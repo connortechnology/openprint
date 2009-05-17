@@ -1,12 +1,12 @@
 <div class="leftColumn">
 <form id="f2" name="f2" action="/employee/project/view.html" method="post">
 <fieldset class="filters">
-<p><label>Docket #</label><input type="text" name="Docket" id="Docket"
+<p><label>Docket #</label><input type="text" name="Docket" id="Docket" size="10"
  onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){f2.submit(f1);}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
  <? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "f2.submit();", '', 'Go' ); ) ?>
 </p>
 
-<p><label>Project #</label><input type="text" name="project_id" id="project_id"
+<p><label>Project #</label><input type="text" name="project_id" id="project_id" size="10"
  onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){f2.submit(f1);}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
  <? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f2.submit();", '', 'Go' ); ) ?>
 </p>
@@ -185,9 +185,19 @@ function open_window( page ) {
 			<td class="unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<td align="right"><b>Total:</b></td>
+			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
+			<td></td>
+		</tr>
+<? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
+		<tr>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<td class="unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<td align="right"><b>Originally Ordered Price:</b></td>
 			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Project'}->ordered_price() ); ) ?></td>
 			<td></td>
 		</tr>
+<? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	</table>
 <? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
@@ -223,6 +233,7 @@ function open_window( page ) {
 				if ( ! @schedule ) {
 					$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule', 'addtopressschedule.gif', "f1.btnFunction.value='AddToPressSchedule';f1.submit();", '', 'Add To Press Schedule' );
 				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'CompletePrinting', 'completePrinting.gif', "f1.btnFunction.value='Complete Printing';f1.submit();", '', 'Complete Printing' ) if $$variable{'Project'}->status() eq 'Approved';
 			} # end if
 			if ( $$variable{'ProjectStatus'} eq 'Printed' and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'AddToBinderySchedule', 'addtobinderyschedule.gif', "f1.btnFunction.value='AddToBinderySchedule';f1.submit();", '', 'Add To Bindery Schedule' );

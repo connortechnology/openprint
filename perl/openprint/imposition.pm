@@ -691,7 +691,9 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 			12	=>	[ [3,4], [4,3], [6,2],[2,6] ],
 			14	=>	[ [2,7], [7,2] ],
 			16	=>	[ [4,4] ],
+			20	=>	[ [4,5], [5,4] ],
 			24	=>	[ [4,6] ],
+			
 			);
 	if ( $spread_size == 2 ) {
 			$blocks{11}	=	[ ];
@@ -702,7 +704,6 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 			$blocks{17}	=	[ ];
 			$blocks{18}	=	[ [3,6],[6,3] ];
 			$blocks{19}	=	[ ];
-			$blocks{20}	=	[ [4,5],[5,4] ];
 			$blocks{21}	=	[ [3,7],[7,3] ];
 			$blocks{22}	=	[ [3,8],[8,3] ];
 			$blocks{32}	=	[ [4,8],[8,4] ];

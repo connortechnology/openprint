@@ -12,12 +12,14 @@ require sets;
 require sql;
 
 use openprint;
-use vars qw( $log $dbh %config %session %param );
+use vars qw( $r $log $dbh %config %session %param %variable );
+*r = \$openprint::r;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 *session = \%openprint::session;
 *param = \%openprint::param;
+*variable = \%openprint::variable;
 
 sub do_new_substitution {
 	my ( $r, $log, $dbh, $command, $text, $variable ) = @_;
@@ -95,6 +97,13 @@ sub do_new_substitution {
 	} # end if
 
 } # end sub do_new_substitution
+
+sub include {
+    my ( $file, $variable ) = @_;
+    $variable = \%variable if ! $variable;
+    my $blah = misc::load_file( $log, $file );
+    return variable_substitution( $r, $log, $dbh, \$blah, $variable );
+}
 
 sub do_include {
 	my ( $r, $log, $dbh, $text, $variable ) = @_;

@@ -71,7 +71,7 @@
 							</ul>
 						</li>
 <? if ( $session{'user_id'} ) ?>
-						<li id="ProductionMenu" class="<? echo ( $r->uri() =~ /employee\/production/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
+						<li id="ProductionMenu" class="<? echo ( $r->uri() =~ /employee\/pro/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
 							<ul>
 								<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
 								<li><a href="/employee/production/barcode.html;NOSSL">&raquo; Barcode</a></li>

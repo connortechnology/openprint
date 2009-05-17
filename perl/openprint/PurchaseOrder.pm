@@ -61,6 +61,7 @@ $serial = 'Purchaseorders_id_seq';
 	'vendor_postalcode'	=>	'vendor_postalcode',
 	'vendor_phone'		=>	'vendor_phone',
 	'vendor_fax'		=>	'vendor_fax',
+	'vendor_sms'		=>	'vendor_sms',
 	'vendor_email'		=>	'vendor_email',
 	'shipto_contact'	=>	'shipto_contact',
 	'shipto_name'		=>	'shipto_name',
@@ -72,6 +73,7 @@ $serial = 'Purchaseorders_id_seq';
 	'shipto_postalcode'	=>	'shipto_postalcode',
 	'shipto_phone'		=>	'shipto_phone',
 	'shipto_fax'		=>	'shipto_fax',
+	'shipto_sms'		=>	'shipto_sms',
 	'shipto_email'		=>	'shipto_email',
 	'manifest_id'		=>	'manifest_id',
 );
@@ -305,7 +307,7 @@ sub send_to_vendor {
 			);
 	my @attachments = ();
 
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_body.html\"-->";
 	$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
@@ -321,12 +323,16 @@ sub send_to_vendor {
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	foreach my $email ( split(',', $self->vendor_email() ) ) {
+		$email =~ s/^\s*(.*)\s*$/$1/;
+		next if ! $email;
 		$mail{'TO'}	= $email;
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
 	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
 		foreach my $email ( split(',', $self->shipto_email() ) ) {
+			$email =~ s/^\s*(.*)\s*$/$1/;
+			next if ! $email;
 			$mail{'TO'} = $email;
 			misc::send_email_with_attachment( $log, \%mail, @attachments );
 			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
@@ -497,5 +503,28 @@ sub Logs {
 	return openprint::PurchaseOrder_Log::find( 'po_id'=>$$self{'id'}, 'order'=>'created_on DESC' );
 } # end sub Logs
 
+sub is_FSC {
+	my ( $self ) = @_;
+	foreach my $C ( $self->Contents() ) {
+		return 1 if $C->description() =~ /FSC/i;
+	} # end foreach C
+} # end sub is_FSC
+
+sub is_PEFC {
+	my ( $self ) = @_;
+	foreach my $C ( $self->Contents() ) {
+		return 1 if $C->description() =~ /PEFC/i;
+	} # end foreach C
+} # end sub is_PEFC
+sub copy {
+	my $self = shift;
+	my $New = new openprint::PurchaseOrder();
+	@$New{keys %fields} = @$self{keys %fields};
+	foreach ( 'id', 'authorized', 'authorized_by'	, 'authorized_on', 'delivered_on' ) {
+		delete $$New{$_};
+	} # end foreach
+	$$New{'created_by'} = $session{'user_id'};
+	return $New;
+} # end sub copy
 1;
 #__END__

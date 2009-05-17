@@ -965,7 +965,7 @@ sub stock_allocation_notification {
 
 	foreach my $User ( @recipients ) {
 		my $From = new openprint::User( $session{'user_id'} );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/stock_allocation_notification.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
@@ -1007,7 +1007,7 @@ sub send_paper_arrival_notification {
 		if ( $to ) {
 # Send notification to maybe CSR's
 			my $From = new openprint::User( $session{'user_id'} );
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
 			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
@@ -1624,6 +1624,7 @@ sub purchase_order_view {
 						'lastname'	=>	$last,
 						'phone'		=>	$param{'vendor_phone'},
 						'fax'		=>	$param{'vendor_fax'},
+						'sms'		=>	$param{'vendor_sms'},
 						'change_password'	=>	'N',
 						'administrator'	=>	'N',
 						'ftp_active'	=>	0,
@@ -1646,6 +1647,24 @@ sub purchase_order_view {
 				'po_id'		=>	$PO->id(),
 				'reason'	=>	$param{'reason'},
 				});
+		} # end if
+		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
+			my @notifications;
+			foreach my $user_id ( openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) ) {
+				my $found = 0;
+				foreach my $notification_id ( $PO->notifications() ) {
+					if ( $notification_id == $user_id ) {
+						$found = 1;
+						last;
+					} # end if	
+				} # end foreach
+				if ( ! $found ) {
+					push @notifications, $user_id;
+				} # end if
+			} # end foreach
+			if ( @notifications ) {
+				$PO->notifications([$PO->notifications(),@notifications]);
+			} # end if
 		} # end if
 	} # end if btnFunction
 
@@ -1679,6 +1698,7 @@ sub purchase_order_edit {
 			'shipto_phone'		=>	$C->phone(),
 			'shipto_fax'		=>	$C->fax(),
 			'shipto_email'		=>	$U->email(),
+			'shipto_sms'		=>	$U->sms(),
 		} );
 		$variable{'error'} .= $PO->save();
 	} # end if
@@ -1841,6 +1861,9 @@ sub _po_select_vendor {
 sub _verification_log {
 	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub _verification_log
+
+sub paper_label_window {
+} # end sub paper_label_window
 
 1;
 __END__

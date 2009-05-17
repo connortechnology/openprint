@@ -108,7 +108,7 @@ sub handler {
 		configuration::init_cache( $log, $dbh, $r->dir_config() );
 		my $serial = $r->param('serial');
 		if ( $serial ) {
-		sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
+			sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
 		} else {
 			$log->error("No serial in upload, dumping session");
 			foreach my $k ( keys %session ) {
@@ -117,22 +117,25 @@ sub handler {
 		} # end if
 		upload_files( $r, $log, $dbh, \%variable );
 		my $page = '/upload/_upload_complete.html';
-		if (-e $ENV{'DOCUMENT_ROOT'} . '/skins/' . $r->dir_config('SiteTitle') . $page) {
-			$page = '/skins/' . $r->dir_config('SiteTitle') . $page;
-		}
-		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+		my $content;
+		if (-e $r->dir_config('SkinPath') . $page) {
+			$page = $r->dir_config('SkinPath') . $page;
+		} else {
+			$page = $ENV{'DOCUMENT_ROOT'} . $page;
+		} # end if
+		my $content = misc::load_file( $log, $page );
         $variable{'PageContent'} = ssi::variable_substitution( $r, $log, $dbh, \$content, \%variable );
 		my @page_path = split('/', $page );
         my $filename = pop @page_path;
         my $template;
 
 		while ( @page_path ) {
-			my $file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins', $r->dir_config('SiteTitle'), 'layouts', @page_path, $filename );
+			my $file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, $filename );
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
 				last;
 			} # end if
-			$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins', $r->dir_config('SiteTitle'), 'layouts', @page_path, 'default.html' );
+			$file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, 'default.html' );
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
 				last;
@@ -254,8 +257,8 @@ sub upload_files {
 		} # end foreach
 # Notify CSR, and Customer of upload
 		$$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
-		if (-e $ENV{'DOCUMENT_ROOT'} . '/skins/' . $r->dir_config('SiteTitle') . '/email_content/uploadfiles_csr_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $r->dir_config('SiteTitle') . '/email_content/uploadfiles_csr_notification.html' );
+		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html') {
+			$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html' );
 		} else {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 		} # end if
@@ -281,7 +284,7 @@ sub upload_files {
 		} else {
 			$to = $openprint::config{'OrderingEmail'};
 		} # end if
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		my $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template, $variable );
 		my %mail = (
 						SMTP    => $openprint::config{'Mail Server'},
@@ -293,8 +296,8 @@ sub upload_files {
 		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
 
 		# Send transcript to uploader
-		if (-e $ENV{'DOCUMENT_ROOT'} . '/skins/' . $r->dir_config('SiteTitle') . '/email_content/uploadfiles_client_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $r->dir_config('SiteTitle') . '/email_content/uploadfiles_client_notification.html' );
+		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
+			$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
 		} else {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
 		} # end if

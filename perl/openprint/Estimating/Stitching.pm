@@ -33,7 +33,7 @@ my %variables = (
 		'hdnBreakdown1'=>['output'],'hdnBreakdown2'=>['output'],'hdnBreakdown3'=>['output'],
         'txtQuantity1'=>['save'], 'txtQuantity2'=>['save'], 'txtQuantity3'=>['save'],
         'ServiceType'=>[],
-		'alert'=>['output'],
+		'alert'=>['output'],'Status'=>['output'],
 		'txtInsertQuantity'=>['save','output'],'chkOverrideInsertQuantity'=>['save'],
 		'txtCalliper'=>['save','output'],
 		'OverrideImposition1'=>['save'], 'OverrideImposition2'=>['save'], 'OverrideImposition3'=>['save'],
@@ -135,6 +135,7 @@ sub signature_calc {
 
 		if ( $imposition > 1 ) {
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
+			$imposition = 1 if ( $$I{'FoldingImposition'} ) and ( $$I{'FoldingImposition'} % 2 );
 			$imposition = 1 if ( $$I{'imposition'} % 2 ) or (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'} % 4 );
 			if ( $$I{'image_orientation'} eq 'Vertical' ) {
 				$imposition = 1 if $$I{'rows'} % 2;
@@ -239,9 +240,8 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
-		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
 			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
@@ -263,11 +263,15 @@ $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposit
 			} # end if
 			last if $imposition == 1;
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
-				$imposition = 1 if $$sig_specs{'hdnImpositionRows'.$qty_index} % 2;
-				$openprint::log->warn("Setting imposition to 1 : Rows" . $$sig_specs{'hdnImpositionRows'.$qty_index} );
+				if ( $$sig_specs{'hdnImpositionRows'.$qty_index} % 2 ) {
+					$imposition = 1;
+					$openprint::log->warn("Setting imposition to 1 : Rows " . $$sig_specs{'hdnImpositionRows'.$qty_index} );
+				} # end if
 			} elsif ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
-				$imposition = 1 if $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2;
-				$openprint::log->warn("Setting imposition to 1 : Cols" . $$sig_specs{'hdnImpositionColumns'.$qty_index} );
+				if ( $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2 ) {
+					$imposition = 1;
+					$openprint::log->warn("Setting imposition to 1 : Cols" . $$sig_specs{'hdnImpositionColumns'.$qty_index} );
+				} # end if
 			} # end if
 		} # end foreach
 
@@ -275,6 +279,7 @@ $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposit
 $openprint::log->debug("Overriding imposiion");
 			if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 				$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
+				$$specs{'Status'} = 'uncalculated';
 			} # end if
 		} else {
 			$$specs{'Imposition'.$qty_index} = $imposition;
@@ -298,8 +303,7 @@ $openprint::log->debug("Overriding imposiion");
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $$specs{'txtQuantity'.$qty_index};
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
 
@@ -360,8 +364,7 @@ $openprint::log->debug("Overriding imposiion");
 		return 'uncalculated';
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $$specs{"txtQuantity$qty_index"};
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		if ( $$specs{'txtInsertQuantity'} > 0 ) {
 			$$specs{"txtPockets$qty_index"} += $$specs{'txtInsertQuantity'};
@@ -373,7 +376,7 @@ $openprint::log->debug("Overriding imposiion");
 
 		if ( 1 > $$specs{"txtPockets$qty_index"} ) {
 			$$specs{'Status'} = 'uncalculated';
-			$$specs{'alert'} = 'We are unable to determine how many pockets your project requires.  Please contact us.';
+			$$specs{'alert'} .= 'We are unable to determine how many pockets your project requires.  Please contact us.';
 			if ( $$specs{'OverrideImposition'.$qty_index} ne 'Y' ) {
 				$$specs{'Imposition'.$qty_index} = '';
 			} # end if

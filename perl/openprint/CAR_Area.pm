@@ -1,8 +1,6 @@
 package openprint::CAR_Area;
 @ISA = qw(openprint::Object);
 
-use MIME::QuotedPrint;
-use MIME::Base64;
 use vars qw( %config $log $dbh %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
@@ -20,6 +18,7 @@ $table = 'car_areas';
 $serial = 'car_areas_id_seq';
 
 %fields = (
+	'id'		=>	'id',
 	'name'		=>	'name',
 	'assignee_id'	=>	'assignee_id',
 	'deleted'	=>	'deleted',

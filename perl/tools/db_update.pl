@@ -319,7 +319,7 @@ if ( ! $data ) {
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM PurchaseOrders LIMIT 1', {} );
 if ( ! $data ) {
 } else {
 	if ( ! exists $$data{'po_id'} ) {
@@ -335,6 +335,12 @@ if ( ! $data ) {
 	} # end if
 	if ( ! exists $$data{'delivered_on_switch'} ) {
 		$dbh->do('ALTER TABLE Manifests add delivered_on_switch TEXT');
+	} # end if
+	if ( ! exists $$data{'vendor_sms'} ) {
+		$dbh->do('ALTER TABLE Manifests add vendor_sms TEXT');
+	} # end if
+	if ( ! exists $$data{'shipto_sms'} ) {
+		$dbh->do('ALTER TABLE Manifests add shipto_sms TEXT');
 	} # end if
 } # end if
 my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
@@ -509,6 +515,28 @@ if ( ! $data ) {
 	} # end foreach
 } # end if
 
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM EmployeeNumbers LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/EmployeeNumbers.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} else {
+	if ( exists $$data{'lngemployeeid'} ) {
+		$dbh->do('alter table employeenumbers rename column lngemployeeid to id');
+		$dbh->do('alter table employeenumbers rename column lngmin to min');
+		$dbh->do('alter table employeenumbers rename column lngmax to max');
+	} # end if
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+if ( $data ) {
+	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_in TEXT') if ! exists $$data{'cip3_in'};
+	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_out TEXT') if ! exists $$data{'cip3_out'};
+	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_hold TEXT') if ! exists $$data{'cip3_hold'};
+	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_merge TEXT') if ! exists $$data{'cip3_merge'};
+	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_monitor TEXT') if ! exists $$data{'cip3_monitor'};
+} # end if
 $dbh->disconnect();
 1;
 __END__

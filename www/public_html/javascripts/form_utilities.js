@@ -539,6 +539,8 @@ function changed( form ) {
 } // end function changed
 
 function fmCheck( form ) {
+	if ( $('ButtonsTop') ) $('ButtonsTop').hide();
+	if ( $('ButtonsBottom') ) $('ButtonsBottom').hide();
 	if ( fmChange == 1 ) {
 		if ( ( ! changed(form) ) || confirm("Are you sure you want to leave this record without saving your changes?") ) {
 			fmChange == 0;
@@ -562,6 +564,8 @@ function fmCheck( form ) {
 	} else {
 		form.submit();
 	}
+	if ( $('ButtonsTop') ) $('ButtonsTop').show();
+	if ( $('ButtonsBottom') ) $('ButtonsBottom').show();
 }
 
 function addCheck(form) {

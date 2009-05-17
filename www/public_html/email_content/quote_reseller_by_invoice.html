@@ -69,4 +69,4 @@ return $html;
 		<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name:</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
 		<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments:</b><?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
 <br class="spacer"/>
-<!--#include virtual="/skins/<? echo ( $config{SiteTitle} ) ?>/includes/quote_disclaimer.html"-->
+<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/includes/quote_disclaimer.html' ); ) ?>

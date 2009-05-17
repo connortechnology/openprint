@@ -6,10 +6,11 @@ use MIME::Base64;
 use openprint::Currency;
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh);
+use vars qw(%variable $log $dbh %config);
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
 require sql;
 require openprint::logs;
@@ -347,7 +348,7 @@ sub send {
     openprint::quote::get_user_for_info( $log, $dbh, \%quote, $$self{id} );
 
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 
 	my @project_summaries;
 	if ( $self->Company()->quote_project_breakdown() eq 'Y' ) {
@@ -431,7 +432,7 @@ sub send {
 
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
 		push @attachments, '', $_, 'text/html', 'quoted-printable';
 
@@ -460,7 +461,7 @@ sub send {
 # Send one to the admin
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 

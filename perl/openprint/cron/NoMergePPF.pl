@@ -50,6 +50,8 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 	if ( opendir DIRHANDLE, $source_path ) {
 		@filenames = readdir DIRHANDLE;
 		closedir DIRHANDLE;
+	} else {
+		die "Unable to open $source_path\n";
 	} # end if
 
 	foreach my $file ( @filenames ) {
@@ -70,7 +72,7 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 				next;
 			} # end if
 
-			my ( $docket, $ppo, $name, $sig, $side ) = $file_base =~ /(\d\d\d\d\d)(\w\w)_?(.*?)Sg(\d+)Sd.(\w)/i;
+			my ( $docket, $ppo, $name, $sig, $side ) = $file_base =~ /(\d\d\d\d\d)(\w*)_?(.*?)S?g?(\d+)S?d?.(\w)/i;
 			my $data = '';
 #print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			$sig = 0 if ! $sig;
