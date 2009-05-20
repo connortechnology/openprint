@@ -20,6 +20,11 @@ my $debug = 1;
 
 sub delete {
 	my $self = shift;
+	sql::update( undef, undef, 'tbl_Projects', ['Index=?', $$self{'id'}], ['strStatus', 'Deleted'] );
+} # end sub delete
+
+sub destroy {
+	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::update( undef, undef, 'Ordered_Products', ['project_id=?', $$self{'id'}], 'project_id', undef );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=?}, $$self{'id'} );

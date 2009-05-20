@@ -157,7 +157,7 @@ sub update {
 		push @columns, "$column = ?";
 	} # end foreach
 	$command .= join( ',', @columns );
-	my @conditions;
+	my @conditions = ();
 	if ( ref $condition eq 'ARRAY' ) {
 		@conditions = @$condition;
 		$command .= ' WHERE ' . shift @conditions;
@@ -175,7 +175,8 @@ sub update {
 		$log->error('SQL statement execution failed: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr) if $log;
 		return $d->errstr;
 	} # end if
-	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, sprintf($print_command, values %commands, @conditions ) ) ) if $log;
+	$_ = sprintf($print_command, values %commands, @conditions );
+	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, $_ ) ) if $log;
 	return;
 } # end sub update
 

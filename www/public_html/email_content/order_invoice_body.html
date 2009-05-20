@@ -1,8 +1,8 @@
 Attached is the current copy of your invoice for order <?ORDER_ID?>.
-All orders are saved in your order history on <? echo ( $openprint::config{'SiteTitle'} ) ?>.
+All orders are saved in your order history on <? echo ( $config{'SiteTitle'} ) ?>.
 You can access all order information by linking from the attachment.<br/>
 <br/>
-<!--#include virtual="/skins/<? openprint::config{'SiteTitle'} ?>/includes/order_disclaimer.html"-->
+<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/includes/order_disclaimer.html' ); ) ?>
 <br/>
 <p>
  If you have any questions, please contact
@@ -12,7 +12,7 @@ You can access all order information by linking from the attachment.<br/>
         my $CSR = new openprint::User( $Company->salesrep_id() );
         return sprintf('<a href="mailto:%s">%s %s</a>.', $CSR->email(), $CSR->firstname(), $CSR->lastname() );
         } else {
-        return qq`our <a href="$openprint::config{'ExternalSiteURL'}/support/help_desk.html">helpdesk</a>.`;
+        return qq`our <a href="$config{'ExternalSiteURL'}/support/help_desk.html">helpdesk</a>.`;
         } # end if
         ) ?>
 </p>

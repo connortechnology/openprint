@@ -127,7 +127,7 @@ sub save {
 		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/usertype_system_notification.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$info{'ReplacementText'}, \%info );
 
-		my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
 		$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
 
 		my %mail = (
@@ -139,14 +139,13 @@ sub save {
 		misc::send_email_with_attachment( $openprint::log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
-	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
+	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{'web_active'} ne $$params{'web_active'} ) ) {
 		my %info;
 		$info{'User'} = $self;
-		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/'.( $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html' ) );
 		$info{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		#$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
+		my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+		$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
 
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},
@@ -432,6 +431,25 @@ sub purchasing_total {
 		$total += $PO->total();
 	} # end foreach $PO
 } # end sub purchasing_total
+
+sub po_limit {
+	my ( $self, $type_id, $new_value ) = @_;
+
+	if ( ! exists $$self{'po_limits'} ) {
+		%{$$self{'po_limits'}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+	} # end if
+
+	if ( defined $new_value ) {
+		if ( exists $$self{'po_limits'}{$type_id} ) {
+			sql::update( undef, undef, 'user_purchaseorder_limits', ['user_id=? AND type_id=?', $$self{'id'},$type_id], 'po_limit', 1*$new_value );
+		} else {
+			sql::insert( undef, undef, 'user_purchaseorder_limits', ['user_id',$$self{'id'},'type_id', $type_id, 'po_limit', 1*$new_value ] );
+		} # end if
+		$$self{'po_limits'}{$type_id} = 1*$new_value;
+	} # end if
+
+	return $$self{'po_limits'}{$type_id};
+} # end sub po_limit
 
 1;
 

@@ -185,9 +185,19 @@ function open_window( page ) {
 			<td class="unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<td align="right"><b>Total:</b></td>
+			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
+			<td></td>
+		</tr>
+<? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
+		<tr>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<td class="unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<td align="right"><b>Originally Ordered Price:</b></td>
 			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Project'}->ordered_price() ); ) ?></td>
 			<td></td>
 		</tr>
+<? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	</table>
 <? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>

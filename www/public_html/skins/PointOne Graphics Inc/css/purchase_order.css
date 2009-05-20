@@ -165,6 +165,14 @@ p label {
     overflow: visible;
 }
 
+td p {
+    padding: 0px;
+}
+td p label {
+    width: auto;
+    margin-left: 0px;
+}
+
 div.autocomplete {
   position:absolute;
   width:250px;

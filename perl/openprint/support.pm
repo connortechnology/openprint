@@ -4,6 +4,15 @@ use MIME::QuotedPrint;
 use Mail::Sendmail;
 use Email::Valid;
 use strict;
+use openprint ();
+use vars qw( $r $log $dbh %variable %param %session %config);
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*param = \%openprint::param;
+*session = \%openprint::session;
+*config = \%openprint::config;
 
 require sql;
 
@@ -77,7 +86,7 @@ sub confirmation_returns {
 
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_confirmation.html' );
 	$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, $info{'ReplacementText'}, \%info );
-    my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+    my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
     $email_template = ssi::variable_substitution( $r, $log, $dbh, $email_template, \%info );
 
 	my %mail = (
@@ -107,7 +116,7 @@ sub confirmation_help_desk {
 	$error .= 'Missing Question or Comment<br/>' if $openprint::param{'txtQuestion-Quote'} eq '';
 	if ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) {
 		require Authen::Captcha;
-		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $ENV{'DOCUMENT_ROOT'}.'/skins/'.$openprint::config{'SiteTitle'}.'/images/captcha');
+		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $openprint::config{'SkinPath'}.'/images/captcha');
 		if ( 1 != $Captcha->check_code( $openprint::param{'Captcha'}, $openprint::param{'MD5SUM'} ) ) {
 			$error .= 'Validation Code incorrect.  Please try again.';
 		} # end if
@@ -172,7 +181,7 @@ sub confirmation_help_desk {
 
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_confirmation.html' );
 	$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-    my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+    my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
     $email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
 
 	my %mail = (

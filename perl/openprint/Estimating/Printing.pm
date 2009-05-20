@@ -360,9 +360,7 @@ my $master_time = gettimeofday();
 	my $services = $Project->services();
 
 	# First, clean up all inputs
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity($qty_index);
-		
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		foreach my $k ( 'txtPlateChangeQuantity' ) {
 			if ( $$specs{$k.$qty_index} =~ /\D/ ) {
 				$variables{$k.$qty_index} = [ sets::union( 'output', @{$variables{$k.$qty_index}} ) ];
@@ -1863,6 +1861,9 @@ $PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs
 $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 						$additional_price = $$sig_price{'Comparison Cost'};
 						$additional_price -= $$sig_price{'Plate Comparison Cost'};
+						$additional_price -= $$sig_price{'Stitching Cost'};
+						$additional_price -= $$sig_price{'PerfectBound Cost'};
+
 
 						if ( ! $$sig_price{'Imposition'} ) {
 #$openprint::log->debug("No Imposition found.");
@@ -2172,6 +2173,10 @@ sub calc_price {
 	#$$specs{'StitchingImposition'.$qty_index} = $price{'StitchingImposition'};
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
+	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
+#$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
+	$run_speed = $speed_mod if $speed_mod;
+
 	my %folding_results;
 
 	# Has to be NEED because they always leave folding out, and it chooses dumb impositions
@@ -2186,6 +2191,7 @@ sub calc_price {
 			$openprint::log->debug("Unable to fold spreads:" . $Imposition->spreads() . ' alert:'. $$project{'FoldingSpecs'}{'alert'} ) if $debug;
 		} else {
 			$$Imposition{'Folder'} = $folding_results{'Equipment'};
+			$$Imposition{'FoldingImposition'} = $folding_results{'Imposition'};
 		} # end if
 		$price{'FoldingImposition'} = $folding_results{'Imposition'};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
@@ -2603,6 +2609,11 @@ sub select_presses {
 			$openprint::log->debug(" ** Press $press_id Failed Calliper Check **");
 			next;
 		} # end if
+		if ( ( $Paper->type() eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
+
+			$openprint::log->debug(" ** Press $press_id Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight') );
+			next;
+		} # end if
 
 		if ( 
 				(
@@ -2902,11 +2913,11 @@ sub get_run_price {
 	$run_speed = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() ) if ! $run_speed;
 	my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
 #$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." ($running_price) ($run_price{'units'}) STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
-	$run_speed = $run_speed / $speed_mod if $speed_mod;
+	$speed_mod = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() ) / $speed_mod if $speed_mod;
 
 	if ( sets::isin( lc $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
-		if ( $run_speed and $speed_mod ) {
-			$running_price *= $run_speed;
+		if ( $speed_mod ) {
+			$running_price *= $speed_mod;
 		} # end if
 #$log->warn(" ** FINAL  RUNNING PRICE $running_price **") if $debug or 1;
 		$run_price{'Cost'} = $running_price;
@@ -2944,8 +2955,9 @@ sub press_setup_cost {
 			$setup_count += 1;
 		} # end if
 	} # end foreach colour
+	
 	my %Price;
-	$Price{'Setup Count'} = $setup_count;
+	$Price{'Setup Count'} = $setup_count + $plate_change_qty;
 	if ( ! ( %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady'.$Imposition->runstyle(), undef, $Press) ) ) {
 		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'PressUnitMakeReady', undef, $Press);
 	} # end if
@@ -2974,23 +2986,20 @@ sub press_setup_cost {
 	} # end if
 	if ( $Price{'units'} =~ /Per Run/i ) {
 		$Price{'Total'} *= $plate_runs if $plate_runs;
-		$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
+		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{'Total'};
 	my %PlateSetupPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'PlateMakeReady', undef, $Press );
 	if ( %PlateSetupPrice ) {
+		my $plates = $setup_count;
+		$plates *= $plate_runs if $plate_runs;
+		$plates += $plate_change_qty;
+
 		if ( lc $PlateSetupPrice{'units'} eq 'per hour') {
-			my $time = $Press->specification('Plate Setup Time');
-			$time *= ($setup_count + $plate_change_qty);
-			$time *= $plate_runs if $plate_runs;
-			$time /= 60;
-			#$time /= 2;
+			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
 			$Price{'Total'} += $PlateSetupPrice{'Price'} * $time;
 		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
-			my $plates = $setup_count;
-			$plates *= $plate_runs if $plate_runs;
-			$plates += $plate_change_qty;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
 			$Price{'Total'} += $PlateSetupPrice{'Price'} * $plates;
 		} else {
@@ -3018,7 +3027,6 @@ sub plate_setup_cost {
 	} # end foreach colour
 
 	my $plate_count_before_changes = $plate_count;
-	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index} if $$specs{'txtPlateChangeQuantity'.$qty_index} > 0;
 
 	my ($plate_type,$plate_size,$max_impressions) = (
 			$Press->specification('Plate Type'),
@@ -3031,7 +3039,7 @@ sub plate_setup_cost {
 
 #$log->debug("** GETTTING PLATE SIZE FOR: $press : SIZE ($plate_size) TYPE ($plate_type) COUNT ($plate_count) RUNS($plate_runs)*$impressions*$max_impressions") if $debug or 1;
 	$plate_count *= $plate_runs;
-	$plate_count += $$specs{'AdditionalPlates'.$qty_index};
+	$plate_count += $$specs{'txtPlateChangeQuantity'.$qty_index};
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
 
 	my %setup_cost = (

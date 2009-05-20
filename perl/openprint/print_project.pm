@@ -18,11 +18,6 @@ require openprint::Estimating::Multipage;
 
 # Projects are like Orders, in that you can have several in here, but only ONE of them may be unfinished.
 
-sub delete_project {
-	my ( $log, $dbh, $project_id ) = @_;
-	sql::update( $log, $dbh, 'tbl_Projects', ['Index=?', $project_id], ['strStatus', 'Deleted'] );
-	openprint::logs::insertLogRecord('20', "Project ID: " . $project_id,);
-} # end sub delete_project
 
 sub insert_project_type {
 	my ( $r, $log, $dbh, $project_index, $project_type_id ) = @_;

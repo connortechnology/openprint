@@ -78,11 +78,17 @@ Choose report criteria and click show results. You may the download the the resu
 				</select>
 		</p>
 		<p>
+			<label>Last Login:</label>
+			<? echo ( ssi::date_select( 'lastlogin_start', [@param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'}], { 'order'=>'m,d,y' } ); ) ?>
+			to
+			<? echo ( ssi::date_select( 'lastlogin_end', [@param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'}], { 'order'=>'m,d,y' } ); ) ?>
+		</p>
+		<p>
 			<label>Active?</label>
-				<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( ssi::checked( $param{'rdbActive'} eq 'Y' ); ) ?> />
-				<label class="radio" for="rdbActiveY">Yes</label>
-				<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( ssi::checked( $param{'rdbActive'} ne 'Y' ); ) ?> />
-				<label class="radio" for="rdbActiveN">No</label>
+			<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( ssi::checked( $param{'rdbActive'} eq 'Y' ); ) ?> />
+			<label class="radio" for="rdbActiveY">Yes</label>
+			<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( ssi::checked( $param{'rdbActive'} ne 'Y' ); ) ?> />
+			<label class="radio" for="rdbActiveN">No</label>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',

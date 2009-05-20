@@ -5,8 +5,9 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable %fields %transforms %defaults );
+use vars qw( %variable %fields %transforms %defaults %config );
 *variable = \%openprint::variable;
+*config = \%openprint::config;
 
 
 require sql;
@@ -304,7 +305,7 @@ sub save {
 		if ( ! $error ) {
 
 			$variable{'Paper'} = $self;
-			if ( my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' ) ) {
+			if ( my $email_template = misc::load_file( $openprint::log, $config{'SkinPath'} . '/email_template.html' ) ) {
 				$variable{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/new_paper_notification.html' );
 				$variable{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$variable{'ReplacementText'}, \%variable );
 				my $body = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%variable );
@@ -1031,12 +1032,12 @@ $openprint::log->debug("No papers found");
 		
 		if ( $qty_index ) {
 			my $qty = $$specs{'txtPressSheetQty'.$qty_index};
-$openprint::log->debug("Looking for $qty");
+#$openprint::log->debug("Looking for $qty");
 			$qty =~ s/\D//g;
 			foreach my $P ( @Papers ) {
-$openprint::log->debug("Looking for $qty < " . $P->minimum_order() );
+#$openprint::log->debug("Looking for $qty < " . $P->minimum_order() );
 				next if $qty < $P->minimum_order();
-$openprint::log->debug("found for $qty < " . $P->minimum_order() );
+#$openprint::log->debug("found for $qty < " . $P->minimum_order() );
 				$Paper = $P;
 				last;
 			} # end foreach
