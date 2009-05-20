@@ -364,6 +364,10 @@ sub find {
 		$sql .= ' AND strEmail=?';
 		push @values, lc $param{'email'};
 	} # end if
+	if ( exists $param{'email_like'} ) {
+		$sql .= ' AND strEmail LIKE ?';
+		push @values, lc $param{'email_like'};
+	} # end if
 	if ( exists $param{'web_active'} ) {
 		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
 		$param{'web_active'} = 'N' if $param{'web_active'} == 0;
