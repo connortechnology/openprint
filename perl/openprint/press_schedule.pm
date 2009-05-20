@@ -115,6 +115,7 @@ sub get_li {
 		$html .= '<br/></li>';
 		return $html;
 	} # end if
+
 	my $Project = new openprint::Project( $$row{'projectindex'} );
 	my %specs = openprint::service::get_specifications_pairs( $log, $dbh, @$row{'projectindex','serviceindex'} );
 	if ( ! $specs{'txtEmployeeComments'} ) {
@@ -256,15 +257,14 @@ sub get_li {
 	return $html;
 } # end sub get_li
 
-sub get_ul {
-	my ( $start_time_start, $start_time_end, $equipment_id, $shift, $filters ) = @_;
-	my $total_impressions;
-
+sub get_lis {
+	my ( $ul_id, $start_time_start, $start_time_end, $equipment_id, $shift, $filters ) = @_;
 	my ( $s, $min, $h, $day, $month, $year );
-	( $s, $min, $h, $day, $month, $year ) = Date::Parse::strptime( $start_time_start ) if $start_time_start;
-	$year += 1900;
-	$month += 1;
-	my $ul_id = sprintf('%d-%.4d-%.2d-%.2d-%s', $equipment_id, $year, $month, $day, $$shift{'name'} );
+	if ( $start_time_start ) {
+		( $s, $min, $h, $day, $month, $year ) = Date::Parse::strptime( $start_time_start );
+		$year += 1900;
+		$month += 1;
+	} # endif
 
 	my @schedule = find(
 			'starttime_start'	=> $start_time_start,
@@ -276,6 +276,7 @@ sub get_ul {
 	my $html;
 
 	my $previous_row;
+	my $total_impressions;
 
 	for ( my $index = 0; $index < @schedule; $index += 1 ) {
 		my $current_row = $schedule[$index];
@@ -288,8 +289,8 @@ sub get_ul {
 		} # end if
 		
 		$html .= get_li( $previous_row, $current_row, $ul_id );
-		my $specs = openprint::service::get_specs_ref( @$current_row{'projectindex','serviceindex'} );
-		$total_impressions += $$specs{'ImpressionQuantity'};
+		my $sig_specs = openprint::service::get_specs_ref( new openprint::Project( $$current_row{'project_index'} ),$$current_row{'serviceindex'} );
+		$total_impressions += $$sig_specs{'ImpressionQuantity'};
 		$previous_row = $current_row;
 	} # end for
 
@@ -302,7 +303,22 @@ sub get_ul {
 			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $$shift{'name'}, ( $Operator->id() ? $Operator->name() : 'assign' ) ) . $html;
 		} # end if
 	} # end if
-	return qq{<ul id="$ul_id" class="shift} . (@schedule ? '' : ' Empty' ) .'">' . $html. "</ul>\n";
+	return $html;
+}
+
+sub get_ul {
+	my ( $start_time_start, $start_time_end, $equipment_id, $shift, $filters ) = @_;
+
+	my ( $s, $min, $h, $day, $month, $year );
+	if ( $start_time_start ) {
+		( $s, $min, $h, $day, $month, $year ) = Date::Parse::strptime( $start_time_start );
+	} # endif
+		$year += 1900;
+		$month += 1;
+	my $ul_id = sprintf('%d-%.4d-%.2d-%.2d-%s', $equipment_id, $year, $month, $day, $$shift{'name'} );
+	my $content = get_lis($ul_id, $start_time_start, $start_time_end, $equipment_id, $shift, $filters);
+
+	return qq{<ul id="$ul_id" class="shift} . ($content ? '' : ' Empty' ) .'">'.$content. "</ul>\n";
 } # end sub get_ul
 
 sub apply_sort {
@@ -409,6 +425,9 @@ sub add_project_to_press_schedule {
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
+		if ( ! $$sig_specs{'UsePress'} ) {
+			$error .= "No press for signature $$sig_specs{'SignatureIndex'}<br/>";
+		} # end if
 		my $runtime = openprint::service::get_runtime( $log, $dbh, $Project->id(), $s_s_id );
 		if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'},'use_in_estimating'=>1) ) {
 			$_ = sql::insert( undef, undef, 'Schedule', ['ProjectIndex', $Project->id(), 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) ] );
@@ -419,7 +438,7 @@ sub add_project_to_press_schedule {
 
 			} # end if
 		} else {
-			$error .= 'Error adding to press schedule: Press not found for signature ' . $_;
+			$error .= "Error adding to press schedule: Press not found ($$sig_specs{UsePress}) for signature $$sig_specs{'SignatureIndex'}<br/>";
 		} # end if
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );

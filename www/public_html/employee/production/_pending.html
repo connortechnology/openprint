@@ -13,14 +13,10 @@
 ) ?>
 <? if ( @{$$variable{'pending_drops'}} ) ?>
 <script type="text/javascript">
-  // <![CDATA[
+// <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'pending_drops'}} ) ) ?>");
 	for ( var id in drops ) {
-		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false,
-             onUpdate:function(drop){
-             jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( drop.id, Sortable.serialize(drop) ) );
-             }
-            });
+		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
 	} // end foreach id in drops
 // ]]>
 </script>

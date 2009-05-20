@@ -10,8 +10,6 @@ require openprint::Object;
 require Compress::Zlib;
 use openprint ();
 use MIME::Base64;
-use Text::PDF;
-use Text::PDF::Filter;
 use Image::Magick;
 use Number::Format;
 
@@ -303,6 +301,7 @@ sub generate_previews {
 
 				foreach my $image ( @{$$preview{'separations'}} ) {
 					if ( $$image{'encoding'} eq 'ASCIIHexDecode' ) {
+						require Text::PDF::Filter;
 						my $f = Text::PDF::ASCIIHexDecode->new;
 						$$image{'image'} = $f->infilt($$image{'image'}, 1 );
 					} # end if

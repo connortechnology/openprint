@@ -1072,6 +1072,94 @@ sub _pending {
     } # end foreach press
 } # end sub _pending
 
+sub _ul {
+	my $id = $param{'id'};
+	$id =~ /^(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)$/;
+	my ( $equipment_id, $year, $month, $day, $shift_name ) = ( $1, $2, $3, $4, $5 );
+	my ( $start_time, $end_time, $operator_id );
+
+	if ( $shift_name ) {
+		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift_name ) ) {
+			$start_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $start_time );
+			$end_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $end_time );
+			( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $equipment_id, $start_time, $end_time );
+		} else {
+# Must be Approved or Pending
+		} # end if
+	} # end if
+	my $shift = {
+		'name'	=>	$shift_name,
+		'equipment_id'	=>	$equipment_id,
+		'starttime'		=>	$start_time,
+	};
+	@variable{'equipment_id','start_time','end_time','shift'} = ( $equipment_id, $start_time, $end_time, $shift );
+} # end sub _ul
+
+sub _drop {
+
+	my $id = $param{'id'};
+	$id =~ /^(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)$/;
+	my ( $equipment_id, $year, $month, $day, $shift_name ) = ( $1, $2, $3, $4, $5 );
+	my ( $start_time, $end_time, $operator_id );
+
+	if ( $shift_name and ! sets::isin( $shift_name, [ 'NotApproved' ] ) ) {
+		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift_name ) ) {
+			$start_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $start_time );
+			$end_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $end_time );
+			( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $equipment_id, $start_time, $end_time );
+		} else {
+# Must be Approved or Pending
+		} # end if
+	} # end if
+
+	if ( exists $param{'services'} ) {
+		my $services = $param{'services'};
+		$services =~ s/$id\[\]=//g;
+		my @order = split( '&', $services );
+		return if ! @order;
+
+		my $Equipment = new openprint::Equipment( $equipment_id );
+
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
+		while ( @order ) {
+			my $id = shift @order;
+			$id =~ s/\D//g;
+			next if ! $id;
+
+			my @rows = openprint::press_schedule::find('id'=>$id);
+			next if ! @rows;
+			my $row = shift @rows;
+			if ( $start_time and ! $$row{starttime} ) {
+				new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . " at $start_time" );
+			} # end if
+
+			sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'equipment_id', $equipment_id );
+			if ( $$row{operator_id} != $operator_id ) {
+				sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
+			} # end if
+
+			if ( @order ) {
+				if ( $openprint::config{'Smart Schedule'} eq 'Y') {
+					( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE id=?}, $id );
+				} else {
+					( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $id );
+				} # end if
+			} # end if
+		} # end foreach
+		sql::end_transaction( $dbh, $ac );
+
+		# Now need to detect if contents of ul are different than the dropped order, or not.
+		my @new_order = map{ $$_{'id'} } openprint::press_schedule::find('starttime_start'=>$start_time,'starttime_end'=>$end_time,'equipment_id'=>$equipment_id);
+		if ( @order != sets::intersection( @order, @new_order ) ) {
+			# Some have jumped ship.  I _think_ this can only mean that 1 or more have bumped down to the next shift
+			$variable{'changed'} = 1;
+		} # end if
+		$log->debug("CHanged ? : $variable{'changed'}");
+	} # end if services
+
+} # end sub _ul.html
+
 1;
 
 __END__

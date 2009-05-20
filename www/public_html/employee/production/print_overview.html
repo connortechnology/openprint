@@ -14,7 +14,7 @@
 			} # end foreach
 		} # end if
 		$session{'/employee/production/print_overview.html?lastupdated'} = time;
-	} elsif ( time - $session{'/employee/production/print_overview.html?lastupdated'} > 60*60 ) { 
+	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > (24*60*60) ) { 
 		foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay','pending','pending_approved' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
@@ -22,6 +22,9 @@
 ) ?>
 <script type="text/javascript">
 <!--
+	var dropfunction = function(el){
+		new Ajax.Request( '_drop.html', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+	}
 	function level_up( img ) {
 		if ( img.src.match(/level=1/) ) {
 			img.src=img.src.replace(/level=1/,'level=2');
@@ -241,7 +244,7 @@
 		popupWin.showCenter();
 		popupWin.setAjaxContent(url+'?'+parameters, null , true);
 	} // end function popup_window
-var drops = new Array();
+	var drops = new Array();
 -->
 </script>
 <link rel="stylesheet" type="text/css" href="/css/press_schedule.css">
@@ -308,10 +311,10 @@ var drops = new Array();
 	</form>
 </div>
 <? eval (
-	
+		my ($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 		if ( ! $session{'/employee/production/print_overview.html?ddmScheduleStartYear'} ) {
-			if ( ($_) = sql::execute( $log, $dbh, q{SELECT date(MIN(StartTime)) FROM Schedule} ) ) {
-				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, split('-', $_ ) );
+			if ( $starttime ) {
+				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, split('-', $starttime ) );
 			} else {
 				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 			} # end if
@@ -321,12 +324,10 @@ var drops = new Array();
 		} # end if
 
 		if ( ! $session{'/employee/production/print_overview.html?ddmScheduleEndYear'} ) {
-			($_) = sql::execute( $log, $dbh, q{SELECT date(MAX(StartTime)) FROM Schedule} );
-			if ( $_ ) {
-				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, split('-',$_) );
-				$log->debug("Start: $$variable{'ScheduleEnd'}");
+			if ( $endtime ) {
+				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, split('-',$endtime) );
 			} else {
-				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
+				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 ) );
 			} # end if
 		} else {
 			@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh,
@@ -418,6 +419,7 @@ var drops = new Array();
 	<hr style="clear: both;"/>
 	<? echo (
 		require openprint::press_schedule;
+		@{$$variable{'drops'}} = ();
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
 			$html .= '<div class="PressColumn">';
@@ -464,13 +466,15 @@ var drops = new Array();
 <br class="spacer"/>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
-  // <![CDATA[
+// <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>");
 	for ( var id in drops ) {
 		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false,
-             onUpdate:function(drop){
-             jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( drop.id, Sortable.serialize(drop) ) );
-             }
+             onUpdate: dropfunction,
+             //onUpdate: function(el) {
+		//jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( el.id, Sortable.serialize(el) ) );
+		//new Ajax.Request( '_drop.html', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+	//},
             });
 	} // end foreach id in drops
 // ]]>
