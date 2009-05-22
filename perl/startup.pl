@@ -1,6 +1,7 @@
 #!/usr/bin/perl 
 
 BEGIN {
+	use utf8;
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
 	use APR::URI;
