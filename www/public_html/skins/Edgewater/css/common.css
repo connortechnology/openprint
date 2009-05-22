@@ -90,7 +90,7 @@ body #Footer:after {
 	margin: 0px;
 	margin-bottom: 90px; /* for the footer */
 	padding: 10px;
-	padding-top: 90px;
+	padding-top: 10px;
 	min-height: 92px;
 }
 
