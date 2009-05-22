@@ -5,25 +5,20 @@
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
-			foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) {
-				if ( ref $param{$param} eq 'ARRAY' ) {
-					$session{'/employee/production/print_overview.html?'.$param} = join(';', @{$param{$param}} );
-				} elsif ( exists $param{$param} ) {
-					$session{'/employee/production/print_overview.html?'.$param} = $param{$param};
-				} # end if
-			} # end foreach
+			ssi::save_params( '/employee/production/print_overview.html', ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay' ) );
 		} # end if
-		$session{'/employee/production/print_overview.html?lastupdated'} = time;
 	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > (24*60*60) ) { 
+$openprint::log->debug("Clearing session");
 		foreach my $param ( 'Presses','ddmScheduleStartYear','ddmScheduleStartMonth','ddmScheduleStartDay','ddmScheduleEndYear','ddmScheduleEndMonth','ddmScheduleEndDay','pending','pending_approved' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
+	$session{'/employee/production/print_overview.html?lastupdated'} = time;
 ) ?>
 <script type="text/javascript">
 <!--
 	var dropfunction = function(el){
-		new Ajax.Request( '_drop.html', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+		new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
 	function level_up( img ) {
 		if ( img.src.match(/level=1/) ) {
@@ -153,12 +148,12 @@
 				form.ServiceIndex.value=data2;
 				form.CommentInput.value = div.innerHTML;
 			} // end if
-		} else if ( popup == 'Runtime' ) {
-			var div = $( data1 + 'Runtime' );
-			form = document.forms['RuntimeForm'];
+		} else if ( popup == 'RunTime' ) {
+			var div = $( data1 + 'RunTime' );
+			form = document.forms['RunTimeForm'];
 			if ( form ) {
 				form.schedule_id.value=data1;
-				form.Runtime.value=div.innerHTML;
+				form.RunTime.value=div.innerHTML;
 			} // end if
 		} // end if
 		popupWin.setContent(popup+'Popup');
@@ -198,15 +193,25 @@
 		return false;
 	} // end function saveOperator
 
-	function saveRuntime( id, runtime ) {
-		var div = $( id + 'Runtime' );
+	function saveRunTime( id, runtime ) {
+		var div = $( id + 'RunTime' );
 		if ( div )
 			div.innerHTML = runtime;
 
-		jsrsExecute( '/jsrs.htm', null, 'openprint::press_schedule::set_runtime', new Array( id, runtime+':00' ) );
+		new Ajax.Request( '_li_change.json', { parameters: { id: id, runtime: runtime+':00' } } );
+		//jsrsExecute( '/jsrs.htm', null, 'openprint::press_schedule::set_runtime', new Array( id, runtime+':00' ) );
 		popupWin.destroy();
 		return false;
-	} // end function saveRuntime
+	} // end function saveRunTime
+	function saveStartTime( id, runtime ) {
+		var div = $( id + 'StartTime' );
+		if ( div )
+			div.innerHTML = runtime;
+
+		jsrsExecute( '/jsrs.htm', null, 'openprint::press_schedule::set_starttime', new Array( id, runtime+':00' ) );
+		popupWin.destroy();
+		return false;
+	} // end function saveStartTime
 
 	function saveComment( project_index, service_index, comment ) {
 		var div = $( service_index + 'Comment' );
@@ -261,13 +266,23 @@
 		</span>
 	</form>
 </div>
-<div id="RuntimePopup" style="display:none;">
-	<form name="RuntimeForm" onsubmit="return saveRuntime( RuntimeForm.schedule_id.value, RuntimeForm.Runtime.value );">
+<div id="RunTimePopup" style="display:none;">
+	<form name="RunTimeForm" onsubmit="return saveRunTime( RunTimeForm.schedule_id.value, RunTimeForm.RunTime.value );">
 		<input type="hidden" name="schedule_id" />
-		<span style="float: left;">Estimated Runtime: <input type="text" name="Runtime"/></span>
+		<span style="float: left;">Estimated Runtime: <input type="text" name="RunTime"/></span>
 		<span style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'SaveRuntime', 'save.gif', 'if(RuntimeForm.onsubmit())RuntimeForm.submit();', '', 'Save' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'CancelRuntime', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveRunTime', 'save.gif', 'if(RunTimeForm.onsubmit())RunTimeForm.submit();', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelRunTime', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
+		</span>
+	</form>
+</div>
+<div id="StartTimePopup" style="display:none;">
+	<form name="StartTimeForm" onsubmit="return saveStartTime( StartTimeForm.schedule_id.value, StartTimeForm.StartTime.value );">
+		<input type="hidden" name="schedule_id" />
+		<span style="float: left;">Start Time: <input type="text" name="StartTime"/></span>
+		<span style="float: right;">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveStartTime', 'save.gif', 'if(StartTimeForm.onsubmit())StartTimeForm.submit();', '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelStartTime', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
 		</span>
 	</form>
 </div>
@@ -325,9 +340,9 @@
 
 		if ( ! $session{'/employee/production/print_overview.html?ddmScheduleEndYear'} ) {
 			if ( $endtime ) {
-				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, split('-',$endtime) );
+				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Add_Delta_Days( split('-',$endtime), 2 ) );
 			} else {
-				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 ) );
+				@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Add_Delta_Days( Date::Calc::Today(), 2 ) );
 			} # end if
 		} else {
 			@$variable{'ScheduleEndYears','ScheduleEndMonths','ScheduleEndDays','ScheduleEnd'} = ssi::get_dates( $log, $dbh,
@@ -435,7 +450,7 @@
 			if ( $end > 31 ) {
 				return 'Cannot display more than a month of schedule.<br/>';
 			} # end if
-			my $shifts = $openprint::dbh->selectall_arrayref( q{SELECT name, starttime, duration FROM Shifts WHERE equipment_id=? ORDER BY starttime}, {Slice=>{}}, $E->id() );
+			my $shifts = $openprint::dbh->selectall_arrayref( q{SELECT name, starttime, duration, starttime+duration as endtime FROM Shifts WHERE equipment_id=? ORDER BY starttime}, {Slice=>{}}, $E->id() );
 
 			foreach ( 1 .. $end ) {
 				
@@ -471,10 +486,6 @@
 	for ( var id in drops ) {
 		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false,
              onUpdate: dropfunction,
-             //onUpdate: function(el) {
-		//jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( el.id, Sortable.serialize(el) ) );
-		//new Ajax.Request( '_drop.html', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
-	//},
             });
 	} // end foreach id in drops
 // ]]>

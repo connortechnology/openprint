@@ -24,9 +24,18 @@ sub find {
 	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
 		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
 		push @values, @params{'starttime_start','starttime_end'};
+	} elsif ( $params{'starttime_start'} ) {
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime_start'};
+	} elsif ( $params{'starttime_end'} ) {
+		$sql .= ' AND starttime <= ?';
+		push @values, $params{'starttime_end'};
 	} elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
 		$sql .= ' AND starttime IS NULL';
+	} elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
+		$sql .= ' AND starttime IS NULL';
 	} # end if
+
 	if ( $params{'service_status'} ) {
 		if ( ref $params{'service_status'} eq 'ARRAY' ) {
 			$sql .= ' AND (SELECT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=ProjectIndex AND lngServiceIndex=ServiceIndex) IN ('.join(',', map { '?' } @{$params{'service_status'}} ).')';
@@ -111,7 +120,7 @@ sub get_li {
 		$html .= '<span class="Buttons">';
 		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$row{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$row{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
 		$html .= '</span>';
-		$html .= sprintf( q{<span id="%1$dRuntime" class="Runtime" onclick="openPopup( 'Runtime', %1$d );">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+		$html .= sprintf( q{<span class="Runtime" onclick="openPopup( 'RunTime', %1$d );"><span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
 		$html .= '<br/></li>';
 		return $html;
 	} # end if
@@ -244,7 +253,10 @@ sub get_li {
 		$html .= ssi::writeButton( $log, $dbh, 'Split'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){split_job($$row{'projectindex'}, $$row{'serviceindex'}, '$ul_id' );}", '', 'S' ) if $specs{'SignatureQuantity'} > 1;
 		$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$row{'serviceindex'}, '', "popup_window('_stock_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
 		$html .= '</span>';
-		$html .= sprintf( q{<span id="%1$dRuntime" class="Runtime" onclick="openPopup( 'Runtime', %1$d );">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+		$html .= sprintf( q{<span class="StartTime" onclick="openPopup( 'StartTime', %1$d );">Start:<span id=%1$dStartTime">%2$s</span></span>}, $$row{'id'}, 
+			Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) )
+ );
+		$html .= sprintf( q{<span class="Runtime" onclick="openPopup( 'RunTime', %1$d );">Run:<span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
 	} else {
 		$html .= sprintf( '<div class="Comment"><a href="/employee/proj/prin/prin_multi.html?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">%3$s</a></div>', @$row{'projectindex','serviceindex'}, ssi::htmlize($specs{'txtEmployeeComments'}) );
 		$html .= sprintf( '<span class="Forms">%d %s</span>', $specs{'SignatureQuantity'}, ($specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
@@ -300,7 +312,7 @@ sub get_lis {
 		if ( openprint::usergroup::is_user_in( ['PressManager'], $openprint::session{'user_id'} ) ) {
 			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onclick="openPopup('Operator', '%s', '%s' );">%s</span><br class="spacer"/></div>}, Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $$shift{'name'}, $total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $Operator->id(),($Operator->id() ? $Operator->name() : 'assign') ) . $html;
 		} else {
-			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $$shift{'name'}, ( $Operator->id() ? $Operator->name() : 'assign' ) ) . $html;
+			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), @$shift{'name','starttime','endtime'}, ( $Operator->id() ? $Operator->name() : 'assign' ) ) . $html;
 		} # end if
 	} # end if
 	return $html;
@@ -406,10 +418,6 @@ sub split_job {
 
 } # end sub split_job
 
-sub set_runtime {
-	my ( $r, $log, $dbh, $variable, $id, $runtime ) = @_;
-	sql::update( undef, undef, 'Schedule', ['id=?', $id], 'runtime', $runtime );
-} # end sub set_runtime
 
 sub add_project_to_press_schedule {
 	my ( $Project, $service_id ) = @_;
@@ -443,7 +451,7 @@ sub add_project_to_press_schedule {
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	return $error;
-} # end sub add_order_to_press_schedule
+} # end sub add_project_to_press_schedule
 
 1;
 __END__

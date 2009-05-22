@@ -350,7 +350,7 @@ sub bindery_overview {
 
 sub projects {
 
-	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer' );
+	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress' );
 	my @projects;
 
 	my $startdocket = $param{'StartDocket'};
@@ -390,7 +390,7 @@ sub projects {
 } # end sub projects
 
 sub _project_list {
-	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer' );
+	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress' );
 }
 
 sub project_view {
@@ -1095,70 +1095,173 @@ sub _ul {
 	@variable{'equipment_id','start_time','end_time','shift'} = ( $equipment_id, $start_time, $end_time, $shift );
 } # end sub _ul
 
+sub hms2time {
+	my ($h,$m,$s) = split(':', $_[0]);
+	return ($h*3600) + ($m*60) + $s;
+} # end sub hms2time
+sub ymd2time {
+}
+
 sub _drop {
 
 	my $id = $param{'id'};
 	$id =~ /^(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)$/;
 	my ( $equipment_id, $year, $month, $day, $shift_name ) = ( $1, $2, $3, $4, $5 );
-	my ( $start_time, $end_time, $operator_id );
+	my ( $start_time, $end_time, $operator_id, $run_time );
 
 	if ( $shift_name and ! sets::isin( $shift_name, [ 'NotApproved' ] ) ) {
 		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift_name ) ) {
-			$start_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $start_time );
-			$end_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $end_time );
-			( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $equipment_id, $start_time, $end_time );
+			$start_time = Date::Calc::Mktime( $year, $month, $day, split(':',$start_time) );
+			$end_time = Date::Calc::Mktime( $year, $month, $day, split(':',$end_time) );
+			( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $equipment_id, Date::Format::time2str('%Y-%m-%d %H:%M:%S',$start_time), Date::Format::time2str('%Y-%m-%d %H:%M:%S',$end_time) );
 		} else {
 # Must be Approved or Pending
 		} # end if
 	} # end if
 
+	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
+	@{$variable{'changed'}} = ( $id );
+
+	# The idea 
 	if ( exists $param{'services'} ) {
 		my $services = $param{'services'};
 		$services =~ s/$id\[\]=//g;
 		my @order = split( '&', $services );
 		return if ! @order;
 
-		my $Equipment = new openprint::Equipment( $equipment_id );
+		my @final_order;
+		foreach my $row ( openprint::press_schedule::find( 'equipment_id'=>$equipment_id,'starttime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ),'order'=>'starttime' ) ) {
+			push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
+		} # end foreach row
 
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
-		while ( @order ) {
-			my $id = shift @order;
-			$id =~ s/\D//g;
-			next if ! $id;
+		my @jobs = openprint::press_schedule::find( 'equipment_id'=>$equipment_id,'starttime_start'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ),'order'=>'starttime' );
 
-			my @rows = openprint::press_schedule::find('id'=>$id);
-			next if ! @rows;
-			my $row = shift @rows;
-			if ( $start_time and ! $$row{starttime} ) {
-				new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . " at $start_time" );
+		for ( my $j = 0; $j < @jobs; $j += 1 ) {
+			my $row = $jobs[$j];
+			if ( sets::isin( $$row{'id'}, [ map { $_{'id'} } @final_order ] ) ) {
+				splice @jobs, $j, 1;
+				$j -= 1;
+				next;
 			} # end if
 
-			sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'equipment_id', $equipment_id );
-			if ( $$row{operator_id} != $operator_id ) {
-				sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
+			if ( @order and ( $$row{'id'} == $order[0] ) ) {
+				push @final_order, $row;
+				shift @order;
 			} # end if
+		} # end foreach job
 
-			if ( @order ) {
-				if ( $openprint::config{'Smart Schedule'} eq 'Y') {
-					( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE id=?}, $id );
-				} else {
-					( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $id );
-				} # end if
-			} # end if
-		} # end foreach
-		sql::end_transaction( $dbh, $ac );
+		reorder_jobs( @final_order, @jobs );
 
-		# Now need to detect if contents of ul are different than the dropped order, or not.
-		my @new_order = map{ $$_{'id'} } openprint::press_schedule::find('starttime_start'=>$start_time,'starttime_end'=>$end_time,'equipment_id'=>$equipment_id);
-		if ( @order != sets::intersection( @order, @new_order ) ) {
-			# Some have jumped ship.  I _think_ this can only mean that 1 or more have bumped down to the next shift
-			$variable{'changed'} = 1;
-		} # end if
-		$log->debug("CHanged ? : $variable{'changed'}");
 	} # end if services
 
 } # end sub _ul.html
+
+sub reorder_jobs {
+	my ( @order ) = @_;
+
+	my $run_time = 0;
+	my $start_time = time;
+	my $end_time;
+
+	my $row = $order[0];
+	if ( Date::Parse::str2time($$row{'starttime'})+hms2time($$row{'runtime'}) > time ) {
+		$start_time -= hms2time($$row{'runtime'});
+	} # end if
+
+	my ( $new_start_time, $new_end_time, $shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
+	$start_time = ($start_time - ( $start_time % (24*3600) ) + hms2time($new_start_time) );
+	$end_time = $start_time + hms2time($new_end_time);
+
+	my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE ProjectIndex=lngProjectIndex AND ServiceIndex=lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $$row{'equipment_id'}, 
+			Date::Format::time2str('%Y-%m-%d %H:%M:%S',$start_time), 
+			Date::Format::time2str('%Y-%m-%d %H:%M:%S',$end_time)
+			);
+
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
+
+	my @fixed_jobs;
+	for ( my $i = 0; $i < @order; $i += 1 ) {
+		if ( $order[$i]{'starttime_locked'} ) {
+			push @fixed_jobs, splice @order, $i, 1;
+			$i -= 1;
+		} # end if
+	} # end for
+
+	my @shift;
+
+	while ( @order ) {
+		my $row = shift @order;
+		my $old_start_time = $start_time - $run_time;
+
+		while ( @fixed_jobs and Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < $start_time ) {
+			# Have fixed_jobs.  They do not move.
+			$start_time = Date::Parse::str2time($fixed_jobs[0]{'starttime'}) + hms2time( $fixed_jobs[0]{'runtime'} ) + 1;
+			shift @fixed_jobs;
+		} # end while
+
+		# Time to move on to next shift
+		if ( $start_time > $end_time ) {
+			my $date = Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $start_time) );
+
+			#if ( scalar @shift == sets::union( @shift, map { $_ }
+
+			push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $old_start_time), $shift_name );
+
+			my ( $new_start_time, $new_end_time, $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Shifts WHERE equipment_id=? AND starttime <=? AND starttime+duration-'1 second'::interval >= ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
+			if ( ! $new_start_time ) {
+				( $new_start_time, $new_end_time, $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Shifts WHERE equipment_id=? AND starttime > ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ) );
+			} # end if
+			if ( ! $new_start_time ) {
+				( $new_start_time, $new_end_time, $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Shifts WHERE equipment_id=? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'} );
+			} # end if
+			if ( $new_start_time ) {
+				$start_time = $date + hms2time( $new_start_time );
+				$end_time = $date + hms2time( $new_end_time );
+				$shift_name = $new_shift_name;
+
+				my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE ProjectIndex=lngProjectIndex AND ServiceIndex=lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $$row{'equipment_id'}, 
+						Date::Format::time2str('%Y-%m-%d %H:%M:%S',$start_time), 
+						Date::Format::time2str('%Y-%m-%d %H:%M:%S',$end_time)
+						);
+				push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $start_time), $shift_name );
+			} else {
+				$log->error('Unable to find next shift.');
+			} # end if
+		} # end if
+
+		if ( $start_time and ! $$row{starttime} ) {
+			my $Equipment = new openprint::Equipment( $$row{'equipment_id'} );
+			new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
+		} # end if
+
+		sql::update( $log, $dbh, 'Schedule', ['id=?', $$row{'id'}], 'StartTime', Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ), 'equipment_id', $$row{'equipment_id'} );
+		if ( $$row{operator_id} != $operator_id ) {
+			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
+		} # end if
+	
+		$run_time = hms2time( $$row{runtime} );
+		$start_time += $run_time;
+
+	} # end while @order
+	sql::end_transaction( $dbh, $ac );
+} # end sub reorder_jobs
+
+sub _li_change {
+	my @rows = openprint::press_schedule::find('id'=>$param{'id'});
+	next if ! @rows;
+	my $row = shift @rows;
+	
+	my $start_time = Date::Parse::str2time( $$row{'starttime'} );
+
+	my ( $shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
+
+	sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'runtime', $param{'runtime'} );
+
+	push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $start_time), $shift_name );
+	reorder_jobs( 
+				 openprint::press_schedule::find( 'starttime_start'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ), 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+} # end sub _li_change
 
 1;
 

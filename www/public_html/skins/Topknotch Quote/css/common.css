@@ -393,6 +393,9 @@ span.DateSelector {
 	width: 205px;
 }
 
+div.PopupWindow {
+    display: none;
+}
 div.Popup {
     position:absolute;
     visibility: hidden;
