@@ -36,7 +36,7 @@
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
 	<? eval (
-		$session{'menu'} = $openprint::param{'menu'} if exists $openprint::param{'menu'};
+		$session{'menu'} = $param{'menu'} if exists $param{'menu'};
 		) ?>
 	<? if ( ( ! exists $session{'menu'} ) or $session{'menu'} ) ?>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
@@ -49,7 +49,7 @@
 			</div>
 			<div id="CurrencySelection">
 				Currently selected currency:
-				<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
+				<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param, { } ); ) ?>" method="post">
 					<select name="select_currency_id" onchange="this.form.submit();">
 					<? echo (
 							ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $session{'Currency_id'} );
@@ -148,6 +148,7 @@
 							</ul>
 						</li>
 					<li class="off"><a href="#" onclick="bug_report_window();return false;">SEND BUG REPORT</a></li>
+			<li class="off"><a href="<? echo ( misc::get_url( $r->uri(), \%param, { 'include'=>{'menu'=>0} } ); ) ?>">HIDE MENU</a></li>
 <? endif ( $session{'user_id'} ) ?>
 					</ul>
 				</div><!-- Menu -->
@@ -161,6 +162,7 @@
 	<? else ( ( ! exists $session{'menu'} ) or $session{'menu'} ) ?>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();" style="background-image: none; padding: 5px;">
 			<div id="ContentInner"> 
+			<? echo ( ssi::writeButton( $log, $dbh, 'showmenu', 'menu.gif', '',  misc::get_url( $r->uri(), \%param, { 'include'=>{'menu'=>1} } ), 'Show Menu' ); ) ?>
 				<?PageContent?>
 			</div>
 	</body>

@@ -440,7 +440,7 @@ sub setup_date_select {
 } # end sub setup_date_select
 
 sub date_select {
-	my ( $prefix, $value, $onchange ) = @_;
+	my ( $prefix, $value, $options ) = @_;
 
 	my ( $year,$month,$day );
 	if ( ref $value eq 'ARRAY' ) {
@@ -450,18 +450,32 @@ sub date_select {
 	} else {
 		( $year, $month, $day ) = Date::Calc::Localtime( $value ne '' ? Date::Parse::str2time( $value ) : time );
 	} # end if
-$openprint::log->debug(" date_select: $value : ($year,$month,$day),");
+	if ( ref $options eq 'HASH' ) {
+	} elsif ( $options ) {
+		$options = {};
+		$$options{'onchange'} = $options;
+	} # end if
+#$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
+	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
 
 	my $html = '';
-	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s"><option value=""></option>', $prefix, $onchange );
-	$html .= return_years( undef, undef, $year );
-	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_month" onchange="%2$s"><option value=""></option>', $prefix, $onchange );
-	$html .= getmonths( $month );
-	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $onchange );
-	$html .= getdays( $day, $year, $month );
-	$html .= '</select></span>';
+	$html .= sprintf('<span id="%1$s_date">', $prefix );
+	foreach my $o ( split(',', $$options{'order'} ) ) {
+		if ( $o eq 'y' ) {
+			$html .= sprintf('<select name="%1$s_year" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+			$html .= return_years( undef, undef, $year );
+			$html .= '</select>';
+		} elsif ( $o eq 'm' ) {
+			$html .= sprintf('<select name="%1$s_month" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+			$html .= getmonths( $month );
+			$html .= '</select>';
+		} elsif ( $o eq 'd' ) {
+			$html .= sprintf('<select name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+			$html .= getdays( $day, $year, $month );
+			$html .= '</select>';
+		} # endif
+	} # end foreach o
+	$html .= '</span>';
 	return $html;
 } # end sub date_select
 

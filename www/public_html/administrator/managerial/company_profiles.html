@@ -129,6 +129,16 @@
 	<? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Company'}->updated_on()) ); ) ?>
 </p>
 <p>
+	<label>Last Login:</label>
+	<? echo ( 
+		( $_ ) = sql::execute(undef,undef,'SELECT MAX(date_time) FROM log where action_type=2 AND company_id=?', $$variable{'Company'}->id() );
+		if ( ! $_ ) {
+			return 'never';
+		}
+		return Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($_) );
+	 ) ?>
+</p>
+<p>
 	<label>Notes:</label>
 	<textarea id="notes" name="notes" cols="" rows="<? echo ( split("\n", $$variable{'notes'} ); ) ?>" onkeyup="textarea_resize(this);"><?notes?></textarea>
 </p>

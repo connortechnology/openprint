@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -27,6 +27,7 @@ my $debug = 1;
 	'location_id'	=>	'location_id',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
+	'lastseen_on'	=>	'lastseen_on',
 	'other'			=>	'other',
 	'monitor'		=>	'monitor',
 );
@@ -38,9 +39,13 @@ my $debug = 1;
 %defaults = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
+	'lastseen_on'	=>	'NOW()',
 	'location_id'	=>	undef,
 	'monitor'		=>	0,
 );
+
+$table = 'rfidscanners';
+$serial = 'rfidscanners_id_seq';
 
 # Returns a paper object specified by the parameters
 sub find {
@@ -98,44 +103,6 @@ sub find {
 	} # end if
 	return map { new openprint::RFIDScanner( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM RFIDScanners WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
-sub save {
-	my ( $self, $hash ) = @_;
-
-	if ( $hash ) {
-		$self->set( $hash );
-	} # end if
-	
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('RFIDScanners_id_seq')} );
-
-		if ( my $error = sql::insert( undef, undef, 'RFIDScanners', [map { $_, $$self{$_} } keys %fields ] ) ) {
-			$$self{'id'} = undef;
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-
-    } else {
-		if ( my $error = sql::update( undef, undef, 'RFIDScanners', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
-$openprint::log->error( $error );
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-    } # end if
-
-	sql::end_transaction( $dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
 
 sub delete {
     my $self = shift;

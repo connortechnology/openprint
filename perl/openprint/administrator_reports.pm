@@ -229,8 +229,17 @@ sub customer_login {
 	} elsif ( $param{'ddmLastOrderEndYear'} and $param{'ddmLastOrderEndMonth'} and $param{'ddmLastOrderEndDay'} ) {
 		$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  < date('$variable{'LastOrderEnd'}')";
 	} # end if
+	if ( $param{'lastlogin_start_year'} and $param{'lastlogin_start_month'} and $param{'lastlogin_start_day'} ) {
+		if ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
+			$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Company.Index) BETWEEN date('%.4d-%.2d-%.2d') AND date('%.4d-%.2d-%.2d')`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day','lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
+		} else {
+			$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Company.Index) > date('%.4d-%.2d-%.2d')`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'} );
+		} # end if
+	} elsif ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
+		$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Company.Index) < date('%.4d-%.2d-%.2d')`, @param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
+	} # end if
 	if ( $param{'rdbActive'} ) {
-		$query .= " AND Company.ysnAccountActivation = '$param{'rdbActive'}'\n";
+		$query .= " AND Company.ysnAccountActivation = '$param{'rdbActive'}' AND (company.deleted = false OR company.deleted IS NULL)\n";
 	} # end if
 	@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $query );
 

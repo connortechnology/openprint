@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -377,12 +377,9 @@ $openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-			if ( ! $$specs{$pages."PageSignatureFold-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+			if ( ($Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index}) and ( ! $$specs{$pages."PageSignatureFold-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and ( ! $$sig_specs{'rdbTemplateType'} ) ) {
 				$$specs{'alert'} .= 'Folding overriden to different page count.<br/>';
-				my %Results = (
-					'Status'=>'uncalculated',
-				);
-				return %Results;
+				next;
 			} # end if
 			foreach ( keys %fold_types ) {
 				$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = int $$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"};
