@@ -111,7 +111,7 @@ sub find {
 			push @values, $params{'for_name'};
 		} # end if
 		if ( $params{'id_like'} ) {
-			$sql .= " AND index LIKE '$params{'id_like'}%'";
+			$sql .= " AND index::text LIKE '$params{'id_like'}%'";
 		} # end if
 
 		if ( exists $params{'order'} ) {
