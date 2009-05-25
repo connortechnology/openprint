@@ -23,6 +23,7 @@ require openprint::Label;
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Content;
 require openprint::PaperInventory;
+require openprint::RFIDTag;
 
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -734,6 +735,12 @@ sub _stock_checkout {
 			$Skid = new openprint::Skid( $param{'skid_id'} );
 		} elsif ( $param{'rfidtag_id'} ) {
 			my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
+			if ( ! $RFIDTag->id() ) {
+				my @Tags = openprint::RFIDTag::find( 'id_like'=>'%'.$param{'rfidtag_id'} );
+				if ( @Tags == 1 ) {
+					$RFIDTag = $Tags[0];
+				} # end if
+			} # end if
 			if ( ! $RFIDTag->id() ) {
 				$variable{'error'} .= 'RFID Tag ' .  $param{'rfidtag_id'} . ' is not in the system.<br/>';
 			} else {
