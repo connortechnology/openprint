@@ -211,21 +211,7 @@ sub get_li {
 
 		if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
 			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$row{'serviceindex'}, $Project->due_date() );
-			$html .= qq`
-				<script type="text/javascript">
-				Calendar.setup({
-				inputField	 :	"ScheduleDate-$$row{'serviceindex'}",		// id of the input field
-				ifFormat		:	"\%Y-\%m-\%d",		// format of the input field
-				daFormat		:	"\%b \%d",
-				align			:	"Tl",
-				showsTime		:	false,			// will display a time selector
-				displayArea	:	'JumpToDate$$row{'serviceindex'}',
-				singleClick	:	false,			// double-click mode
-				onClose		:	setduedate
-				});
-				</script>
-				`;
-			} # end if
+		} # end if
 	} # end if
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
 		$html .= sprintf( q{<div id="%2$dComment" class="Comment" onclick="openPopup( 'Comment', '%1$s', '%2$s' );">%3$s</div>}, @$row{'projectindex','serviceindex'}, $specs{'txtEmployeeComments'} );
