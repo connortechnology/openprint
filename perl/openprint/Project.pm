@@ -1079,6 +1079,11 @@ sub status_change {
 		} # end foreach AP
 
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
+		foreach my $s_id ( $self->signatures() ) {
+			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
+		} # end foreach
+		my $services = $self->services();
+		openprint::service::status( $$self{'id'}, $$services{''}[0], 'Complete' ) if $$services{''};
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
 		} # end foreach
