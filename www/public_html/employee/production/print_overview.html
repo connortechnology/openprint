@@ -17,7 +17,8 @@
 <script type="text/javascript">
 <!--
 	var dropfunction = function(el){
-		new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+		//new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+		jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( el.id, Sortable.serialize(el) ) );
 	}
 	function toggle_lock( id, img ) {
 		if(img.src=='/images/small-locked.gif'){
