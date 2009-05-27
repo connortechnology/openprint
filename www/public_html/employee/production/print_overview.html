@@ -423,6 +423,7 @@
 	<hr style="clear: both;"/>
 	<? echo (
 		require openprint::press_schedule;
+		require openprint::Equipment_Shift;
 		@{$$variable{'drops'}} = ();
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
@@ -439,19 +440,20 @@
 			if ( $end > 31 ) {
 				return 'Cannot display more than a month of schedule.<br/>';
 			} # end if
-			my $shifts = $openprint::dbh->selectall_arrayref( q{SELECT name, starttime, duration, starttime+duration as endtime FROM Shifts WHERE equipment_id=? ORDER BY starttime}, {Slice=>{}}, $E->id() );
+
+			my @Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
 
 			foreach ( 1 .. $end ) {
 				
-				foreach my $shift ( @$shifts ) {
-					my $starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, split(':', $$shift{'starttime'} ) );
-					my ( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$shift{'starttime'} ), 0, split(':', $$shift{'duration'} ) );
+				foreach my $Shift ( @Shifts ) {
+					my $starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, split(':', $$Shift{'starttime'} ) );
+					my ( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$Shift{'starttime'} ), 0, split(':', $$Shift{'duration'} ) );
 					( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $y, $mon, $d, $h, $min, $s, 0, 0, 0, -1 );
 					my $endtime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $y, $mon, $d, $h, $min, $s ) );
 
 
-					push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), $year, $month, $day, $$shift{'name'} );
-					$html .= openprint::press_schedule::get_ul( $starttime, $endtime, $E->id(), $shift );
+					push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), $year, $month, $day, $$Shift{'name'} );
+					$html .= openprint::press_schedule::get_ul( $starttime, $endtime, $E->id(), $Shift );
 				} # end while shift
 
 				( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );

@@ -495,5 +495,8 @@ sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
 
+sub Shifts {
+} # end sub
+
 1;
 __END__

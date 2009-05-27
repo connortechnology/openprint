@@ -47,19 +47,21 @@ sub update_late_jobs {
 sub set_operator {
 	my ( $r, $log, $dbh, $variable, $period, $operator ) = @_;
 	$period =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w\w)/;
-	my ( $press_index, $year, $month, $day, $shift ) = ( $1, $2, $3, $4, $5 );
-	my $ac = sql::start_transaction( $dbh );
-	my ( $st, $dt ) = sql::execute( $log, $dbh, q{SELECT starttime,duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $press_index, $shift );
-	my ( $sh, $sm, $ss ) = split(':', $st );
-	my $start_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $sh, $sm, $ss );
-	my ( $dh, $dm, $ds ) = split( ':', $dt );
-	my $end_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Add_Delta_DHMS( $year, $month, $day, $sh, $sm, $ss, 0, $dh, $dm, $ds ) );
-	my @schedule = openprint::press_schedule::find( 'starttime_start'=>$start_time, 'starttime_end'=>$end_time, 'equipment_id'=>$press_index );
-	foreach my $row ( @schedule ) {
-		sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngProjectIndex=? AND lngServiceIndex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator ? $operator : undef );
-	} # end foreach
+	my ( $press_index, $year, $month, $day, $shift_name ) = ( $1, $2, $3, $4, $5 );
+	my $Equipment = new openprint::Equipment( $press_index );
 
-	sql::end_transaction( $dbh, $ac );
+	my $date_seconds = Date::Parse::str2time(join('-',$year,$month,$day));
+
+	my $Shift;
+	my @Shifts = openprint::Shift::find('equipment_id'=>$Equipment->id(), 'name'=>$shift_name, 'starttime_start'=>join('-',$year,$month,$day) );
+	if ( ! @Shifts ) {
+		@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$Equipment->id(), 'name'=>$shift_name );
+		$Shift = $Shifts[0]->emanantise( $date_seconds ) if @Shifts;
+	} else {
+		$Shift = $Shifts[0];
+	} # end if
+	return if ! $Shift;
+	$Shift->operator_id( $operator );
 } # end sub set_operator
 
 sub set_impressions {
