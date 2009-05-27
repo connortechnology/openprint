@@ -104,7 +104,7 @@ $openprint::log->debug("Viewing Project $project_index");
 					push @services, $n, $url, $service_index;
 				} else {
 					for ( my $i = 0; $i < @{$services{$id}}; $i += 1 ) {
-						if ( openprint::Estimating::Printing::compare_signatures( $project{$service_index}, $project{$services{$id}[$i]} ) ) {
+						if ( $statuses{$service_index} eq $statuses{$services{$id}[$i]} and openprint::Estimating::Printing::compare_signatures( $project{$service_index}, $project{$services{$id}[$i]} ) ) {
 							$sig_qty += 1;
 							$project{$service_index}{'txtPrice1'} += $project{$services{$id}[$i]}{'txtPrice1'};
 							$project{$service_index}{'txtPrice2'} += $project{$services{$id}[$i]}{'txtPrice2'};

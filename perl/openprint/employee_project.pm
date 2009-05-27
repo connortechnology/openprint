@@ -23,6 +23,7 @@ require openprint::Label;
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Content;
 require openprint::PaperInventory;
+require openprint::RFIDTag;
 
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -338,7 +339,7 @@ sub view {
 	} elsif ( $param{'btnFunction'} eq 'Complete Printing' ) {
 		$Project->status_change( undef, undef, 'Printed' );
 	} elsif ( $param{'btnFunction'} eq 'BinderyComplete' ) {
-		$Project->status_change( undef, undef, 'BinderyComplete' );
+		$Project->status_change( undef, undef, 'Bindery Complete' );
 	} elsif ( $param{'btnFunction'} eq 'Complete' ) {
 		$Project->status_change( undef, undef, 'Complete' );
 	} elsif ( $param{'btnFunction'} eq 'AddToBinderySchedule' ) {
@@ -724,7 +725,18 @@ sub summary {
 } # end sub summary
 
 sub _stock_checkout {
-	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	my $Project;
+	if ( $param{'project_id'} ) {
+		$Project = new openprint::Project( $param{'project_id'} );
+	} elsif ( $param{'docket'} ) {
+		my @Projects = openprint::Project::find('docket'=>$param{'docket'});
+		if ( ! @Projects ) {
+			$variable{'error'} .= 'Invalid docket.<br/>';
+			return;
+		} # end if
+		$Project = $Projects[0];
+	} # end if
+	$variable{'Project'} = $Project;
 
 	if ( $param{'action'} eq 'Add' ) {
 		$param{'skid_id'} =~ s/\D//g;
@@ -734,6 +746,12 @@ sub _stock_checkout {
 			$Skid = new openprint::Skid( $param{'skid_id'} );
 		} elsif ( $param{'rfidtag_id'} ) {
 			my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
+			if ( ! $RFIDTag->id() ) {
+				my @Tags = openprint::RFIDTag::find( 'id_like'=>'%'.$param{'rfidtag_id'} );
+				if ( @Tags == 1 ) {
+					$RFIDTag = $Tags[0];
+				} # end if
+			} # end if
 			if ( ! $RFIDTag->id() ) {
 				$variable{'error'} .= 'RFID Tag ' .  $param{'rfidtag_id'} . ' is not in the system.<br/>';
 			} else {
@@ -761,11 +779,11 @@ sub _stock_checkout {
 
 			foreach my $PI ( @PI ) {
 				if ( ! $PI->docket() ) {
-					$PI->save({'docket'=>$param{'docket'}});
+					$PI->save({'docket'=>$Project->docket()});
 					# only update the most recent entry
 					last;
 				} else {
-					if ( $PI->docket() == $param{'docket'} ) {
+					if ( $PI->docket() == $Project->docket() ) {
 						$add_entry = 0;
 						last;
 					} # end if	
@@ -773,27 +791,35 @@ sub _stock_checkout {
 			} # end foreach PI
 		} # end if
 
-		my @Projects = openprint::Project::find('docket'=>$param{'docket'});
-		if ( ! @Projects ) {
-			$variable{'error'} .= 'Invalid docket.<br/>';
-			return;
-		} # end if
-
 		if ( $add_entry ) {
-			foreach my $C ( $Skid->Contents() ) {
+			my @C = $Skid->Contents();
+			if ( @C ) {
+				foreach my $C ( $Skid->Contents() ) {
+					my $PI = new openprint::PaperInventory();
+					$PI->save({
+							'docket'	=>	$param{'docket'},
+							'paper_id'	=>	$C->paper_id(),
+							'user_id'	=>	$session{'user_id'},
+							'delta'		=>	-1*$C->quantity(),
+							'comment'	=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
+							'skid_id'	=>	$Skid->id(),
+							'units'		=>	$C->units(),
+							});
+					$C->quantity( 0 );
+					$C->save();
+				} # end foreach C
+			} else {
 				my $PI = new openprint::PaperInventory();
 				$PI->save({
-						'docket'	=>	$param{'docket'},
-						'paper_id'	=>	$C->paper_id(),
+						'docket'	=>	$Project->docket(),
+						'paper_id'	=>	undef,,
 						'user_id'	=>	$session{'user_id'},
-						'delta'		=>	-1*$C->quantity(),
-						'comment'	=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Projects[0]->id(), $Projects[0]->docket(), new openprint::User( $session{'user_id'} )->name() ),
+						'delta'		=>	0,
+						'comment'	=>	sprintf('Checked out for docket <a href="/employee/project/view.html?ProjectIndex=%1$d">%2$d</a> by %3$s', $Project->id(), $Project->docket(), new openprint::User( $session{'user_id'} )->name() ),
 						'skid_id'	=>	$Skid->id(),
-						'units'		=>	$C->units(),
+						'units'		=>	undef,
 						});
-				$C->quantity( 0 );
-				$C->save();
-			} # end foreach C
+			} # end if skid has contents
 		} # end if add_entry
 	} # end if
 } # end sub _stock_checkout
