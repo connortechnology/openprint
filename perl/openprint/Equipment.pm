@@ -34,6 +34,7 @@ $serial= 'Equipment_Index_seq';
 	'cip3_hold'			=>	'cip3_hold',
 	'cip3_merge'		=>	'cip3_merge',
 	'cip3_monitor'		=>	'cip3_monitor',
+	'smartscheduling'	=>	'smartscheduling',
 );
 
 %defaults = (

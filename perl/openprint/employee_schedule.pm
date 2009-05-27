@@ -44,7 +44,6 @@ sub update_late_jobs {
 	} # end while
 } # end sub update_late_jobs
 
-
 sub set_operator {
 	my ( $r, $log, $dbh, $variable, $period, $operator ) = @_;
 	$period =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w\w)/;

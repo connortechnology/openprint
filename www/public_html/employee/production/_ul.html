@@ -3,8 +3,10 @@ return openprint::press_schedule::get_lis( $param{'id'}, @$variable{'start_time'
 ) ?>
 <script type="text/javascript">
 <!--
-	for ( var id in drops ) {
-		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
+	for ( var i = 0; i < drops.length; i += 1 ) {
+		if ( $(drops[i]) ) {
+			Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
+		} // end if
 	} // end foreach id in drops
 -->
 </script>

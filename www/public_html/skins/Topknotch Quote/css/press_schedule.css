@@ -127,11 +127,28 @@ A.buttonOn {
 		margin-left: 5px;
 		display: inline;
 	}
+    .RunTime {
+        float: left;
+        margin: 0px 2px 0px 2px;
+        display: inline;
+    }
+    .StartTime {
+        float: left;
+        margin: 0px 2px 0px 2px;
+        display: inline;
+    }
 	.Buttons {
 		float: right;
 		margin-right: 5px;
 		display: inline;
 	}
+    .Services {
+        float: right;
+    }
+    .Services .Service {
+        float: left;
+        margin-right: 2px;
+    }
 	.commands {
 		border-top: 1px solid #000000;
 	}

@@ -503,7 +503,7 @@ sub datetime_select {
 	$html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $$options{'onchange'} );
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>';
-	$html .= sprintf('<span id="%1$s_time"><select name="%1$s_hour" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf('<span id="%1$s_time" class="time"><select name="%1$s_hour" onchange="%2$s">', $prefix, $$options{'onchange'} );
 	$html .= make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour );
 	$html .= '</select>';
 	$html .= ':';

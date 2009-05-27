@@ -123,7 +123,7 @@ sub get_li {
 		$html .= '<span class="Buttons">';
 		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$row{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$row{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
 		$html .= '</span>';
-		$html .= sprintf( q{<span class="Runtime" onclick="openPopup( 'RunTime', %1$d );"><span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+		$html .= sprintf( q{<span class="RunTime" onclick="openPopup( 'RunTime', %1$d );"><span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
 		$html .= '<br/></li>';
 		return $html;
 	} # end if
@@ -246,7 +246,7 @@ sub get_li {
 				$$row{'starttime_locked'} ? 'locked' : 'unlocked',
 				);
 
-		$html .= sprintf( q{<span id="%1$dRuntime" class="Runtime" onclick="openPopup( 'Runtime', %1$d );">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+		$html .= sprintf( q{<span id="%1$dRunTime" class="RunTime" onclick="openPopup( 'RunTime', %1$d );">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
 		$html .= '<span class="Services">';
 		$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 		$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
@@ -262,7 +262,7 @@ sub get_li {
 		#$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$row{'id'},
 				#Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) ),
 				#);
-		#$html .= sprintf( q{<span class="Runtime">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+		#$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
 	} # end if
 	$html .= '<br/></li>';
 	return $html;
@@ -309,7 +309,7 @@ sub get_lis {
 		my $Operator = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents,Schedule WHERE lngProjectIndex=ProjectIndex AND lngServiceIndex=ServiceIndex AND strStatus != 'Complete' AND equipment_id=? AND ( schedule.starttime between ? AND ? ) LIMIT 1}, $equipment_id, $start_time_start, $start_time_end ) );
 		
 		if ( openprint::usergroup::is_user_in( ['PressManager'], $openprint::session{'user_id'} ) ) {
-			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onclick="openPopup('Operator', '%s', '%s' );">%s</span><br class="spacer"/></div>}, Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $$shift{'name'}, $total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $Operator->id(),($Operator->id() ? $Operator->name() : 'assign') ) . $html;
+			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onclick="openPopup('Operator', '%s', '%s' );">%s</span><br class="spacer"/></div>}, Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), @$shift{'name','starttime','endtime'}, $total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $Operator->id(),($Operator->id() ? $Operator->name() : 'assign') ) . $html;
 		} else {
 			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), @$shift{'name','starttime','endtime'}, ( $Operator->id() ? $Operator->name() : 'assign' ) ) . $html;
 		} # end if
