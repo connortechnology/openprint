@@ -77,13 +77,17 @@ sub drop_project {
 			new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . " at $start_time" );
 		} # end if
 
-		sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'equipment_id', $equipment_id );
+		if ( $$row{'starttime_locked'} ) {
+			sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'equipment_id', $equipment_id );
+		} else {
+			sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'equipment_id', $equipment_id );
+		} # end if
 		if ( $$row{operator_id} != $operator_id ) {
 			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
 		} # end if
 
 		if ( @order ) {
-			if ( $openprint::config{'Smart Schedule'} eq 'Y' or ($equipment_id == 28)) {
+			if ( $Equipment->smartscheduling() ) {
 				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE id=?}, $id );
 			} else {
 				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $id );

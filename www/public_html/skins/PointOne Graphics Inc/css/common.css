@@ -505,6 +505,9 @@ span.DateSelector select, span.DateTimeSelector select {
 }
 span.DateSelector select option {
 }
+span.time {
+	margin-left: 5px;
+}
 
 #DidYouKnow {
 	margin: 0px;
