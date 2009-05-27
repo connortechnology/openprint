@@ -1130,31 +1130,37 @@ sub _drop {
 		return if ! @order;
 
 		my @final_order;
-		foreach my $row ( openprint::press_schedule::find( 'equipment_id'=>$equipment_id,'starttime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ),'order'=>'starttime' ) ) {
+		
+		foreach my $row ( openprint::press_schedule::find( 'equipment_id'=>$equipment_id,'starttime_<'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ),'order'=>'starttime' ) ) {
 			push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
 		} # end foreach row
 
 		my @jobs = openprint::press_schedule::find( 'equipment_id'=>$equipment_id,'starttime_start'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ),'order'=>'starttime' );
 
-		for ( my $j = 0; $j < @jobs; $j += 1 ) {
-			my $row = $jobs[$j];
-			if ( sets::isin( $$row{'id'}, [ map { $_{'id'} } @final_order ] ) ) {
-				splice @jobs, $j, 1;
-				$j -= 1;
-				next;
+		foreach my $row_id ( @order ) {
+			my $found = 0;
+			for ( my $j = 0; $j < @jobs; $j += 1 ) {
+				my $row = $jobs[$j];
+				if ( $$row{'id'} == $row_id ) {
+					push @final_order, $row;
+					splice @jobs, $j, 1;
+					$found = 1;
+					last;
+				} # end if
+			} # end foreach job
+			if ( ! $found ) {
+				my @rows = openprint::press_schedule::find( 'id'=>$row_id );
+				if ( @rows ) {
+					push @final_order, $rows[0];
+				} # end if
 			} # end if
-
-			if ( @order and ( $$row{'id'} == $order[0] ) ) {
-				push @final_order, $row;
-				shift @order;
-			} # end if
-		} # end foreach job
+		} # end foreach row_id
 
 		reorder_jobs( @final_order, @jobs );
 
 	} # end if services
 
-} # end sub _ul.html
+} # end sub _drop.json
 
 sub reorder_jobs {
 	my ( @order ) = @_;
@@ -1164,13 +1170,12 @@ sub reorder_jobs {
 	my $end_time;
 
 	my $row = $order[0];
-	if ( Date::Parse::str2time($$row{'starttime'})+hms2time($$row{'runtime'}) > time ) {
-		$start_time -= hms2time($$row{'runtime'});
-	} # end if
+	#if ( Date::Parse::str2time($$row{'starttime'})+hms2time($$row{'runtime'}) > time ) {
+		#$start_time -= hms2time($$row{'runtime'});
+	#} # end if
 
 	my ( $new_start_time, $new_end_time, $shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
-	$start_time = ($start_time - ( $start_time % (24*3600) ) + hms2time($new_start_time) );
-	$end_time = $start_time + hms2time($new_end_time);
+	$end_time = ($start_time - ( $start_time % (24*3600) ) + hms2time($new_end_time) );
 
 	my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE ProjectIndex=lngProjectIndex AND ServiceIndex=lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $$row{'equipment_id'}, 
 			Date::Format::time2str('%Y-%m-%d %H:%M:%S',$start_time), 
@@ -1252,15 +1257,35 @@ sub _li_change {
 	next if ! @rows;
 	my $row = shift @rows;
 	
-	my $start_time = Date::Parse::str2time( $$row{'starttime'} );
+	if ( exists $param{'runtime'} ) {
+		my $start_time = Date::Parse::str2time( $$row{'starttime'} );
 
-	my ( $shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
+		my ( $shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
 
-	sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'runtime', $param{'runtime'} );
+		sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'runtime', $param{'runtime'} );
 
-	push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $start_time), $shift_name );
-	reorder_jobs( 
-				 openprint::press_schedule::find( 'starttime_start'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ), 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+		push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $start_time), $shift_name );
+		reorder_jobs( 
+					 openprint::press_schedule::find( 'starttime_start'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ), 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+	} elsif ( exists $param{'starttime_year'} ) {
+
+		my $old_starttime = Date::Parse::str2time( $$row{'starttime'} );
+		my $new_starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} );
+		sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'starttime', $new_starttime, 'starttime_locked', $param{'locked'} );
+		$new_starttime = Date::Parse::str2time( $new_starttime );
+
+		my ( $old_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $old_starttime ), Date::Format::time2str('%H:%M', $old_starttime ) );
+		my ( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ), Date::Format::time2str('%H:%M', $new_starttime ) );
+		if ( ! $new_shift_name ) {
+			( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime > ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ) );
+		} # end if
+
+		push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $old_starttime), $old_shift_name );
+		push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $new_starttime), $new_shift_name );
+		reorder_jobs( 
+					 openprint::press_schedule::find( 'starttime_start'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $new_starttime < $old_starttime ? $new_starttime : $old_starttime ), 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+
+	} # end if
 } # end sub _li_change
 
 1;

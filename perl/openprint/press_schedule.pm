@@ -30,6 +30,9 @@ sub find {
 	} elsif ( $params{'starttime_end'} ) {
 		$sql .= ' AND starttime <= ?';
 		push @values, $params{'starttime_end'};
+	} elsif ( $params{'starttime_<'} ) {
+		$sql .= ' AND starttime < ?';
+		push @values, $params{'starttime_<'};
 	} elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
 		$sql .= ' AND starttime IS NULL';
 	} elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
@@ -253,8 +256,9 @@ sub get_li {
 		$html .= ssi::writeButton( $log, $dbh, 'Split'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){split_job($$row{'projectindex'}, $$row{'serviceindex'}, '$ul_id' );}", '', 'S' ) if $specs{'SignatureQuantity'} > 1;
 		$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$row{'serviceindex'}, '', "popup_window('_stock_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
 		$html .= '</span>';
-		$html .= sprintf( q{<span class="StartTime" onclick="openPopup( 'StartTime', %1$d );">Start:<span id=%1$dStartTime">%2$s</span></span>}, $$row{'id'}, 
-			Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) )
+		$html .= sprintf( q`<span class="StartTime" onclick="ajax_window( '_starttime_popup.html?id=%1$d' );">Start:<span id=%1$dStartTime">%2$s</span><img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$row{'id'}, 
+			Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) ),
+			$$row{'starttime_locked'} ? 'locked' : 'unlocked',
  );
 		$html .= sprintf( q{<span class="Runtime" onclick="openPopup( 'RunTime', %1$d );">Run:<span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
 	} else {
