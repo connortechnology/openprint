@@ -1317,9 +1317,9 @@ sub make_order_from_order {
 	return if check_credit( $log, $dbh, $variable, $SRC_Order->total() );
 
 	if ( $SRC_Order->status() eq '' ) {
-		return misc::error( 'Can\'t re-order.', 'Order does not exist.' );
+		return misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'Order does not exist.' );
 	} elsif ( ! sets::isin( $SRC_Order->status(), 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
-		return misc::error( 'Can\'t re-order.', 'The given order is not complete.' );
+		return misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'The given order is not complete.' );
 	} else {
 		# this goes before get_order_id so that we re-use orderids
 		delete_unfinished_orders( $log, $dbh, $cookie );
