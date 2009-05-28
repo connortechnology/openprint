@@ -1091,8 +1091,8 @@ sub _ul {
 		my $e = Date::Calc::Mktime( $year, $month, $day, split(':',$end_time) );
 		$e += 24*3600 if ( $e < $s );
 
-		$$shift{'starttime'} = Date::Format::time2str( '%H:%M', $s );
-		$$shift{'endtime'} = Date::Format::time2str( '%H:%M', $e );
+		$$shift{'starttime'} = Date::Format::time2str( '%H:%M:%S', $s );
+		$$shift{'endtime'} = Date::Format::time2str( '%H:%M:%S', $e );
 		$start_time = Date::Format::time2str( '%Y-%m-%d %H:%M', $s );
 		$end_time = Date::Format::time2str( '%Y-%m-%d %H:%M', $e );
 
@@ -1271,7 +1271,7 @@ sub _li_change {
 	if ( exists $param{'runtime'} ) {
 		my $start_time = Date::Parse::str2time( $$row{'starttime'} );
 
-		my ( $shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
+		my ( $shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? ORDER BY starttime DESC LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ) );
 
 		sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'runtime', $param{'runtime'} );
 
@@ -1289,8 +1289,8 @@ sub _li_change {
 		if ( $Equipment->smartscheduling() ) {
 			$new_starttime = Date::Parse::str2time( $new_starttime );
 
-			my ( $old_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $old_starttime ), Date::Format::time2str('%H:%M', $old_starttime ) );
-			my ( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ), Date::Format::time2str('%H:%M', $new_starttime ) );
+			my ( $old_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? ORDER BY starttime DESC LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $old_starttime ) );
+			my ( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? ORDER BY starttime DESC LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ) );
 			if ( ! $new_shift_name ) {
 				( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime > ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ) );
 			} # end if

@@ -266,10 +266,17 @@ if ( $Equipment->smartscheduling() ) {
 		$html .= '<span class="Buttons">';
 		$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$row{'serviceindex'}, '', "popup_window('_stock_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
 		$html .= '</span>';
-		#$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$row{'id'},
-				#Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) ),
-				#);
-		#$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$row{'id'},
+				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) ),
+				);
+		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+if ( $Equipment->smartscheduling() ) {
+		$html .= '<span class="Services">';
+		$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
+		$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+		$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
+		$html .= '</span>';
+}
 	} # end if
 	$html .= '<br/></li>';
 	return $html;
