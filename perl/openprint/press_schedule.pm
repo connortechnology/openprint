@@ -21,6 +21,9 @@ sub find {
 		$sql .= ' AND runtime BETWEEN ( ? AND ? )';
 		push @values, @params{'runtime_start','runtime_end'};
 	} # end if
+	if ( exists $params{'starttime_null'} ) {
+		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
+	} # end if
 	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
 		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
 		push @values, @params{'starttime_start','starttime_end'};
