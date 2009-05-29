@@ -19,7 +19,7 @@ require Date::Parse;
 require openprint::Equipment_Shift;
 require openprint::User;
 
-my $debug = 0;
+my $debug = 1;
 
 $table = 'shifts';
 $serial = 'shifts_id_seq';
@@ -27,9 +27,10 @@ $serial = 'shifts_id_seq';
 %fields = (
 	'id'				=>	'id',
 	'starttime'			=>	'starttime',
-	'endtime'			=>	'time',
+	'endtime'			=>	'endtime',
 	'operator_id'		=>	'operator_id',
 	'shift_id'			=>	'shift_id',
+	'equipment_id'		=>	'equipment_id',
 );
 
 %transforms = (
@@ -43,7 +44,7 @@ sub find {
 	my %params = @_;
 
 	my @values;
-	my $sql = "SELECT * as ending FROM $table WHERE 1>0";
+	my $sql = "SELECT * FROM $table WHERE 1>0";
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -54,10 +55,18 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( exists $params{'name'} and $params{'equipment_id'} ) {
+		$sql .= ' AND shift_id =(SELECT id FROM Equipment_shifts WHERE name=? AND equipment_id=?)';
+		push @values, $params{'name'},$params{'equipment_id'};
+	} # end if
 	if ( exists $params{'equipment_id'} ) {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
 	} # end if
+	if ( $params{'startdate'} ) {
+		$sql .= ' AND date(starttime) = ?';
+		push @values, $params{'startdate'};
+	} 
     if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
         $sql .= ' AND ( starttime BETWEEN ? AND ? )';
         push @values, @params{'starttime_start','starttime_end'};
@@ -74,6 +83,23 @@ sub find {
         $sql .= ' AND starttime IS NULL';
     } elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
         $sql .= ' AND starttime IS NULL';
+    } # end if
+    if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
+        $sql .= ' AND ( endtime BETWEEN ? AND ? )';
+        push @values, @params{'endtime_start','endtime_end'};
+    } elsif ( $params{'endtime_start'} ) {
+        $sql .= ' AND endtime >= ?';
+        push @values, $params{'endtime_start'};
+    } elsif ( $params{'endtime_end'} ) {
+        $sql .= ' AND endtime <= ?';
+        push @values, $params{'endtime_end'};
+    } elsif ( $params{'endtime_<'} ) {
+        $sql .= ' AND endtime < ?';
+        push @values, $params{'endtime_<'};
+    } elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
+        $sql .= ' AND endtime IS NULL';
+    } elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
+        $sql .= ' AND endtime IS NULL';
     } # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -131,6 +157,15 @@ sub operator_id {
 	} # end if
 	return $$self{'operator_id'};
 } # end sub operator_id
+
+sub Equipment {
+	return new openprint::Equipment( $_[0]{'equipment_id'} );
+} # end sub Equipment
+
+sub to_string {
+	my ( $self ) = @_;
+	return sprintf('%s %s %s to %s %s', $self->Equipment()->name(), $self->name(), $$self{'starttime'}, $$self{'endtime'}, $self->Operator()->name() );
+} # end sub to_string
 
 1;
 #__END__

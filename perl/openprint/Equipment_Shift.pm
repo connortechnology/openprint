@@ -16,7 +16,7 @@ require sql;
 require ssi;
 require misc;
 
-my $debug = 0;
+my $debug = 1;
 
 $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';
@@ -26,6 +26,7 @@ $serial = 'equipment_shifts_id_seq';
 	'starttime'			=>	'starttime',
 	'duration'			=>	'duration',
 	'name'				=>	'name',
+	'equipment_id'		=>	'equipment_id',
 );
 
 %transforms = (
@@ -76,6 +77,11 @@ sub find {
         $sql .= ' AND starttime IS NULL';
     } # end if
 
+	if ( $params{'endtime_end'} ) {
+        $sql .= ' AND starttime+duration <= ?';
+        push @values, $params{'endtime_end'};
+	} # end if
+
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 
@@ -91,15 +97,25 @@ sub find {
 } # end sub find
 
 sub starttime_seconds {
+	return misc::hms2time( $_[0]{'starttime'} );
 } # end sub starttime_seconds
+
+sub duration_seconds {
+	return misc::hms2time( $_[0]{'duration'} );
+} # end sub duration_seconds
 
 sub emanantise {
 	my ( $self, $date_seconds ) = @_;
 
+#$log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds ) );
+	#$date_seconds -= ($date_seconds % (24*3600));
+	$date_seconds = Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $date_seconds ) );
+#$log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds ) );
+
 	my $Shift = new openprint::Shift();
 	$Shift->save({
-		'starttime'		=>	$date_seconds + $self->starttime_seconds(),
-		'endtime'		=>	$date_seconds + $self->starttime_seconds() + $self->duration_seconds(),
+		'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds + $self->starttime_seconds() ),
+		'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds + $self->starttime_seconds() + $self->duration_seconds() ),
 		'equipment_id'	=>	$$self{'equipment_id'},
 		'shift_id'		=>	$$self{'id'},
 	});

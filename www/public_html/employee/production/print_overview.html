@@ -452,7 +452,7 @@
 					my $endtime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $y, $mon, $d, $h, $min, $s ) );
 
 
-					push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), $year, $month, $day, $$Shift{'name'} );
+					push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), $year, $month, $day, $Shift->name() );
 					$html .= openprint::press_schedule::get_ul( $starttime, $endtime, $E->id(), $Shift );
 				} # end while shift
 

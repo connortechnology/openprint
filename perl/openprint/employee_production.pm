@@ -22,6 +22,8 @@ require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Content;
 require openprint::PaperInventory;
 require openprint::ProductionFeedback;
+require openprint::Shift;
+require openprint::Equipment_Shift;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -1076,13 +1078,12 @@ sub _ul {
 	my $id = $param{'id'};
 	$id =~ /^(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)$/;
 	my ( $equipment_id, $year, $month, $day, $shift_name ) = ( $1, $2, $3, $4, $5 );
-	my ( $start_time, $end_time, $operator_id );
 
 	my $date_seconds = Date::Parse::str2time(join('-',$year,$month,$day));
 
 	my $Shift;
 	if ( $shift_name ) {
-		my @Shifts = openprint::Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name, 'starttime_start'=>join('-',$year,$month,$day) );
+		my @Shifts = openprint::Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>join('-',$year,$month,$day),'limit'=>1 );
 		if ( ! @Shifts ) {
 			@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name );
 			$Shift = $Shifts[0]->emanantise( $date_seconds ) if @Shifts;
@@ -1094,10 +1095,6 @@ sub _ul {
 	@variable{'equipment_id','start_time','end_time','shift'} = ( $equipment_id, $Shift->starttime(), $Shift->endtime(), $Shift );
 } # end sub _ul
 
-sub hms2time {
-	my ($h,$m,$s) = split(':', $_[0]);
-	return ($h*3600) + ($m*60) + $s;
-} # end sub hms2time
 
 sub _drop {
 
@@ -1107,16 +1104,19 @@ sub _drop {
 
 	my $Shift;
     if ( $shift_name and ! sets::isin( $shift_name, [ 'NotApproved' ] ) ) {
-		my @Shifts = openprint::Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name, 'starttime_start'=>join('-',$year,$month,$day) );
+		my @Shifts = openprint::Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>join('-',$year,$month,$day),'limit'=>1 );
 		if ( ! @Shifts ) {
 			@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name );
-			my $date_seconds = Date::Parse::str2time(join('-',$year,$month,$day));
-			$Shift = $Shifts[0]->emanantise( $date_seconds ) if @Shifts;
+			if ( @Shifts) {	
+				my $date_seconds = Date::Parse::str2time(join('-',$year,$month,$day));
+				$Shift = $Shifts[0]->emanantise( $date_seconds );
+			} # end if
 		} else {
 			$Shift = $Shifts[0];
 		} # end if
 		return if ! $Shift;
 	} # end if
+	$log->debug("Shift: " . $Shift->to_string() );
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
 	@{$variable{'changed'}} = ( $id );
@@ -1168,24 +1168,28 @@ sub reorder_jobs {
 	my $row = $order[0];
 
 	my $Shift;
+
+	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift::find(
-			'equipment_id'=>$$row{'equipment_id'},
-			'starttime_start<'=>Date::Format::time2str('%H:%M', $start_time ),
+			'equipment_id'	=>	$$row{'equipment_id'},
+			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
+			'order'			=>	'starttime',
 			);
 	if ( ! @Shifts ) {
 		@Shifts = openprint::Equipment_Shift::find(
 				'equipment_id'		=>	$$row{'equipment_id'}, 
-				'starttime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
-				'endtime_end'		=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
+				'starttime_start'	=>	Date::Format::time2str('%H:%M', $start_time ),
+				'endtime_end'		=>	Date::Format::time2str('%H:%M', $start_time ),
 				);
 		if ( ! @Shifts ) {
 			@Shifts = openprint::Equipment_Shift::find(
-					'equipment_id'	=>	$$row{'equipment_id'},
-					'starttime_end'	=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
+					'equipment_id'		=>	$$row{'equipment_id'},
+					'starttime_start'	=>	Date::Format::time2str('%H:%M', $start_time ),
+					'order'				=>	'starttime',
 					);
 		} # end if
 		return if ! @Shifts;
-		$Shift = $Shifts[0]->emanantise( $Shift->startdate_seconds() );
+		$Shift = $Shifts[0]->emanantise( $start_time );
 		@Shifts = ( $Shift );
 	} else {
 		$Shift = shift @Shifts;
@@ -1208,7 +1212,7 @@ sub reorder_jobs {
 
 		while ( @fixed_jobs and Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < $start_time ) {
 			# Have fixed_jobs.  They do not move.
-			$start_time = Date::Parse::str2time($fixed_jobs[0]{'starttime'}) + hms2time( $fixed_jobs[0]{'runtime'} ) + 1;
+			$start_time = Date::Parse::str2time($fixed_jobs[0]{'starttime'}) + misc::hms2time( $fixed_jobs[0]{'runtime'} ) + 1;
 			shift @fixed_jobs;
 		} # end while
 
@@ -1219,8 +1223,8 @@ sub reorder_jobs {
 
 			push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $Shift->starttime_seconds()), $Shift->name() );
 			if ( ! @Shifts ) {
-				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_start'=>Date::Format::time2str('%Y-%m-%d %H:%M', $start_time),'endtime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ) );
-				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M', $start_time) ) if ! @Shifts;
+				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_start'=>Date::Format::time2str('%H:%M', $start_time),'endtime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ) );
+				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_end'=>Date::Format::time2str('%H:%M', $start_time) ) if ! @Shifts;
 				return if ! @Shifts;
 				$Shift = $Shifts[0]->emanantise( $Shift->startdate_seconds() );
 			} else {
@@ -1242,7 +1246,7 @@ sub reorder_jobs {
             sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $Shift->operator_id() );
         } # end if
 
-        $start_time += hms2time( $$row{'runtime'} );
+        $start_time += misc::hms2time( $$row{'runtime'} );
 
     } # end while @order
     sql::end_transaction( $dbh, $ac );
