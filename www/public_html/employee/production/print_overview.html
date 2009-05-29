@@ -17,7 +17,11 @@
 <script type="text/javascript">
 <!--
 	var dropfunction = function(el){
-		new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+<? if ( $session{'/employee/production/print_overview.html?Presses'} == 28 ) ?>
+	new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+<? else ( $session{'/employee/production/print_overview.html?Presses'} == 28 ) ?>
+	jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( el.id, Sortable.serialize(el) ) );
+<? endif ( $session{'/employee/production/print_overview.html?Presses'} == 28 ) ?>
 	}
 	function toggle_lock( id, img ) {
 		if(img.src=='/images/small-locked.gif'){
@@ -388,6 +392,12 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.btnFunction.value='Reset';f1.submit();", '', 'Reset' ); ) ?>
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddDocket', 'add.gif', "ajax_window('_add_docket.html', 600, 400 );", '', 'Add Docket' ); ) ?>
+			<? echo (
+				if (@{$$variable{'Presses'}}) {
+			return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', 'print_overview.html?Presses='.$$variable{'Presses'}[0]->id().'&btnFunction=Reflow', 'Reflow Jobs' );
+				} # end if
+				return;
+			) ?>
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 		</p>
 		</div>

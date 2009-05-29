@@ -40,7 +40,9 @@ sub print_overview {
 
 sub press_schedule {
 
-	if ( $param{'btnFunction'} eq 'Add Docket' ) {
+	if ( $param{'btnFunction'} eq 'Reflow' ) {
+		reorder_jobs( openprint::press_schedule::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' ) );
+	} elsif ( $param{'btnFunction'} eq 'Add Docket' ) {
 		my $Project = new openprint::Project();
 		$Project->save();
 		$Project->company_id( $param{'company_id'} );
@@ -1198,9 +1200,9 @@ sub reorder_jobs {
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
 
-	my @fixed_jobs;
+	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
-		if ( $order[$i]{'starttime_locked'} ) {
+		if ( $order[$i]{'starttime'} and $order[$i]{'starttime_locked'} ) {
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
 		} # end if
@@ -1210,7 +1212,7 @@ sub reorder_jobs {
 		my $row = shift @order;
 		my $old_start_time = $start_time - $run_time;
 
-		while ( @fixed_jobs and Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < $start_time ) {
+		while ( @fixed_jobs and (Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < ($start_time+$run_time) ) ) {
 			# Have fixed_jobs.  They do not move.
 			$start_time = Date::Parse::str2time($fixed_jobs[0]{'starttime'}) + misc::hms2time( $fixed_jobs[0]{'runtime'} ) + 1;
 			shift @fixed_jobs;
@@ -1266,7 +1268,7 @@ sub _li_change {
 			#my ( $shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
 			#push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $start_time), $shift_name );
 			reorder_jobs(
-					openprint::press_schedule::find( 'starttime_start'=>$$row{'starttime'}, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+					openprint::press_schedule::find( 'starttime_null'=>0, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
 		} # end if
 	} elsif ( exists $param{'starttime_year'} ) {
 
@@ -1275,18 +1277,8 @@ sub _li_change {
 		sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'starttime', $new_starttime, 'starttime_locked', $param{'locked'} );
 
 		if ( $Equipment->smartscheduling() ) {
-			$new_starttime = Date::Parse::str2time( $new_starttime );
-
-			#my ( $old_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $old_starttime ), Date::Format::time2str('%H:%M', $old_starttime ) );
-			#my ( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ), Date::Format::time2str('%H:%M', $new_starttime ) );
-			#if ( ! $new_shift_name ) {
-				#( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime > ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ) );
-			#} # end if
-
-			#push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $old_starttime), $old_shift_name );
-			#push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $new_starttime), $new_shift_name );
 			reorder_jobs(
-					openprint::press_schedule::find( 'starttime_start'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $new_starttime < $old_starttime ? $new_starttime : $old_starttime ), 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+					openprint::press_schedule::find( 'starttime_null'=>0, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} # end if
 } # end sub _li_change
