@@ -24,6 +24,14 @@ sub find {
 	if ( exists $params{'starttime_null'} ) {
 		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
 	} # end if
+	if ( $params{'starttime_<'} ) {
+		$sql .= ' AND starttime < ?';
+		push @values, $params{'starttime_<'};
+	} # end if
+	if ( $params{'starttime_>='} ) {
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime_>='};
+	} # end if
 	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
 		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
 		push @values, @params{'starttime_start','starttime_end'};
@@ -33,9 +41,6 @@ sub find {
 	} elsif ( $params{'starttime_end'} ) {
 		$sql .= ' AND starttime <= ?';
 		push @values, $params{'starttime_end'};
-	} elsif ( $params{'starttime_<'} ) {
-		$sql .= ' AND starttime < ?';
-		push @values, $params{'starttime_<'};
 	} elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
 		$sql .= ' AND starttime IS NULL';
 	} elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {

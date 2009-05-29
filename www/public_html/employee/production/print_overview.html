@@ -447,9 +447,6 @@
 			if ( $$variable{'ScheduleEnd'} ) {
 				$end = Date::Calc::Delta_Days( split('-', $$variable{'ScheduleStart'}), split('-', $$variable{'ScheduleEnd'} ) ) + 1;
 			} # end if
-			if ( $end > 31 ) {
-				return 'Cannot display more than a month of schedule.<br/>';
-			} # end if
 
 			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
 
