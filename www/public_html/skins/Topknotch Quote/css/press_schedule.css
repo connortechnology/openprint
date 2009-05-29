@@ -126,6 +126,8 @@ A.buttonOn {
 		float: right;
 		margin-left: 5px;
 		display: inline;
+		min-width: 70px;
+		text-align: right;
 	}
     .RunTime {
         float: left;

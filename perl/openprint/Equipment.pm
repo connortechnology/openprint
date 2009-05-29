@@ -8,7 +8,7 @@ require openprint::Fold;
 require openprint::Location;
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 my %find_cache;
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'tbl_equipment';
@@ -494,6 +494,9 @@ sub Previous {
 sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
+
+sub Shifts {
+} # end sub
 
 1;
 __END__

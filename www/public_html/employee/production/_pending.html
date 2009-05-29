@@ -2,10 +2,14 @@
 	my $html;
 	@{$$variable{'pending_drops'}} = ();
 	if ( $session{'/employee/production/print_overview.html?pending'} ) {
+		my $Shift = new openprint::Shift();
+		$Shift->name('Pending');
+
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			push @{$$variable{'pending_drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'NotApproved' );
 			$html .= '<div class="PressColumn">';
-			$html .= openprint::press_schedule::get_ul( undef, undef, $E->id(), {'name'=>'NotApproved'}, {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval'] } );
+			$Shift->equipment_id( $E->id() );
+			push @{$$variable{'pending_drops'}}, $Shift->ul_id();
+			$html .= $Shift->get_ul( {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval']});
 			$html .= '</div>';
 		} # end foreach press
 	} # end if
