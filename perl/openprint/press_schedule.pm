@@ -421,7 +421,7 @@ sub split_job {
 	my ( $start_time, $end_time, $Shift );
 # shit is unset when in pending mode
 	if ( $shift ) {
-		$Shift = $dbh->selectrow_hashref( q{SELECT name, starttime, duration FROM Shifts WHERE equipment_id=? and name=? ORDER BY starttime}, {Slice=>{}}, $press_index, $shift ) or $log->error( $dbh->errstr );;
+		$Shift = $dbh->selectrow_hashref( q{SELECT name, starttime, duration FROM Equipment_Shifts WHERE equipment_id=? and name=? ORDER BY starttime}, {Slice=>{}}, $press_index, $shift ) or $log->error( $dbh->errstr );;
 		$start_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, split(':', $$Shift{'starttime'} ) );
 		my ( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$Shift{'starttime'} ), 0, split(':', $$Shift{'duration'} ) );
 		( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $y, $mon, $d, $h, $min, $s, 0, 0, 0, -1 );

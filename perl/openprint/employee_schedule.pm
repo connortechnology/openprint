@@ -56,7 +56,7 @@ sub drop_project {
 	my ( $start_time, $end_time, $operator_id );
 
 	if ( $shift ) {
-		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift ) ) {
+		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift ) ) {
 			$start_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $start_time );
 			$end_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $end_time );
 
@@ -103,7 +103,7 @@ sub set_operator {
 	$period =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w\w)/;
 	my ( $press_index, $year, $month, $day, $shift ) = ( $1, $2, $3, $4, $5 );
 	my $ac = sql::start_transaction( $dbh );
-	my ( $st, $dt ) = sql::execute( $log, $dbh, q{SELECT starttime,duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $press_index, $shift );
+	my ( $st, $dt ) = sql::execute( $log, $dbh, q{SELECT starttime,duration-'1 second'::interval FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $press_index, $shift );
 	my ( $sh, $sm, $ss ) = split(':', $st );
 	my $start_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $sh, $sm, $ss );
 	my ( $dh, $dm, $ds ) = split( ':', $dt );
