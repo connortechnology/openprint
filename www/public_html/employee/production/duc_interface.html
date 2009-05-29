@@ -102,7 +102,7 @@
 			# Move jobs out of the way
 			my ( $s_date, $s_time ) = split ' ', $last_time;
 			# This works because last_time is always the start of a shift
-			my ( $next_shift ) = sql::execute( $log, $dbh, q{SELECT ?::timestamp + duration FROM Shifts WHERE equipment_id=? AND starttime=?}, $last_time, $press, $s_time );
+			my ( $next_shift ) = sql::execute( $log, $dbh, q{SELECT ?::timestamp + duration FROM Equipment_Shifts WHERE equipment_id=? AND starttime=?}, $last_time, $press, $s_time );
 
 			my @services = sql::execute( $log, $dbh, q{SELECT ProjectIndex, ServiceIndex FROM Schedule WHERE Equipment_id=? AND (starttime between ? AND ?) ORDER BY starttime}, $press, $start_time, $next_shift );
 			$start_time = $next_shift;
