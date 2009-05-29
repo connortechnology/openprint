@@ -1,9 +1,10 @@
 <? if ( $$variable{'changed'} ) ?>
 <? echo ( 
+	my @drops = sets::union( @{$$variable{'changed'}} );
 	$r->content_type('text/javascript');
 	my $html = '';
-	foreach my $id ( @{$$variable{'changed'}} ) {
-		$html .= sprintf(q`new Ajax.Updater( '%1$s', '_ul.html', { method: 'get', parameters: { id: '%1$s' } } );`, $id );
+	foreach my $id (sort @drops) {
+		$html .= sprintf(q`new Ajax.Updater( '%1$s', '_ul.html', { method: 'get', parameters: { id: '%1$s' }, evalScripts:true } );`, $id );
 	} # end foreach id
 	return $html;
 ) ?>

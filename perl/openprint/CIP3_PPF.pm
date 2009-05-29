@@ -420,22 +420,23 @@ sub send_ppf {
 	my $data = decode_base64($$self{'data'});
 	$data = Compress::Zlib::uncompress($data) if $self->compressed();
 
-if ( 0 ){
-	$log->debug('PPF DATA: ' . $data . "uncomressed: " . decode_base64($$self{'data'}) );
-			if ( ! ( $data =~ /^%!PS\-Adobe/ ) ) {
-				$log->error( "Didn't find signature\n");
+	if ( 0 ){
+		$log->debug('PPF DATA: ' . $data . "uncomressed: " . decode_base64($$self{'data'}) );
+		if ( ! ( $data =~ /^%!PS\-Adobe/ ) ) {
+			$log->error( "Didn't find signature\n");
 # Must be already compressed.
-				while ( $_ = Compress::Zlib::uncompress($data) ) {
-					$log->debug( "Uncompressing\n");
-					$data = $_;
-				} 
+			while ( $_ = Compress::Zlib::uncompress($data) ) {
+				$log->debug( "Uncompressing\n");
+				$data = $_;
+			} 
 			print substr($data, 0, 10 ) . "\n";
 			if ( ! ( $data =~ /^%!PS\-Adobe/ ) ) {
 				$log->error( "Still didn't find signature");
 				return;
 			} 
-			} 
-			} 
+		} 
+	} 
+$log->debug("Saving PPF: " . sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ) );
 	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ), $data );
 	if ( $error ) {
 		$log->error($error);

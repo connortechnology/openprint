@@ -21,6 +21,9 @@ sub find {
 		$sql .= ' AND runtime BETWEEN ( ? AND ? )';
 		push @values, @params{'runtime_start','runtime_end'};
 	} # end if
+	if ( exists $params{'starttime_null'} ) {
+		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
+	} # end if
 	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
 		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
 		push @values, @params{'starttime_start','starttime_end'};
@@ -130,6 +133,7 @@ sub get_li {
 
 	my $Project = new openprint::Project( $$row{'projectindex'} );
 	my $services = $Project->services();
+	my $Equipment = new openprint::Equipment($$row{equipment_id});
 
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $$row{'serviceindex'} );
 	if ( ! $$sig_specs{'txtEmployeeComments'} ) {
@@ -169,7 +173,6 @@ sub get_li {
 
 		$comments .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
 
-		my $Equipment = new openprint::Equipment($$row{equipment_id});
 		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
 			if ( $$services{'Folding'} ) {
 				my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
@@ -241,17 +244,21 @@ sub get_li {
 		$html .= ssi::writeButton( $log, $dbh, 'Split'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){split_job($$row{'projectindex'}, $$row{'serviceindex'}, '$ul_id' );}", '', 'S' ) if $$sig_specs{'SignatureQuantity'} > 1;
 		$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$row{'serviceindex'}, '', "popup_window('_stock_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
 		$html .= '</span>';
+if ( $Equipment->smartscheduling() ) {
 		$html .= sprintf( q`<span class="StartTime" onclick="ajax_window( '_starttime_popup.html?id=%1$d' );">Start:<span id=%1$dStartTime">%2$s</span><img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$row{'id'},
 				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) ),
 				$$row{'starttime_locked'} ? 'locked' : 'unlocked',
 				);
+} # end if
 
 		$html .= sprintf( q{<span id="%1$dRunTime" class="RunTime" onclick="openPopup( 'RunTime', %1$d );">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+if ( $Equipment->smartscheduling() ) {
 		$html .= '<span class="Services">';
 		$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 		$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 		$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
 		$html .= '</span>';
+}
 	} else {
 		$html .= sprintf( '<div class="Comment"><a href="/employee/proj/prin/prin_multi.html?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">%3$s</a></div>', @$row{'projectindex','serviceindex'}, ssi::htmlize($$sig_specs{'txtEmployeeComments'}) );
 		$html .= sprintf( '<span class="Forms">%d %s</span>', $$sig_specs{'SignatureQuantity'}, ($$sig_specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
@@ -259,10 +266,17 @@ sub get_li {
 		$html .= '<span class="Buttons">';
 		$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$row{'serviceindex'}, '', "popup_window('_stock_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
 		$html .= '</span>';
-		#$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$row{'id'},
-				#Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) ),
-				#);
-		#$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$row{'id'},
+				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) ),
+				);
+		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
+if ( $Equipment->smartscheduling() ) {
+		$html .= '<span class="Services">';
+		$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
+		$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+		$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
+		$html .= '</span>';
+}
 	} # end if
 	$html .= '<br/></li>';
 	return $html;
@@ -407,7 +421,7 @@ sub split_job {
 	my ( $start_time, $end_time, $Shift );
 # shit is unset when in pending mode
 	if ( $shift ) {
-		$Shift = $dbh->selectrow_hashref( q{SELECT name, starttime, duration FROM Shifts WHERE equipment_id=? and name=? ORDER BY starttime}, {Slice=>{}}, $press_index, $shift ) or $log->error( $dbh->errstr );;
+		$Shift = $dbh->selectrow_hashref( q{SELECT name, starttime, duration FROM Equipment_Shifts WHERE equipment_id=? and name=? ORDER BY starttime}, {Slice=>{}}, $press_index, $shift ) or $log->error( $dbh->errstr );;
 		$start_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, split(':', $$Shift{'starttime'} ) );
 		my ( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$Shift{'starttime'} ), 0, split(':', $$Shift{'duration'} ) );
 		( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $y, $mon, $d, $h, $min, $s, 0, 0, 0, -1 );

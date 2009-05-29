@@ -40,7 +40,9 @@ sub print_overview {
 
 sub press_schedule {
 
-	if ( $param{'btnFunction'} eq 'Add Docket' ) {
+	if ( $param{'btnFunction'} eq 'Reflow' ) {
+		reorder_jobs( openprint::press_schedule::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' ) );
+	} elsif ( $param{'btnFunction'} eq 'Add Docket' ) {
 		my $Project = new openprint::Project();
 		$Project->save();
 		$Project->company_id( $param{'company_id'} );
@@ -1086,11 +1088,16 @@ sub _ul {
 	};
 
 	if ( $shift_name ) {
-		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift_name ) ) {
-		$$shift{'starttime'} = $start_time;
-		$$shift{'endtime'} = $end_time;
-		$start_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $start_time );
-		$end_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $end_time );
+		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift_name ) ) {
+		my $s = Date::Calc::Mktime( $year, $month, $day, split(':',$start_time) );
+		my $e = Date::Calc::Mktime( $year, $month, $day, split(':',$end_time) );
+		$e += 24*3600 if ( $e < $s );
+
+		$$shift{'starttime'} = Date::Format::time2str( '%H:%M:%S', $s );
+		$$shift{'endtime'} = Date::Format::time2str( '%H:%M:%S', $e );
+		$start_time = Date::Format::time2str( '%Y-%m-%d %H:%M', $s );
+		$end_time = Date::Format::time2str( '%Y-%m-%d %H:%M', $e );
+
 		( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $equipment_id, $start_time, $end_time );
 		} else {
 # Must be Approved or Pending
@@ -1112,7 +1119,7 @@ sub _drop {
     my ( $start_time, $end_time, $operator_id, $run_time );
 
     if ( $shift_name and ! sets::isin( $shift_name, [ 'NotApproved' ] ) ) {
-        if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift_name ) ) {
+        if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift_name ) ) {
             $start_time = Date::Calc::Mktime( $year, $month, $day, split(':',$start_time) );
             $end_time = Date::Calc::Mktime( $year, $month, $day, split(':',$end_time) );
             ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $equipment_id, Date::Format::time2str('%Y-%m-%d %H:%M:%S',$start_time), Date::Format::time2str('%Y-%m-%d %H:%M:%S',$end_time) );
@@ -1171,7 +1178,7 @@ sub reorder_jobs {
 
 	my $row = $order[0];
 
-	my ( $new_start_time, $new_end_time, $shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
+	my ( $new_start_time, $new_end_time, $shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Equipment_Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
 	$end_time = ($start_time - ( $start_time % (24*3600) ) + hms2time($new_end_time) );
 
 	my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE ProjectIndex=lngProjectIndex AND ServiceIndex=lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $$row{'equipment_id'}, 
@@ -1182,9 +1189,9 @@ sub reorder_jobs {
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
 
-	my @fixed_jobs;
+	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
-		if ( $order[$i]{'starttime_locked'} ) {
+		if ( $order[$i]{'starttime'} and $order[$i]{'starttime_locked'} ) {
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
 		} # end if
@@ -1196,10 +1203,12 @@ sub reorder_jobs {
 		my $row = shift @order;
 		my $old_start_time = $start_time - $run_time;
 
-		while ( @fixed_jobs and Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < $start_time ) {
+		while ( @fixed_jobs and (Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < ($start_time+$run_time) ) ) {
 			# Have fixed_jobs.  They do not move.
-			$start_time = Date::Parse::str2time($fixed_jobs[0]{'starttime'}) + hms2time( $fixed_jobs[0]{'runtime'} ) + 1;
-			shift @fixed_jobs;
+			my $fixed_job = shift @fixed_jobs;
+			my $new_start_time = Date::Parse::str2time($$fixed_job{'starttime'}) + hms2time($$fixed_job{'runtime'}) + 1;
+			$start_time = $new_start_time;
+$log->debug("Advancing past fixed job at " . $$fixed_job{'starttime'}.' new time is ' . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time) . ' # of fixed jobs: ' . @fixed_jobs );
 		} # end while
 
 # Time to move on to next shift
@@ -1208,17 +1217,27 @@ sub reorder_jobs {
 
 			push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $old_start_time), $shift_name );
 
-			my ( $new_start_time, $new_end_time, $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Shifts WHERE equipment_id=? AND starttime <=? AND starttime+duration-'1 second'::interval >= ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
+			my ( $new_start_time, $new_end_time, $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Equipment_Shifts WHERE equipment_id=? AND starttime <=? ORDER BY starttime DESC LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ),);
+
 			if ( ! $new_start_time ) {
-				( $new_start_time, $new_end_time, $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Shifts WHERE equipment_id=? AND starttime > ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ) );
-			} # end if
-			if ( ! $new_start_time ) {
-				$date += 24*60*60;
-				( $new_start_time, $new_end_time, $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Shifts WHERE equipment_id=? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'} );
+				# Need the previous shift
+				( $new_start_time, $new_end_time, $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval, name FROM Equipment_Shifts WHERE equipment_id=? AND starttime > ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ) );
+				$date -= 24*3600 if $new_start_time ;
 			} # end if
 			if ( $new_start_time ) {
 				$start_time = $date + hms2time( $new_start_time ) if $start_time < $date + hms2time( $new_start_time );
-				$end_time = $date + hms2time( $new_end_time );
+
+				$new_end_time = $date + hms2time( $new_end_time );
+				while( $new_end_time < $start_time ) {
+					$new_end_time += 24*3600;
+				} # end while
+				while ( $new_end_time < $end_time ) {
+$log->debug("End: old $end_time < $new_end_time");
+					$start_time += 24*3600;
+					$new_end_time += 24*3600;
+				} # end while
+					
+				$end_time = $new_end_time;
 				$shift_name = $new_shift_name;
 
 				my ( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE ProjectIndex=lngProjectIndex AND ServiceIndex=lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $$row{'equipment_id'},
@@ -1228,6 +1247,7 @@ sub reorder_jobs {
 				push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $start_time), $shift_name );
 			} else {
 				$log->error('Unable to find next shift.');
+				last;
 			} # end if
 		} # end while
 
@@ -1257,7 +1277,7 @@ sub _li_change {
 	if ( exists $param{'runtime'} ) {
 		my $start_time = Date::Parse::str2time( $$row{'starttime'} );
 
-		my ( $shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
+		my ( $shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Equipment_Shifts WHERE equipment_id=? AND starttime < ? ORDER BY starttime DESC LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ) );
 
 		sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'runtime', $param{'runtime'} );
 
@@ -1275,16 +1295,15 @@ sub _li_change {
 		if ( $Equipment->smartscheduling() ) {
 			$new_starttime = Date::Parse::str2time( $new_starttime );
 
-			my ( $old_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $old_starttime ), Date::Format::time2str('%H:%M', $old_starttime ) );
-			my ( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ), Date::Format::time2str('%H:%M', $new_starttime ) );
+			my ( $old_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Equipment_Shifts WHERE equipment_id=? AND starttime < ? ORDER BY starttime DESC LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $old_starttime ) );
+			my ( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Equipment_Shifts WHERE equipment_id=? AND starttime < ? ORDER BY starttime DESC LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ) );
 			if ( ! $new_shift_name ) {
-				( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime > ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ) );
+				( $new_shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Equipment_Shifts WHERE equipment_id=? AND starttime > ? ORDER BY starttime LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $new_starttime ) );
 			} # end if
 
 			push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $old_starttime), $old_shift_name );
 			push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $new_starttime), $new_shift_name );
-			reorder_jobs(
-					openprint::press_schedule::find( 'starttime_start'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $new_starttime < $old_starttime ? $new_starttime : $old_starttime ), 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+			reorder_jobs( openprint::press_schedule::find( 'starttime_null'=>0, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 
 	} # end if
