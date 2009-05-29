@@ -18,12 +18,13 @@ use MIME::Base64;
 use Getopt::Long;
 use Compress::Zlib;
 
-use vars qw( $log $dbh %config $use_compression );
+use vars qw( $log $dbh %config $use_compression $debug );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 $use_compression = 1;
+$debug = 0;
 
 $log = logger->new();
 $log->{level} = 'warn';
@@ -87,7 +88,7 @@ foreach my $Equipment ( @Equipment ) {
 			# Will ignore ., .., any hidden file
 			next if $file =~ /^\./; 
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-#$log->debug("Parsed to $file_base, $side, $extension from $file");
+$log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			next if $side ne 'B';
 
 			my $out_base = $file_base;
@@ -113,7 +114,16 @@ foreach my $Equipment ( @Equipment ) {
 			my $back_flag = 0;	
 			while ( <FH> ) {
 				$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
-				if ( $_ =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
+				if ( $_ =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+					my $job_name = $1;
+					if ( length $job_name > 16 ) {
+						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$_ = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def';
+						} else {
+							$_ = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def';
+						} # end if
+					} # end if
+				} elsif ( $_ =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 					if ( ! $1 ) {
 						$_ = "/CIP3AdmJobCode ($docket) def";
 					} # end if
@@ -142,16 +152,25 @@ foreach my $Equipment ( @Equipment ) {
 				$line =~ s/$fileA/$fileM/g;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
-				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
+				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 					if ( ! $1 ) {
 						$line = "/CIP3AdmJobCode ($docket) def";
 					} # end if
+				} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.+)\)\s+def/ ) {
+					my $job_name = $1;
+					if ( length $job_name > 16 ) {
+						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def';
+						} else {
+							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def';
+						} # end if
+					} # end if
+				#} elsif ( $line =~ /^\/CIP3AdmJobName \((.*)\) def/ ) {
+#$log->warn("Not Truncating Job Name $1");
 				} # end if
 
 				if ( $line =~ /CIP3EndOfFile/ ) {
-					foreach ( @Back ) {
-						$data .= $_;
-					} # end foreach
+					$data .= join('', @Back );
 				} # end if
 				$data .= $line;
 			} # end while
@@ -169,7 +188,7 @@ foreach my $Equipment ( @Equipment ) {
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
 		my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-#$log->debug("Parsed to $file_base, $side, $extension from $file");
+$log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 		my $out_base = $file_base;
 		$out_base =~ s/\./_/g;
 		my $data;
@@ -188,11 +207,23 @@ foreach my $Equipment ( @Equipment ) {
 			my $line = $_;
 			if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 				$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
-			} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
+			} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 				if ( ! $1 ) {
 					$line = "/CIP3AdmJobCode ($docket) def";
 				} # end if
-			} # end if_
+			} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+				my $job_name = $1;
+#$log->warn("Truncating JobName $job_name");
+				if ( length $job_name > 16 ) {
+					if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+						$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def';
+					} else {
+						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def';
+					} # end if
+				} # end if
+			#} elsif ( $line =~ /^\/CIP3AdmJobName \((.*)\) def(.*)/ ) {
+#$log->warn("Not Truncating Job Name 2 $1 ($2)");
+			} # end if
 			$data .= $line;
 		} # end while
 		close IN;
