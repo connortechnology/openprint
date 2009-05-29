@@ -1077,86 +1077,65 @@ sub _pending {
 } # end sub _pending
 
 sub _ul {
-	my $id = $param{'id'};
-	$id =~ /^(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)$/;
-	my ( $equipment_id, $year, $month, $day, $shift_name ) = ( $1, $2, $3, $4, $5 );
-
-	my $date_seconds = Date::Parse::str2time(join('-',$year,$month,$day));
-
-	my $Shift;
-	if ( $shift_name ) {
-		my @Shifts = openprint::Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>join('-',$year,$month,$day),'limit'=>1 );
-		if ( ! @Shifts ) {
-			@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name );
-			$Shift = $Shifts[0]->emanantise( $date_seconds ) if @Shifts;
-		} else {
-			$Shift = $Shifts[0];
-		} # end if
-		return if ! $Shift;
-	} # end if shift
-	@variable{'equipment_id','start_time','end_time','shift'} = ( $equipment_id, $Shift->starttime(), $Shift->endtime(), $Shift );
+	$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'id'} );
+	$log->debug("_ul for: " . $variable{'Shift'}->to_string() );
 } # end sub _ul
 
 
 sub _drop {
+	my $Shift = openprint::Shift::get_from_ul_id( $param{'id'} );
 
-    my $id = $param{'id'};
-    $id =~ /^(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)$/;
-    my ( $equipment_id, $year, $month, $day, $shift_name ) = ( $1, $2, $3, $4, $5 );
-
-	my $Shift;
-    if ( $shift_name and ! sets::isin( $shift_name, [ 'NotApproved' ] ) ) {
-		my @Shifts = openprint::Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>join('-',$year,$month,$day),'limit'=>1 );
-		if ( ! @Shifts ) {
-			@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name );
-			if ( @Shifts) {	
-				my $date_seconds = Date::Parse::str2time(join('-',$year,$month,$day));
-				$Shift = $Shifts[0]->emanantise( $date_seconds );
-			} # end if
-		} else {
-			$Shift = $Shifts[0];
-		} # end if
-		return if ! $Shift;
-	} # end if
 	$log->debug("Shift: " . $Shift->to_string() );
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
-	@{$variable{'changed'}} = ( $id );
+	@{$variable{'changed'}} = ( $Shift->ul_id() );
 
 	# The idea 
 	if ( exists $param{'services'} ) {
 		my $services = $param{'services'};
-		$services =~ s/$id\[\]=//g;
+		$services =~ s/$param{id}\[\]=//g;
 		my @order = split( '&', $services );
 		return if ! @order;
 
-		my @final_order;
-		foreach my $row ( openprint::press_schedule::find( 'equipment_id'=>$equipment_id,'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
-			push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
-		} # end foreach row
+		if ( $Shift->starttime() ) {
+			my @final_order;
+			foreach my $row ( openprint::press_schedule::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
+				push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
+			} # end foreach row
 
-		my @jobs = openprint::press_schedule::find( 'equipment_id'=>$equipment_id,'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
+			my @jobs = openprint::press_schedule::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
 
-		foreach my $row_id ( @order ) {
-			my $found = 0;
-			for ( my $j = 0; $j < @jobs; $j += 1 ) {
-				my $row = $jobs[$j];
-				if ( $$row{'id'} == $row_id ) {
-					push @final_order, $row;
-					splice @jobs, $j, 1;
-					$found = 1;
-					last;
+			foreach my $row_id ( @order ) {
+				my $found = 0;
+				for ( my $j = 0; $j < @jobs; $j += 1 ) {
+					my $row = $jobs[$j];
+					if ( $$row{'id'} == $row_id ) {
+						push @final_order, $row;
+						splice @jobs, $j, 1;
+						$found = 1;
+						last;
+					} # end if
+				} # end foreach job
+				if ( ! $found ) {
+					my @rows = openprint::press_schedule::find( 'id'=>$row_id );
+					if ( @rows ) {
+						push @final_order, $rows[0];
+					} # end if
 				} # end if
-			} # end foreach job
-			if ( ! $found ) {
-				my @rows = openprint::press_schedule::find( 'id'=>$row_id );
-				if ( @rows ) {
-					push @final_order, $rows[0];
-				} # end if
-			} # end if
-		} # end foreach row_id
-
-		reorder_jobs( @final_order, @jobs );
+			} # end foreach row_id
+			reorder_jobs( @final_order, @jobs );
+		} else {
+			# Pending or Approved
+			my $was_scheduled = 0;
+			foreach my $row_id ( @order ) {
+				foreach my $row ( openprint::press_schedule::find( 'id'=>$row_id ) ) {
+					$was_scheduled = 1 if $$row{'starttime'};
+					sql::update( $log, $dbh, 'Schedule', ['id=?', $$row{'id'}], 'StartTime', undef, 'equipment_id', $Shift->equipment_id() );
+				} # end foreach row
+			} # end foreach row_id
+			# If it was a formerly scheduled job, then shuffle
+			reorder_jobs(openprint::press_schedule::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
+		} # end if	
 
 	} # end if services
 } # end sub _drop.json
@@ -1196,6 +1175,7 @@ sub reorder_jobs {
 	} else {
 		$Shift = shift @Shifts;
 	} # end if
+	push @{$variable{'changed'}}, $Shift->ul_id();
 	
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
@@ -1223,7 +1203,6 @@ sub reorder_jobs {
 
 			my $date = Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $start_time) );
 
-			push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $Shift->starttime_seconds()), $Shift->name() );
 			if ( ! @Shifts ) {
 				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_start'=>Date::Format::time2str('%H:%M', $start_time),'endtime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ) );
 				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_end'=>Date::Format::time2str('%H:%M', $start_time) ) if ! @Shifts;
@@ -1234,8 +1213,8 @@ sub reorder_jobs {
 			} # end if
 
 			$start_time = $Shift->starttime_seconds() if $start_time < $Shift->starttime_seconds();
-
-			push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $start_time), $Shift->name() );
+		
+			push @{$variable{'changed'}}, $Shift->ul_id();
 		} # end if
 
         if ( $start_time and ! $$row{starttime} ) {

@@ -17,11 +17,11 @@
 <script type="text/javascript">
 <!--
 	var dropfunction = function(el){
-<? if ( $session{'/employee/production/print_overview.html?Presses'} == 28 ) ?>
+<? if ( new openprint::Equipment( $session{'/employee/production/print_overview.html?Presses'} )->smartscheduling() ) ?>
 	new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
-<? else ( $session{'/employee/production/print_overview.html?Presses'} == 28 ) ?>
+<? else ( new openprint::Equipment( $session{'/employee/production/print_overview.html?Presses'} )->smartscheduling() ) ?>
 	jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( el.id, Sortable.serialize(el) ) );
-<? endif ( $session{'/employee/production/print_overview.html?Presses'} == 28 ) ?>
+<? endif ( new openprint::Equipment( $session{'/employee/production/print_overview.html?Presses'} )->smartscheduling() ) ?>
 	}
 	function toggle_lock( id, img ) {
 		if(img.src=='/images/small-locked.gif'){
@@ -393,8 +393,8 @@
 <? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddDocket', 'add.gif', "ajax_window('_add_docket.html', 600, 400 );", '', 'Add Docket' ); ) ?>
 			<? echo (
-				if (@{$$variable{'Presses'}}) {
-			return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', 'print_overview.html?Presses='.$$variable{'Presses'}[0]->id().'&btnFunction=Reflow', 'Reflow Jobs' );
+				if ( @{$$variable{'Presses'}} == 1 and $$variable{'Presses'}[0]->smartscheduling() ) {
+					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', 'print_overview.html?Presses='.$$variable{'Presses'}[0]->id().'&btnFunction=Reflow', 'Reflow Jobs' );
 				} # end if
 				return;
 			) ?>
@@ -451,19 +451,34 @@
 				return 'Cannot display more than a month of schedule.<br/>';
 			} # end if
 
-			my @Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
+			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
 
 			foreach ( 1 .. $end ) {
 				
-				foreach my $Shift ( @Shifts ) {
-					my $starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, split(':', $$Shift{'starttime'} ) );
-					my ( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$Shift{'starttime'} ), 0, split(':', $$Shift{'duration'} ) );
-					( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $y, $mon, $d, $h, $min, $s, 0, 0, 0, -1 );
-					my $endtime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $y, $mon, $d, $h, $min, $s ) );
+				foreach my $S ( @Equipment_Shifts ) {
+					my $starttime = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $S->starttime() );
+					my $Shift;
+					my @Shifts = openprint::Shift::find(
+							'equipment_id'	=>	$E->id(),
+							'starttime'		=>	$starttime,
+							);
+					if ( ! @Shifts ) {
+						$Shift = new openprint::Shift();
+						$Shift->save({
+							'starttime'		=>	$starttime,
+							'endtime'		=>	Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $starttime ) + $S->duration_seconds() ),
+							'equipment_id'	=>	$E->id(),
+							'shift_id'		=>	$S->id(),
+						});
+					} elsif ( @Shifts != 1 ) {
+$log->error("Too many shifts");
+next;
+					} else {
+						$Shift = $Shifts[0];
+					} # end if
 
-
-					push @{$$variable{'drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), $year, $month, $day, $Shift->name() );
-					$html .= openprint::press_schedule::get_ul( $starttime, $endtime, $E->id(), $Shift );
+					push @{$$variable{'drops'}}, $Shift->ul_id();
+					$html .= $Shift->get_ul( );
 				} # end while shift
 
 				( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );

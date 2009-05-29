@@ -1,6 +1,7 @@
 <? if ( $$variable{'changed'} ) ?>
 <? echo ( 
 	my @drops = sets::union( @{$$variable{'changed'}} );
+$log->debug("Drops: @drops");
 	$r->content_type('text/javascript');
 	my $html = '';
 	foreach my $id ( sort @drops ) {
