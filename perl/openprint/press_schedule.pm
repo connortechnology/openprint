@@ -24,6 +24,14 @@ sub find {
 	if ( exists $params{'starttime_null'} ) {
 		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
 	} # end if
+	if ( $params{'starttime_<'} ) {
+		$sql .= ' AND starttime < ?';
+		push @values, $params{'starttime_<'};
+	} # end if
+	if ( $params{'starttime_>='} ) {
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime_>='};
+	} # end if
 	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
 		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
 		push @values, @params{'starttime_start','starttime_end'};
@@ -33,9 +41,6 @@ sub find {
 	} elsif ( $params{'starttime_end'} ) {
 		$sql .= ' AND starttime <= ?';
 		push @values, $params{'starttime_end'};
-	} elsif ( $params{'starttime_<'} ) {
-		$sql .= ' AND starttime < ?';
-		push @values, $params{'starttime_<'};
 	} elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
 		$sql .= ' AND starttime IS NULL';
 	} elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
@@ -278,61 +283,13 @@ if ( $Equipment->smartscheduling() ) {
 		$html .= '</span>';
 }
 	} # end if
-	$html .= '<br/></li>';
+	$html .= "<br/></li>\n";
 	return $html;
 } # end sub get_li
 
-sub get_lis {
-	my ( $ul_id, $start_time_start, $start_time_end, $equipment_id, $shift, $filters ) = @_;
-	my ( $s, $min, $h, $day, $month, $year );
-	if ( $start_time_start ) {
-		( $s, $min, $h, $day, $month, $year ) = Date::Parse::strptime( $start_time_start );
-		$year += 1900;
-		$month += 1;
-	} # endif
-
-	my @schedule = find(
-			'starttime_start'	=> $start_time_start,
-			'starttime_end'		=> $start_time_end,
-			'equipment_id'		=> $equipment_id,
-			'order'				=> 'starttime,serviceindex',
-			);
-
-	my $html;
-
-	my $previous_row;
-	my $total_impressions;
-
-	for ( my $index = 0; $index < @schedule; $index += 1 ) {
-		my $current_row = $schedule[$index];
-
-		if ( $filters ) {
-			if ( $$filters{'Status'} ) {
-				my $Project = new openprint::Project($$current_row{'projectindex'});
-				next if ! sets::isin( $Project->status(), $$filters{'Status'} );
-			} # end if
-		} # end if
-		
-		$html .= get_li( $previous_row, $current_row, $ul_id );
-		my $sig_specs = openprint::service::get_specs_ref( new openprint::Project( $$current_row{'project_index'} ),$$current_row{'serviceindex'} );
-		$total_impressions += $$sig_specs{'ImpressionQuantity'};
-		$previous_row = $current_row;
-	} # end for
-
-	if ( $$shift{'name'} and Date::Calc::check_date( $year, $month, $day ) ) {
-		my $Operator = new openprint::User( sql::execute( undef, undef, q{SELECT operator_id FROM tbl_Project_Contents,Schedule WHERE lngProjectIndex=ProjectIndex AND lngServiceIndex=ServiceIndex AND strStatus != 'Complete' AND equipment_id=? AND ( schedule.starttime between ? AND ? ) LIMIT 1}, $equipment_id, $start_time_start, $start_time_end ) );
-		
-		if ( openprint::usergroup::is_user_in( ['PressManager'], $openprint::session{'user_id'} ) ) {
-			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onclick="openPopup('Operator', '%s', '%s' );">%s</span><br class="spacer"/></div>}, Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), @$shift{'name','starttime','endtime'}, $total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $Operator->id(),($Operator->id() ? $Operator->name() : 'assign') ) . $html;
-		} else {
-			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), @$shift{'name','starttime','endtime'}, ( $Operator->id() ? $Operator->name() : 'assign' ) ) . $html;
-		} # end if
-	} # end if
-    return $html;
-} # end sub get_lis
 
 sub get_ul {
-    my ( $start_time_start, $start_time_end, $equipment_id, $shift, $filters ) = @_;
+    my ( $start_time_start, $start_time_end, $equipment_id, $Shift, $filters ) = @_;
 
     my ( $s, $min, $h, $day, $month, $year );
     if ( $start_time_start ) {
@@ -340,8 +297,8 @@ sub get_ul {
     } # endif
         $year += 1900;
         $month += 1;
-    my $ul_id = sprintf('%d-%.4d-%.2d-%.2d-%s', $equipment_id, $year, $month, $day, $$shift{'name'} );
-    my $content = get_lis($ul_id, $start_time_start, $start_time_end, $equipment_id, $shift, $filters);
+    my $ul_id = sprintf('%d-%.4d-%.2d-%.2d-%s', $equipment_id, $year, $month, $day, $Shift->name() );
+    my $content = get_lis($ul_id, $start_time_start, $start_time_end, $equipment_id, $Shift, $filters);
 
 	return qq{<ul id="$ul_id" class="shift} . ($content ? '' : ' Empty' ) .'">' . $content. "</ul>\n";
 } # end sub get_ul
