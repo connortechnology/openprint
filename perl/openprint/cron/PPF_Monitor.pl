@@ -113,6 +113,16 @@ foreach my $Equipment ( @Equipment ) {
 			my $back_flag = 0;	
 			while ( <FH> ) {
 				$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
+				if ( $_ =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def$/ ) {
+					my $job_name = $1;
+					if ( length $job_name > 16 ) {
+						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$_ = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def';
+						} else {
+							$_ = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def';
+						} # end if
+					} # end if
+				} # end if
 				if ( $_ =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
 					if ( ! $1 ) {
 						$_ = "/CIP3AdmJobCode ($docket) def";
@@ -145,6 +155,15 @@ foreach my $Equipment ( @Equipment ) {
 				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
 					if ( ! $1 ) {
 						$line = "/CIP3AdmJobCode ($docket) def";
+					} # end if
+				} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def$/ ) {
+					my $job_name = $1;
+					if ( length $job_name > 16 ) {
+						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def';
+						} else {
+							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def';
+						} # end if
 					} # end if
 				} # end if
 
@@ -192,7 +211,16 @@ foreach my $Equipment ( @Equipment ) {
 				if ( ! $1 ) {
 					$line = "/CIP3AdmJobCode ($docket) def";
 				} # end if
-			} # end if_
+			} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def$/ ) {
+				my $job_name = $1;
+				if ( length $job_name > 16 ) {
+					if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+						$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def';
+					} else {
+						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def';
+					} # end if
+				} # end if
+			} # end if
 			$data .= $line;
 		} # end while
 		close IN;
