@@ -114,13 +114,14 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			my $back_flag = 0;	
 			while ( <FH> ) {
 				$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
-				if ( $_ =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+				if ( $_ =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def(.*)/ ) {
 					my $job_name = $1;
+					my $trail = $2;
 					if ( length $job_name > 16 ) {
 						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
-							$_ = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def';
+							$_ = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def'.$trail;
 						} else {
-							$_ = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def';
+							$_ = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def'.$trail;
 						} # end if
 					} # end if
 				} elsif ( $_ =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
@@ -156,13 +157,14 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 					if ( ! $1 ) {
 						$line = "/CIP3AdmJobCode ($docket) def";
 					} # end if
-				} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.+)\)\s+def/ ) {
+				} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.+)\)\s+def(.*)/ ) {
 					my $job_name = $1;
+					my $trail = $2;
 					if ( length $job_name > 16 ) {
 						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
-							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def';
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def'.$trail;
 						} else {
-							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def';
+							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def'.$trail;
 						} # end if
 					} # end if
 				#} elsif ( $line =~ /^\/CIP3AdmJobName \((.*)\) def/ ) {
@@ -211,14 +213,15 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 				if ( ! $1 ) {
 					$line = "/CIP3AdmJobCode ($docket) def";
 				} # end if
-			} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+			} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def(.*)/ ) {
 				my $job_name = $1;
+				my $trail = $2;
 #$log->warn("Truncating JobName $job_name");
 				if ( length $job_name > 16 ) {
 					if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
-						$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def';
+						$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.') def'.$trail;
 					} else {
-						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def';
+						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).') def'.$trail;
 					} # end if
 				} # end if
 			#} elsif ( $line =~ /^\/CIP3AdmJobName \((.*)\) def(.*)/ ) {
