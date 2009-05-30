@@ -188,6 +188,7 @@ sub get_lis {
 	} # endif
 
 	my @schedule = openprint::press_schedule::find(
+			'starttime_null'	=>	$Shift->starttime() ? 0 : 1,
 			'starttime_>='	=>	$Shift->starttime(),
 			'starttime_<'	=>	$Shift->endtime(),
 			'equipment_id'	=>	$Shift->equipment_id(),
