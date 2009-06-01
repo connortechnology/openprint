@@ -1089,6 +1089,9 @@ sub _drop {
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
 	@{$variable{'changed'}} = ( $Shift->ul_id() );
+	if ( ! $Shift->Equipment()->smartscheduling() ) {
+		return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'id'}, $param{'services'} );
+	} # end if
 
 	# The idea 
 	if ( exists $param{'services'} ) {

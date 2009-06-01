@@ -17,11 +17,7 @@
 <script type="text/javascript">
 <!--
 	var dropfunction = function(el){
-<? if ( new openprint::Equipment( $session{'/employee/production/print_overview.html?Presses'} )->smartscheduling() ) ?>
 	new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
-<? else ( new openprint::Equipment( $session{'/employee/production/print_overview.html?Presses'} )->smartscheduling() ) ?>
-	jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( el.id, Sortable.serialize(el) ) );
-<? endif ( new openprint::Equipment( $session{'/employee/production/print_overview.html?Presses'} )->smartscheduling() ) ?>
 	}
 	function toggle_lock( id, img ) {
 		if(img.src=='/images/small-locked.gif'){

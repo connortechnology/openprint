@@ -78,9 +78,9 @@ sub drop_project {
 		my @rows = openprint::press_schedule::find('id'=>$id);
 		next if ! @rows;
 		my $row = shift @rows;
-		if ( $start_time and ! $$row{starttime} ) {
+		#if ( $start_time and ! $$row{starttime} ) {
 			new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . " at $start_time" );
-		} # end if
+		#} # end if
 
 		sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'equipment_id', $equipment_id );
 		if ( $$row{operator_id} != $operator_id ) {
@@ -88,11 +88,7 @@ sub drop_project {
 		} # end if
 
         if ( @order ) {
-            if ( $Equipment->smartscheduling() ) {
-                ( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE id=?}, $id );
-            } else {
-                ( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $id );
-            } # end if
+			( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $id );
         } # end if
     } # end foreach
     sql::end_transaction( $dbh, $ac );
