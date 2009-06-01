@@ -1051,11 +1051,12 @@ sub signatures {
 	my $self = shift;
 	if ( ! exists $$self{'signatures'} ) {
 		my $services = $self->services();
-		if ( $self->Type()->name() ne 'MultiPagePublication' ) {
-			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
-		} # end if
+		#if ( $self->Type()->name() ne 'MultiPagePublication' ) {
+		#} # end if
 		if ( $$services{'AdditionalSignature'} ) {
 			push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
+		} else {
+			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
 		} # end if
 	} # end if
 	if ( @_ ) {

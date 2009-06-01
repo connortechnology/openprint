@@ -25,6 +25,7 @@ use vars qw( $log $dbh %config $use_compression $debug );
 *config = \%openprint::config;
 $use_compression = 1;
 $debug = 0;
+my $mangle = 0;
 
 $log = logger->new();
 $log->{level} = 'warn';
@@ -114,6 +115,7 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			my $back_flag = 0;	
 			while ( <FH> ) {
 				$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
+if ( $mangle ) {
 				if ( $_ =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
 					my $job_name = $1;
 					if ( length $job_name > 16 ) {
@@ -128,6 +130,7 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 						$_ = "/CIP3AdmJobCode ($docket) def\r\n";
 					} # end if
 				} # end if
+} # end if
 				push @Back, $_ if ( $back_flag );
 				last if $_ =~ /CIPEndBack/;
 			} # end while
@@ -152,7 +155,9 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 				$line =~ s/$fileA/$fileM/g;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
-				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def(.*)/ ) {
+				} 
+if ( $mangle ) {
+				if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def(.*)/ ) {
 					if ( ! $1 ) {
 						$line = "/CIP3AdmJobCode ($docket) def$2";
 					} # end if
@@ -165,9 +170,8 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
 						} # end if
 					} # end if
-				#} elsif ( $line =~ /^\/CIP3AdmJobName \((.*)\) def/ ) {
-#$log->warn("Not Truncating Job Name $1");
 				} # end if
+} # end if
 
 				if ( $line =~ /CIP3EndOfFile/ ) {
 					$data .= join('', @Back );
@@ -207,7 +211,9 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			my $line = $_;
 			if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 				$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
-			} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
+			} 
+if ( $mangle ) {
+			if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 				if ( ! $1 ) {
 					$line = "/CIP3AdmJobCode ($docket) def\r\n";
 				} # end if
@@ -221,9 +227,8 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
 					} # end if
 				} # end if
-			#} elsif ( $line =~ /^\/CIP3AdmJobName \((.*)\) def(.*)/ ) {
-#$log->warn("Not Truncating Job Name 2 $1 ($2)");
 			} # end if
+} # end if
 			$data .= $line;
 		} # end while
 		close IN;
