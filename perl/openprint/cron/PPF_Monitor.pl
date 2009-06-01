@@ -114,25 +114,26 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			my @Back;
 			my $back_flag = 0;	
 			while ( <FH> ) {
-				$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
+				my $line = $_;
+				$back_flag = 1 if ( $line =~ /CIP3BeginBack/ );
 if ( $mangle ) {
-				if ( $_ =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+				if ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
 					my $job_name = $1;
 					if ( length $job_name > 16 ) {
 						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
-							$_ = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.") def\r\n";
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.") def\r\n";
 						} else {
-							$_ = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
 						} # end if
 					} # end if
-				} elsif ( $_ =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
+				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 					if ( ! $1 ) {
-						$_ = "/CIP3AdmJobCode ($docket) def\r\n";
+						$line = "/CIP3AdmJobCode ($docket) def\r\n";
 					} # end if
 				} # end if
 } # end if
-				push @Back, $_ if ( $back_flag );
-				last if $_ =~ /CIPEndBack/;
+				push @Back, $line if ( $back_flag );
+				last if $line =~ /CIPEndBack/;
 			} # end while
 			close( FH );
 			if ( ! @Back ) {
@@ -180,7 +181,7 @@ if ( $mangle ) {
 			} # end while
 			close $A;
 
-			
+$log->debug('Storing PPF');
 			my $PPF = store_PPF( $docket, $sig, $side, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
@@ -262,9 +263,11 @@ sub store_PPF {
 			'compressed'		=>	$compressed_data ? 1 : 0,
 			});
 	$log->error($_) if $_;
+$log->debug("generating previews");
 	$PPF->generate_previews(undef,1);
+$log->debug("Done generating previews");
 
-	foreach my $Project ( openprint::Project::find('docket'=>$docket) ) {
+	foreach my $Project ( openprint::Project::find('docket'=>$docket,'limit'=>10) ) {
 		my $services = $Project->services();
 
 		my $found = 0;
