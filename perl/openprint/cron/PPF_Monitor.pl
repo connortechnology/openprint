@@ -25,7 +25,7 @@ use vars qw( $log $dbh %config $use_compression $debug );
 *config = \%openprint::config;
 $use_compression = 1;
 $debug = 0;
-my $mangle = 0;
+my $mangle = 1;
 
 $log = logger->new();
 $log->{level} = 'warn';
