@@ -214,6 +214,21 @@ sub get_best_price_object {
 	return;
 } # end sub get_best_price 
 
+sub adjust_price {
+	my ( $Price, $options ) = @_;
+	if ( $openprint::config{'ApplyMarkup'} ) {
+#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
+		my $pricingpercent = $openprint::config{'ApplyMarkup'};
+		$pricingpercent =~ s/[^\d\.\-]//g;
+		$pricingpercent /= 100;
+# the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
+		if ( $$Price{'Price'} ne '' ) {
+			$$Price{'Price'} *= ( 1 + $pricingpercent );
+		} # end if
+	} # end if
+	return openprint::Currency::convert( $Price );
+} # end sub adjust_price
+
 1;
 
 __END__

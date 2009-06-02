@@ -2,16 +2,22 @@
 	require Date::Parse;
 	require Date::Format;
 	require openprint::Order;
-	$openprint::param{'/main/order/history.html?lastupdated'} = time;
-	if ( $openprint::param{'ddmStartYear'} ) {
-		openprint::store_session( '/main/order/history.html', \%openprint::param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
+	$param{'/main/order/history.html?lastupdated'} = time;
+	if ( $param{'ddmStartYear'} ) {
+		openprint::store_session( '/main/order/history.html', \%param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
 	} # end if
 	$$variable{'Currency'} = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = ( $$variable{'Currency'}->name(),$$variable{'Currency'}->symbol(), $$variable{'Currency'}->short());
-	if ( $openprint::param{'OrderID'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$openprint::param{'OrderID'},'company_id'=>$openprint::session{'company_id'}, );
-	} elsif ( $openprint::param{'Docket'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$openprint::param{'Docket'},'company_id'=>$openprint::session{'company_id'}, );
+	if ( $param{'OrderID'} ) {
+		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$param{'OrderID'},'company_id'=>$openprint::session{'company_id'}, );
+		if ( sets::isin( $session{'user_type'}, ['A','E'] ) and ! @{$$variable{'Orders'}} ) {
+			@{$$variable{'Orders'}} = openprint::Order::find('id'=>$param{'OrderID'} );
+		} # end if
+	} elsif ( $param{'Docket'} ) {
+		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$param{'Docket'},'company_id'=>$openprint::session{'company_id'}, );
+		if ( sets::isin( $session{'user_type'}, ['A','E'] ) and ! @{$$variable{'Orders'}} ) {
+			@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$param{'Docket'} );
+		} # end if
 	} else {
 
 		@{$$variable{'Orders'}} = openprint::Order::find(

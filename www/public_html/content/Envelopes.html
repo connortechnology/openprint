@@ -1,88 +1,116 @@
-<h4>1 colour printed one side at 150lpi (traditional printing)</h4>
+<h2>Envelope Printing</h2>
 <p>
- #10 Standard white wove with or without window - please specify when ordering<br/>
- 1M = $120<br/>
- 2M = $170<br/>
- 3M = $230<br/>
- 5M = $320<br/>
-</p>
-<p>
- 5.25" x 7.25" Invitation envelopes white wove open side<br/>
- 1M = $160<br/>
- 2M = $235<br/>
- 3M = $310<br/>
- 5M = $460<br/>
-</p>
-<p>
- 9" x 12" Catalogue envelopes white wove open side or open end - please specify when ordering<br/>
- 1M = $190<br/>
- 2M = $300<br/>
- 3M = $410<br/>
- 5M = $630<br/>
-</p>
-<p>
- 10" x 13" Invitation envelopes white wove open end<br/>
- 1M = $225<br/>
- 2M = $350<br/>
- 3M = $485<br/>
- 5M = $755<br/>
-</p>
- <h4>2 colours printed one side at 150lpi (traditional printing)</h4>
-<p>
- #10 Standard white wove with or without window - please specify when ordering<br/>
- 1M = $190<br/>
- 2M = $240<br/>
- 3M = $290<br/>
- 5M = $390<br/>
-</p>
-<p>
- 5.25" x 7.25" Invitation envelopes white wove open side<br/>
- 1M = $235<br/>
- 2M = $310<br/>
- 3M = $385<br/>
- 5M = $535<br/>
-</p>
-<p>
- 9" x 12" Catalogue envelopes white wove open side or open end - please specify when ordering<br/>
- 1M = $270<br/>
- 2M = $390<br/>
- 3M = $510<br/>
- 5M = $750<br/>
-</p>
-<p>
- 10" x 13" Invitation envelopes white wove open end<br/>
- 1M = $295<br/>
- 2M = $440<br/>
- 3M = $585<br/>
- 5M = $875<br/>
-</p>
- <h4>4 colour process one side printed at 175lpi at 2540dpi (waterless printing)</h4>
-<p>
- #10 Standard white wove with or without window - please specify when ordering<br/>
- 1M = $300<br/>
- 2M = $360<br/>
- 3M = $420<br/>
- 5M = $540<br/>
-</p>
-<p>
- 5.25" x 7.25" Invitation envelopes white wove open side<br/>
- 1M = $375<br/>
- 2M = $450<br/>
- 3M = $525<br/>
- 5M = $675<br/>
-</p>
-<p>
- 9" x 12" Catalogue envelopes white wove open side or open end - please specify when ordering<br/>
- 1M = $400<br/>
- 2M = $520<br/>
- 3M = $640<br/>
- 5M = $880<br/>
-</p>
-<p>
- 10" x 13" Invitation envelopes white wove open end<br/>
- 1M = $430<br/>
- 2M = $580<br/>
- 3M = $730<br/>
- 5M = $1030<br/>
-</p>
-<!--#include virtual="/content/_specials.html"-->
+ 1 colour, 2 colour and 4 colour. All are printed on our sheetfed presses. These are individually printed and not part of any group runs. Envelopes do not include bleed, please call for pricing on bleed envelopes. Envlopes are printed on 1 side.</p>
+
+<h4>#10 Standard white wove with or without window - please specify when ordering</h4>
+<table>
+<tr>
+<th>1 colour</th>
+<th>2 colour</th>
+<th>4 colour</th>
+</tr>
+<tr>
+<td>
+1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>120,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>170,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>230,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>320,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+</td>
+<td>
+1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>190,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>240,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>290,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>390,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+</td>
+<td>
+1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>200,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>250,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>300,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>400,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+</td>
+</tr>
+</table>
+<h4>5.25&quot; x 7.25&quot; Invitation envelopes white wove open side</h4>
+<table>
+<tr>
+<th>1 colour</th>
+<th>2 colour</th>
+<th>4 colour</th>
+</tr>
+<tr>
+<td>
+1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>160,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>235,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>310,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>460,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+</td>
+<td>
+1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>235,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>310,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>385,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>535,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+</td>
+<td>
+1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>300,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>375,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>450,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>600,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+</td>
+</tr>
+</table>
+<h4>9&quot; x 12&quot; Catalogue envelopes white wove open side or open end - please specify when ordering</h4>
+<table>
+	<tr>
+		<th>1 colour</th>
+		<th>2 colour</th>
+		<th>4 colour</th>
+	</tr>
+	<tr>
+		<td>
+		1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>190,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>300,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>410,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>630,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		</td>
+		<td>
+		1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>270,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>390,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>510,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>750,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		</td>
+		<td>
+		1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>325,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>400,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>475,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>625,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+		</td>
+	</tr>
+</table>
+<h4>10&quot; x 13&quot; Invitation envelopes white wove open end</h4>
+<table>
+	<tr>
+		<th>1 colour</th>
+		<th>2 colour</th>
+		<th>4 colour</th>
+	</tr>
+<tr>
+<td>
+1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>225,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>350,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>485,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>755,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+</td>
+<td>
+1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>295,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>440,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>585,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>875,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+</td>
+<td>
+1M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>350,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+2M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>450,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+3M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>550,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+5M = $<? echo ( my $Price = openprint::pricing::adjust_price( {'Price'=>750,'currency_id'=>openprint::Currency::get('short'=>'CAD')->id()} ); sprintf('%.2f', $$Price{'Price'} ); ) ?><br/>
+</td>
+</tr>
+</table>
