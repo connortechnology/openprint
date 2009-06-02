@@ -13,6 +13,7 @@ require sql;
 require openprint::Equipment;
 require openprint::service;
 require openprint::press_schedule;
+require openprint::Shift;
 
 use strict;
 
@@ -85,21 +86,9 @@ sub drop_project {
 
 sub set_operator {
 	my ( $r, $log, $dbh, $variable, $period, $operator ) = @_;
-	$period =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w\w)/;
-	my ( $press_index, $year, $month, $day, $shift_name ) = ( $1, $2, $3, $4, $5 );
-	my $Equipment = new openprint::Equipment( $press_index );
 
-	my $date_seconds = Date::Parse::str2time(join('-',$year,$month,$day));
-
-	my $Shift;
-	my @Shifts = openprint::Shift::find('equipment_id'=>$Equipment->id(), 'name'=>$shift_name, 'starttime_start'=>join('-',$year,$month,$day) );
-	if ( ! @Shifts ) {
-		@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$Equipment->id(), 'name'=>$shift_name );
-		$Shift = $Shifts[0]->emanantise( $date_seconds ) if @Shifts;
-	} else {
-		$Shift = $Shifts[0];
-	} # end if
-	return if ! $Shift;
+	my $Shift = openprint::Shift::get_from_ul_id( $period );
+	$log->debug("Set Operator Shift: " . $Shift->to_string() );
 	$Shift->operator_id( $operator );
 } # end sub set_operator
 
