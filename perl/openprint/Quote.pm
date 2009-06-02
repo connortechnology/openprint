@@ -372,7 +372,7 @@ sub send {
 
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_invoice.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		push @attachments, "Quote$$self{id}.html", encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
+		push @attachments, "Quote$$self{id}.html", encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) ) ), 'text/html', 'quoted-printable';
 
 		my %mail = (
 

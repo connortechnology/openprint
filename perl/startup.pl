@@ -22,6 +22,7 @@ BEGIN {
 	use Text::CSV_XS;
 	use	Authen::Captcha;
 	use GD::Barcode;
+	use Encode;
 
 	#use Carp ();
 
