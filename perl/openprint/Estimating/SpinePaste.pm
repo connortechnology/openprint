@@ -83,6 +83,10 @@ sub signature_calc {
 				$openprint::log->debug('Too many Pages ' . $I->pages() . '>' . $Equipment->specification('SpinePaste Maximum Pages') . " for " . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
+			if ( $I->image_orientation() ne 'Vertical' ) {
+				$openprint::log->debug('Can only spine paste a vertical spine. <br/>' );
+				next;
+			} # end if
 			if ( ! $service_index ) {
 				$openprint::log->debug('Can only spine paste 1 signature for ' . $Equipment->strid() . '<br/>' );
 				next;
@@ -186,6 +190,7 @@ sub calc {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
 				my $I = new openprint::Imposition();
 				$I->load( $sig_specs, $qty_index );	
+				$$specs{'hdnBreakdown'.$qty_index} .= $I->to_string() . '<br/>';
 				if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on ' . $Equipment->strid();
 					next;
@@ -196,6 +201,10 @@ sub calc {
 				} # end if
 				if ( $Equipment->specification('SpinePaste Maximum Pages') and $Equipment->specification('SpinePaste Maximum Pages') and $I->pages() > $Equipment->specification('SpinePaste Maximum Pages') ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Too many pages for " . $Equipment->strid();
+					next;
+				} # end if
+				if ( $I->image_orientation() ne 'Vertical' ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Can only spine paste a vertical spine. <br/>';
 					next;
 				} # end if
 				my %folding_results;

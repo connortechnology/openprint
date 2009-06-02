@@ -92,6 +92,7 @@ sub to_string {
 	if ( $$self{'dutch_columns'} ) {
 		$string .= sprintf('+%dx%d', @$self{'dutch_columns','dutch_rows'} );
 	} # end if
+	$string .= ' ' . $$self{'image_orientation'};
 	return $string;
 } # end sub to_string
 
