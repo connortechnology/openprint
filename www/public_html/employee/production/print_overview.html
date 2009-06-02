@@ -19,6 +19,25 @@
 	var dropfunction = function(el){
 	new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
+	function setup_dates( ) {
+		var re = /^JumpToDate(\d*)$/;
+		var dates = $$('span.DueDate');
+		for ( var i = 0; i < dates.length; i+= 1 ) {
+			var match = dates[i].id.match(re);
+			if ( match.length ) {
+					Calendar.setup({
+					inputField   :  "ScheduleDate-"+match[1],       // id of the input field
+					ifFormat        :   "%Y-%m-%d",      // format of the input field
+					daFormat        :   "%b %d",
+					align           :   "Tl",
+					showsTime       :   false,          // will display a time selector
+					displayArea :   'JumpToDate'+match[1],
+					singleClick :   false,          // double-click mode
+					onClose     :   setduedate
+					});
+			} // end if match
+		} // end for each date id
+	} // end function setup_dates()
 	function toggle_lock( id, img ) {
 		if(img.src=='/images/small-locked.gif'){
 			img.src='/images/small-unlocked.gif';
@@ -502,24 +521,7 @@
 			Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
 		} // end if
 	} // end foreach id in drops
-
-	var re = /^JumpToDate(\d*)$/;
-	var dates = $$('span.DueDate');
-	for ( var i = 0; i < dates.length; i+= 1 ) {
-		var match = dates[i].id.match(re);
-		if ( match.length ) {
-                Calendar.setup({
-                inputField   :  "ScheduleDate-"+match[1],       // id of the input field
-                ifFormat        :   "%Y-%m-%d",      // format of the input field
-                daFormat        :   "%b %d",
-                align           :   "Tl",
-                showsTime       :   false,          // will display a time selector
-                displayArea :   'JumpToDate'+match[1],
-                singleClick :   false,          // double-click mode
-                onClose     :   setduedate
-                });
-		} // end if match
-	} // end for each date id
+	setup_dates();
 // ]]>
 </script>
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
