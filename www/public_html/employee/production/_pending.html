@@ -9,7 +9,7 @@
 			$html .= '<div class="PressColumn">';
 			$Shift->equipment_id( $E->id() );
 			push @{$$variable{'pending_drops'}}, $Shift->ul_id();
-			$html .= $Shift->get_ul( {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval']});
+			$html .= $Shift->get_ul( {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete']});
 			$html .= '</div>';
 		} # end foreach press
 	} # end if

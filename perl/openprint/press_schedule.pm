@@ -374,18 +374,8 @@ sub split_job {
 
 	sql::end_transaction( $dbh, $ac );
 
-	my ( $press_index, $year, $month, $day, $shift ) = $ul_id =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)/;
-	my ( $start_time, $end_time, $Shift );
-# shit is unset when in pending mode
-	if ( $shift ) {
-		$Shift = $dbh->selectrow_hashref( q{SELECT name, starttime, duration FROM Equipment_Shifts WHERE equipment_id=? and name=? ORDER BY starttime}, {Slice=>{}}, $press_index, $shift ) or $log->error( $dbh->errstr );;
-		$start_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, split(':', $$Shift{'starttime'} ) );
-		my ( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $year, $month, $day, split(':', $$Shift{'starttime'} ), 0, split(':', $$Shift{'duration'} ) );
-		( $y, $mon, $d, $h, $min, $s ) = Date::Calc::Add_Delta_DHMS( $y, $mon, $d, $h, $min, $s, 0, 0, 0, -1 );
-		$end_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $y, $mon, $d, $h, $min, $s ) );
-	} # end if shift
-	return "Div~$ul_id~".get_ul( $start_time, $end_time, $press_index, $Shift );
-
+	my $Shift = openprint::Shift::get_from_ul_id( $ul_id );
+	return "Div~$ul_id~".$Shift->get_ul();
 } # end sub split_job
 
 

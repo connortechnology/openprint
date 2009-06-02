@@ -114,7 +114,7 @@ sub press_schedule {
 		my ( $starttime, $equipment_id ) = sql::execute( $log, $dbh, q{SELECT starttime, equipment_id FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
 		$equipment_id = $param{'equipment_id'} if $param{'equipment_id'};
 		if ( ! $starttime ) {
-			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=?}, $equipment_id );
+			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=? AND projectindex != ? AND ServiceIndex != ?}, $equipment_id, $project_index, $service_index );
 		} # end if
 		my ( $year, $month, $day, $hours, $minutes, $seconds );
 		if ( ! $starttime ) {
