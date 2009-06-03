@@ -100,6 +100,9 @@ sub find {
     } elsif ( $params{'endtime_<'} ) {
         $sql .= ' AND endtime < ?';
         push @values, $params{'endtime_<'};
+    } elsif ( $params{'endtime_>'} ) {
+        $sql .= ' AND endtime > ?';
+        push @values, $params{'endtime_>'};
     } elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
         $sql .= ' AND endtime IS NULL';
     } elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
@@ -275,6 +278,44 @@ sub get_ul {
 	my $content = $Shift->get_lis($filters);
 	return sprintf('<ul id="%s" class="shift %s">%s</ul>%s', $Shift->ul_id(), ($content ? '' : ' Empty'), $content, "\n" );
 } # end sub get_ul
+
+sub get {
+	my ( $row ) = @_;
+    my $Shift;
+
+	if ( ! $$row{'starttime'} ) {
+		$Shift = new openprint::Shift();
+		$Shift->equipment_id( $$row{'equipment_id'} );
+		my $Project = new openprint::Project( $$row{'projectindex'} );
+		if ( sets::isin( $Project->status(), ['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
+			$$Shift{'name'} = 'Pending';
+		} else {
+			$$Shift{'name'} = 'Approved';
+		} # end if
+	} else {
+		my $starttime_seconds = Date::Parse::str2time( $$row{'starttime'} );
+		my @Shifts = openprint::Shift::find('equipment_id'=>$$row{'equipment_id'}, 'endtime_>'=>$$row{'starttime'}, 'starttime_<'=>$$row{'starttime'},'limit'=>1 );
+		if ( ! @Shifts ) {
+			@Shifts = openprint::Equipment_Shift::find(
+					'equipment_id'	=>	$$row{'equipment_id'},
+					'starttime_<='	=>	Date::Format::time2str('%H:%M',$starttime_seconds ),
+					'endtime_>'		=>	Date::Format::time2str('%H:%M',$starttime_seconds ),
+					'limit'			=>	1,
+					);
+			@Shifts = openprint::Equipment_Shift::find(
+					'equipment_id'	=>	$$row{'equipment_id'},
+					'starttime_>'	=>	Date::Format::time2str('%H:%M',$starttime_seconds ),
+					'order'			=>	'starttime',
+					'limit'			=>	1,
+					) if ! @Shifts;
+			$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
+		} else {
+			$Shift = $Shifts[0];
+		} # end if
+	} # end if
+	return if ! $Shift;
+	return $Shift;
+} # end sub get
 
 1;
 #__END__

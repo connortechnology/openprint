@@ -21,6 +21,10 @@ sub find {
 		$sql .= ' AND runtime BETWEEN ( ? AND ? )';
 		push @values, @params{'runtime_start','runtime_end'};
 	} # end if
+	if ( exists $params{'starttime'} ) {
+		$sql .= ' AND starttime = ?';
+		push @values, $params{'starttime'};
+	} # end if
 	if ( exists $params{'starttime_null'} ) {
 		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
 	} # end if
@@ -241,8 +245,7 @@ sub get_li {
 
 		$html .= '<span class="Buttons">';
 		$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-		$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$row{'serviceindex'}, '', "popup_window('_bump_job.html','project_id=$$row{projectindex}&service_id=$$row{serviceindex}&equipment_id=$$row{equipment_id}');", '', 'B' );
-		#$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='BumpJob';f1.submit();}", '', 'B' );
+		$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$row{'id'}, '', "popup_window('_bump_job.html','id=$$row{id}');", '', 'B' );
 		$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$row{'serviceindex'}, '', "ajax_window('_signature_completion_popup.html?project_id='+$$row{'projectindex'}+'&amp;service_id='+$$row{serviceindex} );", '', 'C' );
 		#$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='CompleteJob';f1.submit();}", '', 'C' );
 		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$row{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );

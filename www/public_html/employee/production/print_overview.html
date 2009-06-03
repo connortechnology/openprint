@@ -17,7 +17,7 @@
 <script type="text/javascript">
 <!--
 	var dropfunction = function(el){
-	new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
+		new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
 	function setup_dates( ) {
 		var re = /^JumpToDate(\d*)$/;
