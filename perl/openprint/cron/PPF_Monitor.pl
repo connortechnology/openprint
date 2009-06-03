@@ -260,10 +260,6 @@ $dbh->disconnect() if $dbh;
 sub store_PPF {
 	my ( $docket, $sig, $side, $data ) = @_;
 
-	foreach my $PPF (openprint::CIP3_PPF::find('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
-		$PPF->delete();
-	} # end foreach
-
 	my $compressed_data;
 	if ( $use_compression ) {
 		$compressed_data = Compress::Zlib::compress($data);
