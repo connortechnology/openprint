@@ -110,6 +110,11 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 				print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."B.$extension\n" ;
 				next;
 			} # end if
+			if ( ! flock(FH, LOCK_EX) ) {
+				$log->error("Unable to lock B!\n");
+				close(FH);
+				next;
+			} # end if
 
 			my @Back;
 			my $back_flag = 0;	
@@ -145,6 +150,11 @@ if ( $mangle ) {
 			my $A;
 			if ( ! open( $A, '< '.$$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension ) ) {
 				print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension\n" ;
+				next;
+			} # end if
+			if ( ! flock(FH, LOCK_EX) ) {
+				$log->error("Unable to lock A!\n");
+				close($A);
 				next;
 			} # end if
 			my $fileA = $file_base.'A';
@@ -206,6 +216,11 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 
 		if ( ! open ( IN, '< ' . $$Equipment{'cip3_in'}.'/'.$file ) ) {
 			print "Error opening for read:" . $$Equipment{'cip3_in'}.'/'.$file."\n" ;
+			next;
+		} # end if
+		if ( ! flock(IN, LOCK_EX) ) {
+			$log->error("Unable to lock CIP FILE!\n");
+			close(IN);
 			next;
 		} # end if
 		while ( <IN> ) {
