@@ -159,10 +159,13 @@ if ( $mangle ) {
 			} # end if
 			my $fileA = $file_base.'A';
 			my $fileM = $file_base.'M';
-
+			my $complete = 0;
 			while ( <$A> ) {
 				my $line = $_;
 				next if $line =~ /^CIP3EndSheet/;
+				if ( $line =~ /%%CIP3EndOfFile/ ) {
+					$complete = 1;
+				} # end if
 				$line =~ s/$fileA/$fileM/g;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
@@ -191,6 +194,10 @@ if ( $mangle ) {
 			} # end while
 			close $A;
 
+			if ( ! $complete ) {
+$log->error("File was not complete! $file_base");
+next;
+			} # end if
 $log->debug('Storing PPF');
 			my $PPF = store_PPF( $docket, $sig, $side, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
@@ -223,8 +230,12 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			close(IN);
 			next;
 		} # end if
+		my $complete = 0;
 		while ( <IN> ) {
 			my $line = $_;
+			if ( $line =~ /%%CIP3EndOfFile/ ) {
+				$complete = 1;
+			} 
 			if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 				$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
 			} 
@@ -248,6 +259,10 @@ if ( $mangle ) {
 			$data .= $line;
 		} # end while
 		close IN;
+		if ( ! $complete ) {
+			$log->error("File was not complete! $file_base");
+			next;
+		} # end if
 		my $PPF = store_PPF( $docket, $sig, $side, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
