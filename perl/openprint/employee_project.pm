@@ -40,12 +40,22 @@ sub view {
 	my $project_index = $param{'ProjectIndex'};
 	$project_index = $param{'project_id'} if ! $project_index;
 	if ( ! $project_index ) {
-		$param{'Docket'} =~ s/\D//g;
 		if ( $param{'Docket'} ) {
-			if ( my @Projects = openprint::Project::find('docket'=>$param{'Docket'}) ) {
-				$project_index = $Projects[0]->id();
+			$param{'Docket'} =~ s/\D//g;
+			if ( $param{'Docket'} ) {
+				if ( my @Projects = openprint::Project::find('docket'=>$param{'Docket'}) ) {
+					$project_index = $Projects[0]->id();
+				} # end if
+			} # end if
+		} elsif ( $param{'docket'} ) {
+			$param{'docket'} =~ s/\D//g;
+			if ( $param{'docket'} ) {
+				if ( my @Projects = openprint::Project::find('docket'=>$param{'docket'}) ) {
+					$project_index = $Projects[0]->id();
+				} # end if
 			} # end if
 		} # end if
+		
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
