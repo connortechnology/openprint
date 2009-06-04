@@ -152,7 +152,7 @@ if ( $mangle ) {
 				print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension\n" ;
 				next;
 			} # end if
-			if ( ! flock(FH, LOCK_EX) ) {
+			if ( ! flock($A, LOCK_EX) ) {
 				$log->error("Unable to lock A!\n");
 				close($A);
 				next;
