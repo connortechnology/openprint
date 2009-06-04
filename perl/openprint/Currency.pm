@@ -9,7 +9,20 @@ use vars qw( $log );
 require openprint::Object;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
+
+sub get {
+	my ( $params ) = @_;
+	my @Currencies = find(@_);
+	if ( @Currencies == 1 ) {
+		return $Currencies[0] 
+	} elsif ( @Currencies > 1 ) {
+		$log->error('More than 1 currency found in openprint::Currency::get');
+	} else {
+		$log->error('No Currency found in openprint::Currency::get');
+	} # end if
+	return;
+} # end sub get
 
 sub find {
 	my %params = @_;
@@ -70,7 +83,15 @@ sub set_conversion {
 } # end sub add_conversion
 
 sub convert_from {
-} # end sub
+	my ( $self, $value ) = @_;
+	my $DST_Currency = get_current();
+	if ( $DST_Currency and ( $DST_Currency->id() != $$self{'id'} ) ) {
+		my $rate = $self->conversions( $DST_Currency->id() );
+		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'}") if $debug;
+		$value *= $rate;
+	} # end if
+	return $value;
+} # end sub convert_from
 sub convert_to {
 } # end sub
 

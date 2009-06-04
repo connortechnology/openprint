@@ -107,7 +107,6 @@ sub add_product {
 	$Project->order_id( $order_id );
 	$Project->quantity1( $Product->quantity() );
 	foreach my $service_index ( sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() ) ) {
-
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $service_index, 'txtQuantity1', $Project->quantity1() );
 	} # end foreach
 	foreach my $signature_service_index ( sort $Project->signatures() ) {
@@ -115,9 +114,8 @@ sub add_product {
 	} # end foreach
 	openprint::service::auto_calculate( $openprint::r, $openprint::log, $openprint::dbh, $openprint::variable, $Project->id(), undef );
 	#$Project->price1( $Product->price() );
-	$Project->save();
-	#$error .= add_project_to_order( $openprint::log, $openprint::dbh, $openprint::cookie, $openprint::variable, $Product->project_id(), $order_id );
-$openprint::log->debug("E: $error");
+	$error .= $Project->save();
+$openprint::log->debug("E: $error") if $error;
 
 	return ( $order_id, $error );
 } # end sub add_product
@@ -743,10 +741,10 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 	my $Currency = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'Currency'} = $Currency;
-	if ( $Order->currency_id() != $Currency->id() ) {
-		$Order->currency_id( $Currency->id() );
-		$Order->save();
-	} # end if
+	#if ( $Order->currency_id() != $Currency->id() ) {
+		#$Order->currency_id( $Currency->id() );
+		#$Order->save();
+	#} # end if
 	@$variable{'Order','ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments'} = 
 ( $Order, $Order->first_name() .' '.$Order->last_name(), $Order->created_on(), $Order->status(), $Order->currency_id(), $Order->po(), $Order->administrator_comments() );
 
