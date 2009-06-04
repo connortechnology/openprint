@@ -108,33 +108,6 @@ sub press_schedule {
 		$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from print overview' );
 		$Project->update_status();
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		my $service_index = $param{'service_id'};
-		my $project_index = $param{'project_id'};
-		my $Project = new openprint::Project( $project_index );
-		my ( $starttime, $equipment_id ) = sql::execute( $log, $dbh, q{SELECT starttime, equipment_id FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
-		$equipment_id = $param{'equipment_id'} if $param{'equipment_id'};
-		if ( ! $starttime ) {
-			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=?}, $equipment_id );
-		} # end if
-		my ( $year, $month, $day, $hours, $minutes, $seconds );
-		if ( ! $starttime ) {
-			( $year, $month, $day, $hours, $minutes, $seconds ) = Date::Calc::Today_and_Now();
-		} else {
-			( $year, $month, $day, $hours, $minutes, $seconds ) = $starttime =~ /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/;
-		} # end if
-		$seconds = 0;
-		$minutes = 0;
-		if ( $hours < 12 ) {
-			$hours = 12;
-		} else {
-			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-			$hours = 0;
-		} # end if
-		if ( $year ) {
-			$starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $hours, $minutes, $seconds );
-			sql::update( $log, $dbh, 'Schedule', ['ProjectIndex=? AND ServiceIndex=?', $project_index, $service_index], 'starttime', $starttime, 'equipment_id', $equipment_id );
-			$Project->add_to_log( @session{'company_id','user_id'}, "Job bumped to next shift: $starttime on " . ( new openprint::Equipment( $equipment_id )->name() ) );
-		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'CompleteJob' ) {
 # Actually this is complete Signature
@@ -1089,6 +1062,9 @@ sub _drop {
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
 	@{$variable{'changed'}} = ( $Shift->ul_id() );
+	if ( ! $Shift->Equipment()->smartscheduling() ) {
+		return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'id'}, $param{'services'} );
+	} # end if
 
 	# The idea 
 	if ( exists $param{'services'} ) {
@@ -1259,6 +1235,37 @@ sub _li_change {
 			reorder_jobs(
 					openprint::press_schedule::find( 'starttime_null'=>0, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
+	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
+		my $Project = new openprint::Project( $$row{'projectindex'} );
+		my ( $starttime, $equipment_id ) = @$row{'starttime','equipment_id'};
+		$equipment_id = $param{'equipment_id'} if $param{'equipment_id'};
+
+		push @{$variable{'changed'}}, openprint::Shift::get( $row )->ul_id();
+
+		if ( ! $starttime ) {
+			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=? AND projectindex != ? AND ServiceIndex != ?}, $equipment_id, @$row{'projectindex','serviceindex'} );
+		} # end if
+		my ( $year, $month, $day, $hours, $minutes, $seconds );
+		if ( ! $starttime ) {
+			( $year, $month, $day, $hours, $minutes, $seconds ) = Date::Calc::Today_and_Now();
+		} else {
+			( $year, $month, $day, $hours, $minutes, $seconds ) = $starttime =~ /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/;
+		} # end if
+		$seconds = 0;
+		$minutes = 0;
+		if ( $hours < 12 ) {
+			$hours = 12;
+		} else {
+			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+			$hours = 0;
+		} # end if
+		if ( $year ) {
+			$starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $hours, $minutes, $seconds );
+			sql::update( $log, $dbh, 'Schedule', ['ProjectIndex=? AND ServiceIndex=?', @$row{'projectindex','serviceindex'} ], 'starttime', $starttime, 'equipment_id', $equipment_id );
+			@$row{'equipment_id','starttime'} = ( $equipment_id, $starttime );
+			$Project->add_to_log( @session{'company_id','user_id'}, "Job bumped to next shift: $starttime on " . ( new openprint::Equipment( $equipment_id )->name() ) );
+		} # end if
+		push @{$variable{'changed'}}, openprint::Shift::get( $row )->ul_id();
 	} # end if
 } # end sub _li_change
 

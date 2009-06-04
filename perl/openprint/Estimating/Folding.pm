@@ -392,13 +392,13 @@ $openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty
 
 			if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $imposition, $qty_index ) ) {
 				$folds{$pages.'PageSignatureFold'} += 1;
+				$$specs{'hdnBreakdown'.$qty_index} .= "Fold $foldtype " . ($Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() .'x'.$Imposition->image_height() : $Imposition->image_height().'x'.$Imposition->image_width() ) . " found.<br/>";
 			} elsif ($$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 				$$specs{'alert'} .= "Warning! Overriden press cannot fold a $foldtype.<br/>"; 
 				$folds{$pages.'PageSignatureFold'} += 1;
 				$$specs{$pages."PageSignatureFold-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = 1;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Fold $foldtype not found.<br/>";
-				
 			} # end if
 		} else {
 

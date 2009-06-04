@@ -437,7 +437,7 @@ sub delete {
 sub update_schedule {
 	my $self = shift;
 
-	if ( ( $openprint::config{'Smart Schedule'} ne 'Y' ) and ( $$self{'id'} == 28 ) ) {
+	if ( $openprint::config{'Smart Schedule'} ne 'Y' ) {
 		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
 		return;
 	} # end if

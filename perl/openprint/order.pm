@@ -1001,7 +1001,7 @@ sub send_completion_notice {
 
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice.html' );
 	if ( $_ ) {
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) );
+		$_ = encode_qp( Encode::encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	#my %mail = (
@@ -1043,7 +1043,7 @@ sub send_invoice {
 
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice.html' );
 	if ( $_ ) {
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) );
+		$_ = encode_qp( Encode::encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	my %mail = (
@@ -1064,7 +1064,7 @@ sub send_invoice {
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_for_admin.html' );
 	if ( $_ ) {
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) );
+		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( $r, $log, $dbh, \$_, \%order ) ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	my %mail = (
@@ -1107,7 +1107,7 @@ sub send_sales_order {
 	get_projects( $log, $dbh, \%order, $order_id );
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	@sales_order = ( "Order$order_id.html", encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) ), 'text/html', 'quoted-printable' );
+	@sales_order = ( "Order$order_id.html", encode_qp( Encode::encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) ) ), 'text/html', 'quoted-printable' );
 
 	# Add a project summary for each project in the order
 	my @project_summaries = ();
@@ -1121,7 +1121,7 @@ sub send_sales_order {
 		openprint::print_project::summary( $r, $log, $dbh, \%variable, $project );
 		$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_summary.html' );
 		$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
-		push @project_summaries, "ProjectSummary$project.html", encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%variable )), 'text/html', 'quoted-printable';
+		push @project_summaries, "ProjectSummary$project.html", encode_qp( Encode::encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%variable ))), 'text/html', 'quoted-printable';
 	} # for each
 
 	my $sales_person_email;
@@ -1149,7 +1149,7 @@ sub send_sales_order {
 	get_projects( $log, $dbh, \%order, $order_id );
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$order{'ReplacementText'}, \%order );
-	$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) );
+	$_ = encode_qp( Encode::encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%order ) ) );
 	@sales_order = ( "Order$order_id.html", $_, 'text/html', 'quoted-printable' );
 	my @project_dockets = ();
 
@@ -1162,8 +1162,7 @@ sub send_sales_order {
 		openprint::print_project::summary( $r, $log, $dbh, \%variable, $project );
 		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
 		if ( $_ ) {
-			$_ = ssi::variable_substitution( $r, $log, $dbh, \$_, \%variable );
-			$_ = encode_qp( $_ );
+			$_ = encode_qp( Encode::encode('utf-8',ssi::variable_substitution( $r, $log, $dbh, \$_, \%variable ) ) );
 			push @project_dockets, "ProjectDocket$project.html", $_, 'text/html', 'quoted-printable';
 		} # end if
 	} # for each

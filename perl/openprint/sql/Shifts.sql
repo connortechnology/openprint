@@ -1,5 +1,5 @@
 
-DROP TABLE Equipment_Shifts;
+DROP TABLE IF EXISTS Equipment_Shifts;
 CREATE TABLE Equipment_Shifts (
 	id			SERIAL,
 	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (lngIndex),
@@ -12,6 +12,7 @@ CREATE INDEX Equipment_Shifts_idx on Equipment_Shifts (equipment_id, starttime )
 
 
 /* Shifts implements each actual shift.  It stores the operator, and theoretically could allow shifts to move around on the fly. */
+DROP TABLE IF EXISTS Shifts;
 CREATE TABLE Shifts (
 	id				SERIAL,
 	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (lngIndex),

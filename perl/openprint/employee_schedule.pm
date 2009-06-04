@@ -13,6 +13,7 @@ require sql;
 require openprint::Equipment;
 require openprint::service;
 require openprint::press_schedule;
+require openprint::Shift;
 
 use strict;
 
@@ -51,48 +52,33 @@ sub drop_project {
 
 	return if ! @order;
 
-	$id =~ /^(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)$/;
-	my ( $equipment_id, $year, $month, $day, $shift ) = ( $1, $2, $3, $4, $5 );
-	my ( $start_time, $end_time, $operator_id );
+	my $Shift = openprint::Shift::get_from_ul_id( $id );
+	$log->debug("Shift: " . $Shift->to_string() );
 
-	if ( $shift ) {
-		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift ) ) {
-			$start_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $start_time );
-			$end_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $end_time );
-
-			( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $equipment_id, $start_time, $end_time );
-		} else {
-# Must be Approved or Pending
-		} # end if
-	} # end if
-
-	my $Equipment = new openprint::Equipment( $equipment_id );
+	my ( $start_time, $end_time, $operator_id ) = ( $Shift->starttime(), $Shift->endtime(), $Shift->operator_id() );
 
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
 	while ( @order ) {
-		my $id = shift @order;
-		$id =~ s/\D//g;
-		next if ! $id;
+		my $row_id = shift @order;
+		$row_id =~ s/\D//g;
+		next if ! $row_id;
 
-		my @rows = openprint::press_schedule::find('id'=>$id);
+		my @rows = openprint::press_schedule::find('id'=>$row_id);
 		next if ! @rows;
 		my $row = shift @rows;
-		if ( $start_time and ! $$row{starttime} ) {
-			new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . " at $start_time" );
-		} # end if
+		new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
 
-		sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'equipment_id', $equipment_id );
+		if ( $$row{'starttime'} ne $start_time or $$row{'equipment_id'} != $Shift->equipment_id() ) {
+			sql::update( $log, $dbh, 'Schedule', ['id=?', $row_id], 'StartTime', $start_time, 'equipment_id', $Shift->equipment_id() );
+		} # end if
 		if ( $$row{operator_id} != $operator_id ) {
 			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
 		} # end if
 
-        if ( @order ) {
-            if ( $Equipment->smartscheduling() ) {
-                ( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE id=?}, $id );
-            } else {
-                ( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $id );
-            } # end if
+		# Starttime is empty when moving to pending
+        if ( @order and $start_time ) {
+			( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $row_id );
         } # end if
     } # end foreach
     sql::end_transaction( $dbh, $ac );
@@ -100,21 +86,9 @@ sub drop_project {
 
 sub set_operator {
 	my ( $r, $log, $dbh, $variable, $period, $operator ) = @_;
-	$period =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w\w)/;
-	my ( $press_index, $year, $month, $day, $shift_name ) = ( $1, $2, $3, $4, $5 );
-	my $Equipment = new openprint::Equipment( $press_index );
 
-	my $date_seconds = Date::Parse::str2time(join('-',$year,$month,$day));
-
-	my $Shift;
-	my @Shifts = openprint::Shift::find('equipment_id'=>$Equipment->id(), 'name'=>$shift_name, 'starttime_start'=>join('-',$year,$month,$day) );
-	if ( ! @Shifts ) {
-		@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$Equipment->id(), 'name'=>$shift_name );
-		$Shift = $Shifts[0]->emanantise( $date_seconds ) if @Shifts;
-	} else {
-		$Shift = $Shifts[0];
-	} # end if
-	return if ! $Shift;
+	my $Shift = openprint::Shift::get_from_ul_id( $period );
+	$log->debug("Set Operator Shift: " . $Shift->to_string() );
 	$Shift->operator_id( $operator );
 } # end sub set_operator
 

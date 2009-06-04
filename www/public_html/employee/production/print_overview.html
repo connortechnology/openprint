@@ -17,12 +17,27 @@
 <script type="text/javascript">
 <!--
 	var dropfunction = function(el){
-<? if ( new openprint::Equipment( $session{'/employee/production/print_overview.html?Presses'} )->smartscheduling() ) ?>
-	new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
-<? else ( new openprint::Equipment( $session{'/employee/production/print_overview.html?Presses'} )->smartscheduling() ) ?>
-	jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( el.id, Sortable.serialize(el) ) );
-<? endif ( new openprint::Equipment( $session{'/employee/production/print_overview.html?Presses'} )->smartscheduling() ) ?>
+		new Ajax.Request( '_drop.json', { method: 'get', parameters: { id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
+	function setup_dates( ) {
+		var re = /^JumpToDate(\d*)$/;
+		var dates = $$('span.DueDate');
+		for ( var i = 0; i < dates.length; i+= 1 ) {
+			var match = dates[i].id.match(re);
+			if ( match.length ) {
+					Calendar.setup({
+					inputField   :  "ScheduleDate-"+match[1],       // id of the input field
+					ifFormat        :   "%Y-%m-%d",      // format of the input field
+					daFormat        :   "%b %d",
+					align           :   "Tl",
+					showsTime       :   false,          // will display a time selector
+					displayArea :   'JumpToDate'+match[1],
+					singleClick :   false,          // double-click mode
+					onClose     :   setduedate
+					});
+			} // end if match
+		} // end for each date id
+	} // end function setup_dates()
 	function toggle_lock( id, img ) {
 		if(img.src=='/images/small-locked.gif'){
 			img.src='/images/small-unlocked.gif';
@@ -319,7 +334,12 @@
 	</form>
 </div>
 <? eval (
-		my ($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
+		my ( $starttime, $endtime );
+		if ( $session{'/employee/production/print_overview.html?Presses'} ) {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/print_overview.html?Presses'} ) ).')' );
+		} else {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
+		} # end if
 		if ( ! $session{'/employee/production/print_overview.html?ddmScheduleStartYear'} ) {
 			if ( $starttime ) {
 				@$variable{'ScheduleStartYears','ScheduleStartMonths','ScheduleStartDays','ScheduleStart'} = ssi::get_dates( $log, $dbh, split('-', $starttime ) );
@@ -447,9 +467,6 @@
 			if ( $$variable{'ScheduleEnd'} ) {
 				$end = Date::Calc::Delta_Days( split('-', $$variable{'ScheduleStart'}), split('-', $$variable{'ScheduleEnd'} ) ) + 1;
 			} # end if
-			if ( $end > 31 ) {
-				return 'Cannot display more than a month of schedule.<br/>';
-			} # end if
 
 			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
 
@@ -470,11 +487,11 @@
 							'equipment_id'	=>	$E->id(),
 							'shift_id'		=>	$S->id(),
 						});
-					} elsif ( @Shifts != 1 ) {
-$log->error("Too many shifts");
-next;
 					} else {
 						$Shift = $Shifts[0];
+						if ( @Shifts != 1 ) {
+							$log->error("Too many shifts");
+						} # end if
 					} # end if
 
 					push @{$$variable{'drops'}}, $Shift->ul_id();
@@ -504,24 +521,7 @@ next;
 			Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
 		} // end if
 	} // end foreach id in drops
-
-	var re = /^JumpToDate(\d*)$/;
-	var dates = $$('span.DueDate');
-	for ( var i = 0; i < dates.length; i+= 1 ) {
-		var match = dates[i].id.match(re);
-		if ( match.length ) {
-                Calendar.setup({
-                inputField   :  "ScheduleDate-"+match[1],       // id of the input field
-                ifFormat        :   "%Y-%m-%d",      // format of the input field
-                daFormat        :   "%b %d",
-                align           :   "Tl",
-                showsTime       :   false,          // will display a time selector
-                displayArea :   'JumpToDate'+match[1],
-                singleClick :   false,          // double-click mode
-                onClose     :   setduedate
-                });
-		} // end if match
-	} // end for each date id
+	setup_dates();
 // ]]>
 </script>
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>

@@ -64,6 +64,8 @@
 			my $total_skids;
 			my $total_weight;
 			my $total_sheets;
+			my $Location = new openprint::Location( $session{'/employee/inventory/skids.html?location_id'} );
+			my @location_ids = map { $_->id() } ( $Location, $Location->get_all_children());
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
 				my $empty = $Skid->empty();
 				if ( $session{'/employee/inventory/skids.html?empty'} ne 'Y' ) {
@@ -87,7 +89,7 @@
 
 				if ( $session{'/employee/inventory/skids.html?location_id'} ) {
 					next if $session{'/employee/inventory/skids.html?location_id'} eq 'None' and $Skid->location_id();
-					next if $Skid->location_id() != $session{'/employee/inventory/skids.html?location_id'};
+					next if ! sets::isin( $Skid->location_id(), \@location_ids );
 				} # end if
 
 				$html .= "<tr$rowclass>";
@@ -138,6 +140,7 @@
 			$html .= '<tr class="totals"><td colspan="3">Totals:</td><td>';
 			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
+			$html .= '</td></tr>';
 			return $html;
 		) ?>
 	</table>
