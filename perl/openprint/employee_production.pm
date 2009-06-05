@@ -1119,7 +1119,6 @@ sub _drop {
 sub reorder_jobs {
 	my ( @order ) = @_;
 
-	my $run_time = 0;
 	my $start_time = time;
 
 	my $row = $order[0];
@@ -1166,6 +1165,7 @@ sub reorder_jobs {
 
 	while ( @order ) {
 		my $row = shift @order;
+		my $run_time = misc::hms2time( $$row{'runtime'} );
 		my $old_start_time = $start_time - $run_time;
 
 		while ( @fixed_jobs and (Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < ($start_time+$run_time) ) ) {
