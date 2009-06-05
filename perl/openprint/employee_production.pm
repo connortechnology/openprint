@@ -1227,6 +1227,7 @@ sub _li_change {
 		} # end if
 	} elsif ( exists $param{'starttime_year'} ) {
 
+		push @{$variable{'changed'}}, openprint::Shift::get( $row )->ul_id();
 		my $old_starttime = Date::Parse::str2time( $$row{'starttime'} );
 		my $new_starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} );
 		sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'starttime', $new_starttime, 'starttime_locked', $param{'locked'} );
