@@ -505,6 +505,9 @@ span.DateSelector select, span.DateTimeSelector select {
 }
 span.DateSelector select option {
 }
+span.time {
+	margin-left: 5px;
+}
 
 #DidYouKnow {
 	margin: 0px;
@@ -606,4 +609,8 @@ input.filter, fieldset p input.filter {
 td p {
 	margin: 0px;
 	padding: 0px;
+}
+td p label {
+    width: auto;
+    margin-left: 0px;
 }

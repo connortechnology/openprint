@@ -809,6 +809,7 @@ sub reuse_project {
 	} # end if
 	$NewProject->company_id( $r->param('ddmCompany') ) if $r->param('ddmCompany');
 	$NewProject->save();
+	$openprint::session{'project_id'} = $NewProject->id();
 
 	$NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );

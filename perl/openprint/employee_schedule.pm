@@ -1,18 +1,24 @@
 package openprint::employee_schedule;
 
 use Date::Calc qw(Add_Delta_Days);
+use openprint ();
+use vars qw( $log $dbh %variable %config );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*config = \%config;
 
 
 require sql;
 require openprint::Equipment;
 require openprint::service;
 require openprint::press_schedule;
+require openprint::Shift;
 
 use strict;
 
 sub add_missing_jobs_to_schedule {
-	my ( $log, $dbh, $variable ) = @_;
-	if ( $openprint::config{'Smart Schedule'} ne 'Y') {
+	if ( $config{'Smart Schedule'} ne 'Y') {
 		$log->debug("Not add lost jobs due to Smart Scheduling being turned off.");
 		return;
 	} # end if
@@ -46,69 +52,44 @@ sub drop_project {
 
 	return if ! @order;
 
-	$id =~ /^(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)$/;
-	my ( $equipment_id, $year, $month, $day, $shift ) = ( $1, $2, $3, $4, $5 );
-	my ( $start_time, $end_time, $operator_id );
+	my $Shift = openprint::Shift::get_from_ul_id( $id );
+	$log->debug("Shift: " . $Shift->to_string() );
 
-	if ( $shift ) {
-		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift ) ) {
-			$start_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $start_time );
-			$end_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $end_time );
-
-			( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $equipment_id, $start_time, $end_time );
-		} else {
-# Must be Approved or Pending
-		} # end if
-	} # end if
-
-	my $Equipment = new openprint::Equipment( $equipment_id );
+	my ( $start_time, $end_time, $operator_id ) = ( $Shift->starttime(), $Shift->endtime(), $Shift->operator_id() );
 
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
 	while ( @order ) {
-		my $id = shift @order;
-		$id =~ s/\D//g;
-		next if ! $id;
+		my $row_id = shift @order;
+		$row_id =~ s/\D//g;
+		next if ! $row_id;
 
-		my @rows = openprint::press_schedule::find('id'=>$id);
+		my @rows = openprint::press_schedule::find('id'=>$row_id);
 		next if ! @rows;
 		my $row = shift @rows;
-		if ( $start_time and ! $$row{starttime} ) {
-			new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . " at $start_time" );
-		} # end if
+		new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
 
-		sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'equipment_id', $equipment_id );
+		if ( $$row{'starttime'} ne $start_time or $$row{'equipment_id'} != $Shift->equipment_id() ) {
+			sql::update( $log, $dbh, 'Schedule', ['id=?', $row_id], 'StartTime', $start_time, 'equipment_id', $Shift->equipment_id() );
+		} # end if
 		if ( $$row{operator_id} != $operator_id ) {
 			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
 		} # end if
 
-		if ( @order ) {
-			if ( $openprint::config{'Smart Schedule'} eq 'Y' or ($equipment_id == 28)) {
-				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE id=?}, $id );
-			} else {
-				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $id );
-			} # end if
-		} # end if
-	} # end foreach
-	sql::end_transaction( $dbh, $ac );
+		# Starttime is empty when moving to pending
+        if ( @order and $start_time ) {
+			( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $row_id );
+        } # end if
+    } # end foreach
+    sql::end_transaction( $dbh, $ac );
 } # end sub drop_project
 
 sub set_operator {
 	my ( $r, $log, $dbh, $variable, $period, $operator ) = @_;
-	$period =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w\w)/;
-	my ( $press_index, $year, $month, $day, $shift ) = ( $1, $2, $3, $4, $5 );
-	my $ac = sql::start_transaction( $dbh );
-	my ( $st, $dt ) = sql::execute( $log, $dbh, q{SELECT starttime,duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $press_index, $shift );
-	my ( $sh, $sm, $ss ) = split(':', $st );
-	my $start_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $sh, $sm, $ss );
-	my ( $dh, $dm, $ds ) = split( ':', $dt );
-	my $end_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Add_Delta_DHMS( $year, $month, $day, $sh, $sm, $ss, 0, $dh, $dm, $ds ) );
-	my @schedule = openprint::press_schedule::find( 'starttime_start'=>$start_time, 'starttime_end'=>$end_time, 'equipment_id'=>$press_index );
-	foreach my $row ( @schedule ) {
-		sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngProjectIndex=? AND lngServiceIndex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator ? $operator : undef );
-	} # end foreach
 
-	sql::end_transaction( $dbh, $ac );
+	my $Shift = openprint::Shift::get_from_ul_id( $period );
+	$log->debug("Set Operator Shift: " . $Shift->to_string() );
+	$Shift->operator_id( $operator );
 } # end sub set_operator
 
 sub set_impressions {

@@ -1,4 +1,4 @@
-DROP TABLE Schedule;
+DROP TABLE IF EXISTS Schedule;
 
 CREATE TABLE Schedule (
 	id					SERIAL,

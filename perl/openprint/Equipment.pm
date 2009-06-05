@@ -34,6 +34,7 @@ $serial= 'Equipment_Index_seq';
 	'cip3_hold'			=>	'cip3_hold',
 	'cip3_merge'		=>	'cip3_merge',
 	'cip3_monitor'		=>	'cip3_monitor',
+	'smartscheduling'	=>	'smartscheduling',
 );
 
 %defaults = (
@@ -122,8 +123,7 @@ sub find {
 		$openprint::log->error( "Error loading Equipment ($sql) (@values) :" . $openprint::dbh->errstr );
 		return;
 	} elsif ( $debug ) {
-	#$openprint::log->debug( 'Number of results: ' . @$data );
-		$openprint::log->debug( $sql . join(',',@values) );
+		$openprint::log->debug( "openprint::Equipment::find : SQL($sql) VALUES(". join(',',@values).") # Results: " . @$data );
 	} # end if
 	
 	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{lngindex}, $_ ) } @$data;
@@ -427,7 +427,7 @@ sub delete {
     sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Service_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
-    sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
+    sql::execute( undef, undef, q{DELETE FROM Equipment_Shifts WHERE equipment_id=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE lngIndex=?}, $$self{id} );
     sql::end_transaction( $openprint::dbh, $ac );
 
@@ -437,7 +437,7 @@ sub delete {
 sub update_schedule {
 	my $self = shift;
 
-	if ( ( $openprint::config{'Smart Schedule'} ne 'Y' ) and ( $$self{'id'} == 28 ) ) {
+	if ( $openprint::config{'Smart Schedule'} ne 'Y' ) {
 		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
 		return;
 	} # end if
@@ -494,6 +494,9 @@ sub Previous {
 sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
+
+sub Shifts {
+} # end sub
 
 1;
 __END__

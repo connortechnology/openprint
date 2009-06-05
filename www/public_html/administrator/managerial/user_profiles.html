@@ -19,6 +19,10 @@ Please select a company or user to obtain login information.<br/>
 <div id="UserProfile">
 	<form name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
 		<fieldset class="filters"><legend>Search:</legend>
+			<p><label>Email:</label>
+				<input type="text" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" /><br/>
+				<span id="search_email_results"></span>
+			</p>	
 			<p>
 				<label>Company Name:</label>
 				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />

@@ -8,6 +8,8 @@ CREATE TABLE CIP3_PPF (
 	front_preview	bytea,
 	back_preview	bytea,
 	compressed		boolean default false,
+	deleted			boolean default false,
+	created_on		timestamp with time zone default now(),
 	PRIMARY KEY (id)
 );
 

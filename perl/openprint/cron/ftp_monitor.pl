@@ -343,6 +343,7 @@ EOT
                         SMTP    => $config{'Mail Server'},
                         FROM    => $from,
                         TO      => $to,
+						CC		=>	'iconnor@penultima.org',
                         SUBJECT => $subject,
                    );
         misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );

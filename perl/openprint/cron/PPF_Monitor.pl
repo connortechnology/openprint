@@ -18,12 +18,14 @@ use MIME::Base64;
 use Getopt::Long;
 use Compress::Zlib;
 
-use vars qw( $log $dbh %config $use_compression );
+use vars qw( $log $dbh %config $use_compression $debug );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 $use_compression = 1;
+$debug = 0;
+my $mangle = 1;
 
 $log = logger->new();
 $log->{level} = 'warn';
@@ -87,13 +89,13 @@ foreach my $Equipment ( @Equipment ) {
 			# Will ignore ., .., any hidden file
 			next if $file =~ /^\./; 
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-#$log->debug("Parsed to $file_base, $side, $extension from $file");
+$log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			next if $side ne 'B';
 
 			my $out_base = $file_base;
 			$out_base =~ s/\./_/g;
 
-			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.*?)S?g?(\d+)/i;
+			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)S?g?(\d+)/i;
 	#print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			$sig = 0 if ! $sig;
 			my $data;
@@ -108,18 +110,35 @@ foreach my $Equipment ( @Equipment ) {
 				print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."B.$extension\n" ;
 				next;
 			} # end if
+			if ( ! flock(FH, LOCK_EX) ) {
+				$log->error("Unable to lock B!\n");
+				close(FH);
+				next;
+			} # end if
 
 			my @Back;
 			my $back_flag = 0;	
 			while ( <FH> ) {
-				$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
-				if ( $_ =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
+				my $line = $_;
+				$back_flag = 1 if ( $line =~ /CIP3BeginBack/ );
+if ( $mangle ) {
+				if ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+					my $job_name = $1;
+					if ( length $job_name > 16 ) {
+						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.") def\r\n";
+						} else {
+							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+						} # end if
+					} # end if
+				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 					if ( ! $1 ) {
-						$_ = "/CIP3AdmJobCode ($docket) def";
+						$line = "/CIP3AdmJobCode ($docket) def\r\n";
 					} # end if
 				} # end if
-				push @Back, $_ if ( $back_flag );
-				last if $_ =~ /CIPEndBack/;
+} # end if
+				push @Back, $line if ( $back_flag );
+				last if $line =~ /CIPEndBack/;
 			} # end while
 			close( FH );
 			if ( ! @Back ) {
@@ -133,31 +152,53 @@ foreach my $Equipment ( @Equipment ) {
 				print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension\n" ;
 				next;
 			} # end if
+			if ( ! flock($A, LOCK_EX) ) {
+				$log->error("Unable to lock A!\n");
+				close($A);
+				next;
+			} # end if
 			my $fileA = $file_base.'A';
 			my $fileM = $file_base.'M';
-
+			my $complete = 0;
 			while ( <$A> ) {
 				my $line = $_;
 				next if $line =~ /^CIP3EndSheet/;
+				if ( $line =~ /%%CIP3EndOfFile/ ) {
+					$complete = 1;
+				} # end if
 				$line =~ s/$fileA/$fileM/g;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
-				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
+				} 
+if ( $mangle ) {
+				if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def(.*)/ ) {
 					if ( ! $1 ) {
-						$line = "/CIP3AdmJobCode ($docket) def";
+						$line = "/CIP3AdmJobCode ($docket) def$2";
+					} # end if
+				} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.+)\)\s+def/ ) {
+					my $job_name = $1;
+					if ( length $job_name > 16 ) {
+						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.") def\r\n";
+						} else {
+							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+						} # end if
 					} # end if
 				} # end if
+} # end if
 
 				if ( $line =~ /CIP3EndOfFile/ ) {
-					foreach ( @Back ) {
-						$data .= $_;
-					} # end foreach
+					$data .= join('', @Back );
 				} # end if
 				$data .= $line;
 			} # end while
 			close $A;
 
-			
+			if ( ! $complete ) {
+$log->error("File was not complete! $file_base");
+next;
+			} # end if
+$log->debug('Storing PPF');
 			my $PPF = store_PPF( $docket, $sig, $side, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
@@ -169,12 +210,12 @@ foreach my $Equipment ( @Equipment ) {
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
 		my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-#$log->debug("Parsed to $file_base, $side, $extension from $file");
+$log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 		my $out_base = $file_base;
 		$out_base =~ s/\./_/g;
 		my $data;
 
-		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.*?)S?g?(\d+)/i;
+		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)S?g?(\d+)/i;
 		if ( ! $docket ) {
 			$log->error("Docket $docket not found for ($file_base) ($file)");
 			next;
@@ -184,18 +225,44 @@ foreach my $Equipment ( @Equipment ) {
 			print "Error opening for read:" . $$Equipment{'cip3_in'}.'/'.$file."\n" ;
 			next;
 		} # end if
+		if ( ! flock(IN, LOCK_EX) ) {
+			$log->error("Unable to lock CIP FILE!\n");
+			close(IN);
+			next;
+		} # end if
+		my $complete = 0;
 		while ( <IN> ) {
 			my $line = $_;
+			if ( $line =~ /%%CIP3EndOfFile/ ) {
+				$complete = 1;
+			} 
 			if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 				$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
-			} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
+			} 
+if ( $mangle ) {
+			if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 				if ( ! $1 ) {
-					$line = "/CIP3AdmJobCode ($docket) def";
+					$line = "/CIP3AdmJobCode ($docket) def\r\n";
 				} # end if
-			} # end if_
+			} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+				my $job_name = $1;
+#$log->warn("Truncating JobName $job_name");
+				if ( length $job_name > 16 ) {
+					if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+						$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.") def\r\n";
+					} else {
+						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+					} # end if
+				} # end if
+			} # end if
+} # end if
 			$data .= $line;
 		} # end while
 		close IN;
+		if ( ! $complete ) {
+			$log->error("File was not complete! $file_base");
+			next;
+		} # end if
 		my $PPF = store_PPF( $docket, $sig, $side, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
@@ -207,10 +274,6 @@ $dbh->disconnect() if $dbh;
 
 sub store_PPF {
 	my ( $docket, $sig, $side, $data ) = @_;
-
-	foreach my $PPF (openprint::CIP3_PPF::find('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
-		$PPF->delete();
-	} # end foreach
 
 	my $compressed_data;
 	if ( $use_compression ) {
@@ -226,9 +289,11 @@ sub store_PPF {
 			'compressed'		=>	$compressed_data ? 1 : 0,
 			});
 	$log->error($_) if $_;
+$log->debug("generating previews");
 	$PPF->generate_previews(undef,1);
+$log->debug("Done generating previews");
 
-	foreach my $Project ( openprint::Project::find('docket'=>$docket) ) {
+	foreach my $Project ( openprint::Project::find('docket'=>$docket,'limit'=>10) ) {
 		my $services = $Project->services();
 
 		my $found = 0;

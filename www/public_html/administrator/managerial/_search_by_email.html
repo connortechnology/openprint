@@ -1,0 +1,10 @@
+<? echo (
+	my @Users = openprint::User::find('email_like'=> $param{'search_email'}.'%','order'=>'lower(strfirstname),lower(strlastname)' );
+	
+	if (! @Users ) {
+		return 'No users found.';
+	} elsif ( @Users > 10 ) {
+	} else {
+		return join( '<br/>', map { sprintf('<a href="/administrator/managerial/user_profiles.html?ddmUser=%d">%s %s</a>', $_->get('id','firstname','lastname') ); } @Users );
+	} # end if
+) ?>

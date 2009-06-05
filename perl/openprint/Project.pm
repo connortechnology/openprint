@@ -370,35 +370,43 @@ sub update_status {
 					if ( $$self{'status'} eq 'In Prepress' ) {
 # Check prepress services and mark complete
 						my @prepress = openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Prepress' );
-						foreach ( @prepress ) {
-							openprint::service::status( $$self{id}, $_, 'Complete' );
-							$changed = 1;
+						foreach my $s_id ( @prepress ) {
+							if ( openprint::service::status( $$self{id}, $s_id ) ne 'Complete' ) {
+								openprint::service::status( $$self{id}, $s_id, 'Complete' );
+								$changed = 1;
+							} # end if
 						} # end foreach
 						if ( $services{'Proofs'} ) {
-							foreach ( @{$services{'Proofs'}} ) {
-								openprint::service::status( $$self{id}, $_, 'Approved' );
+							foreach my $s_id ( @{$services{'Proofs'}} ) {
+								if ( openprint::service::status( $$self{id}, $s_id ) ne 'Approved' ) {
+									openprint::service::status( $$self{id}, $s_id, 'Approved' );
+									$changed = 1;
+								} # end if
 							} # end foreach
-							$changed = 1;
 						} elsif ( $services{'FilmStripping'} ) {
-							foreach ( @{$services{'FilmStripping'}} ) {
-								openprint::service::status( $$self{id}, $_, 'Approved' );
+							foreach my $s_id ( @{$services{'FilmStripping'}} ) {
+								if ( openprint::service::status( $$self{id}, $s_id ) ne 'Approved' ) {
+									openprint::service::status( $$self{id}, $s_id, 'Approved' );
+									$changed = 1;
+								} # end if
 							} # end foreach
-							$changed = 1;
 						} # end if
 					} elsif ( $$self{'status'} eq 'Proofs Out' ) {
 						if ( $services{'Proofs'} ) {
-							foreach ( @{$services{'Proofs'}} ) {
-								openprint::service::status( $$self{id}, $_, 'Approved' );
-							} # end if
-							$changed = 1;
+							foreach my $s_id ( @{$services{'Proofs'}} ) {
+								if ( openprint::service::status( $$self{id}, $s_id ) ne 'Approved' ) {
+									openprint::service::status( $$self{id}, $s_id, 'Approved' );
+									$changed = 1;
+								} # end if
+							} # end foreach
 						} # end if
 					} elsif ( $$self{'status'} eq 'Approved' ) {
 # normal
 					} # end if
 					if ( $services{'NoBindery'} ) {
-						foreach ( @{$services{'NoBindery'}} ) {
-							if ( 'Complete' ne openprint::service::status( $$self{id}, $_ ) ) {
-								openprint::service::status( $$self{id}, $_, 'Complete' );
+						foreach my $s_id ( @{$services{'NoBindery'}} ) {
+							if ( 'Complete' ne openprint::service::status( $$self{id}, $s_id ) ) {
+								openprint::service::status( $$self{id}, $s_id, 'Complete' );
 								$changed = 1;
 							} # end if
 						} # end foreach
@@ -574,9 +582,11 @@ sub find {
 		if ( ref $params{'used_press_name'} eq 'ARRAY' ) {
 			if ( @{$params{'used_press_name'}} ) {
 				$sql .= ' AND (';
-				$sql .= join(' OR ', map { q{(? IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName='UsePress'))} } @{$params{'used_press_name'}} );
+				$sql .= join(' OR ', map { q{(? IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName IN ( 'UsePress','ddmPress1','ddmPress2','ddmPress3')))} } @{$params{'used_press_name'}} );
 				$sql .= ')';
 				push @values, @{$params{'used_press_name'}};
+			} else {
+$openprint::log->debug("No presses in used_press_name");
 			} # end if
 		} else {
 			$sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName='UsePress')};
@@ -1041,10 +1051,12 @@ sub signatures {
 	my $self = shift;
 	if ( ! exists $$self{'signatures'} ) {
 		my $services = $self->services();
+		#if ( $self->Type()->name() ne 'MultiPagePublication' ) {
+		#} # end if
 		if ( $$services{'AdditionalSignature'} ) {
-			@{$$self{'signatures'}} = @{$$services{'AdditionalSignature'}};
-		} elsif ( $$services{''} ) {
-			@{$$self{'signatures'}} = @{$$services{''}};
+			push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
+		} else {
+			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
 		} # end if
 	} # end if
 	if ( @_ ) {
@@ -1079,6 +1091,11 @@ sub status_change {
 		} # end foreach AP
 
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
+		foreach my $s_id ( $self->signatures() ) {
+			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
+		} # end foreach
+		my $services = $self->services();
+		openprint::service::status( $$self{'id'}, $$services{''}[0], 'Complete' ) if $$services{''};
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
 		} # end foreach

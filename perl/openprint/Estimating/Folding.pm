@@ -22,7 +22,7 @@ require sql;
 
 use vars qw( %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -377,12 +377,9 @@ $openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty
 
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 		if ( $$specs{"chkOverrideFoldType-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-			if ( ( ! $$specs{$pages."PageSignatureFold-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and ( ! $$sig_specs{'rdbTemplateType'} ) ) {
+			if ( ($Equipment->strid() eq $$sig_specs{'ddmPress'.$qty_index}) and ( ! $$specs{$pages."PageSignatureFold-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} ) and ( ! $$sig_specs{'rdbTemplateType'} ) ) {
 				$$specs{'alert'} .= 'Folding overriden to different page count.<br/>';
-				my %Results = (
-					'Status'=>'uncalculated',
-				);
-				return %Results;
+				next;
 			} # end if
 			foreach ( keys %fold_types ) {
 				$$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = int $$specs{$_."-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"};
@@ -395,13 +392,13 @@ $openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty
 
 			if ( test_fold( $Equipment, $Imposition, $sig_specs, $foldtype, $imposition, $qty_index ) ) {
 				$folds{$pages.'PageSignatureFold'} += 1;
+				$$specs{'hdnBreakdown'.$qty_index} .= "Fold $foldtype " . ($Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() .'x'.$Imposition->image_height() : $Imposition->image_height().'x'.$Imposition->image_width() ) . " found.<br/>";
 			} elsif ($$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 				$$specs{'alert'} .= "Warning! Overriden press cannot fold a $foldtype.<br/>"; 
 				$folds{$pages.'PageSignatureFold'} += 1;
 				$$specs{$pages."PageSignatureFold-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} = 1;
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Fold $foldtype not found.<br/>";
-				
 			} # end if
 		} else {
 

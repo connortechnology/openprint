@@ -71,6 +71,13 @@
 			<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->useinscheduling(); ) ?> />
 			<label class="radio" for="useinschedulingfalse">No</label>
 		</p>
+		<p>
+			<label>Smart Scheduling:</label>
+			<input type="radio" id="smartscheduling1" name="smartscheduling" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->smartscheduling() ); ) ?> />
+			<label class="radio" for="useinscheduling1">Yes</label>
+			<input type="radio" id="smartscheduling0" name="smartscheduling" value="0"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->smartscheduling() ); ) ?> />
+			<label class="radio" for="smartscheduling0">No</label>
+		</p>
 <? if ( $openprint::config{'JMFEnabled'} eq 'Y' ) ?>
 		<p>
 			<label>Use JMF:</label>
@@ -149,7 +156,7 @@
 				<th width="10%">Max</th>
 				<th width="10%">Value</th>
 				<th width="10%">Units</th>
-				<th width="95">Interpolate</th>
+				<th width="100">Interpolate</th>
 			</tr>
 			<? eval ( @{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications(); ) ?>
 			<? while ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>

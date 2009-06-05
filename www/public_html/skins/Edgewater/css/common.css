@@ -8,7 +8,6 @@ body {
 	background-image: none;
 	font-size: small;
 	font-family: Tahoma, Arial, Helvetica, Sans-Serif;
-	min-width: 880px;
 	max-width: 1280px;
 }
 body #Header {
@@ -17,6 +16,7 @@ body #Header {
 	margin: 0px;
 	height: 74px;
 	background: transparent url(/images/gradient-top.gif) repeat-x 0 0;
+	min-width: 880px;
 }
 body #Header:after {
     content: ".";
@@ -44,15 +44,18 @@ body #Menu {
 	margin-right: auto;
     background-color: #0183FF;
 }
+
 body #HomeMenu {
-	width: 100%;
 	padding: 0px;
 	margin: 0px;
 	margin-left: auto;
 	margin-right: auto;
-	height: 300px;
-    background: #0183FF url(/images/WatersEdge.jpg) repeat-x 0px 0px;
-	background-position: center;
+	height: 280px;
+    background: #0183FF url(/images/WatersEdge.jpg) no-repeat 0px 0px;
+    width: auto;
+    background-repeat: no-repeat;
+    background-position: center top;
+
 }
 body #Footer {
 	bottom: 0px;
@@ -87,7 +90,7 @@ body #Footer:after {
 	margin: 0px;
 	margin-bottom: 90px; /* for the footer */
 	padding: 10px;
-	padding-top: 90px;
+	padding-top: 10px;
 	min-height: 92px;
 }
 

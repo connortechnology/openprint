@@ -10,14 +10,12 @@ require openprint::Object;
 require Compress::Zlib;
 use openprint ();
 use MIME::Base64;
-use Text::PDF;
-use Text::PDF::Filter;
 use Image::Magick;
 use Number::Format;
 
 use vars qw( $log $dbh %config $table $serial %fields %transforms %defaults );
 
-my $debug = 1;
+my $debug = 0;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -111,9 +109,9 @@ sub find {
 } # end sub find
 
 sub parseSheet {
-	my $sheet = shift;
+	my $sheet = shift @_;
 	while ( @_ ) {
-		my $line = shift;
+		my $line = shift @_;
 		if ( $line =~ /^CIP3AdmWorkStyle \/(\w+) def$/ ) {
 			$$sheet{'WorkStyle'} = $1;
 		} elsif ( $line =~ /^CIP3AdmPaperExtent \[ ([\d\.]+) ([\d\.]+) \] def$/ ) {
@@ -133,9 +131,9 @@ sub parseSheet {
 } # end sub parseSheet
 
 sub parseSide {
-	my $front = shift;
+	my $front = shift @_;
 	while ( @_ ) {
-		my $line = shift;
+		my $line = shift @_;
 		if ( $line =~ /^CIP3BeginPreviewImage$/ ) {
 			my $preview = {};
 			@_ = parsePreviewImage( $preview, @_ );
@@ -153,37 +151,42 @@ sub parsePreviewImage {
 	my $image = shift;
 	my @inks = ( 'Cyan','Magenta','Yellow','Black' );
 	while ( @_ ) {
-		my $line = shift;
+		my $line = shift @_;
 		if ( $line =~ /^\( Separation preview for ink: "(\w+)" \) CIP3Comment/ ) {
 			my $separation = {};
 			$$separation{'ink'} = $1;
 			@inks = sets::exclude( [$1], \@inks );
-			$line = shift;
+			$line = shift @_;
 			if ( $line =~ /^CIP3BeginSeparation$/ ) {
+$log->debug("Start parseSeparation ($$separation{ink}) @inks");
 				@_ = parseSeparation( $separation, @_ );
+$log->debug("Done parseSeparation ($$separation{ink}) @inks");
 				push @{$$image{'separations'}}, $separation;
 			} # end if
 		} elsif ( $line =~ /^CIP3BeginSeparation$/ ) {
 			my $separation = {};
 			$$separation{'ink'} = shift @inks;
+$log->debug("Start parseSeparation ($$separation{'ink'}) @inks");
 			@_ = parseSeparation( $separation, @_ );
+$log->debug("Done parseSeparation ($$separation{ink}) @inks");
 			push @{$$image{'separations'}}, $separation;
 		} elsif ( $line =~ /^\/CIP3AdmSeparationNames \[ (.*) \] def$/ ) {
 			my $separations = $1;
 			$separations =~ s/[\(\)]//g;
 			@inks = split(' ', $separations);
+$log->debug("INK Sep @inks");
 		} elsif ( $line =~ /^CIP3EndPreviewImage/ ) {
 			last;
 		} # end if
-		
 	} # end while
 	return @_;	
 } # end sub parsePreviewImage
 
 sub parseSeparation {
-	my $image = shift;
+	my $image = shift @_;
 	while ( @_ ) {
-		my $line = shift;
+		my $line = shift @_;
+$log->debug($line);
 		if ( $line =~ /^\/CIP3PreviewImageWidth (\d+) def/ ) {
 			$$image{'width'} = $1;
 		} elsif ( $line =~ /^\/CIP3PreviewImageHeight (\d+) def/ ) {
@@ -203,12 +206,12 @@ sub parseSeparation {
 		} elsif ( $line =~ /^CIP3PreviewImage$/ ) {
 			$line = shift;
 			my @image_data;
-			while ( ! ( $line =~ /^CIP3EndSeparation/ ) ) {
+			while ( @_ and ! ( $line =~ /^CIP3EndSeparation/ ) ) {
 				push @image_data, $line;
 				$line = shift;
 			} # end while
 			$$image{'image'} = join("\r\n", @image_data);
-			#$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
+			$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
 			last;
 		} elsif ( $line =~ /^CIP3EndSeparation/ ) {
 			last;
@@ -227,6 +230,7 @@ sub parse {
 	$_ = decode_base64($$self{'data'});
 	$_ = Compress::Zlib::uncompress($_) if $$self{'compressed'};
 	my @data = split("\r\n", $_ );
+$log->debug("# of lines: " . @data ) if $debug;
 	while ( @data ) {
 		my $line = shift @data;
 		if ( $line =~ /^CIP3BeginSheet$/ ) {
@@ -275,7 +279,6 @@ sub generate_previews {
 		mkdir $part_path unless -d $path;
 	} # end foreach
 
-
 	my $changed = 0;
 	foreach my $side ( 'Front', 'Back' ) {
 		my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
@@ -288,8 +291,10 @@ sub generate_previews {
 
 		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
 			if ( ! $$self{'parsed'} ) {
+$log->debug("Start parse");
 				$self->parse();
 			} # end if
+$log->debug("Done parse");
 
 			foreach my $preview ( $self->previews($side) ) {
 				if ( ! $$preview{'separations'} ) {
@@ -303,6 +308,7 @@ sub generate_previews {
 
 				foreach my $image ( @{$$preview{'separations'}} ) {
 					if ( $$image{'encoding'} eq 'ASCIIHexDecode' ) {
+						require Text::PDF::Filter;
 						my $f = Text::PDF::ASCIIHexDecode->new;
 						$$image{'image'} = $f->infilt($$image{'image'}, 1 );
 					} # end if
@@ -345,7 +351,7 @@ sub generate_previews {
 				foreach my $s ( @{$$preview{'separations'}} ) {
 					$separations{$$s{'ink'}} = $s;
 				} # end foreach
-
+$log->debug("Orientation: $orientation");
 				if ( $orientation eq 'bottom-left' ) {
 					my @cols =  ( 1 .. $height );
 					my @rows =  reverse ( 1 .. $width);
@@ -421,22 +427,23 @@ sub send_ppf {
 	my $data = decode_base64($$self{'data'});
 	$data = Compress::Zlib::uncompress($data) if $self->compressed();
 
-if ( 0 ){
-	$log->debug('PPF DATA: ' . $data . "uncomressed: " . decode_base64($$self{'data'}) );
-			if ( ! ( $data =~ /^%!PS\-Adobe/ ) ) {
-				$log->error( "Didn't find signature\n");
+	if ( 0 ){
+		$log->debug('PPF DATA: ' . $data . "uncomressed: " . decode_base64($$self{'data'}) );
+		if ( ! ( $data =~ /^%!PS\-Adobe/ ) ) {
+			$log->error( "Didn't find signature\n");
 # Must be already compressed.
-				while ( $_ = Compress::Zlib::uncompress($data) ) {
-					$log->debug( "Uncompressing\n");
-					$data = $_;
-				} 
+			while ( $_ = Compress::Zlib::uncompress($data) ) {
+				$log->debug( "Uncompressing\n");
+				$data = $_;
+			} 
 			print substr($data, 0, 10 ) . "\n";
 			if ( ! ( $data =~ /^%!PS\-Adobe/ ) ) {
 				$log->error( "Still didn't find signature");
 				return;
 			} 
-			} 
-			} 
+		} 
+	} 
+$log->debug("Saving PPF: " . sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ) );
 	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ), $data );
 	if ( $error ) {
 		$log->error($error);
