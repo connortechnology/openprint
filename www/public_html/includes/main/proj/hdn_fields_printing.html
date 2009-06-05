@@ -8,10 +8,8 @@
     <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
     <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 	
-    <input type="hidden" name="hdnPaperWeight" value="<?hdnPaperWeight?>" />
-
 	<? echo ( my $html = '';
-        foreach my $key ( 'Roll2SheetCharge','hdnImpressionQuantity','SheetQuantity','hdnNetSheetCount','hdnImageOrientation','txtMWeight' ) {
+        foreach my $key ( 'Roll2SheetCharge','hdnImpressionQuantity','StockQuantity','hdnNetSheetCount','hdnImageOrientation','txtMWeight' ) {
         foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 
             $html .= sprintf('<input type="hidden" name="%2$s%1$d" value="%3$s" />%4$s', $qty_index, $key, $$variable{$key.$qty_index}, "\n" );

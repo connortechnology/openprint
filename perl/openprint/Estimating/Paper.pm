@@ -81,20 +81,10 @@ sub calc {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 			$papers{$Paper->to_string()} = $Paper;
 			if ( $Paper->type() eq 'Roll' ) {
-				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
-				if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
-					$impressions /= 2;
-				} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
-					my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
-					my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
-					if ( @side_one_colours and @side_two_colours ) {
-						$impressions /= 2;
-					} # end if
-				} # end if
-				$totals{$Paper->to_string()}[$qty_index] += ceil( $impressions * $Paper->area() * $Paper->wpsi());
+				$totals{$Paper->to_string()}[$qty_index] += $$sig_specs{'StockQuantity'.$qty_index};
 				$ms{$Paper->to_string()}[$qty_index] += ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $Paper->area() * $Paper->wpsi() );
 			} elsif ( $Paper->type() eq 'Sheet' ) {
-				my $sheets = $$sig_specs{'SheetQuantity'.$qty_index};
+				my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
 				$sheets /= ( $Paper->start_area() /$Paper->area() );
 				$sheets = ceil( $sheets );
 				$totals{$Paper->to_string()}[$qty_index] += ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
@@ -191,22 +181,12 @@ sub summary {
 			if ( $Paper->type() eq 'Roll' ) {
 				$string .= sprintf(' %s&quot; Roll', $Paper->width() );
 				
-				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
-				if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
-					$impressions /= 2 
-				} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
-					my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
-					my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
-					if ( @side_one_colours and @side_two_colours ) {
-						$impressions /= 2 
-					} # end if
-				} # end if
-				$totals{$string}[$qty_index] += sprintf('%.0f', $impressions * $Paper->area() * $Paper->wpsi());
+				$totals{$string}[$qty_index] += $$sig_specs{'StockQuantity'.$qty_index};
 #$$openprint::log->debug("I: $impressions * $$Paper{width} * $$Paper{height} * " . $Paper->wpsi() . " = " . $totals{$string}[$qty_index] );
 					
 			} elsif ( $Paper->type() eq 'Sheet' ) {
 				$string .= sprintf(' %s&quot;x%s&quot;', $Paper->start_width(), $Paper->start_height() );
-               my $sheets = $$sig_specs{'SheetQuantity'.$qty_index};
+				my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
 				$sheets /= ( $Paper->start_area() /$Paper->area() );
 				$sheets = ceil( $sheets );
                 $totals{$string}[$qty_index] += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );

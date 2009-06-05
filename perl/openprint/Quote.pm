@@ -11,7 +11,7 @@ use vars qw($r %variable $log $dbh %config);
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-*r = \$openrpint::r;
+*r = \$openprint::r;
 
 require sql;
 require openprint::logs;

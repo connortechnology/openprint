@@ -15,9 +15,8 @@ div.Totals {
 	width: 40%;
 }
 div#Invoice div.PageTitle {
-	position: absolute;
-	top:0px;
-	right: 10px;
+	float: right;
+	margin-top: -90px;
 }
 td.Price, th.Price {
 	width: 75px;

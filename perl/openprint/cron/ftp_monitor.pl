@@ -77,6 +77,8 @@ unless ($opts->{'smtp-server'}) {
 }
 my $smtp_server = $opts->{'smtp-server'};
 
+print "file path: " .  $opts->{file_path} . "\n";
+
 my $delay = 0.5;
 if ($opts->{sleep}) {
 	$delay = $opts->{sleep};
@@ -115,8 +117,6 @@ $config{'SkinPath'} = $opts->{'skin_path'};
 
 my $fifoh;
 if (open($fifoh, "< $fifo")) {
-
-
 	while (1) {
 		my $line = <$fifoh>;
 		if ($line) {
@@ -318,7 +318,7 @@ EOT
 		if ( ! Email::Valid->address( $User->email() ) ) {
 			$from = $config{'OrderingEmail'};
 		} else {
-			$from = sprintf('"%s" <%s>"', $User->name(), $User->email() );
+			$from = sprintf('"%s" <%s>', $User->name(), $User->email() );
 		} # end if
 
 		my $to;

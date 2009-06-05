@@ -236,7 +236,6 @@ $log->debug("User Type: $session{'user_type'}");
 			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
 
 		} elsif ( $first ) {
-$log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
 			$eval .= '_'.$second if $second;
 			eval	'require '.$eval;
@@ -245,7 +244,6 @@ $log->debug("1 $first _ $second $filename");
 			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
 			eval $eval;
 			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
-$log->debug('2');
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
@@ -307,6 +305,26 @@ $log->debug('2');
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 				if ( $filename eq '_production_feedback.html' ) {
 					openprint::employee_project::_production_feedback( );
+				} elsif ( $filename eq 'prin_multi.html' ) {
+					if ( $param{'action'} eq 'SendPPF' ) {
+						my $Project = new openprint::Project( $param{'ProjectIndex'} );
+						require openprint::CIP3_PPF;
+						my $PPF = new openprint::CIP3_PPF( $param{'ppf_id'} );
+
+						my $Equipment;
+						foreach my $sig_id ( $Project->signatures() ) {
+							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+							if ( $$sig_specs{'SignatureIndex'} == $$PPF{'signature'} ) {
+
+								my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+								if ( @Equipment ) {
+									$Equipment = $Equipment[0];
+									last;
+								} 	
+							} # end if
+						} # end foreach
+						$PPF->send_ppf( $Equipment ) if $Equipment;
+					} # end if
 				} # end if
 			} # end if
 		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
@@ -363,7 +381,7 @@ $log->debug("Dset: $variable{'Destination'}");
 			openprint::order::history_details( $r, $log, $dbh, \%variable )						if $filename eq 'history_details.html';
 		
 		} elsif ( $second eq 'project' ) {
-			if ( defined $third ) {
+			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
 				if ( ! $variable{'ServiceIndex'} ) {
 					$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
 				} # end if

@@ -6,6 +6,10 @@ use Email::Valid;
 use Date::Calc qw(Add_Delta_Days check_date);
 
 use strict;
+use openprint ();
+use vars qw( %config );
+*config = \%openprint::config;
+
 
 require sql;
 require configuration;
@@ -229,7 +233,7 @@ sub check_credit {
 		return misc::error( $log, $dbh, $variable, 'Credit on hold', 'Your credit account is on hold, you will not be able to place orders.' );
 	} # end if
 
-	if ( $openprint::config{'EnforceCredit'} eq 'Y' ) {
+	if ( $config{'EnforceCredit'} eq 'Y' ) {
 		if ( ! $credit->value('DenyDays') ) {
 			if ( $credit->debt() > 0 ) {
 				my $error = 'Because you do not have a credit account, your previous order must be paid in full before another order is placed.	Click <a href="/main/account/credit_application.html">here</a> to apply for a credit account now.';
@@ -738,11 +742,11 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 	} # end if
 	
 	my $Currency = openprint::Currency::get_current();
+	@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+	$$variable{'Currency'} = $Currency;
 	if ( $Order->currency_id() != $Currency->id() ) {
 		$Order->currency_id( $Currency->id() );
 		$Order->save();
-		@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
-		$$variable{'Currency'} = $Currency;
 	} # end if
 	@$variable{'Order','ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments'} = 
 ( $Order, $Order->first_name() .' '.$Order->last_name(), $Order->created_on(), $Order->status(), $Order->currency_id(), $Order->po(), $Order->administrator_comments() );
@@ -912,7 +916,7 @@ sub finalise_order {
 		my $customer_credit = new openprint::customer_credit( $openprint::session{'company_id'} );
 		my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
 		if ( $downpayment eq '' ) {
-			$downpayment = $openprint::config{'DefaultDownpayment'};
+			$downpayment = $config{'DefaultDownpayment'};
 		} # end if
 		$downpayment = $total * ( $downpayment / 100 );
 		$downpayment = sprintf( '%.2f', $downpayment );
@@ -993,7 +997,7 @@ sub send_completion_notice {
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_completion_notice.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
@@ -1003,8 +1007,8 @@ sub send_completion_notice {
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	#my %mail = (
-		#SMTP	=> $openprint::config{'Mail Server'},
-		#FROM	=> $openprint::config{'AccountingEmail'},
+		#SMTP	=> $config{'Mail Server'},
+		#FROM	=> $config{'AccountingEmail'},
 		##TO		=> $order{'txtEmail'},
 		#TO		=> 'keith@point-one.com, iconnor@point-one.com',
 		#SUBJECT => "Order $order_id Is Complete",
@@ -1035,7 +1039,7 @@ sub send_invoice {
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
@@ -1045,8 +1049,8 @@ sub send_invoice {
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	my %mail = (
-		SMTP	=> $openprint::config{'Mail Server'},
-		FROM	=> $openprint::config{'AccountingEmail'},
+		SMTP	=> $config{'Mail Server'},
+		FROM	=> $config{'AccountingEmail'},
 		TO		=> $order{'txtEmail'},
 		SUBJECT => "Invoice for Order $order_id",
 );
@@ -1057,7 +1061,7 @@ sub send_invoice {
 	my @attachments = ();
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_for_admin.html' );
@@ -1066,9 +1070,9 @@ sub send_invoice {
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	my %mail = (
-		SMTP	=> $openprint::config{'Mail Server'},
-		FROM	=> $openprint::config{'AccountingEmail'},
-		TO		=> $openprint::config{'AccountingEmail'},
+		SMTP	=> $config{'Mail Server'},
+		FROM	=> $config{'AccountingEmail'},
+		TO		=> $config{'AccountingEmail'},
 		SUBJECT => "Invoice for Order $order_id",
 	);
 	misc::send_email_with_attachment( $log, \%mail, @body, @attachments );
@@ -1097,7 +1101,7 @@ sub send_sales_order {
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
@@ -1127,11 +1131,11 @@ sub send_sales_order {
 		my $CSR = new openprint::User( $Order->salesrep_id() );
 		$sales_person_email = sprintf( '"%s" <%s>', $CSR->name(), $CSR->email() );
 	} else {
-		$sales_person_email = $openprint::config{'OrderingEmail'};
+		$sales_person_email = $config{'OrderingEmail'};
 	} # end if
 
 	my %mail = (
-		SMTP	=> $openprint::config{'Mail Server'},
+		SMTP	=> $config{'Mail Server'},
 		FROM	=> $sales_person_email,
 		TO		=> $order{'txtEmail'},
 		SUBJECT => "Order $order_id",
@@ -1140,7 +1144,7 @@ sub send_sales_order {
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my @sales_order;
@@ -1166,20 +1170,20 @@ sub send_sales_order {
 		} # end if
 	} # for each
 
-	my @admin_emails = split( ',', $openprint::config{'OrderingEmail'} );
+	my @admin_emails = split( ',', $config{'OrderingEmail'} );
 	@admin_emails = map { lc; misc::trim($_) } @admin_emails;
 
-	my @accounting_emails = split( ',', $openprint::config{'AccountingEmail'} );
+	my @accounting_emails = split( ',', $config{'AccountingEmail'} );
 	@accounting_emails = map { lc; misc::trim($_) } @accounting_emails;
 
 	@admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
 
 	if ( @admin_emails ) {
 		my %mail = (
-				SMTP	=> $openprint::config{'Mail Server'},
+				SMTP	=> $config{'Mail Server'},
 # Only for Amin
 				FROM	=> $order{'txtEmail'},
-				#FROM	=> $openprint::config{'OrderingEmail'},
+				#FROM	=> $config{'OrderingEmail'},
 				TO		=> join(',',@admin_emails),
 				SUBJECT => "Order $order_id",
 				);
@@ -1449,7 +1453,7 @@ sub update_order_status {
 
 		send_completion_notice( $r, $log, $dbh, $order_id );
 
-		if ( $openprint::config{'SendInvoiceOnProjectCompletion'} ne 'N' ) {
+		if ( $config{'SendInvoiceOnProjectCompletion'} ne 'N' ) {
 			send_invoice( $r, $log, $dbh, $order_id );
 		} # end if
 	} # end if

@@ -73,6 +73,12 @@
 			 </select>
 		</p>
 		<p>
+			<label>POs</label>
+			<input type="radio" name="pos" id="posWith" value="With" <? echo ( ssi::checked($param{pos} eq 'With' ); ) ?> /><label class="radio" for="posWith">With</label>
+			<input type="radio" name="pos" id="posWithout" value="Without" <? echo ( ssi::checked($param{pos} eq 'Without' ); ) ?> /><label class="radio" for="posWithout">Without</label>
+			<input type="radio" name="pos" id="posAll" value="" <? echo ( ssi::checked(!$param{pos}); ) ?> /><label class="radio" for="posAll">All</label>
+		</p>
+		<p>
 			<label>Sort By:</label>
 			<select name="order">
 				<option value="created_on">Date Ordered</option>
@@ -81,14 +87,9 @@
 			</select>
 		</p>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-
 		 <p class="buttons">
-			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_contents(f1);", '', 'Show Results' ); ) ?>
+			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "AjaxLoadContent('Results','/employee/reports/_order_history_results.html', f1.serialize() );", '', 'Show Results' ); ) ?>
 		 </p>
-
-
 	</fieldset>
 </form>
-<div id="Results">
-<!--#include virtual="/employee/reports/_order_history_results.html"-->
-</div>
+<div id="Results"><!--#include virtual="/employee/reports/_order_history_results.html"--></div>

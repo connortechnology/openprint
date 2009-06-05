@@ -4,6 +4,15 @@ use MIME::QuotedPrint;
 use Mail::Sendmail;
 use Email::Valid;
 use strict;
+use openprint ();
+use vars qw( $r $log $dbh %variable %param %session %config);
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*param = \%openprint::param;
+*session = \%openprint::session;
+*config = \%openprint::config;
 
 require sql;
 
@@ -68,22 +77,22 @@ sub confirmation_returns {
 	$template = ssi::variable_substitution( $template, \%info );
 
 	my %mail = (
-			SMTP	=> $openprint::config{'Mail Server'},
-			FROM	=> $openprint::config{'RMAEmail'},
-			TO		=> $openprint::config{'RMAEmail'},
+			SMTP	=> $config{'Mail Server'},
+			FROM	=> $config{'RMAEmail'},
+			TO		=> $config{'RMAEmail'},
 			SUBJECT => 'Online RMA Submission.'
 			);
 	misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
 
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_confirmation.html' );
 	$info{'ReplacementText'} = ssi::variable_substitution( $info{'ReplacementText'}, \%info );
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
     $email_template = ssi::variable_substitution( $email_template, \%info );
 
 	my %mail = (
-		SMTP	=> $openprint::config{'Mail Server'},
+		SMTP	=> $config{'Mail Server'},
 		TO		=> $info{'Email'},
-		FROM	=> $openprint::config{'RMAEmail'},
+		FROM	=> $config{'RMAEmail'},
 		SUBJECT => 'Online RMA Submission.'
 		);
 	misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
@@ -105,9 +114,9 @@ sub confirmation_help_desk {
 	$error .= 'Missing Phone<br/>' if $openprint::param{'txtPhone'} eq '';
 	$error .= 'Missing/Invalid E-mail<br/>' if ( ! $openprint::param{'txtEmail'} ) or ( ! Email::Valid->address( $openprint::param{'txtEmail'} ) );
 	$error .= 'Missing Question or Comment<br/>' if $openprint::param{'txtQuestion-Quote'} eq '';
-	if ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) {
+	if ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) {
 		require Authen::Captcha;
-		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $ENV{'DOCUMENT_ROOT'}.'/skins/'.$openprint::config{'SiteTitle'}.'/images/captcha');
+		my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
 		if ( 1 != $Captcha->check_code( $openprint::param{'Captcha'}, $openprint::param{'MD5SUM'} ) ) {
 			$error .= 'Validation Code incorrect.  Please try again.';
 		} # end if
@@ -163,22 +172,22 @@ sub confirmation_help_desk {
 	$template = ssi::variable_substitution( \$template, \%info );
 
 	my %mail = (
-			SMTP	=> $openprint::config{'Mail Server'},
+			SMTP	=> $config{'Mail Server'},
 			FROM	=> sprintf('"%s %s" <%s>', @openprint::param{'txtFirstName','txtLastName','txtEmail'} ),
-			TO		=> $openprint::config{'HelpdeskEmail'},
+			TO		=> $config{'HelpdeskEmail'},
 			SUBJECT => 'Online Helpdesk Submission.'
 			);
 	misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
 
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_confirmation.html' );
 	$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
     $email_template = ssi::variable_substitution( \$email_template, \%info );
 
 	my %mail = (
-		SMTP	=> $openprint::config{'Mail Server'},
+		SMTP	=> $config{'Mail Server'},
 		TO		=> sprintf('"%s %s" <%s>', @openprint::param{'txtFirstName','txtLastName','txtEmail'} ),
-		FROM	=> $openprint::config{'HelpdeskEmail'},
+		FROM	=> $config{'HelpdeskEmail'},
 		SUBJECT => 'Online Helpdesk Submission.'
 		);
 	misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );

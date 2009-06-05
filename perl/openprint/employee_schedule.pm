@@ -46,25 +46,22 @@ sub drop_project {
 
 	return if ! @order;
 
-	$id =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)/;
-	my ( $press_index, $year, $month, $day, $shift ) = ( $1, $2, $3, $4, $5 );
-	my ( $start_time, $operator_id );
+	$id =~ /^(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w*)$/;
+	my ( $equipment_id, $year, $month, $day, $shift ) = ( $1, $2, $3, $4, $5 );
+	my ( $start_time, $end_time, $operator_id );
 
 	if ( $shift ) {
-		if ( ( $start_time ) = sql::execute( $log, $dbh, q{SELECT starttime FROM Shifts WHERE equipment_id=? AND name=?}, $press_index, $shift ) ) {
-		
+		if ( ( $start_time, $end_time ) = sql::execute( $log, $dbh, q{SELECT starttime, starttime+duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $shift ) ) {
 			$start_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $start_time );
+			$end_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $end_time );
 
-			my $end_time = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, 
-					sql::execute( $log, $dbh, q{SELECT starttime+duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $press_index, $shift )
-					);
-			( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $press_index, $start_time, $end_time );
+			( $operator_id ) = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents, Schedule WHERE Schedule.ProjectIndex=tbl_Project_Contents.lngProjectIndex AND Schedule.ServiceIndex=tbl_Project_Contents.lngServiceIndex AND equipment_id=? AND ( Schedule.starttime BETWEEN ? AND ? )}, $equipment_id, $start_time, $end_time );
 		} else {
 # Must be Approved or Pending
 		} # end if
 	} # end if
 
-	my $Press = new openprint::Equipment( $press_index );
+	my $Equipment = new openprint::Equipment( $equipment_id );
 
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
@@ -77,16 +74,16 @@ sub drop_project {
 		next if ! @rows;
 		my $row = shift @rows;
 		if ( $start_time and ! $$row{starttime} ) {
-			my $Project = new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Press->strid() . " at $start_time" );
+			new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . " at $start_time" );
 		} # end if
 
-		sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'Equipment_ID', $press_index );
+		sql::update( $log, $dbh, 'Schedule', ['id=?', $id], 'StartTime', $start_time, 'equipment_id', $equipment_id );
 		if ( $$row{operator_id} != $operator_id ) {
 			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
 		} # end if
 
 		if ( @order ) {
-			if ( $openprint::config{'Smart Schedule'} eq 'Y') {
+			if ( $openprint::config{'Smart Schedule'} eq 'Y' or ($equipment_id == 28)) {
 				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE id=?}, $id );
 			} else {
 				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $id );
@@ -101,13 +98,10 @@ sub set_operator {
 	$period =~ /(\d*)-(\d\d\d\d)-(\d\d)-(\d\d)-(\w\w)/;
 	my ( $press_index, $year, $month, $day, $shift ) = ( $1, $2, $3, $4, $5 );
 	my $ac = sql::start_transaction( $dbh );
-	my ( $st ) = sql::execute( $log, $dbh, q{SELECT starttime FROM Shifts WHERE equipment_id=? AND name=?}, $press_index, $shift );
+	my ( $st, $dt ) = sql::execute( $log, $dbh, q{SELECT starttime,duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $press_index, $shift );
 	my ( $sh, $sm, $ss ) = split(':', $st );
 	my $start_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $sh, $sm, $ss );
-
-	my ( $dt ) = sql::execute( $log, $dbh, q{SELECT duration-'1 second'::interval FROM Shifts WHERE equipment_id=? AND name=?}, $press_index, $shift );
 	my ( $dh, $dm, $ds ) = split( ':', $dt );
-	$log->debug(" Starttime: $start_time, Delta: $dh:$dm:$ds");
 	my $end_time = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Add_Delta_DHMS( $year, $month, $day, $sh, $sm, $ss, 0, $dh, $dm, $ds ) );
 	my @schedule = openprint::press_schedule::find( 'starttime_start'=>$start_time, 'starttime_end'=>$end_time, 'equipment_id'=>$press_index );
 	foreach my $row ( @schedule ) {

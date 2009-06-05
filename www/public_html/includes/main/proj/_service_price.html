@@ -40,8 +40,7 @@
 	<span class="<?Columns?>Columns">
 <? if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 		<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" onchange="calc(this.form.name);" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />
-		<input type="checkbox" id="OverridePrice<?QTYIndex?>" name="OverridePrice<?QTYIndex?>" value="Y" onclick="if(!this.checked)calc(this.form.name);" <? echo ( $$variable{'OverridePrice'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="OverridePrice<?QTYIndex?>">Override</label>
+		<? echo ( return ssi::write_override( 'OverridePrice'.$$variable{'QTYIndex'}, $$variable{'OverridePrice'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
 <? else ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 		<input name="txtPrice<?QTYIndex?>" size="9" onfocus="this.blur();" readonly="readonly" />
 		<? if ( $$variable{'OverridePrice'.$$variable{'QTYIndex'}} eq 'Y' ) ?>
