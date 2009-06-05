@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
 
@@ -24,6 +25,7 @@ use Mail::Sendmail;
 use MIME::QuotedPrint;
 use MIME::Base64 qw(encode_base64);
 use Time::HiRes qw(usleep);
+use Encode;
 
 my $program = basename($0);
 
@@ -304,6 +306,11 @@ EOT
 		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user}) ) {
 			$User = $Users[0];
 		} # end if
+	} else {
+		if ( my @Users = openprint::User::find('email'=>lc $upload_info->{user}) ) {
+			$User = $Users[0];
+			$Company = $User->Company();
+		} # end if
 	} # end if
 
 	if ( $Company and $User ) {
@@ -340,13 +347,14 @@ EOT
                         TO      => $to,
                         SUBJECT => $subject,
                    );
-        misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
+        misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable' ) );
 	
-	} elsif ( 0 ) {
+	} elsif ( 1 ) {
 		my $email_info = {
 			smtp => $smtp_server,
 			From => $from,
 			To => join(', ', @$recipients),
+			BCC	=>	'iconnor@point-one.com',
 			Subject => $subject,
 		};
 
@@ -386,7 +394,7 @@ EOT
 					} else {
 						$email_info->{Body} .= "Content-Type: application/octet-stream\n";
 						$email_info->{Body} .= "Content-Transfer-Encoding: base64\n\n";
-						$email_info->{Body} .= encode_base64($attach);
+						$email_info->{Body} .= MIME::Base64::encode_base64($attach);
 					}
 
 					$email_info->{Body} .= "\n";

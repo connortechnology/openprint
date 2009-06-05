@@ -37,13 +37,17 @@ configuration::init_cache( $log, $dbh );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM QuoteLevels LIMIT 1', {} );
-if ( ! $data ) {
+my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+
+if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
 } # end if
+
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
 if ( $data ) {
 	if ( ! exists $$data{'style_id'} ) {
