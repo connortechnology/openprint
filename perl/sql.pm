@@ -9,8 +9,9 @@ use DBI;
 use Time::HiRes qw{ gettimeofday tv_interval }; 
 use strict;
 
-use vars qw( $log $dbh $debug );
+use vars qw( $log $dbh $debug $timing );
 $debug = 1;
+$timing = 1;
 
 sub open_sql {
 	my ( $l, %sql_server ) = @_;
@@ -39,7 +40,7 @@ sub execute {
 		$print_sql = $sql;
 		$print_sql =~ s/\?/\%s/g;
 		$print_sql = sprintf($print_sql, @values);
-		$starttime = [gettimeofday];
+		$starttime = [gettimeofday] if $timing;
 	} # end if
 	my $sth;
 	if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
@@ -57,9 +58,15 @@ sub execute {
 			} # end for
 		} # end while
 	} # end if
-	$sth->finish(); # unneccessary
+	$sth->finish();
 	if ( $l and $debug ) {
-		$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+		if ( $timing ) {
+			$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+		} elsif ( @return_array ) {
+			$l->debug("SQL ($print_sql) Results:".join(',',@return_array));
+		} else {
+			$l->debug("SQL ($print_sql) No Results:");
+		} # end if
 	} # end if
 
 	return @return_array;
