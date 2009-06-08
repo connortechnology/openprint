@@ -1119,7 +1119,6 @@ sub _drop {
 sub reorder_jobs {
 	my ( @order ) = @_;
 
-	my $run_time = 0;
 	my $start_time = time;
 
 	my $row = $order[0];
@@ -1166,6 +1165,7 @@ sub reorder_jobs {
 
 	while ( @order ) {
 		my $row = shift @order;
+		my $run_time = misc::hms2time( $$row{'runtime'} );
 		my $old_start_time = $start_time - $run_time;
 
 		while ( @fixed_jobs and (Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < ($start_time+$run_time) ) ) {
@@ -1227,6 +1227,7 @@ sub _li_change {
 		} # end if
 	} elsif ( exists $param{'starttime_year'} ) {
 
+		push @{$variable{'changed'}}, openprint::Shift::get( $row )->ul_id();
 		my $old_starttime = Date::Parse::str2time( $$row{'starttime'} );
 		my $new_starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} );
 		sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'starttime', $new_starttime, 'starttime_locked', $param{'locked'} );
