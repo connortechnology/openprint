@@ -3,8 +3,10 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw( %config );
+use vars qw( %config %param $dbh );
 *config = \%openprint::config;
+*param = \%openprint::param;
+*dbh = \%openprint::dbh;
 
 require sql;
 require ssi;
@@ -18,7 +20,6 @@ require openprint::obj_customer;
 require openprint::address;
 require openprint::Company;
 require openprint::customer_credit;
-
 
 sub configuration {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -147,8 +148,6 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'User already exists.', "There is already a user with the specified email address.  Please try another.");
 		} # end if
 
-		#$openprint::param{'assistant_ids'} = '' if ! exists $openprint::param{'assistant_ids'};
-		#$openprint::param{'csr_ids'} = '' if ! exists $openprint::param{'csr_ids'};
 		delete $openprint::param{'password'} if ! $openprint::param{'password'};
 		my $error = $User->save( \%openprint::param );
 
@@ -201,7 +200,14 @@ sub user_profiles {
 			} # end foreach
 		} # end if
 
-		$$variable{'information'} = "Record saved successfully.";
+		my %notifications;
+		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+		foreach my $k ( keys %types ) {
+			$notifications{$types{$k}} = $param{"notification_$k"};
+		} # end foreach
+		$User->notifications( \%notifications );
+
+		$$variable{'information'} = 'Record saved successfully.';
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
