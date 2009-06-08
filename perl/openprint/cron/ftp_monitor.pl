@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+use utf8;
 use lib '/var/www/p1/perl';
 use strict;
 
@@ -24,6 +25,7 @@ use Mail::Sendmail;
 use MIME::QuotedPrint;
 use MIME::Base64 qw(encode_base64);
 use Time::HiRes qw(usleep);
+use Encode;
 
 my $program = basename($0);
 
@@ -346,7 +348,7 @@ EOT
 						CC		=>	'iconnor@penultima.org',
                         SUBJECT => $subject,
                    );
-        misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
+        misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 	
 	} elsif ( 1 ) {
 		my $email_info = {
@@ -392,7 +394,7 @@ EOT
 					} else {
 						$email_info->{Body} .= "Content-Type: application/octet-stream\n";
 						$email_info->{Body} .= "Content-Transfer-Encoding: base64\n\n";
-						$email_info->{Body} .= encode_base64($attach);
+						$email_info->{Body} .= encode_base64(Encode::encode('utf-8',$attach));
 					}
 
 					$email_info->{Body} .= "\n";
