@@ -165,7 +165,7 @@ sub inventory_report {
 					$Paper->mweight(),
 					$Paper->gsm(),
 					$$Skid{'id'},
-					$$Skid{'rfidtag_id'},
+					$Skid->RFIDTag()->id_short(),
 					$$Skid{'created_on'},
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $$Skid{Paper}{$$Paper{'id'}} : '',
@@ -1316,7 +1316,7 @@ sub manifest {
 								} );
 					} # end if
 					$total_qty += $C->quantity();
-					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest <a href=/employee/inventory/manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
+					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest <a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project ) {
 						my @PAs = openprint::PaperAllocation::find('skid_id'=>$C->skid_id());
@@ -1431,7 +1431,7 @@ sub inventory_log {
             push @Data, (
                 Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
                 $skid_id,
-                $Skid->rfidtag_id(),
+                $Skid->RFIDTag()->id_short(),
                 $Paper->to_string(),
                 $delta,
                 join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),

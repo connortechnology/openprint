@@ -24,7 +24,7 @@
 			$html .= sprintf( '<td>%s</td>', $PI->User()->name() );
 			$html .= sprintf( '<td>%d</td>', $PI->delta(), );
 			$html .= sprintf( '<td>%d</td>', $PI->instock(), );
-			$html .= sprintf( '<td>%s</td>', $PI->comment(), );
+			$html .= sprintf( '<td>%s</td>', $PI->comment_html(), );
 			$html .= '</tr>';
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
