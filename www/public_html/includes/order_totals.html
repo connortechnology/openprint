@@ -10,13 +10,13 @@
 	<? if ( $$variable{'GST'} ne '' ) ?>
 	<tr>
 		<td align="right">Federal Tax:</td>
-		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'GST'} ) ) ?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'GST'} ) ); ) ?></td>
 	</tr>
 	<? endif ( $$variable{'GST'} ne '' ) ?>
 	<? if ( $$variable{'PST'} ne '' ) ?>
 	<tr>
 		<td align="right">State/Prov Tax:</td>
-		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'PST'} ) ) ?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'PST'} ) ); ) ?></td>
 	</tr>
 	<? endif ( $$variable{'PST'} ne '' ) ?>
 	<? if ( $$variable{'HST'} ne '' ) ?>
