@@ -6,10 +6,11 @@ use MIME::Base64;
 use openprint::Currency;
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh);
+use vars qw(%variable $log $dbh %config);
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
 require sql;
 require openprint::logs;
@@ -78,15 +79,15 @@ sub find {
 			$sql .= q{ AND (dtmquotedate <= ?::timestamp with time zone)};
 			push @values, $params{'created_on_end'};
 		} # end if
-		if ( $params{'value_start'} and $params{'value_end'} ) {
-			$sql .= q{ AND (curtotalsale BETWEEN ? AND ? )};
-			push @values, $params{'value_start','value_end'};
-		} elsif ( $params{'value_start'} ) {
-			$sql .= q{ AND (curtotalsale >= ?)};
-			push @values, $params{'value_start'};
-		} elsif ( $params{'value_end'} ) {
-			$sql .= q{ AND (curtotalsale <= ?)};
-			push @values, $params{'value_end'};
+		if ( $params{'total_start'} and $params{'total_end'} ) {
+			$sql .= q{ AND ( (curtotalsale1 BETWEEN ? AND ? ) OR (curtotalsale2 BETWEEN ? AND ? ) OR (curtotalsale3 BETWEEN ? AND ? ) )};
+			push @values, @params{'total_start','total_end','total_start','total_end','total_start','total_end'};
+		} elsif ( $params{'total_start'} ) {
+			$sql .= q{ AND (curtotalsale1 >= ? OR curtotalsale2 >= ? OR curtotalsale3 >= ?)};
+			push @values, @params{'total_start','total_start','total_start'};
+		} elsif ( $params{'total_end'} ) {
+			$sql .= q{ AND (curtotalsale1 <= ? OR curtotalsale2 <= ? OR curtotalsale3 <= ?)};
+			push @values, @params{'total_end','total_end','total_end'};
 		} # end if
 		if ( $params{'status'} ) {
 			if ( ref $params{'status'} eq 'ARRAY' ) {
@@ -97,12 +98,20 @@ sub find {
 				push @values, $params{'status'};
 			} # end if
 		} # end if
+		if ( $params{'currency_id'} ) {
+			$sql .= ' AND ( currency_id = ? )';
+			push @values, $params{'currency_id'};
+		} # end if
+		if ( $params{'salesrep_id'} ) {
+			$sql .= ' AND ( companyindex IN ( SELECT index FROM company WHERE lngsalesperson=? ) )';
+			push @values, $params{'salesrep_id'};
+		} # end if
 		if ( $params{'for_name'} ) {
 			$sql .= q{ AND (SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quoteindex=index)=?};
 			push @values, $params{'for_name'};
 		} # end if
 		if ( $params{'id_like'} ) {
-			$sql .= " AND index LIKE '$params{'id_like'}%'";
+			$sql .= " AND index::text LIKE '$params{'id_like'}%'";
 		} # end if
 
 		if ( exists $params{'order'} ) {
@@ -115,7 +124,7 @@ sub find {
 		$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 		if ( ! $data ) {
-			$log->warn("Error loading Quotes: ($sql) (@values)");
+			$log->warn("Error loading Quotes: ($sql) (@values) reason: " . $dbh->errstr() );
 			return;
 		} elsif ( $debug ) {
 			$log->debug("Loading Quotes: ($sql) (@values)");
@@ -201,13 +210,6 @@ sub to_string {
 	return '';
 } # end sub
 
-sub created_on {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'created_on'} = shift;
-	} # end if
-	return $$self{'created_on'};
-} # end sub created_on
 sub created_by_id {
 	my $self = shift;
 	return $$self{'created_by_id'};
@@ -256,6 +258,10 @@ sub Currency {
 sub for_name {
 	my $self = shift;
 	return $$self{'for_firstname'} . ' ' . $$self{'for_lastname'};
+} # end sub
+sub by_name {
+	my $self = shift;
+	return $$self{'by_firstname'} . ' ' . $$self{'by_lastname'};
 } # end sub
 
 sub contents {
@@ -342,7 +348,7 @@ sub send {
     openprint::quote::get_user_for_info( $log, $dbh, \%quote, $$self{id} );
 
 	openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 
 	my @project_summaries;
 	if ( $self->Company()->quote_project_breakdown() eq 'Y' ) {
@@ -366,7 +372,7 @@ sub send {
 
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_invoice.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		push @attachments, "Quote$$self{id}.html", encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
+		push @attachments, "Quote$$self{id}.html", encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) ) ), 'text/html', 'quoted-printable';
 
 		my %mail = (
 
@@ -407,7 +413,7 @@ sub send {
 			$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_for_invoice.html' );
 			if ( $_ ) {
 				$_ = ssi::variable_substitution( undef, $log, $dbh, \$_, \%quote );
-				push @attachments, "Quote$$self{id}.html", encode_qp($_), 'text/html', 'quoted-printable';
+				push @attachments, "Quote$$self{id}.html", encode_qp(Encode::encode('utf-8',$_)), 'text/html', 'quoted-printable';
 			} # end if
 
 
@@ -426,7 +432,7 @@ sub send {
 
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
 		push @attachments, '', $_, 'text/html', 'quoted-printable';
 
@@ -439,7 +445,7 @@ sub send {
 
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_end_user_invoice.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
+		$_ = encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) ) );
 		push @attachments, "Quote$$self{id}.html", $_, 'text/html', 'quoted-printable';
 
 		my %mail = (
@@ -455,7 +461,7 @@ sub send {
 # Send one to the admin
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 
@@ -463,7 +469,7 @@ sub send {
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_invoice.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$quote{'ReplacementText'}, \%quote );
 		if ( $email_template ) {
-			$email_template = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) );
+			$email_template = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%quote ) ) );
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'QuotingEmail'},

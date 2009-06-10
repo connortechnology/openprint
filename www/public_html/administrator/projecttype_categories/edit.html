@@ -7,12 +7,16 @@
 		) ?>
 		</legend>
 		<p>
-			<label>Name</label>
-			<input type="text" id="name" name="name" value="<? echo ( ssi::htmlize($$variable{'ProjectTypeCategory'}->name()); ) ?>"  />
+			<label>Name:</label>
+			<input type="text" id="name" name="name" value="<? hecho ( $$variable{'ProjectTypeCategory'}->name(); ) ?>"  />
 		</p>
 		<p>
-			<label>Description</label>
-			<textarea id="description" name="description" rows="4" ><? echo ( ssi::htmlize($$variable{'ProjectTypeCategory'}->description()); ) ?></textarea>
+			<label>Description:</label>
+			<textarea id="description" name="description" rows="4" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'ProjectTypeCategory'}->description(); ) ?></textarea>
+		</p>
+		<p>
+			<label>Sort:</label>
+			<input type="text" id="sort" name="sort" value="<? hecho ( $$variable{'ProjectTypeCategory'}->sort(); ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
 		</p>
 		<p class="buttons">
 			<? echo ( join('',

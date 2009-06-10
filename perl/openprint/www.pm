@@ -51,6 +51,8 @@ sub handler {
 
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
+	$r->content_type(q{text/html; charset=utf-8});
+
 
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);
@@ -65,10 +67,10 @@ sub handler {
 		my @values = $r->param($key);
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
-				$log->warn("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
+				$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = shift @values;
-				$log->warn("Parameter $key is (" . $param{$key} . ")" );
+				$log->debug("Parameter $key is (" . $param{$key} . ")" );
 		} # end if
 	} # end foreach
 
@@ -86,6 +88,7 @@ sub handler {
 	openprint::usergroup::init_cache();
 	openprint::Material::init_cache();
 	openprint::Service::init_cache();
+	openprint::Equipment::init_cache();
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -93,6 +96,7 @@ $openprint::log->debug("Page: $page");
 	while ( $page and $lastpage ne $page ) {
 		# This is for loop detection
 		$lastpage = $page;
+$variable{'uri'} = $page;
 		parse_page( $page );
 		if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
 			$page = $variable{'Redirect'};
@@ -113,8 +117,8 @@ $openprint::log->debug("Page: $page");
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
 		if ( ! $variable{'PageContent'} ) {
 			my $content;
-			if ( -e join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) ) {
-				$content = misc::load_file( $log, join('/', $ENV{'DOCUMENT_ROOT'}, 'skins', $config{'SiteTitle'}, $page ) );
+			if ( -e join('/', $config{'SkinPath'}, $page ) ) {
+				$content = misc::load_file( $log, join('/', $config{'SkinPath'}, $page ) );
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 			} # end if
@@ -126,23 +130,14 @@ $openprint::log->debug("Page: $page");
 		# _ signifies a page fragment, so don't load layout
 		if ( substr($filename, 0, 1 ) ne '_' ) {
 			while ( @page_path ) {
-				my $file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, $filename );
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'skins/', $r->dir_config('SiteTitle'), '/layouts', @page_path, 'default.html' );
+				my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
 				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
 				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, $filename );
-				if ( -e $file ) {
-					$template = misc::load_file( $log, $file );
-					last;
-				} # end if
-				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
+				$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
+				#$log->debug("Looking for $file");
 				if ( -e $file ) {
 					$template = misc::load_file( $log, $file );
 					last;
@@ -154,8 +149,8 @@ $openprint::log->debug("Page: $page");
 			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( $r, $log, $dbh, \$template, \%variable ) );
 		} else {
-			$log->warn("No template!");
-			$log->warn($variable{'PageContent'});
+			#$log->warn("No template!");
+			#$log->warn($variable{'PageContent'});
 			$r->print( $variable{'PageContent'} );
 		} # end if
 	} # end if
@@ -238,7 +233,8 @@ $openprint::log->debug("Getfile");
 
 			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
 
-		} else {
+		} elsif ( $first ) {
+$log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
 			$eval .= '_'.$second if $second;
 			eval	'require '.$eval;
@@ -247,6 +243,7 @@ $openprint::log->debug("Getfile");
 			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
 			eval $eval;
 			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
+$log->debug('2');
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
@@ -281,6 +278,7 @@ $openprint::log->debug("Getfile");
 
 			$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
 			@variable{'ddmDueDate','OrderedQuantityIndex'} = ( $variable{'Project'}->due_date(), $variable{'Project'}->ordered_quantity_index() );
+			$variable{'QTYIndex'} = $variable{'OrderedQuantityIndex'};
 			$variable{'DocketNumber'} = $variable{'Project'}->docket();
 
 			$variable{'Employee'} = new openprint::User( $openprint::session{'user_id'} )->name();
@@ -309,19 +307,46 @@ $openprint::log->debug("Getfile");
 
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
+				if ( $filename eq '_production_feedback.html' ) {
+					openprint::employee_project::_production_feedback( );
+				} elsif ( $filename eq 'prin_multi.html' ) {
+					if ( $param{'action'} eq 'SendPPF' ) {
+						my $Project = new openprint::Project( $param{'ProjectIndex'} );
+						require openprint::CIP3_PPF;
+						my $PPF = new openprint::CIP3_PPF( $param{'ppf_id'} );
+
+						my $Equipment;
+						foreach my $sig_id ( $Project->signatures() ) {
+							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+							if ( $$sig_specs{'SignatureIndex'} == $$PPF{'signature'} ) {
+$log->debug("Found sig");
+								my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+								if ( @Equipment ) {
+									$Equipment = $Equipment[0];
+									last;
+								} 	
+							} # end if
+						} # end foreach
+						if ( ! $Equipment ) {
+							$log->debug("Looking it up from Schedule");
+							my @rows = openprint::press_schedule::find('project_id'=>$param{'ProjectIndex'},'service_id'=>$param{'ServiceIndex'});
+							if ( @rows == 1 ) {
+								$Equipment = new openprint::Equipment( $rows[0]{'equipment_id'} );
+							} 
+						} # end if
+						if ( ! $Equipment ) {
+$log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'signature'}.");
+						} else {
+						$PPF->send_ppf( $Equipment );
+						} # end if
+					} # end if
+				} # end if
 			} # end if
-		} elsif ( $second eq 'accounting' ) {
-			if ( openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
-				require openprint::employee_accounting;
-				openprint::employee_accounting::search( $r, $log, $dbh, \%variable )		if $filename eq 'search.html';
-				openprint::employee_accounting::details( $r, $log, $dbh, \%variable )	if $filename eq 'details.html';
-				openprint::employee_accounting::credit( $r, $log, $dbh, \%variable )		if $filename eq 'credit.html';
-			} else {
-				$variable{'error'} = "Unauthorized";
-				$variable{'details'} = "You are not authorized to view this page.";
-				$variable{'Redirect'} = $openprint::config{'errorpage'};
-				return;
-			} # endif
+		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) {
+			$variable{'error'} = 'Unauthorized';
+			$variable{'details'} = 'You are not authorized to view this page.';
+			$variable{'Redirect'} = $config{'errorpage'};
+			return;
 		} else {
 			eval( 'require openprint::'.join('_', @path ) );
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
@@ -353,6 +378,23 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 
+	} elsif ( $first eq 'content' ) { # main
+		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+		return $status if $variable{'Redirect'};	
+
+		if ( ! $session{'user_id'} ) {
+			# if not logged in, determine if they are allowed to see this page or not.
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+				$variable{'Redirect'} = '/error/error_login.html';
+				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				return Apache2::Const::OK;
+			} # end if
+		} # end if
+		eval( 'require openprint::'.join('_', @path ) );
+		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
@@ -362,6 +404,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+$log->debug("Dset: $variable{'Destination'}");
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
@@ -493,15 +536,15 @@ $variable{'ServiceIndex'} = $service_index;
 		} # end if main:$second
 
 	} else {
-		
-		my $module = 'openprint::' . $first;
-		$module .= '_'.$second if $second;
-		eval( "require $module;" );
-		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-		my ( $proc ) = $filename =~ /(.*).html/;
-		eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
-
+		if ( $first ) {
+			my $module = 'openprint::' . $first;
+			$module .= '_'.$second if $second;
+			eval( "require $module;" );
+			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*).html/;
+			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+			$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		} # end if
 	} # end if $first
 
 	return $status;

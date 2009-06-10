@@ -114,8 +114,6 @@ function create_option( value, text ) {
 
 function add_option( ddm, value, text, selectedValue ) {
 	if ( ddm ) {
-		//var optionIndex = get_option_index(ddm.options,value);
-		//if ( optionIndex == -1 ) {
 			var option = create_option( value, text );
 			var index = ddm.options.length;
 			ddm.options[index] = option;
@@ -125,10 +123,6 @@ function add_option( ddm, value, text, selectedValue ) {
 			} else {
 				option.selected = false;
 			} // end if
-		//} else {
-			//ddm.options[optionIndex].text = text;
-		//} // end if
-
 	} else {
 		alert('add_option: null ddm ' + ddm);
 	} // end if
@@ -389,27 +383,25 @@ function isLeapYear(year) {
  *	if specified it will set the default selection to the passed selected day.
  */
 function setDaysDropDown(year, month, dayDropDown, selectedDay) {
+	selectedDay = parseInt(selectedDay);
 	var numberOfDays = returnNumberOfDays(month,year);
 	if ( numberOfDays < selectedDay ) {
 		selectedDay = numberOfDays;
 	} // end if
 
-	if ( dayDropDown.options[0].value == '' ) {
-		numberOfDays = parseInt( numberOfDays ) + 1;
-		selectedDay = parseInt( selectedDay ) + 1;
-	} // end if
-
-	if ( dayDropDown.options.length > numberOfDays ) {
-		for ( var i = dayDropDown.options.length; i > numberOfDays; i -= 1 ) {
-			dayDropDown.options[i-1] = null;
+	if ( dayDropDown.options[dayDropDown.options.length-1].value > numberOfDays ) {
+		for ( var i = dayDropDown.options.length-1; i > numberOfDays; i -= 1 ) {
+			if ( dayDropDown.options[i].value > numberOfDays ) {	
+				dayDropDown.options[i] = null;
+			} // end if
 		} // end for
-	} else if ( dayDropDown.options.length < numberOfDays ) {
-		for ( var i = dayDropDown.options.length; i < numberOfDays; i += 1 ) {
-			dayDropDown.options[i] = new Option( i+1, i+1 );
+	} else if ( dayDropDown.options[dayDropDown.options.length-1].value < numberOfDays ) {
+		for ( var i = parseInt(dayDropDown.options[dayDropDown.options.length-1].value); i < numberOfDays; i += 1 ) {
+			dayDropDown.options[dayDropDown.options.length] = new Option( i+1, i+1 );
 		} // end for
 	} // end if
 
-	dayDropDown.options[selectedDay-1].selected = true;
+	ddm_select_by_value( dayDropDown, selectedDay );
 }
 
 function Serialize( form ) {
@@ -545,24 +537,33 @@ function changed( form ) {
 } // end function changed
 
 function fmCheck( form ) {
+	if ( $('ButtonsTop') ) $('ButtonsTop').hide();
+	if ( $('ButtonsBottom') ) $('ButtonsBottom').hide();
 	if ( fmChange == 1 ) {
 		if ( ( ! changed(form) ) || confirm("Are you sure you want to leave this record without saving your changes?") ) {
 			fmChange == 0;
-						form.submit();
+			form.submit();
 		} 
 	} else if (fmChange == 2) {
 		fmChange = 0;
 		if ( confirm("Are you sure you want to delete this record?") ) {
-						form.submit();
+			form.submit();
 		} 
 	} else if (fmChange == 3) {
 		fmChange = 0;
 		if ( confirm("Are you sure you want to save your changes?") ) {
-						form.submit();
+			form.submit();
+		} 
+	} else if ( form.btnFunction && form.btnFunction.value == 'Undelete' ) {
+		fmChange = 0;
+		if ( confirm("Are you sure you want to undelete this company?") ) {
+			form.submit();
 		} 
 	} else {
 		form.submit();
 	}
+	if ( $('ButtonsTop') ) $('ButtonsTop').show();
+	if ( $('ButtonsBottom') ) $('ButtonsBottom').show();
 }
 
 function addCheck(form) {
@@ -717,10 +718,19 @@ function addLoadEvent(func) {
 
 function Country_onchange( country_ddm, state ) {
 	var country = get_ddm_value( country_ddm );
+	var state_label = $(country_ddm.name + '_state');
+	var postal_label = $(country_ddm.name + '_postal');
 	if ( country == 'US' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @states::states )", jsrs_cbFillDDM );
+		if ( state_label ) state_label.innerHTML='State:';
+		if ( postal_label ) postal_label.innerHTML='ZIP Code:';
 	} else if ( country == 'CA' ) {
 		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @provinces::provinces )", jsrs_cbFillDDM );
+		if ( state_label ) state_label.innerHTML='Province:';
+		if ( postal_label ) postal_label.innerHTML='Postal Code:';
+	} else {
+		if ( state_label ) state_label.innerHTML='State/Province:';
+		if ( postal_label ) postal_label.innerHTML='Postal Code:';
 	} // end if
 } // end function
 
@@ -761,3 +771,67 @@ function (value, className) {
 
 	return result;
 };
+function check_time_starting( form, starting_prefix, ending_prefix ) {
+    var start;
+    var end;
+
+    if ( get_value( form.time_associated ) == 1 ) {
+        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
+        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+    } else {
+        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
+        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+    } // end if
+
+    if ( start > end ) {
+        ddm_select_by_value( form.elements[ending_prefix+'_year'], form.elements[starting_prefix+'_year'].value );
+        ddm_select_by_value( form.elements[ending_prefix+'_month'], form.elements[starting_prefix+'_month'].value );
+        ddm_select_by_value( form.elements[ending_prefix+'_day'], form.elements[starting_prefix+'_day'].value );
+        if ( get_value( form.time_associated ) == 1 ) {
+            ddm_select_by_value( form.elements[ending_prefix+'_hour'], form.elements[starting_prefix+'_hour'].value );
+            ddm_select_by_value( form.elements[ending_prefix+'_minute'], form.elements[starting_prefix+'_minute'].value );
+        } // end if
+    } // end if
+} // end function check_time_starting
+
+function check_time_ending( form, starting_prefix, ending_prefix ) {
+    var start;
+    var end;
+    if ( get_value( form.time_associated ) == 1 ) {
+        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
+        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+    } else {
+        start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
+        end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+    } // end if
+    if ( start > end ) {
+        ddm_select_by_value( form.elements[starting_prefix+'_year'], form.elements[ending_prefix+'_year'].value );
+        ddm_select_by_value( form.elements[starting_prefix+'_month'], form.elements[ending_prefix+'_month'].value );
+        ddm_select_by_value( form.elements[starting_prefix+'_day'], form.elements[ending_prefix+'_day'].value );
+        if ( get_value( form.time_associated ) == 1 ) {
+            ddm_select_by_value( form.elements[starting_prefix+'_hour'], form.elements[ending_prefix+'_hour'].value );
+            ddm_select_by_value( form.elements[starting_prefix+'_minute'], form.elements[ending_prefix+'_minute'].value );
+        } // end if
+    } // end if
+} // end function check_time_ending
+
+function update_duration(form, starting_prefix, ending_prefix ) {
+    if ( get_value( form.time_associated ) == 1 ) {
+        var start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
+        var end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
+        var difference = parseInt( ( end - start ) / 1000 );
+        var days = parseInt(difference/(60*60*24));
+        difference -= days * ( 60*60*24 );
+        var hours = parseInt( difference/(60*60) );
+        difference -= hours * (60*60);
+        var minutes = parseInt( difference/60 );
+        $('duration').innerHTML = days+'days ' + hours+'hours ' + minutes + 'minutes';
+    } else {
+        var start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value );
+        var end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value );
+        var difference = parseInt( ( end - start ) / 1000 );
+        var days = parseInt(difference/(60*60*24));
+        $('duration').innerHTML = days +'days';
+    } // end if
+} // end function update_duration
+

@@ -3,7 +3,7 @@ package openprint::Skid;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %variable %session  );
+use vars qw( $log $dbh %variable %session $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *log = \$openprint::log;
@@ -15,8 +15,37 @@ require openprint::Paper;
 require openprint::RFIDTag;
 require openprint::Skid_Verification;
 require openprint::SkidContent;
+require openprint::Manifest;
+require openprint::ManifestContent;
 
 my $debug = 1;
+
+$table = 'Skids';
+$serial = 'skid_id_seq';
+%fields = (
+	'id'			=>	'id',
+	'location_id'	=>	'location_id',
+	'created_on'	=>	'created_on',
+	'created_by_id'	=>	'created_by_id',
+	'owner_id'		=>	'owner_id',
+	'updated_on'	=>	'updated_on',
+	'updated_by'	=>	'updated_by',
+	'used'			=>	'used',
+	'rfidtag_id'	=>	'rfidtag_id',
+	'type'			=>	'type',
+	'deleted'		=>	'deleted',
+);
+
+%transforms = (
+	'deleted'	=>	[ 's/[^01]//g' ],
+);
+%defaults = (
+	'location_id'	=>	undef,
+	'rfidtag_id'	=>	undef,
+	'updated_on'	=>	'NOW()',
+	'created_on'	=>	'NOW()',
+	'deleted'		=>	0,
+);
 
 sub find {
 	my %params = @_;
@@ -77,6 +106,18 @@ sub find {
 	if ( $params{'created_on'} ) {
 		$log->debug("Find: Created: $params{'created_on'}");
 	} # end if
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+			push @values, @{$params{'deleted'}};
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
+	} # end if
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 
@@ -86,7 +127,7 @@ sub find {
 	} elsif ( ! @$data ) {
 		$log->debug('No skidss loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$log->debug("Debug loaded skids ($sql) (@values) " );
+		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
 	} # end if
 	return map { new openprint::Skid( $_->{id}, $_ ) } @$data;
 
@@ -120,55 +161,40 @@ sub load {
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 
+	delete $$self{'Contents'};
+	@{$$self{'Contents'}} = $self->Contents();
 	%{$$self{'Paper'}} = ();
 	if ( $$self{'id'} ) {
-		my @data = sql::execute( undef, undef, q{SELECT paper_id, quantity, units FROM Skid_Contents WHERE skid_id=?}, $$self{'id'} );
-		while ( my ( $paper_id, $qty, $units ) = splice @data, 0, 3 ) {
-			$$self{'Paper'}{$paper_id} += $qty;
-		} # end while
+		foreach my $C ( $self->Contents() ) {
+			$$self{'Paper'}{$$C{'paper_id'}} += $$C{'quantity'};
+		} # end foreach
 	} # end if
 } # end sub load
 
 sub save {
-	my $self = shift;
-$log->warn("Saving skid");
+	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	my $ac = sql::start_transaction( $dbh );
-	my @sql = ( 
-		'rfidtag_id',	$$self{'rfidtag_id'} ? $$self{'rfidtag_id'} : undef,
-		'location_id',	$$self{'location_id'} ? $$self{'location_id'} : undef,
-		'created_by_id',$$self{'created_by_id'},	
-		'updated_on',	'NOW()',
-		'updated_by',	$session{'user_id'},
-		);
-		
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Skid_id_seq')} );
-		if ( my $error = sql::insert( undef, undef, 'Skids', @sql, 'id', $$self{'id'} ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-	} else {
-		if ( my $error = sql::update( undef, undef, 'Skids', ['id=?',$$self{'id'}], \@sql )) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-	} # end if
+
+	my %Paper = %{$$self{'Paper'}} if $$self{'Paper'};
+
+	$self->SUPER::save( $data );
 
 	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE skid_id=?}, $$self{'id'} );
-	foreach my $paper_id ( keys %{$$self{'Paper'}} ) {
+	foreach my $paper_id ( keys %Paper ) {
         my $Paper = new openprint::Paper( $paper_id );
-		sql::insert( undef, undef, 'skid_Contents', 'skid_id', $$self{'id'}, 'paper_id', $paper_id, 'quantity', int($$self{'Paper'}{$paper_id}), 'units', $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
+		sql::insert( undef, undef, 'skid_Contents', 'skid_id', $$self{'id'}, 'paper_id', $paper_id, 'quantity', int($Paper{$paper_id}), 'units', $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
 	} # end foreach paper_id
-	$self->load();
 	sql::end_transaction( $dbh, $ac );
+	$self->load();
 	return;
 } # end sub save
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
+	sql::execute( undef, undef, q{DELETE FROM manifestcontents WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_allocations WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM paper_inventory WHERE skid_id=?}, $$self{'id'} );
 	sql::execute( undef, undef, q{DELETE FROM skid_contents WHERE skid_id=?}, $$self{'id'} );
@@ -211,7 +237,7 @@ sub remove {
 	$$self{'Paper'}{$$Paper{'id'}} = 0 if $$self{'Paper'}{$$Paper{'id'}} < 0;
 } # end sub add_inventory
 
-sub set {
+sub set_quantity {
 	my ( $self, $Paper, $quantity ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;
@@ -268,22 +294,18 @@ sub Location {
 	return new openprint::Location( $$self{'location_id'} );
 } # end sub Location
 
-sub created_on {
-	my $self = shift;
-	return $$self{'created_on'};
-} # end sub created_on
-sub created_by_id {
-	my $self = shift;
-	return $$self{'created_by_id'};
-} # end sub created_by_id
-
 sub Contents {
     my $self = shift;
+	return if ! $$self{'id'};
+
+	if ( $$self{'Contents'} ) {
+		return @{$$self{'Contents'}};
+	} # end if
+
     my %params = @_;
     $params{'skid_id'} = $$self{'id'};
 
     return openprint::SkidContent::find( %params );
-
 } # end sub contents
 
 sub allocation {
@@ -390,12 +412,15 @@ sub contents {
 } # end sub contents
 
 sub rfidtag_id {
-	my ( $self, $rfidtag_id ) = @_;
+	my $self = shift;
 
-	if ( $rfidtag_id ) {
-		my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
-		my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
-		$log->error( $error ) if $error;
+	if ( @_ ) {
+		my $rfidtag_id = shift;	
+		if ( $rfidtag_id ) {
+			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+			my $error = $RFIDTag->save({'id'=>$rfidtag_id}) if ! $RFIDTag->id();
+			$log->error( $error ) if $error;
+		} # end if
 		$$self{'rfidtag_id'} = $rfidtag_id;
 	} # end if
 	return $$self{'rfidtag_id'};
@@ -404,6 +429,56 @@ sub rfidtag_id {
 sub RFIDTag {
 	return new openprint::RFIDTag( $_[0]{rfidtag_id} );
 } # end sub RFIDTag
+
+sub type {
+	my $self = shift;
+	if ( ! $$self{'type'} ) {
+		my @Contents = $self->Contents();
+		foreach my $C ( @Contents ) {
+			if ( $C->Paper()->type() eq 'Roll' ) {
+				if ( @Contents > 1 ) {
+					$log->error('A Roll Skid cannot contain more than 1 paper.');
+				} # end if
+				$$self{'type'} = 'Roll';	
+				last;
+			} else {
+				$$self{'type'} = 'Skid';	
+				last;
+			} # end if
+		} # end foreach C
+	} # end if	
+	return $$self{'type'};
+} # end sub type
+
+sub is_empty {
+	my $self = $_[0];
+	foreach my $C ( $self->Contents() ) {
+		return 0 if $C->quantity() > 0;
+	} # end foreach
+	return 1;
+} # end sub is_empty
+
+sub last_seen_days {
+	my $self = $_[0];
+	return int( (time - Date::Parse::str2time($$self{'updated_on'})) / (24*60*60) );
+}
+sub age_days {
+	my $self = $_[0];
+	return int( (time - Date::Parse::str2time($$self{'created_on'})) / (24*60*60) );
+}
+
+sub Manifest {
+	my $self = $_[0];
+	foreach my $MC ( openprint::ManifestContent::find('skid_id'=>$$self{id}) ) {
+		return $MC->Manifest();
+	} # end foreach MC
+	return new openprint::Manifest();
+} # end sub Manifest
+
+sub ManifestContents {
+	my $self = $_[0];
+	return openprint::ManifestContent::find('skid_id'=>$$self{id});
+} # end sub ManifestContents
 
 1;
 __END__

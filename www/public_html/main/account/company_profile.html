@@ -19,6 +19,9 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 		</fieldset>
 		<fieldset>
 			<legend>Company Information:</legend>
+<? if ( $$variable{'Company'}->notes() ) ?>
+<p><b><? echo ( $$variable{'Company'}->notes() ) ?></b></p>
+<? endif ( $$variable{'Company'}->notes() ) ?>
 			<p> 
 				<label for="name">Company Name:</label>
 				<input type="text" name="companyname" value="<? hecho ( $$variable{'Company'}->name() ) ?>"  />
@@ -33,7 +36,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 			</p>
 			<p> 
 				<label>Country:</label>
-				<select name="country" onchange="Country_onchange( this, this.form.state );">
+				<select id="country" name="country" onchange="Country_onchange( this, this.form.state );">
 					<option value=""> Select </option>
 					<? echo (
 						ssi::make_drop_down( \@countries::countries, $$variable{'Company'}->country() );
@@ -42,7 +45,7 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 			</p>
 			<p> 
 				<label>State/Province:</label>
-				<select name="state">
+				<select id="state" name="state">
 					<option value=""> Select </option>
             <? echo (
                 ssi::make_drop_down( \@states::states, $$variable{'Company'}->state() ).

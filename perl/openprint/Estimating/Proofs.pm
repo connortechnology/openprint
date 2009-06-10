@@ -23,8 +23,6 @@ require openprint::print;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-my $debug = 1;
-
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -70,16 +68,12 @@ sub calc {
 
 	my $status = 'calculated';
 
-	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)") if $debug;
+	$log->debug("START PROOFS!!!!!!!!!!!!!!!!!! ($project_index) ($service_index)");
 	my $Project = new openprint::Project( $project_index );
 
 	my @signature_service_indices = $Project->signatures();
 
-	foreach my $qty_index ( 1 ..3 ) {
-		if ( ! $Project->quantity($qty_index) ) {
-			$$specs{"txtPrice$qty_index"} = '';
-			next;
-		} # end if
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $totalPrice = 0;
 		my $totalQuantity = 0;
 
@@ -92,10 +86,9 @@ sub calc {
 			} # end if
         } # end foreach
 
-
 		# First, build a hash containing the quantities of each proof.  The reason for this is to honour quantity discounts.
 		foreach my $signature_service_index ( @signature_service_indices ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -130,17 +123,10 @@ sub calc {
 						insert_colour_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 2, $qty_index, $specs );
 					} elsif ( $proof_index == 3 ) {
 						insert_press_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 3, $qty_index, $specs );
-					} else {
-						if ( sets::isin( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}, ['PolaProof','CanonProof','EpsonProof','FujiFinalProof'] ) ) {
-							if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ne 'Y' ) {
-								$$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} = $$sig_specs{'txtWidth'};
-								$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} = $$sig_specs{'txtHeight'};
-							} # end if
-						} # end if
 					} # end if
 				} else {
 
-					if ( ($proof_index == 1) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux' ) and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
+					if ( ($proof_index == 1 ) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux' ) and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
 						$$specs{'alert'} .= "We require Dylux Proofs<br/>";
 						insert_layout_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 1, $specs );
 						@output = sets::union( @output,
@@ -158,7 +144,9 @@ sub calc {
 								"txtProofQuantity-$signature_index-$proof_index-$qty_index",
 								"ddmProofType-$signature_index-$proof_index-$qty_index",
 								);
-					} # end if
+					} # edn if
+
+					
 				} # end if
 
 				my ( $quantity, $type ) = @$specs{
@@ -525,23 +513,6 @@ sub save_proof_specs {
 
 sub summary {
 } # end sub summary
-
-sub get_next_proof_index {
-	my ( $sig_specs ) = @_;
-
-	my @proof_indexes;
-	my $signature_index = $$sig_specs{'SignatureIndex'};
-	if ( ( ! sets::isin( 1, \@proof_indexes ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
-		push @proof_indexes, 1;
-	} # end if
-	if ( ( ! sets::isin( 2, \@proof_indexes ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
-		push @proof_indexes, 2;
-	} # end if
-	if ( ( ! sets::isin( 3, \@proof_indexes ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
-		push @proof_indexes, 3;
-	} # end if
-	return sets::max( \@proof_indexes ) + 1;
-}
 
 1;
 __END__

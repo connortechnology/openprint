@@ -88,7 +88,7 @@ sub _car_view_part1 {
 			# Auto assignation
 			my $Area = new openprint::CAR_Area( $param{'area_id'} );
 			if ( $Area->assignee_id() ) {
-			$param{'issued_to_id'} = $Area->assignee_id();
+				$param{'issued_to_id'} = $Area->assignee_id();
 			} elsif ( $param{'docket'} ) {
 				# Assign to the CSR for the docket
 				my @Orders = openprint::Order::find('docket'=>$param{'docket'} );
@@ -109,10 +109,12 @@ sub _car_view_part1 {
 		} # end if reprint
 		$variable{'error'} .= $variable{'CAR'}->save( \%param );
 		if ( ! $variable{'error'} ) {
+$openprint::log->debug("No errors");
 			if ( $variable{'CAR'}->id() and ( ! $param{'car_id'} ) and ! $send_reprint_request_notification ) {
 	# Send out notifications
-				$variable{'CAR'}->send_notifications();
 			} # end if
+$openprint::log->debug("send notifications");
+				$variable{'CAR'}->send_notifications();
 			if ( $send_assignee_notification ) {
 				$variable{'CAR'}->send_assignee_notification();
 			} # end if
@@ -122,9 +124,9 @@ sub _car_view_part1 {
 			if ( $send_reprint_approval_notification ) {
 				$variable{'CAR'}->send_reprint_approval_notification();
 			} # end if
-		} # end if
+		} # end if no errors
 		
-	} # end if
+	} # end if btnFunction is Save
 } # end sub _car_view_part1
 sub _car_view_part2 {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
@@ -191,8 +193,8 @@ sub pars {
 					$PAR->issued_on(),
 					new openprint::User($PAR->issued_by_id() )->name(),
 					$PAR->reply_by(),
-					$PAR->area(),
-					$PAR->reason(),
+					$PAR->Area()->name(),
+					$PAR->Reason()->name(),
 					$PAR->problem(),
 					$PAR->cause(),
 					$PAR->action(),
@@ -265,6 +267,10 @@ sub _par_edit_part3 {
 sub _par_edit_part4 {
 	$variable{'PAR'} = new openprint::PAR( $param{'par_id'} );
 }
+
+sub _select_customer_from_docket{
+	$param{'docket'} =~ s/\D//g;
+} # end sub _select_customer_from_docket
 
 1;
 __END__

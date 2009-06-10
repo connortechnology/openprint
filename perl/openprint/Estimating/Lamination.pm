@@ -197,6 +197,9 @@ sub display {
 	} # end foreach qty_index
 } # end sub display
 
+sub summary {
+} # end sub summary
+
 
 1;
 __END__

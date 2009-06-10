@@ -20,6 +20,11 @@ my $debug = 1;
 
 sub delete {
 	my $self = shift;
+	sql::update( undef, undef, 'tbl_Projects', ['Index=?', $$self{'id'}], ['strStatus', 'Deleted'] );
+} # end sub delete
+
+sub destroy {
+	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::update( undef, undef, 'Ordered_Products', ['project_id=?', $$self{'id'}], 'project_id', undef );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=?}, $$self{'id'} );
@@ -365,35 +370,43 @@ sub update_status {
 					if ( $$self{'status'} eq 'In Prepress' ) {
 # Check prepress services and mark complete
 						my @prepress = openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Prepress' );
-						foreach ( @prepress ) {
-							openprint::service::status( $$self{id}, $_, 'Complete' );
-							$changed = 1;
+						foreach my $s_id ( @prepress ) {
+							if ( openprint::service::status( $$self{id}, $s_id ) ne 'Complete' ) {
+								openprint::service::status( $$self{id}, $s_id, 'Complete' );
+								$changed = 1;
+							} # end if
 						} # end foreach
 						if ( $services{'Proofs'} ) {
-							foreach ( @{$services{'Proofs'}} ) {
-								openprint::service::status( $$self{id}, $_, 'Approved' );
+							foreach my $s_id ( @{$services{'Proofs'}} ) {
+								if ( openprint::service::status( $$self{id}, $s_id ) ne 'Approved' ) {
+									openprint::service::status( $$self{id}, $s_id, 'Approved' );
+									$changed = 1;
+								} # end if
 							} # end foreach
-							$changed = 1;
 						} elsif ( $services{'FilmStripping'} ) {
-							foreach ( @{$services{'FilmStripping'}} ) {
-								openprint::service::status( $$self{id}, $_, 'Approved' );
+							foreach my $s_id ( @{$services{'FilmStripping'}} ) {
+								if ( openprint::service::status( $$self{id}, $s_id ) ne 'Approved' ) {
+									openprint::service::status( $$self{id}, $s_id, 'Approved' );
+									$changed = 1;
+								} # end if
 							} # end foreach
-							$changed = 1;
 						} # end if
 					} elsif ( $$self{'status'} eq 'Proofs Out' ) {
 						if ( $services{'Proofs'} ) {
-							foreach ( @{$services{'Proofs'}} ) {
-								openprint::service::status( $$self{id}, $_, 'Approved' );
-							} # end if
-							$changed = 1;
+							foreach my $s_id ( @{$services{'Proofs'}} ) {
+								if ( openprint::service::status( $$self{id}, $s_id ) ne 'Approved' ) {
+									openprint::service::status( $$self{id}, $s_id, 'Approved' );
+									$changed = 1;
+								} # end if
+							} # end foreach
 						} # end if
 					} elsif ( $$self{'status'} eq 'Approved' ) {
 # normal
 					} # end if
 					if ( $services{'NoBindery'} ) {
-						foreach ( @{$services{'NoBindery'}} ) {
-							if ( 'Complete' ne openprint::service::status( $$self{id}, $_ ) ) {
-								openprint::service::status( $$self{id}, $_, 'Complete' );
+						foreach my $s_id ( @{$services{'NoBindery'}} ) {
+							if ( 'Complete' ne openprint::service::status( $$self{id}, $s_id ) ) {
+								openprint::service::status( $$self{id}, $s_id, 'Complete' );
 								$changed = 1;
 							} # end if
 						} # end foreach
@@ -539,6 +552,10 @@ sub find {
 		$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
 		push @values, $params{'salesrep_id'};
 	} # end if
+	if ( $params{'csr_id'} ) {
+		$sql .= ' AND companyindex IN (SELECT index FROM Company WHERE lngsalesperson)=?';
+		push @values, $params{'csr_id'};
+	} # end if
 
 	if ( $params{'value_start'} and $params{'value_end'} ) {
 		$sql .= q{ AND ( (price1 BETWEEN ? AND ? ) OR (price2 BETWEEN ? AND ?) OR (price3 BETWEEN ? AND ? ) )};
@@ -565,9 +582,11 @@ sub find {
 		if ( ref $params{'used_press_name'} eq 'ARRAY' ) {
 			if ( @{$params{'used_press_name'}} ) {
 				$sql .= ' AND (';
-				$sql .= join(' OR ', map { q{(? IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName='UsePress'))} } @{$params{'used_press_name'}} );
+				$sql .= join(' OR ', map { q{(? IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName IN ( 'UsePress','ddmPress1','ddmPress2','ddmPress3')))} } @{$params{'used_press_name'}} );
 				$sql .= ')';
 				push @values, @{$params{'used_press_name'}};
+			} else {
+$openprint::log->debug("No presses in used_press_name");
 			} # end if
 		} else {
 			$sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName='UsePress')};
@@ -704,6 +723,9 @@ sub quantities {
 
 sub quantity {
 	my ( $self, $index ) = @_;
+	if ( $index eq 'Used' ) {
+		return $self->ordered_quantity();
+	} # end if
 	return $$self{'quantity'.$index};
 } # end sub quanitty
 
@@ -760,6 +782,7 @@ sub copy {
 			'ddmPressCompletionDate.*', 'UsePress.*', 'rdbPressComplete.*',
 			'UsedPaper.*',
 			'txtMakeReadySetupHours', 'txtStartQuantity','txtFinalQuantity','txtWasteQuantity','txtEmployeeName',
+			'.*Used',
 			);
 
 # Make this all one transaction... Don't need locking because a reload would get a different projectindex
@@ -973,12 +996,19 @@ sub ordered_quantity {
 	if ( (! exists $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
 	} # end if
-	return $$self{"quantity$$self{ordered_quantity_index}"};
+	return $$self{'quantity'.$self->ordered_quantity_index()};
 } # end sub ordered_quantity
 sub ordered_quantity_index {
 	my $self = shift;
 	if ( (! $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
+	} # end if
+	if ( ! $$self{ordered_quantity_index} ) {
+		my @qtys = $self->quantity_indexes();
+$openprint::log->debug("Project ordered_qty_index @qtys ");
+		if ( 1 == @qtys ) {
+			return $qtys[0];
+		} # end if
 	} # end if
 	return $$self{ordered_quantity_index};
 } # end sub ordered_quantity_index
@@ -988,8 +1018,14 @@ sub ordered_price {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
 	} # end if
 	return $$self{'ordered_price'} if $$self{'ordered_price'};
-	return $$self{"price$$self{ordered_quantity_index}"};
+	return $$self{'price'.$self->ordered_quantity_index()};
 } # end sub ordered_price
+
+sub ordered_Price {
+	my ( $self ) = @_;
+	my $price = $self->ordered_price();
+	return { 'Cost'=>$price, 'currency_id'=>$$self{'currency_id'}, 'Price'=>$price };
+} # end sub ordered_Price
 
 sub prices {
 	my $self = shift;
@@ -1001,6 +1037,11 @@ sub price {
 	return $$self{'price'.$index};
 } # end sub price
 
+sub Price {
+	my ( $self, $index ) = @_;
+	return { 'Cost'=>$$self{'price'.$index}, 'currency_id'=>$$self{'currency_id'}, 'Price'=>$$self{'price'.$index} };
+} # end sub price
+
 sub Order {
 	my $self = shift;
 	return new openprint::Order( $$self{'order_id'} );
@@ -1010,10 +1051,12 @@ sub signatures {
 	my $self = shift;
 	if ( ! exists $$self{'signatures'} ) {
 		my $services = $self->services();
+		#if ( $self->Type()->name() ne 'MultiPagePublication' ) {
+		#} # end if
 		if ( $$services{'AdditionalSignature'} ) {
-			@{$$self{'signatures'}} = @{$$services{'AdditionalSignature'}};
-		} elsif ( $$services{''} ) {
-			@{$$self{'signatures'}} = @{$$services{''}};
+			push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
+		} else {
+			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
 		} # end if
 	} # end if
 	if ( @_ ) {
@@ -1042,14 +1085,26 @@ sub status_change {
 			openprint::service::status( $$self{'id'}, $_, 'Complete' );
 		} # end foreach signature
         sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $self->id() );
+		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+			$PA->delete();
+			$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
+		} # end foreach AP
 
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
+		foreach my $s_id ( $self->signatures() ) {
+			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
+		} # end foreach
+		my $services = $self->services();
+		openprint::service::status( $$self{'id'}, $$services{''}[0], 'Complete' ) if $$services{''};
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
 		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
+		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+			$PA->delete();
+		} # end foreach AP
 
 	} elsif ( sets::isin( $new_status, ['Shipped','Picked Up', 'Complete'] ) ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus != ''", $$self{id}], 'strStatus', 'Complete' );
@@ -1057,6 +1112,9 @@ sub status_change {
 		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
+		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+			$PA->delete();
+		} # end foreach AP
 	} # end if
 	$self->save();
 	$self->Order()->update_status();

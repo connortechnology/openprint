@@ -13,11 +13,12 @@ require openprint::usergroup;
 require openprint::logs;
 
 use openprint ();
-use vars qw( $r %variable %param %session);
+use vars qw( $r %variable %param %session %config);
 *r = \$openprint::r;
 *variable = \%openprint::variable;
 *param = \%openprint::param;
 *session = \%openprint::session;
+*config = \%openprint::config;
 
 # displays the login page, and populates the destination variable
 sub save_destination {
@@ -33,6 +34,8 @@ sub save_destination {
 # if someone sets the Destination flag, keep it through the login process.
 	if ( $destination =~ /main\/order/ ) {
 		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue your order.};
+	} elsif ( $destination =~ /survey\.html/ ) {
+		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue the survey.};
 	} else {
 		$session{'Destination'} = q{Click <a href="} . $destination . q{">here</a> to continue to the page you requested.};
 	} # end if
@@ -120,7 +123,7 @@ sub verify_login {
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/login_notification.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
 
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 			$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my %mail = (
@@ -148,16 +151,32 @@ sub verify_login {
 		$Cookie->expires('+3M');
 		$Cookie->bake( $r );
 	} # end if	
-
+$openprint::log->debug("Dest: $session{'Destination'}");
 	if ( $changepass eq 'Y' ) {
 		if ( $site eq 'A' ) {
-		$$variable{'Redirect'} = '/administrator/account/change_password.html';
+			$$variable{'Redirect'} = '/administrator/account/change_password.html';
 		} elsif ( $site eq 'E' ) {
-		$$variable{'Redirect'} = '/employee/account/change_password.html';
+			$$variable{'Redirect'} = '/employee/account/change_password.html';
 		} else {
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+			$$variable{'Redirect'} = '/main/account/change_password.html';
 		} # end if
 		return;
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a>/ ) {
+     
+		$$variable{'Redirect'} = $1.'.html';
+		foreach my $p ( split('&', $2 ) ) {
+			my ( $k, $v ) = split('=', $p );
+			$openprint::log->debug("Psrsmd: $p, $k = $v ");
+			$openprint::param{$k} = $v;
+		} # end foreach
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue the survey\./ ) {
+     
+		$$variable{'Redirect'} = $1.'.html';
+		foreach my $p ( split('&', $2 ) ) {
+			my ( $k, $v ) = split('=', $p );
+			$openprint::log->debug("Psrsmd: $p, $k = $v ");
+			$openprint::param{$k} = $v;
+		} # end foreach
 	} # end if
 
 } # sub verify_login
@@ -184,7 +203,7 @@ sub email_password {
 		return misc::error( $log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.' );
 	} # end if
 
-	if ( my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' ) ) {
+	if ( my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' ) ) {
 		my %info = (
 			'siteURL' => $r->dir_config('siteURL'),
 			'SecureSiteURL' => $r->dir_config('SecureSiteURL'),

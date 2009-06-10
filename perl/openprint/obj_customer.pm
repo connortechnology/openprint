@@ -49,7 +49,8 @@ my %fields = (
 	'Supplier'			=>	'ysnSupplier',
 	'CustomGreeting'	=>	'strCustomGreeting',
 	'Website'			=>	'strWebURL',	
-
+	'notes'				=>	'notes',
+	'deleted'			=>	'deleted',
 ); # end %fields
 
 my %transforms = (
@@ -69,6 +70,7 @@ my %defaults = (
 	'AccountActivation'	=>	'N',
 	'Reseller'	=>	'N',
 	'Supplier'	=>	'N',
+	'deleted'		=>	0,
 );
 
 sub new {

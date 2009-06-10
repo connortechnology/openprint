@@ -100,6 +100,7 @@ sub find {
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
@@ -165,6 +166,41 @@ sub Skid {
 sub User {
 	return new openprint::User( $_[0]{'user_id'} );
 } # end sub User
+
+sub docket {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'docket'} = shift;
+		$$self{'docket'} =~ s/\D//g;
+	} # end if
+	if ( ! $$self{'docket'} ) {
+		if ( $$self{'comment'} =~ /docket (\d+)/ ) {
+			$$self{'docket'} = $1;
+		} # end if
+	} # end if
+	return $$self{'docket'};
+} # end sub docket
+
+sub Project {
+	my $self = $_[0];
+	return new openprint::Project() if ! $$self{'docket'};
+	my @Projects = openprint::Project::find('docket'=>$$self{'docket'});
+	if ( @Projects ) {
+		return $Projects[0];
+	} # end if
+	return new openprint::Project();
+} # end sub Project
+
+sub comment_html {
+	my ( $self ) = @_;
+
+	if ( $$self{'comment'} =~ /^Checked out for docket (\d+) by (.*)$/ ) {
+		return qq`Checked out for docket <a href="/employee/project/view.html?docket=$1">$1</a> by $2`;
+	} elsif ( $$self{'comment'} =~ /^Inventory adjusted from manifest (.+)$/ ) { 
+		return qq`Inventory adjusted from manifest <a href="/employee/inventory/manifest.html?manifest_id=$1">$1</a>`;
+	} # end if
+	return $$self{'comment'};
+} # end comment_html
 
 1;
 __END__

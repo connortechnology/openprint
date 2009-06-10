@@ -1,13 +1,13 @@
 <? eval (
     $ENV{'HTTP_REFERER'} =~ /.*\/(.*\.html)/;
     $$variable{'referer'} = $1;
-    $$variable{'Paper'} = new openprint::Paper( $openprint::param{'paper_id'} );
-	if ( exists $openprint::param{'quantity'} ) {
-		$$variable{'quantity'} = $openprint::param{'quantity'};
-	} elsif ( $openprint::param{'skid_id'} ) {
-		my $Skid = new openprint::Skid( $openprint::param{'skid_id'} );
+    $$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} );
+	if ( exists $param{'quantity'} ) {
+		$$variable{'quantity'} = $param{'quantity'};
+	} elsif ( $param{'skid_id'} ) {
+		my $Skid = new openprint::Skid( $param{'skid_id'} );
 
-		$$variable{'quantity'} = $$Skid{Paper}{$openprint::param{'paper_id'}};
+		$$variable{'quantity'} = $$Skid{Paper}{$param{'paper_id'}};
 	} else {
 		$$variable{'quantity'} = $$variable{Paper}->in_stock();
 	} # end if
@@ -16,11 +16,11 @@
 	<form id="checkoutform" name="checkoutform" action="<?referer?>" method="post">
 		<input type="hidden" name="btnFunction" value="CheckOut" />
 		<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />
-		<input type="hidden" name="skid_id" value="<? echo ( $openprint::param{'skid_id'} ) ?>" />
+		<input type="hidden" name="skid_id" value="<? echo ( $param{'skid_id'} ) ?>" />
 		<fieldset><legend>Check Out Paper</legend>
 			<? echo ( 
 			my $html = '';
-			foreach my $skid_id ( split(',', $openprint::param{'skid_id'} ) ) {
+			foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
 				my $Skid = new openprint::Skid( $skid_id );
 				$html .= sprintf('skid %d contains %d%s<br/>', $skid_id, $$Skid{Paper}{$$variable{'Paper'}->id()}, $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : ' sheets' ); 
 			} # end foreach	
@@ -41,6 +41,10 @@
 				<input type="hidden" name="available_quantity" value="<?quantity?>" />
 				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearCheckOutQuantity', 'clear.gif', "checkoutform.Quantity.value='';", '', 'Clear' ); ) ?>
+			</p>
+			<p>
+				<label>Reason:</label>
+				<textarea id="reason" name="reason" onkeyup="textarea_resize(this);" cols="" rows="1"></textarea>
 			</p>
 			<hr/>
 			<p style="float: right;">

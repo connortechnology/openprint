@@ -14,8 +14,13 @@ sub find {
 		push @values, $params{'name'};
 	} # end if
 	if ( exists $params{'strid'} ) {
-		$sql .= ' AND strID=?';
-		push @values, $params{'strid'};
+		if ( ref $params{'strid'} eq 'ARRAY' ) {
+			$sql .= q{ AND strid IN (}.join(',', map {'?'} @{$params{'strid'}} ).')';
+			push @values, @{$params{'strid'}};
+		} else {
+			$sql .= ' AND strID=?';
+			push @values, $params{'strid'};
+		} # end if
 	} # end if
 	if ( $params{'category_id'} ) {
 		$sql .= ' AND category_id=?';
@@ -136,6 +141,10 @@ sub delete {
 	# Add record to audit log - action "Delete Project Type".
 	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'strName'},);
 } # end sub delete
+
+sub Templates {
+    return openprint::ProjectType_Template::find('projecttype_id'=>$_[0]{'id'});
+} # end sub Templates
 
 1;
 __END__

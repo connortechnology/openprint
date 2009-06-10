@@ -7,6 +7,12 @@ require openprint::Company;
 require openprint::logs;
 use openprint ();
 use strict;
+use vars qw( $log $dbh %config %variable %param );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+*param = \%openprint::param;
+*variable = \%openprint::variable;
 
 my $debug = 1;
 
@@ -27,7 +33,7 @@ my %fields = (
 	'created_on'		=>	'dtmdateentered',
 	'updated_on'		=>	'dtmlastmodified',
 	'type'				=>	'chrtype',
-	'changepassword'	=>	'ysnchangepassword',
+	'change_password'	=>	'ysnchangepassword',
 	'commission'		=>	'dblcommission',
 	'administrator'		=>	'ysnadministrator',
 	'password',			=>	'strpassword',
@@ -37,6 +43,7 @@ my %fields = (
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
 	'purchasing_limit'	=>	'purchasing_limit',
 	'purchasing_total_limit'	=>	'purchasing_total_limit',
+	'notes'				=>	'notes',
 ); # end %fields
 
 my %transforms = (
@@ -54,7 +61,7 @@ my %defaults = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 	'type'			=>	'C',
-	'changepassword'	=>	'N',
+	'change_password'	=>	'N',
 	'administrator'		=>	'N',
 	'commission'		=>	undef,
 	'purchasing_limit'	=>	undef,
@@ -126,7 +133,7 @@ sub save {
 		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/usertype_system_notification.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$info{'ReplacementText'}, \%info );
 
-		my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'} . '/email_template.html' );
 		$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
 
 		my %mail = (
@@ -138,14 +145,13 @@ sub save {
 		misc::send_email_with_attachment( $openprint::log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
-	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
+	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{'web_active'} ne $$params{'web_active'} ) ) {
 		my %info;
 		$info{'User'} = $self;
-		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
-		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+		$info{'ReplacementText'} = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/'.( $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html' ) );
 		$info{'ReplacementText'} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $openprint::log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		#$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
+		my $email_template = misc::load_file( $openprint::log, $openprint::config{'SkinPath'}.'/email_template.html' );
+		$email_template = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$email_template, \%info );
 
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},
@@ -330,6 +336,16 @@ sub find {
 			push @values, $param{'id'};
 		} # end if
 	} # end if
+	if ( $param{'name'} ) {
+		my ( $first, $last ) = $param{'name'} =~ /(\S+)\s*(\S*)/;
+		if ( $first and $last ) {
+			$sql .= ' AND strfirstname=? AND strlastname=?';
+			push @values, $first, $last;
+		} elsif ( $first ) {
+			$sql .= ' AND strfirstname=?';
+			push @values, $first;
+		} # end if
+	} # end if
 
 	if ( $param{'type'} ) {
 		if ( ref $param{'type'} eq 'ARRAY' ) {
@@ -353,6 +369,10 @@ sub find {
 	if ( $param{'email'} ) {
 		$sql .= ' AND strEmail=?';
 		push @values, lc $param{'email'};
+	} # end if
+	if ( exists $param{'email_like'} ) {
+		$sql .= ' AND strEmail LIKE ?';
+		push @values, lc $param{'email_like'};
 	} # end if
 	if ( exists $param{'web_active'} ) {
 		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
@@ -414,6 +434,32 @@ sub csr_ids {
 	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
 } # end sub
 
+sub notifications {
+	my ( $self, $notifications_hash ) = @_;
+	
+	if ( $notifications_hash ) {
+		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
+		my $ac = sql::start_transaction( $dbh );
+		sql::execute( undef, undef, 'DELETE FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+		foreach my $k ( keys %types ) {
+			sql::insert( undef, undef, 'User_Notifications', { 'user_id'=>$$self{'id'},'type_id'=>$k, 'value'=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
+		} # end foreach k
+		sql::end_transaction( $dbh, $ac );
+		$$self{'notifications'} = $notifications_hash;
+	} elsif ( ! exists $$self{'notifications'} ) {
+		%{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+	} # end if
+	
+	return $$self{'notifications'};
+} # end sub notifications
+
+sub notification {
+	my ( $self, $name ) = @_;
+
+	$self->notifications() if ( ! exists $$self{'notifications'} );
+	return $$self{'notifications'}{$name} if $$self{'notifications'};
+} # end sub notification
+
 sub purchasing_total {
 	require openprint::PurchaseOrder;
 	my $total = 0;
@@ -421,6 +467,25 @@ sub purchasing_total {
 		$total += $PO->total();
 	} # end foreach $PO
 } # end sub purchasing_total
+
+sub po_limit {
+	my ( $self, $type_id, $new_value ) = @_;
+
+	if ( ! exists $$self{'po_limits'} ) {
+		%{$$self{'po_limits'}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+	} # end if
+
+	if ( defined $new_value ) {
+		if ( exists $$self{'po_limits'}{$type_id} ) {
+			sql::update( undef, undef, 'user_purchaseorder_limits', ['user_id=? AND type_id=?', $$self{'id'},$type_id], 'po_limit', 1*$new_value );
+		} else {
+			sql::insert( undef, undef, 'user_purchaseorder_limits', ['user_id',$$self{'id'},'type_id', $type_id, 'po_limit', 1*$new_value ] );
+		} # end if
+		$$self{'po_limits'}{$type_id} = 1*$new_value;
+	} # end if
+
+	return $$self{'po_limits'}{$type_id};
+} # end sub po_limit
 
 1;
 

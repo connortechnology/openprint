@@ -172,21 +172,19 @@ function gsm_to_mweight( form ) {
 		width: 70%;
 	}
 </style>
-<? if ( $$variable{'error'} ) ?>
-The following errors occurred:<br/>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<div class="information"><?information?></div>
-<? eval ( @$variable{'error','information'} = (); ) ?>
-<? if ( $openprint::param{'skid_quantity'} ) ?>
-<? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$openprint::param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
-<? endif ( $openprint::param{'skid_quantity'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $param{'skid_quantity'} ) ?>
+<? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
+<? endif ( $param{'skid_quantity'} ) ?>
+<? if ( $$variable{'Skid'}->deleted() ) ?>
+<div class="error">Warning: This skid has been deleted.</div>
+<? endif ( $$variable{'Skid'}->deleted() ) ?>
 
 <form name="jump" method="get" action="skid_details.html">
 	<fieldset class="filters"><legend>Choose Skid</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
-			<input type="text" id="skid_id" name="skid_id" size="90" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
+			<input type="text" id="skid_id" name="skid_id" size="80" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}",'','Go' ),
 				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
@@ -222,7 +220,7 @@ The following errors occurred:<br/>
 				<? echo ( 
 					my $html;
 					if ( $$variable{'Skid'}->created_on() ) {
-						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Skid'}->created_on()) );
+						$html .= Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->created_on()) );
 						$html .= ' by ' . new openprint::User( $$variable{'Skid'}->created_by_id() )->name();
 					} # end if
 					return $html;
@@ -233,7 +231,7 @@ The following errors occurred:<br/>
 				<? echo (
 					my $html;
 					if ( $$variable{'Skid'}->updated_on() ) {
-						$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Skid'}->updated_on()) );
+						$html .= Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->updated_on()) );
 						$html .= ' by ' . (new openprint::User( $$variable{'Skid'}->updated_by() )->name());
 					} # end if
 					return $html;
@@ -241,13 +239,14 @@ The following errors occurred:<br/>
 			</p>
 		<? else ( $$variable{'Skid'}->id() ) ?>
 			<p><label># of skids to add:</label>
-				<input type="text" name="skid_quantity" value="<? echo ( $openprint::param{skid_quantity} ) ?>" />
+				<input type="text" name="skid_quantity" value="<? echo ( $param{skid_quantity} ) ?>" />
 			</p>
 		<? endif ( $$variable{'Skid'}->id() ) ?>
 			<p><label>RFID Tag:</label>
-					<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>" />
+				<input type="text" id="rfidtag_id" name="rfidtag_id" value="<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>" />
 				<? if ( $$variable{'Skid'}->rfidtag_id() ) ?>
-					<a href="rfidtag_details.html?rfidtag_id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>">View Tag</a>
+					<a href="rfidtag_details.html?rfidtag_id=<? echo ( $$variable{'Skid'}->rfidtag_id() ) ?>">View Tag</a><br/>
+					Last seen: <? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Skid'}->RFIDTag()->updated_on()) ); ) ?>
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
 			</p>
 			<p><label>Verification:</label>
@@ -267,9 +266,22 @@ The following errors occurred:<br/>
 				ssi::writeButton( $log, $dbh, 'showMap', 'show.gif', "open_window('/maps/index.html?parent&amp;location_id='+get_ddm_value(f1.ddmLocation)+'&amp;selected_id='+get_ddm_value(f1.ddmLocation)+'&amp;skid_id=$$variable{'skid_id'}','Location','width=400,height=400,scrollbars=yes');", '', 'Map' ),
 				); ) ?>
 			</p>
+<? if ( $$variable{'Skid'}->id() ) ?>
+			<p>
+				<label>Manifest:</label>
+				<? echo (
+					my $html = '';
+					my @ManifestContents = openprint::ManifestContent::find('skid_id'=>$$variable{'Skid'}->id() );
+					foreach my $MC ( @ManifestContents ) {
+					$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a><br/>', $MC->manifest_id() );
+					} # end foreach MC
+					return $html;
+				) ?>
+			</p>
+<? endif ( $$variable{'Skid'}->id() ) ?>
 			<p>
 				<label for="Docket">Docket:</label>
-				<input type="text" id="Docket" name="Docket" size="10" value="<? echo ( $openprint::param{'Docket'} ) ?>" />
+				<input type="text" id="Docket" name="Docket" size="10" value="<? echo ( $param{'Docket'} ) ?>" />
 			</p>
 			<? if ( ! $$variable{'Skid'}->id() ) ?>
 			<p class="buttons">
@@ -296,7 +308,13 @@ The following errors occurred:<br/>
 						$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
 					} # end if
 					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{'skid_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'Skid'}->id();
+					if ( $$variable{'Skid'}->id() ) {
+						if ( $$variable{'Skid'}->deleted() ) {
+							$html .= ssi::writeButton( $log, $dbh, 'destroy', 'destroy.gif', "f1.action='skids.html?skid_id=$$variable{'skid_id'}';f1.btnFunction.value='Destroy';f1.submit();", '', 'Destroy' );
+						} else {
+							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('You should never do this. You should just check out the contents of the skid.  Are you sure?')){f1.action='skids.html?skid_id=$$variable{'skid_id'}';f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+						} # end if
+					} # end if
 					$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
 					#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
 					$html .= ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', 'skid_details.html', 'Add New Skid' ) if $$variable{'Skid'}->id();

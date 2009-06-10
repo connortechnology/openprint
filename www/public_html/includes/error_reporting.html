@@ -8,6 +8,11 @@
 <?information?>
 </div>
 <? endif ( $$variable{'information'} ) ?>
+<? if ( $$variable{'warning'} ) ?>
+<div class="warning">
+<?warning?>
+</div>
+<? endif ( $$variable{'warning'} ) ?>
 <? eval ( 
-	@$variable{'error','information'} = ();
+	@$variable{'error','information','warning'} = ();
 ) ?>

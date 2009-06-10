@@ -3,7 +3,9 @@ package openprint::Order;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %fields);
+use vars qw( %session %config %variable $log $dbh %fields);
+*session = \%openprint::session;
+*config = \%openprint::config;
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -47,6 +49,7 @@ require openprint::OrderedProduct;
 	'salesrep_id'				=>	'employeeindex',
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
+	'created_on'				=>	'dtmorderdate',
 	);
 sub find {
 	my %params = @_;
@@ -166,30 +169,31 @@ sub load {
 
 sub save {
 	my ( $self, $params ) = @_;
+
 	my $ac = sql::start_transaction( $dbh );
 
-	
-	my @sql;
+	my %sql;
 	foreach my $key ( keys %fields ) {
 		next if $key eq 'paid';
 		$$self{$key} = undef if $$self{$key} eq '';
-		push @sql, $fields{$key}, $$self{$key};
+		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
 		
 	if ( ! $$self{'id'} ) {
 		#@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
-		$$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
-		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
+		$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		$sql{$fields{'created_on'}} = 'NOW()';
+		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if	
 	} elsif ( $$params{'force_insert'} ) {
-		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', [ @sql, 'Index', $$self{'id'} ] ) ) ) {
+		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if	
 	} else {
-		if ( ( my $error = sql::update( $log, $dbh, 'Orders', ['Index=?', $$self{'id'}], @sql ) ) ) {
+		if ( ( my $error = sql::update( $log, $dbh, 'Orders', ['index=?', $$self{'id'}], \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if	
@@ -288,7 +292,7 @@ sub approve {
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_id, 'Waiting For Customer Approval'], 'strstatus', 'Ordered' );
 		$Project->add_to_log( @openprint::session{'company_id', 'user_id'}, 'Additional Charges Approved' );
 		sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $$self{'id'}, $project_id ],
-				'curSalesPrice',    $price,
+				'curSalesPrice',	$price,
 				'dblTax1', ( $gst_amount ne '' ? $gst_amount : undef ),
 				'dblTax2', ( $pst_amount ne '' ? $pst_amount : undef ),
 				'dblTax3', ( $hst_amount ne '' ? $hst_amount : undef ),
@@ -302,11 +306,11 @@ sub approve {
 	} # end while
 
 	sql::update( $log, $dbh, 'Orders', ['Index=?',$$self{id}],
-			'curFedTax',    ( $gst_total ne '' ? $gst_total : undef ),
-			'curProvTax',   ( $pst_total ne '' ? $pst_total : undef ),
-			'curHarmTax',   ( $hst_total ne '' ? $hst_total : undef ),
+			'curFedTax',	( $gst_total ne '' ? $gst_total : undef ),
+			'curProvTax',	( $pst_total ne '' ? $pst_total : undef ),
+			'curHarmTax',	( $hst_total ne '' ? $hst_total : undef ),
 			'curTotalSale', ( $total ne '' ? $total : undef ),
-			'strStatus',    'In Production',
+			'strStatus',	'In Production',
 			);
 
 	$self->add_log( 'Customer Approved' );
@@ -332,7 +336,7 @@ sub update_status {
 
 	if ( sets::isin( 'Pending Deposit', \@statuses ) and $self->status() ne 'Pending Deposit' ) {
 		return $self->status( 'Pending Deposit' );
-	} elsif (  sets::isin( 'Waiting For Customer Approval', \@statuses ) ) {
+	} elsif (	sets::isin( 'Waiting For Customer Approval', \@statuses ) ) {
 		return $self->status( 'Waiting For Customer Approval' );
 	} elsif ( sets::intersection( @statuses, 'In Prepress','Proofs Out','Approved','Printed') ) {
 		$self->status( 'In Production' );
@@ -380,6 +384,7 @@ sub Projects {
 
 sub Products {
 	my $self = shift;
+	return if ! $$self{'id'};
 	return openprint::OrderedProduct::find( 'order_id'=>$$self{id} );
 } # end sub Products
 
@@ -396,9 +401,15 @@ sub balance {
 sub sub_total {
 	my $self = shift;
 	my $subtotal = 0;
-	foreach my $P ($self->projects() ) {
-		# This is really neat actually.  When the project is ordered, this gives the price stored in order_contents, but if the order isn't finalized, then it gives the price stored in the project...
-		$subtotal += $P->ordered_price();
+	foreach my $Project ($self->projects() ) {
+		# This is really neat actually.	When the project is ordered, this gives the price stored in order_contents, but if the order isn't finalized, then it gives the price stored in the project...
+		if ( $Project->currency_id() != $$self{'currency_id'} ) {
+$openprint::log->debug("sub_total: $$Project{'currency_id'} != $$self{'currency_id'}");
+			my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
+			$subtotal += ( $rate * $Project->ordered_price() );
+		} else {
+			$subtotal += $Project->ordered_price();
+		} # end if
 	} # end foreach
 	foreach my $P ($self->Products() ) {
 		$subtotal += $P->price();
@@ -412,28 +423,58 @@ sub Currency {
 } # end sub
 
 sub pay {
-    my $self = shift;
-    $_ = 'SELECT CompanyIndex, currencyindex, curTotalSale, (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND order_id=Orders.Index) FROM Orders WHERE Index=?';
-    my ( $company_index, $currency_id, $amount, $paid ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{id} );
-    if ( $amount - $paid <= 0 ) {
-        $self->update_status();
-        return "Order $$self{id} is already paid!<br/>";
-    } # end if
+	my $self = shift;
+	$_ = 'SELECT CompanyIndex, currencyindex, curTotalSale, (SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND order_id=Orders.Index) FROM Orders WHERE Index=?';
+	my ( $company_index, $currency_id, $amount, $paid ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{id} );
+	if ( $amount - $paid <= 0 ) {
+		$self->update_status();
+		return "Order $$self{id} is already paid!<br/>";
+	} # end if
 
-    my ( $error ) = sql::insert( $openprint::log, $openprint::dbh, 'Payments',
-            'order_id',     $$self{id},
-            'company_id',   $$self{company_id},
-            'curAmount',        $amount - $paid,
-            'dtmDate',          'NOW()',
-            'strMethod',        'Manual',
-            'currency_id',      $$self{currency_id},
-            'strDescription',   'Order marked paid',
-            );
-    if ( ! $error ) {
-        $self->update_status();
-    } # end if
-    return $error;
+	my ( $error ) = sql::insert( $openprint::log, $openprint::dbh, 'Payments',
+			'order_id',	 $$self{id},
+			'company_id',	$$self{company_id},
+			'curAmount',		$amount - $paid,
+			'dtmDate',			'NOW()',
+			'strMethod',		'Manual',
+			'currency_id',		$$self{currency_id},
+			'strDescription',	'Order marked paid',
+			);
+	if ( ! $error ) {
+		$self->update_status();
+	} # end if
+	return $error;
 } # end sub pay
+
+sub send_cancellation_notice {
+	my $self = shift;
+$log->debug("Sending cancellation notice");
+
+	my %order;
+	$order{'Order'} = $self;
+	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_cancellation_notice.html' );
+	$order{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$order{'ReplacementText'}, \%order );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+$log->debug($email_template );
+	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%order ) );
+$log->debug($_);
+	my @body = ('', $_, 'text/html', 'quoted-printable');
+
+	my $Me = new openprint::User( $session{'user_id'} );
+
+	# Send to inventory and scheduling people.
+	foreach my $Recipient ( openprint::User::find('usergroups'=>['Inventory','Scheduling']) ) {
+		next if $Recipient->id() == $session{'user_id'};
+		my %mail = (
+				SMTP	=> $config{'Mail Server'},
+				FROM	=> sprintf('"%s" <%s>', $Me->get('name','email') ),
+				TO		=> sprintf('"%s" <%s>', $Recipient->get('name','email') ),
+				SUBJECT => "Docket $$self{'docket'} has been cancelled.",
+				);
+		misc::send_email_with_attachment( $log, \%mail, @body );
+	} # end foreach Recipient
+	
+} # end sub send_cancellation_notice
 
 1;
 __END__

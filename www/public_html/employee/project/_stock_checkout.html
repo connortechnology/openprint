@@ -1,59 +1,59 @@
-<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form id="checkout_form" name="checkout_form">
 	<input type="hidden" name="docket" value="<? echo ( $$variable{'Project'}->docket() ) ?>" />
 	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />
 	<input type="hidden" name="action" value="Add" />
-<fieldset><legend>Stock Used</legend>
-	<table class="List">
-		<tr><th align="left">Stock</th><th align="left" width="80">Skid</th><th align="left" width="120">RFIDTAG</th>
-			<th align="left" width="120">Location</th>
-			<th align="right" width="80">Quantity</th>
-		</tr>
-		<? echo (
-			my $html = '';
-			my %Entries;
-			my $rowclass;
+	<fieldset><legend>Stock Used</legend>
+		<table class="List">
+			<tr><th align="left">Stock</th><th align="left" width="80">Skid</th><th align="left" width="120">RFIDTAG</th>
+				<th align="left" width="120">Location</th>
+				<th align="right" width="80">Quantity</th>
+			</tr>
+			<? echo (
+				my $html = '';
+				my %Entries;
+				my $rowclass;
 
-			foreach my $PI ( openprint::PaperInventory::find('docket'=>$$variable{'Project'}->docket(), 'order'=>'updated_on' ) ) {
-				push @{$Entries{$PI->paper_id()}}, $PI;
-			} # end foreach PI
-			foreach my $paper_id ( keys %Entries ) {
-				my $Paper = new openprint::Paper( $paper_id );
+				foreach my $PI ( openprint::PaperInventory::find('docket'=>$$variable{'Project'}->docket(), 'order'=>'updated_on' ) ) {
+					push @{$Entries{$PI->paper_id()}}, $PI;
+				} # end foreach PI
+				foreach my $paper_id ( keys %Entries ) {
+					my $Paper = new openprint::Paper( $paper_id );
 
-				my $PI = shift @{$Entries{$paper_id}};
-				my $Skid = $PI->Skid();
-				my $total = -1*$PI->delta();
-
-				$html .= sprintf('<tr%1$s><td rowspan="%2$d"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>',
-					$rowclass, scalar @{$Entries{$paper_id}}+1, $Paper->id(), $Paper->to_string() );
-
-				$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $Skid->id() );
-				$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
-				$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number(-1*$PI->delta()), $PI->units() );
-
-				foreach my $PI ( @{$Entries{$paper_id}} ) {
+					my $PI = shift @{$Entries{$paper_id}};
 					my $Skid = $PI->Skid();
-					$total += -1*$PI->delta();
-					$html .= sprintf('<tr%s>',$rowclass);
+					my $total = -1*$PI->delta();
+
+					$html .= sprintf('<tr%1$s><td rowspan="%2$d"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>',
+						$rowclass, scalar @{$Entries{$paper_id}}+1, $Paper->id(), $Paper->to_string() );
+
 					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $Skid->id() );
 					$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
 					$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number(-1*$PI->delta()), $PI->units() );
+
+					foreach my $PI ( @{$Entries{$paper_id}} ) {
+						my $Skid = $PI->Skid();
+						$total += -1*$PI->delta();
+						$html .= sprintf('<tr%s>',$rowclass);
+						$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $Skid->id() );
+						$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
+						$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number(-1*$PI->delta()), $PI->units() );
+					} # end foreach
+					$html .= '<tr class="totals"><td colspan="4" align="right">Total:</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
+					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach
-				$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
-				$rowclass = $rowclass ? '' : 'class="colRow"';
-			} # end foreach
-			return $html;
-		) ?>
-			<tr>
-				<td>Checkout Stock:</td>
-				<td>
-					<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
-				</td><td>
-					<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
-				</td><td>
-					<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', q`new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html', { method: 'get', parameters: checkout_form.serialize() } );`,'','Submit' ); ) ?>
-				</td>
-			</tr>
-	</table>
-</fieldset>
+				return $html;
+			) ?>
+				<tr class="unprintable">
+					<td>Checkout Stock:</td>
+					<td>
+						<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'StockCheckout', '/employee/project/_stock_checkout.html', {method: 'get', parameters: $('checkout_form').serialize()} );}" />
+					</td><td>
+						<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'StockCheckout', '/employee/project/_stock_checkout.html', {method: 'get', parameters: $('checkout_form').serialize()} );}" />
+					</td><td>
+						<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', q`new Ajax.Updater('StockCheckout','/employee/project/_stock_checkout.html', { method: 'get', parameters: checkout_form.serialize() } );`,'','Submit' ); ) ?>
+					</td>
+				</tr>
+		</table>
+	</fieldset>
 </form>

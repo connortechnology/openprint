@@ -1,4 +1,4 @@
-<a href="/testimonials.html">Testimonials</a> / <a href="/paper.html">Paper</a> / <a href="/design_tips.html">Design Tips</a> /
+<a href="/testimonials.html">Testimonials</a> / <a href="/paper.html">Paper</a> / <a href="/design_tips.html">Design Tips</a> / <a href="/design_services.html">Design Services</a> /
 <a href="/specials.html">Specials</a> / 
 <a href="/templates.html">Templates</a> / 
 <a href="/waterless.html">Waterless Printing</a>
@@ -13,6 +13,7 @@
 	<a href="/main/order/history.html">Order History</a>
 <? if ( sets::isin($openprint::session{user_type}, ['A','E'] ) ) ?>
 	/ <a href="/main/project/history.html">Project History</a>
+	/ <a href="/main/account/registration.html">Registration</a>
 <? endif ( sets::isin($openprint::session{user_type}, ['A','E'] ) ) ?>
 <? else ( $openprint::session{'user_id'} ) ?>
 	<a href="/main/account/registration.html">Registration</a>

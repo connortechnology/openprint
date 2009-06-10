@@ -74,11 +74,10 @@ sub view_services {
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
-	my ( $cust_id ) = $Project->company_id();
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index *** $openprint::session{'company_id'}");
 
-	if ( $cust_id eq $openprint::session{'company_id'} or $openprint::session{'user_type'} eq 'A' ) {
+	if ( ( $Project->company_id() == $openprint::session{'company_id'} ) or sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
 
 		if ( defined $openprint::param{'btnFunction'} ) {
 			if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
@@ -92,13 +91,20 @@ sub view_services {
 				$log->debug("** Save Service in View Services Function **");
 
 				my $service_index = $r->param('ServiceIndex');
+				my $Currency = openprint::Currency::get_current();
+				my $recalc = 0;	
 				save_service( $r, $log, $dbh, $variable, $Project, $service_index );
+				if ( $Project->currency_id() != $Currency->id() ) {
+					$Project->Currency( $Currency );
+					# Change of currency calls for complete recalc
+					$recalc = 1;
+				} # end if
 
 				if ( $r->param('NewBook') eq 'Y' ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
-				} elsif ( $r->param('PrintingService') eq 'Y' ) {
+				} elsif ( $r->param('PrintingService') eq 'Y' or $recalc ) {
 
 					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					# Now run code to modify all other services
@@ -106,7 +112,6 @@ sub view_services {
 					$log->info("********* Auto Calculate  ( PrintingService eq 'Y' ) *************");
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
 				} # end if
-				$Project->Currency( openprint::Currency::get_current() );
 				$Project->save();
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
 				my $service_name = $openprint::param{'txtServiceName'};
@@ -170,9 +175,10 @@ sub view_services {
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
-				foreach my $signature_service_index ( sort $Project->signatures() ) {
-					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
-				} # end foreach
+				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+				#foreach my $signature_service_index ( sort $Project->signatures() ) {
+					#openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
+				#} # end foreach
 				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
 				$Project->save();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
@@ -620,9 +626,10 @@ sub get_finished_calliper {
 	my $finished_calliper;
     foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
-		my $calliper = $$sig_specs{'txtSignatureSpreadQuantity1'} ? $$sig_specs{'txtSignatureSpreadQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
+		my $calliper = $$sig_specs{'PageQuantity1'} ? $$sig_specs{'PageQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
+$openprint::log->debug("Calliper for sig $$sig_specs{SignatureIndex} : $$sig_specs{'txtSpecificStockCalliper'} : $calliper, total=$finished_calliper");
 		if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
-			$finished_calliper += $calliper * 2;
+			$finished_calliper += $calliper / 2;
 		} elsif ( $$sig_specs{'ProjectType'} eq 'ScratchPads' ) {
 			$finished_calliper += $$sig_specs{'PageQuantity'} * $calliper;
 		} else {

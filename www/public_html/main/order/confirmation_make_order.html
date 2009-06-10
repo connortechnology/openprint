@@ -5,8 +5,10 @@
 <b>
 Thank you. Your order and information have been received. You will receive a copy of the order via e-mail shortly.<br/>
 <br/>
-You now need to upload the file(s) pertaining to this order: <? echo ( ssi::writeButton( $log, $dbh, 'UploadFiles','upload.gif','','/upload/upload_center.html?Docket='.$$variable{'Order'}->docket(), 'Upload Files' ); ) ?><br/>
+<? if ( $$variable{'Order'} ) ?>
+You now need to upload the file(s) pertaining to this order: <? echo ( ssi::writeButton( $log, $dbh, 'UploadFiles','upload.gif','','/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Files' ); ) ?><br/>
 <br/>
+<? endif ( $$variable{'Order'} ) ?>
 </b>
 
 <br/>

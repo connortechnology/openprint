@@ -54,7 +54,7 @@ my @outputs = (
 	'hdnBreakdown1',
 	'hdnBreakdown2',
 	'hdnBreakdown3',
-'alert',
+'alert','Status',
 );
 sub outputs {
 	return @outputs;
@@ -116,7 +116,10 @@ sub calc {
 			my %results = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, \%MakeReadies );
 			$MakeReadies{$results{'Equipment'}->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} if $results{'Equipment'};
 			$GrandTotal += $results{'Total'};
-			$status = 'uncalculated' if $results{'Status'} eq 'uncalculated';
+			if ( $results{'Status'} eq 'uncalculated' ) {
+				$status = 'uncalculated';
+				$$specs{'alert'} .= $results{'alert'};
+			} # end if
 
 		} # end foreach signature
 
@@ -124,7 +127,7 @@ sub calc {
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{ProjectMoneyFormat}, $GrandTotal );
 	} # end foreach qty
 
-	return $status;
+	return $$specs{'Status'} = $status;
 
 } # end sub calc
 
@@ -207,6 +210,10 @@ sub signature_calc {
 		return %BestPrice;
 	} # end if
 	$BestPrice{'Status'} = 'uncalculated';
+	if ( sets::isin( $Imposition->Paper()->grade(), [4,5] ) ) {
+		$BestPrice{'alert'} .= 'Unable to UVCoat on uncoated stock.<br/>';
+		return %BestPrice;
+	} # end if
 
 	my @front_uv;
 	push @front_uv, $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} if $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} and ( $$specs{"SideOneCoatingType-$$sig_specs{'SignatureIndex'}"} ne 'None' );
@@ -254,7 +261,7 @@ $openprint::log->debug("@different_types");
 
 			my $complete = 1;
 			my $totalPrice = 0;
-			my $breakdown;
+			my $breakdown = '<b>'.$Equipment->name() . '</b><br/>';;
 
 			if ( @$impositions > 1 ) {
 				my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $openprint::log, $openprint::dbh, $openprint::variable, $Project, $service_index, $sig_specs, {}, $qty_index, $$impositions[0]->Paper() );
@@ -287,7 +294,7 @@ $openprint::log->debug('W&T: ' . $breakdown ) if $debug;
 					last;
 				} # end if
 
-				if ( $_ = $Equipment->fits( $imp->Paper()->width(), $imp->Paper()->height(), $$sig_specs{'txtSpecificStockCalliper'} ) ) {
+				if ( $_ = $Equipment->fits( $imp->Paper()->width(), $imp->Paper()->height(), $imp->Paper()->calliper() ) ) {
 					$breakdown .= "Doesn't fit. $_<br/>";
 $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 					$complete = 0;

@@ -255,9 +255,6 @@ fieldset p select {
 fieldset p textarea {
     width: 70%;
 }
-fieldset p option {
-    width: 70%;
-}
 fieldset.filters {
     margin-left: 0px;
     margin-right: 0px;
@@ -396,6 +393,9 @@ span.DateSelector {
 	width: 205px;
 }
 
+div.PopupWindow {
+    display: none;
+}
 div.Popup {
     position:absolute;
     visibility: hidden;
@@ -567,4 +567,7 @@ div.Service span.TwoColumns {
 }
 h1,h2,h3,h5 {
 	color: maroon;
+}
+div#NewDimensions {
+	display: none;
 }

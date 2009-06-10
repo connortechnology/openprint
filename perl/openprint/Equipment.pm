@@ -8,9 +8,12 @@ require openprint::Fold;
 require openprint::Location;
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 my %find_cache;
-my %fields = (
+use vars qw( $table $serial %fields %transforms %defaults );
+$table = 'tbl_equipment';
+$serial= 'Equipment_Index_seq';
+%fields = (
 	'id'	=>	'lngindex',
 	'strid'	=>	'strid',
 	'name'	=>	'strname',
@@ -26,6 +29,16 @@ my %fields = (
 	'jdf_id'			=> 	'jdf_id',
 	'jdf_name'			=> 	'jdf_name',
 	'location_id'		=>	'location_id',
+	'cip3_in'			=>	'cip3_in',
+	'cip3_out'			=>	'cip3_out',
+	'cip3_hold'			=>	'cip3_hold',
+	'cip3_merge'		=>	'cip3_merge',
+	'cip3_monitor'		=>	'cip3_monitor',
+	'smartscheduling'	=>	'smartscheduling',
+);
+
+%defaults = (
+	'location_id'		=>	undef,
 );
 
 sub init_cache {
@@ -94,6 +107,10 @@ sub find {
 		$sql .= ' AND jmf_enabled=?';
 		push @values, 1;
 	} # end if
+	if ( $params{'cip3_monitor'} ) {
+		$sql .= ' AND cip3_monitor=?';
+		push @values, $params{'cip3_monitor'};
+	} # end if
 	if ( $params{'category'} ) {
 		$sql .= q{ AND strCategory=?};
 		push @values, $params{'category'};
@@ -106,21 +123,12 @@ sub find {
 		$openprint::log->error( "Error loading Equipment ($sql) (@values) :" . $openprint::dbh->errstr );
 		return;
 	} elsif ( $debug ) {
-	#$openprint::log->debug( 'Number of results: ' . @$data );
-		$openprint::log->debug( $sql . join(',',@values) );
+		$openprint::log->debug( "openprint::Equipment::find : SQL($sql) VALUES(". join(',',@values).") # Results: " . @$data );
 	} # end if
 	
 	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{lngindex}, $_ ) } @$data;
 	return @{$find_cache{$hash_key}};
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM tbl_Equipment WHERE lngIndex=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
 
 sub fits {
    my ( $self, $width, $height, $calliper ) = @_;
@@ -297,7 +305,7 @@ if ( ! defined $range ) {
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
 	#$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
-		return $Spec if ( 1*($$Spec{min}) == $range ) or (1*($$Spec{max}) == $range );
+		return $Spec if ( (1*$$Spec{min}) == $range ) or ((1*$$Spec{max}) == $range );
 
 		return $Spec if ( 
 			(! $$Spec{interpolate})
@@ -320,20 +328,20 @@ if ( ! defined $range ) {
 $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
 		return;	
 	}
-	
+
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
-		return $Spec if ( $$Spec{max} == $range ) or ( !(1*$$Spec{max}) and ! (1*$$Spec{interpolate}) );
+		return $Spec if ( (1*$$Spec{min}) <= $range ) and ( ( (1*$$Spec{max}) >= $range ) or ! (1*$$Spec{max}) );
 
+	#$openprint::log->debug("Examining: ($range) (" . $Spec->min() . 	') (' . 1*$Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
 		# first step, find one less than the min
-		last if $$Spec{max} > $range;
+		last if ( ( (1*$$Spec{max}) > $range) or ( ! (1*$$Spec{max}) ) );
 	} # end foreach
 	if ( $i and $i < @{$$self{'Specifications'}{$name}} ) {
-		# back up
 		$y = $$self{'Specifications'}{$name}[$i];
 #$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
-#$openprint::log->debug("Couldn't find maximum") if $debug;
+$openprint::log->debug("Equipment::specification Couldn't find maximum for $name") if $debug;
 		return;
 	} # end if
 
@@ -343,9 +351,10 @@ $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'
 		my $S = $x->copy();
 		$$S{min} = $$S{max} = $range;
 		$$S{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
+#$openprint::log->debug("Returning " . $$S{value}) if $debug;
 		return $S;
 	} # end if
-#$openprint::log->debug("Returning " . $value) if $debug;
+#$openprint::log->debug("Returning nothing") if $debug;
 	return;
 } # end sub specification
 
@@ -418,60 +427,12 @@ sub delete {
     sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Service_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
-    sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
+    sql::execute( undef, undef, q{DELETE FROM Equipment_Shifts WHERE equipment_id=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE lngIndex=?}, $$self{id} );
     sql::end_transaction( $openprint::dbh, $ac );
 
 	openprint::logs::insertLogRecord('6', "Equipment Index: $$self{id} - " . $$self{name}, );
 } # end sub delete
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		if ( $param and exists $$param{$k} ) {
-			$sql{$fields{$k}} = $$param{$k};
-		} else {
-			$sql{$fields{$k}} = $$self{$k};
-		} # end if
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-
-	if ( ! $$self{id} ) {
-		@$self{id} = sql::execute( undef, undef, q{SELECT nextval('Equipment_Index_seq')} );
-		$sql{lngindex} = $$self{id};
-		sql::insert( undef, undef, 'tbl_Equipment', \%sql );
-		openprint::logs::insertLogRecord('34', "Equipment: " . $self->strid(). " - " . $self->name(),);
-	} else {
-		sql::update( undef, undef, 'tbl_Equipment', ['lngIndex=?',$$self{id}], \%sql );
-		openprint::logs::insertLogRecord('35', "Equipment: " . $self->strid(). ' - ' . $self->name(),);
-	} # end if
-
-if ( 0 ) {
-	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
-	foreach my $key ( keys %$param ) {
-		if ( $key =~ /SName(.*)/ and $$param{$key} ne '' ) {
-			my $i = $1;
-			$$param{'SMin'.$i} =~ s/[^\d\.]//g;
-			$$param{'SMax'.$i} =~ s/[^\d\.]//g;
-			sql::insert( undef, undef, 'tbl_Equipment_Specifications', [
-					'lngEquipmentIndex',    $$self{id},
-					'dblMin',               ( $$param{'SMin'.$1} ne '' ? $$param{'SMin'.$1} : undef ),
-					'dblMax',               ( $$param{'SMax'.$1} ne '' ? $$param{'SMax'.$1} : undef ),
-					'strUnits',             $$param{'SUnits'.$1},
-					'strName',              $$param{'SName'.$1},
-					'strValue',             $$param{'SValue'.$1},
-					'interpolate',          $$param{'i'.$1},
-					] );
-		} # end if
-	} # end foreach
-} # end if
-
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-} # end sub save
 
 sub update_schedule {
 	my $self = shift;
@@ -486,10 +447,10 @@ sub update_schedule {
     $_ = q{SELECT DISTINCT ProjectIndex, ServiceIndex, StartTime FROM tbl_Projects, Schedule WHERE Equipment_id=? AND Index=ProjectIndex AND tbl_Projects.strStatus='Approved' ORDER BY StartTime};
     my @data = sql::execute( undef, undef, $_, $$self{id} );
     while ( my ( $project_index, $service_index, undef ) = splice @data, 0, 3 ) {
-        sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ServiceIndex=?', $$self{id}, $service_index],
+        sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ProjectIndex=? AND ServiceIndex=?', $$self{id}, $project_index, $service_index],
                 'StartTime', $start_time
                 );
-        ( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ServiceIndex=?}, $service_index );
+        ( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
     } # end while
 
 } # end sub update_schedule
@@ -533,6 +494,9 @@ sub Previous {
 sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
+
+sub Shifts {
+} # end sub
 
 1;
 __END__

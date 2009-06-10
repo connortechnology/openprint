@@ -38,6 +38,7 @@ $serial = 'Purchaseorders_id_seq';
 	'authorized_by'		=>	'authorized_by',
 	'authorized_on'		=>	'authorized_on',
 	'delivered_on'		=>	'delivered_on',
+	'delivered_on_switch'		=>	'delivered_on_switch',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
 	'federaltax'		=>	'federaltax',
@@ -60,6 +61,7 @@ $serial = 'Purchaseorders_id_seq';
 	'vendor_postalcode'	=>	'vendor_postalcode',
 	'vendor_phone'		=>	'vendor_phone',
 	'vendor_fax'		=>	'vendor_fax',
+	'vendor_sms'		=>	'vendor_sms',
 	'vendor_email'		=>	'vendor_email',
 	'shipto_contact'	=>	'shipto_contact',
 	'shipto_name'		=>	'shipto_name',
@@ -71,6 +73,7 @@ $serial = 'Purchaseorders_id_seq';
 	'shipto_postalcode'	=>	'shipto_postalcode',
 	'shipto_phone'		=>	'shipto_phone',
 	'shipto_fax'		=>	'shipto_fax',
+	'shipto_sms'		=>	'shipto_sms',
 	'shipto_email'		=>	'shipto_email',
 	'manifest_id'		=>	'manifest_id',
 );
@@ -110,6 +113,16 @@ sub find {
 			$sql .= ' AND id=?';
 			push @values, $params{'id'};
 		} # end if
+	} # end if
+	if ( $params{'id_start'} and $params{'id_end'} ) {
+		$sql .= ' AND ( id BETWEEN ? AND ? )';
+		push @values, @params{'id_start','id_end'}
+	} elsif ( $params{'id_start'} ) {
+		$sql .= ' AND ( id >= ?)';
+		push @values, $params{'id_start'};
+	} elsif ( $params{'id_end'} ) {
+		$sql .= ' AND ( id <= ?)';
+		push @values, $params{'id_end'};
 	} # end if
 	if ( exists $params{'company_id'} ) {
 		if ( ref $params{'company_id'} eq 'ARRAY' ) {
@@ -168,9 +181,18 @@ sub find {
 	} elsif ( $params{'authorized'} eq 'N' ) {
 		$sql .= ' AND authorized_by IS NULL';
 	} # end if
-	if ( $params{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $params{'deleted'};
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			if ( @{$params{'deleted'}} ) {
+				$sql .= ' AND deleted IN ('. join(',', map {'?'} @{$params{'deleted'}} ) . ')';
+				push @values, @{$params{'deleted'}};
+			} else {
+				return ();
+			} # end if
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
 	} else {
 		$sql .= ' AND (deleted=? OR deleted IS NULL)';
 		push @values, 0;
@@ -211,6 +233,10 @@ sub save {
 		$sql{'subtotal'} += $C->total();
 	} # end foreach
 	$sql{'total'} = $sql{'subtotal'};
+	if ( ! $sql{'currency_id'} ) {
+		my $Currency = openprint::Currency::get_current();
+		$sql{'currency_id'} = $Currency->id();
+	} # end if
 
 	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
@@ -241,11 +267,6 @@ sub save {
 	$self->load();
 	return;
 } # end sub save
-
-sub delete {
-	my $self = shift;
-	return sql::update( undef, undef, 'PurchaseOrders', ['id=?', $$self{id}], 'deleted',1 );
-} # end sub delete
 
 sub destroy {
     my $self = shift;
@@ -286,7 +307,7 @@ sub send_to_vendor {
 			);
 	my @attachments = ();
 
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_body.html\"-->";
 	$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
@@ -297,26 +318,33 @@ sub send_to_vendor {
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
 			FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-			TO      => sprintf( '"%s" <%s>', $self->vendor_contact(), $self->vendor_email() ),
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
 			);
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
-	if ( $self->vendor_email() ) {
+	foreach my $email ( split(',', $self->vendor_email() ) ) {
+		$email =~ s/^\s*(.*)\s*$/$1/;
+		next if ! $email;
+		$mail{'TO'}	= $email;
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
-	} # end if
+	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
-		$mail{'TO'} = sprintf( '"%s" <%s>', $self->shipto_contact(), $self->shipto_email() );
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
-		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
+		foreach my $email ( split(',', $self->shipto_email() ) ) {
+			$email =~ s/^\s*(.*)\s*$/$1/;
+			next if ! $email;
+			$mail{'TO'} = $email;
+			misc::send_email_with_attachment( $log, \%mail, @attachments );
+			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
+		} # end foreach
 	} # end if
 	if ( $self->notifications() ) {
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 		@attachments = ('', $_, 'text/html', 'quoted-printable');
 		$results .= 'Notification sent to: ';
-		foreach my $U ( $self->notifications() ) {
+		foreach my $user_id ( $self->notifications() ) {
+			my $U = new openprint::User( $user_id );
 			$mail{'TO'} = sprintf( '"%s" <%s>', $U->name(), $U->email() );
 			misc::send_email_with_attachment( $log, \%mail, @attachments );
 			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
@@ -475,5 +503,28 @@ sub Logs {
 	return openprint::PurchaseOrder_Log::find( 'po_id'=>$$self{'id'}, 'order'=>'created_on DESC' );
 } # end sub Logs
 
+sub is_FSC {
+	my ( $self ) = @_;
+	foreach my $C ( $self->Contents() ) {
+		return 1 if $C->description() =~ /FSC/i;
+	} # end foreach C
+} # end sub is_FSC
+
+sub is_PEFC {
+	my ( $self ) = @_;
+	foreach my $C ( $self->Contents() ) {
+		return 1 if $C->description() =~ /PEFC/i;
+	} # end foreach C
+} # end sub is_PEFC
+sub copy {
+	my $self = shift;
+	my $New = new openprint::PurchaseOrder();
+	@$New{keys %fields} = @$self{keys %fields};
+	foreach ( 'id', 'authorized', 'authorized_by'	, 'authorized_on', 'delivered_on' ) {
+		delete $$New{$_};
+	} # end foreach
+	$$New{'created_by'} = $session{'user_id'};
+	return $New;
+} # end sub copy
 1;
 #__END__

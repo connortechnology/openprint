@@ -1,37 +1,35 @@
-		<style type="text/css">
-		<? echo ( misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/skins/' . $openprint::config{'SiteTitle'} . '/css/quote.css' ); ) ?>
-		</style>
-		<br class="spacer"/>
-		<!--#include virtual="/includes/quote_header.html"-->
-		<!--#include virtual="/includes/quote_prepared_by.html"-->
-		<!--#include virtual="/includes/quote_prepared_for.html"-->
-		<br class="spacer" style="clear: both;"/>
-		<table class="List">
-			<tr> 
-				<th width="60" align="left">ID</th>
-				<th align="left">Description</th>
-				<th width="130" align="right">Weight</th>
-				<th width="50" align="right">MU</th>
-				<th width="90" align="right">Quantity</th>
-				<th width="90" align="right">Price</th>
-				<th width="90" align="right">Final Price</th>
-			</tr>
-			<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
-			<tr<?rowclass?>> 
-				<td><a href="<? echo ( $openprint::config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><?project_index?></a></td>
-				<td><a href="<? echo ( $openprint::config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( 
+<style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?></style>
+<br class="spacer"/>
+<!--#include virtual="/includes/quote_header.html"-->
+<!--#include virtual="/includes/quote_prepared_by.html"-->
+<!--#include virtual="/includes/quote_prepared_for.html"-->
+<br class="spacer" style="clear: both;"/>
+<table class="List">
+	<tr> 
+		<th width="60" align="left">ID</th>
+		<th align="left">Description</th>
+		<th width="130" align="right">Weight</th>
+		<th width="50" align="right">MU</th>
+		<th width="90" align="right">Quantity</th>
+		<th width="90" align="right">Price</th>
+		<th width="90" align="right">Final Price</th>
+	</tr>
+	<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+	<tr<?rowclass?>> 
+		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><?project_index?></a></td>
+		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( 
 my $html;
 my $Project = new openprint::Project( $$variable{'project_index'} );
 $html .= ssi::htmlize($Project->reference()) . ':<br/>' if $Project->reference();
-$html .= $Project->summary() if $openprint::config{'ShowProjectSummaryOnQuote'} ne 'N';
+$html .= $Project->summary() if $config{'ShowProjectSummaryOnQuote'} ne 'N';
 return $html;
  ) ?></a></td>
-				<td colspan="5">
-					<table>
-						<? while ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
-						<? if ( $$variable{'qty'} ) ?>
-							<tr>
-               <td width="130" align="right">
+		<td colspan="5">
+			<table>
+				<? while ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+				<? if ( $$variable{'qty'} ) ?>
+				<tr>
+					<td width="130" align="right">
 <? echo (
     my $Project = new openprint::Project( $$variable{'project_index'} );
     my %services = $Project->services();
@@ -54,21 +52,21 @@ return $html;
         } # end if
 ) ?></td>
 
-							<td width="50" align="right"><?markup?>%</td>
-							<td width="90" align="right"><?qty?></td>
-							<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol() ) ?><?stdprice?></td>
-							<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency->symbol() ) ?><?newprice?></td>
-							</tr>
-						<? endif ( $$variable{'qty'} ) ?>
-						<? endwhile ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
-					</table>
-				</td>
-			</tr>
-			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-			<? endwhile ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
-		</table>
-		<span class="Currency">All prices are in <b><? echo ( $$variable{'Quote'}->Currency->name() ) ?></b> and are subject to applicable taxes.</span>
-				<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name:</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
-				<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments:</b><?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
-		<br class="spacer"/>
-		<!--#include virtual="/skins/<? echo ( $openprint::config{SiteTitle} ) ?>/includes/quote_disclaimer.html"-->
+					<td width="50" align="right"><?markup?>%</td>
+					<td width="90" align="right"><?qty?></td>
+					<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol() ) ?><?stdprice?></td>
+					<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency->symbol() ) ?><?newprice?></td>
+					</tr>
+				<? endif ( $$variable{'qty'} ) ?>
+				<? endwhile ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
+			</table>
+		</td>
+	</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+</table>
+<span class="Currency">All prices are in <b><? echo ( $$variable{'Quote'}->Currency->name() ) ?></b> and are subject to applicable taxes.</span>
+		<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name:</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
+		<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments:</b><?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
+<br class="spacer"/>
+<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/includes/quote_disclaimer.html' ); ) ?>

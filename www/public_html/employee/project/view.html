@@ -1,4 +1,18 @@
-<div id="Navigation"><a href="/employee/index.html">HOME</a> &gt; <a href="/employee/production/projects.html">Projects</a> &gt; Viewing Project</div>
+<div class="leftColumn">
+<form id="f2" name="f2" action="/employee/project/view.html" method="post">
+<fieldset class="filters">
+<p><label>Docket #</label><input type="text" name="Docket" id="Docket" size="10"
+ onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){f2.submit(f1);}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+ <? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "f2.submit();", '', 'Go' ); ) ?>
+</p>
+
+<p><label>Project #</label><input type="text" name="project_id" id="project_id" size="10"
+ onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){f2.submit(f1);}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+ <? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f2.submit();", '', 'Go' ); ) ?>
+</p>
+</fieldset>
+</form>
+</div>
 <div class="PageTitle">
 <h1>PRODUCTION</h1>
 <h2>View Project</h2>
@@ -10,19 +24,15 @@ function open_window( page ) {
 	window.open(page,'label','newWin,width=610,top=50,resizable=yes,scrollbars=yes,menubar=yes,toolbar=yes,location=no,directories=yes,status=yes');
 }
 </script>
-<? if ( $$variable{'error'} ) ?>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?>
-<div class="information"><?information?></div>
-<? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $$variable{'Project'}->id() ) ?>
 <!--#include virtual="/includes/project_header.html" -->
 <br/>
-<form name="f1" method="post" action="project_view.html?ProjectIndex=<?ProjectIndex?>">
+<form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
 		<tr> 
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<th width="20">&nbsp;</th>
+			<th width="20" class="unprintable">&nbsp;</th>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<th align="left">Service</th>
 			<th width="100" align="right">
@@ -36,7 +46,7 @@ function open_window( page ) {
 		<? eval ( $$variable{'rowclass'} = ' class="colRowRed"' if $$variable{'status'} eq 'Waiting For Customer Approval' ) ?>
 		<tr<?rowclass?>> 
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<td><input type="checkbox" name="chkDelete-<?index?>" /></td>
+			<td class="unprintable"><input type="checkbox" name="chkDelete-<?index?>" /></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<td>
 <? if ( $$variable{'url'} ne '' ) ?>
@@ -45,11 +55,17 @@ function open_window( page ) {
 <?name?>
 <? endif ( $$variable{'url'} ne '' ) ?><br/>
 <? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
-<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, $$variable{'Project'}->ordered_quantity_index() ); ) ?>
+<? echo ( 
+	if ( $$variable{'name'} eq 'Shipping' ) {
+		openprint::service::summary( @$variable{'ProjectIndex','index'}, 'Used' );
+	} else {
+		openprint::service::summary( @$variable{'ProjectIndex','index'}, $$variable{'Project'}->ordered_quantity_index() );
+	} # end if
+ ) ?>
 &nbsp;</td>
 			<td align="right">
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-			<? echo ( sprintf('$%.2f', $$variable{'price'.$$variable{'OrderedQuantityIndex'}} ); ) ?>
+			<? echo ( sprintf('$%.2f', $$variable{'price'.$$variable{'Project'}->ordered_quantity_index()} ); ) ?>
 			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			</td>
 			<td align="right">&nbsp;<?status?></td>
@@ -59,10 +75,9 @@ function open_window( page ) {
 		<? if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<th colspan="4"></th>
-			<? else ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<th colspan="3"></th>
+			<th class="unprintable">&nbsp;</th>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<th colspan="3"></th>
 		</tr>
 <? echo ( 
 	use POSIX qw(ceil);
@@ -108,7 +123,7 @@ function open_window( page ) {
 	if ( keys %totals ) {
 		my $html = '<tr>';
 		if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
-			$html .= '<td>&nbsp;</td>';
+			$html .= '<td class="unprintable">&nbsp;</td>';
 		} # end if
 		$html .= '<td><b>Stock:</b><br/>';
 		foreach my $string ( sort keys %totals ) {
@@ -161,20 +176,28 @@ function open_window( page ) {
 		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<th colspan="4"></th>
-			<? else ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<th colspan="3"></th>
+			<th class="unprintable"></th>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<th colspan="3"></th>
 		</tr>
 		<tr>
-			<td align="right"><b>Total:</b></td>
-			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Total'.$$variable{'OrderedQuantityIndex'}} ); ) ?></td>
-			<td
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			colspan="2"
+			<td class="unprintable"></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			></td>
+			<td align="right"><b>Total:</b></td>
+			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
+			<td></td>
 		</tr>
+<? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
+		<tr>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<td class="unprintable"></td>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<td align="right"><b>Originally Ordered Price:</b></td>
+			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Project'}->ordered_price() ); ) ?></td>
+			<td></td>
+		</tr>
+<? endif ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 	</table>
 <? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
@@ -210,6 +233,7 @@ function open_window( page ) {
 				if ( ! @schedule ) {
 					$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule', 'addtopressschedule.gif', "f1.btnFunction.value='AddToPressSchedule';f1.submit();", '', 'Add To Press Schedule' );
 				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'CompletePrinting', 'completePrinting.gif', "f1.btnFunction.value='Complete Printing';f1.submit();", '', 'Complete Printing' ) if $$variable{'Project'}->status() eq 'Approved';
 			} # end if
 			if ( $$variable{'ProjectStatus'} eq 'Printed' and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'AddToBinderySchedule', 'addtobinderyschedule.gif', "f1.btnFunction.value='AddToBinderySchedule';f1.submit();", '', 'Add To Bindery Schedule' );
@@ -221,9 +245,6 @@ function open_window( page ) {
 			if ( $$variable{'ShippingType'} eq 'Delivery' and $$variable{'ProjectStatus'} ne 'Shipped' ) {
 
 				$html .= ssi::writeButton( $log, $dbh, 'Shipped', 'shipped.gif', "f1.btnFunction.value='Shipped';f1.submit();", '', 'Shipped' );
-			} else {
-				$html .= ssi::writeButton( $log, $dbh, 'Shipped', 'shipped.gif', "f1.btnFunction.value='Shipped';f1.submit();", '', 'Shipped' );
-				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
 			} # end if
 			if ( $$variable{'ShippingType'} eq 'Customer Pickup' and $$variable{'ProjectStatus'} ne 'Picked Up' ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
@@ -257,6 +278,7 @@ function open_window( page ) {
 	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 </form>
 <br/>
+<? if ( $$variable{'Project'}->docket() ) ?>
 <div class="leftColumn">
 <? eval (
 	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() );
@@ -289,6 +311,7 @@ function open_window( page ) {
 		</fieldset>
 	</form>
 </div>
+<? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend>Allocated</legend>
 	<table class="List">
@@ -325,15 +348,18 @@ function open_window( page ) {
 					$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
 					$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
 				} # end foreach
-				$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
+				$html .= '<tr class="totals"><td colspan="4" align="right">Total:</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
 			} # end foreach
 			return $html;
 		) ?>
 	</table>
 </fieldset>
+<br/>
+<? if ( $$variable{'Project'}->docket() ) ?>
 <div id="StockCheckout">
 <!--#include virtual="/employee/project/_stock_checkout.html"-->
 </div>
+<? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
 <fieldset><legend>Modification History</legend>
 	<table class="List">
@@ -356,4 +382,14 @@ function open_window( page ) {
 	<? endwhile ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{'ProjectLog'}},0,4; ) ?>
 	</table>
 </fieldset>
-
+<? else ( $$variable{'Project'}->id() ) ?>
+<div class="error">
+<? echo ( 
+	if ( $param{'project_id'} ) {
+		return 'Project ' . $param{'project_id'} . ' does not exist.<br/>';
+	} elsif ( $param{'ProjectIndex'} ) {
+		return 'Project ' . $param{'ProjectIndex'} . ' does not exist.<br/>';
+	} # end if
+) ?>
+</div>
+<? endif ( $$variable{'Project'}->id() ) ?>

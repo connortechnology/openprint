@@ -87,6 +87,17 @@ sub load_file {
 	return undef;
 } # end sub load_file
 
+sub save_file {
+	my ( $log, $file, $contents ) = @_;
+	if ( open( F, "> $file" ) ) {
+		print F $contents;
+	} else {
+		$log->warn( "Error opening $file, Reason: $!" );
+		return "Error opening $file, Reason: $!";
+	} # end if
+	return;
+} # end sub save_file
+
 sub build_city_prov_country {
 	my ( $city, $prov, $country ) = @_;
 	my $cpc = $city;
@@ -161,12 +172,19 @@ sub get_url {
 	if ( $options and $$options{'exclude'} ) {
 		@keys = sets::exclude( $$options{'exclude'}, \@keys );
 	} # end if	
+	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany' ], \@keys );
 	my %encoded;
 	foreach my $k ( @keys ) {
 		$encoded{$k} = $$params{$k};
 		$encoded{$k} =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;	
 	} # end foreach
-	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } @keys ) );
+	if ( $options and $$options{'include'} ) {
+		foreach my $k ( keys %{$$options{'include'}} ) {
+			$encoded{$k} = $$options{'include'}{$k};
+		} # end foreach
+	} # end if	
+	
+	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } keys %encoded ) );
 } # end sub get_url
 
 sub sum {
@@ -237,20 +255,117 @@ sub interval_to_seconds {
     return ($h*3600) + ($m*60) + $s;
 } # end sub interval_to_seconds
 
-sub CommaFormatted {
-    my $delimiter = ','; # replace comma if desired
-    my($n,$d) = split /\./,shift,2;
-    my @a = ();
-    while($n =~ /\d\d\d\d/) {
-        $n =~ s/(\d\d\d)$//;
-        unshift @a,$1;
-    }
-    unshift @a,$n;
-    $n = join $delimiter,@a;
-    $n = "$n\.$d" if $d =~ /\d/;
-    return $n;
-} # end of subroutine CommaFormatted
+sub seconds_to_pretty_interval {
+    my ( $seconds ) = @_;
+    my $string;
+    my $years = int($seconds / ( 60 * 60 * 24 * 365 ));
+    my $remainder = $seconds % ( 60*60*24*365 );
+    $string .= sprintf('%dy', $years) if $years;
+    return $string if ! $remainder;
 
+    my $days = int ( $remainder / ( 60* 60 * 24 ) );
+    $remainder = $remainder % ( 60 * 60 * 24 );
+    if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
+        $string .= '1 month';
+    } elsif ( $days ) {
+        $string .= sprintf('%dd', $days );
+    } # end if
+    return $string if ! $remainder;
+
+    my $hours = int( $remainder / (60*60) );
+    $remainder = $remainder % ( 60*60 );
+    my $minutes = int ( $remainder / 60 );
+    $remainder = $remainder % 60;
+
+    if ( $remainder ) {
+        $string .= sprintf('%d:%.2d:%.2d', $hours, $minutes, $remainder );
+    } else {
+        $string .= sprintf('%d:%.2d', $hours, $minutes );
+    } # end if
+    return $string;
+
+} # end sub seconds_to_pretty_interval
+
+
+sub rle_decode {
+	my ( $source, $width, $height ) = @_;
+	my $result = '';
+	my $position = 0;
+    while ( $source ) {
+        my $l = unpack( 'C', $source );
+        if ( $l == 128 ) {
+			# Could be end of scan line
+            substr($source, 0, 1) = '';
+#$openprint::log->warn("scanline length: $position");
+#$position = 0;
+        } elsif ($l > 128) {
+            if (length($source) < 2) {
+                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
+                return $result;
+            } # end if
+            $result .= substr($source, 1, 1) x (257 - $l);
+            substr($source, 0, 2) = '';
+			$position += 2;
+        } else {
+            if (length($source) < $l + 1) {
+                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
+                return $result;
+            }
+            $result .= substr($source, 1, $l+1);
+            substr($source, 0, $l + 2) = '';
+			$position += $l+2;
+        }
+    } # end while source
+	return $result;
+} # end sub rle_decode
+
+# We do not encode single chars, must be more than 2.
+sub rle_encode {    
+	my $input = $_[0];
+	my $output;
+
+	my $last = '';
+	my $count = 0;
+
+	while ( $input ) {
+		my $next = substr($input, 0, 1);
+		substr($input, 0, 1) = '';
+
+		if ( $next ne $last ) {
+			if ( $count == 1 ) {
+				$output .= pack( 'C', 2 );
+				$output .= $last.$next;;
+				$count = 0;
+				$last = '';
+			} elsif ( $count > 1 ) {
+				$output .= pack( 'C', 257-$count );
+				$output .= $last;
+				$last = $next;
+				$count = 1;
+			} else {
+				$last = $next;
+				$count = 1;
+			} # end if
+		} else {
+			if ( $count == 127 ) {
+				$output .= pack( 'C', 257-$count );
+				$output .= $last;
+				$count = 0;
+			} # end if
+			$count += 1;
+		} # end if
+	} # end while
+	if ( $count ) {
+		$output .= pack('C', 257-$count );
+		$output .= $last;
+	} # end if
+	return $output. (pack('C', 128));
+} # end sub rle_encode
+
+sub hms2time {
+	my ($h,$m,$s) = split(':', $_[0]);
+	return ($h*3600) + ($m*60) + $s;
+} # end sub hms2time
 1;
 
 __END__

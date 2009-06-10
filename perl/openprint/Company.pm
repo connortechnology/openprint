@@ -54,6 +54,8 @@ require openprint::Object;
 		'bank_email'				=>	'strbankemail',
 		'detail_level'				=>	'detail_level',
 		'quote_project_breakdown'	=>	'quote_project_breakdown',
+		'notes'						=>	'notes',
+		'deleted'					=>	'deleted',
 		);
 %transforms = (
 	'name' => [ 's/\.//g' ],
@@ -67,6 +69,7 @@ require openprint::Object;
 	'pricelist_id'	=>	undef,
 	'activation'	=>	'N',
 	'mailinglist'	=>	'N',
+	'deleted'		=>	0,
 );
 
 my $debug = 1;
@@ -180,9 +183,21 @@ sub Currency {
 
 sub delete {
 	my $self = shift;
+	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 1 );
+	$$self{'deleted'} = 1;
+	delete $openprint::Object::cache{'openprint::Company'}{$$self{id}};
+} # end sub delete
+
+sub undelete {
+	my $self = shift;
+	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 0 );
+	$$self{'deleted'} = 0;
+	delete $openprint::Object::cache{'openprint::Company'}{$$self{id}};
+} # end sub undelete
+
+sub destroy {
+	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
-# i'm not sure why we did this, for now we are going to delete the users
-#sql::update( undef, undef, 'Company_Users', "CompanyIndex = '$index'", 'lngCustomerID', 0 );
 	sql::execute( undef, undef, 'DELETE FROM Trade_References WHERE Company_id =?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM HelpDesk WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM RMA WHERE Company_Id=?', $$self{'id'} );
@@ -213,14 +228,14 @@ sub delete {
 	foreach my $User ( openprint::User::find('company_id'=>$$self{'id'} ) ) {
 		$User->delete();
 	} # end foreach
-	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 1 );
-	#sql::execute( undef, undef, 'DELETE FROM Company WHERE Index=?',$$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Company WHERE Index=?',$$self{'id'} );
 
 	sql::end_transaction( $openprint::dbh, $ac );
 
    # Add record to audit log - action "Delete Company Profile".
    openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'}");
 } # end sub delete
+
 sub save {
 	my ( $self, $params ) = @_;
 
@@ -230,7 +245,7 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 	$sql{dtmlastmodified} = 'NOW()';
-	$sql{'strname'} = Text::Unaccent::unac_string('LATIN1', $sql{'strname'} );
+	$sql{'strname'} = Text::Unaccent::unac_string('UTF-8', $sql{'strname'} );
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {

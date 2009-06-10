@@ -41,7 +41,7 @@
 		if ( $$variable{'Schedule'} eq $r->param('Schedule') ) {
 			$$variable{'error'} .= "Form $form not found.  Not added to schedule.";
 		} # end if
-		my ($time) = sql::execute( $log, $dbh, q{SELECT starttime FROM shifts WHERE equipment_id=? AND name=?}, $r->param('Equipment'), $r->param('Time') );
+		my ($time) = sql::execute( $log, $dbh, q{SELECT starttime FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $r->param('Equipment'), $r->param('Time') );
 		
 	}
 ) ?>
@@ -72,7 +72,7 @@
 		my @data = split ',', $r->param('Schedule');
 		while ( my ( $project_id, $service_id, $press, $day, $shift ) = splice @data,0, 5 ) {
 			my $Project = new openprint::Project( $project_id );
-			my ($time) = sql::execute( $log, $dbh, q{SELECT starttime FROM shifts WHERE equipment_id=? AND name=?}, $press, $shift );
+			my ($time) = sql::execute( $log, $dbh, q{SELECT starttime FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $press, $shift );
 			if ( ! $time ) {
 				$$variable{'error'} .= "Shift $shift does not exist for $equipment{$press}<br/>";
 				next;
@@ -102,7 +102,7 @@
 			# Move jobs out of the way
 			my ( $s_date, $s_time ) = split ' ', $last_time;
 			# This works because last_time is always the start of a shift
-			my ( $next_shift ) = sql::execute( $log, $dbh, q{SELECT ?::timestamp + duration FROM Shifts WHERE equipment_id=? AND starttime=?}, $last_time, $press, $s_time );
+			my ( $next_shift ) = sql::execute( $log, $dbh, q{SELECT ?::timestamp + duration FROM Equipment_Shifts WHERE equipment_id=? AND starttime=?}, $last_time, $press, $s_time );
 
 			my @services = sql::execute( $log, $dbh, q{SELECT ProjectIndex, ServiceIndex FROM Schedule WHERE Equipment_id=? AND (starttime between ? AND ?) ORDER BY starttime}, $press, $start_time, $next_shift );
 			$start_time = $next_shift;
@@ -241,7 +241,7 @@
 			if ( $specs{'ddmPress'} and $specs{'ddmPress'} ne $$variable{'EquipmentIDs'}{$equipment_id} ) {
 				$html .= qq`<br/><span class="warning">Running press is not quoted press: $specs{'ddmPress'}</span>`;
 			} # end if
-			if ( ! sql::execute( $log, $dbh, q{SELECT starttime FROM shifts WHERE equipment_id=? AND name=?}, $equipment_id, $time ) ) {
+			if ( ! sql::execute( $log, $dbh, q{SELECT starttime FROM Equipment_Shifts WHERE equipment_id=? AND name=?}, $equipment_id, $time ) ) {
 				$html .= qq`<br/><span class="error">Shift $time does not exist for $$variable{'EquipmentIDs'}{$equipment_id}</span>`;
 			
 			} # end if

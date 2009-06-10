@@ -18,11 +18,6 @@ require openprint::Estimating::Multipage;
 
 # Projects are like Orders, in that you can have several in here, but only ONE of them may be unfinished.
 
-sub delete_project {
-	my ( $log, $dbh, $project_id ) = @_;
-	sql::update( $log, $dbh, 'tbl_Projects', ['Index=?', $project_id], ['strStatus', 'Deleted'] );
-	openprint::logs::insertLogRecord('20', "Project ID: " . $project_id,);
-} # end sub delete_project
 
 sub insert_project_type {
 	my ( $r, $log, $dbh, $project_index, $project_type_id ) = @_;
@@ -809,11 +804,12 @@ sub reuse_project {
 	$NewProject->user_id( $openprint::session{'user_id'} );
 	$NewProject->order_id( '' );
 	# This allows uncalc->uncalc, everything else to UnOrdered
-	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete' ] ) ) {
+	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped' ] ) ) {
 		$NewProject->status('Unordered');
 	} # end if
 	$NewProject->company_id( $r->param('ddmCompany') ) if $r->param('ddmCompany');
 	$NewProject->save();
+	$openprint::session{'project_id'} = $NewProject->id();
 
 	$NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
@@ -840,9 +836,7 @@ sub reuse_project {
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()
 			or $Project->quantity3() != $NewProject->quantity3() ) {
-		foreach my $signature_service_id ( $NewProject->signatures() ) {
-			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $NewProject->id(), $signature_service_id,'Printing' );
-		} # end foreach
+		openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $NewProject->id() );
 		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $NewProject->id(), undef );
 	} # endif
 	return $NewProject->id();
@@ -926,7 +920,7 @@ sub calc {
 					} elsif ( ( my ( $folds ) = $specs{'FoldType'} =~ /^(\d)Panel/ ) ) {
 						#$folds =~ s/\D//g;
 						#$folds += 1;
-						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'} *1000/ $folds)/1000 );
+						$specs{'txtFinalWidth'} = sprintf('%.3f', int($specs{'txtWidth'}*1000/$folds)/1000 );
 						$specs{'txtFinalHeight'} = $specs{'txtHeight'};
 					} # end if
 				} # end if
@@ -1169,6 +1163,7 @@ sub calc {
 		} # end if printing
 
 		if ( $specs{'Status'} eq 'uncalculated' ) {
+			delete $specs{'txtPrice1'};
 			$specs{'alert'} .= 'Problem calculating printing';
 			return jsrs::encode_pairs(%specs);
 		} # end if
@@ -1176,7 +1171,7 @@ sub calc {
 		# Force a reload
 		$services = $project->services();
 
-		$log->debug("Adding Required Services");
+		#$log->debug("Adding Required Services");
 		foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $project->type_id() ) ) {
 			if ( ! $$services{$servicetype_id} ) {
 				push @{$$services{$servicetype_id}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, $servicetype_id );
@@ -1208,9 +1203,9 @@ $openprint::log->debug("Proofs: $specs{'proof_type'}");
 					push @{$proof_indexes{$signature_index}}, 2;
 					openprint::Estimating::Proofs::insert_colour_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 2, 1, $proof_specs );
 				} # end if
-$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
+#$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
 				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
-$openprint::log->debug("Adding press proof");
+#$openprint::log->debug("Adding press proof");
 					push @{$proof_indexes{$signature_index}}, 3;
 					openprint::Estimating::Proofs::insert_press_proof( $log, $dbh, $$project{id}, $$services{'Proofs'}[0], $signature_service_index, 3, 1, $proof_specs );
 				} # end if
@@ -1225,7 +1220,7 @@ $openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature
 					} # end foreach proof_index
 					if ( ! $proof_index ) {
 						$proof_index = sets::max( $proof_indexes{$signature_index} ) + 1;
-	$openprint::log->debug("Adding proof $proof_index");
+	#$openprint::log->debug("Adding proof $proof_index");
 						foreach my $qty_index ( $project->quantity_indexes() ) {
 							#$$proof_specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} = 1;
 							#$$proof_specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} = $specs{'proof_type'};
@@ -1253,7 +1248,7 @@ $openprint::log->debug("Looking at $_ " . $$proof_specs{"ddmProofType-$signature
 		} # end if
 
 		if ( openprint::Estimating::Folding::neccessary( $log, $dbh, $$project{'id'} ) ) {
-			$openprint::log->error('Adding Folding');
+			#$openprint::log->debug('Adding Folding');
 			push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Folding' ) if ! $$services{'Folding'};
 			if ( (exists $specs{'FoldType'}) and ((! $specs{'FoldType'} ) or ( $specs{'FoldType'} eq 'NoFold' )) ) {
 				$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';

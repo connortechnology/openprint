@@ -10,7 +10,7 @@
 	<table class="List">
 		<tr>
 			<td>
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) ) ?>
+				<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 				<table>
 					<tr>
 						<td valign="top"><b>Representative:</b></td>
@@ -21,16 +21,23 @@
 						<td><textarea name="AdministratorComments" cols="30" rows="5" ><?AdministratorComments?></textarea></td>
 					</tr>
 				</table>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['A', 'E'] ) ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 			</td>
 			<td align="right" valign="top">
 				<!--#include virtual="/includes/order_totals.html" -->
-				<span class="Currency">All prices listed in <?CurrencyName?>.</span>
+				<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name() ) ?>.
+<? echo ( 
+	if ( $$variable{'Currency'}->id() != $$variable{'Order'}->Currency()->id() ) {
+		return 'Order originally in ' . $$variable{'Order'}->Currency()->name();
+	} # end if
+	return;
+) ?>
+				</span>
 			</td>
 		</tr>
 	</table>
 	<br class="spacer"/>
-	<!--#include virtual="/skins/<? echo ( $openprint::config{SiteTitle} ) ?>/includes/order_disclaimer.html"-->
+	<? echo ( ssi::include( $config{'SkinPath'}.'/includes/order_disclaimer.html'); ) ?>
 	<br/>
 	<span style="float: right;">
 	<? echo ( ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', 'f1.submit();', '', 'Complete Order' ); ) ?>

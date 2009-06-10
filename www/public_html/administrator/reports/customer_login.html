@@ -1,5 +1,5 @@
-Choose report criteria and click show results. You may the download the the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
-<br>
+Choose report criteria and click show results. You may the download the the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br/>
+<br/>
 <form name="f1" method="post" action="customer_login.html">
 	<fieldset class="filters">
 		<p>
@@ -7,8 +7,7 @@ Choose report criteria and click show results. You may the download the the resu
 			<select name="ddmEmployees" size="1">
 				<option value="">All Employees</option>
 <? echo (
-
-    ssi::make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)','usergroup'=>'Sales' ) ], $r->param('ddmEmployees') );
+    ssi::make_drop_down( [ ( 'None','None' ), map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(strfirstname),lower(strlastname)','usergroup'=>'Sales' ) ], $param{'ddmEmployees'} );
 ) ?>
 			</select>
 		</p>
@@ -79,11 +78,17 @@ Choose report criteria and click show results. You may the download the the resu
 				</select>
 		</p>
 		<p>
+			<label>Last Login:</label>
+			<? echo ( ssi::date_select( 'lastlogin_start', [@param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'}], { 'order'=>'m,d,y' } ); ) ?>
+			to
+			<? echo ( ssi::date_select( 'lastlogin_end', [@param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'}], { 'order'=>'m,d,y' } ); ) ?>
+		</p>
+		<p>
 			<label>Active?</label>
-				<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( 'checked="checked"' if $$variable{'rdbActive'} eq 'Y' ) ?> />
-				<label class="radio" for="rdbActiveY">Yes</label>
-				<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( 'checked="checked"' if $$variable{'rdbActive'} eq 'N' ) ?> />
-				<label class="radio" for="rdbActiveN">No</label>
+			<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( ssi::checked( $param{'rdbActive'} eq 'Y' ); ) ?> />
+			<label class="radio" for="rdbActiveY">Yes</label>
+			<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( ssi::checked( $param{'rdbActive'} ne 'Y' ); ) ?> />
+			<label class="radio" for="rdbActiveN">No</label>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
@@ -104,23 +109,41 @@ Choose report criteria and click show results. You may the download the the resu
 			<th align="right">Projects</th>
 			<th align="right">Last Project</th>
 			<th align="right">Orders</th>
-			<th align="right">Total Value</th>
 			<th align="right">Last Order</th>
+			<th class="Price">Total Value</th>
 		</tr>
-		<? while ( @$variable{'cust_index','cust_name','state','registration','rep','projects','lastproject','orders','total','lastorder'} = splice @{$$variable{'DATA'}},0,10; ) ?>
-		<tr<?rowclass?>> 
-			<td align="left"><a href="/administrator/managerial/company_profiles.html?ddmCustomer=<?cust_index?>">&nbsp;<?cust_name?></a></td>
-			<td align="right">&nbsp;<?state?></td>
-			<td align="right">&nbsp;<?registration?></td>
-			<td align="right">&nbsp;<?rep?></td>
-			<td align="right">&nbsp;<?projects?></td>
-			<td align="right"><?lastproject?></td>
-			<td align="right">&nbsp;<?orders?></td>
-			<td align="right">$<?total?></td>
-			<td align="right"><?lastorder?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq '' ? ' class="colRow"' : '' ) ?>
-		<? endwhile ( @$variable{'cust_index','cust_name','state','registration','rep','projects','lastproject','orders','total','lastorder'} = splice @{$$variable{'DATA'}},0,10; ) ?>
+		<? echo ( 
+			my $html = '';
+			my $rowclass;
+			while ( my ( $company_id, $user_id, $csr_id, $projects, $last_project, $orders, $last_order, $total ) = splice @{$$variable{'DATA'}}, 0, 8 ) {
+				my $Company = new openprint::Company( $company_id );
+				my $User = new openprint::User( $user_id );
+				my $CSR = new openprint::User( $csr_id );
+				my $Project = new openprint::Project( $last_project );
+				my $Order = new openprint::Order( $last_order );
+
+				$html .= sprintf('<tr%1$s> 
+					<td align="left"><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%2$d">%3$s</a></td>
+					<td align="right">%4$s</td>
+					<td align="right">%5$s</td>
+					<td align="right">%6$s</td>
+					<td align="right">%7$d</td>
+					<td align="right">%8$s</td>
+					<td align="right">%9$d</td>
+					<td align="right">%10$s</td>
+					<td class="Price">%11$s</td>
+				</tr>', $rowclass, $company_id, $Company->name(), $Company->state(), 
+					Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $Company->created_on() ) ),
+					$CSR->name(), $projects, 
+					$projects ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $Project->created_on() ) ) : '',
+					$orders,
+					$orders ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ) : '',
+					openprint::Currency::format($total) );
+
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end while
+			return $html;
+		) ?>
 	</table>
 	<? else ( @{$$variable{'DATA'}} ) ?>
 	There were no results matching your criteria.<br>

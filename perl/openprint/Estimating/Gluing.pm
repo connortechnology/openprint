@@ -147,6 +147,9 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 	return $status;
 } # end sub calc
 
+sub summary {
+} # end sub summary
+
 1;
 
 __END__
