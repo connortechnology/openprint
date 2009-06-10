@@ -27,7 +27,7 @@ $serial = 'schedule_id_seq';
 	'starttime'		=>	'starttime',
 	'runtime'		=>	'runtime',
 	'project_id'	=>	'projectindex',
-	'service_id'	=>	'serviceindex',
+	'service_id'	=>	'service_id',
 	'equipment_id'	=>	'equipment_id',
 );
 
@@ -69,10 +69,10 @@ sub find {
     } # end if
     if ( $params{'service_id'} ) {
 		if ( ref $params{'service_id'} eq 'ARRAY' ) {
-			$sql .= ' AND serviceindex={?}';
+			$sql .= ' AND service_id={?}';
 			push @values, $params{'service_id'};
 		} else {
-			$sql .= ' AND ? = ANY(serviceindex)';
+			$sql .= ' AND ? = ANY(service_id)';
 			push @values, $params{'service_id'};
 		} # end if
     } # end if
@@ -320,10 +320,10 @@ sub get_li {
         $html .= sprintf( q{<span id="%1$dImpressions" class="Impressions" onclick="openPopup( 'Impressions', %1$d );">%2$d imps</span>}, $$self{'id'}, $impressions );
 
         $html .= '<span class="Buttons">';
-        $html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$self{'project_id'};f1.ServiceIndex.value=$$self{'serviceindex'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
+        $html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
         $html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','id=$$self{id}');", '', 'B' );
         $html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}' );", '', 'C' );
-        $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id.value:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
+        $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
         #$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "if(confirm('Are you sure?')){split_job($$self{'project_id'}, $$self{'serviceindex'}, '$ul_id' );}", '', 'S' ) if $$sig_specs{'SignatureQuantity'} > 1;
         $html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
         $html .= '</span>';

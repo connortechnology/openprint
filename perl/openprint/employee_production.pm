@@ -41,7 +41,7 @@ sub print_overview {
 sub press_schedule {
 
 	if ( $param{'btnFunction'} eq 'Reflow' ) {
-		reorder_jobs( openprint::press_schedule::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' ) );
+		reorder_jobs( openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' ) );
 	} elsif ( $param{'btnFunction'} eq 'Add Docket' ) {
 		my $Project = new openprint::Project();
 		$Project->save();
@@ -1198,7 +1198,7 @@ sub reorder_jobs {
 				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_start'=>Date::Format::time2str('%H:%M', $start_time),'endtime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ) );
 				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_end'=>Date::Format::time2str('%H:%M', $start_time) ) if ! @Shifts;
 				return if ! @Shifts;
-				$Shift = $Shifts[0]->emanantise( $Shift->startdate_seconds() );
+				$Shift = $Shifts[0]->emanantise( $start_time );
 			} else {
 				$Shift = shift @Shifts;
 			} # end if
@@ -1227,41 +1227,39 @@ sub reorder_jobs {
 } # end sub reorder_jobs
 
 sub _li_change {
-	my @rows = openprint::press_schedule::find('id'=>$param{'id'});
-	next if ! @rows;
-	my $row = shift @rows;
+	my $row = new openprint::ScheduledJob($param{'schedule_id'});
 	my $Equipment = new openprint::Equipment( $$row{'equipment_id'} );
 
 	if ( exists $param{'runtime'} ) {
-		sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'runtime', $param{'runtime'} );
+		sql::update( undef, undef, 'Schedule', ['id=?', $param{'schedule_id'}], 'runtime', $param{'runtime'} );
 
 		if ( $Equipment->smartscheduling() ) {
 			#my $start_time = Date::Parse::str2time( $$row{'starttime'} );
 			#my ( $shift_name ) = sql::execute( $log, $dbh, q{SELECT name FROM Shifts WHERE equipment_id=? AND starttime < ? AND starttime+duration-'1 second'::interval > ? LIMIT 1}, $$row{'equipment_id'}, Date::Format::time2str('%H:%M', $start_time ), Date::Format::time2str('%H:%M', $start_time ) );
 			#push @{$variable{'changed'}}, sprintf('%d-%s-%s',$$row{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $start_time), $shift_name );
 			reorder_jobs(
-					openprint::press_schedule::find( 'starttime_null'=>0, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
 		} # end if
 	} elsif ( exists $param{'starttime_year'} ) {
 
 		push @{$variable{'changed'}}, openprint::Shift::get( $row )->ul_id();
 		my $old_starttime = Date::Parse::str2time( $$row{'starttime'} );
 		my $new_starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} );
-		sql::update( undef, undef, 'Schedule', ['id=?', $param{'id'}], 'starttime', $new_starttime, 'starttime_locked', $param{'locked'} );
+		sql::update( undef, undef, 'Schedule', ['id=?', $param{'schedule_id'}], 'starttime', $new_starttime, 'starttime_locked', $param{'locked'} );
 
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
-					openprint::press_schedule::find( 'starttime_null'=>0, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		my $Project = new openprint::Project( $$row{'projectindex'} );
+		my $Project = $row->Project();
 		my ( $starttime, $equipment_id ) = @$row{'starttime','equipment_id'};
 		$equipment_id = $param{'equipment_id'} if $param{'equipment_id'};
 
 		push @{$variable{'changed'}}, openprint::Shift::get( $row )->ul_id();
 
 		if ( ! $starttime ) {
-			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=? AND projectindex != ? AND ServiceIndex != ?}, $equipment_id, @$row{'projectindex','serviceindex'} );
+			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=? AND id != ?}, $equipment_id, $$row{'id'} );
 		} # end if
 		my ( $year, $month, $day, $hours, $minutes, $seconds );
 		if ( ! $starttime ) {
@@ -1279,8 +1277,7 @@ sub _li_change {
 		} # end if
 		if ( $year ) {
 			$starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', $year, $month, $day, $hours, $minutes, $seconds );
-			sql::update( $log, $dbh, 'Schedule', ['ProjectIndex=? AND ServiceIndex=?', @$row{'projectindex','serviceindex'} ], 'starttime', $starttime, 'equipment_id', $equipment_id );
-			@$row{'equipment_id','starttime'} = ( $equipment_id, $starttime );
+			$row->save({'starttime'=>$starttime, 'equipment_id'=>$equipment_id});
 			$Project->add_to_log( @session{'company_id','user_id'}, "Job bumped to next shift: $starttime on " . ( new openprint::Equipment( $equipment_id )->name() ) );
 		} # end if
 		push @{$variable{'changed'}}, openprint::Shift::get( $row )->ul_id();

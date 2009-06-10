@@ -553,6 +553,11 @@ if ( ! $data ) {
 	if ( ! exists $$data{'id'} ) {
 		$dbh->do('ALTER TABLE Schedule ADD id SERIAL');
 	} # end if
+	if ( exists $$data{'serviceindex'} ) {
+		$dbh->do('ALTER TABLE Schedule ADD service_id INTEGER[]');
+		$dbh->do('UPDATE Schedule SET service_id=ARRAY[serviceindex]');
+		$dbh->do('ALTER TABLE Schedule DROP serviceindex');
+	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
 if ( ! $data ) {
@@ -561,6 +566,35 @@ if ( ! $data ) {
 		$dbh->do($st);
 	} # end foreach
 } else {
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Equipment_Shifts LIMIT 1', {} );
+my $data2 = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Shifts LIMIT 1', {} );
+if ( $data2 and ! $data ) {
+	$dbh->do( 'ALTER TABLE Shifts rename to Equipment_Shifts' );
+	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} elsif ( ! ( $data2 or $data ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Equipment_Shifts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} elsif ( ! $data2 ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} else {
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
+		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
+		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
+	} # end if
 } # end if
 $dbh->disconnect();
 1;
