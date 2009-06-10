@@ -117,14 +117,9 @@ sub press_schedule {
 		$Project->update_status();
 	} elsif ( $param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $param{'schedule_id'} ) {
-			if ( my @rows = openprint::press_schedule::find('id'=>$param{'schedule_id'} ) ) {
-				my $row = shift @rows;
-				if ( ! sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE id=?}, $$row{id} ) ) {
-					if ( $$row{'projectindex'} ) {
-						my $Project = new openprint::Project( $$row{'projectindex'} );
-						$Project->add_to_log( @session{'company_id','user_id'}, 'Job removed from print schedule.' );
-					} # end if
-				} # end if successful delete
+			my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+			if ( ( ! $Job->delete() ) and $$Job{'project_id'} ) {
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, 'Job removed from print schedule.' );
 			} # end if
 		} else {
 			$variable{'error'} .= 'No job given to delete...';
@@ -1075,10 +1070,12 @@ sub _drop {
 
 		if ( $Shift->starttime() ) {
 			my @final_order;
+			# Get jobs before the shift, leave them in order.
 			foreach my $row ( openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
 				push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
 			} # end foreach row
 
+			# Get the rest of the jobs on this equipment
 			my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
 
 			my $previous;
@@ -1098,6 +1095,8 @@ $log->debug("Sigs are the same, coalescing ");
 				$previous = $Job;
 			} # end foreach row
 
+
+			# Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
 			foreach my $row_id ( @order ) {
 				my $found = 0;
 				for ( my $j = 0; $j < @jobs; $j += 1 ) {
@@ -1110,10 +1109,10 @@ $log->debug("Sigs are the same, coalescing ");
 					} # end if
 				} # end foreach job
 				if ( ! $found ) {
-					my @rows = openprint::press_schedule::find( 'id'=>$row_id );
-					if ( @rows ) {
-						push @final_order, $rows[0];
-					} # end if
+					# Must be on another press.
+					my $Job = new openprint::ScheduledJob( $row_id );
+					$Job->equipment_id( $Shift->equipment_id() );
+					push @final_order, $Job;
 				} # end if
 			} # end foreach row_id
 			reorder_jobs( @final_order, @jobs );
@@ -1121,13 +1120,12 @@ $log->debug("Sigs are the same, coalescing ");
 			# Pending or Approved
 			my $was_scheduled = 0;
 			foreach my $row_id ( @order ) {
-				foreach my $row ( openprint::press_schedule::find( 'id'=>$row_id ) ) {
-					$was_scheduled = 1 if $$row{'starttime'};
-					sql::update( $log, $dbh, 'Schedule', ['id=?', $$row{'id'}], 'StartTime', undef, 'equipment_id', $Shift->equipment_id() );
-				} # end foreach row
+				my $Job = new openprint::ScheduledJob( $row_id );
+				$was_scheduled = 1 if $$Job{'starttime'};
+				$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()});
 			} # end foreach row_id
 			# If it was a formerly scheduled job, then shuffle
-			reorder_jobs(openprint::press_schedule::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
+			reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
 		} # end if	
 
 	} # end if services
@@ -1211,16 +1209,18 @@ sub reorder_jobs {
 		} # end if
 
         if ( $start_time and ! $$row{starttime} ) {
-            my $Equipment = new openprint::Equipment( $$row{'equipment_id'} );
-            new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
+            $row->Project()->add_to_log( @session{'company_id','user_id'}, "Scheduled to print on " . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
         } # end if
 
-        sql::update( $log, $dbh, 'Schedule', ['id=?', $$row{'id'}], 'StartTime', Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ), 'equipment_id', $$row{'equipment_id'} );
-        if ( $$row{operator_id} != $Shift->operator_id() ) {
-            sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $Shift->operator_id() );
-        } # end if
+		$row->save({
+				'starttime'	=> Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ),
+				'equipment_id'	=>	$$row{'equipment_id'},
+				} );
+		if ( $$row{operator_id} != $Shift->operator_id() ) {
+			$row->operator_id( $Shift->operator_id() );
+		} # end if
 
-        $start_time += misc::hms2time( $$row{'runtime'} );
+        $start_time += $row->runtime_seconds();
 
     } # end while @order
     sql::end_transaction( $dbh, $ac );

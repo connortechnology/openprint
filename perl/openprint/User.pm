@@ -7,6 +7,12 @@ require openprint::Company;
 require openprint::logs;
 use openprint ();
 use strict;
+use vars qw( $log $dbh %config %variable %param );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+*param = \%openprint::param;
+*variable = \%openprint::variable;
 
 my $debug = 1;
 
@@ -427,6 +433,32 @@ sub csr_ids {
 	} # end if
 	return sql::execute( undef, undef, 'SELECT csr_id FROM Assistants WHERE assistant_id=?', $$self{id} );
 } # end sub
+
+sub notifications {
+	my ( $self, $notifications_hash ) = @_;
+	
+	if ( $notifications_hash ) {
+		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
+		my $ac = sql::start_transaction( $dbh );
+		sql::execute( undef, undef, 'DELETE FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+		foreach my $k ( keys %types ) {
+			sql::insert( undef, undef, 'User_Notifications', { 'user_id'=>$$self{'id'},'type_id'=>$k, 'value'=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
+		} # end foreach k
+		sql::end_transaction( $dbh, $ac );
+		$$self{'notifications'} = $notifications_hash;
+	} elsif ( ! exists $$self{'notifications'} ) {
+		%{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+	} # end if
+	
+	return $$self{'notifications'};
+} # end sub notifications
+
+sub notification {
+	my ( $self, $name ) = @_;
+
+	$self->notifications() if ( ! exists $$self{'notifications'} );
+	return $$self{'notifications'}{$name} if $$self{'notifications'};
+} # end sub notification
 
 sub purchasing_total {
 	require openprint::PurchaseOrder;

@@ -497,8 +497,8 @@ sub get_runtime {
     my ( $log, $dbh, $project_index, $service_index ) = @_;
 
     my $Project = new openprint::Project( $project_index );
-    my ( $qty_index ) = $Project->ordered_quantity_index();
-    my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+    my $qty_index = $Project->ordered_quantity_index();
+    my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 
     if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'AdditionalSignature' ) ) {
 		if ( ! $$specs{'UsePress'} ) {

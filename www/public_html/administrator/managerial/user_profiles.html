@@ -273,6 +273,19 @@ Please select a company or user to obtain login information.<br/>
 				<label for="change_passwordN" class="radio">No</label>
 			</p>
 		</fieldset>
+		<fieldset><legend>Notifications</legend>
+			<? echo ( 
+				my $html;
+				my $n = $$variable{'User'}->notifications();
+				my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+				foreach my $k ( keys %types ) {
+					$html .= '<p><label>'.$types{$k}.':</label>';
+					$html .= sprintf('<input type="text" name="notification_%1$s" value="%2$s" />', $k, $$n{$types{$k}} );
+					$html .= '</p>';
+				} # end foreach k
+				return $html;
+			) ?>
+		</fieldset>
 		<fieldset>
 		<p id="ButtonsBottom">
 			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Company Info.</a><? endif ( $$variable{'CustomerIndex'} )?>&nbsp;</label>

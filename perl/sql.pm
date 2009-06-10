@@ -9,8 +9,9 @@ use DBI;
 use Time::HiRes qw{ gettimeofday tv_interval }; 
 use strict;
 
-use vars qw( $log $dbh $debug );
+use vars qw( $log $dbh $debug $timing );
 $debug = 1;
+$timing = 1;
 
 sub open_sql {
 	my ( $l, %sql_server ) = @_;
@@ -39,7 +40,7 @@ sub execute {
 		$print_sql = $sql;
 		$print_sql =~ s/\?/\%s/g;
 		$print_sql = sprintf($print_sql, @values);
-		$starttime = [gettimeofday];
+		$starttime = [gettimeofday] if $timing;
 	} # end if
 	my $sth;
 	if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
@@ -57,9 +58,15 @@ sub execute {
 			} # end for
 		} # end while
 	} # end if
-	$sth->finish(); # unneccessary
+	$sth->finish();
 	if ( $l and $debug ) {
-		$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+		if ( $timing ) {
+			$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+		} elsif ( @return_array ) {
+			$l->debug("SQL ($print_sql) Results:".join(',',@return_array));
+		} else {
+			$l->debug("SQL ($print_sql) No Results:");
+		} # end if
 	} # end if
 
 	return @return_array;
@@ -116,16 +123,28 @@ sub insert {
 	# we can use push and pop in here, because we actually don't acre about order, only pairing
 	my $command = "INSERT INTO $table (".join( ',', keys %commands ).') VALUES (';
 	my $print_command = $command;
-	$print_command .= join(',', map { defined $_ ? $_ : 'undef' } @values ) if @values;
+
+	my @command_places = ();
+	my @command_values = ();
+	foreach my $v ( @values ) {
+		if ( ref $v eq 'ARRAY' ) {
+			push @command_places, '?';
+			push @command_values, '{'.join(',', map { $_ } @{$v} ).'}';
+		} else {
+			push @command_places, '?';
+			push @command_values, $v;
+		} # end if
+	} # end foreach
+	$command .= join(',', @command_places) .')';
+	$print_command .= join(',', map { if( ref $_ eq 'ARRAY' ) { "{$_}"; } elsif( defined $_ ) { $_; } else {'undef';} } @command_values ) if @command_values;
 	$print_command .= ')';
 
-	$command .= join(',', map { '?' } @values ).')';
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
 		$l->error( "Error Preparing SQL Statement: ($command):" . $d->errstr ) if $l;
 		return $d->errstr;
 	} # end if
-	if ( ! $sth->execute(values %commands) ) {
+	if ( ! $sth->execute(@command_values) ) {
 		$l->error("SQL statement execution failed: ($print_command):" . $d->errstr) if $l;
 		return $d->errstr;
 	} # end if
@@ -153,8 +172,14 @@ sub update {
 
 	my $command = "UPDATE $table SET ";
 	my @columns;
+	my @values;
 	foreach my $column ( keys %commands ) {
 		push @columns, "$column = ?";
+		if ( ref $commands{$column} eq 'ARRAY' ) {
+			push @values, '{'.join(',', map { $_ } @{$commands{$column}} ).'}';
+		} else {
+			push @values, $commands{$column};
+		} # end if
 	} # end foreach
 	$command .= join( ',', @columns );
 	my @conditions = ();
@@ -168,14 +193,14 @@ sub update {
 	$print_command =~ s/\?/\%s/g;
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
-		$log->error( 'Error Preparing SQL Statement: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr ) if $log;
+		$log->error( 'Error Preparing SQL Statement: ('.sprintf($print_command, @values, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr ) if $log;
 		return $d->errstr;
 	} # end if
-	if ( ! $sth->execute( values %commands, @conditions ) ) {
-		$log->error('SQL statement execution failed: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr) if $log;
+	if ( ! $sth->execute( @values, @conditions ) ) {
+		$log->error('SQL statement execution failed: ('.sprintf($print_command, @values, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr) if $log;
 		return $d->errstr;
 	} # end if
-	$_ = sprintf($print_command, values %commands, @conditions );
+	$_ = sprintf($print_command, @values, @conditions );
 	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, $_ ) ) if $log;
 	return;
 } # end sub update

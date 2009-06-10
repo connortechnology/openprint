@@ -347,16 +347,24 @@ sub add_project_to_press_schedule {
 	my @sigs = $service_id ? ( $service_id ) : $Project->signatures();
 
 	foreach my $s_s_id ( @sigs ) {
-		next if find('project_id'=>$Project->id(), 'service_id'=>$s_s_id );
+		next if openprint::ScheduledJob::find('project_id'=>$Project->id(), 'service_id'=>$s_s_id );
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
 		if ( ! $$sig_specs{'UsePress'} ) {
 			$error .= "No press for signature $$sig_specs{'SignatureIndex'}<br/>";
+			next;
 		} # end if
 		my $runtime = openprint::service::get_runtime( $log, $dbh, $Project->id(), $s_s_id );
 		if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'},'use_in_estimating'=>1) ) {
-			$_ = sql::insert( undef, undef, 'Schedule', ['ProjectIndex', $Project->id(), 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) ] );
+			my $Job = new openprint::ScheduledJob();
+			$_ = $Job->save({
+				'project_id'	=>	$Project->id(),
+				'service_id'	=>	[$s_s_id],
+				'equipment_id'	=>	$Equipment[0]->id(),
+				'starttime'		=>	undef,
+				'runtime'		=>	($runtime ? "$runtime minutes" : undef )
+			});
 			if ( $_ ) {
 				$error .= 'Error adding to press schedule: ' . $_;
 			} else {
@@ -366,7 +374,7 @@ sub add_project_to_press_schedule {
 		} else {
 			$error .= "Error adding to press schedule: Press not found ($$sig_specs{UsePress}) for signature $$sig_specs{'SignatureIndex'}<br/>";
 		} # end if
-	} # end foreach
+	} # end foreach sig
 	sql::end_transaction( $dbh, $ac );
 	return $error;
 } # end sub add_project_to_press_schedule
