@@ -130,6 +130,7 @@ sub get_li {
 	my ( $previous_row, $row, $ul_id ) = @_;
 
 	my $html;
+$log->debug("NEWS: $$row{'news2'}");
 	if ( ! $$row{'projectindex'} ) {
 		$html .= sprintf( '<li id="item_%d" class="%s">Reserved', $$row{'id'}, 'reserved' );
 		$html .= '<span class="Buttons">';
@@ -146,53 +147,7 @@ sub get_li {
 
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $$row{'serviceindex'} );
 	if ( ! $$sig_specs{'txtEmployeeComments'} ) {
-		my @side_one = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-		my @side_two = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
-		my $comments = sprintf( '%d/%d', scalar @side_one, scalar @side_two );
-
-		my %pms;
-		foreach my $side ( 'SideOne', 'SideTwo' ) {
-			foreach my $index ( 1 .. 8 ) {
-				if ( $$sig_specs{'chkSpecial'.$side.'Colour'.$index} ) {
-					if ( $$sig_specs{'txtSpecial'.$side.'Colour'.$index} ) {
-						$pms{$index} += 1;
-					} # end if
-				} # end if
-			} # end foreach index
-		} # end foreach side
-		if ( keys %pms ) {
-			$comments .= '+' . ( keys %pms ) . ' PMS';
-		} # end if
-
-		if ( $$sig_specs{'rdbAqueousSideOne'} ne 'None' or $$sig_specs{'rdbAqueousSideTwo'} ne 'None' ) {
-			$comments .= '+AQ';
-		} # end if
-		if (
-				$$sig_specs{'chkVarnishSpotGlossSideOne'}
-				or $$sig_specs{'chkVarnishSpotMatteSideOne'}
-				or $$sig_specs{'chkVarnishOverallGlossSideOne'}
-				or $$sig_specs{'chkVarnishOverallMatteSideOne'}
-				or $$sig_specs{'chkVarnishSpotGlossSideTwo'}
-				or $$sig_specs{'chkVarnishSpotMatteSideTwo'}
-				or $$sig_specs{'chkVarnishOverallGlossSideTwo'}
-				or $$sig_specs{'chkVarnishOverallMatteSideTwo'}
-			) {
-			$comments .= '+Varnish';
-		} # end if
-
-		$comments .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
-
-		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
-			if ( $$services{'Folding'} ) {
-				my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
-				if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
-					$comments .= '(fold inline)';
-				} # end if
-			} else {
-				$comments .= '(sheeted)';
-			} # end if
-		} # end if
-		openprint::service::insert_service_spec( $log, $dbh, @$row{'projectindex','serviceindex'}, 'txtEmployeeComments', $comments );
+		openprint::service::insert_service_spec( $log, $dbh, @$row{'projectindex','serviceindex'}, 'txtEmployeeComments', openprint::Shift::get_li_comment( $row ) );
 	} # end if
 
 	if ( ! $$sig_specs{'SignatureQuantity'} ) {

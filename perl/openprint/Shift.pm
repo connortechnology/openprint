@@ -10,7 +10,7 @@ use vars qw(%variable $log $dbh %config %session $table $serial %fields %transfo
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-*session = \%openprint::session;
+*session = \%session;
 
 require sql;
 require ssi;
@@ -18,6 +18,7 @@ require misc;
 require Date::Parse;
 require openprint::Equipment_Shift;
 require openprint::User;
+require openprint::ScheduledJob;
 
 my $debug = 1;
 
@@ -157,14 +158,23 @@ sub name {
 sub schedule {
 	return openprint::press_schedule::find( 'starttime_start'=>$_[0]{'starttime'}, 'starttime_end'=>$_[0]{'endtime'}, 'equipment_id'=>$_[0]{'equipment_id'} );
 } # end sub schedule
+sub Schedule {
+	return openprint::ScheduledJob::find( 
+			'starttime_null'	=>	$_[0]{'starttime'} ? 0 : 1,
+			'starttime_>='		=>	$_[0]{'starttime'}, 
+			'starttime_<'		=>	$_[0]{'endtime'}, 
+			'equipment_id'		=>	$_[0]{'equipment_id'},
+			'order'				=>	'starttime,serviceindex',
+			);
+} # end sub Schedule
 
 sub operator_id {
 	my $self = shift;
 
 	if ( @_ ) {
 		$$self{'operator_id'} = shift;
-		foreach my $row ( $self->schedule() ) {
-			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngProjectIndex=? AND lngServiceIndex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $$self{'operator_id'} ? $$self{'operator_id'} : undef );
+		foreach my $Job ( $self->Schedule() ) {
+			$Job->operator_id( $$self{'operator_id'} );	
 		} # end foreach
 		$self->save();
 	} # end if
@@ -182,6 +192,7 @@ sub to_string {
 
 sub get_lis {
 	my ( $Shift, $filters ) = @_;
+	my $self = $Shift;
 
 	my ( $s, $min, $h, $day, $month, $year );
 	if ( $Shift->starttime() ) {
@@ -190,13 +201,6 @@ sub get_lis {
 		$month += 1;
 	} # endif
 
-	my @schedule = openprint::press_schedule::find(
-			'starttime_null'	=>	$Shift->starttime() ? 0 : 1,
-			'starttime_>='	=>	$Shift->starttime(),
-			'starttime_<'	=>	$Shift->endtime(),
-			'equipment_id'	=>	$Shift->equipment_id(),
-			'order'			=>	'starttime,serviceindex',
-			);
 
 	my $html;
 	my $ul_id = $Shift->ul_id();
@@ -204,26 +208,24 @@ sub get_lis {
 	my $previous_row;
 	my $total_impressions;
 
-	for ( my $index = 0; $index < @schedule; $index += 1 ) {
-		my $current_row = $schedule[$index];
+	foreach my $Job ( $self->Schedule() ) {
+
+		my $Project = new openprint::Project($$Job{'project_id'});
 
 		if ( $filters ) {
 			if ( $$filters{'Status'} ) {
-				my $Project = new openprint::Project($$current_row{'projectindex'});
-				next if ! sets::isin( $Project->status(), $$filters{'Status'} );
+				next if ! sets::isin( $Job->Project()->status(), $$filters{'Status'} );
 			} # end if
 		} # end if
 		
-		$html .= openprint::press_schedule::get_li( $previous_row, $current_row, $ul_id );
-		my $sig_specs = openprint::service::get_specs_ref( new openprint::Project( $$current_row{'project_index'} ),$$current_row{'serviceindex'} );
-		$total_impressions += $$sig_specs{'ImpressionQuantity'};
-		$previous_row = $current_row;
-	} # end for
+		$html .= $Job->get_li( $ul_id );
+		$total_impressions += $Job->impressions();
+	} # end foreach Job
 
 	if ( $Shift->name() and Date::Calc::check_date( $year, $month, $day ) ) {
 		my $Operator = $Shift->Operator();
 
-		if ( openprint::usergroup::is_user_in( ['PressManager'], $openprint::session{'user_id'} ) ) {
+		if ( openprint::usergroup::is_user_in( ['PressManager'], $session{'user_id'} ) ) {
 			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onclick="openPopup('Operator', '%s', '%s' );">%s</span><br class="spacer"/></div>}, Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
 			Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),

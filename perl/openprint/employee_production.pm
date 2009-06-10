@@ -1075,11 +1075,28 @@ sub _drop {
 
 		if ( $Shift->starttime() ) {
 			my @final_order;
-			foreach my $row ( openprint::press_schedule::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
+			foreach my $row ( openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
 				push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
 			} # end foreach row
 
-			my @jobs = openprint::press_schedule::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
+			my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
+
+			my $previous;
+			foreach my $row_id ( @order ) {
+				my $Job = new openprint::ScheduledJob( $row_id );
+				if ( $previous and ( $previous->project_id() == $Job->project_id() ) ) {
+					my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
+					my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
+					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $previous->Project()->ordered_qty_index() ) ) {
+$log->debug("Sigs are the same, coalescing ");
+						push @{$$previous{'service_id'}}, @{$$Job{'service_id'}};
+						$previous->save();
+						$Job->delete();
+						@order = sets::exclude( [ $row_id ], \@order );
+					} # end if
+				} # end if
+				$previous = $Job;
+			} # end foreach row
 
 			foreach my $row_id ( @order ) {
 				my $found = 0;
