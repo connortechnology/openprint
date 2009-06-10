@@ -2,10 +2,19 @@ package openprint::employee_support;
 
 use Mail::Sendmail;
 use MIME::QuotedPrint;
+use openprint ();
 use strict;
 
 require sql;
 require misc;
+use vars qw( $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
 
 sub helpdesk {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -29,7 +38,7 @@ sub helpdesk {
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_response.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		my $email_template = ssi::variable_substitution( $r, $log, $dbh, \$_, \%info );
 
 		my %mail = (
@@ -165,7 +174,7 @@ sub returns {
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_response.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
 
 		my %mail = (

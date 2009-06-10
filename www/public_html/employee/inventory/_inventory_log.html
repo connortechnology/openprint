@@ -73,7 +73,7 @@
 				$PI->instock,
 				$Skid->Location()->name(),
 				$PI->docket(),
-				$PI->comment,
+				$PI->comment_html(),
 				);
 			$total += $PI->delta;
 			$rowclass = $rowclass ? '' : ' class="colRow"';

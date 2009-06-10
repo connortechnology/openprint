@@ -165,7 +165,7 @@ sub inventory_report {
 					$Paper->mweight(),
 					$Paper->gsm(),
 					$$Skid{'id'},
-					$$Skid{'rfidtag_id'},
+					$Skid->RFIDTag()->id_short(),
 					$$Skid{'created_on'},
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $$Skid{Paper}{$$Paper{'id'}} : '',
@@ -965,7 +965,7 @@ sub stock_allocation_notification {
 
 	foreach my $User ( @recipients ) {
 		my $From = new openprint::User( $session{'user_id'} );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/stock_allocation_notification.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
@@ -1007,7 +1007,7 @@ sub send_paper_arrival_notification {
 		if ( $to ) {
 # Send notification to maybe CSR's
 			my $From = new openprint::User( $session{'user_id'} );
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
 			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
@@ -1216,7 +1216,13 @@ sub _rfidscanner_log {
 sub manifest {
 	$param{'manifest_id'} =~ s/\s//g;
 	my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
-	if ( $param{'btnFunction'} eq 'Submit' ) {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $Manifest->delete();
+		if ( ! $variable{'error'} ) {
+			$variable{'Redirect'} = '/employee/inventory/manifests.html';
+			%param = ();
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
 		$Manifest->id( $param{'manifest_id'} ) if ! $Manifest->id();
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
@@ -1310,7 +1316,7 @@ sub manifest {
 								} );
 					} # end if
 					$total_qty += $C->quantity();
-					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest <a href=/employee/inventory/manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
+					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest <a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project ) {
 						my @PAs = openprint::PaperAllocation::find('skid_id'=>$C->skid_id());
@@ -1425,7 +1431,7 @@ sub inventory_log {
             push @Data, (
                 Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
                 $skid_id,
-                $Skid->rfidtag_id(),
+                $Skid->RFIDTag()->id_short(),
                 $Paper->to_string(),
                 $delta,
                 join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
@@ -1648,6 +1654,24 @@ sub purchase_order_view {
 				'reason'	=>	$param{'reason'},
 				});
 		} # end if
+		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
+			my @notifications;
+			foreach my $user_id ( openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) ) {
+				my $found = 0;
+				foreach my $notification_id ( $PO->notifications() ) {
+					if ( $notification_id == $user_id ) {
+						$found = 1;
+						last;
+					} # end if	
+				} # end foreach
+				if ( ! $found ) {
+					push @notifications, $user_id;
+				} # end if
+			} # end foreach
+			if ( @notifications ) {
+				$PO->notifications([$PO->notifications(),@notifications]);
+			} # end if
+		} # end if
 	} # end if btnFunction
 
 	$variable{'PurchaseOrder'} = $PO;
@@ -1843,6 +1867,9 @@ sub _po_select_vendor {
 sub _verification_log {
 	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub _verification_log
+
+sub paper_label_window {
+} # end sub paper_label_window
 
 1;
 __END__

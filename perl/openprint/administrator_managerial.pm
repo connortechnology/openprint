@@ -2,6 +2,11 @@ package openprint::administrator_managerial;
 use MIME::QuotedPrint;
 
 use strict;
+use openprint ();
+use vars qw( %config %param $dbh );
+*config = \%openprint::config;
+*param = \%openprint::param;
+*dbh = \%openprint::dbh;
 
 require sql;
 require ssi;
@@ -15,7 +20,6 @@ require openprint::obj_customer;
 require openprint::address;
 require openprint::Company;
 require openprint::customer_credit;
-
 
 sub configuration {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -144,10 +148,14 @@ sub user_profiles {
 			return misc::error( $log, $dbh, $variable, 'User already exists.', "There is already a user with the specified email address.  Please try another.");
 		} # end if
 
-		#$openprint::param{'assistant_ids'} = '' if ! exists $openprint::param{'assistant_ids'};
-		#$openprint::param{'csr_ids'} = '' if ! exists $openprint::param{'csr_ids'};
 		delete $openprint::param{'password'} if ! $openprint::param{'password'};
 		my $error = $User->save( \%openprint::param );
+
+		if ( ! $error ) {
+			foreach my $Type ( openprint::PurchaseOrder_ContentType::find() ) {
+				$User->po_limit( $Type->id(), $openprint::param{'po_limit-'.$Type->id()} );
+			} # end foreach Type
+		} # end if
 
 		if ( $error ) {
 			return misc::error( $log, $dbh, $variable, 'Error Saving.', "There was an error saving the user's information. $error");
@@ -192,7 +200,14 @@ sub user_profiles {
 			} # end foreach
 		} # end if
 
-		$$variable{'information'} = "Record saved successfully.";
+		my %notifications;
+		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+		foreach my $k ( keys %types ) {
+			$notifications{$types{$k}} = $param{"notification_$k"};
+		} # end foreach
+		$User->notifications( \%notifications );
+
+		$$variable{'information'} = 'Record saved successfully.';
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
@@ -337,7 +352,7 @@ sub company_profiles {
 		if ( $Company->activation() ne $openprint::param{'rdbAccountActivation'} ) {
 			my %info;
 			$info{'Company'} = $Company;
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 			$_ = $openprint::param{'rdbAccountActivation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
@@ -356,7 +371,7 @@ sub company_profiles {
 		} # end if
 		if ( $Company->reseller() and ( $Company->reseller() ne $openprint::param{'rdbReseller'} ) ) {
 			my %info;
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 			$info{'Company'} = $Company;
 			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
 
@@ -376,7 +391,7 @@ sub company_profiles {
 if ( 0 ) {
 		if ( $Company->supplier() ne $openprint::param{'rdbSupplier'} ) {
 			my %info;
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 			$info{'Company'} = $Company;
 			my @to = sql::execute( $log, $dbh, 'SELECT strEmail FROM Users WHERE CompanyIndex=?', $index );
 
@@ -572,7 +587,7 @@ sub credit_applications {
 
 				$params{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
 				$params{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$params{'ReplacementText'}, \%params );
-				$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/email_template.html' );
+				$_ = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 				my $template = ssi::variable_substitution( $r, $log, $dbh, \$_, \%params );
 				my %mail = (
 						SMTP	=> $openprint::config{'Mail Server'},

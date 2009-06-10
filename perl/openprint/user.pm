@@ -2,6 +2,9 @@ package openprint::user;
 use MIME::QuotedPrint;
 
 use strict;
+use openprint ();
+use vars qw( %config );
+*config = \%openprint::config;
 
 require sql;
 require misc;
@@ -64,7 +67,7 @@ sub save {
 			$info{'User'} = $User;
 			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
 
-			my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
 
 			my %mail = (
@@ -85,7 +88,7 @@ sub save {
 				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/usertype_system_notification.html' );
 				$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
 
-				my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 				$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
 
 				my %mail = (
@@ -110,7 +113,7 @@ sub save {
 			$_ = $r->param('rdbAccountActivation') eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
 			$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-            my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+            my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 			$email_template = ssi::variable_substitution( $r, $log, $dbh, \$email_template, \%info );
 
 			my %mail = (

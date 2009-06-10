@@ -74,11 +74,10 @@ sub view_services {
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
-	my ( $cust_id ) = $Project->company_id();
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index *** $openprint::session{'company_id'}");
 
-	if ( $cust_id eq $openprint::session{'company_id'} or $openprint::session{'user_type'} eq 'A' ) {
+	if ( ( $Project->company_id() == $openprint::session{'company_id'} ) or sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
 
 		if ( defined $openprint::param{'btnFunction'} ) {
 			if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {

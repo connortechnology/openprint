@@ -179,7 +179,7 @@ sub send_notifications {
 
 	if ( @Users ) {
 		my $From = new openprint::User( $session{'user_id'} );
-		my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		my $text = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/iso_par_notification.html' );
 
 		my %info = (

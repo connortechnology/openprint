@@ -241,5 +241,12 @@ sub Skid {
 	return new openprint::Skid( $$self{'skid_id'} );
 } # end sub Skid
 
+sub id_short {
+	my ( $self ) = @_;
+	return if ! $$self{'id'};
+	my ( $type, $significant ) = $$self{'id'} =~ /^(\d)(\d{14})$/;
+	return 1*$significant;
+} # end sub id_short
+
 1;
 __END__

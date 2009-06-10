@@ -135,6 +135,7 @@ sub signature_calc {
 
 		if ( $imposition > 1 ) {
 #$openprint::log->debug("Impositions: $$sig_specs{SignatureIndex} $$sig_specs{txtSignatureType} " . $I->imposition() . " != $$specs{'Imposition'.$qty_index} Pockets: ".$$specs{"txtPockets$qty_index"}) if $debug;
+			$imposition = 1 if ( $$I{'FoldingImposition'} ) and ( $$I{'FoldingImposition'} % 2 );
 			$imposition = 1 if ( $$I{'imposition'} % 2 ) or (sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'} % 4 );
 			if ( $$I{'image_orientation'} eq 'Vertical' ) {
 				$imposition = 1 if $$I{'rows'} % 2;

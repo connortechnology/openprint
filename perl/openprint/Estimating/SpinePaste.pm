@@ -83,6 +83,10 @@ sub signature_calc {
 				$openprint::log->debug('Too many Pages ' . $I->pages() . '>' . $Equipment->specification('SpinePaste Maximum Pages') . " for " . $Equipment->strid() . '<br/>' );
 				next;
 			} # end if
+			if ( $I->image_orientation() ne 'Vertical' ) {
+				$openprint::log->debug('Can only spine paste a vertical spine. <br/>' );
+				next;
+			} # end if
 			if ( ! $service_index ) {
 				$openprint::log->debug('Can only spine paste 1 signature for ' . $Equipment->strid() . '<br/>' );
 				next;
@@ -96,7 +100,7 @@ sub signature_calc {
 				next;
 			} # end if
 			if ( ( ! $$folding_results{'Equipment'} ) or ( $$folding_results{'Equipment'}->id() != $Equipment->id() ) ) {
-				$openprint::log->debug("Must also be folded on " . $Equipment->strid() );
+				$openprint::log->debug( "Must also be folded on $$Equipment{strid}.");
 				next;
 			} # end if
 		} # end if
@@ -107,9 +111,11 @@ sub signature_calc {
 		} # end if
 	} # end foreach Equipment
 	if ( ! %best ) {
+$openprint::log->debug("Nopt best");
 		$Results{'Status'} = 'uncalculated';
-		$Results{'alert'} .= 'Unable to calculate';
+		$Results{'alert'} .= 'Unable to calculate.<br/>';
 	} else {
+$openprint::log->debug("best %best");
 		$Results{'Status'} = 'calculated';
 		$Results{'Equipment'} = $best{'Equipment'};
 		$Results{'Price'} = $best{'Price'}{'Total'};
@@ -146,6 +152,10 @@ sub calc {
 	} # end if
 
 	my $services = $Project->services();
+	if ( ! ($$services{'Folding'} and @{$$services{'Folding'}} ) ) {
+		$$specs{'alert'} .= 'Project does not have a folding service.  Folding is required.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 	my $pages = 0;
 	if ( $$services{''} ) {
 		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
@@ -180,6 +190,7 @@ sub calc {
 				my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
 				my $I = new openprint::Imposition();
 				$I->load( $sig_specs, $qty_index );	
+				$$specs{'hdnBreakdown'.$qty_index} .= $I->to_string() . '<br/>';
 				if ( $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on ' . $Equipment->strid();
 					next;
@@ -192,14 +203,16 @@ sub calc {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Too many pages for " . $Equipment->strid();
 					next;
 				} # end if
+				if ( $I->image_orientation() ne 'Vertical' ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'Can only spine paste a vertical spine. <br/>';
+					next;
+				} # end if
 				my %folding_results;
-				if ( $$services{'Folding'} ) {
-					my $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
-					$folding_results{'Equipment'} = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
-					if ( $folding_results{'Equipment'}->id() != $Equipment->id() ) {
-						$$specs{'hdnBreakdown'.$qty_index} .='Must also be folded on ' . $Equipment->strid();
-						next;
-					} # end if
+				my $folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+				$folding_results{'Equipment'} = new openprint::Equipment( $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+				if ( $folding_results{'Equipment'}->id() != $Equipment->id() ) {
+					$$specs{'hdnBreakdown'.$qty_index} .='Must also be folded on ' . $Equipment->strid();
+					next;
 				} # end if
 				$imposition = $I->imposition();
 			} # end if
@@ -225,6 +238,7 @@ sub calc {
 			$$specs{"txtPrice$qty_index"} = '';
 			$$specs{"txtUnitPrice$qty_index"} = '';
 			$$specs{'Status'} = 'uncalculated';
+			$$specs{'alert'} = 'Unable to calculate.<br/>';
 		} else {
 			$$specs{'ddmEquipment'.$qty_index} = $best{'Equipment'}->id();
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $best{'Price'}{'Total'} );

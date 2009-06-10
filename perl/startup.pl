@@ -1,6 +1,7 @@
 #!/usr/bin/perl 
 
 BEGIN {
+	use utf8;
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
 	use APR::URI;
@@ -21,6 +22,7 @@ BEGIN {
 	use Text::CSV_XS;
 	use	Authen::Captcha;
 	use GD::Barcode;
+	use Encode;
 
 	#use Carp ();
 

@@ -8,7 +8,7 @@ require openprint::Fold;
 require openprint::Location;
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 my %find_cache;
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'tbl_equipment';
@@ -29,6 +29,12 @@ $serial= 'Equipment_Index_seq';
 	'jdf_id'			=> 	'jdf_id',
 	'jdf_name'			=> 	'jdf_name',
 	'location_id'		=>	'location_id',
+	'cip3_in'			=>	'cip3_in',
+	'cip3_out'			=>	'cip3_out',
+	'cip3_hold'			=>	'cip3_hold',
+	'cip3_merge'		=>	'cip3_merge',
+	'cip3_monitor'		=>	'cip3_monitor',
+	'smartscheduling'	=>	'smartscheduling',
 );
 
 %defaults = (
@@ -101,6 +107,10 @@ sub find {
 		$sql .= ' AND jmf_enabled=?';
 		push @values, 1;
 	} # end if
+	if ( $params{'cip3_monitor'} ) {
+		$sql .= ' AND cip3_monitor=?';
+		push @values, $params{'cip3_monitor'};
+	} # end if
 	if ( $params{'category'} ) {
 		$sql .= q{ AND strCategory=?};
 		push @values, $params{'category'};
@@ -113,8 +123,7 @@ sub find {
 		$openprint::log->error( "Error loading Equipment ($sql) (@values) :" . $openprint::dbh->errstr );
 		return;
 	} elsif ( $debug ) {
-	#$openprint::log->debug( 'Number of results: ' . @$data );
-		$openprint::log->debug( $sql . join(',',@values) );
+		$openprint::log->debug( "openprint::Equipment::find : SQL($sql) VALUES(". join(',',@values).") # Results: " . @$data );
 	} # end if
 	
 	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{lngindex}, $_ ) } @$data;
@@ -332,7 +341,7 @@ $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'
 		$y = $$self{'Specifications'}{$name}[$i];
 #$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
-$openprint::log->debug("Couldn't find maximum") if $debug;
+$openprint::log->debug("Equipment::specification Couldn't find maximum for $name") if $debug;
 		return;
 	} # end if
 
@@ -418,7 +427,7 @@ sub delete {
     sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Service_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
-    sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
+    sql::execute( undef, undef, q{DELETE FROM Equipment_Shifts WHERE equipment_id=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE lngIndex=?}, $$self{id} );
     sql::end_transaction( $openprint::dbh, $ac );
 
@@ -438,10 +447,10 @@ sub update_schedule {
     $_ = q{SELECT DISTINCT ProjectIndex, ServiceIndex, StartTime FROM tbl_Projects, Schedule WHERE Equipment_id=? AND Index=ProjectIndex AND tbl_Projects.strStatus='Approved' ORDER BY StartTime};
     my @data = sql::execute( undef, undef, $_, $$self{id} );
     while ( my ( $project_index, $service_index, undef ) = splice @data, 0, 3 ) {
-        sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ServiceIndex=?', $$self{id}, $service_index],
+        sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ProjectIndex=? AND ServiceIndex=?', $$self{id}, $project_index, $service_index],
                 'StartTime', $start_time
                 );
-        ( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ServiceIndex=?}, $service_index );
+        ( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index );
     } # end while
 
 } # end sub update_schedule
@@ -485,6 +494,9 @@ sub Previous {
 sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
+
+sub Shifts {
+} # end sub
 
 1;
 __END__

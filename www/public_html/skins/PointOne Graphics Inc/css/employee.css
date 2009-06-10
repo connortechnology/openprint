@@ -38,5 +38,13 @@ fieldset p label.radio, #Allocate fieldset p label.radio, #CheckOut fieldset p l
 	margin: 0px;
 }
 .Signature .Previews img {
-	width: 200px;
+	width: 100%;
+}
+td p {
+	margin: 0px;
+	padding: 0px;
+}
+td p label {
+    width: auto;
+    margin-left: 0px;
 }

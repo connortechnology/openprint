@@ -108,6 +108,7 @@ function add_content(form, type_id) {
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif', "new Ajax.Updater('Types', '_manifest_type.html', { method: 'get', parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", '', 'Add Another Stock' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ); ) ?>
 		</p>
 		<input type="hidden" name="btnFunction" />
 	</form>

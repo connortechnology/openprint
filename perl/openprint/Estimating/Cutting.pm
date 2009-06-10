@@ -423,6 +423,11 @@ sub signature_calc {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] );
 		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
 	} # end if
+	if ( $I->image_orientation() eq 'Horizontal' ) {
+		$stitching_imposition = $$I{'columns'} if $stitching_imposition > $$I{'columns'};
+	} else {
+		$stitching_imposition = $$I{'rows'} if $stitching_imposition > $$I{'rows'};
+	} # end if
 	
 	my ( $sheet_width, $sheet_height ) = ($Paper->width(), $Paper->height() );
 
@@ -436,10 +441,11 @@ sub signature_calc {
 #$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
 		if ( $stitching_imposition and ( $I->image_orientation() eq 'Horizontal' ) ) {
 			$vertical_cuts += int ($$sig_specs{'hdnImpositionColumns'.$qty_index} / $stitching_imposition)-1;
+$openprint::log->warn("Negative Vertical Sig Cuts $$sig_specs{'hdnImpositionColumns'.$qty_index} / $stitching_imposition - 1") if $vertical_cuts < 0;
 		} else {
 			$vertical_cuts += $$sig_specs{'hdnImpositionColumns'.$qty_index}-1;
+$openprint::log->warn("Negative Vertical Sig Cuts $$sig_specs{'hdnImpositionColumns'.$qty_index}-1") if $vertical_cuts < 0;
 		} # end if
-$openprint::log->warn('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
 			if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
 				# Assume head to head at all times - head trim

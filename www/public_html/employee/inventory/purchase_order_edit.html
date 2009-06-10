@@ -4,9 +4,20 @@ function load_content_type( index, type ) {
 	$('content-'+index).innerHTML = '';
 	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
 } // end function load_content_type
-function set_sheet_description(index) {
-	$('description-'+index).value = $('mweight-'+index).value +'M ' + $('name-'+index).value;
+
+function set_description(index) {
+	var desc = $('description-'+index);
+	desc.value = '';
+	if ( $('mweight-'+index) ) { 
+		desc.value += $('mweight-'+index).value +'M ';
+	} // end if
+	var type = $('stocktype-'+index);
+	if ( type && type.options[type.selectedIndex].value ) {
+		desc.value += type.options[type.selectedIndex].value + ' ';
+	} // end if
+	desc.value += $('name-'+index).value;
 }
+
 function calc_price( element ) {
 	var re = /(.*)-(.*)/
 	var matches = re.exec( element.name );

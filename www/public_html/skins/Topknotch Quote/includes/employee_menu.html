@@ -14,6 +14,7 @@
 	<li id="ProductionMenu" class="off"><a href="#" onclick="toggleMenu($('ProductionMenu'), 'off', 'on');return false;">PRODUCTION</a>
 		<ul>
 			<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
+			<li><a href="/employee/production/print_overview.html;NOSSL">&raquo; Press Schedule</a></li>
 		</ul>
 	</li>
 	<? if ( openprint::usergroup::is_user_in( ['Sales','Reporting'], $openprint::session{'user_id'} ) ) ?>

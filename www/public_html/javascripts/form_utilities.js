@@ -383,27 +383,25 @@ function isLeapYear(year) {
  *	if specified it will set the default selection to the passed selected day.
  */
 function setDaysDropDown(year, month, dayDropDown, selectedDay) {
+	selectedDay = parseInt(selectedDay);
 	var numberOfDays = returnNumberOfDays(month,year);
 	if ( numberOfDays < selectedDay ) {
 		selectedDay = numberOfDays;
 	} // end if
 
-	if ( dayDropDown.options[0].value == '' ) {
-		numberOfDays = parseInt( numberOfDays ) + 1;
-		selectedDay = parseInt( selectedDay ) + 1;
-	} // end if
-
-	if ( dayDropDown.options.length > numberOfDays ) {
-		for ( var i = dayDropDown.options.length; i > numberOfDays; i -= 1 ) {
-			dayDropDown.options[i-1] = null;
+	if ( dayDropDown.options[dayDropDown.options.length-1].value > numberOfDays ) {
+		for ( var i = dayDropDown.options.length-1; i > numberOfDays; i -= 1 ) {
+			if ( dayDropDown.options[i].value > numberOfDays ) {	
+				dayDropDown.options[i] = null;
+			} // end if
 		} // end for
-	} else if ( dayDropDown.options.length < numberOfDays ) {
-		for ( var i = dayDropDown.options.length; i < numberOfDays; i += 1 ) {
-			dayDropDown.options[i] = new Option( i+1, i+1 );
+	} else if ( dayDropDown.options[dayDropDown.options.length-1].value < numberOfDays ) {
+		for ( var i = parseInt(dayDropDown.options[dayDropDown.options.length-1].value); i < numberOfDays; i += 1 ) {
+			dayDropDown.options[dayDropDown.options.length] = new Option( i+1, i+1 );
 		} // end for
 	} // end if
 
-	dayDropDown.options[selectedDay-1].selected = true;
+	ddm_select_by_value( dayDropDown, selectedDay );
 }
 
 function Serialize( form ) {

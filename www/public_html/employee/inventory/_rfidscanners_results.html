@@ -45,6 +45,7 @@
 			<th align="left" width="115">IP Address</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
+			<th align="left" width="115">Last Seen On</th>
 			<th align="left" width="100">Location</th>
 			<th align="left" width="140">Type</th>
 			<th align="left" width="60">Monitor</th>
@@ -60,6 +61,7 @@
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%1$d">%2$s</a></td>', @$RFIDScanner{'id','ipaddr'} );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($RFIDScanner->created_on()) ) );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($RFIDScanner->updated_on()) ) );
+				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($RFIDScanner->lastseen_on()) ) );
 				$html .= sprintf( '<td><a href="rfidscanner_details.html?rfidscanner_id=%d">%s</a></td>', $$RFIDScanner{'id'}, $RFIDScanner->Location()->name() );
 
 				$html .= '<td>'.$RFIDScanner->type().'</td>';	

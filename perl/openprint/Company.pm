@@ -245,7 +245,7 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 	$sql{dtmlastmodified} = 'NOW()';
-	$sql{'strname'} = Text::Unaccent::unac_string('LATIN1', $sql{'strname'} );
+	$sql{'strname'} = Text::Unaccent::unac_string('UTF-8', $sql{'strname'} );
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {

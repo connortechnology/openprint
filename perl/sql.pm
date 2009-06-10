@@ -9,8 +9,9 @@ use DBI;
 use Time::HiRes qw{ gettimeofday tv_interval }; 
 use strict;
 
-use vars qw( $log $dbh $debug );
+use vars qw( $log $dbh $debug $timing );
 $debug = 1;
+$timing = 1;
 
 sub open_sql {
 	my ( $l, %sql_server ) = @_;
@@ -18,7 +19,7 @@ sub open_sql {
 	
 	my $dsn = "dbi:$sql_server{'driver'}:dbname=$sql_server{'database'};";
 	$dsn .= "host=$sql_server{'host'}" if $sql_server{'host'};
-	if ( ! ( $dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1} ) ) ) {
+	if ( ! ( $dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1,pg_enable_utf8 => 1 } ) ) ) {
 		die $log->crit("Unable to connect to database $sql_server{'database'}: " . DBI->errstr );
 	} # end if
 	#$log->info("Opened connection to $sql_server{'database'}.	Thread ID: " . $dbh->{'thread_id'});
@@ -39,7 +40,7 @@ sub execute {
 		$print_sql = $sql;
 		$print_sql =~ s/\?/\%s/g;
 		$print_sql = sprintf($print_sql, @values);
-		$starttime = [gettimeofday];
+		$starttime = [gettimeofday] if $timing;
 	} # end if
 	my $sth;
 	if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
@@ -57,9 +58,15 @@ sub execute {
 			} # end for
 		} # end while
 	} # end if
-	$sth->finish(); # unneccessary
+	$sth->finish();
 	if ( $l and $debug ) {
-		$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+		if ( $timing ) {
+			$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+		} elsif ( @return_array ) {
+			$l->debug("SQL ($print_sql) Results:".join(',',@return_array));
+		} else {
+			$l->debug("SQL ($print_sql) No Results:");
+		} # end if
 	} # end if
 
 	return @return_array;
@@ -157,7 +164,7 @@ sub update {
 		push @columns, "$column = ?";
 	} # end foreach
 	$command .= join( ',', @columns );
-	my @conditions;
+	my @conditions = ();
 	if ( ref $condition eq 'ARRAY' ) {
 		@conditions = @$condition;
 		$command .= ' WHERE ' . shift @conditions;
@@ -175,7 +182,8 @@ sub update {
 		$log->error('SQL statement execution failed: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr) if $log;
 		return $d->errstr;
 	} # end if
-	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, sprintf($print_command, values %commands, @conditions ) ) ) if $log;
+	$_ = sprintf($print_command, values %commands, @conditions );
+	$log->debug( sprintf('SQL (%.4f usecs) (%s)', tv_interval( $starttime, [gettimeofday])*1000, $_ ) ) if $log;
 	return;
 } # end sub update
 
