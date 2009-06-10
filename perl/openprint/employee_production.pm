@@ -1075,12 +1075,16 @@ sub _drop {
 
 		if ( $Shift->starttime() ) {
 			my @final_order;
+
+			# Get jobs before the shift, leave them in order.
 			foreach my $row ( openprint::press_schedule::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
 				push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
 			} # end foreach row
 
+			# Get the rest of the jobs on this equipment
 			my @jobs = openprint::press_schedule::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
 
+			# Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
 			foreach my $row_id ( @order ) {
 				my $found = 0;
 				for ( my $j = 0; $j < @jobs; $j += 1 ) {
@@ -1093,8 +1097,10 @@ sub _drop {
 					} # end if
 				} # end foreach job
 				if ( ! $found ) {
+					# Must be on another press.
 					my @rows = openprint::press_schedule::find( 'id'=>$row_id );
 					if ( @rows ) {
+						$rows[0]{'equipment_id'} = $Shift->equipment_id();
 						push @final_order, $rows[0];
 					} # end if
 				} # end if
