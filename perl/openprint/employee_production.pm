@@ -1078,6 +1078,7 @@ sub _drop {
 			# Get the rest of the jobs on this equipment
 			my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
 
+			# Coalesce Jobs
 			my $previous;
 			foreach my $row_id ( @order ) {
 				my $Job = new openprint::ScheduledJob( $row_id );
@@ -1086,10 +1087,16 @@ sub _drop {
 					my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
 					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $previous->Project()->ordered_qty_index() ) ) {
 $log->debug("Sigs are the same, coalescing ");
-						push @{$$previous{'service_id'}}, @{$$Job{'service_id'}};
-						$previous->save();
-						$Job->delete();
-						@order = sets::exclude( [ $row_id ], \@order );
+						$_ = $previous->save({
+								'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
+								'service_id'	=>	[ @{$$previous{'service_id'}}, @{$$Job{'service_id'}} ],	
+								});
+						if ( $_ ) {
+							$log->error($_);
+						} else {
+							$Job->delete();
+							@order = sets::exclude( [ $row_id ], \@order );
+						} # end if
 					} # end if
 				} # end if
 				$previous = $Job;
@@ -1281,6 +1288,17 @@ sub _li_change {
 			$Project->add_to_log( @session{'company_id','user_id'}, "Job bumped to next shift: $starttime on " . ( new openprint::Equipment( $equipment_id )->name() ) );
 		} # end if
 		push @{$variable{'changed'}}, openprint::Shift::get( $row )->ul_id();
+	} elsif ( $param{'action'} eq 'RemoveJob' ) {
+		if ( $row->id() ) {
+			push @{$variable{'changed'}}, openprint::Shift::get( $row )->ul_id();
+			$row->delete();
+		} else {
+$log->debug("Already deleted");
+		} # end if
+		if ( $Equipment->smartscheduling() ) {
+			reorder_jobs(
+					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$row{'equipment_id'},'order'=>'starttime' ) );
+		} # end if smartscheduling
 	} # end if
 } # end sub _li_change
 

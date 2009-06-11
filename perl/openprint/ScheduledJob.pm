@@ -150,7 +150,7 @@ sub find {
 } # end sub find
 
 sub runtime_seconds {
-	return misc::hms2time( $_[0]{'runtime'} );
+	return misc::hms2time( $_[0]->runtime() );
 } # end sub runtime_seconds
 
 sub starttime_seconds {
@@ -258,7 +258,7 @@ sub get_li {
         $html .= '<span class="Buttons">';
         $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
         $html .= '</span>';
-        $html .= sprintf( q{<span class="RunTime" onclick="openPopup( 'RunTime', %1$d );"><span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$self{'id'}, split(':',$$self{'runtime'}) );
+        $html .= sprintf( q{<span class="RunTime" onclick="openPopup( 'RunTime', %1$d );"><span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$self{'id'}, split(':',$self->runtime()) );
         $html .= '<br/></li>';
         return $html;
     } # end if
@@ -334,7 +334,7 @@ sub get_li {
 					);
 		} # end if
 
-		$html .= sprintf( q{<span id="%1$dRunTime" class="RunTime" onclick="popup_window( '_starttime_popup.html,'id=%1$d' );">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$$self{'runtime'}) );
+		$html .= sprintf( q{<span id="%1$dRunTime" class="RunTime" onclick="popup_window( '_starttime_popup.html,'id=%1$d' );">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
 		if ( $Equipment->smartscheduling() ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
@@ -352,7 +352,7 @@ sub get_li {
         $html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{'id'},
                 Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
                 );
-        $html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$$self{'runtime'}) );
+        $html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
 		if ( $Equipment->smartscheduling() ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
@@ -395,6 +395,20 @@ sub impressions {
 sub Project {
 	return new openprint::Project( $_[0]{'project_id'} );
 } # end sub Project
+
+sub runtime {
+	my ( $self ) = @_;
+
+	my $minutes = 0;
+	if ( ! $$self{'runtime'} ) {
+		my $Project = $self->Project();
+		foreach my $sig_id ( @{$$self{'service_id'}} ) {
+			$minutes += openprint::service::get_runtime( $Project, $sig_id );
+		} # end foreach
+		$$self{'runtime'} = Date::Format::time2str( '%H:%M:%S', 60*$minutes );
+	} # end if
+	return $$self{'runtime'};
+} # end sub runtime
 
 1;
 #__END__

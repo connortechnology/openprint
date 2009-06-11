@@ -148,7 +148,7 @@ sub view {
 
 				if ( $r->param("UsePress-$printing_specs{'SignatureIndex'}") ne $printing_specs{'UsePress'} ) {
 					openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, 'UsePress', $r->param("UsePress-$printing_specs{'SignatureIndex'}") );
-					my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $signature_service_index );
+					my $runtime = openprint::service::get_runtime( $Project, $signature_service_index );
 
 					my @Equipment = openprint::Equipment::find('strid'=>$param{"UsePress-$printing_specs{'SignatureIndex'}"} );
 					next if ! @Equipment;
