@@ -194,6 +194,8 @@ sub process_request {
 							$self->log(1, sprintf('%s : %s : error saving scanner2 %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
 						} # end if
 					} # end if
+				} elsif ( $Tag->type() eq 'Skid' ) {
+					# Ignore Skids
 				} else {
 					$self->log(1, "unknown tag type: " . $Tag->type() );
 				} # end if
@@ -221,7 +223,7 @@ sub process_request {
 			alarm($timeout);
 		} # end while
 		alarm($previous_alarm);
-		$self->log(1, sprintf('%s : %s : done while, tag: %s', $date, $self->{server}->{peeraddr}, $tag ));
+		$self->log(1, sprintf('%s : %s : done while, tag: %s', $date, $self->{server}->{peeraddr}, $tag )) if $debug;
 	}; # end eval
 
 	$dbh->disconnect();
