@@ -25,7 +25,7 @@
     <span class="Max"><input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Max() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></span>
     <span class="Units">
 		<select name="units-<? echo ( $$variable{'Price'}->id() ) ?>">
-			<? echo ( ssi::make_drop_down( [ 'Per 100lbs','Per 100lbs','Per M', 'Per M' ], $$variable{'Price'}->Units() ); ) ?>
+			<? echo ( ssi::make_drop_down( [ 'Per 100lbs','Per 100lbs','Per M', 'Per M','PerSqInch','Per Sq Inch' ], $$variable{'Price'}->Units() ); ) ?>
 		</select>
 	</span>
     <span class="Cost"><input class="text" type="text" name="cost-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>"  onKeyUp="this.value=this.value.replace(/[^\d\.]/g,'');calc_from_cost(this);"/></span>

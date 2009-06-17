@@ -1234,6 +1234,7 @@ $i->display();
 }
 				if ( 1 ) {
 				foreach my $imp ( @imps ) {
+					next if $imp->imposition() > $qty;
 					my $add = 1;
 					my $str = sprintf('%dx%d+%dx%d-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle'} );
 					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->width() == $$specs{"OverrideStockWidth$qty_index"} ) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() == $$specs{"OverrideStockHeight$qty_index"} )) {
