@@ -36,10 +36,10 @@
                 <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
                 <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
-<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners'] ) ) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'Door Hangers' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
