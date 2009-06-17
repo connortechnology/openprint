@@ -172,6 +172,8 @@ sub display {
 
 } # end sub display
 #
+sub summary {
+} # end sub summary
 
 1;
 

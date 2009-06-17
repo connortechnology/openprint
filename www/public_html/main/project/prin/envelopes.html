@@ -33,8 +33,8 @@
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 		<fieldset><legend><?ProjectTypeName?></legend>
 <? if ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
-                <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-                <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
+		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
+		<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
 <? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->

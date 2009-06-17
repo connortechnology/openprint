@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -645,24 +645,24 @@ sub add_imposition {
 			#push @impositions, {'Imposition' => 1, 'Rows' => 1, 'Cols' => 1 };
 		} elsif ( ($Paper->type() eq 'Roll') and ($Press->specification('W&TonRoll') eq 'N') and sets::isin( $run_style, ['Work & Turn','Work & Tumble'] ) ) {
 			next;
-		} else {
-			foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $override_grain_direction, $Press ) ) {
-				if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
-					if ( ($versions * 2) > $i->imposition() ) {
+		} # end if
+
+		foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $override_grain_direction, $Press ) ) {
+			if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
+				if ( ($versions * 2) > $i->imposition() ) {
 #$log->debug("Nixing imposition because W&T needds 2* versions > imposition");
-						next;
-					} # end if
-				} elsif ( $versions > $i->imposition() ) {
 					next;
 				} # end if
-				if ( $run_style eq 'Perfecting' ) {
+			} elsif ( $versions > $i->imposition() ) {
+				next;
+			} # end if
+			if ( $run_style eq 'Perfecting' ) {
 # make sure that we do not get any 1up perfecting!
 # Can only do 1 up perfecting if we are using perfecting paper, which doesn't need rollers
-					next if ( $i->imposition() == 1 and ! $Paper->perfecting() );
-				} # end if
-				push @impositions, $i;
-			} # end foreach
-		} # end if
+				next if ( $i->imposition() == 1 and ! $Paper->perfecting() );
+			} # end if
+			push @impositions, $i;
+		} # end foreach
 	} # end foreach runstyle
 #if ( $debug ) {
 	#foreach my $i ( @impositions ) {
