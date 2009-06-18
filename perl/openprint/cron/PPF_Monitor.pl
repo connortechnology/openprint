@@ -126,7 +126,7 @@ if ( $mangle ) {
 					my $job_name = $1;
 					if ( length $job_name > 16 ) {
 						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
-							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.") def\r\n";
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig."SdB) def\r\n";
 						} else {
 							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
 						} # end if
@@ -179,7 +179,7 @@ if ( $mangle ) {
 					my $job_name = $1;
 					if ( length $job_name > 16 ) {
 						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
-							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.") def\r\n";
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig."SdA) def\r\n";
 						} else {
 							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
 						} # end if
@@ -216,10 +216,6 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 		my $data;
 
 		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)S?g?(\d+)/i;
-		if ( ! $docket ) {
-			$log->error("Docket $docket not found for ($file_base) ($file)");
-			next;
-		} # end if docket
 
 		if ( ! open ( IN, '< ' . $$Equipment{'cip3_in'}.'/'.$file ) ) {
 			print "Error opening for read:" . $$Equipment{'cip3_in'}.'/'.$file."\n" ;
@@ -249,7 +245,7 @@ if ( $mangle ) {
 #$log->warn("Truncating JobName $job_name");
 				if ( length $job_name > 16 ) {
 					if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
-						$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.") def\r\n";
+						$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.'Sd'.$side.") def\r\n";
 					} else {
 						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
 					} # end if
@@ -281,49 +277,51 @@ sub store_PPF {
 		$log->debug("Compressed PPF from " . length $data . " to " . length $compressed_data );
 	} # end if
 	my $PPF = new openprint::CIP3_PPF();
-	$_ = $PPF->save({
+	$PPF->set({
 			'docket'    	=>  $docket,
 			'signature' 	=>  $sig,
 			'side'      	=>  $side,
 			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
-			'compressed'		=>	$compressed_data ? 1 : 0,
+			'compressed'	=>	$compressed_data ? 1 : 0,
 			});
-	$log->error($_) if $_;
-$log->debug("generating previews");
-	$PPF->generate_previews(undef,1);
-$log->debug("Done generating previews");
 
-	foreach my $Project ( openprint::Project::find('docket'=>$docket,'limit'=>10) ) {
-		my $services = $Project->services();
+	if ( $docket ) {
+		$_ = $PPF->save();
+		$log->error($_) if $_;
+		$PPF->generate_previews(undef,1);
 
-		my $found = 0;
-		foreach my $ss_id ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-			if ( $$services{'AdditionalSignature'} ) {
-				if ( $sig == $$sig_specs{'SignatureIndex'} ) {
+		foreach my $Project ( openprint::Project::find('docket'=>$docket,'limit'=>10) ) {
+			my $services = $Project->services();
+
+			my $found = 0;
+			foreach my $ss_id ( $Project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+				if ( $$services{'AdditionalSignature'} ) {
+					if ( $sig == $$sig_specs{'SignatureIndex'} ) {
+						$found = 1;
+						last;
+					} # end if
+				} elsif ( $sig == $$sig_specs{'SignatureIndex'}+1 ) {
 					$found = 1;
 					last;
 				} # end if
-			} elsif ( $sig == $$sig_specs{'SignatureIndex'}+1 ) {
-				$found = 1;
-				last;
+			} # end foreach sig
+			if ( ! $found ) {
+				print "Adding new signature for $docket $sig $side\n";
+				my $ac = sql::start_transaction( $dbh );
+				$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+				my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );
+				openprint::service::status( $Project->id(), $print_service_index, 'Ordered' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtPrice'.$Project->ordered_quantity_index(), 0 );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Spreads' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Spreads' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $sig );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'ddmRunStyleUsed', $PPF->runstyle() ) if $PPF->runstyle();
+				sql::end_transaction( $dbh, $ac );
+				$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );
 			} # end if
-		} # end foreach sig
-		if ( ! $found ) {
-			print "Adding new signature for $docket $sig $side\n";
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
-			my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );
-			openprint::service::status( $Project->id(), $print_service_index, 'Ordered' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtPrice'.$Project->ordered_quantity_index(), 0 );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Spreads' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Spreads' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $sig );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'ddmRunStyleUsed', $PPF->runstyle() ) if $PPF->runstyle();
-			sql::end_transaction( $dbh, $ac );
-			$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );
-		} # end if
-	} # end foreach Project
+		} # end foreach Project
+	} # end if
 	return $PPF;
 } # end sub store_PPF
 
