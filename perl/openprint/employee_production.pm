@@ -1182,41 +1182,36 @@ sub reorder_jobs {
 		} # end while
 
 # Time to move on to next shift
-		if ( ( $start_time > $Shift->endtime_seconds() ) ) {
-
-			my $date = Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $start_time) );
+		while ( ( ! $Shift->operator_id() ) or ( $start_time > $Shift->endtime_seconds() ) ) {
 
 			if ( ! @Shifts ) {
-				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_start'=>Date::Format::time2str('%H:%M', $start_time),'endtime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ) );
-				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_end'=>Date::Format::time2str('%H:%M', $start_time) ) if ! @Shifts;
-				return if ! @Shifts;
-				$Shift = $Shifts[0]->emanantise( $Shift->startdate_seconds() );
-			} else {
-				$Shift = shift @Shifts;
-			} # end if
-			while ( @Shifts and ! $Shift->operator_id() ) {
-				$Shift = shift @Shifts;
-			} # end if
-			if ( ! $Shift->operator_id() ) {
 				$start_time = undef;
+				last;
 			} else {
+				$Shift = shift @Shifts;
 				$start_time = $Shift->starttime_seconds() if $start_time < $Shift->starttime_seconds();
 			} # end if
 			push @{$variable{'changed'}}, $Shift->ul_id();
 		} # end if
 
-        if ( $start_time and ! $$row{starttime} ) {
-            my $Equipment = new openprint::Equipment( $$row{'equipment_id'} );
-            new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
-        } # end if
 
         sql::update( $log, $dbh, 'Schedule', ['id=?', $$row{'id'}], 'StartTime', ( $start_time ? Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ) : undef), 'equipment_id', $$row{'equipment_id'} );
         if ( $$row{operator_id} != $Shift->operator_id() ) {
             sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $Shift->operator_id() );
         } # end if
+		if ( ! $start_time ) {
+			last;
+        } elsif ( ! $$row{starttime} ) {
+            my $Equipment = new openprint::Equipment( $$row{'equipment_id'} );
+            new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on " . $Equipment->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
+        } # end if
 
         $start_time += misc::hms2time( $$row{'runtime'} );
 
+    } # end while @order
+	while ( @order ) {
+		my $row = shift @order;
+        sql::update( $log, $dbh, 'Schedule', ['id=?', $$row{'id'}], 'StartTime', undef, 'equipment_id', $$row{'equipment_id'} );
     } # end while @order
     sql::end_transaction( $dbh, $ac );
 } # end sub reorder_jobs
