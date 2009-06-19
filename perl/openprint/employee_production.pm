@@ -24,6 +24,7 @@ require openprint::PaperInventory;
 require openprint::ProductionFeedback;
 require openprint::Shift;
 require openprint::Equipment_Shift;
+require openprint::ScheduledJob;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -1028,7 +1029,7 @@ sub _stock_checkout {
 } # end sub _stock_checkout
 
 sub _bump_job {
-	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$variable{'Job'} = new openprint::ScheduledJob( $param{'id'} );
 } # end sub _bump_job
 
 sub _pending_approved {
