@@ -183,6 +183,26 @@ className:"alphacube", width:width, height:height
 	} // end if
 	contentWin.setAjaxContent(url, null , true);
 }
+var popupWin;
+function popup_window( url, parameters ) {
+	if ( ! popupWin ) {
+		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+onDestroy: function(eventName, win) {
+			   if (win == popupWin) {
+				   popupWin = null;
+				   Windows.removeObserver(this);
+			   }
+		   }
+		}
+		Windows.addObserver(myObserver);
+	} // end if
+	popupWin.setHTMLContent('Loading... please wait');
+	popupWin.showCenter();
+	popupWin.setAjaxContent(url+'?'+parameters, null , true);
+} // end function popup_window
+
 
 function toggleInput( name ) {
 $('txt'+name).value='';

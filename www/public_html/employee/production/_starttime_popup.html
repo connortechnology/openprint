@@ -1,4 +1,4 @@
-<form name="StartTimeForm" onsubmit="return saveStartTime( StartTimeForm.schedule_id.value, StartTimeForm.StartTime.value );">
+<form name="StartTimeForm">
 	<input type="hidden" name="id" value="<? echo ( $param{'id'} ) ?>" />
 	<p>
 		<label>Start Time:</p>
@@ -19,7 +19,7 @@
 		<label class="radio" for="locked0">No</label>
 	</p>
 	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'SaveStartTime', 'save.gif', q`new Ajax.Request('_li_change.json',{parameters:StartTimeForm.serialize(), onSuccess:function(){contentWin.destroy();}});`, '', 'Save' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'CancelStartTime', 'cancel.gif', "contentWin.destroy();", '', 'Cancel' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'SaveStartTime', 'save.gif', q`new Ajax.Request('_li_change.json',{parameters:StartTimeForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'CancelStartTime', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
 	</p>
 </form>

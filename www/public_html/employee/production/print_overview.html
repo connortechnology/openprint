@@ -142,7 +142,7 @@
 		if ( popup == 'Operator' ) {
 			form = document.forms['OperatorForm'];
 			if ( form ) {
-				form.Period.value=data1;
+				form.shift_id.value=data1;
 				ddm_select_by_value( form.Operator, data2 );
 			} else {
 				alert('form not found');
@@ -183,20 +183,6 @@
 		popupWin.setContent(popup+'Popup');
 		popupWin.showCenter();
 	} // end function openPopup
-	function saveOperator( period, operator, name ) {
-		var div = $( period + 'Operator' );
-		if ( div ) {
-			div.innerHTML = name;
-			if ( name == '' ) {
-			div.className = 'assign';
-			} else {
-			div.className = 'Operator';
-			} // end if
-		} // end if
-		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_operator', new Array( period, operator ) );
-		popupWin.destroy();
-		return false;
-	} // end function saveOperator
 
 	function saveForms( project_index, service_index, forms ) {
 		var div = $( service_index + 'Forms' );
@@ -245,25 +231,6 @@
 	} // end function saveComment
 	function errFunc( t ) {
 	}
-	var popupWin;
-	function popup_window( url, parameters ) {
-		if ( ! popupWin ) {
-			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
-			// Set up a windows observer, check ou debug window to get messages
-			myObserver = {
-	onDestroy: function(eventName, win) {
-				   if (win == popupWin) {
-					   popupWin = null;
-					   Windows.removeObserver(this);
-				   }
-			   }
-			}
-			Windows.addObserver(myObserver);
-		} // end if
-		popupWin.setHTMLContent('Loading... please wait');
-		popupWin.showCenter();
-		popupWin.setAjaxContent(url+'?'+parameters, null , true);
-	} // end function popup_window
 	var drops = new Array();
 -->
 </script>
@@ -303,11 +270,11 @@
 	</form>
 </div>
 <div id="OperatorPopup" style="display:none;">
-	<form name="OperatorForm" onsubmit="return saveOperator( OperatorForm.Period.value, OperatorForm.Operator.options[OperatorForm.Operator.selectedIndex].value, OperatorForm.Operator.options[OperatorForm.Operator.selectedIndex].text );">
-		<input type="hidden" name="Period" />
+	<form name="OperatorForm" onsubmit="return saveOperator( OperatorForm.shift_id.value, OperatorForm.operator_id.options[OperatorForm.operator_id.selectedIndex].value, OperatorForm.operator_id.options[OperatorForm.operator_id.selectedIndex].text );">
+		<input type="hidden" name="shift_id" />
 		<input type="hidden" name="btnFunction" value="Operator"/>
 		<span style="float: left;">
-			Operator: <select name="Operator" size="1"><option value="">select one</option>
+			Operator: <select name="operator_id" size="1"><option value="">select one</option>
 			<? echo ( 
 			   ssi::make_drop_down ( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>'E', 'usergroup'=>'Press','order'=>'lower(strfirstname)' ) ] );
 			   ) ?>

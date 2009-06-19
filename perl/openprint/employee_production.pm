@@ -1200,33 +1200,18 @@ sub reorder_jobs {
 		} # end while
 
 # Time to move on to next shift
-		if ( ( $start_time > $Shift->endtime_seconds() ) ) {
-
-			my $date = Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $start_time) );
-
+		while ( (!$Shift->operator_id()) or ( $start_time > $Shift->endtime_seconds() ) ) {
 			if ( ! @Shifts ) {
-				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_start'=>Date::Format::time2str('%H:%M', $start_time),'endtime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ) );
-				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_end'=>Date::Format::time2str('%H:%M', $start_time) ) if ! @Shifts;
-				return if ! @Shifts;
-				$Shift = $Shifts[0]->emanantise( $start_time );
-			} else {
-				$Shift = shift @Shifts;
-			} # end if
-			while ( @Shifts and ! $Shift->operator_id() ) {
-				$Shift = shift @Shifts;
-			} # end if
-			if ( ! $Shift->operator_id() ) {
 				$start_time = undef;
+				last;
 			} else {
-				$start_time = $Shift->starttime_seconds() if $start_time < $Shift->starttime_seconds();
+				$Shift = shift @Shifts;
+				$start_time = $Shift->starttime_seconds();
 			} # end if
 			push @{$variable{'changed'}}, $Shift->ul_id();
 		} # end if
 
-
-		if ( $$row{operator_id} != $Shift->operator_id() ) {
-			$row->operator_id( $Shift->operator_id() );
-		} # end if
+		$row->operator_id( $Shift->operator_id() );
 		last if $row->save({
 				'starttime'	=> Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ),
 				'equipment_id'	=>	$$Shift{'equipment_id'},
@@ -1317,6 +1302,20 @@ $log->debug("Already deleted");
 		} # end if smartscheduling
 	} # end if
 } # end sub _li_change
+
+sub _shift_popup {
+	$variable{'Shift'} = new openprint::Shift( $param{'shift_id'} );
+} # end sub _shift_popup
+
+sub _shift_change {
+	my $Shift = new openprint::Shift( $param{'shift_id'} );
+	$Shift->save({
+		'starttime'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ),
+		'endtime'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'endtime_year','endtime_month','endtime_day','endtime_hour','endtime_minute'} ),
+		'operator_id'	=>	$param{'operator_id'},
+	});
+	push @{$variable{'changed'}}, $Shift->ul_id();
+} # end sub _shift_change
 
 1;
 

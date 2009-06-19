@@ -10,7 +10,7 @@ use vars qw(%variable $log $dbh %config %session $table $serial %fields %transfo
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-*session = \%session;
+*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -226,10 +226,11 @@ sub get_lis {
 		my $Operator = $Shift->Operator();
 
 		if ( openprint::usergroup::is_user_in( ['PressManager'], $session{'user_id'} ) ) {
-			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onclick="openPopup('Operator', '%s', '%s' );">%s</span><br class="spacer"/></div>}, Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
+			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onclick="popup_window('_shift_popup.html','shift_id=%d');">%s</span><br class="spacer"/></div>}, Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
 			Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
-$total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $Operator->id(),($Operator->id() ? $Operator->name() : 'assign') ) . $html;
+			$total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, 
+			$Shift->id(), ($Operator->id() ? $Operator->name() : 'assign') ) . $html;
 		} else {
 			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
@@ -238,7 +239,7 @@ $total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $
 		} # end if
 	} # end if
 	return $html;
-} # end sub
+} # end sub get_lis
 
 sub ul_id {
 	my ( $self ) = @_;
