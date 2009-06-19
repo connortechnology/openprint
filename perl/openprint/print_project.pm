@@ -244,7 +244,7 @@ sub continue_project {
 	$log->info(" ************* STARTING continue_project **************** " );
 
 	if ( $$variable{'Redirect'} eq '' ) {
-		$project_index = $session{'project_id'} if ! $project_index;
+		$project_index = $openprint::session{'project_id'} if ! $project_index;
 
 		my ( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
 		# pick the next unfinished service.

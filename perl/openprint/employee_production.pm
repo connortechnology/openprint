@@ -1080,6 +1080,7 @@ sub _drop {
 			my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
 
 			# Coalesce Jobs
+$log->debug("Order before coalesce: @order");
 			my $previous;
 			foreach my $row_id ( @order ) {
 				my $Job = new openprint::ScheduledJob( $row_id );
@@ -1103,6 +1104,7 @@ $log->debug("Sigs are the same, coalescing ");
 				$previous = $Job;
 			} # end foreach row
 
+$log->debug("Order after coalesce: @order");
 
 			# Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
 			foreach my $row_id ( @order ) {
@@ -1130,7 +1132,7 @@ $log->debug("Sigs are the same, coalescing ");
 			foreach my $row_id ( @order ) {
 				my $Job = new openprint::ScheduledJob( $row_id );
 				$was_scheduled = 1 if $$Job{'starttime'};
-				$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()});
+				$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()}) if $Job->starttime() or ( $$Job->equipment_id() != $Shift->equipment_id() );
 			} # end foreach row_id
 			# If it was a formerly scheduled job, then shuffle
 			reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
@@ -1191,7 +1193,7 @@ sub reorder_jobs {
 		my $run_time = misc::hms2time( $$row{'runtime'} );
 		my $old_start_time = $start_time - $run_time;
 
-		while ( @fixed_jobs and (Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < ($start_time+$run_time) ) ) {
+		while ( @fixed_jobs and $fixed_jobs[0]{'starttime'} and (Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < ($start_time+$run_time) ) ) {
 			# Have fixed_jobs.  They do not move.
 			$start_time = Date::Parse::str2time($fixed_jobs[0]{'starttime'}) + misc::hms2time( $fixed_jobs[0]{'runtime'} ) + 1;
 			shift @fixed_jobs;
@@ -1221,21 +1223,29 @@ sub reorder_jobs {
 			push @{$variable{'changed'}}, $Shift->ul_id();
 		} # end if
 
-        if ( $start_time and ! $$row{starttime} ) {
-            $row->Project()->add_to_log( @session{'company_id','user_id'}, "Scheduled to print on " . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
-        } # end if
 
-		$row->save({
-				'starttime'	=> Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ),
-				'equipment_id'	=>	$$row{'equipment_id'},
-				} );
 		if ( $$row{operator_id} != $Shift->operator_id() ) {
 			$row->operator_id( $Shift->operator_id() );
 		} # end if
+		last if $row->save({
+				'starttime'	=> Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ),
+				'equipment_id'	=>	$$Shift{'equipment_id'},
+				} );
+		if ( ! $start_time ) {
+			last;
+        } elsif ( ! $$row{starttime} ) {
+            $row->Project()->add_to_log( @session{'company_id','user_id'}, "Scheduled to print on " . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
+        } # end if
 
         $start_time += $row->runtime_seconds();
 
     } # end while @order
+	while ( @order ) {
+		my $row = shift @order;
+		last if $row->save({
+				'starttime'	=> undef,
+				} );
+	} # end while @order
     sql::end_transaction( $dbh, $ac );
 } # end sub reorder_jobs
 

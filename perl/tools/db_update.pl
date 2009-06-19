@@ -589,12 +589,12 @@ if ( $data2 and ! $data ) {
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
-} else {
-	if ( ! exists $$data{'id'} ) {
-		$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
-		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
-		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
-	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Equipment_Shifts LIMIT 1', {} );
+if ( ! exists $$data{'id'} ) {
+	$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
+	$dbh->do('ALTER TABLE Equipment_shifts add id serial');
+	$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
 } # end if
 $dbh->disconnect();
 1;
