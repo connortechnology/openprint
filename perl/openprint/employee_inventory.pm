@@ -1045,7 +1045,7 @@ sub highlight_paper {
 	foreach my $P ( openprint::Paper::find(
 				'in_stock_start'	=> 1,
 				) ) {
-		next if $P->in_stock() - $P->allocated() <= 0;
+		#next if $P->available() <= 0;
 		if ( $param{Manufacturer} and ($P->manufacturer_id() != $param{Manufacturer} ) ) {
 			push @results, $P->id().'~';
 			next;
