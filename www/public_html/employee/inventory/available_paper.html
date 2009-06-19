@@ -194,7 +194,7 @@ Please select a Paper to view/edit.<br>
                             ) ) {
                         $data{$Stock->weight()} = $Stock->weight_id();
                     } # end foreach
-                    return ssi::make_drop_down( [map { $data{$_}, $_ } sort keys %data ], $session{'/employee/inventory/available_paper.html?Colour'} );
+                    return ssi::make_drop_down( [map { $data{$_}, $_ } sort keys %data ], $session{'/employee/inventory/available_paper.html?Weight'} );
 				) ?>
 			</select>
 		</p>
@@ -302,7 +302,7 @@ Please select a Paper to view/edit.<br>
 			my $available_sheets;
 
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
-				next if $Paper->in_stock() - $Paper->allocated() <= 0;
+				next if $Paper->available() <= 0;
 				my %skid_age;
 				my %last_seen;
 				my %skid_location;
@@ -333,11 +333,11 @@ Please select a Paper to view/edit.<br>
 				if ( $Paper->type() eq 'Roll' ) {
 					$total_weight += $Paper->in_stock();
 					$total_rolls += 1;
-					$available_weight += $Paper->in_stock() - $Paper->allocated();
+					$available_weight += $Paper->available();
 				} else {
 					$total_sheets += $Paper->in_stock();
 					$total_skids += 1;
-					$available_sheets += $Paper->in_stock() - $Paper->allocated();
+					$available_sheets += $Paper->available();
 				} # end if
 				
 				if ( 
@@ -361,7 +361,7 @@ $selected = '';
 					$selected,
 					$$Paper{'id'},
 					$Paper->to_string(),
-					Number::Format::format_number($Paper->in_stock() - $Paper->allocated()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
+					Number::Format::format_number($Paper->available()) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
 					join('<br/>', map { $_.'days - ' . $skid_age{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_age{$_}>1?'s':'&nbsp;') } keys %skid_age),
 					join('<br/>', map { $_.'days - ' . $last_seen{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($last_seen{$_}>1?'s':'&nbsp;') } keys %last_seen),
 					join('<br/>', map { ($_ ? new openprint::Location($_)->name() : 'unknown' ).' - ' . $skid_location{$_} . ($Paper->type() eq 'Roll' ? ' roll' : ' skid').($skid_location{$_}>1?'s':''). ' - ' . Number::Format::format_number($inventory{$_}).'lbs' } keys %skid_location),

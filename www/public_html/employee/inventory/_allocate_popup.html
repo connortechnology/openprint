@@ -36,7 +36,7 @@
 						} # end foreach Skid
 						return $available;
 					} else {
-						return $$variable{Paper}->in_stock() - $$variable{Paper}->allocated();
+						return $$variable{Paper}->available();
 					} # end if
 ) ?>"/>
 				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
