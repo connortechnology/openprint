@@ -39,6 +39,16 @@
 			<label>Category:</label>
 			<input type="text" name="category" value="<? echo ( $$variable{'ServiceType'}->category() ) ?>" /> 
 		</p>
+<? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+		<p>
+			<label>Type:</label>
+			<input type="text" name="type" value="<? echo ( $$variable{'ServiceType'}->type() ) ?>" />
+		</p>
+		<p>
+			<label>URL:</label>
+			<input type="text" name="url" value="<? echo ( $$variable{'ServiceType'}->url() ) ?>" />
+		</p>
+<? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p>
 			<label>Visible in Project Create:</label>
 			<input type="radio" id="create_visible1" name="create_visible" value="1"  <? echo ( 'checked="checked"' if $$variable{'ServiceType'}->create_visible(); ) ?> />

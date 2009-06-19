@@ -148,31 +148,28 @@
 				alert('form not found');
 			} // end if
 		} else if ( popup == 'Forms' ) {
-			var div = $( data2 + 'Forms' );
+			var div = $( data1 + 'Forms' );
 			form = document.forms['f5'];
 			if ( form ) {
 				var reg = /(\d*) form/;
 				var ar = reg.exec( div.innerHTML );
-				form.ProjectIndex.value = data1;
-				form.ServiceIndex.value = data2;
+				form.schedule_id.value=data1;
 				form.Forms.value = ar[1];
 			} // end if
 		} else if ( popup == 'Impressions' ) {
-			var div = $( data2 + 'Impressions' );
+			var div = $( data1 + 'Impressions' );
 			form = document.forms['ImpressionsForm'];
 			if ( form ) {
 				var reg = /(\d*) imps/;
 				var ar = reg.exec( div.innerHTML );
-				form.ProjectIndex.value=data1;
-				form.ServiceIndex.value=data2;
+				form.schedule_id.value=data1;
 				form.Impressions.value=ar[1];
 			} // end if
 		} else if ( popup == 'Comment' ) {
-			var div = $( data2 + 'Comment' );
+			var div = $( data1 + 'Comment' );
 			form = document.forms['f2'];
 			if ( form ) {
-				form.ProjectIndex.value=data1;
-				form.ServiceIndex.value=data2;
+				form.schedule_id.value=data1;
 				form.CommentInput.value = div.innerHTML;
 			} // end if
 		} else if ( popup == 'RunTime' ) {
