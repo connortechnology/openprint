@@ -1282,6 +1282,24 @@ sub _li_change {
 	} # end if
 } # end sub _li_change
 
+sub operator_schedule {
+    if ( %param ) {
+        if ( $param{'btnFunction'} eq 'Reset' ) {
+            foreach my $param ( 'Presses' ) {
+                delete $session{$r->uri().'?'.$param};
+            } # end if
+        } else {
+            ssi::save_params( $r->uri(), ( 'Presses' ) );
+        } # end if
+    } elsif ( ( time - $session{$r->uri().'lastupdated'} ) > 24*60*60 ) {
+        foreach my $param ( 'Presses') {
+            delete $session{$r->uri().'?'.$param};
+        } # end if
+    } # end if
+    $session{$r->uri().'?lastupdated'} = time;
+
+} # end sub operator_schedule
+
 1;
 
 __END__
