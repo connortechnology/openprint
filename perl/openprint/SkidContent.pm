@@ -43,6 +43,10 @@ sub find {
 		$sql .= ' AND paper_id=?';
 		push @values, $params{'Paper'}->id();
 	} # end if
+	if ( exists $params{'quantity_>'} ) {
+		$sql .= ' AND quantity > ?';
+		push @values, $params{'quantity_>'};
+	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
@@ -88,6 +92,10 @@ sub Paper {
 	my $Paper = new openprint::Paper( $$self{'paper_id'} );
 	return $Paper;
 } # end sub Paper
+
+sub Skid {
+	return new openprint::Skid( $_[0]{'skid_id'} );
+} # end sub Skid
 
 1;
 

@@ -1200,7 +1200,8 @@ sub reorder_jobs {
 		} # end while
 
 # Time to move on to next shift
-		while ( (!$Shift->operator_id()) or ( $start_time > $Shift->endtime_seconds() ) ) {
+		while ( ( ! $Shift->operator_id() ) or ( $start_time > $Shift->endtime_seconds() ) ) {
+
 			if ( ! @Shifts ) {
 				$start_time = undef;
 				last;
@@ -1316,6 +1317,23 @@ sub _shift_change {
 	});
 	push @{$variable{'changed'}}, $Shift->ul_id();
 } # end sub _shift_change
+sub operator_schedule {
+    if ( %param ) {
+        if ( $param{'btnFunction'} eq 'Reset' ) {
+            foreach my $param ( 'Presses' ) {
+                delete $session{$r->uri().'?'.$param};
+            } # end if
+        } else {
+            ssi::save_params( $r->uri(), ( 'Presses' ) );
+        } # end if
+    } elsif ( ( time - $session{$r->uri().'lastupdated'} ) > 24*60*60 ) {
+        foreach my $param ( 'Presses') {
+            delete $session{$r->uri().'?'.$param};
+        } # end if
+    } # end if
+    $session{$r->uri().'?lastupdated'} = time;
+
+} # end sub operator_schedule
 
 1;
 
