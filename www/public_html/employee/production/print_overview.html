@@ -151,10 +151,14 @@
 			var div = $( data1 + 'Forms' );
 			form = document.forms['f5'];
 			if ( form ) {
-				var reg = /(\d*) form/;
+				var reg = /(\d+) forms?/;
 				var ar = reg.exec( div.innerHTML );
-				form.schedule_id.value=data1;
-				form.Forms.value = ar[1];
+				if ( ar ) {
+					form.schedule_id.value = data1;
+					form.Forms.value = ar[1];
+				} else {
+					alert('Unable to read # of forms.');
+				} // end if
 			} // end if
 		} else if ( popup == 'Impressions' ) {
 			var div = $( data1 + 'Impressions' );
@@ -184,14 +188,15 @@
 		popupWin.showCenter();
 	} // end function openPopup
 
-	function saveForms( project_index, service_index, forms ) {
-		var div = $( service_index + 'Forms' );
+	function saveForms( schedule_id, forms ) {
+		var div = $( schedule_id + 'Forms' );
 		if ( div )
 			div.innerHTML = forms+' forms';
-		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_forms', new Array( project_index, service_index, forms ) );
-		popupWin.destroy();
+		new Ajax.Request( '_li_change.json', { parameters: { schedule_id: schedule_id, forms: forms, action: 'SetForms' }, onSuccess: function(){popupWin.destroy();
+} } );
+		//popupWin.destroy();
 		return false;
-	} // end function saveOperator
+	} // end function saveForms
 
 	function saveImpressions( project_index, service_index, impressions ) {
 		var div = $( service_index + 'Impressions' );
@@ -214,15 +219,15 @@
 		return false;
 	} // end function saveRunTime
 
-	function saveComment( project_index, service_index, comment ) {
-		var div = $( service_index + 'Comment' );
+	function saveComment( schedule_id, comment ) {
+		var div = $( schedule_id + 'Comment' );
 		if ( div ) {
 			if ( comment == '' )
 				div.innerHTML='&nbsp;';
 			else
 				div.innerHTML = comment;
 
-			jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_comment', new Array( project_index, service_index, comment ) );
+			jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_comment', new Array( schedule_id, comment ) );
 		} else {
 			alert('Error!  Comment not updated!');
 		} // end if
@@ -236,9 +241,8 @@
 </script>
 <link rel="stylesheet" type="text/css" href="/css/press_schedule.css">
 <div id="CommentPopup" style="display:none;">
-	<form name="f2" onsubmit="return saveComment( f2.ProjectIndex.value, f2.ServiceIndex.value, f2.CommentInput.value );">
-		<input type="hidden" name="ProjectIndex" />
-		<input type="hidden" name="ServiceIndex" />
+	<form name="f2" onsubmit="return saveComment( f2.schedule_id.value, f2.CommentInput.value );">
+		<input type="hidden" name="schedule_id" />
 		<p>Comment:<br/>
 		<textarea name="CommentInput" style="width:100%;" rows="4" cols="20"></textarea>
 		</p>
@@ -287,9 +291,8 @@
 	</form>
 </div>
 <div id="FormsPopup" style="display:none;">
-	<form name="f5" onsubmit="return saveForms( f5.ProjectIndex.value, f5.ServiceIndex.value, f5.Forms.value );">
-		<input type="hidden" name="ProjectIndex" />
-		<input type="hidden" name="ServiceIndex" />
+	<form name="f5" onsubmit="return saveForms( f5.schedule_id.value, f5.Forms.value );">
+		<input type="hidden" name="schedule_id" />
 		<span style="float: left;"> # of Forms: <input type="text" name="Forms"/></span>
 		<span style="float: right;">
 			<? echo ( ssi::writeButton( $log, $dbh, 'Save5', 'save.gif', 'if(f5.onsubmit())f5.submit();', '', 'Save' ); ) ?>

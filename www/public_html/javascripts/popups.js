@@ -200,7 +200,10 @@ onDestroy: function(eventName, win) {
 	} // end if
 	popupWin.setHTMLContent('Loading... please wait');
 	popupWin.showCenter();
-	popupWin.setAjaxContent(url+'?'+parameters, null , true);
+	if ( parameters ) {
+		url += '?' + parameters;
+	}
+	popupWin.setAjaxContent(url, null , true);
 } // end function popup_window
 
 

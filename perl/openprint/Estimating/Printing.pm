@@ -45,7 +45,8 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 # There are other values in teh actual specs hash, but htey are either transitory or should never be changed
 my %variables = (
 		'txtSignatureType' => ['save'],
-		'txtServiceDescription'	=> ['save'],
+		'txtServiceDescription'	=>	['save'],
+		'txtEmployeeComments'	=>	['save'],
 		'txtPrice1' => ['save','output'],
 		'txtPrice2' => ['save','output'],
 		'txtPrice3' => ['save','output'],
@@ -3155,17 +3156,12 @@ sub compare_signatures_runstyle {
 sub compare_signatures {
 	my ( $sig1, $sig2, $qty_index ) = @_;
 	return 0 if ! compare_signatures_runstyle( $sig1, $sig2, $qty_index );
-#foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
-##foreach my $key ( 'ddmRunStyle', 'ddmPress' ) {
-#return 0 if $$sig1{$key.$q_i} ne $$sig2{$key.$q_i};
-#} # end if
-#} # end foreach q_i
 	foreach my $key (
 			'CustomStockPrice','txtCustomMWeight','CustomStockPriceUnits','txtStockGSM',
 			'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour',
 			'txtSpecificStockWidth', 'txtSpecificStockHeight',
 			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
-			'rdbSuppliedStock','rdbSpecificStock',
+			'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
 		return 0 if $$sig1{$key} ne $$sig2{$key};
 	} # end foreach

@@ -150,11 +150,20 @@ sub find {
 } # end sub find
 
 sub runtime_seconds {
-	return misc::hms2time( $_[0]->runtime() );
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'runtime'} = Date::Format::time2str( '%H:%M:%S', $_[0] );
+	} # end if
+	
+	return misc::hms2time( $$self{'runtime'} );
 } # end sub runtime_seconds
 
 sub starttime_seconds {
-	return Date::Parse::str2time( $_[0]{'starttime'} );
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] );
+	} # end if
+	return Date::Parse::str2time( $$self{'starttime'} );
 } # endsub
 
 sub startdate_seconds {
@@ -252,6 +261,8 @@ sub comment {
 sub get_li {
     my ( $self, $ul_id ) = @_;
 
+$log->debug("ScheduledJob::get_li");
+
     my $html;
     if ( ! $$self{'project_id'} ) {
         $html .= sprintf( '<li id="item_%d" class="%s">Reserved', $$self{'id'}, 'reserved' );
@@ -272,7 +283,7 @@ sub get_li {
 	foreach my $sig_id ( @{$$self{'service_id'}} ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		if ( ! $$sig_specs{'SignatureQuantity'} ) {
-			$$sig_specs{'SignatureQuantity'} = $$sig_specs{'txtSignatureQuantity'} ? $$sig_specs{'txtSignatureQuantity'} : 1;
+			$$sig_specs{'SignatureQuantity'} = 1;
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'SignatureQuantity', $$sig_specs{'SignatureQuantity'} );
 		} # end if
 		if ( ! $$sig_specs{'ImpressionQuantity'} ) {
@@ -316,19 +327,19 @@ sub get_li {
 		$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
         $html .= sprintf( q{<div id="%2$dComment" class="Comment" onclick="openPopup( 'Comment', '%1$d' );">%2$s</div>}, $$self{'id'}, $self->comment() );
 
-        $html .= sprintf( q{<span class="Forms" id="%1$dForms" onclick="openPopup( 'Forms', '%1$d' );">%2$d %3$s</span>}, $$self{'id'}, $forms, ($forms > 1 ? ' forms' : ' form') );
+        $html .= sprintf( q{<span class="Forms" id="%1$dForms" onclick="openPopup( 'Forms', '%1$d' );">%2$d %3$s</span>}, $$self{'id'}, $forms, 'form'.($forms > 1 ? 's' : '') );
         $html .= sprintf( q{<span id="%1$dImpressions" class="Impressions" onclick="openPopup( 'Impressions', %1$d );">%2$d imps</span>}, $$self{'id'}, $impressions );
 
         $html .= '<span class="Buttons">';
         $html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-        $html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','id=$$self{id}');", '', 'B' );
+        $html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
         $html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}' );", '', 'C' );
         $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
-        #$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "if(confirm('Are you sure?')){split_job($$self{'project_id'}, $$self{'serviceindex'}, '$ul_id' );}", '', 'S' ) if $$sig_specs{'SignatureQuantity'} > 1;
+        $html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split' } } );", '', 'S' ) if @{$$self{'service_id'}} > 1;
         $html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
         $html .= '</span>';
 		if ( $Equipment->smartscheduling() ) {
-			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_starttime_popup.html?id=%1$d' );">Start:<span id=%1$dStartTime">%2$s</span><img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
+			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_starttime_popup.html', 'id=%1$d' );">Start(%1$d):<span id=%1$dStartTime">%2$s</span><img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
 					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
 					$$self{'starttime_locked'} ? 'locked' : 'unlocked',
 					);
@@ -409,6 +420,13 @@ sub runtime {
 	} # end if
 	return $$self{'runtime'};
 } # end sub runtime
+
+sub forms {
+	my ( $self ) = @_;
+
+	return scalar @{$$self{'service_id'}} if ! $$self{'service_id'};
+	return 0;
+} # end sub forms
 
 1;
 #__END__

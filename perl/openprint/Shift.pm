@@ -164,7 +164,7 @@ sub Schedule {
 			'starttime_>='		=>	$_[0]{'starttime'}, 
 			'starttime_<'		=>	$_[0]{'endtime'}, 
 			'equipment_id'		=>	$_[0]{'equipment_id'},
-			'order'				=>	'starttime,projectindex',
+			'order'				=>	'starttime,projectindex,service_id',
 			);
 } # end sub Schedule
 

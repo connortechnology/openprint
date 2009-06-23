@@ -5,6 +5,10 @@ package openprint::Project;
 
 use strict;
 use openprint ();
+use vars qw( $log $dbh );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
 use openprint::Currency;
 use openprint::ProjectType;
 use openprint::Company;
@@ -1119,6 +1123,52 @@ sub status_change {
 	$self->save();
 	$self->Order()->update_status();
 } # end sub status_change
+
+sub add_signature {
+	my ( $self, $sig_index, $status, $data ) = @_;
+	
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+	my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $self->id(), 'AdditionalSignature' );
+	openprint::service::status( $self->id(), $print_service_index, $status );
+	if ( ! $sig_index ) {
+		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+		my ( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );
+		$sig_index += 1;
+	} # end if
+	openprint::service::insert_service_spec( $log, $dbh, $self->id(), $print_service_index, 'SignatureIndex', $sig_index );
+	sql::end_transaction( $dbh, $ac );
+
+} # end sub add_signature
+
+sub copy_signature {
+    my ( $self, $sig_specs, $data ) = @_;
+    my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $self->id(), 'AdditionalSignature' );
+    my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
+    my $ac = sql::start_transaction( $dbh );
+    $dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+    $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+    my ( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );
+    $sig_index += 1;
+    openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, 'SignatureIndex', $sig_index );
+
+    # Releases the lock
+    $dbh->commit();
+
+    foreach my $key ( openprint::Estimating::Printing::variables() ) {
+		next if $key eq 'SignatureIndex';
+        openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
+    } # end foreach
+
+	if ( $data ) {
+		foreach my $k ( keys %{$data} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $k, $$data{$k} );
+		} # end foreach k
+	} # end if data
+
+    sql::end_transaction( $dbh, $ac );
+    return $new_service_index;
+} # end sub copy_signature
 
 
 
