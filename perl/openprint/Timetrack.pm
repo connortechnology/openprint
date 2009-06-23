@@ -275,6 +275,13 @@ sub save {
 	return $self->SUPER::save(@_);
 }
 
+sub copy {
+	my $New = $_[0]->SUPER::copy();
+	delete $$New{'invoice_id'};
+	delete $$New{'paycheque_id'};
+	return $New;
+} # end sub copy
+
 1;
 
 __END__
