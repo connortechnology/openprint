@@ -1749,6 +1749,7 @@ sub purchase_orders {
 	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
+			next if ! $PO->id();
 			if ( $_ = $PO->authorize() ) {
 				$variable{'error'} .= $_ . '<br/>';
 			} else {
