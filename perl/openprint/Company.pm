@@ -58,7 +58,7 @@ require openprint::Object;
 		'deleted'					=>	'deleted',
 		);
 %transforms = (
-	'name' => [ 's/\.//g' ],
+	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
 	'discount'	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
