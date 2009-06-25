@@ -138,6 +138,10 @@ sub data_to_csv {
 
 sub export_csv {
 	my ( $r, $log, $variable, $filename, $header, $data ) = @_;
+	if ( scalar @{$header}<= 0 ) {
+		$log->error('Invalid Header!');
+		return;
+	} # end if
 	my @data = data_to_csv( $header, $data );
 	return export( $r, $log, $variable, $filename, \@data );
 } # end sub

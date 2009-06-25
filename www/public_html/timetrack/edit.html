@@ -2,11 +2,8 @@
 
 <script type="text/javascript">
 	tinyMCE.init({
-
 		mode : "textareas",
-
 		theme : "simple"
-
 	});
 </script>
 <form name="f1" id="f1" action="history.html" method="post">
@@ -85,6 +82,7 @@
 				if ( $$variable{'Timetrack'}->id() ) {
 				$html = ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();check_time_starting(f1);', '', 'Reset' );
 				$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+				$html .= ssi::writeButton( $log, $dbh, 'copy', 'copy.gif', "f1.action='edit.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
 				} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
 				return $html;

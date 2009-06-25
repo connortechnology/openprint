@@ -42,6 +42,9 @@ sub edit {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $variable{'Timetrack'}->save(\%param);
 		$variable{'Redirect'} = '/timetrack/history.html';
+	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+		$variable{'Timetrack'} = $variable{'Timetrack'}->copy();
+		$variable{'error'} .= $variable{'Timetrack'}->save();
 	} # end if
 	if ( time - $session{'/timetrack/edit.html?lastupdated'} < ( 12*60*60 ) ) {
 		$variable{'Timetrack'}->company_id( $session{'/timetrack/edit.html?company_id'} ) if ! $variable{'Timetrack'}->company_id();
