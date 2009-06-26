@@ -27,6 +27,10 @@
 		<? endif ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+       <? if ( $$variable{'uri'} =~ /\/main\/project\/prin/ ) ?>
+        <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+        <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+        <? endif ( $$variable{'uri'} =~ /\/main\/project\/prin/ ) ?>
 		<? endif ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 		   <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
