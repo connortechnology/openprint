@@ -423,6 +423,7 @@ sub information {
 	} elsif ( $openprint::param{'btnFunction'} eq 'New Order' ) {
 		# Re order situation
 		$order_id = make_order_from_order( $log, $dbh, $cookie, $order_id, $variable );
+		return if ! $order_id;
 	} elsif ( $openprint::param{'btnFunction'} eq 'ReOpen' ) {
 		delete_unfinished_orders( $log, $dbh, $cookie );
 		if ( $order_id = $openprint::param{'OrderID'} ) {
@@ -1311,12 +1312,14 @@ sub make_order_from_order {
 	my ( $log, $dbh, $cookie, $src_order_id, $variable ) = @_;
 
 	my $SRC_Order = new openprint::Order( $src_order_id );
-	return if check_credit( $log, $dbh, $variable, $SRC_Order->total() );
+	return 0 if check_credit( $log, $dbh, $variable, $SRC_Order->total() );
 
 	if ( $SRC_Order->status() eq '' ) {
-		return misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'Order does not exist.' );
+		misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'Order does not exist.' );
+		return 0;
 	} elsif ( ! sets::isin( $SRC_Order->status(), 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
-		return misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'The given order is not complete.' );
+		misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'The given order is not complete.' );
+		return 0;
 	} else {
 		# this goes before get_order_id so that we re-use orderids
 		delete_unfinished_orders( $log, $dbh, $cookie );
@@ -1332,6 +1335,7 @@ sub make_order_from_order {
 				$NewProduct->save();
 			} # end foreach
 		} # end if
+		return $order_id;
 	} # end if
 	return 0;
 } # end sub make_order_from_order
@@ -1345,6 +1349,7 @@ sub quantity_select_display {
 	if ( $openprint::param{'btnFunction'} eq 'New Order' ) {
 		# Re order situation
 		my $order_id = make_order_from_order( $log, $dbh, $cookie, $openprint::param{'hiddenOrderID'}, $variable );
+		return if ! $order_id;
 	} elsif ( $openprint::param{'btnFunction'} eq 'ReOpen' ) {
 		delete_unfinished_orders( $log, $dbh, $cookie );
 		if ( $order_id = $openprint::param{'OrderID'} ) {

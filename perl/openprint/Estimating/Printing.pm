@@ -1570,7 +1570,10 @@ sub get_project_price {
 #$imp->display();
 #}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
+
 $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 1;
+
+
 if ( 1 ) {
             my %imps;
 
@@ -1663,6 +1666,38 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fil
 			@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $$project{'FoldingSpecs'}, $specs, $qty_index ) } @impositions;
 $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug or 1;
 		} # end if Folding
+        if ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
+            my $found = 0;
+            foreach my $I ( @impositions ) {
+                if ( $I->imposition() == $$specs{'txtImposition'.$qty_index} ) {
+                    $found = 1;
+                } # end if
+            } # end foreach I
+			if ( ! $found ) {
+				my @i;
+				foreach my $I ( @impositions ) {
+					if ( ! ( $$specs{'txtImposition'.$qty_index} % $I->columns() ) ) {
+						my $remove = ( $I->imposition() - $$specs{'txtImposition'.$qty_index} ) / $I->columns();
+						if ( $I->rows() > $remove ) {
+							my $i = $I->copy();
+							$i->rows( $i->rows()-$remove );
+							push @i, $i if $i->imposition();
+						} # end if
+					} elsif ( ! ( $$specs{'txtImposition'.$qty_index} % $I->rows() ) ) {
+						my $remove = ( $I->imposition() - $$specs{'txtImposition'.$qty_index} ) / $I->rows();
+						if ( $I->columns() > $remove ) {
+							my $i = $I->copy();
+							$i->columns( $i->columns()-$remove );
+							push @i, $i if $i->imposition();
+						} # end if
+					} # end if
+				} # end foreach I
+				if ( @i ) {
+					@impositions = @i;
+					$found = 1;
+				} # end if
+			} # end if
+        } # end if
 
 		if ( 0 ) {
 $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
@@ -1687,7 +1722,10 @@ $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
 				$openprint::log->debug('No Web 4 U');
 				next;
 			} # end if
-			next if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) );
+			if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) ) {
+				next;
+			} 
+
 			if ( ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $imp->pages() != $$specs{'PageQuantity'.$qty_index} ) ) {
 				#$openprint::log->debug("Doesn't match page quantity override " . $imp->pages() . ' != ' . $$specs{'PageQuantity'.$qty_index});
 				next;
