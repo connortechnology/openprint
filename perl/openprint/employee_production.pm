@@ -36,8 +36,23 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *config = \%openprint::config;
 
 sub print_overview {
+	if ( %param ) {
+		if ( $param{'btnFunction'} eq 'Reset' ) {
+			foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved' ) {
+				delete $session{'/employee/production/print_overview.html?'.$param};
+			} # end if
+		} else {
+			ssi::save_params( '/employee/production/print_overview.html', ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day' ) );
+		} # end if
+	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > 24*60*60 ) {
+		foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved' ) {
+			delete $session{'/employee/production/print_overview.html?'.$param};
+		} # end if
+	} # end if
+	$session{'/employee/production/print_overview.html?lastupdated'} = time;
+
 	press_schedule( @_ );
-} 
+} # end sub print_overview
 
 sub press_schedule {
 
@@ -108,9 +123,6 @@ sub press_schedule {
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
 		$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from print overview' );
 		$Project->update_status();
-	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-
-	} elsif ( $param{'btnFunction'} eq 'CompleteJob' ) {
 	} elsif ( $param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $param{'schedule_id'} ) {
 			my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
@@ -1058,13 +1070,19 @@ sub _ul {
 			$starttime += $runtime;
 		} # end foreach	
 	} # end if
-	$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'id'} );
-	$log->debug("_ul for: " . $variable{'Shift'}->to_string() );
+	if ( $param{'shift_id'} ) {
+		$variable{'Shift'} = new openprint::Shift( $param{'shift_id'} );
+	} elsif ( $param{'ul_id'} ) {
+		$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
+	} else {
+$log->debug("No Shift!");
+	} # end if
+	$log->debug("_ul for: $variable{'Shift'}{id} " . $variable{'Shift'}->to_string() );
 } # end sub _ul
 
 
 sub _drop {
-	my $Shift = openprint::Shift::get_from_ul_id( $param{'id'} );
+	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 
 	$log->debug("Shift: " . $Shift->to_string() );
 
@@ -1216,6 +1234,7 @@ sub reorder_jobs {
 
 			if ( ! @Shifts ) {
 				$start_time = undef;
+				$variable{'alert'} .= 'Not enough shifts to fit all jobs. Please assign an operator to another shift.';
 				last;
 			} else {
 				$Shift = shift @Shifts;
@@ -1261,23 +1280,29 @@ sub _li_change {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if
-	} elsif ( exists $param{'starttime_year'} ) {
+	} elsif ( $param{'action'} eq 'SaveJob' ) {
 
-		push @{$variable{'changed'}}, openprint::Shift::get( $Job )->ul_id();
-		my $old_starttime = Date::Parse::str2time( $$Job{'starttime'} );
+		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+		my $old_starttime = $Job->starttime_seconds();
 		my $new_starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} );
-		sql::update( undef, undef, 'Schedule', ['id=?', $param{'schedule_id'}], 'starttime', $new_starttime, 'starttime_locked', $param{'locked'} );
+		$Job->comment( $param{'comment'} );
+		$Job->impressions( $param{'impressions'} );
+		$variable{'error'} .= $Job->save({
+				'starttime'			=>	$param{'starttime_year'} ? $new_starttime : undef,
+				'starttime_locked'	=>	$param{'locked'},
+				'runtime'			=>	$param{'runtime'},
+				} );
 
+		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		my $Project = $Job->Project();
 		my ( $starttime, $equipment_id ) = @$Job{'starttime','equipment_id'};
 		$equipment_id = $param{'equipment_id'} if $param{'equipment_id'};
-
-		push @{$variable{'changed'}}, openprint::Shift::get( $Job )->ul_id();
+$log->debug('Shift: ' . $Job->Shift()->ul_id() );
+		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 
 		if ( ! $starttime ) {
 			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=? AND id != ?}, $equipment_id, $$Job{'id'} );
@@ -1285,16 +1310,16 @@ sub _li_change {
 		$starttime = Date::Parse::str2time( $starttime );
 		$starttime = time if $starttime < time;
 
-			$Job->save({'starttime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime ), 'equipment_id'=>$equipment_id});
-			$Project->add_to_log( @session{'company_id','user_id'}, 'Job bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $starttime ) . ' on ' . ( new openprint::Equipment( $equipment_id )->name() ) );
-		push @{$variable{'changed'}}, openprint::Shift::get( $Job )->ul_id();
+		$variable{'error'} .= $Job->save({'starttime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime ), 'equipment_id'=>$equipment_id});
+		$Job->Project->add_to_log( @session{'company_id','user_id'}, 'Job bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $starttime ) . ' on ' . $Job->Equipment()->name() );
+		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
 		if ( $Job->id() ) {
-			push @{$variable{'changed'}}, openprint::Shift::get( $Job )->ul_id();
+			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 			$Job->delete();
 		} else {
 $log->debug("Already deleted");
@@ -1322,7 +1347,7 @@ $log->debug("Already deleted");
 			} # end while	
 			$Job->save({'service_id'=>\@service_ids});
 		} # end if
-		push @{$variable{'changed'}}, openprint::Shift::get( $Job )->ul_id();
+		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 	} elsif ( $param{'btnFunction'} eq 'CompleteJob' ) {
 		# Actually this is complete Signature
 		foreach my $sig_id ( @{$$Job{'service_id'}} ) {
@@ -1331,7 +1356,7 @@ $log->debug("Already deleted");
 			complete_signature( $log, $dbh, \%variable, $Job->project_id(), $sig_id );
 		} # end foreach
 		$Job->Project->update_status();
-		push @{$variable{'changed'}}, openprint::Shift::get( $Job )->ul_id();
+		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		$Job->delete();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
@@ -1374,8 +1399,9 @@ sub operator_schedule {
 
 } # end sub operator_schedule
 
-sub _starttime_popup {
-} # end sub _starttime_popup
+sub _job_popup {
+	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+} # end sub _job_popup
 
 sub _signature_completion_popup {
 	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
