@@ -271,12 +271,10 @@
 		) ?>
 	<hr style="clear: both;"/>
 	<? echo (
-		require openprint::press_schedule;
-		require openprint::Equipment_Shift;
 		@{$$variable{'drops'}} = ();
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn">';
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
                     '/employee/production/print_overview.html?schedule_start_month',
                     '/employee/production/print_overview.html?schedule_start_day'};
