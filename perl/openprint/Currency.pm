@@ -4,8 +4,9 @@ package openprint::Currency;
 use strict;
 use Number::Format;
 use openprint ();
-use vars qw( $log );
+use vars qw( $log $dbh $table $serial %fields );
 *log = \$openprint::log;
+*dbh = \$openprint::dbh;
 require openprint::Object;
 require sql;
 
@@ -25,6 +26,14 @@ $serial = 'CurrencyIndex_seq';
 
 # This treats a Currency as an object.  The database is only accessed on method access.
 my $debug = 1;
+$table = 'Currencies';
+$serial = 'currencyindex_seq';
+%fields = (
+'id'	=>	'id',
+'name'	=>	'name',
+'symbol'	=>	'symbol',
+'short'		=>	'short',
+);
 
 sub get {
 	my ( $params ) = @_;

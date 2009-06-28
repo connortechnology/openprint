@@ -1,14 +1,14 @@
 <ul id="menubar">
 	<li id="Account" class="off"><a href="#">Account</a>
 		<ul>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 			<li><a href="/administrator/account/logout.html;SSL">Logout</a></li>
-<? else ( $openprint::session{'user_id'} ) ?>
+<? else ( $session{'user_id'} ) ?>
 			<li><a href="/administrator/account/login.html;SSL">Login</a></li>
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>
 		</ul>
 	</li>
-<? if ( $openprint::session{'user_type'} eq 'A' ) ?>
+<? if ( $session{'user_type'} eq 'A' ) ?>
 	<li id="Paper" class="off"><a href="#">Paper</a>
 		<ul>
 			<li><a href="/administrator/paper/list.html;SSL">View/Edit</a></li>
@@ -53,5 +53,5 @@
 			<li><a href="/administrator/managerial/configuration.html;SSL">Configuration</a></li>
 		</ul>
 	</li>
-<? endif ( $openprint::session{'user_type'} eq 'A' ) ?>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
 </ul>

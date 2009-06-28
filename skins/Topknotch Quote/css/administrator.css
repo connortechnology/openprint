@@ -83,3 +83,12 @@ ul#menubar li#Setup a {
 		width: 15%;
 		text-align: center;
 	}
+
+th.Price, td.Price {
+	text-align: right;
+	width: 90px;
+}
+th.Date, td.Date {
+	text-align: right;
+	width: 90px;
+}
