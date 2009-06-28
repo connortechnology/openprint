@@ -2,20 +2,8 @@
 	require Date::Parse;
 	require Date::Format;
 
-	if ( $param{'btnFunction'} ne 'Save' ) {
-		$session{'/paycheque/history.html?lastupdated'} = time;
-
-		foreach ( 'paid_on_start_year','paid_on_start_month','paid_on_start_day','paid_on_end_year','paid_on_end_month','paid_on_end_day',
-	'employer_id','employee_id') {
-			if ( ref $param{$_} eq 'ARRAY' ) {
-				$session{"/paycheque/history.html?$_"} = join(';', @{$param{$_}} );
-			} elsif ( exists $param{$_} ) {
-				$session{"/paycheque/history.html?$_"} = $param{$_};
-			} # end if
-		} # end foreach
-	} # end if
-
 	@{$$variable{'Paycheques'}} = ();
+	$$variable{'Total'} = 0;
 	foreach my $Paycheque ( openprint::Paycheque::find( 
 		'paid_on_start'	=> sprintf('%.4d-%.2d-%.2d', @session{'/paycheque/history.html?paid_on_start_year','/paycheque/history.html?paid_on_start_month','/paycheque/history.html?paid_on_start_day'} ),
 		'paid_on_end'	=> sprintf('%.4d-%.2d-%.2d', @session{'/paycheque/history.html?paid_on_end_year','/paycheque/history.html?paid_on_end_month','/paycheque/history.html?paid_on_end_day'} ),
@@ -24,6 +12,7 @@
 		'order'				=> 'id',
 		) ) {
 		push @{$$variable{'Paycheques'}}, $Paycheque;
+		$$variable{'Total'} += $Paycheque->total();
 	} # end foreach Paycheque
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
@@ -50,13 +39,17 @@
 		) ?>
 		<tr title="<? echo ( $$variable{'Paycheque'}->description() ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
 			<td><a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id(); ) ?>"><? echo ( $$variable{'Paycheque'}->id(); ) ?></a></td>
-			<td class="Date"><a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id(); ) ?>"><? echo ( Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $$variable{'Paycheque'}->paid_on() ) ); ) ?></a></td>
+			<td class="Date"><a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Paycheque'}->paid_on() ) ); ) ?></a></td>
 			<td><a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id(); ) ?>"><? hecho ( $$variable{'Paycheque'}->Employer()->name(); ) ?></a></td>
 			<td><a href="/paycheque/edit.html?paycheque_id=<? echo ( $$variable{'Paycheque'}->id(); ) ?>"><? hecho ( $$variable{'Paycheque'}->Employee()->name(); ) ?></a></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Paycheque'}->total() ); ) ?></td>
+			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'Paycheque'}->total(),2,2 ) ); ) ?></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Paycheque'} = shift @{$$variable{'Paycheques'}}; ) ?>
+		<tr class="totals">
+			<td colspan="4">Totals:</td>
+			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'Total'},2,2) ); ) ?></td>
+		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
