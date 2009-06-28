@@ -73,5 +73,5 @@ There are no allocations.
 <? endif ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
 <script type="text/javascript">
 	$('Allocated').innerHTML = '<? echo ( int($$variable{'Paper'}->allocated()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
-	$('Available').innerHTML = '<? echo ( int($$variable{'Paper'}->in_stock() - $$variable{'Paper'}->allocated()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
+	$('Available').innerHTML = '<? echo ( int($$variable{'Paper'}->available()). ($$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets'); ) ?>';
 </script>

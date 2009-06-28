@@ -1199,9 +1199,7 @@ sub reorder_jobs {
 		} # end while
 
 # Time to move on to next shift
-		if ( ( $start_time > $Shift->endtime_seconds() ) ) {
-
-			my $date = Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $start_time) );
+		while ( ( ! $Shift->operator_id() ) or ( $start_time > $Shift->endtime_seconds() ) ) {
 
 			if ( ! @Shifts ) {
 				@Shifts = openprint::Equipment_Shift::find('equipment_id'=>$$row{'equipment_id'}, 'starttime_start'=>Date::Format::time2str('%H:%M', $start_time),'endtime_end'=>Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ) );
@@ -1216,7 +1214,9 @@ sub reorder_jobs {
 			} # end if
 			if ( ! $Shift->operator_id() ) {
 				$start_time = undef;
+				last;
 			} else {
+				$Shift = shift @Shifts;
 				$start_time = $Shift->starttime_seconds() if $start_time < $Shift->starttime_seconds();
 			} # end if
 			push @{$variable{'changed'}}, $Shift->ul_id();
@@ -1236,6 +1236,10 @@ sub reorder_jobs {
 
         $start_time += $row->runtime_seconds();
 
+    } # end while @order
+	while ( @order ) {
+		my $row = shift @order;
+        sql::update( $log, $dbh, 'Schedule', ['id=?', $$row{'id'}], 'StartTime', undef, 'equipment_id', $$row{'equipment_id'} );
     } # end while @order
     sql::end_transaction( $dbh, $ac );
 } # end sub reorder_jobs
@@ -1308,6 +1312,24 @@ $log->debug("Already deleted");
 		} # end if smartscheduling
 	} # end if
 } # end sub _li_change
+
+sub operator_schedule {
+    if ( %param ) {
+        if ( $param{'btnFunction'} eq 'Reset' ) {
+            foreach my $param ( 'Presses' ) {
+                delete $session{$r->uri().'?'.$param};
+            } # end if
+        } else {
+            ssi::save_params( $r->uri(), ( 'Presses' ) );
+        } # end if
+    } elsif ( ( time - $session{$r->uri().'lastupdated'} ) > 24*60*60 ) {
+        foreach my $param ( 'Presses') {
+            delete $session{$r->uri().'?'.$param};
+        } # end if
+    } # end if
+    $session{$r->uri().'?lastupdated'} = time;
+
+} # end sub operator_schedule
 
 1;
 
