@@ -3,8 +3,10 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw( %config );
+use vars qw( %config %param $dbh );
 *config = \%openprint::config;
+*param = \%openprint::param;
+*dbh = \%openprint::dbh;
 
 require sql;
 require ssi;
@@ -214,7 +216,14 @@ sub user_profiles {
 				'value'=>$param{'value-'} 
 				} );
 
-		$variable{'information'} = "Record saved successfully.";
+		my %notifications;
+		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+		foreach my $k ( keys %types ) {
+			$notifications{$types{$k}} = $param{"notification_$k"};
+		} # end foreach
+		$User->notifications( \%notifications );
+
+		$variable{'information'} = 'Record saved successfully.';
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified

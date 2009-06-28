@@ -1,6 +1,11 @@
-<? eval ( @{$$variable{'ProjectTypes'}} = sql::execute( $log, $dbh, q{SELECT lngIndex, strID, strName, strDetailedURL FROM Project_Types ORDER BY lngSort, lower(strName)} ); ) ?>
-<ul class="ProjectTypes">
-<? while ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
-<li><a href="/content/<?url?>?ProjectType=<? echo ( URI::Escape::uri_escape($$variable{'id'}) ) ?>&amp;ProjectTypeName=<? echo ( URI::Escape::uri_escape($$variable{'name'}) ) ?>" title="<?name?>"><?name?></a></li>
-<? endwhile ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
+<ul id="ProjectTypes">
+<? echo (
+	my $html = '';
+	foreach my $Category ( openprint::ProjectTypeCategory::find('order'=>'sort,name') ) {
+		foreach my $PT ( openprint::ProjectType::find('category_id'=>$Category->id(), 'order'=>'sorting,name' ) ) {
+$html .= sprintf('<li><a href="/content/%1$s?ProjectType=%2$s&amp;ProjectTypeName=%3$s" title="%4$s">%4$s</a></li>', $PT->url(), URI::Escape::uri_escape($PT->name()), URI::Escape::uri_escape($PT->description()), ssi::htmlize($PT->description()) );
+		} # end foreach PT
+	} # end foreach Category
+	return $html;
+) ?>
 </ul>

@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<title><?PageTitle?></title>	
+		<meta http-equiv="Content-Type" content="text/html; charset=utf8"/>
+		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/menu.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
+<? if ( $r->uri() =~ /administrator\/quote/ ) ?>
+<link href="/css/quote.css" rel="stylesheet" type="text/css">
+<? endif ( $r->uri() =~ /administrator\/quote/ ) ?>
+		<link href="/css/administrator.css" rel="stylesheet" type="text/css"/>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js"></script>
+		<script type="text/javascript" src="/javascripts/popups.js"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
+		<link rel="shortcut icon" href="/images/favicon.ico"/>
+	</head>
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
+		<div id="Header">	
+			<div id="Logo">
+				<table><tr>
+				<td><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
+				<td><a href="/index.html"><span id="PointOne">PointOne</span><br/><span id="GraphicsInc">GRAPHICS INC</span></a></td>
+				</tr></table>
+			</div>
+			<div id="Menu">
+				<ul id="menubar">
+					<li class="off" id="AccountMenu"><a href="#" onclick="toggleMenu($('AccountMenu'), 'off', 'on');return false;">ACCOUNT</a>
+						<ul>
+<? if ( $openprint::session{'user_id'} ) ?>
+							<li><a href="/administrator/account/logout.html;SSL">&raquo; Logout</a></li>
+<? else ( $openprint::session{'user_id'} ) ?>
+							<li><a href="/administrator/account/login.html;SSL">&raquo; Login</a></li>
+<? endif ( $openprint::session{'user_id'} ) ?>
+						</ul>
+					</li> 
+<? if ( $openprint::session{'user_type'} eq 'A' ) ?>
+					<li class="<? echo ( $r->uri() =~ /administrator\/paper/ ? 'on' : 'off' ) ?>" id="PaperMenu"><a href="#" onclick="toggleMenu($('PaperMenu'), 'off', 'on');return false;">PAPER</a>
+						<ul>
+							<li><a href="/administrator/paper/list.html;SSL">&raquo; View/Edit</a></li>
+							<li><a href="/administrator/paper/import_export.html;SSL">&raquo; Import/Export</a></li>
+							<li><a href="/administrator/production/pricelists.html;SSL">&raquo; Pricelists</a></li>
+						</ul>
+					</li>
+					<li class="<? echo ( $r->uri() =~ /administrator\/managerial/ ? 'on' : 'off' ) ?>" id="ManagerialMenu"><a href="#" onclick="toggleMenu($('ManagerialMenu'), 'off', 'on');return false;">MANAGERIAL</a>
+						<ul>
+							<li><a href="/administrator/managerial/credit_applications.html;SSL">&raquo; Credit Applications</a></li>
+							<li><a href="/administrator/managerial/company_profiles.html;SSL">&raquo; Company Profiles</a></li>
+							<li><a href="/administrator/managerial/user_profiles.html;SSL">&raquo; User Profiles</a></li>
+							<li><a href="/administrator/managerial/logs.html;SSL">&raquo; Admin Audit Log</a></li>
+							<li><a href="/administrator/managerial/upload_log.html;SSL">&raquo; Upload Log</a></li>
+						</ul>
+					</li>
+					<li class="<? echo ( $r->uri() =~ /administrator\/reports/ ? 'on' : 'off' ) ?>" id="ReportsMenu"><a href="#" onclick="toggleMenu($('ReportsMenu'), 'off', 'on');return false;">REPORTS</a>
+						<ul>
+						<li><a href="/administrator/reports/orders.html;SSL">&raquo; Orders</a></li>
+						<li><a href="/administrator/reports/quotes.html;SSL">&raquo; Quotes</a></li>
+						<li><a href="/administrator/reports/projects.html;SSL">&raquo; Projects</a></li>
+						<li><a href="/administrator/reports/customer_login.html;SSL">&raquo; Customer Login</a></li>
+						<li><a href="/administrator/reports/CustomerServiceReps.html;SSL">&raquo; Customer Service Reps</a></li>
+						<li><a href="/administrator/reports/bindery.html;SSL">&raquo; Bindery</a></li>
+						</ul>
+					</li>
+					<li class="off" id="SetupMenu"><a href="#" onclick="toggleMenu($('SetupMenu'), 'off', 'on');return false;">SETUP</a>
+						<ul>
+							<li><a href="/administrator/equipment/edit.html;SSL">&raquo; Equipment</a></li>
+							<li><a href="/administrator/service_types/edit.html;SSL">&raquo; Service Types</a></li>
+							<li><a href="/administrator/services/edit.html;SSL">&raquo; Services</a></li>
+							<li><a href="/administrator/production/pricelists.html;SSL">&raquo; Pricelists</a></li>
+							<li><a href="/administrator/materials/edit.html;SSL">&raquo; Materials</a></li>
+							<li><a href="/administrator/project_types/edit.html;SSL">&raquo; Project Types</a></li>
+							<li><a href="/administrator/project_types/defaults_edit.html;SSL">&raquo; Project Defaults</a></li>
+							<li><a href="/administrator/project_types/templates.html;SSL">&raquo; Project Templates</a></li>
+							<li><a href="/administrator/production/colour_import_export.html;SSL">&raquo; Colours</a></li>
+							<li><a href="/administrator/managerial/taxes.html;SSL">&raquo; Taxes</a></li>
+							<li><a href="/administrator/managerial/currency.html;SSL">&raquo; Currencies</a></li>
+							<li><a href="/administrator/managerial/configuration.html;SSL">&raquo; Configuration</a></li>
+						</ul>
+					</li>
+<? endif ( $openprint::session{'user_type'} eq 'A' ) ?>
+				</ul>
+			</div>
+		</div>
+		<div id="Content"> 
+		<div id="ContentInner"> 
+		<?PageContent?>
+		</div>
+		</div>
+	</body>
+</html>

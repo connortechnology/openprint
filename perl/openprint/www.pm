@@ -51,6 +51,8 @@ sub handler {
 
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
+	$r->content_type(q{text/html; charset=utf-8});
+
 
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);
@@ -315,7 +317,7 @@ $log->debug("User Type: $session{'user_type'}");
 						foreach my $sig_id ( $Project->signatures() ) {
 							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 							if ( $$sig_specs{'SignatureIndex'} == $$PPF{'signature'} ) {
-
+$log->debug("Found sig");
 								my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 								if ( @Equipment ) {
 									$Equipment = $Equipment[0];
@@ -323,7 +325,18 @@ $log->debug("User Type: $session{'user_type'}");
 								} 	
 							} # end if
 						} # end foreach
-						$PPF->send_ppf( $Equipment ) if $Equipment;
+						if ( ! $Equipment ) {
+							$log->debug("Looking it up from Schedule");
+							my @rows = openprint::press_schedule::find('project_id'=>$param{'ProjectIndex'},'service_id'=>$param{'ServiceIndex'});
+							if ( @rows == 1 ) {
+								$Equipment = new openprint::Equipment( $rows[0]{'equipment_id'} );
+							} 
+						} # end if
+						if ( ! $Equipment ) {
+$log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'signature'}.");
+						} else {
+						$PPF->send_ppf( $Equipment );
+						} # end if
 					} # end if
 				} # end if
 			} # end if

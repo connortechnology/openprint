@@ -4,6 +4,10 @@
 	my $html .= sprintf(q{<td><input type="text" class="SheetQTY" name="qty-%1$d" id="qty-%1$d" value="%2$d" onkeyup="calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}" />sheets</td>}, $C->id(), $C->qty() );
 	$html .= sprintf(q{<td><input type="text" name="item-%1$d" id="item-%1$d" value="%2$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}else{$('line-%1$d').removeClassName('changed');}"/></td>}, $C->id(), $C->item() );
 	my ( $mweight, $type, $name ) = $$C{'description'} =~ /^([\d\.]+)M *([\w\/]*) *(.*)$/;
+	if ( ! sets::isin( $type, [ '', 'FSC', 'PEFC/SFI' ] ) ) {
+		$name = $type . ' ' . $name;
+		$type = '';
+	} # end if
 	my $rows = scalar split(/\n/, $name );
 	$rows = 1 if ! $rows;
 

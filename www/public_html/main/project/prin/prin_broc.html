@@ -32,10 +32,10 @@
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 		<fieldset><legend><?ProjectTypeName?></legend>
 
-<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Envelopes'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Envelopes','Banners'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Envelopes'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Envelopes','Banners'] ) ) ?>
 
 <? if ( $$variable{'ProjectTypeID'} eq 'Door Hangers' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->

@@ -8,15 +8,16 @@ require openprint::logs;
 require openprint::Usergroup;
 use openprint ();
 use strict;
-use vars qw(%variable $log $dbh %config);
-*variable = \%openprint::variable;
+use vars qw( $log $dbh %config %variable %param %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*param = \%openprint::param;
+*variable = \%openprint::variable;
 
 my $debug = 0;
 
-my %fields = (
+%fields = (
 	'company_id'		=>	'company_id',
 	'salutation'		=>	'salutation',
 	'title'				=>	'title',
@@ -46,9 +47,10 @@ my %fields = (
 	'purchasing_limit'	=>	'purchasing_limit',
 	'purchasing_total_limit'	=>	'purchasing_total_limit',
 	'notes'				=>	'notes',
+	'deleted'			=>	'deleted',
 ); # end %fields
 
-my %transforms = (
+%transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'wage'			=>	[ 's/[^\d\.]//g' ],
 	'purchasing_limit'			=>	[ 's/[^\d\.]//g' ],
@@ -58,7 +60,7 @@ my %transforms = (
 	'updated_on'		=> [ 's/.*//g' ],
 );
 
-my %defaults = (
+%defaults = (
 	'web_active'	=>	'N',
 	'ftp_active'	=>	'0',
 	'created_on'	=>	'NOW()',
@@ -71,6 +73,7 @@ my %defaults = (
 	'purchasing_limit'	=>	undef,
 	'purchasing_total_limit'	=>	undef,
 	'wage'				=>	undef,
+	'deleted'			=>	0,
 );
 
 sub get {
@@ -78,19 +81,6 @@ sub get {
 
 	return @$self{@_};
 } # end sub get
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	my @fields = keys %fields;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( 'SELECT * FROM Users WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) {
-			$log->error( "Error loading User( $$self{'id'} ): " . $dbh->errstr() );
-		} # end if
-	} # end if
-	@$self{@fields} = @$data{@fields{@fields}};
-} # end sub load
 
 sub set {
 	my ( $self, $params ) = @_;
@@ -212,11 +202,6 @@ sub save {
 	return;
 } # end sub save
 
-sub delete {
-	my $self = shift;
-	sql::update( undef, undef, 'Users', ['index=?', $$self{'id'}], 'deleted', 1 );
-} # end sub delete
-
 sub destroy {
 	my $self = shift;
 
@@ -318,16 +303,6 @@ sub name {
 	} # end if
 } # end sub name
 
-sub email {
-	my $self = shift;
-	return $$self{'email'};
-} # end sub email
-
-sub id {
-	my $self = shift;
-	return $$self{'id'};
-} # end sub id
-
 sub find {
 	my %param = @_;
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
@@ -385,6 +360,10 @@ sub find {
 	if ( $param{'password'} ) {
 		$sql .= ' AND strpassword=?';
 		push @values, $param{'password'};
+	} # end if
+	if ( exists $param{'email_like'} ) {
+		$sql .= ' AND strEmail LIKE ?';
+		push @values, lc $param{'email_like'};
 	} # end if
 	if ( exists $param{'web_active'} ) {
 		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
@@ -451,6 +430,39 @@ sub Groups {
 
     return openprint::Usergroup::find('user_id'=>$$self{id} );
 } # end sub Groups
+sub notifications {
+	my ( $self, $notifications_hash ) = @_;
+	
+	if ( $notifications_hash ) {
+		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
+		my $ac = sql::start_transaction( $dbh );
+		sql::execute( undef, undef, 'DELETE FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+		foreach my $k ( keys %types ) {
+			sql::insert( undef, undef, 'User_Notifications', { 'user_id'=>$$self{'id'},'type_id'=>$k, 'value'=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
+		} # end foreach k
+		sql::end_transaction( $dbh, $ac );
+		$$self{'notifications'} = $notifications_hash;
+	} elsif ( ! exists $$self{'notifications'} ) {
+		%{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+	} # end if
+	
+	return $$self{'notifications'};
+} # end sub notifications
+
+sub notification {
+	my ( $self, $name ) = @_;
+
+	$self->notifications() if ( ! exists $$self{'notifications'} );
+	return $$self{'notifications'}{$name} if $$self{'notifications'};
+} # end sub notification
+
+sub purchasing_total {
+	require openprint::PurchaseOrder;
+	my $total = 0;
+	foreach my $PO ( openprint::PurchaseOrder::find('authorized'=>'N') ) {
+		$total += $PO->total();
+	} # end foreach $PO
+} # end sub purchasing_total
 
 sub po_limit {
 	my ( $self, $type_id, $new_value ) = @_;

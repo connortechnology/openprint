@@ -558,18 +558,23 @@ if ( $version < 1897 ) {
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM paper_inventory LIMIT 1', {} );
-if ( $data ) {
-	my $ac = sql::start_transaction( $dbh );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Paper_Inventory.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} else {
 	$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on}) if exists $$data{'updatetime'};
 	if ( ! exists $$data{'id'} ) {
+		my $ac = sql::start_transaction( $dbh );
 		$dbh->do(q{alter table paper_inventory add id integer});
 		$dbh->do(q{create sequence paperinventory_id_seq});
 		$dbh->do(q{alter table paper_inventory alter id set default nextval('paperinventory_id_seq')});
 		$dbh->do(q{update paper_inventory set id=nextval('paperinventory_id_seq')});
 		$dbh->do(q{alter table paper_inventory alter id set not null});
 		$dbh->do(q{alter table paper_inventory add primary key(id)});
+		sql::end_transaction( $dbh, $ac );
 	} # end if
-	sql::end_transaction( $dbh, $ac );
 } # end if
 if ( $version < 1898 ) {
 	print "Updating to version 1898\n";
@@ -1954,6 +1959,60 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_hold TEXT') if ! exists $$data{'cip3_hold'};
 	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_merge TEXT') if ! exists $$data{'cip3_merge'};
 	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_monitor TEXT') if ! exists $$data{'cip3_monitor'};
+	$dbh->do('ALTER TABLE tbl_Equipment ADD smartscheduling BOOLEAN default false') if ! exists $$data{'smartscheduling'};
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Schedule LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Schedule.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} else {
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE Schedule ADD id SERIAL');
+	} # end if
+	if ( exists $$data{'serviceindex'} ) {
+		$dbh->do('ALTER TABLE Schedule ADD service_id INTEGER[]');
+		$dbh->do('UPDATE Schedule SET service_id=ARRAY[serviceindex]');
+		$dbh->do('ALTER TABLE Schedule DROP serviceindex');
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Labels.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} else {
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Equipment_Shifts LIMIT 1', {} );
+my $data2 = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Shifts LIMIT 1', {} );
+if ( $data2 and ! $data ) {
+	$dbh->do( 'ALTER TABLE Shifts rename to Equipment_Shifts' );
+	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} elsif ( ! ( $data2 or $data ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Equipment_Shifts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} elsif ( ! $data2 ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} else {
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
+		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
+		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
+	} # end if
 } # end if
 $dbh->disconnect();
 1;

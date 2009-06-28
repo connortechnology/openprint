@@ -361,6 +361,10 @@ sub rle_encode {
 	return $output. (pack('C', 128));
 } # end sub rle_encode
 
+sub hms2time {
+	my ($h,$m,$s) = split(':', $_[0]);
+	return ($h*3600) + ($m*60) + $s;
+} # end sub hms2time
 1;
 
 __END__

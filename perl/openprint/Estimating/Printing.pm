@@ -1602,6 +1602,7 @@ $i->display();
 }
 }
 				foreach my $imp ( @imps ) {
+					next if $imp->imposition() > $qty;
 					my $add = 1;
 					my $str = sprintf('%dx%d+%dx%d-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
 					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->type() eq 'Sheet' )
@@ -3741,8 +3742,10 @@ sub get_varnish_run_price {
 				my $coverage = $Material->specification('Coverage', $grade);
 				my $qty = ceil( $area*$impressions/$coverage ) if $coverage;
 				my %price = $Material->get_price( $qty, $Press );
-				$varnish_price{'Material Price'} += $price{'Price'} * $qty;
-				$varnish_price{'Material Total'} += $price{'Price'} * $qty;
+				$price{'Total'} = $price{'Price'} * $qty;
+				$varnish_price{'Material Price'} += $price{'Total'};
+				$varnish_price{'Material Total'} += $price{'Total'};
+				$varnish_price{'Breakdown'} .= sprintf('%s at %.2f%s * %dKg = $%.2f<br/>', $c, @price{'Price','units'}, $qty, $price{'Total'} );
 			} # end if
 		} # end if
 	} # end foreach

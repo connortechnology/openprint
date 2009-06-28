@@ -6,7 +6,7 @@ use MIME::Base64;
 use openprint::Currency;
 use strict;
 use openprint ();
-use vars qw($r %variable $log $dbh %config);
+use vars qw($r %variable $log $dbh %config %fields %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -19,7 +19,7 @@ require openprint::QuotedProject;
 
 my $debug = 1;
 
-my %fields = (
+%fields = (
 	'id'			=>	'index',
 	'created_on'	=>	'dtmquotedate',
 	'updated_on'	=>	'dtmlastmodified',
@@ -38,7 +38,7 @@ my %fields = (
 	'total3'		=>	'curtotalsale3',
 	);
 
-my %defaults = (
+%defaults = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 );
@@ -113,7 +113,7 @@ sub find {
 			push @values, $params{'for_name'};
 		} # end if
 		if ( $params{'id_like'} ) {
-			$sql .= " AND index LIKE '$params{'id_like'}%'";
+			$sql .= " AND index::text LIKE '$params{'id_like'}%'";
 		} # end if
 
 		if ( exists $params{'order'} ) {
@@ -387,7 +387,7 @@ sub send {
 			my @attachments = ();
 			$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
 			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
-			push @attachments, '', encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
+			push @attachments, '', encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) ), 'text/html', 'quoted-printable';
 
 			$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_invoice.html' );
 			$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
@@ -430,7 +430,7 @@ sub send {
 			$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_for_invoice.html' );
 			if ( $_ ) {
 				$_ = ssi::variable_substitution( \$_, \%quote );
-				push @attachments, "Quote$$self{id}.html", encode_qp($_), 'text/html', 'quoted-printable';
+				push @attachments, "Quote$$self{id}.html", encode_qp(Encode::encode('utf-8',$_)), 'text/html', 'quoted-printable';
 			} # end if
 
 			my %mail = (
@@ -456,7 +456,7 @@ sub send {
 
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_end_user_invoice.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
-		push @attachments, "Quote$$self{id}.html", encode_qp( ssi::variable_substitution( \$email_template, \%quote ) ), 'text/html', 'quoted-printable';
+		push @attachments, "Quote$$self{id}.html", encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) ), 'text/html', 'quoted-printable';
 
 		my %mail = (
 				SMTP    => $openprint::config{'Mail Server'},
@@ -479,7 +479,7 @@ sub send {
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_invoice.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		if ( $email_template ) {
-			$email_template = encode_qp( ssi::variable_substitution( \$email_template, \%quote ) );
+			$email_template = encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) );
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'QuotingEmail'},
