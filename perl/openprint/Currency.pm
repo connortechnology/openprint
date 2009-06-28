@@ -4,12 +4,21 @@ package openprint::Currency;
 use strict;
 use Number::Format;
 use openprint ();
-use vars qw( $log );
+use vars qw( $log $dbh $table $serial %fields );
 *log = \$openprint::log;
+*dbh = \$openprint::dbh;
 require openprint::Object;
 require sql;
 
 my $debug = 1;
+$table = 'Currencies';
+$serial = 'currencyindex_seq';
+%fields = (
+'id'	=>	'id',
+'name'	=>	'name',
+'symbol'	=>	'symbol',
+'short'		=>	'short',
+);
 
 sub get {
 	my ( $params ) = @_;
@@ -47,14 +56,6 @@ sub find {
 	} # end if
 	return map { new openprint::Currency( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CUrrencies WHERE id=?', {}, $$self{'id'} );
-	} # end if
-	@$self{qw/name short symbol/} = @$data{qw/name short symbol/};
-} # end sub load
 
 sub values {
 	my $self = shift;
