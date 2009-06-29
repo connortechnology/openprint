@@ -255,7 +255,7 @@ function filterDDM( filter, ddm ) {
 	var chunk2 =  ddm.options[old_selected_index].text.toLowerCase();
 
 	if ( chunk1 > chunk2 ) {
-		# search down
+		// search down
 		for ( var index = old_selected_index-1; index > 0; index -= 1 ) {
 			var chunk2 = ddm.options[index].text.toLowerCase();
 			if ( chunk1 <= chunk2 ) {
@@ -265,20 +265,20 @@ function filterDDM( filter, ddm ) {
 		} // end for
 		ddm.selectedIndex = 0;
 		return 0 != old_selected_index;
-	} else if (  chunk2 > chunk1 ) {
-		# search up
+	} else if ( chunk2 > chunk1 ) {
+		// search up
 		for ( var index = old_selected_index+1; index < ddm.options.length; index += 1 ) {
 			var chunk2 = ddm.options[index].text.toLowerCase();
 			if ( chunk1 > chunk2 ) {
 				// Need to back up 1
 				ddm.selectedIndex = index-1;
 				return index != old_selected_index;
-			} elsif ( chunk1 == chunk2 ) {
+			} else if ( chunk1 == chunk2 ) {
 				ddm.selectedIndex = index;
 				return index != old_selected_index;
 			} // end if
 		} // end for
-	} # end if
+	} // end if
 
 	return ddm.selectedIndex != old_selected_index;
 

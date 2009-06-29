@@ -1,14 +1,15 @@
 <? eval (
-	$$variable{'ProjectTypeName'} = $param{'ProjectType'} if $param{'ProjectType'};
-	if ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) {
+	if ( $$variable{'ProjectType'}->name() eq 'GreetingCards' ) {
 		$$variable{'FoldType'} = '2PanelFold';
 		$$variable{'DimensionsDisplay'} = 'Finished';
 	} # end if
 ) ?>
 <form name="f1" method="post" action="">
-	<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
+	<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
 	<input type="hidden" name="Status" value="<?Status?>" />
+	<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
+
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
@@ -17,7 +18,6 @@
 				<div class="Questions">
 					<h3>Instant Pricing</h3>
 
-					<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
 					<!--#include virtual="/includes/sizes.html"-->
 					<p><label>Colours:</label>
 						<select name="Colours" onchange="calc(this.form.name);">
@@ -29,17 +29,16 @@
 					<br/>
 					<!--#include virtual="/includes/aqueous.html"-->
 					<!--#include virtual="/includes/uvcoating.html"-->
-					<div class="row">
+					<p>
 						<label>Stock Information</label><br/>
 						<!--#include virtual="/includes/paper_dropdowns.html"-->
-					</div>
-					<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
-					<div class="row">
+					</p>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+					<p>
 						<label>Fold Type:</label>
-						<span class="input">
-							<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
-								<? echo (
-									ssi::make_drop_down( [ 'NoFold','No Fold', 
+						<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
+							<? echo (
+								ssi::make_drop_down( [ 'NoFold','No Fold', 
 			'2PanelFold','2 Panel Fold',
 			'3PanelFold','3 Panel Fold',
 			'3PanelZFold','3 Panel Z Fold',
@@ -57,44 +56,39 @@
 			'MapFold', 'Map Fold',
 ], $$variable{'FoldType'} ); ) ?>
 
-							</select>
-						</span>
-					</div>
-					<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
-					<? if ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) ?>
+						</select>
+					</p>
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+					<? if ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
 						<input type="hidden" name="FoldType" value="2PanelFold"/>
-					<? endif ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) ?>
-					<? if ( sets::isin( $$variable{'ProjectTypeName'}, 'Covers' ) ) ?>
-							<div class="row">
-								<label>Fold Type:</label>
-								<span class="input">
-									<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
-										<option value="NoFold">No Fold</option>
-										<option value="2PanelFold">2 Panel Fold</option>
-									</select>
-								</span>
-							</div>
-					<? endif ( sets::isin( $$variable{'ProjectTypeName'}, 'Covers' ) ) ?>
+					<? endif ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
+					<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
+						<p>
+							<label>Fold Type:</label>
+							<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
+								<option value="NoFold">No Fold</option>
+								<option value="2PanelFold">2 Panel Fold</option>
+							</select>
+						</p>
+					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
 
 					<!--#include virtual="_proofs.html"-->
 					<!--#include virtual="/includes/drilling.html"-->
 					<!--#include virtual="/includes/scoring.html"-->
 					<!--#include virtual="/includes/perfing.html"-->
-		<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
+		<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
 					<!--#include virtual="/includes/shrinkwrapping.html"-->
 					<!--#include virtual="/includes/bundling.html"-->
-		<? endif ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
+		<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
 
 					<!--#include virtual="/includes/turnaround.html"-->
 					<br class="spacer"/>
-					<? if ( sets::isin( $$variable{'ProjectTypeName'}, 'ScratchPads' ) ) ?>
-					<div class="row">
+					<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
+					<p>
 						<label>Number of pages per pad:</label>
-						<span class="input">
-							<input type="text" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" size="4" />
-						</span>
-					</div>
-					<? endif ( sets::isin( $$variable{'ProjectTypeName'}, 'ScratchPads' ) ) ?>
+						<input type="text" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" size="4" />
+					</p>
+					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
 					<!--#include virtual="/includes/quantity.html"-->
 					<br class="spacer"/>
 					<!--#include virtual="/includes/press_type.html"-->
@@ -110,8 +104,8 @@
 		   </div>
 		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
-		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
-		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
-</div><!--instant_price_section-->
+		<h2><? echo ( $$variable{'ProjectType'}->name() ) ?> printing - full colour</h2>
+		<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ); ) ?>
+		</div><!--instant_price_section-->
 	</div><!--InstantPricing-->
 </form>

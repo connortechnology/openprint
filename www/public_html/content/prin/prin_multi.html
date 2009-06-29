@@ -1,11 +1,8 @@
-<? eval (
-	$$variable{'ProjectTypeName'} = $param{'ProjectType'} if $param{'ProjectType'};
-) ?>
 <form name="f1" method="post" action="/main/order/information.html">
-	<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
+	<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
 	<input type="hidden" name="Status" value="<?Status?>" />
-<? if ( $param{'ProjectType'} ) ?>
+<? if ( $param{'projecttype_id'} ) ?>
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
@@ -18,42 +15,33 @@
 			<? eval ( $$variable{'DimensionsDisplay'} = 'Finished' ) ?>
 			<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
 			<!--#include virtual="/includes/sizes.html"-->
-			<div class="row">
-				<span class="label">Number of pages:</span>
-				<span class="input">
-					<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="remove_div('OrderButton');"/>
-				</span>
+			<p>
+				<label>Number of pages:</label>
+				<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="remove_div('OrderButton');"/>
 				<br class="spacer"/>
-				<span class="input">
-						<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('CoverStocks');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} ne 'Different' ) ?> />
-						<label class="radio" for="rdbCoverSelf">Self Cover</label>
-						<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('CoverStocks');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
-						<label class="radio" for="rdbCoverDifferent">Different Cover</label>
-					<br class="spacer"/>
-				</span>
+				<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('CoverStocks');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} ne 'Different' ) ?> />
+				<label class="radio" for="rdbCoverSelf">Self Cover</label>
+				<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('CoverStocks');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
+				<label class="radio" for="rdbCoverDifferent">Different Cover</label>
 				<br class="spacer"/>
-			</div>
-			<div class="row">
-				<span class="label">Binding Type</span>
-				<span class="input">
-					<select name="rdbTemplateType" onchange="remove_div('OrderButton');">
-						<option value="SaddleStitching">Saddle Stitching</option>
-						<option value="PerfectBound">Perfect Bound</option>
+			</p>
+			<p>
+				<label>Binding Type</label>
+				<select name="rdbTemplateType" onchange="remove_div('OrderButton');">
+					<option value="SaddleStitching">Saddle Stitching</option>
+					<option value="PerfectBound">Perfect Bound</option>
+				</select>
+			</p>
+			<div id="CoverStocks" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
+				<h4>Information for Cover</h4>
+				<p>
+					<label>Colours:</label>
+					<select name="ColoursCover" onchange="calc(this.form.name);">
+						<option value="4/0">4 Colour One Side</option>
+						<option value="4/1">4 Colour/Black</option>
+						<option value="4/4">4 Colour Both Sides</option>
 					</select>
-				</span>
-			</div>
-			<div id="CoverStocks" class="row" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
-				<span class="label">Information for Cover</span>
-				<div class="row">
-					<span class="label">Colours:</span>
-					<span class="input">
-						<select name="ColoursCover" onchange="calc(this.form.name);">
-							<option value="4/0">4 Colour One Side</option>
-							<option value="4/1">4 Colour/Black</option>
-							<option value="4/4">4 Colour Both Sides</option>
-						</select>
-					</span>
-				</div>
+				</p>
 				<br class="spacer"/>
 				<? echo ( 
 						# Load Defaults
@@ -81,16 +69,14 @@
 			</div>
 			<br class="spacer"/>
 			<div class="row">
-				<span class="label">Information for Interior Pages</span>
-				<div class="row">
-					<span class="label">Colours:</span>
-					<span class="input">
-						<select name="Colours" onchange="calc(this.form.name);">
-							<option value="4/4">4 Colour</option>
-							<option value="1/1">Black</option>
-						</select>
-					</span>
-				</div>
+				<h4>Information for Interior Pages</h4>
+				<p>
+					<label>Colours:</label>
+					<select name="Colours" onchange="calc(this.form.name);">
+						<option value="4/4">4 Colour</option>
+						<option value="1/1">Black</option>
+					</select>
+				</p>
 				<br class="spacer"/>
 				<? echo ( 
 					$$variable{'Signature'} = '2';
@@ -123,10 +109,10 @@
 			</div>
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
-		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
-		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
-<? else ( $param{'ProjectType'} ) ?>
+		<h2><? echo ( $$variable{'ProjectType'}->name() ) ?> printing - full colour</h2>
+		<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ); ) ?>
+<? else ( $param{'projecttype_id'} ) ?>
 Please select the type of your project.
-<? endif ( $param{'ProjectType'} ) ?>
+<? endif ( $param{'projecttype_id'} ) ?>
 	</div><!--InstantPricing-->
 </form>

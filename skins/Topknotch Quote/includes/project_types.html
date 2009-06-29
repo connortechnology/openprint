@@ -1,10 +1,13 @@
 <ul id="ProjectTypes">
 	<? echo (
 		my $html = '';
-		foreach my $ProjectType ( openprint::ProjectType::find( 'order'=> 'lngSort, lower(strName)' ) ) {
-$html .= sprintf('<li><a href="/content/%1$s?ProjectType=%2$s&amp;ProjectTypeName=%3$s" title="%4$s">%4$s</a></li>',
-	$ProjectType->url(), URI::Escape::uri_escape($ProjectType->strid()), URI::Escape::uri_escape($ProjectType->name()), ssi::htmlize($ProjectType->name()) );
-		} # end foreach
+		foreach my $ProjectType ( openprint::ProjectType::find( 'order'=> 'sorting, lower(name)' ) ) {
+			$html .= sprintf('<li><a href="/content/%1$s?projecttype_id=%2$s" title="%3$s">%3$s</a></li>',
+				$ProjectType->url(), 
+				$ProjectType->id(), 
+				ssi::htmlize($ProjectType->description()) 
+				);
+		} # end foreach ProjectType
 		return $html;
 	) ?>
 	<img id="Butterfly" src="/images/logo_butterfly.jpg" alt="Butterfly" />

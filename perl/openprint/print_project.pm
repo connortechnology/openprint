@@ -910,10 +910,7 @@ sub calc {
 	$specs{'alert'} = '';
 	$specs{'txtQuantity1'} =~ s/\D//g;
 
-	my @project_types = openprint::ProjectType::find( 'name' => $specs{'ProjectType'} );
-	return if ! @project_types;
-	my $ProjectType = shift @project_types;
-
+	my $ProjectType = new openprint::ProjectType( $specs{'projecttype_id'} );
 	my $Project = new openprint::Project( $specs{'ProjectIndex'} );
 	$Project->Currency( openprint::Currency::get_current() );
 	$Project->type_id( $ProjectType->id() );
@@ -936,22 +933,22 @@ sub calc {
 		$specs{'ProjectIndex'} = $$Project{'id'};
 
 		if ( ! $$services{''} ) {
-			push @{$$services{''}}, openprint::print_project::insert_project_type( $r, $log, $dbh, $$Project{'id'}, $specs{'ProjectType'} );
+			push @{$$services{''}}, openprint::print_project::insert_project_type( $r, $log, $dbh, $$Project{'id'}, $ProjectType->name() );
 		} # end if
 
 		my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$Project{'id'}, $$services{''}[0] );
-		if ( $printing_specs{'ProjectType'} ne $specs{'ProjectType'} ) {
+		if ( $printing_specs{'ProjectType'} ne $ProjectType->name() ) {
 			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $$services{''}[0] );
-			$$services{''}[0] = openprint::print_project::insert_project_type( $r, $log, $dbh, $$Project{'id'}, $specs{'ProjectType'} );
+			$$services{''}[0] = openprint::print_project::insert_project_type( $r, $log, $dbh, $$Project{'id'}, $ProjectType->name() );
 			%printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$Project{'id'}, $$services{''}[0] );
 		} # end if
 
 		if ( ! sets::isin( $specs{'Dimensions'}, ['', 'Custom'] ) ) {
 			my ( $width, $height, $type ) = $specs{'Dimensions'} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
-			my @args = ( $specs{'ProjectType'}, $width, $height );
+			my @args = ( $specs{'projecttype_id'}, $width, $height );
 
 			if ( $type eq 'Flat' ) {
-				$_ = q{SELECT dblfinishedwidth::float, dblfinishedheight::float FROM projecttemplate WHERE projecttype_id = (SELECT Id FROM project_types where name=?) AND dblFlatWidth=? AND dblFlatHeight=?};
+				$_ = q{SELECT dblfinishedwidth::float, dblfinishedheight::float FROM projecttemplate WHERE projecttype_id=? AND dblFlatWidth=? AND dblFlatHeight=?};
 				if ( $specs{'FoldType'} ) {
 					$_ .= q{ AND type=?};
 					push @args, $specs{'FoldType'};
@@ -970,7 +967,7 @@ sub calc {
 					} # end if
 				} # end if
 			} else {
-				$_ = q{SELECT dblFlatWidth::float, dblFlatHeight::float FROM projecttemplate WHERE projecttype_id = (SELECT Id FROM project_types WHERE name=?) AND dblFinishedWidth=? AND dblFinishedHeight=?};
+				$_ = q{SELECT dblFlatWidth::float, dblFlatHeight::float FROM projecttemplate WHERE projecttype_id=? AND dblFinishedWidth=? AND dblFinishedHeight=?};
 				if ( $specs{'FoldType'} ) {
 					$_ .= q{ AND type=?};
 					push @args, $specs{'FoldType'};

@@ -84,12 +84,6 @@ function cbCalc( results ) {
 
 
 function Dimensions_onchange( select ) {
-	//var value = get_ddm_value( select );
-	//if ( value == 'Custom' ) {
-	//add_div('CustomDimensions');
-	//} else {
-	//remove_div('CustomDimensions');
-	//} // end if
 	remove_div('OrderButton');
 	calc( select.form.name );
 } // end if

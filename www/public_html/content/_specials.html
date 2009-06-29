@@ -2,17 +2,15 @@
     my $list_id = openprint::pricing::get_pricelist_id( $log, $dbh, $variable );
     $$variable{'Pricelist'} = new openprint::Pricelist( $list_id );
     $$variable{'Currency'} = new openprint::Currency( $session{'Currency_id'} );
-	my @projecttypes = openprint::ProjectType::find('strid'=>$param{ProjectType});
-	$$variable{'ProjectType'} = shift @projecttypes if @projecttypes;
 ) ?>
 <? if ( $$variable{'ProjectType'} ) ?>
 <div id="Specials" align="center">
 	<h2>
-<? if ( sets::isin( $param{ProjectType} , ['Brochures','Posters','Magazines'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines'] ) ) ?>
 Individual
-<? else ( sets::isin( $param{ProjectType} , ['Brochures','Posters','Magazines'] ) ) ?>
+<? else ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines'] ) ) ?>
 Group
-<? endif ( sets::isin( $param{ProjectType} , ['Brochures','Posters','Magazines'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines'] ) ) ?>
  Run Specials for
 <? echo (
 require Date::Calc;

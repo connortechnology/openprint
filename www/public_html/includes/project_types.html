@@ -1,6 +1,14 @@
-<? eval ( @{$$variable{'ProjectTypes'}} = sql::execute( $log, $dbh, q{SELECT lngIndex, strID, strName, strDetailedURL FROM Project_Types ORDER BY lngSort, lower(strName)} ); ) ?>
-<ul class="ProjectTypes">
-<? while ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
-<li><a href="/content/<?url?>?ProjectType=<? echo ( URI::Escape::uri_escape($$variable{'id'}) ) ?>&amp;ProjectTypeName=<? echo ( URI::Escape::uri_escape($$variable{'name'}) ) ?>" title="<?name?>"><?name?></a></li>
-<? endwhile ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
+<ul id="ProjectTypes">
+	<? echo (
+		my $html = '';
+		foreach my $ProjectType ( openprint::ProjectType::find( 'order'=> 'sorting, lower(name)' ) ) {
+			$html .= sprintf('<li><a href="/content/%1$s?projecttype_id=%2$s" title="%3$s">%3$s</a></li>',
+				$ProjectType->url(), 
+				$ProjectType->id(), 
+				ssi::htmlize($ProjectType->description()) 
+				);
+		} # end foreach ProjectType
+		return $html;
+	) ?>
+	<img id="Butterfly" src="/images/logo_butterfly.jpg" alt="Butterfly" />
 </ul>
