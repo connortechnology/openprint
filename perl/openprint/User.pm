@@ -374,6 +374,10 @@ sub find {
 		$sql .= ' AND strEmail LIKE ?';
 		push @values, lc $param{'email_like'};
 	} # end if
+	if ( exists $param{'purchasing_limit_>='} ) {
+		$sql .= ' AND purchasing_limit >= ?';
+		push @values, $param{'purchasing_limit_>='};
+	} # end if
 	if ( exists $param{'web_active'} ) {
 		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
 		$param{'web_active'} = 'N' if $param{'web_active'} == 0;

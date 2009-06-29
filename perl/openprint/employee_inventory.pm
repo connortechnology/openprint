@@ -1648,33 +1648,34 @@ sub purchase_order_view {
 		$param{'statetax_charge'} = $param{'statetax_charge'} ? 1 : 0;
 		$variable{'error'} .= $PO->save( \%param );
 $log->debug("PO total: " . $PO->total() . ' Me total: ' . $Me->purchasing_limit() );
-		if ( $PO->total() < $Me->purchasing_limit() ) {
-			$variable{'error'} .= $PO->save({
-					'authorized'	=> 1,
-					'authorized_on'	=> 'NOW()',
-					'authorized_by'	=> $session{'user_id'},
-					});
-		} else {
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-			my %info;
-			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
-			$info{'From'} = $Me;
-			$info{'PurchaseOrder'} = $PO;
+		if ( ! $PO->authorized() ) {
+			if ( $PO->total() < $Me->purchasing_limit() ) {
+				$variable{'error'} .= $PO->save({
+						'authorized'	=> 1,
+						'authorized_on'	=> 'NOW()',
+						'authorized_by'	=> $session{'user_id'},
+						});
+			} else {
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+				my %info;
+				$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
+				$info{'From'} = $Me;
+				$info{'PurchaseOrder'} = $PO;
 
-			foreach my $U ( openprint::User::find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$PO->total() ) ) {
-				next if $U->id() == $Me->id();
+				foreach my $U ( openprint::User::find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$PO->total() ) ) {
+					next if $U->id() == $Me->id();
 
-				$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
-				my @body = ('', $_, 'text/html', 'quoted-printable');
-				my %mail = (
-						SMTP    => $config{'Mail Server'},
-						FROM    => sprintf( '"%s" <%s>', $Me->name(), $Me->email() ),
-						TO      => sprintf( '"%s" <%s>', $U->name(), $U->email() ),
-						BCC		=> 'iconnor@point-one.com',
-						SUBJECT => 'Purchase Order requiring approval: ' . $PO->id(),
-						);
-				misc::send_email_with_attachment( $log, \%mail, @body );
-			} # end foreach U
+					$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
+					my @body = ('', $_, 'text/html', 'quoted-printable');
+					my %mail = (
+							SMTP    => $config{'Mail Server'},
+							FROM    => sprintf( '"%s" <%s>', $Me->name(), $Me->email() ),
+							TO      => sprintf( '"%s" <%s>', $U->name(), $U->email() ),
+							SUBJECT => 'Purchase Order requiring approval: ' . $PO->id(),
+							);
+					misc::send_email_with_attachment( $log, \%mail, @body );
+				} # end foreach U
+			} # end if
 		} # end if
 		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
 			my $L = new openprint::PurchaseOrder_Log();
