@@ -249,39 +249,38 @@ function filterDDM( filter, ddm ) {
 		ddm.selectedIndex = 0;
 		return;
 	} // end if
-	var old_selected = ddm.selectedIndex;
+	var old_selected_index = ddm.selectedIndex;
 
 	var chunk1 = filter.value.toLowerCase();
-	if ( ddm.selectedIndex > 0 ) {
-		for ( var index = ddm.selectedIndex; index; index -= 1 ) {
+	var chunk2 =  ddm.options[old_selected_index].text.toLowerCase();
+
+	if ( chunk1 > chunk2 ) {
+		# search down
+		for ( var index = old_selected_index-1; index > 0; index -= 1 ) {
 			var chunk2 = ddm.options[index].text.toLowerCase();
-			if ( chunk1 > chunk2 ) {
+			if ( chunk1 <= chunk2 ) {
 				ddm.selectedIndex = index;
-				break;
+				return true;
 			} // end if
 		} // end for
-	} // end if
-	if ( ddm.selectedIndex == 0 && ddm.options.length ) 
-		ddm.selectedIndex = 1;
+		ddm.selectedIndex = 0;
+		return 0 != old_selected_index;
+	} else if (  chunk2 > chunk1 ) {
+		# search up
+		for ( var index = old_selected_index+1; index < ddm.options.length; index += 1 ) {
+			var chunk2 = ddm.options[index].text.toLowerCase();
+			if ( chunk1 > chunk2 ) {
+				// Need to back up 1
+				ddm.selectedIndex = index-1;
+				return index != old_selected_index;
+			} elsif ( chunk1 == chunk2 ) {
+				ddm.selectedIndex = index;
+				return index != old_selected_index;
+			} // end if
+		} // end for
+	} # end if
 
-	for ( var index = ddm.selectedIndex; index < ddm.options.length; index += 1 ) {
-		var chunk2 = ddm.options[index].text.toLowerCase();
-		if ( chunk1 <= chunk2 ) {
-			ddm.selectedIndex = index;
-			return index != old_selected;
-		} // end if
-		//} // end if
-	} // end for
-   // Assumes that the first entry is "SElect One"
-	for ( var index = 1; index < ddm.selectedIndex; index += 1 ) {
-		var chunk2 = ddm.options[index].text.toLowerCase();
-		if ( chunk1 <= chunk2 ) {
-			ddm.selectedIndex = index;
-			return index != old_selected;
-		} // end if
-		//} // end if
-	} // end for
-	return ddm.selectedIndex != old_selected;
+	return ddm.selectedIndex != old_selected_index;
 
 } // end function filterDDM
 
@@ -957,3 +956,22 @@ function update_duration(form, starting_prefix, ending_prefix ) {
 		$('duration').innerHTML = days +'days';
 	} // end if
 } // end function update_duration
+
+function setup_ie_menu() {
+	if (document.all && document.getElementById) {
+		var navRoot = document.getElementById("menubar");
+		if ( navRoot ) {
+			for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
+				var node = navRoot.childNodes[i];
+				if (node.nodeName=='LI') {
+					node.onmouseover=function() {
+						this.className+=' over';
+					}
+					node.onmouseout=function() {
+						this.className=this.className.replace(' over', '');
+					}
+				} // end if
+			} // end for
+		} // end if
+	}
+} // end function setup_ie_menu

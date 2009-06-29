@@ -24,16 +24,7 @@ $serial = 'CurrencyIndex_seq';
 %defaults = (
 );
 
-# This treats a Currency as an object.  The database is only accessed on method access.
-my $debug = 1;
-$table = 'Currencies';
-$serial = 'currencyindex_seq';
-%fields = (
-'id'	=>	'id',
-'name'	=>	'name',
-'symbol'	=>	'symbol',
-'short'		=>	'short',
-);
+my $debug = 0;
 
 sub get {
 	my ( $params ) = @_;
