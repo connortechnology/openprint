@@ -210,11 +210,9 @@ $log->debug('Storing PPF');
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
 
-		# CHeck AGE
+        # CHeck AGE
 		my $mtime = ( stat $file )[9];
-		$current_time = time;
-
-		if ( $current_time - $mtime < 2*60 ) {
+		if ( time - $mtime < 2*60 ) {
 			next;
 		} # end if
 

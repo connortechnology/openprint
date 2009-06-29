@@ -5,7 +5,9 @@ ul#menubar {
 	padding: 0px;
 	background-color: #0183FF;
 	width: 100%;
-	height: 24px;
+	float: none;
+	z-index: 6000;
+	display: block;
 }
 ul#menubar:after {
     content: ".";
@@ -21,12 +23,13 @@ ul#menubar:after {
 /* End hide from IE-mac */
 
 ul#menubar li {
-	height: auto;
 	list-style: none;
 	margin: 0px;
+	padding: 0px;
 	margin-left: 30px;
 	float: left;
 	background-color: #0183FF;
+	display: inline;
 }
 ul#menubar li a {
 	color: white;
@@ -37,12 +40,25 @@ ul#menubar li a {
 	padding: 4px;
 	float: left;
 }
+ul#menubar li a:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html ul#menubar li a {height: 1%;}
+* ul#menubar li a {display: block;}
+/* End hide from IE-mac */
 
 ul#menubar li ul  {
 	list-style: none;
 	margin: 0px;
 	padding: 5px;
 	background-color: #0183FF;
+	position: absolute;
 }
 ul#menubar li ul:after {
     content: ".";
@@ -57,11 +73,18 @@ ul#menubar li ul:after {
 * ul#menubar li ul {display: block;}
 /* End hide from IE-mac */
 
+#menubar li.off ul {
+    display: none;
+}
+#menubar li.on ul {
+	display: block;
+}
+#menubar li.off:hover ul,#menubar li.on:hover ul, #menubar li.over ul {
+    /*display the current topic*/
+    display: block;
+}
+
 ul#menubar li ul li {
-/*
-	border-bottom: 1px solid #D3C18A;
-*/
-    list-style: none;
 	padding: 0px;
 	margin: 0px;
 }
@@ -78,15 +101,6 @@ ul#menubar li ul li a {
 }
 	
 
-#menubar li.off ul, #menubar li.on ul {
-    /*put the subnavs below and hide them all*/
-    display: none;
-    padding: 0px;
-    margin: 0px;
-    list-style: none;
-	position: absolute;
-	top: 98px;
-}
 
 #menubar li.off {
 }
@@ -96,26 +110,10 @@ ul#menubar li ul li a {
 #menubar li.off:hover {
 	background-color: #8C8A8B;
 }
-#menubar li.off:hover ul,#menubar li.on:hover ul, #menubar li.over ul {
-    /*display the current topic*/
-    display: block;
-    list-style: none;
-    padding: 0px;
-    margin:0px;
-    z-index: 6000;
-}
 
 
 #menubar li ul li:hover {
 	background-color: #8C8A8B;
-}
-
-#menubar li.on ul {
-    /*  display the other topics when
-    *              their parent is hovered 
-    display: block;
-    z-index: 6000;
-    */
 }
 
 #menubar li.off:hover a {
