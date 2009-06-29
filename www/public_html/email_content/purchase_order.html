@@ -144,7 +144,7 @@
 				<div class="rightColumn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?><br/></div>
 				<br class="spacer"/>
 				<hr/>
-				<div class="leftColumn"><i>Authorized by</i></div>
+				<div class="leftColumn"><i>Authorized<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ? by<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?</i></div>
 				<div class="rightColumn"><i>Date</i></div>
 		<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
 			</div>

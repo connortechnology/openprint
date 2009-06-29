@@ -209,6 +209,15 @@ $log->debug('Storing PPF');
 	foreach my $file ( @filenames ) {
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
+
+		# CHeck AGE
+		my $mtime = ( stat $file )[9];
+		$current_time = time;
+
+		if ( $current_time - $mtime < 2*60 ) {
+			next;
+		} # end if
+
 		my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
 $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 		my $out_base = $file_base;

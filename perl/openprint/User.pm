@@ -39,18 +39,18 @@ my %fields = (
 	'password',			=>	'strpassword',
 	'ftp_active'		=>	'ftp_active',
 	'web_active'		=>	'ysnaccountactivation',
-	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
+	'howdidyouhearaboutus'		=>	'howdidyouhearaboutus',
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
-	'purchasing_limit'	=>	'purchasing_limit',
+	'purchasing_limit'			=>	'purchasing_limit',
 	'purchasing_total_limit'	=>	'purchasing_total_limit',
-	'notes'				=>	'notes',
+	'notes'						=>	'notes',
 ); # end %fields
 
 my %transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
-	'created_on'		=> [ 's/.*//g' ],
-	'updated_on'		=> [ 's/.*//g' ],
+	'created_on'		=>	[ 's/.*//g' ],
+	'updated_on'		=>	[ 's/.*//g' ],
 	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
 	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 );

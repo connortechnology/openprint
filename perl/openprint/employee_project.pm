@@ -172,24 +172,17 @@ sub view {
 						} # end if
 						$param{'rdbComplete'} = 'No';
 					} else {
-						my $duedate = join('-', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
-						$Project->due_date( $duedate );
-						if ( ! $Project->save() ) {
-							$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
-						} else {
-							$variable{'error'} .= 'Error saving duedate.';
+						if ( $param{'ddmDueDateYear'} ) {
+							my $duedate = join('-', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
+							$Project->due_date( $duedate );
+							if ( ! $Project->save() ) {
+								$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
+							} else {
+								$variable{'error'} .= 'Error saving duedate.';
+							} # end if
 						} # end if
 
-						if ( $config{'Smart Schedule'} eq 'Y' ) {
-							foreach my $signature_service_index ( $Project->signatures() ) {
-								my %sig_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $signature_service_index );
-								if ( my @Equipment = openprint::Equipment::find( 'strid'=>$sig_specs{'UsePress'} ) ) {
-								openprint::employee_schedule::insert( $log, $dbh, $project_index, $signature_service_index, $Equipment[0]->id() );
-								} # end if
-							} # end foreach signature_service_index
-						} # end if
-
-						sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Approved' );
+						openprint::service::status( $project_index, $service_index, 'Approved' );
 					} # end if
 				} else { # Not Complete
 					if ( $status ne 'Ordered' ) {
@@ -211,32 +204,36 @@ sub view {
 					} # end if
 
 					if ( (! exists $param{'rdbApproved'} ) or ($param{'rdbApproved'}  eq 'Y') ) {
-						if ( ! Date::Calc::check_date( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ) ) {
-							my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
-							if ( @ServiceTypes ) {
-								$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
-								$variable{'ErrorMessage'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-							} else {
-								$variable{'error'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-							} # end if
-							$param{'rdbApproved'} = 'N';
-						} else {
-# It's a valid duedate
-							my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
+						if ( $param{'ddmDueDateYear'} ) {
 
-							if ( $status ne 'Approved' ) {
-								openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $project_index, $service_index, $status );
-								send_proofs_approved_email( $project_index, $order_id );
-							} # end if
-							if ( $duedate ne $Project->due_date() ) {
-								$Project->due_date( $duedate );
-								if ( ! $Project->save() ) {
-									$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
-									send_duedate_change_notification( $project_index, $order_id );
+							if ( ! Date::Calc::check_date( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ) ) {
+								my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+								if ( @ServiceTypes ) {
+									$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
+									$variable{'ErrorMessage'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 								} else {
-									$variable{'error'} .= 'Error saving duedate.';
+									$variable{'error'} = 'There was an error saving the due date.  Please check that a real date was selected.';
+								} # end if
+								$param{'rdbApproved'} = 'N';
+							} else {
+# It's a valid duedate
+								my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
+
+								if ( $duedate ne $Project->due_date() ) {
+									$Project->due_date( $duedate );
+									if ( ! $Project->save() ) {
+										$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
+										send_duedate_change_notification( $project_index, $order_id );
+									} else {
+										$variable{'error'} .= 'Error saving duedate.';
+									} # end if
 								} # end if
 							} # end if
+						} # end if
+
+						if ( (!$variable{'error'}) and ($status ne 'Approved') ) {
+							openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $project_index, $service_index, $status );
+							send_proofs_approved_email( $project_index, $order_id );
 						} # end if
 					} elsif ( $param{'rdbApproved'} eq 'N' ) { # NOT APPROVED
 						if ( $status ne 'Proofs Out' and $status ne 'Waiting For Customer Approval' ) {

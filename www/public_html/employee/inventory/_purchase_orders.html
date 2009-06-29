@@ -77,7 +77,7 @@
 				<td><a href="purchase_order_view.html?po_id=%1$d">%7$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%8$s</a></td>
 				<td style="text-align: right;">%5$s%6$.2f</td>
-			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total(), $PO->Authorized_By()->name(), $PO->manifest_id() );
+			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total(), ( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ), $PO->manifest_id() );
 		} # end while
 		return $html;
 	) ?>

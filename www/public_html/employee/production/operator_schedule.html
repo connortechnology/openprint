@@ -10,20 +10,26 @@
 	<fieldset class="filters"><legend>Display Criteria</legend>
 		<p>
 			<label>Presses:</label>
-			<select name="Presses" multiple size="4">
+			<select name="Presses" multiple="multiple" size="4">
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
 	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
-		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
+		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/operator_schedule.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/operator_schedule.html?Presses'} ) ] );
 	} # end foreach press
 
-	if ( $session{'/employee/production/print_overview.html?Presses'} ) {
-		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/print_overview.html?Presses'} ] );
+	if ( $session{'/employee/production/operator_schedule.html?Presses'} ) {
+		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/operator_schedule.html?Presses'} ] );
 	} else {
 		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
 ) ?>
+			</select>
+		</p>
+		<p>
+			<label>Operator</label>
+			<select multiple="multiple" id="operator_id" name="operator_id">
+				<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>'E', 'order'=>'lower(strfirstname),lower(strlastname)') ], [ split ';', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">
@@ -42,7 +48,7 @@
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="font-size:16px; font-weight:bold;"><a href="/employee/production/print_overview.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
+			$html .= '<div class="PressColumn" ><a href="/employee/production/operator_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
 		} # end foreach
 		return $html;
 		) ?>
