@@ -534,13 +534,14 @@ sub datetime_text {
 
 sub save_params {
 	my ( $url, @keys ) = @_;
-	$session{$url.'?lastupdated'} = time;
 
 	foreach ( @keys ) {
 		if ( ref $param{$_} eq 'ARRAY' ) {
 			$session{"$url?$_"} = join(';', @{$param{$_}} );
+			$session{$url.'?lastupdated'} = time;
 		} elsif ( exists $param{$_} ) {
 			$session{"$url?$_"} = $param{$_};
+			$session{$url.'?lastupdated'} = time;
 		} # end if
 	} # end foreach
 } # end sub save_params
