@@ -835,3 +835,21 @@ function update_duration(form, starting_prefix, ending_prefix ) {
     } // end if
 } // end function update_duration
 
+function setup_ie_menu() {
+	if (document.all && document.getElementById) {
+		var navRoot = document.getElementById("menubar");
+		if ( navRoot ) {
+			for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
+				var node = navRoot.childNodes[i];
+				if (node.nodeName=='LI') {
+					node.onmouseover=function() {
+						this.className+=' over';
+					}
+					node.onmouseout=function() {
+						this.className=this.className.replace(' over', '');
+					}
+				} // end if
+			} // end for
+		} // end if
+	}
+} // end function setup_ie_menu
