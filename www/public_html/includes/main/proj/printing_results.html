@@ -325,7 +325,7 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input type="text" id="TotalBaseSetupRun<?QTYIndex?>" name="TotalBaseSetupRun<?QTYIndex?>" value="<? echo ( $$variable{'TotalBaseSetupRun'.$$variable{'QTYIndex'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+		<input type="text" id="OverTotal<?QTYIndex?>" name="OverTotal<?QTYIndex?>" value="<? echo ( $$variable{'OverTotal'.$$variable{'QTYIndex'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
 	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -342,7 +342,7 @@
 		<input type="hidden" id="OverrideBase<?QTYIndex?>" name="OverrideBase<?QTYIndex?>" value="<? echo (  $$variable{'OverrideBase'.$$variable{'QTYIndex'}} ) ?>" />
 		<input type="hidden" id="OverRun<?QTYIndex?>" name="OverRun<?QTYIndex?>" value="<? echo ( $$variable{'OverRun'.$$variable{'QTYIndex'}} ) ?>" />
 		<input type="hidden" id="OverrideRun<?QTYIndex?>" name="OverrideRun<?QTYIndex?>" value="<? echo (  $$variable{'OverrideRun'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" id="TotalBaseSetupRun<?QTYIndex?>" name="TotalBaseSetupRun<?QTYIndex?>" value="<? echo ( $$variable{'TotalBaseSetupRun'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" id="OverTotal<?QTYIndex?>" name="OverTotal<?QTYIndex?>" value="<? echo ( $$variable{'OverTotal'.$$variable{'QTYIndex'}} ) ?>" />
 		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>

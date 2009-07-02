@@ -1308,5 +1308,14 @@ sub basis_height {
 	return $$self{'basis_height'};
 } # end sub basis_height
 
+sub sheet_weight {
+	my ( $self ) = @_;
+	$$self{'width'} * $$self{'height'} * $self->wpsi();
+} # end sub sheet_weight
+sub start_sheet_weight {
+	my ( $self ) = @_;
+	$$self{'start_width'} * $$self{'start_height'} * $self->wpsi();
+} # end sub start_sheet_weight
+
 1;
 __END__

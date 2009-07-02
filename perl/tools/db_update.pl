@@ -471,6 +471,13 @@ $dbh->do(q{alter table tbl_Services rename to Services});
 	sql::end_transaction( $dbh, $ac );
 	$version = 1600;
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Services LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'owner_id'} ) {
+		$dbh->do('alter table services add owner_id INTEGER');
+		$dbh->do('alter table services add FOREIGN KEY (owner_id) REFERENCES Companies (id)');
+	} # end if
+} # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Categories LIMIT 1', {} );
 if ( $data ) {
@@ -694,6 +701,14 @@ if ( $data ) {
 	} # end if
 } # end if
 
+foreach my $E ( openprint::Equipment::find('Specifications'=>{'Cutting Capable'=>'Y','Stitching Capable'=>'Y'}) ) {
+	foreach my $Spec ( $E->Specifications() ) {
+		if ( $Spec->name() =~ /Cutting Capable/ ) {
+			$Spec->value('When Stitching');
+			$Spec->save();
+		} # end if
+	} # end foreach
+}
 foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'Y'}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		if ( $Spec->name() =~ /^(\d+)PageSignatureFoldRunSpeed$/ ) {
@@ -1335,7 +1350,7 @@ if ( ! openprint::ServiceType::find('name'=>'Paper') ) {
     my $PaperService = new openprint::ServiceType();
     $PaperService->save({'name'=>'Paper',
             'description'=>'Paper',
-            'url'=>'',
+            'url'=>'Paper.html',
             'type'=>'Paper',
             'category'=>'Materials',
             'sorting'=>undef,

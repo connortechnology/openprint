@@ -370,3 +370,6 @@ div.Service span.TwoColumns {
 	width: 50%;
 	float: left;
 }
+img.Override {
+	height: 16px;
+}

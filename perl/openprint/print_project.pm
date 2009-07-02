@@ -1117,8 +1117,7 @@ sub calc {
 # This will add bindery services, and a printing service
 			$specs{'Status'} = openprint::print::multipage_signatures( \%specs, $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0] );
 		} else {
-# Non-book
-
+			# Non-book
 			if ( $specs{'Colours'} eq '4/4' ) {
 				$specs{'chkBlackSideOne'} = undef;
 				$specs{'chkBlackSideTwo'} = undef;
@@ -1176,7 +1175,6 @@ sub calc {
 				} # end foreach
 			} # end if
 
-
 			@specs{'rdbAqueousSideOne','rdbAqueousSideTwo'} = @specs{'Aqueous','Aqueous'};
 			my $ac = sql::start_transaction( $dbh );
 			foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','rdbAqueousSideOne','rdbAqueousSideTwo','PageQuantity' ) {
@@ -1191,7 +1189,7 @@ sub calc {
 			} else {
 				openprint::service::delete_service_spec( $$Project{'id'}, $$services{''}[0], 'OverridePrintingType1' );
 			} # end if
-			if ( $specs{'ProjectType'} eq 'PresentationFolders' ) {
+			if ( $ProjectType->name() eq 'PresentationFolders' ) {
 				foreach my $spec ( 'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketRight','chkPocketCenter' ) {
 					if ( $printing_specs{$spec} ne $specs{$spec} ) {
 						openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $specs{$spec} );
@@ -1203,14 +1201,14 @@ sub calc {
 			} # end if
 			sql::end_transaction( $dbh, $ac );
 			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'Printing' );
-			@specs{'txtWidth','txtHeight','chkPocketCenter','alert'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert'};
-			$specs{'Status'} = 'uncalculated' if $$sig_specs{'Status'} eq 'uncalculated';
+			@specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
 			%printing_specs = %{$sig_specs};
 		} # end if printing
 
 		if ( $specs{'Status'} eq 'uncalculated' ) {
 			delete $specs{'txtPrice1'};
 			$specs{'alert'} .= 'Problem calculating printing';
+$log->warn( $printing_specs{'alert'} );
 			return jsrs::encode_pairs(%specs);
 		} # end if
 

@@ -51,6 +51,10 @@ sub load {
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
+	if ( ! $table ) {
+		$log->error( 'NO table for type ' . $type );
+		return;
+	} # end if
 
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );

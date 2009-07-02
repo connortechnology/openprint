@@ -571,3 +571,6 @@ h1,h2,h3,h5 {
 div#NewDimensions {
 	display: none;
 }
+img.Override {
+	height: 16px;
+}

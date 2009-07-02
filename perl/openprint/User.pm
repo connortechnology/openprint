@@ -8,16 +8,19 @@ require openprint::logs;
 require openprint::Usergroup;
 use openprint ();
 use strict;
-use vars qw( $log $dbh %config %variable %param %fields %transforms %defaults );
+use vars qw( $log $dbh %config %variable %param %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 *param = \%openprint::param;
 *variable = \%openprint::variable;
+$table = 'Users';
+$serial = 'users_id_seq';
 
 my $debug = 0;
 
 %fields = (
+	'id'				=>	'id',
 	'company_id'		=>	'company_id',
 	'salutation'		=>	'salutation',
 	'title'				=>	'title',
@@ -75,12 +78,6 @@ my $debug = 0;
 	'wage'				=>	undef,
 	'deleted'			=>	0,
 );
-
-sub get {
-	my $self = shift;
-
-	return @$self{@_};
-} # end sub get
 
 sub set {
 	my ( $self, $params ) = @_;

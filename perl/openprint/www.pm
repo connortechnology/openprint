@@ -519,11 +519,11 @@ $openprint::log->debug("$1");
 		} else {
 			my $module = 'openprint::' . join('_', ($first, $second )	);
 			eval( "require $module;" );
-			$log->warn( "Eval error of require, Reason: " . $@ );	# if $@;
+			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
 			if ( $proc ) {
 			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
+			$log->warn( "Eval error of ($proc), Reason: " . $@ )  if $@;
 			} # end if
 		} # end if main:$second
 
