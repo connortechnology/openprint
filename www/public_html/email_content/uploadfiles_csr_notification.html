@@ -109,23 +109,9 @@ OR:
 		<tbody>
 <? echo (
 	my $html;
-	foreach my $index ( 1 .. 5 ) {
-		if ( $param{'fileUpload'.$index} ) {
-			my $filename = $param{'fileUpload'.$index};
-			$filename =~ s/.*[\/\\](.*)/$1/;
-			$filename =~ s/ /_/g;
-			my $size = $r->upload('fileUpload'.$index)->size();
-			if ( $size > 1048576 ) {
-				$size = sprintf( '%.3f MB', $size / 1048576 );
-			} elsif ( $size > 1024 ) {
-				$size = sprintf( '%.3f KB', $size / 1024 );
-			} else {
-				$size .= ' B';
-			} # end if
-
-			$html .= qq~<tr><td nowrap="nowrap">$filename</td><td>$param{'txtDescription'.$index}</td><td align="right">$size</td></tr>~;
-		} # end if
-	} # end foreach
+	foreach my $File ( openprint::File::find('upload_id'=>$param{'serial'} ) ) {
+		$html .= sprintf('<tr><td nowrap="nowrap">%s</td><td>%s</td><td align="right">%s</td></tr>', $File->filename(), $File->description(), $File->size_text() );
+	} # end foreach File
 	return $html;
 ) ?>
 		</tbody>
