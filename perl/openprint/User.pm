@@ -39,18 +39,18 @@ my %fields = (
 	'password',			=>	'strpassword',
 	'ftp_active'		=>	'ftp_active',
 	'web_active'		=>	'ysnaccountactivation',
-	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
+	'howdidyouhearaboutus'		=>	'howdidyouhearaboutus',
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
-	'purchasing_limit'	=>	'purchasing_limit',
+	'purchasing_limit'			=>	'purchasing_limit',
 	'purchasing_total_limit'	=>	'purchasing_total_limit',
-	'notes'				=>	'notes',
+	'notes'						=>	'notes',
 ); # end %fields
 
 my %transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
-	'created_on'		=> [ 's/.*//g' ],
-	'updated_on'		=> [ 's/.*//g' ],
+	'created_on'		=>	[ 's/.*//g' ],
+	'updated_on'		=>	[ 's/.*//g' ],
 	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
 	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 );
@@ -373,6 +373,10 @@ sub find {
 	if ( exists $param{'email_like'} ) {
 		$sql .= ' AND strEmail LIKE ?';
 		push @values, lc $param{'email_like'};
+	} # end if
+	if ( exists $param{'purchasing_limit_>='} ) {
+		$sql .= ' AND purchasing_limit >= ?';
+		push @values, $param{'purchasing_limit_>='};
 	} # end if
 	if ( exists $param{'web_active'} ) {
 		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
