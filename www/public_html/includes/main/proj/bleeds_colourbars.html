@@ -1,10 +1,14 @@
 <div class="BleedsColourBars" id="BleedsColourBars<?Group?>" >
+<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 	<fieldset><legend>Bleeds, Colour Bars, Crop Marks</legend>
+<? endif ( $$variable{'Mode'} ne 'Easy' ) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 <? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 		<!--#include virtual="/includes/main/proj/bleed.html"-->
 <? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
 		<!--#include virtual="/includes/main/proj/colour_bars.html"-->
 		<!--#include virtual="/includes/main/proj/cropmarks.html"-->
+<? if ( $$variable{'Mode'} ne 'Easy' ) ?>
 	</fieldset>
+<? endif ( $$variable{'Mode'} ne 'Easy' ) ?>
 </div>

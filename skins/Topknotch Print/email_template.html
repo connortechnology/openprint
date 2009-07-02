@@ -2,10 +2,10 @@
 <html>
 	<head>
 		<!--***This e-mail was designed for an HTML E-mail client. If you can not read this properly, save and open with a Internet browser.***  -->
-		<title><? echo ( $openprint::config{'SiteTitle'} ) ?></title>
-		<base href="<? echo ( $openprint::config{'ExternalSiteURL'} ) ?>"/>
+		<title><? echo ( $config{'SiteTitle'} ) ?></title>
+		<base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
 		<style type="text/css">
-			<!--#include virtual="/skins/<? echo ( $openprint::config{'SiteTitle'} ) ?>/css/email.css"-->
+			<? echo ( ssi::include( $config{'SkinPath'} . '/css/email.css' ); ) ?>
 		</style>
 	</head>
 	<body>

@@ -22,6 +22,8 @@ require ssi;
 require misc;
 require configuration;
 require openprint::login;
+require openprint::Upload;
+require openprint::File;
 
 use openprint;
 use vars qw( %variable %session %param %config $log $dbh );
@@ -101,7 +103,6 @@ sub handler {
 <totalsize>$size</totalsize>
 <elapsedtime>$elapsedtime</elapsedtime>
 <serial>}.$r->param('serial').q{</serial></response>};
-		#$log->debug($output);
 		$request->content_type('text/xml');
 		$r->print( $output );
 	} else {
@@ -117,12 +118,12 @@ sub handler {
 		} # end if
 		upload_files( $r, $log, $dbh, \%variable );
 		my $page = '/upload/_upload_complete.html';
+		my $content;
 		if (-e $config{'SkinPath'} . $page) {
-			$page = $config{'SkinPath'} . $page;
+			$content = misc::load_file( $log, $config{'SkinPath'}.$page );
 		} else {
-			$page = $ENV{'DOCUMENT_ROOT'} . $page;
-		}
-		my $content = misc::load_file( $log, $page );
+			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.$page );
+		} # end if
         $variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		my @page_path = split('/', $page );
         my $filename = pop @page_path;
@@ -235,23 +236,22 @@ sub upload_files {
 				my $upload = $r->upload( 'fileUpload'.$index );
 				if ( ! $upload->link(  "$config{'ProjectFilesPath'}$destdir$filename" ) ) {
 					$$variable{'error'} .= "There was an error saving file $param{'fileUpload'.$index}: $!<br/>";
-					return;
+					next;
 				} else {
 					$$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
 
-				if ( $param{'project_id'} ) {
-					  sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE project_id=? AND filename=?}, 
-					  $param{'project_id'} ? $param{'project_id'} : undef, $destdir.$filename );
-				} else {
-				   sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE filename=?}, $destdir.$filename );
-				} # end if
-				sql::insert( $log, $dbh, 'project_files', [
-						'project_id',	$param{'project_id'} ? $param{'project_id'} : undef,
-						'filename',		$destdir.$filename,
-						'description',	$param{'txtDescription'.$index},
-						'upload_id',	$param{'serial'},
-						] );
+				foreach my $File ( openprint::File::find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
+					$File->delete();
+				} # end foreach
+				my $File = new openprint::File();
+				$$variable{'error'} .= $File->save({
+						'project_id'	=>	( $param{'project_id'} ? $param{'project_id'} : undef ),
+						'filename'		=>	$destdir.$filename,
+						'description'	=>	$param{'txtDescription'.$index},
+						'upload_id'		=>	$param{'serial'},
+						'size'			=>	$upload->size(),
+						} );
 			} # end if
 		} # end foreach
 # Notify CSR, and Customer of upload
@@ -261,7 +261,6 @@ sub upload_files {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 		} # end if
 		$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
-		my $csr_id;
 		my $to;
 		my $from;
 		if ( $session{'user_id'} ) {
@@ -270,22 +269,23 @@ sub upload_files {
 		} else {
 			$from = $param{'txtEmailAddress'};
 			if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
-				$from = $openprint::config{'OrderingEmail'};
+				$from = $config{'OrderingEmail'};
 			} # end if
 		} # end if
 		if ( $session{'company_id'} ) {
-			( $csr_id ) = sql::execute( $log, $dbh, q{SELECT lngSalesPerson FROM Company WHERE Index=?}, $session{'company_id'} );
-		} # end nif
-		if ( $csr_id ) {
-			my $CSR = new openprint::User( $csr_id );
-			$to = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email') ),
+			my $Company = new openprint::Company( $session{'company_id'} );
+			if ( $Company->salesrep_id() ) {
+				$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') );
+			} else {
+				$to = $config{'OrderingEmail'};
+			} # end if
 		} else {
-			$to = $openprint::config{'OrderingEmail'};
+			$to = $config{'OrderingEmail'};
 		} # end if
 		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		my $body = ssi::variable_substitution( \$email_template, $variable );
 		my %mail = (
-						SMTP    => $openprint::config{'Mail Server'},
+						SMTP    => $config{'Mail Server'},
 						FROM    => $from,
 						TO		=> $to,
 						#BCC		=>	'iconnor@penultima.org',
