@@ -718,7 +718,7 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$Fold->name( $pages.'PageFold' );
 			$Fold->type( $pages . 'PageFold' );
 			$Fold->pages( $pages );
-			$Fold->max_imposition( $pages == 4 ? 4 : 1 );
+			$Fold->max_imposition( 1 );
 			$_ = $Fold->save();
 			die $_ if $_;
 			my $FS = new openprint::FoldSpecification();
@@ -734,7 +734,7 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$Fold->equipment_id( $E->id() );
 			$Fold->name( $type.'Fold' );
 			$Fold->type( $type.'Fold' );
-			$Fold->max_imposition( 4 );
+			$Fold->max_imposition( 1 );
 			$_ = $Fold->save();
 			die $_ if $_;
 			my $FS = new openprint::FoldSpecification();
@@ -745,8 +745,39 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			die $_ if $_;
 			$Spec->delete();
 		}
-	} 
+	}  # end foreach Spec
+	foreach my $Spec ( $E->Specifications() ) {
+		my $found = 0;
+		if ( $Spec->name() =~ /^Runspeed Adjustment$/ ) {
+			$found = 1;
+			foreach my $Fold ( $E->Folds() ) {
+				foreach my $FoldSpec ( $Fold->Specifications() ) {
+					if ( ! ( $FoldSpec->min_weight() or $FoldSpec->max_weight() ) ) {
+						my $FoldSpec2 = $FoldSpec->copy();
+						$FoldSpec2->save({
+							'runspeed'=>$FoldSpec->runspeed() - ( $FoldSpec->runspeed()*($Spec->value()/100) ),
+							'min_weight'=>$Spec->min(), 
+							'max_weight'=>$Spec->max(),
+							'interpolate'	=>	$Spec->interpolate(),
+						});
+					} # end if
+				} # end foreach FoldSpec
+			} # end foreach
+			$Spec->delete();
+		} # end if Spec->name
+		if ($found) {
+			foreach my $Fold ( $E->Folds() ) {
+				foreach my $FoldSpec ( $Fold->Specifications() ) {
+					if ( ! ( $FoldSpec->min_weight() or $FoldSpec->max_weight() ) ) {
+						$FoldSpec->delete();
+					} # endif
+			} # end foreachd
+			} # end foreachd
+		} # end if found
+	}  # end foreach Spec
 }
+
+
 
 my $FoldingService;
 my @FoldingServices = openprint::Service::find('name'=>'Folding');

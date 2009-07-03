@@ -51,9 +51,9 @@
 			<div class="Header">
 					<span style="float: left; font-size: 30px; color: #687796;">Topknotch Quote</span>
 				<!--<img style="float: left; margin-right: 15px;" src="/images/main/header/logo.jpg">-->
-				<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+				<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
-				<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+				<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 				<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
 			</div>
 			<!--#include virtual="/includes/administrator_menu.html"-->
