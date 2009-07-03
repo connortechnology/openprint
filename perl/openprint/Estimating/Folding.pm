@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -830,12 +830,14 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {
+$openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $imposition );
 					%setupPrice = openprint::service::get_price_object( 'FoldMakeReady', $imposition, $Equipment );
 				} # end if
 				$Breakdown .= 'MR: ';
 				if ( lc $setupPrice{'units'} eq 'per form' ) {
 					$setupPrice{'Total'} = $setupPrice{'Price'};
-					$Breakdown .= sprintf( '$%.2f<br/>', $totalPrice );
+					$totalPrice += $setupPrice{'Total'};
+					$Breakdown .= sprintf( '($%1$.2f%2$s=$%3$.2f)', @setupPrice{'Price','units','Total'} );
 				} elsif ( ! sets::isin( $fold_type, $makereadies{$Equipment->id()} ) ) {
 					if ( lc $setupPrice{'units'} eq 'per imposition' ) {
 						$setupPrice{'Total'} = $setupPrice{'Price'} * $imposition;

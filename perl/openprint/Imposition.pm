@@ -94,6 +94,15 @@ sub get {
 	my ( $self, @fields ) = @_;
 	return map { $self->$_ } @fields;
 } # end sub get
+sub to_string {
+	my $self = shift;
+	my $string = sprintf('%dout %dx%d', @$self{'imposition','columns','rows'} );
+	if ( $$self{'dutch_columns'} ) {
+		$string .= sprintf('+%dx%d', @$self{'dutch_columns','dutch_rows'} );
+	} # end if
+	$string .= ' ' . $$self{'image_orientation'};
+	return $string;
+} # end sub to_string
 
 sub set {
 	my $self = shift;

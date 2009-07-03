@@ -249,39 +249,38 @@ function filterDDM( filter, ddm ) {
 		ddm.selectedIndex = 0;
 		return;
 	} // end if
-	var old_selected = ddm.selectedIndex;
+	var old_selected_index = ddm.selectedIndex;
 
 	var chunk1 = filter.value.toLowerCase();
-	if ( ddm.selectedIndex > 0 ) {
-		for ( var index = ddm.selectedIndex; index; index -= 1 ) {
+	var chunk2 =  ddm.options[old_selected_index].text.toLowerCase();
+
+	if ( chunk1 > chunk2 ) {
+		// search down
+		for ( var index = old_selected_index-1; index > 0; index -= 1 ) {
+			var chunk2 = ddm.options[index].text.toLowerCase();
+			if ( chunk1 <= chunk2 ) {
+				ddm.selectedIndex = index;
+				return true;
+			} // end if
+		} // end for
+		ddm.selectedIndex = 0;
+		return 0 != old_selected_index;
+	} else if ( chunk2 > chunk1 ) {
+		// search up
+		for ( var index = old_selected_index+1; index < ddm.options.length; index += 1 ) {
 			var chunk2 = ddm.options[index].text.toLowerCase();
 			if ( chunk1 > chunk2 ) {
+				// Need to back up 1
+				ddm.selectedIndex = index-1;
+				return index != old_selected_index;
+			} else if ( chunk1 == chunk2 ) {
 				ddm.selectedIndex = index;
-				break;
+				return index != old_selected_index;
 			} // end if
 		} // end for
 	} // end if
-	if ( ddm.selectedIndex == 0 && ddm.options.length ) 
-		ddm.selectedIndex = 1;
 
-	for ( var index = ddm.selectedIndex; index < ddm.options.length; index += 1 ) {
-		var chunk2 = ddm.options[index].text.toLowerCase();
-		if ( chunk1 <= chunk2 ) {
-			ddm.selectedIndex = index;
-			return index != old_selected;
-		} // end if
-		//} // end if
-	} // end for
-   // Assumes that the first entry is "SElect One"
-	for ( var index = 1; index < ddm.selectedIndex; index += 1 ) {
-		var chunk2 = ddm.options[index].text.toLowerCase();
-		if ( chunk1 <= chunk2 ) {
-			ddm.selectedIndex = index;
-			return index != old_selected;
-		} // end if
-		//} // end if
-	} // end for
-	return ddm.selectedIndex != old_selected;
+	return ddm.selectedIndex != old_selected_index;
 
 } // end function filterDDM
 
@@ -398,27 +397,25 @@ function isLeapYear(year) {
  *	if specified it will set the default selection to the passed selected day.
  */
 function setDaysDropDown(year, month, dayDropDown, selectedDay) {
+	selectedDay = parseInt(selectedDay);
 	var numberOfDays = returnNumberOfDays(month,year);
 	if ( numberOfDays < selectedDay ) {
 		selectedDay = numberOfDays;
 	} // end if
 
-	if ( dayDropDown.options[0].value == '' ) {
-		numberOfDays = parseInt( numberOfDays ) + 1;
-		selectedDay = parseInt( selectedDay ) + 1;
-	} // end if
-
-	if ( dayDropDown.options.length > numberOfDays ) {
-		for ( var i = dayDropDown.options.length; i > numberOfDays; i -= 1 ) {
-			dayDropDown.options[i-1] = null;
+	if ( dayDropDown.options[dayDropDown.options.length-1].value > numberOfDays ) {
+		for ( var i = dayDropDown.options.length-1; i > numberOfDays; i -= 1 ) {
+			if ( dayDropDown.options[i].value > numberOfDays ) {	
+				dayDropDown.options[i] = null;
+			} // end if
 		} // end for
-	} else if ( dayDropDown.options.length < numberOfDays ) {
-		for ( var i = dayDropDown.options.length; i < numberOfDays; i += 1 ) {
-			dayDropDown.options[i] = new Option( i+1, i+1 );
+	} else if ( dayDropDown.options[dayDropDown.options.length-1].value < numberOfDays ) {
+		for ( var i = parseInt(dayDropDown.options[dayDropDown.options.length-1].value); i < numberOfDays; i += 1 ) {
+			dayDropDown.options[dayDropDown.options.length] = new Option( i+1, i+1 );
 		} // end for
 	} // end if
 
-	dayDropDown.options[selectedDay-1].selected = true;
+	ddm_select_by_value( dayDropDown, selectedDay );
 }
 
 function Serialize( form ) {
@@ -959,3 +956,22 @@ function update_duration(form, starting_prefix, ending_prefix ) {
 		$('duration').innerHTML = days +'days';
 	} // end if
 } // end function update_duration
+
+function setup_ie_menu() {
+	if (document.all && document.getElementById) {
+		var navRoot = document.getElementById("menubar");
+		if ( navRoot ) {
+			for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
+				var node = navRoot.childNodes[i];
+				if (node.nodeName=='LI') {
+					node.onmouseover=function() {
+						this.className+=' over';
+					}
+					node.onmouseout=function() {
+						this.className=this.className.replace(' over', '');
+					}
+				} // end if
+			} // end for
+		} // end if
+	}
+} // end function setup_ie_menu

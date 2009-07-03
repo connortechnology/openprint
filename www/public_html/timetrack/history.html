@@ -40,13 +40,6 @@
 					<? echo ( openprint::Company::get_dropdown( $session{'/timetrack/history.html?company_id'} ); ) ?>
 				</select>
 			</p>
-<? eval (
-	ssi::setup_date_select( '/timetrack/history.html', 'starting', -31 );
-
-	$session{'/timetrack/history.html?invoiced'} = '0' if ! $session{'/timetrack/history.html?invoiced'};
-	$session{'/timetrack/history.html?paid'} = '0' if ! $session{'/timetrack/history.html?paid'};
-	$session{'/timetrack/history.html?employee_id'} = $session{'user_id'} if ! exists $session{'/timetrack/history.html?employee_id'};
-) ?>
 			<p>
 				<label>Dates:</label>
 				<span class="DateSelector">

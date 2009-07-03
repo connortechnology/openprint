@@ -102,6 +102,18 @@ sub children {
 	return openprint::Location::find( 'parent_id' => $$self{'id'} );
 } # end sub children
 
+sub get_all_children {
+	my $self = shift;
+	my @results;
+	
+	foreach my $child ( $self->children() ) {
+		# Prevent infinite loop
+		next if sets::isin( $child->id(), [ map { $_->id() } @results ] );
+		push @results, $child, $child->get_all_children();
+	} # end foreach child
+	return @results;
+} # end sub get_all_children
+
 sub parent {
 	my $self = shift;
 	return new openprint::Location( $$self{'parent_id'}) if $$self{'parent_id'};

@@ -18,12 +18,14 @@ use MIME::Base64;
 use Getopt::Long;
 use Compress::Zlib;
 
-use vars qw( $log $dbh %config $use_compression );
+use vars qw( $log $dbh %config $use_compression $debug );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 $use_compression = 1;
+$debug = 0;
+my $mangle = 1;
 
 $log = logger->new();
 $log->{level} = 'warn';
@@ -87,13 +89,13 @@ foreach my $Equipment ( @Equipment ) {
 			# Will ignore ., .., any hidden file
 			next if $file =~ /^\./; 
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-#$log->debug("Parsed to $file_base, $side, $extension from $file");
+$log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			next if $side ne 'B';
 
 			my $out_base = $file_base;
 			$out_base =~ s/\./_/g;
 
-			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.*?)S?g?(\d+)/i;
+			my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)S?g?(\d+)/i;
 	#print "File: $file Docket $docket, Operattor: $ppo, Name: $name, Sig: $sig, $side\n";
 			$sig = 0 if ! $sig;
 			my $data;
@@ -108,18 +110,35 @@ foreach my $Equipment ( @Equipment ) {
 				print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."B.$extension\n" ;
 				next;
 			} # end if
+			if ( ! flock(FH, LOCK_EX) ) {
+				$log->error("Unable to lock B!\n");
+				close(FH);
+				next;
+			} # end if
 
 			my @Back;
 			my $back_flag = 0;	
 			while ( <FH> ) {
-				$back_flag = 1 if ( $_ =~ /CIP3BeginBack/ );
-				if ( $_ =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
+				my $line = $_;
+				$back_flag = 1 if ( $line =~ /CIP3BeginBack/ );
+if ( $mangle ) {
+				if ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+					my $job_name = $1;
+					if ( length $job_name > 16 ) {
+						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig."SdB) def\r\n";
+						} else {
+							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+						} # end if
+					} # end if
+				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 					if ( ! $1 ) {
-						$_ = "/CIP3AdmJobCode ($docket) def";
+						$line = "/CIP3AdmJobCode ($docket) def\r\n";
 					} # end if
 				} # end if
-				push @Back, $_ if ( $back_flag );
-				last if $_ =~ /CIPEndBack/;
+} # end if
+				push @Back, $line if ( $back_flag );
+				last if $line =~ /CIPEndBack/;
 			} # end while
 			close( FH );
 			if ( ! @Back ) {
@@ -133,31 +152,53 @@ foreach my $Equipment ( @Equipment ) {
 				print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension\n" ;
 				next;
 			} # end if
+			if ( ! flock($A, LOCK_EX) ) {
+				$log->error("Unable to lock A!\n");
+				close($A);
+				next;
+			} # end if
 			my $fileA = $file_base.'A';
 			my $fileM = $file_base.'M';
-
+			my $complete = 0;
 			while ( <$A> ) {
 				my $line = $_;
 				next if $line =~ /^CIP3EndSheet/;
+				if ( $line =~ /%%CIP3EndOfFile/ ) {
+					$complete = 1;
+				} # end if
 				$line =~ s/$fileA/$fileM/g;
 				if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 					$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
-				} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
+				} 
+if ( $mangle ) {
+				if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def(.*)/ ) {
 					if ( ! $1 ) {
-						$line = "/CIP3AdmJobCode ($docket) def";
+						$line = "/CIP3AdmJobCode ($docket) def$2";
+					} # end if
+				} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.+)\)\s+def/ ) {
+					my $job_name = $1;
+					if ( length $job_name > 16 ) {
+						if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+							$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig."SdA) def\r\n";
+						} else {
+							$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+						} # end if
 					} # end if
 				} # end if
+} # end if
 
 				if ( $line =~ /CIP3EndOfFile/ ) {
-					foreach ( @Back ) {
-						$data .= $_;
-					} # end foreach
+					$data .= join('', @Back );
 				} # end if
 				$data .= $line;
 			} # end while
 			close $A;
 
-			
+			if ( ! $complete ) {
+$log->error("File was not complete! $file_base");
+next;
+			} # end if
+$log->debug('Storing PPF');
 			my $PPF = store_PPF( $docket, $sig, $side, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
@@ -168,34 +209,63 @@ foreach my $Equipment ( @Equipment ) {
 	foreach my $file ( @filenames ) {
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
+
+        # CHeck AGE
+		my $mtime = ( stat $file )[9];
+		if ( time - $mtime < 2*60 ) {
+			next;
+		} # end if
+
 		my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-#$log->debug("Parsed to $file_base, $side, $extension from $file");
+$log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 		my $out_base = $file_base;
 		$out_base =~ s/\./_/g;
 		my $data;
 
-		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.*?)S?g?(\d+)/i;
-		if ( ! $docket ) {
-			$log->error("Docket $docket not found for ($file_base) ($file)");
-			next;
-		} # end if docket
+		my ( $docket, $ppo, $name, $sig ) = $file_base =~ /^(\d\d\d\d\d)(\w\w)?_?(.+?)S?g?(\d+)/i;
 
 		if ( ! open ( IN, '< ' . $$Equipment{'cip3_in'}.'/'.$file ) ) {
 			print "Error opening for read:" . $$Equipment{'cip3_in'}.'/'.$file."\n" ;
 			next;
 		} # end if
+		if ( ! flock(IN, LOCK_EX) ) {
+			$log->error("Unable to lock CIP FILE!\n");
+			close(IN);
+			next;
+		} # end if
+		my $complete = 0;
 		while ( <IN> ) {
 			my $line = $_;
+			if ( $line =~ /%%CIP3EndOfFile/ ) {
+				$complete = 1;
+			} 
 			if ( $line =~ /^\/CIP3AdmSheetName \(Sheet (\d*)\) def/ ) {
 				$line = sprintf("/CIP3AdmSheetName (Sig#%dSheet#%d) def\r\n", 1*$sig, $1 );
-			} elsif ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def$/ ) {
+			} 
+if ( $mangle ) {
+			if ( $line =~ /^\/CIP3AdmJobCode\s+\((.*)\)\s+def/ ) {
 				if ( ! $1 ) {
-					$line = "/CIP3AdmJobCode ($docket) def";
+					$line = "/CIP3AdmJobCode ($docket) def\r\n";
 				} # end if
-			} # end if_
+			} elsif ( $line =~ /^\/CIP3AdmJobName\s+\((.*)\)\s+def/ ) {
+				my $job_name = $1;
+#$log->warn("Truncating JobName $job_name");
+				if ( length $job_name > 16 ) {
+					if ( my ( $pre, $name, $sig ) = ( $job_name =~ /(\d\d\d\d\d\w\w)(.+)SIG(\d\d\d)/ ) ) {
+						$line = '/CIP3AdmJobName ('.$pre.(substr($name,0,4)).'Sg'.$sig.'Sd'.$side.") def\r\n";
+					} else {
+						$line = '/CIP3AdmJobName ('.(substr($job_name,0,16)).") def\r\n";
+					} # end if
+				} # end if
+			} # end if
+} # end if
 			$data .= $line;
 		} # end while
 		close IN;
+		if ( ! $complete ) {
+			$log->error("File was not complete! $file_base");
+			next;
+		} # end if
 		my $PPF = store_PPF( $docket, $sig, $side, $data );
 		$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 		unlink $$Equipment{'cip3_in'}.'/'.$file;
@@ -208,57 +278,57 @@ $dbh->disconnect() if $dbh;
 sub store_PPF {
 	my ( $docket, $sig, $side, $data ) = @_;
 
-	foreach my $PPF (openprint::CIP3_PPF::find('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
-		$PPF->delete();
-	} # end foreach
-
 	my $compressed_data;
 	if ( $use_compression ) {
 		$compressed_data = Compress::Zlib::compress($data);
 		$log->debug("Compressed PPF from " . length $data . " to " . length $compressed_data );
 	} # end if
 	my $PPF = new openprint::CIP3_PPF();
-	$_ = $PPF->save({
+	$PPF->set({
 			'docket'    	=>  $docket,
 			'signature' 	=>  $sig,
 			'side'      	=>  $side,
 			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
-			'compressed'		=>	$compressed_data ? 1 : 0,
+			'compressed'	=>	$compressed_data ? 1 : 0,
 			});
-	$log->error($_) if $_;
-	$PPF->generate_previews(undef,1);
 
-	foreach my $Project ( openprint::Project::find('docket'=>$docket) ) {
-		my $services = $Project->services();
+	if ( $docket ) {
+		$_ = $PPF->save();
+		$log->error($_) if $_;
+		$PPF->generate_previews(undef,1);
 
-		my $found = 0;
-		foreach my $ss_id ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-			if ( $$services{'AdditionalSignature'} ) {
-				if ( $sig == $$sig_specs{'SignatureIndex'} ) {
+		foreach my $Project ( openprint::Project::find('docket'=>$docket,'limit'=>10) ) {
+			my $services = $Project->services();
+
+			my $found = 0;
+			foreach my $ss_id ( $Project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+				if ( $$services{'AdditionalSignature'} ) {
+					if ( $sig == $$sig_specs{'SignatureIndex'} ) {
+						$found = 1;
+						last;
+					} # end if
+				} elsif ( $sig == $$sig_specs{'SignatureIndex'}+1 ) {
 					$found = 1;
 					last;
 				} # end if
-			} elsif ( $sig == $$sig_specs{'SignatureIndex'}+1 ) {
-				$found = 1;
-				last;
+			} # end foreach sig
+			if ( ! $found ) {
+				print "Adding new signature for $docket $sig $side\n";
+				my $ac = sql::start_transaction( $dbh );
+				$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+				my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );
+				openprint::service::status( $Project->id(), $print_service_index, 'Ordered' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtPrice'.$Project->ordered_quantity_index(), 0 );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Spreads' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Spreads' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $sig );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'ddmRunStyleUsed', $PPF->runstyle() ) if $PPF->runstyle();
+				sql::end_transaction( $dbh, $ac );
+				$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );
 			} # end if
-		} # end foreach sig
-		if ( ! $found ) {
-			print "Adding new signature for $docket $sig $side\n";
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
-			my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );
-			openprint::service::status( $Project->id(), $print_service_index, 'Ordered' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtPrice'.$Project->ordered_quantity_index(), 0 );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Spreads' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Spreads' );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'SignatureIndex', $sig );
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'ddmRunStyleUsed', $PPF->runstyle() ) if $PPF->runstyle();
-			sql::end_transaction( $dbh, $ac );
-			$Project->add_to_log( undef, undef, "CIP3 Adding new form $sig $side." );
-		} # end if
-	} # end foreach Project
+		} # end foreach Project
+	} # end if
 	return $PPF;
 } # end sub store_PPF
 

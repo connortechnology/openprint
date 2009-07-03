@@ -2,9 +2,9 @@
 	<input type="hidden" name="btnFunction" value="Add Docket" />
 	<fieldset><legend>Create New Docket</legend>
 		<p><label>Company:</label>
-		<select name="company_id">
-			<? echo ( openprint::Company::get_dropdown( $openprint::session{'company_id'} ); ) ?>
-		</select>
+			<select name="company_id">
+			<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
+			</select>
 		</p>
 		<p><label>Comment:</label>
 			<textarea name="Comment" rows="5"></textarea>

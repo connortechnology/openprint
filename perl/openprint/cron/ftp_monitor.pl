@@ -323,21 +323,37 @@ EOT
 
 		my $to;
 		if ( $Company->salesrep_id() ) {
-			$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') ),
+			if ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) {
+				$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') ),
+			} # end if
 		} else {
 			$to = $config{'OrderingEmail'};
 		} # end if
-		my %variable;
-		$variable{'Company'} = $Company;
-		$variable{'User'} = $User;
-		$variable{'filename'} = $file;
-		$variable{'size'} = $upload_info->{size};
+		if ( $to ) {
+			my %variable;
+			$variable{'Company'} = $Company;
+			$variable{'User'} = $User;
+			$variable{'filename'} = $file;
+			$variable{'size'} = $upload_info->{size};
 
-		if (-e $opts->{'skin_path'} . '/email_content/uploadfiles_csr_notification.html') {
-			$variable{'ReplacementText'} = misc::load_file( $log, $opts->{'skin_path'} . '/email_content/ftp_csr_notification.html' );
-		} else {
-			$variable{'ReplacementText'} = misc::load_file( $log, $opts->{'document_root'} . '/email_content/ftp_csr_notification.html' );
+			if (-e $opts->{'skin_path'} . '/email_content/uploadfiles_csr_notification.html') {
+				$variable{'ReplacementText'} = misc::load_file( $log, $opts->{'skin_path'} . '/email_content/ftp_csr_notification.html' );
+			} else {
+				$variable{'ReplacementText'} = misc::load_file( $log, $opts->{'document_root'} . '/email_content/ftp_csr_notification.html' );
+			} # end if
+			$variable{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
+			my $email_template = misc::load_file( $log, $opts->{'skin_path'} . '/email_template.html' );
+			my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
+			my %mail = (
+							SMTP    => $config{'Mail Server'},
+							FROM    => $from,
+							TO      => $to,
+							#CC		=>	'iconnor@penultima.org',
+							SUBJECT => $subject,
+					   );
+			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 		} # end if
+<<<<<<< HEAD:perl/openprint/cron/ftp_monitor.pl
 		$variable{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
 		my $email_template = misc::load_file( $log, $opts->{'skin_path'} . '/email_template.html' );
         my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
@@ -348,6 +364,8 @@ EOT
                         SUBJECT => $subject,
                    );
         misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable' ) );
+=======
+>>>>>>> 0f128a1ebc3318fedd8cc81facdf3955ebdb1699:perl/openprint/cron/ftp_monitor.pl
 	
 	} elsif ( 1 ) {
 		my $email_info = {
@@ -394,7 +412,11 @@ EOT
 					} else {
 						$email_info->{Body} .= "Content-Type: application/octet-stream\n";
 						$email_info->{Body} .= "Content-Transfer-Encoding: base64\n\n";
+<<<<<<< HEAD:perl/openprint/cron/ftp_monitor.pl
 						$email_info->{Body} .= MIME::Base64::encode_base64($attach);
+=======
+						$email_info->{Body} .= encode_base64(Encode::encode('utf-8',$attach));
+>>>>>>> 0f128a1ebc3318fedd8cc81facdf3955ebdb1699:perl/openprint/cron/ftp_monitor.pl
 					}
 
 					$email_info->{Body} .= "\n";

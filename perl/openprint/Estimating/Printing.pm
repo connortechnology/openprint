@@ -59,8 +59,6 @@ my %variables = (
 		'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 		'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
 		'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
-		'StockPrice1'=>['save','output'], 'StockPrice2'=>['save','output'], 'StockPrice3'=>['save','output'],
-		'OverrideStockPrice1'=>['save'], 'OverrideStockPrice2'=>['save'], 'OverrideStockPrice3'=>['save'],
 		'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
 		'chkCyanSideOne' => ['save'],
 		'chkMagentaSideOne' => ['save'],
@@ -148,7 +146,7 @@ my %variables = (
 		'OverBase1' =>  ['save','output'], 'OverBase2' => ['save','output'], 'OverBase3' => ['save','output'],
 		'OverSetup1' =>  ['save','output'], 'OverSetup2' => ['save','output'], 'OverSetup3' => ['save','output'],
 		'OverRun1' =>  ['save','output'], 'OverRun2' => ['save','output'], 'OverRun3' => ['save','output'],
-		'TotalBaseSetupRun1' =>  ['save','output'], 'TotalBaseSetupRun2' => ['save','output'], 'TotalBaseSetupRun3' => ['save','output'],
+		'OverTotal1' =>  ['save','output'], 'OverTotal2' => ['save','output'], 'OverTotal3' => ['save','output'],
 		'PressWashPrice1' =>  ['save','output'], 'PressWashPrice2' => ['save','output'], 'PressWashPrice3' => ['save','output'],
 		'PressWashCharge1' =>  ['save','output'], 'PressWashCharge2' => ['save','output'], 'PressWashCharge3' => ['save','output'],
 		'PressWashes1' =>  ['save','output'], 'PressWashes2' => ['save','output'], 'PressWashes3' => ['save','output'],
@@ -157,7 +155,6 @@ my %variables = (
 		'SteppingCharge1' =>  ['save','output'], 'SteppingCharge2' => ['save','output'], 'SteppingCharge3' => ['save','output'],
 		'InkTotalCharge1' =>  ['save','output'], 'InkTotalCharge2' => ['save','output'], 'InkTotalCharge3' => ['save','output'],
 		'InkMixCharge1' =>  ['save','output'], 'InkMixCharge2' => ['save','output'], 'InkMixCharge3' => ['save','output'],
-		'TotalOvers1' =>  ['save','output'], 'TotalOvers2' => ['save','output'], 'TotalOvers3' => ['save','output'],
 		'Roll2SheetCharge1'	=> ['save','output'], 'Roll2SheetCharge2'	=> ['save','output'], 'Roll2SheetCharge3'	=> ['save','output'],
 #
 
@@ -592,11 +589,6 @@ $openprint::log->debug("calc_from_impos: Stock Weight: $$price{'Stock Weight'}")
 
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $$price{'Impressions'};
 
-		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
-$openprint::log->debug("Paper Cost: $$price{'Paper Price'}");
-			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $$price{'Paper Price'} );
-		} else {
-		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			if ( $$specs{'pages_supplied'} eq 'Y' ) {
 				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
@@ -688,7 +680,7 @@ my $master_time = gettimeofday();
 
 		# if quantity overriden then the total is total of entered quantity
 		if ( ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
-	 		$$specs{'TotalBaseSetupRun'.$qty_index} = $$specs{'OverBase'.$qty_index} + $$specs{'OverSetup'.$qty_index} + $$specs{'OverRun'.$qty_index};
+	 		$$specs{'OverTotal'.$qty_index} = $$specs{'OverBase'.$qty_index} + $$specs{'OverSetup'.$qty_index} + $$specs{'OverRun'.$qty_index};
 		}
 	} # end foreach
 
@@ -1419,7 +1411,6 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size' ) if ! $$project{'BleedSize'};
 					$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 				} # end if
-$openprint::log->debug("BLeed for press: $$Press{strid}: $$project{'BleedSize'}");
 
 				my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @side_one_colours, @side_two_colours ] );
 
@@ -1609,6 +1600,7 @@ $i->display();
 }
 }
 				foreach my $imp ( @imps ) {
+					next if $imp->imposition() > $qty;
 					my $add = 1;
 					my $str = sprintf('%dx%d+%dx%d-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
 					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->type() eq 'Sheet' )
@@ -1843,17 +1835,7 @@ $i->display();
  		$$specs{'OverBase'.$qty_index} = $$stock_qt{'Net Sheet Count'};
  		$$specs{'OverSetup'.$qty_index} = $$stock_qt{'Setup Overs'};
  		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
-
-		if ( ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
-			#procedure above calculates the total otherwise ...
-		}
-		else {
-	 		$$specs{'TotalBaseSetupRun'.$qty_index} = $$specs{'OverBase'.$qty_index} + $$specs{'OverSetup'.$qty_index} + $$specs{'OverRun'.$qty_index};
-		}
-# 		$$specs{'TotalBaseSetupRun'.$qty_index} = $$specs{'OverBase'.$qty_index} + $$specs{'OverSetup'.$qty_index} + $$specs{'OverRun'.$qty_index};
-
- 		$$specs{'TotalOvers'.$qty_index} = $$stock_qt{'Total Overs'};
-
+	 	$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
 		$$specs{'ImpositionCharge'.$qty_index} = $best_price{'Imposition Total'};
 		my $PageCharge = $best_price{'Page Charge'};
 		$$specs{'PageCharge'.$qty_index} = $$PageCharge{'Total'};
@@ -1871,10 +1853,6 @@ $i->display();
 
 		$$specs{'hdnImpressionQuantity'.$qty_index} = $best_price{'Impressions'};
 #$$specs{'RunTime'.$qty_index} = $best_price{'RunTime'};
-		if ( $$specs{'OverrideStockPrice'.$qty_index} ne 'Y' ) {
-$openprint::log->debug("Paper Cost: $best_price{'Paper Price'}");
-			$$specs{'StockPrice'.$qty_index} = sprintf('%.2f', $best_price{'Paper Price'} );
-		} # end if
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			if ( $$specs{'pages_supplied'} eq 'Y' ) {
@@ -1965,24 +1943,8 @@ sub breakdown {
 	my $plate_costs = $$price{'Plate Costs'};
 	$breakdown .= sprintf( 'Plates: %d %s * $%.2f per plate = $%.2f<br/>', @$price{'txtPlateQuantity','PlateID','Plate Cost','Plate Price'});
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
-#	my $stock_qty = $$price{'Stock Quantity'};
 
 	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s FoldMakeReady: %d FoldRun: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'FoldingMakeReadyOvers','FoldingRunOvers','Total Overs'} );
-	if ( $Paper->type() ne 'Roll' ) {
-$breakdown .= sprintf( '%sx%s starting %sx%s %sM %sgsm<br/>', $Paper->width(), $Paper->height(), $Paper->start_width(), $Paper->start_height(), $Paper->mweight(), $Paper->gsm() );
-		$breakdown .= "Stock: $$price{'Gross Sheet Count'} sheets @".$Paper->mweight() . 'M = ' . $$price{'Stock Weight'}.'lbs';
-		$breakdown .= " * (\$ $$price{'Paper Price'}/100lb) = \$ $$price{'Paper Total'}<br/>" if exists $$price{'Paper Total'};
-	} else {
-		$breakdown .= sprintf('Stock: %sx%s -> %sx%s (%d gsm) ', $Paper->start_width(), $Paper->start_height(), $Paper->width(), $Paper->height(), $Paper->gsm() );
-		$$price{'Paper 1000 Price'} = (($Paper->mweight()/$Imposition->imposition())/100)*$$price{'Paper Price'};
-		$breakdown .= sprintf(' %.0f lbs * $%.2f/100lb (%.2f/M) = $%.2f<br/>', @$price{'Stock Weight','Paper Price','Paper 1000 Price','Paper Total'});
-	} # end if
-	if ( $$specs{'rdbSuppliedStock'} eq 'Y' ) {
-		$breakdown .= 'Stock Price not included in total<br/>';
-		if ( my $SuppliedPaperPrice = $$price{'SuppliedPaperPrice'} ) {
-			$breakdown .= sprintf('SuppliedStock Charge: $%1$.2f%2$s * (%4$dlbs,%5$dsheets) = $%3$.2f<br/>', @$SuppliedPaperPrice{'Price','units','Total'}, @$price{'Stock Weight','Gross Sheet Count'});
-		} # end if
-	} # end if
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
 	$breakdown .= sprintf('Total: $%.2f<br/>', $$price{'Total Cost'} );
@@ -2188,7 +2150,7 @@ $imp->dispay('Ma imposition!');
 								and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 								) {
 							$add = 0;
-} elsif ( 1 ) {
+} elsif ( 0 ) {
 $openprint::log->debug( "Not Dropping $BiggerPrice{'100lb'} $SmallerPrice{'100lb'}");
 $I->display();
 $imp->display();
@@ -2272,7 +2234,7 @@ $imp->display();
 								and ( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 								) {
 							$add = 0;
-} elsif ( 1 ) {
+} elsif ( 0 ) {
 $openprint::log->debug( "Not Dropping $BiggerPrice{'100lb'} $SmallerPrice{'100lb'}");
 $I->display();
 $imp->display();
@@ -2393,10 +2355,6 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 			@{$$price{'Impositions'}} = @{$$sig_specs{'Impositions'}} if $$sig_specs{'Impositions'};
 			push @{$$price{'Impositions'}}, $imp;
 			my $Paper = $imp->Paper();
-			if ( $$sig_specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) {
-				$Paper = $Paper->copy();
-				$$Paper{'Price'} = $$sig_specs{'StockPrice'.$qty_index};
-			} # end if
 
 			my $upq = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} - $imp->pages();
 			if ( $upq and $imp->pages() ) {
@@ -2594,27 +2552,33 @@ $imp->display();
 			foreach my $key ( keys %PaperCounts ) {
 				my ( $paper_id, $width, $height ) = ( $key =~ /(\d+)-([\.\d]+)x([\.\d]+)/ );
 				my $Paper = new openprint::Paper( $paper_id );
+				$Paper->width( $width );
+				$Paper->height( $height );
 
-				my $gross_sheets = ceil( $PaperCounts{$key} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) ) if $Paper->type() eq 'Sheet';
-				my $sheets_per_package = $Paper->sheets_per_package();
-				if ( $sheets_per_package and $Paper->full_packages() ) {
-					if ( $Paper->type() eq 'Sheet' ) {
-						$gross_sheets = $sheets_per_package * ceil( $gross_sheets / $sheets_per_package );
-						$PaperCounts{$key} = ceil( $gross_sheets * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
-					} elsif ( $Paper->type() eq 'Roll' ) {
-						$PaperCounts{$key} = $sheets_per_package * ceil( $PaperCounts{$key}/$sheets_per_package);
-						#$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
+				if ( $Paper->full_packages() ) {
+					my $sheets_per_package = $Paper->sheets_per_package();
+					if ( $sheets_per_package ) {
+						if ( $Paper->type() eq 'Sheet' ) {
+							# PaperCounts is in weight, so convert to sheets
+							my $gross_sheets = ceil( $PaperCounts{$key} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) );
+							$gross_sheets = $sheets_per_package * ceil( $gross_sheets / $sheets_per_package );
+							$PaperCounts{$key} = ceil( $gross_sheets * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
+						} elsif ( $Paper->type() eq 'Roll' ) {
+							$PaperCounts{$key} = $sheets_per_package * ceil( $PaperCounts{$key}/$sheets_per_package);
+						} # end if
 					} # end if
 				} # end if
 
 				if ( $$Paper{'minimum_order'} ) {
-			# Assume sheets for sheets, lbs for Rolls
-					if ( ($Paper->type() eq 'Sheet') and ($$Paper{'minimum_order'} > $gross_sheets) ) {
-						$gross_sheets = $$Paper{'minimum_order'};
-						$PaperCounts{$paper_id} = ceil( $gross_sheets * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
-					} elsif ( ($Paper->type() eq 'Roll') and ($Paper->minimum_order() > $PaperCounts{$paper_id}) ) {
-						$PaperCounts{$paper_id} = $$Paper{'minimum_order'};
-						#$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());
+					# Assume sheets for sheets, lbs for Rolls
+					if ( $Paper->type() eq 'Sheet') {
+						# PaperCounts is in weight, so convert to sheets
+						my $gross_sheets = ceil( $PaperCounts{$key} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) );
+						if ( $$Paper{'minimum_order'} > $gross_sheets) {
+							$PaperCounts{$key} = ceil( $$Paper{'minimum_order'} * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
+						} # end if
+					} elsif ( $Paper->minimum_order() > $PaperCounts{$paper_id} ) { # Must be a roll
+						$PaperCounts{$key} = $$Paper{'minimum_order'};
 					} # end if
 				} # end if
 
@@ -2622,9 +2586,9 @@ $imp->display();
 				$paper_price{'Total'} = $paper_price{'100lb Price'} * $PaperCounts{$key} / 100;
 				$$price{'Comparison Cost'} += $paper_price{'Total'};
 				$$price{'Stock Total'} += $paper_price{'Total'};
-				$$price{'Paper Breakdown'} .= sprintf('%d %s $%.2f<br/>', $PaperCounts{$key}, $Paper->to_string(), $paper_price{'Total'} );
-				#$$price{'Paper Breakdown'} .= sprintf('%s %d %s $%.2f<br/>', $key, $PaperCounts{$key}, $Paper->to_string(), $paper_price{'Total'} );
+				$$price{'Paper Breakdown'} .= sprintf('%s %s $%.2f<br/>', $Paper->type() eq 'Sheet' ? ceil( $PaperCounts{$key} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) ).'sheets' : $PaperCounts{$key}.'lbs', $Paper->to_string(), $paper_price{'Total'} );
 			} # end foreach Paper in PaperCounts
+
 			my %paper_price = $Paper->get_price( $$price{'Stock Weight'} );
 			$paper_price{'Total'} = $paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100;
 			@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @paper_price{'100lb Cost', '100lb Price', 'Total'};
@@ -2647,7 +2611,6 @@ $imp->display();
 			} # end if
 
 			if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) and ! $$project{'roll2sheetcharged'} ) {
-				
 				$$price{'Roll2SheetCharge'} = openprint::service::get_price( 'Roll2Sheet', undef, $Press );
 				$$price{'Comparison Cost'} += $$price{'Roll2SheetCharge'};
 				$$price{'Total Cost'} += $$price{'Roll2SheetCharge'};
@@ -3756,8 +3719,10 @@ sub get_varnish_run_price {
 				my $coverage = $Material->specification('Coverage', $grade);
 				my $qty = ceil( $area*$impressions/$coverage ) if $coverage;
 				my %price = $Material->get_price( $qty, $Press );
-				$varnish_price{'Material Price'} += $price{'Price'} * $qty;
-				$varnish_price{'Material Total'} += $price{'Price'} * $qty;
+				$price{'Total'} = $price{'Price'} * $qty;
+				$varnish_price{'Material Price'} += $price{'Total'};
+				$varnish_price{'Material Total'} += $price{'Total'};
+				$varnish_price{'Breakdown'} .= sprintf('%s at %.2f%s * %dKg = $%.2f<br/>', $c, @price{'Price','units'}, $qty, $price{'Total'} );
 			} # end if
 		} # end if
 	} # end foreach
@@ -3959,6 +3924,11 @@ sub press_setup_cost {
 		$Price{'Total'} = $Price{'Price'} * $setup_count;
 	} elsif ( $Price{'units'} eq 'Per Form' ) {
 		%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $$specs{'PreviousForms'.$qty_index} + 1, $Press);
+		$Price{'Total'} = $Price{'Price'};
+	} elsif ( $Price{'units'} eq 'Total' ) {
+		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
+			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
+		} # end if
 		$Price{'Total'} = $Price{'Price'};
 	} else { # Per Unit
 		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {

@@ -1,17 +1,16 @@
 <? eval (
     my $list_id = openprint::pricing::get_pricelist_id( $log, $dbh, $variable );
     $$variable{'Pricelist'} = new openprint::Pricelist( $list_id );
-    $$variable{'Currency'} = new openprint::Currency( $openprint::session{'Currency_id'} );
-	my @projecttypes = openprint::ProjectType::find('strid'=>$openprint::param{ProjectType});
-	$$variable{'ProjectType'} = shift @projecttypes if @projecttypes;
+    $$variable{'Currency'} = new openprint::Currency( $session{'Currency_id'} );
 ) ?>
+<? if ( $$variable{'ProjectType'} ) ?>
 <div id="Specials" align="center">
 	<h2>
-<? if ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters','Magazines'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines'] ) ) ?>
 Individual
-<? else ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters','Magazines'] ) ) ?>
+<? else ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines'] ) ) ?>
 Group
-<? endif ( sets::isin( $openprint::param{ProjectType} , ['Brochures','Posters','Magazines'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines'] ) ) ?>
  Run Specials for
 <? echo (
 require Date::Calc;
@@ -20,7 +19,7 @@ return Date::Calc::Month_to_Text($m) . ' ' . $y;
 ) ?>
     </h2>
 <? eval (
-    @{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)','projecttype_id'=>$$variable{'ProjectType'}->id() );
+    @{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)','projecttype_id'=>$$variable{'ProjectType'}->id() ) if $$variable{'ProjectType'};
 ) ?>
 <? while ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
 <h4><? echo ( $$variable{'Category'}->name(); ) ?></h4>
@@ -54,7 +53,7 @@ return Date::Calc::Month_to_Text($m) . ' ' . $y;
         $html .= sprintf('<td style="text-align:left;">%s</td>', $$variable{'Product'}->specification( $spec ) );
     } # end foreach specs
     foreach my $qty ( @{$$variable{'QTYS'}} ) {
-        my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$variable{'Product'}->id(), $$variable{'Pricelist'}->id(), 'openprint::product_priceset', $qty );
+        my %price = openprint::pricing::get_best_price_object( $log, $dbh, $session{'company_id'}, $$variable{'Product'}->id(), $$variable{'Pricelist'}->id(), 'openprint::product_priceset', $qty );
         if ( $price{'Price'} ) {
         openprint::Currency::convert( \%price );
         $html .= sprintf('<td style="text-align:right;"><a href="/main/order/information.html?Product=%d&amp;Quantity=%d">%s%.2f</a></td>', $$variable{'Product'}->id(), $qty, $$variable{'Currency'}->symbol(), $price{'Price'} );
@@ -73,4 +72,4 @@ return Date::Calc::Month_to_Text($m) . ' ' . $y;
 <br/>
 <? endwhile ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
 </div>
-
+<? endif ( $$variable{'ProjectType'} ) ?>

@@ -4,8 +4,9 @@ package openprint::Currency;
 use strict;
 use Number::Format;
 use openprint ();
-use vars qw( $log );
+use vars qw( $log $dbh $table $serial %fields );
 *log = \$openprint::log;
+*dbh = \$openprint::dbh;
 require openprint::Object;
 require sql;
 
@@ -23,8 +24,20 @@ $serial = 'CurrencyIndex_seq';
 %defaults = (
 );
 
-# This treats a Currency as an object.  The database is only accessed on method access.
 my $debug = 0;
+
+sub get {
+	my ( $params ) = @_;
+	my @Currencies = find(@_);
+	if ( @Currencies == 1 ) {
+		return $Currencies[0] 
+	} elsif ( @Currencies > 1 ) {
+		$log->error('More than 1 currency found in openprint::Currency::get');
+	} else {
+		$log->error('No Currency found in openprint::Currency::get');
+	} # end if
+	return;
+} # end sub get
 
 sub find {
 	my %params = @_;
@@ -96,7 +109,15 @@ sub set_conversion {
 } # end sub add_conversion
 
 sub convert_from {
-} # end sub
+	my ( $self, $value ) = @_;
+	my $DST_Currency = get_current();
+	if ( $DST_Currency and ( $DST_Currency->id() != $$self{'id'} ) ) {
+		my $rate = $self->conversions( $DST_Currency->id() );
+		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'}") if $debug;
+		$value *= $rate;
+	} # end if
+	return $value;
+} # end sub convert_from
 sub convert_to {
 } # end sub
 

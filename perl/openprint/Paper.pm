@@ -5,9 +5,10 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw( %variable %fields %transforms %defaults %config );
+use vars qw( $log %variable %fields %transforms %defaults %config );
 *variable = \%openprint::variable;
 *config = \%openprint::config;
+*log = \$openprint::log;
 
 
 require sql;
@@ -61,7 +62,7 @@ sub find {
 
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
-	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
+	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
 
 	if ( exists $params{'id'} ) {
 		if ( ref $params{'id'} eq 'ARRAY' ) {
@@ -243,10 +244,11 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Papers WHERE id=?}, {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( q{SELECT *,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated,(SELECT SUM(quantity) FROM skid_contents WHERE paper_id=papers.id) AS in_stock FROM Papers WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{@fields} = @$data{@fields};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
+	@$self{'allocated','in_stock'} = @$data{'allocated','in_stock'};
 } # end sub load
 
 
@@ -807,10 +809,28 @@ sub in_stock {
 	return 0 if ! $$self{'id'};
 
 	if ( ! exists $$self{in_stock} ) {
-		@$self{in_stock} = misc::sum( map { $_->quantity() } openprint::SkidContent::find('paper_id'=>$$self{'id'}) );
+		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
+			@$self{in_stock} += int $SkidContent->quantity();
+		} # end foreach SkidContent
 	} # end if
-    return int $$self{in_stock};
+    return $$self{in_stock};
 } # end sub in_stock
+
+sub available {
+    my $self = shift;
+	return 0 if ! $$self{'id'};
+
+	if ( ! exists $$self{available} ) {
+		$$self{available} = 0;
+		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
+			@$self{available} += int $SkidContent->quantity();
+		} # end foreach SkidContent
+		$$self{'available'} -= $self->allocated();
+	} # end if
+    return $$self{available};
+} # end sub available
 
 sub skids {
     my $self = shift;
@@ -1287,6 +1307,15 @@ sub basis_height {
 	} # end if
 	return $$self{'basis_height'};
 } # end sub basis_height
+
+sub sheet_weight {
+	my ( $self ) = @_;
+	$$self{'width'} * $$self{'height'} * $self->wpsi();
+} # end sub sheet_weight
+sub start_sheet_weight {
+	my ( $self ) = @_;
+	$$self{'start_width'} * $$self{'start_height'} * $self->wpsi();
+} # end sub start_sheet_weight
 
 1;
 __END__

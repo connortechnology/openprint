@@ -19,7 +19,7 @@ sub open_sql {
 	
 	my $dsn = "dbi:$sql_server{'driver'}:dbname=$sql_server{'database'};";
 	$dsn .= "host=$sql_server{'host'}" if $sql_server{'host'};
-	if ( ! ( $dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1} ) ) ) {
+	if ( ! ( $dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1,pg_enable_utf8 => 1 } ) ) ) {
 		die $log->crit("Unable to connect to database $sql_server{'database'}: " . DBI->errstr );
 	} # end if
 	#$log->info("Opened connection to $sql_server{'database'}.	Thread ID: " . $dbh->{'thread_id'});
@@ -58,14 +58,14 @@ sub execute {
 			} # end for
 		} # end while
 	} # end if
-	$sth->finish(); # unneccessary
+	$sth->finish();
 	if ( $l and $debug ) {
 		if ( $timing ) {
-		$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+			$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
 		} elsif ( @return_array ) {
-		$l->debug("SQL ($print_sql) Results:".join(',',@return_array));
+			$l->debug("SQL ($print_sql) Results:".join(',',@return_array));
 		} else {
-		$l->debug("SQL ($print_sql) No Results:");
+			$l->debug("SQL ($print_sql) No Results:");
 		} # end if
 	} # end if
 
@@ -123,16 +123,28 @@ sub insert {
 	# we can use push and pop in here, because we actually don't acre about order, only pairing
 	my $command = "INSERT INTO $table (".join( ',', keys %commands ).') VALUES (';
 	my $print_command = $command;
-	$print_command .= join(',', map { defined $_ ? $_ : 'undef' } @values ) if @values;
+
+	my @command_places = ();
+	my @command_values = ();
+	foreach my $v ( @values ) {
+		if ( ref $v eq 'ARRAY' ) {
+			push @command_places, '?';
+			push @command_values, '{'.join(',', map { $_ } @{$v} ).'}';
+		} else {
+			push @command_places, '?';
+			push @command_values, $v;
+		} # end if
+	} # end foreach
+	$command .= join(',', @command_places) .')';
+	$print_command .= join(',', map { if( ref $_ eq 'ARRAY' ) { "{$_}"; } elsif( defined $_ ) { $_; } else {'undef';} } @command_values ) if @command_values;
 	$print_command .= ')';
 
-	$command .= join(',', map { '?' } @values ).')';
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
 		$l->error( "Error Preparing SQL Statement: ($command):" . $d->errstr ) if $l;
 		return $d->errstr;
 	} # end if
-	if ( ! $sth->execute(values %commands) ) {
+	if ( ! $sth->execute(@command_values) ) {
 		$l->error("SQL statement execution failed: ($print_command):" . $d->errstr) if $l;
 		return $d->errstr;
 	} # end if
@@ -160,8 +172,14 @@ sub update {
 
 	my $command = "UPDATE $table SET ";
 	my @columns;
+	my @values;
 	foreach my $column ( keys %commands ) {
 		push @columns, "$column = ?";
+		if ( ref $commands{$column} eq 'ARRAY' ) {
+			push @values, '{'.join(',', map { $_ } @{$commands{$column}} ).'}';
+		} else {
+			push @values, $commands{$column};
+		} # end if
 	} # end foreach
 	$command .= join( ',', @columns );
 	my @conditions = ();
@@ -175,11 +193,11 @@ sub update {
 	$print_command =~ s/\?/\%s/g;
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
-		$log->error( 'Error Preparing SQL Statement: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr ) if $log;
+		$log->error( 'Error Preparing SQL Statement: ('.sprintf($print_command, @values, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr ) if $log;
 		return $d->errstr;
 	} # end if
-	if ( ! $sth->execute( values %commands, @conditions ) ) {
-		$log->error('SQL statement execution failed: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr) if $log;
+	if ( ! $sth->execute( @values, @conditions ) ) {
+		$log->error('SQL statement execution failed: ('.sprintf($print_command, @values, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr) if $log;
 		return $d->errstr;
 	} # end if
 	

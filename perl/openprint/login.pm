@@ -157,7 +157,7 @@ sub verify_login {
 			$$variable{'Redirect'} = '/account/change_password.html';
 		} # end if
 		return;
-	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue your order\./ ) {
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a>/ ) {
      
 		$$variable{'Redirect'} = $1.'.html';
 		foreach my $p ( split('&', $2 ) ) {

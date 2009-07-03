@@ -2,16 +2,16 @@
 <html>
 	<head>
 		<!--***This e-mail was designed for an HTML E-mail client. If you can not read this properly, save and open with a Internet browser.***  -->
-		<title><? echo ( $openprint::config{'SiteTitle'} ) ?></title>
-		<base href="<? echo ( $openprint::config{'ExternalSiteURL'} ) ?>"/>
+		<title><? echo ( $config{'SiteTitle'} ) ?></title>
+		<base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
 		<style type="text/css">
-			<!--#include virtual="/skins/<? echo ( $openprint::config{'SiteTitle'} ) ?>/css/email.css"-->
+			<? echo ( ssi::include( $config{'SkinPath'} . '/css/email.css' ); ) ?>
 		</style>
 	</head>
 	<body>
 		<table width="100%" border="0" cellpadding="0" cellspacing="0">
 			<tr id="Header">
-				<td width="251" background="/images/gradient_bg.gif" id="Logo"><img src="/images/topknotch_logo.gif" alt="Topnotch Print" /></td>
+				<td width="251" background="/images/gradient_bg.gif" id="Logo"><img src="/images/topknotch_logo.gif" alt="Topknotch Print" /></td>
 				<td background="/images/gradient_bg.gif">
 					<a href="mailto:sales@topknotchprint.com">sales@topknotchprint.com</a><br/>
 					Tel: 1-905-624-5100<br/>

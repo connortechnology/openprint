@@ -31,10 +31,22 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );
 		$variable{'error'} .= $Timetrack->destroy();
+	} elsif ( ! $param{'btnFunction'} ) {
+		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','employee_id','company_id') );
 	} # end if
+	if ( ( ! $session{'/timetrack/history.html?lastupdated'} ) or ( time - $session{'/timetrack/history.html?lastupdated'} ) < ( 12*60*60 ) ) {
+		ssi::setup_date_select( '/timetrack/history.html', 'starting', -31 );
+	} # end if
+
+	$session{'/timetrack/history.html?invoiced'} = '0' if ! $session{'/timetrack/history.html?invoiced'};
+	$session{'/timetrack/history.html?paid'} = '0' if ! $session{'/timetrack/history.html?paid'};
+	$session{'/timetrack/history.html?employee_id'} = $session{'user_id'} if ! exists $session{'/timetrack/history.html?employee_id'};
 } # end sub history
 
 sub _history {
+	if ( ! $param{'btnFunction'} ) {
+		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','employee_id','company_id') );
+	} # end if
 } # end sub _history
 
 sub edit {

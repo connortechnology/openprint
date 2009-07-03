@@ -15,6 +15,9 @@
 -->
 </script>
 <div id="ProjectView">
+<? if ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
+<div class="warning">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <? echo ( $$variable{'Project'}->Company()->name() ) ?>!</div>
+<? endif ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
 	<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
 	There is no current project. 
 	<? else ( $$variable{'ProjectIndex'} eq '' ) ?>

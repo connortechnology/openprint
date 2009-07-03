@@ -273,6 +273,11 @@ background-repeat: no-repeat;
 width: 21px;
 height: 20px;
 }
+
+div.InstantPricing input {
+     background: expression(this.type=="radio" ?'#E4DAF2;':'white');
+}
+
 div#instant_price_section
 {
 float: right;

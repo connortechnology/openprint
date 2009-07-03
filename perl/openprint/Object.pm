@@ -51,12 +51,15 @@ sub load {
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
+	if ( ! $table ) {
+		$log->error( 'NO table for type ' . $type );
+		return;
+	} # end if
 
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
-			return;
 		} # end if
 	} # end if
 
@@ -198,6 +201,14 @@ sub delete {
 	return;
 } # end sub delete
 
+sub destroy {
+	my ( $self ) = @_;
+	my $type = ref $self;
+	my $table = eval '$'.$type.'::table';
+	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+	delete $openprint::Object::cache{$type}{$$self{id}};
+} # end sub destroy
+
 sub undelete {
     my ( $self ) = @_;
     my $type = ref $self;
@@ -207,9 +218,6 @@ sub undelete {
 	return;
 } # end sub delete
 
-
-1;
-__END__
 
 1;
 __END__
