@@ -479,7 +479,8 @@ if ( ! $data ) {
 	if ( sql::execute( undef, undef, "SELECT nextval('serviceindex_seq')" ) ) {
 		$dbh->do('DROP SEQUENCE serviceindex_seq');
 		$dbh->do('CREATE SEQUENCE services_id_seq');
-		$dbh->do("ALTER TABLE Services alter id set default nextval(services_id_seq)");
+		$dbh->do("ALTER TABLE Services alter column id set default nextval('services_id_seq')");
+		$dbh->do("SELECT setval('services_id_seq', (SELECT MAX(id) FROM Services))");
 	} # end if
 	if ( ! exists $$data{'owner_id'} ) {
 		$dbh->do('ALTER TABLE Services add owner_id INTEGER');
@@ -1491,10 +1492,12 @@ if ( ! openprint::ServiceType::find('name'=>'Varnish') ) {
 } # end if
 foreach my $S ( openprint::Service::find('name'=>'VarnishInLine') ) {
 	print "Converting VarnishInLine to coatings\n";
-	$S->name('Varnish Gloss Overall');
-	$S->description('Varnish Gloss Overall');
-	$S->category('Coating');
-	$S->save();
+	if ( ! openprint::Service::find('name'=>'Varnish Gloss Overall') ) {
+		$S->name('Varnish Gloss Overall');
+		$S->description('Varnish Gloss Overall');
+		$S->category('Coating');
+		$S->save();
+	} # end if
 
 	if ( ! openprint::Service::find('name'=>'Varnish Gloss Spot') ) {
 		my $S2 = $S->copy();
@@ -1508,7 +1511,7 @@ foreach my $S ( openprint::Service::find('name'=>'VarnishInLine') ) {
 		} # end foreach
 	} # end if
 	if ( ! openprint::Service::find('name'=>'Varnish Matte Overall') ) {
-		$S2 = $S->copy();
+		my $S2 = $S->copy();
 		$S2->name('Varnish Matte Overall');
 		$S2->description('Varnish Matte Overall');
 		$S2->save();
@@ -1519,7 +1522,7 @@ foreach my $S ( openprint::Service::find('name'=>'VarnishInLine') ) {
 		} # end foreach
 	} # en dif
 	if ( ! openprint::Service::find('name'=>'Varnish Matte Spot') ) {
-		$S2 = $S->copy();
+		my $S2 = $S->copy();
 		$S2->name('Varnish Matte Spot');
 		$S2->description('Varnish Matte Spot');
 		$S2->save();
@@ -1552,7 +1555,7 @@ foreach my $S ( openprint::Service::find('name'=>'VarnishMakeReady') ) {
 	} # end if
 
 	if ( ! openprint::Service::find('name'=>'Varnish Matte Overall MakeReady') ) {
-		$S2 = $S->copy();
+		my $S2 = $S->copy();
 		$S2->name('Varnish Matte Overall MakeReady');
 		$S2->description('Varnish Matte Overall MakeReady');
 		$S2->save();
@@ -1563,15 +1566,15 @@ foreach my $S ( openprint::Service::find('name'=>'VarnishMakeReady') ) {
 		} # end foreach
 	} # en dif
 	if ( ! openprint::Service::find('name'=>'Varnish Matte Spot MakeReady') ) {
-	$S2 = $S->copy();
-	$S2->name('Varnish Matte Spot MakeReady');
-	$S2->description('Varnish Matte Spot MakeReady');
-	$S2->save();
-	foreach my $P ( $S->prices() ) {
-		$P = $P->copy();
-		$P->service_id( $S2->id() );
-		$P->save();
-	} # end foreach
+		my $S2 = $S->copy();
+		$S2->name('Varnish Matte Spot MakeReady');
+		$S2->description('Varnish Matte Spot MakeReady');
+		$S2->save();
+		foreach my $P ( $S->prices() ) {
+			$P = $P->copy();
+			$P->service_id( $S2->id() );
+			$P->save();
+		} # end foreach
 	} # en dif
 }
 
@@ -1660,19 +1663,21 @@ if ( $data ) {
 
 sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment,Paper', 'type','text') if ! $config{'Cached Objects'};
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
-if ( $data ) {
+if ( sets::isin( 'projecttype_categories', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
 	if ( ! exists $$data{'sort'} ) {
 		$dbh->do('ALTER TABLE projecttype_categories ADD sort integer');
 	} # end if
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
-if ( $data ) {
+
+if ( sets::isin( 'tbl_equipment', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
 	if ( ! exists $$data{'location_id'} ) {
 		$dbh->do('ALTER TABLE tbl_Equipment ADD location_id INTEGER');
 		$dbh->do('ALTER TABLE tbl_Equipment ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
 	} # end if
 } # end if
+
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM survey_question_available_answers LIMIT 1', {} );
 if ( $data ) {
 	if ( ! exists $$data{'id'} ) {
@@ -1818,6 +1823,12 @@ if ( ! $data ) {
 		$dbh->do( 'ALTER TABLE Taxes rename column dblstatepercent to statetax' );
 	} # end if
 }
+if ( ! sets::isin( 'invoices', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Invoices.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} # end if
 if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Invoiced_Products.sql});
 	foreach my $st ( split(';', $_ ) ) {
