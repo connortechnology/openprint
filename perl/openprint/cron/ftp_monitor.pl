@@ -353,19 +353,6 @@ EOT
 					   );
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 		} # end if
-<<<<<<< HEAD:perl/openprint/cron/ftp_monitor.pl
-		$variable{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
-		my $email_template = misc::load_file( $log, $opts->{'skin_path'} . '/email_template.html' );
-        my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
-        my %mail = (
-                        SMTP    => $config{'Mail Server'},
-                        FROM    => $from,
-                        TO      => $to,
-                        SUBJECT => $subject,
-                   );
-        misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($body), 'text/html', 'quoted-printable' ) );
-=======
->>>>>>> 0f128a1ebc3318fedd8cc81facdf3955ebdb1699:perl/openprint/cron/ftp_monitor.pl
 	
 	} elsif ( 1 ) {
 		my $email_info = {
@@ -412,11 +399,7 @@ EOT
 					} else {
 						$email_info->{Body} .= "Content-Type: application/octet-stream\n";
 						$email_info->{Body} .= "Content-Transfer-Encoding: base64\n\n";
-<<<<<<< HEAD:perl/openprint/cron/ftp_monitor.pl
-						$email_info->{Body} .= MIME::Base64::encode_base64($attach);
-=======
-						$email_info->{Body} .= encode_base64(Encode::encode('utf-8',$attach));
->>>>>>> 0f128a1ebc3318fedd8cc81facdf3955ebdb1699:perl/openprint/cron/ftp_monitor.pl
+						$email_info->{Body} .= MIME::Base64::encode_base64(Encode::encode('utf-8',$attach));
 					}
 
 					$email_info->{Body} .= "\n";

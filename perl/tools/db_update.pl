@@ -473,7 +473,6 @@ if ( $version < 1600 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1600;
 } # end if
-<<<<<<< HEAD:perl/tools/db_update.pl
 my $data = $dbh->selectrow_hashref( 'SELECT * FROM Services LIMIT 1', {} );
 if ( ! $data ) {
 } else {
@@ -483,18 +482,9 @@ if ( ! $data ) {
 		$dbh->do("ALTER TABLE Services alter column id set default nextval('services_id_seq')");
 		$dbh->do("SELECT setval('services_id_seq', (SELECT MAX(id) FROM Services))");
 	} # end if
-=======
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Services LIMIT 1', {} );
-if ( $data ) {
->>>>>>> 0f128a1ebc3318fedd8cc81facdf3955ebdb1699:perl/tools/db_update.pl
 	if ( ! exists $$data{'owner_id'} ) {
-<<<<<<< HEAD:perl/tools/db_update.pl
 		$dbh->do('ALTER TABLE Services add owner_id INTEGER');
 		$dbh->do('ALTER TABLE Services add FOREIGN KEY(owner_id) REFERENCES companies (id)');
-=======
-		$dbh->do('alter table services add owner_id INTEGER');
-		$dbh->do('alter table services add FOREIGN KEY (owner_id) REFERENCES Companies (id)');
->>>>>>> 0f128a1ebc3318fedd8cc81facdf3955ebdb1699:perl/tools/db_update.pl
 	} # end if
 } # end if
 
