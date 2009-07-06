@@ -47,11 +47,13 @@ sub email_campaigns {
     } elsif ( $param{'btnFunction'} eq 'TrialRun' ) {
         $variable{'Results'} = $Campaign->trial( $param{'TrialEmailAddress'} );
     } elsif ( $param{'btnFunction'} eq 'Download Recipients' ) {
-        my @header = ( 'Company','Name','Email','Phone');
+        my @header = ( 'Company','Name','Email','Phone','Last Sent On','Number of Times Sent');
         my @data;
 		foreach my $user_id ( $Campaign->recipients() ) {
 			my $User = new openprint::User( $user_id );
 			push @data, $User->Company()->name(), $User->name(), $User->email(), $User->phone();
+			my ( $last_sent, $num_times ) = sql::execute( undef, undef, 'SELECT emailsenton, numemailsent FROM emailcampaign_sent WHERE campaign_id=? AND user_id=? ORDER BY emailsenton DESC LIMIT 1', $Campaign->id(), $User->id() );
+			push @data, $last_sent, $num_times;
 		} # end foreach
 
         misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );

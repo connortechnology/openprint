@@ -2,10 +2,14 @@
 	my $html;
 	@{$$variable{'pending_drops'}} = ();
 	if ( $session{'/employee/production/print_overview.html?pending'} ) {
+		my $Shift = new openprint::Shift();
+		$Shift->name('Pending');
+
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			push @{$$variable{'pending_drops'}}, sprintf( '%d-%.4d-%.2d-%.2d-%s', $E->id(), 1900, 1, 0, 'NotApproved' );
 			$html .= '<div class="PressColumn">';
-			$html .= openprint::press_schedule::get_ul( undef, undef, $E->id(), {'name'=>'NotApproved'}, {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval'] } );
+			$Shift->equipment_id( $E->id() );
+			push @{$$variable{'pending_drops'}}, $Shift->ul_id();
+			$html .= $Shift->get_ul( {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete']});
 			$html .= '</div>';
 		} # end foreach press
 	} # end if
@@ -13,15 +17,33 @@
 ) ?>
 <? if ( @{$$variable{'pending_drops'}} ) ?>
 <script type="text/javascript">
-  // <![CDATA[
+// <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'pending_drops'}} ) ) ?>");
-	for ( var id in drops ) {
-		Sortable.create(drops[id], {dropOnEmpty:true,containment:drops,constraint:false,
-             onUpdate:function(drop){
-             jsrsExecute( '/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( drop.id, Sortable.serialize(drop) ) );
-             }
-            });
+<? if ( $r->uri() =~ /_pending/ ) ?>
+	for ( var i = 0; i < drops.length; i += 1 ) {
+		if ( $(drops[i]) ) {
+			Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
+		} // end if
 	} // end foreach id in drops
+	var re = /^JumpToDate(\d*)$/;
+	var dates = $$('span.DueDate');
+	for ( var i = 0; i < dates.length; i+= 1 ) {
+		var match = dates[i].id.match(re);
+		if ( match.length ) {
+                Calendar.setup({
+                inputField   :  "ScheduleDate-"+match[1],       // id of the input field
+                ifFormat        :   "%Y-%m-%d",      // format of the input field
+                daFormat        :   "%b %d",
+                align           :   "Tl",
+                showsTime       :   false,          // will display a time selector
+                displayArea :   'JumpToDate'+match[1],
+                singleClick :   false,          // double-click mode
+                onClose     :   setduedate
+                });
+		} // end if match
+	} // end for each date id
+// ]]>
+<? endif ( $r->uri() =~ /_pending/ ) ?>
 // ]]>
 </script>
 <? endif ( @{$$variable{'pending_drops'}} ) ?>

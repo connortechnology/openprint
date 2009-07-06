@@ -325,7 +325,7 @@
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
-		<input type="text" id="TotalBaseSetupRun<?QTYIndex?>" name="TotalBaseSetupRun<?QTYIndex?>" value="<? echo ( $$variable{'TotalBaseSetupRun'.$$variable{'QTYIndex'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+		<input type="text" id="OverTotal<?QTYIndex?>" name="OverTotal<?QTYIndex?>" value="<? echo ( $$variable{'OverTotal'.$$variable{'QTYIndex'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
 	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
@@ -342,7 +342,7 @@
 		<input type="hidden" id="OverrideBase<?QTYIndex?>" name="OverrideBase<?QTYIndex?>" value="<? echo (  $$variable{'OverrideBase'.$$variable{'QTYIndex'}} ) ?>" />
 		<input type="hidden" id="OverRun<?QTYIndex?>" name="OverRun<?QTYIndex?>" value="<? echo ( $$variable{'OverRun'.$$variable{'QTYIndex'}} ) ?>" />
 		<input type="hidden" id="OverrideRun<?QTYIndex?>" name="OverrideRun<?QTYIndex?>" value="<? echo (  $$variable{'OverrideRun'.$$variable{'QTYIndex'}} ) ?>" />
-		<input type="hidden" id="TotalBaseSetupRun<?QTYIndex?>" name="TotalBaseSetupRun<?QTYIndex?>" value="<? echo ( $$variable{'TotalBaseSetupRun'.$$variable{'QTYIndex'}} ) ?>" />
+		<input type="hidden" id="OverTotal<?QTYIndex?>" name="OverTotal<?QTYIndex?>" value="<? echo ( $$variable{'OverTotal'.$$variable{'QTYIndex'}} ) ?>" />
 		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
@@ -453,23 +453,6 @@
 </p>
 <? endif ( sets::isin( $$variable{'ProjectTypeID'}, [ 'Envelopes' ] ) ) ?>
 
-<p>
-	<label><b>Stock Price:</b></label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		<input id="StockPrice<?QTYIndex?>" name="StockPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'StockPrice'.$$variable{'QTYIndex'}} ) ?>" onkeyup="calc(this.form.name);" /> Per 100lbs
-		<? echo ( 
-			if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				return ssi::write_override( 'OverrideStockPrice'.$$variable{'QTYIndex'}, $$variable{'OverrideStockPrice'.$$variable{'QTYIndex'}},'',"calc('f1');" );
-			} # end if
-		) ?>
-	</span>
-<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</p>
 <!--#include virtual="/includes/main/proj/_unit_price.html"-->
 <!--#include virtual="/includes/main/proj/_service_price.html"-->
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>

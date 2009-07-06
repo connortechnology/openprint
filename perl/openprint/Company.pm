@@ -248,7 +248,7 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 	$sql{'updated_on'} = 'NOW()';
-	$sql{'name'} = Text::Unaccent::unac_string('LATIN1', $sql{'name'} );
+	$sql{'name'} = Text::Unaccent::unac_string('UTF-8', $sql{'name'} );
 
     my $ac = sql::start_transaction( $dbh );
     if ( ! $$self{'id'} ) {

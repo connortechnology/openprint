@@ -12,7 +12,9 @@ require openprint::logs;
 use openprint ();
 
 my $debug = 1;
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 $table = 'pricelists';
 $serial = 'pricelists_id_seq';

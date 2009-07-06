@@ -62,17 +62,17 @@
 					$Paper->back_ordered(),
 					Number::Format::format_number($Paper->allocated()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
 					Number::Format::format_number($Paper->in_stock()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  in stock
-					Number::Format::format_number($Paper->in_stock() - $Paper->allocated()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  available
-					$Paper->in_stock() - $Paper->allocated() < 0 ? 'warning' : '',
+					Number::Format::format_number($Paper->available()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  available
+					$Paper->available() < 0 ? 'warning' : '',
 					);
 				$html .= '</tr>',
 				$rowclass = $rowclass ? '' : 'colRow';
 				if ( $Paper->type() eq 'Roll' ) {
-					$available_lbs += $Paper->in_stock() - $Paper->allocated();
+					$available_lbs += $Paper->available();
 					$total_lbs += $Paper->in_stock();
 					$allocated_lbs += $Paper->allocated();
 				} else {
-					$available_sheets += $Paper->in_stock() - $Paper->allocated();
+					$available_sheets += $Paper->available();
 					$total_sheets += $Paper->in_stock();
 					$allocated_sheets += $Paper->allocated();
 				} # end if

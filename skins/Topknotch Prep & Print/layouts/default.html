@@ -19,20 +19,24 @@
 		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
-		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? if ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
-		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
+		<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
+		<? if ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
 		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
-		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
+		<? endif ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
+		<? if ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
-		<? if ( $r->uri() =~ /\/content\/prin/ ) ?>
+       <? if ( $$variable{'uri'} =~ /\/main\/project\/prin/ ) ?>
+        <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+        <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+        <? endif ( $$variable{'uri'} =~ /\/main\/project\/prin/ ) ?>
+		<? endif ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
+		<? if ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 		   <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
 		   <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
 		   <script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
-		<? endif ( $r->uri() =~ /\/content\/prin/ ) ?>
+		<? endif ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
 	<body>
@@ -44,8 +48,8 @@
         <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 
 		<div id="main_content"><div id="main_content_inner">
-			<? if ( $r->uri() =~ /\/main\/order/ ) ?>
-			<? else ( $r->uri() =~ /\/main\/order/ ) ?>
+			<? if ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
+			<? else ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 			<div id="left_sidebar">
 				<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 				<div class="shadow_left"><div class="shadow_right">
@@ -62,7 +66,7 @@
 			</div>
 
 			<div id="main_page">
-			<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+			<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 				<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 				<div class="shadow_left"><div class="shadow_right">
 					<div id="main_page_content"><?PageContent?></div>
@@ -71,10 +75,10 @@
 					</div><!-- Footer -->
 				</div></div>
 				<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
-			<? if ( $r->uri() =~ /\/main\/order/ ) ?>
-			<? else ( $r->uri() =~ /\/main\/order/ ) ?>
+			<? if ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
+			<? else ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 			</div><!-- main_page -->
-			<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+			<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 			<br class="spacer"/>
 		</div></div>
 	</body>

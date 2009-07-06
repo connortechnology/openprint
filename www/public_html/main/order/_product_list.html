@@ -13,7 +13,7 @@
 		<td align="left"><? echo ( $$variable{'Product'}->quantity(); ) ?></td>
 		<td align="right">
 <? echo (
-	$$variable{'price'} = $$variable{'Product'}->price();
+	$$variable{'price'} = $$variable{'Order'}->Currency()->convert_from( $$variable{'Product'}->price() );
 
 	my $shipping_html;
 	my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
@@ -24,12 +24,10 @@
 
 		foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
 			my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_index );
-			my $price = $$specs{'txtPrice1'};
+			my $price = $$variable{'Project'}->Currency()->convert_from( $$specs{'txtPrice1'} );
+
 			$$variable{'price'} -= $price;
-			if ( $$variable{'Project'}->currency_id() != $$variable{'CurrencyIndex'} ) {
-				my $rate = $$variable{'Currency'}->conversions( $$variable{'Project'}->currency_id() );
-				$price *= $rate;
-			} # end if
+;
 			eval('require openprint::Estimating::'.$ServiceType->name().';' );
 			my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs, 1 );') . '<br/>';
 

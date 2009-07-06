@@ -166,7 +166,7 @@ sub inventory_report {
 					$Paper->mweight(),
 					$Paper->gsm(),
 					$$Skid{'id'},
-					$$Skid{'rfidtag_id'},
+					$Skid->RFIDTag()->id_short(),
 					$$Skid{'created_on'},
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $$Skid{Paper}{$$Paper{'id'}} : '',
@@ -1045,7 +1045,7 @@ sub highlight_paper {
 	foreach my $P ( openprint::Paper::find(
 				'in_stock_start'	=> 1,
 				) ) {
-		next if $P->in_stock() - $P->allocated() <= 0;
+		#next if $P->available() <= 0;
 		if ( $param{Manufacturer} and ($P->manufacturer_id() != $param{Manufacturer} ) ) {
 			push @results, $P->id().'~';
 			next;
@@ -1216,7 +1216,13 @@ sub _rfidscanner_log {
 sub manifest {
 	$param{'manifest_id'} =~ s/\s//g;
 	my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
-	if ( $param{'btnFunction'} eq 'Submit' ) {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $Manifest->delete();
+		if ( ! $variable{'error'} ) {
+			$variable{'Redirect'} = '/employee/inventory/manifests.html';
+			%param = ();
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
 		$Manifest->id( $param{'manifest_id'} ) if ! $Manifest->id();
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
@@ -1310,7 +1316,7 @@ sub manifest {
 								} );
 					} # end if
 					$total_qty += $C->quantity();
-					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest <a href=/employee/inventory/manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
+					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest <a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project ) {
 						my @PAs = openprint::PaperAllocation::find('skid_id'=>$C->skid_id());
@@ -1425,7 +1431,7 @@ sub inventory_log {
             push @Data, (
                 Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
                 $skid_id,
-                $Skid->rfidtag_id(),
+                $Skid->RFIDTag()->id_short(),
                 $Paper->to_string(),
                 $delta,
                 join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
@@ -1744,6 +1750,7 @@ sub purchase_orders {
 	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
+			next if ! $PO->id();
 			if ( $_ = $PO->authorize() ) {
 				$variable{'error'} .= $_ . '<br/>';
 			} else {

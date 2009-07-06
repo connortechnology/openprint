@@ -51,12 +51,15 @@ sub load {
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
+	if ( ! $table ) {
+		$log->error( 'NO table for type ' . $type );
+		return;
+	} # end if
 
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
-			return;
 		} # end if
 	} # end if
 
@@ -183,6 +186,13 @@ sub copy {
 	return $new;
 } # end sub copy
 
+sub clone {
+	my $self = shift;
+	my $new = new ref $self;
+	@$new{keys %$self} = @$self{keys %$self};
+	return $new;
+} # end sub clone
+
 sub delete {
     my ( $self ) = @_;
     my $type = ref $self;
@@ -215,9 +225,6 @@ sub undelete {
 	return;
 } # end sub delete
 
-
-1;
-__END__
 
 1;
 __END__

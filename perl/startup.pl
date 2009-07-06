@@ -1,6 +1,7 @@
 #!/usr/bin/perl 
 
 BEGIN {
+	use utf8;
 	use threads;
 	use threads::shared;
 	#use Apache2 ();
@@ -25,6 +26,7 @@ BEGIN {
 	use Text::CSV_XS;
 	use	Authen::Captcha;
 	use GD::Barcode;
+	use Encode;
 
 	#use Carp ();
 

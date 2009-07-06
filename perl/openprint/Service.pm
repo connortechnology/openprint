@@ -108,7 +108,7 @@ sub find {
 	
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading Service ($sql) (@values) Reason: " . $openprint::dbh->errstr );
+		$log->debug("Error loading Service ($sql) (@values) Reason: " . $openprint::dbh->errstr );
 		return;
 	} # end if
 	return map { new openprint::Service( $_->{id}, $_ ) } @$data;
@@ -118,9 +118,9 @@ sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist ) = @_;
 
 	if ( ! $Pricelist ) {
-		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable ));
+		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $log, $dbh, $openprint::variable ));
 	} # end if
-    my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
+    my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
     return if ! %price;
 
 	$price{'currency_id'} = $Pricelist->currency_id();
