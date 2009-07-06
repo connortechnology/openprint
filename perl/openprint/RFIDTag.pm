@@ -218,7 +218,7 @@ sub skid_id {
 		return;
 	} # end if
 	if ( ! $$self{'skid_id'} ) {
-		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
 		if ( @Skids ) {
 			$$self{'skid_id'} = $Skids[0]->id();
 		} # end if
@@ -233,7 +233,7 @@ sub Skid {
 		return;
 	} # end if
 	if ( ! $$self{'skid_id'} ) {
-		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'});
+		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
 		if ( @Skids ) {
 			$$self{'skid_id'} = $Skids[0]->id();
 		} # end if
