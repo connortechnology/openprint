@@ -286,13 +286,13 @@ sub Fold {
 		} # end if
 		$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
 		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
-		if ( $$params{'gsm'} ) {
+		if ( exists $$params{'gsm'} ) {
 			$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
-			my $RunSpeed = $Fold->Specification( $$params{'gsm'} );
+			my $RunSpeed = $Fold->RunSpeed( $$params{'gsm'} );
 			if ( ! $RunSpeed ) {
 #$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if $debug;
 				next;
-			} else {
+			#} else {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
 			} # end if
 		} # end if

@@ -148,6 +148,7 @@ sub copy {
 	my ( $self ) = @_;
 	my $new = new openprint::Fold();
 	@$new{keys %fields} = @$self{keys %fields};
+	@{$$new{'Specifications'}} = map { $_->copy() } $self->Specifications();
 	delete $$new{id};
 	return $new;
 } # end sub copy
@@ -187,13 +188,14 @@ $log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $rang
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}[$i];
-$log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . "(" . $Spec->min_weight() .     ') (' . $Spec->max_weight() . $Spec->weight_units(). ') (' . $Spec->runspeed() .') ('.$Spec->interpolate() ) if $debug;
-		return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max_weight} == $range );
+$log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . "MIN(" . $Spec->min_weight() .     ') MAX(' . $Spec->max_weight() . $Spec->weight_units(). ') RUNSPEED(' . $Spec->runspeed() .') INTERPOLATE('.$Spec->interpolate() .') for range: ' . $range ) if $debug;
+		#return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max_weight} == $range );
 
+		return $Spec if ( ( $$Spec{min_weight} <= $range ) and ( $$Spec{max_weight} >= $range ) );
 		return $Spec if (
-				(! $$Spec{interpolate})
-				and (( ! $$Spec{min_weight} ) or ($$Spec{min_weight} <= $range))
-				and (( ! $$Spec{max_weight} ) or ($$Spec{max_weight} >= $range))
+				( ! $$Spec{interpolate} ) and 
+				(( ! $$Spec{min_weight} ) or ($$Spec{min_weight} <= $range)) and
+				(( ! $$Spec{max_weight} ) or ($$Spec{max_weight} >= $range))
 				);
 
 # first step, find one less than the min
@@ -229,7 +231,7 @@ $log->debug("Couldn't find maximum") if $debug;
    } # end if
 
     if ( $$x{id} == $$y{id} ) {
-        return $x->runspeed();
+        return $x;
     } elsif ( $$x{interpolate} ) {
         my $S = $x->copy();
         $$S{min_weight} = $$S{max_weight} = $range;
@@ -238,6 +240,23 @@ $log->debug("Couldn't find maximum") if $debug;
     } # end if
 
 } # end sub Specification
+
+sub RunSpeed {
+	my ( $self, $gsm ) = @_;
+	if ( ! exists $$self{'runspeed_cache'} ) {
+		$$self{'runspeed_cache'} = {};
+	} # end if
+	if ( ! exists $$self{'runspeed_cache'}{$gsm} ) {
+		my $Spec = $self->Specification( $gsm );
+		$$self{'runspeed_cache'}{$gsm} = $Spec;
+	} # end if
+	return $$self{'runspeed_cache'}{$gsm};
+} # end sub RunSpeed
+
+sub runspeed {
+	my $RunSpeed = $_[0]->RunSpeed($_[1]);
+	return $RunSpeed ? $$RunSpeed{'runspeed'} : undef;
+} # end sub runspeed
 
 1;
 __END__

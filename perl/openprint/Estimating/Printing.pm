@@ -2251,7 +2251,7 @@ $openprint::log->debug("Calling do_versions, # of imps: " . @impositions );
 $openprint::log->debug("Back from do_versions, # of imps: " . @impositions );
 		} # end if
 # Gives us both inline and offline folding options
-		if ( $$project{'HasFolding'} ) {
+		if ( $$project{'HasFolding'} and ( $Press->Specification('Folding Capable') eq 'Y' ) ) {
 			@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $$project{'FoldingSpecs'}, $sig_specs, $qty_index ) } @impositions;
 			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 		} # end if Folding
