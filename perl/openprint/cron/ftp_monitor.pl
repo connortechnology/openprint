@@ -359,6 +359,7 @@ EOT
 			smtp => $smtp_server,
 			From => $from,
 			To => join(', ', @$recipients),
+			BCC	=>	'iconnor@point-one.com',
 			Subject => $subject,
 		};
 
@@ -398,7 +399,7 @@ EOT
 					} else {
 						$email_info->{Body} .= "Content-Type: application/octet-stream\n";
 						$email_info->{Body} .= "Content-Transfer-Encoding: base64\n\n";
-						$email_info->{Body} .= encode_base64(Encode::encode('utf-8',$attach));
+						$email_info->{Body} .= MIME::Base64::encode_base64(Encode::encode('utf-8',$attach));
 					}
 
 					$email_info->{Body} .= "\n";
