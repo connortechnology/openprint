@@ -243,7 +243,7 @@ sub Skid {
 
 sub id_short {
 	my ( $self ) = @_;
-	return if ! $$self{'id'};
+	return '' if ! $$self{'id'};
 	my ( $type, $significant ) = $$self{'id'} =~ /^(\d)(\d{14})$/;
 	return 1*$significant;
 } # end sub id_short

@@ -2264,6 +2264,7 @@ sub calc_price {
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Folding' );
 	} # end if
 	$price{'Run Speed'} = $run_speed;
+	return \%price if ! $run_speed;
 
 	if ( $$services{'SpinePaste'} ) {
 #my $starttime = gettimeofday();

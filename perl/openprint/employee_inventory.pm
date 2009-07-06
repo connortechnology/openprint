@@ -145,9 +145,9 @@ sub inventory_report {
 		foreach my $Skid ( $Paper->skids() ) {
 			my $weight = 0;
 			if ( $Paper->type() eq 'Roll' ) {
-			$weight = $$Skid{Paper}{$$Paper{'id'}};
+				$weight = $$Skid{Paper}{$$Paper{'id'}};
 			} else {
-			$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $$Skid{Paper}{$$Paper{'id'}};
+				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $$Skid{Paper}{$$Paper{'id'}};
 			} # end if
 			$total_weight += $weight;
 			push @data,(
@@ -282,6 +282,10 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 	} # end if
 
 } # end sub paper
+
+sub _paper_results {
+	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','outofstock','Owner' ) );
+} # end sub _paper_results
 
 sub paper_details {
 	my $Paper = new openprint::Paper( $param{'paper_id'} );
