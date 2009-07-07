@@ -224,8 +224,8 @@ sub load {
 		$$self{'layout_height'} = $$self{'spread_rows'} * $$self{'layout_height'};
 		$$self{'spread_size'} = $$specs{'txtSpreadSize'};
 	} else {
-		$$self{'spread_rows'} = int($$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if $$specs{'txtFinalWidth'};
-		$$self{'spread_columns'} = int($$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if $$specs{'txtFinalHeight'};
+		$$self{'spread_rows'} = int($$specs{'txtWidth'} / $$specs{'txtFinalWidth'}) if 1*$$specs{'txtFinalWidth'};
+		$$self{'spread_columns'} = int($$specs{'txtHeight'} / $$specs{'txtFinalHeight'}) if 1*$$specs{'txtFinalHeight'};
 		$$self{'spread_size'} = $$self{'spread_rows'} * $$self{'spread_columns'} * 2;
 		$$self{'spread_rows'} = 1;
 		$$self{'spread_columns'} = 1;
