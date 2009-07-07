@@ -126,7 +126,7 @@ if ( $settings{'notify'} ) {
 		To		=> $settings{'notify'},
 		Subject	=> 'New user registration at ' . $settings{'url'},
 		Body	=>	"
-Someone has registered at $settings{url}.  They should also have been automatically entered into your infusionsoft system.
+Someone has registered at $settings{url}.  " . ( $settings{'infusionsofturl'} ? 'They should also have been automatically entered into your infusionsoft system.' : '' ) . "
 
 Details are as follows:
 FirstName: " . param('FirstName')."
