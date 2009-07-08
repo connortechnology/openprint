@@ -1,29 +1,36 @@
-<a name="top"></a>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" action="payment_options.html" method="post">
 	<fieldset>
 		<p>
-			<label>Payment Option:</label>
-			<select name="ddmPaymentOption"	onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
-				<option value="">Select a Payment Option</option>
-				<option value="">-----------------------</option>
-				<?ddmPaymentOption?>
+			<label>Payment Type:</label>
+			<select name="paymenttype_id"	onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<option value="">select</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PaymentType::find('order'=>'lower(name)') ], $$variable{'PaymentType'}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">
-			<? echo ( join ('',
-				ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<'),
-				ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>'),
-				ssi::writeButton( $log, $dbh, 'New1','new.gif',"keepCompany(f1);",'','New'),
-				ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-				ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
-			); ) ?>
+			<? echo ( my $html;
+
+				$html .= ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','<<');
+				$html .= ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='>>';fmCheck(f1);",'','>>');
+				$html .= ssi::writeButton( $log, $dbh, 'New1','new.gif',"",'','New');
+				if ( $param{'paymenttype_id'} ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
+				$html .= ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset');
+				return $html;
+			) ?>
 		</p>
 	</fieldset>
 	<fieldset>
 		<p>
-			<label>Payment Option Name:</label>
-			<input type="text" name="txtPaymentOption" value="<?txtPaymentOption?>" />
+			<label>Name:</label>
+			<input type="text" name="name" value="<? echo ( $$variable{'PaymentType'}->name() ) ?>" />
+		</p>
+		<p>
+			<label>Description:</label>
+			<textarea id="description" name="description" onkeyup="textarea_resize(this);"><? echo ( $$variable{'PaymentType'}->name() ) ?></textarea>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>

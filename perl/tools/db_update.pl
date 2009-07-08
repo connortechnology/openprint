@@ -38,6 +38,7 @@ my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT ver
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
 
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
 if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/QuoteLevels.sql});
@@ -1061,20 +1062,21 @@ foreach my $E ( openprint::Equipment::find() ) {
 	} # end foreach
 } # end foreach
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manifests LIMIT 1', {} );
-if ( ! $data ) {
-		$_ = misc::load_file( $log, q{../openprint/sql/Manifests.sql});
-		foreach my $st ( split(';', $_ ) ) {
-			$dbh->do($st);
-		}
+if ( ! sets::isin( 'manifests', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Manifests.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
 } else {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manifests LIMIT 1', {} );
+my $ac = sql::start_transaction( $dbh );
 	if ( ! exists $$data{'po_id'} ) {
 		$dbh->do('ALTER TABLE Manifests add po_id INTEGER');
 		$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id)');
 	} # end if
 	if ( ! exists $$data{'supplier_id'} ) {
 		$dbh->do('ALTER TABLE Manifests add supplier_id INTEGER');
-		$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (supplier_id) REFERENCES Company (index)');
+		$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (supplier_id) REFERENCES Companies (id)');
 	} # end if
 	if ( ! exists $$data{'docket'} ) {
 		$dbh->do('ALTER TABLE Manifests add docket INTEGER');
@@ -1088,31 +1090,36 @@ if ( ! $data ) {
 	if ( ! exists $$data{'shipto_sms'} ) {
 		$dbh->do('ALTER TABLE Manifests add shipto_sms TEXT');
 	} # end if
+sql::end_transaction( $dbh, $ac );
 } # end if
-my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
-if ( ! $data ) {
-		$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql});
-		foreach my $st ( split(';', $_ ) ) {
-			$dbh->do($st);
-		}
+
+if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
 } else {
-	if ( ! exists $$data{'federaltax_charge'} ) {
-		$dbh->do('ALTER TABLE purchaseorders add federaltax_charge BOOLEAN');
-	} # end if
-	if ( ! exists $$data{'statetax_charge'} ) {
-		$dbh->do('ALTER TABLE purchaseorders add statetax_charge BOOLEAN');
-	} # end if
-	if ( ! exists $$data{'authorized'} ) {
-		$dbh->do('ALTER TABLE purchaseorders add authorized BOOLEAN');
-		$dbh->do('UPDATE purchaseorder set authorized=true WHERE authorized_on IS NOT NULL');
-	} # end if
-	if ( ! exists $$data{'manifest_id'} ) {
-		$dbh->do('ALTER TABLE purchaseorders add manifest_id TEXT');
-		$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (manifest_id) REFERENCES Manifests (id)');
+	my $data = $dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+	if ( $data ) {
+		my $ac = sql::start_transaction( $dbh );
+		if ( ! exists $$data{'federaltax_charge'} ) {
+			$dbh->do('ALTER TABLE purchaseorders add federaltax_charge BOOLEAN');
+		} # end if
+		if ( ! exists $$data{'statetax_charge'} ) {
+			$dbh->do('ALTER TABLE purchaseorders add statetax_charge BOOLEAN');
+		} # end if
+		if ( ! exists $$data{'authorized'} ) {
+			$dbh->do('ALTER TABLE purchaseorders add authorized BOOLEAN');
+			$dbh->do('UPDATE purchaseorder set authorized=true WHERE authorized_on IS NOT NULL');
+		} # end if
+		if ( ! exists $$data{'manifest_id'} ) {
+			$dbh->do('ALTER TABLE purchaseorders add manifest_id TEXT');
+			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (manifest_id) REFERENCES Manifests (id)');
+		} # end if
+		sql::end_transaction( $dbh, $ac );
 	} # end if
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorder_contents LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'purchaseorder_contents', \@tables ) ) {
 	$dbh->do('
 			CREATE TABLE PurchaseOrder_COntents (
 				id SERIAL NOT NULL,
@@ -1639,10 +1646,14 @@ $dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
 $dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER') if ! exists $$data{'owner_id'};
 $dbh->do('ALTER TABLE Pricelists ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
+if ( sets::isin( 'price_lists_id_seq', \@sequences )   ) {
 $dbh->do('DROP SEQUENCE IF EXISTS price_lists_id_seq');
+} 
+if ( ! sets::isin( 'pricelists_id_seq', \@sequences ) ) {
 $dbh->do('CREATE SEQUENCE pricelists_id_seq');
 $dbh->do(q`SELECT setval('pricelists_id_seq', (SELECT MAX(id) FROM Pricelists))`);
 $dbh->do(q`ALTER TABLE pricelists alter id set default nextval('pricelists_id_seq')`);
+} # end if
 sql::end_transaction( $dbh, $ac );
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ordered_products LIMIT 1', {} );
@@ -1773,6 +1784,15 @@ if ( ! $data ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
+	my $ac = sql::start_transaction( $dbh );
+	$_ = misc::load_file( $log, q{../openprint/sql/PaymentTypes.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+	sql::end_transaction( $dbh, $ac );
+} # end if
+
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_contents LIMIT 1', {} );
 if ( $data ) {
 	if ( ! exists $$data{'id'} ) {
@@ -1827,7 +1847,6 @@ if ( ! $data ) {
 		$dbh->do($st);
 	}
 } 
-
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM users LIMIT 1', {} );
 if ( $data ) {
@@ -1884,34 +1903,37 @@ if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
 		$dbh->do('ALTER TABLE Invoiced_Products add description text');
 	} # end if
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifest_content_types LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'manifest_content_types', @tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Manifest_Content_Types.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
-	require openprint::Manifest;
-	$dbh->do('alter table manifestcontents add type_id integer');
-	foreach my $Manifest ( openprint::Manifest::find() ) {
-		my @Contents = $Manifest->Contents();
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifestcontents LIMIT 1', {} );
+	if ( $data and ! exists $$data{'type_id'} ) {
+		require openprint::Manifest;
+		$dbh->do('alter table manifestcontents add type_id integer');
+		foreach my $Manifest ( openprint::Manifest::find() ) {
+			my @Contents = $Manifest->Contents();
 
-		if ( @Contents ) {
-			my $T = new openprint::Manifest_Content_Type();
-			$_ = $T->save({
-				'manifest_id'	=>	$Manifest->id(),
-				'docket'		=>	$Contents[0]->docket(),
-				'po_id'			=>	$Manifest->po_id(),
-			});
-			die $_ if $_;
-			foreach my $C ( @Contents ) {
-				$C->save({'type_id'=>$T->id()});
-			} # end foreach
-		} # end if
-	} # end foreach Manifest
-	$dbh->do('alter table manifestcontents alter type_id set not null');
-	$dbh->do('alter table manifestcontents add foreign key (type_id) references manifest_content_types (id)');
+			if ( @Contents ) {
+				my $T = new openprint::Manifest_Content_Type();
+				$_ = $T->save({
+					'manifest_id'	=>	$Manifest->id(),
+					'docket'		=>	$Contents[0]->docket(),
+					'po_id'			=>	$Manifest->po_id(),
+				});
+				die $_ if $_;
+				foreach my $C ( @Contents ) {
+					$C->save({'type_id'=>$T->id()});
+				} # end foreach
+			} # end if
+		} # end foreach Manifest
+		$dbh->do('alter table manifestcontents alter type_id set not null');
+		$dbh->do('alter table manifestcontents add foreign key (type_id) references manifest_content_types (id)');
+	} # end if
 } else {
-	if ( ! exists $$data{'supplier_invoice'} ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifest_content_types LIMIT 1', {} );
+	if ( $data and ! exists $$data{'supplier_invoice'} ) {
 		$dbh->do('alter table manifest_content_types add supplier_invoice text');
 	} # end if
 } 
@@ -2070,35 +2092,30 @@ if ( ! $data ) {
 	} # end foreach
 } else {
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Equipment_Shifts LIMIT 1', {} );
-my $data2 = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Shifts LIMIT 1', {} );
-if ( $data2 and ! $data ) {
+if ( sets::isin('shifts',\@tables) and ! sets::isin( 'equipment_shifts', \@tables ) ) {
 	$dbh->do( 'ALTER TABLE Shifts rename to Equipment_Shifts' );
 	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
-} elsif ( ! ( $data2 or $data ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Equipment_Shifts.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
-	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
-} elsif ( ! $data2 ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
 } else {
-	if ( ! exists $$data{'id'} ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Equipment_Shifts LIMIT 1', {} );
+	if ( $data and ! exists $$data{'id'} ) {
 		$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
 		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
 		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
 	} # end if
 } # end if
+
+@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+
+if ( ! sets::isin('shifts',\@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+$dbh->commit();
 $dbh->disconnect();
 1;
 __END__

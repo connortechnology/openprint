@@ -359,7 +359,7 @@ sub find {
 		push @values, $param{'password'};
 	} # end if
 	if ( exists $param{'email_like'} ) {
-		$sql .= ' AND strEmail LIKE ?';
+		$sql .= ' AND email LIKE ?';
 		push @values, lc $param{'email_like'};
 	} # end if
 	if ( exists $param{'web_active'} ) {

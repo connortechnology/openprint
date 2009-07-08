@@ -54,7 +54,7 @@
 		(Fields marked with an * are required.)
 		<br/>
 		<br/>
-		<div class="leftColumn" style="min-width: 320px;">
+		<div class="leftColumn">
 			<fieldset>
 				<p> 
 					<label>Order ID:</label><? echo ( $$variable{'Order'}->id() ) ?>
@@ -73,23 +73,20 @@
 				</p>
 <? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 			</fieldset>
-			<div id="ContactInformation">
-			<!--#include virtual="_contact_information.html"-->
-			</div>
+			<div id="ContactInformation"><!--#include virtual="_contact_information.html"--></div>
 			<div id="PaymentOptions">
 			<!--#include virtual="_payment_options.html"-->
 			</div>
 		</div>
-		<div class="rightColumn" style="min-width: 320px;">
+		<div class="rightColumn">
 			<? eval ( 
-				@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, q{SELECT lngProjectIndex, strProjectReference, intQuantityIndex, shippingtype, intQuantity1, intQuantity2, intQUantity3 FROM Order_Contents, tbl_Projects WHERE lngProjectIndex=Index AND OrderIndex=?}, $$variable{'Order'}->id() );
+				@{$$variable{'PROJECTS'}} = $$variable{'Order'}->Projects();
 				@{$$variable{'PRODUCTS'}} = $$variable{'Order'}->Products();
  ) ?>
 			<? if ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
-				<? while ( @$variable{'ProjectIndex','Reference','SelectedQuantityIndex','ShippingType','Quantity1','Quantity2','Quantity3'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
-				<? eval ( $$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ); ) ?>
-				<!--#include virtual="_project_information.html"-->
-				<? endwhile ( @$variable{'ProjectIndex','Reference','SelectedQuantityIndex','ShippingType','Quantity1','Quantity2','Quantity3'} = splice @{$$variable{'PROJECTS'}},0,7; ) ?>
+				<? while ( $$variable{'Project'} = shift @{$$variable{'PROJECTS'}}; ) ?>
+				<div id="Projects"><!--#include virtual="_project_information.html"--></div>
+				<? endwhile ( $$variable{'Project'} = shift @{$$variable{'PROJECTS'}}; ) ?>
 				<div id="Products"><!--#include virtual="_product_information.html"--></div>
 			<? else ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
 				<p>This order appears to be empty.</p>

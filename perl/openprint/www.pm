@@ -388,7 +388,7 @@ $log->debug("Dset: $variable{'Destination'}");
 			require openprint::order;
 			openprint::order::quantity_select_display( $r, $log, $dbh, $session{_session_id}, \%variable )		if $filename eq 'selection.html';
 			openprint::order::information( $r, $log, $dbh, $session{_session_id}, \%variable )					if $filename eq 'information.html';
-			openprint::order::verify_order( $r, $log, $dbh, $session{_session_id}, \%variable )				if $filename eq 'submit.html';
+			openprint::order::submit( $r, $log, $dbh, $session{_session_id}, \%variable )				if $filename eq 'submit.html';
 			openprint::order::finalise_order( $r, $log, $dbh, $session{_session_id}, \%variable )				if $filename eq 'confirmation_make_order.html';
 			openprint::order::history( $r, $log, $dbh, \%variable )								if $filename eq 'history.html';
 			openprint::order::history_details( $r, $log, $dbh, \%variable )						if $filename eq 'history_details.html';

@@ -175,6 +175,7 @@ table.List td textarea {
 
 .Currency {
 	font-weight: bold;
+float: right;
 }
 
 fieldset {

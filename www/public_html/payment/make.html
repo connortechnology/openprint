@@ -1,0 +1,62 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+
+<? eval ( $param{'order_id'} = $param{'OrderID'} if $param{'OrderID'} ) ?>
+<? if ( $param{'order_id'} ) ?>
+<? eval ( 
+	$$variable{'Order'} = new openprint::Order( $param{'order_id'} );
+) ?>
+<!--#include virtual="/includes/order_header.html"-->
+<br class="spacer"/>
+<? endif ( $param{'order_id'} ) ?>
+
+<form id="f1" name="f1" method="post" action="make.html">
+	<input type="hidden" name="btnFunction" />
+	<fieldset>
+		<p><label>Payment Type:</label>
+		<input type="hidden" name="PaymentType" value="PayPal" />
+		<img src="https://fpdbs.paypal.com/dynamicimageweb?cmd=_dynamic-image&buttontype=ecmark" alt="Paypal" style="margin-right:7px;"/><span style="font-size:11px; font-family: Arial, Verdana;">The safer, easier way to pay.</span>
+		</p>
+		<p><label>Amount (<? echo ( return openprint::Currency::get_current()->short(); ) ?>):</label>
+			<input type="text" id="amount" name="amount" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
+		</p>
+	<fieldset>
+	
+	<fieldset id="CreditCardDetails"><legend>Credit Card Details</legend>
+		<p><label>Credit Card Type:</label>
+			<select name="cc_type" id="cc_type">
+				<? echo ( 
+					my @options = (
+						'VISA', 'VISA',
+					);
+					return ssi::make_drop_down( \@options );
+				) ?>
+			</select>
+		</p>
+		<p><label>First Name:</label>
+			<input type="text" id="firstname" name="firstname" value="<? echo ( new openprint::User( $session{'user_id'} )->firstname() ) ?>" />
+		</p>
+		<p><label>Last Name:</label>
+			<input type="text" id="lastname" name="lastname" value="<? echo ( new openprint::User( $session{'user_id'} )->lastname() ) ?>" />
+		</p>
+		<p><label>Credit Card #:</label>
+			<input type="text" id="cc_number" name="cc_number" size="16" />
+			CVV2: <input type="text" id="cc_cvv2" name="cc_cvv2" size="3" />
+		</p>
+		<p><label>Expiry Date:</label>
+			<select id="exp_month" name="exp_month" />
+				<? echo ( 
+					return ssi::make_drop_down( [ map { sprintf('%.2d',$_), sprintf('%.2d',$_) } ( 1 .. 12 ) ] );
+				) ?>
+			</select>
+			<select id="exp_year" name="exp_year" />
+				<? echo ( 
+					return ssi::return_years( (localtime(time))[5] + 1900, (localtime(time))[5] + 1910 );
+				) ?>
+			</select>
+		</p>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Submit' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', '', $ENV{'REFERRER'}, 'Cancel' ); ) ?>
+		</p>
+	</fieldset>
+</form>

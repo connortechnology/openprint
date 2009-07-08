@@ -101,14 +101,11 @@ sub reseller_application_process {
 
 	my %info;
 	$info{'date'} = localtime;
-    $info{'SecureSiteURL'} = $r->dir_config('SecureSiteURL');
-    $info{'siteURL'} = $r->dir_config('siteURL');
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 
 	my @fields = keys %fields;
 	@info{ @fields } = $customer->get( @fields{@fields} );
-	openprint::user::load( $log, $dbh, $user_id, \%info );
 	$info{'txtEmployees'} = ssi::get_range_text( sql::execute( $log, $dbh, "SELECT Min, Max FROM EmployeeNumbers WHERE ID=$info{'ddmEmployees'}" ) );
 	$info{'txtAnnualSales'} = ssi::get_range_text( sql::execute( $log, $dbh, "SELECT Min, Max FROM AnnualSales WHERE Id=$info{'ddmAnnualSales'}" ) );
 
