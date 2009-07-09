@@ -206,11 +206,11 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT *,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated,(SELECT SUM(quantity) FROM skid_contents WHERE paper_id=papers.id) AS in_stock FROM Papers WHERE id=?}, {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( q{SELECT *,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated FROM Papers WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{@fields} = @$data{@fields};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
-	@$self{'allocated','in_stock'} = @$data{'allocated','in_stock'};
+	@$self{'allocated'} = @$data{'allocated'};
 } # end sub load
 
 
@@ -685,10 +685,10 @@ sub in_stock {
 	if ( ! exists $$self{in_stock} ) {
 		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			@$self{in_stock} += int $SkidContent->quantity();
+			$$self{in_stock} += int $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-    return $$self{in_stock};
+    return 1*$$self{in_stock};
 } # end sub in_stock
 
 sub available {
