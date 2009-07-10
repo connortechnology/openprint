@@ -8,7 +8,7 @@ use vars qw( $log $dbh %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
+my $debug = 1;
 
 %fields = (
 	'id'			=>	'id',
