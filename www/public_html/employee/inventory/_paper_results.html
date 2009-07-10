@@ -47,9 +47,11 @@
 			my $allocated_sheets;
 
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
-$log->debug("Paper instock : " . $Paper->in_stock() );
-				next if $Paper->in_stock() and ! $session{'/employee/inventory/paper.html?instock'};
-				next if (!$Paper->in_stock()) and ! $session{'/employee/inventory/paper.html?outofstock'};
+$log->debug("Paper InStock: " . $Paper->in_stock() );
+				#if ( ! $session{'/employee/inventory/paper.html?Docket'} ) {
+					next if $Paper->in_stock() and ! $session{'/employee/inventory/paper.html?instock'};
+					next if (!$Paper->in_stock()) and ! $session{'/employee/inventory/paper.html?outofstock'};
+				#} # end if
 
 				$html .= sprintf( '<tr class="%1$s %11$s"><td><a href="paper_details.html?paper_id=%2$d">%3$s</a></td><td>%4$.2f</td><td>%5$.2f</td><td align="right">%6$d</td><td align="right">%7$s</td><td align="right">%8$s</td><td align="right">%9$s</td>',
 					$rowclass,
