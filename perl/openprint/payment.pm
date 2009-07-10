@@ -67,24 +67,31 @@ sub _unpaid {
 } # end sub _paid
 
 sub make {
+	$param{'order_id'} = $param{'OrderID'} if $param{'OrderID'};
+	$variable{'Order'} = new openprint::Order( $param{'order_id'} );
+
+	$variable{'Payment'} = new openprint::Payment( $param{'payment_id'} );
+	
+	$variable{'Payment'}->set( \%param );
+	$variable{'Payment'}->amount( $variable{'Order'}->balance() ) if ! $variable{'Payment'}->amount();
 
 	if ( $param{'btnFunction'} eq 'Submit' ) {
-		if ( $config{'PaymentProcessor'} eq 'PayPal' ) {
+		if ( $variable{'Payment'}->Type()->name() eq 'PayPal' ) {
 			require PayPal;
 
-			my $Paypal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PASSWORD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+			my $Paypal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
 
 			my $result = $Paypal->Call_Service({
 					#METHOD=>'GetBalance',
-					METHOD=>'SetExpressCheckout',
-					PAYMENTACTION=>'Sale',
-					AMT=>$param{'amount'},
+					METHOD			=>	'SetExpressCheckout',
+					PAYMENTACTION	=>	'Sale',
+					AMT				=>	$param{'amount'},
 					#CURRENCYCODE=>openprint::Currency::get_current()->short(),
 					#COUTNRYCODE=>'CA',
 
 					#creditcardtype=>$param{'cc_type'},
-					#acct=>$param{'cc_number'},
-					#expdate=>$param{'exp_month'}.$param{'exp_year'},
+					acct=>$param{'cc_number'},
+					expdate=>$param{'exp_month'}.$param{'exp_year'},
 					#cvv2=>$param{'cc_cvv2'},
 					#firstname=>$param{'firstname'},
 					#lastname=>$param{'lastname'},
@@ -93,9 +100,8 @@ sub make {
 					#state=>$param{'state'},
 					#zip=>$param{'postalcode'},
 					#country=>$param{'country'},
-					RETURNURL=>'http://testing.connortechnology.com/payment/make.html',
-					CANCELURL=>'http://testing.connortechnology.com/payment/make.html',
-#4739731052277472
+					RETURNURL=>$config{'ExternalSiteURL'}.'/payment/make.html',
+					CANCELURL=>$config{'ExternalSiteURL'}.'/payment/make.html',
 					});
 
 			if ($$result{ack} eq 'Success') {
@@ -106,9 +112,8 @@ sub make {
 					$variable{'error'} .= "$$error{errorcode} $$error{longmessage}<br/>";
 				} # end foreach error
 			} # end if
-		} else {
-			$log->error("Unknown Payment Processor in payment::make : $config{'PaymentProcessor'}");
 		} # end if PaymentProcessor == Paypal
+	} elsif ( $param{'btnFunction'} eq '' ) {
 	} else {
 		$log->error("Unknown btnFunction in payment::make : $param{'btnFunction'}");
 	} # end if btnFunction

@@ -21,6 +21,10 @@ $serial = 'paymenttypes_id_seq';
 );
 my $debug = 1;
 
+sub find_one {
+	my @results = find( @_ );
+	return $results[0] if @results;
+} # end sub find_one
 sub find {
 	my %params = @_;
 

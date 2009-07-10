@@ -1,23 +1,26 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 
-<? eval ( $param{'order_id'} = $param{'OrderID'} if $param{'OrderID'} ) ?>
+<form id="f1" name="f1" method="post" action="make.html">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="order_id" value="<? echo ( $$variable{'Order'}->id() ) ?>" />
 <? if ( $param{'order_id'} ) ?>
-<? eval ( 
-	$$variable{'Order'} = new openprint::Order( $param{'order_id'} );
-) ?>
 <!--#include virtual="/includes/order_header.html"-->
 <br class="spacer"/>
 <? endif ( $param{'order_id'} ) ?>
 
-<form id="f1" name="f1" method="post" action="make.html">
-	<input type="hidden" name="btnFunction" />
 	<fieldset>
 		<p><label>Payment Type:</label>
-		<input type="hidden" name="PaymentType" value="PayPal" />
+		<? if ( openprint::PaymentType::find() > 1 ) ?>
+		<select id="type_id" name="type_id">
+		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PaymentType::find('order'=>'lower(name)') ], $$variable{'Payment'}->type_id() ); ) ?>
+		</select>
+		<? else ( openprint::PaymentType::find() > 1 ) ?>
+		<input type="hidden" name="type_id" value="<? echo ( openprint::PaymentType::find_one()->id() ) ?>" />
 		<img src="https://fpdbs.paypal.com/dynamicimageweb?cmd=_dynamic-image&buttontype=ecmark" alt="Paypal" style="margin-right:7px;"/><span style="font-size:11px; font-family: Arial, Verdana;">The safer, easier way to pay.</span>
+		<? endif ( openprint::PaymentType::find() > 1 ) ?>
 		</p>
 		<p><label>Amount (<? echo ( return openprint::Currency::get_current()->short(); ) ?>):</label>
-			<input type="text" id="amount" name="amount" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
+			<input type="text" id="amount" name="amount" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" value="<? echo ( $$variable{'Order'}->balance() ) ?>" />
 		</p>
 	<fieldset>
 	
@@ -39,10 +42,11 @@
 			<input type="text" id="lastname" name="lastname" value="<? echo ( new openprint::User( $session{'user_id'} )->lastname() ) ?>" />
 		</p>
 		<p><label>Credit Card #:</label>
-			<input type="text" id="cc_number" name="cc_number" size="16" />
-			CVV2: <input type="text" id="cc_cvv2" name="cc_cvv2" size="3" />
+			<input type="text" id="cc_number" name="cc_number" size="16" style="width: auto;" />
+			CVV2: <input type="text" id="cc_cvv2" name="cc_cvv2" size="3" style="width: auto;" />
 		</p>
 		<p><label>Expiry Date:</label>
+			<span class="DateSelector">
 			<select id="exp_month" name="exp_month" />
 				<? echo ( 
 					return ssi::make_drop_down( [ map { sprintf('%.2d',$_), sprintf('%.2d',$_) } ( 1 .. 12 ) ] );
@@ -53,10 +57,11 @@
 					return ssi::return_years( (localtime(time))[5] + 1900, (localtime(time))[5] + 1910 );
 				) ?>
 			</select>
+			</span>
 		</p>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Submit' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', '', $ENV{'REFERRER'}, 'Cancel' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'SubmitPayment', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Submit' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelPayment', 'cancel.gif', '', $ENV{'REFERRER'}, 'Cancel' ); ) ?>
 		</p>
 	</fieldset>
 </form>

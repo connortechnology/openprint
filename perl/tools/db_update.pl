@@ -1782,6 +1782,10 @@ if ( ! $data ) {
 	if ( ! exists $$data{'deleted'} ) {
 		$dbh->do('ALTER TABLE Payments add deleted boolean NOT NULL default false;');
 	} # end if
+	if ( $data and ! exists $$data{'type_id'} ) {
+		$dbh->do('ALTER TABLE paymenttypes add type_id INTEGER');
+		$dbh->do('ALTER TABLE paymenttypes add FOREIGN KEY (type_id) REFERENCES PaymentTypes (id)');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
@@ -1791,6 +1795,7 @@ if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
 		$dbh->do($st);
 	}
 	sql::end_transaction( $dbh, $ac );
+} else {
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_contents LIMIT 1', {} );

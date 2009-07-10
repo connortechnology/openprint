@@ -149,12 +149,6 @@ sub find {
 	} # end if
 } # end sub find
 
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Order( );
-	return $new;
-} # end sub copy
-
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
@@ -231,15 +225,6 @@ sub to_string {
 	my $self = shift;
 	return '';
 } # end sub
-
-sub created_on {
-	my $self = shift;
-	return $$self{'created_on'};
-} # end sub created_on
-sub created_by_id {
-	my $self = shift;
-	return $$self{'created_by_id'};
-} # end sub created_by_id
 
 # Approve is acknowledging the prices, etc and giving the go ahead. So this function updates all the prices, taxes, statuses, etc.
 sub approve {

@@ -37,8 +37,8 @@ sub Call_Service {
     
     my %params=(%{$self->{api}},%req); 
 foreach my $k ( keys %params ) {
-$params{$k} = uri_escape( $params{$k} );
-#$params{$k} = uri_escape( $params{$k} ) if $k ne 'RETURNURL' and $k ne 'CANCELURL';
+#$params{$k} = uri_escape( $params{$k} );
+$params{$k} = uri_escape( $params{$k} ) if $k ne 'RETURNURL' and $k ne 'CANCELURL';
 $openprint::log->debug("$k => $params{$k}");
 } # end foreach
 $openprint::log->debug( join('&', map { "$_=$params{$_}" } keys %params ) );
