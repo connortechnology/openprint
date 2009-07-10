@@ -182,7 +182,7 @@ sub find {
 			if ( (! defined $params{'supplied'} ) or ($params{'supplied'} eq '' ) ) {
 				$sql .= ' AND supplied IS NULL';
 			} else {
-				$sql .= ' AND supplied=?';
+				$sql .= ' AND (supplied IS NULL OR supplied=?)';
 				push @values, $params{'supplied'} eq 'Y' ? 1 : 0;
 			} # end if
 		} # end if
