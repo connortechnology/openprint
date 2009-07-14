@@ -1439,7 +1439,7 @@ $openprint::log->warn("Aftere auto");
 	foreach my $key ( @no_outputs ) {
 		delete $specs{$key};
 	} # end foreach
-
+sleep(5);
 	$project->update_status( $variable );
 	$specs{'Status'} = $project->status() if $specs{'Status'} ne 'uncalculated';
 	return jsrs::encode_pairs(%specs);
