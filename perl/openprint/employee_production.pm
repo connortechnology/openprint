@@ -25,6 +25,7 @@ require openprint::ProductionFeedback;
 require openprint::Shift;
 require openprint::Equipment_Shift;
 require openprint::ScheduledJob;
+require openprint::Operator_Shift;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -1396,6 +1397,17 @@ sub operator_schedule {
         } # end if
     } # end if
     $session{$r->uri().'?lastupdated'} = time;
+	if ( $param{'btnFunction'} eq 'Add Shift' ) {
+		foreach my $Equipment ( openprint::Equipment::find() ) {
+			my $LastShift = openprint::Operator_Shift::find_one('equipment_id'=>$Equipment->id(), 'order'=>'starttime DESC');
+			my $starttime = $LastShift->starttime_seconds()+$LastShift->duration_seconds() if $LastShift;
+
+			foreach my $ES ( openprint::Equipment_Shift::find('equipment_id'=>$Equipment->id(), 'order'=>'starttime') ) {
+				my $NewShift = new openprint::Operator_Shift();
+				$NewShift->save({'equipment_id'=>$Equipment->id(),'starttime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime),'shift_id'=>$ES->id()});
+			} # end foreach ES
+		} # end foreach Equipment
+	} # end if
 
 } # end sub operator_schedule
 

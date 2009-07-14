@@ -2298,7 +2298,6 @@ sub calc_price {
 	$run_overs = ceil($base_impressions * $over_rate);
 	#my $gross_qty = $impressions;
 	my $gross_qty = ceil( $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
-#$openprint::log->error( "1 Stock: $gross_qty: $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) " );
 	my $additional_overs=0;
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
@@ -2310,11 +2309,8 @@ sub calc_price {
 	my $weight = ceil( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
 	my $sheets_per_package = $Paper->sheets_per_package();
 	if ( $sheets_per_package and $Paper->full_packages() ) {
-#$openprint::log->error( " Stock: $gross_qty: $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) $sheets_per_package -> " . ( $gross_qty % $sheets_per_package ) );
 		if ( $Paper->type() eq 'Sheet' ) {
-			if ( $gross_qty % $sheets_per_package ) {
-				$gross_qty = $sheets_per_package * ceil( $gross_qty / $sheets_per_package );
-			} # end if
+			$gross_qty = $sheets_per_package * ceil( $gross_qty / $sheets_per_package );
 		} elsif ( $Paper->type() eq 'Roll' ) {
 			$weight = $sheets_per_package * ceil( $weight/$sheets_per_package);
 			$gross_qty = $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi());

@@ -1,19 +1,3 @@
-
-var showCalcButtonTimeout = null;
-
-function showCalcButton() {
-	/* Called after 5 seconds of calculation, to restore the calc button and put text in the alert box telling the user to try again. */
-	var alertdiv = $('AlertDiv');
-	if ( alertdiv ) {
-		alertdiv.innerHTML = 'The calculation is taking too long.  Something may have gone wrong.  Please click the Calculate Button again to retry.';
-		alertdiv.show();
-	} // end if
-	add_div('Buttons');
-	remove_div('OrderButton');
-	remove_div('Processing');
-	
-} // end function showCalcButton
-
 function FoldType_onchange( select ) {
 	var foldtype = get_ddm_value( select );
 	var image = document.images['FoldType'];
@@ -33,7 +17,7 @@ function cbFoldType_onchange( results ) {
 	//Dimensions_onchange( select );
 }
 
-function calc( formName, force ) {
+function calc( formName ) {
 	var form = getFormObj(formName);
 
 	if ( form.HoleDrilling && ( get_rdb_value( form.HoleDrilling ) == 'Y' ) ) {
@@ -45,10 +29,6 @@ function calc( formName, force ) {
 	if ( ! form.txtQuantity1 )
 		return;
 	form.txtQuantity1.value = parseInt(1*form.txtQuantity1.value);
-	if ( form.txtPrice1 ) 
-		form.txtPrice1.value='';
-	if ( form.txtUnitPrice1 ) 
-		form.txtUnitPrice1.value='';
 
 	var div = document.getElementById('AlertDiv');
 
@@ -65,26 +45,16 @@ function calc( formName, force ) {
 	} // end if
 	div.style.display = 'none';
 
-   if ( gettingNewPrice && ! force ) {
-        // This prevents concurrent price getting
-        if ( timeout )
-            clearTimeout( timeout );
-        timeout = setTimeout("calc('f1');", 1000 );
-        return;
-    } // end if
-    timeout = null;
-
+	if ( gettingNewPrice ) {
+		setTimeout("calc('"+formName+"');", 1000 );
+		return;
+	} // end if
 	jsrsExecute( '/jsrs.htm', cbCalc, 'openprint::print_project::calc', get_variables( formName ) );
-	showCalcButtonTimeout = setTimeout('showCalcButton();', 5000 );
 	remove_div('Buttons');
 	add_div('Processing');
 }
 
 function cbCalc( results ) {
-
-	if ( showCalcButtonTimeout ) 
-		clearTimeout( showCalcButtonTimeout );
-
 	cbFillResults(results);
 	var form = getFormObj('f1');
 	add_div('Buttons');
