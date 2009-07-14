@@ -14,5 +14,6 @@ CREATE TABLE Payments (
 	description			TEXT,
 	completed			BOOLEAN not null default false,
 	deleted				BOOLEAN not NULL default false,
+	type_id				INTEGER, FOREIGN KEY (type_id) REFERENCES PaymentTypes (id),
 	PRIMARY KEY( id )
 );

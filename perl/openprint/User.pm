@@ -56,8 +56,8 @@ my $debug = 0;
 %transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'wage'			=>	[ 's/[^\d\.]//g' ],
-	'purchasing_limit'			=>	[ 's/[^\d\.]//g' ],
-	'purchasing_total_limit'	=>	[ 's/[^\d\.]//g' ],
+	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
+	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
 	'created_on'		=> [ 's/.*//g' ],
 	'updated_on'		=> [ 's/.*//g' ],
@@ -359,8 +359,12 @@ sub find {
 		push @values, $param{'password'};
 	} # end if
 	if ( exists $param{'email_like'} ) {
-		$sql .= ' AND strEmail LIKE ?';
+		$sql .= ' AND email LIKE ?';
 		push @values, lc $param{'email_like'};
+	} # end if
+	if ( exists $param{'purchasing_limit_>='} ) {
+		$sql .= ' AND purchasing_limit >= ?';
+		push @values, $param{'purchasing_limit_>='};
 	} # end if
 	if ( exists $param{'web_active'} ) {
 		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {

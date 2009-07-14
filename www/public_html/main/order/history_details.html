@@ -35,12 +35,13 @@ Projects listed in red have changed price from the time this order was originall
 <!--#include virtual="_product_list.html" -->
 <span style="float: left;">
 	<br/>
-	<? if ( $$variable{'AdministratorName'} ) ?>
-	<b>Representative:</b> <?AdministratorName?><br/>
-	<? endif ( $$variable{'AdministratorName'} ) ?>
+	<? if ( $$variable{'Order'}->administrator_name() ) ?>
+	<b>Representative:</b> <? echo ( $$variable{'Order'}->administrator_name() ) ?><br/>
+	<? endif ( $$variable{'Order'}->administrator_name() ) ?>
+	<? if ( $$variable{'Order'}->administrator_comments() ) ?>
 	<? if ( $$variable{'AdministratorComments'} ) ?>
-	<b>Representative Comments:</b> <?AdministratorComments?><br/>
-	<? endif ( $$variable{'AdministratorComments'} ) ?>
+	<b>Representative Comments:</b> <? echo ( $$variable{'Order'}->administrator_comments() ) ?><br/>
+	<? endif ( $$variable{'Order'}->administrator_comments() ) ?>
 </span>
 <div style="float: right; text-align: right;">
 	<!--#include virtual="/includes/order_totals.html" -->
@@ -80,30 +81,30 @@ Projects listed in red have changed price from the time this order was originall
 		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 		<? echo ( 
 			my $html;
-			if ( sets::isin( $$variable{'ORDER_STATUS'}, 'Re-Opened', 'Incomplete') ) {
+			if ( sets::isin( $$variable{'Order'}->status(), 'Re-Opened', 'Incomplete') ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', '', "information.html?OrderID=$$variable{'OrderID'}", 'Continue' );
 				$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
-			} elsif ( sets::isin( $$variable{'ORDER_STATUS'}, 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval' ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'UploadCenter', 'upload_center.gif', '', '/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Center' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
+			} elsif ( sets::isin( $$variable{'Order'}->status(), 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval' ) ) {
+				$html .= ssi::writeButton( $log, $dbh, 'UploadCenter', 'upload_center.gif', '', '/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Center' ) if $$variable{'Order'}->status() ne 'Cancelled';
 				$html .= ssi::writeButton( $log, $dbh, 'reOrder','reOrder.gif',"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", '', 'ReOrder' ); 
-				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled'; 
-				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) or ( $$variable{'ORDER_STATUS'} eq 'Pending Deposit' ) ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ) if $$variable{'Order'}->status() ne 'Cancelled'; 
+				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) or ( $$variable{'Order'}->status() eq 'Pending Deposit' ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'ReOpen','re_open.gif',"f1.action='information.html';f1.btnFunction.value='ReOpen';f1.submit();", '', 'ReOpen' );
-					$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
+					$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'Order'}->status() ne 'Cancelled';
 				} # end if
-			} elsif ( $$variable{'ORDER_STATUS'} eq 'Cancelled' ) {
+			} elsif ( $$variable{'Order'}->status() eq 'Cancelled' ) {
 			} # end if
 			if ( $$variable{'AmountOutstanding'} ) {
-				if ( $config{'PaymentProcessor'} ) {
-					$html .= ssi::writeButton( $log, $dbh, 'MakePayment','makePayment.gif',"f1.action='/main/payment/payment_make.html';f1.submit();", '', 'Make Payment' ); 
+				if ( openprint::PaymentType::find() ) {
+					$html .= ssi::writeButton( $log, $dbh, 'MakePayment','makePayment.gif',"f1.action='/payment/make.html';f1.submit();", '', 'Make Payment' ); 
 				} # end if
 			} # end if
 			
 			return $html;
 		 ) ?>
-</span>
-<br class="spacer"/>
-<!--#include virtual="/includes/_order_payments.html"-->
-	</form>
+	</span>
+	<br class="spacer"/>
+	<!--#include virtual="/includes/_order_payments.html"-->
+</form>
 
 <br class="spacer"/>

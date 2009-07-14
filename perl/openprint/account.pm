@@ -10,7 +10,6 @@ require sql;
 require ssi;
 require misc;
 
-require openprint::user;
 require openprint::usergroup;
 require openprint::logs;
 require openprint::MarketingCategory;

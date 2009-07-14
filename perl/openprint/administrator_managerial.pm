@@ -3,10 +3,6 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw( %config %param $dbh );
-*config = \%openprint::config;
-*param = \%openprint::param;
-*dbh = \%openprint::dbh;
 
 require sql;
 require ssi;
@@ -615,6 +611,16 @@ sub _company_accounting_contacts {
 		$variable{'error'} .= sql::insert( undef, undef, 'companies_accountingcontacts', 'company_id', $variable{'Company'}->id(), 'user_id', $param{'new_accounting_contact_id'} );
 	} # end if
 } # end sub
+
+sub payment_options {
+	require openprint::PaymentType;
+	$variable{'PaymentType'} = new openprint::PaymentType( $param{'paymenttype_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $variable{'PaymentType'}->save(\%param);
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $variable{'PaymentType'}->delete();
+	} # end if
+} # end sub payment_options
 
 1;
 __END__

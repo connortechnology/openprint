@@ -26,9 +26,9 @@ sub helpdesk {
 			'ysnReviewed',	$r->param('rdbReviewed'),
 			'blbResponse',	$r->param('txtQuestion-Quote')
 		);
-		$_ = "SELECT Users.strFirstName || ' ' || Users.strLastName, Users.strEmail\n".
+		$_ = "SELECT Users.FirstName || ' ' || Users.LastName, Users.Email\n".
 			"FROM HelpDesk,Users WHERE HelpDesk.Id = $index\n".
-			"AND Users.Index=UserId\n";
+			"AND Users.id=UserId\n";
 
 		my ($name, $email) = sql::execute( $log, $dbh, $_);
 
@@ -103,9 +103,9 @@ sub helpdesk_search {
 				'ysnReviewed',	$r->param('rdbReviewed'),
 				'blbResponse',	$r->param('txtQuestion-Quote')
 				] );
-		$_ = "SELECT Users.strFirstName || ' ' || Users.strLastName, Users.strEmail\n".
+		$_ = "SELECT Users.FirstName || ' ' || Users.LastName, Users.Email\n".
 			"FROM HelpDesk,Users WHERE HelpDesk.Id=$index\n".
-			"AND Users.Index=User_Id\n";
+			"AND Users.id=User_Id\n";
 
 		my ($name, $email) = sql::execute( $log, $dbh, $_);
 		my %mail = (
