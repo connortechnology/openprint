@@ -63,6 +63,7 @@
 							my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
 							while ( my ( $name, $value ) = splice @defaults,0,2 ) {
 								$$variable{$name.'CoverSpreads'} = $value;
+								$$variable{$name.'InteriorSpreads'} = $value;
 							} # end while
 						} # end if
 
@@ -97,6 +98,12 @@
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
 					return variable_substitution( $r, $log, $dbh, \$html, $variable );
 					) ?>
+				<input type="hidden" name="rdbColourBarInteriorSpreads" value="<?rdbColourBarInteriorSpreads?>"/>
+				<input type="hidden" name="txtCropMarkSpaceInteriorSpreads" value="<?txtCropMarkSpaceInteriorSpreads?>"/>
+				<input type="hidden" name="chkBleedLeftInteriorSpreads" value="<?chkBleedLeftInteriorSpreads?>"/>
+				<input type="hidden" name="chkBleedRightInteriorSpreads" value="<?chkBleedRightInteriorSpreads?>"/>
+				<input type="hidden" name="chkBleedTopInteriorSpreads" value="<?chkBleedTopInteriorSpreads?>"/>
+				<input type="hidden" name="chkBleedBottomInteriorSpreads" value="<?chkBleedBottomInteriorSpreads?>"/>
 				<br class="spacer"/>
 			</div>
 			<!--#include virtual="/includes/shrinkwrapping.html"-->

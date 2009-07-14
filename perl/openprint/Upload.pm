@@ -4,6 +4,24 @@ use strict;
 
 require openprint::Company;
 require openprint::File;
+use openprint ();
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+$table = 'uploads';
+$serial = 'upload_id_seq';
+%fields = (
+	'start'	=>	'start',
+	'size'	=>	'size',
+	'total'	=>	'total',
+	'id'	=>	'id',
+	'finished'	=>	'finished',
+	'company_id'	=>	'company_id',
+	'user_id'		=>	'user_id',
+	'company'		=>	'company',	
+);
 
 my $debug = 1;
 
@@ -38,26 +56,6 @@ sub find {
 	return map { new openprint::Upload( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub load {
-    my ( $self, $data ) = @_;
-    if ( ! $data ) {
-        $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Uploads WHERE id=?', {}, $$self{id} );
-    } # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
-sub save {
-	my $self = shift;
-	my %sql = (
-		);
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Upload_id_seq')} );
-		sql::insert( $openprint::log, $openprint::dbh, 'Uploads', 'id', $$self{'id'}, %sql );
-	} else {
-		sql::update( $openprint::log, $openprint::dbh, 'Uploads', ['id=?', $$self{'id'}], %sql );
-	} # end if
-} # end sub save
-
 sub Company {
 	my $self = shift;
 	return new openprint::Company($$self{company_id});
@@ -73,6 +71,14 @@ sub Files {
 	return openprint::File::find('upload_id'=>$$self{id});
 } # end sub
 
+sub total_text {
+	my ( $self ) = @_;
+	return misc::format_bytes( $$self{'total'} );
+} #end sub total_text
+sub size_text {
+	my ( $self ) = @_;
+	return misc::format_bytes( $$self{'size'} );
+} #end sub size_text
 1;
 __END__
 
