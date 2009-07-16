@@ -800,11 +800,6 @@ sub check_in {
 	$docket =~ s/\D//g;
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
-	if ( ($Paper->type() eq 'Roll') and ($quantity > 0) and ( $$Skid{Paper}{$Paper->id()} + $quantity > 10000 ) ) {
-		$variable{'error'} .= 'Skid cannot hold more than 10000lbs.<br/>';
-		return;
-	} # end if
-
 # Default to add
 	if	( $quantity =~ /^\d/ ) {
 		$quantity = '+' . $quantity;
