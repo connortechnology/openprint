@@ -217,7 +217,7 @@ $log->debug("User Type: $session{'user_type'}");
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				if ( sql::execute( $log, $dbh, 'SELECT type FROM Users WHERE type=?', 'A' ) ) {
 					$variable{'Redirect'} = '/administrator/error/login.html';
-					$variable{'Destination'} = misc::get_destination( $r, $log );
+					$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 					return $status;
 				} # end if
 			} # end if
@@ -261,7 +261,7 @@ $log->debug("User Type: $session{'user_type'}");
 		if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) )	) {
 				$variable{'Redirect'} = '/employee/error/login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
@@ -361,7 +361,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			# if not logged in, determine if they are allowed to see this page or not.
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
@@ -381,7 +381,7 @@ $log->debug("Not logged in");
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 $log->debug("redirecting");
 				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} else {
@@ -400,7 +400,7 @@ $log->debug("logged in");
 			# if not logged in, determine if they are allowed to see this page or not.
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} # end if

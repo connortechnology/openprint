@@ -79,22 +79,22 @@
 								<li><a href="/main/services/delivery.html;NOSSL">&raquo; Delivery</a></li>
 							</ul>
 						</li>
-						<li id="MenuAccount" class="<? echo ( $r->uri() =~ /main\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">ACCOUNT</a>
+						<li id="MenuAccount" class="<? echo ( $r->uri() =~ /account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">ACCOUNT</a>
 							<ul>
 	<? if ( $openprint::session{'user_id'} ) ?>
-								<li><a href="/main/account/company_profile.html">&raquo; Company Profile</a></li>
-								<li><a href="/main/account/user_profile.html">&raquo; User Profile</a></li>
+								<li><a href="/account/company_profile.html">&raquo; Company Profile</a></li>
+								<li><a href="/account/user_profile.html">&raquo; User Profile</a></li>
 	<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
-								<li><a href="/main/account/select_company.html">&raquo; Select Company</a></li>
-								<li><a href="/main/account/registration.html">&raquo; Registration</a></li>
+								<li><a href="/account/select_company.html">&raquo; Select Company</a></li>
+								<li><a href="/account/registration.html">&raquo; Registration</a></li>
 	<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
-								<li><a href="/main/account/logout.html">&raquo; Logout</a></li>
+								<li><a href="/account/logout.html">&raquo; Logout</a></li>
 	<? else ( $openprint::session{'user_id'} ) ?>
-								<li><a href="/main/account/login.html">&raquo; Login</a></li>
-								<li><a href="/main/account/registration.html">&raquo; Registration</a></li>
+								<li><a href="/account/login.html">&raquo; Login</a></li>
+								<li><a href="/account/registration.html">&raquo; Registration</a></li>
 	<? endif ( $openprint::session{'user_id'} ) ?>
-								<li><a href="/main/account/credit_application.html">&raquo; Credit Application</a></li>
-								<li><a href="/main/account/reseller_application.html">&raquo; Reseller Application</a></li>
+								<li><a href="/account/credit_application.html">&raquo; Credit Application</a></li>
+								<li><a href="/account/reseller_application.html">&raquo; Reseller Application</a></li>
 							</ul>
 						</li>
 						<li id="MenuProjects" class="<? echo ( $r->uri() =~ /main\/project/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuProjects'), 'off', 'on');return false;">PROJECTS</a>
@@ -131,7 +131,7 @@
 				</div>
 	<? if ( ! $openprint::session{'user_id'} ) ?>
 				<div id="QuickLogin">
-					<form name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
+					<form name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/account/login.html">
 						<fieldset><legend>QUICK LOGIN:</legend>
 							<br/>
 							EMAIL:<br/>
@@ -143,7 +143,7 @@
 								<? echo ( join('', 
 									ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ),
 									ssi::writeButton( $log, $dbh, 'QuickForgotButton','forgot.gif',"QuickLoginForm.btnFunction.value='Forgotten Password';QuickLoginForm.submit();", '', 'Forgotten Password' ),
-									ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register Now' ),
+									ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/account/registration.html', 'Register Now' ),
 									);
 								) ?>
 						</fieldset>

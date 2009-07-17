@@ -75,7 +75,31 @@ sub make {
 	$variable{'Payment'}->set( \%param );
 	$variable{'Payment'}->amount( $variable{'Order'}->balance() ) if ! $variable{'Payment'}->amount();
 
-	if ( $param{'btnFunction'} eq 'Submit' ) {
+	if ( $param{'btnFunction'} eq 'ExpressCheckOut' ) {
+		# Express CheckOut takes an Order
+		my $Order = new openprint::Order( $param{'order_id'} );
+		require PayPal;
+		my $Paypal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+		my $result = $Paypal->Call_Service({
+					METHOD			=>	'SetExpressCheckout',
+					PAYMENTACTION	=>	'Sale',
+					CURRENCYCODE	=>	openprint::Currency::get_current()->short(),
+					AMT				=>	$Order->balance(),
+					RETURNURL		=>	$config{'ExternalSiteURL'}.'/payment/make.html',
+					CANCELURL		=>	$config{'ExternalSiteURL'}.'/payment/make.html',
+					});
+		if ($$result{ack} ne 'Success') {
+			$variable{'error'} .= 'Api call failed:<br/>';
+			foreach my $error ( $Paypal->Parse_Errors($result) ) {
+				$variable{'error'} .= "$$error{errorcode} $$error{longmessage}<br/>";
+			} # end foreach error
+		} else {
+			my $token = $$result{'TOKEN'};	
+			$r->headers_out->(Location=>$Paypal::url.$token);
+			return;
+		} # end if
+		
+	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
 		if ( $variable{'Payment'}->Type()->name() eq 'PayPal' ) {
 			require PayPal;
 
@@ -86,13 +110,12 @@ sub make {
 					METHOD			=>	'SetExpressCheckout',
 					PAYMENTACTION	=>	'Sale',
 					AMT				=>	$param{'amount'},
-					#CURRENCYCODE=>openprint::Currency::get_current()->short(),
 					#COUTNRYCODE=>'CA',
 
 					#creditcardtype=>$param{'cc_type'},
 					acct=>$param{'cc_number'},
 					expdate=>$param{'exp_month'}.$param{'exp_year'},
-					#cvv2=>$param{'cc_cvv2'},
+					cvv2=>$param{'cc_cvv2'},
 					#firstname=>$param{'firstname'},
 					#lastname=>$param{'lastname'},
 					#street=>$param{'address1'},

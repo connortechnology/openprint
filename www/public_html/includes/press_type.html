@@ -1,8 +1,7 @@
 <? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
-<div class="row">
-	<span class="label">Press type:</span>
-	<span class="input"> 
-		<select name="PrintingType" onchange="remove_div('OrderButton');calc(this.form.name);">
+<p>
+	<label>Press type:</label>
+		<select id="PrintingType" name="PrintingType" onchange="remove_div('OrderButton');calc(this.form.name);">
 			<? echo (
 				my $html;
 				
@@ -10,7 +9,7 @@
  '', 'No Preference', sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{'PrintingType'} );
 			) ?>
 		</select>
-	</span>
-	<br class="spacer"/>
-</div>
+</p>
+<? else ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
+<input type="hidden" name="PrintingType" id="PrintingType" value="<?PrintingType?>" />
 <? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
