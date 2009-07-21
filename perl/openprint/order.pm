@@ -1183,12 +1183,13 @@ sub send_sales_order {
 				FROM	=> $order{'txtEmail'},
 				#FROM	=> $openprint::config{'OrderingEmail'},
 				TO		=> join(',',@admin_emails),
+				BCC		=>	'iconnor@penultima.org',
 				SUBJECT => "Order $order_id",
 				);
 		misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries, @project_dockets );
 	} # end if
 	
-} # end sub order_send_email
+} # end sub send_sales_order
 
 sub history {
 	my ( $r, $log, $dbh, $variable ) = @_;

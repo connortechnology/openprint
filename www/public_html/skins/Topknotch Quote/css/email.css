@@ -19,4 +19,125 @@ A:hover {
 }
 body {
 	padding: 10px;
+	background-color: #ffffff;
+    font-family: Arial, Helvetica, Sans-Serif;
+    font-size: small;
+    margin: 0px;
+
 }
+
+tr#Header {
+	height: 104px;
+}
+tr#Header td {
+	margin: 0px;
+	padding: 0px;
+	height: 104px;
+}
+td#Logo {
+     width: 251px;
+	height: 104px;
+}
+
+a:link,
+	a:visited,
+	a:hover,
+	a:active
+{
+	text-decoration: none;
+}
+
+table {
+	width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    table-layout: fixed;
+    border: none;
+
+}
+
+table.List {
+    border-bottom: 1px solid #cfbb4b;
+}
+table.List th {
+    border-bottom: 1px solid #cfbb4b;
+    background: transparent;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+table.List td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    vertical-align: top;
+}
+table.List tr.totals {
+    border-top: 1px solid #cfbb4b;
+}
+
+
+table.List input.text {
+    width: 100%;
+}
+
+hr {
+    width: 100%;
+    margin: 1px;
+    padding: 0px;
+    height: 1px;
+    border: 0px;
+    color: #cfbb4b;
+    background-color: #cfbb4b;
+}
+
+.colRow { background-color: #E3E4F0 }
+
+img {
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+fieldset {
+    border-right: none;
+    border-left: none;
+    border-top: 1px solid #cfbb4b;
+    border-bottom: none;
+    padding-bottom: 10px;
+}
+fieldset p {
+    margin: 0px;
+    margin-top: .4em;
+    padding: 0px;
+}
+fieldset p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset p {height: 1%;}
+* fieldset p {display:block;}
+/* End hide from IE-mac */
+
+fieldset legend {
+    font-weight: bold;
+	color: #cfbb4b;
+}
+fieldset p label {
+	width: 185px;
+	float: left;
+}
+.Currency {
+    float: right;
+    font-weight: bold;
+}
+.spacer {
+    clear: both;
+    height: 0px;
+    margin: 0px;
+    padding: 0px;
+}
+
