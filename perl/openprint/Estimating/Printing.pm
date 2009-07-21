@@ -1676,19 +1676,21 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 			if ( ! $found ) {
 				my @i;
 				foreach my $I ( @impositions ) {
-					if ( ! ( $$specs{'txtImposition'.$qty_index} % $I->columns() ) ) {
-						my $remove = ( $I->imposition() - $$specs{'txtImposition'.$qty_index} ) / $I->columns();
-						if ( $I->rows() > $remove ) {
-							my $i = $I->copy();
-							$i->rows( $i->rows()-$remove );
-							push @i, $i if $i->imposition();
-						} # end if
-					} elsif ( ! ( $$specs{'txtImposition'.$qty_index} % $I->rows() ) ) {
-						my $remove = ( $I->imposition() - $$specs{'txtImposition'.$qty_index} ) / $I->rows();
-						if ( $I->columns() > $remove ) {
-							my $i = $I->copy();
-							$i->columns( $i->columns()-$remove );
-							push @i, $i if $i->imposition();
+					if ( $$specs{'txtImposition'.$qty_index} < $I->imposition() ) {
+						if ( ! ( $$specs{'txtImposition'.$qty_index} % $I->columns() ) ) {
+							my $remove = ( $I->imposition() - $$specs{'txtImposition'.$qty_index} ) / $I->columns();
+							if ( $I->rows() > $remove ) {
+								my $i = $I->copy();
+								$i->rows( $i->rows()-$remove );
+								push @i, $i if $i->imposition();
+							} # end if
+						} elsif ( ! ( $$specs{'txtImposition'.$qty_index} % $I->rows() ) ) {
+							my $remove = ( $I->imposition() - $$specs{'txtImposition'.$qty_index} ) / $I->rows();
+							if ( $I->columns() > $remove ) {
+								my $i = $I->copy();
+								$i->columns( $i->columns()-$remove );
+								push @i, $i if $i->imposition();
+							} # end if
 						} # end if
 					} # end if
 				} # end foreach I
