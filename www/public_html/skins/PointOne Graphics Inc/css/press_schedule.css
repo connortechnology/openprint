@@ -51,7 +51,7 @@ div.row {
 		text-align: left;
 		font-size: 12px;
 	}
-	div.PressColumn li {
+	div.PressColumn ul li {
 		padding: 0px;
 		margin: 0px;
 		margin-top: 2px;

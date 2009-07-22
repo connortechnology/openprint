@@ -54,23 +54,31 @@
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="'.int(100/(@{$$variable{'Presses'}})).'%;">';
-
-			my @EquipmentShifts = openprint::Equipment_Shift::find( 'equipment_id'=>$E->id(), 'order'=>'starttime' );
-			my $starttime = $EquipmentShifts[0]->starttime_seconds();
+			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Presses'}})).'%;"><ul>';
 
 			my @OperatorShifts = openprint::Operator_Shift::find('equipment_id'=>$E->id(), 'order'=>'starttime' );
-			while ( $starttime < $OperatorShifts[length @OperatorShifts -1] ) {
-				foreach my $Shift ( @EquipmentShifts ) {	
-					if ( $OperatorShifts[0]->shift_id() == $Shift->id() ) {
-						my $OS = shift @OperatorShifts;
-					} # end if
-					$html .= $Shift->get_operator_li();
-					$starttime += $Shift->runtime_seconds();
-				} # end foreach Shift
-			} # end while
+			foreach my $Shift ( @OperatorShifts ) {	
+				$html .= sprintf( '<li id="item_%d">', $$Shift{'id'} );
+				$html .= $Shift->Shift()->name();
+				$html .= ' - ';
+				$html .= sprintf('<span id="operator_id-%d">', $Shift->id() );
+				if ( $Shift->operator_id() ) {
+					$html .= $Shift->Operator()->name();
+				} else {
+					$html .= 'assign';
+				} # end if
+				$html .= '</span>';
+				$html .= '<span class="Buttons">';
+				$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$Shift{'id'}, '', "if(confirm('Are you sure?')){}", '', 'D' );
+				$html .= '</span>';
 
-			$html .= '</div>';
+				$html .= "<br/></li>\n";
+				$html .= sprintf(q`<script type="text/javascript">
+					new Ajax.InPlaceCollectionEditor( 'operator_id-%1$d', '_operator_shift_li.html', { loadCollectionURL: '_operators.json', cancelControl:false, default: %2$d } );
+				</script>`, $Shift->id(), $Shift->operator_id() );
+			} # end foreach Shift
+
+			$html .= '</ul></div>';
 		} # end foreach press
 		return $html;
 	) ?>

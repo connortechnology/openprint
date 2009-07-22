@@ -122,18 +122,6 @@ sub emanantise {
 	return $Shift;
 } # end sub emanantise
 
-sub get_operator_li {
-    my ( $self ) = @_;
-
-    my $html;
-	$html .= sprintf( '<li id="item_%d">', $$self{'id'} );
-	$html .= '<span class="Buttons">';
-	$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
-	$html .= '</span>';
-
-	$html .= "<br/></li>\n";
-	return $html;
-} # end sub get_li
 
 1;
 #__END__

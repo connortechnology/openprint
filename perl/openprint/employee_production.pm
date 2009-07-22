@@ -1419,6 +1419,26 @@ sub _signature_completion_popup {
 	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
 }
 
+sub _operators {
+} # end 
+
+sub _operator_shift_li {
+	my ( $shift_id ) = $param{'editorId'} =~ /^operator_id-(\d+)$/;	
+	my $Shift = new openprint::Operator_Shift( $shift_id );
+	if ( $param{'value'} ) {
+		my $Operator = openprint::User::find_one('name'=>$param{'value'});
+		if ( $Operator ) {
+			$variable{'error'} .= $Shift->save({'operator_id'=>$Operator->id()});
+		} else {
+			$variable{'error'} .= 'invalid user';
+		} # end if
+	} else {
+		$variable{'error'} .= $Shift->save({'operator_id'=>undef});
+	} # end if
+
+	$variable{'Shift'} = $Shift;
+} # end sub operator_shift_li
+
 1;
 
 __END__

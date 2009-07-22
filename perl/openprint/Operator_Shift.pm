@@ -106,7 +106,7 @@ sub find {
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded Operator_Shift ($sql) (@values) records:" . @$data );
 	} # end if
-	return map { new openprint::ScheduledJob( $_->{id}, $_ ) } @$data;
+	return map { new openprint::Operator_Shift( $_->{id}, $_ ) } @$data;
 } # end sub find
 
 sub Equipment {
@@ -139,6 +139,10 @@ sub starttime_seconds {
 sub duration_seconds {
 	return $_[0]->Shift()->duration_seconds();
 } # end sub duration_seconds
+
+sub Operator {
+	return new openprint::User( $_[0]{'operator_id'} );
+} # end sub Operator
 
 1;
 #__END__

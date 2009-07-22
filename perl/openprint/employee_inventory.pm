@@ -1289,15 +1289,21 @@ sub manifest {
 				} # end if po_id
 
 				# Save any new entries that might have been entered but not added.
-				if ( $param{"rfidtag_id-$$Type{id}-"} or $param{"skid_id-$$Type{id}-"} ) {
+				if ( $param{"qty_lbs-$$Type{id}-"} ) {
 					@param{"rfidtag_id-$$Type{id}-","skid_id-$$Type{id}-"} = misc::trim(@param{"rfidtag_id-$$Type{id}-","skid_id-$$Type{id}-"});
-					my $Tag = new openprint::RFIDTag( $param{"rfidtag_id-$$Type{id}-"} );
-					$variable{'error'} .= $Tag->save({'id'=>$param{"rfidtag_id-$$Type{id}-"}}) if $param{"rfidtag_id-$$Type{id}-"} and ! $Tag->id();
-					my $Skid = new openprint::Skid( $param{"skid_id-$$Type{id}-"} );
-					$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
+
+					my $Skid;
+					my $Tag;
+					if ( $param{"rfidtag_id-$$Type{id}-"} ) {
+						$Tag = new openprint::RFIDTag( $param{"rfidtag_id-$$Type{id}-"} );
+						$variable{'error'} .= $Tag->save({'id'=>$param{"rfidtag_id-$$Type{id}-"}}) if $param{"rfidtag_id-$$Type{id}-"} and ! $Tag->id();
+						$Skid = $Tag->Skid() if $Tag->skid_id();
+					} # end if
+					
+					$Skid = new openprint::Skid( $param{"skid_id-$$Type{id}-"} ) if ! $Skid;
 					$variable{'error'} .= $Skid->save() if ! $Skid->id();
 
-					if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
+					if ( $Tag and $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Manifest->Contents() ) ) {
 						#$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been scanned.';
 					} elsif ( $Skid->id() and sets::isin( $Skid->id(), map { $_->skid_id() } $Manifest->Contents() ) ) {
 						#$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been scanned.';
@@ -1320,7 +1326,7 @@ sub manifest {
 								} );
 					} # end if
 					$total_qty += $C->quantity();
-					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest <a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
+					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->id() ) );
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project ) {
 						my @PAs = openprint::PaperAllocation::find('skid_id'=>$C->skid_id());
