@@ -184,7 +184,7 @@ sub find {
 			if ( (! defined $params{'supplied'} ) or ($params{'supplied'} eq '' ) ) {
 				$sql .= ' AND supplied IS NULL';
 			} else {
-				$sql .= ' AND (supplied IS NULL OR supplied=?)';
+				$sql .= ' AND supplied=?';
 				push @values, $params{'supplied'} eq 'Y' ? 1 : 0;
 			} # end if
 		} # end if
@@ -846,14 +846,11 @@ sub sheets_per_package {
 		$$self{sheets_per_package} = shift;
 	} # end if
 
-	my $factor = 1;
-	if ( $$self{'width'} and $$self{'height'} ) {
-		$factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} );
-	} # end if
-	$factor = 1 if ! $factor;
+	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} ) if $$self{'width'} and $$self{'height'};
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
 	
-	return $$self{'sheets_per_package'} * $factor;
+	return $$self{'sheets_per_package'} * $factor if $factor;
+	return $$self{'sheets_per_package'};
 }
 
 sub gsm {

@@ -172,7 +172,7 @@
 			</table>
 			<span style="float: right;">
 				<? echo ( 
-					ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', "if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});document.forms['upload'].submit();}", '', 'Upload Files' );
+					ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', "if ( check_input( upload ) ) { upload.btnFunction.value='Upload Files';startprogress($$variable{serial});upload.submit();}", '', 'Upload Files' );
 				) ?>					
 			</span>
 			<br class="spacer"/>

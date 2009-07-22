@@ -36,10 +36,10 @@
                 <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
                 <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
-<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards'] ) ) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'Door Hangers' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
@@ -108,6 +108,11 @@
 	<!--#include virtual="/includes/main/proj/version_quantity.html"-->
 	<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectTypeID'} eq 'MultiVersion' ) ?>
+<? if ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
+	<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
+	<!--#include virtual="/includes/main/proj/templates/labels.html" -->
+	<!--#include virtual="/includes/main/proj/dimensions.html"-->
+<? endif ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'Tags/Tickets' ) ?>
 <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 <!--#include virtual="/includes/main/proj/templates/tags_tickets.html" -->

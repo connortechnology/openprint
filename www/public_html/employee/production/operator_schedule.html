@@ -8,6 +8,7 @@
 <form name="f1" method="post" action="operator_schedule.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Display Criteria</legend>
+		<div class="leftColumn">
 		<p>
 			<label>Presses:</label>
 			<select name="Presses" multiple="multiple" size="4">
@@ -26,49 +27,48 @@
 ) ?>
 			</select>
 		</p>
+		</div>
+		<div class="rightColumn">
 		<p>
 			<label>Operator</label>
-			<select multiple="multiple" id="operator_id" name="operator_id">
-				<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>'E', 'order'=>'lower(strfirstname),lower(strlastname)') ], [ split ';', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); ) ?>
+			<select multiple="multiple" id="operator_id" name="operator_id" size="4">
+<? echo ( 
+		ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>'E', 'order'=>'lower(strfirstname),lower(strlastname)') ], [ split ';', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); 
+) ?>
 			</select>
 		</p>
+		</div>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif', "f1.btnFunction.value='Add Shift';f1.submit();", '', 'Add Shift' ); ) ?>
 		</p>
 	</fieldset>
-	<style type="text/css">
-		div.PressColumn {
-			width: <? echo ( int (100/(@{$$variable{'Presses'}})); ) ?>%;
-			text-align: center;
-			padding: 0px;
-			margin: 0px;
-		}
-	</style>
-	
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" ><a href="/employee/production/operator_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
-		} # end foreach
+			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Presses'}})).'%;"><a href="/employee/production/operator_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
+		} # end foreach Equipment
 		return $html;
-		) ?>
+	) ?>
 	<hr style="clear: both;"/>
 	<? echo (
-		require openprint::Equipment_Shift;
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn">';
-			my ( $year, $month, $day ) = split ('-', $$variable{'ScheduleStart'} );
-			my ( $h, $min, $s );
-			if ( ! $$variable{'ScheduleEnd'} ) {
-				@$variable{'ScheduleEnd'} = sql::execute( $log, $dbh, q{SELECT date(MAX(StartTime)) FROM Schedule} );
-			} # end if
-			my $end = 1;
-			if ( $$variable{'ScheduleEnd'} ) {
-				$end = Date::Calc::Delta_Days( split('-', $$variable{'ScheduleStart'}), split('-', $$variable{'ScheduleEnd'} ) ) + 1;
-			} # end if
+			$html .= '<div class="PressColumn" style="'.int(100/(@{$$variable{'Presses'}})).'%;">';
 
-			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
+			my @EquipmentShifts = openprint::Equipment_Shift::find( 'equipment_id'=>$E->id(), 'order'=>'starttime' );
+			my $starttime = $EquipmentShifts[0]->starttime_seconds();
+
+			my @OperatorShifts = openprint::Operator_Shift::find('equipment_id'=>$E->id(), 'order'=>'starttime' );
+			while ( $starttime < $OperatorShifts[length @OperatorShifts -1] ) {
+				foreach my $Shift ( @EquipmentShifts ) {	
+					if ( $OperatorShifts[0]->shift_id() == $Shift->id() ) {
+						my $OS = shift @OperatorShifts;
+					} # end if
+					$html .= $Shift->get_operator_li();
+					$starttime += $Shift->runtime_seconds();
+				} # end foreach Shift
+			} # end while
 
 			$html .= '</div>';
 		} # end foreach press
