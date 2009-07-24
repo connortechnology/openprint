@@ -40,6 +40,7 @@ $serial = 'payments_id_seq';
 );
 
 %transforms = (
+	'amount'	=>	[ 's/[^\d\.]//g' ],
 );
 %defaults = (
 	'order_id'		=>	undef,

@@ -217,7 +217,7 @@ $openprint::log->debug($paper_id . ' => ' . $totals{$paper_id}[$qty_index] );
 				$$specs{"sheets-$stock_index-$qty_index"} = $totals{$paper_id}[$qty_index];
 			} else {
 				$$specs{"qty-$stock_index-$qty_index"} = $totals{$paper_id}[$qty_index];
-				$$specs{"sheets-$stock_index-$qty_index"} = ceil( $totals{$paper_id}[$qty_index] / $Paper->start_sheet_weight() );
+				$$specs{"sheets-$stock_index-$qty_index"} = ceil( $totals{$paper_id}[$qty_index] / $Paper->start_sheet_weight() ) if $Paper->start_sheet_weight();
 			} # end if
 			$stock_index += 1;
 		} # end foreach Stock

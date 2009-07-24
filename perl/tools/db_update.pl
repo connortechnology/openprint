@@ -1924,7 +1924,7 @@ if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
 	}
 } else {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Invoiced_Products LIMIT 1', {} );
-	if ( ! exists $$data{'description'} ) {
+	if ( $data and ! exists $$data{'description'} ) {
 		$dbh->do('ALTER TABLE Invoiced_Products add description text');
 	} # end if
 } # end if

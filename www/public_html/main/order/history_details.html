@@ -97,7 +97,7 @@ Projects listed in red have changed price from the time this order was originall
 			if ( $$variable{'AmountOutstanding'} ) {
 				my @Payments = openprint::PaymentType::find();
 				if ( @Payments == 1 and $Payments[0]->name() eq 'PayPal' ) {
-					$html .= '<a href="/payment/make.html?order_id='.$$variable{'Order'}->id().'&amp;btnFunction=ExpressCheckOut"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif" alt="ExpressCheckOut"/></a>';
+					$html .= '<a href="/payment/make.html?order_id='.$$variable{'Order'}->id().'&amp;btnFunction=SetExpressCheckOut"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif" alt="ExpressCheckOut"/></a>';
 				} else {
 					$html .= ssi::writeButton( $log, $dbh, 'MakePayment','makePayment.gif',"f1.action='/payment/make.html';f1.submit();", '', 'Make Payment' ); 
 				} # end if

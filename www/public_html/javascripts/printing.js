@@ -178,7 +178,7 @@ function calc_print( formName, force ) {
 	} // end if
 	gettingNewPrice = true;
 	var h = form.serialize(true);
-	h.service_type = 'Printing';
+	h.ServiceType = 'Printing';
 	h.callback = 'cbFillPrintResults';
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end calc_print

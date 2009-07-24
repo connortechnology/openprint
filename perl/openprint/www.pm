@@ -105,7 +105,12 @@ $variable{'uri'} = $page;
 		} # end if
 	} # end while
 
-	if ( exists $variable{'Download'} and $variable{'Download'} ) {
+	if ( $variable{'ExternalRedirect'} ) {
+		$r->headers_out->set(Location=>$variable{'ExternalRedirect'});
+		$r->status(Apache2::Const::REDIRECT);
+		#$r->send_http_header;
+$log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
+	} elsif ( exists $variable{'Download'} and $variable{'Download'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {
 			$r->print( $_ );
 		} # end foreach
