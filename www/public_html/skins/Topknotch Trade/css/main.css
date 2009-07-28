@@ -183,24 +183,6 @@ div.OrderHistory fieldset p label {
 	margin-left: -100px;
 	width: 95px;
 }
-div#MainBox {
-	display: block;
-	padding: 0px;
-	padding-left: 190px;
-	margin: 5px;
-	width: auto;
-	clear: none;
-}
-div#MainBox:after {
-    content: ".";
-    display: block;
-    height: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div#MainBox {height: 1%;}
-/* End hide from IE-mac */
 
 img#Butterfly, img#IDEAG7, img#IDEAG7Master {
 	margin-top: 10px;
@@ -295,4 +277,7 @@ img#HomeCollage {
 }
 #menubar li#MenuAccount a {
 	width: 120px;
+}
+#AlertDiv {
+	color: red;
 }

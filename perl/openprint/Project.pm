@@ -898,7 +898,7 @@ sub summary {
 
 	my %services = $self->get_services();
 	if ( $services{''} ) {
-		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $$self{'id'}, $services{''}[0] );
+		my %specs = %{openprint::service::get_specs_ref( $self, $services{''}[0] )};
 		if ( $specs{'Versions'} ) {
 			$summary .= $specs{'Versions'} .= ' versions ';
 		} # end if
