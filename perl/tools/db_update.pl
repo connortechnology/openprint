@@ -1783,8 +1783,8 @@ if ( ! $data ) {
 		$dbh->do('ALTER TABLE Payments add deleted boolean NOT NULL default false;');
 	} # end if
 	if ( $data and ! exists $$data{'type_id'} ) {
-		$dbh->do('ALTER TABLE paymenttypes add type_id INTEGER');
-		$dbh->do('ALTER TABLE paymenttypes add FOREIGN KEY (type_id) REFERENCES PaymentTypes (id)');
+		$dbh->do('ALTER TABLE payments add type_id INTEGER');
+		$dbh->do('ALTER TABLE payments add FOREIGN KEY (type_id) REFERENCES PaymentTypes (id)');
 	} # end if
 } # end if
 
