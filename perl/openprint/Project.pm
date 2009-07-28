@@ -488,8 +488,10 @@ sub find {
             push @values, $params{'id_end'};
 	} # end if
 	if ( exists $params{'predefined'} ) {
-		$sql .= ' AND predefined=?';
-		push @values, $params{'predefined'};
+		if ( $params{'predefined'} ne '' ) {
+			$sql .= ' AND predefined=?';
+			push @values, $params{'predefined'};
+		} # end if
 	} # end if
 
 	if ( $params{'reference'} ) {
@@ -896,7 +898,7 @@ sub summary {
 
 	my %services = $self->get_services();
 	if ( $services{''} ) {
-		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $$self{'id'}, $services{''}[0] );
+		my %specs = %{openprint::service::get_specs_ref( $self, $services{''}[0] )};
 		if ( $specs{'Versions'} ) {
 			$summary .= $specs{'Versions'} .= ' versions ';
 		} # end if
