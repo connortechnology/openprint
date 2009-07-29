@@ -370,12 +370,7 @@ sub paper_details {
 
 		foreach my $Duplicate ( @Duplicates ) {
 			next if $Duplicate->id() == $Paper->id();
-			my $ac = sql::start_transaction( $dbh );
-			sql::update( undef, undef, 'Paper_allocations', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $Paper->id() );
-			sql::update( undef, undef, 'Paper_Inventory', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $Paper->id() );
-			sql::update( undef, undef, 'skid_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $Paper->id() );
-			$Duplicate->delete();
-			sql::end_transaction( $dbh, $ac );
+			$Paper->merge( $Duplicate );
 		} # end foreach
 	} # end if
 	$variable{'Paper'} = $Paper;

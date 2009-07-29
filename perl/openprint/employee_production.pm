@@ -52,7 +52,7 @@ sub print_overview {
 	} # end if
 	$session{'/employee/production/print_overview.html?lastupdated'} = time;
 
-	press_schedule( @_ );
+	press_schedule();
 } # end sub print_overview
 
 sub press_schedule {
@@ -1213,7 +1213,7 @@ sub reorder_jobs {
 
 	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
-		if ( $order[$i]{'starttime'} and $order[$i]{'starttime_locked'} ) {
+		if ( $order[$i]{'starttime'} and $order[$i]{'locked'} ) {
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
 		} # end if
@@ -1281,6 +1281,14 @@ sub _li_change {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if
+	} elsif ( $param{'action'} eq 'start' ) {
+		$Job->starttime_seconds( time );
+		$Job->locked( 1 );
+		$variable{'error'} .= $Job->save();
+		if ( $Equipment->smartscheduling() ) {
+			reorder_jobs(
+					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+		} # end if
 	} elsif ( $param{'action'} eq 'SaveJob' ) {
 
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
@@ -1289,9 +1297,9 @@ sub _li_change {
 		$Job->comment( $param{'comment'} );
 		$Job->impressions( $param{'impressions'} );
 		$variable{'error'} .= $Job->save({
-				'starttime'			=>	$param{'starttime_year'} ? $new_starttime : undef,
-				'starttime_locked'	=>	$param{'locked'},
-				'runtime'			=>	$param{'runtime'},
+				'starttime'	=>	$param{'starttime_year'} ? $new_starttime : undef,
+				'locked'	=>	$param{'locked'},
+				'runtime'	=>	$param{'runtime'},
 				} );
 
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();

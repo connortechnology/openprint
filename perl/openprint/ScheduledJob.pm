@@ -29,6 +29,7 @@ $serial = 'schedule_id_seq';
 	'project_id'	=>	'projectindex',
 	'service_id'	=>	'service_id',
 	'equipment_id'	=>	'equipment_id',
+	'locked'		=>	'starttime_locked',
 );
 
 %transforms = (
@@ -337,12 +338,12 @@ sub get_li {
         $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
         $html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split' } } );", '', 'S' ) if @{$$self{'service_id'}} > 1;
         $html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
-		$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", '', 'Start' );
+		$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'start' } } );", '', 'Start' );
         $html .= '</span>';
 		if ( $Equipment->smartscheduling() ) {
 			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
 					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
-					$$self{'starttime_locked'} ? 'locked' : 'unlocked',
+					$$self{'locked'} ? 'locked' : 'unlocked',
 					);
 		} # end if
 
