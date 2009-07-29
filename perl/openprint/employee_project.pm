@@ -39,6 +39,7 @@ sub view {
 
 	my $project_index = $param{'ProjectIndex'};
 	$project_index = $param{'project_id'} if ! $project_index;
+	$project_index =~ s/\D//g;
 	if ( ! $project_index ) {
 		if ( $param{'Docket'} ) {
 			$param{'Docket'} =~ s/\D//g;
