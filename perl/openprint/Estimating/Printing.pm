@@ -2250,11 +2250,6 @@ sub calc_price {
 			} # end if
 		} # end if
 
-		if ( ! $run_speed ) {
-			$openprint::log->warn("Got no runspeed.");
-			return \%price;
-		} # end if
-
 		if ( $folding_results{'Equipment'} ) {
 			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) Price: $%.2f on %s', @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 		} else {
@@ -2262,6 +2257,10 @@ sub calc_price {
 		} # end if
 		$price{'Comparison Cost'} += $folding_results{'Price'};
 		return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Folding' );
+	} # end if
+	if ( ! $run_speed ) {
+		$openprint::log->warn("Got no runspeed.");
+		return \%price;
 	} # end if
 	$price{'Run Speed'} = $run_speed;
 	return \%price if ! $run_speed;

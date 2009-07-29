@@ -700,10 +700,9 @@ sub in_stock {
 		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			$$self{in_stock} += $SkidContent->quantity();
-$log->debug("in_stock:" . $$self{'in_stock'} );
 		} # end foreach SkidContent
 	} # end if
-    return $$self{in_stock};
+    return 1*$$self{in_stock};
 } # end sub in_stock
 
 sub available {

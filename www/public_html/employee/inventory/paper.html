@@ -124,10 +124,12 @@ Please select a Paper to view/edit.<br>
 		</p>
 		<p>
         <label>In Stock/Out of Stock?</label>
-        <input type="checkbox" id="instock" name="instock" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/paper.html?instock'} eq 'Y'  or ! exists $session{'/employee/inventory/paper.html?instock'} ) ?> />
-        <label class="radio" for="instock">In Stock</label>
-        <input type="checkbox" id="outofstock" name="outofstock" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/skids.html?outofstock'} eq 'Y' ) ?> />
-        <label class="radio" for="outofstock">Out Of Stock</label>
+        <input type="radio" id="instockY" name="instock" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/paper.html?instock'} eq 'Y'  or ! exists $session{'/employee/inventory/paper.html?instock'} ); ) ?> />
+        <label class="radio" for="instockY">In Stock</label>
+        <input type="radio" id="instockN" name="instock" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?instock'} eq 'N' ); ) ?> />
+        <label class="radio" for="instockN">Out Of Stock</label>
+        <input type="radio" id="instockB" name="instock" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?instock'} eq 'B' ); ) ?> />
+        <label class="radio" for="instockB">Both</label>
         </p>
 
 		<p class="buttons">
