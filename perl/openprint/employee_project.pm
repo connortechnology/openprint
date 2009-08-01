@@ -356,6 +356,10 @@ sub view {
 		openprint::bindery_schedule::add_project( $Project );
 	} elsif ( $param{'btnFunction'} eq 'AddToPressSchedule' ) {
 		$variable{'error'} .= openprint::press_schedule::add_project_to_press_schedule( $Project, $param{'ServiceIndex'} );
+	} elsif ( $param{'btnFunction'} eq 'RemoveFromPressSchedule' ) {
+		foreach my $Job ( openprint::ScheduledJob( 'project_id'=>$Project->id() ) ) {
+			$Job->delete();
+		} # end foreach Job
 	} elsif ( $param{'btnFunction'} eq 'Add Service' ) {
 
 		if ( $param{'NewServiceType'} ) {

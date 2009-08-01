@@ -45,7 +45,8 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 # There are other values in teh actual specs hash, but htey are either transitory or should never be changed
 my %variables = (
 		'txtSignatureType' => ['save'],
-		'txtServiceDescription'	=> ['save'],
+		'txtServiceDescription'	=>	['save'],
+		'txtEmployeeComments'	=>	['save'],
 		'txtPrice1' => ['save','output'],
 		'txtPrice2' => ['save','output'],
 		'txtPrice3' => ['save','output'],
@@ -1563,13 +1564,16 @@ sub get_project_price {
 			} # end if
 		} # end if
 		if ( $SpreadLayout > 0 ) {
-			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
 #$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
 #foreach my $imp ( @impositions ) {
 #$imp->display();
 #}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 1;
+
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
+
+
 if ( 1 ) {
             my %imps;
 
@@ -1653,15 +1657,49 @@ if ( 1 ) {
                 push @{$imps{$str}}, $imp if $add;
             } # end foreach imp
             @impositions = map {@{$_}} values %imps;
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after filter:' . @impositions) if $debug or 1;
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after filter:' . @impositions) if $debug;
 } # end if turn filters on/off
 
 		} # end if SpreadLayout
 # Gives us both inline and offline folding options
 		if ( $$project{'HasFolding'} ) {
 			@impositions = map { openprint::Estimating::Folding::impositions( $Project, $_, $$project{'FoldingSpecs'}, $specs, $qty_index ) } @impositions;
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug or 1;
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 		} # end if Folding
+        if ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) {
+            my $found = 0;
+            foreach my $I ( @impositions ) {
+                if ( $I->imposition() == $$specs{'txtImposition'.$qty_index} ) {
+                    $found = 1;
+                } # end if
+            } # end foreach I
+			if ( ! $found ) {
+				my @i;
+				foreach my $I ( @impositions ) {
+					if ( $$specs{'txtImposition'.$qty_index} < $I->imposition() ) {
+						if ( ! ( $$specs{'txtImposition'.$qty_index} % $I->columns() ) ) {
+							my $remove = ( $I->imposition() - $$specs{'txtImposition'.$qty_index} ) / $I->columns();
+							if ( $I->rows() > $remove ) {
+								my $i = $I->copy();
+								$i->rows( $i->rows()-$remove );
+								push @i, $i if $i->imposition();
+							} # end if
+						} elsif ( ! ( $$specs{'txtImposition'.$qty_index} % $I->rows() ) ) {
+							my $remove = ( $I->imposition() - $$specs{'txtImposition'.$qty_index} ) / $I->rows();
+							if ( $I->columns() > $remove ) {
+								my $i = $I->copy();
+								$i->columns( $i->columns()-$remove );
+								push @i, $i if $i->imposition();
+							} # end if
+						} # end if
+					} # end if
+				} # end foreach I
+				if ( @i ) {
+					@impositions = @i;
+					$found = 1;
+				} # end if
+			} # end if
+        } # end if
 
 		if ( 0 ) {
 $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
@@ -1686,7 +1724,10 @@ $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
 				$openprint::log->debug('No Web 4 U');
 				next;
 			} # end if
-			next if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) );
+			if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) ) {
+				next;
+			} 
+
 			if ( ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $imp->pages() != $$specs{'PageQuantity'.$qty_index} ) ) {
 				#$openprint::log->debug("Doesn't match page quantity override " . $imp->pages() . ' != ' . $$specs{'PageQuantity'.$qty_index});
 				next;
@@ -3159,17 +3200,12 @@ sub compare_signatures_runstyle {
 sub compare_signatures {
 	my ( $sig1, $sig2, $qty_index ) = @_;
 	return 0 if ! compare_signatures_runstyle( $sig1, $sig2, $qty_index );
-#foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
-##foreach my $key ( 'ddmRunStyle', 'ddmPress' ) {
-#return 0 if $$sig1{$key.$q_i} ne $$sig2{$key.$q_i};
-#} # end if
-#} # end foreach q_i
 	foreach my $key (
 			'CustomStockPrice','txtCustomMWeight','CustomStockPriceUnits','txtStockGSM',
 			'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour',
 			'txtSpecificStockWidth', 'txtSpecificStockHeight',
 			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
-			'rdbSuppliedStock','rdbSpecificStock',
+			'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
 		return 0 if $$sig1{$key} ne $$sig2{$key};
 	} # end foreach

@@ -1,0 +1,49 @@
+<fieldset><legend>Allocated Paper:</legend>
+<? echo ( 
+	require openprint::PaperAllocation;
+
+	my %paper;
+	my @Allocations = openprint::PaperAllocation::find('project_id'=>$openprint::param{'project_id'});
+	foreach my $Allocation ( @Allocations ) {
+		$paper{$Allocation->paper_id()} = 1;
+	} # end foreach Allocation
+	
+	return 'No paper allocated' if ! @Allocations;
+
+	my $html = '';
+	foreach my $paper_id ( keys %paper ) {
+		my $Paper = new openprint::Paper( $paper_id );
+		$html .= '<b>'.$Paper->to_string().'</b><br/>';
+		@Allocations = openprint::PaperAllocation::find('project_id'=>$openprint::param{'project_id'},'paper_id'=>$paper_id);
+		
+		foreach my $Allocation ( @Allocations ) {
+			$html .= 'Quantity: ' . $Allocation->quantity() . $Allocation->units().'<br/>';
+			my @Skids;
+			if ( $Allocation->skid_id() ) {
+				$html .= 'The following ' . ( $Allocation->Paper()->type() eq 'Roll' ? ' rolls ' : ' skids ' ) . 'have been allocated:<br/>';
+				@Skids = ( $Allocation->Skid() );
+			} else {
+				$html .= 'The following ' . ( $Allocation->Paper()->type() eq 'Roll' ? ' rolls ' : ' skids ' ) . 'are available to be used:<br/>';
+				@Skids = map { new openprint::Skid( $_ ); } sql::execute( undef, undef, 'SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0 ORDER BY skid_id', $Allocation->paper_id() );
+			} # end if
+
+			foreach my $Skid ( @Skids ) {
+				my $Location = $Skid->Location();
+				if ( $Location->id() ) {
+					$html .= '<span style="float:right;width:200px;">';
+					$html .= sprintf('<img id="MAP%d" src="/images/maps/map.gif?location_id=%d&width=200&level=1" alt="" /><br/>', $Skid->id(), $Location->id() );
+					$html .= ssi::writeButton( $log, $dbh, 'Plus'.$Skid->id(), '', q{level_up( $('MAP}.$Skid->id().q{') );}, '', '+' );
+					$html .= ssi::writeButton( $log, $dbh, 'Minus'.$Skid->id(), '', q{level_down( $('MAP}.$Skid->id().q{') );}, '', '-' );
+					$html .= '</span>';
+					$html .= 'Location:' . $Location->name().'<br/>';
+				} # end if
+				$html .= 'Skid: ' . $Skid->id().'<br/>';
+				$html .= 'RFID: ' . $Skid->rfidtag_id().'<br/>';
+				$html .= '<br class="spacer"/>';
+			} # end foreach
+		} # end foreach Allocation
+		$html .= '<hr class="spacer"/>';
+	} # end foreach paper
+	return $html;
+) ?>
+</fieldset>

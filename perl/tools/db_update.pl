@@ -326,6 +326,14 @@ if ( ! $data ) {
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manifests LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Manifests.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
 } else {
 	if ( ! exists $$data{'po_id'} ) {
 		$dbh->do('ALTER TABLE Manifests add po_id INTEGER');
@@ -556,7 +564,7 @@ if ( ! $data ) {
 	if ( exists $$data{'serviceindex'} ) {
 		$dbh->do('ALTER TABLE Schedule ADD service_id INTEGER[]');
 		$dbh->do('UPDATE Schedule SET service_id=ARRAY[serviceindex]');
-		$dbh->do('ALTER TABLE Schedule DROP serviceindex');
+		#$dbh->do('ALTER TABLE Schedule DROP serviceindex');
 	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
@@ -589,12 +597,12 @@ if ( $data2 and ! $data ) {
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
-} else {
-	if ( ! exists $$data{'id'} ) {
-		$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
-		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
-		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
-	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Equipment_Shifts LIMIT 1', {} );
+if ( ! exists $$data{'id'} ) {
+	$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
+	$dbh->do('ALTER TABLE Equipment_shifts add id serial');
+	$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
 } # end if
 $dbh->disconnect();
 1;

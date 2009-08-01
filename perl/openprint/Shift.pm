@@ -10,7 +10,7 @@ use vars qw(%variable $log $dbh %config %session $table $serial %fields %transfo
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-*session = \%session;
+*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -164,7 +164,7 @@ sub Schedule {
 			'starttime_>='		=>	$_[0]{'starttime'}, 
 			'starttime_<'		=>	$_[0]{'endtime'}, 
 			'equipment_id'		=>	$_[0]{'equipment_id'},
-			'order'				=>	'starttime,projectindex',
+			'order'				=>	'starttime,projectindex,service_id',
 			);
 } # end sub Schedule
 
@@ -226,19 +226,22 @@ sub get_lis {
 		my $Operator = $Shift->Operator();
 
 		if ( openprint::usergroup::is_user_in( ['PressManager'], $session{'user_id'} ) ) {
-			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" id="%sOperator" onclick="openPopup('Operator', '%s', '%s' );">%s</span><br class="spacer"/></div>}, Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
+			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" onclick="popup_window('_shift_popup.html','shift_id=%d');">%s</span><br class="spacer"/></div>},
+Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
 			Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
-$total_impressions, ($Operator->id() ? 'Operator' : 'assign' ),$ul_id, $ul_id, $Operator->id(),($Operator->id() ? $Operator->name() : 'assign') ) . $html;
+			$total_impressions, ($Operator->id() ? 'Operator' : 'assign' ), 
+			$Shift->id(), ($Operator->id() ? $Operator->name() : 'assign') ) . $html;
 		} else {
-			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
+			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', 
+					Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
 			Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
 			( $Operator->id() ? $Operator->name() : 'assign' ) ) . $html;
 		} # end if
 	} # end if
 	return $html;
-} # end sub
+} # end sub get_lis
 
 sub ul_id {
 	my ( $self ) = @_;
@@ -278,45 +281,11 @@ sub get_ul {
 	my ( $Shift, $filters ) = @_;
 
 	my $content = $Shift->get_lis($filters);
-	return sprintf('<ul id="%s" class="shift %s">%s</ul>%s', $Shift->ul_id(), ($content ? '' : ' Empty'), $content, "\n" );
+	return sprintf('<ul id="ul%s" class="shift %s">%s</ul>%s', $Shift->ul_id(), ($content ? '' : ' Empty'), $content, "\n" );
 } # end sub get_ul
 
 sub get {
-	my ( $row ) = @_;
-    my $Shift;
-
-	if ( ! $$row{'starttime'} ) {
-		$Shift = new openprint::Shift();
-		$Shift->equipment_id( $$row{'equipment_id'} );
-		my $Project = new openprint::Project( $$row{'projectindex'} );
-		if ( sets::isin( $Project->status(), ['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
-			$$Shift{'name'} = 'Pending';
-		} else {
-			$$Shift{'name'} = 'Approved';
-		} # end if
-	} else {
-		my $starttime_seconds = Date::Parse::str2time( $$row{'starttime'} );
-		my @Shifts = openprint::Shift::find('equipment_id'=>$$row{'equipment_id'}, 'endtime_>'=>$$row{'starttime'}, 'starttime_<'=>$$row{'starttime'},'limit'=>1 );
-		if ( ! @Shifts ) {
-			@Shifts = openprint::Equipment_Shift::find(
-					'equipment_id'	=>	$$row{'equipment_id'},
-					'starttime_<='	=>	Date::Format::time2str('%H:%M',$starttime_seconds ),
-					'endtime_>'		=>	Date::Format::time2str('%H:%M',$starttime_seconds ),
-					'limit'			=>	1,
-					);
-			@Shifts = openprint::Equipment_Shift::find(
-					'equipment_id'	=>	$$row{'equipment_id'},
-					'starttime_>'	=>	Date::Format::time2str('%H:%M',$starttime_seconds ),
-					'order'			=>	'starttime',
-					'limit'			=>	1,
-					) if ! @Shifts;
-			$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
-		} else {
-			$Shift = $Shifts[0];
-		} # end if
-	} # end if
-	return if ! $Shift;
-	return $Shift;
+	return $_[0]->Shift();
 } # end sub get
 
 1;

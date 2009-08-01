@@ -13,6 +13,10 @@
 	p\osition: relative;
 	margin-right: 5px;
 }
+.Project label.radio {
+	float: none;
+	margin: 0px;
+}
 
 div.ProjectHeader {
 	border-bottom: 1px solid #194D98;
@@ -74,6 +78,10 @@ div.ProjectHeader fieldset p label {
 	text-align: left;
 	width: auto;
 }
+div.ProjectHeader fieldset p label.radio {
+	float: none;
+	margin: 0px;
+}
 
 .ProjectSummary div.row {
     margin: 0px;
@@ -85,6 +93,10 @@ div.ProjectHeader fieldset p label {
        float:left;
        font-weight: normal;
        padding: 0px;
+}
+.ProjectSummary div.row label.radio {
+	float: none;
+	margin: 0px;
 }
 .ProjectSummary div.row .value {
        text-align: left;

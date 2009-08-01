@@ -4,7 +4,7 @@
 
 	$openprint::session{'/main/project/history.html?lastupdated'} = time;
 
-	foreach ( 'ddmStatus','CreatedStartYear','CreatedStartMonth','CreatedStartDay','CreatedEndYear','CreatedEndMonth','CreatedEndDay','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
+	foreach ( 'ddmStatus','CreatedStartYear','CreatedStartMonth','CreatedStartDay','CreatedEndYear','CreatedEndMonth','CreatedEndDay','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay', 'predefined' ) {
 		$openprint::session{"/main/project/history.html?$_"} = $openprint::param{$_} if exists $openprint::param{$_};
 	} # end foreach
 	if ( ! $openprint::session{'/main/project/history.html?ddmStatus'} ) {
@@ -25,6 +25,7 @@
 		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} ),
 		'company_id'		=> $openprint::session{'company_id'},
 		'status'			=> $openprint::session{'/main/project/history.html?ddmStatus'},
+		'predefined'			=> $openprint::session{'/main/project/history.html?predefined'},
 		'reference'				=> $openprint::param{'Reference'},
 		'and'				=> ($openprint::param{'ProjectID'} ? " AND Index LIKE '$openprint::param{'ProjectID'}\%'" : undef ),
 		'order'				=> 'index DESC',

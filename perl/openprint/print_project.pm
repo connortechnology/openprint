@@ -244,7 +244,7 @@ sub continue_project {
 	$log->info(" ************* STARTING continue_project **************** " );
 
 	if ( $$variable{'Redirect'} eq '' ) {
-		$project_index = $session{'project_id'} if ! $project_index;
+		$project_index = $openprint::session{'project_id'} if ! $project_index;
 
 		my ( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
 		# pick the next unfinished service.
@@ -1439,7 +1439,6 @@ $openprint::log->warn("Aftere auto");
 	foreach my $key ( @no_outputs ) {
 		delete $specs{$key};
 	} # end foreach
-
 	$project->update_status( $variable );
 	$specs{'Status'} = $project->status() if $specs{'Status'} ne 'uncalculated';
 	return jsrs::encode_pairs(%specs);

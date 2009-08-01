@@ -252,6 +252,12 @@ fieldset.filters p label {
 	margin-left: -105px;
 	width: 100px;
 }
+fieldset.filters p label.radio {
+	width: auto;
+	display: inline;
+	float: none;
+	margin: 0px;
+}
 fieldset.filters p select {
     width: auto;
 }

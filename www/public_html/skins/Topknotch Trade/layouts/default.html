@@ -16,6 +16,11 @@
 		<? endif ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<style type="text/css">
+div#main_content_inner {
+padding-left: 0px;
+}
+		</style>
 		<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
 		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
@@ -23,7 +28,7 @@
 		<? if ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 				<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
 				<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
-				<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
+				<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.1"></script>
 		<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
