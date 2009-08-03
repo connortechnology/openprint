@@ -82,28 +82,33 @@ sub handler {
 			'password'	=> $r->dir_config('db_password'),
 			);
 
-	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $log, $dbh, $r->dir_config() );
-	openprint::session_init();
-
-	foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
-		eval sprintf('openprint::%s::init_cache();', $o );
-		$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
-	} # end foreach
-
 	my $lastpage = '';
 	my $page = $r->uri();
-$openprint::log->debug("Page: $page");
-	while ( $page and $lastpage ne $page ) {
-		# This is for loop detection
-		$lastpage = $page;
-$variable{'uri'} = $page;
-		parse_page( $page );
-		if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
-			$page = $variable{'Redirect'};
-			$variable{'Redirect'} = '';
-		} # end if
-	} # end while
+
+
+		# This one has to go here, because it loads data, the others clear data, so they can go after the requires
+		configuration::init_cache( $log, $dbh, $r->dir_config() );
+	if ( $dbh ) {
+		openprint::session_init();
+
+		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
+			eval sprintf('openprint::%s::init_cache();', $o );
+			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
+		} # end foreach
+
+	$openprint::log->debug("Page: $page");
+		while ( $page and $lastpage ne $page ) {
+			# This is for loop detection
+			$lastpage = $page;
+	$variable{'uri'} = $page;
+			parse_page( $page );
+			if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
+				$page = $variable{'Redirect'};
+				$variable{'Redirect'} = '';
+			} # end if
+		} # end while
+
+	} # end if
 
 	if ( $variable{'ExternalRedirect'} ) {
 		$r->headers_out->set(Location=>$variable{'ExternalRedirect'});
@@ -169,9 +174,11 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} # end foreach
 	} # end if
 
-	$session{'lastupdated'} = time;
-	untie %session;
-	$dbh->disconnect();
+	if ( $dbh ) {
+		$session{'lastupdated'} = time;
+		untie %session;
+		$dbh->disconnect();
+	} # end if
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();

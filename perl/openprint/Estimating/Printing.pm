@@ -699,7 +699,18 @@ my $master_time = gettimeofday();
 		} # end if
 	} # end if
 
-	if ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
+	if ( $$specs{'ProjectType'} eq 'Banners' ) {
+		my $width = $$specs{'txtFinalWidth'};
+		$width += $$specs{'PocketSize'};
+		$width += $$specs{'PocketSize'};
+		if ( $width != $$specs{'txtWidth'} ) {
+			$$specs{'txtWidth'} = $width;
+			$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
+		} else {
+			$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
+		} # end if
+$openprint::log->debug("Banners: $width != $$specs{txtWidth}");
+	} elsif ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
 		if ( $$specs{'ddmProjectSize'} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
 # auto calc flat dimensions

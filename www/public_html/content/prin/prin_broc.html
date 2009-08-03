@@ -18,6 +18,9 @@
 					<h3>Instant Pricing</h3>
 
 					<!--#include virtual="/includes/sizes.html"-->
+<? if ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
+	<!--#include virtual="/includes/main/proj/banner_printing.html"-->
+<? endif ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
 					<p><label>Colours:</label>
 						<select name="Colours" onchange="calc(this.form.name);">
 							<option value="4/0">4 Colour One Side</option>
