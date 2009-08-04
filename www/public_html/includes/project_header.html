@@ -7,16 +7,16 @@
 			<label>Project #:</label>
 	  		<?ProjectIndex?>
 		</p>
-	  	<? if ( $$variable{'DocketNumber'} ) ?>
+	  	<? if ( $$variable{'Project'}->docket() ) ?>
 		<p>
 	  		<label>Docket Number:</label>
-	  		<?DocketNumber?>
+	  		<? echo ( $$variable{'Project'}->docket() ) ?>
 		</p>
 		<p>
 	  		<label>Ordered Quantity:</label>
-	  		<?OrderedQuantity?>   			
+	  		<? echo ( $$variable{'Project'}->ordered_quantity() ) ?>
    		</p>
-	  	<? endif ( $$variable{'DocketNumber'} ) ?>
+	  	<? endif ( $$variable{'Project'}->docket() ) ?>
    		<p>
 			<label>Status:</label>
 			<? if ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>

@@ -895,7 +895,8 @@ sub finalise_order {
 			$pst_total += $pst_amount if $pst_amount ne '';
 			$hst_total += $hst_amount if $hst_amount ne '';
 			$total += $price + $gst_amount + $pst_amount + $hst_amount;
-		} # end while projct data
+		} # end foreach Project
+
 		foreach my $Product ( $Order->Products() ) {
 			my $price = $Product->price();
 			my $pst_amount = $price * ($pst_rate/100) if ( $pst_rate and $pst_exempt ne 'Y' ); 
@@ -960,7 +961,18 @@ sub finalise_order {
 			$Project->update_status();
 
 			openprint::press_schedule::add_project_to_press_schedule( $Project );
-		} # end foreach
+		} # end foreach Project
+		foreach my $Product ( $Order->Products() ) {
+			my $Project = $Product->Project();
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			$Project->docket( $docket_number );
+			$Project->order_id( $Order->id() );
+			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
+			$Project->save();	
+			$Project->update_status();
+
+			openprint::press_schedule::add_project_to_press_schedule( $Project );
+		} # end foreach Product
 		update_order_status( $r, $log, $dbh, $order_id );
 # send out email notifications
 		send_sales_order( $r, $log, $dbh, $order_id );
