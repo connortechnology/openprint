@@ -45,11 +45,11 @@ sub make_quote_from_quote {
 # pull info for the quote we are duplicating
 		my $new_quote_id = create_quote();
 		
-		my @data = sql::execute( $log, $dbh, 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE QuoteIndex=?', $quote_id );
+		my @data = sql::execute( $log, $dbh, 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE quote_id=?', $quote_id );
 		while ( @data ) {
 			my ( $project_index, $markup1, $markup2, $markup3 ) = splice @data, 0, 4;
 			add_project_to_quote( $r, $log, $dbh, \%variable, $new_quote_id, $project_index );
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $new_quote_id, $project_index],[
+			sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND ProjectIndex=?', $new_quote_id, $project_index],[
 					'dblMarkup1', 1*$markup1,
 					'dblMarkup2', 1*$markup2,
 					'dblMarkup3', 1*$markup3,
@@ -195,14 +195,14 @@ sub information {
 	$session{'quote_id'} = $quote_id;
 
 	if ( $param{'remove'} ) {
-		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?', @param{'quote_id','remove'} );
+		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE quote_id=? AND ProjectIndex=?', @param{'quote_id','remove'} );
 		$Quote->add_log( 'Remove project ' . $param{'remove'} );
 	} # end if
 
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
 	foreach my $key ( keys %param ) {
 		if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $quote_id, $2],
+			sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND ProjectIndex=?', $quote_id, $2],
 					'dblMarkup'.$1,         1*$r->param($key),
 					);
 		} # end if
@@ -280,7 +280,7 @@ sub submit {
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
-				sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $quote_id, $2],
+				sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND ProjectIndex=?', $quote_id, $2],
 						'dblMarkup'.$1,         1*$r->param($key),
 						);
 			} # end if

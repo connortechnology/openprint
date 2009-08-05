@@ -2120,6 +2120,17 @@ if ( ! sets::isin('shifts',\@tables ) ) {
 		$dbh->do($st);
 	} # end foreach
 } # end if
+
+if ( sets::isin( 'tbl_quotes', \@tables ) ) {
+	$dbh->do('ALTER TABLE tbl_Quotes rename to Quotes');
+	$dbh->do('ALTER TABLE Quotes alter column index rename to id');
+	$dbh->do('ALTER TABLE tbl_Quote_Users_For alter column quoteindex rename to quote_id');
+	$dbh->do('ALTER TABLE tbl_Quote_Users_By alter column quoteindex rename to quote_id');
+	$dbh->do('ALTER TABLE tbl_Quote_Details alter column quoteindex rename to quote_id');
+	$dbh->do('CREATE SEQUENCE quotes_id_seq');
+	$dbh->do("SELECT setval('quotes_id_seq', (select MAX(id) FROM Quotes) )");
+	$dbh->do("ALTER TABLE Quotes alter column id set default nextval('quotes_id_seq')");
+} # end if
 $dbh->commit();
 $dbh->disconnect();
 1;

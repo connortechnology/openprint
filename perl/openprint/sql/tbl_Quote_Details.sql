@@ -1,7 +1,7 @@
 DROP TABLE tbl_Quote_Details;
 
 CREATE TABLE tbl_Quote_Details (
-	QuoteIndex		INTEGER NOT NULL, FOREIGN KEY (QuoteIndex) REFERENCES tbl_Quotes (Index),
+	quote_id		INTEGER NOT NULL, FOREIGN KEY (quote_id) REFERENCES Quotes (id),
 	ProjectIndex	INTEGER NOT NULL, FOREIGN KEY (ProjectIndex) REFERENCES Projects (id),
 	strDescription	TEXT,
 

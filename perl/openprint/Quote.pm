@@ -6,11 +6,12 @@ use MIME::Base64;
 use openprint::Currency;
 use strict;
 use openprint ();
-use vars qw($r %variable $log $dbh %config %fields %defaults );
+use vars qw($r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*session = \%openprint::session;
 *r = \$openprint::r;
 
 require sql;
@@ -19,8 +20,11 @@ require openprint::QuotedProject;
 
 my $debug = 1;
 
+$table = 'quotes';
+$serial = 'quotes_id_seq';
+
 %fields = (
-	'id'			=>	'index',
+	'id'			=>	'id',
 	'created_on'	=>	'dtmquotedate',
 	'updated_on'	=>	'dtmlastmodified',
 	'company_id'	=>	'companyindex',
@@ -49,7 +53,7 @@ sub find {
 		return new openprint::Quote( $params{'id'} );
 	} else {
 		my @values;
-		my $sql = 'SELECT * FROM tbl_Quotes WHERE 1>0';
+		my $sql = "SELECT * FROM $table WHERE 1>0";
 		if ( $params{'company_id'} ) {
 			if ( ref $params{'company_id'} eq 'ARRAY' ) {
 				if ( @{$params{'company_id'}} ) {
@@ -109,11 +113,11 @@ sub find {
 			push @values, $params{'salesrep_id'};
 		} # end if
 		if ( $params{'for_name'} ) {
-			$sql .= q{ AND (SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quoteindex=index)=?};
+			$sql .= q{ AND (SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=index)=?};
 			push @values, $params{'for_name'};
 		} # end if
 		if ( $params{'id_like'} ) {
-			$sql .= " AND index::text LIKE '$params{'id_like'}%'";
+			$sql .= " AND id::text LIKE '$params{'id_like'}%'";
 		} # end if
 
 		if ( exists $params{'order'} ) {
@@ -144,14 +148,14 @@ sub copy {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quotes WHERE index=?}, {}, $$self{'id'} );
+		$data = $dbh->selectrow_hashref( qq{SELECT * FROM $table WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 
-	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_for WHERE quoteindex=?}, {}, $$self{'id'} );
+	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_for WHERE quote_id=?}, {}, $$self{'id'} );
 	@$self{qw/for_companyname for_firstname for_lastname for_title for_salutation for_address1 for_address2 for_city for_state for_country for_postalcode for_phone for_extension for_fax for_email/} = @$data{qw/strcompanyname strfirstname strlastname strtitle strsalutation straddress straddress2 strcity strstate strcountry strpostalcode strphone strextension strfax stremail/};
 
-	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_by WHERE quoteindex=?}, {}, $$self{'id'} );
+	$data = $dbh->selectrow_hashref( q{SELECT * FROM tbl_Quote_Users_by WHERE quote_id=?}, {}, $$self{'id'} );
 	@$self{qw/by_companyname by_firstname by_lastname by_title by_salutation by_address1 by_address2 by_city by_state by_country by_postalcode by_phone by_extension by_fax by_email/} = @$data{qw/strcompanyname strfirstname strlastname strtitle strsalutation straddress straddress2 strcity strstate strcountry strpostalcode strphone strextension strfax stremail/};
 } # end sub load
 
@@ -165,25 +169,25 @@ sub save {
 	if ( ! $$self{'id'} ) {
 		my $ac = sql::start_transaction( $dbh );
 		if ( $openprint::config{'QuoteIDFormat'} eq 'Year' ) {
-			$dbh->do( "LOCK TABLE tbl_Quotes IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
+			$dbh->do( "LOCK TABLE $table IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 
-			my ( $quote ) = sql::execute( undef, undef, q{SELECT MAX(Index) FROM tbl_Quotes} );
+			my ( $quote ) = sql::execute( undef, undef, q{SELECT MAX(id) FROM Quotes} );
 			$quote =~ /(\d\d\d\d)/;
 			if ( $1 > ( 1900 + (localtime(time))[5]) or $quote eq '' ) {
 				return (1900 + (localtime(time))[5]) . '00001';
 			} # end if
 			$$self{'id'} = $quote + 1;
 		} else {
-			@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Quotes_id_seq')} );
+			@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('quotes_id_seq')} );
 		} # end if
-		$sql{'index'} = $$self{'id'};
-		if ( ( my $error = sql::insert( undef, undef, 'tbl_Quotes', \%sql ) ) ) {
+		$sql{'id'} = $$self{'id'};
+		if ( ( my $error = sql::insert( undef, undef, $table, \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} else {
-		sql::update( undef, undef, 'tbl_Quotes', ['Index=?', $$self{'id'}], \%sql );
+		sql::update( undef, undef, $table, ['id=?', $$self{'id'}], \%sql );
 	} # end if
 	$self->load();
 	return;
@@ -198,9 +202,9 @@ sub delete {
 	}
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Details WHERE QuoteIndex=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE QuoteIndex=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE QuoteIndex=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Details WHERE quote_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE quote_id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE quote_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Quote_Log WHERE quote_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quotes WHERE Index=?', $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
@@ -231,8 +235,8 @@ sub add_log {
 	my ( $self, $comment ) = @_;
 	sql::insert( $log, $dbh, 'Quote_Log',
 			'quote_id',		$$self{'id'},
-			'company_id',	$openprint::session{'company_id'},
-			'user_id',		$openprint::session{'user_id'},
+			'company_id',	$session{'company_id'},
+			'user_id',		$session{'user_id'},
 			'Description',	$comment,
 			);
 } # end sub add_log
@@ -244,13 +248,13 @@ sub Company {
 
 sub Quoted_Projects {
 	my $self = shift;
-	return map {new openprint::QuotedProject( $_ );} sql::execute( undef, undef, q{SELECT id FROM tbl_Quote_Details WHERE QuoteIndex=?}, $$self{'id'} );
+	return map {new openprint::QuotedProject( $_ );} sql::execute( undef, undef, q{SELECT id FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
 } # end sub Quoted_Projects
 
 sub Projects {
 	my $self = shift;
 	if ( ! exists $$self{'Projects'} ) {
-	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT ProjectIndex FROM tbl_Quote_Details WHERE QuoteIndex=?}, $$self{'id'} );
+	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT ProjectIndex FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
 	} # end if
 	return @{$$self{'Projects'}};
 } # end sub projects
@@ -274,7 +278,7 @@ sub by_name {
 
 sub contents {
 	my $self = shift;
-	$$self{'contents'} = $dbh->selectall_arrayref( q{SELECT * FROM tbl_Quote_Details WHERE QuoteIndex=?}, {Slice=>{}}, $$self{'id'} );
+	$$self{'contents'} = $dbh->selectall_arrayref( q{SELECT * FROM tbl_Quote_Details WHERE quote_id=?}, {Slice=>{}}, $$self{'id'} );
 	return $$self{'contents'};
 }
 
@@ -294,9 +298,9 @@ sub store_user_by_info {
 	my ( $self, $data ) = @_;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE QuoteIndex=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE quote_id=?', $$self{'id'} );
 	sql::insert( undef, undef, 'tbl_Quote_Users_By',
-			'QuoteIndex',		$$self{'id'},
+			'quote_id',		$$self{'id'},
 			'strFirstName',		$$data{'ByFirstName'},
 			'strLastName',		$$data{'ByLastName'},
 			'strCompanyName',	$$data{'ByCompanyName'},
@@ -323,9 +327,9 @@ sub store_user_for_info {
 	my ( $self, $data ) = @_;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE QuoteIndex=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE quote_id=?', $$self{'id'} );
 	sql::insert( undef, undef, 'tbl_Quote_Users_For',
-			'QuoteIndex',		$$self{'id'},
+			'quote_id',		$$self{'id'},
 			'strFirstName',		$$data{'ForFirstName'},
 			'strLastName',		$$data{'ForLastName'},
 			'strCompanyName',	$$data{'ForCompanyName'},
@@ -379,9 +383,9 @@ sub send {
 		push @project_summaries, sprintf('Project%d.html',$Project->project_id()), encode_qp( ssi::variable_substitution( \$email_template, \%variable )), 'text/html', 'quoted-printable';
 	} # for each Project
 
-	my $Me = new openprint::User( $openprint::session{'user_id'} );
+	my $Me = new openprint::User( $session{'user_id'} );
 
-	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, ['A', 'E']) ) {
+	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $session{'user_type'}, ['A', 'E']) ) {
 
 		if ( $Me->email_quotes_to_myself() ) {
 			my @attachments = ();

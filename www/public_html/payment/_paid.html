@@ -13,7 +13,7 @@
 		$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 		foreach my $Invoice ( openprint::Invoice::find('payment_id'=>$$variable{'Payment'}->id(), 'order'=>'id') ) {
 			$html .= sprintf( q`<tr title="%s" onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');">`, $Invoice->external_notes() );
-			$html .= sprintf('<td>%d</td>', $Invoice->id() );
+			$html .= sprintf('<td><a href="/invoice/view.html?invoice_id=%1$d">%1$d</a></td>', $Invoice->id() );
 			$html .= sprintf('<td class="Price">%s%s</td>', $$variable{'Currency'}->symbol(), Number::Format::format_number($Invoice->total(),2,2) );
 			$html .= sprintf('<td class="Price">%s%s</td>', $$variable{'Currency'}->symbol(), Number::Format::format_number($Invoice->interest(),2,2) );
 			$html .= sprintf('<td class="Price">%s%s</td>', $$variable{'Currency'}->symbol(), Number::Format::format_number($Invoice->paid(),2,2) );

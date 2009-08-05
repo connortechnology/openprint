@@ -1,8 +1,8 @@
-DROP TABLE IF EXISTS tbl_Quotes;
+DROP TABLE IF EXISTS Quotes;
 
 
-CREATE TABLE tbl_Quotes (
-	Index				SERIAL NOT NULL,
+CREATE TABLE Quotes (
+	id				SERIAL NOT NULL,
 	strSessionID		varchar(10) NOT NULL,
 	CompanyIndex		INTEGER NOT NULL, FOREIGN KEY (CompanyIndex) REFERENCES Companies (id),
 	UserIndex			INTEGER NOT NULL, FOREIGN KEY (UserIndex) REFERENCES Users (id),
@@ -20,6 +20,6 @@ CREATE TABLE tbl_Quotes (
 	strAdministratorName		TEXT,
 	strCurrencyName		TEXT,
 	strCurrencySymbol	TEXT,
-	PRIMARY KEY (Index)
+	PRIMARY KEY (id)
 );
 
