@@ -54,6 +54,13 @@ sub view {
 					$project_index = $Projects[0]->id();
 				} # end if
 			} # end if
+		} elsif ( $param{'order_id'} ) {
+			$param{'order_id'} =~ s/\D//g;
+			if ( $param{'order_id'} ) {
+				if ( my @Projects = openprint::Project::find('order_id'=>$param{'order_id'}) ) {
+					$project_index = $Projects[0]->id();
+				} # end if
+			} # end if
 		} # end if
 		
 	} # end if
@@ -374,6 +381,10 @@ sub view {
 		openprint::bindery_schedule::add_project( $Project );
 	} elsif ( $param{'btnFunction'} eq 'AddToPressSchedule' ) {
 		$variable{'error'} .= openprint::press_schedule::add_project_to_press_schedule( $Project, $param{'ServiceIndex'} );
+	} elsif ( $param{'btnFunction'} eq 'RemoveFromPressSchedule' ) {
+		foreach my $Job ( openprint::ScheduledJob( 'project_id'=>$Project->id() ) ) {
+			$Job->delete();
+		} # end foreach Job
 	} elsif ( $param{'btnFunction'} eq 'Add Service' ) {
 
 		if ( $param{'NewServiceType'} ) {

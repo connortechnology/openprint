@@ -176,8 +176,12 @@ sub save {
 	} # end foreach
 		
 	if ( ! $$self{'id'} ) {
-		#@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
-		$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		if ( $openprint::config{'OrderIDStyle'} eq 'Year' ) {
+			$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		} else {
+			@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('order_id_seq')} );
+			$sql{'index'} = $$self{'id'};
+		} # end if
 		$sql{$fields{'created_on'}} = 'NOW()';
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
@@ -307,12 +311,12 @@ sub approve {
 sub status {
 	my ( $self, $new_status ) = @_;
 	if ( defined $new_status and $$self{'status'} ne $new_status ) {
-		sql::update( $log, $dbh, 'Orders', "Index=$$self{'id'}", 'strStatus', $new_status );
+		sql::update( $log, $dbh, 'Orders', ['Index=?', $$self{'id'}], 'strStatus', $new_status );
 		$$self{'status'} = $new_status;
 		$self->add_log( "Changed Status to $new_status" );
 	} # end if
 	return $$self{'status'};
-} # end sub set_status
+} # end sub status
 
 # Adding Waiting For Pickup, Shipped, Picked Up
 sub update_status {

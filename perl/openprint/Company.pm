@@ -64,8 +64,9 @@ $serial = 'companies_id_seq';
 		'deleted'					=>	'deleted',
 		);
 %transforms = (
-	'name' => [ 's/\.//g' ],
 	'established'	=> [ 's/[^\d\-]//g' ],
+	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
+	'discount'	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
 	'detail_level'	=>	undef,

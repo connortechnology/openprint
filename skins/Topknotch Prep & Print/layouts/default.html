@@ -35,11 +35,11 @@
 		<? if ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 		   <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
 		   <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
-		   <script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
+		   <script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.1"></script>
 		<? endif ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
-	<body>
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
         <div class="shadow_left"><div class="shadow_right">
 			<div id="Header"><!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"--></div>

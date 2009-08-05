@@ -56,6 +56,7 @@ my %variables = (
 		'hdnBreakdown1'=>['save','output'], 'hdnBreakdown2'=>['save','output'], 'hdnBreakdown3'=>['save','output'],
 		'txtSignatureType' => ['save'],
 		'txtServiceDescription'	=> ['save'],
+		'txtEmployeeComments'	=>	['save'],
 		'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 		'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
 		'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
@@ -4045,18 +4046,13 @@ sub compare_signatures_runstyle {
 sub compare_signatures {
 	my ( $sig1, $sig2, $qty_index ) = @_;
 	return 0 if ! compare_signatures_runstyle( $sig1, $sig2, $qty_index );
-#foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
-##foreach my $key ( 'ddmRunStyle', 'ddmPress' ) {
-#return 0 if $$sig1{$key.$q_i} ne $$sig2{$key.$q_i};
-#} # end if
-#} # end foreach q_i
 	foreach my $key (
 			'Group',
 			'CustomStockPrice','txtCustomMWeight',
 			'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour',
 			'txtSpecificStockWidth', 'txtSpecificStockHeight',
 			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
-			'rdbSuppliedStock','rdbSpecificStock',
+			'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
 		if ( $$sig1{$key} ne $$sig2{$key} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");

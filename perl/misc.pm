@@ -213,7 +213,7 @@ sub error {
 sub trim {
 	my @results;
 	foreach my $thing ( @_ ) {
-		$thing =~ s/^\s*(.*)\s*$/$1/;
+		s/^\s+//, s/\s+$// for $thing;
 		push @results, $thing;
 	}
 	return @results;

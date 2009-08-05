@@ -1,0 +1,136 @@
+fieldset p {
+    padding-left: 115px;
+}
+fieldset p label {
+    margin-left: -115px;
+    width: 110px;
+}
+fieldset p.buttons {
+    margin: 0px;
+    padding: 0px;
+    margin-left: 115px;
+    float: left;
+}
+
+ul#menubar li#Account a {
+	width: 55px;
+}
+ul#menubar li#Pricing a {
+	width: 75px;
+}
+ul#menubar li#Paper a {
+	width: 65px;
+}
+ul#menubar li#Managerial a {
+	width: 95px;
+}
+ul#menubar li#Equipment a {
+	width: 65px;
+}
+ul#menubar li#Reports a {
+	width: 95px;
+}
+ul#menubar li#Setup a {
+	width: 120px;
+}
+#Prices {
+}
+.Pricelist {
+}
+
+	#Prices .Price .Add {
+		float: left;
+	}
+	#Prices .Price .Min  {
+		float: left;
+		width: 10%;
+		text-align: center;
+	}
+	#Prices .Price .Min input.text {
+	}
+	#Prices .Price .Max  {
+		float: left;
+		width: 10%;
+		text-align: center;
+	}
+	#Prices .Price .Max input.text {
+	}
+	#Prices .Price .Units {
+		float: left;
+	}
+	#Prices .Price .Cost {
+		float: left;
+	}
+	#Prices .Price .Cost input.text {
+		width: 90%;
+	}
+	#Prices .Price .Markup {
+		float: left;
+	}
+	#Prices .Price .Markup input.text {
+		width: 90%;
+	}
+	#Prices .Price .Price {
+		float: left;
+		width: 10%;
+		text-align: center;
+	}
+	#Prices .Price .Price input.text {
+		width: 90%;
+	}
+	#Prices .Price .Discount {
+		float: left;
+		width: 15%;
+		text-align: center;
+	}
+
+th.Price, td.Price {
+	text-align: right;
+	width: 90px;
+}
+th.Date, td.Date {
+	text-align: right;
+	width: 90px;
+}
+.Add {
+	width: 20px;
+	text-align: center;
+}
+.Range  {
+	width: auto;
+	text-align: center;
+}
+.Product table.List tr td.Cost input {
+	text-align: right;
+}
+.Product table.List tr td.Price input {
+	text-align: right;
+}
+.Product table.List tr td.Markup input {
+	text-align: right;
+}
+.Product table.List tr td.Range input, table.List tr td.Range input[type="text"] {
+	width: 47%;
+	text-align: left;
+
+}
+.Units {
+	width: 90px;
+	text-align: center;
+}
+.Cost {
+	width: 90px;
+	text-align: center;
+}
+.Markup {
+	width: 80px;
+	text-align: center;
+}
+td.Price {
+	width: 90px;
+	text-align: center;
+}
+.Discount {
+	width: 100px;
+	text-align: center;
+}

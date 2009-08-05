@@ -1,5 +1,4 @@
 package openprint::obj_customer;
-use Text::Unaccent;
 
 use strict;
 
@@ -53,7 +52,11 @@ my %fields = (
 ); # end %fields
 
 my %transforms = (
-	'Name'			=>	[ 's/\.//g' ],
+	'Name'			=>	[ 
+	's/\.//g', 
+	's/^\s+//',
+	's/\s+$//',
+],
 	'PostalCode'	=>	[ 'tr/[a-z]/[A-Z]/', 's/[\W]//g' ],
 	'Discount'		=>	[ 's/[^\d\.\-]//g' ],
 	'TaxNumber1'	=>	[ 's/[\D]//g', 's/(\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d).*/$1/' ],
@@ -138,7 +141,7 @@ sub set {
 		if ( defined $fields{$field} ) {
 
 			foreach my $transform ( @{$transforms{$field}} ) {
-				eval '$params->{$field} =~ ' . $transform;
+				eval '$$params{$field} =~ ' . $transform .';';
 			} # end foreach
 
 			if ( $params->{$field} eq '' and exists $defaults{$field} ) {

@@ -355,12 +355,24 @@ sub add_project_to_press_schedule {
 			$error .= "No press for signature $$sig_specs{'SignatureIndex'}<br/>";
 			next;
 		} # end if
-		my $runtime = openprint::service::get_runtime( $Project, $s_s_id );
+
+		my @service_ids = ( $s_s_id );
+
+		foreach my $s_id_2 ( @sigs ) {
+			next if $s_id_2 == $s_s_id;
+			my $sig_specs2 = openprint::service::get_specs_ref( $Project, $s_id_2 );
+			if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $Project->ordered_quantity_index() ) ) {
+				push @service_ids, $s_id_2;
+				@sigs = sets::exclude( [ $s_id_2 ], \@sigs );
+			} # end if
+		} # end foreach
+
+		my $runtime = openprint::service::get_runtime( $Project, $s_s_id ) * @service_ids;
 		if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'},'use_in_estimating'=>1) ) {
 			my $Job = new openprint::ScheduledJob();
 			$_ = $Job->save({
 				'project_id'	=>	$Project->id(),
-				'service_id'	=>	[$s_s_id],
+				'service_id'	=>	\@service_ids,
 				'equipment_id'	=>	$Equipment[0]->id(),
 				'starttime'		=>	undef,
 				'runtime'		=>	($runtime ? "$runtime minutes" : undef )

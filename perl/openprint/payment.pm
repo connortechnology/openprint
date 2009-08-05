@@ -90,8 +90,6 @@ sub make {
 					#COUTNRYCODE=>'CA',
 
 					#creditcardtype=>$param{'cc_type'},
-					acct=>$param{'cc_number'},
-					expdate=>$param{'exp_month'}.$param{'exp_year'},
 					#cvv2=>$param{'cc_cvv2'},
 					#firstname=>$param{'firstname'},
 					#lastname=>$param{'lastname'},
