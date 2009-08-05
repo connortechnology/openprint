@@ -2305,7 +2305,7 @@ $openprint::log->debug("Back from do_versions, # of imps: " . @impositions );
 			my $found = 0;
 			foreach my $I ( @impositions ) {
 				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-					$found = 0;
+					$found = 1;
 				} # end if
 			} # end foreach I
 			if ( ! $found ) {
