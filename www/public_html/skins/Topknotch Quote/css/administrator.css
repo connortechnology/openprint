@@ -92,3 +92,45 @@ th.Date, td.Date {
 	text-align: right;
 	width: 90px;
 }
+.Add {
+	width: 20px;
+	text-align: center;
+}
+.Range  {
+	width: auto;
+	text-align: center;
+}
+.Product table.List tr td.Cost input {
+	text-align: right;
+}
+.Product table.List tr td.Price input {
+	text-align: right;
+}
+.Product table.List tr td.Markup input {
+	text-align: right;
+}
+.Product table.List tr td.Range input, table.List tr td.Range input[type="text"] {
+	width: 47%;
+	text-align: left;
+
+}
+.Units {
+	width: 90px;
+	text-align: center;
+}
+.Cost {
+	width: 90px;
+	text-align: center;
+}
+.Markup {
+	width: 80px;
+	text-align: center;
+}
+td.Price {
+	width: 90px;
+	text-align: center;
+}
+.Discount {
+	width: 100px;
+	text-align: center;
+}
