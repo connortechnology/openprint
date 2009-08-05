@@ -478,15 +478,19 @@ sub find {
         } # end if
     } # end if
 	if ( $params{'id_start'} and $params{'id_end'} ) {
-            $sql .= ' AND (Index BETWEEN ? AND ?)';
-            push @values, @params{'id_start','id_end'};
+		$sql .= ' AND (Index BETWEEN ? AND ?)';
+		push @values, @params{'id_start','id_end'};
 	} elsif ( $params{'id_start'} ) {
-            $sql .= ' AND Index >= ?';
-            push @values, $params{'id_start'};
+		$sql .= ' AND Index >= ?';
+		push @values, $params{'id_start'};
 	} elsif ( $params{'id_end'} ) {
-            $sql .= ' AND Index <= ?';
-            push @values, $params{'id_end'};
+		$sql .= ' AND Index <= ?';
+		push @values, $params{'id_end'};
 	} # end if
+	if ( $params{'type_id'} ) {
+		$sql .= ' AND type_id=?';
+		push @values, $params{'type_id'};
+    } # end if
 	if ( exists $params{'predefined'} ) {
 		if ( $params{'predefined'} ne '' ) {
 			$sql .= ' AND predefined=?';

@@ -180,8 +180,12 @@ sub save {
 	} # end foreach
 		
 	if ( ! $$self{'id'} ) {
-		#@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
-		$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		if ( $openprint::config{'OrderIDStyle'} eq 'Year' ) {
+			$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		} else {
+			@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('order_id_seq')} );
+			$sql{'index'} = $$self{'id'};
+		} # end if
 		$sql{$fields{'created_on'}} = 'NOW()';
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
