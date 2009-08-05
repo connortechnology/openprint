@@ -1,5 +1,5 @@
 <? eval (
-	ssi::save_params( '/employee/inventory/paper.html', ( 'Owner','Group','Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','outofstock' ) );
+	ssi::save_params( '/employee/inventory/paper.html', ( 'Owner','Group','Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock' ) );
  
 	$session{'/employee/inventory/paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?Owner'};
 	if ( $session{'/employee/inventory/paper.html?Docket'} ) {
@@ -50,8 +50,11 @@
 			my $allocated_sheets;
 
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
-				next if $Paper->in_stock() and ! $session{'/employee/inventory/paper.html?instock'};
-				next if (!$Paper->in_stock()) and ! $session{'/employee/inventory/paper.html?outofstock'};
+				if ( ! $session{'/employee/inventory/paper.html?Docket'} ) {
+					next if $Paper->in_stock() and $session{'/employee/inventory/paper.html?instock'} eq 'N';
+					next if (!$Paper->in_stock()) and $session{'/employee/inventory/paper.html?instock'} eq 'Y';
+				} # end if
+#$log->debug("Instock: " . $Paper->in_stock() );
 
 				$html .= sprintf( '<tr class="%1$s %11$s"><td><a href="paper_details.html?paper_id=%2$d">%3$s</a></td><td>%4$.2f</td><td>%5$.2f</td><td align="right">%6$d</td><td align="right">%7$s</td><td align="right">%8$s</td><td align="right">%9$s</td>',
 					$rowclass,
@@ -62,17 +65,17 @@
 					$Paper->back_ordered(),
 					Number::Format::format_number($Paper->allocated()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
 					Number::Format::format_number($Paper->in_stock()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  in stock
-					Number::Format::format_number($Paper->in_stock() - $Paper->allocated()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  available
-					$Paper->in_stock() - $Paper->allocated() < 0 ? 'warning' : '',
+					Number::Format::format_number($Paper->available()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  available
+					$Paper->available() < 0 ? 'warning' : '',
 					);
 				$html .= '</tr>',
 				$rowclass = $rowclass ? '' : 'colRow';
 				if ( $Paper->type() eq 'Roll' ) {
-					$available_lbs += $Paper->in_stock() - $Paper->allocated();
+					$available_lbs += $Paper->available();
 					$total_lbs += $Paper->in_stock();
 					$allocated_lbs += $Paper->allocated();
 				} else {
-					$available_sheets += $Paper->in_stock() - $Paper->allocated();
+					$available_sheets += $Paper->available();
 					$total_sheets += $Paper->in_stock();
 					$allocated_sheets += $Paper->allocated();
 				} # end if

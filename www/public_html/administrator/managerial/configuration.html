@@ -1,5 +1,5 @@
 <div id="Configuration">
-<form name="f1" method="post">
+<form id="f1" name="f1" method="post">
 <? echo (
 	my $html;
 	my @config = sql::execute( $log, $dbh, 'SELECT Name, Value, Type, Description, category FROM Configuration ORDER BY category, lower(name)' );
@@ -44,6 +44,7 @@
         } # end if
         $html .= qq{</p>\n};
 		$cat = $category;
+		$cat = '' if ! defined $cat;
     } # end while
 	return $html;
 ) ?>

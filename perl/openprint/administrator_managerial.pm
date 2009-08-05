@@ -3,8 +3,6 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw( %config );
-*config = \%openprint::config;
 
 require sql;
 require ssi;
@@ -214,7 +212,14 @@ sub user_profiles {
 				'value'=>$param{'value-'} 
 				} );
 
-		$variable{'information'} = "Record saved successfully.";
+		my %notifications;
+		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+		foreach my $k ( keys %types ) {
+			$notifications{$types{$k}} = $param{"notification_$k"};
+		} # end foreach
+		$User->notifications( \%notifications );
+
+		$variable{'information'} = 'Record saved successfully.';
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
@@ -606,6 +611,16 @@ sub _company_accounting_contacts {
 		$variable{'error'} .= sql::insert( undef, undef, 'companies_accountingcontacts', 'company_id', $variable{'Company'}->id(), 'user_id', $param{'new_accounting_contact_id'} );
 	} # end if
 } # end sub
+
+sub payment_options {
+	require openprint::PaymentType;
+	$variable{'PaymentType'} = new openprint::PaymentType( $param{'paymenttype_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $variable{'PaymentType'}->save(\%param);
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $variable{'PaymentType'}->delete();
+	} # end if
+} # end sub payment_options
 
 1;
 __END__

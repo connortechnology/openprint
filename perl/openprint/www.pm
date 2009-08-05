@@ -51,6 +51,8 @@ sub handler {
 
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
+	$r->content_type(q{text/html; charset=utf-8});
+
 
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);
@@ -315,7 +317,7 @@ $log->debug("User Type: $session{'user_type'}");
 						foreach my $sig_id ( $Project->signatures() ) {
 							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 							if ( $$sig_specs{'SignatureIndex'} == $$PPF{'signature'} ) {
-
+$log->debug("Found sig");
 								my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 								if ( @Equipment ) {
 									$Equipment = $Equipment[0];
@@ -323,7 +325,18 @@ $log->debug("User Type: $session{'user_type'}");
 								} 	
 							} # end if
 						} # end foreach
-						$PPF->send_ppf( $Equipment ) if $Equipment;
+						if ( ! $Equipment ) {
+							$log->debug("Looking it up from Schedule");
+							my @rows = openprint::press_schedule::find('project_id'=>$param{'ProjectIndex'},'service_id'=>$param{'ServiceIndex'});
+							if ( @rows == 1 ) {
+								$Equipment = new openprint::Equipment( $rows[0]{'equipment_id'} );
+							} 
+						} # end if
+						if ( ! $Equipment ) {
+$log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'signature'}.");
+						} else {
+						$PPF->send_ppf( $Equipment );
+						} # end if
 					} # end if
 				} # end if
 			} # end if
@@ -357,6 +370,28 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+	} elsif ( $first eq 'account' ) {
+		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+$log->debug("Account ($status) ($variable{'Redirect'})");
+		return $status if $variable{'Redirect'};	
+
+		if ( ! $session{'user_id'} ) {
+			# if not logged in, determine if they are allowed to see this page or not.
+$log->debug("Not logged in");
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+$log->debug("redirecting");
+				$variable{'Redirect'} = '/error/error_login.html';
+				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				return Apache2::Const::OK;
+			} # end if
+		} else {
+$log->debug("logged in");
+		} # end if
+		eval( 'require openprint::'.join('_', @path ) );
+		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
@@ -366,7 +401,6 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
-$log->debug("Dset: $variable{'Destination'}");
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
@@ -375,7 +409,7 @@ $log->debug("Dset: $variable{'Destination'}");
 			require openprint::order;
 			openprint::order::quantity_select_display( $r, $log, $dbh, $session{_session_id}, \%variable )		if $filename eq 'selection.html';
 			openprint::order::information( $r, $log, $dbh, $session{_session_id}, \%variable )					if $filename eq 'information.html';
-			openprint::order::verify_order( $r, $log, $dbh, $session{_session_id}, \%variable )				if $filename eq 'submit.html';
+			openprint::order::submit( $r, $log, $dbh, $session{_session_id}, \%variable )				if $filename eq 'submit.html';
 			openprint::order::finalise_order( $r, $log, $dbh, $session{_session_id}, \%variable )				if $filename eq 'confirmation_make_order.html';
 			openprint::order::history( $r, $log, $dbh, \%variable )								if $filename eq 'history.html';
 			openprint::order::history_details( $r, $log, $dbh, \%variable )						if $filename eq 'history_details.html';
@@ -506,11 +540,11 @@ $openprint::log->debug("$1");
 		} else {
 			my $module = 'openprint::' . join('_', ($first, $second )	);
 			eval( "require $module;" );
-			$log->warn( "Eval error of require, Reason: " . $@ );	# if $@;
+			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
 			if ( $proc ) {
 			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
+			$log->warn( "Eval error of ($proc), Reason: " . $@ )  if $@;
 			} # end if
 		} # end if main:$second
 

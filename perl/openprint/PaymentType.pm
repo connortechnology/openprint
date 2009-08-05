@@ -4,13 +4,27 @@ package openprint::PaymentType;
 use strict;
 
 require sql;
+use openprint ();
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+$table = 'paymenttypes';
+$serial = 'paymenttypes_id_seq';
 
 %fields = (
 	'id'			=>	'id',
 	'name'			=>	'name',
 	'description'	=>	'description',
+	'created_on'	=>	'created_on',
+	'updated_on'	=>	'updated_on',
 );
+my $debug = 1;
 
+sub find_one {
+	my @results = find( @_ );
+	return $results[0] if @results;
+} # end sub find_one
 sub find {
 	my %params = @_;
 
@@ -22,48 +36,15 @@ sub find {
 		push @values, $params{'name'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("openprint::PaymentType::find( $sql)" . $openprint::dbh->errstr);
-	} else {
-		return map { new openprint::PaymentType( $_->{id}, $_ ); } @$data;
+		$log->debug("openprint::PaymentType::find( $sql)" . $dbh->errstr);
+		return;
+	} elsif ( $debug ) {
+		$log->debug("openprint::PaymentType::find($sql) (@values) : " . @$data );
 	} # end if
+	return map { new openprint::PaymentType( $_->{id}, $_ ); } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM PaymentTypes WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{keys %fields} = @$data{keys %fields};
-
-} # end sub load
-
-sub delete {
-	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM PaymentTypes WHERE id=?}, $$self{'id'} );
-} # end sub delete
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paymenttypes_id_seq')});
-		sql::insert( undef, undef, 'PaymentTypes', $self );
-	} else {
-		sql::update( undef, undef, 'PaymentTypes', ['id=?', $$self{'id'}], $self );
-	} # end if
-} # end sub save
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::PaymentType();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
 
 1;
 

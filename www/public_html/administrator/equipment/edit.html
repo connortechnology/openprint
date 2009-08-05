@@ -79,6 +79,13 @@
 			<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->useinscheduling(); ) ?> />
 			<label class="radio" for="useinschedulingfalse">No</label>
 		</p>
+		<p>
+			<label>Smart Scheduling:</label>
+			<input type="radio" id="smartscheduling1" name="smartscheduling" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->smartscheduling() ); ) ?> />
+			<label class="radio" for="useinscheduling1">Yes</label>
+			<input type="radio" id="smartscheduling0" name="smartscheduling" value="0"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->smartscheduling() ); ) ?> />
+			<label class="radio" for="smartscheduling0">No</label>
+		</p>
 <? if ( $config{'JMFEnabled'} eq 'Y' ) ?>
 		<p>
 			<label>Use JMF:</label>

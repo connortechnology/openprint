@@ -20,17 +20,17 @@ There is no current project.
 		</tr>
 		<? while ( @$variable{'index','name','url','price1','price2','price3', 'status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
 		<tr<?rowclass?> 
-			<td><?name?> <? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?></td>
+			<td><b><?name?></b><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?></td>
 		<? if ( $$variable{'Quantity1'} ) ?><td align="right">
-<?CurrencySymbol?> <?price1?>
+<b><?CurrencySymbol?> <?price1?></b><br/>
 <? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 ); ) ?>
 </td><? endif ( $$variable{'Quantity1'} ) ?>
 		<? if ( $$variable{'Quantity2'} ) ?><td align="right">
-<?CurrencySymbol?> <?price2?>
+<b><?CurrencySymbol?> <?price2?></b><br/>
 <? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 2 ); ) ?>
 </td><? endif ( $$variable{'Quantity2'} ) ?>
 		<? if ( $$variable{'Quantity3'} ) ?><td align="right">
-<?CurrencySymbol?> <?price3?>
+<b><?CurrencySymbol?> <?price3?></b><br/>
 <? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 3 ); ) ?>
 </td><? endif ( $$variable{'Quantity3'} ) ?>
 		<td align="right"><?status?></td>

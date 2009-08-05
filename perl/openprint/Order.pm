@@ -149,12 +149,6 @@ sub find {
 	} # end if
 } # end sub find
 
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Order( );
-	return $new;
-} # end sub copy
-
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
@@ -231,15 +225,6 @@ sub to_string {
 	my $self = shift;
 	return '';
 } # end sub
-
-sub created_on {
-	my $self = shift;
-	return $$self{'created_on'};
-} # end sub created_on
-sub created_by_id {
-	my $self = shift;
-	return $$self{'created_by_id'};
-} # end sub created_by_id
 
 # Approve is acknowledging the prices, etc and giving the go ahead. So this function updates all the prices, taxes, statuses, etc.
 sub approve {
@@ -376,18 +361,16 @@ sub Company {
 	my $self = shift;
 	return new openprint::Company( $$self{'company_id'} );
 } # end sub company
-sub projects {
-	my $self = shift;
-	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
-} # end sub projects
+
 sub Projects {
 	my $self = shift;
+	return () if ! $$self{'id'};
 	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
 }
 
 sub Products {
 	my $self = shift;
-	return if ! $$self{'id'};
+	return () if ! $$self{'id'};
 	return openprint::OrderedProduct::find( 'order_id'=>$$self{id} );
 } # end sub Products
 
@@ -404,7 +387,7 @@ sub balance {
 sub sub_total {
 	my $self = shift;
 	my $subtotal = 0;
-	foreach my $Project ($self->projects() ) {
+	foreach my $Project ($self->Projects() ) {
 		# This is really neat actually.	When the project is ordered, this gives the price stored in order_contents, but if the order isn't finalized, then it gives the price stored in the project...
 		if ( $Project->currency_id() != $$self{'currency_id'} ) {
 $openprint::log->debug("sub_total: $$Project{'currency_id'} != $$self{'currency_id'}");

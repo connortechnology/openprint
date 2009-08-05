@@ -52,6 +52,7 @@
 </script>
 <? if ( ! $$variable{'Quote'}->id() ) ?>
 	There is no current quote.
+	<? echo ( ssi::writeButton( $log, $dbh, 'create', 'create.gif', '', '/main/quote/information.html?btnFunction=New', 'Create New Quote' ); ) ?>
 <? else ( ! $$variable{'Quote'}->id() ) ?>
 
 	<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>

@@ -89,7 +89,7 @@
 			<select name="ddmPress" onchange="load_projects(this.form);">
 				<option value="">All Presses</option>
 <? echo (
-		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $session{'/employee/production/projects.html?ddmPress'} );
+		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strname)' ) ], $session{'/employee/production/projects.html?ddmPress'} );
 ) ?>
 			</select>
 	</p>

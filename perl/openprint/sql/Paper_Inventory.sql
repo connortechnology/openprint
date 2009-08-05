@@ -8,7 +8,7 @@ CREATE TABLE Paper_Inventory (
 	User_id		INTEGER, FOREIGN KEY (User_id) REFERENCES Users (id),
 	PO_Id		INTEGER NOT NULL, FOREIGN KEY (PO_Id) REFERENCES Paper_Purchase_Orders (Id),
 	InStock		INTEGER,
-	UpdateTime	TIMESTAMP,
+	Updated_on	TIMESTAMP WITH TIME ZONE default NOW(),
 	delta		INTEGER,
 	Comment		TEXT,
 	docket		INTEGER,

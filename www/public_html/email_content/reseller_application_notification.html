@@ -1,8 +1,8 @@
 <? hecho ( join(' ', $$variable{'User'}->get('firstname','lastname') ); ) ?> has submitted a new reseller application for your approval:<br/>
 <br/>
-Please click <a href="<? echo ( $openprint::config{ExternalSecureSiteURL} ) ?>/administrator/managerial/company_profiles.html?ddmCustomer=<? echo ( $$variable{'Company'}->id() ) ?>">here</a>
+Please click <a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/administrator/managerial/company_profiles.html?ddmCustomer=<? echo ( $$variable{'Company'}->id() ) ?>">here</a>
 to view/edit the company.<br/>
-Please click <a href="<? echo ( $openprint::config{ExternalSecureSiteURL} ) ?>/administrator/managerial/user_profiles.html?ddmUser=<? echo ( $$variable{'User'}->id() ) ?>">here</a>
+Please click <a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/administrator/managerial/user_profiles.html?ddmUser=<? echo ( $$variable{'User'}->id() ) ?>">here</a>
 to view/edit the user profile.<br/>
 <br/>
 <!--#include virtual="/email_content/_company_information.html"-->

@@ -19,6 +19,10 @@ Please select a company or user to obtain login information.<br/>
 <div id="UserProfile">
 	<form name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
 		<fieldset class="filters"><legend>Search:</legend>
+			<p><label>Email:</label>
+				<input type="text" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" /><br/>
+				<span id="search_email_results"></span>
+			</p>	
 			<p>
 				<label>Company Name:</label>
 				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
@@ -249,7 +253,7 @@ Please select a company or user to obtain login information.<br/>
 			</fieldset>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<? if ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
-		<? if ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $session{user_id} ) ) ?>
+		<? if ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
 		<fieldset><legend>Email Settings:</legend>
 			<p>
 				<label>Password:</label>
@@ -281,7 +285,7 @@ Please select a company or user to obtain login information.<br/>
 				<label class="radio" for="VacationState0">Disabled</label>
 			</p>
 		</fieldset>
-		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $session{user_id} ) ) ?>
+		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
 		<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 		<fieldset><legend>Login Information:</legend> 
 			<p> 
@@ -303,6 +307,19 @@ Please select a company or user to obtain login information.<br/>
 				<input type="radio" id="change_passwordN" name="change_password" <? echo ( ssi::checked( $$variable{'User'}->change_password() ne 'Y' ); ) ?> value="N"/>
 				<label for="change_passwordN" class="radio">No</label>
 			</p>
+		</fieldset>
+		<fieldset><legend>Notifications</legend>
+			<? echo ( 
+				my $html;
+				my $n = $$variable{'User'}->notifications();
+				my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+				foreach my $k ( keys %types ) {
+					$html .= '<p><label>'.$types{$k}.':</label>';
+					$html .= sprintf('<input type="text" name="notification_%1$s" value="%2$s" />', $k, $$n{$types{$k}} );
+					$html .= '</p>';
+				} # end foreach k
+				return $html;
+			) ?>
 		</fieldset>
 		<fieldset><legend>Service Defaults</legend>
 			<!--#include virtual="_service_defaults.html"-->

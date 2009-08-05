@@ -109,17 +109,17 @@ sub history {
 		$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
 		push @attachments, '', MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
 
-#my @recipients = ('iconnor@connortechnology.com');
-		my @recipients = map { sprintf('"%s" <%s>', $_->name(), $_->email() ) } new openprint::Company($param{'company_id'})->AccountingContacts();
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => $config{'AccountingEmail'},
-				TO      => join(',', @recipients ),
-				BCC     => sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
-				SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
-				);
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
-		$variable{'information'} .= 'Sent to '.join(',', @recipients ). '<br/>';
+		foreach my $Recipient ( new openprint::Company($param{'company_id'})->AccountingContacts() ) {
+			my %mail = (
+					SMTP    => $config{'Mail Server'},
+					FROM    => $config{'AccountingEmail'},
+					TO      => sprintf('"%s" <%s>', $Recipient->name(), $Recipient->email() ),
+					BCC     => sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
+					SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
+					);
+			misc::send_email_with_attachment( $log, \%mail, @attachments );
+			$variable{'information'} .= sprintf('Sent to &quot;%s %s&quot; &lt;%s&gt;<br/>',$Recipient->get('firstname','lastname','email') );
+		} # end foreach Recipient
 	} # end if
 } # end sub history
 
@@ -221,6 +221,13 @@ sub _invoiced_products {
 				'invoice_id'=>$variable{'Invoice'}->id(),
 				'quantity'	=> 1
 				});
+	} elsif ( $param{'action'} eq 'remove' ) {
+		my $IP = new openprint::Invoiced_Product( $param{'product_id'} );
+		if ( $IP->id() ) {
+			$variable{'error'} .= $IP->delete();
+		} else {
+			$variable{'error'} .= "Product $param{'product_id'} does not exist.<br/>";
+		} # end if
 	} # end if
 } # end sub _invoiced_products
 

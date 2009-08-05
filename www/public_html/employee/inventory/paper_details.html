@@ -252,7 +252,7 @@ function calc_from_gsm( form ) {
 			</p>
 			<p>
 				<label>Available:</label><span id="Available">
-				<? echo ( int($$variable{'Paper'}->in_stock() - $$variable{'Paper'}->allocated()); ) ?>
+				<? echo ( $$variable{'Paper'}->available(); ) ?>
 				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
 				</span>
 			</p>

@@ -166,7 +166,7 @@ sub inventory_report {
 					$Paper->mweight(),
 					$Paper->gsm(),
 					$$Skid{'id'},
-					$$Skid{'rfidtag_id'},
+					$Skid->RFIDTag()->id_short(),
 					$$Skid{'created_on'},
 					$Skid->Location()->name(),
 					$Paper->type() eq 'Sheet' ? $$Skid{Paper}{$$Paper{'id'}} : '',
@@ -969,7 +969,7 @@ sub stock_allocation_notification {
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
-				SMTP    => $openprint::config{'Mail Server'},
+				SMTP    => $config{'Mail Server'},
 				FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 				TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
 				#TO      => 'iconnor@Point-one.com',
@@ -1045,7 +1045,7 @@ sub highlight_paper {
 	foreach my $P ( openprint::Paper::find(
 				'in_stock_start'	=> 1,
 				) ) {
-		next if $P->in_stock() - $P->allocated() <= 0;
+		#next if $P->available() <= 0;
 		if ( $param{Manufacturer} and ($P->manufacturer_id() != $param{Manufacturer} ) ) {
 			push @results, $P->id().'~';
 			next;
@@ -1216,7 +1216,13 @@ sub _rfidscanner_log {
 sub manifest {
 	$param{'manifest_id'} =~ s/\s//g;
 	my $Manifest = new openprint::Manifest( $param{'manifest_id'} );
-	if ( $param{'btnFunction'} eq 'Submit' ) {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $Manifest->delete();
+		if ( ! $variable{'error'} ) {
+			$variable{'Redirect'} = '/employee/inventory/manifests.html';
+			%param = ();
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
 		$Manifest->id( $param{'manifest_id'} ) if ! $Manifest->id();
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
@@ -1310,7 +1316,7 @@ sub manifest {
 								} );
 					} # end if
 					$total_qty += $C->quantity();
-					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest <a href=/employee/inventory/manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
+					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest <a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a>.', $Manifest->id() ) );
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project ) {
 						my @PAs = openprint::PaperAllocation::find('skid_id'=>$C->skid_id());
@@ -1425,7 +1431,7 @@ sub inventory_log {
             push @Data, (
                 Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($time) ),
                 $skid_id,
-                $Skid->rfidtag_id(),
+                $Skid->RFIDTag()->id_short(),
                 $Paper->to_string(),
                 $delta,
                 join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
@@ -1517,6 +1523,8 @@ sub _allocate_popup {
 } # end sub _allocate_popup
 
 sub purchase_order_view {
+
+	my $Me = new openprint::User( $session{'user_id'} );
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 
 	if ( $param{'btnFunction'} eq 'Delete' ) {
@@ -1561,7 +1569,7 @@ sub purchase_order_view {
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{'po_id'} ) {
-			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>new openprint::User( $session{'user_id'} )->company_id() } );
+			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
 		} # end if
 		foreach my $k ( keys %param ) {
 			my ( $content_id ) = $k =~ /qty-(.*)/;
@@ -1640,6 +1648,36 @@ sub purchase_order_view {
 		$param{'federaltax_charge'} = $param{'federaltax_charge'} ? 1 : 0;
 		$param{'statetax_charge'} = $param{'statetax_charge'} ? 1 : 0;
 		$variable{'error'} .= $PO->save( \%param );
+$log->debug("PO total: " . $PO->total() . ' Me total: ' . $Me->purchasing_limit() );
+		if ( ! $PO->authorized() ) {
+			if ( $PO->total() < $Me->purchasing_limit() ) {
+				$variable{'error'} .= $PO->save({
+						'authorized'	=> 1,
+						'authorized_on'	=> 'NOW()',
+						'authorized_by'	=> $session{'user_id'},
+						});
+			} else {
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+				my %info;
+				$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
+				$info{'From'} = $Me;
+				$info{'PurchaseOrder'} = $PO;
+
+				foreach my $U ( openprint::User::find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$PO->total() ) ) {
+					next if $U->id() == $Me->id();
+
+					$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
+					my @body = ('', $_, 'text/html', 'quoted-printable');
+					my %mail = (
+							SMTP    => $config{'Mail Server'},
+							FROM    => sprintf( '"%s" <%s>', $Me->name(), $Me->email() ),
+							TO      => sprintf( '"%s" <%s>', $U->name(), $U->email() ),
+							SUBJECT => 'Purchase Order requiring approval: ' . $PO->id(),
+							);
+					misc::send_email_with_attachment( $log, \%mail, @body );
+				} # end foreach U
+			} # end if
+		} # end if
 		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
 			my $L = new openprint::PurchaseOrder_Log();
 			$L->save({
@@ -1744,6 +1782,7 @@ sub purchase_orders {
 	} elsif ( $param{'btnFunction'} eq 'Authorize' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
+			next if ! $PO->id();
 			if ( $_ = $PO->authorize() ) {
 				$variable{'error'} .= $_ . '<br/>';
 			} else {

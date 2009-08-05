@@ -151,7 +151,7 @@ sub signature_calc_stock_cutting {
 			'Status'	=> 'calculated',
 			);
 	my $services = $Project->services();
-$openprint::log->debug("Stock Cutting Paper: " . $Paper->to_string() );
+#$openprint::log->debug("Stock Cutting Paper: " . $Paper->to_string() );
 # Add cutting the sheet prior to printing
 	return %results if ( ! ( $Paper->width() and $Paper->height() ) );
 	return %results if ($Paper->width() == $Paper->start_width()) and ($Paper->height() == $Paper->start_height() );
@@ -197,25 +197,25 @@ $openprint::log->debug("Stock Cutting Paper: " . $Paper->to_string() );
 		return %results;
 	} # end if
 
-if ( ($Paper->start_width() >= $Paper->width()) and ($Paper->start_height() >= $Paper->height()) ) {
-	@$specs{"txtSuppliedStockWidth-$signature_index-$qty_index", "txtSuppliedStockHeight-$signature_index-$qty_index",
-		"txtSheetSizeWidth-$signature_index-$qty_index", "txtSheetSizeHeight-$signature_index-$qty_index"} =
-			( 
-			 ( $Paper->start_width() ? $Paper->start_width() : $Paper->width() ),
-			 ( $Paper->start_height() ? $Paper->start_height() : $Paper->height() ), 
-			 $Paper->width(), 
-			 $Paper->height()
-			);
-} else {
-	@$specs{"txtSuppliedStockWidth-$signature_index-$qty_index", "txtSuppliedStockHeight-$signature_index-$qty_index",
-		"txtSheetSizeWidth-$signature_index-$qty_index", "txtSheetSizeHeight-$signature_index-$qty_index"} =
-			( 
-			 ( $Paper->start_width() ? $Paper->start_width() : $Paper->height() ),
-			 ( $Paper->start_height() ? $Paper->start_height() : $Paper->width() ), 
-			 $Paper->height(), 
-			 $Paper->width()
-			);
-} # end if
+	if ( ($Paper->start_width() >= $Paper->width()) and ($Paper->start_height() >= $Paper->height()) ) {
+		@$specs{"txtSuppliedStockWidth-$signature_index-$qty_index", "txtSuppliedStockHeight-$signature_index-$qty_index",
+			"txtSheetSizeWidth-$signature_index-$qty_index", "txtSheetSizeHeight-$signature_index-$qty_index"} =
+				( 
+				 ( $Paper->start_width() ? $Paper->start_width() : $Paper->width() ),
+				 ( $Paper->start_height() ? $Paper->start_height() : $Paper->height() ), 
+				 $Paper->width(), 
+				 $Paper->height()
+				);
+	} else {
+		@$specs{"txtSuppliedStockWidth-$signature_index-$qty_index", "txtSuppliedStockHeight-$signature_index-$qty_index",
+			"txtSheetSizeWidth-$signature_index-$qty_index", "txtSheetSizeHeight-$signature_index-$qty_index"} =
+				( 
+				 ( $Paper->start_width() ? $Paper->start_width() : $Paper->height() ),
+				 ( $Paper->start_height() ? $Paper->start_height() : $Paper->width() ), 
+				 $Paper->height(), 
+				 $Paper->width()
+				);
+	} # end if
 
 	$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cutting prior to printing: %sx%s -> %sx%s<br/>', @$specs{"txtSuppliedStockWidth-$signature_index-$qty_index", "txtSuppliedStockHeight-$signature_index-$qty_index",
         "txtSheetSizeWidth-$signature_index-$qty_index", "txtSheetSizeHeight-$signature_index-$qty_index"} );
@@ -250,7 +250,7 @@ if ( ($Paper->start_width() >= $Paper->width()) and ($Paper->start_height() >= $
 		} # end if
 #$openprint::log->debug( $$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"} . '/' . $sheet_width );
 #$openprint::log->debug( $$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"} . '/' . $sheet_height );
-$openprint::log->debug( "$sheets = $width_cuts $height_cuts" );
+#$openprint::log->debug( "$sheets = $width_cuts $height_cuts" );
 		my %ServicePrice = openprint::service::get_price_object( 'Cutting', $sheets, $Equipment );
 		my $price = 0;
 		foreach my $cuts ( $width_cuts -1, $height_cuts-1 ) {
@@ -653,6 +653,7 @@ sub signature_calc {
 		} else {
 			%ServicePrice = openprint::service::get_price_object( 'Cutting', $$specs{"txtQuantity$qty_index"}, $Equipment );
 		} # end if
+        #if ( $ServicePrice{'units'} eq 'Per Inch' ) {
 
 		my $price;
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
@@ -689,30 +690,61 @@ sub signature_calc {
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 
-			if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
-				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $price );
+			if ( $vertical_cuts > $horizontal_cuts ) {
+				$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
 				if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_columns'};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 				} # end if
-				$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
-
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $price );
+				$price = ( $runs * $horizontal_cuts * $ServicePrice{'Price'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $horizontal_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
 			} else {
-				$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $price );
+				$price = ( $runs * $horizontal_cuts * $ServicePrice{'Price'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $horizontal_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
 				if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_rows'};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 				} # end if
-				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
-
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $price );
+				$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
+			} # end if
+
+			
+			if ( $dutch_vertical_cuts or $dutch_horizontal_cuts ) {
+
+				$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
+				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+
+				if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
+					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $price );
+					$totalPrice += $price;
+					if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
+						$sheets *= $$I{'dutch_columns'};
+						$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+					} # end if
+					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
+
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $price );
+					$totalPrice += $price;
+				} else {
+					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $price );
+					$totalPrice += $price;
+					if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
+						$sheets *= $$I{'dutch_rows'};
+						$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+					} # end if
+					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
+
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $price );
+					$totalPrice += $price;
+				} # end if
 			} # end if
 		} # end if
 

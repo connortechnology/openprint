@@ -93,26 +93,28 @@ print $query->redirect($settings{'url'}.'/registration-confirmation/');
 $dbh->disconnect();
 
 if ( $settings{'infusionsofturl'} ) {
-	my $mech = WWW::Mechanize->new;
-	$mech->get('https://laylorps.infusionsoft.com/');
-	$mech->submit_form(
-			form_name => 'loginForm',
-			fields    => { 
-				'username'	=>	$settings{'infusionsoftusername'},
-				'password'	=>	$settings{'infusionsoftpassword'},
-			} 
-	);
-	$mech->get('https://laylorps.infusionsoft.com/Contact/add/addPerson.jsp');
-	$mech->submit_form(
-			form_name	=> 'person',
-			fields		=> {
-				'Contact0OwnerID'	=>	$settings{'infusionsoft_Contact0OwnerID'},
-				'Contact0LeadSourceId'	=>	$settings{'infusionsoft_Contact0LeadSourceId'},
-				'Contact0FirstName'	=>	param('FirstName'),
-				'Contact0LastName'	=>	param('LastName'),
-				'Contact0Phone1'	=>	param('Phone'),
-				'Contact0Email'		=>	param('Email'),
-			} );
+	eval {
+		my $mech = WWW::Mechanize->new;
+		$mech->get('https://laylorps.infusionsoft.com/');
+		$mech->submit_form(
+				form_name => 'loginForm',
+				fields    => { 
+					'username'	=>	$settings{'infusionsoftusername'},
+					'password'	=>	$settings{'infusionsoftpassword'},
+				} 
+		);
+		$mech->get('https://laylorps.infusionsoft.com/Contact/add/addPerson.jsp');
+		$mech->submit_form(
+				form_name	=> 'person',
+				fields		=> {
+					'Contact0OwnerID'	=>	$settings{'infusionsoft_Contact0OwnerID'},
+					'Contact0LeadSourceId'	=>	$settings{'infusionsoft_Contact0LeadSourceId'},
+					'Contact0FirstName'	=>	param('FirstName'),
+					'Contact0LastName'	=>	param('LastName'),
+					'Contact0Phone1'	=>	param('Phone'),
+					'Contact0Email'		=>	param('Email'),
+				} );
+	} # end eval
 } # end if
 
 if ( $settings{'notify'} ) {
@@ -124,7 +126,7 @@ if ( $settings{'notify'} ) {
 		To		=> $settings{'notify'},
 		Subject	=> 'New user registration at ' . $settings{'url'},
 		Body	=>	"
-Someone has registered at $settings{url}.  They should also have been automatically entered into your infusionsoft system.
+Someone has registered at $settings{url}.  " . ( $settings{'infusionsofturl'} ? 'They should also have been automatically entered into your infusionsoft system.' : '' ) . "
 
 Details are as follows:
 FirstName: " . param('FirstName')."

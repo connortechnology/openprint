@@ -24,7 +24,7 @@ if ( $year ) {
 
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		print "Getting db backup $month-$day-$year\n";
-		`su postgres -c "scp $src_host:/var/backups/www2/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
+		`su postgres -c "scp $src_host:/media/Storage/Backups/Database/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
 	} # end if
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		die "No db dum[";
@@ -58,3 +58,27 @@ print "done\n";
 print "upgrading signatures...";
 `/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db >> /tmp/db_update.log` or $log->error($!);
 print "done\n";
+print "Add PayPal info...";
+$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>$dst_db, 'password'=>$dst_db, 'host'=>$ARGV[3]) );
+sql::insert( undef, undef, 'configuration',[
+    'name','PayPal API Username',
+    'value','iconno_1247151292_biz_api1.connortechnology.com',
+    'type','text',
+    'description','API Username.',
+    'category', 'PayPal Settings'] );
+sql::insert( undef, undef, 'configuration',[
+    'name','PayPal API Password',
+    'value','L5NLQTU78FWBZB2Y',
+    'type','text',
+    'description','API Password.',
+    'category', 'PayPal Settings'] );
+sql::insert( undef, undef, 'configuration',[
+    'name','PayPal API Signature',
+    'value','AM8eBaLN6T6GGF6ESQFIFPJEZnf9A-3ClKCuhktddVO70kgmZGyxORe4',
+    'type','text',
+    'description','API SIgnature.',
+    'category', 'PayPal Settings'] );
+require openprint::PaymentType;
+my $PayPal = new openprint::PaymentType();
+$PayPal->save({'name'=>'PayPal','description'=>'PayPal'});
+$dbh->disconnect();

@@ -76,6 +76,19 @@ fieldset p {
     margin: .5em;
 	padding-left: 185px;
 }
+fieldset p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset p {height: 1%;}
+* fieldset p {display:block;}
+/* End hide from IE-mac */
+
 
 fieldset p label {
     width: 185px;
@@ -132,6 +145,9 @@ table.List td {
 
 table.List td A {
 	text-decoration: none;
+}
+table.List tr.totals {
+    border-top: 1px solid #800000;
 }
 
 /* Style for Tip Overlays */
@@ -192,7 +208,7 @@ h1, h2, h3, h5 {
 }
 span.DateSelector {
     float: left;
-	width: 215px;
+	width: 220px;
 }
 div.Service span.ThreeColumns {
 	width: 32%;
@@ -205,4 +221,7 @@ div.Service span.TwoColumns {
 
 div#NewDimensions {
 	display: none;
+}
+img.Override {
+	height: 16px;
 }

@@ -84,6 +84,11 @@ $serial = 'companies_id_seq';
 
 my $debug = 0;
 
+sub find_one {
+	my @results = find( @_ );
+	return $results[0] if @results;
+} # end sub find_one
+
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;
@@ -248,7 +253,7 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 	$sql{'updated_on'} = 'NOW()';
-	$sql{'name'} = Text::Unaccent::unac_string('LATIN1', $sql{'name'} );
+	$sql{'name'} = Text::Unaccent::unac_string('UTF-8', $sql{'name'} );
 
     my $ac = sql::start_transaction( $dbh );
     if ( ! $$self{'id'} ) {
@@ -400,6 +405,28 @@ sub AccountingContacts {
 
 	return openprint::User::find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{'id'} )] );
 } # end sub AccountingContacts
+
+sub get_shipping_address {
+	my $self = shift;
+
+	my ( $address_index ) = sql::execute( undef,undef, 'SELECT MAX(lngIndex) FROM tbl_Addresses WHERE Company_id=?', $$self{id} );
+	my $Address = new openprint::address( $log, $dbh, $address_index, $$self{id} );
+	return $Address;
+} # end sub get_shipping_address
+
+sub save_shipping {
+	my ( $self, $params ) = @_;
+
+	my $address = $self->get_shipping_address();
+	$address->set( $params );
+} # end sub save_shipping
+
+sub load_shipping {
+	my ( $self, @params ) = @_;
+
+	my $address = $self->get_shipping_address();
+	return $address->get( @params );
+} # end sub save_shipping
 
 1;
 __END__

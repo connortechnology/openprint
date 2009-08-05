@@ -2,15 +2,15 @@
 	<span class="label">Turnaround:</span>
 	<span class="input">
 		<select name="TurnaroundDays" size="1" onchange="remove_div('OrderButton');">
-<? if ( $$variable{'ProjectTypeName'} eq 'PresentationFolders' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 			<option value="5">5 days after approval</option>
 			<option value="4">4 days after approval</option>
 			<option value="2">48 hours after approval</option>
-<? else ( $$variable{'ProjectTypeName'} eq 'PresentationFolders' ) ?>
+<? else ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 			<option value="4">4 days after approval</option>
 			<option value="2">48 hours after approval</option>
 			<option value="1">24 hours after approval</option>
-<? endif ( $$variable{'ProjectTypeName'} eq 'PresentationFolders' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 		</select>
 	</span>
 </div>

@@ -182,3 +182,7 @@ span.SpotColour label, span.Coverages label {
 	float: left;
 	width: 50%;
 }
+#ProjectView .price {
+	text-align: right;
+	width: 160px;
+}

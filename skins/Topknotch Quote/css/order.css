@@ -65,3 +65,13 @@ div.OrderHeader fieldset p label {
 	text-align: left;
 	width: auto;
 }
+div.Order #ContactInformation {
+	display: none;
+} 
+div.Order #Projects {
+	width: 100%;
+}
+div.Order .leftColumn, div.Order .rightColumn {
+	min-width: 320px;
+	width: 100%;
+}

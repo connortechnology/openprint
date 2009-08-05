@@ -13,8 +13,8 @@ $table = 'Project_Types';
 $serial = 'project_types_id_seq';
 
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',	
+	'id'			=>	'id',
+	'name'			=>	'name',	
 	'description'	=>	'description',
 	'category_id'	=>	'category_id',
 	'url'			=>	'url',

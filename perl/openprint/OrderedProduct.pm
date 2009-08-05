@@ -4,6 +4,7 @@ package openprint::OrderedProduct;
 use strict;
 require openprint::Product;
 require openprint::Project;
+require openprint::Order;
 
 my @fields = (
 	'id',
@@ -112,14 +113,19 @@ sub Project {
 $openprint::log->debug("Creating proejct from template: " . $self->Product()->project_id() );
 	my $Project = new openprint::Project( $self->Product()->project_id() )->copy();
 	$Project->reference( $self->Product()->name() );
+	$Project->user_id( $openprint::session{'user_id'} );
 	$Project->company_id( $openprint::session{'company_id'} );
+	$Project->currency_id( $self->Order()->currency_id() );
 	$Project->save();
 	$$self{'project_id'} = $Project->id();
-$openprint::log->debug("Save?");
 	my $e = $self->save();
 	$openprint::log->error( $e ) if $e;
 	return $Project;
 } # end sub Project
+
+sub Order {
+	return new openprint::Order( $_[0]{'order_id'} );
+} # end sub Order
 
 sub Product {
 	my $self = shift;

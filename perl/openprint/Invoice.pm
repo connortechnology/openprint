@@ -380,7 +380,7 @@ sub send {
 } # end sub send
 
 sub Products {
-	return openprint::Invoiced_Product::find('invoice_id'=>$_[0]{'id'});
+	return openprint::Invoiced_Product::find('invoice_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Products
 
 sub Interests {

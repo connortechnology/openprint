@@ -175,6 +175,7 @@ table.List td textarea {
 
 .Currency {
 	font-weight: bold;
+float: right;
 }
 
 fieldset {
@@ -319,6 +320,10 @@ hr {
 .colRow {
 	background-color: #ded9c2;
  }					/* alternating row color in generated tables */
+.changed {
+    background-color: yellow;
+}
+
 
 div.row {
 	p\osition: relative;
@@ -393,6 +398,9 @@ span.DateSelector {
 	width: 205px;
 }
 
+div.PopupWindow {
+    display: none;
+}
 div.Popup {
     position:absolute;
     visibility: hidden;
@@ -567,4 +575,7 @@ h1,h2,h3,h5 {
 }
 div#NewDimensions {
 	display: none;
+}
+img.Override {
+	height: 16px;
 }

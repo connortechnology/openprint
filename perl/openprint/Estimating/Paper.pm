@@ -35,8 +35,32 @@ my @variables = (
 );
 
 sub variables {
-	return @variables;
-}
+	my ( $p_id, $s_id, $specs ) = @_;
+	my @v = @variables;
+
+	my $Project = new openprint::Project( $p_id );
+	foreach my $ss_id ( $Project->signatures() ) {
+		foreach my $stock_index ( 1 .. 4 ) {
+			last if ! $$specs{"id-$ss_id-$stock_index"};
+			push @v, "id-$ss_id-$stock_index";
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				push @v, "qty-$ss_id-$stock_index-$qty_index";
+				push @v, "sheets-$ss_id-$stock_index-$qty_index";
+				push @v, "overrideqty-$ss_id-$stock_index-$qty_index";
+				push @v, "cost-$ss_id-$stock_index-$qty_index";
+				push @v, "overridecost-$ss_id-$stock_index-$qty_index";
+				push @v, "price-$ss_id-$stock_index-$qty_index";
+			} # end foreach qty_index
+		} # end foreach stock_index
+	} # end foreach ss_id
+	foreach my $stock_index ( 1 .. 4 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			push @v, "qty-$stock_index-$qty_index";
+			push @v, "sheets-$stock_index-$qty_index";
+		} # end foreach qty_index
+	} # end foreach stock_index
+	return @v;
+} # end sub variables
 
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
@@ -65,47 +89,141 @@ sub neccessary {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+$openprint::log->debug("Starting Paper::calc");
 	my $Project = new openprint::Project( $project_index );
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		delete $$specs{'txtPrice'.$qty_index};
 		delete $$specs{'MPrice'.$qty_index};
 	} # end foreach qty_index
 
+	# Totals is storing the native qty, ie lbs for rolls, sheets for sheets
 	my %totals;
-	my %ms;
 	my %papers;
+
+	# FIrst pass: figure out the quantities involved, so that in the second pass, we can lookup prices based on quantity discounts.
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			next if ! $$sig_specs{'txtImposition'.$qty_index};
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			$papers{$Paper->to_string()} = $Paper;
-			if ( $Paper->type() eq 'Roll' ) {
-				$totals{$Paper->to_string()}[$qty_index] += $$sig_specs{'StockQuantity'.$qty_index};
-				$ms{$Paper->to_string()}[$qty_index] += ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $Paper->area() * $Paper->wpsi() );
-			} elsif ( $Paper->type() eq 'Sheet' ) {
-				my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
-				$sheets /= ( $Paper->start_area() /$Paper->area() );
-				$sheets = ceil( $sheets );
-				$totals{$Paper->to_string()}[$qty_index] += ceil( $sheets * $Paper->start_area() * $Paper->wpsi() );
-				$ms{$Paper->to_string()}[$qty_index] += ceil( ((1000/$$sig_specs{'txtImposition'.$qty_index})/( $Paper->start_area() /$Paper->area() )) * $Paper->start_area() * $Paper->wpsi() );
-			} # end if
-		} # end foreach qty_index
-	} # end foreach signature
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		foreach my $paper_id ( keys %totals ) {
-			my $Paper = $papers{$paper_id};
-			if ( ! $Paper->supplied() ) {
-				my %price = $Paper->get_price( $totals{$paper_id}[$qty_index] );
-				$price{'Total'} = $price{'100lb Price'} * $totals{$paper_id}[$qty_index] / 100;
+		foreach my $stock_index ( 1 .. 4 ) {
+			last if ( $stock_index > 1 ) and ( ! $$specs{"id-$ss_id-$stock_index"} );
 
-#$openprint::log->warn("Paper price for " . $totals{$paper_id}[$qty_index] . ' of ' . $Paper->to_string() . ' : ' . $price{'Total'} ) if $debug;
-				$$specs{"txtPrice$qty_index"} += $price{'Total'};
-				$$specs{"MPrice$qty_index"} += $price{'100lb Price'} * $ms{$paper_id}[$qty_index] / 100;
-			} # endif
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				next if ! $$sig_specs{'txtImposition'.$qty_index};
+				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+
+				if ( $$specs{"overrideqty-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
+					if ( $Paper->type() eq 'Sheet' ) {
+						my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
+						$sheets /= ( $Paper->start_area() /$Paper->area() );
+						$sheets = ceil( $sheets );
+	
+						$$specs{"qty-$ss_id-$stock_index-$qty_index"} = ceil( $sheets * $Paper->start_sheet_weight() );
+						$$specs{"sheets-$ss_id-$stock_index-$qty_index"} = $sheets;
+					} else {
+						$$specs{"qty-$ss_id-$stock_index-$qty_index"} = $$sig_specs{'StockQuantity'.$qty_index};
+						delete $$specs{"sheets-$ss_id-$stock_index-$qty_index"};
+					} # end if
+				} # end if
+				@$Paper{'width','height'} = @$Paper{'start_width','start_height'};
+				$Paper->mweight(0); # force recalc
+				my $paper_string = $Paper->to_string();
+				$papers{$paper_string} = $Paper;
+			
+				if ( $Paper->type() eq 'Sheet' ) {
+					$totals{$paper_string}[$qty_index] += $$specs{"sheets-$ss_id-$stock_index-$qty_index"};
+				} else {
+					$totals{$paper_string}[$qty_index] += $$specs{"qty-$ss_id-$stock_index-$qty_index"};
+				} # end if
+			} # end foreach qty_index
+		} # end foreach stock_index
+	} # end foreach signature
+
+	foreach my $paper_string ( keys %papers ) {
+		my $Paper = $papers{$paper_string};
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+$openprint::log->debug($paper_string . ' => ' . $totals{$paper_string}[$qty_index] );
+		} # end foreach
+	} # end if
+	# Enforce minimum orders and full packages
+	foreach my $paper_string ( keys %papers ) {
+		my $Paper = $papers{$paper_string};
+		if ( $Paper->full_packages() ) {
+			my $sheets_per_package = $Paper->sheets_per_package();
+			if ( $sheets_per_package ) {
+				if ( $Paper->type() eq 'Sheet' ) {
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						$totals{$paper_string}[$qty_index] = $sheets_per_package * ceil( $totals{$paper_string}[$qty_index] / $sheets_per_package );
+					} # end foreah qty_index
+				} elsif ( $Paper->type() eq 'Roll' ) {
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						$totals{$paper_string}[$qty_index] = $sheets_per_package * int($totals{$paper_string}[$qty_index]/$sheets_per_package);
+					} # end foreah qty_index
+				} # end if
+			} # end if sheets_per_package
+		} # end if full packages
+		if ( $$Paper{'minimum_order'} ) {
+# Assume sheets for sheets, lbs for Rolls
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				if ( $$Paper{'minimum_order'} > $totals{$paper_string}[$qty_index] ) {
+					$totals{$paper_string}[$qty_index] = ceil( $$Paper{'minimum_order'} );
+				} # end if
+			} # end foreach qty_index
+		} # end if
+	} # end foreach
+
+	foreach my $paper_string ( keys %papers ) {
+		my $Paper = $papers{$paper_string};
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+$openprint::log->debug($paper_string . ' => ' . $totals{$paper_string}[$qty_index] );
+		} # end foreach
+	} # end if
+
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		foreach my $stock_index ( 1 .. 4 ) {
+			last if ( $stock_index > 1 ) and ( ! $$specs{"id-$ss_id-$stock_index"} );
+
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				next if ! $$sig_specs{'txtImposition'.$qty_index};
+				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				@$Paper{'width','height'} = @$Paper{'start_width','start_height'};
+				$Paper->mweight(0); # force recalc
+				my $paper_id = $Paper->to_string();
+$openprint::log->warn("Getting prices for $paper_id");
+				next if $Paper->supplied();
+
+				if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
+					my %price = $Paper->get_price( $totals{$paper_id}[$qty_index] );
+					$$specs{"cost-$ss_id-$stock_index-$qty_index"} = $price{'100lb Price'};
+$openprint::log->warn("Getting prices for $paper_id (".$totals{$paper_id}[$qty_index].")+> " . $price{'100lb Price'});
+				} # end if
+				$$specs{"price-$ss_id-$stock_index-$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},$$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
+				if ( $Paper->type() eq 'Sheet' ) {
+					$$specs{"txtPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * ($totals{$paper_id}[$qty_index]*$Paper->sheet_weight() ) / 100;
+				} else {
+					$$specs{"txtPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * $totals{$paper_id}[$qty_index] / 100;
+				} # end if
+				$$specs{"MPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * ceil( ((1000/$$sig_specs{'txtImposition'.$qty_index})/( $Paper->start_area() /$Paper->area() )) * $Paper->start_sheet_weight() )/ 100;
+			} # end foreach qty_index
+		} # end foreach stock_index
+	} # end foreach signature
+
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		my $stock_index = 1;
+		foreach my $paper_id ( sort keys %papers ) {
+			my $Paper = $papers{$paper_id};
+$openprint::log->debug($paper_id . ' => ' . $totals{$paper_id}[$qty_index] );
+			if ( $Paper->type() eq 'Sheet' ) {
+				$$specs{"qty-$stock_index-$qty_index"} = ceil( $totals{$paper_id}[$qty_index] * $Paper->sheet_weight() );
+				$$specs{"sheets-$stock_index-$qty_index"} = $totals{$paper_id}[$qty_index];
+			} else {
+				$$specs{"qty-$stock_index-$qty_index"} = $totals{$paper_id}[$qty_index];
+				$$specs{"sheets-$stock_index-$qty_index"} = ceil( $totals{$paper_id}[$qty_index] / $Paper->start_sheet_weight() );
+			} # end if
+			$stock_index += 1;
 		} # end foreach Stock
 		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} );
 		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+$openprint::log->debug("Price $qty_index " . $$specs{"txtPrice$qty_index"} );
 	} # end foreach qty_index
 
 	return $$specs{'Status'} = 'calculated';
@@ -168,52 +286,43 @@ sub summary {
 
     $specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
 
-    my %totals;
-    my %sheets;
+    my %Papers;
 	foreach my $ss_id ( $Project->signatures() ) {
         my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			my $string = '';
-			$string .= 'Customer Supplied ' if $Paper->supplied();
-			$string .= sprintf( '%s %s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight() );
-			if ( $Paper->type() eq 'Roll' ) {
-				$string .= sprintf(' %s&quot; Roll', $Paper->width() );
-				
-				$totals{$string}[$qty_index] += $$sig_specs{'StockQuantity'.$qty_index};
-#$$openprint::log->debug("I: $impressions * $$Paper{width} * $$Paper{height} * " . $Paper->wpsi() . " = " . $totals{$string}[$qty_index] );
-					
-			} elsif ( $Paper->type() eq 'Sheet' ) {
-				$string .= sprintf(' %s&quot;x%s&quot;', $Paper->start_width(), $Paper->start_height() );
-				my $sheets = $$sig_specs{'StockQuantity'.$qty_index};
-				$sheets /= ( $Paper->start_area() /$Paper->area() );
-				$sheets = ceil( $sheets );
-                $totals{$string}[$qty_index] += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
-                $sheets{$string}[$qty_index] += $sheets;
-            } # end if
+			@$Paper{'width','height'} = @$Paper{'start_width','start_height'};
+			$Paper->mweight(0); # force recalc
+			$Papers{$Paper->to_string()} = $Paper;
         } # end foreach qty_index
-
     } # end foreach
+
 	if ( $qty_index ) {
 		my $html = '';
-		foreach my $key ( sort keys %totals ) {
-			if ( $totals{$key}[$qty_index] ) {
-				if ( $sheets{$key} ) {
-					$html .= $sheets{$key}[$qty_index].'sheets '.$totals{$key}[$qty_index].'lbs';
-				} else {
-					$html .= $totals{$key}[$qty_index].'lbs';
+		my $stock_id = 1;
+		foreach my $key ( sort keys %Papers ) {
+			my $Paper = $Papers{$key};
+$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
+			if ( $$specs{"qty-$stock_id-$qty_index"} ) {
+				if ( $Paper->type() eq 'Sheet' ) {
+					$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 				} # end if
+				$html .= $$specs{"qty-$stock_id-$qty_index"}.'lbs';
 			} else {
 				$html .= 'none';
 			} # end if
 			$html .= '<br/>';
+			$stock_id += 1;
 		} # end foreach key
 		return $html;
 	} else {
-		return join('<br/>', sort keys %totals );
+		return join('<br/>', sort keys %Papers );
 	} # end if
 } # end sub summary
+
+sub save {
+} # end sub save
 
 1;
 __END__

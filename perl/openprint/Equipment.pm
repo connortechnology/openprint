@@ -37,6 +37,7 @@ my %find_cache;
 	'cip3_hold'			=>	'cip3_hold',
 	'cip3_merge'		=>	'cip3_merge',
 	'cip3_monitor'		=>	'cip3_monitor',
+	'smartscheduling'	=>	'smartscheduling',
 );
 %transforms = (
 );
@@ -132,8 +133,7 @@ $openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $
 		$openprint::log->error( "Error loading Equipment ($sql) (@values) :" . $openprint::dbh->errstr );
 		return;
 	} elsif ( $debug ) {
-	#$openprint::log->debug( 'Number of results: ' . @$data );
-		$openprint::log->debug( $sql . join(',',@values) . ' records:'. @$data );
+		$openprint::log->debug( "openprint::Equipment::find : SQL($sql) VALUES(". join(',',@values).") # Results: " . @$data );
 	} # end if
 	
 	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{id}, $_ ) } @$data;
@@ -286,13 +286,13 @@ sub Fold {
 		} # end if
 		$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
 		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
-		if ( $$params{'gsm'} ) {
+		if ( exists $$params{'gsm'} ) {
 			$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
-			my $RunSpeed = $Fold->Specification( $$params{'gsm'} );
+			my $RunSpeed = $Fold->RunSpeed( $$params{'gsm'} );
 			if ( ! $RunSpeed ) {
 #$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if $debug;
 				next;
-			} else {
+			#} else {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
 			} # end if
 		} # end if
@@ -474,6 +474,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
+    sql::execute( undef, undef, q{DELETE FROM Equipment_Shifts WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE Id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 
@@ -484,7 +485,7 @@ sub update_schedule {
 	my $self = shift;
 
 	if ( $openprint::config{'Smart Schedule'} ne 'Y' ) {
-		$openprint::log->debug("Not using Smart Schedule.	Not Updating Press Schedule");
+		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
 		return;
 	} # end if
 
@@ -540,6 +541,9 @@ sub Previous {
 sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
+
+sub Shifts {
+} # end sub
 
 1;
 __END__

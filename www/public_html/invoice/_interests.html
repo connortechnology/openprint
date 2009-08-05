@@ -23,10 +23,11 @@
 </fieldset>
 <? endif ( @{$$variable{'Interests'}} ) ?>
 <script type="text/javascript">
-if ( var div = $('Interest_Total') ) {
+var div;
+if ( div = $('Interest_Total') ) {
 div.innerHTML = '<? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?>';
 }
-if ( var div = $('Owing') ) {
+if ( div = $('Owing') ) {
 div.innerHTML = '<? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?>';A
 }
 </script>

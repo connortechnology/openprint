@@ -8,7 +8,6 @@ require sql;
 require ssi;
 require misc;
 
-require openprint::user;
 require openprint::usergroup;
 require openprint::logs;
 
@@ -157,7 +156,7 @@ sub verify_login {
 			$$variable{'Redirect'} = '/account/change_password.html';
 		} # end if
 		return;
-	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue your order\./ ) {
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a>/ ) {
      
 		$$variable{'Redirect'} = $1.'.html';
 		foreach my $p ( split('&', $2 ) ) {
@@ -188,8 +187,7 @@ sub logout {
 sub email_password {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	my $email = $openprint::param{'txtEmail2'};
-	$email =~ tr/[A-Z]/[a-z]/;
+	my $email = lc $openprint::param{'txtEmail2'};
 
 	my @Users = openprint::User::find('email'=>$email);
 
@@ -198,16 +196,11 @@ sub email_password {
 	} # end if
 
 	if ( my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' ) ) {
-		my %info = (
-			'siteURL' => $r->dir_config('siteURL'),
-			'SecureSiteURL' => $r->dir_config('SecureSiteURL'),
-			'SiteTitle' => $r->dir_config('SiteTitle'),
-		);
+		my %info;
 		
+		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
 		foreach my $User ( @Users ) {
-			openprint::user::load( $log, $dbh, $User->id(), \%info );
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/forgotten_password.html' );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+			$info{'ReplacementText'} = ssi::variable_substitution( \$content, \%info );
 			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 
