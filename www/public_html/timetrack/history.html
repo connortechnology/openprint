@@ -57,16 +57,16 @@
 				<label class="radio" for="invoiced_1">Yes</label>
 				<input type="radio" id="invoiced_0" name="invoiced" value="0" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '0' ); ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="invoiced_0">No</label>
-				<input type="radio" id="invoiced_0;1" name="invoiced" value="0;1" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '0;1' ) ) ?> onclick="load_timetracks(this.form);" />
-				<label class="radio" for="invoiced_0;1">Both</label>
+				<input type="radio" id="invoiced_01" name="invoiced" value="0;1" <? echo ( ssi::checked( $session{'/timetrack/history.html?invoiced'} eq '0;1' ) ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="invoiced_01">Both</label>
 			</p>
 			<p><label>Paid?:</label>
 				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '1' ); ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="paid_1">Yes</label>
 				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '0' ); ) ?> onclick="load_timetracks(this.form);" />
 				<label class="radio" for="paid_0">No</label>
-				<input type="radio" id="paid_0;1" name="paid" value="0;1" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '0;1' ); ) ?> onclick="load_timetracks(this.form);" />
-				<label class="radio" for="paid_0;1">Both</label>
+				<input type="radio" id="paid_01" name="paid" value="0;1" <? echo ( ssi::checked( $session{'/timetrack/history.html?paid'} eq '0;1' ); ) ?> onclick="load_timetracks(this.form);" />
+				<label class="radio" for="paid_01">Both</label>
 			</p>
 			<p>
 				<label>Employee:</label>
