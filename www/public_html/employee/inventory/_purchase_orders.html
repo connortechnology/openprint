@@ -63,10 +63,19 @@
 	</tr>
 	<? echo ( 
 		my $html = '';
+		my $report_total = 0;
+		my $Currency = openprint::Currency::get_current();
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
 			$html .= sprintf(q`<tr id="tr-%1$d" onmouseover="$('tr-%1$d').addClassName('highlightOn');" onmouseout="$('tr-%1$d').removeClassName('highlightOn');">`, $PO->id() );
 			if ( $session{'user_type'} eq 'A' ) {
 				$html .= '<td><input type="checkbox" id="po_id" name="po_id" value="'.$PO->id().'"/></td>';
+			} # end if
+			my $total = $PO->total();
+
+			if ( $Currency->id() != $PO->currency_id() ) {
+				if ( my $rate = $PO->Currency()->conversions( $session{Currency_id} ) ) {
+					$total *= $rate;
+				} # end if
 			} # end if
 
 			$html .= sprintf( q`
@@ -76,11 +85,16 @@
 				<td><a href="purchase_order_view.html?po_id=%1$d">%4$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%7$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%8$s</a></td>
-				<td style="text-align: right;">%5$s%6$.2f</td>
-			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $PO->Currency()->symbol(), $PO->total(), $PO->Authorized_By()->name(), $PO->manifest_id() );
+				<td style="text-align: right;">%5$s%6$s</td>
+			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $Currency->symbol(), Number::Format::format_number($total), $PO->Authorized_By()->name(), $PO->manifest_id() );
+			$report_total += $total;
 		} # end while
+		$html .= '<tr class="totals"><td colspan="7" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
+		$html .= sprintf('%s%s', $Currency->symbol(), Number::Format::format_number( $report_total ) );
+		$html .= '</td></tr>';
 		return $html;
 	) ?>
+		
 	</table>
 	<p class="buttons">
 		<? echo (
