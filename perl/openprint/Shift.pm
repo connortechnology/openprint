@@ -246,16 +246,16 @@ Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $da
 sub ul_id {
 	my ( $self ) = @_;
 	if ( $self->starttime() ) {
-		return sprintf('%d-%s-%s', $$self{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $self->starttime_seconds() ), $self->name() );
+		return sprintf('ul%d-%s-%s', $$self{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $self->starttime_seconds() ), $self->name() );
 	} else {
-		return sprintf('%d-%s', $$self{'equipment_id'}, $self->name() );
+		return sprintf('ul%d-%s', $$self{'equipment_id'}, $self->name() );
 	} # end if
 } # end sub ul_id
 
 sub get_from_ul_id {
 	my ( $id ) = @_;
 
-	$id =~ /^(\d*)-(\d\d\d\d-\d\d-\d\d)?-?(\w*)$/;
+	$id =~ /^ul(\d*)-(\d\d\d\d-\d\d-\d\d)?-?(\w*)$/;
     my ( $equipment_id, $date, $shift_name ) = ( $1, $2, $3 );
 
     my $Shift;
@@ -281,7 +281,7 @@ sub get_ul {
 	my ( $Shift, $filters ) = @_;
 
 	my $content = $Shift->get_lis($filters);
-	return sprintf('<ul id="ul%s" class="shift %s">%s</ul>%s', $Shift->ul_id(), ($content ? '' : ' Empty'), $content, "\n" );
+	return sprintf('<ul id="%s" class="shift %s">%s</ul>%s', $Shift->ul_id(), ($content ? '' : ' Empty'), $content, "\n" );
 } # end sub get_ul
 
 sub get {

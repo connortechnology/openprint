@@ -379,7 +379,6 @@ sub delete {
     sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_prices WHERE lngpaperindex=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_recommendations WHERE lngpaperindex=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM Paper_Purchase_Order_Contents WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{'id'} );
 
@@ -625,14 +624,14 @@ sub add_inventory {
 	} # end if
 
 	$Skid = new openprint::Skid( $Skid ) if ref $Skid ne 'openprint::Skid';
-	#Skid{Paper}{paper_id} has already been adjusted
+	my $C = $Skid->Content( $self );
 
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
     sql::insert( undef, undef, 'Paper_Inventory',
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  ($Skid->id() ? 1*$$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
+        'InStock',  ($C ? $C->quantity() : $self->in_stock() + $quantity),
         'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
@@ -675,8 +674,7 @@ sub back_ordered {
     my $self = shift;
 	return 0 if ! $$self{'id'};
 
-    ( $_ ) = sql::execute( undef, undef, q{SELECT Quantity FROM Paper_Purchase_Order_Contents WHERE paper_id=? AND PaperPurchaseOrder_id IN ( SELECT id FROM Paper_Purchase_Orders WHERE Status='Sent')}, $$self{'id'} );
-    return int $_;
+    return 0;
 } # end sub back_ordered
 
 sub allocated {

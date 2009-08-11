@@ -107,9 +107,6 @@ sub find {
     } elsif ( $params{'starttime_end'} ) {
         $sql .= ' AND starttime <= ?';
         push @values, $params{'starttime_end'};
-    } elsif ( $params{'starttime_<'} ) {
-        $sql .= ' AND starttime < ?';
-        push @values, $params{'starttime_<'};
     } elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
         $sql .= ' AND starttime IS NULL';
     } elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
@@ -174,7 +171,7 @@ sub startdate_seconds {
 } # end sub startdate_seconds
 
 sub endtime_seconds {
-	return Date::Parse::str2time( $_[0]{'endtime'} );
+	return $_[0]->starttime_seconds() + $_[0]->runtime_seconds();
 } # endsub
 
 sub Equipment {
@@ -263,6 +260,8 @@ sub get_li {
     my ( $self, $ul_id ) = @_;
 
 # a 12hour shift ~= 600px, so each hour gets 50px;
+	my $scale = $session{'/employee/production/print_overview.html?scale'};
+	$scale = 100 if ! $scale;
 
     my $html;
     if ( ! $$self{'project_id'} ) {
@@ -308,7 +307,7 @@ sub get_li {
     if ( $Project->rush() ) {
         $colour .= ' rush';
     } # end if
-    $html .= sprintf( '<li id="item_%d" class="%s" style="height:%spx;">', $$self{'id'}, $colour, $self->starttime() ? int($self->runtime_seconds()/100) : 'auto' );
+    $html .= sprintf( '<li id="item_%d" class="%s" style="height:%spx;">', $$self{'id'}, $colour, $self->starttime() ? int($self->runtime_seconds()/$scale) : 'auto' );
     $html .= '<div class="Company">';
     $html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $$self{'project_id'}, $Project->docket() );
 	my $n = $Project->Company()->name();
@@ -338,7 +337,11 @@ sub get_li {
         $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
         $html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split' } } );", '', 'S' ) if @{$$self{'service_id'}} > 1;
         $html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
+		if ( $self->status() ne 'In Production' ) {
 		$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'start' } } );", '', 'Start' );
+		} else {
+		$html .= ssi::writeButton( $log, $dbh, 'Stop'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'stop' } } );", '', 'Stop' );
+		} # end if
         $html .= '</span>';
 		if ( $Equipment->smartscheduling() ) {
 			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
@@ -481,6 +484,38 @@ sub Shift {
     return $Shift;
 } # end sub Shift
 
+sub start {
+	my ( $self ) = @_;
+	$self->starttime_seconds( time );
+	$self->locked( 1 );
+	my $e = $self->save();
+	if ( ! $e ) {
+		foreach my $sig_id ( @{$$self{'service_id'}} ) {
+			openprint::service::status( $$self{'project_id'}, $sig_id, 'In Production' );
+		} # end foreach sig_id
+	} # end if
+	return $e;
+} # end sub start
+
+sub stop {
+	my ( $self ) = @_;
+	$self->locked( 0 );
+	$self->runtime_seconds( time - $self->starttime_seconds() );
+	my $e = $self->save();
+	if ( ! $e ) {
+		foreach my $sig_id ( @{$$self{'service_id'}} ) {
+			openprint::service::status( $$self{'project_id'}, $sig_id, 'Ordered' );
+		} # end foreach sig_id
+	} # end if
+	return $e;
+} # end sub stop
+
+sub status {
+	my ( $self ) = @_;
+	foreach my $sig_id ( @{$$self{'service_id'}} ) {
+		return openprint::service::status( $$self{'project_id'}, $sig_id );
+	} # end foreach sig_id
+} # end sub status
 
 1;
 #__END__

@@ -144,10 +144,11 @@ sub inventory_report {
 		} # end if
 		foreach my $Skid ( $Paper->skids() ) {
 			my $weight = 0;
+			my $C = $Skid->Content( $Paper );
 			if ( $Paper->type() eq 'Roll' ) {
-				$weight = $$Skid{Paper}{$$Paper{'id'}};
+				$weight = $C->quantity();
 			} else {
-				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $$Skid{Paper}{$$Paper{'id'}};
+				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $C->quantity();
 			} # end if
 			$total_weight += $weight;
 			push @data,(
@@ -168,7 +169,7 @@ sub inventory_report {
 					$Skid->RFIDTag()->id_short(),
 					$$Skid{'created_on'},
 					$Skid->Location()->name(),
-					$Paper->type() eq 'Sheet' ? $$Skid{Paper}{$$Paper{'id'}} : '',
+					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
 					$weight,
 					);
 		} # end foreach skid
@@ -576,7 +577,9 @@ sub skid_details {
 	my $Skid = new openprint::Skid( $skid_ids[0] );
 	foreach ( @skid_ids ) {
 		my $S = new openprint::Skid( $_ );
-		if ( sets::intersection( keys %{$$S{Paper}}, keys %{$$Skid{Paper}} ) != keys %{$$S{Paper}} ) {
+		my @C1 = map { $_->paper_id() } $S->Contents();
+		my @C2 = map { $_->paper_id() } $Skid->Contents();
+		if ( sets::intersection( @C1, @C2 ) != @C1 ) {
 			$variable{'similar'} = 0;
 			last;
 		} # end if
@@ -601,6 +604,10 @@ sub skid_details {
 				$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
 				return;
 			} # end if
+			if ( $param{'skid_quantity'} > 100 ) {
+                $variable{'error'} .= 'Cannot enter more than 100 skids/rolls at a time.';
+                return;
+			} # end if
 			@{$variable{'Skids'}} = ();
 			foreach my $skid_count ( 1 .. $param{'skid_quantity'} ) {
 				my $S = new openprint::Skid();
@@ -608,9 +615,9 @@ sub skid_details {
 				save_skid( $S );
 				push @{$variable{'Skids'}}, $S;
 				if ( ! $variable{'Paper'} ) {
-					if ( $$S{Paper} ) {
-						my @paper_ids = keys %{$$S{Paper}};
-						$variable{'paper_id'} = $paper_ids[0] if @paper_ids;
+					my @C = $S->Contents();
+					if ( @C ) {
+						$variable{'paper_id'} = $C[0]->paper_id();
 					} # end of
 				} # end of
 				if ( $param{'verification_code'} ) {
@@ -619,7 +626,7 @@ sub skid_details {
 					$SV->save({
 						'skid_id'	=>	$S->id(),
 						'code'		=>	$param{'verification_code'},
-						'user_id'	=>	$openprint::session{'user_id'},
+						'user_id'	=>	$session{'user_id'},
 					});
 				} # end if verification_code
 			} # end foreach
@@ -634,7 +641,7 @@ sub skid_details {
 					$SV->save({
 						'skid_id'	=>	$skid_id,
 						'code'		=>	$param{'verification_code'},
-						'user_id'	=>	$openprint::session{'user_id'},
+						'user_id'	=>	$session{'user_id'},
 					});
 				} # end if verification_code
 			} # end foreach
@@ -678,8 +685,12 @@ sub skid_details {
 	} elsif ( $param{'btnFunction'} eq 'DeletePaper' ) {
 		foreach my $skid_id ( @skid_ids ) {
 			my $Skid = new openprint::Skid( $skid_id );
-			delete $$Skid{Paper}{$param{paper_id}};
-			$Skid->save();
+			foreach my $C ( $Skid->Contents() ) {
+				if ( $C->paper_id() == $param{'paper_id'} ) {
+					$C->delete();
+				} # end if
+			} # end foreach C
+			delete $$Skid{'Contents'};
 		} # end foreach
 	} # end if
 
@@ -701,9 +712,9 @@ sub check_out {
 		$Paper = new openprint::Paper( $paper_id );
 	} elsif ( $skid_id ) {
 		my $Skid = new openprint::Skid( $skid_id );
-		my @papers = keys %{$$Skid{Paper}};
+		my @papers = $Skid->Contents();
 		if ( 1 == @papers ) {
-			$Paper = new openprint::Paper( shift @papers );
+			$Paper = $papers[0]->Paper();
 			$paper_id = $Paper->id();
 		} else {
 			$variable{'error'} .= 'Skid contains more than one type of paper.	You must specify.<br/>';
@@ -739,17 +750,18 @@ sub check_out {
 	my $qty = $quantity;
 	foreach my $skid_id ( @skids ) {
 		my $Skid = new openprint::Skid( $skid_id );
-		if ( $$Skid{Paper}{$paper_id} <= 0 ) {
+		my $C = $Skid->Content( $Paper );
+		if ( $C->quantity() <= 0 ) {
 			# No paper on skid
-		} elsif ( $$Skid{Paper}{$paper_id} < $qty ) {
-			my $amount = $$Skid{Paper}{$paper_id};
+		} elsif ( $C->quantity() < $qty ) {
+			my $amount = $C->quantity();
 			$qty -= $amount;
 			$amount *= -1;
 			$Skid->add( $Paper, $amount );
 			$Paper->add_inventory( $Skid, $amount, $units, $description );
 			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if @Projects and $Paper->allocated( $Projects[0]->id() );
 		} else {
-			$$Skid{Paper}{$paper_id} -= $qty;
+			$C->save({'quantity'=>($C->quantity() - $qty)});
 			if ( @Projects ) {
 				$Paper->add_inventory( $Skid, -1*$qty, $units, $description );
 				$Paper->allocate( $Skid->id(), $Projects[0]->id(), -1*$qty ) if $Paper->allocated( $Projects[0]->id() );
@@ -758,7 +770,7 @@ sub check_out {
 			} # end if
 			$qty = 0;
 		} # end if
-		$Skid->save();
+		delete $$Skid{'Contents'};
 		last if ! $qty;
 	} # end foreach
 
@@ -782,9 +794,9 @@ sub check_in {
 	if ( $paper_id ) {
 		$Paper = new openprint::Paper( $paper_id );
 	} elsif ( $skid_id ) {
-		my @papers = keys %{$$Skid{Paper}};
+		my @papers = $Skid->Contents();
 		if ( 1 == @papers ) {
-			$Paper = new openprint::Paper( shift @papers );
+			$Paper = $papers[0]->Paper();
 			$paper_id = $Paper->id();
 		} else {
 			$variable{'error'} .= 'Skid contains more than one type of paper. You must specify.<br/>';
@@ -986,7 +998,8 @@ sub send_paper_arrival_notification {
 	foreach my $Paper ( @papers ) {
 		my $to;
 		$info{'Paper'} = $Paper;
-		$info{'Quantity'} = $$Skid{Paper}{$Paper->id()};
+		my $C = $Skid->Content( $Paper );
+		$info{'Quantity'} = $C ? $C->quantity() : 0;
 		my @data = sql::execute( undef, undef, q{SELECT distinct quantity, project_id FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $Skid->id(), $Paper->id() );
 		while ( @info{'Quantity','project_id'} = splice @data, 0, 2 ) {
 			my $Project = new openprint::Project( $info{'project_id'} );
@@ -1518,7 +1531,7 @@ sub _allocate_popup {
     if ( exists $param{'quantity'} ) {
         $variable{'quantity'} = $param{'quantity'};
     } else {
-        $variable{'quantity'} = $variable{Paper}->in_stock() - $variable{Paper}->allocated();
+        $variable{'quantity'} = $variable{'Paper'}->in_stock() - $variable{'Paper'}->allocated();
     } # end if
 } # end sub _allocate_popup
 

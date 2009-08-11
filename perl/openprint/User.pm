@@ -238,8 +238,6 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM paper_purchase_orders WHERE userindex=?', $$self{'id'} );
-
 
 	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Users WHERE Index=?', $$self{'id'} );
 

@@ -39,14 +39,14 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub print_overview {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved' ) {
+			foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/print_overview.html', ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day' ) );
+			ssi::save_params( '/employee/production/print_overview.html', ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale' ) );
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > 24*60*60 ) {
-		foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved' ) {
+		foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
@@ -58,7 +58,12 @@ sub print_overview {
 sub press_schedule {
 
 	if ( $param{'btnFunction'} eq 'Reflow' ) {
-		reorder_jobs( openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' ) );
+		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' );
+		if ( @Jobs ) {
+			reorder_jobs( @Jobs );
+		} else {
+			$variable{'error'} .= 'There are no jobs scheduled to reflow.';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Add Docket' ) {
 		my $Project = new openprint::Project();
 		$Project->save();
@@ -1092,11 +1097,18 @@ sub _drop {
 	if ( ! $Shift->Equipment()->smartscheduling() ) {
 		return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'id'}, $param{'services'} );
 	} # end if
+if ( 0 ) {
+	if ( $Shift->starttime() and ! $Shift->operator_id() ) {
+		$variable{'alert'} .= 'Shifts must have an operator in order to schedule jobs in them.';
+		reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' ));
+		return;
+	} # end if
+} # end if
 
 	# The idea 
 	if ( exists $param{'services'} ) {
 		my $services = $param{'services'};
-		$services =~ s/$param{id}\[\]=//g;
+		$services =~ s/$param{ul_id}\[\]=//g;
 		my @order = split( '&', $services );
 		return if ! @order;
 
@@ -1179,6 +1191,12 @@ sub reorder_jobs {
 
 	my $row = $order[0];
 
+	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
+	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
+$log->debug("Downing starttime, " . $row->Project()->docket() . ' locked: ' . $row->locked() );
+		$start_time = $row->starttime_seconds();
+	} # end if
+
 	my $Shift;
 
 	# Grab all shifts.  We will only add a shift at the end
@@ -1187,6 +1205,9 @@ sub reorder_jobs {
 			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
 			'order'			=>	'starttime',
 			);
+foreach my $S ( @Shifts ) {
+$log->debug("Shifts: " . $S->to_string() );
+} # end foreach S
 	if ( ! @Shifts ) {
 		@Shifts = openprint::Equipment_Shift::find(
 				'equipment_id'		=>	$$row{'equipment_id'}, 
@@ -1200,7 +1221,10 @@ sub reorder_jobs {
 					'order'				=>	'starttime',
 					);
 		} # end if
-		return if ! @Shifts;
+		if ( ! @Shifts ) {
+			$variable{'alert'} .= 'There are no shifts to schedule on.';
+			return;
+		} # end if
 		$Shift = $Shifts[0]->emanantise( $start_time );
 		@Shifts = ( $Shift );
 	} else {
@@ -1224,9 +1248,9 @@ sub reorder_jobs {
 		my $run_time = misc::hms2time( $$row{'runtime'} );
 		my $old_start_time = $start_time - $run_time;
 
-		while ( @fixed_jobs and $fixed_jobs[0]{'starttime'} and (Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < ($start_time+$run_time) ) ) {
+		while ( @fixed_jobs and ($fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
 			# Have fixed_jobs.  They do not move.
-			$start_time = Date::Parse::str2time($fixed_jobs[0]{'starttime'}) + misc::hms2time( $fixed_jobs[0]{'runtime'} ) + 1;
+			$start_time = $fixed_jobs[0]->endtime_seconds() + 1;
 			shift @fixed_jobs;
 		} # end while
 
@@ -1282,9 +1306,22 @@ sub _li_change {
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if
 	} elsif ( $param{'action'} eq 'start' ) {
-		$Job->starttime_seconds( time );
-		$Job->locked( 1 );
-		$variable{'error'} .= $Job->save();
+
+		# Stop any currently running jobs
+		foreach my $J ( openprint::ScheduledJob::find('equipment_id'=>$Job->equipment_id()) ) {
+			if ( $J->status() eq 'In Production' ) {
+				$variable{'error'} .= $J->stop();
+				$variable{'alert'} .= 'Stopped job ' . $J->Project()->docket();
+			} # end if
+		} # end foreach
+
+		$variable{'error'} .= $Job->start();
+		if ( $Equipment->smartscheduling() ) {
+			reorder_jobs(
+					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+		} # end if
+	} elsif ( $param{'action'} eq 'stop' ) {
+		$variable{'error'} .= $Job->stop();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );

@@ -59,13 +59,12 @@ sub rfidtag_details {
 				} # end if
 			} # end if
 			my $changed = 0;
-			foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-				if ( $param{"in_stock-$paper_id"} != $$Skid{'Paper'}{$paper_id} ) {
-					$changed = 1;
-					$$Skid{'Paper'}{$paper_id} = $param{"in_stock-$paper_id"};
+			foreach my $C ( $Skid->Contents() ) {
+				my $paper_id = $C->paper_id();
+				if ( $param{"in_stock-$paper_id"} != $C->quantity() ) {
+					$C->save({'quantity'=>$param{"in_stock-$paper_id"}});
 				} # end if
 			} # end foreach paper on skid
-			$Skid->save() if $changed;
 			if ( $param{'verification_code'} ) {
 				my $SV = new openprint::Skid_Verification();
 				$param{'verification_code'} =~ s/^[Vv](.*)$/$1/;
@@ -122,9 +121,10 @@ $openprint::log->debug("SKID_ID: $variable{'skid_id'}");
 		} # end if CHeckin/CheckOut
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$Skid->rfidtag_id( $param{'rfidtag_id'} );
-		foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-			if ( $param{"in_stock-$paper_id"} != $$Skid{'Paper'}{$paper_id} ) {
-				$$Skid{'Paper'}{$paper_id} = $param{"in_stock-$paper_id"};
+		foreach my $C ( $Skid->Contents() ) {
+			my $paper_id = $C->paper_id();
+			if ( $param{"in_stock-$paper_id"} != $C->quantity() ) {
+				$C->save({'quantity'=>$param{"in_stock-$paper_id"}});
 			} # end if
 		} # end foreach paper on skid
 		$variable{'error'} .= $Skid->save();

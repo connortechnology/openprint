@@ -22,7 +22,10 @@
 			my $html = '';
 			foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
 				my $Skid = new openprint::Skid( $skid_id );
-				$html .= sprintf('skid %d contains %d%s<br/>', $skid_id, $$Skid{Paper}{$$variable{'Paper'}->id()}, $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : ' sheets' ); 
+				foreach my $C ( $Skid->Contents( 'paper_id'=>$param{'paper_id'} ) ) {
+					
+				$html .= sprintf('skid %d contains %d%s of %s<br/>', $skid_id, $C->quantity(), $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : ' sheets', $C->Paper()->to_string() ); 
+				} # end foreach
 			} # end foreach	
 			return $html;
 			) ?>

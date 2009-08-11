@@ -19,7 +19,6 @@ require configuration;
 require openprint::login;
 
 require openprint::obj_customer;
-require openprint::paper_purchase_order;
 require openprint::print;
 require openprint::Estimating::Printing;
 require openprint::print_project;
