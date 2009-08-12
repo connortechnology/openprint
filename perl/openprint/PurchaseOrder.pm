@@ -21,6 +21,7 @@ require openprint::User;
 require openprint::Tax;
 require openprint::PurchaseOrder_Content;
 require openprint::PurchaseOrder_Log;
+require openprint::Email;
 
 my $debug = 0;
 
@@ -330,25 +331,25 @@ sub send_to_vendor {
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
 	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
-		foreach my $email ( split(',', $self->shipto_email() ) ) {
-			$email =~ s/^\s*(.*)\s*$/$1/;
-			next if ! $email;
-			$mail{'TO'} = $email;
-			misc::send_email_with_attachment( $log, \%mail, @attachments );
-			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
-		} # end foreach
+		my $Email = new openprint::Email();
+		$results .= $Email->send( 
+				TO	=>	[ split(',', $self->shipto_email() ) ],
+				FROM	=>	$mail{'FROM'},
+				SUBJECT	=>	$mail{'SUBJECT'},
+				ATTACHMENTS =>	\@attachments,
+				);
 	} # end if
 	if ( $self->notifications() ) {
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 		@attachments = ('', $_, 'text/html', 'quoted-printable');
-		$results .= 'Notification sent to: ';
-		foreach my $user_id ( $self->notifications() ) {
-			my $U = new openprint::User( $user_id );
-			$mail{'TO'} = sprintf( '"%s" <%s>', $U->name(), $U->email() );
-			misc::send_email_with_attachment( $log, \%mail, @attachments );
-			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
-		} # end foreach U
+		my $Email = new openprint::Email();
+		$results .= 'Notifications: <br/>' . $Email->send( 
+				TO	=>	[ map { new openprint::User( $_ ) } $self->notifications() ],
+				FROM	=>	$mail{'FROM'},
+				SUBJECT	=>	$mail{'SUBJECT'},
+				ATTACHMENTS =>	\@attachments,
+				);
 	} # end if
 
 	my $L = new openprint::PurchaseOrder_Log();
