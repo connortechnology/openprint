@@ -817,6 +817,11 @@ sub _stock_checkout {
 							});
 					$C->quantity( 0 );
 					$C->save();
+#Remove any allocations
+					foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'paper_id'=>$C->paper_id(), 'docket'=>$Project->docket() ) ) {
+						$PA->delete();
+					} # end foreach
+
 				} # end foreach C
 			} else {
 				my $PI = new openprint::PaperInventory();
