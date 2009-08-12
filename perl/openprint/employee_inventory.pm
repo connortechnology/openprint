@@ -605,8 +605,8 @@ sub skid_details {
 				return;
 			} # end if
 			if ( $param{'skid_quantity'} > 100 ) {
-                $variable{'error'} .= 'Cannot enter more than 100 skids/rolls at a time.';
-                return;
+				$variable{'error'} .= 'Cannot enter more than 100 skids/rolls at a time.';
+				return;
 			} # end if
 			@{$variable{'Skids'}} = ();
 			foreach my $skid_count ( 1 .. $param{'skid_quantity'} ) {
