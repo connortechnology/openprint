@@ -38,6 +38,7 @@ $serial = 'shifts_id_seq';
 );
 
 %defaults = (
+	'operator_id'		=>	undef,
 );
 
 sub find {
