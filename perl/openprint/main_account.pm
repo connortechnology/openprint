@@ -91,6 +91,8 @@ sub registration {
 	$error .= 'Empty Password.<br/>' if $openprint::param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $openprint::param{'password'} ne $openprint::param{'verifypassword'};
 	if ( ( ! $session{'user_id'} ) and ( $openprint::config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
+		# Remove spaces, because some people want to put spaces between the characters, etc.
+		$openprint::param{'Captcha'} =~ s/\s//g;
 		require Authen::Captcha;
         my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $openprint::config{'SkinPath'}.'/images/captcha');
 		if ( 1 != $Captcha->check_code( $openprint::param{'Captcha'}, $openprint::param{'MD5SUM'} ) ) {
