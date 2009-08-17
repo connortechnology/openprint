@@ -1542,7 +1542,7 @@ sub purchase_order_view {
 			my $L = new openprint::PurchaseOrder_Log();
 			$L->save({
 					'user_id'	=>	$session{'user_id'},
-					'po_id'		=>	$PO->id(),
+					'po_id'		=>	$param{'po_id'},
 					'reason'	=>	'deleted.',
 					});
 			delete $param{'po_id'};
