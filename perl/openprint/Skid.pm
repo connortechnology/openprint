@@ -159,7 +159,7 @@ sub load {
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM Skids WHERE id=?}, {}, $$self{'id'} );
 	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
+	@$self{keys %fields} = @$data{@fields{keys %fields}};
 
 	delete $$self{'Contents'};
 	@{$$self{'Contents'}} = $self->Contents();

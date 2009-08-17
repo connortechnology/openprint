@@ -8,9 +8,9 @@
 			<tr><th align="left">Skid</th><th align="left">RFID Tag</th><th align="left">Quantity</th></tr>
 			<tr>
 				<td>
-					<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
+					<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="new Ajax.Request( '_check_for_skid.json', {parameters: {skid_id: this.value}, evalScripts: true } );" />
 				</td><td>
-					<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
+					<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="new Ajax.Request( '_check_for_skid.json', {parameters: {rfidtag_id: this.value}, evalScripts: true } );" />
 				</td><td>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', q`new Ajax.Updater('StockCheckout','_stock_checkout.html', { method: 'get', parameters: checkout_form.serialize() } );`,'','Submit' ); ) ?>
 				</td>

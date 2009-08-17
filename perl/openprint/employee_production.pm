@@ -1295,6 +1295,9 @@ sub operator_schedule {
 
 } # end sub operator_schedule
 
+sub _check_for_skid {
+} # end sub _check_for_skid
+
 1;
 
 __END__

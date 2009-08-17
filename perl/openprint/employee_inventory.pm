@@ -570,6 +570,8 @@ sub skid_details {
 
 	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) ) {
 		$variable{'error'} .= "Skid $param{'skid_id'} not found!<br/>";
+		$variable{'Skid'} = new openprint::Skid();
+		@{$variable{'skid_ids'}} = ();
 		return;
 	} # end if
 
