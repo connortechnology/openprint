@@ -45,6 +45,7 @@ sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
+	# Can't auto-load in_stock because we have to not count Missing paper
 	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
 
 	if ( exists $params{'id'} ) {
@@ -357,15 +358,27 @@ sub save {
 	return;
 } # end sub save
 
+sub merge {
+	my ( $self, $Duplicate ) = @_;
+	my $ac = sql::start_transaction( $openprint::dbh );
+	sql::update( undef, undef, 'Paper_allocations', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	sql::update( undef, undef, 'Paper_Inventory', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	sql::update( undef, undef, 'Paper_purchase_order_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	sql::update( undef, undef, 'skid_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	$Duplicate->delete();
+	sql::end_transaction( $openprint::dbh, $ac );
+} # end sub merge
+
 sub delete {
-    my $self = shift;
+	my $self = shift;
     my $ac = sql::start_transaction( );
+	# We don't want to lose the paper if it's in a manifest
 	#sql::update( undef, undef, 'manifest_content_types', ['paper_id=?', $$self{'id'}], 'paper_id', undef );
     sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_prices WHERE lngpaperindex=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_recommendations WHERE lngpaperindex=?}, $$self{'id'} );
-    #sql::execute( undef, undef, q{DELETE FROM Paper_Purchase_Order_Contents WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{'id'} );
 
@@ -611,14 +624,14 @@ sub add_inventory {
 	} # end if
 
 	$Skid = new openprint::Skid( $Skid ) if ref $Skid ne 'openprint::Skid';
-	#Skid{Paper}{paper_id} has already been adjusted
+	my $C = $Skid->Content( $self );
 
 	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
     sql::insert( undef, undef, 'Paper_Inventory',
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  ($Skid->id() ? 1*$$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
+        'InStock',  ($C ? $C->quantity() : $self->in_stock() + $quantity),
         'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
@@ -661,7 +674,6 @@ sub back_ordered {
     my $self = shift;
 	return 0 if ! $$self{'id'};
 
-    #( $_ ) = sql::execute( undef, undef, q{SELECT Quantity FROM Paper_Purchase_Order_Contents WHERE paper_id=? AND PaperPurchaseOrder_id IN ( SELECT id FROM Paper_Purchase_Orders WHERE Status='Sent')}, $$self{'id'} );
     return 0;
 } # end sub back_ordered
 
@@ -685,7 +697,7 @@ sub in_stock {
 	if ( ! exists $$self{in_stock} ) {
 		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			$$self{in_stock} += int $SkidContent->quantity();
+			$$self{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
     return 1*$$self{in_stock};
