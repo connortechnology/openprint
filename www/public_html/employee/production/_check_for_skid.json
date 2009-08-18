@@ -1,9 +1,6 @@
 <? echo ( 
 	$r->content_type('text/javascript');
 	if ( exists $param{'skid_id'} ) {
-		if ( ! $param{'skid_id'} ) {
-			return q`$('rfidtag_id').value='';`;
-		} # end if
 		$param{'skid_id'} =~ s/\D//g;
 		my $Skid = new openprint::Skid( $param{'skid_id'} );
 		if ( $Skid->id() ) {
@@ -12,9 +9,6 @@
 			return q`$('skid_id').style.color = 'red';`;
 		} # end if
 	} elsif ( $param{'rfidtag_id'} ) {
-		if ( ! $param{'skid_id'} ) {
-			return q`$('rfidtag_id').value='';`;
-		} # end if
 		$param{'rfidtag_id'} =~ s/\D//g;
 		my $RFIDTag = new openprint::RFIDTag( $param{'rfidtag_id'} );
 		if ( $RFIDTag->id() ) {
