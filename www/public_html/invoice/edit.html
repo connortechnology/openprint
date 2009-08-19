@@ -1,5 +1,8 @@
 <? if ( $$variable{'Invoice'}->id() ) ?>
 <script type="text/javascript">
+	function update_product( product_id ) {
+		$('product-total-'+product_id).innerHTML = do_decimals( parseFloat($('product-price-'+product_id).value) * parseFloat($('product-quantity-'+product_id).value), 2 );
+	} // end function update_product
     function add_timetrack( timetrack_id ) {
         new Ajax.Updater( 'InvoicedTimetracks', '_invoiced_timetracks.html', {
                 method:'get',
@@ -39,9 +42,7 @@
 
 </script>
 <? endif ( $$variable{'Invoice'}->id() ) ?>
-<? if ( $$variable{'error'} ) ?>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" id="f1" action="<? echo ( $$variable{'Invoice'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{'Invoice'}->id() ) ?>" />

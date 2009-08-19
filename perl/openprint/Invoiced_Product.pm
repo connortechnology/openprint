@@ -79,16 +79,6 @@ sub find {
 	return map { new openprint::Invoiced_Product( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub delete {
-	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM Invoiced_Products WHERE id=?}, $$self{'id'} );
-} # end sub delete
-
-sub destroy {
-	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM Invoiced_Products WHERE id=?}, $$self{'id'} );
-} # end sub destroy
-
 sub Invoice {
 	return new openprint::Invoice( $_[0]{invoice_id} );
 } # end sub Invoice

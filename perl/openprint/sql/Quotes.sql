@@ -1,11 +1,11 @@
-DROP TABLE tbl_Quotes;
+DROP TABLE IF EXISTS Quotes;
 
 
-CREATE TABLE tbl_Quotes (
-	Index				INT4 NOT NULL,
+CREATE TABLE Quotes (
+	id				SERIAL NOT NULL,
 	strSessionID		varchar(10) NOT NULL,
-	CompanyIndex		INT4 NOT NULL, FOREIGN KEY (CompanyIndex) REFERENCES Company (Index),
-	UserIndex			INT4 NOT NULL, FOREIGN KEY (UserIndex) REFERENCES Users (Index),
+	CompanyIndex		INTEGER NOT NULL, FOREIGN KEY (CompanyIndex) REFERENCES Companies (id),
+	UserIndex			INTEGER NOT NULL, FOREIGN KEY (UserIndex) REFERENCES Users (id),
     dblModification1	NUMERIC(20,2),
     dblModification2	NUMERIC(20,2),
     dblModification3	NUMERIC(20,2),
@@ -20,6 +20,6 @@ CREATE TABLE tbl_Quotes (
 	strAdministratorName		TEXT,
 	strCurrencyName		TEXT,
 	strCurrencySymbol	TEXT,
-	PRIMARY KEY (Index)
+	PRIMARY KEY (id)
 );
 

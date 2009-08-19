@@ -517,8 +517,9 @@ sub datetime_select {
 
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
+		$_ = $options;
 		$options = {};
-		$$options{'onchange'} = $options;
+		$$options{'onchange'} = $_;
 	} # end if
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
 	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
