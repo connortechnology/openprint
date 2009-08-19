@@ -392,6 +392,14 @@ span.DateSelector {
     float: left;
 	width: 205px;
 }
+span.DateTimeSelector {
+    float: left;
+    width: 400px;
+}
+span.DateSelector select, span.DateTimeSelector select {
+    width: auto;
+    max-width: none;
+}
 
 div.PopupWindow {
     display: none;

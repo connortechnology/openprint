@@ -604,6 +604,14 @@ if ( ! exists $$data{'id'} ) {
 	$dbh->do('ALTER TABLE Equipment_shifts add id serial');
 	$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Articles LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Articles.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

@@ -477,18 +477,24 @@ sub find {
         } # end if
     } # end if
 	if ( $params{'id_start'} and $params{'id_end'} ) {
-            $sql .= ' AND (Index BETWEEN ? AND ?)';
-            push @values, @params{'id_start','id_end'};
+		$sql .= ' AND (Index BETWEEN ? AND ?)';
+		push @values, @params{'id_start','id_end'};
 	} elsif ( $params{'id_start'} ) {
-            $sql .= ' AND Index >= ?';
-            push @values, $params{'id_start'};
+		$sql .= ' AND Index >= ?';
+		push @values, $params{'id_start'};
 	} elsif ( $params{'id_end'} ) {
-            $sql .= ' AND Index <= ?';
-            push @values, $params{'id_end'};
+		$sql .= ' AND Index <= ?';
+		push @values, $params{'id_end'};
 	} # end if
+	if ( $params{'type_id'} ) {
+		$sql .= ' AND type_id=?';
+		push @values, $params{'type_id'};
+    } # end if
 	if ( exists $params{'predefined'} ) {
-		$sql .= ' AND predefined=?';
-		push @values, $params{'predefined'};
+		if ( $params{'predefined'} ne '' ) {
+			$sql .= ' AND predefined=?';
+			push @values, $params{'predefined'};
+		} # end if
 	} # end if
 
 	if ( $params{'reference'} ) {
@@ -810,7 +816,7 @@ sub copy {
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ProjectIndex', $new->id(), 1 );
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ServiceIndex', $new_service_index, 1 );
 
-		my $specs = openprint::service::get_specs_ref( $self->id(), $service_index );
+		my $specs = openprint::service::get_specs_ref( $self, $service_index );
 		foreach my $key ( keys %$specs ) {
 			if ( ! sets::isin_regx( $key, @dont_copy ) ) {
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, $key, $$specs{$key}, 1 );
@@ -895,7 +901,7 @@ sub summary {
 
 	my %services = $self->get_services();
 	if ( $services{''} ) {
-		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $$self{'id'}, $services{''}[0] );
+		my %specs = %{openprint::service::get_specs_ref( $self, $services{''}[0] )};
 		if ( $specs{'Versions'} ) {
 			$summary .= $specs{'Versions'} .= ' versions ';
 		} # end if
@@ -1001,6 +1007,7 @@ sub ordered_quantity {
 	} # end if
 	return $$self{'quantity'.$self->ordered_quantity_index()};
 } # end sub ordered_quantity
+
 sub ordered_quantity_index {
 	my $self = shift;
 	if ( (! $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {

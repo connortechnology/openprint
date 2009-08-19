@@ -21,15 +21,15 @@
 -->
 <div class="row"> 
 	<span class="label">Impression Count:</span>
-	<? if ( $$variable{'Project'}->quantity1() ) ?>
-	<span class="value"><?hdnImpressionQuantity1?></span>
-	<? endif ( $$variable{'Project'}->quantity1() ) ?>
-	<? if ( $$variable{'Project'}->quantity2() ) ?>
-	<span class="value"><?hdnImpressionQuantity2?></span>
-	<? endif ( $$variable{'Project'}->quantity2() ) ?>
-	<? if ( $$variable{'Project'}->quantity3() ) ?>
-	<span class="value"><?hdnImpressionQuantity3?></span>
-	<? endif ( $$variable{'Project'}->quantity3() ) ?>
+<? echo ( 
+	my $html = '';
+	my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+	foreach my $qty_index ( 1 .. 3 ) {
+		next if ! $$variable{'Project'}->quantity( $qty_index );
+		$html .= sprintf('<span class="value">%d</span>', $$sig_specs{'hdnImpressionQuantity'.$qty_index} );
+	} # end foreach qty_index
+	return $html;
+) ?>
 </div>
 <div class="row"> 
 	<span class="label">Gross Stock Quantity:</span>

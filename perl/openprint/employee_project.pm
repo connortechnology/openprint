@@ -55,6 +55,13 @@ sub view {
 					$project_index = $Projects[0]->id();
 				} # end if
 			} # end if
+		} elsif ( $param{'order_id'} ) {
+			$param{'order_id'} =~ s/\D//g;
+			if ( $param{'order_id'} ) {
+				if ( my @Projects = openprint::Project::find('order_id'=>$param{'order_id'}) ) {
+					$project_index = $Projects[0]->id();
+				} # end if
+			} # end if
 		} # end if
 		
 	} # end if
