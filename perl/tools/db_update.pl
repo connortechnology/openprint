@@ -1087,14 +1087,6 @@ if ( ! sets::isin( 'manifests', \@tables ) ) {
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
-} # end if
-
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manifests LIMIT 1', {} );
-if ( ! $data ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Manifests.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	}
 } else {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manifests LIMIT 1', {} );
 my $ac = sql::start_transaction( $dbh );
@@ -1768,6 +1760,17 @@ if ( $data ) {
 		$dbh->do('ALTER TABLE survey_question_available_answers ADD PRIMARY KEY (id)');
 	} # end if
 }
+
+if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
+	my $ac = sql::start_transaction( $dbh );
+	$_ = misc::load_file( $log, q{../openprint/sql/PaymentTypes.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+	sql::end_transaction( $dbh, $ac );
+} else {
+} # end if
+
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Payments LIMIT 1', {} );
 if ( ! $data ) {
 		$_ = misc::load_file( $log, q{../openprint/sql/Payments.sql});
@@ -1816,16 +1819,6 @@ if ( ! $data ) {
 	} # end if
 } # end if
 
-if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
-	my $ac = sql::start_transaction( $dbh );
-	$_ = misc::load_file( $log, q{../openprint/sql/PaymentTypes.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	}
-	sql::end_transaction( $dbh, $ac );
-} else {
-} # end if
-
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_contents LIMIT 1', {} );
 if ( $data ) {
 	if ( ! exists $$data{'id'} ) {
@@ -1833,12 +1826,6 @@ if ( $data ) {
 		$dbh->do('alter table skid_contents drop constraint skid_contents_pkey');
 		$dbh->do('alter table skid_contents add primary key (id)');
 		$dbh->do('create index skid_contents_skid_id_idx on skid_contents (skid_id)');
-	} # end if
-} # end if
-my $data = $dbh->selectrow_hashref( 'SELECT * FROM manifestcontents LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{'docket'} ) {
-		$dbh->do('alter table manifestcontents add docket integer');
 	} # end if
 } # end if
 foreach my $ServiceType ( openprint::ServiceType::find() ) {
@@ -1942,27 +1929,32 @@ if ( ! sets::isin( 'manifest_content_types', @tables ) ) {
 		$dbh->do($st);
 	}
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifestcontents LIMIT 1', {} );
-	if ( $data and ! exists $$data{'type_id'} ) {
-		require openprint::Manifest;
-		$dbh->do('alter table manifestcontents add type_id integer');
-		foreach my $Manifest ( openprint::Manifest::find() ) {
-			my @Contents = $Manifest->Contents();
+	if ( $data ) {
+		if ( ! exists $$data{'type_id'} ) {
+			require openprint::Manifest;
+			$dbh->do('alter table manifestcontents add type_id integer');
+			foreach my $Manifest ( openprint::Manifest::find() ) {
+				my @Contents = $Manifest->Contents();
 
-			if ( @Contents ) {
-				my $T = new openprint::Manifest_Content_Type();
-				$_ = $T->save({
-					'manifest_id'	=>	$Manifest->id(),
-					'docket'		=>	$Contents[0]->docket(),
-					'po_id'			=>	$Manifest->po_id(),
-				});
-				die $_ if $_;
-				foreach my $C ( @Contents ) {
-					$C->save({'type_id'=>$T->id()});
-				} # end foreach
-			} # end if
-		} # end foreach Manifest
-		$dbh->do('alter table manifestcontents alter type_id set not null');
-		$dbh->do('alter table manifestcontents add foreign key (type_id) references manifest_content_types (id)');
+				if ( @Contents ) {
+					my $T = new openprint::Manifest_Content_Type();
+					$_ = $T->save({
+						'manifest_id'	=>	$Manifest->id(),
+						'docket'		=>	$Contents[0]->docket(),
+						'po_id'			=>	$Manifest->po_id(),
+					});
+					die $_ if $_;
+					foreach my $C ( @Contents ) {
+						$C->save({'type_id'=>$T->id()});
+					} # end foreach
+				} # end if
+			} # end foreach Manifest
+			$dbh->do('alter table manifestcontents alter type_id set not null');
+			$dbh->do('alter table manifestcontents add foreign key (type_id) references manifest_content_types (id)');
+		} # end if
+		if ( ! exists $$data{'docket'} ) {
+			$dbh->do('alter table manifestcontents add docket integer');
+		} # end if
 	} # end if
 } else {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM manifest_content_types LIMIT 1', {} );
@@ -2063,32 +2055,32 @@ $Currency->save({'short'=>'CAD'});
 				'description'=>'Email address to send Inventory notifications to.',
 				'category'=> 'Email Notifications'] );
 	} # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ProductionFeedback LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'productionfeedback', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/ProductionFeedback.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CIP3_PPF LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'cip3_ppf', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/CIP3_PPF.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM EmployeeNumbers LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'employeenumbers', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/EmployeeNumbers.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
 } else {
-	if ( exists $$data{'lngemployeeid'} ) {
-		$dbh->do('alter table employeenumbers rename column lngemployeeid to id');
-		$dbh->do('alter table employeenumbers rename column lngmin to min');
-		$dbh->do('alter table employeenumbers rename column lngmax to max');
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM EmployeeNumbers LIMIT 1', {} );
+	if ( $data ) {
+		if ( exists $$data{'lngemployeeid'} ) {
+			$dbh->do('alter table employeenumbers rename column lngemployeeid to id');
+			$dbh->do('alter table employeenumbers rename column lngmin to min');
+			$dbh->do('alter table employeenumbers rename column lngmax to max');
+		} # end if
 	} # end if
 } # end if
 
@@ -2111,7 +2103,7 @@ if ( ! $data ) {
 	if ( ! exists $$data{'id'} ) {
 		$dbh->do('ALTER TABLE Schedule ADD id SERIAL');
 	} # end if
-	if ( exists $$data{'serviceindex'} ) {
+	if ( exists $$data{'serviceindex'} and ! exists $$data{'service_id'} ) {
 		$dbh->do('ALTER TABLE Schedule ADD service_id INTEGER[]');
 		$dbh->do('UPDATE Schedule SET service_id=ARRAY[serviceindex]');
 		#$dbh->do('ALTER TABLE Schedule DROP serviceindex');
@@ -2126,18 +2118,20 @@ if ( ! $data ) {
 } else {
 } # end if
 if ( sets::isin('shifts',\@tables) and ! sets::isin( 'equipment_shifts', \@tables ) ) {
+$log->warn( "Tbales @tables");
 	$dbh->do( 'ALTER TABLE Shifts rename to Equipment_Shifts' );
-	$_ = misc::load_file( $log, q{../openprint/sql/Shifts.sql});
+} elsif ( ! sets::isin( 'equipment_shifts', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Equipment_Shifts.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
-} else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Equipment_Shifts LIMIT 1', {} );
-	if ( $data and ! exists $$data{'id'} ) {
-		$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
-		$dbh->do('ALTER TABLE Equipment_shifts add id serial');
-		$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
-	} # end if
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Equipment_Shifts LIMIT 1', {} );
+if ( $data and ! exists $$data{'id'} ) {
+	$dbh->do('ALTER TABLE Equipment_Shifts drop constraint shifts_pkey');
+	$dbh->do('ALTER TABLE Equipment_shifts add id serial');
+	$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
 } # end if
 
 @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
@@ -2151,17 +2145,17 @@ if ( ! sets::isin('shifts',\@tables ) ) {
 
 if ( sets::isin( 'tbl_quotes', \@tables ) ) {
 	$dbh->do('ALTER TABLE tbl_Quotes rename to Quotes');
-	$dbh->do('ALTER TABLE Quotes alter column index rename to id');
+	$dbh->do('ALTER TABLE Quotes rename column index to id');
 	$dbh->do('ALTER TABLE tbl_Quote_Users_For rename column quoteindex to quote_id');
 	$dbh->do('ALTER TABLE tbl_Quote_Users_By rename column quoteindex to quote_id');
 	$dbh->do('ALTER TABLE tbl_Quote_Details rename column quoteindex to quote_id');
+	$dbh->do('DROP SEQUENCE IF EXISTS quotes_id_seq');
 	$dbh->do('CREATE SEQUENCE quotes_id_seq');
 	$dbh->do("SELECT setval('quotes_id_seq', (select MAX(id) FROM Quotes) )");
 	$dbh->do("ALTER TABLE Quotes alter column id set default nextval('quotes_id_seq')");
 } # end if
 $dbh->commit();
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Articles LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin('articles',\@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Articles.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);

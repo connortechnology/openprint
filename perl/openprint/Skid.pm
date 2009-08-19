@@ -212,7 +212,7 @@ sub add {
 		$quantity =~ s/[^\d]//g;
 # Set
 	} # end if
-	$C->save({'quantity'=>$quantity});
+	$content->save({'quantity'=>$quantity});
 	return $quantity - $old_quantity;
 } # end sub add_inventory
 

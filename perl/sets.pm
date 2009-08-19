@@ -11,17 +11,17 @@ sub isin {
 		my $thing = shift;
 #$openprint::log->debug( 'REF' . ref $thing );
 		if ( ref $thing eq 'ARRAY' ) {
-			foreach my $value (@{$thing}) {
+			foreach (@{$thing}) {
 #$openprint::log->debug( 'thing' . $value );
-				return 1 if $value eq $var;
+				return 1 if $_ eq $var;
 			} # end foeach
 		} else {
 			return 1 if $thing eq $var;
 		} # end if
 	} elsif ( @_ > 1 ) {
-		foreach my $value (@_) {
-			return 1 if $value eq $var;
-		} # end foeach
+		foreach $_ (@_) {
+			return 1 if $_ eq $var;
+		} # end foreach
 	} # end if
     return 0;
 
