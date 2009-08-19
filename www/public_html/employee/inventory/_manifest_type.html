@@ -7,8 +7,9 @@
 			} else {
 				foreach my $C ( $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) {
 					my $Skid = $C->Skid();
-					foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-						$Paper = new openprint::Paper( $paper_id );
+
+					foreach my $SkidContent ( $Skid->Contents() ) {
+						$Paper = $SkidContent->Paper();
 						last;
 					} # end foreach paper_id
 					last if $Paper;

@@ -75,8 +75,8 @@
                     next if ! $empty;
                 } # end if
 				my $iftype = 1;
-                foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-                    my $Paper = new openprint::Paper( $paper_id );
+                foreach my $C ( $Skid->Contents() ) {
+                    my $Paper = $C->Paper();
                     if ( ! sets::isin( $Paper->type(), split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) {
                         $iftype = 0;
                         last;
@@ -117,38 +117,39 @@
 				
 				$html .= '<td class="checkbox">&nbsp;</td><td colspan="5">';
 			
-				foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-					my $Paper = new openprint::Paper( $paper_id );
+				foreach my $C ( $Skid->Contents() ) {
+					my $Paper = $C->Paper();
 					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s - %d %s</a><br/>',
-					$$Skid{'id'},
-					$Paper->to_string(),
-					$$Skid{'Paper'}{$paper_id},
-					$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
+						$$Skid{'id'},
+						$Paper->to_string(),
+						$C->quantity(),
+						$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
 					);
 					if ( $Paper->type() eq 'Roll' ) {
 						$total_rolls += 1;
-						$total_weight += $Skid->content($Paper);
+						$total_weight += $C->quantity();
 					} else {
 						$total_skids += 1;
-						$total_sheets += $Skid->content($Paper);
+						$total_sheets += $C->quantity();
 					} # end if	
 				} # end foreach
 				$html .= '</td>';	
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid
-			$html .= '<tr class="totals"><td colspan="3">Totals:</td><td>';
+			$html .= '<tr class="totals"><td colspan="4">Totals:</td><td>';
 			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
-			$html .= '</td></tr>';
+			$html .= '</td><td></td></tr>';
 			return $html;
 		) ?>
 	</table>
 	<input type="hidden" name="btnFunction"/>
 	<span style="float: right;">
 		<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'move', 'move.gif', "popup_window('/employee/inventory/_move_skids_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(',') ) ;", '', 'Move To' ),
 					ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(','), 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=yes,status=no');", '', 'Print Labels' ),
-					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "SkidResults.btnFunction.value='Delete';SkidResults.submit();", '', 'Delete Checked' ),
+					#ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "SkidResults.btnFunction.value='Delete';SkidResults.submit();", '', 'Delete Checked' ),
 					ssi::writeButton( $log, $dbh, 'Select', 'select.gif', "SkidResults.btnFunction.value='Go';SkidResults.action='skid_details.html';SkidResults.submit();", '', 'Select Checked' ),
 
 			); ) ?>

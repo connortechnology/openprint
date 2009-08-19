@@ -34,7 +34,32 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *config = \%openprint::config;
 
 sub skids {
-	if ( $param{'btnFunction'} eq 'Delete' )  {
+	if ( $param{'btnFunction'} eq 'move' )  {
+		if ( $param{'skid_id'} ) {
+			$param{'skid_id'} =~ s/[^\d\-\,]//g;
+			my @skid_ids;
+			foreach my $range ( split ',', $param{'skid_id'} ) {
+				if ( $range =~ /(\d*)\-(\d*)/ ) {
+					push @skid_ids, ( $1 .. $2 );
+				} else {
+					push @skid_ids, $range;
+				} # end if
+			} # end foreach
+			my $Location = new openprint::Location( $param{'location_id'} );
+			if ( ! $Location->id() ) {
+				$variable{'error'} .= 'Invalid location.<br/>';
+			} else {
+				foreach my $skid_id ( @skid_ids ) {
+					my $Skid = new openprint::Skid( $skid_id );
+					if ( my $e = $Skid->save({'location_id'=>$param{'location_id'}}) ) {
+					$variable{'error'} .= "Skid $$Skid{'id'} has not been moved. Error: $e<br/>";
+					} else {
+					$variable{'information'} .= "Skid $$Skid{'id'} has been moved to $$Location{name}.<br/>";
+					} # end if
+				} # end foreach
+			} # end if
+		} # end if skid_id
+	} elsif ( $param{'btnFunction'} eq 'Delete' )  {
 		if ( $param{'skid_id'} ) {
 			$param{'skid_id'} =~ s/[^\d\-\,]//g;
 			my @skid_ids;
@@ -1916,5 +1941,7 @@ sub _verification_log {
 sub paper_label_window {
 } # end sub paper_label_window
 
+sub move_skids_window {
+} # end sub move_skids_window
 1;
 __END__

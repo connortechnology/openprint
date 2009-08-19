@@ -6,10 +6,11 @@
 		$$variable{'quantity'} = $param{'quantity'};
 	} elsif ( $param{'skid_id'} ) {
 		my $Skid = new openprint::Skid( $param{'skid_id'} );
-
-		$$variable{'quantity'} = $$Skid{Paper}{$param{'paper_id'}};
+		if ( my $C = $Skid->Content( $$variable{'Paper'} ) ) {
+			$$variable{'quantity'} = $C->quantity();
+		} # end if
 	} else {
-		$$variable{'quantity'} = $$variable{Paper}->in_stock();
+		$$variable{'quantity'} = $$variable{'Paper'}->in_stock();
 	} # end if
 ) ?>
 <div id="CheckOut">
