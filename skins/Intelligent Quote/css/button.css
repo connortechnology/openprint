@@ -54,8 +54,10 @@
 
 
 a.buttonImageOff .l {
+display:none;
 }
 a.buttonImageOff .r {
+display:none;
 }
 a.buttonImageOff .c {
 	font-family: Arial, Helvetica, Sans-Serif;
@@ -73,8 +75,10 @@ a.buttonImageOff .c {
 
 
 a.buttonImageOn .l {
+display:none;
 }
 a.buttonImageOn .r {
+display:none;
 }
 a.buttonImageOn .c {
 	font-family: Arial, Helvetica, Sans-Serif;

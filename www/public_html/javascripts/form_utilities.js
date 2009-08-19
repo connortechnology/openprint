@@ -854,6 +854,10 @@ function fill_form_from_xml( form, xmlResponse ) {
 		}
 	}
 }
+function getFormObj( formName ) {
+	var form = document.forms[formName];
+	return form;
+}
 
 function getFormObj( formName ) {
 	var form = document.forms[formName];
