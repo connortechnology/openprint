@@ -19,12 +19,19 @@ my $debug = 1;
 	'units'			=>	'units',
 );
 %defaults = (
+	'purpose_id'	=>	undef,
 );
 %transforms = (
 );
 $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 
 sub find {
 	my %params = @_;
@@ -49,6 +56,7 @@ sub find {
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
 		$log->debug("openprint::SkidContent::find( $sql)" . $dbh->errstr);
@@ -58,23 +66,6 @@ sub find {
 	} # end if
 	return map { new openprint::SkidContent( $_->{id}, $_ ); } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $dbh->selectrow_hashref( 'SELECT * FROM Skid_Contents WHERE skid_id=? AND paper_id=?', {}, @$self{'skid_id','paper_id'} );
-		if ( ! $data ) { $log->debug($dbh->errstr ); }
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-
-} # end sub load
-
-sub delete {
-	my $self = shift;
-
-    sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE skid_id=? AND paper_id=? AND ( purpose_id=? OR purpose_id IS NULL)}, @$self{'skid_id','paper_id','purpose_id'} );
-} # end sub delete
 
 sub purpose {
 	my $self = shift;
