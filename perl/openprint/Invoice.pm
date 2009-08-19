@@ -57,6 +57,7 @@ require sql;
 	'deleted'		=> 0,
 	'posted'		=> 0,
 	'interest'		=> undef,
+	'monthly_interest'		=> undef,
 	'paid'			=> undef,
 	'statetax'		=> undef,
 	'federaltax'	=> undef,

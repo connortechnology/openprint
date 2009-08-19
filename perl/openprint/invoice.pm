@@ -15,7 +15,6 @@ require openprint::Invoice;
 require openprint::Invoice_Interest;
 
 sub history {
-	ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id','bad_debt') );
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
@@ -32,6 +31,7 @@ sub history {
 		$param{'invoicer_id'} = $session{'company_id'} if ! $param{'invoicer_id'};
 		if ( ! ( $variable{'error'} .= $Invoice->save(\%param) ) ) {
 			$variable{'information'} .= 'Invoice saved.<br/>';
+			%param = ();
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Post' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
@@ -121,6 +121,7 @@ sub history {
 			$variable{'information'} .= sprintf('Sent to &quot;%s %s&quot; &lt;%s&gt;<br/>',$Recipient->get('firstname','lastname','email') );
 		} # end foreach Recipient
 	} # end if
+	ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id','bad_debt') );
 } # end sub history
 
 sub _history {
