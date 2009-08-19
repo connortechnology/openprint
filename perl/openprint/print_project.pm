@@ -1116,8 +1116,8 @@ sub calc {
 				return jsrs::encode_pairs(%specs);
 			} # end if
 
-			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $$services{''}[0], 'SideOneUVCoatingType', $specs{'SideOneCoatingType'} );
-			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $$services{''}[0], 'SideTwoUVCoatingType', $specs{'SideTwoCoatingType'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'SideOneUVCoatingType', $specs{'SideOneCoatingType'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'SideTwoUVCoatingType', $specs{'SideTwoCoatingType'} );
 			if ( 
 					( $specs{'SideOneCoatingType'} and ( $specs{'SideOneCoatingType'} ne 'None' ) ) or
 					( $specs{'SideTwoCoatingType'} and ( $specs{'SideTwoCoatingType'} ne 'None' ) ) 
