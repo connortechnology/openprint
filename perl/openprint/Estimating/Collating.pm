@@ -76,7 +76,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 	my $minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'CollatingMinimumCharge', undef, undef );
 
 	my $printing_service_index = openprint::project::get_project_type_service_index( $log, $dbh, $project_index );
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $printing_service_index );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
 	if ( ! $$specs{'txtSignatureCount'} ) {
 		if ( ! $$printing_specs{'txtTotalPageQuantity'} ) {
 			$$specs{'alert'} = 'Number of pages is unknown!';
@@ -90,7 +90,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 	} # end if
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Collating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Collating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
 	my $error = '';
 	if ( ! @all_equipment ) {
 		$error .= "We have no collating equipment.";
@@ -110,15 +110,14 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 	} # end if
 
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %bestPrice;
 
 		$$specs{'hdnBreakdown'.$qty_index} = '';
-		$$specs{'hdnBreakdown'.$qty_index}  .= "MinimumCharge: " . sprintf( '%.2f', $minimumCharge ) . "\n";
+		$$specs{'hdnBreakdown'.$qty_index}  .= "MinimumCharge: " . sprintf( '%.2f', $minimumCharge ) . '<br/>';
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 
-		next if ( ! $$specs{"txtQuantity$qty_index"} );
 		my $qty = $$specs{"txtQuantity$qty_index"} * $$specs{'txtSignatureCount'};
 
 		my @equipment = ();
@@ -135,19 +134,34 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 				'Equipment'	=> $Equipment,
 				'Total'		=> 0,
 			);
+			if ( $Equipment->specification('Collating Capable') eq 'When Printing' ) {
+				# All signatures must be printed on the same machine
+				my $cant = 0;
+				foreach my $sig_id ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+					if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+						# cant
+						$cant = 1;
+					} # end if
+				} # end foreach
+				if ( $cant ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Equipment " . $price{'Equipment'}->name() . ": Not all signatures printed on this press.<br/>";
+					next;
+				} # end if
+			} # end if
 			$price{'MakeReady'} = openprint::service::get_price( $log, $dbh, $variable, 'CollatingMakeReady', undef, $Equipment );
 			my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Collating', $qty, $Equipment );
 			if ( sets::isin( $servicePrice{'units'}, 'Per M', 'Per 1000' )  ) {
 				$price{'Service'} = $servicePrice{'Price'}/1000; # Service Price for Collating is per 1000
 			} else {
-				$$specs{'alert'} .= 'Unknown units in service price';
+				$$specs{'alert'} .= 'Unknown units in service price.<br/>';
 			} # end if
 			$price{'Total'} = $price{'MakeReady'} + $qty * $price{'Service'};
 
 			if ( ! $bestPrice{'Total'} or $price{'Total'} < $bestPrice{'Total'} ) {
 				%bestPrice = %price;
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= "Equipment " . $price{'Equipment'}->name() . ":\n\tMake Ready: $price{'MakeReady'}, Service: $servicePrice{'Price'} $servicePrice{'units'}\n";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Equipment " . $price{'Equipment'}->name() . ":\n\tMake Ready: $price{'MakeReady'}, Service: $servicePrice{'Price'} $servicePrice{'units'}<br/>";
 		} # end foreach equipment
 
 		if ( ! $bestPrice{'Equipment'} ) {
