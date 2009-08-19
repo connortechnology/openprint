@@ -182,6 +182,7 @@ sub calc_setup_object {
 	$setup1->runstyle( $run_style );
 	$setup1->image_orientation('Vertical');
 	$setup1->spread_size( $$specs{'txtSpreadSize'} );
+	$setup1->bleed_size( $$specs{'BleedSize'} );
 	if ( 1 ) {
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
@@ -199,6 +200,7 @@ sub calc_setup_object {
 	$setup2->runstyle( $run_style );
 	$setup2->image_orientation('Horizontal');
 	$setup2->spread_size( $$specs{'txtSpreadSize'} );
+	$setup2->bleed_size( $$specs{'BleedSize'} );
 	if ( 1 ) {
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);
@@ -251,6 +253,7 @@ sub calc_setup_object {
 
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;
+
 	if ( sets::isin( $$specs{'Binding'}, ['SaddleStitching','LoopStitching'] ) ) {
 		$bindery_gutters = $Press->specification('StitchingGutter');
 		$bindery_bleed = $Press->specification('StitchingBleed');
@@ -281,6 +284,9 @@ sub calc_setup_object {
 	$bleed_height = 0 if $bleed_height < 0;
 #$openprint::log->debug("BleedSize: $$specs{'BleedSize'} bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
+	if ( $$specs{'Binding'} eq 'PerfectBound' ) {
+		$image_height += 2*$$specs{'PerfectBindCoverGutter'};
+	} # end if
 	$setup1->image_width( $image_width + $bleed_width );
 	$setup1->image_height( $image_height );
 
@@ -306,7 +312,7 @@ sub calc_setup_object {
 
 	$gutters = 0 if $gutters < 0;
 
-	$$specs{'Grip Size'} = $$specs{'Grip'};
+	$$specs{'Grip Size'} = $$specs{'Grip'} - $$specs{'PerfectBindCoverGutter'};
 # doube grip for a perfecting or Work & Tumble.
 	$$specs{'Grip Size'} *= 2 if sets::isin( $run_style, [ 'Work & Tumble', 'Perfecting' ] ); 
 	if ( ( $run_style eq 'Work & Tumble' ) and ( $$specs{'Colour Bar Orientation'} ne 'Length' ) ) {
@@ -348,7 +354,6 @@ sub calc_setup_object {
 		} else {
 			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Height'} ne 'N';
 		} # end if
-		$setup1->grip( $$specs{'Grip Size'} );
 
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
@@ -399,7 +404,7 @@ sub calc_setup_object {
 $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 
 		if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
-			calc_setup( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height );
+			calc_setup( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $image_height  );
 			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
 			fix_height( $setup1, $specs );
 			if ( check_setup( $setup1, $specs ) ) {
@@ -502,7 +507,6 @@ $openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if $debug;
 		} else {
 			$adjusted_paper_height -= $$specs{'Grip Size'} if $$specs{'Add Grip Width'} ne 'N';
 		} # end if
-		$setup2->grip( $$specs{'Grip Size'} );
 		if ( $$specs{'Colour Bar Orientation'} ne 'Length' ) {
 			$adjusted_paper_height -= $$specs{'colour_bar_size'};
 		} # end if
@@ -549,7 +553,7 @@ $openprint::log->debug("Using Cut Off : $$specs{'Cut Off'}") if $debug;
 		$adjusted_paper_width = 0 if $adjusted_paper_width < 0;
 
 		if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
-			calc_setup( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height );
+			calc_setup( $setup2, $image_height, $image_width, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $image_width );
 			$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if $debug;
 			if ( check_setup( $setup2, $specs ) ) {
 			$openprint::log->debug(" CHECK 2 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup2->imposition(). ":".$setup2->columns() . 'x' . $setup2->rows(). " $run_style") if $debug;
@@ -634,8 +638,8 @@ sub get_imposition {
 	if ( $$project{'Runstyles'} ) {
 	$openprint::log->debug(" *1* Run Styles to consider: @styles ** $$project{'Runstyles'} $do_perfecting") if $debug;
 		@styles = sets::intersection( @styles, misc::trim(split(',', $$project{'Runstyles'} ) ) );
-	$openprint::log->debug(" *2* Run Styles to consider: @styles **") if $debug;
 	} # end if
+	$openprint::log->debug(" *2* Run Styles to consider: @styles **") if $debug;
 
 	return add_imposition( $project, $Paper, $versions, $override_grain_direction, $Press, @styles );
 } # end sub
@@ -660,25 +664,24 @@ sub add_imposition {
 			} # end foreach
 		} elsif ( ($Paper->type() eq 'Roll') and ($Press->specification('W&TonRoll') eq 'N') and sets::isin( $run_style, ['Work & Turn','Work & Tumble'] ) ) {
 			next;
-		} else {
-$openprint::log->debug("Calling calc_setup_object") if $debug;
-			foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $override_grain_direction, $Press ) ) {
-				if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
-					if ( ($versions * 2) > $i->imposition() ) {
+		} # end if
+
+		foreach my $i ( calc_setup_object( $project, @$project{'image_width','image_height'}, $Paper, $run_style, $override_grain_direction, $Press ) ) {
+			if ( sets::isin( $run_style, ['Work & Turn','Work & Tumble']) ) {
+				if ( ($versions * 2) > $i->imposition() ) {
 #$log->debug("Nixing imposition because W&T needds 2* versions > imposition");
-						next;
-					} # end if
-				} elsif ( $versions > $i->imposition() ) {
 					next;
 				} # end if
-				#if ( $run_style eq 'Perfecting' ) {
+			} elsif ( $versions > $i->imposition() ) {
+				next;
+			} # end if
+			if ( $run_style eq 'Perfecting' ) {
 # make sure that we do not get any 1up perfecting!
 # Can only do 1 up perfecting if we are using perfecting paper, which doesn't need rollers
-					#next if ( $i->imposition() == 1 and ! $Paper->perfecting() );
-				#} # end if
-				push @impositions, $i;
-			} # end foreach
-		} # end if
+				next if ( $i->imposition() == 1 and ! $Paper->perfecting() );
+			} # end if
+			push @impositions, $i;
+		} # end foreach
 	} # end foreach runstyle
 #if ( $debug ) {
 	#foreach my $i ( @impositions ) {
@@ -794,14 +797,16 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 			3	=>	[ [1,3], [3,1] ],
 			4	=>	[ [1,4], [4,1], [2,2] ],
 			5	=>	[ [1,5], [5,1] ],
-			6	=>	[ [2,3],[3,2],[1,6],[6,1] ],
+			6	=>	[ [2,3], [3,2], [1,6], [6,1] ],
 			7	=>	[ [7,1] ],
-			8	=>	[ [2,4],[4,2] ],
+			8	=>	[ [2,4], [4,2] ],
 			9	=>	[ [3,3] ],
-			10	=>	[ [5,2], [2,5] ],
-			12	=>	[ [3,4], [4,3],[6,2],[2,6] ],
+			10	=>	[ [5,2], [2,5], [3,4], [4,3] ],
+			12	=>	[ [3,4], [4,3], [6,2], [2,6] ],
 			14	=>	[ [7,2], [2,7] ],
 			16	=>	[ [4,4] ],
+			20	=>	[ [4,5], [5,4] ],
+			24  =>  [ [4,6], [6,4] ],
 			);
 	if ( $spread_size == 2 ) {
 			$blocks{11}	=	[ ];
@@ -812,7 +817,6 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 			$blocks{17}	=	[ ];
 			$blocks{18}	=	[ [3,6],[6,3] ];
 			$blocks{19}	=	[ ];
-			$blocks{20}	=	[ [4,5],[5,4] ];
 			$blocks{21}	=	[ [3,7],[7,3] ];
 			$blocks{22}	=	[ [3,8],[8,3] ];
 			$blocks{24}	=	[ [6,4],[4,6],[2,12],[12,2],[3,8],[8,3] ];
@@ -858,20 +862,19 @@ $openprint::log->debug("Convert Impositions: Desired: $desired_signature_size, S
 				$newimp->columns($cols);
 				$newimp->imposition($rows * $cols);
 				if ( $newimp->image_orientation() eq 'Vertical' ) {
-				$newimp->image_width( $newimp->image_width() * $col );
-				$newimp->image_height( $newimp->image_height() * $row );
+					$newimp->image_width( $newimp->image_width() * $col );
+					$newimp->image_height( $newimp->image_height() * $row );
 				} else {
-				$newimp->image_width( $newimp->image_width() * $row );
-				$newimp->image_height( $newimp->image_height() * $col );
+					$newimp->image_width( $newimp->image_width() * $row );
+					$newimp->image_height( $newimp->image_height() * $col );
 				} # end if
 				$newimp->spread_columns( $col );
 				$newimp->spread_rows( $row );
 				#$openprint::log->debug("To: $imp->{columns}x$imp->{rows}=$imp->{imposition} $imp->{runstyle} $imp->{image_width}x$imp->{image_height} $imp->{layout_width}x$imp->{layout_height}") if $debug;
 				push @imps, $newimp;
 			} # end foreach block
-			#last if @imps;
- #and (@imps[@imps-1]->imposition() >= 2);
-			last if @imps and ($imps[@imps-1]->imposition() >= 2);
+			#last if @imps and (@imps[@imps-1]->imposition() >= 4);
+			#last if @imps and ($signature_size < $start/2);
 		} # end foreach signature_size
 		push @good_impositions, @imps;
 	} # end foreach

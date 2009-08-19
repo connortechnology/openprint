@@ -1,6 +1,8 @@
 function calc( formName ){
 	gettingNewPrice = true;
-	jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, 'Packaging' ) );
+	var h = form.serialize(true);
+	h.service_type = 'Packaging';
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end calc
 
 function validate_data(formName) {

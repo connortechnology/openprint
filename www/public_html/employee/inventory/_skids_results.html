@@ -1,14 +1,6 @@
 <? eval (
 	require openprint::StockPurpose;
-	if ( $param{created_on_start_year} ) {
-		foreach my $key ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','notempty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code' ) {
-			if ( ref $param{$key} eq 'ARRAY' ) {
-				$session{'/employee/inventory/skids.html?'.$key} = join(';', @{$param{$key}} );
-			} else {
-				$session{'/employee/inventory/skids.html?'.$key} = $param{$key};
-			}
-		} # end foreach
-	} # end if
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','notempty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code' ) );
 
 	if ( ! $session{'/employee/inventory/skids.html?created_on_start_year'} ) {
 		@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} = Date::Calc::Today();
@@ -59,7 +51,7 @@
 <form id="SkidResults" name="SkidResults" action="skids.html" method="post">
 	<table class="List">
 		<tr>
-			<th width="20"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
 			<th align="left" width="75">Skid ID</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
@@ -70,6 +62,12 @@
 		<? echo (
 			my $html;
 			my $rowclass;
+			my $total_rolls;
+			my $total_skids;
+			my $total_weight;
+			my $total_sheets;
+			my $Location = new openprint::Location( $session{'/employee/inventory/skids.html?location_id'} );
+			my @location_ids = map { $_->id() } ( $Location, $Location->get_all_children());
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
 				my $empty = $Skid->empty();
 				if ( $session{'/employee/inventory/skids.html?empty'} ne 'Y' ) {
@@ -79,8 +77,8 @@
                     next if ! $empty;
                 } # end if
 				my $iftype = 1;
-                foreach my $paper_id ( keys %{$$Skid{'Paper'}} ) {
-                    my $Paper = new openprint::Paper( $paper_id );
+                foreach my $C ( $Skid->Contents() ) {
+                    my $Paper = $C->Paper();
                     if ( ! sets::isin( $Paper->type(), split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) {
                         $iftype = 0;
                         last;
@@ -93,11 +91,11 @@
 
 				if ( $session{'/employee/inventory/skids.html?location_id'} ) {
 					next if $session{'/employee/inventory/skids.html?location_id'} eq 'None' and $Skid->location_id();
-					next if $Skid->location_id() != $session{'/employee/inventory/skids.html?location_id'};
+					next if ! sets::isin( $Skid->location_id(), \@location_ids );
 				} # end if
 
 				$html .= "<tr$rowclass>";
-				$html .= qq`<td><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->created_on()) ), );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->updated_on()) ), );
@@ -119,29 +117,42 @@
 				$html .= '</tr>';
 				$html .= "<tr$rowclass>";
 				
-				$html .= '<td>&nbsp;</td><td colspan="5">';
-				foreach my $c ( $Skid->contents() ) {
-					my $Paper = new openprint::Paper( $c->paper_id() );
-					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s %s - %d %s</a><br/>',
-					$$Skid{'id'},
-					$Paper->to_string(),
-					new openprint::StockPurpose( $c->purpose_id() )->name(),
-					$c->quantity(),
-					$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
+				$html .= '<td class="checkbox">&nbsp;</td><td colspan="5">';
+			
+				foreach my $C ( $Skid->Contents() ) {
+					my $Paper = $C->Paper();
+					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s - %d %s</a><br/>',
+						$$Skid{'id'},
+						$Paper->to_string(),
+						new openprint::StockPurpose( $C->purpose_id() )->name(),
+						$C->quantity(),
+						$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
 					);
+					if ( $Paper->type() eq 'Roll' ) {
+						$total_rolls += 1;
+						$total_weight += $C->quantity();
+					} else {
+						$total_skids += 1;
+						$total_sheets += $C->quantity();
+					} # end if	
 				} # end foreach
 				$html .= '</td>';	
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Skid
+			$html .= '<tr class="totals"><td colspan="4">Totals:</td><td>';
+			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
+			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
+			$html .= '</td><td></td></tr>';
 			return $html;
 		) ?>
 	</table>
 	<input type="hidden" name="btnFunction"/>
 	<span style="float: right;">
 		<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'move', 'move.gif', "popup_window('/employee/inventory/_move_skids_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(',') ) ;", '', 'Move To' ),
 					ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id='+\$A(SkidResults.skids).filter(function(e){return e.checked}).map(function(e){return e.value}).join(','), 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=yes,status=no');", '', 'Print Labels' ),
-					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "SkidResults.btnFunction.value='Delete';SkidResults.submit();", '', 'Delete Checked' ),
+					#ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "SkidResults.btnFunction.value='Delete';SkidResults.submit();", '', 'Delete Checked' ),
 					ssi::writeButton( $log, $dbh, 'Select', 'select.gif', "SkidResults.btnFunction.value='Go';SkidResults.action='skid_details.html';SkidResults.submit();", '', 'Select Checked' ),
 
 			); ) ?>

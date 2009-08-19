@@ -164,6 +164,10 @@ form {
 fieldset {
 	border: none;
     border-top: 1px solid #6A00BE;
+    padding: 2px;
+    margin: 0px;
+    padding-bottom: 10px;
+
 }
 fieldset legend {
 	color: #6A00BE;
@@ -238,7 +242,6 @@ fieldset p textarea {
     width: 70%;
 }
 fieldset p option {
-    width: 70%;
 }
 fieldset.filters {
 	width: auto;
@@ -338,6 +341,16 @@ span.DateSelector {
     float: left;
 	width: 220px;
 }
+span.DateTimeSelector {
+	float: left;
+	width: 400px;
+}
+span.DateSelector select, span.DateTimeSelector select {
+	width: auto;
+	max-width: none;
+}
+span.DateSelector select option {
+}
 .Currency {
 	font-weight: bold;
 	float: right;
@@ -366,4 +379,7 @@ div.Service span.ThreeColumns {
 div.Service span.TwoColumns {
 	width: 50%;
 	float: left;
+}
+img.Override {
+	height: 16px;
 }

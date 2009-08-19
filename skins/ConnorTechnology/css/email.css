@@ -61,9 +61,28 @@ fieldset p label {
 }
 
 td#banner {
-	background: url(http://www.connortechnology.com/images/header.png) repeat-x top;
 }
-.spacer {
+br.spacer {
 	height: 0px;
 	clear: both;
+}
+div.PageTitle {
+	float: right;
+	margin-top: -80px;
+	right: 10px;
+}
+div.PageTitle h1 {
+    text-align: right;
+	color: #ff7f00;
+    margin: 0px;
+    font-size: 16px;
+}
+div.PageTitle h2 {
+    text-align: right;
+    color: #000088;
+    margin-top: 0px;
+    font-size: 12px;
+}
+tr.colRow {
+    background-color: #e3e4f0;
 }

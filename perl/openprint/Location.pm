@@ -43,14 +43,6 @@ sub find {
 
 } # end sub find
 
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Location();
-	@$new{'location'} = @$self{'location'};
-	%{$$new{'Paper'}} = %{$$self{'Paper'}};
-	return $new;
-} # end sub copy
-
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
@@ -101,6 +93,18 @@ sub children {
 	my $self = shift;
 	return openprint::Location::find( 'parent_id' => $$self{'id'} );
 } # end sub children
+
+sub get_all_children {
+	my $self = shift;
+	my @results;
+	
+	foreach my $child ( $self->children() ) {
+		# Prevent infinite loop
+		next if sets::isin( $child->id(), [ map { $_->id() } @results ] );
+		push @results, $child, $child->get_all_children();
+	} # end foreach child
+	return @results;
+} # end sub get_all_children
 
 sub parent {
 	my $self = shift;

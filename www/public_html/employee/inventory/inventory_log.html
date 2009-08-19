@@ -1,67 +1,67 @@
 <? eval (
-	if ( ! exists $openprint::session{'/employee/inventory/inventory_log.html?ins'} ) {
-		$openprint::session{'/employee/inventory/inventory_log.html?ins'} = 1;
+	if ( ! exists $session{'/employee/inventory/inventory_log.html?ins'} ) {
+		$session{'/employee/inventory/inventory_log.html?ins'} = 1;
 	} # end if
-	if ( ! exists $openprint::session{'/employee/inventory/inventory_log.html?outs'} ) {
-		$openprint::session{'/employee/inventory/inventory_log.html?outs'} = 1;
+	if ( ! exists $session{'/employee/inventory/inventory_log.html?outs'} ) {
+		$session{'/employee/inventory/inventory_log.html?outs'} = 1;
 	} # end if
-	if ( ! $openprint::session{'/employee/inventory/inventory_log.html?StartYear'} ) {
-		@openprint::session{'/employee/inventory/inventory_log.html?StartYear','/employee/inventory/inventory_log.html?StartMonth','/employee/inventory/inventory_log.html?StartDay'} = Date::Calc::Today();
+	if ( ! $session{'/employee/inventory/inventory_log.html?StartYear'} ) {
+		@session{'/employee/inventory/inventory_log.html?StartYear','/employee/inventory/inventory_log.html?StartMonth','/employee/inventory/inventory_log.html?StartDay'} = Date::Calc::Today();
 	} # end if
-	@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @openprint::session{'/employee/inventory/inventory_log.html?StartYear','/employee/inventory/inventory_log.html?StartMonth','/employee/inventory/inventory_log.html?StartDay'} );
+	@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @session{'/employee/inventory/inventory_log.html?StartYear','/employee/inventory/inventory_log.html?StartMonth','/employee/inventory/inventory_log.html?StartDay'} );
 	
-	if ( ! $openprint::session{'/employee/inventory/inventory_log.html?EndYear'} ) {
-		@openprint::session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} = Date::Calc::Today();
+	if ( ! $session{'/employee/inventory/inventory_log.html?EndYear'} ) {
+		@session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} = Date::Calc::Today();
 	} # end if
-	@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, @openprint::session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} );
-	$openprint::session{'/employee/inventory/inventory_log.html?StartHour'} = 0 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartHour'};
-	$openprint::session{'/employee/inventory/inventory_log.html?StartMinute'} if ! defined $openprint::session{'/employee/inventory/inventory_log.html?StartMinute'};
-	$openprint::session{'/employee/inventory/inventory_log.html?EndHour'} = 23 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndHour'};
-	$openprint::session{'/employee/inventory/inventory_log.html?EndMinute'} = 59 if ! defined $openprint::session{'/employee/inventory/inventory_log.html?EndMinute'};
+	@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, @session{'/employee/inventory/inventory_log.html?EndYear','/employee/inventory/inventory_log.html?EndMonth','/employee/inventory/inventory_log.html?EndDay'} );
+	$session{'/employee/inventory/inventory_log.html?StartHour'} = 0 if ! defined $session{'/employee/inventory/inventory_log.html?StartHour'};
+	$session{'/employee/inventory/inventory_log.html?StartMinute'} if ! defined $session{'/employee/inventory/inventory_log.html?StartMinute'};
+	$session{'/employee/inventory/inventory_log.html?EndHour'} = 23 if ! defined $session{'/employee/inventory/inventory_log.html?EndHour'};
+	$session{'/employee/inventory/inventory_log.html?EndMinute'} = 59 if ! defined $session{'/employee/inventory/inventory_log.html?EndMinute'};
 ) ?>
 <form name="LogForm" id="LogForm" method="post">
 	<fieldset><legend>Filters</legend>
 	<p>
 		<label>Date:</label>
 		<span class="DateTimeSelector">
-			<select name="StartYear" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?StartYears?></select>
-			<select name="StartMonth" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?StartMonths?></select>
-			<select name="StartDay" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?StartDays?></select>
+			<select name="StartYear" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartYears?></select>
+			<select name="StartMonth" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartMonths?></select>
+			<select name="StartDay" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?StartDays?></select>
 -
-			<select name="StartHour" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $openprint::session{'/employee/inventory/inventory_log.html?StartHour'} ); ) ?></select>:
-			<select name="StartMinute" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $openprint::session{'/employee/inventory/inventory_log.html?StartMinute'} ); ) ?></select>
+			<select name="StartHour" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $session{'/employee/inventory/inventory_log.html?StartHour'} ); ) ?></select>:
+			<select name="StartMinute" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $session{'/employee/inventory/inventory_log.html?StartMinute'} ); ) ?></select>
 			<? echo ( ssi::writeButton( $log, $dbh, 'StartToday', 't.gif', 'set_today( LogForm.StartYear, LogForm.StartMonth, LogForm.StartDay );', '', 'T' ); ) ?>
 			to
 		</span>
 		<span class="DateTimeSelector">
-			<select name="EndYear" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndYears?></select>
-			<select name="EndMonth" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndMonths?></select>
-			<select name="EndDay" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><?EndDays?></select>
+			<select name="EndYear" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?EndYears?></select>
+			<select name="EndMonth" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?EndMonths?></select>
+			<select name="EndDay" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><?EndDays?></select>
 -
-			<select name="EndHour" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $openprint::session{'/employee/inventory/inventory_log.html?EndHour'} ); ) ?></select>:
-			<select name="EndMinute" onchange="new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $openprint::session{'/employee/inventory/inventory_log.html?EndMinute'} ); ) ?></select>
+			<select name="EndHour" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 23 ) ], $session{'/employee/inventory/inventory_log.html?EndHour'} ); ) ?></select>:
+			<select name="EndMinute" onchange="AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );"><? echo ( ssi::make_drop_down( [ map { $_, sprintf('%.2d',$_) } ( 0 .. 59 ) ], $session{'/employee/inventory/inventory_log.html?EndMinute'} ); ) ?></select>
 			<? echo ( ssi::writeButton( $log, $dbh, 'EndToday', 't.gif', 'set_today( LogForm.EndYear, LogForm.EndMonth, LogForm.EndDay );', '', 'T' ); ) ?>
 		</span>
 	</p>
 	<p><label>Ins/Outs</label>
-		<input type="checkbox" name="ins" id="ins" <? echo ( $openprint::session{'/employee/inventory/inventory_log.html?ins'} ? 'checked="checked"' : '' ) ?> />
+		<input type="checkbox" name="ins" id="ins" <? echo ( $session{'/employee/inventory/inventory_log.html?ins'} ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="ins">Check Ins</label>
-		<input type="checkbox" name="outs" id="outs" <? echo ( $openprint::session{'/employee/inventory/inventory_log.html?outs'} ? 'checked="checked"' : '' ) ?> />
+		<input type="checkbox" name="outs" id="outs" <? echo ( $session{'/employee/inventory/inventory_log.html?outs'} ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="outs">Check Outs</label>
 	</p>
 		<p><label>Type:</label>
-            <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Sheet', split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
+            <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Sheet', split(';', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeSheet">Sheet</label>
-            <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Roll', split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
+            <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Roll', split(';', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeRoll">Roll</label>
-            <input type="checkbox" id="TypeUnknown" name="Type" value="Unknown" <? echo ( 'checked="checked"' if ( ! $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Unknown', split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
+            <input type="checkbox" id="TypeUnknown" name="Type" value="Unknown" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/inventory_log.html?Type'} ) or sets::isin( 'Unknown', split(';', $session{'/employee/inventory/inventory_log.html?Type'} ) ) ) ?> />
             <label class="radio" for="TypeUnknown">Unknown</label>
         </p>
 		<p><label>Docket:</label>
-			<input type="text" id="docket" name="docket" onkeyup="this.value=this.value.replace(/\D/,'');" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );}" />
+			<input type="text" id="docket" name="docket" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );}" />
 		</p>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "LogForm.btnFunction.value='';new Ajax.Updater( 'Log', '_inventory_log.html', {method:'get',parameters: LogForm.serialize()} );", '', 'Load' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "LogForm.btnFunction.value='';AjaxLoadContent( 'Log', '_inventory_log.html', LogForm.serialize() );", '', 'Load' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "LogForm.btnFunction.value='Download';LogForm.submit();", '', 'Download' ); ) ?>
 		</p>
 	</fieldset>

@@ -210,3 +210,43 @@ div#lastLogins {
 padding-top: .6em;
 margin-top: .6em;
 }
+img#HomeCollage {
+	float: right;
+}
+#CurrencySelection {
+    float: left;
+    margin: 0px;
+	margin-top: 5px;
+    padding: 0px;
+    width: 310px;
+}
+
+#CurrencySelection p {
+    padding: 0px;
+    padding-left: 75px;
+    margin: 0px;
+    vertical-align: top;
+	overflow:hidden;
+	text-align: left;
+}
+#CurrencySelection p select {
+	max-width: 140px;
+	vertical-align: top;
+}
+#CurrencySelection p input {
+margin-top: 0px;
+	vertical-align: top;
+}
+#CurrencySelection p label {
+    width: 70px;
+    margin-left: -75px;
+    text-align: right;
+    float: left;
+    overflow: visible;
+    padding: 0px;
+    vertical-align: top;
+    color: black;
+    font-size: small;
+    font-weight: bold;
+}
+

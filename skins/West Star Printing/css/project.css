@@ -234,6 +234,14 @@ div.Service fieldset p label {
     margin-left: -130px;
     text-align: left;
 }
+div.Paper fieldset p {
+    padding-left: 250px;
+}
+div.Paper fieldset p label {
+    width: 245px;
+    margin-left: -250px;
+    text-align: left;
+}
 div.Service fieldset p label.radio {
     width: auto;
     float: none;

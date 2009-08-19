@@ -26,15 +26,27 @@ sub history {
 			$param{'invoice_id'} = $_;
 			$variable{'Redirect'} = '/invoice/edit.html';
 		} else {
-			ssi::save_param( '/timetrack/edit.html', 'ending', 'company_id' );
+			ssi::save_params( '/timetrack/edit.html', 'ending', 'company_id' );
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Timetrack = new openprint::Timetrack( $param{'timetrack_id'} );
 		$variable{'error'} .= $Timetrack->destroy();
+	} elsif ( ! $param{'btnFunction'} ) {
+		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','employee_id','company_id') );
 	} # end if
+	if ( ( ! $session{'/timetrack/history.html?lastupdated'} ) or ( time - $session{'/timetrack/history.html?lastupdated'} ) < ( 12*60*60 ) ) {
+		ssi::setup_date_select( '/timetrack/history.html', 'starting', -31 );
+	} # end if
+
+	$session{'/timetrack/history.html?invoiced'} = '0' if ! $session{'/timetrack/history.html?invoiced'};
+	$session{'/timetrack/history.html?paid'} = '0' if ! $session{'/timetrack/history.html?paid'};
+	$session{'/timetrack/history.html?employee_id'} = $session{'user_id'} if ! exists $session{'/timetrack/history.html?employee_id'};
 } # end sub history
 
 sub _history {
+	if ( ! $param{'btnFunction'} ) {
+		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','employee_id','company_id') );
+	} # end if
 } # end sub _history
 
 sub edit {
@@ -42,6 +54,9 @@ sub edit {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $variable{'Timetrack'}->save(\%param);
 		$variable{'Redirect'} = '/timetrack/history.html';
+	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+		$variable{'Timetrack'} = $variable{'Timetrack'}->copy();
+		$variable{'error'} .= $variable{'Timetrack'}->save();
 	} # end if
 	if ( time - $session{'/timetrack/edit.html?lastupdated'} < ( 12*60*60 ) ) {
 		$variable{'Timetrack'}->company_id( $session{'/timetrack/edit.html?company_id'} ) if ! $variable{'Timetrack'}->company_id();

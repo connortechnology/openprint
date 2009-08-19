@@ -67,14 +67,6 @@ sub find {
 	} # end if
 } # end sub find
 
-sub copy {
-	my ( $self ) = @_;
-	my $new = new openprint::FoldSpecification();
-	@$new{keys %fields} = @$self{keys %fields};
-	delete $$new{id};
-	return $new;
-} # end sub copy
-
 sub Fold {
 	my $self = shift;
 	return new openprint::Fold( $$self{fold_id} );

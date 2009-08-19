@@ -6,25 +6,31 @@ require Exporter;
 # Provides some utility functions for doing SQL queries
 
 use DBI;
-use Time::HiRes qw{ time gettimeofday tv_interval }; 
+use Time::HiRes qw{ gettimeofday tv_interval }; 
 use strict;
 
 use vars qw( $log $dbh $debug $timing );
+use openprint ();
+*dbh = \$openprint::dbh;
+*log = \$openprint::log;
 $debug = 1;
 $timing = 1;
 
+# This uses it's own dbh so as not to quash the global dbh.  This is so that we can easily open secondary db connections while maintaining the global one.
+#
 sub open_sql {
 	my ( $l, %sql_server ) = @_;
-	$log = $l;
+	$l = $log if ! $l;
+	my $new_dbh;
 	
 	my $dsn = "dbi:$sql_server{'driver'}:dbname=$sql_server{'database'};";
 	$dsn .= "host=$sql_server{'host'}" if $sql_server{'host'};
-	if ( ! ( $dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1} ) ) ) {
+	if ( ! ( $new_dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1,pg_enable_utf8 => 1 } ) ) ) {
 		die $log->crit("Unable to connect to database $sql_server{'database'}: " . DBI->errstr );
 	} # end if
 	#$log->info("Opened connection to $sql_server{'database'}.	Thread ID: " . $dbh->{'thread_id'});
 
-	return $dbh;
+	return $new_dbh;
 } # end sub open_sql
 
 sub execute {
@@ -40,7 +46,7 @@ sub execute {
 		$print_sql = $sql;
 		$print_sql =~ s/\?/\%s/g;
 		$print_sql = sprintf($print_sql, @values);
-		$starttime = gettimeofday() if $timing;
+		$starttime = [gettimeofday] if $timing;
 	} # end if
 	my $sth;
 	if ( ! ( $sth = $d->prepare_cached($sql) ) ) {
@@ -58,14 +64,14 @@ sub execute {
 			} # end for
 		} # end while
 	} # end if
-	$sth->finish(); # unneccessary
+	$sth->finish();
 	if ( $l and $debug ) {
 		if ( $timing ) {
-		$l->debug("SQL (".sprintf('%.4f', tv_interval( [$starttime])*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
+			$l->debug("SQL (".sprintf('%.4f', tv_interval($starttime)*1000)." usecs). ($print_sql) Results:".join(',',@return_array));
 		} elsif ( @return_array ) {
-		$l->debug("SQL ($print_sql) Results:".join(',',@return_array));
+			$l->debug("SQL ($print_sql) Results:".join(',',@return_array));
 		} else {
-		$l->debug("SQL ($print_sql) No Results:");
+			$l->debug("SQL ($print_sql) No Results:");
 		} # end if
 	} # end if
 
@@ -93,7 +99,7 @@ sub run_query {
 		} # end for
 	} # end while
 	#$sth->finish(); # unneccessary
-	$log->debug("SQL (".(sprintf('%.4f', tv_interval( $starttime, [gettimeofday])*1000) )." useconds). ($sql_statement) Results:".join(',',@return_array));
+	$log->debug("SQL (".(sprintf('%.4f', tv_interval($starttime)*1000) )." useconds). ($sql_statement) Results:".join(',',@return_array));
 	
 	return ( $num_of_fields, @return_array );
 } # end sub run_query
@@ -123,20 +129,32 @@ sub insert {
 	# we can use push and pop in here, because we actually don't acre about order, only pairing
 	my $command = "INSERT INTO $table (".join( ',', keys %commands ).') VALUES (';
 	my $print_command = $command;
-	$print_command .= join(',', map { defined $_ ? $_ : 'undef' } @values ) if @values;
+
+	my @command_places = ();
+	my @command_values = ();
+	foreach my $v ( @values ) {
+		if ( ref $v eq 'ARRAY' ) {
+			push @command_places, '?';
+			push @command_values, '{'.join(',', map { $_ } @{$v} ).'}';
+		} else {
+			push @command_places, '?';
+			push @command_values, $v;
+		} # end if
+	} # end foreach
+	$command .= join(',', @command_places) .')';
+	$print_command .= join(',', map { if( ref $_ eq 'ARRAY' ) { "{$_}"; } elsif( defined $_ ) { $_; } else {'undef';} } @command_values ) if @command_values;
 	$print_command .= ')';
 
-	$command .= join(',', map { '?' } @values ).')';
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
 		$l->error( "Error Preparing SQL Statement: ($command):" . $d->errstr ) if $l;
 		return $d->errstr;
 	} # end if
-	if ( ! $sth->execute(values %commands) ) {
+	if ( ! $sth->execute(@command_values) ) {
 		$l->error("SQL statement execution failed: ($print_command):" . $d->errstr) if $l;
 		return $d->errstr;
 	} # end if
-	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime, [gettimeofday])*1000, $print_command ) ) if $l;
+	$l->debug(sprintf('SQL (%.4f usecs) (%s): ', tv_interval($starttime)*1000, $print_command ) ) if $l;
 	return;
 } # end sub insert
 
@@ -160,8 +178,14 @@ sub update {
 
 	my $command = "UPDATE $table SET ";
 	my @columns;
+	my @values;
 	foreach my $column ( keys %commands ) {
 		push @columns, "$column = ?";
+		if ( ref $commands{$column} eq 'ARRAY' ) {
+			push @values, '{'.join(',', map { $_ } @{$commands{$column}} ).'}';
+		} else {
+			push @values, $commands{$column};
+		} # end if
 	} # end foreach
 	$command .= join( ',', @columns );
 	my @conditions = ();
@@ -175,11 +199,11 @@ sub update {
 	$print_command =~ s/\?/\%s/g;
 	my $sth;
 	if ( ! ( $sth = $d->prepare($command) ) ) {
-		$log->error( 'Error Preparing SQL Statement: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr ) if $log;
+		$log->error( 'Error Preparing SQL Statement: ('.sprintf($print_command, @values, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr ) if $log;
 		return $d->errstr;
 	} # end if
-	if ( ! $sth->execute( values %commands, @conditions ) ) {
-		$log->error('SQL statement execution failed: ('.sprintf($print_command, values %commands, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr) if $log;
+	if ( ! $sth->execute( @values, @conditions ) ) {
+		$log->error('SQL statement execution failed: ('.sprintf($print_command, @values, map { defined $_ ? $_ : 'undef' } @conditions ).'):' . $d->errstr) if $log;
 		return $d->errstr;
 	} # end if
 	

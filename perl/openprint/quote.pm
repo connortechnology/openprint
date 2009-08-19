@@ -6,6 +6,12 @@ use MIME::QuotedPrint;
 use MIME::Base64;
 use Mail::Sendmail;
 use Email::Valid;
+use openprint;
+use vars qw( $log $dbh %config );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
+
 use strict;
 
 require sql;
@@ -19,7 +25,7 @@ require openprint::Quote;
 sub get_unfinished_quote_id {
 	my ( $log, $dbh, $cookie, $variable ) = @_;
 
-	$_ = q{SELECT Index, CompanyIndex, UserIndex FROM tbl_Quotes WHERE strSessionID=? AND strStatus='Incomplete'};
+	$_ = q{SELECT id, CompanyIndex, UserIndex FROM Quotes WHERE strSessionID=? AND strStatus='Incomplete'};
 	my ( $quote_id, $cust_id, $user_id ) = sql::execute( $log, $dbh, $_, $cookie );
 
 	# This is to update the quote if we login or switch company before finishing the quote
@@ -27,12 +33,12 @@ sub get_unfinished_quote_id {
 		if ( $cust_id != $openprint::session{'company_id'} ) {
 			
 			# This should also remove any projects in the quote that belong to other companies FIXME
-			sql::update( $log, $dbh, 'tbl_Quotes', "Index=$quote_id", 'CompanyIndex', $openprint::session{'company_id'},
+			sql::update( $log, $dbh, 'Quotes', ['id=?', $quote_id], 'CompanyIndex', $openprint::session{'company_id'},
 					'currency_id',		openprint::Currency::get_current()->id(),
 					);
 		} # end if
 		if ( $user_id != $openprint::session{'user_id'} ) {
-			sql::update( $log, $dbh, 'tbl_Quotes', "Index=$quote_id", 'UserIndex', $openprint::session{'user_id'} );
+			sql::update( $log, $dbh, 'Quotes', ['id=?', $quote_id], 'UserIndex', $openprint::session{'user_id'} );
 		} # end if
 	} # end if
 	
@@ -47,7 +53,7 @@ sub get_unfinished_quote_contents {
 	my $subtotal2 = 0;
 	my $subtotal3 = 0;
 
-	$_ = 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE QuoteIndex=?';
+	$_ = 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE quote_id=?';
 	my @projects = sql::execute( $log, $dbh, $_, $quote_id );
 	while ( my ( $project_index, $markup1, $markup2, $markup3 ) = splice @projects, 0, 4 ) {
 		my ( $reference, $qty1, $qty2, $qty3, $price1, $price2, $price3 ) = get_project_info( $log, $dbh, $project_index );
@@ -79,11 +85,12 @@ sub store_quote_info {
 		} # end if
 	} # end foreach
 
-	my $error = '';
-	$error .= 'No prepared by first name entered.<br/>' if $by{'ByFirstName'} eq '';
-	$error .= 'No prepared by last name entered.<br/>' if $by{'ByLastName'} eq '';
-	$error .= 'No prepared by email address entered.<br/>' if $by{'ByEmail'} eq '';
-	$error .= 'Invalid prepared by email address entered.<br/>' if ( ! Email::Valid->address( $by{'ByEmail'} ) );
+	my @required_fields = split(',', $config{'QuoteRequiredFields'} );
+
+	my $error = "";
+	$error .= 'No prepared by first name entered.<br>' if $r->param('ByFirstName') eq '' and sets::isin('ByFirstName', \@required_fields );
+	$error .= 'No prepared by last name entered.<br>' if $r->param('ByLastName') eq '' and sets::isin('ByLastName', \@required_fields );
+	$error .= 'No prepared by email address entered.<br>' if $r->param('ByEmail') eq '' and sets::isin('ByEmail', \@required_fields );
 	if ( $error ne '' ) {
 		return $error;
 	} # end if
@@ -96,8 +103,7 @@ sub store_quote_info {
 #		$error .= 'No prepared for postal code entered.<br>' if $r->param('ForPostalCode') eq '';
 #		$error .= 'No prepared for country entered.<br>' if $r->param('ForCountry') eq ''; 
 #		$error .= 'No prepared for phone number entered.<br>' if $r->param('ForPhone') eq '';
-		$error .= 'No prepared for email address entered.<br/>' if $r->param('ForEmail') eq '';
-		$error .= 'Invalid prepared for email address entered.<br/>' if ( ! Email::Valid->address( $for{'ForEmail'} ) );
+		$error .= 'No prepared for email address entered.<br>' if $r->param('ForEmail') eq '' and sets::isin('ForEmail', \@required_fields );
 		if ( $error ne '' ) {
 			return $error;
 		} # end if
@@ -120,20 +126,20 @@ sub store_quote_info {
 sub get_user_by_info {
 	my ( $log, $dbh, $variable, $quote_id ) = @_;
 
-	$_ = 'SELECT strCompanyName, strSalutation, strFirstName, strLastName, strAddress, strAddress2, strCity, strState, strCountry, strPostalCode, strPhone, strExt, strFax, strEmail FROM tbl_Quote_Users_By WHERE QuoteIndex=?';
+	$_ = 'SELECT strCompanyName, strSalutation, strFirstName, strLastName, strAddress, strAddress2, strCity, strState, strCountry, strPostalCode, strPhone, strExt, strFax, strEmail FROM tbl_Quote_Users_By WHERE quote_id=?';
 	return @$variable{'ByCompanyName','BySalutation', 'ByFirstName','ByLastName','ByAddress1','ByAddress2','ByCity','ByStateProvince','ByCountry','ByPostalCode','ByPhone', 'ByExtension', 'ByFax', 'ByEmail'} = sql::execute( $log, $dbh, $_, $quote_id );
 } # end sub get_user_by_info
 
 sub get_user_for_info {
 	my ( $log, $dbh, $variable, $quote_id ) = @_;
 
-	$_ = 'SELECT strCompanyName, strSalutation, strFirstName, strLastName, strAddress, strAddress2, strCity, strState, strCountry, strPostalCode, strPhone, strExt, strFax, strEmail FROM tbl_Quote_Users_For WHERE QuoteIndex=?';
+	$_ = 'SELECT strCompanyName, strSalutation, strFirstName, strLastName, strAddress, strAddress2, strCity, strState, strCountry, strPostalCode, strPhone, strExt, strFax, strEmail FROM tbl_Quote_Users_For WHERE quote_id=?';
 	return @$variable{'ForCompanyName', 'ForSalutation','ForFirstName','ForLastName','ForAddress1','ForAddress2','ForCity','ForStateProvince','ForCountry','ForPostalCode','ForPhone', 'ForExtension', 'ForFax', 'ForEmail'} = sql::execute( $log, $dbh, $_, $quote_id );
 } # end sub get_user_for_info
 
 sub get_misc_info {
     my ( $log, $dbh, $variable, $quote_id ) = @_;
-    $_ = q{SELECT CompanyIndex, to_char(dtmQuoteDate, 'MM/DD/YYYY'), curTotalSale1, curTotalSale2, curTotalSale3, strCustomerComments, strAdministratorComments, strAdministratorName, currency_id FROM tbl_Quotes WHERE Index=?};
+    $_ = q{SELECT CompanyIndex, to_char(dtmQuoteDate, 'MM/DD/YYYY'), curTotalSale1, curTotalSale2, curTotalSale3, strCustomerComments, strAdministratorComments, strAdministratorName, currency_id FROM Quotes WHERE id=?};
     @$variable{'Company_ID','DATE', 'TOTAL1','TOTAL2','TOTAL3','Comments','AdministratorComments', 'AdministratorName','currency_id'} = sql::execute( $log, $dbh, $_, $quote_id );
 	my $Currency = new openprint::Currency( $$variable{'currency_id'} );
     @$variable{'CurrencyName', 'CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );

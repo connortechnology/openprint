@@ -168,20 +168,14 @@
 				foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {
 					my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
 
-					if ( $ServiceType->name() eq 'Paper' ) {
-						$line_html .= sprintf('<tr%s><td><b>Stock</b><br/>%s</td>', $rowclass,
-							openprint::service::summary( $$variable{'Project'}, $s_id )
-							);
+					if ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() and ! $$variable{'Quote'} ) {
+					$line_html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%s</b></a><br/>%s</td>', $rowclass, $ServiceType->url(), $$variable{'Project'}->id(), $s_id, ($$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),
+						openprint::service::summary( $$variable{'Project'}, $s_id ),
+						);
 					} else {
-						if ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() and ! $$variable{'Quote'} ) {
-						$line_html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%s</b></a><br/>%s</td>', $rowclass, $ServiceType->url(), $$variable{'Project'}->id(), $s_id, ($$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),
-							openprint::service::summary( $$variable{'Project'}, $s_id ),
-							);
-						} else {
-						$line_html .= sprintf('<tr%s><td><b>%s</b><br/>%s</td>', $rowclass, ($$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description()), 
-							openprint::service::summary( $$variable{'Project'}, $s_id ),
-							);
-						} # end if
+					$line_html .= sprintf('<tr%s><td><b>%s</b><br/>%s</td>', $rowclass, ($$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description()), 
+						openprint::service::summary( $$variable{'Project'}, $s_id ),
+						);
 					} # end if
 					
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -256,6 +250,19 @@
 		</tr>
 		<tr class="totals"> 
 			<td align="right">1000 Price:</td>
+<? echo ( my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<td class="price">'.$$variable{'Currency'}->symbol().Number::Format::format_number(($$variable{'Project'}->price( $qty_index )/$$variable{'Project'}->quantity($qty_index))*1000, 2, 2).'</td>';
+	} # end foreach qty_index
+	return $html;
+) ?>
+	<? if ( ! $$variable{'Quote'} ) ?>
+			<td class="status"></td>
+			<td class="actions"></td>
+	<? endif ( ! $$variable{'Quote'} ) ?>
+		</tr>
+		<tr class="totals"> 
+			<td align="right">Additional 1000 Price:</td>
 <? echo ( my $html = '';
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$html .= '<td class="price">'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'Project'}->m_price( $qty_index ), 2, 2).'</td>';

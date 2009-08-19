@@ -17,5 +17,6 @@
 <script type="text/javascript">
 	$('totallbs-<?type_id?>').innerHTML = '<? echo ( sprintf('%.0f', misc::sum( map { $_->quantity() } $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) ); ) ?>lbs';
 	$('totalkgs-<?type_id?>').innerHTML = '<? echo ( sprintf('%.4f', misc::sum( map { $_->quantity() } $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) )/2.2046); ) ?>kg';
+	$('skidcount-<?type_id?>').innerHTML = '<? echo ( $$variable{'Manifest'}->Contents('type_id'=>$$variable{'type_id'}) ) ?> skids/rolls';
 </script>
 <? endif ( $param{'action'} and $$variable{'type_id'} ) ?>

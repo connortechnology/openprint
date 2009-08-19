@@ -1,6 +1,6 @@
 <html>
 	<body>
-Thank you for using <? echo ( $$variable{'Invoice'}->Invoicer()->name() ) ?>.  Attached is your current invoice (#<? echo ( $$variable{'Invoice'}->id() ) ?>).  <br/>
+Thank you for using <? echo ( $$variable{'Invoice'}->Invoicer()->name() ) ?>.  Your current invoice (#<? echo ( $$variable{'Invoice'}->id() ) ?>) is attached.  <br/>
  <br/>
 This invoice has been sent to the following contacts at <? echo ( $$variable{'Invoice'}->Invoicee()->name() ) ?>:<br/>
 <? echo (
@@ -11,7 +11,8 @@ This invoice has been sent to the following contacts at <? echo ( $$variable{'In
 	return $html;
 ) ?>
  <br/>
-If you have any questions or comments regarding your invoice, or our new online billing system, please send us an e-mail at <a href="mailto://<? echo ( $config{'AccountingEmail'} ) ?>"><? echo ( $config{'AccountingEmail'} ) ?></a>.  As always, your concerns will be addressed in a prompt and confidential manner.<br/>
+If you have any questions or comments regarding your invoice, or our online billing system, please send us an e-mail at <a href="mailto://<? echo ( $config{'AccountingEmail'} ) ?>"><? echo ( $config{'AccountingEmail'} ) ?></a>.<br/>
+As always, your concerns will be addressed in a prompt and confidential manner.<br/>
  <br/>
 Thank you,<br/>
 Isaac Connor<br/>

@@ -16,6 +16,7 @@ $serial = 'Product_Category_Id_seq';
 $table = 'Product_Categories';
 
 %fields = (
+			'id'				=>	'id',
 			'name'				=>	'name',
 			'description'		=>	'description',
 			'projecttype_id'	=>	'projecttype_id',
@@ -49,9 +50,11 @@ sub find {
 	} # end if
 	if ( exists $params{'deleted'} ) {
 		if ( $params{'deleted'} ) {
-			$sql .= ' AND (deleted=? OR deleted IS NULL)', $params{'deleted'};
+			$sql .= ' AND (deleted=? OR deleted IS NULL)';
+			push @values, $params{'deleted'};
 		} else {
-			$sql .= ' AND deleted=?', $params{'deleted'};
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
 		} # end if
 	} else {
 		$sql .= ' AND (deleted=false OR deleted IS NULL)';

@@ -14,7 +14,7 @@ use vars qw( %variable %session %param %config $log $dbh %fields %transforms %de
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
+my $debug = 0;
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
@@ -24,6 +24,7 @@ $table = 'Service_Prices';
 $serial = 'serviceprices_id_seq';
 
 %fields = (
+	'id'			=>	'id',
 	'owner_id'		=>	'owner_id',
 	'pricelist_id'	=>	'pricelist_id',
 	'service_id'	=>	'service_id',

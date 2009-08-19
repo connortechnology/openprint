@@ -46,6 +46,7 @@ my %variables = (
 		'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
 		'Markup1'=>['save'], 'Markup2'=>['save'], 'Markup3'=>['save'],
 		'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],
+		'MPrice1'=>['save','output'], 'MPrice2'=>['save','output'], 'MPrice3'=>['save','output'],
 		'txtRunTime1'=>['save'], 'txtRunTime2'=>['save'], 'txtRunTime3'=>['save'],
 		'txtSignatureQty4Page-1'=>['save','output'], 'txtSignatureQty4Page-2'=>['save','output'], 'txtSignatureQty4Page-3'=>['save','output'],
 		'txtSignatureQty8Page-1'=>['save','output'], 'txtSignatureQty8Page-2'=>['save','output'], 'txtSignatureQty8Page-3'=>['save','output'],
@@ -154,6 +155,7 @@ sub signature_calc {
 
 		if ( $imposition > 1 ) {
 			$imposition = 1 if ( 
+			($$I{'FoldingImposition'} and $$I{'FoldingImposition'} % 2 ) or 
 			($$I{'imposition'} % 2 ) or 
 			($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) or 
 			($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
@@ -167,6 +169,7 @@ sub signature_calc {
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 			$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
+			$$specs{'Status'} = 'uncalculated';
 		} # end if
 	} else {
 		$$specs{'Imposition'.$qty_index} = $imposition;
@@ -282,7 +285,6 @@ sub calc {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
-		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
 			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
@@ -294,7 +296,7 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-#$openprint::log->debug(sprintf('%d %s %s %d %dx%d', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index} ) );
+$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) );
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			if ( 
 				($$sig_specs{'txtImposition'.$qty_index}%2) or 
@@ -319,6 +321,7 @@ sub calc {
 #$openprint::log->debug("Overriding imposiion");
 			if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
 				$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
+				$$specs{'Status'} = 'uncalculated';
 			} # end if
 		} else {
 			$$specs{'Imposition'.$qty_index} = $imposition;
@@ -426,7 +429,7 @@ sub calc {
 
 		if ( 1 > $$specs{"txtPockets$qty_index"} ) {
 			$$specs{'Status'} = 'uncalculated';
-			$$specs{'alert'} = 'We are unable to determine how many pockets your project requires.  Please contact us.';
+			$$specs{'alert'} .= 'We are unable to determine how many pockets your project requires.  Please contact us.';
 			if ( $$specs{'OverrideImposition'.$qty_index} ne 'Y' ) {
 				$$specs{'Imposition'.$qty_index} = '';
 			} # end if
@@ -527,6 +530,7 @@ sub calc {
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'MPrice'} *(1+$$specs{"Markup$qty_index"}/100) );
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtRunTime$qty_index"} = $$bestPrice{'RunTime'};
 	} # end foreach qty_index
@@ -584,6 +588,7 @@ sub get_price {
 		'RunTime'	=> 0,
 		'Passes'	=> 0,
 		'Imposition' => $$specs{'Imposition'.$qty_index},
+		'MPrice'	=> 0,
 	);
 
 	my $qty = $$specs{'txtQuantity'.$qty_index};
@@ -714,6 +719,7 @@ sub get_price {
 
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
+	$price{'MPrice'} += ( $price{'Service'} / $qty ) * 1000;
 
 	$price{'txtPrice'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'};
 $openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification("Maximum $$ServiceType{'name'} Imposition") . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'txtPrice'} ) if $debug;

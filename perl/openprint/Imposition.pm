@@ -23,6 +23,7 @@ my @fields = (
 	'cropmark_top','cropmark_bottom','cropmark_left','cropmark_right',
 	'stock_width','stock_height',
 	'quantity',
+	'bleed_size',
 );
 
 use strict;
@@ -93,6 +94,15 @@ sub get {
 	my ( $self, @fields ) = @_;
 	return map { $self->$_ } @fields;
 } # end sub get
+sub to_string {
+	my $self = shift;
+	my $string = sprintf('%dout %dx%d', @$self{'imposition','columns','rows'} );
+	if ( $$self{'dutch_columns'} ) {
+		$string .= sprintf('+%dx%d', @$self{'dutch_columns','dutch_rows'} );
+	} # end if
+	$string .= ' ' . $$self{'image_orientation'};
+	return $string;
+} # end sub to_string
 
 sub set {
 	my $self = shift;
@@ -152,6 +162,21 @@ sub Paper {
 	return $$self{'paper'};
 } # end sub Paper
 
+sub load_used {
+	my ( $self, $specs, $qty_index ) = @_;
+
+	$$self{'runstyle'} = $$specs{'ddmRunStyleUsed'} ? $$specs{'ddmRunStyleUsed'} : $$specs{'ddmRunStyle'.$qty_index};
+	$$self{'image_orientation'} = $$specs{'hdnImageOrientationUsed'} ? $$specs{'hdnImageOrientationUsed'} : $$specs{'hdnImageOrientation'.$qty_index};
+	$$self{'imposition'} = $$specs{'txtImpositionUsed'} ? $$specs{'txtImpositionUsed'} : $$specs{'txtImposition'.$qty_index};
+	$$self{'rows'} = $$specs{'hdnImpositionRowsUsed'} ? $$specs{'hdnImpositionRowsUsed'} : $$specs{'hdnImpositionRows'.$qty_index};
+	$$self{'columns'} = $$specs{'hdnImpositionColumnsUsed'} ? $$specs{'hdnImpositionColumnsUsed'} : $$specs{'hdnImpositionColumns'.$qty_index};
+	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRowsUsed'} ? $$specs{'hdnImpositionDutchRowsUsed'} : $$specs{'hdnImpositionDutchRows'.$qty_index};
+	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumnsUsed'} ? $$specs{'hdnImpositionDutchColumnsUsed'} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
+	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
+	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
+
+} # edn sub load_used
+
 sub load {
 	my ( $self, $specs, $qty_index ) = @_;
 
@@ -183,6 +208,7 @@ sub load {
 	$$self{'runstyle'} = 'Sheet Work' if ! $$self{'runstyle'};
 	$$self{'image_orientation'} = $$specs{'hdnImageOrientation'.$qty_index};
 	$$self{'grain_direction'} = $$specs{'rdbGrainDirection'.$qty_index};
+	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
 
 	if ( ! $$self{'image_orientation'} ) {
 		# Guess the image orientation

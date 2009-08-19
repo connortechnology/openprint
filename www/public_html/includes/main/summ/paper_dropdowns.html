@@ -49,7 +49,7 @@
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
-<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 <div class="row">
     <span class="label">Stock Cost:</span>
 <? echo ( 
@@ -67,14 +67,14 @@
 			my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $qty );
 			$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $qty, $paper_price{'Paper Price'} );
 		} else {
-		my $weight = $qty * $Paper->width() * $Paper->height() * $Paper->wpsi();
-		my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $qty );
-		$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $weight, $paper_price{'Paper Price'} );
+			my $weight = $qty * $Paper->width() * $Paper->height() * $Paper->wpsi();
+			my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $qty );
+			$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $weight, $paper_price{'Paper Price'} );
 		} # end if
 	} # end foreach qty_index
 	return $html;
 ) ?>
 
 </div>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 <div

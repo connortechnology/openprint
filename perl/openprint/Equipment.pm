@@ -32,6 +32,12 @@ my %find_cache;
 	'jdf_id'			=> 	'jdf_id',
 	'jdf_name'			=> 	'jdf_name',
 	'location_id'		=>	'location_id',
+	'cip3_in'			=>	'cip3_in',
+	'cip3_out'			=>	'cip3_out',
+	'cip3_hold'			=>	'cip3_hold',
+	'cip3_merge'		=>	'cip3_merge',
+	'cip3_monitor'		=>	'cip3_monitor',
+	'smartscheduling'	=>	'smartscheduling',
 );
 %transforms = (
 );
@@ -111,6 +117,10 @@ $openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $
 		$sql .= ' AND jmf_enabled=?';
 		push @values, 1;
 	} # end if
+	if ( $params{'cip3_monitor'} ) {
+		$sql .= ' AND cip3_monitor=?';
+		push @values, $params{'cip3_monitor'};
+	} # end if
 	if ( $params{'category'} ) {
 		$sql .= q{ AND strCategory=?};
 		push @values, $params{'category'};
@@ -123,8 +133,7 @@ $openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $
 		$openprint::log->error( "Error loading Equipment ($sql) (@values) :" . $openprint::dbh->errstr );
 		return;
 	} elsif ( $debug ) {
-	#$openprint::log->debug( 'Number of results: ' . @$data );
-		$openprint::log->debug( $sql . join(',',@values) . ' records:'. @$data );
+		$openprint::log->debug( "openprint::Equipment::find : SQL($sql) VALUES(". join(',',@values).") # Results: " . @$data );
 	} # end if
 	
 	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{id}, $_ ) } @$data;
@@ -277,13 +286,13 @@ sub Fold {
 		} # end if
 		$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
 		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
-		if ( $$params{'gsm'} ) {
+		if ( exists $$params{'gsm'} ) {
 			$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
-			my $RunSpeed = $Fold->Specification( $$params{'gsm'} );
+			my $RunSpeed = $Fold->RunSpeed( $$params{'gsm'} );
 			if ( ! $RunSpeed ) {
-$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() );
+#$openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint::Paper::gsm_to_weight($$params{'gsm'})."lbs) on fold " . $Fold->name() . ' on ' . $self->name() ) if $debug;
 				next;
-			} else {
+			#} else {
 #$openprint::log->debug("Got runspeed $$RunSpeed{runspeed}") if $debug;
 			} # end if
 		} # end if
@@ -296,7 +305,7 @@ $openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint:
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'strname, dblmin' );
+	return openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'strname, dblmin', @_ );
 } # end sub Specifications
 
 sub specification {
@@ -341,7 +350,7 @@ if ( ! defined $range ) {
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
-	$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
+	#$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
 		return $Spec if ( (1*$$Spec{min}) == $range ) or ((1*$$Spec{max}) == $range );
 
 		return $Spec if ( 
@@ -378,7 +387,7 @@ $openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'
 		$y = $$self{'Specifications'}{$name}[$i];
 #$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
-$openprint::log->debug("Couldn't find maximum") if $debug;
+$openprint::log->debug("Equipment::specification Couldn't find maximum for $name") if $debug;
 		return;
 	} # end if
 
@@ -465,6 +474,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
+    sql::execute( undef, undef, q{DELETE FROM Equipment_Shifts WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE Id=?}, $$self{id} );
 	sql::end_transaction( $openprint::dbh, $ac );
 
@@ -475,7 +485,7 @@ sub update_schedule {
 	my $self = shift;
 
 	if ( $openprint::config{'Smart Schedule'} ne 'Y' ) {
-		$openprint::log->debug("Not using Smart Schedule.	Not Updating Press Schedule");
+		$openprint::log->debug("Not using Smart Schedule.  Not Updating Press Schedule");
 		return;
 	} # end if
 
@@ -484,10 +494,10 @@ sub update_schedule {
 	$_ = q{SELECT DISTINCT ProjectIndex, ServiceIndex, StartTime FROM Projects, Schedule WHERE Equipment_id=? AND Index=ProjectIndex AND Projects.strStatus='Approved' ORDER BY StartTime};
 	my @data = sql::execute( undef, undef, $_, $$self{id} );
 	while ( my ( $project_index, $service_index, undef ) = splice @data, 0, 3 ) {
-		sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ServiceIndex=?', $$self{id}, $service_index],
+		sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ProjectIndex=? AND ServiceIndex=?', $$self{id}, $project_index, $service_index],
 				'StartTime', $start_time
 				);
-		( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE ServiceIndex=?}, $service_index );
+		( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE projectindex=? AND ServiceIndex=?}, $project_index, $service_index );
 	} # end while
 
 } # end sub update_schedule
@@ -531,6 +541,9 @@ sub Previous {
 sub Location {
 	return new openprint::Location( $_[0]{location_id} );
 } # end sub Location
+
+sub Shifts {
+} # end sub
 
 1;
 __END__

@@ -11,6 +11,7 @@ my @variables = (
 	'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 	'Markup1', 'Markup2', 'Markup3',
 	'txtPrice1', 'txtPrice2', 'txtPrice3',
+	'MPrice1', 'MPrice2', 'MPrice3',
 	'OverridePrice1', 'OverridePrice2', 'OverridePrice3',
 );
 
@@ -35,8 +36,7 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-    foreach my $qty_index ( 1 .. 3 ) {
-        next if ! $Project->quantity($qty_index);
+    foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'Markup'.$qty_index} =~ s/[^\-\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity() if ! $$specs{'txtQuantity'.$qty_index};
@@ -107,6 +107,7 @@ sub calc {
 		} # end if
 
         $$specs{"txtUnitPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} );
+        $$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, (($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'MaterialPrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} ) * 1000 );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{'Markup'.$qty_index}/100) );
 		} else {

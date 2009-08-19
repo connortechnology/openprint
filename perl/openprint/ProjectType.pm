@@ -13,8 +13,8 @@ $table = 'Project_Types';
 $serial = 'project_types_id_seq';
 
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',	
+	'id'			=>	'id',
+	'name'			=>	'name',	
 	'description'	=>	'description',
 	'category_id'	=>	'category_id',
 	'url'			=>	'url',
@@ -32,13 +32,18 @@ sub find {
 	my %params = @_;
 	my @values;
 	my $sql = q{SELECT * FROM Project_Types WHERE 1>0};
-	if ( $params{'name'} ) {
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
-	} # end if
 	if ( exists $params{'description'} ) {
 		$sql .= ' AND description=?';
 		push @values, $params{'description'};
+	} # end if
+	if ( exists $params{'name'} ) {
+		if ( ref $params{'name'} eq 'ARRAY' ) {
+			$sql .= q{ AND name IN (}.join(',', map {'?'} @{$params{'name'}} ).')';
+			push @values, @{$params{'name'}};
+		} else {
+			$sql .= ' AND name=?';
+			push @values, $params{'name'};
+		} # end if
 	} # end if
 	if ( $params{'category_id'} ) {
 		$sql .= ' AND category_id=?';
@@ -47,7 +52,7 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error loading ProjectTypes: ($sql) (@values)");
+		$openprint::log->error("Error loading ProjectTypes: ($sql) (@values) Reason: " . $openprint::dbh->errstr() );
 		return;
 	} # end if
 	return map { new openprint::ProjectType( $_->{id}, $_ ); } @$data;
@@ -124,7 +129,7 @@ sub delete {
 	sql::end_transaction( $dbh, $ac );
 	
 	# Add record to audit log - action "Delete Project Type".
-	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'strName'},);
+	openprint::logs::insertLogRecord('19', "Project Type ID: " . $$self{'id'} . " Project Type: " . $$self{'name'},);
 } # end sub delete
 
 sub Templates {

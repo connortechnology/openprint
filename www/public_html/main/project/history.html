@@ -60,6 +60,13 @@
 ) ?>
 				</select>
 			</p>
+			<p>
+				<label>Type:</label>
+				<select id="type_id" name="type_id" onchange="load_projects( this.form );">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)') ], $session{'/main/project/history.html?type_id'} ); ) ?>
+				</select>
+			</p>
 <? eval (
 	if ( ( ! $session{'/main/project/history.html?CreatedStartYear'} ) or ( time - $session{'/main/project/history.html?lastupdated'} > 3600 ) ) {
 		@session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 );
@@ -112,6 +119,16 @@
 					<select name="UpdatedEndYear" onchange="setDaysDropDown(this.value,this.form.UpdatedEndMonth.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);load_projects(this.form);"><?UpdatedEndYears?></select>
 				</span>
 			</p>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+			<p><label>Predefined:</label>
+				<input type="radio" name="predefined" id="predefined1" value="1" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '1' ) ) ?> onclick="load_projects(this.form);" />
+				<label class="radio" for="predefined1">Yes</label>
+				<input type="radio" name="predefined" id="predefined0" value="0" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '0' ) ) ?> onclick="load_projects(this.form);" />
+				<label class="radio" for="predefined0">No</label>
+				<input type="radio" name="predefined" id="predefined" value="" <? echo ( ssi::checked( $session{'/main/project/history.html?predefined'} eq '' ) ) ?> onclick="load_projects(this.form);" />
+				<label class="radio" for="predefined">Both</label>
+			</p>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
 			</div>
 		</fieldset>
 	</div>

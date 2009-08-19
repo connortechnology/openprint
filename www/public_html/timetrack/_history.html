@@ -2,9 +2,6 @@
 	require Date::Parse;
 	require Date::Format;
 
-	if ( ! $param{'btnFunction'} ) {
-	ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','employee_id','company_id') );
-	} # end if
 
 	@{$$variable{'Timetracks'}} = ();
 	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = 0;
@@ -52,11 +49,11 @@
 		<? eval ( 
 			$$variable{'conversion_rate'} = $$variable{'Timetrack'}->Currency()->conversions( $session{'Currency_id'} );
 		) ?>
-		<tr title="<? echo ( $$variable{'Timetrack'}->description() ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+		<tr title="<? hecho ( $$variable{'Timetrack'}->description() ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
 			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->User()->name(); ) ?></a></td>
 			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->Company()->name(); ) ?></a></td>
-			<td align="left"><? echo ( Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $$variable{'Timetrack'}->starting() ) ); ) ?></td>
-			<td align="left"><? echo ( Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time( $$variable{'Timetrack'}->ending() ) ); ) ?></td>
+			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Timetrack'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Timetrack'}->starting() ) ); ) ?></td>
+			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Timetrack'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Timetrack'}->ending() ) ); ) ?></td>
 			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'Timetrack'}->elapsed() ); ) ?></td>
 			<td align="center"><? echo ( $$variable{'Timetrack'}->invoiced() ? 'Y' : 'N'; ) ?></td>
 			<td align="center"><? echo ( $$variable{'Timetrack'}->paid() ? 'Y' : 'N'; ) ?></td>

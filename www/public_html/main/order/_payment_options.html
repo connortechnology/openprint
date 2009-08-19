@@ -6,8 +6,8 @@
 		my @PaymentTypes = openprint::PaymentType::find('order'=>'lower(name)');
 
 		foreach my $PaymentType ( @PaymentTypes ) {
-			$html .= sprintf(q`<input type="checkbox" id="PaymentType%1$s" name="PaymentType" value="%1$s" /><label class="radio" for="PaymentType%1$s">%2$s</label><br/>`,
-				$PaymentType->name(), $PaymentType->description(), 
+			$html .= sprintf(q`<input type="checkbox" id="PaymentType%1$d" name="PaymentType" value="%1$d" /><label class="radio" for="PaymentType%1$d">%2$s</label><br/>`,
+				$PaymentType->id(), $PaymentType->description(), 
 				);
 		} # end foreach
 		

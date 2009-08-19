@@ -8,7 +8,7 @@ use vars qw( $log $dbh %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
+my $debug = 1;
 
 %fields = (
 	'id'			=>	'id',
@@ -25,6 +25,12 @@ my $debug = 0;
 $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 
 sub find {
 	my %params = @_;
@@ -42,6 +48,10 @@ sub find {
 	if ( $params{'Paper'} ) {
 		$sql .= ' AND paper_id=?';
 		push @values, $params{'Paper'}->id();
+	} # end if
+	if ( exists $params{'quantity_>'} ) {
+		$sql .= ' AND quantity > ?';
+		push @values, $params{'quantity_>'};
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -88,6 +98,10 @@ sub Paper {
 	my $Paper = new openprint::Paper( $$self{'paper_id'} );
 	return $Paper;
 } # end sub Paper
+
+sub Skid {
+	return new openprint::Skid( $_[0]{'skid_id'} );
+} # end sub Skid
 
 1;
 

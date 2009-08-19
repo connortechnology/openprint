@@ -3,16 +3,14 @@
 <h2>User Profiles</h2>
 </div>
 <script type="text/javascript">
-function keepCompany( form ){
+function keepCompany( form ) {
 	var Company = form.ddmCustomer.selectedIndex;
 	var Role = form.ddmUserRole.selectedIndex;
 
 	clearForm(form);
 	form.ddmCustomer.selectedIndex = Company;
 	form.ddmUserRole.selectedIndex= Role;
-	
 	form.company_id.selectedIndex = Company;
-
 }
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
@@ -21,10 +19,14 @@ Please select a company or user to obtain login information.<br/>
 <div id="UserProfile">
 	<form name="f1" method="post" action="user_profiles.html" onsubmit="return fmCheck();">
 		<fieldset class="filters"><legend>Search:</legend>
+			<p><label>Email:</label>
+				<input type="text" id="search_email" name="search_email" onkeyup="$('search_email_results').innerHTML='';if (this.value.length > 3 ) {new Ajax.Updater('search_email_results', '_search_by_email.html', {parameters:{ search_email: this.value}});}" /><br/>
+				<span id="search_email_results"></span>
+			</p>	
 			<p>
 				<label>Company Name:</label>
-				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
-				<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='';this.form.submit();}" size="4" />
+				<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';f1.submit();}">
 					<option value="">All Companies</option>
 					<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
 				</select>
@@ -32,21 +34,21 @@ Please select a company or user to obtain login information.<br/>
 			</p>
 			<p>
 				<label>User Type:</label>
-				<select name="ddmUserRole" onchange="f1.submit();">
+				<select name="ddmUserRole" onchange="f1.btnFunction.value='';f1.submit();">
 					<option value="">All User Types</option>
 					<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $param{'ddmUserRole'} ); ) ?>
 				</select>
 			</p>
 			<p>
 				<label>User Name:</label>
-				<select name="ddmUser" onchange="f1.submit();">
+				<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
 					<option value="">Select a User</option>
 					<?FILL_USER_NAME?>
 				</select>
 			</p>
 		</fieldset>
 		<fieldset>
-			<p> 
+			<p id="ButtonsTop"> 
 				<label><? if ( $$variable{'User'}->company_id() ) ?><a href="company_profiles.html?ddmCustomer=<? echo ( $$variable{'User'}->company_id() ) ?>">Link to Company Info.</a><? endif ( $$variable{'User'}->company_id() ) ?>&nbsp;</label>
 				
 				<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
@@ -55,14 +57,14 @@ Please select a company or user to obtain login information.<br/>
 				<? echo ( join ('',
 					ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;'),
 					ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;'),
-					ssi::writeButton( $log, $dbh, 'New1','new.gif',"keepCompany(f1);",'','New'),
+					ssi::writeButton( $log, $dbh, 'New1','new.gif',"\$('Log').hide();keepCompany(f1);",'','New'),
 					ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 					ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
 					ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
 				); ) ?>
 			</p>
 		</fieldset>
-		<fieldset><legend>User Information:</legend>
+		<fieldset><legend>User Information: <? echo ( $$variable{'User'}->id() ) ?></legend>
 			<? if ( $$variable{'User'}->Company()->notes() ) ?>
 			<p>
 				<label>Company Notes:</label>
@@ -199,12 +201,20 @@ Please select a company or user to obtain login information.<br/>
 			<label>Purchasing Limit (Total)</label>
 			<input type="text" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 		</p>
+		<? echo (
+			my $html;
+			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ) {
+				
+				$html .= sprintf('<p><label>Limit for %2$s</label><input type="text" name="po_limit-%1$d" value="%3$s" /></p>', $PO_Type->get('id','name'), $$variable{'User'}->po_limit( $PO_Type->id() ) );
+			} # end foreach PO_Type
+			return $html;
+		) ?>
 </div>
 <div class="rightColumn">
 		<p>
 			<label>Assistant to:</label>
 			<select name="csr_ids" size="4" multiple="multiple">
-				<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+				<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
 			</select>
 		</p>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
@@ -243,7 +253,7 @@ Please select a company or user to obtain login information.<br/>
 			</fieldset>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<? if ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
-		<? if ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $session{user_id} ) ) ?>
+		<? if ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
 		<fieldset><legend>Email Settings:</legend>
 			<p>
 				<label>Password:</label>
@@ -275,7 +285,7 @@ Please select a company or user to obtain login information.<br/>
 				<label class="radio" for="VacationState0">Disabled</label>
 			</p>
 		</fieldset>
-		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $session{user_id} ) ) ?>
+		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
 		<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
 		<fieldset><legend>Login Information:</legend> 
 			<p> 
@@ -298,12 +308,25 @@ Please select a company or user to obtain login information.<br/>
 				<label for="change_passwordN" class="radio">No</label>
 			</p>
 		</fieldset>
+		<fieldset><legend>Notifications</legend>
+			<? echo ( 
+				my $html;
+				my $n = $$variable{'User'}->notifications();
+				my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+				foreach my $k ( keys %types ) {
+					$html .= '<p><label>'.$types{$k}.':</label>';
+					$html .= sprintf('<input type="text" name="notification_%1$s" value="%2$s" />', $k, $$n{$types{$k}} );
+					$html .= '</p>';
+				} # end foreach k
+				return $html;
+			) ?>
+		</fieldset>
 		<fieldset><legend>Service Defaults</legend>
 			<!--#include virtual="_service_defaults.html"-->
 		</fieldset>
 		<fieldset>
-		<p>
-			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link</a> to Company Info.<? endif ( $$variable{'CustomerIndex'} )?>&nbsp;</label>
+		<p id="ButtonsBottom">
+			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="company_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Company Info.</a><? endif ( $$variable{'CustomerIndex'} )?>&nbsp;</label>
 			
 	<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
 			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
@@ -311,7 +334,7 @@ Please select a company or user to obtain login information.<br/>
 				<? echo ( join ( '', 
 					ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;'),
 					ssi::writeButton( $log, $dbh, 'Next2','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;'),
-					ssi::writeButton( $log, $dbh, 'New2','new.gif',"keepCompany(f1);",'','New'),
+					ssi::writeButton( $log, $dbh, 'New2','new.gif',"\$('Log').hide();keepCompany(f1);",'','New'),
 					ssi::writeButton( $log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 					ssi::writeButton( $log, $dbh, 'Save2','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
 					ssi::writeButton( $log, $dbh, 'Reset2','reset.gif','f1.reset();','','Reset'),
@@ -319,7 +342,7 @@ Please select a company or user to obtain login information.<br/>
 		</p>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>
-<fieldset><legend>Last 10 Login Attempts</legend>
+<fieldset id="Log"><legend>Last 10 Login Attempts</legend>
     <table class="List">
         <tr>
             <th align="left" width="145">When</th>

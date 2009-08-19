@@ -2,18 +2,8 @@
 <script type="text/javascript">
 <!--
 	function check_inputs(form ) {
-		if ( form.skid_id && form.skid_id.value ) {
-			if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
-				alert( 'Skids cannot contain more than 10000lbs' );
-				return false;
-			} // end if
-			if ( form.Units && get_value( form.Units ) == 'lbs' && form.Quantity.value > 10000 ) {
-				alert( 'Skids cannot contain more than 10000lbs' );
-				return false;
-			} // end if
-		} // end if
-		if ( form.available_quantity && form.Quantity.value > form.available_quantity.value ) {
-			alert( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available' );
+		if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
+			alert( 'There are only ' + form.available_quantity.value + ' available!' );
 			return false;
 		} // end if
 		return true;
@@ -252,7 +242,7 @@ function calc_from_gsm( form ) {
 			</p>
 			<p>
 				<label>Available:</label><span id="Available">
-				<? echo ( int($$variable{'Paper'}->in_stock() - $$variable{'Paper'}->allocated()); ) ?>
+				<? echo ( $$variable{'Paper'}->available(); ) ?>
 				<? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>
 				</span>
 			</p>
@@ -265,7 +255,7 @@ function calc_from_gsm( form ) {
 		<div style="float: right;">
 			<? echo (
 					my $html = '';
-					if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
+					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
 							$html .= ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' );
 							$html .= ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' );
 							$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );

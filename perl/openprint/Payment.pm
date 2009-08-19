@@ -12,9 +12,13 @@ use MIME::Base64;
 my $debug = 1;
 
 use strict;
-use vars qw( %fields %defaults %transforms );
+use vars qw( $table $serial %fields %defaults %transforms );
 
 require sql;
+require openprint::PaymentType;
+
+$table = 'payments';
+$serial = 'payments_id_seq';
 
 %fields = (
 	'id'				=>	'id',
@@ -32,9 +36,11 @@ require sql;
 	'received_on'		=>	'date',
 	'remaining'			=>	'remaining',
 	'deleted'			=>	'deleted',
+	'type_id'			=>	'type_id',
 );
 
 %transforms = (
+	'amount'	=>	[ 's/[^\d\.]//g' ],
 );
 %defaults = (
 	'order_id'		=>	undef,
@@ -142,65 +148,11 @@ sub find {
 	return map { new openprint::Payment( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $dbh->selectrow_hashref( 'SELECT * FROM Payments WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $log->debug("No data when loading payment $$self{'id'} " . $dbh->errstr() ); }
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
-
-sub delete {
-	my $self = shift;
-	return sql::update( undef, undef, 'Payments', ['id=?', $$self{'id'} ], 'deleted', 1 );
-} # end sub delete
-
 sub destroy {
 	my $self = shift;
     sql::execute( undef, undef, q{DELETE FROM ledgers WHERE payment_id=?}, $$self{'id'} );
     return sql::execute( undef, undef, q{DELETE FROM Payments WHERE id=?}, $$self{'id'} );
 } # end sub destroy
-
-sub save {
-	my ( $self, $param ) = @_;
-	
-	$self->set( $param ) if $param;
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$fields{$k}} = $$self{$k};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('payments_id_seq')});
-		$sql{'id'} = $$self{id};
-		if ( my $error = sql::insert( undef, undef, 'Payments', \%sql ) ) {
-			$dbh->rollback();
-			#sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-	} else {
-		delete $sql{'created_on'};
-		if ( my $error = sql::update( undef, undef, 'Payments', ['id=?', $$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-	} # end if
-	sql::end_transaction( $dbh, $ac );
-	$self->load();
-	return '';
-} # end sub save
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Payment();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
 
 sub Payor {
 	return new openprint::Company( $_[0]{payor_id} );
@@ -227,6 +179,10 @@ sub remaining {
 	} # end if
 	return $$self{'remaining'};
 } # end sub remaining
+
+sub Type {
+	return new openprint::PaymentType( $_[0]{'type_id'} );
+} # end sub Type
 
 1;
 

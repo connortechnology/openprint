@@ -8,10 +8,11 @@
         } // end if
     } // end function confirm_delete()
 </script>
-<p class="error"><?error?></p>
+<!--#include virtual="/includes/error_reporting.html"-->
 <!--#include virtual="/includes/order_header.html" -->
 <br class="spacer"/>
 <!--#include virtual="/includes/order_project_list.html" -->
+<!--#include virtual="_product_list.html" -->
 <span style="float: left;">
 	<? if ( $$variable{'AdministratorName'} ) ?>
 	<b>Administrator Name:</b> <?AdministratorName?><br>

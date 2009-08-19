@@ -1,10 +1,6 @@
 <? eval (
-	#foreach my $k ( 'txtCompanyName', 'txtAddress1', 'txtAddress2', 'txtCity', 'ddmStateProvince', 'txtPostalCode', 'ddmCountry', 'txtPhone', 'txtExtension', 'txtFax', 'rdbSalutation', 'txtFirstName','txtLastName','txtEmail' ) {
-		#$$variable{$k} = $openprint::param{$k};
-	#} # end foreach
-
-	if ( $openprint::param{'company_id'} ) {
-		my $Company = new openprint::Company( $openprint::param{'company_id'} );
+	if ( $param{'company_id'} ) {
+		my $Company = new openprint::Company( $param{'company_id'} );
 		@$variable{'txtCompanyName',
 			 'txtAddress1',
 			 'txtAddress2',
@@ -16,8 +12,8 @@
 			 'txtExtension',
 			 'txtFax'} = $Company->get( 'name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
 		my @Users = openprint::User::find( 
-			 'company_id'=>$openprint::param{'company_id'} ? $openprint::param{'company_id'} : $openprint::session{'company_id'}, 
-			 'order'=>'lower(strLastName),lower(strFirstName)'
+			 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
+			 'order'=>'lower(lastname),lower(firstname)'
 		);
 		if ( scalar @Users == 1 ) {
 			@$variable{'rdbSalutation','txtFirstName','txtLastName','txtEmail'} = $Users[0]->get('salutation','firstname','lastname','email');
@@ -40,7 +36,7 @@
 		<input type="radio" id="rdbSalutationMiss" name="rdbSalutation" value="Miss" <? echo ( 'checked="checked"' if $$variable{'rdbSalutation'} eq 'Miss' ) ?> />
 		<label class="radio" for="rdbSalutationMiss">Miss</label>
 	</p>
-<? if ( sets::isin( $openprint::session{'user_type'}, [ 'A','E'] ) ) ?>
+<? if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 	<p> 
 		<label>Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
 		<input type="hidden" name="txtFirstName" value="<?txtFirstName?>"/>
@@ -49,18 +45,18 @@
 			<option value="">Please Select</option>
 <? echo ( 
 	my @Users = openprint::User::find( 
-		'company_id'=>$openprint::param{'company_id'} ? $openprint::param{'company_id'} : $openprint::session{'company_id'}, 
-		'order'=>'lower(strLastName),lower(strFirstName)'
+		'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
+		'order'=>'lower(LastName),lower(FirstName)'
 	 );
 	return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ],
 		scalar @Users == 1 ? $Users[0]->id() : (
-			$openprint::param{'ddmUsers'} ? $openprint::param{'ddmUsers'} : $openprint::session{'user_id'} 
+			$param{'ddmUsers'} ? $param{'ddmUsers'} : $session{'user_id'} 
 			)
 	);
 ) ?>
 		</select>
 	</p>
-<? else ( sets::isin( $openprint::session{'user_type'}, [ 'A','E'] ) ) ?>
+<? else ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 	<p> 
 		<label >First Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
 		<input type="text" name="txtFirstName" value="<?txtFirstName?>"/>
@@ -69,7 +65,7 @@
 		<label>Last Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
 		<input type="text" name="txtLastName" value="<?txtLastName?>"/>
 	</p>
-<? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A','E'] ) ) ?>
+<? endif ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 	<p> 
 		<label>Address:<span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="txtAddress1" value="<?txtAddress1?>" /><br/>
@@ -85,7 +81,7 @@
 		</select>
 	</p>
 	<p> 
-		<label>State/Province:<span class="requiredFieldIndicator">*</span></label>
+		<label><span id="ddmCountry_state">State/Province:</span><span class="requiredFieldIndicator">*</span></label>
 		<select name="ddmStateProvince">
 			<option value=""> Select </option>
 			<? echo ( 
@@ -99,7 +95,7 @@
 		<input type="text" name="txtCity" value="<?txtCity?>" />
 	</p>
 	<p> 
-		<label>Zip/Postal Code:<span class="requiredFieldIndicator">*</span></label>
+		<label><span id="ddmCountry_postal">Zip/Postal Code:</span><span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="txtPostalCode" value="<?txtPostalCode?>" />
 	</p>
 	<p> 

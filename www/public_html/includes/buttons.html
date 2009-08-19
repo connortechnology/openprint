@@ -27,13 +27,13 @@ function click_upload( form ) {
 <br class="spacer"/>
 <div id="Buttons">
    <div id="CalculateButton">
-   <div id="CalculateBtn"><? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1');", '', 'Calculate'); ) ?></div>
+   <div id="CalculateBtn"><? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate'); ) ?></div>
 	<br class="spacer"/>
    </div>
    
 <? echo ( ssi::writeButton( $log, $dbh, 'Breakdown', 'price_breakdown.gif', "breakdown_window(document.f1.ProjectIndex.value);", '', 'Detailed Pricing' ); ) ?>
 	<div id="OrderButton" <? echo ( 'style="display:none;"' if $$variable{'Status'} ne 'Unordered' ) ?> >
-	<? echo ( ssi::writeButton( $log, $dbh, 'UPS', '', "open_window('/main/project/shipping/UPS.html','popup');", '', 'Get UPS Shipping Estimate'); ) ?><br class="spacer" />
+	<? echo ( ssi::writeButton( $log, $dbh, 'UPS', '', "open_window('/main/project/shipping/UPS.html','popup','resizeable,width=800,menubar');", '', 'Get UPS Shipping Estimate'); ) ?><br class="spacer" />
 	<? echo ( ssi::writeButton( $log, $dbh, 'Upload', '', "click_upload( document.f1 );", '', 'Upload Files'); ) ?>
 	<? echo ( ssi::writeButton( $log, $dbh, 'Quote', '', "click_quote( document.f1 );", '', 'Email Quote'); ) ?>
 	<? echo ( ssi::writeButton( $log, $dbh, 'Order', '', "click_order( document.f1 );", '', 'Place Order') if $openprint::config{AllowOrdering} ne 'false'; ) ?>

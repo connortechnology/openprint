@@ -201,33 +201,61 @@ sub delete {
 	foreach my $PO ( openprint::PurchaseOrder::find('manifest_id'=>$$self{'id'}) ) {
 		$PO->save({'manifest_id'=>undef});
 	} # end foreach $PO
+	foreach my $T ( $self->Types() ) {
+		$T->delete();
+	} # end foreach Type
     sql::execute( undef, undef, q{DELETE FROM ManifestContents WHERE manifest_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Manifests WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
+	return $dbh->errstr() if $dbh->errstr();
 	delete $openprint::Object::cache{'openprint::Manifest'}{$$self{'id'}};
 	return '';
 } # end sub delete
 
 sub Types {
 	my ( $self, %params ) = @_;
-	if ( $$self{'id'} ) {
-		$params{'manifest_id'} = $$self{'id'};
-		return openprint::Manifest_Content_Type::find(%params);
+	if ( %params ) {
+		if ( $$self{'id'} ) {
+			$params{'manifest_id'} = $$self{'id'};
+			return openprint::Manifest_Content_Type::find(%params);
+		} # end if
 	} # end if
+	if ( ! $$self{'Types'} ) {
+		if ( $$self{'id'} ) {
+			$params{'manifest_id'} = $$self{'id'};
+			@{$$self{'Types'}} = openprint::Manifest_Content_Type::find(%params);
+		} # end if
+	} # end if
+	return @{$$self{'Types'}} if $$self{'Types'};
 	return;
 } # end sub Types
 
 sub Contents {
 	my ( $self, %params ) = @_;
-	if ( $$self{'id'} ) {
-		return openprint::ManifestContent::find('manifest_id'=>$$self{id}, %params );
+	if ( %params ) {
+		if ( $$self{'id'} ) {
+			return openprint::ManifestContent::find('manifest_id'=>$$self{id}, %params );
+		} # end if
 	} # end if
+	if ( ! $$self{'Contents'} ) {
+		if ( $$self{'id'} ) {
+			@{$$self{'Contents'}} = openprint::ManifestContent::find('manifest_id'=>$$self{id} );
+		} # end if
+	} # end if
+	return @{$$self{'Contents'}} if $$self{'Contents'};
 	return;
 } # end sub Contents
 
 sub Vendor {
 	return new openprint::Company( $_[0]{'supplier_id'} );
 } # end sub Vendor
+
+sub po_ids {
+	return sets::union( map { $_->po_id() } $_[0]->Types() );
+} # end sub po_ids
+sub dockets {
+	return sets::union( map { $_->docket() } $_[0]->Types() );
+} # end sub dockets
 
 1;
 __END__

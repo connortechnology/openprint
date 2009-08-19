@@ -90,7 +90,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 	} # end if
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Collating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Collating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
 	my $error = '';
 	if ( ! @all_equipment ) {
 		$error .= 'We have no collating equipment.<br/>';
@@ -118,7 +118,6 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 		$$specs{"txtQuantity$qty_index"} = int( $$specs{"txtQuantity$qty_index"} );
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 
-		next if ( ! $$specs{"txtQuantity$qty_index"} );
 		my $qty = $$specs{"txtQuantity$qty_index"} * $$specs{'txtSignatureCount'};
 
 		my @equipment = ();
@@ -135,12 +134,27 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 				'Equipment'	=> $Equipment,
 				'Total'		=> 0,
 			);
+			if ( $Equipment->specification('Collating Capable') eq 'When Printing' ) {
+				# All signatures must be printed on the same machine
+				my $cant = 0;
+				foreach my $sig_id ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+					if ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) {
+						# cant
+						$cant = 1;
+					} # end if
+				} # end foreach
+				if ( $cant ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Equipment " . $price{'Equipment'}->name() . ": Not all signatures printed on this press.<br/>";
+					next;
+				} # end if
+			} # end if
 			$price{'MakeReady'} = openprint::service::get_price( 'CollatingMakeReady', undef, $Equipment );
 			my %servicePrice = openprint::service::get_price_object( 'Collating', $qty, $Equipment );
 			if ( sets::isin( $servicePrice{'units'}, 'Per M', 'Per 1000' )  ) {
 				$price{'Service'} = $servicePrice{'Price'}/1000; # Service Price for Collating is per 1000
 			} else {
-				$$specs{'alert'} .= 'Unknown units in service price';
+				$$specs{'alert'} .= 'Unknown units in service price.<br/>';
 			} # end if
 			$price{'Total'} = $price{'MakeReady'} + $qty * $price{'Service'};
 
@@ -166,7 +180,7 @@ sub display {
     my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my @equipment = openprint::Equipment::find( 'Specifications' => {'Collating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @equipment = openprint::Equipment::find( 'Specifications' => {'Collating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
 	foreach my $qty_index ( $Project->quantity_indexes() ) {	
 		$$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 	} # end foreach qty_index

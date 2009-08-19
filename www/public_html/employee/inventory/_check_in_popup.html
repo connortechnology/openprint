@@ -5,7 +5,7 @@
 	if ( exists $param{'quantity'} ) {
 		$$variable{'quantity'} = $param{'quantity'};
 	} else {
-		$$variable{'quantity'} = $$variable{Paper}->in_stock() - $$variable{Paper}->allocated();
+		$$variable{'quantity'} = $$variable{'Paper'}->available();
 	} # end if
 ) ?>
 <div id="CheckIn">

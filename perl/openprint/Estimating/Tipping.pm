@@ -15,6 +15,7 @@ my %variables = (
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
+	'MPrice1' => ['save','output'], 'MPrice2' => ['save','output'], 'MPrice3' => ['save','output'],
 	'Markup1'	=> ['save'], 'Markup2'	=> ['save'], 'Markup3'	=> ['save'],
 	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'],
 );
@@ -71,12 +72,11 @@ sub calc {
 
 	my $status = 'calculated';
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity( $qty_index ) if ! $$specs{'txtQuantity'.$qty_index};
-		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		my %BestPrice;
 		$$specs{'hdnBreakdown'.$qty_index} = '';
@@ -139,6 +139,7 @@ sub calc {
 		} # end if
 
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $BestPrice{'ServicePrice'}{'Total'} / $$specs{'txtQuantity'.$qty_index} );
+		$$specs{'MPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, (1+$$specs{"Markup$qty_index"}/100) * (($BestPrice{'ServicePrice'}{'Total'} / $$specs{'txtQuantity'.$qty_index})*1000) );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{"Markup$qty_index"}/100) );
 		} else {

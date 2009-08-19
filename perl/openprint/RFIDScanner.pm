@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -14,6 +14,8 @@ require sql;
 require ssi;
 require misc;
 require openprint::Location;
+require openprint::RFIDTagHistory;
+require openprint::RFIDScannerHistory;
 
 my $debug = 1;
 
@@ -25,6 +27,7 @@ my $debug = 1;
 	'location_id'	=>	'location_id',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
+	'lastseen_on'	=>	'lastseen_on',
 	'other'			=>	'other',
 );
 
@@ -35,8 +38,12 @@ my $debug = 1;
 %defaults = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
+	'lastseen_on'	=>	'NOW()',
 	'location_id'	=>	undef,
 );
+
+$table = 'rfidscanners';
+$serial = 'rfidscanners_id_seq';
 
 # Returns a paper object specified by the parameters
 sub find {
@@ -91,50 +98,15 @@ sub find {
 	return map { new openprint::RFIDScanner( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM RFIDScanners WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
-sub save {
-	my ( $self, $hash ) = @_;
-
-	if ( $hash ) {
-		$self->set( $hash );
-	} # end if
-
-	my %sql = map { $_, $$self{$_} } keys %fields;
-	$sql{'updated_on'} = 'NOW()';
-	
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('RFIDScanners_id_seq')} );
-		$sql{'id'} = $$self{'id'};
-
-		if ( my $error = sql::insert( undef, undef, 'RFIDScanners', \%sql ) ) {
-			$$self{'id'} = undef;
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-
-    } else {
-		if ( my $error = sql::update( undef, undef, 'RFIDScanners', ['id=?', $$self{id}], \%sql ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-    } # end if
-
-	sql::end_transaction( $dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
-
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
+	foreach ( openprint::RFIDScannerHistory::find('scanner_id'=>$$self{'id'}) ) {
+		$_->delete();
+	} # end foreach
+	foreach ( openprint::RFIDTagHistory::find('scanner_id'=>$$self{'id'}) ) {
+		$_->delete();
+	} # end foreach
     sql::execute( undef, undef, q{DELETE FROM RFIDScanners WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
@@ -153,6 +125,24 @@ sub location_id {
     } # end if
     return $$self{'location_id'};
 } # end sub location_id
+
+sub Next {
+	my $self = $_[0];
+	my ( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MIN(name) FROM RFIDScanners WHERE lower(name) > lower(?))', $$self{'name'} );
+	if ( ! $new_id ) {
+		( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MIN(name) FROM RFIDScanners)' );
+	} # end if
+	return new openprint::RFIDScanner( $new_id );
+} # end sub Next
+
+sub Previous {
+	my $self = $_[0];
+	my ( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MAX(name) FROM RFIDScanners WHERE lower(name) < lower(?))', $$self{'name'} );
+	if ( ! $new_id ) {
+		( $new_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDScanners WHERE name = (SELECT MAX(name) FROM RFIDScanners)' );
+	} # end if
+	return new openprint::RFIDScanner( $new_id );
+} # end sub Previous
 
 1;
 __END__

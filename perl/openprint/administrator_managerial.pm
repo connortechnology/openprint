@@ -2,6 +2,7 @@ package openprint::administrator_managerial;
 use MIME::QuotedPrint;
 
 use strict;
+use openprint ();
 
 require sql;
 require ssi;
@@ -144,18 +145,24 @@ sub user_profiles {
 		delete $param{'password'} if ! $param{'password'};
 		my $error = $User->save( \%param );
 
+		if ( ! $error ) {
+			foreach my $Type ( openprint::PurchaseOrder_ContentType::find() ) {
+				$User->po_limit( $Type->id(), $openprint::param{'po_limit-'.$Type->id()} );
+			} # end foreach Type
+		} # end if
+
 		if ( $error ) {
 			return misc::error( $log, $dbh, \%variable, 'Error Saving.', "There was an error saving the user's information. $error");
 		} # end if
 
 		if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 			if ( $param{'VacationState'} ) {
-				email::start_vacation( $r, $log, $User->email(), @param{'VacationSubject','VacationMessage'} );
+				email::start_vacation( $User->email(), @param{'VacationSubject','VacationMessage'} );
 			} else {
-				email::stop_vacation( $r, $log, $User->email() );
+				email::stop_vacation( $User->email() );
 			} # end if
 			if ( $param{'EmailPassword'} and $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
-				email::set_password( $r, $log, @param{'email','EmailPassword'} );
+				email::set_password( @param{'email','EmailPassword'} );
 			} # end if
 			my @aliases = ();
 			foreach my $alias ( split "\r\n", $param{'aliases'} ) {
@@ -163,9 +170,7 @@ sub user_profiles {
 				push @aliases, $alias;
 			} # end foreach
 			push @aliases, $User->email() if ! @aliases;
-			email::aliases( $log, $User->email(), @aliases );
-
-			$sql::dbh = $dbh;
+			email::aliases( $User->email(), @aliases );
 		} # end if
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
@@ -205,7 +210,14 @@ sub user_profiles {
 				'value'=>$param{'value-'} 
 				} );
 
-		$variable{'information'} = "Record saved successfully.";
+		my %notifications;
+		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
+		foreach my $k ( keys %types ) {
+			$notifications{$types{$k}} = $param{"notification_$k"};
+		} # end foreach
+		$User->notifications( \%notifications );
+
+		$variable{'information'} = 'Record saved successfully.';
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
@@ -237,11 +249,9 @@ sub user_profiles {
 	} # end if 
 
 	if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
-		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
-		@{$variable{'Aliases'}} = email::aliases( $log, $User->email() );
-		$sql::dbh = $dbh;
+		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+		@{$variable{'Aliases'}} = email::aliases( $User->email() );
 	} # end if
-
 				
 	# fill in User Name Drop Down Menu
 	$variable{'FILL_USER_NAME'} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ], $User->id() );
@@ -288,7 +298,7 @@ sub company_profiles {
 			'txtDownpayment'	=>	'Downpayment',
 			);
 
-	my $index = $param{'ddmCustomer'} ? $param{'ddmCustomer'} : $session{'company_id'};
+	my $index = $param{'ddmCustomer'};
 	my $Company = new openprint::Company( $index );
 
 	if ( $param{'btnFunction'} eq '<<' ) {
@@ -305,66 +315,68 @@ sub company_profiles {
 
 		my $customer = new openprint::obj_customer( $log, $dbh, $index );
 
-		if ( $Company->activation() ne $param{'activation'} ) {
-			my %info;
-			$info{'Company'} = $Company;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+		if ( $Company->id() ) {
+			if ( $Company->activation() and ( $Company->activation() ne $param{'activation'} ) ) {
+				my %info;
+				$info{'Company'} = $Company;
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
-			$_ = $param{'activation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+				$_ = $param{'activation'} eq 'Y' ? 'account_activated.html' : 'account_deactivated.html';
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			$email_template = ssi::variable_substitution( \$email_template, \%info ); 
+				$email_template = ssi::variable_substitution( \$email_template, \%info ); 
 
-			my @to = map { sprintf('"%s %s" <%s>', $_->get('firstname','lastname','email')); } openprint::User::find('company_id'=>$index,'web_active'=>'Y');
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
-					FROM	=> $config{'AdministratorEmail'},
-					TO		=> join( ',', @to ),
-					SUBJECT => 'Customer account status has changed!',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-		} # end if
-		if ( $Company->reseller() and ( $Company->reseller() ne $param{'rdbReseller'} ) ) {
-			my %info;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-			$info{'Company'} = $Company;
+				my @to = map { sprintf('"%s %s" <%s>', $_->get('firstname','lastname','email')); } openprint::User::find('company_id'=>$index,'web_active'=>'Y');
+				my %mail = (
+						SMTP	=> $config{'Mail Server'},
+						FROM	=> $config{'AdministratorEmail'},
+						TO		=> join( ',', @to ),
+						SUBJECT => 'Customer account status has changed!',
+						);
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+			} # end if
+			if ( $Company->reseller() and ( $Company->reseller() ne $param{'rdbReseller'} ) ) {
+				my %info;
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+				$info{'Company'} = $Company;
 
-			my @to = openprint::User::find('company_id'=>$index);
+				my @to = openprint::User::find('company_id'=>$index);
 
-			$_ = $param{'rdbReseller'} eq 'Y' ? 'customer_account_reseller.html' : 'customer_account_non_reseller.html';
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+				$_ = $param{'rdbReseller'} eq 'Y' ? 'customer_account_reseller.html' : 'customer_account_non_reseller.html';
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-			$email_template = ssi::variable_substitution( \$email_template, \%info ); 
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
-					FROM	=> $config{'AdministratorEmail'},
-					TO		=> join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
-					SUBJECT => "Customer account status has changed!",
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-		} # end if
-if ( 0 ) {
-		if ( $Company->supplier() ne $param{'rdbSupplier'} ) {
-			my %info;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-			$info{'Company'} = $Company;
-			my @to = openprint::User::find('company_id'=>$index);
+				$email_template = ssi::variable_substitution( \$email_template, \%info ); 
+				my %mail = (
+						SMTP	=> $config{'Mail Server'},
+						FROM	=> $config{'AdministratorEmail'},
+						TO		=> join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
+						SUBJECT => "Customer account status has changed!",
+						);
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+			} # end if
+	if ( 0 ) {
+			if ( $Company->supplier() ne $param{'rdbSupplier'} ) {
+				my %info;
+				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+				$info{'Company'} = $Company;
+				my @to = openprint::User::find('company_id'=>$index);
 
-			$_ = $param{'rdbSupplier'} eq 'Y' ? 'customer_account_supplier.html' : 'customer_account_non_supplier.html';
-			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
-			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-			$email_template = ssi::variable_substitution( \$email_template, \%info );
-			my %mail = (
-					SMTP	=> $config{'Mail Server'},
-					FROM	=> $config{'AdministratorEmail'},
-					TO		=> join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
-					SUBJECT => 'Customer account status has changed!',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
-		} # end if
-} # end if
+				$_ = $param{'rdbSupplier'} eq 'Y' ? 'customer_account_supplier.html' : 'customer_account_non_supplier.html';
+				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
+				$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
+				$email_template = ssi::variable_substitution( \$email_template, \%info );
+				my %mail = (
+						SMTP	=> $config{'Mail Server'},
+						FROM	=> $config{'AdministratorEmail'},
+						TO		=> join( ',', map { sprintf('"%s" <%s>', $_->name(), $_->email() ); } @to ),
+						SUBJECT => 'Customer account status has changed!',
+						);
+				misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($email_template), 'text/html', 'quoted-printable' ) );
+			} # end if
+	} # end if
+		} # end if Company->id()
 
 		$param{'start_year'} =~ s/\D//g;
 		if ( $param{'start_year'} ) {
@@ -412,43 +424,30 @@ if ( 0 ) {
 		$Company->undelete();
 	} # end if btnFunction
 
-# we no longer default to displaying the first record.	The user must select one.,
-	if ( $index > 0 ) {
-		my $customer = new openprint::obj_customer( $log, $dbh, $index );
-
-		$variable{'txtPricingLevel'} = sprintf ( "%.0f", $variable{'txtPricingLevel'} ) . "%";
-		$variable{'txtDownpayment'} = sprintf ( "%.0f", $variable{'txtDownpayment'} ) . "%";
-
-		openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
-		my $shipping_address = $customer->get_shipping_address();
-		@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
-		$variable{'rdbShippingSalutation'.$variable{'rdbShippingSalutation'}} = 'CHECKED';
-
-		my $customer_credit = new openprint::customer_credit( $index );
-		@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
-	} # end if
-
-	# Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
-	my @available_categories = map { $_->id(), $_->name() } openprint::MarketingCategory::find();
-	
 	# get categories this customer is in we do it this way to limit databse transaction to 2.
 	my @customers_categories;
-	if ( $index ) {
-		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
-		@customers_categories = sql::execute( $log, $dbh, $_, $index );
-	} # end if
-	$variable{'selectCustomerCategories'} = ssi::make_select( \@available_categories, \@customers_categories );
-
-	$variable{'ddmShippingStateProvince'} = ssi::return_states_and_provinces($variable{'ddmShippingStateProvince'});
-	$variable{'ddmShippingCountry'} = ssi::return_countries($variable{'ddmShippingCountry'});
-
 	my $total;
 	my $payments;
 	if ( $index ) {
+		my $customer = new openprint::obj_customer( $log, $dbh, $index );
+		openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
+		my $shipping_address = $customer->get_shipping_address();
+		@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
+		my $customer_credit = new openprint::customer_credit( $index );
+		@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
+		$_ = q{SELECT category_id FROM Companies_in_Marketing_Categories WHERE Company_id =?};
+		@customers_categories = sql::execute( $log, $dbh, $_, $index );
 		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Paid')";
 		( $total ) = sql::execute( $log, $dbh, $_, $index );
 		( $payments ) = misc::sum( map { $_->amount() } openprint::Payment::find('completed'=>1, 'payor_id'=>$index, 'recipient_id'=>$session{'company_id'} ) );
 	} # end if
+
+	$variable{'txtPricingLevel'} = sprintf ( "%.0f", $variable{'txtPricingLevel'} ) . "%";
+	$variable{'txtDownpayment'} = sprintf ( "%.0f", $variable{'txtDownpayment'} ) . "%";
+
+	# Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
+	my @available_categories = map { $_->id(), $_->name() } openprint::MarketingCategory::find();
+	$variable{'selectCustomerCategories'} = ssi::make_select( \@available_categories, \@customers_categories );
 
 	$variable{'CreditBalance'} = '$ '.sprintf( '%.2f', ( $total - $payments ) );
 	if ( $variable{'txtCreditLimit'} < ($total - $payments) ) {
@@ -601,6 +600,23 @@ sub credit_application {
 
 	} # end if
 } # end sub admin_credit_app
+
+sub _company_accounting_contacts {
+	$variable{'Company'} = new openprint::Company( $param{'company_id'} );
+	if ( $param{'new_accounting_contact_id'} ) {
+		$variable{'error'} .= sql::insert( undef, undef, 'companies_accountingcontacts', 'company_id', $variable{'Company'}->id(), 'user_id', $param{'new_accounting_contact_id'} );
+	} # end if
+} # end sub
+
+sub payment_options {
+	require openprint::PaymentType;
+	$variable{'PaymentType'} = new openprint::PaymentType( $param{'paymenttype_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $variable{'PaymentType'}->save(\%param);
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $variable{'PaymentType'}->delete();
+	} # end if
+} # end sub payment_options
 
 1;
 __END__

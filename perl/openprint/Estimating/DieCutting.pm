@@ -30,6 +30,7 @@ my @variables = (
 	'OverridePrice1','OverridePrice2','OverridePrice3',
 	'Markup1','Markup2','Markup3',
 	'txtPrice1','txtPrice2','txtPrice3',
+	'MPrice1','MPrice2','MPrice3',
 	'DiePrice1','DiePrice2','DiePrice3', 'OverrideDiePrice',
 	'StrippingPrice1','StrippingPrice2','StrippingPrice3', 'OverrideStrippingPrice',
 );
@@ -82,6 +83,7 @@ sub calc_price {
 	if ( ! %MakeReady ) {
 		%MakeReady = openprint::service::get_price_object( 'DieCuttingMakeReady' ,undef, $Equipment );
 	} # end if
+	$Total{'MPrice'} = 0;
 	$Total{'MakeReady'} = \%MakeReady;
 	$Total{'Total'} += $MakeReady{'Price'};
 
@@ -149,8 +151,10 @@ sub calc_price {
 		} # end if
 
 		$Total{'Stripping'} = \%Stripping;
+		$Total{'MPrice'} += $Stripping{'Price'};
 		$Total{'Total'} += $Stripping{'Total'};
 	} else {
+		$Total{'MPrice'} += ( $$specs{"StrippingPrice$qty_index"} / $impressions ) * 1000;
 		$Total{'Total'} += $$specs{"StrippingPrice$qty_index"};
 	} # end if
 
@@ -165,6 +169,7 @@ sub calc_price {
 	$ServicePrice{'Total'} = $impressions * $ServicePrice{'Price'} / 1000;
 	$Total{'ServicePrice'} = \%ServicePrice;
 	$Total{'Total'} += $ServicePrice{'Total'};
+	$Total{'MPrice'} += ( $ServicePrice{'Total'} / $impressions ) * 1000;
 # the extra services are priced by qty, not impressions.
 #if ( $folding eq 'Y' ) {
 #my $folding_price =  openprint::service::get_price( 'HandFolding'.$die_complexity ,$qty, '') / 1000; 
@@ -180,6 +185,7 @@ sub calc_price {
 		} # end if
 		$Total{'HoleClearingPrice'} = \%HoleClearingPrice;
 		$Total{'Total'} += $HoleClearingPrice{'Total'};
+		$Total{'MPrice'} += ( $HoleClearingPrice{'Total'} * $hole_clearing_holes / $impressions ) * 1000;
 	} # end if
 
 	$Total{'txtPrice'} = $Total{'Total'};
@@ -255,14 +261,14 @@ sub calc {
 	} # end foreach signature
 
 	my @possible_equipment = openprint::Equipment::find( 'use_in_estimating'=>1, 'Specifications'=>{'Die Cutting Capable'=>'Y'} );
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
-		next if ! $qty;
 
 		my $totalPrice = 0;
 		my $totalUnitPrice = 0;
+		my $totalMPrice = 0;
 		my $totalDiePrice = 0;
 		my $totalStrippingPrice = 0;
 
@@ -354,6 +360,7 @@ sub calc {
 				} # end if
 				$totalPrice += $bestPrice{'txtPrice'};
 				$totalUnitPrice += $bestPrice{'txtUnitPrice'};
+				$totalMPrice += $bestPrice{'MPrice'};
 				$totalDiePrice += $bestPrice{'DiePrice'}{'Price'} if $bestPrice{'DiePrice'};
 				$totalStrippingPrice += $bestPrice{'Stripping'}{'Total'} if $bestPrice{'Stripping'};
 
@@ -390,6 +397,7 @@ sub calc {
 			@no_outputs = sets::union( "txtPrice$qty_index", @no_outputs );
 		} # end if
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalUnitPrice );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalMPrice*(1+$$specs{'Markup'.$qty_index}/100) );
 
 	} # end foreach qty
 

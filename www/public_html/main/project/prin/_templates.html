@@ -3,7 +3,7 @@
 
 <? echo (
 	my $html = '';
-	foreach my $ProjectType ( openprint::ProjectType::find('strid'=>$$variable{'ProjectTypeID'}) ) {
+	foreach my $ProjectType ( openprint::ProjectType::find('name'=>$$variable{'ProjectTypeID'}) ) {
 		my %types = map { $_->type(), 1 } $ProjectType->Templates();
 		foreach my $type ( keys %types ) {
 			$html .= "options['$type'] = new Array();\n";

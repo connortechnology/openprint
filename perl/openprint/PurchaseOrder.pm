@@ -20,6 +20,7 @@ require openprint::User;
 require openprint::Tax;
 require openprint::PurchaseOrder_Content;
 require openprint::PurchaseOrder_Log;
+require openprint::Email;
 
 my $debug = 0;
 
@@ -37,6 +38,7 @@ $serial = 'Purchaseorders_id_seq';
 	'authorized_by'		=>	'authorized_by',
 	'authorized_on'		=>	'authorized_on',
 	'delivered_on'		=>	'delivered_on',
+	'delivered_on_switch'		=>	'delivered_on_switch',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
 	'federaltax'		=>	'federaltax',
@@ -59,6 +61,7 @@ $serial = 'Purchaseorders_id_seq';
 	'vendor_postalcode'	=>	'vendor_postalcode',
 	'vendor_phone'		=>	'vendor_phone',
 	'vendor_fax'		=>	'vendor_fax',
+	'vendor_sms'		=>	'vendor_sms',
 	'vendor_email'		=>	'vendor_email',
 	'shipto_contact'	=>	'shipto_contact',
 	'shipto_name'		=>	'shipto_name',
@@ -70,6 +73,7 @@ $serial = 'Purchaseorders_id_seq';
 	'shipto_postalcode'	=>	'shipto_postalcode',
 	'shipto_phone'		=>	'shipto_phone',
 	'shipto_fax'		=>	'shipto_fax',
+	'shipto_sms'		=>	'shipto_sms',
 	'shipto_email'		=>	'shipto_email',
 	'manifest_id'		=>	'manifest_id',
 );
@@ -227,6 +231,10 @@ sub save {
 		$sql{'subtotal'} += $C->total();
 	} # end foreach
 	$sql{'total'} = $sql{'subtotal'};
+	if ( ! $sql{'currency_id'} ) {
+		my $Currency = openprint::Currency::get_current();
+		$sql{'currency_id'} = $Currency->id();
+	} # end if
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 	if ( ! $$self{'id'} ) {
@@ -297,7 +305,7 @@ sub send_to_vendor {
 			);
 	my @attachments = ();
 
-	my $email_template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_body.html\"-->";
 	$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
@@ -308,30 +316,37 @@ sub send_to_vendor {
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
 			FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-			TO      => sprintf( '"%s" <%s>', $self->vendor_contact(), $self->vendor_email() ),
 			SUBJECT => 'Purchase Order ' . $self->id() . ' from ' . $self->vendor_name(),
 			);
 
 	my $results = 'PO ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
-	if ( $self->vendor_email() ) {
+	foreach my $email ( split(',', $self->vendor_email() ) ) {
+		$email =~ s/^\s*(.*)\s*$/$1/;
+		next if ! $email;
+		$mail{'TO'}	= $email;
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
-	} # end if
+	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
-		$mail{'TO'} = sprintf( '"%s" <%s>', $self->shipto_contact(), $self->shipto_email() );
-		misc::send_email_with_attachment( $log, \%mail, @attachments );
-		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
+		my $Email = new openprint::Email();
+		$results .= $Email->send( 
+				TO	=>	[ split(',', $self->shipto_email() ) ],
+				FROM	=>	$mail{'FROM'},
+				SUBJECT	=>	$mail{'SUBJECT'},
+				ATTACHMENTS =>	\@attachments,
+				);
 	} # end if
 	if ( $self->notifications() ) {
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 		@attachments = ('', $_, 'text/html', 'quoted-printable');
-		$results .= 'Notification sent to: ';
-		foreach my $U ( $self->notifications() ) {
-			$mail{'TO'} = sprintf( '"%s" <%s>', $U->name(), $U->email() );
-			misc::send_email_with_attachment( $log, \%mail, @attachments );
-			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
-		} # end foreach U
+		my $Email = new openprint::Email();
+		$results .= 'Notifications: <br/>' . $Email->send( 
+				TO	=>	[ map { new openprint::User( $_ ) } $self->notifications() ],
+				FROM	=>	$mail{'FROM'},
+				SUBJECT	=>	$mail{'SUBJECT'},
+				ATTACHMENTS =>	\@attachments,
+				);
 	} # end if
 
 	my $L = new openprint::PurchaseOrder_Log();
@@ -486,5 +501,28 @@ sub Logs {
 	return openprint::PurchaseOrder_Log::find( 'po_id'=>$$self{'id'}, 'order'=>'created_on DESC' );
 } # end sub Logs
 
+sub is_FSC {
+	my ( $self ) = @_;
+	foreach my $C ( $self->Contents() ) {
+		return 1 if $C->description() =~ /FSC/i;
+	} # end foreach C
+} # end sub is_FSC
+
+sub is_PEFC {
+	my ( $self ) = @_;
+	foreach my $C ( $self->Contents() ) {
+		return 1 if $C->description() =~ /PEFC/i;
+	} # end foreach C
+} # end sub is_PEFC
+sub copy {
+	my $self = shift;
+	my $New = new openprint::PurchaseOrder();
+	@$New{keys %fields} = @$self{keys %fields};
+	foreach ( 'id', 'authorized', 'authorized_by'	, 'authorized_on', 'delivered_on' ) {
+		delete $$New{$_};
+	} # end foreach
+	$$New{'created_by'} = $session{'user_id'};
+	return $New;
+} # end sub copy
 1;
 #__END__

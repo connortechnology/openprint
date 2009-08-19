@@ -55,6 +55,15 @@
 		<select name="ddmPressCompletionDateDay-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, document.f1.elements['ddmPressCompletionDateMonth-<?SignatureIndex?>'],this, this.value);"><?days?></select>
 		<select name="ddmPressCompletionDateYear-<?SignatureIndex?>" size="1"><?years?></select>
 	</p>
+<? eval (
+	if ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq '' ) {
+		if ( openprint::service::status( @$variable{'ProjectIndex','ServiceIndex'} ) eq 'Complete' ) {
+			$$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} = 'Yes';
+		} else {
+			$$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} = 'No';
+		} # end if
+	} # end if
+) ?>
 	<p>
 		<label>Complete:</label>
 		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>Y" name="rdbPressComplete-<?SignatureIndex?>" value="Yes" <? echo ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq 'Yes' ? 'checked="checked"' : '' ) ?> />
@@ -62,21 +71,16 @@
 		<input type="radio" id="rdbPressComplete-<?SignatureIndex?>N" name="rdbPressComplete-<?SignatureIndex?>" value="No" <? echo ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} ne 'Yes' ? 'checked="checked"' : '' ) ?> />
 		<label class="radio" for="rdbPressComplete-<?SignatureIndex?>N">No</label>
 	</p>
-</div>
+	<p><label>Schedule:</label>
 <? echo ( 
-	my $html = '<p class="buttons">';
-	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
-
-		my @schedule = openprint::press_schedule::find('project_id'=>$$variable{'ProjectIndex'}, 'service_id'=>$$variable{'ServiceIndex'} );
-		if ( @schedule ) {
-			if ( ! $schedule[0]{starttime} ) {
-			$html .= 'Pending Schedule';
-			} else {
-			$html .= 'Scheduled to run at ' . $schedule[0]{starttime};
-			} # end if
-		#} else {
-			#$html .= ssi::writeButton( $log, $dbh, 'Schedule'.$$variable{'SignatureIndex'}, 'schedule.gif', '', '', 'Add to Schedule' );
+	my @schedule = openprint::ScheduledJob::find('project_id'=>$$variable{'Project'}->id(), 'service_id'=>$$variable{'ServiceIndex'} );
+	if ( @schedule ) {
+		if ( ! $schedule[0]{starttime} ) {
+			return 'Pending Schedule';
 		} # end if
+		return'Scheduled to run at ' . $schedule[0]{starttime};
 	} # end if
-	return $html . '</p>';
+	return 'Not scheduled.';
 ) ?>
+	</p>
+</div>

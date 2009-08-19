@@ -1,19 +1,19 @@
 <? eval ( $$variable{'error'} = ''; ) ?>
-<? if ( $openprint::param{'txtCompanyName'} ) ?>
+<? if ( $param{'txtCompanyName'} ) ?>
 <? eval ( 
-	if ( openprint::Company::find( 'name'=>$openprint::param{'txtCompanyName'} ) ) {
+	if ( openprint::Company::find( 'name'=>$param{'txtCompanyName'} ) ) {
 		$$variable{'error'} = 'A company with that name aready exists.  Please select it from the dropdown, or change the name of the company below.';
 	} else {
 		my $Company = new openprint::Company();
 		$Company->set( {
-			'name'		=>	$openprint::param{'txtCompanyName'},
-			'address1'	=>	$openprint::param{'txtAddress1'},
-			'address2'	=>	$openprint::param{'txtAddress2'},
-			'city'		=>	$openprint::param{'txtCity'},
-			'state'		=>	$openprint::param{'ddmStateProvince'},
-			'country'	=>	$openprint::param{'ddmCountry'},
-			'phone'		=>	$openprint::param{'txtPhone'},
-			'fax'		=>	$openprint::param{'txtFax'},
+			'name'		=>	$param{'txtCompanyName'},
+			'address1'	=>	$param{'txtAddress1'},
+			'address2'	=>	$param{'txtAddress2'},
+			'city'		=>	$param{'txtCity'},
+			'state'		=>	$param{'ddmStateProvince'},
+			'country'	=>	$param{'ddmCountry'},
+			'phone'		=>	$param{'txtPhone'},
+			'fax'		=>	$param{'txtFax'},
 		} );
 		$$variable{'error'} .= $Company->save();
 		$$variable{'company_id'} = $Company->id();	
@@ -25,10 +25,10 @@
 <? if ( $$variable{'error'} ) ?>
 <div class="error"><?error?></div>
 <? endif ( $$variable{'error'} ) ?>
-<? endif ( $openprint::param{'txtCompanyName'} ) ?>
+<? endif ( $param{'txtCompanyName'} ) ?>
 <select name="company_id" onchange="company_id_onchange(this);">
 <option value="">Select a Company</option>
 <? echo ( 
-		openprint::Company::get_dropdown( $$variable{'company_id'} ? $$variable{'company_id'} : $openprint::session{'company_id'} );
+		openprint::Company::get_dropdown( $$variable{'company_id'} ? $$variable{'company_id'} : $session{'company_id'} );
 		) ?>
 </select>

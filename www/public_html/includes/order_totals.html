@@ -5,30 +5,30 @@
 	</tr>
 	<tr>
 		<td align="right">Sub Total:</td>
-		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->sub_total() ); ) ?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->sub_total() ) ); ) ?></td>
 	</tr>
-	<? if ( $$variable{'GST'} ne '' ) ?>
+	<? if ( defined $$variable{'Order'}->federal_tax() ) ?>
 	<tr>
 		<td align="right">Federal Tax:</td>
-		<td align="right"><?CurrencySymbol?><?GST?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->federal_tax() ) ); ) ?></td>
 	</tr>
-	<? endif ( $$variable{'GST'} ne '' ) ?>
-	<? if ( $$variable{'PST'} ne '' ) ?>
+	<? endif ( defined $$variable{'Order'}->federal_tax() ) ?>
+	<? if ( defined $$variable{'Order'}->state_tax() ) ?>
 	<tr>
 		<td align="right">State/Prov Tax:</td>
-		<td align="right"><?CurrencySymbol?><?PST?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->state_tax() ) ); ) ?></td>
 	</tr>
-	<? endif ( $$variable{'PST'} ne '' ) ?>
-	<? if ( $$variable{'HST'} ne '' ) ?>
+	<? endif ( defined $$variable{'Order'}->state_tax() ) ?>
+	<? if ( defined $$variable{'Order'}->harmonized_tax() ) ?>
 	<tr>
 		<td align="right">Harmonized Tax:</td>
-		<td align="right"><?CurrencySymbol?><?HST?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->harmonized_tax() ) ) ?></td>
 	</tr>
-	<? endif ( $$variable{'HST'} ne '' ) ?>
+	<? endif ( defined $$variable{'Order'}->harmonized_tax() ) ?>
 	<? if ( $$variable{'TOTAL'} ) ?>
 	<tr class="totals">
 		<td align="right"><b>TOTAL:</b></td>
-		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'TOTAL'} ); ) ?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'TOTAL'} ) ); ) ?></td>
 	</tr>
 	<? endif ( $$variable{'TOTAL'} ) ?>
 </table>

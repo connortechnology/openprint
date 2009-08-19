@@ -1,8 +1,10 @@
 <? eval (
-	$$variable{'ServiceIndex'} = $openprint::param{'service_id'} if $openprint::param{'service_id'} and ! $$variable{'ServiceIndex'};
-	$$variable{'ProjectIndex'} = $openprint::param{'project_id'} if $openprint::param{'project_id'} and ! $$variable{'ProjectIndex'};
-	$$variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} ) if $openprint::param{'project_id'} and ! $$variable{'Project'};
-	my $Company = new openprint::Company( $openprint::session{'company_id'} );
+	$$variable{'ServiceIndex'} = $param{'service_id'} if $param{'service_id'} and ! $$variable{'ServiceIndex'};
+	$$variable{'Project'} = new openprint::Project( $param{'project_id'} ) if $param{'project_id'} and ! $$variable{'Project'};
+	if ( ! $$variable{'ProjectIndex'} ) {
+		$$variable{'ProjectIndex'} = $$variable{'Project'}->id();
+	} # end if
+	my $Company = new openprint::Company( $session{'company_id'} );
 
 	my $specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
 
@@ -25,7 +27,7 @@
 			);
 
 # Load from customer
-		my $customer = new openprint::obj_customer( $log, $dbh, $openprint::session{'company_id'} );
+		my $customer = new openprint::obj_customer( $log, $dbh, $session{'company_id'} );
 		my $shipping_address = $customer->get_shipping_address();
 		my %shipping_specs;
 		@shipping_specs{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields} ) );
@@ -71,7 +73,7 @@
 			);
 	if ( ! ( $$specs{'ToEmail'} and $$specs{'ToPhone'} ) ) {
 		require openprint::User;
-		my $User = new openprint::User( $openprint::session{'user_id'} );
+		my $User = new openprint::User( $session{'user_id'} );
 		foreach my $spec ( keys %UserSpecs ) {
 			$$specs{$spec} = $User->get($UserSpecs{$spec}) if ! $$specs{$spec};
 		} # end foreach
@@ -123,7 +125,7 @@
 			</select>
 	</p>
 	<p> 
-		<label>State/Province:<span class="requiredFieldIndicator">*</span></label>
+		<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_state">State/Province:</span><span class="requiredFieldIndicator">*</span></label>
 		<select name="ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>">
 			<option value=""> Select </option>
 			<? echo ( join('',
@@ -138,7 +140,7 @@
 		<input type="text" name="ToCity-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCity-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
 	</p>
 	<p> 
-		<label>Zip/Postal Code:<span class="requiredFieldIndicator">*</span></label>
+		<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_postal">Zip/Postal Code:</span><span class="requiredFieldIndicator">*</span></label>
 		<input type="text" name="ToPostalCode-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPostalCode-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
 	</p>
 	<p> 

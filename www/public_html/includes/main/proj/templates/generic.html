@@ -4,6 +4,8 @@
 		my @templates = sql::execute( undef, undef, q{SELECT DISTINCT type FROM projecttemplate WHERE projecttype_id=? ORDER BY type}, $$variable{'Project'}->type_id() );
 		if ( @templates == 1 ) {
 			return sprintf('<input type="hidden" name="rdbTemplateType" value="%s"/>', $templates[0] );
+		} elsif ( @templates == 0 ) {
+			return '';
 		} # end if
 		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/templates/project_template_select.html' );
 		foreach my $template ( @templates ) {

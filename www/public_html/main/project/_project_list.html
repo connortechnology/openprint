@@ -4,7 +4,7 @@
 
 	$session{'/main/project/history.html?lastupdated'} = time;
 
-	foreach ( 'ddmStatus','CreatedStartYear','CreatedStartMonth','CreatedStartDay','CreatedEndYear','CreatedEndMonth','CreatedEndDay','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay' ) {
+	foreach ( 'ddmStatus','CreatedStartYear','CreatedStartMonth','CreatedStartDay','CreatedEndYear','CreatedEndMonth','CreatedEndDay','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay', 'predefined','type_id' ) {
 		$session{"/main/project/history.html?$_"} = $param{$_} if exists $param{$_};
 	} # end foreach
 	if ( ! $session{'/main/project/history.html?ddmStatus'} ) {
@@ -25,6 +25,8 @@
 		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} ),
 		'company_id'		=> $session{'company_id'},
 		'status'			=> $session{'/main/project/history.html?ddmStatus'},
+		'type_id'			=> $session{'/main/project/history.html?type_id'},
+		'predefined'		=> $session{'/main/project/history.html?predefined'},
 		'reference'				=> $param{'Reference'},
 		'and'				=> ($param{'ProjectID'} ? " AND id LIKE '$param{'ProjectID'}\%'" : undef ),
 		'order'				=> 'id DESC',

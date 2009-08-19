@@ -159,7 +159,7 @@ sub get_best_prices {
 			my $Company = new openprint::Company( $cust_id );
 
 			my $pricingpercent = $Company->discount();
-			if ( $pricingpercent ) {
+			if ( 1*$pricingpercent ) {
 				$pricingpercent = $pricingpercent/100;
 				for ( my $index = 0; $index < @pricing; $index += 1 ) {
 					if ( $pricing[$index]->{Discountable} ne 'N' ) {
@@ -173,7 +173,7 @@ sub get_best_prices {
 			} # end if
 		} # end if
 		if ( $openprint::config{'ApplyMarkup'} ) {
-			
+		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
 			$pricingpercent =~ s/[^\d\.\-]//g;
 			$pricingpercent /= 100;
@@ -223,6 +223,21 @@ sub get_best_price_object {
 	} # end foreach
 	return;
 } # end sub get_best_price 
+
+sub adjust_price {
+	my ( $Price, $options ) = @_;
+	if ( $openprint::config{'ApplyMarkup'} ) {
+#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
+		my $pricingpercent = $openprint::config{'ApplyMarkup'};
+		$pricingpercent =~ s/[^\d\.\-]//g;
+		$pricingpercent /= 100;
+# the if here is to preserve empty pricing.	if pricei s empty, we display call, instead of 0.00.
+		if ( $$Price{'Price'} ne '' ) {
+			$$Price{'Price'} *= ( 1 + $pricingpercent );
+		} # end if
+	} # end if
+	return openprint::Currency::convert( $Price );
+} # end sub adjust_price
 
 1;
 

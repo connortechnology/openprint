@@ -1,7 +1,6 @@
 <? eval (
 	require openprint::Manifest;
 
-	ssi::save_params( '/employee/inventory/manifests.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','supplier_id' ) );
 
 	if ( $param{'manifest_id'} ) {
 		@{$$variable{'Manifests'}} = openprint::Manifest::find( 
@@ -22,19 +21,19 @@
 		my %search = (
 			'id_like'	=> $param{'manifest_like'},
 			'received_on_start'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/manifests.html?created_on_start_year',
-				'/employee/inventory/manifests.html?created_on_start_month',
-				'/employee/inventory/manifests.html?created_on_start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
-				'/employee/inventory/manifests.html?created_on_start_year',
-				'/employee/inventory/manifests.html?created_on_start_month',
-				'/employee/inventory/manifests.html?created_on_start_day'} ) : undef,
+				'/employee/inventory/manifests.html?received_on_start_year',
+				'/employee/inventory/manifests.html?received_on_start_month',
+				'/employee/inventory/manifests.html?received_on_start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+				'/employee/inventory/manifests.html?received_on_start_year',
+				'/employee/inventory/manifests.html?received_on_start_month',
+				'/employee/inventory/manifests.html?received_on_start_day'} ) : undef,
 			'received_on_end'	=>	Date::Calc::check_date( @session{
-				'/employee/inventory/manifests.html?created_on_end_year',
-				'/employee/inventory/manifests.html?created_on_end_month',
-				'/employee/inventory/manifests.html?created_on_end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
-				'/employee/inventory/manifests.html?created_on_end_year',
-				'/employee/inventory/manifests.html?created_on_end_month',
-				'/employee/inventory/manifests.html?created_on_end_day'} ) : undef,
+				'/employee/inventory/manifests.html?received_on_end_year',
+				'/employee/inventory/manifests.html?received_on_end_month',
+				'/employee/inventory/manifests.html?received_on_end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+				'/employee/inventory/manifests.html?received_on_end_year',
+				'/employee/inventory/manifests.html?received_on_end_month',
+				'/employee/inventory/manifests.html?received_on_end_day'} ) : undef,
 			'order'		=>	'received_on',
 		);
 		$search{'supplier_id'} = $session{'/employee/inventory/manifests.html?supplier_id'} if $session{'/employee/inventory/manifests.html?supplier_id'};
@@ -61,8 +60,8 @@
 				$html .= '<tr>';
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="manifests" value="$$Manifest{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%1$s</a></td>', $$Manifest{'id'} );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', @$Manifest{'id','po_id'} );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', @$Manifest{'id','docket'} );
+				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, join('<br/>', $Manifest->po_ids() ) );
+				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, join('<br/>', $Manifest->dockets() ) );
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', @$Manifest{'id'}, $Manifest->Vendor()->name() );
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%s">%s</a></td>', $$Manifest{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($Manifest->received_on()) ) );
 

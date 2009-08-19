@@ -1,0 +1,46 @@
+<fieldset class="Signature"><legend>Information for form <?SignatureIndex?>:</legend>
+	<p>
+<? echo ( my $html = '';
+	$html .= openprint::service::summary( $$variable{'Project'}->id(), $$variable{'ServiceIndex'} ) . '<br/>';
+	$html .= openprint::service::summary( $$variable{'Project'}->id(), $$variable{'ServiceIndex'}, $$variable{'Project'}->ordered_quantity_index() );
+	return $html;
+) ?>
+	</p>
+	<form id="f<?ServiceIndex?>" name="f<?ServiceIndex?>" method="post" action="/employee/production/project_view.html">
+		<? echo ( include( $ENV{'DOCUMENT_ROOT'}.'/employee/proj/prin/_previews.html'); ) ?>
+		<div class="leftColumn">
+			<? echo (
+				my $html = '';
+				my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
+				my $I = new openprint::Imposition();
+				$I->load_used( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
+				$html .= '<p><label>RunStyle:</label>'.$I->runstyle(). '</p>';
+				$html .= '<p><label>Imposition:</label>'.$I->to_string().'</p>';
+				return $html;
+			) ?>
+		</div><div class="rightColumn">
+			<? echo( include( $ENV{'DOCUMENT_ROOT'}.'/includes/employee/feedback/press_completion.html'); ) ?>
+			<p class="buttons">
+		<? echo ( 
+			my $html = '';
+			$html .= ssi::writeButton( $log, $dbh, 'Save'.$$variable{'ServiceIndex'},'save.gif', 'f'.$$variable{'ServiceIndex'}.'.submit();', '', 'Save' );
+			$html .= ssi::writeButton( $log, $dbh, 'Reset'.$$variable{'ServiceIndex'},'reset.gif', 'f'.$$variable{'ServiceIndex'}.'.reset();', '', 'Reset' );
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+                if ( ! openprint::ScheduledJob::find('project_id'=>$$variable{'Project'}->id(),'service_id'=>$$variable{'ServiceIndex'} ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule', 'addtopressschedule.gif', sprintf(q`f%1$s.btnFunction.value='AddToPressSchedule';f%1$s.submit();`,$$variable{'ServiceIndex'}), '', 'Add To Press Schedule' );
+                } # end if
+            } # end if
+
+			return $html;
+) ?>
+			</p>
+		</div>
+		<input type="hidden" name="btnFunction" value="Save"/>
+		<? echo ( include ( $ENV{'DOCUMENT_ROOT'}.'/includes/employee/feedback/hidden_fields.html'); ) ?>
+	</form>
+	<br class="spacer"/>
+	
+	<fieldset><legend>Production Feedback</legend><div id="ProductionFeedback-<?ServiceIndex?>">
+		<? echo ( include( $ENV{'DOCUMENT_ROOT'}.'/employee/proj/prin/_production_feedback.html' ); ) ?>
+	</div></fieldset>
+</fieldset>

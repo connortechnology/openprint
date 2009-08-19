@@ -87,6 +87,17 @@ sub load_file {
 	return undef;
 } # end sub load_file
 
+sub save_file {
+	my ( $log, $file, $contents ) = @_;
+	if ( open( F, "> $file" ) ) {
+		print F $contents;
+	} else {
+		$log->warn( "Error opening $file, Reason: $!" );
+		return "Error opening $file, Reason: $!";
+	} # end if
+	return;
+} # end sub save_file
+
 sub build_city_prov_country {
 	my ( $city, $prov, $country ) = @_;
 	my $cpc = $city;
@@ -127,6 +138,10 @@ sub data_to_csv {
 
 sub export_csv {
 	my ( $r, $log, $variable, $filename, $header, $data ) = @_;
+	if ( scalar @{$header}<= 0 ) {
+		$log->error('Invalid Header!');
+		return;
+	} # end if
 	my @data = data_to_csv( $header, $data );
 	return export( $r, $log, $variable, $filename, \@data );
 } # end sub
@@ -141,13 +156,14 @@ sub export {
 } # end sub export
 
 sub get_destination {
-    my ( $r, $log, $uri ) = @_;
+    my ( $r, $uri ) = @_;
     my $dest = $uri ? $uri : $r->uri();
     my @keys = $r->param();
     if ( @keys ) {
         $dest .= '?';
         my @params;
         foreach my $key ( @keys ) {
+			next if $key eq 'password';
             push @params, join( '=', ($key, $r->param($key)));
         } # end foreach
         $dest .=  join( '&', @params );
@@ -198,7 +214,7 @@ sub error {
 sub trim {
 	my @results;
 	foreach my $thing ( @_ ) {
-		$thing =~ s/^\s*(.*)\s*$/$1/;
+		s/^\s+//, s/\s+$// for $thing;
 		push @results, $thing;
 	}
 	return @results;
@@ -275,6 +291,85 @@ sub interval_to_seconds {
     return ($h*3600) + ($m*60) + $s;
 } # end sub interval_to_seconds
 
+sub rle_decode {
+	my ( $source, $width, $height ) = @_;
+	my $result = '';
+	my $position = 0;
+    while ( $source ) {
+        my $l = unpack( 'C', $source );
+        if ( $l == 128 ) {
+			# Could be end of scan line
+            substr($source, 0, 1) = '';
+#$openprint::log->warn("scanline length: $position");
+#$position = 0;
+        } elsif ($l > 128) {
+            if (length($source) < 2) {
+                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
+                return $result;
+            } # end if
+            $result .= substr($source, 1, 1) x (257 - $l);
+            substr($source, 0, 2) = '';
+			$position += 2;
+        } else {
+            if (length($source) < $l + 1) {
+                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
+                return $result;
+            }
+            $result .= substr($source, 1, $l+1);
+            substr($source, 0, $l + 2) = '';
+			$position += $l+2;
+        }
+    } # end while source
+	return $result;
+} # end sub rle_decode
+
+# We do not encode single chars, must be more than 2.
+sub rle_encode {    
+	my $input = $_[0];
+	my $output;
+
+	my $last = '';
+	my $count = 0;
+
+	while ( $input ) {
+		my $next = substr($input, 0, 1);
+		substr($input, 0, 1) = '';
+
+		if ( $next ne $last ) {
+			if ( $count == 1 ) {
+				$output .= pack( 'C', 2 );
+				$output .= $last.$next;;
+				$count = 0;
+				$last = '';
+			} elsif ( $count > 1 ) {
+				$output .= pack( 'C', 257-$count );
+				$output .= $last;
+				$last = $next;
+				$count = 1;
+			} else {
+				$last = $next;
+				$count = 1;
+			} # end if
+		} else {
+			if ( $count == 127 ) {
+				$output .= pack( 'C', 257-$count );
+				$output .= $last;
+				$count = 0;
+			} # end if
+			$count += 1;
+		} # end if
+	} # end while
+	if ( $count ) {
+		$output .= pack('C', 257-$count );
+		$output .= $last;
+	} # end if
+	return $output. (pack('C', 128));
+} # end sub rle_encode
+
+sub hms2time {
+	my ($h,$m,$s) = split(':', $_[0]);
+	return ($h*3600) + ($m*60) + $s;
+} # end sub hms2time
 1;
 
 __END__

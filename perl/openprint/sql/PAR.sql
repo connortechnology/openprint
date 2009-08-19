@@ -20,7 +20,24 @@ CREATE TABLE PAR (
 	created_on	timestamp with time zone NOT NULL default NOW(),
 	updated_on	timestamp with time zone NOT NULL default NOW(),
 	deleted		boolean default false,
-	area		TEXT,
-	reason		TEXT,
+	area_id		INTEGER NOT NULL,FOREIGN KEY (area_id) REFERENCES PAR_Areas (id),
+	reason_id	INTEGER NOT NULL,FOREIGN KEY (reason_id) REFERENCES PAR_Reasons (id),
 	PRIMARY KEY (id)
 );
+CREATE TABLE PAR_Areas (
+    id  SERIAL NOT NULL,
+    name    TEXT NOT NULL,
+    assignee_id INTEGER, FOREIGN KEY (assignee_id) REFERENCES Users (index),
+    deleted     BOOLEAN,
+    sorting     INTEGER,
+    PRIMARY KEY (id)
+);
+CREATE TABLE PAR_Reasons (
+    id  SERIAL NOT NULL,
+    area_id INTEGER NOT NULL, FOREIGN KEY (area_id) REFERENCES CAR_Areas (id),
+    name    TEXT NOT NULL,
+    deleted     BOOLEAN,
+    sorting     INTEGER,
+    PRIMARY KEY (id)
+);
+

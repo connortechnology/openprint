@@ -15,6 +15,7 @@ my %variables = (
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 	'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
+	'MPrice1'	=> ['save','output'], 'MPrice2'	=> ['save','output'], 'MPrice3'	=> ['save','output'], 
 	'txtQuantity1' => ['save'], 'txtQuantity2' => ['save'], 'txtQuantity3' => ['save'],
 );
 sub variables {
@@ -53,11 +54,10 @@ sub calc {
 
 	my $status = 'calculated';
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity( $qty_index ) if ! $$specs{'txtQuantity'.$qty_index};
-		next if ! $$specs{'txtQuantity'.$qty_index};
 
 		my %BestPrice;
 		$$specs{'hdnBreakdown'.$qty_index} = '';
@@ -74,6 +74,7 @@ sub calc {
 			my $runs = ceil($$specs{'SetsOfNumbers'} / $heads);
 			my $last_run = $$specs{'SetsOfNumbers'} % $heads;
 			my $total = 0;
+			my $mprice = 0;
 
 			my %MakeReady = openprint::service::get_price_object('NumberingMakeReady', undef, $Equipment );
 			if ( ! %MakeReady ) {
@@ -98,6 +99,7 @@ sub calc {
 			} else {
 				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs * $$specs{'txtQuantity'.$qty_index} / 1000;
 				$total += $ServicePrice{'Total'};
+				$mprice += $ServicePrice{'Price'} * $runs;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: %4$d runs of %5$d numbers : $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs, $heads );
 			} # end if
 
@@ -110,6 +112,7 @@ sub calc {
 					$LastServicePrice{'Total'} += $LastServicePrice{'Price'} * $$specs{'txtQuantity'.$qty_index} / 1000;
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: 1 run of %4$d numbers : $%1$.2f%2$s = $%3$.2f<br/>', @LastServicePrice{'Price','units','Total'}, $last_run );
 					$total += $LastServicePrice{'Total'};
+				$mprice += $LastServicePrice{'Price'};
 				} # end if
 			} # end if
 			
@@ -120,6 +123,7 @@ sub calc {
 			
 			if ( ( ! defined $BestPrice{'Total'} ) or $total < $BestPrice{'Total'} ) {
 				$BestPrice{'Total'} = $total;
+				$BestPrice{'MPrice'} = $mprice;
 				$BestPrice{'Equipment'} = $Equipment;
 				$BestPrice{'ServicePrice'} = \%ServicePrice;
 				$BestPrice{'LastServicePrice'} = \%LastServicePrice;
@@ -134,6 +138,7 @@ sub calc {
 		} # end if
 
         $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'LastServicePrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} );
+		$$specs{'MPrice'.$qty_index} = sprintf( $openprint::config{'UnitPriceFormat'}, $BestPrice{'MPrice'}*(1+$$specs{"Markup$qty_index"}/100) );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 		$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{"Markup$qty_index"}/100) );
 		} else {

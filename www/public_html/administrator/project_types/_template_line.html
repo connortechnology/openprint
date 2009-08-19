@@ -1,0 +1,32 @@
+<? if ( $$variable{'Template'} ) ?>
+<tr id="T<? echo ( $$variable{'Template'}->id() ) ?>">
+	<? echo (
+		my $Template = $$variable{'Template'};
+ 		my $html .= sprintf(q`
+<td><input type="text" name="type%1$d" value="%2$s" /></td>
+<td><input type="text" name="description%1$d" value="%3$s" /></td>
+<td><input type="text" name="finishedwidth%1$d" value="%4$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
+<td><input type="text" name="finishedheight%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
+<td><input type="text" name="flatwidth%1$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
+<td><input type="text" name="flatheight%1$d" value="%7$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
+`, $Template->get('id','type','description','finished_width','finished_height','flat_width','flat_height') );
+
+            $html .= '<td>';
+            $html .= ssi::writeButton( $log, $dbh, 'C'.$Template->id(), '', qq`new Ajax.Updater( 'T$$Template{id}', '_template_line.html', {
+                parameters: {
+                    template_id:	'$$Template{id}',
+					action: 		'C'
+                },
+                insertion: 'after',
+                } );`, '', 'C' );
+            $html .= ssi::writeButton( $log, $dbh, 'X'.$Template->id(), '', qq`new Ajax.Updater( 'T$$Template{id}', '_template_line.html', {
+                parameters: {
+                    template_id:	'$$Template{id}',
+					action:			'X'
+                }
+				} );`, '', 'X' );
+		return $html;
+	) ?>
+	</td>
+</tr>
+<? endif ( $$variable{'Template'} ) ?>

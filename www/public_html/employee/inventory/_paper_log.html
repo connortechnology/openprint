@@ -12,11 +12,13 @@
 	} else {
 		@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 	} # end if
+	$param{'limit'} = 10 if ! exists $param{'limit'};
 
 	my @PI = openprint::PaperInventory::find(
 		'paper_id'	=>	$param{'paper_id'},
 		'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
 		'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
+		'limit'				=>	$param{'limit'},
 	);
 	if ( (! @PI) and ! $param{'ddmStartYear'} ) {
 		@PI = openprint::PaperInventory::find('paper_id'=>$param{'paper_id'}, 'limit'=>1, 'order'=>'updated_on DESC');
@@ -46,6 +48,13 @@
 			<select name="ddmEndYear" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?EndYears?></select>
 			<select name="ddmEndMonth" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?EndMonths?></select>
 			<select name="ddmEndDay" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?EndDays?></select>
+		</span>
+		<span class="DateSelector">
+		Limit 
+		<select name="limit" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );">
+			<? echo ( ssi::make_drop_down( [ map { $_, $_ } ( 10,25,100 ) ], $param{'limit'} ); ) ?>
+		</select>
+		entries
 		</span>
 	</p>
 	<hr/>

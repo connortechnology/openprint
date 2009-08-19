@@ -11,11 +11,13 @@ require sql;
 sub init_cache {
 	my ( $log, $dbh, $apr_table ) = @_;
 	
-	#%cache = sql::execute( undef, undef, 'SELECT Name, Value FROM Configuration' );
-	my $data = $openprint::dbh->selectall_arrayref( 'SELECT Name, Value FROM Configuration', {Slice=>{}} );
-	foreach (@{$data}) {
-		$cache{$_->{name}} = $_->{value};
-	} # end foreach
+	%cache = ();
+	if ( $dbh ) {
+		my $data = $openprint::dbh->selectall_arrayref( 'SELECT Name, Value FROM Configuration', {Slice=>{}} );
+		foreach (@{$data}) {
+			$cache{$_->{name}} = $_->{value};
+		} # end foreach
+	} # end if
 	
 	# Anything specified in dir_config override configuration
 	if ( $apr_table ) {
