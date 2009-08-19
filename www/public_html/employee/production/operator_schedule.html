@@ -8,63 +8,77 @@
 <form name="f1" method="post" action="operator_schedule.html">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Display Criteria</legend>
+		<div class="leftColumn">
 		<p>
 			<label>Presses:</label>
-			<select name="Presses" multiple size="4">
+			<select name="Presses" multiple="multiple" size="4">
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
 	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
-		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
+		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/operator_schedule.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/operator_schedule.html?Presses'} ) ] );
 	} # end foreach press
 
-	if ( $session{'/employee/production/print_overview.html?Presses'} ) {
-		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/print_overview.html?Presses'} ] );
+	if ( $session{'/employee/production/operator_schedule.html?Presses'} ) {
+		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/operator_schedule.html?Presses'} ] );
 	} else {
 		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
 ) ?>
 			</select>
 		</p>
+		</div>
+		<div class="rightColumn">
+		<p>
+			<label>Operator</label>
+			<select multiple="multiple" id="operator_id" name="operator_id" size="4">
+<? echo ( 
+		ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>'E', 'order'=>'lower(strfirstname),lower(strlastname)') ], [ split ';', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); 
+) ?>
+			</select>
+		</p>
+		</div>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif', "f1.btnFunction.value='Add Shift';f1.submit();", '', 'Add Shift' ); ) ?>
 		</p>
 	</fieldset>
-	<style type="text/css">
-		div.PressColumn {
-			width: <? echo ( int (100/(@{$$variable{'Presses'}})); ) ?>%;
-			text-align: center;
-			padding: 0px;
-			margin: 0px;
-		}
-	</style>
-	
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="font-size:16px; font-weight:bold;"><a href="/employee/production/print_overview.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
-		} # end foreach
+			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Presses'}})).'%;"><a href="/employee/production/operator_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
+		} # end foreach Equipment
 		return $html;
-		) ?>
+	) ?>
 	<hr style="clear: both;"/>
 	<? echo (
-		require openprint::Equipment_Shift;
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn">';
-			my ( $year, $month, $day ) = split ('-', $$variable{'ScheduleStart'} );
-			my ( $h, $min, $s );
-			if ( ! $$variable{'ScheduleEnd'} ) {
-				@$variable{'ScheduleEnd'} = sql::execute( $log, $dbh, q{SELECT date(MAX(StartTime)) FROM Schedule} );
-			} # end if
-			my $end = 1;
-			if ( $$variable{'ScheduleEnd'} ) {
-				$end = Date::Calc::Delta_Days( split('-', $$variable{'ScheduleStart'}), split('-', $$variable{'ScheduleEnd'} ) ) + 1;
-			} # end if
+			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Presses'}})).'%;"><ul>';
 
-			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
+			my @OperatorShifts = openprint::Operator_Shift::find('equipment_id'=>$E->id(), 'order'=>'starttime' );
+			foreach my $Shift ( @OperatorShifts ) {	
+				$html .= sprintf( '<li id="item_%d">', $$Shift{'id'} );
+				$html .= $Shift->Shift()->name();
+				$html .= ' - ';
+				$html .= sprintf('<span id="operator_id-%d">', $Shift->id() );
+				if ( $Shift->operator_id() ) {
+					$html .= $Shift->Operator()->name();
+				} else {
+					$html .= 'assign';
+				} # end if
+				$html .= '</span>';
+				$html .= '<span class="Buttons">';
+				$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$Shift{'id'}, '', "if(confirm('Are you sure?')){}", '', 'D' );
+				$html .= '</span>';
 
-			$html .= '</div>';
+				$html .= "<br/></li>\n";
+				$html .= sprintf(q`<script type="text/javascript">
+					new Ajax.InPlaceCollectionEditor( 'operator_id-%1$d', '_operator_shift_li.html', { loadCollectionURL: '_operators.json', cancelControl:false, default: %2$d } );
+				</script>`, $Shift->id(), $Shift->operator_id() );
+			} # end foreach Shift
+
+			$html .= '</ul></div>';
 		} # end foreach press
 		return $html;
 	) ?>

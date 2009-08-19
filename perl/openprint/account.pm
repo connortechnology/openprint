@@ -92,6 +92,8 @@ sub registration {
 	if ( ( ! $session{'user_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		require Authen::Captcha;
         my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+		# Remove spaces, because some people want to put spaces between the characters, etc.
+		$param{'Captcha'} =~ s/\s//g;
 		if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
 			$error .= 'Validation Code incorrect.  Please try again.';
 		} # end if

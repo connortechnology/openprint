@@ -22,8 +22,6 @@ require ssi;
 require misc;
 require configuration;
 require openprint::login;
-require openprint::Upload;
-require openprint::File;
 
 use openprint;
 use vars qw( %variable %session %param %config $log $dbh );
@@ -103,6 +101,7 @@ sub handler {
 <totalsize>$size</totalsize>
 <elapsedtime>$elapsedtime</elapsedtime>
 <serial>}.$r->param('serial').q{</serial></response>};
+		#$log->debug($output);
 		$request->content_type('text/xml');
 		$r->print( $output );
 	} else {
@@ -119,23 +118,24 @@ sub handler {
 		upload_files( $r, $log, $dbh, \%variable );
 		my $page = '/upload/_upload_complete.html';
 		my $content;
-		if (-e $config{'SkinPath'} . $page) {
-			$content = misc::load_file( $log, $config{'SkinPath'}.$page );
+		if (-e $r->dir_config('SkinPath') . $page) {
+			$page = $r->dir_config('SkinPath') . $page;
 		} else {
-			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.$page );
+			$page = $ENV{'DOCUMENT_ROOT'} . $page;
 		} # end if
+		my $content = misc::load_file( $log, $page );
         $variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		my @page_path = split('/', $page );
         my $filename = pop @page_path;
         my $template;
 
 		while ( @page_path ) {
-			my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
+			my $file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, $filename );
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
 				last;
 			} # end if
-			$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
+			$file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, 'default.html' );
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
 				last;
@@ -236,31 +236,34 @@ sub upload_files {
 				my $upload = $r->upload( 'fileUpload'.$index );
 				if ( ! $upload->link(  "$config{'ProjectFilesPath'}$destdir$filename" ) ) {
 					$$variable{'error'} .= "There was an error saving file $param{'fileUpload'.$index}: $!<br/>";
-					next;
+					return;
 				} else {
 					$$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
 
-				foreach my $File ( openprint::File::find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
-					$File->delete();
-				} # end foreach
-				my $File = new openprint::File();
-				$$variable{'error'} .= $File->save({
-						'project_id'	=>	( $param{'project_id'} ? $param{'project_id'} : undef ),
-						'filename'		=>	$destdir.$filename,
-						'description'	=>	$param{'txtDescription'.$index},
-						'upload_id'		=>	$param{'serial'},
-						'size'			=>	$upload->size(),
-						} );
+				if ( $param{'project_id'} ) {
+					  sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE project_id=? AND filename=?}, 
+					  $param{'project_id'} ? $param{'project_id'} : undef, $destdir.$filename );
+				} else {
+				   sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE filename=?}, $destdir.$filename );
+				} # end if
+				sql::insert( $log, $dbh, 'project_files', [
+						'project_id',	$param{'project_id'} ? $param{'project_id'} : undef,
+						'filename',		$destdir.$filename,
+						'description',	$param{'txtDescription'.$index},
+						'upload_id',	$param{'serial'},
+						] );
 			} # end if
 		} # end foreach
 # Notify CSR, and Customer of upload
-		if (-e $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html' );
+		$$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
+		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html') {
+			$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html' );
 		} else {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 		} # end if
 		$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
+		my $csr_id;
 		my $to;
 		my $from;
 		if ( $session{'user_id'} ) {
@@ -269,23 +272,22 @@ sub upload_files {
 		} else {
 			$from = $param{'txtEmailAddress'};
 			if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
-				$from = $config{'OrderingEmail'};
+				$from = $openprint::config{'OrderingEmail'};
 			} # end if
 		} # end if
 		if ( $session{'company_id'} ) {
-			my $Company = new openprint::Company( $session{'company_id'} );
-			if ( $Company->salesrep_id() ) {
-				$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') );
-			} else {
-				$to = $config{'OrderingEmail'};
-			} # end if
+			( $csr_id ) = sql::execute( $log, $dbh, q{SELECT lngSalesPerson FROM Company WHERE Index=?}, $session{'company_id'} );
+		} # end nif
+		if ( $csr_id ) {
+			my $CSR = new openprint::User( $csr_id );
+			$to = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email') ),
 		} else {
-			$to = $config{'OrderingEmail'};
+			$to = $openprint::config{'OrderingEmail'};
 		} # end if
 		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
 		my $body = ssi::variable_substitution( \$email_template, $variable );
 		my %mail = (
-						SMTP    => $config{'Mail Server'},
+						SMTP    => $openprint::config{'Mail Server'},
 						FROM    => $from,
 						TO		=> $to,
 						#BCC		=>	'iconnor@penultima.org',
@@ -294,8 +296,8 @@ sub upload_files {
 		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
 
 		# Send transcript to uploader
-		if (-e $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html' );
+		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
+			$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
 		} else {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
 		} # end if

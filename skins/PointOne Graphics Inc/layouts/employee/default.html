@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><?PageTitle?> - Employee</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.2"></script>
@@ -33,6 +33,12 @@
 		<? if ( $r->uri() =~ /purchase_order/ ) ?>
 		<link href="/css/purchase_order.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /purchase_order/ ) ?>
+ 		<? if ( $r->uri() =~ /print_overview/ ) ?>
+ 		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
+ 		<? endif ( $r->uri() =~ /print_overview/ ) ?>
+ 		<? if ( $r->uri() =~ /operator_schedule/ ) ?>
+ 		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
+ 		<? endif ( $r->uri() =~ /operator_schedule/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
 	<? eval (
@@ -76,6 +82,9 @@
 								<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
 								<li><a href="/employee/production/barcode.html;NOSSL">&raquo; Barcode</a></li>
 								<li><a href="/employee/production/print_overview.html;NOSSL">&raquo; Press Schedule</a></li>
+<? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+ 								<li><a href="/employee/production/operator_schedule.html;NOSSL">&raquo; Operator Schedule</a></li>
+<? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 								<li><a href="/employee/production/monthly_schedule.html;NOSSL">&raquo; Schedule Overview</a></li>
 <!--
 								<li><a href="/employee/production/press_schedule.html;NOSSL">&raquo; New Press Schedule</a></li>
@@ -147,6 +156,7 @@
 								<li><a href="/employee/support/returns.html;NOSSL">&raquo; Returns</a></li>
 							</ul>
 						</li>
+						<li class="off"><a href="<? echo ( misc::get_url( $r->uri(), \%param, { 'include'=>{'menu'=>0} } ); ) ?>">HIDE MENU</a></li>
 						<li class="off"><a href="#" onclick="bug_report_window();return false;">SEND BUG REPORT</a></li>
 <? endif ( $session{'user_id'} ) ?>
 					</ul>
@@ -160,6 +170,7 @@
 	</body>
 	<? else ( ( ! exists $session{'menu'} ) or $session{'menu'} ) ?>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();" style="background-image: none; padding: 5px;">
+		<? echo ( ssi::writeButton( $log, $dbh, 'showmenu', 'menu.gif', '',  misc::get_url( $r->uri(), \%param, { 'include'=>{'menu'=>1} } ), 'Show Menu' ); ) ?>
 			<div id="ContentInner"> 
 			<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 			</div>

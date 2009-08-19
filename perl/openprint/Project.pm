@@ -332,8 +332,8 @@ sub is_printed {
 	
 	my %statuses = sql::execute( undef, undef, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	foreach ( $self->signatures() ) {
-		return 0 if $statuses{$_} eq 'Ordered';
-	} # end foreac
+		return 0 if sets::isin( $statuses{$_}, ['Ordered','In Production'] );
+	} # end foreach
 	return 1;
 } # end sub is_printed
 
@@ -1204,12 +1204,13 @@ sub status_change {
 		foreach $_ ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $_, 'Complete' );
 		} # end foreach signature
-        sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $self->id() );
+		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+			$Job->delete();
+		} # end foreach
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 			$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
 		} # end foreach AP
-
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
 		foreach my $s_id ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
@@ -1219,7 +1220,9 @@ sub status_change {
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
 		} # end foreach
-		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
+		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+			$Job->delete();
+		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
@@ -1229,7 +1232,9 @@ sub status_change {
 	} elsif ( sets::isin( $new_status, ['Shipped','Picked Up', 'Complete'] ) ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus != ''", $$self{id}], 'strStatus', 'Complete' );
 # Remove jobs from the Schedule when marked complete.
-		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
+		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+			$Job->delete();
+		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {

@@ -39,6 +39,7 @@ sub view {
 
 	my $project_index = $param{'ProjectIndex'};
 	$project_index = $param{'project_id'} if ! $project_index;
+	$project_index =~ s/\D//g;
 	if ( ! $project_index ) {
 		if ( $param{'Docket'} ) {
 			$param{'Docket'} =~ s/\D//g;
@@ -84,7 +85,7 @@ sub view {
 			$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rush_job_notification.html' );
 			$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 			$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-			$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
+			$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$_, \%info ) ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my $From = new openprint::User( $session{'user_id'} );
 			my @To = openprint::User::find('usergroup'=>'Production');
@@ -188,24 +189,17 @@ sub view {
 						} # end if
 						$param{'rdbComplete'} = 'No';
 					} else {
-						my $duedate = join('-', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
-						$Project->due_date( $duedate );
-						if ( ! $Project->save() ) {
-							$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
-						} else {
-							$variable{'error'} .= 'Error saving duedate.';
+						if ( $param{'ddmDueDateYear'} ) {
+							my $duedate = join('-', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
+							$Project->due_date( $duedate );
+							if ( ! $Project->save() ) {
+								$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
+							} else {
+								$variable{'error'} .= 'Error saving duedate.';
+							} # end if
 						} # end if
 
-						if ( $config{'Smart Schedule'} eq 'Y' ) {
-							foreach my $signature_service_index ( $Project->signatures() ) {
-								my %sig_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $signature_service_index );
-								if ( my @Equipment = openprint::Equipment::find( 'strid'=>$sig_specs{'UsePress'} ) ) {
-								openprint::employee_schedule::insert( $log, $dbh, $project_index, $signature_service_index, $Equipment[0]->id() );
-								} # end if
-							} # end foreach signature_service_index
-						} # end if
-
-						sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Approved' );
+						openprint::service::status( $project_index, $service_index, 'Approved' );
 					} # end if
 				} else { # Not Complete
 					if ( $status ne 'Ordered' ) {
@@ -227,41 +221,44 @@ sub view {
 					} # end if
 
 					if ( (! exists $param{'rdbApproved'} ) or ($param{'rdbApproved'}  eq 'Y') ) {
-						if ( ! Date::Calc::check_date( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ) ) {
-							my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
-							if ( @ServiceTypes ) {
-								$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
-								$variable{'ErrorMessage'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-							} else {
-								$variable{'error'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-							} # end if
-							$param{'rdbApproved'} = 'N';
-						} elsif ( 0 < Date::Calc::Delta_Days( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
-							my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
-							if ( @ServiceTypes ) {
-								$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
-								$variable{'ErrorMessage'} = 'You cannot select a date in the past. Please try again.';
-							} else {
-								$variable{'error'} = 'You cannot select a duedate in the past. Please try again.';
-							} # end if
-							$param{'rdbApproved'} = 'N';
-						} else {
-# It's a valid duedate
-							my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
-
-							if ( $status ne 'Approved' ) {
-								openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $project_index, $service_index, $status );
-								send_proofs_approved_email( $project_index, $order_id );
-							} # end if
-							if ( $duedate ne $Project->due_date() ) {
-								$Project->due_date( $duedate );
-								if ( ! $Project->save() ) {
-									$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
-									send_duedate_change_notification( $project_index, $order_id );
+						if ( $param{'ddmDueDateYear'} ) {
+							if ( ! Date::Calc::check_date( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ) ) {
+								my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+								if ( @ServiceTypes ) {
+									$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
+									$variable{'ErrorMessage'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
 								} else {
-									$variable{'error'} .= 'Error saving duedate.';
+									$variable{'error'} = 'There was an error saving the due date.  Please check that a real date was selected.';
+								} # end if
+								$param{'rdbApproved'} = 'N';
+							} elsif ( 0 < Date::Calc::Delta_Days( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'}, Date::Calc::Today() ) ) {
+								my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+								if ( @ServiceTypes ) {
+									$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
+									$variable{'ErrorMessage'} = 'You cannot select a date in the past. Please try again.';
+								} else {
+									$variable{'error'} = 'You cannot select a duedate in the past. Please try again.';
+								} # end if
+								$param{'rdbApproved'} = 'N';
+							} else {
+# It's a valid duedate
+								my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
+
+								if ( $duedate ne $Project->due_date() ) {
+									$Project->due_date( $duedate );
+									if ( ! $Project->save() ) {
+										$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
+										send_duedate_change_notification( $project_index, $order_id );
+									} else {
+										$variable{'error'} .= 'Error saving duedate.';
+									} # end if
 								} # end if
 							} # end if
+						} # end if
+
+						if ( (!$variable{'error'}) and ($status ne 'Approved') ) {
+							openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $project_index, $service_index, $status );
+							send_proofs_approved_email( $project_index, $order_id );
 						} # end if
 					} elsif ( $param{'rdbApproved'} eq 'N' ) { # NOT APPROVED
 						if ( $status ne 'Proofs Out' and $status ne 'Waiting For Customer Approval' ) {
@@ -515,7 +512,7 @@ sub send_additional_charges_notifications {
 #misc::send_email_with_attachment( $log, \%mail, @body );
 
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/additional_charges_client_notification.html\"-->";
-	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
@@ -631,8 +628,8 @@ sub send_proofs_complete_email {
 	$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_complete.html' );
 	$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 
-	$_ = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
+	$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$_, \%info ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
@@ -689,7 +686,7 @@ sub send_proofs_approved_email {
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_approved-sales_rep.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
 		$_ = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-		$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
+		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$_, \%info ) ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $config{'Mail Server'},
@@ -720,7 +717,7 @@ sub send_duedate_change_notification {
 	if ( $CSR->email() ) {
 		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/proofs_duedate_change-sales_rep.html\"-->";
-		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
+		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $config{'Mail Server'},
@@ -846,6 +843,10 @@ sub _stock_checkout {
 							});
 					$C->quantity( 0 );
 					$C->save();
+					#Remove any allocations
+					foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'paper_id'=>$C->paper_id(), 'docket'=>$Project->docket() ) ) {
+						$PA->delete();
+					} # end foreach
 				} # end foreach C
 			} else {
 				my $PI = new openprint::PaperInventory();

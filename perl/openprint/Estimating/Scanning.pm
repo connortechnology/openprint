@@ -78,6 +78,9 @@ sub display {
 	} # end foreach
 
 } # end sub display
+
+sub summary {
+}
     
 
 1;

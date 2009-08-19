@@ -144,9 +144,9 @@ Please select a Paper to view/edit.<br>
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent('Results','/employee/inventory/_paper_results.html', Serialize(f1) );", '', 'Show Results' );
+				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent('Results','/employee/inventory/_paper_results.html', f1.serialize() );", '', 'Show Results' );
 				$html .= ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'paper_details.html', 'Add New Paper' );
-				if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+				if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'DownloadInventory', 'download.gif', "f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", '', 'Download Inventory' );
 					$html .= ssi::writeButton( $log, $dbh, 'DownloadLog', 'download.gif', "f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", '', 'Download Log' );
 					$html .= ssi::writeButton( $log, $dbh, 'Consumption', 'consumption.gif', "f1.btnFunction.value='Consumption Report';f1.action='paper.html?Download';f1.submit();", '', 'Consumption Report' ) if $session{'email'} =~ /iconnor/;

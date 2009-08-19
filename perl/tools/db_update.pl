@@ -2140,6 +2140,14 @@ if ( sets::isin( 'tbl_quotes', \@tables ) ) {
 	$dbh->do("ALTER TABLE Quotes alter column id set default nextval('quotes_id_seq')");
 } # end if
 $dbh->commit();
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Articles LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Articles.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

@@ -24,9 +24,9 @@
 		</p>
 		<p>
 			<label>Locked:</label>
-			<input type="radio" id="locked1" name="locked" value="1" <? echo ( ssi::checked( $$variable{'Job'}{'starttime_locked'} ); ) ?> />
+			<input type="radio" id="locked1" name="locked" value="1" <? echo ( ssi::checked( $$variable{'Job'}{'locked'} ); ) ?> />
 			<label class="radio" for="locked1">Yes</label>
-			<input type="radio" id="locked0" name="locked" value="0" <? echo ( ssi::checked( ! $$variable{'Job'}{'starttime_locked'} ); ) ?> />
+			<input type="radio" id="locked0" name="locked" value="0" <? echo ( ssi::checked( ! $$variable{'Job'}{'locked'} ); ) ?> />
 			<label class="radio" for="locked0">No</label>
 		</p>
 	</fieldset>

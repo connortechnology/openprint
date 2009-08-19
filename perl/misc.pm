@@ -369,17 +369,6 @@ sub hms2time {
 	my ($h,$m,$s) = split(':', $_[0]);
 	return ($h*3600) + ($m*60) + $s;
 } # end sub hms2time
-
-sub format_bytes {
-	if ( $_[0] > 1048576 ) {
-		return sprintf( '%.3f MB', $_[0] / 1048576 );
-	} elsif ( $_[0] > 1024 ) {
-		return sprintf( '%.3f KB', $_[0] / 1024 );
-	} else {
-		return $_[0].' B';
-	} # end if
-} # end sub format_bytes
-
 1;
 
 __END__

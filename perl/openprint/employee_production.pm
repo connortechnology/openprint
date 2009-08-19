@@ -26,6 +26,7 @@ require openprint::ProductionFeedback;
 require openprint::Shift;
 require openprint::Equipment_Shift;
 require openprint::ScheduledJob;
+require openprint::Operator_Shift;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -39,26 +40,31 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub print_overview {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved' ) {
+			foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/print_overview.html', ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day' ) );
+			ssi::save_params( '/employee/production/print_overview.html', ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale' ) );
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > 24*60*60 ) {
-		foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved' ) {
+		foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
 	$session{'/employee/production/print_overview.html?lastupdated'} = time;
 
-	press_schedule( @_ );
+	press_schedule();
 } # end sub print_overview
 
 sub press_schedule {
 
 	if ( $param{'btnFunction'} eq 'Reflow' ) {
-		reorder_jobs( openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' ) );
+		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' );
+		if ( @Jobs ) {
+			reorder_jobs( @Jobs );
+		} else {
+			$variable{'error'} .= 'There are no jobs scheduled to reflow.';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Add Docket' ) {
 		my $Project = new openprint::Project();
 		$Project->save();
@@ -1105,11 +1111,18 @@ sub _drop {
 	if ( ! $Shift->Equipment()->smartscheduling() ) {
 		return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'id'}, $param{'services'} );
 	} # end if
+if ( 0 ) {
+	if ( $Shift->starttime() and ! $Shift->operator_id() ) {
+		$variable{'alert'} .= 'Shifts must have an operator in order to schedule jobs in them.';
+		reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' ));
+		return;
+	} # end if
+} # end if
 
 	# The idea 
 	if ( exists $param{'services'} ) {
 		my $services = $param{'services'};
-		$services =~ s/$param{id}\[\]=//g;
+		$services =~ s/$param{ul_id}\[\]=//g;
 		my @order = split( '&', $services );
 		return if ! @order;
 
@@ -1192,6 +1205,12 @@ sub reorder_jobs {
 
 	my $row = $order[0];
 
+	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
+	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
+$log->debug("Downing starttime, " . $row->Project()->docket() . ' locked: ' . $row->locked() );
+		$start_time = $row->starttime_seconds();
+	} # end if
+
 	my $Shift;
 
 	# Grab all shifts.  We will only add a shift at the end
@@ -1200,6 +1219,9 @@ sub reorder_jobs {
 			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
 			'order'			=>	'starttime',
 			);
+foreach my $S ( @Shifts ) {
+$log->debug("Shifts: " . $S->to_string() );
+} # end foreach S
 	if ( ! @Shifts ) {
 		@Shifts = openprint::Equipment_Shift::find(
 				'equipment_id'		=>	$$row{'equipment_id'}, 
@@ -1213,7 +1235,10 @@ sub reorder_jobs {
 					'order'				=>	'starttime',
 					);
 		} # end if
-		return if ! @Shifts;
+		if ( ! @Shifts ) {
+			$variable{'alert'} .= 'There are no shifts to schedule on.';
+			return;
+		} # end if
 		$Shift = $Shifts[0]->emanantise( $start_time );
 		@Shifts = ( $Shift );
 	} else {
@@ -1226,7 +1251,7 @@ sub reorder_jobs {
 
 	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
-		if ( $order[$i]{'starttime'} and $order[$i]{'starttime_locked'} ) {
+		if ( $order[$i]{'starttime'} and $order[$i]{'locked'} ) {
 			push @fixed_jobs, splice @order, $i, 1;
 			$i -= 1;
 		} # end if
@@ -1237,9 +1262,9 @@ sub reorder_jobs {
 		my $run_time = misc::hms2time( $$row{'runtime'} );
 		my $old_start_time = $start_time - $run_time;
 
-		while ( @fixed_jobs and $fixed_jobs[0]{'starttime'} and (Date::Parse::str2time($fixed_jobs[0]{'starttime'}) < ($start_time+$run_time) ) ) {
+		while ( @fixed_jobs and ($fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
 			# Have fixed_jobs.  They do not move.
-			$start_time = Date::Parse::str2time($fixed_jobs[0]{'starttime'}) + misc::hms2time( $fixed_jobs[0]{'runtime'} ) + 1;
+			$start_time = $fixed_jobs[0]->endtime_seconds() + 1;
 			shift @fixed_jobs;
 		} # end while
 
@@ -1294,6 +1319,27 @@ sub _li_change {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if
+	} elsif ( $param{'action'} eq 'start' ) {
+
+		# Stop any currently running jobs
+		foreach my $J ( openprint::ScheduledJob::find('equipment_id'=>$Job->equipment_id()) ) {
+			if ( $J->status() eq 'In Production' ) {
+				$variable{'error'} .= $J->stop();
+				$variable{'alert'} .= 'Stopped job ' . $J->Project()->docket();
+			} # end if
+		} # end foreach
+
+		$variable{'error'} .= $Job->start();
+		if ( $Equipment->smartscheduling() ) {
+			reorder_jobs(
+					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+		} # end if
+	} elsif ( $param{'action'} eq 'stop' ) {
+		$variable{'error'} .= $Job->stop();
+		if ( $Equipment->smartscheduling() ) {
+			reorder_jobs(
+					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+		} # end if
 	} elsif ( $param{'action'} eq 'SaveJob' ) {
 
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
@@ -1302,9 +1348,9 @@ sub _li_change {
 		$Job->comment( $param{'comment'} );
 		$Job->impressions( $param{'impressions'} );
 		$variable{'error'} .= $Job->save({
-				'starttime'			=>	$param{'starttime_year'} ? $new_starttime : undef,
-				'starttime_locked'	=>	$param{'locked'},
-				'runtime'			=>	$param{'runtime'},
+				'starttime'	=>	$param{'starttime_year'} ? $new_starttime : undef,
+				'locked'	=>	$param{'locked'},
+				'runtime'	=>	$param{'runtime'},
 				} );
 
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
@@ -1410,6 +1456,17 @@ sub operator_schedule {
         } # end if
     } # end if
     $session{$r->uri().'?lastupdated'} = time;
+	if ( $param{'btnFunction'} eq 'Add Shift' ) {
+		foreach my $Equipment ( openprint::Equipment::find() ) {
+			my $LastShift = openprint::Operator_Shift::find_one('equipment_id'=>$Equipment->id(), 'order'=>'starttime DESC');
+			my $starttime = $LastShift->starttime_seconds()+$LastShift->duration_seconds() if $LastShift;
+
+			foreach my $ES ( openprint::Equipment_Shift::find('equipment_id'=>$Equipment->id(), 'order'=>'starttime') ) {
+				my $NewShift = new openprint::Operator_Shift();
+				$NewShift->save({'equipment_id'=>$Equipment->id(),'starttime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime),'shift_id'=>$ES->id()});
+			} # end foreach ES
+		} # end foreach Equipment
+	} # end if
 
 } # end sub operator_schedule
 
@@ -1420,6 +1477,26 @@ sub _job_popup {
 sub _signature_completion_popup {
 	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
 }
+
+sub _operators {
+} # end 
+
+sub _operator_shift_li {
+	my ( $shift_id ) = $param{'editorId'} =~ /^operator_id-(\d+)$/;	
+	my $Shift = new openprint::Operator_Shift( $shift_id );
+	if ( $param{'value'} ) {
+		my $Operator = openprint::User::find_one('name'=>$param{'value'});
+		if ( $Operator ) {
+			$variable{'error'} .= $Shift->save({'operator_id'=>$Operator->id()});
+		} else {
+			$variable{'error'} .= 'invalid user';
+		} # end if
+	} else {
+		$variable{'error'} .= $Shift->save({'operator_id'=>undef});
+	} # end if
+
+	$variable{'Shift'} = $Shift;
+} # end sub operator_shift_li
 
 1;
 

@@ -432,6 +432,7 @@ sub signature_calc {
 
 	my $sheets = $$specs{"txtQuantity$qty_index"};
 	$sheets *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
+	$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 # Grab the Calliper
 	if ( $$specs{"chkOverrideCalliper-$signature_index"} ne 'Y' ) {
 		$$specs{"txtStockCalliper-$signature_index"} = $Paper->calliper();
@@ -657,6 +658,7 @@ sub signature_calc {
 
 		my $price;
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
+		$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 		$$specs{'hdnBreakdown'.$qty_index} .= '# of cuts: ' . $cuts . ' => ' .($cuts * $sheets) . '<br/>';
 
@@ -716,8 +718,10 @@ sub signature_calc {
 
 			
 			if ( $dutch_vertical_cuts or $dutch_horizontal_cuts ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
 
 				$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
+				$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 
 				if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {

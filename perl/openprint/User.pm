@@ -226,8 +226,6 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM paper_purchase_orders WHERE userindex=?', $$self{'id'} );
-
 
 	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{'id'} );
 
@@ -299,6 +297,13 @@ sub name {
 		return $$self{'lastname'};
 	} # end if
 } # end sub name
+
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 
 sub find {
 	my %param = @_;

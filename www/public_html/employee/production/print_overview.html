@@ -187,6 +187,7 @@
                 = $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
 	} # end if
 ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="print_overview.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
@@ -227,6 +228,19 @@
 '/employee/production/print_overview.html?schedule_end_month',
 '/employee/production/print_overview.html?schedule_end_day'} ] ); ) ?>
 			</span>
+		</p>
+		<p>
+			<label>Scale:</label>
+			<select id="scale" name="scale" onchange="this.form.submit();">
+				<? echo ( 
+					my @options = ( 
+						'100'	=>	'100px / hour',
+						'200'	=>	'200px / hour',
+						'360'	=>	'360px / hour',
+					);
+					return ssi::make_drop_down( \@options, $session{'/employee/production/print_overview.html?scale'} );
+				) ?>
+			</select>
 		</p>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
@@ -271,12 +285,10 @@
 		) ?>
 	<hr style="clear: both;"/>
 	<? echo (
-		require openprint::press_schedule;
-		require openprint::Equipment_Shift;
 		@{$$variable{'drops'}} = ();
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn">';
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
                     '/employee/production/print_overview.html?schedule_start_month',
                     '/employee/production/print_overview.html?schedule_start_day'};
