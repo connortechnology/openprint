@@ -170,20 +170,7 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
-	my $ac = sql::start_transaction( $dbh );
-
-	#my %Paper = %{$$self{'Paper'}} if $$self{'Paper'};
-
-	$self->SUPER::save( $data );
-
-	#sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE skid_id=?}, $$self{'id'} );
-	#foreach my $paper_id ( keys %Paper ) {
-        #my $Paper = new openprint::Paper( $paper_id );
-		#sql::insert( undef, undef, 'skid_Contents', 'skid_id', $$self{'id'}, 'paper_id', $paper_id, 'quantity', int($Paper{$paper_id}), 'units', $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
-	#} # end foreach paper_id
-	#sql::end_transaction( $dbh, $ac );
-	$self->load();
-	return;
+	return $self->SUPER::save( $data );
 } # end sub save
 
 sub destroy {
@@ -208,8 +195,9 @@ sub add {
 
 	my $C = $self->Content( $Paper );
 	if ( ! $C ) {
-		$log->error("Unable to find SkidContent for Skid $$self{'id'} for Paper $$Paper{id}");
-		return;
+		$C = new openprint::SkidContent();
+		$C->skid_id( $$self{'id'} );	
+		$C->paper_id( $Paper->id() );
 	} # end if
 
 	my $old_quantity = $C->quantity();
