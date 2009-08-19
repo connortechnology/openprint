@@ -11,6 +11,7 @@ use openprint ();
 require sql;
 require openprint::Object;
 require openprint::User;
+require openprint::customer_credit;
 
 $table = 'companies';
 $serial = 'companies_id_seq';
