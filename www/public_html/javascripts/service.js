@@ -23,124 +23,84 @@ function calc( formName, force ) {
 				div.innerHTML = 'Calculating';
 			} // end if
 			gettingNewPrice = true;
-			jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+			new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: form.serialize(), evalScripts: true } );
 		} // end if
 	} // end if
 } // end calc()
 
 
-function get_variables( formName, service_type ) {
-	var form = getFormObj( formName );
-	if ( ! form ) {
-		alert('No form in get_variables');
-	} // end if
-
-    gettingNewPrice = true;
-
-    var parameters = new Array();
-	if ( service_type )
-		parameters[parameters.length] = service_type;
-
-    for ( var index = 0; index < form.elements.length ; index += 1 ) {
-        if ( form.elements[index].type == 'radio' ) {
-            if ( form.elements[index].checked == true ) {
-                parameters[parameters.length] = form.elements[index].name;
-                parameters[parameters.length] = form.elements[index].value;
-            } // end if
-        } else if ( form.elements[index].type == 'checkbox' ) {
-            if ( form.elements[index].checked == true ) {
-                parameters[parameters.length] = form.elements[index].name;
-                parameters[parameters.length] = form.elements[index].value;
-            } // end if
-		} else if ( form.elements[index].type == 'select-one' ) {
-			if ( form.elements[index].selectedIndex != -1 ) {
-				parameters[parameters.length] = form.elements[index].name;
-				parameters[parameters.length] = form.elements[index].options[form.elements[index].selectedIndex].value;
-			} // end if
-        } else {
-           if (
-                ( form.elements[index].name == 'hdnBreakdown' )
-                || ( form.elements[index].name == 'ContinueProject' )
-                || ( form.elements[index].name == 'btnFunction' )
-) {
-            } else if ( form.elements[index].name && form.elements[index].value != '' ) {
-				parameters[parameters.length] = form.elements[index].name;
-				parameters[parameters.length] = form.elements[index].value;
-			} // end if
-		} // end if
-    } // end for
-	return parameters;
-} // end get_variables()
-
 function cbFillResults( results ) {
-    var pairs = results.split('|');
     var form = getFormObj('f1');
 	$('AlertDiv').hide();
 	if ( $('InformationDiv') )
 		$('InformationDiv').hide();
+	var keys = results.keys();
 
-    for ( var i = 0; i < pairs.length; i += 1 ){
-        if ( pairs[i].indexOf('~') != -1 ) {
-            var data = pairs[i].split('~');
-            if ( data[0] == 'alert') {
-				if (data[1] != '') {
-					var div = $("AlertDiv");
-					if ( div ) {
-						div.innerHTML = data[1];
-						div.show();
-					} else {
-						alert( data[1] );
-					} // end if
-				} // end if
-				
-                continue;
-            } else if ( data[0] == 'information') {
-				if (data[1] != '') {
-					var div = $("InformationDiv");
-					if ( div ) {
-						div.innerHTML = data[1];
-						div.show();
-					} // end if
-				} // end if
-                continue;
-            } // end if
-
-			var element = form.elements[data[0]];
-            if ( element ) {
-				if ( element.type == 'select-one' ) {
-					ddm_select_by_value( element, data[1], -1 );
-				} else if ( element.type == 'checkbox' ) {
-					if ( element.value == data[1] ) {
-						element.checked = true;
-					} else {
-						element.checked = false;
-					} // end if
-				} else if ( element.type == 'radio' ) {
-				} else if ( element.type == 'text' ) {
-					if ( ! element.gotFocus )
-						element.value = data[1];
-				} else if ( element.type == 'hidden' ) {
-					element.value = data[1];
+	for ( var index = 0; index < keys.length; index += 1 ) {
+		var key = keys[index];
+		var value = results.get(keys[index]);
+//if ( ! confirm( key + ' ' + value ) ) {
+//break;
+//}
+	
+		if ( key == 'alert') {
+			if (value != '') {
+				var div = $("AlertDiv");
+				if ( div ) {
+					div.innerHTML = value;
+					div.show();
 				} else {
-					var elements = element;
-					for ( var j=0; j < elements.length; j += 1 ) {
-						if ( elements[j].value == data[1] ) {
-							elements[j].checked = true;
-						} else {
-							elements[j].checked = false;
-						} // end if
-					} // end for
+					alert( value );
 				} // end if
-			} else if ( div = $(data[0]) ) {
-//alert('filling: ' + data[0] + ' with: ' + data[1] );
-				//div.hide();
-				div.innerHTML = data[1];
-				//d//iv.show();
-			} else {
-//alert('didnt find: ' + data[0]);
 			} // end if
-        } // end if
-    } // end for
+
+			continue;
+		} else if ( key == 'information') {
+			if (value != '') {
+				var div = $("InformationDiv");
+				if ( div ) {
+					div.innerHTML = value;
+					div.show();
+				} // end if
+			} // end if
+			continue;
+		} // end if
+
+		var element = form.elements[key];
+		if ( element ) {
+			if ( element.type == 'select-one' ) {
+				ddm_select_by_value( element, value, -1 );
+			} else if ( element.type == 'checkbox' ) {
+				if ( element.value == value ) {
+					element.checked = true;
+				} else {
+					element.checked = false;
+				} // end if
+			} else if ( element.type == 'radio' ) {
+			} else if ( element.type == 'text' ) {
+				if ( ! element.gotFocus )
+					element.value = value;
+			} else if ( element.type == 'hidden' ) {
+				element.value = value;
+			} else {
+				var elements = element;
+				for ( var j=0; j < elements.length; j += 1 ) {
+					if ( elements[j].value == value ) {
+						elements[j].checked = true;
+					} else {
+						elements[j].checked = false;
+					} // end if
+				} // end for
+			} // end if
+		} else if ( div = $(key) ) {
+			//alert('filling: ' + data[0] + ' with: ' + data[1] );
+			//div.hide();
+			div.innerHTML = value;
+			//d//iv.show();
+		} else {
+			//alert('didnt find: ' + data[0]);
+		} // end if
+	} // end for each 
     gettingNewPrice = false;
 } // end function cbFillResults
 

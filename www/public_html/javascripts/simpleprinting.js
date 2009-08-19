@@ -49,7 +49,12 @@ function calc( formName ) {
 		setTimeout("calc('"+formName+"');", 1000 );
 		return;
 	} // end if
-	jsrsExecute( '/jsrs.htm', cbCalc, 'openprint::print_project::calc', get_variables( formName ) );
+	gettingNewPrice = true;
+	var h = form.serialize(true);
+	h.ServiceType = 'Project';
+	h.callback = 'cbCalc';
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+	//jsrsExecute( '/jsrs.htm', cbCalc, 'openprint::print_project::calc', get_variables( formName ) );
 	remove_div('Buttons');
 	add_div('Processing');
 }

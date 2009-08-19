@@ -62,11 +62,11 @@
 					</div>
 					<div id="nav_icons">
 					 <a href="/"><img src="/images/home_icon.gif" alt="Home" /></a>
-					 <? if ( $openprint::session{'user_id'} ) ?>
-					 <a href="/main/account/logout.html"><img src="/images/logout_icon.gif" alt="Logout" /></a>
-					 <? else ( $openprint::session{'user_id'} ) ?>
-					 <a href="/main/account/login.html"><img src="/images/login_icon.gif" alt="Login" /></a>
-					 <? endif ( $openprint::session{'user_id'} ) ?>
+					 <? if ( $session{'user_id'} ) ?>
+					 <a href="/account/logout.html"><img src="/images/logout_icon.gif" alt="Logout" /></a>
+					 <? else ( $session{'user_id'} ) ?>
+					 <a href="/account/login.html"><img src="/images/login_icon.gif" alt="Login" /></a>
+					 <? endif ( $session{'user_id'} ) ?>
 					</div>		 
 				</div>
 			</div>

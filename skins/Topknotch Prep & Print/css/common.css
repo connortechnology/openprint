@@ -210,6 +210,16 @@ span.DateSelector {
     float: left;
 	width: 220px;
 }
+span.DateTimeSelector {
+	float: left;
+	width: 400px;
+}
+span.DateSelector select, span.DateTimeSelector select {
+	width: auto;
+	max-width: none;
+}
+span.DateSelector select option {
+}
 div.Service span.ThreeColumns {
 	width: 32%;
 	float: left;

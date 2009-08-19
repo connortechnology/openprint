@@ -168,6 +168,7 @@ sub fold_types {
 sub signature_needs {
 	my ( $Project, $specs, $qty_index ) = @_;
 
+	return 0 if $Project->Type()->name() eq 'Banners';
 	my $services = $Project->services();
 	if ( $$services{'NoBindery'} ) {
 		return 0;
@@ -218,6 +219,7 @@ sub neccessary {
 	my ( $project_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
+	return 0 if $Project->Type()->name() eq 'Banners';
 	my $services = $Project->services( );
 
 	if ( $$services{'NoBindery'} ) {

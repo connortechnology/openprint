@@ -39,9 +39,9 @@
       <div id="nav_icons">
          <a href="/index.html"><img src="/images/home_icon.gif" alt="Home" /></a>
          <? if ( $session{'user_id'} ) ?>
-         <a href="/main/account/logout.html"><img src="/images/logout_icon.gif" alt="Logout" /></a>
+         <a href="/account/logout.html"><img src="/images/logout_icon.gif" alt="Logout" /></a>
          <? else ( $session{'user_id'} ) ?>
-         <a href="/main/account/login.html"><img src="/images/login_icon.gif" alt="Login" /></a>
+         <a href="/account/login.html"><img src="/images/login_icon.gif" alt="Login" /></a>
          <? endif ( $session{'user_id'} ) ?>
          <a href="/contact.html"><img src="/images/contact_icon.gif" alt="Contact" /></a>
       </div>         

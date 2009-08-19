@@ -1,15 +1,18 @@
 <script type="text/javascript" src="/javascripts/service.js"></script>
 <script type="text/javascript">
-function calc( formName ) {
-	if ( gettingNewPrice ) {
+function calc( formName, force ) {
+	if ( gettingNewPrice && ! force ) {
 		setTimeout( "calc('" + formName + "');", 1000 );
 	} else {
 		remove_div('AlertDiv');
 		gettingNewPrice = true;
 		var form = getFormObj( formName );
-		jsrsExecute( '/jsrs.htm', cbFillUPSResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+		var h = form.serialize(true);
+		h.callback = 'cbFillUPSResults';
+		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 	} // end if
 } // end calc()
+
 function cbFillUPSResults( results ) {
 	cbFillResults( results );
 	var form = getFormObj( 'f1' );
@@ -18,7 +21,7 @@ function cbFillUPSResults( results ) {
 	} // end if
 }
 function validate_data(formName) {
-	var form = getFormObj( formName );
+	//var form = getFormObj( formName );
 	var text = '';
 	return true;
 } // end function

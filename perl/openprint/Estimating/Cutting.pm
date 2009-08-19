@@ -18,6 +18,11 @@ package openprint::Estimating::Cutting;
 use POSIX qw{ ceil };
 
 use strict;
+use openprint ();
+use vars qw( $log $dbh %config );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*config = \%openprint::config;
 
 require openprint::project;
 require openprint::Equipment;
@@ -277,7 +282,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 	} # end for each equipment
 	$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};	
 	my %results = (
-			'Price' 	=> sprintf($openprint::config{'ProjectMoneyFormat'}, $bestPrice ),
+			'Price' 	=> sprintf($config{'ProjectMoneyFormat'}, $bestPrice ),
 			'MPrice'	=> ($mprice/$$specs{'txtQuantity'.$qty_index})*1000,
 			'Equipment'	=> $bestEquipment,
 			);
@@ -387,7 +392,7 @@ sub signature_calc_folding_cutting {
 		} # end if
 	} # end for each equipment
 	$results{'Status'}		= $bestEquipment ? 'calculated' : 'uncalculated';
-	$results{'Price'}		= sprintf($openprint::config{'ProjectMoneyFormat'}, $bestPrice );
+	$results{'Price'}		= sprintf($config{'ProjectMoneyFormat'}, $bestPrice );
 	$results{'MPrice'}		= ($bestPrice/$$specs{'txtQuantity'.$qty_index})*1000;
 	$results{'Equipment'}	= $bestEquipment;
 	return %results;
@@ -666,7 +671,7 @@ sub signature_calc {
 			$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
 			$totalPrice += $price;
-			if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
+			if ( $config{'Dumb Cutting'} ne 'Y' ) {
 				$sheets *= $$I{'columns'};
 				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 			} # end if
@@ -677,7 +682,7 @@ sub signature_calc {
 			$price = ( $runs * $horizontal_cuts * $ServicePrice{'Price'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $horizontal_cuts, $sheets, $runs, $price );
 			$totalPrice += $price;
-			if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
+			if ( $config{'Dumb Cutting'} ne 'Y' ) {
 				$sheets *= $$I{'rows'};
 				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 			} # end if
@@ -696,7 +701,7 @@ sub signature_calc {
 				$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
-				if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
+				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_columns'};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 				} # end if
@@ -707,7 +712,7 @@ sub signature_calc {
 				$price = ( $runs * $horizontal_cuts * $ServicePrice{'Price'} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $horizontal_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
-				if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
+				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_rows'};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 				} # end if
@@ -728,7 +733,7 @@ sub signature_calc {
 					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $price );
 					$totalPrice += $price;
-					if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
+					if ( $config{'Dumb Cutting'} ne 'Y' ) {
 						$sheets *= $$I{'dutch_columns'};
 						$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 					} # end if
@@ -740,7 +745,7 @@ sub signature_calc {
 					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $price );
 					$totalPrice += $price;
-					if ( $openprint::config{'Dumb Cutting'} ne 'Y' ) {
+					if ( $config{'Dumb Cutting'} ne 'Y' ) {
 						$sheets *= $$I{'dutch_rows'};
 						$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 					} # end if
@@ -805,9 +810,13 @@ sub calc {
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+
 	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	push @equipment, openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'When Printing'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
-	push @equipment, openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'When Folding'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	if ( $$services{'Folding'} ) {
+		push @equipment, openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'When Folding'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	} # end if
 	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	if ( ! @equipment ) {
 		$$specs{'alert'} = 'We have no cutting equipment.<br/>';
@@ -868,7 +877,7 @@ sub calc {
 			} # end if
 
 			# Folding
-if ( 1 ) {
+if ( $$services{'Folding'} ) {
 			my %results = signature_calc_folding_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
 			$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 			$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
@@ -886,7 +895,6 @@ $openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
 			my $minCharge = openprint::service::get_price( 'CuttingChargeMinimum', undef, $results{'Equipment'} );
 			$results{'Price'} = $minCharge if $results{'Price'} and ($results{'Price'} < $minCharge);
 
-			#$$specs{"ddmEquipment$qty_index"} = $results{'Equipment'};
 			$$specs{"txtRegularCutPrice-$signature_index-$qty_index"} = sprintf('%.2f', $results{'Price'} );
 			$price += $results{'Price'};
 			$mprice += $results{'MPrice'};
@@ -894,12 +902,12 @@ $openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
 		} # end foreach signature_index
 
 		if ( $$specs{"OverridePrice$qty_index"} eq 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
 		} # end if
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $mprice *(1+$$specs{'Markup'.$qty_index}/100) );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
+		$$specs{"MPrice$qty_index"} = sprintf( $config{'UnitPriceFormat'}, $mprice *(1+$$specs{'Markup'.$qty_index}/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
 
 	} # end foreach quantity
 	return $$specs{'Status'};

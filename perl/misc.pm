@@ -156,13 +156,14 @@ sub export {
 } # end sub export
 
 sub get_destination {
-    my ( $r, $log, $uri ) = @_;
+    my ( $r, $uri ) = @_;
     my $dest = $uri ? $uri : $r->uri();
     my @keys = $r->param();
     if ( @keys ) {
         $dest .= '?';
         my @params;
         foreach my $key ( @keys ) {
+			next if $key eq 'password';
             push @params, join( '=', ($key, $r->param($key)));
         } # end foreach
         $dest .=  join( '&', @params );

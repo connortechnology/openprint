@@ -5,6 +5,9 @@ use LWP::UserAgent;
 use openprint;
 use URI::Escape qw( uri_escape );
 
+use vars qw( $url );
+$url = 'https://www.sandbox.paypal.com/webscr&cmd=_express-checkout&token=';
+
 sub new {
     my $pkg=shift;
     my %params=@_;
@@ -36,12 +39,10 @@ sub Call_Service {
     my %res=();
     
     my %params=(%{$self->{api}},%req); 
-foreach my $k ( keys %params ) {
-#$params{$k} = uri_escape( $params{$k} );
-$params{$k} = uri_escape( $params{$k} ) if $k ne 'RETURNURL' and $k ne 'CANCELURL';
-$openprint::log->debug("$k => $params{$k}");
-} # end foreach
-$openprint::log->debug( join('&', map { "$_=$params{$_}" } keys %params ) );
+	foreach my $k ( keys %params ) {
+		$params{$k} = uri_escape( $params{$k} ) if $k ne 'RETURNURL' and $k ne 'CANCELURL';
+		$openprint::log->debug("PayPal Call_Service: $k => $params{$k}");
+	} # end foreach
     my $ua=LWP::UserAgent->new;
     $ua->timeout($self->{service}{timeout});    
     my $uares=$ua->post($self->{service}{url},\%params);
