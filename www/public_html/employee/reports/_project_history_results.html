@@ -1,25 +1,25 @@
 <? echo (
 	my %parameters;	
-	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) {
-		$parameters{'SalesPerson'} = $openprint::session{'user_id'};
-		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$openprint::session{'user_id'})";
-	} elsif ( $openprint::param{'CSR'} ) {
-		$parameters{'SalesPerson'} = $openprint::param{'CSR'};
+	if ( $session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
+		$parameters{'SalesPerson'} = $session{'user_id'};
+		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{'user_id'})";
+	} elsif ( $param{'CSR'} ) {
+		$parameters{'SalesPerson'} = $param{'CSR'};
 	} # end if
 	#$parameters{'order'} = 'lower(strcompanyname)';
 	my @Companies = openprint::Company::find( %parameters );
 	my %companies = map { int($_->id()), $_->name() } @Companies;
 	my %filters = (
-		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
-		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
-			'status' =>	$openprint::param{'status'},
-			'value_start' => $openprint::param{'value_start'},
-			'value_end' => $openprint::param{'value_end'},
-			'user_id' => ($openprint::param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $openprint::param{'Estimator'}),
+		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
+		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
+			'status' =>	$param{'status'},
+			'value_start' => $param{'value_start'},
+			'value_end' => $param{'value_end'},
+			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
 			'order' => 'Index',
 );
-	if ( $openprint::param{'company_id'} and exists $companies{$openprint::param{'company_id'}} ) {
-		$filters{'company_id'} = $openprint::param{'company_id'};
+	if ( $param{'company_id'} and exists $companies{$param{'company_id'}} ) {
+		$filters{'company_id'} = $param{'company_id'};
 	} # end if
 
 	if ( %companies ) {
@@ -48,14 +48,14 @@
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 	<? if ( exists $$variable{'Companies'}{int($$variable{'Project'}->company_id())} ) ?>
 	<tr<?rowclass?>>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->company->name() ); ) ?></a></td>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference() ); ) ?></a></td>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></a></td>
-		<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->status(); ) ?></a></td>
-		<td align="right"><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">$<? echo ( $$variable{'Project'}->price1(); ) ?></a></td>
-		<td align="right"><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">$<? echo ( $$variable{'Project'}->price2(); ) ?></a></td>
-		<td align="right"><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">$<? echo ( $$variable{'Project'}->price3(); ) ?></a></td>
+		<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
+		<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->company->name() ); ) ?></a></td>
+		<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference() ); ) ?></a></td>
+		<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></a></td>
+		<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->status(); ) ?></a></td>
+		<td align="right"><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">$<? echo ( $$variable{'Project'}->price1(); ) ?></a></td>
+		<td align="right"><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">$<? echo ( $$variable{'Project'}->price2(); ) ?></a></td>
+		<td align="right"><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>">$<? echo ( $$variable{'Project'}->price3(); ) ?></a></td>
 	</tr>
 	<? eval ( 
 		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';

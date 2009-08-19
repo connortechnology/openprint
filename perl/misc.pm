@@ -156,13 +156,14 @@ sub export {
 } # end sub export
 
 sub get_destination {
-    my ( $r, $log, $uri ) = @_;
+    my ( $r, $uri ) = @_;
     my $dest = $uri ? $uri : $r->uri();
     my @keys = $r->param();
     if ( @keys ) {
         $dest .= '?';
         my @params;
         foreach my $key ( @keys ) {
+			next if $key eq 'password';
             push @params, join( '=', ($key, $r->param($key)));
         } # end foreach
         $dest .=  join( '&', @params );
@@ -213,7 +214,7 @@ sub error {
 sub trim {
 	my @results;
 	foreach my $thing ( @_ ) {
-		$thing =~ s/^\s*(.*)\s*$/$1/;
+		s/^\s+//, s/\s+$// for $thing;
 		push @results, $thing;
 	}
 	return @results;
@@ -369,17 +370,6 @@ sub hms2time {
 	my ($h,$m,$s) = split(':', $_[0]);
 	return ($h*3600) + ($m*60) + $s;
 } # end sub hms2time
-
-sub format_bytes {
-	if ( $_[0] > 1048576 ) {
-		return sprintf( '%.3f MB', $_[0] / 1048576 );
-	} elsif ( $_[0] > 1024 ) {
-		return sprintf( '%.3f KB', $_[0] / 1024 );
-	} else {
-		return $_[0].' B';
-	} # end if
-} # end sub format_bytes
-
 1;
 
 __END__

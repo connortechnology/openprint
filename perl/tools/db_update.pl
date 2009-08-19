@@ -550,6 +550,26 @@ sql::insert(undef,undef,'configuration', [
     'category', 'Perfect Binding Settings',
     ] ) if ! $config{'PerfectBindGlueSpace'};
 
+if ( $config{'public_URIs'} ) {
+	my @paths = split(',', $config{'public_URIs'} );
+	for ( my $p=0; $p < @paths; $p +=1 ) {
+		if ( $paths[$p] =~ /confirmation_login/ ) {
+			$paths[$p] = '/index.html';
+		#} elsif ( $paths[$p] =~ /login_confirmation/ ) {
+			#$paths[$p] = '/index.html';
+		} elsif ( $paths[$p] =~ /overview/ ) {
+			$paths[$p] = '/index.html';
+		} elsif ( $paths[$p] =~ /search/ ) {
+			$paths[$p] = '/index.html';
+		} elsif ( $paths[$p] =~ /main(\/account.*)/ ) {
+			$paths[$p] = $1;
+		#} elsif ( $paths[$p] =~ /\.\*(\/account.*)/ ) {
+			#$paths[$p] = $1;
+		}
+	} # end foreach
+	sql::update( undef, undef, 'configuration', ['name=?', 'public_URIs'], 'value', join(',',sets::union(@paths)) );
+} # end inf
+
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
@@ -1063,6 +1083,14 @@ foreach my $E ( openprint::Equipment::find() ) {
 } # end foreach
 
 if ( ! sets::isin( 'manifests', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Manifests.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} # end if
+
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manifests LIMIT 1', {} );
+if ( ! $data ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Manifests.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
@@ -1904,7 +1932,7 @@ if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
 	}
 } else {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Invoiced_Products LIMIT 1', {} );
-	if ( ! exists $$data{'description'} ) {
+	if ( $data and ! exists $$data{'description'} ) {
 		$dbh->do('ALTER TABLE Invoiced_Products add description text');
 	} # end if
 } # end if
@@ -2086,7 +2114,7 @@ if ( ! $data ) {
 	if ( exists $$data{'serviceindex'} ) {
 		$dbh->do('ALTER TABLE Schedule ADD service_id INTEGER[]');
 		$dbh->do('UPDATE Schedule SET service_id=ARRAY[serviceindex]');
-		$dbh->do('ALTER TABLE Schedule DROP serviceindex');
+		#$dbh->do('ALTER TABLE Schedule DROP serviceindex');
 	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
@@ -2132,6 +2160,14 @@ if ( sets::isin( 'tbl_quotes', \@tables ) ) {
 	$dbh->do("ALTER TABLE Quotes alter column id set default nextval('quotes_id_seq')");
 } # end if
 $dbh->commit();
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Articles LIMIT 1', {} );
+if ( ! $data ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Articles.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

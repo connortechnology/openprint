@@ -44,7 +44,6 @@ $serial = 'projecttemplate_id_seq';
 );
 
 my %find_cache;
-# Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
@@ -87,9 +86,5 @@ sub find {
 	return map { new openprint::ProjectType_Template( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub delete {
-    sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $_[0]{'id'} );
-} # end sub delete
-
 1;
-#__END__
+__END__

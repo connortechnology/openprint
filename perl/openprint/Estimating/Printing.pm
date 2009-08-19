@@ -56,6 +56,7 @@ my %variables = (
 		'hdnBreakdown1'=>['save','output'], 'hdnBreakdown2'=>['save','output'], 'hdnBreakdown3'=>['save','output'],
 		'txtSignatureType' => ['save'],
 		'txtServiceDescription'	=> ['save'],
+		'txtEmployeeComments'	=>	['save'],
 		'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 		'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
 		'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
@@ -699,7 +700,18 @@ my $master_time = gettimeofday();
 		} # end if
 	} # end if
 
-	if ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
+	if ( $$specs{'ProjectType'} eq 'Banners' ) {
+		my $width = $$specs{'txtFinalWidth'};
+		$width += $$specs{'PocketSize'};
+		$width += $$specs{'PocketSize'};
+		if ( $width != $$specs{'txtWidth'} ) {
+			$$specs{'txtWidth'} = $width;
+			$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
+		} else {
+			$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
+		} # end if
+$openprint::log->debug("Banners: $width != $$specs{txtWidth}");
+	} elsif ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
 		if ( $$specs{'ddmProjectSize'} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
 # auto calc flat dimensions
@@ -2267,7 +2279,7 @@ $openprint::log->debug("Back from do_versions, # of imps: " . @impositions );
 			my $found = 0;
 			foreach my $I ( @impositions ) {
 				if ( $I->imposition() == $$sig_specs{'txtImposition'.$qty_index} ) {
-					$found = 0;
+					$found = 1;
 				} # end if
 			} # end foreach I
 			if ( ! $found ) {
@@ -4045,18 +4057,13 @@ sub compare_signatures_runstyle {
 sub compare_signatures {
 	my ( $sig1, $sig2, $qty_index ) = @_;
 	return 0 if ! compare_signatures_runstyle( $sig1, $sig2, $qty_index );
-#foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
-##foreach my $key ( 'ddmRunStyle', 'ddmPress' ) {
-#return 0 if $$sig1{$key.$q_i} ne $$sig2{$key.$q_i};
-#} # end if
-#} # end foreach q_i
 	foreach my $key (
 			'Group',
 			'CustomStockPrice','txtCustomMWeight',
 			'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour',
 			'txtSpecificStockWidth', 'txtSpecificStockHeight',
 			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
-			'rdbSuppliedStock','rdbSpecificStock',
+			'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
 		if ( $$sig1{$key} ne $$sig2{$key} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");

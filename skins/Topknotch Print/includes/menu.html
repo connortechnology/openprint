@@ -8,13 +8,13 @@
 <a href="/support/FAQ.html">FAQ</a>
 <br />
 <? if ( $openprint::session{'user_id'} ) ?>
-	<a href="/main/account/company_profile.html">Company Profile</a> / 
-	<a href="/main/account/user_profile.html">User Profile</a> /
+	<a href="/account/company_profile.html">Company Profile</a> / 
+	<a href="/account/user_profile.html">User Profile</a> /
 	<a href="/main/order/history.html">Order History</a>
 <? if ( sets::isin($openprint::session{user_type}, ['A','E'] ) ) ?>
 	/ <a href="/main/project/history.html">Project History</a>
-	/ <a href="/main/account/registration.html">Registration</a>
+	/ <a href="/account/registration.html">Registration</a>
 <? endif ( sets::isin($openprint::session{user_type}, ['A','E'] ) ) ?>
 <? else ( $openprint::session{'user_id'} ) ?>
-	<a href="/main/account/registration.html">Registration</a>
+	<a href="/account/registration.html">Registration</a>
 <? endif ( $openprint::session{'user_id'} ) ?>

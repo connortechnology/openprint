@@ -12,17 +12,17 @@
 </ul>
 <ul>Account
 <? if ( $openprint::session{'user_id'} ) ?>
-  <li><a href="/main/account/logout.html">Logout</a></li>
-  <li><a href="/main/account/user_profile.html">User Profile</a></li>
-  <li><a href="/main/account/company_profile.html">Company Profile</a></li>
-  <li><a href="/main/account/credit_application.html">Credit Application</a></li>
-  <li><a href="/main/account/reseller_application.html">Reseller Application</a></li>
+  <li><a href="/account/logout.html">Logout</a></li>
+  <li><a href="/account/user_profile.html">User Profile</a></li>
+  <li><a href="/account/company_profile.html">Company Profile</a></li>
+  <li><a href="/account/credit_application.html">Credit Application</a></li>
+  <li><a href="/account/reseller_application.html">Reseller Application</a></li>
 <? else ( $openprint::session{'user_id'} ) ?>
-  <li><a href="/main/account/registration.html">Registration</a></li>
-  <li><a href="/main/account/login.html">Login</a></li>		
+  <li><a href="/account/registration.html">Registration</a></li>
+  <li><a href="/account/login.html">Login</a></li>		
 <? endif ( $openprint::session{'user_id'} ) ?>
 <? if ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
-  <li><a href="/main/account/select_company.html">Select Company</a></li>
+  <li><a href="/account/select_company.html">Select Company</a></li>
 <? endif ( sets::isin( $openprint::session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 </ul>
 <ul>Services

@@ -29,16 +29,6 @@
 			alert( 'Please enter the docket # or project # to allocate to.' );
 			return false;
 		} // end if
-		if ( form.skid_id && form.skid_id.value ) {
-			if ( form.type && (get_rdb_value( form.type ) == 'Roll') && form.Quantity.value > 10000 ) {
-				alert( 'Skids cannot contain more than 10000lbs' );
-				return false;
-			} // end if
-			if ( form.Units && (get_value( form.Units ) == 'lbs') && form.Quantity.value > 10000 ) {
-				alert( 'Skids cannot contain more than 10000lbs' );
-				return false;
-			} // end if
-		} // end if
 		if ( form.available_quantity && ( parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) ) {
 			if ( form.Units ) {
 				alert( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available' );
@@ -302,6 +292,7 @@ Please select a Paper to view/edit.<br>
 			my $available_sheets;
 
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
+$log->debug("Got paper Available: " . $Paper->available() ) if $Paper->id() == 7626;
 				next if $Paper->available() <= 0;
 				my %skid_age;
 				my %last_seen;

@@ -118,12 +118,16 @@ sub calc {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
+		my $qty = $$specs{"txtQuantity$qty_index"};
+		if ( ! $$printing_specs{'PageQuantity'} ) {
+			$qty /= int( $$specs{'PageQuantity'} );
+		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= "Minimum Charge: $minimumCharge<br/>";
-		$$specs{'hdnBreakdown'.$qty_index} .= "QTY $qty_index: ".$$specs{"txtQuantity$qty_index"}. '<br/>';
+		$$specs{'hdnBreakdown'.$qty_index} .= "QTY $qty_index: $qty<br/>";
 
 		my $price = 0;
 
-		my %ServicePrice = openprint::service::get_price_object( 'Padding', $$specs{"txtQuantity$qty_index"}, undef );
+		my %ServicePrice = openprint::service::get_price_object( 'Padding', $qty, undef );
 		if ( ! %ServicePrice ) {
 			$log->debug('No price');
 			$status = 'uncalculated';
@@ -142,7 +146,7 @@ sub calc {
 
 		if ( $$specs{'Backing'} eq 'Cardboard' ) {
 			if ( my @Materials = openprint::Material::find('name'=>'CardboardBacking') ) {
-				my %CardboardPrice = $Materials[0]->get_price( $$specs{"txtQuantity$qty_index"}, undef );
+				my %CardboardPrice = $Materials[0]->get_price( $qty, undef );
 				if ( $CardboardPrice{'units'} eq 'Per Square Inch' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * $$sig_specs{'txtFinalWidth'} * $$sig_specs{'txtFinalHeight'} * $$specs{"txtQuantity$qty_index"};
 				} elsif ( $CardboardPrice{'units'} eq 'Per Square Foot' ) {
@@ -156,7 +160,7 @@ sub calc {
 		} # end if
 		if ( $$specs{'rdbDTape'} eq 'Y' ) {
 			if ( my @Materials = openprint::Material::find('name'=>'DTape') ) {
-				my %DTapePrice = $Materials[0]->get_price( $$specs{"txtQuantity$qty_index"}, undef );
+				my %DTapePrice = $Materials[0]->get_price( $qty, undef );
 				$DTapePrice{'Total'} = $DTapePrice{'Price'} * $$sig_specs{'txtFinalWidth'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('DTape Price: $%1$.2f%2$s = $%3$.2f<br/>', @DTapePrice{'Price','units','Total'} );
 				$price += $DTapePrice{'Total'};
@@ -177,7 +181,7 @@ sub calc {
 		} # end if Glues
 
 		$price = $minimumCharge if $price < $minimumCharge;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price/$qty );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
 		} else {

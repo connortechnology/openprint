@@ -6,7 +6,6 @@
 ) ?>
 <form name="f1" method="post" action="">
 	<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
-	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
 	<input type="hidden" name="Status" value="<?Status?>" />
 	<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
 
@@ -19,6 +18,9 @@
 					<h3>Instant Pricing</h3>
 
 					<!--#include virtual="/includes/sizes.html"-->
+<? if ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
+	<!--#include virtual="/includes/main/proj/banner_printing.html"-->
+<? endif ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
 					<p><label>Colours:</label>
 						<select name="Colours" onchange="calc(this.form.name);">
 							<option value="4/0">4 Colour One Side</option>
@@ -105,7 +107,17 @@
 		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
 		<h2><? echo ( $$variable{'ProjectType'}->name() ) ?> printing - full colour</h2>
+<? if ( ! ( $r->uri() =~ /trade/ ) ) ?>
+<div style="width: 500px;">
+<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div><div class="shadow_left"><div class="shadow_right">
+<div style="font-size: large; font-weight: bold; text-align: center;">Free shipping on all orders over $100 within GTA*</div>
+</div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+</div>
+<? endif ( ! ( $r->uri() =~ /trade/ ) ) ?>
 		<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ); ) ?>
-		</div><!--instant_price_section-->
+<? if ( ! ( $r->uri() =~ /trade/ ) ) ?>
+<p style="font-size: small;">* Free shipping does not apply to trade clients or any job that has been discounted below our standard pricing.</p>
+<? endif ( ! ( $r->uri() =~ /trade/ ) ) ?>
+</div><!--instant_price_section-->
 	</div><!--InstantPricing-->
 </form>

@@ -39,27 +39,9 @@ $openprint::log->debug("$session{user_type}");
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
-<script type="text/javascript">
+		<script type="text/javascript">
 <!--
-        function startList() {
-            if (document.all && document.getElementById) {
-                var navRoot = document.getElementById("menubar");
-                if ( navRoot ) {
-                    for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-                        var node = navRoot.childNodes[i];
-                        if (node.nodeName=='LI') {
-                            node.onmouseover=function() {
-                                this.className+=' over';
-							}
-                            node.onmouseout=function() {
-								this.className=this.className.replace(' over', '');
-							}
-                        } // end if
-                    } // end for
-                } // end if
-            }
-        }
-		Event.observe(window, 'load', startList );
+		Event.observe(window, 'load', setup_ie_menu );
 			
 		if ( typeof(body_onLoad) == 'function' ) 
 			Event.observe(window, 'load', body_onLoad );
@@ -71,12 +53,12 @@ $openprint::log->debug("$session{user_type}");
 			<div class="Header">
 				<a class="Logo" href="/index.html"><img id="Logo" src="/images/logo.png" alt="West Star Printing"/></a>
   <? if ( ! $session{'user_id'} ) ?>
-				<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
+				<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/account/login.html">
 					<p><label>Email:</label><input type="text" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/>
 							<? echo ( ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ) ) ?>
 					</p>
 					<p><label>Password:</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/>
-						<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register Now' );) ?>
+						<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/account/registration.html', 'Register Now' );) ?>
 					</p>
 					<input type="hidden" name="btnFunction" />
 				</form>
@@ -121,7 +103,7 @@ $openprint::log->debug("$session{user_type}");
 			</div><!--Header--><div class="GrayGradient"><? if ( $r->uri() =~ /index.html$/ ) ?><div style="background: white; margin: 0px 0px 2px 0px;"><img id="Rolls" src="/images/rolls.jpg" alt=""/></div><? endif ( $r->uri() =~ /index.html$/ ) ?></div><div class="Content">
 			<div class="ContentInner">
 <? if ( ( $session{'user_type'} eq 'C' ) and ! $session{'AgreedToDisclaimer'} ) ?>
-<form name="DisclaimerForm" method="post" action="/main/account/login.html">
+<form name="DisclaimerForm" method="post" action="/account/login.html">
 	<fieldset><legend>Disclaimer</legend>
 <? echo ( $config{'LoginDisclaimer'} ) ?>
 		<p class="buttons">

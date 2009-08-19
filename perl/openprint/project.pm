@@ -99,20 +99,18 @@ $openprint::log->debug("Viewing Project $project_index");
 				
 			} # end foreach
 		} else {
-		
-		foreach my $service_index ( @{$services{$id}} ) {
-			if ( $n eq 'Outside Service' ) {
-				push @services, $project{$service_index}{'ServiceName'}, $url, $service_index;
-			} else {
-				push @services, $n, $url, $service_index;
-			} # end if
-		} # end foreach
+			foreach my $service_index ( @{$services{$id}} ) {
+				if ( $n eq 'Outside Service' ) {
+					push @services, $project{$service_index}{'ServiceName'}, $url, $service_index;
+				} else {
+					push @services, $n, $url, $service_index;
+				} # end if
+			} # end foreach
 		} # end if
 	} # end while
 
 	while ( @services ) {
 		my ( $name, $url, $service_index ) = splice @services, 0, 3;
-
 
 		push @{$$variable{'SERVICES'}}, $service_index, $name, $url;
 
@@ -127,7 +125,7 @@ $openprint::log->debug("Viewing Project $project_index");
 		} # end foreach qty_index
 
 		push @{$$variable{'SERVICES'}}, $statuses{$service_index};
-	} # end foreach
+	} # end while ( @services )
 
 	my $save = 0;
 	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {

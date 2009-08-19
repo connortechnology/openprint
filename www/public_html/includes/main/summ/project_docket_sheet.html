@@ -296,7 +296,15 @@
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white" style="table-layout: fixed;">
 	<tr> 
-         <td class="headerText"><b>Special Press Instructions:</b></td>
+         <td class="headerText"><b>Special Press Instructions:</b>
+			<? echo ( 
+				my $services = $$variable{'Project'}->services();
+				if ( $$services{'PerfectBound'} ) {
+					my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{'PerfectBound'}[0] );
+					return 'Spine: ' . $$specs{'txtCalliper'}.' inches<br/>';
+				} # end if
+			) ?>
+		</td>
     </tr>
     <tr>
          <td class="headerText">

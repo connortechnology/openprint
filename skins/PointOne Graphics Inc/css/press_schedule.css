@@ -35,7 +35,9 @@ div.row {
 		margin: 0px 0px 0px 0px;
 		padding: 0px;
 		border: none;
-
+		text-align: center;
+		font-size:16px;
+		font-weight:bold;
 	}
 	div.PressColumn ul {
 		padding: 0px;
@@ -45,8 +47,11 @@ div.row {
 		border-bottom: 1px solid black;
 		list-style: none none inside;
 		text-indent: 0px;
+		font-weight: normal;
+		text-align: left;
+		font-size: 12px;
 	}
-	div.PressColumn li {
+	div.PressColumn ul li {
 		padding: 0px;
 		margin: 0px;
 		margin-top: 2px;
@@ -56,6 +61,8 @@ div.row {
 		text-indent: 0px;
 		background-color: #ffffff;
 		z-index: 0;
+		min-height: 80px;
+		max-height: 400px;
 	}
 	li br {
 		clear: both;
@@ -100,7 +107,6 @@ div.row {
 		font-weight: bold;
 		font-size: 14px;
 		overflow: hidden;
-		height: 14px;
 		text-align: left;
 	}
 	.Forms {

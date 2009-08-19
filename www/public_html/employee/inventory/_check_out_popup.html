@@ -6,11 +6,11 @@
 		$$variable{'quantity'} = $param{'quantity'};
 	} elsif ( $param{'skid_id'} ) {
 		my $Skid = new openprint::Skid( $param{'skid_id'} );
-		if ( my @c = $Skid->contents('paper_id'=>$param{'paper_id'}) ) {
-			$$variable{'quantity'} = $c[0]->quantity();
+		if ( my $C = $Skid->Content( $$variable{'Paper'} ) ) {
+			$$variable{'quantity'} = $C->quantity();
 		} # end if
 	} else {
-		$$variable{'quantity'} = $$variable{Paper}->in_stock();
+		$$variable{'quantity'} = $$variable{'Paper'}->in_stock();
 	} # end if
 ) ?>
 <div id="CheckOut">
@@ -23,8 +23,9 @@
 			my $html = '';
 			foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
 				my $Skid = new openprint::Skid( $skid_id );
-				foreach my $c ( $Skid->contents('paper_id'=>$$variable{'Paper'}->id())) {
-					$html .= sprintf('skid %d contains %d%s<br/>', $skid_id, $$c->quantity(), $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : ' sheets' ); 
+				foreach my $C ( $Skid->Contents( 'paper_id'=>$param{'paper_id'} ) ) {
+					
+					$html .= sprintf('skid %d contains %d%s of %s<br/>', $skid_id, $C->quantity(), $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : ' sheets', $C->Paper()->to_string() ); 
 				} # end foreach
 			} # end foreach	
 			return $html;

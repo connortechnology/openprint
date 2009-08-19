@@ -273,7 +273,7 @@ sub verify_user {
 	if ( $session{'lastupdated'} and $session{'user_id'} and $idletime and ( time - $session{'lastupdated'} > $idletime ) ) {
 		logout( $log, $dbh, $variable, $cookie, $site );
 		$$variable{'idletime'} = $idletime;
-		$$variable{'Destination'} = misc::get_destination( $r, $log );
+		$$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 		if ( $site eq 'C' ) {
 			$$variable{'Redirect'} = '/error/idle_timeout.html';
 		} elsif ( $site eq 'A' ) {

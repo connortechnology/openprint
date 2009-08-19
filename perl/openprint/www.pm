@@ -82,30 +82,40 @@ sub handler {
 			'password'	=> $r->dir_config('db_password'),
 			);
 
-	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $log, $dbh, $r->dir_config() );
-	openprint::session_init();
-
-	foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
-		eval sprintf('openprint::%s::init_cache();', $o );
-		$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
-	} # end foreach
-
 	my $lastpage = '';
 	my $page = $r->uri();
-$openprint::log->debug("Page: $page");
-	while ( $page and $lastpage ne $page ) {
-		# This is for loop detection
-		$lastpage = $page;
-$variable{'uri'} = $page;
-		parse_page( $page );
-		if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
-			$page = $variable{'Redirect'};
-			$variable{'Redirect'} = '';
-		} # end if
-	} # end while
 
-	if ( exists $variable{'Download'} and $variable{'Download'} ) {
+
+		# This one has to go here, because it loads data, the others clear data, so they can go after the requires
+		configuration::init_cache( $log, $dbh, $r->dir_config() );
+	if ( $dbh ) {
+		openprint::session_init();
+
+		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
+			eval sprintf('openprint::%s::init_cache();', $o );
+			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
+		} # end foreach
+
+	$openprint::log->debug("Page: $page");
+		while ( $page and $lastpage ne $page ) {
+			# This is for loop detection
+			$lastpage = $page;
+	$variable{'uri'} = $page;
+			parse_page( $page );
+			if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
+				$page = $variable{'Redirect'};
+				$variable{'Redirect'} = '';
+			} # end if
+		} # end while
+
+	} # end if
+
+	if ( $variable{'ExternalRedirect'} ) {
+		$r->headers_out->set(Location=>$variable{'ExternalRedirect'});
+		$r->status(Apache2::Const::REDIRECT);
+		#$r->send_http_header;
+$log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
+	} elsif ( exists $variable{'Download'} and $variable{'Download'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {
 			$r->print( $_ );
 		} # end foreach
@@ -164,9 +174,11 @@ $variable{'uri'} = $page;
 		} # end foreach
 	} # end if
 
-	$session{'lastupdated'} = time;
-	untie %session;
-	$dbh->disconnect();
+	if ( $dbh ) {
+		$session{'lastupdated'} = time;
+		untie %session;
+		$dbh->disconnect();
+	} # end if
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();
@@ -217,7 +229,7 @@ $log->debug("User Type: $session{'user_type'}");
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				if ( sql::execute( $log, $dbh, 'SELECT type FROM Users WHERE type=?', 'A' ) ) {
 					$variable{'Redirect'} = '/administrator/error/login.html';
-					$variable{'Destination'} = misc::get_destination( $r, $log );
+					$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 					return $status;
 				} # end if
 			} # end if
@@ -261,7 +273,7 @@ $log->debug("User Type: $session{'user_type'}");
 		if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) )	) {
 				$variable{'Redirect'} = '/employee/error/login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
@@ -361,7 +373,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			# if not logged in, determine if they are allowed to see this page or not.
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
@@ -381,7 +393,7 @@ $log->debug("Not logged in");
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 $log->debug("redirecting");
 				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} else {
@@ -400,7 +412,7 @@ $log->debug("logged in");
 			# if not logged in, determine if they are allowed to see this page or not.
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} # end if

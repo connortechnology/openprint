@@ -7,7 +7,9 @@ function calc( formName ){
 	} // end if
 	timeout = null;
     gettingNewPrice = true;
-    jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::service::external_calc', get_variables( formName, 'Stitching' ) );
+	var h = form.serialize(true);
+	h.service_type = 'Stitching';
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end calc_packaging()
 
 function validate_data(formName) {

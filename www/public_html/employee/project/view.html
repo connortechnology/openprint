@@ -229,9 +229,18 @@ function open_window( page ) {
 			} # end if
 			
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-				my @schedule = openprint::press_schedule::find('project_id'=>$$variable{'ProjectIndex'} );
-				if ( ! @schedule ) {
+				my $need_add = 0;
+				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
+					if ( ! openprint::ScheduledJob::find('project_id'=>$$variable{'ProjectIndex'}, 'service_id'=>$sig_id ) ) {
+						$need_add = 1;
+						last;
+					} # end if
+				} # end foreach sig_id
+
+				if ( ! $need_add ) {
 					$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule', 'addtopressschedule.gif', "f1.btnFunction.value='AddToPressSchedule';f1.submit();", '', 'Add To Press Schedule' );
+				} else {
+					$html .= ssi::writeButton( $log, $dbh, 'RemoveFromPressSchedule', 'removefrompressschedule.gif', "f1.btnFunction.value='RemoveFromPressSchedule';f1.submit();", '', 'Remove from Press Schedule' );
 				} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'CompletePrinting', 'completePrinting.gif', "f1.btnFunction.value='Complete Printing';f1.submit();", '', 'Complete Printing' ) if $$variable{'Project'}->status() eq 'Approved';
 			} # end if
@@ -325,7 +334,7 @@ function open_window( page ) {
 			my %Allocations;
 			my $rowclass;
 
-			foreach my $Allocation ( openprint::PaperAllocation::find('project_id'=>$$variable{'Project'}->id(), 'order'=>'created_on' ) ) {
+			foreach my $Allocation ( openprint::PaperAllocation::find('project_id'=>$$variable{'Project'}->id(), 'order'=>'skid_id' ) ) {
 				push @{$Allocations{$Allocation->paper_id()}}, $Allocation;
 			} # end foreach Allocation
 			foreach my $paper_id ( keys %Allocations ) {

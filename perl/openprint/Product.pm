@@ -58,6 +58,10 @@ sub find {
 		$sql .= ' AND category_id=?';
 		push @values, $params{'category_id'};
 	} # end if
+	if ( $params{'project_id'} ) {
+		$sql .= ' AND project_id=?';
+		push @values, $params{'project_id'};
+	} # end if
 
 	if ( exists $params{'deleted'} ) {
 		if ( $params{'deleted'} ) {

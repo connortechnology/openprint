@@ -285,8 +285,11 @@ sub getyears {
 sub getmonths {
 	my @months = map { $_, Date::Calc::Month_to_Text( $_ ) } ( 1 .. 12 );
 	my $selected = shift;
-	$selected = int($selected);
-	$selected = (localtime(time))[4]+1 if ! defined $selected;
+	if ( $selected ) {
+		$selected = int($selected);
+	} elsif ( ! defined $selected ) {
+		$selected = (localtime(time))[4]+1;
+	} # end if
 	return make_drop_down( \@months, $selected );
 } # edn sub getmonths
 
@@ -512,7 +515,15 @@ sub date_select {
 sub datetime_select {
 	my ( $prefix, $value, $options ) = @_;
 
-	my ($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( $value ? Date::Parse::str2time( $value ) : time );
+	my ($year,$month,$day, $hour,$min,$sec);
+	if ( ! defined $value ) {
+		($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( time );
+	} elsif ( $value ) {
+		($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( Date::Parse::str2time( $value ) );
+	} else {
+		$year = '';
+		$month = '';
+	} # end if
 #$openprint::log->debug("$year,$month,$day, $hour:$min:$sec");
 
 	if ( ref $options eq 'HASH' ) {
@@ -526,20 +537,25 @@ sub datetime_select {
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= '<option value=""> </option>';
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>';
 	$html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= '<option value=""> </option>';
 	$html .= getmonths( $month );
 	$html .= '</select>';
 	$html .= sprintf('<select name="%1$s_day" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= '<option value=""> </option>';
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>';
 	$html .= sprintf('<span id="%1$s_time" class="time"><select name="%1$s_hour" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= '<option value=""> </option>';
 	$html .= make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour );
 	$html .= '</select>';
 	$html .= ':';
 	$html .= sprintf('<select name="%1$s_minute" onchange="%2$s">', $prefix, $$options{'onchange'} );
-	$html .= make_drop_down( [ map { $_, $_ } ( 0 .. 59 ) ], $min );
+	$html .= '<option value=""> </option>';
+	$html .= make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min );
 	$html .= '</select></span>';
 	return $html;
 } # end sub datetime_select

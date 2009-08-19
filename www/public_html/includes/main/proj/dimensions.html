@@ -2,7 +2,11 @@
 	<fieldset><legend>Dimensions</legend>
 		<div class="leftColumn">
 			<select name="ddmProjectSize" size="1" onchange="ddmProjectSize_onChange(this.form);">
+<? if ( $$variable{'ddmProjectSize'} ) ?>
 				<option value="<?ddmProjectSize?>"><?ddmProjectSize?></option>
+<? else ( $$variable{'ddmProjectSize'} ) ?>
+				<option value="custom">custom</option>
+<? endif ( $$variable{'ddmProjectSize'} ) ?>
 			</select>
 		</div>
 		<div class="rightColumn">

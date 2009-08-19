@@ -122,5 +122,6 @@ sub emanantise {
 	return $Shift;
 } # end sub emanantise
 
+
 1;
 #__END__

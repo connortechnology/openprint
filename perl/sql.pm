@@ -10,21 +10,27 @@ use Time::HiRes qw{ gettimeofday tv_interval };
 use strict;
 
 use vars qw( $log $dbh $debug $timing );
+use openprint ();
+*dbh = \$openprint::dbh;
+*log = \$openprint::log;
 $debug = 1;
 $timing = 1;
 
+# This uses it's own dbh so as not to quash the global dbh.  This is so that we can easily open secondary db connections while maintaining the global one.
+#
 sub open_sql {
 	my ( $l, %sql_server ) = @_;
-	$log = $l;
+	$l = $log if ! $l;
+	my $new_dbh;
 	
 	my $dsn = "dbi:$sql_server{'driver'}:dbname=$sql_server{'database'};";
 	$dsn .= "host=$sql_server{'host'}" if $sql_server{'host'};
-	if ( ! ( $dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1,pg_enable_utf8 => 1 } ) ) ) {
+	if ( ! ( $new_dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1,pg_enable_utf8 => 1 } ) ) ) {
 		die $log->crit("Unable to connect to database $sql_server{'database'}: " . DBI->errstr );
 	} # end if
 	#$log->info("Opened connection to $sql_server{'database'}.	Thread ID: " . $dbh->{'thread_id'});
 
-	return $dbh;
+	return $new_dbh;
 } # end sub open_sql
 
 sub execute {

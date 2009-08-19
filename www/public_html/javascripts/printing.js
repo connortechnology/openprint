@@ -176,8 +176,11 @@ function calc_print( formName, force ) {
 		div.innerHTML = 'Calculating....';
 		div.show();
 	} // end if
-	jsrsExecute( '/jsrs.htm', cbFillPrintResults, 'openprint::service::external_calc', get_variables(formName,'Printing') );
-	return;
+	gettingNewPrice = true;
+	var h = form.serialize(true);
+	h.ServiceType = 'Printing';
+	h.callback = 'cbFillPrintResults';
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end calc_print
 
 

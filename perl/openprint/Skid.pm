@@ -144,64 +144,24 @@ sub copy {
 	my $self = shift;
 	my $new = new openprint::Skid( );
 	@$new{'location_id'} = @$self{'location_id'};
-	if ( ! $$self{'Paper'} ) {
-		$log->debug("Problem with paper on skid");
-	} # end if
-	%{$$new{'Paper'}} = %{$$self{'Paper'}};
 	$new->save();
-	foreach my $content ( $self->contents() ) {
-		my $Paper = new openprint::Paper( $content->paper_id );
-		my $newcontent = $content->copy();
-		$newcontent->skid_id( $new->id() );
-		$newcontent->save();
 
-		$Paper->add_inventory( $new, $content->quantity() );
-		my @data = sql::execute( $openprint::log,$openprint::dbh, q{SELECT project_id, quantity, units FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $Paper->id );
+	foreach my $C ( $self->Contents() ) {
+		$C->Paper()->add_inventory( $new->id(), $C->quantity() );
+		my @data = sql::execute( undef, undef, q{SELECT project_id, quantity, units FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $C->paper_id() );
 		while ( @data ) {
-			$Paper->allocate( $new->id(), splice @data, 0, 3 );
-		} # en d while
-	} # end foreach paper
+			$C->Paper()->allocate( $new->id(), splice @data, 0, 3 );
+		} # end while
+	} # end foreach Content
 	return $new;
 } # end sub copy
-
-sub load {
-	my ($self, $data ) = @_;
-
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM Skids WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-
-if ( 0 ) {
-	# Was remarked out in new version....
-	delete $$self{'Contents'};
-	@{$$self{'Contents'}} = $self->Contents();
-	%{$$self{'Paper'}} = ();
-	if ( $$self{'id'} ) {
-		foreach my $C ( $self->Contents() ) {
-			$$self{'Paper'}{$$C{'paper_id'}} += $$C{'quantity'};
-		} # end foreach
-	} # end if
-}
-} # end sub load
 
 sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
-	my $ac = sql::start_transaction( $dbh );
-
-	my %Paper = %{$$self{'Paper'}} if $$self{'Paper'};
-
-	$self->SUPER::save( $data );
-
-	sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE skid_id=?}, $$self{'id'} );
-	foreach my $paper_id ( keys %Paper ) {
-        my $Paper = new openprint::Paper( $paper_id );
-		sql::insert( undef, undef, 'skid_Contents', 'skid_id', $$self{'id'}, 'paper_id', $paper_id, 'quantity', int($Paper{$paper_id}), 'units', $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
-	} # end foreach paper_id
-	sql::end_transaction( $dbh, $ac );
+	my $e = $self->SUPER::save( $data );
 	$self->load();
-	return;
+	return $e;
 } # end sub save
 
 sub destroy {
@@ -225,7 +185,7 @@ sub add {
 	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
 
 	my $content;
-	my @contents = $self->contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
+	my @contents = $self->Contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
 	if ( ! @contents ) {
 		$content = new openprint::SkidContent();
 		$content->skid_id( $$self{'id'} );
@@ -251,18 +211,16 @@ sub add {
 	} else {
 		$quantity =~ s/[^\d]//g;
 # Set
-
 	} # end if
-
-	$content->quantity( $quantity );
-	$content->save();
+	$C->save({'quantity'=>$quantity});
 	return $quantity - $old_quantity;
 } # end sub add_inventory
+
 sub remove {
 	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;
-	my @contents = $self->contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
+	my @contents = $self->Contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
 	if ( ! @contents ) {
 		return 'Specified stock is not on this skid';
 	} # end if
@@ -277,7 +235,7 @@ sub set_quantity {
 	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
 	$quantity =~ s/[^\-\d]//g;
 	$quantity = int $quantity;
-	my @contents = $self->contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
+	my @contents = $self->Contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
 	if ( ! @contents ) {
 		return 'Specified stock is not on this skid';
 	} # end if
@@ -287,6 +245,9 @@ sub set_quantity {
 	$content->save();
 	return '';
 } # end sub set_quantity
+
+sub print_label {
+}
 
 sub location {
 	my $self = shift;
@@ -329,18 +290,28 @@ sub Location {
 	return new openprint::Location( $$self{'location_id'} );
 } # end sub Location
 
+sub Content {
+    my ( $self, $Paper ) = @_;
+	return if ! $$self{'id'};
+	foreach my $C ( $self->Contents() ) {
+		if ( $C->paper_id() == $Paper->id() ) {
+			return $C;
+		} # end if	
+	} # end foreach C
+} # end sub Content
+
 sub Contents {
     my $self = shift;
 	return if ! $$self{'id'};
 
-	if ( $$self{'Contents'} ) {
-		return @{$$self{'Contents'}};
+	if ( @_ ) {
+		my %params = @_;
+		$params{'skid_id'} = $$self{'id'};
+		return openprint::SkidContent::find( %params );
+	} elsif ( ! $$self{'Contents'} ) {
+		@{$$self{'Contents'}} = openprint::SkidContent::find( 'skid_id'=>$$self{'id'} );
 	} # end if
-
-    my %params = @_;
-    $params{'skid_id'} = $$self{'id'};
-
-    return openprint::SkidContent::find( %params );
+	return @{$$self{'Contents'}};
 } # end sub contents
 
 sub allocation {
@@ -353,7 +324,12 @@ sub allocation {
 
 sub allocateable {
 	my ( $self, $Paper ) = @_;
-	return $$self{'Paper'}{$Paper->id()} - $self->allocation( 'Paper'=>$Paper );
+	my $C = $self->Content( $Paper );
+	if ( ! $C ) {
+		$log->error("Unable to find SkidContent for Skid $$self{'id'} for Paper $$Paper{id}");
+		return;
+	} # end if
+	return $C->quantity() - $self->allocation( 'Paper'=>$Paper );
 } # end sub allocateable
 
 # Checkout all paper on the skid
@@ -433,13 +409,20 @@ sub allocate {
 
 sub empty {
 	my ( $self ) = @_;
-	foreach my $paper_id ( keys %{$$self{'Paper'}} ) {
-		if ( $$self{'Paper'}{$paper_id} > 0 ) {
-			return 0;
-		} # end if
-	} # end foreach
-	return 1;
+	my @Contents = $self->Contents('quantity_>'=>0);
+	return ! @Contents;
 } # end sub empty
+
+sub contents {
+	my ( $self, $Paper ) = @_;
+
+	my $total;
+	foreach my $C ( $self->Contents() ) {
+		next if $C->paper_id() != $Paper->id();
+		$total += $C->quantity();
+	} # end foreach C
+	return $total;
+} # end sub contents
 
 sub rfidtag_id {
 	my $self = shift;

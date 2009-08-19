@@ -46,7 +46,6 @@
 				<? echo ( 
 						# Load Defaults
 						if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
-
                             $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
                             my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
                             while ( my ( $name, $value ) = splice @defaults,0,2 ) {
@@ -110,7 +109,17 @@
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
 		<h2><? echo ( $$variable{'ProjectType'}->name() ) ?> printing - full colour</h2>
+<? if ( ! ( $r->uri() =~ /trade/ ) ) ?>
+<div style="width: 500px;">
+<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div><div class="shadow_left"><div class="shadow_right">
+<div style="font-size: large; font-weight: bold; text-align: center;">Free shipping on all orders over $100 within GTA*</div>
+</div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+</div>
+<? endif ( ! ( $r->uri() =~ /trade/ ) ) ?>
 		<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ); ) ?>
+<? if ( ! ( $r->uri() =~ /trade/ ) ) ?>
+<p style="font-size: small;">* Free shipping does not apply to trade clients or any job that has been discounted below our standard pricing.</p>
+<? endif ( ! ( $r->uri() =~ /trade/ ) ) ?>
 <? else ( $param{'projecttype_id'} ) ?>
 Please select the type of your project.
 <? endif ( $param{'projecttype_id'} ) ?>

@@ -125,20 +125,12 @@ function check_inputs(form ) {
 		return false;
 	} // end if
 
-	if ( form.type && get_rdb_value( form.type ) == 'Roll' && form.Quantity.value > 10000 ) {
-		alert( 'Skids cannot contain more than 10000lbs' );
-		return false;
-	} // end if
 	var units;
     if ( form.Units )
         units = get_value( form.Units );
     else if ($('Units'))
         units = $('Units').innerHTML;
 
-	if ( units == 'lbs' && form.Quantity.value > 10000 ) {
-		alert( 'Skids cannot contain more than 10000lbs' );
-		return false;
-	} // end if
 	if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
 		alert( 'You asked for ' + form.Quantity.value + ' but there are only ' + form.available_quantity.value + ' ' + units + ' available' );
 		return false;

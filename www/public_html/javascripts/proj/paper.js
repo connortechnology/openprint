@@ -1,7 +1,6 @@
 // From now on this file should only have stuff related to paper in it
 
 function body_onLoad() {
-	var form = getFormObj('f1');
 	calc('f1');
 } // end function body_onLoad();
 

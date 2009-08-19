@@ -6,7 +6,9 @@ package openprint::Project;
 use strict;
 use openprint ();
 
-use vars qw( %config );
+use vars qw( $log $dbh %config );
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 *config = \%openprint::config;
 
 use openprint::Currency;
@@ -330,8 +332,8 @@ sub is_printed {
 	
 	my %statuses = sql::execute( undef, undef, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	foreach ( $self->signatures() ) {
-		return 0 if $statuses{$_} eq 'Ordered';
-	} # end foreac
+		return 0 if sets::isin( $statuses{$_}, ['Ordered','In Production'] );
+	} # end foreach
 	return 1;
 } # end sub is_printed
 
@@ -502,9 +504,15 @@ sub find {
 		$sql .= " AND id::text LIKE '$params{'id_like'}%'";
 	} # end if
 
+	if ( $params{'type_id'} ) {
+		$sql .= ' AND type_id=?';
+		push @values, $params{'type_id'};
+    } # end if
 	if ( exists $params{'predefined'} ) {
-		$sql .= ' AND predefined=?';
-		push @values, $params{'predefined'};
+		if ( $params{'predefined'} ne '' ) {
+			$sql .= ' AND predefined=?';
+			push @values, $params{'predefined'};
+		} # end if
 	} # end if
 
 	if ( $params{'reference'} ) {
@@ -830,7 +838,7 @@ sub copy {
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ProjectIndex', $new->id(), 1 );
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, 'ServiceIndex', $new_service_index, 1 );
 
-		my $specs = openprint::service::get_specs_ref( $self->id(), $service_index );
+		my $specs = openprint::service::get_specs_ref( $self, $service_index );
 		foreach my $key ( keys %$specs ) {
 			if ( ! sets::isin_regx( $key, @dont_copy ) ) {
 				openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $new->id(), $new_service_index, $key, $$specs{$key}, 1 );
@@ -1082,6 +1090,7 @@ sub ordered_quantity {
 	} # end if
 	return $$self{'quantity'.$self->ordered_quantity_index()};
 } # end sub ordered_quantity
+
 sub ordered_quantity_index {
 	my $self = shift;
 	if ( (! $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {
@@ -1195,12 +1204,13 @@ sub status_change {
 		foreach $_ ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $_, 'Complete' );
 		} # end foreach signature
-        sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $self->id() );
+		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+			$Job->delete();
+		} # end foreach
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 			$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
 		} # end foreach AP
-
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
 		foreach my $s_id ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
@@ -1210,7 +1220,9 @@ sub status_change {
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
 		} # end foreach
-		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
+		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+			$Job->delete();
+		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
@@ -1220,7 +1232,9 @@ sub status_change {
 	} elsif ( sets::isin( $new_status, ['Shipped','Picked Up', 'Complete'] ) ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus != ''", $$self{id}], 'strStatus', 'Complete' );
 # Remove jobs from the Schedule when marked complete.
-		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
+		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+			$Job->delete();
+		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
@@ -1234,6 +1248,52 @@ sub status_change {
 sub User {
 	return new openprint::User( $_[0]{'user_id'} );	
 } # end sub User
+
+sub add_signature {
+	my ( $self, $sig_index, $status, $data ) = @_;
+	
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
+	my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $self->id(), 'AdditionalSignature' );
+	openprint::service::status( $self->id(), $print_service_index, $status );
+	if ( ! $sig_index ) {
+		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+		my ( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );
+		$sig_index += 1;
+	} # end if
+	openprint::service::insert_service_spec( $log, $dbh, $self->id(), $print_service_index, 'SignatureIndex', $sig_index );
+	sql::end_transaction( $dbh, $ac );
+
+} # end sub add_signature
+
+sub copy_signature {
+    my ( $self, $sig_specs, $data ) = @_;
+    my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $self->id(), 'AdditionalSignature' );
+    my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
+    my $ac = sql::start_transaction( $dbh );
+    $dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+    $_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+    my ( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );
+    $sig_index += 1;
+    openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, 'SignatureIndex', $sig_index );
+
+    # Releases the lock
+    $dbh->commit();
+
+    foreach my $key ( openprint::Estimating::Printing::variables() ) {
+		next if $key eq 'SignatureIndex';
+        openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
+    } # end foreach
+
+	if ( $data ) {
+		foreach my $k ( keys %{$data} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $k, $$data{$k} );
+		} # end foreach k
+	} # end if data
+
+    sql::end_transaction( $dbh, $ac );
+    return $new_service_index;
+} # end sub copy_signature
 
 sub Template {
 	return new openprint::QuoteLevel( $_[0]{'style_id'} );

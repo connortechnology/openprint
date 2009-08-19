@@ -27,6 +27,8 @@ BEGIN {
 	use	Authen::Captcha;
 	use GD::Barcode;
 	use Encode;
+	use JSON;
+	use JSON::XS;
 
 	#use Carp ();
 

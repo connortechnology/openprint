@@ -2,7 +2,9 @@
 	$$variable{'pages'} = POSIX::ceil(@{$$variable{'Skids'}}/3);
 	$$variable{'page'} = 1;
 	my $Skid = new openprint::Skid( $$variable{'Skids'}[0] );
-	$$variable{'total_quantity'} = $$Skid{'Paper'}{$$variable{'paper_id'}}*@{$$variable{'Skids'}};
+	if ( my $C = $Skid->Content( new openprint::Paper( $$variable{'paper_id'} ) ) ) {
+	$$variable{'total_quantity'} = $C->quantity()*@{$$variable{'Skids'}};
+	} # end if
 	$$variable{'FirstSkid'} = $$variable{'Skids'}[0];
 	$$variable{'LastSkid'} = $$variable{'Skids'}[@{$$variable{'Skids'}}-1];
 ) ?>
@@ -46,7 +48,7 @@
 		$html .= '</td><td width="23%">&nbsp;</td><td width="37%">&nbsp;</td></tr>';
 	} # end if
 	$html .= '<tr height="50%"><td>Total Qty:</td><td style="border: 1px solid black;">';
-	if ( $$Skid{'Paper'}{$$variable{'paper_id'}} ) {
+	if ( my $C = $Skid->Content( new openprint::Paper( $$variable{'paper_id'} ) ) ) {
 		$html .= $$variable{'total_quantity'};
 		$html .= 'lbs' if $Paper->type() eq 'Roll';
 		$html .= 'sheets' if $Paper->type() eq 'Sheet';
@@ -58,9 +60,9 @@
 <p>
 <? echo ( 
 	my $html;
-	$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$openprint::param{docket}+&amp;NoText=1&amp;Height=30">` if $openprint::param{'docket'};
+	$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$param{docket}+&amp;NoText=1&amp;Height=30">` if $param{'docket'};
 	$html .= '<b>Docket:</b>';
-	$html .= qq`<b>$openprint::param{docket}</b><br/>`;
+	$html .= qq`<b>$param{docket}</b><br/>`;
 	return $html;
 ) ?>
 </p>
@@ -74,8 +76,8 @@
 		$html .= qq`<tr><td width="17%"><b>Skid #:</b></td><td width="33%">$skid_id</td>`;
 		$html .= qq`<td width="50%" rowspan="2" align="right"><img src="/barcode.png?code=I$skid_id+&amp;NoText=1&amp;Height=50"/></td></tr>`;
 		$html .= '<tr><td style="border: 1px solid black;">Qty:</td><td style="border: 1px solid black;">';
-		if ( $$Skid{'Paper'}{$$variable{'paper_id'}} ) {
-			$html .= $$Skid{'Paper'}{$$variable{'paper_id'}};
+		if ( my $C = $Skid->Content( $Paper ) ) {
+			$html .= $C->quantity();
 			$html .= 'lbs' if $Paper->type() eq 'Roll';
 			$html .= 'sheets' if $Paper->type() eq 'Sheet';
 		} # end if
