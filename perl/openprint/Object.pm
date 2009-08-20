@@ -84,6 +84,7 @@ sub save {
 	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
 
 	if ( ! $$self{'id'} ) {
+		
 		my $ac = sql::start_transaction( $dbh );
 		($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
 		if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
@@ -99,6 +100,7 @@ sub save {
 	} # end if
 	$self->load();
 	delete $openprint::Object::cache{$type}{$$self{id}};
+	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return;
 } # end sub save
 
@@ -165,14 +167,6 @@ $openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults
 	return @set_fields;
 } # end sub set
 
-sub delete {
-    my ( $self ) = @_;
-	my $type = ref $self;
-	my $table = eval '$'.$type.'::table';
-    sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
-	delete $openprint::Object::cache{$type}{$$self{id}};
-} # end sub delete
-
 sub copy {
 	my $self = shift;
 
@@ -205,6 +199,7 @@ sub delete {
 		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
 		delete $openprint::Object::cache{$type}{$$self{id}};
 	} # end if
+	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return;
 } # end sub delete
 
@@ -214,6 +209,7 @@ sub destroy {
 	my $table = eval '$'.$type.'::table';
 	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
 	delete $openprint::Object::cache{$type}{$$self{id}};
+	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 } # end sub destroy
 
 sub undelete {
@@ -222,6 +218,8 @@ sub undelete {
     my $table = eval '$'.$type.'::table';
 	sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 0 );
 	$$self{'deleted'}=0;
+	my %find_cache = eval '%'.$type.'::find_cache';
+	%find_cache = () if %find_cache;
 	return;
 } # end sub delete
 

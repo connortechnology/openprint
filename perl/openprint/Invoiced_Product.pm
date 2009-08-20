@@ -12,7 +12,7 @@ use MIME::Base64;
 my $debug = 0;
 
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $table $serial %fields %defaults %transforms %find_cache );
 
 $table = 'invoiced_products';
 $serial = 'invoiced_products_id_seq';
@@ -37,10 +37,9 @@ require sql;
 	'quantity'		=>	undef,
 );
 
-my %find_cache;
 sub find {
 	my %params = @_;
-	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
+	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) : $params{$_} } sort keys %params );
 	return map { new openprint::Invoiced_Product( $_ ) } @{$find_cache{$hash_key}} if $find_cache{$hash_key};
 
 	my $sql = 'SELECT * FROM ' . $table . ' WHERE 1>0';
