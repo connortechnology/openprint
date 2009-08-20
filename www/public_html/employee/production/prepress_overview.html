@@ -23,20 +23,6 @@
 		my $html;
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">';
-			my ( $year, $month, $day ) = @session{'/employee/production/prepress_overview.html?schedule_start_year',
-                    '/employee/production/prepress_overview.html?schedule_start_month',
-                    '/employee/production/prepress_overview.html?schedule_start_day'};
-			my ( $h, $min, $s );
-			my $end = 1;
-				$end = Date::Calc::Delta_Days( 
-					@session{'/employee/production/prepress_overview.html?schedule_start_year',
-					'/employee/production/prepress_overview.html?schedule_start_month',
-					'/employee/production/prepress_overview.html?schedule_start_day',
-					'/employee/production/prepress_overview.html?schedule_end_year',
-					'/employee/production/prepress_overview.html?schedule_end_month',
-					'/employee/production/prepress_overview.html?schedule_end_day'}
-					) + 1;
-
 			$html .= '<ul>';
 			foreach my $Project ( openprint::Project::find('status'=>$status, 'order'=>'index' ) ) {
 				my $services = $Project->services();

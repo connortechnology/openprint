@@ -70,9 +70,9 @@
 				my %weight;
 				foreach my $MC ( $Manifest->Contents() ) {
 					my $Skid = $MC->Skid();
-					foreach my $paper_id ( keys %{$$Skid{Paper}} ) {
-						$skids{$paper_id} += 1;
-						$weight{$paper_id} += $MC->quantity();
+					foreach my $C ( $Skid->Contents() ) {
+						$skids{$C->paper_id} += 1;
+						$weight{$C->paper_id} += $MC->quantity();
 					} # end foreach paper on skid
 				} # end foreach MC
 				foreach my $paper_id ( keys %weight ) {
