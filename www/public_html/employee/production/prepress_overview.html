@@ -1,0 +1,107 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<form name="f1" method="post" action="prepress_overview.html">
+	<input type="hidden" name="btnFunction"/>
+	<input type="hidden" name="schedule_id" />
+	<div class="unprintable">
+		Please click on the <b>Docket #</b> to view details.<br/>
+	</div><!--unprintable-->
+	<div class="PressScheduleHeader">
+		Pre-Press Overview Generated <? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, time ); ) ?>
+		<br/>
+	</div>
+	Projects highlighted in yellow are scheduled for printing.<br/>
+	<? echo (
+		@{$$variable{'Statuses'}} = ( 'In Prepress', 'Proofs Out', 'Waiting For QA Approval' );
+		my $html;
+		foreach my $status ( @{$$variable{'Statuses'}} ) {
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">'.$status.'</div>';
+		} # end foreach
+		return $html;
+		) ?>
+	<hr style="clear: both;"/>
+	<? echo (
+		my $html;
+		foreach my $status ( @{$$variable{'Statuses'}} ) {
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">';
+			my ( $year, $month, $day ) = @session{'/employee/production/prepress_overview.html?schedule_start_year',
+                    '/employee/production/prepress_overview.html?schedule_start_month',
+                    '/employee/production/prepress_overview.html?schedule_start_day'};
+			my ( $h, $min, $s );
+			my $end = 1;
+				$end = Date::Calc::Delta_Days( 
+					@session{'/employee/production/prepress_overview.html?schedule_start_year',
+					'/employee/production/prepress_overview.html?schedule_start_month',
+					'/employee/production/prepress_overview.html?schedule_start_day',
+					'/employee/production/prepress_overview.html?schedule_end_year',
+					'/employee/production/prepress_overview.html?schedule_end_month',
+					'/employee/production/prepress_overview.html?schedule_end_day'}
+					) + 1;
+
+			$html .= '<ul>';
+			foreach my $Project ( openprint::Project::find('status'=>$status, 'order'=>'index' ) ) {
+				my $services = $Project->services();
+
+				my $impressions = 0;
+				my $forms = 0;
+				foreach my $sig_id ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+					if ( ! $$sig_specs{'SignatureQuantity'} ) {
+						$$sig_specs{'SignatureQuantity'} = 1;
+#openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'SignatureQuantity', $$sig_specs{'SignatureQuantity'} );
+					} # end if
+					if ( ! $$sig_specs{'ImpressionQuantity'} ) {
+						$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
+#openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
+					} # end if
+					$impressions += $$sig_specs{'ImpressionQuantity'};
+					$forms += $$sig_specs{'SignatureQuantity'};
+				} # end foreach sig
+
+				my $colour = 'blue';
+				if ( openprint::ScheduledJob::find('project_id'=>$Project->id(), 'starttime_null'=>0 ) ) {
+					$colour = 'yellow';
+				} # end if
+				if ( $Project->rush() ) {
+					$colour .= ' rush';
+				} # end if
+
+
+				$html .= sprintf( '<li class="%s">', $colour );
+				$html .= '<div class="Company">';
+				$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $Project->id(), $Project->docket() );
+				my $n = $Project->Company()->name();
+				$n =~ s/The //gi;
+				$html .= ssi::htmlize( $n );
+				$html .= '</div>';
+				$html .= qq`<span class="DueDate">`;
+				if ( ! $Project->requested_date() ) {
+					$html .= 'no requested date</span>';
+				} else {
+					my ( $year, $month, $day ) = split('-', $Project->requested_date() );
+					if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
+						$html .= qq` $day</span>`;
+				} # end if
+				if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+					$html .= sprintf( q{<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">%2$s</div>}, $Project->id(), $Project->summary() );
+
+					$html .= sprintf( q{<span id="%1$dForms" class="Forms" onclick="openPopup( 'Forms', '%1$d' );">%2$d %3$s</span>}, $Project->id(), $forms, 'form'.($forms > 1 ? 's' : '') );
+					$html .= sprintf( q{<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">%2$d imps</span>}, $Project->id(), $impressions );
+					$html .= '<span class="Services">';
+					$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
+					$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+					$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
+					$html .= '</span>';
+				} else {
+					$html .= sprintf( '<div class="Comment">%3$s</div>', ssi::htmlize( $Project->summary() ) );
+					$html .= sprintf( '<span class="Forms">%d %s</span>', $forms, $forms > 1 ? ' forms' : ' form' );
+					$html .= sprintf( '<span class="Impressions">%d imps</span>', $impressions );
+				} # end if
+				$html .= '<br/></li>';
+			} # end foreach Project
+			$html .= '</ul>';
+			$html .= '</div>';
+		} # end foreach press
+		return $html;
+	) ?>
+</form>
+<br class="spacer"/>
