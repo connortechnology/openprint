@@ -51,7 +51,7 @@ sub Checkout_Skid {
 sub process_request {
 	my $self = shift;
 
-	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'www4') );
+	$dbh = sql::open_sql( $log, ('database'=>'point-one', 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one','host'=>'localhost') );
 
 	# Have to reload scanner here
 
@@ -123,7 +123,7 @@ sub process_request {
 
 			if ( ( $type_digit == 2 ) and ( $tag_id < 2100 ) ) {
 				# Ignore the test tags
-				$self->log(1, sprintf('%s : %s : old skid tag %s', $date, $self->{server}->{peeraddr}, $tag_id ));
+				$self->log(1, sprintf('%s : %s : old skid tag %s', $date, $self->{server}->{peeraddr}, $tag_id )) if $debug;
 				next;
 			} # end if
 
@@ -181,7 +181,7 @@ sub process_request {
 #$self->log(1, sprintf('%s : %s : getting histyo', $date, $self->{server}->{peeraddr} ));
 					@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
 					if ( ! sets::isin( $Tag->location_id(), @last_seen ) ) {
-						$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $self->{server}->{peeraddr}, $Tag->id(), $Tag->Location()->name() ));
+						#$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $self->{server}->{peeraddr}, $Tag->id(), $Tag->Location()->name() ));
 						$Scanner->location_id( $Tag->location_id(), $Tag->id() );
 						shift @last_seen if @last_seen > 7;
 						push @last_seen, $Tag->location_id();
@@ -197,7 +197,7 @@ sub process_request {
 				} elsif ( $Tag->type() eq 'Skid' ) {
 					# Ignore Skids
 				} else {
-					$self->log(1, "unknown tag type: " . $Tag->type() );
+					$self->log(1, "unknown tag type: (" . $Tag->type().')' );
 				} # end if
 
 			} elsif ( $Scanner->type() eq 'Truck Inventory' ) {
