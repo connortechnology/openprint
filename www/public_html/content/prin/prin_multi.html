@@ -124,17 +124,20 @@
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
 		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
-<? if ( ! ( $r->uri() =~ /trade/ ) ) ?>
+<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<? else ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
 <div style="width: 480px;">
 <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div><div class="shadow_left"><div class="shadow_right">
 <div style="font-size: large; font-weight: bold; text-align: center;">Free shipping on all orders over $100 within GTA*</div>
 </div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 </div>
-<? endif ( ! ( $r->uri() =~ /trade/ ) ) ?>
+<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
 		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
-<? if ( ! ( $r->uri() =~ /trade/ ) ) ?>
+<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<? else ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
 <p style="font-size: small;">* Free shipping does not apply to trade clients or any job that has been discounted below our standard pricing.</p>
-<? endif ( ! ( $r->uri() =~ /trade/ ) ) ?>
+<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
 <? else ( $param{'ProjectType'} ) ?>
 Please select the type of your project.
 <? endif ( $param{'ProjectType'} ) ?>
