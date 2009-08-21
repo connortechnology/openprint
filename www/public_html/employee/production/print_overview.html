@@ -171,6 +171,13 @@
 	} else {
 		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 	} # end if
+	if ( $endtime ) {
+		my $endtime_seconds = Date::Parse::str2time( $endtime );
+		if ( $endtime_seconds < time ) {
+			$endtime_seconds = time;
+			$endtime = Date::Format::time2str( '%Y-%m-%d', $endtime_seconds );
+		}
+	} # end if
 	if ( ! $session{'/employee/production/print_overview.html?schedule_start_year'} ) {
 		@session{
                 '/employee/production/print_overview.html?schedule_start_year',
