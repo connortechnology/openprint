@@ -34,7 +34,7 @@
 				'/employee/inventory/manifests.html?received_on_end_year',
 				'/employee/inventory/manifests.html?received_on_end_month',
 				'/employee/inventory/manifests.html?received_on_end_day'} ) : undef,
-			'order'		=>	'received_on',
+			'order'		=>	'received_on DESC',
 		);
 		$search{'supplier_id'} = $session{'/employee/inventory/manifests.html?supplier_id'} if $session{'/employee/inventory/manifests.html?supplier_id'};
 		@{$$variable{'Manifests'}} = openprint::Manifest::find( %search );
