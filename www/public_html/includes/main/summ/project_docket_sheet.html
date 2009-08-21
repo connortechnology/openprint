@@ -1,4 +1,4 @@
-<? if ( $openprint::config{'Barcodes Enabled'} ne 'N' ) ?>
+<? if ( $config{'Barcodes Enabled'} ne 'N' ) ?>
 <table width="100%" border="0">
 	<tr>
 		<th width="20">&nbsp;</th>
@@ -16,7 +16,7 @@
 		<td width="20">&nbsp;</td>
 	</tr>
 </table>
-<? endif ( $openprint::config{'Barcodes Enabled'} ne 'N' ) ?>
+<? endif ( $config{'Barcodes Enabled'} ne 'N' ) ?>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white">
 	<tr> 
 		<td colspan="2" width="20%" valign="top"><table cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -136,11 +136,11 @@
 
 		my $part = 0;
 		while ( my $service_index = shift @sigs ) {
-			my $sig_specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_index );
 
 			my $signatures = 1;
 			for ( my $i=0; $i < @sigs; $i += 1 ) {
-				my $sig_specs2= openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $sigs[$i] );
+				my $sig_specs2= openprint::service::get_specs_ref( $$variable{'Project'}, $sigs[$i] );
 				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $$variable{'Project'}->ordered_quantity_index() ) ) {
 					$signatures += 1;
 					splice @sigs, $i, 1;
@@ -162,7 +162,7 @@
 			} else {
 				$html .= $$sig_specs{'UsePress'};
 			} # end if
-			if ( $openprint::config{'Barcodes Enabled'} ne 'N' ) {
+			if ( $config{'Barcodes Enabled'} ne 'N' ) {
 			$html .= '<br/><img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F'.$$sig_specs{SignatureIndex}.'+&NoText=1&Height=20"/>';
 			} # end if
 			$html .= '<br/>'.$signatures . ' Form'. ( $signatures > 1 ? 's' : '' );
@@ -221,7 +221,7 @@
 			$html .= sprintf('%2$dout %1$s', @$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index(), 'txtImposition'.$$variable{'Project'}->ordered_quantity_index()} );
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				if ( sets::isin( 'Folding', split(',',$$variable{'BinderyServices'})) ) {
-					my $specs = openprint::service::get_specs_ref( $$variable{'ProjectIndex'}, $$variable{'Services'}{'Folding'}[0] );
+					my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$variable{'Services'}{'Folding'}[0] );
 					my $Equipment = new openprint::Equipment( $$specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()} );
 					if ( $Equipment->strid() eq $$sig_specs{'UsePress'} ) {
 						$html .= ' Fold inline';
@@ -247,7 +247,7 @@
 
 		if ( $Paper->type() eq 'Roll' ) {
 			my $net_impressions = $$variable{'Project'}->ordered_quantity();
-			$net_impressions /= $$sig_specs{'txtImposition'.$$variable{'Project'}->ordered_quantity_index()};
+			$net_impressions /= $$sig_specs{'txtImposition'.$$variable{'Project'}->ordered_quantity_index()} if $$sig_specs{'txtImposition'.$$variable{'Project'}->ordered_quantity_index()};
 			$net_impressions *= 2 if (
 					openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) and
 					openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) and
@@ -278,7 +278,7 @@
 	} # end while service_index
 	return $html;
 ) ?>
-			<? if ( $openprint::config{'Barcodes Enabled'} ne 'N' ) ?>
+			<? if ( $config{'Barcodes Enabled'} ne 'N' ) ?>
 	<tr>
 		<td align="center">
 <img style="padding-left: 5px; padding-right: 5px;" src="/barcode.png?code=F<? echo ( ++$$variable{'SignatureIndex'} ) ?>+&NoText=1&Height=20"/>
@@ -291,7 +291,7 @@
 		<td>&nbsp;</td>
 		<td><br><br><br></td>
 	</tr>
-			<? endif ( $openprint::config{'Barcodes Enabled'} ne 'N' ) ?>
+			<? endif ( $config{'Barcodes Enabled'} ne 'N' ) ?>
 </table>
 <br/>
 <table width="100%" border="1" cellspacing="0" cellpadding="0" bordercolorlight="black" bordercolordark="white" style="table-layout: fixed;">

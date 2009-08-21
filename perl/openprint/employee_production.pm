@@ -1456,6 +1456,7 @@ sub operator_schedule {
 
 } # end sub operator_schedule
 
+<<<<<<< HEAD:perl/openprint/employee_production.pm
 sub _job_popup {
 	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
 } # end sub _job_popup
@@ -1483,6 +1484,10 @@ sub _operator_shift_li {
 
 	$variable{'Shift'} = $Shift;
 } # end sub operator_shift_li
+=======
+sub _check_for_skid {
+} # end sub _check_for_skid
+>>>>>>> 213621bb1487621591f32162ed76afdcf88eec03:perl/openprint/employee_production.pm
 
 1;
 
