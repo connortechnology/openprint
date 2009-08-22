@@ -228,7 +228,6 @@ Please select a company or user to obtain login information.<br/>
 		<br class="spacer"/>
 		</fieldset>
 		<fieldset><legend>Groups</legend>
-		<? eval ( @{$$variable{'Groups'}} = openprint::user::groups( $log, $dbh, $$variable{'UserIndex'} ); )?>
 			<? echo (
 				require openprint::Usergroup;
 				my $html = '<ul>';

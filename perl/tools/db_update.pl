@@ -2161,6 +2161,10 @@ if ( ! sets::isin('articles',\@tables ) ) {
 		$dbh->do($st);
 	} # end foreach
 } # end if
+if ( ! sets::isin('user_notifications',\@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/User_Notifications.sql});
+	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
+} # end if
 
 $dbh->disconnect();
 1;
