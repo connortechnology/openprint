@@ -9,7 +9,7 @@
 	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="value">
 <? echo (
-	return '&nbsp;' if ! ( $$variable{'Proofs-'.$$variable{'SignatureGroupIndex'}.'-'.$$variable{'QTYIndex'}} or @{$$variable{'Proofs-'.$$variable{'SignatureGroupIndex'}.'-'.$$variable{'QTYIndex'}}} );
+	return '&nbsp;' if ! ( $$variable{'Proofs-'.$$variable{'SignatureGroupIndex'}.'-'.$$variable{'QTYIndex'}} and @{$$variable{'Proofs-'.$$variable{'SignatureGroupIndex'}.'-'.$$variable{'QTYIndex'}}} );
 	my $html;
 	while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureGroupIndex'}.'-'.$$variable{'QTYIndex'}}},0,6 ) {
 		if ( $$variable{'ProofQuantity'} and $$variable{'ProofType'} ) {

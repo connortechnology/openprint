@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl -w
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;

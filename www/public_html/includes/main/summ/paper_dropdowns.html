@@ -2,9 +2,9 @@
 	<span class="label">Is stock supplied?</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="value"><? echo ( $$variable{'rdbSuppliedStock'} eq 'Y' ? 'Yes' : 'No' ) ?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
@@ -12,9 +12,9 @@
     <span class="label">Stock:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <span class="value"><? echo ( $$variable{'rdbSpecificStock'} eq 'Y' ? $$variable{'txtSpecificStockBrand'} : $$variable{'ddmStockBrand'} ) ?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
@@ -22,9 +22,9 @@
     <span class="label">Finish:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <span class="value"><? echo ( $$variable{'rdbSpecificStock'} eq 'Y' ? $$variable{'txtSpecificStockFinish'} : $$variable{'ddmStockFinish'} ) ?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
@@ -32,9 +32,9 @@
     <span class="label">Colour:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <span class="value"><? echo ( $$variable{'rdbSpecificStock'} eq 'Y' ? $$variable{'txtSpecificStockColour'} : $$variable{'ddmStockColour'} ) ?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
@@ -42,10 +42,10 @@
     <span class="label">Calliper &amp; Weight:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <span class="value"><?txtSpecificStockCalliper?>, 
     <? echo ( $$variable{'rdbSpecificStock'} eq 'Y' ? $$variable{'txtSpecificStockWeight'} : $$variable{'ddmStockWeight'} ) ?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
