@@ -1,5 +1,5 @@
 #!/usr/bin/perl 
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/p1/perl';
 use strict;
 use warnings;
 
@@ -96,7 +96,7 @@ if ( 1 ) {
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
 			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
-				$log->debug('Quoted!' . $Project->id());
+				#$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
 			if ( $Project->status() ne 'Unordered' ) {
@@ -104,11 +104,11 @@ if ( 1 ) {
 				next;
 			} # end if
 			if ( $Project->order_id() ) {
-				$log->error('WTF! Project has an order_id bu is Unordered');
+				$log->error('WTF! Project has an order_id bu is Unordered'.$Project->id().') docket (' . $Project->docket() . ')');
 				next;
 			} # end if
 			if ( $Project->docket() ) {
-				$log->error('WTF! has docket, but is not ordered');
+				$log->error('WTF! has docket, but is not ordered ('.$Project->id().') docket (' . $Project->docket() . ')');
 				next;
 			} # end if
 			$Project->delete();
@@ -132,7 +132,7 @@ if ( 1 ) {
 				$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
-			$Project->delete();
+			$Project->destroy();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} # end if Projects
