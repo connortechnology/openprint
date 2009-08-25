@@ -107,7 +107,6 @@ sub add_product {
 	$Project->order_id( $order_id );
 	$Project->quantity1( $Product->quantity() );
 	foreach my $service_index ( sql::execute( undef, undef, q{SELECT lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() ) ) {
-
 		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $service_index, 'txtQuantity1', $Project->quantity1() );
 	} # end foreach
 	foreach my $signature_service_index ( sort $Project->signatures() ) {
@@ -115,9 +114,8 @@ sub add_product {
 	} # end foreach
 	openprint::service::auto_calculate( $openprint::r, $openprint::log, $openprint::dbh, $openprint::variable, $Project->id(), undef );
 	#$Project->price1( $Product->price() );
-	$Project->save();
-	#$error .= add_project_to_order( $openprint::log, $openprint::dbh, $openprint::cookie, $openprint::variable, $Product->project_id(), $order_id );
-$openprint::log->debug("E: $error");
+	$error .= $Project->save();
+$openprint::log->debug("E: $error") if $error;
 
 	return ( $order_id, $error );
 } # end sub add_product
@@ -425,6 +423,7 @@ sub information {
 	} elsif ( $openprint::param{'btnFunction'} eq 'New Order' ) {
 		# Re order situation
 		$order_id = make_order_from_order( $log, $dbh, $cookie, $order_id, $variable );
+		return if ! $order_id;
 	} elsif ( $openprint::param{'btnFunction'} eq 'ReOpen' ) {
 		delete_unfinished_orders( $log, $dbh, $cookie );
 		if ( $order_id = $openprint::param{'OrderID'} ) {
@@ -743,10 +742,10 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 	my $Currency = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'Currency'} = $Currency;
-	if ( $Order->currency_id() != $Currency->id() ) {
-		$Order->currency_id( $Currency->id() );
-		$Order->save();
-	} # end if
+	#if ( $Order->currency_id() != $Currency->id() ) {
+		#$Order->currency_id( $Currency->id() );
+		#$Order->save();
+	#} # end if
 	@$variable{'Order','ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments'} = 
 ( $Order, $Order->first_name() .' '.$Order->last_name(), $Order->created_on(), $Order->status(), $Order->currency_id(), $Order->po(), $Order->administrator_comments() );
 
@@ -953,7 +952,7 @@ sub finalise_order {
 		$$variable{'Downpayment'} = sprintf( '%.2f', $$variable{'Downpayment'} );
 
 		foreach my $Project ( @Projects ) {
-			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
 			$Project->docket( $docket_number );
 			$Project->order_id( $Order->id() );
 			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );
@@ -1313,12 +1312,14 @@ sub make_order_from_order {
 	my ( $log, $dbh, $cookie, $src_order_id, $variable ) = @_;
 
 	my $SRC_Order = new openprint::Order( $src_order_id );
-	return if check_credit( $log, $dbh, $variable, $SRC_Order->total() );
+	return 0 if check_credit( $log, $dbh, $variable, $SRC_Order->total() );
 
 	if ( $SRC_Order->status() eq '' ) {
-		return misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'Order does not exist.' );
+		misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'Order does not exist.' );
+		return 0;
 	} elsif ( ! sets::isin( $SRC_Order->status(), 'Complete', 'Paid',	'Shipped', 'Waiting For Pickup', 'Picked Up' ) ) {
-		return misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'The given order is not complete.' );
+		misc::error( $log, $dbh, $variable, 'Can\'t re-order.', 'The given order is not complete.' );
+		return 0;
 	} else {
 		# this goes before get_order_id so that we re-use orderids
 		delete_unfinished_orders( $log, $dbh, $cookie );
@@ -1334,6 +1335,7 @@ sub make_order_from_order {
 				$NewProduct->save();
 			} # end foreach
 		} # end if
+		return $order_id;
 	} # end if
 	return 0;
 } # end sub make_order_from_order
@@ -1347,6 +1349,7 @@ sub quantity_select_display {
 	if ( $openprint::param{'btnFunction'} eq 'New Order' ) {
 		# Re order situation
 		my $order_id = make_order_from_order( $log, $dbh, $cookie, $openprint::param{'hiddenOrderID'}, $variable );
+		return if ! $order_id;
 	} elsif ( $openprint::param{'btnFunction'} eq 'ReOpen' ) {
 		delete_unfinished_orders( $log, $dbh, $cookie );
 		if ( $order_id = $openprint::param{'OrderID'} ) {

@@ -43,14 +43,6 @@ sub find {
 
 } # end sub find
 
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Location();
-	@$new{'location'} = @$self{'location'};
-	%{$$new{'Paper'}} = %{$$self{'Paper'}};
-	return $new;
-} # end sub copy
-
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {

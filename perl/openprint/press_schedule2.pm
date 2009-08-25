@@ -176,7 +176,7 @@ sub get_li {
 
 		my ( $h, $m, $s ) = split( ':', $$row{'runtime'} );
 		my $runtime = (($h*3600 + $m*60 + $s)/60) -2;
-		$runtime = openprint::service::get_runtime( $openprint::log, $openprint::dbh, @$row{'projectindex','service_index'} ) if $runtime < 20;
+		$runtime = openprint::service::get_runtime( $Project, $$row{'service_index'} ) if $runtime < 20;
 		$runtime = 20 if $runtime < 20;
 		#$runtime =4320 if $runtime < 4320;
 # 4320 = 12hours in seconds
@@ -361,7 +361,7 @@ sub sort_schedule {
 			push @{$jobs{$$job{equipment_id}}}, $job;
 		} else {
 			if ( ! $$job{'runtime'} ) {
-				my $r = openprint::service::get_runtime( $openprint::log, $openprint::dbh, @$job{'projectindex','serviceindex'} );
+				my $r = openprint::service::get_runtime( new openprint::Project( $$job{'projectindex'} ), $$job{'serviceindex'} );
 				$$job{'runtime'} = sprintf('%.2d:%.2d:00', $r/60, $r%60);
 			} # end if
 			push @{$jobs{''}}, $job;

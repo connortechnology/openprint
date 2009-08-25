@@ -127,7 +127,7 @@ sub insert {
 	my ( $start_time ) = sql::execute( $log, $dbh, q{SELECT MAX(StartTime+RunTime) FROM Schedule, tbl_Projects WHERE Index=ProjectIndex AND strStatus='Approved' AND Equipment_ID=?}, $equipment_id );
 	( $start_time ) = sql::execute( $log, $dbh, 'SELECT NOW()' ) if ! $start_time;
 	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ServiceIndex=?}, $service_index );
-	my $runtime = openprint::service::get_runtime( $log, $dbh, $project_index, $service_index );
+	my $runtime = openprint::service::get_runtime( new openprint::Project( $project_index ), $service_index );
 
 	sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $service_index, 'Equipment_id', $equipment_id,'StartTime', $start_time, 'RunTime', "$runtime minutes" );
 	sql::end_transaction( $dbh, $ac );

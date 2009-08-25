@@ -101,7 +101,7 @@ sub add {
 		my ( $start_time ) = sql::execute( undef, undef, 'SELECT MAX(starttime+runtime) FROM Schedule WHERE equipment_id=?', $$item{equipment_id} );
 		( $start_time ) = sql::execute( undef, undef, 'SELECT NOW()' ) if ! $start_time;
 
-		my $runtime = openprint::service::get_runtime( $log, $dbh, @$item{'projectindex','serviceindex'} );
+		my $runtime = openprint::service::get_runtime( new openprint::Project( $$item{'projectindex'} ), $$item{'serviceindex'} );
 
 		$error .= sql::insert( undef, undef, 'Schedule',
 				'ProjectIndex', $$item{projectindex},
@@ -399,7 +399,7 @@ sub add_project_to_press_schedule {
 		if ( ! $$sig_specs{'UsePress'} ) {
 			$error .= "No press for signature $$sig_specs{'SignatureIndex'}<br/>";
 		} # end if
-		my $runtime = openprint::service::get_runtime( $log, $dbh, $Project->id(), $s_s_id );
+		my $runtime = openprint::service::get_runtime( $Project, $s_s_id );
 		if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'},'use_in_estimating'=>1) ) {
 			$_ = sql::insert( undef, undef, 'Schedule', ['ProjectIndex', $Project->id(), 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) ] );
 			if ( $_ ) {

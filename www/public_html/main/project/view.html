@@ -187,9 +187,9 @@ if ( $$variable{'HiddenSignatures'} ) {
 	<? if ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' ); ) ?>
 	<? endif ( $$variable{'ProjectStatus'} eq 'uncalculated' ) ?>
-	<? if ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated'] ) ) ?>
+	<? if ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated','Re-Opened'] ) ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
-	<? endif ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated'] ) ) ?>
+	<? endif ( sets::isin( $$variable{'ProjectStatus'}, ['Unordered','uncalculated','Re-Opened'] ) ) ?>
 	<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>

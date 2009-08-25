@@ -25,7 +25,14 @@
 			</td>
 			<td align="right" valign="top">
 				<!--#include virtual="/includes/order_totals.html" -->
-				<span class="Currency">All prices listed in <?CurrencyName?>.</span>
+				<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name() ) ?>.
+<? echo ( 
+	if ( $$variable{'Currency'}->id() != $$variable{'Order'}->Currency()->id() ) {
+		return 'Order originally in ' . $$variable{'Order'}->Currency()->name();
+	} # end if
+	return;
+) ?>
+				</span>
 			</td>
 		</tr>
 	</table>

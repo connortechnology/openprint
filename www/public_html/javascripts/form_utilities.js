@@ -752,11 +752,15 @@ function textarea_resize( element ) {
 	element.rows = countLines(element.value,element.cols);
 } // end function textarea_resize
 
-function set_today( e_y, e_m, e_d ) {
+function set_today( e_y, e_m, e_d, e_h, e_min ) {
 	var d = new Date();
-	ddm_select_by_value( e_y, d.getYear() );
+	ddm_select_by_value( e_y, 1900+d.getYear() );
 	ddm_select_by_value( e_m, d.getMonth()+1 );
 	ddm_select_by_value( e_d, d.getDate() );
+	if ( e_h )
+		ddm_select_by_value( e_h, d.getHours() );
+	if ( e_min )
+		ddm_select_by_value( e_min, d.getMinutes() );
 } // end function set_today
 
 Ajax.Autocompleter.extract_value = 

@@ -128,6 +128,9 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 			<th align="left" width="100">Status</th>
 			<th align="right" width="75">Total</th>
 			<th align="right" width="125">Balance</th>
+<? if ( ! $param{'ddmCurrency'} ) ?>
+			<th align="right" width="30">&nbsp;</th>
+<? endif ( ! $param{'ddmCurrency'} ) ?>
 		</tr>
 		<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
 		<tr<?rowclass?>> 
@@ -138,6 +141,9 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
 			<td align="right"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->total() ); ) ?></a></td>
 			<td align="right"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->balance() ); ) ?></a></td>
+<? if ( ! $param{'ddmCurrency'} ) ?>
+			<th align="right"><? echo ( $$variable{'Order'}->Currency()->short() ) ?></th>
+<? endif ( ! $param{'ddmCurrency'} ) ?>
 		</tr>
 		<? eval ( 
 			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
@@ -151,6 +157,9 @@ if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
 			<td colspan="5" align="right"><b>Report Total:</b></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
+<? if ( ! $param{'ddmCurrency'} ) ?>
+			<td>&nbsp;</td>
+<? endif ( ! $param{'ddmCurrency'} ) ?>
 		</tr>
 	</table>
 	<? else ( @{$$variable{'Orders'}} ) ?>

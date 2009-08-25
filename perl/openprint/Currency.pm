@@ -4,12 +4,34 @@ package openprint::Currency;
 use strict;
 use Number::Format;
 use openprint ();
-use vars qw( $log );
+use vars qw( $log $dbh $table $serial %fields );
 *log = \$openprint::log;
+*dbh = \$openprint::dbh;
 require openprint::Object;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
+$table = 'Currencies';
+$serial = 'currencyindex_seq';
+%fields = (
+'id'	=>	'id',
+'name'	=>	'name',
+'symbol'	=>	'symbol',
+'short'		=>	'short',
+);
+
+sub get {
+	my ( $params ) = @_;
+	my @Currencies = find(@_);
+	if ( @Currencies == 1 ) {
+		return $Currencies[0] 
+	} elsif ( @Currencies > 1 ) {
+		$log->error('More than 1 currency found in openprint::Currency::get');
+	} else {
+		$log->error('No Currency found in openprint::Currency::get');
+	} # end if
+	return;
+} # end sub get
 
 sub find {
 	my %params = @_;
@@ -34,14 +56,6 @@ sub find {
 	} # end if
 	return map { new openprint::Currency( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CUrrencies WHERE id=?', {}, $$self{'id'} );
-	} # end if
-	@$self{qw/name short symbol/} = @$data{qw/name short symbol/};
-} # end sub load
 
 sub values {
 	my $self = shift;
@@ -70,7 +84,15 @@ sub set_conversion {
 } # end sub add_conversion
 
 sub convert_from {
-} # end sub
+	my ( $self, $value ) = @_;
+	my $DST_Currency = get_current();
+	if ( $DST_Currency and ( $DST_Currency->id() != $$self{'id'} ) ) {
+		my $rate = $self->conversions( $DST_Currency->id() );
+		$log->debug("Converting $value in $$self{'name'} to $$DST_Currency{'name'}") if $debug;
+		$value *= $rate;
+	} # end if
+	return $value;
+} # end sub convert_from
 sub convert_to {
 } # end sub
 
