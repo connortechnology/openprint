@@ -448,16 +448,13 @@ sub pay {
 
 sub send_cancellation_notice {
 	my $self = shift;
-$log->debug("Sending cancellation notice");
 
 	my %order;
 	$order{'Order'} = $self;
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_cancellation_notice.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-$log->debug($email_template );
 	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%order ) );
-$log->debug($_);
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	my $Me = new openprint::User( $session{'user_id'} );
