@@ -24,7 +24,8 @@
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">';
 			$html .= '<ul>';
-			foreach my $Project ( openprint::Project::find('status'=>$status, 'order'=>'index' ) ) {
+			foreach my $Project ( openprint::Project::find('status'=>$status, 'order'=>'lngdocketnumber' ) ) {
+				next if ! $Project->docket();
 				my $services = $Project->services();
 
 				my $impressions = 0;

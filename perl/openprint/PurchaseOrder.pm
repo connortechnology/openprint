@@ -233,6 +233,10 @@ sub save {
 	foreach my $C ( $self->Contents() ) {
 		$sql{'subtotal'} += $C->total();
 	} # end foreach
+	delete $$self{'federaltax'};
+	delete $$self{'statetax'};
+	$sql{'federaltax'} = $self->federaltax();
+	$sql{'statetax'} = $self->statetax();
 	$sql{'total'} = $sql{'subtotal'};
 	if ( ! $sql{'currency_id'} ) {
 		my $Currency = openprint::Currency::get_current();
