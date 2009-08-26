@@ -33,7 +33,8 @@
 						foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
 							my $Skid = new openprint::Skid( $skid_id );
 							if ( my $C = $Skid->Content( $$variable{'Paper'}) ) {
-							$available += ( $C->quantity() - $Skid->allocation('Paper'=>$$variable{'Paper'}) );
+								$available += ( $C->quantity() - $Skid->allocation('Paper'=>$$variable{'Paper'}) );
+							} # end if
 						} # end foreach Skid
 						return $available;
 					} else {

@@ -953,7 +953,7 @@ sub finalise_order {
 		$$variable{'Downpayment'} = sprintf( '%.2f', $$variable{'Downpayment'} );
 
 		foreach my $Project ( @Projects ) {
-			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Client Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
+			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
 			$Project->docket( $docket_number );
 			$Project->order_id( $Order->id() );
 			$Project->status( $status eq 'Pending Deposit' ? $status : 'In Prepress' );

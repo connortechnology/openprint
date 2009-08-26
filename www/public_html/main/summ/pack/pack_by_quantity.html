@@ -2,9 +2,9 @@
 	<span class="label">Items per <?ServiceTypeName?>:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="value"><?txtItemsPerPackage?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+    <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
