@@ -1244,10 +1244,33 @@ $log->debug("Shifts: " . $S->to_string() );
 # Time to move on to next shift
 		while ( ( ! $Shift->operator_id() ) or ( $start_time > $Shift->endtime_seconds() ) ) {
 
+			# Try to assign operator if one doesn't exist
+			if ( ! $Shift->operator_id() ) {
+				if ( $Shift->assign_operator_id() ) {
+					$Shift->save();
+					continue;
+				} # end if
+			} # end if
+
 			if ( ! @Shifts ) {
-				$start_time = undef;
-				$variable{'alert'} .= 'Not enough shifts to fit all jobs. Please assign an operator to another shift.';
-				last;
+				# Try to add more:
+				my ( $Y, $M, $D, $h, $m, $s ) = Date::Parse::str2ptime( $Shift->endtime() );
+				my $time = Date::Calc::Mktime( 1970, 1, $D, $h, $m, $s );
+				my $NewShift = openprint::OperatorShift::find_one('equipment_id'=>$$Shift{'equipment_id'}, 'starttime_>'=>$time, 'order'=>'starttime DESC' );
+				if ( ! $NewShift ) {
+					# Try wrapping around
+					$NewShift = openprint::OperatorShift::find_one('equipment_id'=>$$Shift{'equipment_id'}, 'starttime_<'=>$time, 'order'=>'starttime' );
+				} # end if
+				if ( $NewShift and $NewShift->operator_id() ) {
+					$Shift = $NewShift->Equipment_Shift()->emanantise( Date::Calc::Mktime( $Y, $M, $D ) );
+					$Shift->operator_id( $NewShift->operator_id() );
+					$Shift->save();
+					$start_time = $Shift->starttime_seconds();
+				} else {
+					$start_time = undef;
+					$variable{'alert'} .= 'Not enough shifts to fit all jobs. Please assign an operator to another shift.';
+					last;
+				} # end if
 			} else {
 				$Shift = shift @Shifts;
 				$start_time = $Shift->starttime_seconds();
@@ -1430,13 +1453,35 @@ sub operator_schedule {
     } # end if
     $session{$r->uri().'?lastupdated'} = time;
 	if ( $param{'btnFunction'} eq 'Add Shift' ) {
-		foreach my $Equipment ( openprint::Equipment::find() ) {
-			my $LastShift = openprint::Operator_Shift::find_one('equipment_id'=>$Equipment->id(), 'order'=>'starttime DESC');
-			my $starttime = $LastShift->starttime_seconds()+$LastShift->duration_seconds() if $LastShift;
+		my @Equipment = map { new openprint::Equipment( $_ ) } ( ref $param{'Presses'} eq 'ARRAY' ? @{$param{'Presses'}} : ( $param{'Presses'} ) );
+		foreach my $Equipment ( @Equipment ) {
+			next if ! $Equipment->id();
+			my $PreviousShift = openprint::Operator_Shift::find_one('equipment_id'=>$Equipment->id(), 'order'=>'starttime DESC');
 
+			# Base time is Jaunary 1st 00:00:00, we need this because apparently the epoch is not actually at midnight for some reason.
+			my $starttime = $PreviousShift ? $PreviousShift->endtime_seconds() : 0;
+$log->debug( 'Starttime: ' . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime, 'GMT' ) );
 			foreach my $ES ( openprint::Equipment_Shift::find('equipment_id'=>$Equipment->id(), 'order'=>'starttime') ) {
+				if ( $PreviousShift ) {
+$log->debug( "Previous: " . Date::Format::time2str('%H:%M:%S', $PreviousShift->endtime_seconds(), 'GMT' ) . " < " . Date::Format::time2str('%H:%M:%S',$ES->starttime_seconds(), 'GMT' ) );
+					if ( $PreviousShift->endtime_seconds() < $ES->starttime_seconds() ) {
+						# Roll the clock over
+						$starttime += ( (24*60*60) - $PreviousShift->endtime_seconds() ) + $ES->starttime_seconds();
+					} # end if
+				} # end if
+				my $time = $starttime % ( 24*60*60 );
+$log->debug("Time: " . Date::Format::time2str('%H:%M:%S', $time, 'GMT' ) . ' ES: ' . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime + $ES->starttime_seconds(), 'GMT' ) . ' => ' . $ES->duration() );
+				if ( $time < $ES->starttime_seconds() ) {
+					$starttime += $ES->starttime_seconds() - $time;
+$log->debug("Adjustimng starttime up: $starttime += " . Date::Format::time2str('%H:%M:%S',$ES->starttime_seconds(), 'GMT') . " - " . Date::Format::time2str('%H:%M:%S', $time, 'GMT' ) );
+				} elsif ( $time > $ES->starttime_seconds() ) {
+					$starttime += ( (24*60*60) - $time ) + $ES->starttime_seconds();
+$log->debug("Adjustimng starttime over: $starttime += " );
+				} # end if
 				my $NewShift = new openprint::Operator_Shift();
-				$NewShift->save({'equipment_id'=>$Equipment->id(),'starttime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime),'shift_id'=>$ES->id()});
+				$NewShift->save({'equipment_id'=>$Equipment->id(),'starttime'=>Date::Format::time2str('%H:%M:%S', $starttime, 'GMT'),'shift_id'=>$ES->id()});
+				$starttime += $ES->duration_seconds();
+				$PreviousShift = $ES;
 			} # end foreach ES
 		} # end foreach Equipment
 	} # end if
