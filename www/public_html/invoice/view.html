@@ -99,9 +99,9 @@
 		<table class="List">
 			<tr>
 				<th align="left">Product</th>
-				<th style="text-align: right; width: 100px;">Price</th>
+				<th class="Price">Price</th>
 				<th style="text-align: right; width: 50px;">Qty</th>
-				<th style="text-align: right; width: 100px;">Total</th>
+				<th class="Price">Total</th>
 			</tr>
 			<? echo ( 
 				my $html = '';
@@ -110,9 +110,9 @@
 					$html .= '<tr>';
 					$html .= sprintf('<td align="left">%s</td>', $Product->description() );
 
-					$html .= sprintf('<td align="right">%2$s</td>', $Product->id(), $Product->price() );
+					$html .= sprintf('<td class="Price">%2$s</td>', $Product->id(), openprint::Currency::format($Product->price()) );
 					$html .= sprintf('<td align="right">%2$d</td>', $Product->id(), $Product->quantity() );
-					$html .= sprintf('<td align="right">%2$.2f</td>', $Product->id(), $Product->total() );
+					$html .= sprintf('<td class="Price">%2$s</td>', $Product->id(), openprint::Currency::format($Product->total()) );
 					$html .= '</tr>';
 					$$variable{'product_total'} += $Product->total();
 				} # end foreach Product
@@ -120,7 +120,7 @@
 			) ?>
 			<tr class="totals">
 				<td colspan="3" align="right"><b>Totals:</b></td>
-				<td align="right"><b><? echo ( openprint::Currency::format( $$variable{'product_total'} ); ) ?></b></td>
+				<td class="Price"><b><? echo ( openprint::Currency::format( $$variable{'product_total'} ); ) ?></b></td>
 			</tr>
 		</table>
 	</fieldset>
@@ -130,8 +130,8 @@
 <div class="Notes">
 	<fieldset><legend>Notes</legend>
         <table class="List">
-            <tr><td width="105">Created On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->created_on() ) ); ) ?></td></tr>
-            <tr><td width="105">Posted On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->posted_on() ) ); ) ?></td></tr>
+            <tr><td class="Date">Created On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->created_on() ) ); ) ?></td></tr>
+            <tr><td>Posted On:</td><td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time($$variable{'Invoice'}->posted_on() ) ); ) ?></td></tr>
             <tr><td><b>Due On:</b></td><td><b><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->due_on() ) ); ) ?></b></td></tr>
             <tr><td>Notes:</td><td><? echo ( $$variable{'Invoice'}->external_notes() ) ?></td></tr>
             <tr><td><b>Invoice Terms:</b></td><td><b>Net 15 days. Interest on overdue amounts will acrue at the rate of <? echo ( $$variable{'Invoice'}->monthly_interest() ) ?>% per month from the due date.</b></td></tr>
@@ -143,37 +143,37 @@
 		<table>
 			<tr>
 				<td align="right">Sub Total:</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
+				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
 			</tr>
 			<? if ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
 			<tr>
 				<td align="right">GST (<? echo ( $$variable{'Invoice'}->federaltaxrate() ) ?>%):</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
+				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
 			</tr>
 			<? endif ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
 			<? if ( $$variable{'Invoice'}->statetax() ne '' ) ?>
 			<tr>
 				<td align="right">PST (<? echo ( $$variable{'Invoice'}->statetaxrate() ) ?>%):</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->statetax() ); ) ?></td>
+				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->statetax() ); ) ?></td>
 			</tr>
 			<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>
 			<tr>
 				<td align="right"><b>Total:</b></td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></b></td>
+				<td class="Price"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></b></td>
 			</tr>
 			<? if ( $$variable{'Invoice'}->interest() ne '' ) ?>
 			<tr>
 				<td align="right"><b>Interest:</b></td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></b></td>
+				<td class="Price"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></b></td>
 			</tr>
 			<? endif ( $$variable{'Invoice'}->interest() ne '' ) ?>
 			<tr>
 				<td align="right">Amount Paid:</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->paid() ); ) ?></td>
+				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->paid() ); ) ?></td>
 			</tr>
-			<tr>
+			<tr class="AmountOwing">
 				<td align="right"><b>Amount Owing</b>:</td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></b></td>
+				<td class="Price"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></b></td>
 			</tr>
 		</table>
 		<span style="float:right;">All amounts in <? echo ( $$variable{'Invoice'}->Currency()->name(); ) ?>.</span>

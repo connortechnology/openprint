@@ -20,10 +20,10 @@ sub history {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 
 		foreach my $Product ( $Invoice->Products() ) {
-			$Product->save({
+			$variable{'error'} .= $Product->save({
 				'description'	=>	$param{'product-description-'.$Product->id()},
 				'price'			=>	$param{'product-price-'.$Product->id()},
-				'qty'			=>	$param{'product-qty-'.$Product->id()},
+				'quantity'		=>	$param{'product-quantity-'.$Product->id()},
 				});
 		} # end foreach
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
@@ -216,6 +216,16 @@ sub _available_timetracks {
 } # end sub _available_timetracks
 sub _invoiced_products {
 	$variable{'Invoice'} = new openprint::Invoice( $param{'invoice_id'} );
+
+	# Save any changes to the products
+	foreach my $Product ( $variable{'Invoice'}->Products() ) {
+		$variable{'error'} .= $Product->save({
+			'description'	=>	$param{'product-description-'.$Product->id()},
+			'price'			=>	$param{'product-price-'.$Product->id()},
+			'quantity'		=>	$param{'product-quantity-'.$Product->id()},
+			});
+	} # end foreach
+
 	if ( $param{'action'} eq 'new' ) {
 		my $IP = new openprint::Invoiced_Product( );
 		$variable{'error'} .= $IP->save({
