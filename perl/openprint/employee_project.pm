@@ -147,8 +147,8 @@ sub view {
 				next if ! $param{'UsePress-'.$printing_specs{'SignatureIndex'}};
 				next if $param{'UsePress-'.$printing_specs{'SignatureIndex'}} eq $printing_specs{'UsePress'};
 
-				if ( $r->param("UsePress-$printing_specs{'SignatureIndex'}") ne $printing_specs{'UsePress'} ) {
-					openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, 'UsePress', $r->param("UsePress-$printing_specs{'SignatureIndex'}") );
+				if ( $param{"UsePress-$printing_specs{'SignatureIndex'}"} ne $printing_specs{'UsePress'} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, 'UsePress', $param{"UsePress-$printing_specs{'SignatureIndex'}"} );
 					my $runtime = openprint::service::get_runtime( $Project, $signature_service_index );
 
 					my @Equipment = openprint::Equipment::find('strid'=>$param{"UsePress-$printing_specs{'SignatureIndex'}"} );
@@ -189,67 +189,69 @@ sub view {
 					if ( $status ne 'Ordered' ) {
 # Make sure we don't get approved without complete, because they can't unapprove
 						$Project->add_to_log( @session{'company_id','user_id'}, "Marked Filmstripping Ordered from $status" );
-						sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex='$project_index' AND lngServiceIndex='$service_index'", 'strStatus', 'Ordered' );
+						openprint::service::status( $project_index, $service_index, 'Ordered' );
 					} # end if
 				} # end if Complete or NOT
 			} elsif ( $service_type eq 'Proofs' ) {
-				if ( $param{'rdbComplete'} eq 'Yes' ) {
-# Only send if completion date has changed
+				if ( $param{'rdbComplete'} ne 'Yes' ) {
+	# Make sure we don't get approved without complete, because they can't unapprove
+					$param{'rdbApproved'} = 'N';
+					$param{'rdbClientApproved'} = 'N';
+					$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Ordered from $status" );
+					openprint::service::status( $project_index, $service_index, 'Ordered' );
+				} elsif ( $param{'rdbApproved'} eq 'Y' ) {
+					if ( $param{'duedate_year'} ) {
+						if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
+							my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
+							if ( @ServiceTypes ) {
+								$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
+								$variable{'ErrorMessage'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
+							} else {
+								$variable{'error'} = 'There was an error saving the due date.  Please check that a real date was selected.';
+							} # end if
+							$param{'rdbApproved'} = 'N';
+						} else {
+							# It's a valid duedate
+							my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} );
+
+							if ( $duedate ne $Project->due_date() ) {
+								$Project->due_date( $duedate );
+								if ( ! $Project->save() ) {
+									$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
+									send_duedate_change_notification( $project_index, $order_id );
+								} else {
+									$variable{'error'} .= 'Error saving duedate.';
+								} # end if
+							} # end if
+						} # end if valid due date
+					} # end if due date is specified
+
+					if ( (!$variable{'error'}) and ($status ne 'Approved') ) {
+						openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $project_index, $service_index, $status );
+						send_proofs_approved_email( $project_index, $order_id );
+					} # end if
+				} elsif ( $param{'rdbClientApproved'} eq 'Y' ) {
+					if ( $status ne 'Waiting For QA Approval' ) {
+						$param{'ClientApprovalDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
+						$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for QA Approval from $status" );
+						openprint::service::status( $project_index, $service_index, 'Waiting For QA Approval' );
+					} # end if
+					$param{'rdbApproved'} = 'N';
+				} else { # Just complete
+					if ( $status ne 'Waiting For Customer Approval' ) {
+						$param{'CompleteDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
+						$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Waiting for Customer Approval from $status" );
+						openprint::service::status( $project_index, $service_index, 'Waiting For Customer Approval' );
+					} # end if
+					# Only send if completion date has changed
 					my ( $c_date, $complete ) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'CompletionDate','rdbComplete' );
 					if ( $complete ne $param{'rdbComplete'} and $c_date ne $param{'CompletionDate'} ) {
 						send_proofs_complete_email( $project_index, $order_id );
 					} # end if completion date has changed
-
-					if ( $param{'ScheduleForPress'} eq 'Y' ) {
-						$variable{'error'} .= openprint::press_schedule::add_project_to_press_schedule( $Project );
-					} # end if
-
-					if ( (! exists $param{'rdbApproved'} ) or ($param{'rdbApproved'}  eq 'Y') ) {
-						if ( $param{'ddmDueDateYear'} ) {
-
-							if ( ! Date::Calc::check_date( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ) ) {
-								my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
-								if ( @ServiceTypes ) {
-									$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
-									$variable{'ErrorMessage'} = 'There was an error saving the DueDate.  Please check that a real date was selected.';
-								} else {
-									$variable{'error'} = 'There was an error saving the due date.  Please check that a real date was selected.';
-								} # end if
-								$param{'rdbApproved'} = 'N';
-							} else {
-# It's a valid duedate
-								my $duedate = sprintf('%.4d-%.2d-%.2d', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
-
-								if ( $duedate ne $Project->due_date() ) {
-									$Project->due_date( $duedate );
-									if ( ! $Project->save() ) {
-										$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
-										send_duedate_change_notification( $project_index, $order_id );
-									} else {
-										$variable{'error'} .= 'Error saving duedate.';
-									} # end if
-								} # end if
-							} # end if
-						} # end if
-
-						if ( (!$variable{'error'}) and ($status ne 'Approved') ) {
-							openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $project_index, $service_index, $status );
-							send_proofs_approved_email( $project_index, $order_id );
-						} # end if
-					} elsif ( $param{'rdbApproved'} eq 'N' ) { # NOT APPROVED
-						if ( $status ne 'Proofs Out' and $status ne 'Waiting For Customer Approval' ) {
-							$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Proofs Out from $status" );
-							sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$service_index", 'strStatus', 'Proofs Out' );
-						} # end if
-					} # end if Approved
-				} else { # Not Complete
-# Make sure we don't get approved without complete, because they can't unapprove
-					$param{'rdbApproved' => 'N'};
-					$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Ordered from $status" );
-					sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND lngServiceIndex=$service_index", 'strStatus', 'Ordered' );
+					$param{'rdbApproved'} = 'N';
+					$param{'rdbClientApproved'} = 'N';
 				} # end if Complete Or NOT
-
-			} # end if				
+			} # end if Proofs or FilmStrippign
 		} else { # A Service, But Not Film Stripping or Proofs
 			if ( $param{'rdbComplete'} eq 'Yes' ) {
 				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Complete' );
@@ -288,8 +290,8 @@ sub view {
 
 # Save info
 		my $ac = sql::start_transaction( $dbh );
-		my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $service_index );
-		if ( $specs{'ProjectType'} ) {
+		my $service_specs = openprint::service::get_specs_ref( $Project, $service_index );
+		if ( $$service_specs{'ProjectType'} ) {
 			my $complete = 1;
 
 			foreach my $signature_service_index ( $Project->signatures() ) {
@@ -319,19 +321,18 @@ sub view {
 			} #nd if
 		} elsif ( $service_type eq 'AdditionalSignature' ) {
 			foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockBrand UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
-				next if $specs{"$param-$specs{'SignatureIndex'}"} eq $param{"$param-$specs{'SignatureIndex'}"};
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $param, $param{"$param-$specs{'SignatureIndex'}"} );
+				next if $$service_specs{"$param-$$service_specs{'SignatureIndex'}"} eq $param{"$param-$$service_specs{'SignatureIndex'}"};
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $param, $param{"$param-$$service_specs{'SignatureIndex'}"} );
 			} # end foreach
 
-			if ( my @Equipment = openprint::Equipment::find( 'strid'=>$specs{'UsePress'} ) ) {
+			if ( my @Equipment = openprint::Equipment::find( 'strid'=>$$service_specs{'UsePress'} ) ) {
 				$Equipment[0]->update_schedule();
 			} # end if
 		} else {
-
-			my @do_not_save = ( 'btnFunction','ProjectIndex','ServiceIndex','order_id', 'ddmDueDateDay','ddmDueDateMonth','ddmDueDateYear','rdbApproved','Docket' );
-			foreach my $param ( $r->param() ) {
+			my @do_not_save = ( 'btnFunction','ProjectIndex','ServiceIndex','order_id', 'ddmDueDateDay','ddmDueDateMonth','ddmDueDateYear','Docket' );
+			foreach my $param ( keys %param ) {
 				next if ( sets::isin_regx( $param, @do_not_save ) );
-				next if $specs{$param} eq $param{$param};
+				next if $$service_specs{$param} eq $param{$param};
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $param, $param{$param} );
 			} # end foreach
 		} # end if

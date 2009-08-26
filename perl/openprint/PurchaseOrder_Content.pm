@@ -32,9 +32,9 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 );
 
 %transforms = (
-	'price'			=>	[ 's/[^\d\.]//g' ],
-	'total'			=>	[ 's/[^\d\.]//g' ],
-	'qty'			=>	[ 's/[^\d\.]//g' ],
+	'price'			=>	[ 's/[^\-\d\.]//g' ],
+	'total'			=>	[ 's/[^\-\d\.]//g' ],
+	'qty'			=>	[ 's/[^\-\d\.]//g' ],
 );
 
 %defaults = (

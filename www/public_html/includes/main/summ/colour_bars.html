@@ -2,7 +2,7 @@
     <span class="label">Colour bars:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <span class="value"><? echo ( 
 if ( $$variable{'rdbColourBar'} eq 'Y' ) {
 return 'Yes';
@@ -12,7 +12,7 @@ return 'No';
 return 'Auto';
 } # endif
 ) ?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>

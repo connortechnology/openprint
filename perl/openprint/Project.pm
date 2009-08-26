@@ -352,6 +352,13 @@ sub update_status {
 				$self->save();
             } # end if
             return $$self{status};
+		} elsif ( sets::isin( 'Waiting For QA Approval', \@statuses ) ) {
+            if ( $$self{status} ne 'Waiting For QA Approval' ) {
+				$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Waiting For QA Approval from $$self{'status'}" );
+				$$self{'status'} = 'Waiting For QA Approval';
+				$self->save();
+            } # end if
+            return $$self{status};
 		} elsif ( sets::isin( 'Proofs Out', \@statuses ) and ( $$self{'status'} ne 'Proofs Out' ) ) {
 			$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Proofs Out from $$self{'status'}" );
 			$$self{'status'} = 'Proofs Out';

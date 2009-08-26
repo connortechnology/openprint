@@ -905,7 +905,7 @@ sub mark_proofs_approved {
 	} # end if
 	if ( ! $service_index ) {
 		$log->error("Project $project_index has no Proofs service in mark_proofs_approved.");
-	} # en dif
+	} # end if
 
 	$Project->add_to_log( @session{'company_id','user_id'}, "Marked Proofs Approved from $old_status" );
 	$variable{'Project'} = $Project;
@@ -914,19 +914,6 @@ sub mark_proofs_approved {
 
 	my $approval_date = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() );
 	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'ApprovalDate', $approval_date );
-
-	if ( $config{'Smart Schedule'} eq 'Y' ) {
-		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$variable{'Project'}->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
-			my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'});
-			if ( @Equipment ) {
-				openprint::employee_schedule::remove( $log, $dbh, $project_index, $signature_service_index );
-				openprint::employee_schedule::insert( $log, $dbh, $project_index, $signature_service_index, $Equipment[0]->id() );
-			} # end if
-		} # end foreach signature_service_index
-	} # end if
-
 } # end sub mark_proofs_approved
 
 
@@ -1456,7 +1443,6 @@ sub operator_schedule {
 
 } # end sub operator_schedule
 
-<<<<<<< HEAD:perl/openprint/employee_production.pm
 sub _job_popup {
 	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
 } # end sub _job_popup
@@ -1484,10 +1470,9 @@ sub _operator_shift_li {
 
 	$variable{'Shift'} = $Shift;
 } # end sub operator_shift_li
-=======
+
 sub _check_for_skid {
 } # end sub _check_for_skid
->>>>>>> 213621bb1487621591f32162ed76afdcf88eec03:perl/openprint/employee_production.pm
 
 1;
 
