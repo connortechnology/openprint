@@ -1,6 +1,6 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl -w
 use utf8;
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/p1/perl';
 use strict;
 
 require configuration;
@@ -94,8 +94,8 @@ if ( $opts->{'pid_file'} ) {
 	} # end if
 } # end if
 
-$log->info("Opening SQL connection");
-$dbh = sql::open_sql( $log, 
+$openprint::log->info("Opening SQL connection");
+$openprint::dbh = sql::open_sql( $log, 
 	'host'		=> $opts->{'db_host'},
 	'database'	=> $opts->{'db_name'},
 	'driver'	=> 'Pg',
@@ -103,6 +103,7 @@ $dbh = sql::open_sql( $log,
 	'password'	=> $opts->{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
+%openprint::config = ();
 configuration::init_cache( $log, $dbh, {} );
 if ( $opts->{'site_url'} ) {
 $config{'siteURL'} = $opts->{'site_url'};
