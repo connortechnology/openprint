@@ -466,7 +466,8 @@ sub notification {
 	my ( $self, $name ) = @_;
 
 	$self->notifications() if ( ! exists $$self{'notifications'} );
-	return $$self{'notifications'}{$name} if $$self{'notifications'};
+	return $$self{'notifications'}{$name} if $$self{'notifications'} and $$self{'notifications'}{$name};
+	return '';
 } # end sub notification
 
 sub purchasing_total {
