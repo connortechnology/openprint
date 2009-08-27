@@ -27,7 +27,7 @@
 			<td>
 				<select name="txtID-<?index?>">
 					<option value=""> all </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)')], $$variable{'id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(name)')], $$variable{'id'} ); ) ?>
 				</select>
 			</td>
 			<td> <input type="text" name="txtName-<?index?>" value="<?name?>"></td>
@@ -46,7 +46,7 @@
 			<td>
 				<select name="txtID-New">
 					<option value=""> all </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)')] ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(name)')] ); ) ?>
 				</select>
 				</td>
 			<td> <input type="text" name="txtName-New"> </td>

@@ -56,7 +56,7 @@
 					) ?>
 		</select>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<? echo ( ssi::write_override( 'chkOverrideSheetSize'.$$variable{'QTYIndex'}, $$variable{'chkOverrideSheetSize'.$$variable{'QTYIndex'}},"\$('OverrideStockSize$$variable{QTYIndex}').show();", "f1.OverrideStockWidth$$variable{QTYIndex}.value='';f1.OverrideStockHeight$$variable{QTYIndex}.value='';\$('OverrideStockSize$$variable{QTYIndex}').hide();" ); ) ?>
+		<? echo ( ssi::write_override( 'chkOverrideSheetSize'.$$variable{'QTYIndex'}, $$variable{'chkOverrideSheetSize'.$$variable{'QTYIndex'}},"\$('OverrideStockSize$$variable{QTYIndex}').show();", "f1.OverrideStockWidth$$variable{QTYIndex}.value='';f1.OverrideStockHeight$$variable{QTYIndex}.value='';\$('OverrideStockSize$$variable{QTYIndex}').hide();calc('f1');" ); ) ?>
 		<br/>
 		<span id="OverrideStockSize<?QTYIndex?>" <? echo ( 'style="display:none;"' if $$variable{'chkOverrideSheetSize'.$$variable{'QTYIndex'}} ne 'Y' ) ?> >
 		<input type="text" name="OverrideStockWidth<?QTYIndex?>" value="<? echo ( $$variable{'OverrideStockWidth'.$$variable{'QTYIndex'}} ) ?>" onkeyup="this.form.ddmStockSheetSize<?QTYIndex?>.selectedIndex=0;calc(this.form.name);" size="7"/> x

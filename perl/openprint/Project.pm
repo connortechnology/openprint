@@ -26,7 +26,7 @@ my $debug = 1;
 
 sub delete {
 	my $self = shift;
-	sql::update( undef, undef, 'tbl_Projects', ['Index=?', $$self{'id'}], ['strStatus', 'Deleted'] );
+	sql::update( undef, undef, 'tbl_Projects', ['id=?', $$self{'id'}], ['strStatus', 'Deleted'] );
 } # end sub delete
 
 sub destroy {
@@ -47,7 +47,7 @@ sub destroy {
 		$Quote->add_log('Deleted Project ' . $$self{'id'} );
 	} # end foreach
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{'id'} );
-	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM projects WHERE Index=?}, $$self{'id'} );
+	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM projects WHERE id=?}, $$self{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
@@ -529,7 +529,7 @@ sub find {
 	if ( exists $params{'company_id'} ) {
 		if ( ref $params{'company_id'} eq 'ARRAY' ) {
 			if ( @{$params{'company_id'}} ) {
-				$sql .= q{ AND companyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
+				$sql .= q{ AND company_id IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
 				push @values, @{$params{'company_id'}};
 			} else {
 				$openprint::log->warn("EMpty company array passed to openprint::Project::find");
@@ -543,9 +543,9 @@ sub find {
 	} # end if
 	if ( $params{'user_id'} ) {
 		if ( $params{'user_id'} =~ /\D/ ) {
-			$sql .= " AND (UserIndex $params{'user_id'})";
+			$sql .= " AND (user_id $params{'user_id'})";
 		} else {
-			$sql .= q{ AND (UserIndex=?)};
+			$sql .= q{ AND (user_id=?)};
 			push @values, $params{'user_id'};
 		} # end if
 	} # end if
@@ -616,19 +616,19 @@ sub find {
 		if ( ref $params{'used_press_name'} eq 'ARRAY' ) {
 			if ( @{$params{'used_press_name'}} ) {
 				$sql .= ' AND (';
-				$sql .= join(' OR ', map { q{(? IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName IN ( 'UsePress','ddmPress1','ddmPress2','ddmPress3')))} } @{$params{'used_press_name'}} );
+				$sql .= join(' OR ', map { q{(? IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Projects.id AND strName IN ( 'UsePress','ddmPress1','ddmPress2','ddmPress3')))} } @{$params{'used_press_name'}} );
 				$sql .= ')';
 				push @values, @{$params{'used_press_name'}};
 			} else {
 $openprint::log->debug("No presses in used_press_name");
 			} # end if
 		} else {
-			$sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName='UsePress')};
+			$sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Projects.id AND strName='UsePress')};
 			push @values, $params{'used_press_name'};
 		} # end if
 	} # end if
 	if ( $params{'estimated_press_name'} ) {
-		$sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Index AND strName IN ('ddmPress1','ddmPress2','ddmPress3') )};
+		$sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Projects.id AND strName IN ('ddmPress1','ddmPress2','ddmPress3') )};
 		push @values, $params{'estimated_press_name'};
 	} # end if
 
@@ -860,16 +860,15 @@ sub copy {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref(
-				q{SELECT *,daterequired, due_date, intquantityindex, cursalesprice FROM Projects LEFT OUTER JOIN Order_Contents ON OrderIndex=order_id AND lngProjectIndex=id WHERE id=?}
-				, {}, $$self{'id'} );
+$log->debug("Loading $$self{id}");
+		$data = $dbh->selectrow_hashref( q{SELECT * FROM Projects WHERE id=?}, {}, $$self{'id'} );
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
 	} # endif
 	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
 		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
-	return;
+$log->debug("PROJECT: $$self{id}");
 } # end sub load
 
 sub type {

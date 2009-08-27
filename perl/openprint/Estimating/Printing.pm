@@ -1848,6 +1848,8 @@ $i->display();
  		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
 	 	$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
 		$$specs{'ImpositionCharge'.$qty_index} = $best_price{'Imposition Total'};
+		delete $$specs{'Impositions'};
+		delete $$specs{'Additional Impositions'.$qty_index};
 		my $PageCharge = $best_price{'Page Charge'};
 		$$specs{'PageCharge'.$qty_index} = $$PageCharge{'Total'};
 		my $SteppingCharge = $best_price{'Stepping Charge'};

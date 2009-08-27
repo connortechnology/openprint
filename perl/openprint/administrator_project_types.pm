@@ -20,40 +20,38 @@ use vars qw( $r $log $dbh %variable %param %session );
 *session = \%openprint::session;
 
 sub edit {
-	my ( $r, $log, $dbh, $variable ) = @_;
+	my $ProjectType = new openprint::ProjectType( $param{'ddmProjectType'} );
 
-	my $ProjectType = new openprint::ProjectType( $openprint::param{'ddmProjectType'} );
-
-	if ( $openprint::param{'btnFunction'} eq 'Go' ) {
-		if ( my @project_types = openprint::ProjectType::find( 'name' => $openprint::param{'txtGoProjectTypeID'} ) ) {
+	if ( $param{'btnFunction'} eq 'Go' ) {
+		if ( my @project_types = openprint::ProjectType::find( 'name' => $param{'txtGoProjectTypeID'} ) ) {
 			$ProjectType = shift @project_types;
 		} # end if
-	} elsif ( $openprint::param{'btnFunction'} eq '<<' ) {
+	} elsif ( $param{'btnFunction'} eq '<<' ) {
 		$ProjectType = $ProjectType->prev();
-	} elsif ( $openprint::param{'btnFunction'} eq '>>' ) {
+	} elsif ( $param{'btnFunction'} eq '>>' ) {
 		$ProjectType = $ProjectType->next();
-	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$ProjectType->delete();
 		$ProjectType = $ProjectType->next();
-	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
-		$$variable{'error'} .= $ProjectType->save( {
-		'name'				=> $openprint::param{'txtID'},
-		'description'		=> $openprint::param{'txtName'},
-		'url'				=> $openprint::param{'txtURL'},
-		'sorting'			=> $openprint::param{'txtSort'},
-		'required_services'	=> $openprint::param{'RequiredServices'},
-		'category_id'		=> $openprint::param{'category_id'},
+	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $ProjectType->save( {
+		'name'				=> $param{'txtID'},
+		'description'		=> $param{'txtName'},
+		'url'				=> $param{'txtURL'},
+		'sorting'			=> $param{'txtSort'},
+		'required_services'	=> $param{'RequiredServices'},
+		'category_id'		=> $param{'category_id'},
 		});
 
 		sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
-		foreach my $key ( keys %openprint::param ) {
+		foreach my $key ( keys %param ) {
 			if ( $key =~ /^Paper\d*$/ ) {
-				sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$openprint::param{$key},'lngProjectTypeIndex', $ProjectType->id() );
+				sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$param{$key},'lngProjectTypeIndex', $ProjectType->id() );
 			} # end if
 		} # end foreach
-	} elsif ( $openprint::param{'btnFunction'} eq 'Import' ) {
+	} elsif ( $param{'btnFunction'} eq 'Import' ) {
 		my $error = '';
-		if ( $openprint::param{'fileImport'} ) {
+		if ( $param{'fileImport'} ) {
 			my $upload = $r->upload( 'fileImport' );
 			my $io = $upload->io();
 			$_ = <$io>;
@@ -83,53 +81,51 @@ sub edit {
 			$log->warn( "No file given to upload." );
 		} # end if
 		if ( $error ne '' ) {
-			return misc::error( $log, $dbh, $variable, 'Import errors.', $error );
+			return misc::error( $log, $dbh, \%variable, 'Import errors.', $error );
 		} # end if
 
-	} elsif ( $openprint::param{'btnFunction'} eq 'Export' ) {
+	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 	    my @header = ( 'Project Type ID', 'Project Type Name', 'URL', 'Sort Order');
 	    my @data = map { $_->name(), $_->description(), $_->url(), $_->sorting() } openprint::ProjectType::find('order'=>'sorting');
-    	misc::export_csv( $r, $log, $variable, 'projectTypes.csv', \@header, \@data );
+    	misc::export_csv( $r, $log, \%variable, 'projectTypes.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
 		openprint::logs::insertLogRecord('40',);
 	} # end if
-	$$variable{'ProjectType'} = $ProjectType;
+	$variable{'ProjectType'} = $ProjectType;
 } # end sub types_edit
 
 sub defaults_edit {
-	my ( $r, $log, $dbh, $variable ) = @_;
+	my $index = $param{'ddmProjectType'};
 
-	my $index = $openprint::param{'ddmProjectType'};
-
-	if ( $openprint::param{'btnFunction'} eq 'Save' ) {
+	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $error = '';
 
 		my $ac = sql::start_transaction( $openprint::dbh );
 
 		my %cache = map { $_->strid(), $_->id() } openprint::ProjectType::find();
 		sql::execute( $log, $dbh, 'DELETE FROM tbl_ProjectType_Defaults' );
-		foreach my $key ( keys %openprint::param ) {
-			if ( $key =~ /txtID-(.*)/ and $openprint::param{"txtName-$1"} ne '' ) {
+		foreach my $key ( keys %param ) {
+			if ( $key =~ /txtID-(.*)/ and $param{"txtName-$1"} ne '' ) {
 				$error .= sql::insert( $log, $dbh, 'tbl_ProjectType_Defaults', 
-						'lngProjectTypeIndex', ( $openprint::param{$key} eq '' ? undef : $cache{$openprint::param{$key}} ),
-						'strFieldName', $openprint::param{"txtName-$1"},
-						'strDefaultValue', $openprint::param{"txtValue-$1"}
+						'lngProjectTypeIndex', ( $param{$key} eq '' ? undef : $cache{$param{$key}} ),
+						'strFieldName', $param{"txtName-$1"},
+						'strDefaultValue', $param{"txtValue-$1"}
 						);
 			} # end if
 		} # end foreach
 		sql::end_transaction( $openprint::dbh, $ac );
 		
 		if ( $error ne '' ) {
-			return misc::error( $log, $dbh, $variable, 'Save errors.', $error );
+			return misc::error( $log, $dbh, \%variable, 'Save errors.', $error );
 		} # end if
-	} elsif ( $openprint::param{'btnFunction'} eq 'Import' ) {
+	} elsif ( $param{'btnFunction'} eq 'Import' ) {
 		my $error = '';
-		if ( $openprint::param{'fileImport'} ne '' ) {
+		if ( $param{'fileImport'} ne '' ) {
 			my $upload = $r->upload('fileImport');
 			my $io = $upload->io();
 			$_ = <$io>;
 			my $csv = Text::CSV_XS->new();
-			my $ac = sql::start_transaction( $openprint::dbh );
+			my $ac = sql::start_transaction( $dbh );
 			my %cache = map { $_->strid(), $_->id() } openprint::ProjectType::find();
 			sql::execute( $log, $dbh, 'DELETE FROM tbl_ProjectType_Defaults' );
 
@@ -144,29 +140,29 @@ sub defaults_edit {
 						'lngProjectTypeIndex', ( ( $id eq '' or $id eq 'All' ) ? undef : $cache{$id} ),
 						'strFieldName', $name, 'strDefaultValue', $value  );
 			} # end foreach
-			sql::end_transaction( $openprint::dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 
 		} else {
 			$log->warn( "No file given to upload." );
 		} # end if
 		if ( $error ne '' ) {
-			return misc::error( $log, $dbh, $variable, 'Import errors.', $error );
+			return misc::error( $log, $dbh, \%variable, 'Import errors.', $error );
 		} # end if
 
-	} elsif ( $openprint::param{'btnFunction'} eq 'Export' ) {
+	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 		my @header = ( 'Project Type ID', 'Field Name', 'Field Value');
 
 		$_ = "SELECT (SELECT name FROM Project_Types WHERE id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
 			"FROM tbl_ProjectType_Defaults\n".
 			"ORDER BY ID, strFieldName";
 		my @data = sql::execute( $log, $dbh, $_ );
-		misc::export_csv( $r, $log, $variable, 'projectTypes.csv', \@header, \@data );
+		misc::export_csv( $r, $log, \%variable, 'projectTypes.csv', \@header, \@data );
 
 	} # end if
 	$_ = "SELECT (SELECT name FROM Project_Types WHERE id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
 		"FROM tbl_ProjectType_Defaults\n".
 		"ORDER BY ID, strFieldName";
-	@{$$variable{'Defaults'}} = sql::execute( $log, $dbh, $_ );
+	@{$variable{'Defaults'}} = sql::execute( $log, $dbh, $_ );
 } # end sub defaults_edit
 
 sub templates {
