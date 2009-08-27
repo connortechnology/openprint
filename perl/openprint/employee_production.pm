@@ -1248,7 +1248,7 @@ $log->debug("Shifts: " . $S->to_string() );
 			if ( ! $Shift->operator_id() ) {
 				if ( $Shift->assign_operator_id() ) {
 					$Shift->save();
-					continue;
+					next;
 				} # end if
 			} # end if
 
