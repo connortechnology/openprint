@@ -39,6 +39,10 @@
  		<? if ( $r->uri() =~ /operator_schedule/ ) ?>
  		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
  		<? endif ( $r->uri() =~ /operator_schedule/ ) ?>
+		<? if ( $r->uri() =~ /prepress_overview/ ) ?>
+		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
+		<meta http-equiv="refresh" content="300">
+		<? endif ( $r->uri() =~ /prepress_overview/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
 	<? eval (
@@ -81,10 +85,9 @@
 							<ul>
 								<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
 								<li><a href="/employee/production/barcode.html;NOSSL">&raquo; Barcode</a></li>
+								<li><a href="/employee/production/prepress_overview.html;NOSSL">&raquo; PrePress Overview</a></li>
 								<li><a href="/employee/production/print_overview.html;NOSSL">&raquo; Press Schedule</a></li>
-<? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
  								<li><a href="/employee/production/operator_schedule.html;NOSSL">&raquo; Operator Schedule</a></li>
-<? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 								<li><a href="/employee/production/monthly_schedule.html;NOSSL">&raquo; Schedule Overview</a></li>
 <!--
 								<li><a href="/employee/production/press_schedule.html;NOSSL">&raquo; New Press Schedule</a></li>

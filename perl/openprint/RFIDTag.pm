@@ -258,5 +258,24 @@ sub id_short {
 	return 1*$significant;
 } # end sub id_short
 
+sub is_invalid_id {
+	my ( $id ) = @_;
+
+	if ( length $id != 15 ) {
+		return 'Invalid length.  A valid tag should be 15 characters long. This one is ' . length $id;
+	} # end if
+
+	my $type_digit = substr( $id, 0, 1 );
+	if ( $type_digit =~ /\D/ ) {
+		return "Invalid type digit ($type_digit)";
+	} # end if
+
+	if ( $id =~ /\D/ ) {
+		return 'Should not contain anything other than integers.';
+	} # end if
+
+	return 0;
+} # end sub is_valid_id
+
 1;
 __END__

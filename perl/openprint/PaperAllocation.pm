@@ -136,9 +136,7 @@ sub save {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
-	if ( @_ ) {
-		$self->Project()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted. Reason: ' . $_[0] );
-	} # end if
+	$self->Project()->add_to_log(@session{'company_id','user_id'}, 'Allocation deleted.' . ( @_ ? ' Reason: ' . $_[0] : '' ) );
     sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 } # end sub delete
