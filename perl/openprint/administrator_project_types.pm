@@ -100,20 +100,19 @@ sub defaults_edit {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $error = '';
 
-		my $ac = sql::start_transaction( $openprint::dbh );
+		my $ac = sql::start_transaction( $dbh );
 
-		my %cache = map { $_->strid(), $_->id() } openprint::ProjectType::find();
 		sql::execute( $log, $dbh, 'DELETE FROM tbl_ProjectType_Defaults' );
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /txtID-(.*)/ and $param{"txtName-$1"} ne '' ) {
 				$error .= sql::insert( $log, $dbh, 'tbl_ProjectType_Defaults', 
-						'lngProjectTypeIndex', ( $param{$key} eq '' ? undef : $cache{$param{$key}} ),
+						'lngProjectTypeIndex', ( $param{$key} eq '' ? undef : $param{$key} ),
 						'strFieldName', $param{"txtName-$1"},
 						'strDefaultValue', $param{"txtValue-$1"}
 						);
 			} # end if
 		} # end foreach
-		sql::end_transaction( $openprint::dbh, $ac );
+		sql::end_transaction( $dbh, $ac );
 		
 		if ( $error ne '' ) {
 			return misc::error( $log, $dbh, \%variable, 'Save errors.', $error );
