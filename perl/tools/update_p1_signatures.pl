@@ -28,6 +28,10 @@ $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 
+foreach my $bleed ( 'Top','Bottom','Left','Right' ) {
+sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
+} # end foreach bleed
+
 foreach my $Project ( openprint::Project::find('updated_on_start'=> sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), - 30 ) ) ) ) {
 	my $services = $Project->services();
 
