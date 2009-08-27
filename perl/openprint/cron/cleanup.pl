@@ -1,5 +1,5 @@
 #!/usr/bin/perl 
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/p1/perl';
 use strict;
 use warnings;
 
@@ -60,7 +60,7 @@ foreach my $session ( sql::execute( $log, $dbh, q{SELECT id FROM sessions} ) ) {
 } # end foreach
 $log->debug("Deleted $deleted_session_count sessions");
 
-if ( 0 ) {
+if ( 1 ) {
 # Clean out uncalculated projects
 	my @Projects = openprint::Project::find(
 			'status'=>'uncalculated',
@@ -77,7 +77,7 @@ if ( 0 ) {
 				next;
 			} # end if
 			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
-				$log->error('Quoted!' . $Project->id());
+				#$log->error('Quoted!' . $Project->id());
 				next;
 			} # end if
 			$Project->delete();
@@ -88,15 +88,15 @@ if ( 0 ) {
 	@Projects = openprint::Project::find(
 			'status'=>'Unordered',
 			'order'=>'index desc',
-			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ),
-			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ),
+			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			);
 	if ( @Projects ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
 			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
-				$log->debug('Quoted!' . $Project->id());
+				#$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
 			if ( $Project->status() ne 'Unordered' ) {
@@ -104,11 +104,11 @@ if ( 0 ) {
 				next;
 			} # end if
 			if ( $Project->order_id() ) {
-				$log->error('WTF! Project has an order_id bu is Unordered');
+				$log->error('WTF! Project has an order_id bu is Unordered'.$Project->id().') docket (' . $Project->docket() . ')');
 				next;
 			} # end if
 			if ( $Project->docket() ) {
-				$log->error('WTF! has docket, but is not ordered');
+				$log->error('WTF! has docket, but is not ordered ('.$Project->id().') docket (' . $Project->docket() . ')');
 				next;
 			} # end if
 			$Project->delete();
@@ -117,8 +117,8 @@ if ( 0 ) {
 	} # end if
 	@Projects = openprint::Project::find(
 			'status'=>'Deleted','order'=>'index desc',
-			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
-			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ),
+			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			);
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -128,11 +128,12 @@ if ( 0 ) {
 				$log->error('WTF!');
 				next;
 			} # end if
+			next if $Project->docket();
 			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
-				$log->debug('Quoted!' . $Project->id());
+				#$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
-			$Project->delete();
+			$Project->destroy();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} # end if Projects
@@ -147,7 +148,7 @@ if ( 0 ) {
 	sql::end_transaction( $dbh, $ac );
 
 	$ac = sql::start_transaction( $dbh );
-	my @Quotes = openprint::Quote::find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	my @Quotes = openprint::Quote::find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
 	$log->warn('Cleaning out ' . @Quotes . ' incomplete quotes ');
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
@@ -234,7 +235,15 @@ if ( $config{'RFID Enabled'} ) {
 			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
 			'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
-	$log->warn( "History Entries: " . @Hs );
+	$log->warn( "Scanner History Entries: " . @Hs );
+	foreach my $H ( @Hs ) {
+		$H->delete();
+	} # end foreach H
+	@Hs = openprint::RFIDTagHistory::find(
+			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
+			'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
+			);
+	$log->warn( "Tag History Entries: " . @Hs );
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H

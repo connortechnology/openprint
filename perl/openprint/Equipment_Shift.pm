@@ -104,6 +104,10 @@ sub duration_seconds {
 	return misc::hms2time( $_[0]{'duration'} );
 } # end sub duration_seconds
 
+sub endtime_seconds {
+	return $_[0]->starttime_seconds() + $_[0]->duration_seconds();
+} # end sub endtime_seconds
+
 sub emanantise {
 	my ( $self, $date_seconds ) = @_;
 

@@ -1160,7 +1160,6 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 	} # end foreach
 	@available_printingtypes = sets::union( @available_printingtypes );
 
-
 #$openprint::log->debug("Master time before qty: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	my %threads;
 	my %prices;
@@ -3378,10 +3377,8 @@ sub calc_price {
 			'FoldingRunOvers'			=> $folding_results{'RunOvers'},
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
-
 	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
 	$price{'Net Sheet Count'} = $sheet_qty{'Net Sheet Count'};
-
 	$price{'Stock Weight'} = $sheet_qty{'Weight'};
 
 	my $sheets = $gross_qty;

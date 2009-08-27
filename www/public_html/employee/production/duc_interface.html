@@ -113,7 +113,7 @@
 				( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+'1 second' FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
 				if ( ! $start_time ) {
 					sql::update( $log, $dbh, 'Schedule', "ProjectIndex=$project_id AND ServiceIndex=$service_id", 
-							'RunTime',		openprint::service::get_runtime( $log, $dbh, $project_id, $service_id ),
+							'RunTime',		openprint::service::get_runtime( $Project, $service_id ),
 							);
 					( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime+RunTime FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
 				} # end if
@@ -127,14 +127,14 @@
 					last if ( ! $_ );
 					$start_time = $_;
 				} # end while
+				my $Project = new openprint::Project( $project_id );
 				sql::insert( $log, $dbh, 'Schedule', 
 					'ProjectIndex', $project_id,
 					'ServiceIndex', $service_id,
 					'StartTime',	$start_time,
 					'equipment_id', $press,
-					'RunTime',		openprint::service::get_runtime( $log, $dbh, $project_id, $service_id ),
+					'RunTime',		openprint::service::get_runtime( $Project, $service_id ),
 					);
-				my $Project = new openprint::Project( $project_id );
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Scheduled to print on $start_time" );
 				( $start_time ) = sql::execute( $log, $dbh, q{SELECT starttime + '1 second' from Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
 
@@ -148,7 +148,7 @@
 								'ServiceIndex', $services{$service_type}[0],
 								'ServiceType_id', $service_types{$service_type},
 								'StartTime',    $start_time,
-								'RunTime',  openprint::service::get_runtime( $log, $dbh, $project_id, $services{$service_type}[0] ),
+								'RunTime',  openprint::service::get_runtime( $Project, $services{$service_type}[0] ),
 								);
 					} # end if
 				} # end foreach

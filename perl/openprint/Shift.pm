@@ -182,6 +182,21 @@ sub operator_id {
 	return $$self{'operator_id'};
 } # end sub operator_id
 
+sub assign_operator_id {
+	my ( $self ) = @_;
+	my ( $Y, $M, $D, $h, $m, $s ) = Date::Parse::str2ptime( $$self{'starttime'} );
+	my $time = Date::Calc::Mktime( 1970, 1, $D, $h, $m, $s );
+	my $Shift = openprint::OperatorShift::find_one(
+			'equipment_id'=>$$self{'equipment_id'}, 
+			'shift_id'=>$$self{'shift_id'}, 
+			'starttime'=>Date::Format::time2str( '%H:%M:%S', $time ),
+			);
+	if ( $Shift and $Shift->operator_id() ) {
+		return $$self{'operator_id'} = $Shift->operator_id();
+	} # end if
+	return;
+} # end sub assign_operator_id
+
 sub Equipment {
 	return new openprint::Equipment( $_[0]{'equipment_id'} );
 } # end sub Equipment
