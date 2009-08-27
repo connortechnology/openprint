@@ -304,7 +304,7 @@ $openprint::log->debug("unknown status: $$sig_specs{'Status'} alert: $$sig_specs
 							$sig_specs = $sig_specs2;
 						} # end if
 					} # end if
-					my $new_service_index = copy_signature( $project_index, $sig_specs );
+					my $new_service_index = $Project->copy_signature( $sig_specs );
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $new_service_index );
 
 					# Need to dro poverrides on the last sig so that we don't get more spreads than we need
@@ -377,28 +377,5 @@ return 'Cover Spreads' if ( $specified_spreads{'Cover Spreads'} != 1 );
 	return 'Interior Spreads' if $$printing_specs{'txtInteriorSpreadQuantity'} > $specified_spreads{'Interior Spreads'};
 } # end sub status
         
-sub copy_signature {
-	my ( $project_index, $sig_specs ) = @_;
-$openprint::log->debug("ADding signature");
-	my $new_service_index = openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'AdditionalSignature' );
-	my $new_specs = openprint::service::get_specs_ref( $project_index, $new_service_index );
-	my $ac = sql::start_transaction( $openprint::dbh );
-	$openprint::dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
-	$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-	my ( $sig_index ) = sql::execute( undef, undef, $_, $project_index );
-	$sig_index += 1;
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureIndex', $sig_index );
-
-	# Releases the lock
-	$openprint::dbh->commit();
-
-	foreach my $key ( openprint::Estimating::Printing::variables() ) {
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
-	} # end foreach
-
-	sql::end_transaction( $openprint::dbh, $ac );
-	return $new_service_index;
-} # end sub copy_signature
-
 1;
 __END__
