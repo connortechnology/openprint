@@ -14,6 +14,7 @@
 
     my @no_outputs = eval( 'return openprint::Estimating::'.$param{'ServiceType'}.'::no_outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
     @vars = sets::exclude( \@no_outputs, \@vars );
+$log->debug("No outputs: @no_outputs");
 	foreach my $key ( @no_outputs ) {
 		delete $specs{$key};
 	} # end foreach

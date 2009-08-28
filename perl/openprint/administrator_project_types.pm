@@ -158,7 +158,7 @@ sub defaults_edit {
 		misc::export_csv( $r, $log, \%variable, 'projectTypes.csv', \@header, \@data );
 
 	} # end if
-	$_ = "SELECT (SELECT name FROM Project_Types WHERE id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
+	$_ = "SELECT lngprojecttypeindex, (SELECT name FROM Project_Types WHERE id=lngProjectTypeIndex) AS ID,strFieldName, strDefaultValue\n".
 		"FROM tbl_ProjectType_Defaults\n".
 		"ORDER BY ID, strFieldName";
 	@{$variable{'Defaults'}} = sql::execute( $log, $dbh, $_ );

@@ -20,7 +20,7 @@
 			<th width="195" align="left">Field Value</th>
 		</tr>
 		<? while ( @{$$variable{'Defaults'}} ) ?>
-		<? eval ( @$variable{'id','name','value'} = splice @{$$variable{'Defaults'}},0,3; ) ?>
+		<? eval ( @$variable{'id','projecttypename','name','value'} = splice @{$$variable{'Defaults'}},0,4; ) ?>
 		<? eval ( $$variable{'index'} = @{$$variable{'Defaults'}}; ) ?>
 		<tr<?rowclass?>> 
 			<td>&nbsp;</td>

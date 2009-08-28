@@ -502,7 +502,7 @@ sub signature_calc {
 #$openprint::log->warn('Negative Vertical Sig Cuts') if $vertical_cuts < 0;
 			if ( $$I{'image_orientation'} eq 'Horizontal' ) {
 				# Assume head to head at all times - head trim
-				if ( $$sig_specs{'chkBleedTop'} ) {
+				if ( $$sig_specs{'BleedTop'} ) {
 					$vertical_cuts += int ( $$I{'columns'}/2 );
 				} # end if
 			} # end if
@@ -512,8 +512,8 @@ sub signature_calc {
 		my $columns =  $$folding_imposition{columns} ? $$I{'columns'} / $$folding_imposition{columns} : $$I{'columns'};
 		$vertical_cuts += 1+$columns;# = 2+$$I{'columns'}-1
 		if ( 
-				( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
-				( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) )
+				( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+				( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) )
 		   ) {
 			$vertical_cuts += $columns-1;
 		} # end if
@@ -534,7 +534,7 @@ sub signature_calc {
 		if ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) {
 #$openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 			if ( $$I{'image_orientation'} eq 'Vertical' ) {
-				if ( $$sig_specs{'chkBleedTop'} ) {
+				if ( $$sig_specs{'BleedTop'} ) {
 					$horizontal_cuts += int( $$I{'rows'}/2);
 				} # end if
 			} # end if
@@ -543,8 +543,8 @@ sub signature_calc {
 		my $rows = $$folding_imposition{rows} ? $$I{'rows'}/$$folding_imposition{rows} : $$I{'rows'};
 		$horizontal_cuts += 1 + $rows;#2 + $$I{'rows'}-1
 		if ( $$sig_specs{'ddmBleedSize'.$qty_index} and ( 
-					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) ) or
-					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) )
+					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) ) or
+					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) )
 		   ) {
 			$horizontal_cuts += $rows-1;
 		} # end if
@@ -563,18 +563,18 @@ sub signature_calc {
 		if ( $$I{'dutch_columns'} and $$I{'dutch_rows'} ) {
 			$dutch_vertical_cuts += 1 + $$I{'dutch_columns'};
 			$dutch_horizontal_cuts += $$I{'dutch_rows'}; # +1 - 1
-			if ( ( $$sig_specs{'chkBleedTop'} and $$sig_specs{'chkBleedBottom'} ) or ($$sig_specs{'chkBleedLeft'} and $$sig_specs{'chkBleedRight'} ) ) {
+			if ( ( $$sig_specs{'BleedTop'} and $$sig_specs{'BleedBottom'} ) or ($$sig_specs{'BleedLeft'} and $$sig_specs{'BleedRight'} ) ) {
 				$dutch_horizontal_cuts += 1;
 			} # end if
 			if ( 
-					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) or
-					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) )
+					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) or
+					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) )
 			   ) {
 				$dutch_vertical_cuts += $$I{'dutch_columns'}-1;
 			} # end if
 			if ( 
-					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'chkBleedTop'} or $$sig_specs{'chkBleedBottom'} ) ) or
-					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'chkBleedLeft'} or $$sig_specs{'chkBleedRight'} ) )
+					( $$I{'image_orientation'} eq 'Horizontal' and ( $$sig_specs{'BleedTop'} or $$sig_specs{'BleedBottom'} ) ) or
+					( $$I{'image_orientation'} eq 'Vertical' and ( $$sig_specs{'BleedLeft'} or $$sig_specs{'BleedRight'} ) )
 			   ) {
 				$dutch_horizontal_cuts += $$I{'dutch_rows'}-1;
 			} # end if
