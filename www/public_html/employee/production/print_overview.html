@@ -336,9 +336,9 @@
 <? eval (
 		my ( $starttime, $endtime );
 		if ( $session{'/employee/production/print_overview.html?Presses'} ) {
-		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/print_overview.html?Presses'} ) ).')' );
+			($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/print_overview.html?Presses'} ) ).')' );
 		} else {
-		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
+			($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 		} # end if
 		if ( ! $session{'/employee/production/print_overview.html?ddmScheduleStartYear'} ) {
 			if ( $starttime ) {
