@@ -24,6 +24,7 @@ require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Content;
 require openprint::PaperInventory;
 require openprint::RFIDTag;
+require openprint::ScheduledJob;
 
 
 use vars qw( $r $log $dbh %variable %param %session %config );
