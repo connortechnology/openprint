@@ -53,12 +53,12 @@ sub find {
 	my %params = @_;
 
 	my $starttime = gettimeofday() if $debug;
-	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
+	#my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
 #$openprint::log->debug("Hash key: $hash_key");
-	if ( $find_cache{$hash_key} ) {
+	#if ( $find_cache{$hash_key} ) {
 		#$openprint::log->debug("Debug cached papers () () in : " . sprintf('%.4f', tv_interval( [$starttime])*1000) . 'usecs records:' . @{$find_cache{$hash_key}} ) if $debug;
-		return @{$find_cache{$hash_key}};
-	} # end if
+		#return @{$find_cache{$hash_key}};
+	#} # end if
 
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
@@ -238,7 +238,7 @@ sub find {
 	} elsif ( $debug ) {
 		$openprint::log->debug("Debug loaded papers ($sql) (@values) in : " . sprintf('%.4f', tv_interval( [$starttime])*1000) . 'usecs records:' . @$data ) if $debug;
 	} # end if
-	@{$find_cache{$hash_key}} = map { new openprint::Paper( $_->{id}, $_ ) } @$data;
+	#@{$find_cache{$hash_key}} = map { new openprint::Paper( $_->{id}, $_ ) } @$data;
 	return map { new openprint::Paper( $_->{id}, $_ ) } @$data;
 } # end sub find
 
@@ -1140,42 +1140,56 @@ sub load_from_signature {
 		$Paper->basis_height( $$specs{'basis_height'} );
 		$Paper->basis_mweight( $$specs{'basis_mweight'} );
 		$Paper->score_required( $Paper->calliper() > 0.008 );
-#following line added on june-30-2008
-		$Paper->req_die_scoring( $Paper->calliper() > 0.008 );
 		if ( $$specs{'StockType'} ne 'Roll' ) {
 			$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
-		my %params = (
-				'supplied'	=> $$specs{'rdbSuppliedStock'},
-				'name'      => $$specs{'ddmStockBrand'},
-				'finish'    => $$specs{'ddmStockFinish'},
-				'colour'    => $$specs{'ddmStockColour'},
-				'weight'    => $$specs{'ddmStockWeight'},
-				'project_type_id'=> $Project ? $Project->Type()->id() : undef,
-		);
-		if ( $qty_index ) {
-			#if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
+		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
+			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
+			$Paper = $Paper->id() ? $Paper->clone() : undef;
+		} # end if
+
+		if ( ! $Paper ) {
+			my %params = (
+					'supplied'	=> $$specs{'rdbSuppliedStock'},
+					'name'      => $$specs{'ddmStockBrand'},
+					'finish'    => $$specs{'ddmStockFinish'},
+					'colour'    => $$specs{'ddmStockColour'},
+					'weight'    => $$specs{'ddmStockWeight'},
+					'project_type_id'=> $Project ? $Project->Type()->id() : undef,
+					'order'		=>	'minimum_order',
+			);
+			if ( $qty_index ) {
 				$params{'width'} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
 				$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
-			#} else {
-			#} # end if
-			$params{'type'}	= $$specs{'StockType'.$qty_index};
+				$params{'type'}	= $$specs{'StockType'.$qty_index};
+			} # end if
+			my @Papers = find( %params );
+			if ( ! @Papers ) {
+	#$log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
+				delete $params{'width'};
+				delete $params{'height'};
+				@Papers = find( %params );
+			} # end if
+	#$log->debug("Found " . @Papers );
+			foreach my $P ( @Papers ) {
+				next if $$specs{'StockQuantity'.$qty_index} < $P->minimum_order();
+				$Paper = $P;
+				last;
+			} # end foreach
+			if ( ( ! $Paper ) and @Papers ) {
+	#$log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
+				$Paper = shift @Papers;
+			} # end if
+		} # end if Paper
+		if ( ! $Paper ) {
+#$log->debug("No paper found");
+			$Paper = new openprint::Paper();
+		} else {
+			$Paper = $Paper->clone();
 		} # end if
-		my @Papers = find( %params );
-		if ( ! @Papers ) {
-			delete $params{'width'};
-			delete $params{'height'};
-			@Papers = find( %params );
-		} # end if
-		foreach my $P ( @Papers ) {
-			next if $$specs{'StockQuantity'.$qty_index} < $P->minimum_order();
-			$Paper = $P;
-			last;
-		} # end foreach
-		$Paper = shift @Papers if @Papers;
-		$Paper = new openprint::Paper() if ! $Paper;
+		
 		if ( $$specs{'rdbSuppliedStock'} eq 'Y' and ! $Paper->supplied() ) {
 			$Paper->supplied(1);
 		} # end if
@@ -1187,9 +1201,10 @@ $openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
 
 	if ( $qty_index ) {
 		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
-			$Paper = $Paper->clone();
+#$log->debug("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$Paper->width( $$specs{'StockWidth'.$qty_index} );
-			$Paper->height( $$specs{'StockHeight'.$qty_index} );
+			$Paper->start_width( $Paper->width() ) if ! $Paper->start_width();
+			$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
 			$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
 		} # end if
 	} # end if

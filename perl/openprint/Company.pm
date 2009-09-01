@@ -340,11 +340,6 @@ sub save_tradereferences {
 	return;
 } # end sub save_tradereferences
 
-sub start_year {
-	my $self = shift;
-	$$self{'established'} =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
-	return $1;
-} # end sub start_year
 
 sub Credit {
 	my ( $self, $supplier ) = @_;

@@ -159,9 +159,7 @@ sub copy {
 sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
-	my $e = $self->SUPER::save( $data );
-	$self->load();
-	return $e;
+	return $self->SUPER::save( $data );
 } # end sub save
 
 sub destroy {
@@ -184,21 +182,14 @@ sub to_string {
 sub add {
 	my ( $self, $Paper, $quantity, $purpose_id ) = @_;
 
-	my $content;
-	my @contents = $self->Contents( 'Paper'=>$Paper, 'purpose_id'=>$purpose_id );
-	if ( ! @contents ) {
-		$content = new openprint::SkidContent();
-		$content->skid_id( $$self{'id'} );
-		$content->paper_id( $Paper->id() );
-		$content->purpose_id( $purpose_id );
-	} else {
-		$content = $contents[0];
-		if ( $purpose_id and ! $content->purpose_id() ) {
-			$content->purpose_id( $purpose_id );
-		} # end if
+	my $C = $self->Content( $Paper );
+	if ( ! $C ) {
+		$C = new openprint::SkidContent();
+		$C->skid_id( $$self{'id'} );	
+		$C->paper_id( $Paper->id() );
 	} # end if
 
-	my $old_quantity = $content->quantity();
+	my $old_quantity = $C->quantity();
 
 	if ( $quantity =~ /^\+/ ) {
 		$quantity =~ s/[^\d]//g;
@@ -212,7 +203,7 @@ sub add {
 		$quantity =~ s/[^\d]//g;
 # Set
 	} # end if
-	$content->save({'quantity'=>$quantity});
+	$C->save({'quantity'=>$quantity});
 	return $quantity - $old_quantity;
 } # end sub add_inventory
 

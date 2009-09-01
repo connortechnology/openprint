@@ -22,7 +22,7 @@
 	<? if ( defined $$variable{'Order'}->harmonized_tax() ) ?>
 	<tr>
 		<td align="right">Harmonized Tax:</td>
-		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->harmonized_tax() ) ) ?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->harmonized_tax() ) ); ) ?></td>
 	</tr>
 	<? endif ( defined $$variable{'Order'}->harmonized_tax() ) ?>
 	<? if ( $$variable{'TOTAL'} ) ?>

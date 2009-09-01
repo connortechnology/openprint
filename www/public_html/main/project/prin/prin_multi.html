@@ -3,9 +3,9 @@
 <script type="text/javascript" src="/javascripts/printing.js?version=1.4"></script>
 <script type="text/javascript">
 <!--
-	function calc( formName ) {
+	function calc( formName, force ) {
 		var form = getFormObj( formName );
-		if ( gettingNewPrice ) {
+		if ( gettingNewPrice && ! force ) {
 			if ( timeout ) {
 				clearTimeout( timeout );
 			} // end if
@@ -14,7 +14,10 @@
 		} // end if
 		timeout = null;
 		gettingNewPrice = true;
-		jsrsExecute( '/jsrs.htm', cbBookResults, 'openprint::service::external_calc', get_variables(formName,'Multipage') );
+		var h = form.serialize(true);
+		h.ServiceType = 'Multipage';
+		h.callback = 'cbBookResults';
+		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 	}
 	function cbBookResults( results ) {
 		cbFillResults(results);

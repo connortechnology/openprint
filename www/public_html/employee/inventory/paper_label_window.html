@@ -32,7 +32,7 @@
 			if ( $$variable{'paper_id'} ) {
 				@papers = ( $$variable{'paper_id'} );
 			} else {
-				@papers = map { $_->paper_id() } $$variable{'Skid'}->contents();
+				@papers = map { $_->paper_id() } $$variable{'Skid'}->Contents();
 			} # end if
 			if ( @papers ) {
 				foreach my $paper_id ( @papers ) {

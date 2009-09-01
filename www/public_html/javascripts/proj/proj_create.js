@@ -208,8 +208,8 @@ function checkSelections (form){
 	return true;
 } // end checkFilmProofsPads()
 
-function calc(formName) {
-	if ( gettingNewPrice ) {
+function calc( formName, force ) {
+	if ( gettingNewPrice && ! force ) {
 		if ( timeout ) clearTimeout( timeout );
 		timeout = setTimeout( "calc('" + formName + "');", 1000 );
 		return;
@@ -217,5 +217,10 @@ function calc(formName) {
 	timeout = null;
 	var form = getFormObj( formName );
     gettingNewPrice = true;
-	jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::print_project::create_calc', Serialize( form ) );
+	//jsrsExecute( '/jsrs.htm', cbFillResults, 'openprint::print_project::create_calc', Serialize( form ) );
+	var h = form.serialize(true);
+	h.ServiceType = 'Project';
+	h.callback = 'cbFillResults';
+	h.function = 'create_calc';
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end function calc(form)

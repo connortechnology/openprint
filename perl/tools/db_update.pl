@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/testing/perl';
 use strict;
 
 require sql;
@@ -132,8 +132,8 @@ if ( $data ) {
 	$dbh->do(q{alter table Users rename column index to id}) if exists $$data{'index'};
 	$dbh->do(q`alter table users add deleted boolean`) if ! exists $$data{'deleted'};
 	$dbh->do(q`alter table users add email_quotes_to_myself boolean default false`) if ! exists $$data{'email_quotes_to_myself'};
-	$dbh->do('ALTER TABLE USERS RENAME COLUMN ysnaccountactivation TO web_active') if $$data{'ysnaccountactivation'};
-	$dbh->do('ALTER TABLE USERS RENAME COLUMN companyindex TO company_id') if $$data{'companyindex'};
+	$dbh->do('ALTER TABLE USERS RENAME COLUMN ysnaccountactivation TO web_active') if exists $$data{'ysnaccountactivation'};
+	$dbh->do('ALTER TABLE USERS RENAME COLUMN companyindex TO company_id') if exists $$data{'companyindex'};
 	if ( ! exists $$data{'purchasing_limit'} ) {
 		$dbh->do(q`alter table Users add purchasing_limit	float`);
 	} # end if
@@ -1306,8 +1306,11 @@ if ( $version < $new_version ) {
     $version = $new_version;
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ProjectType_Categories LIMIT 1', {} );
-if ( $data ) {
+if ( sets::isin( 'projecttype_categories', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
+	if ( $data and ! exists $$data{'sort'} ) {
+		$dbh->do('ALTER TABLE projecttype_categories ADD sort integer');
+	} # end if
 } else {
 	$_ = misc::load_file( $log, q{../openprint/sql/ProjectType_Categories.sql});
 	foreach my $st ( split(';', $_ ) ) {
@@ -1345,7 +1348,7 @@ if ( ! sets::isin( 'product_categories', \@tables ) ) {
 	}
 } else {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Product_Categories LIMIT 1', {} );
-	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean') if ! exists $$data{'deleted'};
+	$dbh->do('ALTER TABLE Product_Categories ADD deleted boolean') if $data and ! exists $$data{'deleted'};
 } # end if
 
 if ( ! sets::isin( 'products', \@tables ) ) {
@@ -1355,7 +1358,7 @@ if ( ! sets::isin( 'products', \@tables ) ) {
 	}
 } else {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Products LIMIT 1', {} );
-	$dbh->do('ALTER TABLE Products ADD deleted boolean') if ! exists $$data{'deleted'};
+	$dbh->do('ALTER TABLE Products ADD deleted boolean') if $data and ! exists $$data{'deleted'};
 } # end if
 
 if ( ! sets::isin( 'product_specifications', \@tables ) ) {
@@ -1738,12 +1741,6 @@ if ( $data ) {
 
 sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment,Paper', 'type','text') if ! $config{'Cached Objects'};
 
-if ( sets::isin( 'projecttype_categories', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
-	if ( ! exists $$data{'sort'} ) {
-		$dbh->do('ALTER TABLE projecttype_categories ADD sort integer');
-	} # end if
-} # end if
 
 if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );

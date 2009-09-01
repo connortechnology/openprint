@@ -20,14 +20,14 @@
 			<th width="195" align="left">Field Value</th>
 		</tr>
 		<? while ( @{$$variable{'Defaults'}} ) ?>
-		<? eval ( @$variable{'id','name','value'} = splice @{$$variable{'Defaults'}},0,3; ) ?>
+		<? eval ( @$variable{'id','projecttypename','name','value'} = splice @{$$variable{'Defaults'}},0,4; ) ?>
 		<? eval ( $$variable{'index'} = @{$$variable{'Defaults'}}; ) ?>
 		<tr<?rowclass?>> 
 			<td>&nbsp;</td>
 			<td>
 				<select name="txtID-<?index?>">
 					<option value=""> all </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)')], $$variable{'id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(name)')], $$variable{'id'} ); ) ?>
 				</select>
 			</td>
 			<td> <input type="text" name="txtName-<?index?>" value="<?name?>"></td>
@@ -46,7 +46,7 @@
 			<td>
 				<select name="txtID-New">
 					<option value=""> all </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)')] ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(name)')] ); ) ?>
 				</select>
 				</td>
 			<td> <input type="text" name="txtName-New"> </td>

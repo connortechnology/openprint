@@ -15,37 +15,48 @@
 	my %totals;
 	my %sheets;
 	my %papers;
+	my %indexes;
 	my $Project = $$variable{'Project'};
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			my $paper_string = $Paper->to_string();
+			$papers{$paper_string} = $Paper;
+		} # end foreach
+	} # end foreach signature
+	my @stocks = sort keys %papers;
+	foreach my $stock_index ( 1 .. @stocks ) {
+		$indexes{$stocks[$stock_index-1]} = $stock_index;
+	} # end foreach
+
 	foreach my $ss_id ( $Project->signatures() ) {
 		$$variable{'ss_id'} = $ss_id;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		$html .= '<fieldset><legend>Stock for Signature ' . $$sig_specs{'SignatureIndex'} . '</legend>';
 
-		foreach my $stock_index ( 1 .. 4 ) {
-			last if ( $stock_index > 1 ) and ( ! $$variable{"id-$ss_id-$stock_index"} );
-			$$variable{'stock_index'} = $stock_index;
+		my %sig_papers;
+		# What we do is load each stock for the signature, and assign it a stock_index, 1 .. 4, then deal with them in order.
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			my $paper_string = $Paper->to_string();
+			$sig_papers{$paper_string} = $Paper;
+		} # end foreach
 
-			my $Paper;
-			if ( $$variable{"id-$ss_id-$stock_index"} ) {
-				$Paper = new openprint::Paper( $$variable{"id-$ss_id-$stock_index"} );
-			} else {
-				$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
-			} # end if
-			$$variable{'Stock'} = $Paper;
-			$papers{$Paper->to_string()} = $Paper;
-			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$totals{$Paper->to_string()}[$qty_index] += $$variable{"qty-$ss_id-$stock_index-$qty_index"};
-				$sheets{$Paper->to_string()}[$qty_index] += $$variable{"sheets-$ss_id-$stock_index-$qty_index"};
-			} # end foreach
+		foreach my $paper_string ( @stocks ) {
+			next if ! $sig_papers{$paper_string};
+
+			$$variable{'stock_index'} = $indexes{$paper_string};
+			$$variable{'Stock'} = $sig_papers{$paper_string};
 			$html .= ssi::include($ENV{'DOCUMENT_ROOT'}.'/main/project/_stock_line.html');
 		} # end foreach stock_index
-		$html .= '</fieldset>';
+		$html .= "</fieldset>\n";
 	} # end foreach signature
 
-	$html .= '<fieldset><legend>Totals:</legend>';
-	my $stock_id = 1;
-	foreach my $stock ( sort keys %totals ) {
-		$html .= '<p><label>'.$stock.'</label>';
+	$html .= "<fieldset><legend>Totals:</legend>\n";
+	foreach my $stock ( @stocks ) {
+		my $stock_id = $indexes{$stock};
+		$html .= '<p><label>'.$stock."</label>\n";
 		my $Paper = $papers{$stock};
 
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -54,9 +65,9 @@
 			if ( $Paper->type() ne 'Roll' ) {
 				$html .= sprintf(q`<br/><input size="6" type="text" id="sheets-%1$d-%2$d" name="sheets-%1$d-%2$d" value="%3$s" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />sheets`, $stock_id, $qty_index, $sheets{$stock}[$qty_index] );
 			} # end if
-			$html .= '</span>';
+			$html .= "</span>\n";
 		} # end foreach qty_index
-		$html .= '</p>';
+		$html .= "</p>\n";
 		$stock_id += 1;
 	} # end foreach stock
 	$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_service_price.html' );

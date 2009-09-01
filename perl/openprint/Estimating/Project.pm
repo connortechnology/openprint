@@ -616,6 +616,83 @@ $log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
 	return $$specs{'Status'};
 } # end sub calc
 
+sub create_calc {
+	#my ( $r, $log, $dbh, $variable, %specs ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
+
+	return if ! $$specs{'rdbProjectType'};
+
+	# Sanitize input
+	foreach my $qty_index ( 1 .. 3 ) {
+		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
+	} # end foreach qty_index
+
+	my $Project = new openprint::Project( $$specs{'ProjectIndex'} );
+	$Project->currency_id( $openprint::session{'Currency_id'} ) if ! $Project->currency_id();
+	if ( ! $Project->id() ) {
+		$Project->save();
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Created' );
+	} # end if
+
+	my %services = $Project->get_services( );
+	foreach my $qty_index ( 1 .. 3 ) {
+		if ( $$specs{'txtQuantity'.$qty_index} != $Project->quantity($qty_index) ) {
+			foreach my $service_id ( keys %services ) {
+				foreach my $s_id ( @{$services{$service_id}} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity'.$qty_index, $$specs{'txtQuantity'.$qty_index} );
+				} # end foreach
+			} # end foreach
+			$Project->quantity( $qty_index, $$specs{'txtQuantity'.$qty_index} );
+		} # end if
+	} # end foreach qty_index
+
+	my @project_types = openprint::ProjectType::find( 'name' => $$specs{'rdbProjectType'} );
+	my $ProjectType = shift @project_types;
+	if ( $Project->Type()->name() ne $ProjectType->name() ) {
+		my @oldRequiredServiceTypes = $Project->Type()->required_ServiceTypes();
+		my @newRequiredServiceTypes = $ProjectType->required_ServiceTypes();
+
+# Remove no longer needed services
+		foreach my $ServiceType ( @oldRequiredServiceTypes ) {
+			if ( ! sets::isin( $ServiceType, \@newRequiredServiceTypes ) ) {
+				foreach my $s_id ( @{$services{$ServiceType->name()}} ) {
+					openprint::print_project::delete_service( $log, $dbh, $Project->id(), $s_id );
+				} # end foreach
+				delete $services{$ServiceType->name()};
+			} # end if
+		} # end foreach
+
+# add needed services
+		foreach my $ServiceType ( @newRequiredServiceTypes ) {
+			if ( ! $services{$ServiceType->name()} ) {
+				my $s_id = openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );
+				push @{$services{$ServiceType->name()}}, $s_id;
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity1', $$specs{'txtQuantity1'} );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity2', $$specs{'txtQuantity2'} );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, 'txtQuantity3', $$specs{'txtQuantity3'} );
+			} # endif
+		} # end foreach
+		if ( $services{''} ) {
+			foreach ( @{$services{''}} ) {
+				openprint::print_project::delete_service( $log, $dbh, $Project->id(), $_ );
+			} # end foreach
+		} # end if
+		$Project->Type( $ProjectType );
+		$Project->save();
+	} # end if ProjectType changed
+
+	foreach my $ServiceType ( openprint::ServiceType::find( 'create_visible' => 'Y' ) ) {
+		if ( $services{$ServiceType->name()} ) {
+			$$specs{'chkServices'.$ServiceType->name()} = $ServiceType->name();
+		} else {
+			#push @results, 'chkServices'.$ServiceType->name().'~';
+		} # end if
+	} # end foreach
+
+	$$specs{'ProjectIndex'} = $Project->id();
+	return $$specs{'Status'} = 'calculated';
+} # end if
+
 1;
 
 __END__

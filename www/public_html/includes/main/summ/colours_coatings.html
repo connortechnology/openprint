@@ -5,7 +5,7 @@
 <!-- The rest is done for each qty -->
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="value"> 
 	  <? if ( $$variable{'chkBlackSideOne'} ) ?>
 	  	<?chkBlackSideOne?>&nbsp;
@@ -17,7 +17,7 @@
 	  	<?chkSpecialColourSideOne?>
 	  <? endif ( $$variable{'chkSpecialColourSideOne'} ) ?>
 	</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <!-- End of Results -->
@@ -30,7 +30,7 @@
 <!-- The rest is done for each qty -->
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="value"> 
 	<? if ( $$variable{'chkSpecialSideOneColour1'} ) ?>
 	  <?txtSpecialSideOneColour1?> (<?txtSpecialSideOneColourInkPercent1?>%) &nbsp;
@@ -58,7 +58,7 @@
 	<? endif ( $$variable{'chkSpecialSideOneColour8'} ) ?>
 	   
 	 </span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <!-- End of Results -->
@@ -70,7 +70,7 @@
 	<span class="label">Varnish for side one:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="value">
 		<?chkVarnishOverallGlossSideOne?>
 		<?chkVarnishOverallMatteSideOne?>
@@ -78,7 +78,7 @@
 		<?chkVarnishSpotMatteSideOne?>
 		<?chkVarnishDryTrapSideOne?>
 	</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
   </div>
@@ -89,9 +89,9 @@
 	<span class="label">Aqueous coating for side one:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="value"><?rdbAqueousSideOne?></span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
@@ -101,7 +101,7 @@
 		<span class="label">Side two colours:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 		<span class="value"> 
 		  <? if ( $$variable{'chkBlackSideTwo'} ) ?>
 			<?chkBlackSideTwo?>&nbsp;
@@ -113,7 +113,7 @@
 			<?chkSpecialColourSideTwo?>
 		  <? endif ( $$variable{'chkSpecialColourSideTwo'} ) ?>
 		</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
   </div>
@@ -124,7 +124,7 @@
 		<span class="label">Side two special colours:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="value"> 
 	<? if ( $$variable{'chkSpecialSideTwoColour1'} ) ?>
 	  <?txtSpecialSideTwoColour1?> (<?txtSpecialSideTwoColourInkPercent1?>%) &nbsp;
@@ -151,7 +151,7 @@
 	  <?txtSpecialSideTwoColour8?> (<?txtSpecialSideTwoColourInkPercent8?>%) &nbsp;
 	<? endif ( $$variable{'chkSpecialSideTwoColour8'} ) ?>
 		</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<br class="spacer"/>
@@ -163,7 +163,7 @@
 	<span class="label">Varnish for side two:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="value">
 		<?chkVarnishOverallGlossSideTwo?>
 		<?chkVarnishOverallMatteSideTwo?>
@@ -171,7 +171,7 @@
 		<?chkVarnishSpotMatteSideTwo?>
 		<?chkVarnishDryTrapSideTwo?>
 	</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
@@ -182,9 +182,9 @@
 	<span class="label">Aqueous coating for side two:</span>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<span class="value"> <?rdbAqueousSideTwo?> </span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>

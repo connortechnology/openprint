@@ -622,6 +622,29 @@ sub skid_details {
 			$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
 			return;
 		} # end if
+		if ( $param{'rfidtag_id'} ) {
+			my @rfidtags = misc::trim( split ',', $param{'rfidtag_id'} );
+			if ( @skid_ids and ( @rfidtags != @skid_ids ) ) {
+				$variable{'error'} .= 'When saving to multiple skids, the # of rfidtags must match the # of skids.';
+				return;
+			} # end if
+
+			foreach my $rfidtag_id ( misc::trim( @rfidtags ) ) {
+				$log->debug( $rfidtag_id );
+				if ( $_ = openprint::RFIDTag::is_invalid_id( $rfidtag_id ) ) {
+					$variable{'error'} .= "RFIDTAG $rfidtag_id is invalid: $_.<br/>";
+					next;
+				} # end if
+				my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+				if ( $RFIDTag->id() ) {
+					my $skid_id = $RFIDTag->skid_id();
+					if ( $skid_id and ( $skid_id != $param{'skid_id'} ) ) {
+						$variable{'error'} .= "RFIDTAG $rfidtag_id is already assigned to skid $skid_id.<br/>";
+						next;
+					} # end if
+				} # end if
+			} # end foreach rfidtag_id
+		} # end if
 
 		if ( $param{'skid_quantity'} ) {
 			if ( (@quantities>1) and ( @quantities != $param{'skid_quantity'} ) ) {
