@@ -26,7 +26,7 @@
 			if ( $openprint::param{"UsePress-$sid"} ne $$sig_specs{'UsePress'} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $openprint::param{'ProjectIndex'}, $sid, 'UsePress', $openprint::param{"UsePress-$sid"} );
 				if ( my @Equipment = openprint::Equipment::find('strid'=>$openprint::param{"UsePress-$sid"}) ) {
-					my $runtime = 1*openprint::service::get_runtime( $log, $dbh, $openprint::param{'ProjectIndex'}, $sid );
+					my $runtime = 1*openprint::service::get_runtime( $Project, $sid );
 					sql::update( $log, $dbh, 'Schedule', ['ServiceIndex=?', $sid],
 						'Equipment_id', $Equipment[0]->id(),
 						'RunTime', "$runtime minutes",
