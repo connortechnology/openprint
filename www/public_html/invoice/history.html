@@ -103,7 +103,7 @@
 				$html .= ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f1.btnFunction.value='Download';f1.submit();", '', 'Download' );
 				$html .= ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
 				$html .= ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'edit.html', 'New Invoice' );
-				$html .= ssi::writeButton( $log, $dbh, 'AccountStatement', 'account_statement.gif', "f1.btnFunction.value='Account Statement';f1.submit();", '', 'Account Statement' ) if $session{'/invoice/history.html?company_id'};
+				$html .= ssi::writeButton( $log, $dbh, 'AccountStatement', 'account_statement.gif', "if(!\$('company_id').value){alert('Please select a company');} else {f1.btnFunction.value='Account Statement';f1.submit();}", '', 'Account Statement' );
 				return $html;
 			) ?>
 		</p>

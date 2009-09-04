@@ -20,6 +20,10 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 		$$variable{'total'} += $Invoice->total();
 		$$variable{'interest_total'} += $Invoice->interest();
 		$$variable{'owing_total'} += $Invoice->owing();
+
+		if ( ( time - Date::Parse::str2time( $Invoice->due_on() ) ) > ( 60*60*24*30 ) ) {
+			$$variable{'3monthwarning'} = 1;
+		} # end if
 	} # end foreach Invoice
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
@@ -66,4 +70,10 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 </table>
 <span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 <br class="spacer"/><br/>
-Payments received after <? echo ( Date::Format::time2str( $config{'DateFormat'}, time ); ) ?> will not be shown.  Please make payment immediately.  
+Payments received after <? echo ( Date::Format::time2str( $config{'DateFormat'}, time ); ) ?> will not be shown.  Please make payment immediately.  <br/>
+<br/>
+<? if ( $$variable{'3monthwarning'} ) ?>
+<b>
+Please note that at least one of these Invoices is 3 months overdue. No further service will be given until the account is brought up to date.<br/> 
+</b>
+<? endif ( $$variable{'3monthwarning'} ) ?>
