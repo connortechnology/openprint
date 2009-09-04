@@ -54,7 +54,9 @@ OR:
 		<p><label>Due Date:</label>
 			<? echo ( 
 				if ( $$variable{'Project'}->requested_date() ) {
-					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) );
+					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) );
+				} elsif ( $param{'ddmDueDateYear'} ) {
+					return join('-', @param{'ddmDueDateYear','DueDateMonth','ddmDueDateDay'} );
 				} # end if
 				return 'None selected';
 			) ?>
@@ -70,6 +72,8 @@ OR:
 			<? echo ( 
 				if ( $$variable{Project}->requested_date() ) {
 					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) );
+				} elsif ( $param{'ddmDueDateYear'} ) {
+					return join('-', @param{'ddmDueDateYear','DueDateMonth','ddmDueDateDay'} );
 				} # end if
 				return 'None selected';
 			) ?>
