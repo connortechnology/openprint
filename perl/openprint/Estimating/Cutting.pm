@@ -381,7 +381,7 @@ sub signature_calc {
 		return;
 	} # end if
 	my $signature_index = $$sig_specs{'SignatureIndex'};
-	$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Signature: $signature_index ";
+	$$specs{'hdnBreakdown'.$qty_index} .= "<br/>Signature: $signature_index " . $I->to_string().'<br/>';
 
 	$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};	
 	if ( ! $$specs{"txtQuantity$qty_index"} ) {
@@ -392,6 +392,7 @@ sub signature_calc {
 
 	my $sheets = $$specs{"txtQuantity$qty_index"};
 	$sheets *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
+	$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 # Grab the Calliper
 	if ( $$specs{"chkOverrideCalliper-$signature_index"} ne 'Y' ) {
 		$$specs{"txtStockCalliper-$signature_index"} = $Paper->calliper();
@@ -498,8 +499,6 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 
 		# Now consider Dutch cuts
 		if ( $$sig_specs{'hdnImpositionDutchColumns'.$qty_index} and $$sig_specs{'hdnImpositionDutchRows'.$qty_index} ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
-
 			$dutch_vertical_cuts += 1 + $$sig_specs{'hdnImpositionDutchColumns'.$qty_index};
 			$dutch_horizontal_cuts += $$sig_specs{'hdnImpositionDutchRows'.$qty_index}; # +1 - 1
 			if ( ( $$sig_specs{'chkBleedTop'} and $$sig_specs{'chkBleedBottom'} ) or ($$sig_specs{'chkBleedLeft'} and $$sig_specs{'chkBleedRight'} ) ) {
@@ -547,6 +546,7 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 
 			my $price;
 			my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$sig_specs{'txtImposition'.$qty_index} );
+			$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 
 			if ( $vertical_cuts > $horizontal_cuts ) {
@@ -575,8 +575,10 @@ $openprint::log->warn('Negative Horizontal Sig Cuts') if $horizontal_cuts < 0;
 
 			
 			if ( $dutch_vertical_cuts or $dutch_horizontal_cuts ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
 
 				$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$sig_specs{'txtImposition'.$qty_index} );
+				$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 
 				if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {

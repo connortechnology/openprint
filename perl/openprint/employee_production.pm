@@ -363,6 +363,19 @@ sub projects {
 			$param{'ProjectIndex'} = @projects[0]->id();
 			return;
 		} # end if
+	} elsif ( $param{'order_id'} ) {
+		$param{'order_id'} =~ s/\D//g;
+		if ( $param{'order_id'} ) {
+			my $Order = new openprint::Order( $param{'order_id'} );
+			@projects = $Order->Projects();
+		} # end if
+		if ( @projects == 1 ) {
+			$order_id = $projects[0]->order_id();
+			$variable{'Redirect'} = '/employee/project/view.html';
+			$param{'OrderID'} = $order_id;
+			$param{'ProjectIndex'} = @projects[0]->id();
+			return;
+		} # end if
 	} # end if
 
 	$variable{'txtDocket'} = $param{'txtDocket'};

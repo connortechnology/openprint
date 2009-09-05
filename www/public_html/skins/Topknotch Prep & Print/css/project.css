@@ -158,6 +158,7 @@ span.SpotColour label, span.Coverages label {
 .checkOption {
 	float: left;
 	width: 30%;
+	min-width: 104px;
 }
 .SpecialColour {
 	float: left;

@@ -16,6 +16,7 @@ $serial = 'Product_Category_Id_seq';
 $table = 'Product_Categories';
 
 %fields = (
+			'id'				=>	'id',
 			'name'				=>	'name',
 			'description'		=>	'description',
 			'projecttype_id'	=>	'projecttype_id',
