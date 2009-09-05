@@ -408,8 +408,7 @@ div.Popup {
     display: none;
 }
 
-/* Begin Menu Styles
- * */
+/* Begin Menu Styles */
 
 ul#menubar {
 	width:100%;
@@ -441,8 +440,9 @@ ul#menubar:after {
 }
 /* Hides from IE-mac \*/
 * html ul#menubar {height: 1%;}
-* *     ul#menubar{display:block;}
-* */* End hide from IE-mac */
+*     ul#menubar{display:block;}
+/* End hide from IE-mac */
+
 ul#menubar li {
     float: left;
     list-style: none;
@@ -519,8 +519,7 @@ ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
 }
 
 ul#menubar li.off:hover ul, ul#menubar li.over ul {
-    /*  display the other topics when
- *   *              their parent is hovered */
+    /*  display the other topics when their parent is hovered */
     display: block;
     z-index: 6000;
 }
