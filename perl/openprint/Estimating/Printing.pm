@@ -608,7 +608,7 @@ $openprint::log->debug("# of colours: " . @side_one_colours );
 			} # end if
 		} # end if
 		my $Paper = new openprint::Paper();
-		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',(sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
+		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 1,(sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N'),@$specs{'txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
 		@$Paper{'width','height','mweight','Price','type','Units','basis_width','basis_height','basis_mweight','minimum_order'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','CustomStockPriceUnits','basis_width','basis_height','basis_mweight','minimum_order'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};
@@ -1081,8 +1081,10 @@ $openprint::log->debug("No spread layout for you!");
 			} # end fi
 
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
-			$project{'Grip'} = $Press->specification('Grip');
-			$project{'Gutter'} = $Press->specification('Gutter');
+			if ( $Project->Type()->name() ne 'Envelopes' ) {
+				$project{'Grip'} = $Press->specification('Grip');
+				$project{'Gutter'} = $Press->specification('Gutter');
+			} # end if
 			$project{'Orientation'} = $Press->specification('Orientation');
 			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
 				$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
