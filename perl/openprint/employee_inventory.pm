@@ -1597,6 +1597,7 @@ sub purchase_order_view {
 					'reason'	=>	'deleted.',
 					});
 			delete $param{'po_id'};
+			delete $param{'btnFunction'};
 			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
@@ -1609,6 +1610,7 @@ sub purchase_order_view {
 					'reason'	=>	'undeleted.',
 					});
 			delete $param{'po_id'};
+			delete $param{'btnFunction'};
 			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
