@@ -61,8 +61,7 @@ div.row {
 		text-indent: 0px;
 		background-color: #ffffff;
 		z-index: 0;
-		min-height: 80px;
-		max-height: 400px;
+		max-height: 2048px;
 	}
 	li br {
 		clear: both;
@@ -111,7 +110,7 @@ div.row {
 	}
 	.Forms {
 		float: left;
-		margin-right: 5px;
+		margin: 2px;
 		display: inline;
 	}
 	.DueDate {
@@ -121,29 +120,30 @@ div.row {
 		display: inline;
 	}
 	.Impressions {
-		float: right;
-		margin-left: 2px;
-		display: inline;
+		float: left;
+		margin: 2px;
 		min-width: 70px;
 		text-align: right;
 	}
-	.Runtime {
+	.RunTime {
 		float: left;
-		margin: 0px 2px 0px 2px;
+		margin: 2px;
 		display: inline;
 	}
 	.StartTime {
 		float: left;
-		margin: 0px 2px 0px 2px;
+		margin: 2px;
 		display: inline;
 	}
 	.Buttons {
 		float: right;
-		margin-right: 2px;
+		margin: 2px;
 		display: inline;
 	}
 	.Services {
+		margin: 2px;
 		float: right;
+		display: inline;
 	}
 	.Services .Service {
 		float: left;

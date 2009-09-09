@@ -241,9 +241,11 @@
 			<select id="scale" name="scale" onchange="this.form.submit();">
 				<? echo ( 
 					my @options = ( 
-						'100'	=>	'100px / hour',
-						'200'	=>	'200px / hour',
-						'360'	=>	'360px / hour',
+						''		=>	'Overview',	
+						'10'	=>	'10px / hour',
+						'20'	=>	'20px / hour',
+						'30'	=>	'30px / hour',
+						'40'	=>	'40px / hour',
 					);
 					return ssi::make_drop_down( \@options, $session{'/employee/production/print_overview.html?scale'} );
 				) ?>

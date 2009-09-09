@@ -1239,7 +1239,7 @@ $log->debug("Downing starttime, " . $row->Project()->docket() . ' locked: ' . $r
 
 	while ( @order ) {
 		my $row = shift @order;
-		my $run_time = misc::hms2time( $$row{'runtime'} );
+		my $run_time = $row->runtime_seconds();
 		my $old_start_time = $start_time - $run_time;
 
 		while ( @fixed_jobs and ($fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
@@ -1261,7 +1261,7 @@ $log->debug("Downing starttime, " . $row->Project()->docket() . ' locked: ' . $r
 
 			if ( ! @Shifts ) {
 				# Try to add more:
-				my ( $Y, $M, $D, $h, $m, $s ) = Date::Parse::str2ptime( $Shift->endtime() );
+				my ( $s, $m, $h, $D, $M, $Y, $Z ) = Date::Parse::strptime( $Shift->endtime() );
 				my $time = Date::Calc::Mktime( 1970, 1, $D, $h, $m, $s );
 				my $NewShift = openprint::OperatorShift::find_one('equipment_id'=>$$Shift{'equipment_id'}, 'starttime_>'=>$time, 'order'=>'starttime DESC' );
 				if ( ! $NewShift ) {
@@ -1280,10 +1280,10 @@ $log->debug("Downing starttime, " . $row->Project()->docket() . ' locked: ' . $r
 				} # end if
 			} else {
 				$Shift = shift @Shifts;
-				$start_time = $Shift->starttime_seconds();
+				$start_time = $Shift->starttime_seconds() if $start_time < $Shift->starttime_seconds();
 			} # end if
 			push @{$variable{'changed'}}, $Shift->ul_id();
-		} # end if
+		} # end while
 
 		$row->operator_id( $Shift->operator_id() );
 		last if $row->save({
@@ -1296,7 +1296,7 @@ $log->debug("Downing starttime, " . $row->Project()->docket() . ' locked: ' . $r
             $row->Project()->add_to_log( @session{'company_id','user_id'}, "Scheduled to print on " . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
         } # end if
 
-        $start_time += $row->runtime_seconds();
+        $start_time += $run_time;
 
     } # end while @order
 	while ( @order ) {

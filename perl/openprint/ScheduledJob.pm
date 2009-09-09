@@ -261,7 +261,15 @@ sub get_li {
 
 # a 12hour shift ~= 600px, so each hour gets 50px;
 	my $scale = $session{'/employee/production/print_overview.html?scale'};
-	$scale = 100 if ! $scale;
+	my @Presses = split(';', $session{'/employee/production/print_overview.html?Presses'} );
+	my $min_height = 50 * ( @Presses ? @Presses : 1 );
+	my $height;
+	if ( ! $scale ) {
+		$height = $min_height;
+	} else {
+		$height = $self->starttime() ? $scale * int($self->runtime_seconds()/3600) : $min_height;
+		$height = $min_height if $height < $min_height;
+	} # end if
 
     my $html;
     if ( ! $$self{'project_id'} ) {
@@ -307,7 +315,7 @@ sub get_li {
     if ( $Project->rush() ) {
         $colour .= ' rush';
     } # end if
-    $html .= sprintf( '<li id="item_%d" class="%s" style="height:%spx;">', $$self{'id'}, $colour, $self->starttime() ? int($self->runtime_seconds()/$scale) : 'auto' );
+    $html .= sprintf( '<li id="item_%d" class="%s" style="height:%spx;">', $$self{'id'}, $colour, $height );
     $html .= '<div class="Company">';
     $html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $$self{'project_id'}, $Project->docket() );
 	my $n = $Project->Company()->name();
@@ -329,6 +337,14 @@ sub get_li {
 
         $html .= sprintf( q{<span id="%1$dForms" class="Forms" onclick="openPopup( 'Forms', '%1$d' );">%2$d %3$s</span>}, $$self{'id'}, $forms, 'form'.($forms > 1 ? 's' : '') );
         $html .= sprintf( q{<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">%2$d imps</span>}, $$self{'id'}, $impressions );
+		if ( $Equipment->smartscheduling() ) {
+			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
+					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
+					$$self{'locked'} ? 'locked' : 'unlocked',
+					);
+		} # end if
+
+		$html .= sprintf( q{<span class="RunTime" onclick="popup_window( '_job_popup.html,'schedule_id=%1$d' );">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
 
         $html .= '<span class="Buttons">';
         $html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
@@ -344,14 +360,6 @@ sub get_li {
 		} # end if
         $html .= '</span>';
 		if ( $Equipment->smartscheduling() ) {
-			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
-					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
-					$$self{'locked'} ? 'locked' : 'unlocked',
-					);
-		} # end if
-
-		$html .= sprintf( q{<span class="RunTime" onclick="popup_window( '_job_popup.html,'schedule_id=%1$d' );">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
-		if ( $Equipment->smartscheduling() ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
@@ -362,16 +370,16 @@ sub get_li {
 		$html .= sprintf( '<div class="Comment">%3$s</div>', ssi::htmlize( $self->comment() ) );
 		$html .= sprintf( '<span class="Forms">%d %s</span>', $forms, $forms > 1 ? ' forms' : ' form' );
 		$html .= sprintf( '<span class="Impressions">%d imps</span>', $impressions );
-		$html .= '<span class="Buttons">';
-		$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
-if ( $$self{'operator_id'} == $session{'user_id'} ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", '', 'Start' );
-} # end if
-		$html .= '</span>';
         $html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{'id'},
                 Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
                 );
         $html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
+		$html .= '<span class="Buttons">';
+		$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
+		if ( $$self{'operator_id'} == $session{'user_id'} ) {
+			$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", '', 'Start' );
+		} # end if
+		$html .= '</span>';
 		if ( $Equipment->smartscheduling() ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
