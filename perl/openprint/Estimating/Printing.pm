@@ -1228,7 +1228,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 				} # end if Web or Sheet
 
 if ( 0 ) {
-$openprint::log->debug("Sorting");	
+$openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
 }
@@ -1289,8 +1289,8 @@ $i->display();
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
-if ( 1 ) {
-$openprint::log->warn('Impositions');
+if ( 0 ) {
+$openprint::log->warn('Impositions for '. $Press->strid() );
 foreach my $I ( @impositions ) {
 $I->display();
 } # end foreach
@@ -1676,6 +1676,7 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 			if ( ! $found ) {
 				my @i;
 				foreach my $I ( @impositions ) {
+					next if $I->imposition() < $$specs{'txtImposition'.$qty_index};
 					if ( ! ( $$specs{'txtImposition'.$qty_index} % $I->columns() ) ) {
 						my $remove = ( $I->imposition() - $$specs{'txtImposition'.$qty_index} ) / $I->columns();
 						if ( $I->rows() > $remove ) {
