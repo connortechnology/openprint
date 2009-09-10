@@ -26,9 +26,7 @@
 				next if ! $$preview{'separations'};
 
 				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-					$$variable{'Project'}->docket(),
-					$$variable{'SignatureIndex'}+1,
-					'Front',
+					$$variable{'Project'}->docket(), $$variable{'SignatureIndex'}, 'Front',
 					);
 			} # end foreach preview
 			$front_html .= ssi::writeButton($log, $dbh, 'SendPPF'.$PPF->id(), 'send.gif', '', '/employee/proj/prin/prin_multi.html?ProjectIndex='.$$variable{'Project'}->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id(), 'Send CIP' );
@@ -39,9 +37,7 @@
 				next if ! $$preview{'separations'};
 
 				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-					$$variable{'Project'}->docket(),
-					$PPF->signature(),
-					'Back',
+					$$variable{'Project'}->docket(), $PPF->signature(), 'Back',
 					);
 			} # end foreach preview
 			$back_html .= '</fieldset></div>';
@@ -49,15 +45,10 @@
 		} elsif ( $PPF->side() eq 'A' or $PPF->side() eq 'Front' ) {
 			$front_html .= '<div class="leftColumn"><fieldset><legend>Front created at '.Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PPF->created_on() ) ).'</legend>';
 			foreach my $preview ( $PPF->previews() ) {
-				if ( ! $$preview{'separations'} ) {
-					$log->debug("No separations");
-					next;
-				} # end if
+				next if ! $$preview{'separations'};
 
 				$front_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-					$$variable{'Project'}->docket(),
-					$PPF->signature(),
-					'Front',
+					$$variable{'Project'}->docket(), $PPF->signature(), 'Front',
 					);
 			} # end foreach preview
 			$front_html .= ssi::writeButton($log, $dbh, 'SendPPF'.$PPF->id(), 'send.gif', '', '/employee/proj/prin/prin_multi.html?ProjectIndex='.$$variable{'Project'}->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id(), 'Send CIP' );
@@ -69,9 +60,7 @@
 				next if ! $$preview{'separations'};
 
 				$back_html .= sprintf('<a href="/images/previews/%1$dsg%2$dsd%3$s.jpg"><img src="/images/previews/%1$dsg%2$dsd%3$s.jpg" alt="" /></a>', 
-					$$variable{'Project'}->docket(),
-					$PPF->signature(),,
-					'Back',
+					$$variable{'Project'}->docket(), $PPF->signature(), 'Back',
 					);
 			} # end foreach preview
 			$back_html .= ssi::writeButton($log, $dbh, 'SendPPF'.$PPF->id(), 'send.gif', '', '/employee/proj/prin/prin_multi.html?ProjectIndex='.$$variable{'Project'}->id().'&ServiceIndex='.$$variable{ServiceIndex}.'&action=SendPPF&ppf_id='.$PPF->id(), 'Send CIP' );

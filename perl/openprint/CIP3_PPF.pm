@@ -158,17 +158,17 @@ sub parsePreviewImage {
 			@inks = sets::exclude( [$1], \@inks );
 			$line = shift @_;
 			if ( $line =~ /^CIP3BeginSeparation$/ ) {
-$log->debug("Start parseSeparation ($$separation{ink}) @inks");
+#$log->debug("Start parseSeparation ($$separation{ink}) @inks");
 				@_ = parseSeparation( $separation, @_ );
-$log->debug("Done parseSeparation ($$separation{ink}) @inks");
+#$log->debug("Done parseSeparation ($$separation{ink}) @inks");
 				push @{$$image{'separations'}}, $separation;
 			} # end if
 		} elsif ( $line =~ /^CIP3BeginSeparation$/ ) {
 			my $separation = {};
 			$$separation{'ink'} = shift @inks;
-$log->debug("Start parseSeparation ($$separation{'ink'}) @inks");
+#$log->debug("Start parseSeparation ($$separation{'ink'}) @inks");
 			@_ = parseSeparation( $separation, @_ );
-$log->debug("Done parseSeparation ($$separation{ink}) @inks");
+#$log->debug("Done parseSeparation ($$separation{ink}) @inks");
 			push @{$$image{'separations'}}, $separation;
 		} elsif ( $line =~ /^\/CIP3AdmSeparationNames \[ (.*) \] def$/ ) {
 			my $separations = $1;
@@ -186,7 +186,7 @@ sub parseSeparation {
 	my $image = shift @_;
 	while ( @_ ) {
 		my $line = shift @_;
-$log->debug($line);
+#$log->debug($line);
 		if ( $line =~ /^\/CIP3PreviewImageWidth (\d+) def/ ) {
 			$$image{'width'} = $1;
 		} elsif ( $line =~ /^\/CIP3PreviewImageHeight (\d+) def/ ) {
@@ -230,7 +230,7 @@ sub parse {
 	$_ = decode_base64($$self{'data'});
 	$_ = Compress::Zlib::uncompress($_) if $$self{'compressed'};
 	my @data = split("\r\n", $_ );
-$log->debug("# of lines: " . @data ) if $debug;
+#$log->debug("# of lines: " . @data ) if $debug;
 	while ( @data ) {
 		my $line = shift @data;
 		if ( $line =~ /^CIP3BeginSheet$/ ) {
@@ -283,20 +283,25 @@ sub generate_previews {
 	foreach my $side ( 'Front', 'Back' ) {
 		my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
 		if ( (!$force) and -f $filename ) {
-			#$log->warn("$filename exists, not generating the preview.");	
+			$log->warn("$filename exists, not generating the preview.");	
 			next;
 		} else {
-			#$log->debug("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
+$log->debug("Blah");
+			$log->warn("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
 		} # end if
+			$log->warn("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
 
 		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
 			if ( ! $$self{'parsed'} ) {
-$log->debug("Start parse");
 				$self->parse();
 			} # end if
-$log->debug("Done parse");
 
-			foreach my $preview ( $self->previews($side) ) {
+			my @previews = $self->previews($side);
+			if ( ! @previews ) {
+				$log->error("NO Previews for side $side");
+			} # end if
+
+			foreach my $preview ( @previews ) {
 				if ( ! $$preview{'separations'} ) {
 					$log->warn('No separations in preview.');
 				} # end if
@@ -351,7 +356,6 @@ $log->debug("Done parse");
 				foreach my $s ( @{$$preview{'separations'}} ) {
 					$separations{$$s{'ink'}} = $s;
 				} # end foreach
-$log->debug("Orientation: $orientation");
 				if ( $orientation eq 'bottom-left' ) {
 					my @cols =  ( 1 .. $height );
 					my @rows =  reverse ( 1 .. $width);
@@ -378,7 +382,7 @@ $log->debug("Orientation: $orientation");
 						} # end foreach ink
 					} # end foreach
 				} # end if
-	#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
+	$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
 				
 				my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK','orientation'=>$orientation);
 	#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
@@ -392,7 +396,7 @@ $log->debug("Orientation: $orientation");
 				$log->error( $_ ) if $_;
 				#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
 				my @blobs = $Image->ImageToBlob();
-#$log->debug("# of blobs: " . @blobs );
+$log->debug("# of blobs: " . @blobs );
 				if ( ! @blobs ) {
 						$log->debug("No blobs");
 				} else {
@@ -413,6 +417,8 @@ $log->debug("Orientation: $orientation");
 			} elsif ( $self->previews($side) ) {
 				$log->error( "No data in the preview for $filename" );
 			} # end if
+		} else {
+$log->error("No path");
 		} # end if
 	} # end foreach side
 	if ( $changed ) {
