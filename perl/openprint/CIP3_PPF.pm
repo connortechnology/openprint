@@ -15,7 +15,7 @@ use Number::Format;
 
 use vars qw( $log $dbh %config $table $serial %fields %transforms %defaults );
 
-my $debug = 0;
+my $debug = 1;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -174,7 +174,7 @@ sub parsePreviewImage {
 			my $separations = $1;
 			$separations =~ s/[\(\)]//g;
 			@inks = split(' ', $separations);
-$log->debug("INK Sep @inks");
+#$log->debug("INK Sep @inks");
 		} elsif ( $line =~ /^CIP3EndPreviewImage/ ) {
 			last;
 		} # end if
@@ -211,7 +211,7 @@ sub parseSeparation {
 				$line = shift;
 			} # end while
 			$$image{'image'} = join("\r\n", @image_data);
-			$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
+			#$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
 			last;
 		} elsif ( $line =~ /^CIP3EndSeparation/ ) {
 			last;
@@ -286,10 +286,9 @@ sub generate_previews {
 			$log->warn("$filename exists, not generating the preview.");	
 			next;
 		} else {
-$log->debug("Blah");
+#$log->debug("Blah");
 			$log->warn("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
 		} # end if
-			$log->warn("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
 
 		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
 			if ( ! $$self{'parsed'} ) {
@@ -382,7 +381,7 @@ $log->debug("Blah");
 						} # end foreach ink
 					} # end foreach
 				} # end if
-	$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
+	#$log->error("Assembling CMYK image from separations. Width: $width x $height = " . $width*$height*4 . " dept: $depth " . length $image_data );
 				
 				my $Image = Image::Magick->new(magick=>'cmyk',depth=>$depth,size=>$width.'x'.$height,'debug'=>'Blob','colorspace'=>'CMYK','orientation'=>$orientation);
 	#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
@@ -396,7 +395,7 @@ $log->debug("Blah");
 				$log->error( $_ ) if $_;
 				#$log->debug("Orientation Mgick: " . $Image->Get('orientation') );
 				my @blobs = $Image->ImageToBlob();
-$log->debug("# of blobs: " . @blobs );
+#$log->debug("# of blobs: " . @blobs );
 				if ( ! @blobs ) {
 						$log->debug("No blobs");
 				} else {
