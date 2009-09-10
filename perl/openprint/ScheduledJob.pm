@@ -150,7 +150,7 @@ sub find {
 sub runtime_seconds {
 	my $self = shift;
 	if ( @_ ) {
-		$$self{'runtime'} = Date::Format::time2str( '%H:%M:%S', $_[0] );
+		$$self{'runtime'} = misc::seconds2hms($_[0]);
 	} # end if
 	
 	return misc::hms2time( $$self{'runtime'} );
@@ -262,7 +262,7 @@ sub get_li {
 # a 12hour shift ~= 600px, so each hour gets 50px;
 	my $scale = $session{'/employee/production/print_overview.html?scale'};
 	my @Presses = split(';', $session{'/employee/production/print_overview.html?Presses'} );
-	my $min_height = 50 * ( @Presses ? @Presses : 1 );
+	my $min_height = 40 + ( 10 * ( @Presses ? @Presses : 1 ) );
 	my $height;
 	if ( ! $scale ) {
 		$height = $min_height;
@@ -278,7 +278,7 @@ sub get_li {
         $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
         $html .= '</span>';
         $html .= sprintf( q{<span class="RunTime" onclick="openPopup( 'RunTime', %1$d );"><span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$self{'id'}, split(':',$self->runtime()) );
-        $html .= '<br/></li>';
+        $html .= '</li>';
         return $html;
     } # end if
 
@@ -333,18 +333,18 @@ sub get_li {
 
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
 		$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
-        $html .= sprintf( q{<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">%2$s</div>}, $$self{'id'}, $self->comment() );
+        $html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
 
-        $html .= sprintf( q{<span id="%1$dForms" class="Forms" onclick="openPopup( 'Forms', '%1$d' );">%2$d %3$s</span>}, $$self{'id'}, $forms, 'form'.($forms > 1 ? 's' : '') );
-        $html .= sprintf( q{<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">%2$d imps</span>}, $$self{'id'}, $impressions );
+        $html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $forms, 'form'.($forms > 1 ? 's' : '') );
+        $html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps</span>`, $$self{'id'}, $impressions );
 		if ( $Equipment->smartscheduling() ) {
-			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
+			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
 					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
 					$$self{'locked'} ? 'locked' : 'unlocked',
 					);
 		} # end if
 
-		$html .= sprintf( q{<span class="RunTime" onclick="popup_window( '_job_popup.html,'schedule_id=%1$d' );">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
+		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">%2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
 
         $html .= '<span class="Buttons">';
         $html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
@@ -388,7 +388,7 @@ sub get_li {
 			$html .= '</span>';
 		} # end if smart
 	} # end if
-	$html .= "<br/></li>\n";
+	$html .= "</li>\n";
 	return $html;
 } # end sub get_li
 
@@ -447,7 +447,7 @@ sub runtime {
 sub forms {
 	my ( $self ) = @_;
 
-	return scalar @{$$self{'service_id'}} if ! $$self{'service_id'};
+	return scalar @{$$self{'service_id'}} if $$self{'service_id'};
 	return 0;
 } # end sub forms
 
@@ -508,7 +508,8 @@ sub start {
 sub stop {
 	my ( $self ) = @_;
 	$self->locked( 0 );
-	$self->runtime_seconds( time - $self->starttime_seconds() );
+$log->debug("Stopping job: starttime $$self{'starttime'} seconds: " . $self->starttime_seconds() . " now: " . time . " elapsed: " . ( time - $self->starttime_seconds() ) );
+	$self->runtime_seconds( $self->runtime_seconds() - ( time - $self->starttime_seconds() ) );
 	my $e = $self->save();
 	if ( ! $e ) {
 		foreach my $sig_id ( @{$$self{'service_id'}} ) {
