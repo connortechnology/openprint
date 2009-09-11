@@ -1675,11 +1675,19 @@ sub purchase_order_view {
 						'fax'			=> $param{'vendor_fax'},
 						} );
 				$param{'supplier_id'} = $C->id();
-			} elsif ( @Companies == 1 ) {
-				if ( $Companies[0]->supplier() ne 'Y' ) {
-					$Companies[0]->save( {'supplier'=>'Y'} );
+			} else {
+				my $Company;
+				foreach my $C ( @Companies ) {
+					if ( $C->supplier() eq 'Y' ) {
+						$Company = $C;
+						last;
+					} # end if
+				} # end foreach
+				if ( ! $Company ) {
+					$Company = $Companies[0];
+					$Company->save( {'supplier'=>'Y'} );
 				} # end if
-				$param{'supplier_id'} = $Companies[0]->id();
+				$param{'supplier_id'} = $Company->id();
 			} # end if
 		} # end if
 		if ( ! $param{'contact_id'} ) {
