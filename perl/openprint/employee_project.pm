@@ -57,7 +57,6 @@ sub view {
 				} # end if
 			} # end if
 		} # end if
-		
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
@@ -449,6 +448,7 @@ sub view {
 	if ( $project_index ) {
 		openprint::project::view( $log, $dbh, \%variable, $project_index, $order_id );
 	} # end if
+	$variable{'Project'} = $Project if ! $variable{'Project'};
 
 } # end sub view_project
 
