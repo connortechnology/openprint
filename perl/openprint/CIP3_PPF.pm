@@ -287,7 +287,7 @@ sub generate_previews {
 			next;
 		} else {
 #$log->debug("Blah");
-			$log->warn("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
+			#$log->warn("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
 		} # end if
 
 		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
@@ -297,7 +297,7 @@ sub generate_previews {
 
 			my @previews = $self->previews($side);
 			if ( ! @previews ) {
-				$log->error("NO Previews for side $side");
+				#$log->error("NO Previews for side $side");
 			} # end if
 
 			foreach my $preview ( @previews ) {
