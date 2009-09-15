@@ -9,14 +9,13 @@
 	}
 </style>
 <div align="center">
-	<h2>Topknotch Specials for 
+	<h2>Specials for 
 <? echo (
 require Date::Calc;
 my ( $y, $m, $d ) = Date::Calc::Today();
 return Date::Calc::Month_to_Text($m) . ' ' . $y;
 ) ?>
 	</h2>
-<p>Due to the quick turnaround on <span style="color: red;">Gangrun business cards and postcards</span> please ensure files are print ready. Proofs emailed for approval are only to check for ripping problems. Files with changes if already printed will be charged in full again.</p>
 <p>Specials pricing only applies to print ready pdf files with bleed and crop marks. All other file formats will be automatically charged between $10-$30.</p>
 <? eval (
 	@{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)' );
