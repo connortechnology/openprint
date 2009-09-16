@@ -4,14 +4,14 @@
 	$$variable{'Project'} = $Project if ! $$variable{'Project'};
 	
 	if ( $param{'btnFunction'} eq 'Delete Proofs' ) {
-		my %proof_specs = openprint::service::get_specifications_pairs( $log, $dbh, @param{'ProjectIndex','ServiceIndex'} );
+		my $proof_specs = openprint::service::get_specs_ref( $Project, $param{'ServiceIndex'} );
 		foreach my $sid ( $Project->signatures() ) {
-			my %sig_specs = openprint::service::get_specifications_pairs( $log, $dbh, @param{'ProjectIndex'}, $sid );
-			foreach my $key ( keys %proof_specs ) {
-				if ( $key =~ /txtProofQuantity-$sig_specs{'SignatureIndex'}-(\d*)/ ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sid );
+			foreach my $key ( keys %$proof_specs ) {
+				if ( $key =~ /txtProofQuantity-$$sig_specs{'SignatureIndex'}-(\d*)/ ) {
 					my $proof_index = $1;
-					if ( $param{"chkDelete-$sig_specs{'SignatureIndex'}-$proof_index"} ) {
-						openprint::Estimating::Proofs::delete_proof( $log, $dbh, @param{'ProjectIndex','ServiceIndex'}, $sig_specs{'SignatureIndex'}, $proof_index );
+					if ( $param{"chkDelete-$$sig_specs{'SignatureIndex'}-$proof_index"} ) {
+						openprint::Estimating::Proofs::delete_proof( $log, $dbh, @param{'ProjectIndex','ServiceIndex'}, $$sig_specs{'SignatureIndex'}, $proof_index );
 					} # end if
 				} # end if
 			} # end foreach  key
@@ -27,7 +27,7 @@
 				openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $sid, 'UsePress', $param{"UsePress-$sid"} );
 				if ( my @Equipment = openprint::Equipment::find('strid'=>$param{"UsePress-$sid"}) ) {
 					my $runtime = 1*openprint::service::get_runtime( $Project, $sid );
-					sql::update( $log, $dbh, 'Schedule', ['ServiceIndex=?', $sid],
+					sql::update( $log, $dbh, 'Schedule', ['projectindex=? AND ServiceIndex=?', $Project->id(), $sid],
 						'Equipment_id', $Equipment[0]->id(),
 						'RunTime', "$runtime minutes",
 						);
@@ -118,9 +118,7 @@
 	) ?>
 	<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureIndices'}} ) ?>
 	<? eval ( $$variable{'SignatureSpecs'} = openprint::service::get_specs_ref( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?>
-	<fieldset><legend>Signature:
-		<? echo ( $$variable{'SignatureSpecs'}{'Reference'} ) ?>
-		</legend>
+	<fieldset><legend>Signature: <? echo ( $$variable{'SignatureSpecs'}{'Reference'} ) ?></legend>
 		<? echo ( 
 			my $specs = $$variable{'SignatureSpecs'};
 			my $html;
@@ -139,50 +137,50 @@
 		</p>
 		<p>
 			<label>Proofs:</label>
-				<table class="List" style="table-layout: auto;">
-					<tr>
-						<th width="70" align="left">Quantity</th>
-						<th width="200" align="center">Size</th>
-						<th align="left">Type</th>
-						<th width="20">&nbsp;</th>
-					</tr>
-					<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureSpecs'}{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
-					<tr>
-						<td><?ProofQuantity?></td>
-						<td align="center"><?ProofWidth?> x <?ProofHeight?></td>
-						<td align="left"><?ProofType?></td>
-						<td><input type="checkbox" id="chkDelete-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>-<?ProofIndex?>" name="chkDelete-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>-<?ProofIndex?>"/></td>
-					</tr>
-					<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureSpecs'}{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
-					<tr>
-						<td>
-							<input type="text" name="txtProofQuantity-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>" size="6"  />
-						</td>
-						<td align="center">
-							<input type="text" name="txtProofWidth-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>" size="6"  style="width: auto;" />
-							x
-							<input type="text" name="txtProofHeight-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>" size="6"  style="width: auto;" />
-						</td>
-						<td>
-							<select name="ddmProofType-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>">
-							<option value="">Select Type</option>
-					<? echo ( ssi::make_drop_down( [map { $_->name(), $_->description() } openprint::Service::find( 'category'=>'Proofs', 'order'=>'lower(description)' )] ); ) ?>
-							</select>
-						</td>
-						<td>&nbsp;</td>
-					</tr>
-		<? endif ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
-				</table>
+			<table class="List" style="table-layout: auto;">
+				<tr>
+					<th width="70" align="left">Quantity</th>
+					<th width="200" align="center">Size</th>
+					<th align="left">Type</th>
+					<th width="20">&nbsp;</th>
+				</tr>
+				<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureSpecs'}{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
+				<tr>
+					<td><?ProofQuantity?></td>
+					<td align="center"><?ProofWidth?> x <?ProofHeight?></td>
+					<td align="left"><?ProofType?></td>
+					<td><input type="checkbox" id="chkDelete-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>-<?ProofIndex?>" name="chkDelete-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>-<?ProofIndex?>"/></td>
+				</tr>
+				<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureSpecs'}{'SignatureIndex'}.'-'.$$variable{'Project'}->ordered_quantity_index()}},0,6; ) ?>
+				<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
+				<tr>
+					<td>
+						<input type="text" name="txtProofQuantity-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>" size="6"  />
+					</td>
+					<td align="center">
+						<input type="text" name="txtProofWidth-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>" size="6"  style="width: auto;" />
+						x
+						<input type="text" name="txtProofHeight-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>" size="6"  style="width: auto;" />
+					</td>
+					<td>
+						<select name="ddmProofType-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>">
+						<option value="">Select Type</option>
+						<? echo ( ssi::make_drop_down( [map { $_->name(), $_->description() } openprint::Service::find( 'category'=>'Proofs', 'order'=>'lower(description)' )] ); ) ?>
+						</select>
+					</td>
+					<td>&nbsp;</td>
+				</tr>
+				<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
+			</table>
 		</p>
 		<span style="float: right;">
 		<? echo ( 
-		if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) {
-		return join('',
+			if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) {
+				return join('',
 					ssi::writeButton( $log, $dbh, 'Save','save.gif', "if(check_input(f2,'$$variable{SignatureSpecs}{SignatureIndex}')){f2.btnFunction.value='Add Proof';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',Serialize(f2) );}", '', 'Save' ),
 					ssi::writeButton( $log, $dbh, 'Delete','delete.gif', "f2.btnFunction.value='Delete Proofs';LoadContent('Signatures','/employee/proj/prep/_proofs_signatures.html',Serialize(f2) );", '', 'Delete Checked' ),
-		);
-		} # end if
+				);
+			} # end if
 			return '';
 		) ?>
 		</span>

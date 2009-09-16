@@ -1113,6 +1113,8 @@ if ( 0 ) {
 		my @order = split( '&', $services );
 		return if ! @order;
 
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 		if ( $Shift->starttime() ) {
 			my @final_order;
 			# Get jobs before the shift, leave them in order.
@@ -1170,7 +1172,7 @@ $log->debug("Order after coalesce: @order");
 				} # end if
 			} # end foreach row_id
 			reorder_jobs( @final_order, @jobs );
-		} else {
+		} else { # has starttime
 			# Pending or Approved
 			my $was_scheduled = 0;
 			foreach my $row_id ( @order ) {
@@ -1180,13 +1182,18 @@ $log->debug("Order after coalesce: @order");
 			} # end foreach row_id
 			# If it was a formerly scheduled job, then shuffle
 			reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
-		} # end if	
+		} # end if	has starttime
+		sql::end_transaction( $dbh, $ac );
 
 	} # end if services
 } # end sub _drop.json
 
 sub reorder_jobs {
 	my ( @order ) = @_;
+
+foreach my $Job ( @order ) {
+$log->debug($Job->Project()->docket() . ' ' . $Job->Project()->Company()->name() );
+}
 
 	my $start_time = time;
 
@@ -1206,9 +1213,9 @@ $log->debug("Downing starttime, " . $row->Project()->docket() . ' locked: ' . $r
 			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
 			'order'			=>	'starttime',
 			);
-foreach my $S ( @Shifts ) {
-$log->debug("Shifts: " . $S->to_string() );
-} # end foreach S
+#foreach my $S ( @Shifts ) {
+#$log->debug("Shifts: " . $S->to_string() );
+#} # end foreach S
 	if ( ! @Shifts ) {
 		@Shifts = openprint::Equipment_Shift::find(
 				'equipment_id'		=>	$$row{'equipment_id'}, 
@@ -1234,7 +1241,7 @@ $log->debug("Shifts: " . $S->to_string() );
 	push @{$variable{'changed'}}, $Shift->ul_id();
 	
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 	my @fixed_jobs = ();
 	for ( my $i = 0; $i < @order; $i += 1 ) {
