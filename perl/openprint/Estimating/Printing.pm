@@ -1610,7 +1610,7 @@ $openprint::log->debug('blah'.$Paper->to_string());
 				} # end if Web or Sheet
 
 if ( $debug or 1 ) {
-$openprint::log->debug('Sorting results from paper: ' . $Paper->to_string() );
+$openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
 }
@@ -3786,6 +3786,9 @@ sub get_aqueous_price {
 			if ( $aqueous_sides == 1 and ! $is_sheetwork ) {
 				$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
 			} # end if
+		} # end if
+		if ( $aqueous_sides == 1 and $is_sheetwork ) {
+			$impressions = int($impressions/2);
 		} # end if
 		$aqueous_price{'Quantity'} = $impressions;
 		my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press);

@@ -255,34 +255,24 @@ sub seconds_to_JDF_interval {
 }
 
 sub seconds_to_pretty_interval {
-	my ( $seconds ) = @_;
-	my $string;
-	my $years = int($seconds / ( 60 * 60 * 24 * 365 ));
-	my $remainder = $seconds % ( 60*60*24*365 );
-	$string .= sprintf('%dy', $years) if $years;
-	return $string if ! $remainder;
+    my ( $seconds ) = @_;
+    my $string;
+    my $years = int($seconds / ( 60 * 60 * 24 * 365 ));
+    my $remainder = $seconds % ( 60*60*24*365 );
+    $string .= sprintf('%dy', $years) if $years;
+    return $string if ! $remainder;
 
-	my $days = int ( $remainder / ( 60* 60 * 24 ) );
-	$remainder = $remainder % ( 60 * 60 * 24 );
-	if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
-		$string .= '1 month';
-	} elsif ( $days ) {
-		$string .= sprintf('%dd', $days );
-	} # end if
-	return $string if ! $remainder;
+    my $days = int ( $remainder / ( 60* 60 * 24 ) );
+    $remainder = $remainder % ( 60 * 60 * 24 );
+    if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
+        $string .= '1 month';
+    } elsif ( $days ) {
+        $string .= sprintf('%dd', $days );
+    } # end if
+    return $string if ! $remainder;
 
-	my $hours = int( $remainder / (60*60) );
-	$remainder = $remainder % ( 60*60 );
-	my $minutes = int ( $remainder / 60 );
-	$remainder = $remainder % 60;
-	
-	if ( $remainder ) {
-		$string .= sprintf('%d:%.2d:%.2d', $hours, $minutes, $remainder );
-	} else {
-		$string .= sprintf('%d:%.2d', $hours, $minutes );
-	} # end if
-	return $string;
-
+	$string .= seconds2hms( $remainder );
+    return $string;
 } # end sub seconds_to_pretty_interval
 
 sub interval_to_seconds {
@@ -370,6 +360,19 @@ sub hms2time {
 	my ($h,$m,$s) = split(':', $_[0]);
 	return ($h*3600) + ($m*60) + $s;
 } # end sub hms2time
+sub seconds2hms {
+	my ( $seconds ) = @_;
+    my $hours = int( $seconds / (60*60) );
+    $seconds = $seconds % ( 60*60 );
+    my $minutes = int ( $seconds / 60 );
+    $seconds = $seconds % 60;
+
+    if ( $seconds ) {
+        return sprintf('%d:%.2d:%.2d', $hours, $minutes, $seconds );
+    } # end if
+	return sprintf('%d:%.2d', $hours, $minutes );
+} # end sub seconds2hms
+
 1;
 
 __END__
