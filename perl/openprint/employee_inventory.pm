@@ -1597,6 +1597,7 @@ sub purchase_order_view {
 					'reason'	=>	'deleted.',
 					});
 			delete $param{'po_id'};
+			delete $param{'btnFunction'};
 			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
@@ -1609,6 +1610,7 @@ sub purchase_order_view {
 					'reason'	=>	'undeleted.',
 					});
 			delete $param{'po_id'};
+			delete $param{'btnFunction'};
 			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
@@ -1673,11 +1675,19 @@ sub purchase_order_view {
 						'fax'			=> $param{'vendor_fax'},
 						} );
 				$param{'supplier_id'} = $C->id();
-			} elsif ( @Companies == 1 ) {
-				if ( $Companies[0]->supplier() ne 'Y' ) {
-					$Companies[0]->save( {'supplier'=>'Y'} );
+			} else {
+				my $Company;
+				foreach my $C ( @Companies ) {
+					if ( $C->supplier() eq 'Y' ) {
+						$Company = $C;
+						last;
+					} # end if
+				} # end foreach
+				if ( ! $Company ) {
+					$Company = $Companies[0];
+					$Company->save( {'supplier'=>'Y'} );
 				} # end if
-				$param{'supplier_id'} = $Companies[0]->id();
+				$param{'supplier_id'} = $Company->id();
 			} # end if
 		} # end if
 		if ( ! $param{'contact_id'} ) {
@@ -1898,9 +1908,11 @@ sub _po_content_line {
             'type_id'       =>  $param{'type_id'},
             });
 		$variable{'C'} = $C;
+		$variable{'error'} .= $PO->save();
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $PO_Content = new openprint::PurchaseOrder_Content( $param{'id'} );
 		$PO_Content->delete();
+		$variable{'error'} .= $PO->save();
 	} # end if
 } # end sub _purchase_order_content_line
 

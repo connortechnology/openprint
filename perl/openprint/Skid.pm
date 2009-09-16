@@ -149,24 +149,6 @@ sub copy {
 	return $new;
 } # end sub copy
 
-sub load {
-	my ($self, $data ) = @_;
-
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM Skids WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-
-	#delete $$self{'Contents'};
-	#@{$$self{'Contents'}} = $self->Contents();
-	#%{$$self{'Paper'}} = ();
-	#if ( $$self{'id'} ) {
-		#foreach my $C ( $self->Contents() ) {
-			#$$self{'Paper'}{$$C{'paper_id'}} += $$C{'quantity'};
-		#} # end foreach
-	#} # end if
-} # end sub load
-
 sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
