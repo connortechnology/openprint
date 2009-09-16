@@ -2860,6 +2860,9 @@ sub get_aqueous_price {
 				$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
 			} # end if
 		} # end if
+		if ( $aqueous_sides == 1 and $is_sheetwork ) {
+			$impressions = int($impressions/2);
+		} # end if
 		$aqueous_price{'Quantity'} = $impressions;
 		my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press);
 		$aqueous_price{'Run Cost'} = $Price{'Price'};

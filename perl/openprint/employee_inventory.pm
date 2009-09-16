@@ -1908,9 +1908,11 @@ sub _po_content_line {
             'type_id'       =>  $param{'type_id'},
             });
 		$variable{'C'} = $C;
+		$variable{'error'} .= $PO->save();
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $PO_Content = new openprint::PurchaseOrder_Content( $param{'id'} );
 		$PO_Content->delete();
+		$variable{'error'} .= $PO->save();
 	} # end if
 } # end sub _purchase_order_content_line
 
