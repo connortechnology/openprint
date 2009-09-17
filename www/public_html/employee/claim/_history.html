@@ -1,0 +1,119 @@
+<? eval (
+	if ( $param{'claim_id'} ) {
+		@{$$variable{'Claims'}} = openprint::Claim::find( 
+			'id'=>$param{'claim_id'}, 
+			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
+			'deleted'=>[1,0],
+			'order' => 'id desc');
+	} elsif ( $param{'docket'} ) {
+		@{$$variable{'Claims'}} = openprint::Claim::find( 
+			'docket'=>$param{'docket'}, 
+			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
+			'order' => 'id desc');
+	} elsif ( $param{'manifest_id'} ) {
+		@{$$variable{'Claims'}} = openprint::Claim::find( 
+			'manifest_id'=>$param{'manifest_id'}, 
+			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
+			'order' => 'id desc');
+	} else {
+		my %search = (
+			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
+			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/claim/history.html?starting_start_year','/employee/claim/history.html?starting_start_month','/employee/claim/history.html?starting_start_day'} ),
+			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/claim/history.html?starting_end_year','/employee/claim/history.html?starting_end_month','/employee/claim/history.html?starting_end_day'} ),
+			'order',			'id desc',
+		);
+		$search{'supplier_id'} = $session{'/employee/claim/history.html?supplier_id'} if $session{'/employee/claim/history.html?supplier_id'};
+		$search{'created_by'} = $session{'/employee/claim/history.html?created_by'} if $session{'/employee/claim/history.html?created_by'};
+
+		@{$$variable{'Claims'}} = ();
+		foreach my $Claim ( openprint::Claim::find( %search ) ) {
+			next if $session{'/employee/claim/history.html?status'} eq 'Y' and $Claim->status() ne '1';
+			next if $session{'/employee/claim/history.html?status'} eq 'N' and $Claim->status() ne '0';
+			next if $session{'/employee/claim/history.html?status'} eq 'U' and $Claim->status() ne '';
+			if ( $param{'contains'} ) {
+				my $next = 1;
+				foreach my $C ($Claim->Contents()) {
+					if ( $C->description() =~ /$param{'contains'}/i ) {
+						$next = 0;
+						last;
+					} # end if
+				} # end foreach
+				next if $next;
+			} # end if
+			push @{$$variable{'Claims'}}, $Claim;
+		} # end foreach Claim
+	} # end if
+) ?>
+<? if ( @{$$variable{'Claims'}} == 0 ) ?>
+	There are no purchase orders matching your search criteria.
+<? else ( @{$$variable{'Claims'}} == 0 ) ?>
+	<p>Please click on a <b>Purchase Order #</b> to view details.</p>
+<table class="List sortable">
+	<tr>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+		<th width="20"><input type="checkbox" onclick="select_all( $('f1'), 'claim_id', this.checked );"/></th>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
+		<th width="35">ID</th>
+		<th class="Date">Date</th>
+		<th style="text-align: left;">Vendor</th>
+		<th style="text-align: left;">Created By</th>
+		<th class="Date">Filed On</th>
+		<th class="Date">Sent to Accounts</th>
+		<th class="Date">Invoiced</th>
+		<th class="Date">Cancelled</th>
+		<th class="Price" style="text-align: right;">Total</th>
+	</tr>
+	<? echo ( 
+		my $html = '';
+		my $report_total = 0;
+		my $Currency = openprint::Currency::get_current();
+		while ( my $Claim = shift @{$$variable{'Claims'}} ) {
+			$html .= sprintf(q`<tr id="tr-%1$d" onmouseover="$('tr-%1$d').addClassName('highlightOn');" onmouseout="$('tr-%1$d').removeClassName('highlightOn');">`, $Claim->id() );
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= '<td><input type="checkbox" id="claim_id" name="claim_id" value="'.$Claim->id().'"/></td>';
+			} # end if
+			my $total = $Claim->total();
+
+			if ( $Currency->id() != $Claim->currency_id() ) {
+				if ( my $rate = $Claim->Currency()->conversions( $session{Currency_id} ) ) {
+					$total *= $rate;
+				} # end if
+			} # end if
+
+			$html .= sprintf( q`
+				<td><a href="view.html?claim_id=%1$d">%1$d</a></td>
+				<td><a href="view.html?claim_id=%1$d">%2$s</a></td>
+				<td><a href="view.html?claim_id=%1$d">%3$s</a></td>
+				<td><a href="view.html?claim_id=%1$d">%4$s</a></td>
+				<td><a href="view.html?claim_id=%1$d">%7$s</a></td>
+				<td><a href="view.html?claim_id=%1$d">%8$s</a></td>
+				<td><a href="view.html?claim_id=%1$d">%9$s</a></td>
+				<td><a href="view.html?claim_id=%1$d">%10$s</a></td>
+				<td style="text-align: right;">%5$s%6$s</td>
+			</tr>`, $Claim->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Claim->created_on())), $Claim->Vendor()->name(), $Claim->Creator()->name(), $Currency->symbol(), Number::Format::format_number($total), 
+				($Claim->filed_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->filed_on())) : ''),
+				($Claim->sent_to_accounts_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->sent_to_accounts_on())) : '' ),
+				($Claim->invoiced_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->invoiced_on())) : '' ),
+				($Claim->cancelled_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->cancelled_on())) : '' ),
+				);
+			$report_total += $total;
+		} # end while
+		$html .= '<tr class="totals"><td colspan="9" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
+		$html .= sprintf('%s%s', $Currency->symbol(), Number::Format::format_number( $report_total ) );
+		$html .= '</td></tr>';
+		return $html;
+	) ?>
+		
+	</table>
+	<p class="buttons">
+		<? echo (
+			my $html;
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= ssi::writeButton($log, $dbh, 'Decline', 'decline.gif', "open_decline_window(f1);", '', 'Decline Selected' );
+				$html .= ssi::writeButton($log, $dbh, 'Authorize', 'authorize.gif', "f1.btnFunction.value='Authorize';f1.submit();", '', 'Authorize Selected' );
+				$html .= ssi::writeButton($log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete Selected' );
+			} # end if
+			return $html;
+		) ?>
+	</p>
+<? endif ( @{$$variable{'Claims'}} == 0 ) ?>

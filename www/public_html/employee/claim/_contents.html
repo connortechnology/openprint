@@ -1,0 +1,33 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<table class="List sortable">
+	<tr>
+		<th align="left" width="120">RFID</th>
+		<th align="left" width="90">Skid</th>
+		<th>Quantity (lbs)</th>
+		<th>Quantity (kgs)</th>
+		<th width="40">&nbsp;</th>
+	</tr>
+	<tr id="new">
+		<td><input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
+		<td><input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
+		<td><input type="text" id="qty_lbs" name="qty_lbs" value="" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs') );" /></td>
+		<td><input type="text" id="qty_kgs" name="qty_kgs" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs') );" /></td>
+		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1') );", '', 'Add' ); ) ?></td>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $total = 0;
+		my @Contents = $$variable{'Manifest'}->Contents( 'type_id'=>$$variable{'type_id'}, 'order'=>'id');
+		foreach my $C ( @Contents ) {
+			$html .= sprintf('<tr id="new">' );
+			$html .= sprintf('<td><input type="text" id="rfidtag_id-%1$d" name="rfidtag_id-%1$d" value="%2$s" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>', $C->id(), $C->Skid()->rfidtag_id() );
+			$html .= sprintf('<td><input type="text" id="skid_id-%1$d" name="skid_id-%1$d" value="%2$d" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>', $C->id(), $C->skid_id() );
+			$html .= sprintf('<td><input type="text" id="qty_lbs-%1$d" name="qty_lbs-%1$d" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%1$d') );" /></td>', $C->id(), $C->quantity() );
+			$html .= sprintf('<td><input type="text" id="qty_kgs-%1$d" name="qty_kgs-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%1$d') );" /></td>', $C->id(), $C->quantity() );
+			$html .= '<td>'.ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1') );", '', 'Add' )."</td>\n";
+			$html .= '</tr>';
+		} # end foreach tag_id
+		#$html .= sprintf('<tr id="totals-%3$d" class="totals"><td>Totals:</td><td colspan="2" id="skidcount-%3$d">%4$d skids/rolls</td><td id="totallbs-%3$d">%1$dlbs</td><td id="totalkgs-%3$d">%2$.4fkg</td><td>&nbsp;</td></tr>', $total, $total/2.2046, $$variable{'type_id'}, scalar @Contents );
+		return $html;
+	) ?>
+</table>
