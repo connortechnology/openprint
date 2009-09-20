@@ -310,9 +310,9 @@ $log->debug("User Type: $session{'user_type'}");
 						} # end while
 						$duedatedays -= 1;
 					} # end while
-					@variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = ( $year, $month, $day );
+					@variable{'duedate_year','duedate_month','duedate_day'} = ( $year, $month, $day );
 				} else {
-					@variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = split('-', $variable{'ddmDueDate'});
+					@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{'ddmDueDate'});
 				} # end if
 
 			} elsif ( $third eq 'prin' ) {	

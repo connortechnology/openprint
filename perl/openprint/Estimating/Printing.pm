@@ -1605,7 +1605,7 @@ $openprint::log->debug($Paper->to_string());
 				} # end if Web or Sheet
 
 if ( $debug ) {
-$openprint::log->debug('Sorting results from paper: ' . $Paper->to_string() );
+$openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
 }
@@ -1673,12 +1673,11 @@ $i->display();
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			if ( $debug ) {
-				$openprint::log->warn('Impositions');
+				$openprint::log->warn('Impositions for '. $Press->strid() );
 				foreach my $I ( @impositions ) {
 					$I->display();
 				} # end foreach
 			} # end if
-
 			if ( ! @impositions ) {
 #$openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 				if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $Press->strid() eq $$specs{'ddmPress'.$qty_index} ) ) {
@@ -3772,6 +3771,9 @@ sub get_aqueous_price {
 			if ( $aqueous_sides == 1 and ! $is_sheetwork ) {
 				$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
 			} # end if
+		} # end if
+		if ( $aqueous_sides == 1 and $is_sheetwork ) {
+			$impressions = int($impressions/2);
 		} # end if
 		$aqueous_price{'Quantity'} = $impressions;
 		my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press);

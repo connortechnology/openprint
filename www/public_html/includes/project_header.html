@@ -25,7 +25,15 @@
 			<label>Creation Date:</label>
 	  		<span title="<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></span>
 		</p>
+<<<<<<< HEAD:www/public_html/includes/project_header.html
 		<? if ( $$variable{'Project'}->docket() ) ?>
+=======
+	  	<p> 
+			<label>Last Updated:</label>
+	  		<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
+		</p>
+		<? if ( $$variable{'DocketNumber'} ) ?>
+>>>>>>> 05696d345e61d8bc4a09ed1274302564a5488ba5:www/public_html/includes/project_header.html
 		<? if ( $$variable{'Project'}->shippingtype() ) ?>
 	  	<p> 
 			<label>Shipping Type:</label>

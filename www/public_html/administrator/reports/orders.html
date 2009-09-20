@@ -156,7 +156,7 @@ if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
 		<tr class="totals"> 
 			<td colspan="5" align="right"><b>Report Total:</b></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'}; ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 <? if ( ! $param{'ddmCurrency'} ) ?>
 			<td>&nbsp;</td>
 <? endif ( ! $param{'ddmCurrency'} ) ?>

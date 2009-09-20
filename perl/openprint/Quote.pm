@@ -380,7 +380,7 @@ sub send {
 			$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_view.html' );
 		} # end if
 		$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
-		push @project_summaries, sprintf('Project%d.html',$Project->project_id()), encode_qp( ssi::variable_substitution( \$email_template, \%variable )), 'text/html', 'quoted-printable';
+		push @project_summaries, sprintf('Project%d.html',$Project->project_id()), encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%variable ))), 'text/html', 'quoted-printable';
 	} # for each Project
 
 	my $Me = new openprint::User( $session{'user_id'} );
@@ -429,7 +429,7 @@ sub send {
 			$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_for_body.html' );
 			if ( $_ ) {
 				$_ = ssi::variable_substitution( \$_, \%quote );
-				push @attachments, '', encode_qp($_), 'text/html', 'quoted-printable';
+				push @attachments, '', encode_qp(Encode::encode('utf-8',$_)), 'text/html', 'quoted-printable';
 			} # end if
 			$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_for_invoice.html' );
 			if ( $_ ) {
@@ -453,7 +453,7 @@ sub send {
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%quote ) );
+		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
 		push @attachments, '', $_, 'text/html', 'quoted-printable';
 
 		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_end_user_body.html' );
@@ -476,7 +476,7 @@ sub send {
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		$_ = encode_qp( ssi::variable_substitution( \$email_template, \%quote ) );
+		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 
 		openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
