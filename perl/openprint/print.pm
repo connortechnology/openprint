@@ -66,7 +66,7 @@ sub view_services {
 
 	my $Project = new openprint::Project( $project_index );
 
-	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index *** $openprint::session{'company_id'}");
+	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
 
 	if ( ( $Project->company_id() == $openprint::session{'company_id'} ) or sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
 

@@ -231,7 +231,8 @@ sub signature_calc {
 		return %bestPrice;
 	} # end if
 
-	my $qty = $$specs{"txtQuantity$qty_index"};
+	# Should include overs
+	my $qty = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{'txtPressSheetComboItems'} ) {
 		$qty *= $$specs{'txtPressSheetComboItems'};
 	} # end if

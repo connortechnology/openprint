@@ -53,6 +53,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 # These are use to tell the code which variables to save
 # There are other values in teh actual specs hash, but htey are either transitory or should never be changed
 my %variables = (
+		'Impositions'=>[], 'Additional Impositions1'=>[], 'Additional Impositions2'=>[], 'Additional Impositions3'=>[],
 		'hdnBreakdown1'=>['save','output'], 'hdnBreakdown2'=>['save','output'], 'hdnBreakdown3'=>['save','output'],
 		'txtSignatureType' => ['save'],
 		'txtServiceDescription'	=> ['save'],
@@ -174,6 +175,7 @@ my %variables = (
 		'hdnImpressionQuantity1' => ['save','output'], 'hdnImpressionQuantity2' => ['save','output'], 'hdnImpressionQuantity3' => ['save','output'], 
 		'rdbPressProof' => ['save'], 
 		'txtMWeight1' => ['save','output'], 'txtMWeight2' => ['save','output'], 'txtMWeight3' => ['save','output'],
+		'paper_id1'	=>	['save','output'], 'paper_id2'	=>	['save','output'], 'paper_id3'	=> ['save','output'],
 		'hdnSuppliedStockWidth1' => ['save','output'], 'hdnSuppliedStockWidth2' => ['save','output'], 'hdnSuppliedStockWidth3' => ['save','output'],
 		'hdnSuppliedStockHeight1' => ['save','output'], 'hdnSuppliedStockHeight2' => ['save','output'], 'hdnSuppliedStockHeight3' => ['save','output'],
 		'StockWidth'=>['save'],'StockWidth1' => ['save','output'], 'StockWidth2' => ['save','output'], 'StockWidth3' => ['save','output'],
@@ -576,6 +578,7 @@ $openprint::log->debug("calc_from_impos: Stock Weight: $$price{'Stock Weight'}")
 			$$specs{'alert'} = 'Error: Unknown stock type.';
 		} # end if
 
+		$$specs{'paper_id'.$qty_index} = $Paper->id();
 		$$specs{'hdnSuppliedStockWidth'.$qty_index} = $Paper->start_width();
 		$$specs{'hdnSuppliedStockHeight'.$qty_index} = $Paper->start_height();
 		$$specs{'StockWidth'.$qty_index} = $Paper->width();
@@ -1128,6 +1131,7 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 		$$specs{'alert'} .= 'There was a problem loading the specified paper.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+	@Papers = map { $_->clone() } @Papers;
 
 	if ( $debug or 1 ) {
 		foreach my $P ( @Papers ) {
@@ -1423,6 +1427,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 				} # end if
 
+				# PMS
 				my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @side_one_colours, @side_two_colours ] );
 
 				if ( ! $$specs{'rdbColourBar'} ) {
@@ -1473,7 +1478,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 					next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
-$openprint::log->debug($Paper->to_string());
+$openprint::log->debug('blah'.$Paper->to_string());
 
 					my $P = $Paper->clone();
 					my @i;
@@ -1610,6 +1615,11 @@ foreach my $i ( @imps ) {
 $i->display();
 }
 }
+	if ( $debug or 1 ) {
+		foreach my $P ( @Papers ) {
+			$openprint::log->debug("Paper: " . $P->to_string() );
+		} # end foreach
+	} # end if
 				foreach my $imp ( @imps ) {
 					next if $imp->imposition() > $qty;
 					my $add = 1;
@@ -1649,7 +1659,7 @@ $i->display();
 								splice @{$imps{$str}}, $j, 1;
 								$j -= 1;
 							} elsif (
-									( $I->Paper()->area() <= $imp->Paper()->area() )
+									( $I->Paper()->area() < $imp->Paper()->area() )
 									and
 									( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 									and
@@ -1659,9 +1669,7 @@ $i->display();
 									) {
 								# Already have a much better sheet
 								$add = 0;
-								#last;
 							} # end if
-
 						} # end for
 					} # end if overriden or not or cached
 					push @{$imps{$str}}, $imp if $add;
@@ -1847,6 +1855,8 @@ $i->display();
  		$$specs{'OverRun'.$qty_index} = $$stock_qt{'Run Overs'};
 	 	$$specs{'OverTotal'.$qty_index} = $$stock_qt{'Total Overs'};
 		$$specs{'ImpositionCharge'.$qty_index} = $best_price{'Imposition Total'};
+		#delete $$specs{'Impositions'};
+		#delete $$specs{'Additional Impositions'.$qty_index};
 		my $PageCharge = $best_price{'Page Charge'};
 		$$specs{'PageCharge'.$qty_index} = $$PageCharge{'Total'};
 		my $SteppingCharge = $best_price{'Stepping Charge'};
@@ -1979,13 +1989,13 @@ sub get_imposition_price {
 
 sub get_project_price {
 	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $impositions, $versions, $PlateCounts, $PaperCounts, $previous_forms_cache, $signatures, $best_price, $recursion_depth ) = @_;
-$openprint::log->debug("******** get_project_price");
+#$openprint::log->debug("******** get_project_price");
 	my %previous_forms_cache;
 	my %best_price;
 	$best_price{'Comparison Cost'} = $best_price if $best_price;
 
-$openprint::log->debug("Press Override: " . $$sig_specs{'chkOverridePress'.$qty_index} );
-$openprint::log->debug("Possible Presses: " . join(',', map { $_->strid() } @$possible_presses) );
+#$openprint::log->debug("Press Override: " . $$sig_specs{'chkOverridePress'.$qty_index} );
+#$openprint::log->debug("Possible Presses: " . join(',', map { $_->strid() } @$possible_presses) );
 
 	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
 
@@ -2026,7 +2036,7 @@ $openprint::log->debug("Possible Presses: " . join(',', map { $_->strid() } @$po
 				$SpreadLayout = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$sig_specs{'txtSpreadSize'};
 			} # end if
 		} # end if
-		if ( $debug ) {
+		if ( $debug or 1 ) {
 			$openprint::log->debug("QTY: $qty_index before " . @impositions );
 			foreach my $imp ( @impositions ) {
 				$imp->display();
@@ -2255,6 +2265,7 @@ $imp->display();
 			} # end foreach imp
 			@impositions = map {@{$_}} values %imps;
 		} # end if
+$log->debug("Press Impositions after filtering: " . @{$$impositions{$Press->id()}} );
 		if ( $$sig_specs{'versions'} > 1 and @impositions < 30 ) {
 $openprint::log->debug("Calling do_versions, # of imps: " . @impositions );
 			@impositions = openprint::imposition::do_versions( $versions, \@impositions );
@@ -2874,7 +2885,7 @@ sub calc_price {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{'alert'} $$project{'AqueousSpecs'}{alert} " . $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} elsif ( $aq_results{'Equipment'} ) {
-			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: $%.2f on %s<br/>', $aq_results{'Total'}, $aq_results{'Equipment'}->name() );
+			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: MR $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', @aq_results{'MakeReady','Service','Material','Total'}, $aq_results{'Equipment'}->name() );
 			$price{'Comparison Cost'} += $aq_results{'Total'};
 		} # end if
 	} # end if Aqueous
@@ -2929,7 +2940,7 @@ sub calc_price {
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
 
 		$price{'Comparison Cost'} += $folding_results{'Price'};
-#$price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison Cost'}.'<br/>';
+$price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison Cost'}.'<br/>';
 	} else {
 		$price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 	} # end if
@@ -3391,9 +3402,12 @@ sub calc_price {
 	my %run_price;
 
 	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
-		%run_price = get_run_price( $impressions, scalar(@colours), 0, $Imposition, $Press, $run_speed ); 
+		my @c = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @colours ] );
+		%run_price = get_run_price( $impressions, scalar(@c), 0, $Imposition, $Press, $run_speed ); 
 	} else {
-		%run_price = get_run_price( $impressions, scalar @{$$project{'side_one_colours'}}, scalar @{$$project{'side_two_colours'}}, $Imposition, $Press, $run_speed );
+		my @c1 = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], $$project{'side_one_colours'} );
+		my @c2 = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], $$project{'side_two_colours'} );
+		%run_price = get_run_price( $impressions, scalar @c1, scalar @c2, $Imposition, $Press, $run_speed );
 	} # end if
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {

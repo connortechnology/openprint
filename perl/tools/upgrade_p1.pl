@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/testing/perl';
 use Date::Calc;
 use strict;
 require sql;
@@ -17,17 +17,20 @@ $log = new logger( 'warn' );
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
 $src_db = 'point-one' if ! $src_db;
 $dst_db = 'point-one' if ! $dst_db;
-$src_host = 'www2.point-one.com' if ! $src_host;
 `/etc/init.d/apache2 reload`;
 if ( $year ) {
 	( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) if ! $month;
 
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		print "Getting db backup $month-$day-$year\n";
+		if ( $src_host ne 'localhost' ) {
 		`su postgres -c "scp $src_host:/var/backups/www2/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
+		} else {
+			`ln -s /media/Storage/backups/localhost/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2`;
+		} 
 	} # end if
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
-		die "No db dum[";
+		die "No db dump";
 	}
 	print "Dropping db...";
 	`su postgres -c "dropdb $dst_db"`;
@@ -47,7 +50,11 @@ if ( $year ) {
 	`su postgres -c "createdb -E SQL_ASCII $dst_db"`;
 	print "done\n";
 	print "Loading db...";
-	`su postgres -c "ssh $src_host pg_dump -h www4 point-one | psql $dst_db"`;
+	if ( $src_host ) {
+		`su postgres -c "ssh $src_host pg_dump -h $src_host point-one | psql $dst_db"`;
+	} else {
+		`su postgres -c "pg_dump $src_db | psql $dst_db"`;
+	} # end if
 	print "done\n";
 
 } # end if

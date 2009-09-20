@@ -221,7 +221,7 @@ sub undelete {
 	my %find_cache = eval '%'.$type.'::find_cache';
 	%find_cache = () if %find_cache;
 	return;
-} # end sub delete
+} # end sub undelete
 
 sub Creator {
 	require openprint::User;

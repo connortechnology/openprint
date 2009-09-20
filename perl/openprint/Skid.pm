@@ -189,7 +189,7 @@ sub add {
 		$C->paper_id( $Paper->id() );
 	} # end if
 
-	my $old_quantity = $content->quantity();
+	my $old_quantity = $C->quantity();
 
 	if ( $quantity =~ /^\+/ ) {
 		$quantity =~ s/[^\d]//g;
@@ -203,7 +203,7 @@ sub add {
 		$quantity =~ s/[^\d]//g;
 # Set
 	} # end if
-	$content->save({'quantity'=>$quantity});
+	$C->save({'quantity'=>$quantity});
 	return $quantity - $old_quantity;
 } # end sub add_inventory
 
