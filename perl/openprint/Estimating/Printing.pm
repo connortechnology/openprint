@@ -968,7 +968,7 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 		if ( $$specs{'perfecting'} eq '' ) {
 			$$specs{'perfecting'} = sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N';
 		} # end if
-		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',@$specs{'perfecting','txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
+		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 1,@$specs{'perfecting','txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
 		@$Paper{'width','height','mweight','Price','type','basis_width','basis_height','basis_mweight','minimum_order'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','basis_width','basis_height','basis_mweight','minimum_order'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};

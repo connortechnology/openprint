@@ -21,6 +21,7 @@ require Math::Units;
 
 require sql;
 require openprint::JDF;
+require openprint::OrderedProduct;
 
 my $debug = 1;
 
@@ -1112,6 +1113,7 @@ $openprint::log->debug("Project ordered_qty_index @qtys ");
 	} # end if
 	return $$self{ordered_quantity_index};
 } # end sub ordered_quantity_index
+
 sub ordered_price {
 	my $self = shift;
 	if ( ! exists $$self{'ordered_price'} ) {
@@ -1305,6 +1307,19 @@ sub copy_signature {
 sub Template {
 	return new openprint::QuoteLevel( $_[0]{'style_id'} );
 } # end sub Template
+sub Ordered_Product {
+	my ( $self ) = @_;
+	if ( ! exists $$self{'Ordered_Product'} ) {
+		my @Products = openprint::OrderedProduct::find( 'project_id'=>$$self{'id'} );
+		if ( @Products == 1 ) {
+			$$self{'Ordered_Product'} = $Products[0];
+		} elsif ( @Products ) {
+			$log->error("More than 1 OrderedProduct returned in Project::OrderedProduct");
+		} # end if
+	} # end if
+	return $$self{'Ordered_Product'};
+} # end sub Ordered_Product
+
 1;
 
 __END__
