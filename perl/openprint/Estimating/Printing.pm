@@ -971,7 +971,7 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 		if ( $$specs{'perfecting'} eq '' ) {
 			$$specs{'perfecting'} = sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N';
 		} # end if
-		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 'Y',@$specs{'perfecting','txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
+		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 1,@$specs{'perfecting','txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
 		@$Paper{'width','height','mweight','Price','type','basis_width','basis_height','basis_mweight','minimum_order'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','basis_width','basis_height','basis_mweight','minimum_order'};
 		if ( $$specs{'StockType'} eq 'Roll' ) {
 			delete $$Paper{'height'};
@@ -1609,7 +1609,7 @@ $openprint::log->debug('blah'.$Paper->to_string());
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( $debug or 1 ) {
+if ( $debug ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
@@ -1680,13 +1680,12 @@ $i->display();
 			push @impositions, map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-			if ( $debug or 1 ) {
-				$openprint::log->warn('Impositions');
+			if ( $debug ) {
+				$openprint::log->warn('Impositions for '. $Press->strid() );
 				foreach my $I ( @impositions ) {
 					$I->display();
 				} # end foreach
 			} # end if
-
 			if ( ! @impositions ) {
 #$openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 				if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $Press->strid() eq $$specs{'ddmPress'.$qty_index} ) ) {

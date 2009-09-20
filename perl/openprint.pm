@@ -21,22 +21,22 @@ sub load_session {
 }
 
 sub session_init {
-    my $cookies = Apache2::Cookie->fetch( $r );
-    my $cookie = $$cookies{'_session_id'};
-    $cookie = $cookie->value if $cookie;
+	my $cookies = Apache2::Cookie->fetch( $r );
+	my $cookie = $$cookies{'_session_id'};
+	$cookie = $cookie->value if $cookie;
 
 	if ( ! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
 		$log->debug("Error fetching Session: $cookie: $@");
-		if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle      => $dbh, Commit      => 0, IDLength    => 8, };` ) {
+		if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle		=> $dbh, Commit		=> 0, IDLength	=> 8, };` ) {
 			$log->debug("Error creating Session: ");
 		} # end if
 	} # end if
 
 	if ( $cookie ne $session{_session_id} ) {
 		my $Cookie = Apache2::Cookie->new($r,
-				-name  => '_session_id',
+				-name	=> '_session_id',
 				-value => $session{_session_id},
-				-path	  =>  '/',
+				-path		=>	'/',
 				#-domain	=> '.point-one.com',
 				);
 		$Cookie->bake( $r );
@@ -63,19 +63,19 @@ sub session_init {
 		if ( $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
 			my $Company = new openprint::Company( $r->param('ddmCompany') );
 			if ( ! $Company->id() ) {
-				$variable{'error'} .= 'Unknown company selected.  Please try again.';
+				$variable{'error'} .= 'Unknown company selected.	Please try again.';
 			} else {
-				$openprint::session{'company_id'} = $Company->id();
+				$session{'company_id'} = $Company->id();
 				openprint::logs::insertLogRecord('79',);
 
 				if ( $Company->currency_id() ) {
-					$openprint::session{'Currency_id'} = $Company->currency_id();
+					$session{'Currency_id'} = $Company->currency_id();
 				} elsif ( $Company->country() eq 'US' ) {
 					my @currencies = openprint::Currency::find('short'=>'USD');
-					$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
+					$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 				} elsif ( $Company->country() eq 'CA' ) {
 					my @currencies = openprint::Currency::find('short'=>'CAD');
-					$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
+					$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 				} # end if
 				my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
 				delete @session{@keys};

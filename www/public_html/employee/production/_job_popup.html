@@ -1,4 +1,4 @@
-<form name="JobForm">
+<form id="JobForm" name="JobForm">
 	<input type="hidden" name="schedule_id" value="<? echo ( $param{'schedule_id'} ) ?>" />
 	<fieldset><legend>Job Scheduling Information</legend>
 		<p>
@@ -6,28 +6,32 @@
 			<textarea id="comment" name="comment"  rows="5" cols="" ><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
 		</p>
 		<p>
+			<label>Locked:</label>
+			<input type="radio" id="locked1" name="locked" value="1" <? echo ( ssi::checked( $$variable{'Job'}{'locked'} ); ) ?> onclick="$('StartTime').show();" />
+			<label class="radio" for="locked1">Yes</label>
+			<input type="radio" id="locked0" name="locked" value="0" <? echo ( ssi::checked( ! $$variable{'Job'}{'locked'} ); ) ?> onclick="$('StartTime').hide();" />
+			<label class="radio" for="locked0">No</label>
+		</p>
+		<p id="StartTime" <? echo ( $$variable{'Job'}->locked() ? '' : 'style="display:none;"' ) ?>>
 			<label>Start Time:</label>
 			<span class="DateTimeSelector">
 			<? echo ( 
 				return ssi::datetime_select( 'starttime', ( $$variable{'Job'}{'starttime'} ? $$variable{'Job'}{'starttime'} : ''), { 'onchange'=>q`set_rdb_value($('locked'), 1 );` } );
 			) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Today', 't.gif', 'set_today( JobForm.starttime_year, JobForm.starttime_month, JobForm.starttime_day, JobForm.starttime_hour, JobForm.starttime_minute );', '', 'Today' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Today', 't.gif', 'set_today( JobForm.starttime_year, JobForm.starttime_month, JobForm.starttime_day, JobForm.starttime_hour, JobForm.starttime_minute );', '', 'T' ); ) ?>
 			</span>
 		</p>
 		<p>
-			<label>Estimated Runtime:</label>
-			<input type="text" name="runtime" value="<? echo ( $$variable{'Job'}->runtime() ) ?>" />
+			<label>Runtime:</label>
+			<input type="text" name="runtime" value="<? echo ( $$variable{'Job'}->runtime() ) ?>" onkeyup="this.value=this.value.replace(/[^\d:]/g,'');"/>
+		</p>
+		<p>
+			<label>Forms:</label>
+			<input type="text" name="forms" value="<? echo ( $$variable{'Job'}->forms() ) ?>" onkeyup="this.value=this.value.replace(/\D/g, '');" />
 		</p>
 		<p>
 			<label>Impressions:</label>
 			<input type="text" name="impressions" value="<? echo ( $$variable{'Job'}->impressions() ) ?>" />
-		</p>
-		<p>
-			<label>Locked:</label>
-			<input type="radio" id="locked1" name="locked" value="1" <? echo ( ssi::checked( $$variable{'Job'}{'locked'} ); ) ?> />
-			<label class="radio" for="locked1">Yes</label>
-			<input type="radio" id="locked0" name="locked" value="0" <? echo ( ssi::checked( ! $$variable{'Job'}{'locked'} ); ) ?> />
-			<label class="radio" for="locked0">No</label>
 		</p>
 	</fieldset>
 		<p class="buttons">

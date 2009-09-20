@@ -128,7 +128,13 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
    	</p>
 		<p>
 			<label>Due Date:</label>
-			<? echo ( Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time( $$variable{Project}->requested_date() ) ); ) ?>
+			<? echo ( 
+				if ( $param{'ddmDueDateYear'} ) {
+					return join('-', @param{'ddmDueDateYear','DueDateMonth','ddmDueDateDay'} );
+				} else {
+					return Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time( $$variable{Project}->requested_date() ) ); 
+				} # end if
+			) ?>
 		</p>
 <? else ( $openprint::param{'project_id'} ) ?>
 	<? if ( $openprint::param{'txtQuoteNumber'} ) ?>

@@ -453,7 +453,7 @@ sub send {
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_reseller_by_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		$_ = encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) );
+		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
 		push @attachments, '', $_, 'text/html', 'quoted-printable';
 
 		$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/quote_end_user_body.html' );
@@ -476,7 +476,7 @@ sub send {
 		$quote{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/quote_admin_body.html' );
 		$quote{'ReplacementText'} = ssi::variable_substitution( \$quote{'ReplacementText'}, \%quote );
 		my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-		$_ = encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%quote ) ) );
+		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%quote ) ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 
 		openprint::quote::get_finished_quote_contents( $log, $dbh, \%quote, $$self{id} );
