@@ -4,11 +4,12 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults $table $serial );
+use vars qw(%variable $log $dbh %config %session %fields %transforms %defaults $table $serial );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -333,6 +334,9 @@ sub total {
 sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
+sub Contact {
+	return new openprint::Contact( $_[0]{'contact_id'} );
+} # end sub Contact
 
 sub send {
 	my ( $self ) = @_;
