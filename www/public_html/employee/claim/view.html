@@ -1,4 +1,4 @@
-<form id="f1" name="f1" action="history.html" method="post">
+<form id="f1" name="f1" action="view.html" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="claim_id" value="<? echo ( $$variable{'Claim'}->id() ) ?>" />
 	<!--#include virtual="/includes/error_reporting.html"-->
@@ -83,11 +83,11 @@
 					$$variable{'Claim'}->invoiced_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->invoiced_on() ) ) : '';
 				) ?>
 				</p>
-<? if ( $$variable{'Claim'}->invoiced_on() ) )?>
+<? if ( $$variable{'Claim'}->invoiced_on() ) ?>
 				<p><label>Invoice #:</label>
 				<? echo ( $$variable{'Claim'}->invoice_id() ) ?>
 				</p>
-<? endif ( $$variable{'Claim'}->invoiced_on() ) )?>
+<? endif ( $$variable{'Claim'}->invoiced_on() ) ?>
 				<p><label>Cancelled On:</label>
 				<? echo ( 
 $$variable{'Claim'}->cancelled_on() ?

@@ -49,6 +49,7 @@ $serial = 'claims_id_seq';
 	'statetax'			=>	'statetax',
 	'statetax_rate'		=>	'statetax_rate',
 	'statetax_charge'	=>	'statetax_charge',
+	'deleted'			=>	'deleted',
 );
 
 %transforms = (
@@ -76,6 +77,7 @@ $serial = 'claims_id_seq';
 	'federaltax_rate'	=>	undef,
 	'statetax'		=>	undef,
 	'statetax_rate'	=>	undef,
+	'deleted'		=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -168,6 +170,22 @@ sub find {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
 	} # end if
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			if ( @{$params{'deleted'}} ) {
+				$sql .= ' AND deleted IN ('. join(',', map {'?'} @{$params{'deleted'}} ) . ')';
+				push @values, @{$params{'deleted'}};
+			} else {
+				return ();
+			} # end if
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
+	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
@@ -200,13 +218,11 @@ sub save {
 	return $self->SUPER::save( $hash );
 } # end sub save
 
-sub delete {
+sub destroy {
     my $self = shift;
     my $ac = sql::start_transaction( );
-	foreach my $PO ( openprint::PurchaseOrder::find('claim_id'=>$$self{'id'}) ) {
-		$PO->save({'claim_id'=>undef});
-	} # end foreach $PO
     sql::execute( undef, undef, q{DELETE FROM Claim_Contents WHERE claim_id=?}, $$self{'id'} );
+	return $dbh->errstr() if $dbh->errstr();
     sql::execute( undef, undef, q{DELETE FROM Claims WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 	return $dbh->errstr() if $dbh->errstr();
@@ -335,7 +351,7 @@ sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 sub Contact {
-	return new openprint::Contact( $_[0]{'contact_id'} );
+	return new openprint::User( $_[0]{'contact_id'} );
 } # end sub Contact
 
 sub send {

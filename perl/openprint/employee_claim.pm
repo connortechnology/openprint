@@ -29,9 +29,11 @@ sub view {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Claim->delete();
 		if ( ! $variable{'error'} ) {
-			$variable{'Redirect'} = '/employee/inventory/claims.html';
+			$variable{'Redirect'} = '/employee/claim/history.html';
 			%param = ();
 		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
+		$variable{'error'} .= $Claim->undelete();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $Claim->id() ) {
 			$Claim->id( $param{'claim_id'} );
