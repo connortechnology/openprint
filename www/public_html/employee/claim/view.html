@@ -74,129 +74,88 @@
 				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->filed_on() ) ); ) ?>
 				</p>
 				<p><label>Sent To Accounts:</label>
-				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->sent_to_accounts_on() ) ); ) ?>
+				<? echo ( 
+					$$variable{'Claim'}->sent_to_accounts_on() ?  Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->sent_to_accounts_on() ) ) : '';
+				) ?>
 				</p>
 				<p><label>Invoiced On:</label>
-				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->invoiced_on() ) ); ) ?>
+				<? echo ( 
+					$$variable{'Claim'}->invoiced_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->invoiced_on() ) ) : '';
+				) ?>
 				</p>
+<? if ( $$variable{'Claim'}->invoiced_on() ) )?>
 				<p><label>Invoice #:</label>
 				<? echo ( $$variable{'Claim'}->invoice_id() ) ?>
 				</p>
+<? endif ( $$variable{'Claim'}->invoiced_on() ) )?>
 				<p><label>Cancelled On:</label>
-				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->cancelled_on() ) ); ) ?>
+				<? echo ( 
+$$variable{'Claim'}->cancelled_on() ?
+Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->cancelled_on() ) )
+: '';
+) ?>
 				</p>
 		</div>
-		<br class="spacer"/><br/>
-		<table style="table-layout: fixed;">
-			<tr>
-				<th>Shipping Method</th>
-				<th>Shipping Terms</th>
-				<th width="203" style="text-align: center;">Delivery Date</th>
-			</tr>
-			<tr>
-				<td><? echo ( $$variable{'Claim'}->shipping_method() ) ?></td>
-				<td><? echo ( $$variable{'Claim'}->shipping_terms() ) ?></td>
-				<td style="text-align: center;"><? echo ( $$variable{'Claim'}->delivered_on_switch() ne 'DATE' ? $$variable{'Claim'}->delivered_on_switch().'<br/>' : '' ) ?>
-					<? echo ( $$variable{'Claim'}->delivered_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->delivered_on() ) ) : '' ) ?>
-				</td>
-			</tr>
-		</table>
 		<br class="spacer"/>
-<table>
+<table id="Contents">
 	<tr>
-		<th width="90" style="text-align: center;">QTY</th>
-		<th width="110">ITEM</th>
+		<th class="RFID">RFID</th>
+		<th class="Skid">SKID/ROLL #</th>
+		<th class="Quantity">QUANTITY</th>
 		<th>DESCRIPTION</th>
-		<th width="90">DOCKET</th>
 		<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
+		<th class="Reason">REASON</th>
 		<th width="110">UNIT PRICE</th>
 		<th width="90">LINE TOTAL</th>
+		<? else ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
+		<th class="Reason" colspan="3">REASON</th>
 		<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( my $html = '';
 	foreach my $C ( $$variable{'Claim'}->Contents() ) {
 		if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-		if ( $C->Type()->name() eq 'Roll Stock' ) {
 			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$dlbs</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-				<td style="text-align: right;">%5$s/100lb</td>
-				<td style="text-align: right;">%6$s</td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),2), openprint::Currency::format($C->total()) );
-			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$dsheets</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-				<td style="text-align: right;">%5$s/100lb</td>
-				<td style="text-align: right;">%6$s</td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),2), openprint::Currency::format($C->total()) );
-			} else {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$d</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-				<td style="text-align: right;">%5$s</td>
-				<td style="text-align: right;">%6$s</td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket(), openprint::Currency::format($C->price(),4), openprint::Currency::format($C->total()) );
-			} # end if
+				<td class="RFID">%1$s</td>
+				<td class="Skid">%2$d</td>
+				<td class="Quantity">%3$slbs</td>
+				<td>%4$s</td>
+				<td>%5$s</td>
+				<td style="text-align: right;">%6$s%7$s</td>
+				<td style="text-align: right;">%8$s</td>
+			</tr>', $C->Skid()->rfidtag_id(), $C->skid_id(), Number::Format::format_number($C->quantity()), $C->description(), $C->reason(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
 		} else {
-			if ( $C->Type()->name() eq 'Roll Stock' ) {
 			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$dlbs</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
-			} elsif ( $C->Type()->name() eq 'Sheet Stock' ) {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$dsheets</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			</tr>', $C->qty(), $C->item(), $C->description(), $C->docket() );
-			} else {
-			$html .= sprintf('<tr>
-				<td style="text-align: center;">%1$d</td>
-				<td>%2$s</td>
-				<td>%3$s</td>
-				<td><a href="/employee/production/projects.html?StartDocket=%4$s">%4$s</a></td>
-			</tr>', $C->qty(), $C->item(),$C->description(), $C->docket() );
-			} # end if
+				<td>%1$s</td>
+				<td>%2$d</td>
+				<td>%3$slbs</td>
+				<td>%4$s</td>
+				<td colspan="3">%5$s</td>
+			</tr>', $C->Skid()->rfidtag_id(), $C->skid_id(), Number::Format::format_number($C->quantity()), $C->description(), $C->reason() );
 		} # end if
 	} # end foreach C
 	return $html;
 ) ?>
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	<tr>
-		<td colspan="5" class="totals">SUBTOTAL</td>
+		<td colspan="6" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->subtotal() ); ) ?></td>
 	</tr>
     <tr<? echo ( $$variable{'Claim'}->federaltax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="5" class="totals"><? echo ( $$variable{'Claim'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?> ( <? echo ( $$variable{'Claim'}->federaltax_rate() ) ?>%)</td>
+        <td colspan="6" class="totals"><? echo ( $$variable{'Claim'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?> ( <? echo ( $$variable{'Claim'}->federaltax_rate() ) ?>%)</td>
         <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->federaltax() ); ) ?></td>
     </tr>
     <tr<? echo ( $$variable{'Claim'}->statetax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="5" class="totals"><? echo ( $$variable{'Claim'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?></td>
+        <td colspan="6" class="totals"><? echo ( $$variable{'Claim'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?></td>
         <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->statetax() ); ) ?></td>
     </tr>
 
 	<tr>
-		<td colspan="5" class="totals">TOTAL</td>
+		<td colspan="6" class="totals">TOTAL</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'Claim'}->total() ); ) ?></td>
 	</tr>
 	<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 </table>
 		<div class="leftColumn">
-			<ol>
-				<li> Please send your invoice with a copy of delivery note signed by receiving party.</li>
-				<li> Please indicate this Purchase Order # in your invoice, packing slip / delivery note.</li>
-				<li> Please notify us immediately if you are unable to ship as specified.</li>
-			</ol>
 		</div>
 		<div class="rightColumn" style="text-align: right;">
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
