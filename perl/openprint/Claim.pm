@@ -334,5 +334,41 @@ sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
 } # end sub Company
 
+sub send {
+	my ( $self ) = @_;
+
+	my $From = new openprint::User( $session{'user_id'} );
+	
+	my %info = (
+			'Claim'	=>	$self,
+			'From'	=>	$From,
+			);
+	my @attachments = ();
+
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/claim_body.html\"-->";
+	$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	push @attachments, ('', $_, 'text/html', 'quoted-printable');
+
+	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/claim.html' );
+	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$content, \%info ) ) ), 'text/html', 'quoted-printable';
+
+	my %mail = (
+			SMTP    => $config{'Mail Server'},
+			FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			SUBJECT => 'CLAIM ' . $self->id() . ' for ' . $self->vendor_name(),
+			);
+
+	my $results = 'CLAIM ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
+	my $Email = new openprint::Email();
+	$results .= $Email->send( 
+			TO	=>	[ split(',', $self->vendor_email() ) ],
+			FROM	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			SUBJECT	=>	'CLAIM ' . $self->id() . ' for ' . $self->vendor_name(),
+			ATTACHMENTS =>	\@attachments,
+			);
+	return $results;
+} # end sub send
+
 1;
 __END__
