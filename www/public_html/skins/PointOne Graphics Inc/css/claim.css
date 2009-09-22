@@ -45,12 +45,15 @@
 .Claim table td.Cost {
 	width: 80px;
 }
+.Claim table td.Price input {
+	text-align: right;
+}
 .Claim table .RFID {
-	width: 120px;
+	width: 140px;
 	text-align: left;
 }
 .Claim table .Skid {
-	width: 90px;
+	width: 70px;
 	text-align: left;
 }
 .Claim table .Quantity {
