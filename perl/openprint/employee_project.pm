@@ -24,6 +24,7 @@ require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Content;
 require openprint::PaperInventory;
 require openprint::RFIDTag;
+require openprint::ScheduledJob;
 
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -56,7 +57,6 @@ sub view {
 				} # end if
 			} # end if
 		} # end if
-		
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
@@ -163,7 +163,7 @@ sub view {
 
 			if ( $service_type eq 'FilmStripping' ) {
 				if ( $param{'rdbComplete'} eq 'Yes' ) {
-					if ( ! Date::Calc::check_date( @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ) ) {
+					if ( ! Date::Calc::check_date( @param{'duedate_year','duedate_month','duedate_day'} ) ) {
 						my @ServiceTypes = openprint::ServiceType::find('name'=>$service_type);
 						if ( @ServiceTypes ) {
 							$variable{'Redirect'} = '/employee/proj/'.$ServiceTypes[0]->url();
@@ -173,8 +173,8 @@ sub view {
 						} # end if
 						$param{'rdbComplete'} = 'No';
 					} else {
-						if ( $param{'ddmDueDateYear'} ) {
-							my $duedate = join('-', @param{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} );
+						if ( $param{'duedate_year'} ) {
+							my $duedate = join('-', @param{'duedate_year','duedate_month','duedate_day'} );
 							$Project->due_date( $duedate );
 							if ( ! $Project->save() ) {
 								$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $duedate" );
@@ -329,7 +329,7 @@ sub view {
 				$Equipment[0]->update_schedule();
 			} # end if
 		} else {
-			my @do_not_save = ( 'btnFunction','ProjectIndex','ServiceIndex','order_id', 'ddmDueDateDay','ddmDueDateMonth','ddmDueDateYear','Docket' );
+			my @do_not_save = ( 'btnFunction','ProjectIndex','ServiceIndex','order_id', 'duedate_day','duedate_month','duedate_year','Docket' );
 			foreach my $param ( keys %param ) {
 				next if ( sets::isin_regx( $param, @do_not_save ) );
 				next if $$service_specs{$param} eq $param{$param};
@@ -448,6 +448,7 @@ sub view {
 	if ( $project_index ) {
 		openprint::project::view( $log, $dbh, \%variable, $project_index, $order_id );
 	} # end if
+	$variable{'Project'} = $Project if ! $variable{'Project'};
 
 } # end sub view_project
 

@@ -15,7 +15,7 @@ use Number::Format;
 
 use vars qw( $log $dbh %config $table $serial %fields %transforms %defaults );
 
-my $debug = 0;
+my $debug = 1;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -165,23 +165,23 @@ sub parsePreviewImage {
 			@inks = sets::exclude( [$1], \@inks );
 			$line = shift @_;
 			if ( $line =~ /^CIP3BeginSeparation$/ ) {
-$log->debug("Start parseSeparation ($$separation{ink}) @inks");
+#$log->debug("Start parseSeparation ($$separation{ink}) @inks");
 				@_ = parseSeparation( $separation, @_ );
-$log->debug("Done parseSeparation ($$separation{ink}) @inks");
+#$log->debug("Done parseSeparation ($$separation{ink}) @inks");
 				push @{$$image{'separations'}}, $separation;
 			} # end if
 		} elsif ( $line =~ /^CIP3BeginSeparation$/ ) {
 			my $separation = {};
 			$$separation{'ink'} = shift @inks;
-$log->debug("Start parseSeparation ($$separation{'ink'}) @inks");
+#$log->debug("Start parseSeparation ($$separation{'ink'}) @inks");
 			@_ = parseSeparation( $separation, @_ );
-$log->debug("Done parseSeparation ($$separation{ink}) @inks");
+#$log->debug("Done parseSeparation ($$separation{ink}) @inks");
 			push @{$$image{'separations'}}, $separation;
 		} elsif ( $line =~ /^\/CIP3AdmSeparationNames \[ (.*) \] def$/ ) {
 			my $separations = $1;
 			$separations =~ s/[\(\)]//g;
 			@inks = split(' ', $separations);
-$log->debug("INK Sep @inks");
+#$log->debug("INK Sep @inks");
 		} elsif ( $line =~ /^CIP3EndPreviewImage/ ) {
 			last;
 		} # end if
@@ -193,7 +193,7 @@ sub parseSeparation {
 	my $image = shift @_;
 	while ( @_ ) {
 		my $line = shift @_;
-$log->debug($line);
+#$log->debug($line);
 		if ( $line =~ /^\/CIP3PreviewImageWidth (\d+) def/ ) {
 			$$image{'width'} = $1;
 		} elsif ( $line =~ /^\/CIP3PreviewImageHeight (\d+) def/ ) {
@@ -218,7 +218,7 @@ $log->debug($line);
 				$line = shift;
 			} # end while
 			$$image{'image'} = join("\r\n", @image_data);
-			$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
+			#$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
 			last;
 		} elsif ( $line =~ /^CIP3EndSeparation/ ) {
 			last;
@@ -237,7 +237,7 @@ sub parse {
 	$_ = decode_base64($$self{'data'});
 	$_ = Compress::Zlib::uncompress($_) if $$self{'compressed'};
 	my @data = split("\r\n", $_ );
-$log->debug("# of lines: " . @data ) if $debug;
+#$log->debug("# of lines: " . @data ) if $debug;
 	while ( @data ) {
 		my $line = shift @data;
 		if ( $line =~ /^CIP3BeginSheet$/ ) {
@@ -290,20 +290,24 @@ sub generate_previews {
 	foreach my $side ( 'Front', 'Back' ) {
 		my $filename = sprintf('%s%dsg%dsd%s.jpg', $path, $self->get('docket','signature'), $side );
 		if ( (!$force) and -f $filename ) {
-			#$log->warn("$filename exists, not generating the preview.");	
+			$log->warn("$filename exists, not generating the preview.");	
 			next;
 		} else {
-			#$log->debug("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
+#$log->debug("Blah");
+			#$log->warn("generating preview for ".$self->to_string(). " Force: $force Previews: " . length($$self{lc($side).'_preview'}) );
 		} # end if
 
 		if ( $force or (length $$self{lc($side).'_preview'} < 100 )) {
 			if ( ! $$self{'parsed'} ) {
-$log->debug("Start parse");
 				$self->parse();
 			} # end if
-$log->debug("Done parse");
 
-			foreach my $preview ( $self->previews($side) ) {
+			my @previews = $self->previews($side);
+			if ( ! @previews ) {
+				#$log->error("NO Previews for side $side");
+			} # end if
+
+			foreach my $preview ( @previews ) {
 				if ( ! $$preview{'separations'} ) {
 					$log->warn('No separations in preview.');
 				} # end if
@@ -358,7 +362,6 @@ $log->debug("Done parse");
 				foreach my $s ( @{$$preview{'separations'}} ) {
 					$separations{$$s{'ink'}} = $s;
 				} # end foreach
-$log->debug("Orientation: $orientation");
 				if ( $orientation eq 'bottom-left' ) {
 					my @cols =  ( 1 .. $height );
 					my @rows =  reverse ( 1 .. $width);
@@ -420,6 +423,8 @@ $log->debug("Orientation: $orientation");
 			} elsif ( $self->previews($side) ) {
 				$log->error( "No data in the preview for $filename" );
 			} # end if
+		} else {
+$log->error("No path");
 		} # end if
 	} # end foreach side
 	if ( $changed ) {

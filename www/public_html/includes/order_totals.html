@@ -22,7 +22,7 @@
 	<? if ( $$variable{'HST'} ne '' ) ?>
 	<tr>
 		<td align="right">Harmonized Tax:</td>
-		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'HST'} ) ) ?></td>
+		<td align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'HST'} ) ); ) ?></td>
 	</tr>
 	<? endif ( $$variable{'HST'} ne '' ) ?>
 	<? if ( $$variable{'TOTAL'} ) ?>

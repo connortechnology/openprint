@@ -134,9 +134,10 @@
 							</ul>
 						</li>
 						<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-						<li id="InventoryMenu" class="<? echo ( $r->uri() =~ /employee\/inventory/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
+						<li id="InventoryMenu" class="<? echo ( ($r->uri() =~ /employee\/inventory/ or $r->uri() =~ /employee\/claim/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 							<ul>
 								<li><a href="/employee/inventory/purchase_orders.html;NOSSL">&raquo; Purchase Orders</a></li>
+								<li><a href="/employee/claim/history.html;NOSSL">&raquo; Claims</a></li>
 								<li><a href="/employee/inventory/available_paper.html;NOSSL">&raquo; Available Paper</a></li>
 								<li><a href="/employee/inventory/docket_labels.html;NOSSL">&raquo; Docket Labels</a></li>
 								<li><a href="/employee/inventory/paper.html;NOSSL">&raquo; Paper</a></li>

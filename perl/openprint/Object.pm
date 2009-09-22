@@ -198,9 +198,10 @@ sub undelete {
 	return;
 } # end sub delete
 
-
-1;
-__END__
+sub Creator {
+	require openprint::User;
+	return new openprint::User( $_[0]{'created_by'} );
+} # end sub Creator
 
 1;
 __END__

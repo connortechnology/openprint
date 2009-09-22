@@ -318,7 +318,7 @@ sub send_to_vendor {
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
-	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ), 'text/html', 'quoted-printable';
+	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
 
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
