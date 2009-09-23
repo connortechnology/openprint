@@ -12,12 +12,12 @@ Please select an allocation to view/edit.<br>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_start', [@session{'/employee/inventory/allocations.html?created_on_start_year','/employee/inventory/allocations.html?created_on_start_month','/employee/inventory/allocations.html?created_on_start_day'}] ); ) ?>
+<? echo ( ssi::date_select( 'created_on_start', $session{'/employee/inventory/allocations.html?created_on_start_year'} ? [@session{'/employee/inventory/allocations.html?created_on_start_year','/employee/inventory/allocations.html?created_on_start_month','/employee/inventory/allocations.html?created_on_start_day'}] : ' '); ) ?>
 <? echo ( ssi::writeButton( $log, $dbh, 'created_on_start_today', 't.gif', 'set_today( f1.created_on_start_year, f1.created_on_start_month, f1.created_on_start_day );', '', 'T' ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_end', [@session{'/employee/inventory/allocations.html?created_on_end_year','/employee/inventory/allocations.html?created_on_end_month','/employee/inventory/allocations.html?created_on_end_day'}] ); ) ?>
+<? echo ( ssi::date_select( 'created_on_end', $session{'/employee/inventory/allocations.html?created_on_end_year'} ? [@session{'/employee/inventory/allocations.html?created_on_end_year','/employee/inventory/allocations.html?created_on_end_month','/employee/inventory/allocations.html?created_on_end_day'}] : ' ' ); ) ?>
 <? echo ( ssi::writeButton( $log, $dbh, 'created_on_end_today', 't.gif', 'set_today( f1.created_on_end_year, f1.created_on_end_month, f1.created_on_end_day );', '', 'T' ); ) ?>
 			</span>
 		</p>
