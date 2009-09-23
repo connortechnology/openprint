@@ -9,12 +9,6 @@ Please select an allocation to view/edit.<br>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_allocations.html', \$('f1').serialize() );",'','Go' ); ) ?>
 		</p>
 		<hr/>
-<? eval (
-	$session{'/employee/inventory/allocations.html?created_on_start_year'} = ' ' if ! $session{'/employee/inventory/allocations.html?created_on_start_year'};
-	$session{'/employee/inventory/allocations.html?created_on_start_month'} = ' ' if ! $session{'/employee/inventory/allocations.html?created_on_start_month'};
-	$session{'/employee/inventory/allocations.html?created_on_end_year'} = ' ' if ! $session{'/employee/inventory/allocations.html?created_on_end_year'};
-	$session{'/employee/inventory/allocations.html?created_on_end_month'} = ' ' if ! $session{'/employee/inventory/allocations.html?created_on_end_month'};
-) ?>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
