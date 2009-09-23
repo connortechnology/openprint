@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%session %variable $dbh $log %fields %transforms %defaults );
+use vars qw(%session %variable $dbh $log $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -25,6 +25,9 @@ require openprint::Manufacturer;
 
 my $debug = 1;
 
+$table = 'PaperAllocations';
+$serial = 'paper_allocation_id_seq';
+
 %fields = (
 	'id'			=>	'id',
 	'paper_id'		=>	'paper_id',
@@ -34,6 +37,9 @@ my $debug = 1;
 	'project_id'	=>	'project_id',
 	'units'			=>	'units',
 	'quantity'		=>	'quantity',
+);
+
+%transforms = (
 );
 
 %defaults = (
@@ -91,47 +97,6 @@ sub find {
 	} # end if
 	return map { new openprint::PaperAllocation( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM Paper_Allocations WHERE id=?}, {}, $$self{'id'} );
-		if ( ! $data ) {
-			$log->warn('Non-existent Paper Allocation Loaded: ' . $dbh->errstr() );
-		} # end if
-	} # end if
-
-	@$self{keys %fields} = @$data{keys %fields};
-} # end sub load
-
-sub save {
-	my ( $self, $hash ) = @_;
-
-	if ( $hash ) {
-		$self->set( $hash );
-	} # end if
-	
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('paper_allocation_id_seq')} );
-
-		if ( my $error = sql::insert( undef, undef, 'Paper_Allocations', [map { $_, $$self{$_} } keys %fields ] ) ) {
-			$$self{'id'} = undef;
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-
-    } else {
-        if ( my $error = sql::update( undef, undef, 'Paper_Allocations', ['id=?',$$self{'id'}], [ map { $_, $$self{$_} } keys %fields ] ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-    } # end if
-
-	sql::end_transaction( $dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
 
 sub delete {
     my $self = shift;

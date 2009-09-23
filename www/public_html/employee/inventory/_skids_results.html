@@ -1,5 +1,5 @@
 <? eval (
-	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','notempty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code' ) );
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','notempty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code', 'allocated' ) );
 
 	if ( ! $session{'/employee/inventory/skids.html?created_on_start_year'} ) {
 		@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} = Date::Calc::Today();
@@ -83,6 +83,15 @@
                     } # end if
                 } # end foreach
                 next if ! $iftype;
+
+				if ( $session{'/employee/inventory/skids.html?allocated'} ) {
+					my @Allocations = openprint::PaperAllocation::find('skid_id'=>$Skid->id());
+					if ( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) {
+						next if ! @Allocations;
+					} elsif ( $session{'/employee/inventory/skids.html?allocated'} eq 'N' ) {
+						next if @Allocations;
+					} # end if	
+				} # end if
 
 				next if $Skid->rfidtag_id() and ! $session{'/employee/inventory/skids.html?withrfid'};
 				next if ( ! $Skid->rfidtag_id() ) and ! $session{'/employee/inventory/skids.html?withoutrfid'};
