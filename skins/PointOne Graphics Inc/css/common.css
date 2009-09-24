@@ -14,12 +14,12 @@ overflow-y: scroll;
 
 }
 #Content:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
+	content: ".";
+	display: block;
+	height: 0;
+	font-size: 0;
+	clear: both;
+	visibility: hidden;
 
 }
 /* Hides from IE-mac \*/
@@ -106,8 +106,9 @@ div#Header .Logo hr {
 
 a {
   text-decoration : none;
+outline: 0;
 } 
-a:link { color: #000066;  }                             /* normal text links */
+a:link { color: #000066;  }							 /* normal text links */
 a:active { color: #000066;   }
 a:visited { color:#333399;   }
 a:hover { color: #6666CC;   }
@@ -176,12 +177,12 @@ fieldset {
 	padding-bottom: 10px;
 }
 fieldset:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
+	content: ".";
+	display: block;
+	height: 0;
+	font-size: 0;
+	clear: both;
+	visibility: hidden;
 
 }
 /* Hides from IE-mac \*/
@@ -266,12 +267,12 @@ fieldset p {
 }
 
 fieldset p:after {
-    content: "."; 
-    display: block; 
-    height: 0; 
+	content: "."; 
+	display: block; 
+	height: 0; 
 	font-size: 0;
-    clear: both; 
-    visibility: hidden;
+	clear: both; 
+	visibility: hidden;
 }
 /* Hides from IE-mac \*/
 * html fieldset p {height: 1%;}
@@ -292,11 +293,11 @@ fieldset p label {
 	padding-top: 2px;
 }
 fieldset p select {
-    width: 70%;
+	width: 70%;
 	vertical-align: top;
 }
 fieldset p textarea {
-    width: 70%;
+	width: 70%;
 }
 fieldset p option {
 }
@@ -336,9 +337,9 @@ fieldset.filters {
 	border-bottom: none;
 }
 @media print {
-    .filters {
-        display: none;
-    }
+	.filters {
+		display: none;
+	}
 }
 
 fieldset.filters p {
@@ -391,24 +392,24 @@ display: none;
 }
 }
 hr {
-        width: 100%;
-        margin: 1px;
-        padding: 0px;
-        height: 1px;
-        border: 0px;
-        color: #000088;
-        background-color: #000088;
+		width: 100%;
+		margin: 1px;
+		padding: 0px;
+		height: 1px;
+		border: 0px;
+		color: #000088;
+		background-color: #000088;
 }
 
 .error, .warning {
-        color: red;
+		color: red;
 }
 
 .colRow,.roweven {
 	background-color: #CAB880;
 }/* alternating row color in generated tables */
 .colRowRed {
-    color: red;
+	color: red;
 }/* alternating row color in generated tables */
 tr.highlightOn {
 	background-color: #FF5C51;
@@ -464,14 +465,42 @@ img {
 	border: none;
 }
 
-td.checkbox, th.checkbox {
-	width: 15px;
-	text-align: center;
-}
-
 td.Date, th.Date {
 	width: 120px;
 	text-align: right;
+}
+td.DateTime, th.DateTime {
+	width: 150px;
+	text-align: left;
+}
+td.Elapsed, th.Elapsed {
+	width: 120px;
+	text-align: left;
+}
+td.Docket, th.Docket {
+	width: 50px;
+	text-align: center;
+}
+td.Stock, th.Stock {
+	text-align: right;
+}
+td.StockQuantity, th.StockQuantity {
+	width: 80px;
+	text-align: right;
+}
+td.User, th.User {
+	width: 120px;
+	text-align: left;
+}
+td.Company, th.Company {
+	width: 200px;
+	text-align: left;
+	overflow:hidden;
+}
+
+td.checkbox, th.checkbox {
+	width: 15px;
+	text-align: center;
 }
 td.Price, th.Price {
 	width: 100px;
@@ -536,7 +565,7 @@ span.DateSelector select option {
 }
 .PageTitle h1 {
 	text-align: right;
-    color: #EE3E33;
+	color: #EE3E33;
 	margin: 0px;
 	font-size: 20px;
 }
@@ -547,7 +576,7 @@ span.DateSelector select option {
 	font-size: 16px;
 }
 h3 {
-    color: #EE3E33;
+	color: #EE3E33;
 }
 #BugReport fieldset p {
 	padding-left: 75px;
@@ -557,8 +586,8 @@ h3 {
 	margin-left: -75px;
 }
 br.pagebreak {
-    height: 0px;
-    page-break-after: always;
+	height: 0px;
+	page-break-after: always;
 }
 fieldset p input.CompanyFilter {
 	width: auto;
@@ -585,7 +614,7 @@ form.inplaceeditor-form a { /* The cancel link */
 	display: none;
 }
 .changed {
-    background-color: yellow;
+	background-color: yellow;
 }
 
 input.filter, fieldset p input.filter {

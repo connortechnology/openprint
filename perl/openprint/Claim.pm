@@ -4,11 +4,12 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults $table $serial );
+use vars qw(%variable $log $dbh %config %session %fields %transforms %defaults $table $serial );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -17,6 +18,7 @@ require misc;
 require openprint::Claim_Content;
 require openprint::PurchaseOrder;
 require openprint::Company;
+require openprint::Currency;
 
 
 my $debug = 1;
@@ -26,6 +28,7 @@ $serial = 'claims_id_seq';
 
 %fields = (
 	'id'			=>	'id',
+	'company_id'	=>	'company_id',
 	'created_on'	=>	'created_on',
 	'created_by'	=>	'created_by',
 	'updated_on'	=>	'updated_on',
@@ -36,7 +39,17 @@ $serial = 'claims_id_seq';
 	'po_id'			=>	'po_id',
 	'docket'		=>	'docket',
 	'supplier_id'	=>	'supplier_id',
+	'contact_id'	=>	'contact_id',
 	'currency_id'	=>	'currency_id',
+	'total'				=>	'total',
+	'subtotal'			=>	'subtotal',
+	'federaltax'		=>	'federaltax',
+	'federaltax_rate'	=>	'federaltax_rate',
+	'federaltax_charge'	=>	'federaltax_charge',
+	'statetax'			=>	'statetax',
+	'statetax_rate'		=>	'statetax_rate',
+	'statetax_charge'	=>	'statetax_charge',
+	'deleted'			=>	'deleted',
 );
 
 %transforms = (
@@ -58,6 +71,13 @@ $serial = 'claims_id_seq';
 	'supplier_id'	=>	undef,
 	'invoice_id'	=>	undef,
 	'currency_id'	=>	undef,
+	'total'			=>	0,
+	'subtotal'		=>	0,
+	'federaltax'	=>	undef,
+	'federaltax_rate'	=>	undef,
+	'statetax'		=>	undef,
+	'statetax_rate'	=>	undef,
+	'deleted'		=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -150,6 +170,22 @@ sub find {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
 	} # end if
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			if ( @{$params{'deleted'}} ) {
+				$sql .= ' AND deleted IN ('. join(',', map {'?'} @{$params{'deleted'}} ) . ')';
+				push @values, @{$params{'deleted'}};
+			} else {
+				return ();
+			} # end if
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
+	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
 
@@ -164,13 +200,29 @@ sub find {
 	return map { new openprint::Claim( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub delete {
+sub save {
+	my ( $self, $hash ) = @_;
+	$$hash{'subtotal'} = 0;
+	foreach my $C ( $self->Contents() ) {
+		$$hash{'subtotal'} += $C->total();
+	} # end foreach
+	delete $$self{'federaltax'};
+	delete $$self{'statetax'};
+	$$hash{'federaltax'} = $self->federaltax();
+	$$hash{'statetax'} = $self->statetax();
+	$$hash{'total'} = $self->total();
+	if ( ! $$hash{'currency_id'} ) {
+		my $Currency = openprint::Currency::get_current();
+		$$hash{'currency_id'} = $Currency->id();
+	} # end if
+	return $self->SUPER::save( $hash );
+} # end sub save
+
+sub destroy {
     my $self = shift;
     my $ac = sql::start_transaction( );
-	foreach my $PO ( openprint::PurchaseOrder::find('claim_id'=>$$self{'id'}) ) {
-		$PO->save({'claim_id'=>undef});
-	} # end foreach $PO
     sql::execute( undef, undef, q{DELETE FROM Claim_Contents WHERE claim_id=?}, $$self{'id'} );
+	return $dbh->errstr() if $dbh->errstr();
     sql::execute( undef, undef, q{DELETE FROM Claims WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 	return $dbh->errstr() if $dbh->errstr();
@@ -205,6 +257,138 @@ sub Currency {
 sub Creator {
 	return new openprint::User( $_[0]{created_by} );
 } # end sub Creator
+
+sub federaltax {
+	my ( $self, $new ) = @_;
+
+	if ( defined $new ) {
+		$$self{'federaltax'} = $new;
+	} # end if
+	if ( ( ! $$self{'federaltax'} ) and $self->federaltax_charge() ) {
+		$$self{'federaltax'} = $self->subtotal() * ( $self->federaltax_rate()/100 );
+	} # end if
+	return $$self{'federaltax'};
+} # end sub federaltax
+
+sub federaltax_rate {
+	my ( $self, $new ) = @_;
+	if ( defined $new ) {
+		$$self{'federaltax_rate'} = $new;
+	} # end if
+	if ( ! $$self{'federaltax_rate'} ) {
+		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
+			$$self{'federaltax_rate'} = $Tax->federaltax_rate();
+		} # end if
+	} # end if
+	return $$self{'federaltax_rate'};
+} # end sub federaltax_rate
+
+sub federaltax_charge {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'federaltax_charge'} = $_[0];
+	} # end if
+	if ( ! defined $$self{'federaltax_charge'} ) {
+		if ( $self->Company()->taxexempt1() eq 'Y' ) {
+			$$self{'federaltax_charge'} = 0;
+		} # end if
+# This is true, but can't expect people to type it in
+#if ( ! $self->Vendor()->gst_number() ) {
+#   return 0;
+#} # end if
+		$$self{'federaltax_charge'} = 1;
+	} # end if
+	return $$self{'federaltax_charge'};
+} # end sub federaltax_charge
+sub statetax {
+	my ( $self, $new ) = @_;
+
+	if ( defined $new ) {
+		$$self{'statetax'} = $new;
+	} # end if
+	if ( ( ! $$self{'statetax'} ) and $self->statetax_charge() ) {
+		$$self{'statetax'} = $self->subtotal() * ( $self->statetax_rate()/100 );
+	} # end if
+	return $$self{'statetax'};
+} # end sub statetax
+
+sub statetax_rate {
+	my ( $self, $new ) = @_;
+	if ( defined $new ) {
+		$$self{'statetax_rate'} = $new;
+	} # end if
+	if ( ! $$self{'statetax_rate'} ) {
+		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
+			$$self{'statetax_rate'} = $Tax->statetax_rate();
+		} # end if
+	} # end if
+	return $$self{'statetax_rate'};
+} # end sub statetax_rate
+
+sub statetax_charge {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'statetax_charge'} = $_[0];
+	} # end if
+	if ( ! defined $$self{'statetax_charge'} ) {
+		if ( $self->Company()->taxexempt2() eq 'Y' ) {
+			return 0;
+		} # end if
+# This is true, but can't expect people to type it in
+#if ( ! $self->Vendor()->pst_number() ) {
+#   return 0;
+#} # end if
+		$$self{'statetax_charge'} = 1;
+	} # end if
+	return $$self{'statetax_charge'};
+} # end sub statetax_charge
+sub total {
+	my ( $self ) = @_;
+	return $$self{'subtotal'} + $self->federaltax() + $self->statetax();
+} # end sub total
+
+sub Company {
+	return new openprint::Company( $_[0]{'company_id'} );
+} # end sub Company
+sub Contact {
+	return new openprint::User( $_[0]{'contact_id'} );
+} # end sub Contact
+
+sub send {
+	my ( $self ) = @_;
+
+	my $From = new openprint::User( $session{'user_id'} );
+	
+	my %info = (
+			'Claim'	=>	$self,
+			'From'	=>	$From,
+			);
+	my @attachments = ();
+
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/claim_body.html\"-->";
+	$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	push @attachments, ('', $_, 'text/html', 'quoted-printable');
+
+	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/claim.html' );
+	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$content, \%info ) ) ), 'text/html', 'quoted-printable';
+
+	my %mail = (
+			SMTP    => $config{'Mail Server'},
+			FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			SUBJECT => 'CLAIM ' . $self->id() . ' for ' . $self->vendor_name(),
+			);
+
+	my $results = 'CLAIM ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
+	my $Email = new openprint::Email();
+	$results .= $Email->send( 
+			TO	=>	[ split(',', $self->vendor_email() ) ],
+			FROM	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			SUBJECT	=>	'CLAIM ' . $self->id() . ' for ' . $self->vendor_name(),
+			ATTACHMENTS =>	\@attachments,
+			);
+	return $results;
+} # end sub send
 
 1;
 __END__

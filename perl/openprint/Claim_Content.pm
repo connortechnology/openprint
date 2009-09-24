@@ -16,8 +16,8 @@ require misc;
 
 my $debug = 0;
 
-$table = 'manifestcontents';
-$serial = 'manifestcontents_id_seq';
+$table = 'claim_contents';
+$serial = 'claim_contents_id_seq';
 
 %fields = (
 	'id'				=>	'id',
@@ -25,14 +25,20 @@ $serial = 'manifestcontents_id_seq';
 	'skid_id'			=>	'skid_id',
 	'quantity'			=>	'quantity',
 	'reason'			=>	'reason',
+	'cost'				=>	'cost',
+	'cost_units'		=>	'cost_units',
 );
 
 %transforms = (
 	'quantity'	=> [ 's/\D//g' ],
+	'skid_id'	=> [ 's/\D//g' ],
+	'cost'		=> [ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
 	'quantity'	=> 0,
+	'skid_id'	=>	undef,
+	'cost'		=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -54,6 +60,10 @@ sub find {
 	if ( $params{'skid_id'} ) {
 		$sql .= ' AND skid_id=?';
 		push @values, $params{'skid_id'};
+	} # end if
+	if ( $params{'claim_id'} ) {
+		$sql .= ' AND claim_id=?';
+		push @values, $params{'claim_id'};
 	} # end if
 	if ( $params{'id_like'} ) {
 		$sql .= " AND id LIKE '%$params{id_like}%'";
@@ -79,6 +89,21 @@ sub Skid {
 sub Claim {
 	return new openprint::Claim( $_[0]{claim_id} );
 } # end sub Manifest
+
+sub description {
+	my ( $self ) = @_;
+	my $description;
+	foreach my $SkidContent ( $self->Skid()->Contents() ) {
+		$description .= $SkidContent->Paper()->to_string().'<br/>';
+	} # end foreach SkidContent
+
+	return $description;
+} # end sub description
+
+sub total {
+	my ( $self ) = @_;
+	return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'}/100 );
+} # end sub total
 
 1;
 __END__
