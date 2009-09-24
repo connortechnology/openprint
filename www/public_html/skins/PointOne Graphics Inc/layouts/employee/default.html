@@ -137,7 +137,7 @@
 							</ul>
 						</li>
 						<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-						<li id="InventoryMenu" class="<? echo ( $r->uri() =~ /employee\/inventory/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
+						<li id="InventoryMenu" class="<? echo ( ($r->uri() =~ /employee\/inventory/ or $r->uri() =~ /employee\/claim/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('InventoryMenu'), 'off', 'on');return false;">INVENTORY</a>
 							<ul>
 								<li><a href="/employee/inventory/purchase_orders.html;NOSSL">&raquo; Purchase Orders</a></li>
 								<li><a href="/employee/claim/history.html;NOSSL">&raquo; Claims</a></li>
@@ -145,6 +145,7 @@
 								<li><a href="/employee/inventory/docket_labels.html;NOSSL">&raquo; Docket Labels</a></li>
 								<li><a href="/employee/inventory/paper.html;NOSSL">&raquo; Paper</a></li>
 								<li><a href="/employee/inventory/skids.html;NOSSL">&raquo; Skids/Rolls</a></li>
+								<li><a href="/employee/inventory/allocations.html;NOSSL">&raquo; Allocations</a></li>
 								<li><a href="/employee/inventory/rfidtags.html;NOSSL">&raquo; RFID Tags</a></li>
 								<li><a href="/employee/inventory/rfidscanners.html;NOSSL">&raquo; RFID Scanners</a></li>
 								<li><a href="/employee/inventory/manifest.html;NOSSL">&raquo; Update Inventory</a></li>

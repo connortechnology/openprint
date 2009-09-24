@@ -1911,6 +1911,7 @@ sub _po_content_line {
 		$variable{'error'} .= $PO->save();
 	} elsif ( $param{'action'} eq 'delete' ) {
 		my $PO_Content = new openprint::PurchaseOrder_Content( $param{'id'} );
+		$PO = $PO_Content->PurchaseOrder();
 		$PO_Content->delete();
 		$variable{'error'} .= $PO->save();
 	} # end if
@@ -1978,5 +1979,13 @@ sub paper_label_window {
 
 sub move_skids_window {
 } # end sub move_skids_window
+
+sub allocations {
+	ssi::save_params( '/employee/inventory/allocations.html', ( 'Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','stock_age_start_year','stock_age_start_month','stock_age_start_day','stock_age_end_year','stock_age_end_month','stock_age_end_day' ) );
+} # end sub allocations
+
+sub _allocations {
+	ssi::save_params( '/employee/inventory/allocations.html', ( 'Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','stock_age_start_year','stock_age_start_month','stock_age_start_day','stock_age_end_year','stock_age_end_month','stock_age_end_day' ) );
+} # end sub _allocations
 1;
 __END__
