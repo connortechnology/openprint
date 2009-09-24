@@ -1,36 +1,17 @@
 <script type="text/javascript">
 <!--
-function load_content_type( index, type ) {
-	$('content-'+index).innerHTML = '';
-	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
-} // end function load_content_type
-
-function set_description(index) {
-	var desc = $('description-'+index);
-	desc.value = '';
-	if ( $('mweight-'+index) ) { 
-		desc.value += $('mweight-'+index).value +'M ';
-	} // end if
-	var type = $('stocktype-'+index);
-	if ( type && type.options[type.selectedIndex].value ) {
-		desc.value += type.options[type.selectedIndex].value + ' ';
-	} // end if
-	desc.value += $('name-'+index).value;
-}
-
 function calc_price( element ) {
 	var re = /(.*)-(.*)/
 	var matches = re.exec( element.name );
 	if ( matches ) {
 		var index = matches[2];
-		var cost = parseFloat( $('price-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-		var qty = parseFloat( $('qty-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-		var type = get_value( $('type-'+index) );
-		if ( type == 'Roll Stock' ) {
+		var cost = parseFloat( $('cost-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+		var qty = parseFloat( $('qty_lbs-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+		var units = $('units-'+index).value;
+		if ( units == '/100lb' ) {
 			qty /= 100;
-		} else if ( type == 'Sheet Stock' ) {
-			var mweight = parseFloat( $('mweight-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-			qty = qty * mweight / 100000;
+		} else if ( units == '/M' ) {
+			qty = qty/1000;
 		} // end if
 		$('total-'+index).value = do_decimals( cost * qty, 2 );
 	} // end if
@@ -80,17 +61,32 @@ function getSelectionId(input, li) {
 	theme : "advanced",
 	mode: "specific_textareas",
 	editor_selector : "mce",
-	theme_advanced_toolbar_location : "top",
-	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,"
-	+ "justifyleft,justifycenter,justifyright,justifyfull,formatselect,"
-	+ "bullist,numlist,outdent,indent",
-	theme_advanced_buttons2 : "link,unlink,anchor,image,separator,"
-	+"undo,redo,cleanup,code,separator,sub,sup,charmap",
+	theme_advanced_toolbar_location : "external",
+	theme_advanced_toolbar_align : "left",
+	theme_advanced_resizing : "true",
+	theme_advanced_buttons1 : "bold,italic,underline,strikethrough,separator,justifyleft,justifycenter,justifyright,justifyfull",
+	theme_advanced_buttons2 : "formatselect,bullist,numlist,outdent,indent",
 	theme_advanced_buttons3 : "",
 	auto_resize : true,
 
   });
 
+function add_content(form) {
+	new Ajax.Updater( 'Contents','_contents.html?action=Add&amp;claim_id=<? echo ( $$variable{Claim}->id() ) ?>', {
+			method: 'get', 
+			parameters: form.serialize(),
+			evalScripts: true
+		}
+	);
+} // end function add_Content(form)
+function del_content(form, content_id ) {
+	new Ajax.Updater( 'Contents','_contents.html?action=Delete&amp;claim_id=<? echo ( $$variable{Claim}->id() ) ?>&amp;content_id='+content_id, {
+			method: 'get', 
+			parameters: form.serialize(),
+			evalScripts: true
+		}
+	);
+} // end function add_Content(form)
 -->
 </script>
 <form id="f1" name="f1" action="<? echo ( $$variable{'Claim'}->id() ? 'view' : 'edit' ) ?>.html?claim_id=<? echo ( $$variable{'Claim'}->id() ) ?>" method="post">
@@ -163,6 +159,31 @@ function getSelectionId(input, li) {
 		<div id="Contents">
 		<!--#include virtual="_contents.html"-->
 		</div>
+<table class="List">
+    <tr>
+        <td class="totals">SUBTOTAL</td>
+        <td class="Price"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->subtotal() ); ) ?></td>
+    </tr>
+    <tr>
+        <td class="totals">
+            <? echo ( $$variable{'Claim'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?>
+            <input type="checkbox" id="federaltax_charge" name="federaltax_charge" value="1" <? echo ( ssi::checked( $$variable{'Claim'}->federaltax_charge() ); ) ?> onclick="update_totals(this.form);" />
+        </td>
+        <td class="Price"><? echo ( sprintf('%s<span id="federaltax">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->federaltax() ); ) ?></td>
+    </tr>
+    <tr>
+        <td class="totals">
+            <? echo ( $$variable{'Claim'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?>
+            <input type="checkbox" id="statetax_charge" name="statetax_charge" value="1" <? echo ( ssi::checked( $$variable{'Claim'}->statetax_charge() ); ) ?> onclick="update_totals(this.form);" />
+        </td>
+        <td class="Price"><? echo ( sprintf('%s<span id="statetax">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->statetax() ); ) ?></td>
+    </tr>
+    <tr>
+        <td class="totals">TOTAL</td>
+        <td class="Price"><? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->total() ); ) ?></td>
+    </tr>
+</table>
+
 		<div class="leftColumn">
 		</div>
 		<div class="rightColumn" style="text-align: right;">
