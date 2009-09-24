@@ -21,6 +21,9 @@ $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV
 
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 print "Current Database Version: $version Backups: $backup, Last Updated: $updated_on\n";
+
+my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+
 if ( $version < 1275 ) {
 	print "Updating to version 1275\n";
 	my $ac = sql::start_transaction( $dbh );
@@ -604,6 +607,20 @@ if ( ! exists $$data{'id'} ) {
 	$dbh->do('ALTER TABLE Equipment_shifts add id serial');
 	$dbh->do('ALTER TABLE Equipment_shifts add PRIMARY KEY (id)');
 } # end if
+
+if ( ! sets::isin( 'claims', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Claims.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+if ( ! sets::isin( 'claim_contents', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Claim_Contents.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
 $dbh->disconnect();
 1;
 __END__
