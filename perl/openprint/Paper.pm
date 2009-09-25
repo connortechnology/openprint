@@ -1215,18 +1215,12 @@ $openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
 sub grain_direction {
 	my $self = shift;
 	if ( @_ ) {
+		$$self{'grain_direction'} = $_[0];
 		my $gd = shift;
-		if ( lc $gd eq 'width' ) {
-			$$self{'grain_direction'} = $$self{'width'} > $$self{'height'} ? 'Long' : 'Short';
-		} elsif ( lc $gd eq 'height' ) {
-			$$self{'grain_direction'} = $$self{'width'} > $$self{'height'} ? 'Short' : 'Long';
-		} else {
-			$$self{'grain_direction'} = $gd;
-		} # end if
 	} # end if
 	if ( ! $$self{'grain_direction'} ) {
 		# Default to second measurement
-		$$self{'grain_direction'} = $$self{'width'} > $$self{'height'} ? 'Short' : 'Long';
+		$$self{'grain_direction'} = $$self{'height'};
 	} # end if
 	
 	return $$self{'grain_direction'};

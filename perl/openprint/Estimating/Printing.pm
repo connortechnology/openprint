@@ -1617,7 +1617,7 @@ foreach my $i ( @imps ) {
 $i->display();
 }
 }
-	if ( $debug or 1 ) {
+	if ( $debug ) {
 		foreach my $P ( @Papers ) {
 			$openprint::log->debug("Paper: " . $P->to_string() );
 		} # end foreach
@@ -1682,7 +1682,7 @@ $i->display();
 			push @impositions, map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-			if ( $debug ) {
+			if ( $debug or 1 ) {
 				$openprint::log->warn('Impositions for '. $Press->strid() );
 				foreach my $I ( @impositions ) {
 					$I->display();
@@ -2098,6 +2098,7 @@ $imp->dispay('Ma imposition!');
 					next;
 				} # end if
 				if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
+$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
 					next if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};	
 				} elsif ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
 					next;
@@ -3352,7 +3353,7 @@ $price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison
 	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
 	} else {
-		$run_overs = $base_impressions * $over_rate;
+		$run_overs = ceil( $base_impressions * $over_rate );
 	} # end if
 	$total_overs += $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'};
 

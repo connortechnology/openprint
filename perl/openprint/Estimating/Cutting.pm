@@ -692,68 +692,36 @@ sub signature_calc {
 		} # end if
 
 		if ( $dutch_vertical_cuts or $dutch_horizontal_cuts ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
+			$$specs{'hdnBreakdown'.$qty_index} .= "Dutch Cuts:<br/>";
 
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
+			$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
 			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 
-			if ( $vertical_cuts > $horizontal_cuts ) {
-				$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
+			if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
+				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
 				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_columns'};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 				} # end if
-				$price = ( $runs * $horizontal_cuts * $ServicePrice{'Price'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $horizontal_cuts, $sheets, $runs, $price );
+				$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
+
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
 			} else {
-				$price = ( $runs * $horizontal_cuts * $ServicePrice{'Price'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $horizontal_cuts, $sheets, $runs, $price );
+				$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
 				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_rows'};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 				} # end if
-				$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
+				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
+
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, $price );
 				$totalPrice += $price;
-			} # end if
-
-			
-			if ( $dutch_vertical_cuts or $dutch_horizontal_cuts ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "\tDutch Cuts: ";
-
-				$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
-				$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
-				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
-
-				if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
-					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $price );
-					$totalPrice += $price;
-					if ( $config{'Dumb Cutting'} ne 'Y' ) {
-						$sheets *= $$I{'dutch_columns'};
-						$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
-					} # end if
-					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
-
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $price );
-					$totalPrice += $price;
-				} else {
-					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $price );
-					$totalPrice += $price;
-					if ( $config{'Dumb Cutting'} ne 'Y' ) {
-						$sheets *= $$I{'dutch_rows'};
-						$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
-					} # end if
-					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
-
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $price );
-					$totalPrice += $price;
-				} # end if
 			} # end if
 		} # end if
 
