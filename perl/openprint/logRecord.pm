@@ -4,34 +4,21 @@ require openprint::Object;
 require Date::Handler;
 require openprint::User;
 require openprint::logAction;
+use strict;
 
 my $debug = 1;
-
-use strict;
-use vars qw( %fields );
-
+use vars qw( $log $dbh $table $serial %fields %tansforms %defaults );
+$table = 'log';
+$serial = 'log_id_seq';
 %fields = (
 	'id'	=>	'id',
-	'action_type'	=>	'action_type',
-	'user_id'		=>	'user_id',
-	'date_time'		=>	'date_time',
 	'ip_address'	=>	'ip_address',
 	'hostname'		=>	'hostname',
-	'url'			=>	'url',
-	'note'			=>	'note',
+	'user_id'		=>	'user_id',
 	'company_id'	=>	'company_id',
+	'date_time'		=>	'date_time',	
+	'action_type'	=>	'action_type',
 );
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM log WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) {
-			$openprint::log->error('Error loading Log: reason:'.$openprint::dbh->errstr());
-		} # end if
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
 
 sub find {
 	my %params = @_;
@@ -105,5 +92,17 @@ sub Action {
 	my $self = shift;
 	return new openprint::logAction( $$self{action_type} );	
 } # end sub Action
+
+sub hostname {
+	my ( $self ) = @_;
+	if ( ! defined $$self{'hostname'} ) {
+		return $$self{'ip_address'} unless $$self{'ip_address'} =~ /\d+\.\d+\.\d+\.\d+/;
+		my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip_address'})),2);
+		if ( @h ) {
+			$self->save({'hostname' => $h[0] } );
+		} # end if
+	} # end if
+	return $$self{'hostname'} ? $$self{'hostname'} : $$self{'ip_address'};
+} # end sub hostname
 1;
 __END__

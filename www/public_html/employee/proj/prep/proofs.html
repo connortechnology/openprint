@@ -19,7 +19,6 @@ function check_input( form, signature_index ) {
 <? eval ( 
 	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} );
 	@$variable{'Docket'} = $$variable{'Project'}->docket();
-	@$variable{'CustomerEmail'} = sql::execute( $log, $dbh, q{SELECT strEmail FROM Orders WHERE Index=?}, $$variable{'OrderID'});
 ) ?>
 <a href="/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
 <br/>
@@ -69,7 +68,6 @@ function check_input( form, signature_index ) {
 			</p>
 			<p id="QAApproved" <? echo ( $$variable{'rdbComplete'} eq 'Yes' ? '' : 'style="display:none;"' ) ?>>
 				<label>QA Approved?:</label>
-				<? eval ( $$variable{'Status'} = openprint::service::status( @$variable{'ProjectIndex','ServiceIndex'} ); ) ?>
 					<input type="radio" id="rdbApprovedY" name="rdbApproved" value="Y" onclick="$('DueDate').show();" <? echo ( ssi::checked( $$variable{'rdbApproved'} eq 'Y' ); ) ?> />
 					<label class="radio" for="rdbApprovedY">Yes</label>
 					<input type="radio" id="rdbApprovedN" name="rdbApproved" value="N" onclick="$('DueDate').hide();" <? echo ( ssi::checked( $$variable{'rdbApproved'} ne 'Y' ); ) ?> />
@@ -95,7 +93,7 @@ function check_input( form, signature_index ) {
 					$body = ssi::variable_substitution( \$body, $variable );
 					$body =~ s/([^A-Za-z0-9])/sprintf("%%%02X", ord($1))/seg;
 					$$variable{'body'} = $body;
-					$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', '', qq`mailto:$$variable{'CustomerEmail'}?subject=Docket%20$$variable{'Docket'}&body=$$variable{'body'}`, 'Email' );
+					$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', '', qq`mailto:`.$$variable{'Project'}->Order()->email().q`?subject=Docket%20$$variable{'Docket'}&body=$$variable{'body'}`, 'Email' );
 					$html .= ssi::writeButton( $log, $dbh, 'UploadPDFs', 'uploadFiles.gif', "open_window('/employee/production/upload_pdfs.html?ProjectIndex=$$variable{'ProjectIndex'}','upload','resizable=yes,scrollbars=yes,width=800,height=600,screenX=10,screenY=10,top=0,left=0');", '', 'Upload PDFs' );
 					return $html;
 			) ?>

@@ -81,7 +81,7 @@
 			</tr>
 			<? echo ( 
 				my $html = '';
-				my $$variable{'product_total'} = 0;
+				$$variable{'product_total'} = 0;
 				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
 					$html .= '<tr>';
 					$html .= sprintf('<td align="left">%s</td>', $Product->description() );

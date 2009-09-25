@@ -184,15 +184,20 @@ sub operator_id {
 
 sub assign_operator_id {
 	my ( $self ) = @_;
-	my ( $Y, $M, $D, $h, $m, $s ) = Date::Parse::str2ptime( $$self{'starttime'} );
-	my $time = Date::Calc::Mktime( 1970, 1, $D, $h, $m, $s );
-	my $Shift = openprint::OperatorShift::find_one(
-			'equipment_id'=>$$self{'equipment_id'}, 
-			'shift_id'=>$$self{'shift_id'}, 
-			'starttime'=>Date::Format::time2str( '%H:%M:%S', $time ),
-			);
-	if ( $Shift and $Shift->operator_id() ) {
-		return $$self{'operator_id'} = $Shift->operator_id();
+	my ( $s, $m, $h, $D, $M, $Y, $Z ) = Date::Parse::strptime( $$self{'starttime'} );
+$log->debug( "assign_operator_id $$self{'starttime'} => $Y, $M, $D, $h, $m, $s");
+	if ( Date::Calc::check_date( 1970, 1, $D ) and Date::Calc::check_time( $h, $m, $s ) ) {
+		my $time = Date::Calc::Mktime( 1970, 1, $D, $h, $m, $s );
+		my $Shift = openprint::Operator_Shift::find_one(
+				'equipment_id'=>$$self{'equipment_id'}, 
+				'shift_id'=>$$self{'shift_id'}, 
+				'starttime'=>Date::Format::time2str( '%H:%M:%S', $time ),
+				);
+		if ( $Shift and $Shift->operator_id() ) {
+			return $$self{'operator_id'} = $Shift->operator_id();
+		} # end if
+	} else {
+		$log->error("Invalid Date or Time $$self{'starttime'} => $Y, $M, $D, $h, $m, $s");
 	} # end if
 	return;
 } # end sub assign_operator_id

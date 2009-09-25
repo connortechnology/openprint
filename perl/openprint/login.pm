@@ -139,7 +139,7 @@ sub verify_login {
 
 	if ( $openprint::param{'rdbRememberMe'} eq 'Y' ) {
 		my $Cookie = Apache2::Cookie->new($r,
-			-name  => 'SessionID',
+			-name  => '_session_id',
 			-value => $session{_session_id},
 			-path		=>	'/',
 			);

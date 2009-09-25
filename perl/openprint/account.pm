@@ -26,32 +26,7 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 
 # called when a salesperson selects a customer to be
 sub select_company {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-	if ( $param{'ddmCompany'} ) {
-		my $Company = new openprint::Company( $param{'ddmCompany'} );
-		if ( ! $Company->id() ) {
-			$variable{'error'} .= 'Unknown company selected.  Please try again.';
-			return;
-		} # end if
-		$openprint::session{'company_id'} = $Company->id();
-		openprint::logs::insertLogRecord('79',);
-
-		if ( $Company->currency_id() ) {
-			$openprint::session{'Currency_id'} = $Company->currency_id();
-		} elsif ( $Company->country() eq 'US' ) {
-			my @currencies = openprint::Currency::find('short'=>'USD');
-			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
-		} elsif ( $Company->country() eq 'CA' ) {
-			my @currencies = openprint::Currency::find('short'=>'CAD');
-			$openprint::session{'Currency_id'} = (shift @currencies)->id() if @currencies;
-		} # end if
-		foreach my $k ( keys %openprint::session ) {
-			next if sets::isin( $k, [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ] );
-			delete $openprint::session{$k};
-		} # end foreach
-	} # end if
-
+	# Taken care of in openprint.pm
 } # end sub select_company
 
 sub registration {

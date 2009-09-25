@@ -15,9 +15,9 @@
 -->
 </script>
 <div id="ProjectView">
-<? if ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
-<div class="warning">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <? echo ( $$variable{'Project'}->Company()->name() ) ?>!</div>
-<? endif ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
+	<? if ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
+	<div class="warning">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <? echo ( $$variable{'Project'}->Company()->name() ) ?>!</div>
+	<? endif ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
 	<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
 	There is no current project. 
 	<? else ( $$variable{'ProjectIndex'} eq '' ) ?>
@@ -91,9 +91,13 @@
 				<th align="left">Services</th>
 				<? echo (
 					my $html = '';
-					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-						$html .= '<th class="price">'.$$variable{'Project'}->quantity( $qty_index ) .'</th>';
-					} # end foreach qty_index
+					if ( $$variable{'Project'}->Ordered_Product() ) {
+						$html .= '<th class="price">'.$$variable{'Project'}->Ordered_Product()->quantity() .'</th>';
+					} else {
+						foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+							$html .= '<th class="price">'.$$variable{'Project'}->quantity( $qty_index ) .'</th>';
+						} # end foreach qty_index
+					} # end if Ordered Product
 					return $html;
 				) ?>
 				<th width="90" align="right">Status</th>
@@ -119,7 +123,9 @@
 						if ( $$specs{'txtQuantity'.$qty_index} and $$specs{'txtQuantity'.$qty_index} != $$variable{'Project'}->quantity($qty_index) ) {
 							$html .= '('.$$specs{'txtQuantity'.$qty_index}.') ';
 						} # end if
-						$html .= '<b>'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'price'.$qty_index},2,2).'</b><br/>';
+						if ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) {
+							$html .= '<b>'.$$variable{'Currency'}->symbol().Number::Format::format_number($$variable{'price'.$qty_index},2,2).'</b><br/>';
+						} # end if
 						my $summary = openprint::service::summary( @$variable{'ProjectIndex','index'}, $qty_index );
 						$summary =~ s/\n/<br\/>/g;
 						$html .= $summary;
@@ -144,6 +150,7 @@
 			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq 'class="colRow"' ? '' : 'class="colRow"' ) ?>
 			<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
 			<? endif ( @{$$variable{'SERVICES'}} ) ?>
+<? if ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) ?>
 			<tr class="totals"> 
 				<td align="left">Unit Prices:</td>
 				<? echo ( my $html = '';
@@ -167,7 +174,15 @@
 				<td align="right">&nbsp;</td>
 				<td class="unprintable" align="right">&nbsp;</td>
 			</tr>
-
+<? endif ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) ?>
+<? if ( $$variable{'Project'}->Ordered_Product() ) ?>
+        <tr class="totals">
+            <td align="left">Ordered Price:</td>
+            <td align="right"><?CurrencySymbol?>&nbsp;<? echo ( $$variable{'Project'}->Ordered_Product()->price() ) ?></td>
+            <td align="right">&nbsp;</td>
+            <td class="unprintable" align="right">&nbsp;</td>
+        </tr>
+<? endif ( $$variable{'Project'}->Ordered_Product() ) ?>
 	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 		<tr class="totals unprintable">
 			<td><input name="txtServiceName"/></td>
