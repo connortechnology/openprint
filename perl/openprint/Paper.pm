@@ -884,10 +884,9 @@ sub get_price {
 
     if ( $$self{'Price'} ) {
 		# If custom paper
-$openprint::log->warn('Using override price');
 		%price = ( 'Price' => $$self{'Price'}, 'Cost'=>$$self{'Price'}, 'units'=>$$self{'Units'});
 #$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
-	} else {
+	} elsif ( $$self{'id'} ) {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $bestPrice;
 		my @Prices = $self->prices( $list_id );
@@ -913,7 +912,8 @@ $openprint::log->warn('Using override price');
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$price{'currency_id'} = $Pricelist->currency_id();
 		openprint::Currency::convert( \%price );
-
+	} else {
+		$openprint::log->error("No custom price, and no paper::id");
 	} # end if
 
 	my $Company = new openprint::Company( $openprint::session{company_id} );
@@ -924,7 +924,7 @@ $openprint::log->warn('Using override price');
 # Don't need to cut it because the mweight has already byeen cut
 	$price{'mweight'} = $self->mweight();
 	# Prices are always stored in cwt now
-	if ( ! $self->mweight() ) {
+	if ( ! $$self{'mweight'} ) {
 		# ROll papers won't have an mweight
 		$price{'100lb'} = $price{'Price'};
 		$price{'100lb Cost'} = $price{'Cost'};

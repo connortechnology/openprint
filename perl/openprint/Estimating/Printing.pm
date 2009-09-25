@@ -20,6 +20,7 @@ my $debug = 0;
 my $master_time;
 
 my %folding_cache;
+my %Papers;
 
 use strict;
 #use warnings;
@@ -1133,11 +1134,10 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 	} # end if
 	@Papers = map { $_->clone() } @Papers;
 
-	if ( $debug or 1 ) {
 		foreach my $P ( @Papers ) {
-			$openprint::log->debug("Paper: " . $P->to_string() );
+			$openprint::log->debug("Paper: " . $P->to_string() ) if ( $debug or 1 );
+			$Papers{$P->to_string()} = $P;
 		} # end foreach
-	} # end if
 
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage );
 
@@ -1578,6 +1578,7 @@ $openprint::log->debug('blah'.$Paper->to_string());
 							last if ! ( 
 									( $P->width() > $$specs{'txtWidth'} and $P->height() > $$specs{'txtHeight'} ) or ( $P->height() > $$specs{'txtHeight'} and $P->width() > $$specs{'txtWidth'} ) );
 							$P->cut();
+							$Papers{$P->to_string()} = $P if ! $Papers{$P->to_string()};
 						} # end while
 					} # end if
 
@@ -1606,6 +1607,7 @@ $openprint::log->debug('blah'.$Paper->to_string());
 						last if ( ! $P->cuttable() );
 						$P = $P->clone();
 						$P->cut();
+						$Papers{$P->to_string()} = $P if ! $Papers{$P->to_string()};
 					} # end while cutting it
 				} # end if Web or Sheet
 
@@ -1889,7 +1891,7 @@ $i->display();
 		my $rate = 1+($best_price{'Overs Rate'}/100);
 		my $ink = (($best_price{'Ink Price'}/$qty)*1000 );
 		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + $ink + ($best_price{'Paper 1000 Price'}*$rate) ) );
-$openprint::log->debug("MPrice: Rate: $rate Impression: $best_price{'Impression MPrice'}/$$Imposition{imposition}=$mprice, Ink: (($best_price{'Ink Price'}/$qty)*1000 )=$ink, PaperM: $best_price{'Paper 1000 Price'}");
+#$openprint::log->debug("MPrice: Rate: $rate Impression: $best_price{'Impression MPrice'}/$$Imposition{imposition}=$mprice, Ink: (($best_price{'Ink Price'}/$qty)*1000 )=$ink, PaperM: $best_price{'Paper 1000 Price'}");
 
 		if ( $$specs{'txtSignatureType'} ) {
 			if ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
@@ -2037,7 +2039,7 @@ sub get_project_price {
 				$SpreadLayout = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} / $$sig_specs{'txtSpreadSize'};
 			} # end if
 		} # end if
-		if ( $debug or 1 ) {
+		if ( $debug or 0 ) {
 			$openprint::log->debug("QTY: $qty_index before " . @impositions );
 			foreach my $imp ( @impositions ) {
 				$imp->display();
@@ -2045,9 +2047,9 @@ sub get_project_price {
 			#$openprint::log->debug("SPread Layout: $SpreadLayout");
 		} # end if
 		if ( $SpreadLayout > 0 ) {
-			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 0;
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, \@impositions );
-			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 1;
+			$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 0;
 
 			my %imps;
 
@@ -2109,7 +2111,7 @@ $imp->dispay('Ma imposition!');
 					# Convert to weight
 					$stock_qty *= $imp->Paper()->area() * $imp->Paper()->wpsi();
 				} # end if
-				$stock_qty += $$PaperCounts{sprintf('%d-%sx%s', $imp->Paper()->get('id','width','height') )};
+				$stock_qty += $$PaperCounts{$imp->Paper()->to_string()};
 
 				if ( $imp->runstyle() eq 'Work & Tumble' ) {
 					my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
@@ -2266,11 +2268,11 @@ $imp->display();
 			} # end foreach imp
 			@impositions = map {@{$_}} values %imps;
 		} # end if
-$log->debug("Press Impositions after filtering: " . @{$$impositions{$Press->id()}} );
+$log->debug("Press Impositions after filtering: " . @{$$impositions{$Press->id()}} ) if $debug;
 		if ( $$sig_specs{'versions'} > 1 and @impositions < 30 ) {
-$openprint::log->debug("Calling do_versions, # of imps: " . @impositions );
+$openprint::log->debug("Calling do_versions, # of imps: " . @impositions ) if $debug;
 			@impositions = openprint::imposition::do_versions( $versions, \@impositions );
-$openprint::log->debug("Back from do_versions, # of imps: " . @impositions );
+$openprint::log->debug("Back from do_versions, # of imps: " . @impositions ) if $debug;
 		} # end if
 # Gives us both inline and offline folding options
 		if ( $$project{'HasFolding'} and ( $Press->Specification('Folding Capable') eq 'Y' ) ) {
@@ -2372,7 +2374,7 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 			} # end if
             $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
             $PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
-			$PaperCounts{sprintf('%d-%sx%s', $imp->Paper()->id(), $imp->Paper()->width(), $imp->Paper()->height() )} += $$price{'Stock Weight'};
+			$PaperCounts{$imp->Paper()->to_string()} += $$price{'Stock Weight'};
 
 			@{$$price{'Impositions'}} = @{$$sig_specs{'Impositions'}} if $$sig_specs{'Impositions'};
 			push @{$$price{'Impositions'}}, $imp;
@@ -2454,7 +2456,7 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 
 							$additional_price *= $sigs;
 
-							$PaperCounts{sprintf('%d-%sx%s', $imp->Paper()->id(), $imp->Paper()->width(), $imp->Paper()->height() )} += $sigs * $$sig_price{'Stock Weight'};
+							$PaperCounts{$imp->Paper()->to_string()} += $sigs * $$sig_price{'Stock Weight'};
 							foreach ( 1 .. $sigs ) {
 								push @{$$price{'Impositions'}}, $imp;
 								$previous_forms_cache{$hash_key} += 1;
@@ -2464,7 +2466,7 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Blank Plates'};
 						} else {
 							$last_sig_price = int($$sig_price{'Comparison Cost'});
-							$PaperCounts{sprintf('%d-%sx%s', $imp->Paper()->id(), $imp->Paper()->width(), $imp->Paper()->height() )} += $$sig_price{'Stock Weight'};
+							$PaperCounts{$imp->Paper()->to_string()} += $$sig_price{'Stock Weight'};
 							push @{$$price{'Impositions'}},$imp;
 							$upq -= $imp->pages();
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
@@ -2511,7 +2513,7 @@ $openprint::log->debug("Page QUantity override: ".$new_specs{'chkOverridePageQua
 							@{$$price{'Impositions'}} = @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
 
 							# Don't add stock weight because we likely have a different stock anyways.
-							$PaperCounts{sprintf('%d-%sx%s', $$sig_price{'Imposition'}->Paper()->get('id','width','height') )} += $$sig_price{'Stock Weight'};
+							$PaperCounts{$$sig_price{'Imposition'}->Paper()->to_string()} += $$sig_price{'Stock Weight'};
 
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
@@ -2570,23 +2572,23 @@ $imp->display();
 				next; # next Impo
 			} # end if
 
-
-			foreach my $key ( keys %PaperCounts ) {
-				my ( $paper_id, $width, $height ) = ( $key =~ /(\d+)-([\.\d]+)x([\.\d]+)/ );
-				my $Paper = new openprint::Paper( $paper_id );
-				$Paper->width( $width );
-				$Paper->height( $height );
+			foreach my $paper_string ( keys %PaperCounts ) {
+				my $Paper = $Papers{$paper_string};
+				if ( ! $Paper ) {
+					$log->error("No Paper Object for $paper_string");
+					next;
+				} # end if
 
 				if ( $Paper->full_packages() ) {
 					my $sheets_per_package = $Paper->sheets_per_package();
 					if ( $sheets_per_package ) {
 						if ( $Paper->type() eq 'Sheet' ) {
 							# PaperCounts is in weight, so convert to sheets
-							my $gross_sheets = ceil( $PaperCounts{$key} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) );
+							my $gross_sheets = ceil( $PaperCounts{$paper_string} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) );
 							$gross_sheets = $sheets_per_package * ceil( $gross_sheets / $sheets_per_package );
-							$PaperCounts{$key} = ceil( $gross_sheets * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
+							$PaperCounts{$paper_string} = ceil( $gross_sheets * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
 						} elsif ( $Paper->type() eq 'Roll' ) {
-							$PaperCounts{$key} = $sheets_per_package * ceil( $PaperCounts{$key}/$sheets_per_package);
+							$PaperCounts{$paper_string} = $sheets_per_package * ceil( $PaperCounts{$paper_string}/$sheets_per_package);
 						} # end if
 					} # end if
 				} # end if
@@ -2595,20 +2597,20 @@ $imp->display();
 					# Assume sheets for sheets, lbs for Rolls
 					if ( $Paper->type() eq 'Sheet') {
 						# PaperCounts is in weight, so convert to sheets
-						my $gross_sheets = ceil( $PaperCounts{$key} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) );
+						my $gross_sheets = ceil( $PaperCounts{$paper_string} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) );
 						if ( $$Paper{'minimum_order'} > $gross_sheets) {
-							$PaperCounts{$key} = ceil( $$Paper{'minimum_order'} * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
+							$PaperCounts{$paper_string} = ceil( $$Paper{'minimum_order'} * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
 						} # end if
-					} elsif ( $Paper->minimum_order() > $PaperCounts{$paper_id} ) { # Must be a roll
-						$PaperCounts{$key} = $$Paper{'minimum_order'};
+					} elsif ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) { # Must be a roll
+						$PaperCounts{$paper_string} = $$Paper{'minimum_order'};
 					} # end if
 				} # end if
 
-				my %paper_price = $Paper->get_price( $PaperCounts{$key} );
-				$paper_price{'Total'} = $paper_price{'100lb Price'} * $PaperCounts{$key} / 100;
+				my %paper_price = $Paper->get_price( $PaperCounts{$paper_string} );
+				$paper_price{'Total'} = $paper_price{'100lb Price'} * $PaperCounts{$paper_string} / 100;
 				$$price{'Comparison Cost'} += $paper_price{'Total'};
 				$$price{'Stock Total'} += $paper_price{'Total'};
-				$$price{'Paper Breakdown'} .= sprintf('%s %s $%.2f<br/>', $Paper->type() eq 'Sheet' ? ceil( $PaperCounts{$key} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) ).'sheets' : $PaperCounts{$key}.'lbs', $Paper->to_string(), $paper_price{'Total'} );
+				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s $%.2f<br/>', $Paper->type() eq 'Sheet' ? ceil( $PaperCounts{$paper_string} / ( $$Paper{'width'} * $$Paper{'height'} * $Paper->wpsi() ) ).'sheets' : $PaperCounts{$paper_string}.'lbs', $Paper->to_string(), $paper_price{'Total'} );
 			} # end foreach Paper in PaperCounts
 
 			my %paper_price = $Paper->get_price( $$price{'Stock Weight'} );
