@@ -144,7 +144,7 @@ sub verify_login {
 
 	if ( $openprint::param{'rdbRememberMe'} eq 'Y' ) {
 		my $Cookie = Apache2::Cookie->new($r,
-			-name  => 'SessionID',
+			-name  => '_session_id',
 			-value => $openprint::session{_session_id},
 			-path		=>	'/',
 			);
@@ -161,7 +161,7 @@ $openprint::log->debug("Dest: $session{'Destination'}");
 			$$variable{'Redirect'} = '/main/account/change_password.html';
 		} # end if
 		return;
-	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a>/ ) {
+	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\??(.*)">here<\/a>/ ) {
      
 		$$variable{'Redirect'} = $1.'.html';
 		foreach my $p ( split('&', $2 ) ) {

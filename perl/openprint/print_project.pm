@@ -257,7 +257,7 @@ sub continue_project {
 					my @sigs = $Project->signatures($_);
 					my $src_id = pop @sigs;
 					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
-					$service_index = openprint::Estimating::Multipage::copy_signature( $project_index, $src_specs );
+					$service_index = $Project->copy_signature( $src_specs );
 					( $service_index, $redirect ) = choose_service( $log, $dbh, $project_index );
 					last;
 				} # end if

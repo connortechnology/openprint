@@ -536,6 +536,18 @@ $variable{'ServiceIndex'} = $service_index;
 		} # end if main:$second
 
 	} else {
+        $status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+        return $status if $variable{'Redirect'};
+
+        if ( ! $session{'user_id'} ) {
+            # if not logged in, determine if they are allowed to see this page or not.
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+				$variable{'Redirect'} = '/error/error_login.html';
+				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				return Apache2::Const::OK;
+			} # end if
+		} # end if
+
 		if ( $first ) {
 			my $module = 'openprint::' . $first;
 			$module .= '_'.$second if $second;

@@ -109,8 +109,15 @@
 								<? echo ( ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ) ) ?>
 						</p>
 						<p><label>Password:</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/>
-							<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register Now' );) ?>
+							<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register' );) ?>
 						</p>
+							<p>
+								<label>Remember:</label>
+								<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" />
+								<label class="radio" for="rdbRememberMeY">Yes</label>
+								<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" checked="checked" />
+								<label class="radio" for="rdbRememberMeN">No</label>
+							</p>
 						</fieldset>
 						<input type="hidden" name="btnFunction" />
 					</form>

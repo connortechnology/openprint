@@ -129,14 +129,15 @@ sub calc_price {
 #} # end fi
 
 	if ( $$specs{'txtHoleClearingHoles'} > 0 ) {
+		my $hole_qty = $$specs{'txtHoleClearingHoles'} * $imposition;
 		my %HoleClearingPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'HoleClearing', $$specs{'txtHoleClearingHoles'} * $$specs{"txtQuantity$qty_index"}, undef ); 
-		$HoleClearingPrice{'Total'} = $impressions * $HoleClearingPrice{'Price'} * $$specs{'txtHoleClearingHoles'};
+		$HoleClearingPrice{'Total'} = $impressions * $HoleClearingPrice{'Price'} * $hole_qty;
 		if ( lc $HoleClearingPrice{'units'} eq 'per m' ) {
 			$HoleClearingPrice{'Total'} /= 1000;
 		} # end if
 		$Total{'HoleClearingPrice'} = \%HoleClearingPrice;
 		$Total{'Total'} += $HoleClearingPrice{'Total'};
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clear: $%.2f %s * %d impressions = $%.2f<br/>', @HoleClearingPrice{'Price','units'}, $impressions, $HoleClearingPrice{'Total'});
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%.2f %s * %d impressions * %d holes = $%.2f<br/>', @HoleClearingPrice{'Price','units'}, $impressions, $hole_qty, $HoleClearingPrice{'Total'});
 	} # end if
 
 	#if ( $$specs{'rdbGlued'} eq 'Y' ) {

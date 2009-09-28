@@ -200,12 +200,6 @@ fieldset p label {
 	vertical-align: top;
 	float: left;
 }
-label.radio {
-	width: auto;
-	display: inline;
-	float: none;
-	margin: 0px;
-}
 p.buttons {
 	float: right;
 }
@@ -297,9 +291,6 @@ hr {
 	width: 48%;
 	float: right;
 }
-.PageTitle {
-	display: block;
-}
 
 .colRow {
 	background-color: #eeeeee;
@@ -369,9 +360,8 @@ div.row:after {
 	display: none;
 }
 .PageTitle h1 {
-	font-size: large;
 }
-.PageTitle h1 {
+.PageTitle h2 {
 }
 span.DateSelector {
     float: left;
@@ -406,4 +396,10 @@ h1,h2,h3,h5 {
 }
 div#NewDimensions {
 	display: none;
+}
+label.radio, #Header p label.radio {
+	width: auto;
+	display: inline;
+	float: none;
+	margin: 0px;
 }
