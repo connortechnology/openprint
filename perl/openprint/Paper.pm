@@ -363,7 +363,6 @@ sub merge {
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::update( undef, undef, 'Paper_allocations', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	sql::update( undef, undef, 'Paper_Inventory', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
-	sql::update( undef, undef, 'Paper_purchase_order_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	sql::update( undef, undef, 'skid_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	$Duplicate->delete();
