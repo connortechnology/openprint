@@ -360,7 +360,7 @@ sub find {
 		push @values, lc $param{'email'};
 	} # end if
 	if ( $param{'password'} ) {
-		$sql .= ' AND strpassword=?';
+		$sql .= ' AND password=?';
 		push @values, $param{'password'};
 	} # end if
 	if ( exists $param{'email_like'} ) {
