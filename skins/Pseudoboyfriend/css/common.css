@@ -1,0 +1,392 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	background-color: #a8a8a8;
+    font-style: normal;
+    margin: 0px;
+    padding: 0px;
+	min-width: 730px;
+}
+
+@media screen {
+    body {
+        padding: 0px;
+    }
+}
+@media print {
+    body {
+        padding: 0px;
+    }
+}
+
+
+img {
+	border: none;
+}
+
+a {
+	outline: 0;
+}
+
+.colRow {
+	background-color: #D5CFED;
+}   
+
+.spacer {
+	clear: both;
+	height: 0px;
+	margin: 0px;
+	padding: 0px;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+table td {
+	vertical-align: top;
+}
+
+table.List {
+	border-bottom: 1px solid #6A00BE;
+}
+table.List th {
+	font-weight: bold;
+	border-bottom: 1px solid #6A00BE;
+}
+table.List td {
+	padding-top: 1px;
+	vertical-align: top;
+}
+
+table.List td a {
+	text-decoration: none;
+}
+table.List tr.totals {
+}
+table.List tr.totals td {
+	border-top: 1px solid #6A00BE;
+}
+table.List tr td input {
+    width: expression(this.type=="text" || this.type=="password"?'100%':'auto');
+    float: none;
+    vertical-align: top;
+}
+table.List tr td input[type="text"] {
+    width: 100%;
+    float: none;
+    vertical-align: top;
+}
+
+select {
+	font-size: 11px;
+	margin: 0px;
+	background-color: white;
+	color: black;
+}
+input {
+	margin: 0px;
+	font-size: 10px;
+	background-color: white;
+	color: black;
+}
+.error {
+	color: red;
+	font-weight: bold;
+}
+input.text {
+	width: 95%;
+}
+form {
+	margin: 0px;
+	padding: 0px;
+}
+fieldset {
+	border: none;
+    border-top: 1px solid #6A00BE;
+}
+fieldset legend {
+	color: #6A00BE;
+	font-weight: bold;
+}
+
+fieldset p {
+	margin: 0px;
+    margin-top: .4em;
+	padding: 0px;
+	padding-left: 240px;
+	display: inline-block;
+	overflow: hidden;
+}
+fieldset p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset p {height: 1%;}
+* fieldset p {display:block;}
+/* End hide from IE-mac */
+
+
+fieldset p label {
+	display: inline-block;
+    text-align: right;
+    width: 235px;
+	margin: 0px;
+	margin-left: -240px;
+	margin-bottom: .4em;
+    vertical-align: top;
+float: left;
+outline: 0;
+}
+label.radio {
+    width: auto;
+	display: inline;
+	float: none;
+	margin: 0px;
+}
+p.buttons {
+	float: right;
+}
+fieldset p.buttons {
+    width: auto;
+	margin-left: 240px;
+    float: none;
+	padding: 0px;
+clear: none;
+}
+fieldset p .buttons {
+    float: left;
+}
+fieldset p input {
+    float: none;
+    width: expression(this.type=="text" || this.type=="password"?'70%':'auto');
+}
+fieldset p input[type="text"], fieldset p input[type="password"]  {
+    width: 70%;
+    float: none;
+    vertical-align: top;
+}
+fieldset p select {
+    width: 70%;
+}
+fieldset p textarea {
+    width: 70%;
+}
+fieldset p option {
+    width: 70%;
+}
+fieldset.filters {
+	width: auto;
+	margin-left: 0px;
+	margin-right: 0px;
+	padding: 0px;
+}
+fieldset.filters legend {
+}
+fieldset.filters p select {
+	width: auto;
+}
+fieldset.filters p input[type="text"] {
+	width: auto;
+}
+
+hr {
+    margin: 1px;
+    padding: 0px;
+    height: 1px;
+    border: 0px;
+	color: #6A00BE;
+	background-color: #6A00BE;
+}
+
+.column {
+	width: 48%;
+	float: left;
+}
+.leftColumn {
+	width: 48%;
+	float: left;
+}
+.rightColumn {
+	width: 48%;
+	float: right;
+}
+.PageTitle {
+	display: none;
+}
+
+.CompanyProfile fieldset p {
+	padding-left: 200px;
+}
+.CompanyProfile label {
+	margin-left: -200px;
+	width: 195px;
+}
+.CompanyProfile label.radio {
+    width: auto;
+	display: inline;
+	float: none;
+	margin: 0px;
+}
+.CompanyProfile p.buttons {
+	margin-left: 200px;
+	padding: 0px;
+	float: none;
+}
+span.DateSelector {
+    float: left;
+	width: 220px;
+}
+.Currency {
+	font-weight: bold;
+	float: right;
+}
+
+div#header_banner
+{
+ background-image: url(/images/gradient_bg.gif);
+ background-repeat: repeat-x;
+ width: 100%;
+ height: 104px;
+ text-align: center;
+ margin: 0px auto 0px auto;
+}
+div#logo
+{
+ float: left;
+ width: 251px;
+ height: 104px;
+}
+div#menu {
+ text-align: right;
+ width: 761px;
+ margin: -20px auto 0px auto;
+ color: #11ff11;
+}
+#left_sidebar {
+	float: left;
+	width: 180px;
+	margin: 0px;
+	margin-right: -180px;
+	padding: 0px;
+}
+html>body #left_sidebar {
+}
+
+#left_sidebar ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+#Categories {
+	margin: 0px;
+	padding: 0px;
+}
+h1, h2, h3 {
+	margin-top: 0px;
+}
+
+div#main_page {
+ float: left;
+ width: 761px;
+	margin-left: 200px;
+}
+div#content_container {
+	background-color: #fff;
+	width: 1000px;
+	overflow: hidden;
+	margin: 0px auto 0px auto;
+}
+a:link,
+a:visited,
+a:hover,
+a:active
+{
+ text-decoration: none;
+ color: #6400b5;
+}
+div#menu_links {
+ padding-right: 10px;
+}
+div.shadow_top {
+ background-image: url(/images/shadow_border/top.gif);
+ background-repeat: repeat-x;
+ background-color: #fff;
+ height: 22px;
+}
+div.shadow_tl {
+ float: left;
+ background-image: url(/images/shadow_border/tl.gif);
+ background-repeat: no-repeat;
+ width: 26px;
+ height: 22px;
+}
+div.shadow_tr {
+ float: right;
+ background-image: url(/images/shadow_border/tr.gif);
+ background-repeat: no-repeat;
+ width: 17px;
+ height: 22px;
+}
+div.shadow_bottom {
+ clear: left;
+ background-image: url(/images/shadow_border/bottom.gif);
+ background-repeat: repeat-x;
+ background-color: #fff;
+ height: 22px;
+}
+div.shadow_bl {
+ float: left;
+ background-image: url(/images/shadow_border/bl.gif);
+ background-repeat: no-repeat;
+ width: 26px;
+ height: 22px;
+}
+div.shadow_br {
+ float: right;
+ background-image: url(/images/shadow_border/br.gif);
+ background-repeat: no-repeat;
+ width: 17px;
+ height: 22px;
+}
+div.shadow_left {
+    background-image: url(/images/shadow_border/left.gif);
+    background-repeat: repeat-y;
+    background-position: left;
+    padding-left: 14px;
+}
+div.shadow_right {
+    background-image: url(/images/shadow_border/right.gif);
+    background-repeat: repeat-y;
+    background-position: right;
+    padding-right: 5px;
+}
+
+div#main_page {
+ float: left;
+ width: 565px;
+}
+div#main_page_inner
+{
+ background-color: #fff;
+ padding-top: 5px;
+ padding-bottom: 5px;
+ overflow: hidden;
+}
+div#main_page_content
+{
+ background-image: url(/images/shadow_border/main_page_bg.gif);
+ background-repeat: repeat-y;
+ padding-left: 20px;
+ padding-right: 15px;
+}
+.Article {
+	padding: 2px;
+	text-align: justify;
+}

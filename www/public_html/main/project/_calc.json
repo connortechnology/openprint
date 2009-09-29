@@ -24,9 +24,9 @@ $log->debug("No outputs: @no_outputs");
 			delete $specs{$key};
         } # end if
     } # end foreach
-foreach my $key ( keys %specs ) {
-$log->debug("$key => $specs{$key}");
-} # end foreach
+#foreach my $key ( keys %specs ) {
+#$log->debug("$key => $specs{$key}");
+#} # end foreach
 
 	$param{'callback'} = 'cbFillResults' if ! $param{'callback'};
 	my $json = JSON->new;

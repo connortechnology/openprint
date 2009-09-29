@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 1;
+my $debug = 0;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -246,10 +246,11 @@ sub calc_setup_object {
 	} # end if
 	$setup1->stock_width( $paper_width );
 	$setup1->stock_height( $paper_height );
-	$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? 'height' : 'width' );
+
+	#$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? $Paper->grain_direction() : ( $Paper->grain_direction() eq 'width' ? 'height' : 'width' ) );
 	$setup2->stock_width( $paper_width );
 	$setup2->stock_height( $paper_height );
-	$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? 'width' : 'height' );
+	#$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? ($Paper->grain_direction() eq 'width' ? 'height' : 'width') : $Paper->grain_direction() );
 
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;

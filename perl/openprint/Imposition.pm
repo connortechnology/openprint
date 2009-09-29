@@ -86,8 +86,8 @@ sub AUTOLOAD {
 
 sub display {
 	my ( $self, $prefix ) = @_;
-	$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s', $prefix,
-	@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'}) );
+	$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s', $prefix,
+	@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction() ) );
 } # end sub display
 
 sub get {
@@ -376,19 +376,22 @@ sub pages {
 
 sub grain_direction {
 	my $self = shift;
-	if ( $$self{'rotate_sheet'} ) {
-		if ( $$self{'image_orientation'} eq 'Vertical' ) {
-			return 'width';
+	if ( ! $$self{'grain_direction'} ) {
+		if ( $$self{'rotate_sheet'} ) {
+			if ( $$self{'image_orientation'} eq 'Vertical' ) {
+				$$self{'grain_direction'} = $self->Paper()->grain_direction() eq 'width' ? 'height' : 'width';
+			} else {
+				$$self{'grain_direction'} = $self->Paper()->grain_direction();
+			} # end if
 		} else {
-			return 'height';
-		} # end if
-	} else {
-		if ( $$self{'image_orientation'} eq 'Vertical' ) {
-			return 'height';
-		} else {
-			return 'width';
+			if ( $$self{'image_orientation'} eq 'Vertical' ) {
+				$$self{'grain_direction'} = $self->Paper()->grain_direction();
+			} else {
+				$$self{'grain_direction'} = $self->Paper()->grain_direction() eq 'width' ? 'height' : 'width';
+			} # end if
 		} # end if
 	} # end if
+	return $$self{'grain_direction'};
 } # end sub grain_direction
 
 sub equals {

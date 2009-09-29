@@ -375,11 +375,11 @@
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Width" name="rdbGrainDirection<?QTYIndex?>" value="width" onclick="calc(this.form.name);"
-<? echo ( 'checked="checked"' if $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'width' ) ?>
+<? echo ( ssi::checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'width' ); ) ?>
  />
 		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Width">Width</label>
 		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Height" name="rdbGrainDirection<?QTYIndex?>" value="height" onclick="calc(this.form.name);"
-<? echo ( 'checked="checked"' if $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'height' ) ?>
+<? echo ( ssi::checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'height' ); ) ?>
  />
 		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Height">Height</label>
 		<? echo ( ssi::write_override( 'chkOverrideGrainDirection'.$$variable{'QTYIndex'}, $$variable{'chkOverrideGrainDirection'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
