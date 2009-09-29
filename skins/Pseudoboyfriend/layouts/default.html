@@ -13,37 +13,48 @@
 		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.0"></script>
 
-		<link rel="shortcut icon" href="/images/favicon.ico">
+		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
 	<body>
 		<div id="content_container">
-			<? include ( $config{'SkinPath'}.'/includes/header.html' ) ?>
-         <div id="menu">
-            <div id="menu_links">
-			<? include ( $config{'SkinPath'}.'/includes/menu.html' ) ?>
-            </div>
-         </div>
-         <div id="main_content">
-            <div id="main_content_inner">
-				<? echo ( ssi::include( $config{'SkinPath'}.'/includes/left_sidebar.html'); ) ?>
-               <div id="main_page">
-                  <div class="top_shadow">
-                     <div class="shadow_tl"></div>
-                     <div class="shadow_tr"></div>
-                  </div>
-                  <div id="main_page_content">
-                     <div id="main_page_inner">
-						 <? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
-                     </div>
-                  </div>
-                  <div class="bottom_shadow">
-                     <div class="shadow_bl"></div>
-                     <div class="shadow_br"></div>
-                  </div>
-               </div>
-            </div>
-         </div>
-         &nbsp;
-      </div>
+			<div id="left_sidebar">
+				<div class="shadow_top"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+				<div class="shadow_left"><div class="shadow_right">
+				<div id="Categories"><h3>Categories</h3>
+				<ul>
+				<? echo (
+					require openprint::Article_Category;
+					my $html = '';
+					foreach my $AC ( openprint::Article_Category::find('order'=>'position') ) {
+						$html .= sprintf('<li><a href="/articles/list.html?category_id=%1$d">%2$s</a></li>', $AC->id(), ssi::htmlize( $AC->name() ) );
+					} # end foreach
+					return $html;
+				) ?>
+				</ul>
+				</div>
+				</div></div>
+				<div class="shadow_bottom"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+				<div class="shadow_top"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+				<div class="shadow_left"><div class="shadow_right">
+				</div></div>
+				<div class="shadow_bottom"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+			</div>
+			<div id="menu">
+				<div id="menu_links">
+				<? echo ( ssi::include( $config{'SkinPath'}.'/includes/menu.html'); ) ?>
+				</div>
+			</div>
+			<? echo ( ssi::include( $config{'SkinPath'}.'/includes/left_sidebar.html'); ) ?>
+			<div id="main_page">
+				<div class="shadow_top"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+				<div class="shadow_left">
+				<div class="shadow_right">
+					 <? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+				</div>
+				</div>
+				<div class="shadow_bottom"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+			</div>
+			&nbsp;
+		</div>
 	</body>
 </html>

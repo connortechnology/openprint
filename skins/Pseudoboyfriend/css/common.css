@@ -39,47 +39,6 @@ a {
 	padding: 0px;
 }
 
-.row {
-	margin: 0px;
-	margin-top: 5px;
-	margin-bottom: 5px;
-	float: left;
-	width: 100%;
-}
-div.row:after {
-    content: ".";
-    display: block;
-    height: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div.row {height: 1%;}
-*/* End hide from IE-mac */
-
-.row .label {
-	float: left;
-	width: 30%;
-	margin: 0px;
-	padding: 0px;
-}
-.row .input {
-	float: left;
-	margin: 0px;
-	padding: 0px;
-}
-.row .fullinput {
-	margin: 0px;
-	padding: 0px;
-	float: left;
-	width: 68%;
-}
-.row .buttons {
-	margin-left: 100px;
-	float: left;
-}
-
-
 table {
 	width: 100%;
 	border-collapse: collapse;
@@ -101,7 +60,7 @@ table.List td {
 	vertical-align: top;
 }
 
-table.List td A {
+table.List td a {
 	text-decoration: none;
 }
 table.List tr.totals {
@@ -118,23 +77,6 @@ table.List tr td input[type="text"] {
     width: 100%;
     float: none;
     vertical-align: top;
-}
-
-/* Style for Tip Overlays */
-.tipDiv {
-	position:absolute;
-	z-index:2;
-	visibility: hidden;
-	background-color: #ffffff;
-	width: 250px;
-	border: 1px solid;
-}
-.tipHead {
-	background-color:#DED9C2;
-	padding: 5px;
-}
-.tipText {
-	padding: 5px;
 }
 
 select {
@@ -254,40 +196,6 @@ fieldset.filters p input[type="text"] {
 	width: auto;
 }
 
-div.OrderHeader {
-    float: left;
-    width: 49%;
-    margin-right: .5em;
-}
-div.OrderHeader fieldset {
-	text-align: left;
-}
-div.OrderHeader fieldset p {
-    text-align: right;
-}
-div.OrderHeader fieldset p label {
-    font-weight: bold;
-    margin-right: 10px;
-    float: left;
-    width: auto;
-    text-align: left;
-}
-div.QuoteHeader {
-    float: left;
-    width: 32%;
-    margin-right: .5em;
-}
-div.QuoteHeader fieldset p {
-    text-align: right;
-}
-div.QuoteHeader fieldset p label {
-    font-weight: bold;
-    margin-right: 10px;
-    float: left;
-    width: auto;
-    text-align: left;
-}
-
 hr {
     margin: 1px;
     padding: 0px;
@@ -313,8 +221,6 @@ hr {
 	display: none;
 }
 
-.UserProfile label {
-}
 .CompanyProfile fieldset p {
 	padding-left: 200px;
 }
@@ -341,285 +247,146 @@ span.DateSelector {
 	font-weight: bold;
 	float: right;
 }
-ul.Testimonials {
-}
-ul.Testimonials li {
-	margin-bottom: 10px;
-	width: 100%;
-}
-ul.Testimonials li:after {
-    content: ".";
-    display: block;
-    height: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html ul.Testimonials li {height: 1%;}
-/* End hide from IE-mac */
 
-div.Service span.ThreeColumns {
-	width: 32%;
-	float: left;
+div#header_banner
+{
+ background-image: url(/images/gradient_bg.gif);
+ background-repeat: repeat-x;
+ width: 100%;
+ height: 104px;
+ text-align: center;
+ margin: 0px auto 0px auto;
 }
-div.Service span.TwoColumns {
-	width: 50%;
-	float: left;
+div#logo
+{
+ float: left;
+ width: 251px;
+ height: 104px;
 }
-      body
-      {
-         margin: 0px;
-         font-family: arial, helvetica, sans-serif;
-         font-size: 12px;
-         background-color: #a8a8a8;
-      }
-      div#header
-      {
-         
-      }
-      div#header_banner
-      {
-         background-image: url(/images/gradient_bg.gif);
-         background-repeat: repeat-x;
-         width: 100%;
-         height: 104px;
-         text-align: center;
-         margin: 0px auto 0px auto;
-      }
-      div#logo
-      {
-         float: left;
-         width: 251px;
-         height: 104px;
-      }
-      div#contact_information
-      {
-         float: left;
-         text-align: left;
-         margin-right: 15px;
-         margin-top: 15px;
-         color: #7068b3;
-      }
-      div#currencies
-      {
-         float: left;
-         margin-top: 4px;
-      }
-      div#nav_icons
-      {
-         float: right;
-         padding-right: 20px;
-      }
-      div#menu
-      {
-         text-align: right;
-         width: 761px;
-         margin: -20px auto 0px auto;
-         color: #11ff11;
-      }
-      div#main_content
-      {
-         width: 761px;
-         margin: 0px auto 0px auto;
-         background-color: #fff;
-      }
-      div#main_content_inner
-      {
-         padding-left: 6px;
-         padding-right: 6px;
-         background-color: #fff;
-      }
-      div#left_sidebar
-      {
-         float: left;
-         width: 180px;
-         margin-right: 4px;
-      }
-      div#main_page
-      {
-         float: left;
-      }
-      div#content_container
-      {
-         background-color: #fff;
-         width: 761px;
-         overflow: hidden;
-         margin: 0px auto 0px auto;
-      }
-      a:link,
-      a:visited,
-      a:hover,
-      a:active
-      {
-         text-decoration: none;
-         color: #6400b5;
-      }
-      div#menu_links
-      {
-         padding-right: 10px;
-      }
-      div.top_shadow
-      {
-         background-image: url(/images/shadow_border/top.gif);
-         background-repeat: repeat-x;
-         background-color: #fff;
-         height: 22px;
-      }
-      div.shadow_tl
-      {
-         float: left;
-         background-image: url(/images/shadow_border/tl.gif);
-         background-repeat: no-repeat;
-         width: 26px;
-         height: 22px;
-      }
-      div.shadow_tr
-      {
-         float: right;
-         background-image: url(/images/shadow_border/tr.gif);
-         background-repeat: no-repeat;
-         width: 17px;
-         height: 22px;
-      }
-      div.bottom_shadow
-      {
-         clear: left;
-         background-image: url(/images/shadow_border/bottom.gif);
-         background-repeat: repeat-x;
-         background-color: #fff;
-         height: 22px;
-      }
-      div.shadow_bl
-      {
-         float: left;
-         background-image: url(/images/shadow_border/bl.gif);
-         background-repeat: no-repeat;
-         width: 26px;
-         height: 22px;
-      }
-      div.shadow_br
-      {
-         float: right;
-         background-image: url(/images/shadow_border/br.gif);
-         background-repeat: no-repeat;
-         width: 17px;
-         height: 22px;
-      }
-      div#left_sidebar_content
-      {
-         background-image: url(/images/shadow_border/left_sidebar_bg.gif);
-         background-repeat: repeat-y;
-         padding-left: 20px;
-      }
-      div#left_sidebar_inner
-      {
-         text-align: left;
-         width: 150px;
-         margin: 0px auto 0px auto;
-      }
-      div#main_page
-      {
-         float: left;
-         width: 565px;
-      }
-      div#main_page_inner
-      {
-         background-color: #fff;
-         padding-top: 5px;
-         padding-bottom: 5px;
-         overflow: hidden;
-      }
-      div#main_page_content
-      {
-         background-image: url(/images/shadow_border/main_page_bg.gif);
-         background-repeat: repeat-y;
-         padding-left: 20px;
-         padding-right: 15px;
-      }
-      div#choose_currencies_top
-      {
-         font-size: 12px;
-         text-decoration: none;
-         color: #7c6aba;
-      }
-      div#contact_information div
-      {
-         line-height: 1.1em;
-      }
-      .headline_medium
-      {
-         font-weight: bold;
-         color: #6400b5;
-      }
+div#menu {
+ text-align: right;
+ width: 761px;
+ margin: -20px auto 0px auto;
+ color: #11ff11;
+}
+#left_sidebar {
+	float: left;
+	width: 180px;
+	margin: 0px;
+	margin-right: -180px;
+	padding: 0px;
+}
+html>body #left_sidebar {
+}
 
-/* Instant pricing shadow border styles */
-      div.instant_price_section_top_shadow
-      {
-         background-image: url(/images/instant_pricing/shadow_border/top.gif);
-         background-repeat: repeat-x;
-         background-color: #fff;
-         height: 20px;
-      }
-      div.instant_price_section_shadow_tl
-      {
-         float: left;
-         background-image: url(/images/instant_pricing/shadow_border/tl.gif);
-         background-repeat: no-repeat;
-         width: 21px;
-         height: 20px;
-      }
-      div.instant_price_section_shadow_tr
-      {
-         float: right;
-         background-image: url(/images/instant_pricing/shadow_border/tr.gif);
-         background-repeat: no-repeat;
-         width: 21px;
-         height: 20px;
-      }
-      div#instant_price_section_content
-      {
-         background-image: url(/images/instant_pricing/shadow_border/main_background.gif);
-         background-repeat: repeat-y;
-         padding-left: 7px;
-         padding-right: 7px;
-      }
-      div#instant_price_section_inner
-      {
-         background-color: #e4d9f2;
-      }
-      div.instant_price_section_bottom_shadow
-      {
-         clear: left;
-         background-image: url(/images/instant_pricing/shadow_border/bottom.gif);
-         background-repeat: repeat-x;
-         background-color: #fff;
-         height: 20px;
-      }
-      div.instant_price_section_shadow_bl
-      {
-         float: left;
-         background-image: url(/images/instant_pricing/shadow_border/bl.gif);
-         background-repeat: no-repeat;
-         width: 21px;
-         height: 20px;
-      }
-      div.instant_price_section_shadow_br
-      {
-         float: right;
-         background-image: url(/images/instant_pricing/shadow_border/br.gif);
-         background-repeat: no-repeat;
-         width: 21px;
-         height: 20px;
-      }
-      div#instant_price_section
-      {
-         float: right;
-         width: 267px;
-      }
-      div#CalculateBtn
-      {
-         margin:0 auto; 
-         text-align:center; 
-         width: 95px;
-		outline: 0;
-      }
+#left_sidebar ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+#Categories {
+	margin: 0px;
+	padding: 0px;
+}
+h1, h2, h3 {
+	margin-top: 0px;
+}
+
+div#main_page {
+ float: left;
+ width: 761px;
+	margin-left: 200px;
+}
+div#content_container {
+	background-color: #fff;
+	width: 1000px;
+	overflow: hidden;
+	margin: 0px auto 0px auto;
+}
+a:link,
+a:visited,
+a:hover,
+a:active
+{
+ text-decoration: none;
+ color: #6400b5;
+}
+div#menu_links {
+ padding-right: 10px;
+}
+div.shadow_top {
+ background-image: url(/images/shadow_border/top.gif);
+ background-repeat: repeat-x;
+ background-color: #fff;
+ height: 22px;
+}
+div.shadow_tl {
+ float: left;
+ background-image: url(/images/shadow_border/tl.gif);
+ background-repeat: no-repeat;
+ width: 26px;
+ height: 22px;
+}
+div.shadow_tr {
+ float: right;
+ background-image: url(/images/shadow_border/tr.gif);
+ background-repeat: no-repeat;
+ width: 17px;
+ height: 22px;
+}
+div.shadow_bottom {
+ clear: left;
+ background-image: url(/images/shadow_border/bottom.gif);
+ background-repeat: repeat-x;
+ background-color: #fff;
+ height: 22px;
+}
+div.shadow_bl {
+ float: left;
+ background-image: url(/images/shadow_border/bl.gif);
+ background-repeat: no-repeat;
+ width: 26px;
+ height: 22px;
+}
+div.shadow_br {
+ float: right;
+ background-image: url(/images/shadow_border/br.gif);
+ background-repeat: no-repeat;
+ width: 17px;
+ height: 22px;
+}
+div.shadow_left {
+    background-image: url(/images/shadow_border/left.gif);
+    background-repeat: repeat-y;
+    background-position: left;
+    padding-left: 14px;
+}
+div.shadow_right {
+    background-image: url(/images/shadow_border/right.gif);
+    background-repeat: repeat-y;
+    background-position: right;
+    padding-right: 5px;
+}
+
+div#main_page {
+ float: left;
+ width: 565px;
+}
+div#main_page_inner
+{
+ background-color: #fff;
+ padding-top: 5px;
+ padding-bottom: 5px;
+ overflow: hidden;
+}
+div#main_page_content
+{
+ background-image: url(/images/shadow_border/main_page_bg.gif);
+ background-repeat: repeat-y;
+ padding-left: 20px;
+ padding-right: 15px;
+}
+.Article {
+	padding: 2px;
+	text-align: justify;
+}
