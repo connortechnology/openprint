@@ -1,131 +1,110 @@
-@media screen {
-	a.buttonOn {
-		font-family: Arial, Helvetica, sans-serif;
-		text-decoration: none;
-		background-color: #D96A00;
-		font-size: 11px;
-		/*width: 85px;*/
-		border: 1px outset;
-		color: #404171;
-		padding-left: 10px;
-		padding-right: 10px;
-		padding-top: 3px;
-		padding-bottom: 3px;
-		margin: 0px;
+	a.button {
 		margin-right: 5px;
-		margin-top: 1px;
-		margin-bottom: 1px;
 	}
-
 	a.buttonOff {
-		background-color: #E5A11B;
-		color: #ffffff;
 		padding: 1px;
 		margin:2px;
-		
+		display: inline-block;
 	}
 
 	a.buttonImageOff {
-		font-family: Arial, Helvetica, sans-serif;
+		background-color: #0183FF;
+		padding: 0px;
+		margin: 2px;
+		margin-right: 5px;
 		text-decoration: none;
-		font-size: 11px;
-		color: #ffffff;
-display: -moz-inline-box;
-display: inline-block;
-margin: 0px 0px 0px 5px;
-outline: 0;
-cursor: default;
-height: 20px;
-padding: 0px;
-	}
-	a.buttonImageOn {
-		font-family: Arial, Helvetica, sans-serif;
-		color: #404171;
-		text-decoration: none;
-		font-size: 11px;
-display: -moz-inline-box;
-display: inline-block;
-margin: 0px 0px 0px 5px;
-outline: 0;
-cursor: default;
+		font-family: Arial, Helvetica, Sans-Serif;
+		font-size: small;
+		font-weight: bold;
+		color: white;
+		display: -moz-inline-box;
+		display: inline-block;
+		outline:0;
 	}
 
+	a.buttonOn {
+		padding: 1px;
+		margin:2px;
+		display: inline-block;
+	}
+	a.buttonImageOn {
+		background-color: #8C8A8B;
+		padding: 0px;
+		margin: 2px;
+		margin-right: 5px;
+		text-decoration: none;
+		font-family: Arial, Helvetica, Sans-Serif;
+		font-size: small;
+		font-weight: bold;
+		color: white;
+		display: -moz-inline-box;
+		display: inline-block;
+		outline:0;
+	}
+@media screen {
 }
 @media print {
 	a.button {
 		display: none;
 	}
-	a.buttonOff {
-		display: none;
-	}
-	a.buttonOn {
-		display: none;
-	}
 	a.buttonImageOff {
 		display: none;
 	}
 	a.buttonImageOn {
 		display: none;
 	}
+	a.buttonOff {
+		display: none;
+	}
+	a.buttonOn {
+		display: none;
+	}
+
+}
+@media handheld {
+	a.buttonImageOff,  a.buttonImageOn {
+		padding-left: 3px;
+		padding-right: 3px;
+	}
 }
 
 
 a.buttonImageOff .l {
-display: -moz-inline-box;
-display: inline-block;
-background: url(/images/buttons/left.gif) no-repeat;
-width: 11px;
-height: 20px;
-cursor: default;
+	display: none;
 }
 a.buttonImageOff .r {
-display: -moz-inline-box;
-display: inline-block;
-background: url(/images/buttons/right.gif) no-repeat;
-width: 11px;
-height: 20px;
-cursor: default;
-margin:0px;
+	display: none;
 }
 a.buttonImageOff .c {
-background: url(/images/buttons/center.gif) repeat-x top;
-display: -moz-inline-box;
-display: inline-block;
-height: 17px;
-font-size: 11px;
-font-weight: bold;
-color: #002260;
-padding: 3px 0px 0px 0px;
-cursor: default;
-vertical-align: top;
+	font-family: Arial, Helvetica, Sans-Serif;
+	font-weight: normal;
+	font-size: x-small;
+	background: none;
+	display: -moz-inline-box;
+	display: inline-block;
+	float: none;
+	margin: 0px;
+	padding: 3px 10px 4px 10px;
+	color: white;
 }
 
 
 a.buttonImageOn .l {
-display: -moz-inline-box;
-display: inline-block;
-background: url(/images/buttons/left.gif) no-repeat;
-width: 11px;
-height: 20px;
-cursor: default;
+	display: none;
 }
 a.buttonImageOn .r {
-display: -moz-inline-box;
-display: inline-block;
-background: url(/images/buttons/right.gif) no-repeat;
-width: 11px;
-height: 20px;
-cursor: default;
+	display: none;
 }
 a.buttonImageOn .c {
-background: url(/images/buttons/center.gif) repeat-x top;
-display: -moz-inline-box;
-display: inline-block;
-height: 17px;
-font-size: 11px;
-font-weight: bold;
-padding-top: 3px;
-color: #ffffff;
-cursor: default;
-vertical-align: top;
+	font-family: Arial, Helvetica, Sans-Serif;
+	font-weight: normal;
+	font-size: x-small;
+	background: none;
+	cursor: default;
+	display: -moz-inline-box;
+	display: inline-block;
+	float: none;
+	margin: 0px;
+	padding: 3px 10px 4px 10px;
+	color: white;
 }

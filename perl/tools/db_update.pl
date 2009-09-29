@@ -131,6 +131,7 @@ if ( $data ) {
 		$dbh->do(q`alter table Users rename column chrtype to type`);
 		sql::end_transaction( $dbh, $ac );
 	}
+	$dbh->do(q`alter table Users rename column strpassword to password`) if exists $$data{'strpassword'};
 	$dbh->do(q{alter table Users drop column ysnHTMLEmails}) if exists $$data{'ysnhtmlemails'};
 	$dbh->do(q{alter table Users drop column stremployeetype}) if exists $$data{'stremployeetype'};
 	$dbh->do(q{alter table Users drop column strmailserverusername}) if exists $$data{'strmailserverusername'};
