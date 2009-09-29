@@ -89,3 +89,38 @@ div#lastLogins {
 padding-top: .6em;
 margin-top: .6em;
 }
+#QuickLogin {
+    margin: 0px;
+    padding: 0px;
+    width: 150px;
+}
+#QuickLogin p {
+    padding: 0px;
+    padding-left: 55px;
+    margin: 0px;
+    vertical-align: top;
+}
+#QuickLogin p label {
+    width: 50px;
+    margin-left: -55px;
+    text-align: right;
+    float: left;
+    overflow: visible;
+    padding: 0px;
+    vertical-align: top;
+        color: black;
+        font-size: x-small;
+        font-weight: normal;
+}
+#QuickLogin p label.radio {
+        width: auto;
+        display: inline;
+        float: none;
+        margin: 0px;
+        color: black;
+        font-size: small;
+}
+#QuickLogin p input {
+	width: 98%;
+}
+

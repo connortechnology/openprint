@@ -33,18 +33,31 @@
 				</ul>
 				</div>
 				</div></div>
+<? if ( ! $session{'user_id'} ) ?>
 				<div class="shadow_bottom"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 				<div class="shadow_top"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 				<div class="shadow_left"><div class="shadow_right">
+					<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
+						<fieldset><legend>Quick Login</legend>
+							<p><label>Email:</label><input type="text" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/></p>
+							<p><label>Password:</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/></p>
+							<p>
+								<label>Remember:</label>
+								<input type="radio" id="rdbRememberMeY" name="rdbRememberMe" value="Y" />
+								<label class="radio" for="rdbRememberMeY">Yes</label>
+								<input type="radio" id="rdbRememberMeN" name="rdbRememberMe" value="N" checked="checked" />
+								<label class="radio" for="rdbRememberMeN">No</label>
+							</p>
+							<? echo ( ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ) ) ?>
+							<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register' );) ?>
+						</fieldset>
+						<input type="hidden" name="btnFunction" />
+					</form>
 				</div></div>
 				<div class="shadow_bottom"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+<? endif ( ! $session{'user_id'} ) ?>
+
 			</div>
-			<div id="menu">
-				<div id="menu_links">
-				<? echo ( ssi::include( $config{'SkinPath'}.'/includes/menu.html'); ) ?>
-				</div>
-			</div>
-			<? echo ( ssi::include( $config{'SkinPath'}.'/includes/left_sidebar.html'); ) ?>
 			<div id="main_page">
 				<div class="shadow_top"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 				<div class="shadow_left">
