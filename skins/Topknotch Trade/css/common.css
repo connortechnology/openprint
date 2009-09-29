@@ -371,6 +371,16 @@ span.DateSelector {
     float: left;
 	width: 220px;
 }
+span.DateTimeSelector {
+	float: left;
+	width: 400px;
+}
+span.DateSelector select, span.DateTimeSelector select {
+	width: auto;
+	max-width: none;
+}
+span.DateSelector select option {
+}
 
 div.Popup {
     position:absolute;
@@ -400,4 +410,7 @@ h1,h2,h3,h5 {
 }
 div#NewDimensions {
 	display: none;
+}
+img.Override {
+	height: 16px;
 }

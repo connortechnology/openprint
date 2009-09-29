@@ -40,7 +40,7 @@ CREATE TABLE Survey_Questions (
 
 CREATE TABLE Survey_Responses (
 	survey_id	INTEGER NOT NULL, FOREIGN KEY (survey_id) REFERENCES Surveys (id),
-	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Company (Index),
+	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	question_id	INTEGER NOT NULL, FOREIGN KEY (question_id) REFERENCES Survey_Questions (id),
 	answer		TEXT NOT NULL
 );

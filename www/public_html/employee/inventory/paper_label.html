@@ -7,14 +7,12 @@
 	<? echo ( Date::Format::time2str('%d %b %Y %H:%M', Date::Parse::str2time($$variable{'Skid'}->created_on()) );) ?>
 </div>
 <div style="border: 1px solid black; padding: 0px 7px 0px 5px; height: 90px; margin-bottom: 2px;">
-<? if ( $$variable{'paper_id'} ) ?>
 <? echo ( 
 	my $html;
 	my $Paper = new openprint::Paper( $$variable{'paper_id'} );
-	foreach my $c ( $$variable{'Skid'}->contents( 'paper_id'=>$$variable{'paper_id'} ) ) {
+	foreach my $C ( $$variable{'Skid'}->Contents( 'paper_id'=>$$variable{'paper_id'} ) ) {
 		$html .= '<table style="float: right; width:50%;">';
-		$html .= sprintf('<tr><td>ID:</td><td align="right"><img style="margin-bottom: 7px;" src="/barcode.png?code=R%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'paper_id'} );
-		$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $c->quantity() );
+		$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $C->quantity() );
 		$html .= '</table>';
 		my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
 		$paper_detail .= '<br/>';
@@ -28,11 +26,10 @@
 		} else {
 			$html .= $paper_detail;
 		} # end if
-		$html .= '<br/><b>'. $c->quantity() . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
+		$html .= '<br/><b>'. $C->quantity() . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
 	} # end foreach
-return $html;
+	return $html;
 ) ?>
-<? endif ( $$variable{'paper_id'} ) ?>
 </div>
 <? echo (
 	if ( $$variable{'paper_id'} ) {
@@ -59,11 +56,11 @@ return $html;
 		} # end foreach
 		
 		return $html;
-	} elsif ( $openprint::param{'docket'} ) {
+	} elsif ( $param{'docket'} ) {
 			my $html;
 			$html .= '<div style="padding:0px 7px 0px 7px;">';
-			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$openprint::param{docket}+&amp;NoText=1&amp;Height=30"><b>Docket:</b><br class="spacer"/>`;
-			$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$openprint::param{docket}</b></div></div><br class="pagebreak"/>`;
+			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$param{docket}+&amp;NoText=1&amp;Height=30"><b>Docket:</b><br class="spacer"/>`;
+			$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$param{docket}</b></div></div><br class="pagebreak"/>`;
 			return $html;
 	} else {
 		return '<br class="pagebreak"/>';

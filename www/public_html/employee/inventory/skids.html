@@ -86,6 +86,15 @@ Please select a Skid to view/edit.<br>
             <label class="radio" for="notempty">Not Empty</label>
 		</p>
 		<p>
+            <label>Allocated?</label>
+            <input type="radio" id="allocatedY" name="allocated" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) ) ?> />
+            <label class="radio" for="allocatedY">Yes</label>
+            <input type="radio" id="allocatedN" name="allocated" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?allocated'} eq 'N' ) ) ?> />
+            <label class="radio" for="allocatedN">No</label>
+            <input type="radio" id="allocated" name="allocated" value="" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?allocated'} eq '' ) ) ?> />
+            <label class="radio" for="allocated">All</label>
+		</p>
+		<p>
             <label>With/Without RFID?</label>
             <input type="checkbox" id="withrfid" name="withrfid" <? echo ( $session{'/employee/inventory/skids.html?withrfid'} ? 'checked="checked"' : '' ) ?> />
             <label class="radio" for="withrfid">With RFID</label>

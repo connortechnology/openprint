@@ -7,6 +7,7 @@ body {
 	height: 100%;
 	font-family: verdana, arial, helvetica, sans-serif;
 	font-size: x-small;
+	min-width: 1070px;
 }
 
 #content3 { 
@@ -339,20 +340,16 @@ table.List input {
     text-align: right;
 	color: #ff7f00;
     margin: 0px;
-    font-size: 16px;
+    font-size: large;
 }
 .PageTitle h2 {
     text-align: right;
     color: #000088;
     margin-top: 0px;
-    font-size: 12px;
+    font-size: medium;
 }
 
 
-body, p, ol, ul, td {
-	font-family: verdana, arial, helvetica, sans-serif;
-	font-size: xx-small;
-}
 
 h1 {
 }
@@ -381,7 +378,6 @@ h1 {
       text-align: left;
       font-weight: bold;
       padding: 5px 5px 5px 15px;
-      font-size: 12px;
       margin: -7px;
       background-color: #c00;
       color: #fff;
@@ -424,7 +420,6 @@ th {
 	border-bottom: 1px solid #0046A2;
 	padding: 1px;
 	text-align: left;
-	font-size: xx-small;
 }
 th.money {
 	text-align: right;

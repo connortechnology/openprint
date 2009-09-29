@@ -2,10 +2,19 @@ package openprint::employee_support;
 
 use Mail::Sendmail;
 use MIME::QuotedPrint;
+use openprint ();
 use strict;
 
 require sql;
 require misc;
+use vars qw( $r $log $dbh %variable %param %session %config );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+*variable = \%openprint::variable;
+*session = \%openprint::session;
+*param = \%openprint::param;
+*config = \%openprint::config;
 
 sub helpdesk {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -17,9 +26,9 @@ sub helpdesk {
 			'ysnReviewed',	$r->param('rdbReviewed'),
 			'blbResponse',	$r->param('txtQuestion-Quote')
 		);
-		$_ = "SELECT Users.strFirstName || ' ' || Users.strLastName, Users.strEmail\n".
+		$_ = "SELECT Users.FirstName || ' ' || Users.LastName, Users.Email\n".
 			"FROM HelpDesk,Users WHERE HelpDesk.Id = $index\n".
-			"AND Users.Index=UserId\n";
+			"AND Users.id=UserId\n";
 
 		my ($name, $email) = sql::execute( $log, $dbh, $_);
 
@@ -29,12 +38,12 @@ sub helpdesk {
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/helpdesk_response.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+		$_ = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 		my $email_template = ssi::variable_substitution( \$_, \%info );
 
 		my %mail = (
-			SMTP	=> $openprint::config{'Mail Server'},
-			FROM	=> $openprint::config{'HelpdeskEmail'},
+			SMTP	=> $config{'Mail Server'},
+			FROM	=> $config{'HelpdeskEmail'},
 			TO		=> $email,
 			SUBJECT	=> 'Your help desk submission has been reviewed.',
 		);
@@ -94,14 +103,14 @@ sub helpdesk_search {
 				'ysnReviewed',	$r->param('rdbReviewed'),
 				'blbResponse',	$r->param('txtQuestion-Quote')
 				] );
-		$_ = "SELECT Users.strFirstName || ' ' || Users.strLastName, Users.strEmail\n".
+		$_ = "SELECT Users.FirstName || ' ' || Users.LastName, Users.Email\n".
 			"FROM HelpDesk,Users WHERE HelpDesk.Id=$index\n".
-			"AND Users.Index=User_Id\n";
+			"AND Users.id=User_Id\n";
 
 		my ($name, $email) = sql::execute( $log, $dbh, $_);
 		my %mail = (
-				SMTP	=> $openprint::config{'Mail Server'},
-				FROM	=> $openprint::config{'HelpdeskEmail'},
+				SMTP	=> $config{'Mail Server'},
+				FROM	=> $config{'HelpdeskEmail'},
 				TO		=> $email,
 				SUBJECT => 'Your help desk submission has been reviewed.',
 				BODY	=> $r->param('txtQuestion-Quote') );
@@ -168,12 +177,12 @@ sub returns {
 
 		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/rma_response.html' );
 		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 		$email_template = ssi::variable_substitution( \$email_template, \%info );
 
 		my %mail = (
-				SMTP	=> $openprint::config{'Mail Server'},
-				FROM	=> $openprint::config{'RMAEmail'},
+				SMTP	=> $config{'Mail Server'},
+				FROM	=> $config{'RMAEmail'},
 				TO		=> $info{'Email'},
 				SUBJECT	=> 'Your RMA has been reviewed.'
 		);

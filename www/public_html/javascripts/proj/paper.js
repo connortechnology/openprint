@@ -1,8 +1,11 @@
 // From now on this file should only have stuff related to paper in it
 
 function body_onLoad() {
-	var form = getFormObj('f1');
-	calc('f1');
+	if ( typeof(selectProjectTemplate) == 'function' ) {
+		selectProjectTemplate( 'f1' );
+	} else if ( typeof(calc) == 'function' ) {
+		calc('f1');
+	} // end if
 } // end function body_onLoad();
 
 function paper_price_calc( element, group ) {

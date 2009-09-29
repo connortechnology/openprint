@@ -1,12 +1,19 @@
 package openprint::Service;
 @ISA = qw( openprint::Object );
 use strict;
-use vars qw(%fields %transforms %defaults);
+use vars qw($table $serial %fields %transforms %defaults %session $log $dbh );
 
 require sql;
 require openprint::Object;
 require openprint::pricing;
 require openprint::logs;
+use openprint ();
+*session = \%openprint::session;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
+
+$table = 'services';
+$serial = 'services_id_seq';
 
 %fields = (
 		'id'				=>	'id',
@@ -16,6 +23,7 @@ require openprint::logs;
 		'category_id'		=>	'category_id',
 		'taxexempt1'		=>	'taxexempt1',
 		'taxexempt2'		=>	'taxexempt2',
+		'owner_id'			=>	'owner_id',
 		);	
 
 %transforms = (
@@ -34,53 +42,21 @@ sub init_cache {
 	%cache = map { $_->name(), $_->id() } find();
 } # end sub init_cache
 
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Services WHERE id=?', {}, $$self{'id'} );
-    } # end if
-    @$self{keys %$data} = @$data{keys %$data};
-
-} # end sub load
-
 sub save {
 	my ( $self, $params ) = @_;
 
-	if ( $params ) {
-		$self->set( $params );
-		$openprint::log->debug("Set params");
-	} # end if
+	$self->set( $params );
 
 	if ( $$self{'category'} and ! $$self{'category_id'} ) {
 		$_ = new openprint::ServiceCategory();
 		$_->save({'name'=>$$self{'category'}});
 		$$self{'category_id'} = $_->id();
 	} # end if
+	$$self{'owner_id'} = $session{'company_id'} if ! $$self{'owner_id'};
 
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$k} = $$self{$k};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('ServiceIndex_seq')} );
-		$sql{id} = $$self{id};
-		if ( my $error = sql::insert( undef, undef, 'Services', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-		openprint::logs::insertLogRecord('25', "Service Index: ". $$self{id},);
-	} else {
-		if ( my $error = sql::update( undef, undef, 'Services', ['id=?',$$self{id}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-		openprint::logs::insertLogRecord('26', "Service Index: ". $self->{index},);
+	if ( ( my $error = $self->SUPER::save( ) ) ) {
+		return $error;
 	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
 	return;
 
 } # end sub save
@@ -90,11 +66,12 @@ sub delete {
 
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
 
-	my $ac = sql::start_transaction( $openprint::dbh );
+	my $ac = sql::start_transaction( $dbh );
     sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Services WHERE id=?}, $$self{id} );
 	openprint::logs::insertLogRecord('10', "Service Index: " . $$self{id},);
-	sql::end_transaction( $openprint::dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
+	return $dbh->errstr();
 } # end sub delete
 
 sub prices {
@@ -131,7 +108,7 @@ sub find {
 	
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("Error loading Service ($sql) (@values) Reason: " . $openprint::dbh->errstr );
+		$log->debug("Error loading Service ($sql) (@values) Reason: " . $openprint::dbh->errstr );
 		return;
 	} # end if
 	return map { new openprint::Service( $_->{id}, $_ ) } @$data;
@@ -141,9 +118,9 @@ sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist ) = @_;
 
 	if ( ! $Pricelist ) {
-		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable ));
+		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $log, $dbh, $openprint::variable ));
 	} # end if
-    my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
+    my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
     return if ! %price;
 
 	$price{'currency_id'} = $Pricelist->currency_id();

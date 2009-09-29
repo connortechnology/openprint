@@ -51,6 +51,7 @@ require openprint::Tax;
 	'salesrep_id'				=>	'employeeindex',
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
+	'created_on'				=>	'dtmorderdate',
 	);
 sub find {
 	my %params = @_;
@@ -148,12 +149,6 @@ sub find {
 	} # end if
 } # end sub find
 
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Order( );
-	return $new;
-} # end sub copy
-
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
@@ -181,8 +176,13 @@ sub save {
 	} # end foreach
 		
 	if ( ! $$self{'id'} ) {
-		#@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('Order_id_seq')} );
-		$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		if ( $openprint::config{'OrderIDStyle'} eq 'Year' ) {
+			$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+		} else {
+			@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('order_id_seq')} );
+			$sql{'index'} = $$self{'id'};
+		} # end if
+		$sql{$fields{'created_on'}} = 'NOW()';
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
@@ -229,15 +229,6 @@ sub to_string {
 	my $self = shift;
 	return '';
 } # end sub
-
-sub created_on {
-	my $self = shift;
-	return $$self{'created_on'};
-} # end sub created_on
-sub created_by_id {
-	my $self = shift;
-	return $$self{'created_by_id'};
-} # end sub created_by_id
 
 # Approve is acknowledging the prices, etc and giving the go ahead. So this function updates all the prices, taxes, statuses, etc.
 sub approve {
@@ -320,12 +311,12 @@ sub approve {
 sub status {
 	my ( $self, $new_status ) = @_;
 	if ( defined $new_status and $$self{'status'} ne $new_status ) {
-		sql::update( $log, $dbh, 'Orders', "Index=$$self{'id'}", 'strStatus', $new_status );
+		sql::update( $log, $dbh, 'Orders', ['Index=?', $$self{'id'}], 'strStatus', $new_status );
 		$$self{'status'} = $new_status;
 		$self->add_log( "Changed Status to $new_status" );
 	} # end if
 	return $$self{'status'};
-} # end sub set_status
+} # end sub status
 
 # Adding Waiting For Pickup, Shipped, Picked Up
 sub update_status {
@@ -374,18 +365,16 @@ sub Company {
 	my $self = shift;
 	return new openprint::Company( $$self{'company_id'} );
 } # end sub company
-sub projects {
-	my $self = shift;
-	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
-} # end sub projects
+
 sub Projects {
 	my $self = shift;
+	return () if ! $$self{'id'};
 	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
 }
 
 sub Products {
 	my $self = shift;
-	return if ! $$self{'id'};
+	return () if ! $$self{'id'};
 	return openprint::OrderedProduct::find( 'order_id'=>$$self{id} );
 } # end sub Products
 
@@ -402,13 +391,14 @@ sub balance {
 sub sub_total {
 	my $self = shift;
 	my $subtotal = 0;
-	foreach my $P ($self->projects() ) {
+	foreach my $Project ($self->Projects() ) {
 		# This is really neat actually.	When the project is ordered, this gives the price stored in order_contents, but if the order isn't finalized, then it gives the price stored in the project...
-		if ( $P->currency_id() != $$self{'currency_id'} ) {
-			my $rate = $P->Currency()->conversions( $$self{'currency_id'} );
-			$subtotal += $rate * $P->ordered_price();
+		if ( $Project->currency_id() != $$self{'currency_id'} ) {
+$openprint::log->debug("sub_total: $$Project{'currency_id'} != $$self{'currency_id'}");
+			my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
+			$subtotal += ( $rate * $Project->ordered_price() );
 		} else {
-			$subtotal += $P->ordered_price();
+			$subtotal += $Project->ordered_price();
 		} # end if
 	} # end foreach
 	foreach my $P ($self->Products() ) {
@@ -450,16 +440,13 @@ sub pay {
 
 sub send_cancellation_notice {
 	my $self = shift;
-$log->debug("Sending cancellation notice");
 
 	my %order;
 	$order{'Order'} = $self;
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_cancellation_notice.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-$log->debug($email_template );
 	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%order ) );
-$log->debug($_);
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	my $Me = new openprint::User( $session{'user_id'} );

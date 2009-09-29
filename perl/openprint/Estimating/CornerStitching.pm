@@ -83,9 +83,8 @@ sub calc {
 		return 'uncalculated';
 	} # end if
 
-	# Figure out whether we need a cover
 	my $printing_service_index = $services{''}[0];
-    my $printing_specs = openprint::service::get_specs_ref( $project_index, $printing_service_index );
+    my $printing_specs = openprint::service::get_specs_ref( $Project, $printing_service_index );
 	if ( $$printing_specs{'txtTotalPageQuantity'} <= 0 ) {
 		$$specs{'alert'} .= 'Unknown # of pages<br/>';
 		$status = 'uncalculated';
@@ -100,9 +99,9 @@ sub calc {
 	foreach my $Equipment ( @all_equipment ) {
 
 		my $max_pages = $Equipment->specification('Maximum Pages', undef );
-		if ( $max_pages and $printing_specs{'txtTotalPageQuantity'} > $max_pages ) {
+		if ( $max_pages and $$printing_specs{'txtTotalPageQuantity'} > $max_pages ) {
 			$error .= "For " . $Equipment->name() . ": Only supports $max_pages pages.\n";
-		} elsif ( my $reason = $Equipment->fits( @printing_specs{'txtFinalWidth','txtFinalHeight'}, $$specs{'txtCalliper'} ) ) {
+		} elsif ( my $reason = $Equipment->fits( @$printing_specs{'txtFinalWidth','txtFinalHeight'}, $$specs{'txtCalliper'} ) ) {
 			$error .= "For " . $Equipment->name() . ":\n". $reason  . "\n";
 		} else {
 			push @possible_equipment, $Equipment
@@ -114,10 +113,9 @@ sub calc {
 		$$specs{'alert'} = "Our stitching equipment cannot run this project, for the following reasons:\n$error\n Please only print flat sheets and contact another bindery.";
 	} # end if
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %bestPrice;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		next if ! $$specs{"txtQuantity$qty_index"};
 
 		my $bestEquipment;
 
@@ -181,6 +179,9 @@ sub calc {
 	$log->debug("END CORNER STITCHING!!!!!!!");
 	return $status;
 } # end sub calc
+
+sub summary {
+} # end sub summary
 
 1;
 __END__

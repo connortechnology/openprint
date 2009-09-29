@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><?PageTitle?></title>
-		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
 		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
 		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
 		<link href="/css/main.css" rel="stylesheet" type="text/css"/>
@@ -15,53 +15,30 @@
 		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
-		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? if ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
-		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
+		<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
+		<? if ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
 		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
-		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
-		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
-		<? if ( $r->uri() =~ /\/main\/project\/prin/ ) ?>
-		<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
-		<? endif ( $r->uri() =~ /\/main\/project\/prin/ ) ?>
-		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
-		<? if ( $r->uri() =~ /\/content\/prin/ ) ?>
-		<link href="/css/estimating.css" rel="stylesheet" type="text/css"/>
-		<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
-		<? endif ( $r->uri() =~ /\/content\/prin/ ) ?>
+		<? endif ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
+		<? if ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
+			<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+			<? if ( $$variable{'uri'} =~ /\/main\/project\/prin/ ) ?>
+			<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+			<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+			<? endif ( $$variable{'uri'} =~ /\/main\/project\/prin/ ) ?>
+		<? endif ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
+		<? if ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
+			<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+			<link href="/css/estimating.css" rel="stylesheet" type="text/css"/>
+			<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+			<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+			<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.0"></script>
+		<? endif ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 		<script type="text/javascript" src="/javascripts/window.js"></script>
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
-
-<script type="text/javascript">
-<!--
-		var startList = function() {
-			if (document.all && document.getElementById) {
-				var navRoot = document.getElementById("menubar");
-				if ( navRoot ) {
-					for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-						var node = navRoot.childNodes[i];
-						if (node.nodeName=="LI") {
-							node.onmouseover=function() {
-								this.className+=' over';
-							}
-							node.onmouseout=function() {
-								this.className=this.className.replace(' over', '');
-							}
-						} // end if
-					} // end for
-				} // end if
-			}
-		}
-		window.onload=startList;
--->
-</script>
-
+		<script type="text/javascript"> Event.observe(window, 'load', setup_ie_menu ); </script>
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
@@ -77,7 +54,7 @@
 					<div style="float: left; width: 100%;">
 <? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 					<div id="CurrencySelection">
-						<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param ); ) ?>" method="post">
+						<form name="SelectCurrency" action="<? echo ( misc::get_url( $$variable{'uri'}, \%param ); ) ?>" method="post">
 							<p>
 								<label>Current company:</label>
 								<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
@@ -99,17 +76,17 @@
 <? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 					<img style="float: left; margin-left: 15px;" src="/images/main/header/us-ca.jpg" alt="Flags" width="139" height="48" border="1" usemap="#Map" class="unprintable"/>
 					<map name="Map" id="Flags">
-						<area shape="rect" coords="2,2,68,46" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'USD'} } ); ) ?>" alt="US" />
-						<area shape="rect" coords="72,3,137,47" href="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'CAD'} } ); ) ?>" alt="CA" />
+						<area shape="rect" coords="2,2,68,46" href="<? echo ( misc::get_url( $$variable{'uri'}, \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'USD'} } ); ) ?>" alt="US" />
+						<area shape="rect" coords="72,3,137,47" href="<? echo ( misc::get_url( $$variable{'uri'}, \%param, { 'exclude'=>['select_currency_id','ddmCompany','btnFunction','Currency'], 'include'=>{'Currency'=>'CAD'} } ); ) ?>" alt="CA" />
 					</map>
 <? if ( ! $session{'user_id'} ) ?>
-					<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
+					<form id="QuickLogin" name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/account/login.html">
 						<fieldset><legend>Quick Login</legend>
 						<p><label>Email:</label><input type="text" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/>
 								<? echo ( ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ) ) ?>
 						</p>
 						<p><label>Password:</label><input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/>
-							<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register Now' );) ?>
+							<? echo ( ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/account/registration.html', 'Register Now' );) ?>
 						</p>
 						</fieldset>
 						<input type="hidden" name="btnFunction" />
@@ -119,18 +96,18 @@
 					<br class="spacer"/>
 				</div><!--Header-->
 				<br class="spacer"/>
-				<!--#include virtual="/skins/Topknotch Quote/includes/customer_menu.html"-->
+				<? echo ( ssi::include( $config{'SkinPath'}.'/includes/customer_menu.html' ); ) ?>
 				<div id="MainBox">
-					<!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
+					<? echo ( ssi::include( $config{'SkinPath'}.'/includes/project_types.html' ); ) ?>
 					<div style="float: right; p\osition: relative; margin:0px; width: 100%; padding: 0px;">
-					<?PageContent?>
+					<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 					</div>
 				</div>
 				<span class="unprintable">
 					<br class="spacer"/>
 					<br/>
 				</span>
-				<!--#include virtual="/skins/<?SiteTitle?>/includes/footer.html"-->
+				<? echo ( ssi::include( $config{'SkinPath'}.'/includes/footer.html' ); ) ?>
 			</div><!--ContentInner-->
 		</div><!--Content-->
 	</body>

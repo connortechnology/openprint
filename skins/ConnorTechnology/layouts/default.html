@@ -5,7 +5,6 @@
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 		<link type="text/css" rel="stylesheet" href="/css/common.css"/>
 		<link type="text/css" rel="stylesheet" href="/css/handheld.css" media="handheld"/>
-		<link type="text/css" rel="stylesheet" href="/css/print.css" media="print"/>
 <? if ( $r->uri() =~ /\/administrator/ ) ?>
 		<link type="text/css" rel="stylesheet" href="/css/administrator.css"/>
 <? else ( $r->uri() =~ /\/administrator/ ) ?>
@@ -17,6 +16,7 @@
 		<? if ( $r->uri() =~ /\/invoice/ ) ?>
 		<link href="/css/invoice.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/invoice/ ) ?>
+		<link type="text/css" rel="stylesheet" href="/css/print.css" media="print"/>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
         <script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
@@ -29,25 +29,7 @@
 
 		<script type="text/javascript">
 <!--
-		var startList = function() {
-			if (document.all && document.getElementById) {
-				var navRoot = document.getElementById("menubar");
-				if ( navRoot ) {
-					for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-						var node = navRoot.childNodes[i];
-						if (node.nodeName=="LI") {
-							node.onmouseover=function() {
-								this.className+=' over';
-}
-							node.onmouseout=function() {
-this.className=this.className.replace(' over', '');
-}
-						} // end if
-					} // end for
-				} // end if
-			}
-		}
-		window.onload=startList;
+		window.onload=setup_ie_menu;
 -->
 		</script>
 	</head>
@@ -71,8 +53,6 @@ this.className=this.className.replace(' over', '');
 <? if ( $session{user_id} ) ?>
 				<li id="Accounts" class="off"><a href="#">Accounts</a>
 					<ul>
-						<li><a href="/administrator/managerial/company_profiles.html">Companies</a></li>
-						<li><a href="/administrator/managerial/user_profiles.html">Users</a></li>
 						<li><a href="/account/logout.html">Logout</a></li>
 					</ul>
 				</li>
@@ -86,8 +66,10 @@ this.className=this.className.replace(' over', '');
 						<li><a href="/employee/accounting/ledger.html">Ledger</a></li>
 					</ul>
 				</li>
-				<li id="Marketing" class="off"><a href="#">Marketing</a>
+				<li id="Marketing" class="off"><a href="#">Sales</a>
 					<ul>
+						<li><a href="/main/quote/information.html">Current Quote</a></li>
+						<li><a href="/main/quote/history.html">Quote History</a></li>
 						<li><a href="/employee/marketing/email_campaigns.html">Email Campaigns</a></li>
 						<li><a href="/employee/marketing/email_templates.html">Email Templates</a></li>
 						<li><a href="/employee/marketing/categories.html">Categories</a></li>
@@ -104,6 +86,8 @@ this.className=this.className.replace(' over', '');
 				</li>
 				<li id="Administrator" class="off"><a href="#">Administrator</a>
 					<ul>
+						<li><a href="/administrator/managerial/company_profiles.html">Companies</a></li>
+						<li><a href="/administrator/managerial/user_profiles.html">Users</a></li>
 						<li><a href="/administrator/managerial/configuration.html">Configuration</a></li>
 						<li><a href="/administrator/managerial/currency.html">Currencies</a></li>
 						<li><a href="/administrator/managerial/taxes.html">Taxes</a></li>

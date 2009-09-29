@@ -1,5 +1,5 @@
 <? eval ( 
-	if ( ( ! $$variable{'HoleDrilling'} ) and ( $$variable{'ProjectTypeName'} eq 'Calendars' ) ) {
+	if ( ( ! $$variable{'HoleDrilling'} ) and ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ) {
 		$$variable{'HoleDrilling'} = 'Y';
 	} # end if
  ) ?>

@@ -2,10 +2,10 @@
 <h1>ACCOUNT</h1>
 <h2>Credit Application</h2>
 </div>
-<? if ( $openprint::session{'company_id'} == 0 ) ?>
+<? if ( $session{'company_id'} == 0 ) ?>
 You must register for a login, and be logged in before you can apply for credit.<br>
 <!--#include virtual="/includes/customer_login.html"-->
-<? else ( $openprint::session{'company_id'} == 0 ) ?>
+<? else ( $session{'company_id'} == 0 ) ?>
 	<? if ( $openprint::param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
 Thank you. Your information has been received. Someone will contact you in the immediate future.
 	<? else ( $openprint::param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
@@ -14,11 +14,11 @@ Thank you. Your information has been received. Someone will contact you in the i
 <p class="error"><?error?></p>
 <? endif ( $$variable{'error'} ) ?>
 (<span class="requiredFieldIndicator">*</span> denotes required information )<br/><br/>
-<form name="f1" method="post" action="<?SecureSiteURL?>/main/account/credit_application.html">
+<form name="f1" method="post" action="<?SecureSiteURL?>/account/credit_application.html">
 	<div class="CreditApplication">
-   <!--#include virtual="/main/account/_business_information.html"-->
-	<!--#include virtual="/main/account/_bank_information.html"-->
-   <!--#include virtual="/main/account/_trade_references.html"-->
+   <!--#include virtual="/account/_business_information.html"-->
+	<!--#include virtual="/account/_bank_information.html"-->
+   <!--#include virtual="/account/_trade_references.html"-->
       <fieldset>
          <legend>Application</legend>
          I/We do hereby authorize <? echo ( $openprint::config{SiteTitle} ) ?> to verify all or part of the above listed confidential disclosures, and to verify the credit status of existing lines of credit as listed on this application. Further, I/We agree to pay according to terms printed on any invoices for any purchase(s) including discounts, net price and late charges.<br/>
@@ -68,4 +68,4 @@ Thank you. Your information has been received. Someone will contact you in the i
 	<input type="hidden" name="btnFunction" value="Apply"/>
 </form>
 	<? endif ( $openprint::param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
-<? endif ( $openprint::session{'company_id'} == 0 ) ?>
+<? endif ( $session{'company_id'} == 0 ) ?>

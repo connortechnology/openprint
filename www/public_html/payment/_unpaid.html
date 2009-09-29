@@ -1,32 +1,31 @@
-
-		<fieldset><legend>Unpaid Invoices</legend>
-			<table class="List sortable">
-				<tr>
-					<th>Invoice</th>
-					<th class="Price">Total</th>
-					<th class="Price">Remaining</th>
-					<th width="10">&nbsp;</th>
-				</tr>
-				<? echo (
-					my $html = '';
-					$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
-					my @Invoices;
-					foreach my $I ( openprint::Invoice::find(
-						'invoicer_id'=>$openprint::session{'company_id'},
-						'invoicee_id'=>$$variable{'Payment'}->payor_id(),
-						'order'=>'id',
-					) ) {
-						push @Invoices, $I if $I->owing();
-					} # end foreach $I
-					foreach my $I ( @Invoices ) {
-						$html .= '<tr>';
-						$html .= sprintf('<td><a href="/invoice/edit.html?invoice_id=%1$d">%1$d</a></td>', $I->id() );
-						$html .= sprintf('<td class="Price">%1$s%2$.2f</td>', $$variable{'Currency'}->symbol(), $I->total() );
-						$html .= sprintf('<td class="Price">%1$s%2$.2f</td>', $$variable{'Currency'}->symbol(), $I->owing() );
-						$html .= sprintf('<td>%s</td>', ssi::writeButton( $log, $dbh, 'add'.$I->id(), '', 'pay_invoice('.$I->id().');', '', '+' ) );
-						$html .= '</tr>';
-					} # end foreach $I
-					return $html;
-				) ?>
-			</table>
-		</fieldset>
+<fieldset><legend>Unpaid Invoices</legend>
+	<table class="List sortable">
+		<tr>
+			<th>Invoice</th>
+			<th class="Price">Total</th>
+			<th class="Price">Remaining</th>
+			<th width="10">&nbsp;</th>
+		</tr>
+		<? echo (
+			my $html = '';
+			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+			my @Invoices;
+			foreach my $I ( openprint::Invoice::find(
+				'invoicer_id'=>$openprint::session{'company_id'},
+				'invoicee_id'=>$$variable{'Payment'}->payor_id(),
+				'order'=>'id',
+			) ) {
+				push @Invoices, $I if $I->owing() > 0;
+			} # end foreach $I
+			foreach my $I ( @Invoices ) {
+				$html .= '<tr>';
+				$html .= sprintf('<td><a href="/invoice/edit.html?invoice_id=%1$d">%1$d</a></td>', $I->id() );
+				$html .= sprintf('<td class="Price">%1$s%2$.2f</td>', $$variable{'Currency'}->symbol(), $I->total() );
+				$html .= sprintf('<td class="Price">%1$s%2$.2f</td>', $$variable{'Currency'}->symbol(), $I->owing() );
+				$html .= sprintf('<td>%s</td>', ssi::writeButton( $log, $dbh, 'add'.$I->id(), '', 'pay_invoice('.$I->id().');', '', '+' ) );
+				$html .= '</tr>';
+			} # end foreach $I
+			return $html;
+		) ?>
+	</table>
+</fieldset>

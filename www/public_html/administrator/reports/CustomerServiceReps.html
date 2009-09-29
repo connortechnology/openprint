@@ -35,7 +35,7 @@
 				<select name="ddmEmployees" size="1">
 					<option value="">All Employees</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ] , $openprint::param{'ddmEmployees'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)','web_active'=>1) ] , $param{'ddmEmployees'} );
 ) ?>
 				</select>
 			</p>
@@ -44,7 +44,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 				<select name="ddmEstimator" size="1">
 					<option value="">All Estimators</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)','web_active'=>1) ] , $openprint::param{'ddmEmployees'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)','web_active'=>1) ] , $param{'ddmEmployees'} );
 ) ?>
 				</select>
 			</p>

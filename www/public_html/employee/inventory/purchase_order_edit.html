@@ -4,9 +4,20 @@ function load_content_type( index, type ) {
 	$('content-'+index).innerHTML = '';
 	new Ajax.Updater('content-'+index, '_po_content_'+type+'.html', { method: 'get', parameters: { content_id: index } } );
 } // end function load_content_type
-function set_sheet_description(index) {
-	$('description-'+index).value = $('mweight-'+index).value +'M ' + $('name-'+index).value;
+
+function set_description(index) {
+	var desc = $('description-'+index);
+	desc.value = '';
+	if ( $('mweight-'+index) ) { 
+		desc.value += $('mweight-'+index).value +'M ';
+	} // end if
+	var type = $('stocktype-'+index);
+	if ( type && type.options[type.selectedIndex].value ) {
+		desc.value += type.options[type.selectedIndex].value + ' ';
+	} // end if
+	desc.value += $('name-'+index).value;
 }
+
 function calc_price( element ) {
 	var re = /(.*)-(.*)/
 	var matches = re.exec( element.name );
@@ -156,6 +167,7 @@ function getSelectionId(input, li) {
 					) ?></span></label><input type="text" name="vendor_postalcode" id="vendor_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_postalcode() ) ?>" /></p>
 			<p><label for="vendor_phone">Phone:</label><input type="text" name="vendor_phone" id="vendor_phone" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_phone() ) ?>" /></p>
 			<p><label for="vendor_fax">Fax:</label><input type="text" name="vendor_fax" id="vendor_fax" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_fax() ) ?>" /></p>
+			<p><label for="vendor_sms">SMS:</label><input type="text" name="vendor_sms" id="vendor_sms" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_sms() ) ?>" /></p>
 			<p><label for="vendor_email">Email:</label><input type="text" name="vendor_email" id="vendor_email" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_email() ) ?>" /></p>
 			</fieldset>
 		</div>
@@ -198,6 +210,7 @@ function getSelectionId(input, li) {
 				</label><input type="text" name="shipto_postalcode" id="shipto_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_postalcode() ) ?>" /></p>
 			<p><label for="shipto_phone">Phone:</label><input type="text" name="shipto_phone" id="shipto_phone" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_phone() ) ?>" /></p>
 			<p><label for="shipto_fax">Fax:</label><input type="text" name="shipto_fax" id="shipto_fax" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_fax() ) ?>" /></p>
+			<p><label for="shipto_sms">SMS:</label><input type="text" name="shipto_sms" id="shipto_sms" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_sms() ) ?>" /></p>
 			<p><label for="shipto_email">Email:</label><input type="text" name="shipto_email" id="shipto_email" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_email() ) ?>" /></p>
 			<p><label>Also Notify:</label>
 				<span id="notification_div"><!--#include virtual="_po_notifications.html"--></span>

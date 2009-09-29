@@ -1,6 +1,7 @@
 #!/usr/bin/perl 
 
 BEGIN {
+	use utf8;
 	use threads;
 	use threads::shared;
 	#use Apache2 ();
@@ -20,10 +21,14 @@ BEGIN {
 	use HTML::Entities;
 #
 	use MIME::QuotedPrint;
+	use MIME::Base64;
 	use Mail::Sendmail;
 	use Text::CSV_XS;
 	use	Authen::Captcha;
 	use GD::Barcode;
+	use Encode;
+	use JSON;
+	use JSON::XS;
 
 	#use Carp ();
 

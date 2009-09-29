@@ -1,6 +1,8 @@
-<html>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
-		<title><? echo ( $openprint::config{'SiteTitle'} ) ?> - Quote</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<title><? echo ( $config{'SiteTitle'} ) ?> - Quote</title>
 		<style type="text/css">
 		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/email.css' ); ) ?>
 		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?>
@@ -38,7 +40,7 @@
 my $html;
 my $Project = new openprint::Project( $$variable{'project_index'} );
 $html .= ssi::htmlize($Project->reference()) . ':<br/>' if $Project->reference();
-$html .= $Project->summary() if $openprint::config{'ShowProjectSummaryOnQuote'} ne 'N';
+$html .= $Project->summary() if $config{'ShowProjectSummaryOnQuote'} ne 'N';
 return $html;
  ) ?></td>
 				<td colspan="3">

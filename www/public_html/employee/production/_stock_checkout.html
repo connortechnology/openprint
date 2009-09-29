@@ -1,4 +1,4 @@
-<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form id="checkout_form" name="checkout_form">
 	<input type="hidden" name="docket" value="<? echo ( $$variable{'Project'}->docket() ) ?>" />
 	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Project'}->id() ) ?>" />
@@ -8,9 +8,9 @@
 			<tr><th align="left">Skid</th><th align="left">RFID Tag</th><th align="left">Quantity</th></tr>
 			<tr>
 				<td>
-					<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
+					<input type="text" id="skid_id" name="skid_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '_check_for_skid.json', {parameters: {skid_id: this.value}, evalScripts: true } );}" />
 				</td><td>
-					<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" />
+					<input type="text" id="rfidtag_id" name="rfidtag_id" size="20" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){new Ajax.Updater( 'List', '_update_inventory.html', {method: 'get', parameters: $('f1').serialize(), evalScripts: true} );}" onkeyup="if(this.value){new Ajax.Request( '_check_for_skid.json', {parameters: {rfidtag_id: this.value}, evalScripts: true } );}" />
 				</td><td>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', q`new Ajax.Updater('StockCheckout','_stock_checkout.html', { method: 'get', parameters: checkout_form.serialize() } );`,'','Submit' ); ) ?>
 				</td>
@@ -18,15 +18,17 @@
 			<? echo ( 
 				my $html = '';
 				my $rowclass = '';
-				foreach my $PI ( openprint::PaperInventory::find('docket'=>$$variable{'Project'}->docket() ) ) {
-					$html .= sprintf('<tr%5$s><td>%1$d</td><td>%2$s</td><td>%3$d%4$s</td></tr>', $PI->skid_id(), $PI->Skid()->rfidtag_id(), -1*$PI->delta(), ($PI->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets'), $rowclass );
-					$html .= '<tr><td colspan="3">';
-					foreach my $C ( $PI->Skid()->Contents() ) {
-						$html .= $C->Paper()->to_string().'<br/>';
-					} # end foreach
-					$html .= '</td></tr>';
-					$rowclass = $rowclass ? '' : ' class="colRow"';
-				} # end foreach PI
+				if ( $$variable{'Project'}->docket() ) {
+					foreach my $PI ( openprint::PaperInventory::find('docket'=>$$variable{'Project'}->docket() ) ) {
+						$html .= sprintf('<tr%5$s><td>%1$d</td><td>%2$s</td><td>%3$d%4$s</td></tr>', $PI->skid_id(), $PI->Skid()->rfidtag_id(), -1*$PI->delta(), ($PI->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets'), $rowclass );
+						$html .= '<tr><td colspan="3">';
+						foreach my $C ( $PI->Skid()->Contents() ) {
+							$html .= $C->Paper()->to_string().'<br/>';
+						} # end foreach
+						$html .= '</td></tr>';
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end foreach PI
+				} # end if
 				return $html;
 			) ?>
 		</table>

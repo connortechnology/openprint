@@ -4,19 +4,27 @@ package openprint::OrderedProduct;
 use strict;
 require openprint::Product;
 require openprint::Project;
+require openprint::Order;
 
-my @fields = (
-	'id',
-	'order_id',
-	'product_id',
-	'project_id',
-	'quantity',
-	'price',
-	'shipping_type',
-	'requested_for',
-	'gst',
-	'hst',
-	'pst',
+use vars qw( $serial $table $log $dbh %fields %transforms %defaults );
+
+my $debug = 1;
+
+$serial = 'ordered_products_id_seq';
+$table = 'ordered_products';
+
+%fields = (
+	'id' => 'id',
+	'order_id' => 'order_id',
+	'product_id' => 'product_id',
+	'project_id'	=> 'project_id',
+	'quantity'		=> 'quantity',
+	'price'			=> 'price',
+	'shipping_type'	=> 'shipping_type',
+	'requested_for'	=> 'requested_for',
+	'gst'			=> 'gst',
+	'hst'			=> 'hst',
+	'pst'			=> 'pst',
 );
 
 sub find {
@@ -37,19 +45,23 @@ sub find {
 			$sql .= ' AND order_id IS NULL';
 		} # end if
 	} # end if
-	if ( $params{product_id} ) {
+	if ( $params{'product_id'} ) {
 		$sql .= ' AND product_id=?';
-		push @values, $params{product_id};
+		push @values, $params{'product_id'};
+	} # end if
+	if ( $params{'project_id'} ) {
+		$sql .= ' AND project_id=?';
+		push @values, $params{'project_id'};
 	} # end if
 	
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$openprint::log->debug('Error (' . $openprint::dbh->errstr . ") Loading Ordered Products: $sql @values");
 		return;
-	} else {
+	} elsif ( $debug ) {
 		$openprint::log->debug("Loading Ordered Products: $sql @values #results:" . @$data);
-		return map { new openprint::OrderedProduct( $_->{id}, $_ ) } @$data;
 	} # end if
+	return map { new openprint::OrderedProduct( $_->{id}, $_ ) } @$data;
 	
 } # end sub find
 
@@ -71,34 +83,10 @@ sub load {
 	@$self{keys %$data} = @$data{keys %$data};
 } # end sub load
 
-sub save {
-	my $self = shift;
-
-$openprint::log->debug("Saving!");
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('ordered_product_id_seq')});
-		if ( my $e = sql::insert( undef, undef, 'Ordered_Products', map { $_, $$self{$_} } @fields ) ) {
-			$openprint::dbh->rollback();
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $e;
-		} # end if
-    } else {
-        if ( my $e = sql::update( undef, undef, 'Ordered_Products', ['id=?', $$self{'id'}], map { $_, $$self{$_} } @fields ) ) {
-			$openprint::dbh->rollback();
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $e;
-		} # end if
-    } # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
-
 sub copy {
 	my ( $self ) = @_;
 	my $New = new openprint::OrderedProduct();
-	@$New{@fields} = @$self{@fields};
+	@$New{ keys %fields} = @$self{keys %fields};
 	delete $$New{'id'};
 	delete $$New{'project_id'};
 	return $New;
@@ -112,14 +100,19 @@ sub Project {
 $openprint::log->debug("Creating proejct from template: " . $self->Product()->project_id() );
 	my $Project = new openprint::Project( $self->Product()->project_id() )->copy();
 	$Project->reference( $self->Product()->name() );
+	$Project->user_id( $openprint::session{'user_id'} );
 	$Project->company_id( $openprint::session{'company_id'} );
+	$Project->currency_id( $self->Order()->currency_id() );
 	$Project->save();
 	$$self{'project_id'} = $Project->id();
-$openprint::log->debug("Save?");
 	my $e = $self->save();
 	$openprint::log->error( $e ) if $e;
 	return $Project;
 } # end sub Project
+
+sub Order {
+	return new openprint::Order( $_[0]{'order_id'} );
+} # end sub Order
 
 sub Product {
 	my $self = shift;

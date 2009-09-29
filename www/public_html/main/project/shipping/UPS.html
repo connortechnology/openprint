@@ -1,15 +1,18 @@
 <script type="text/javascript" src="/javascripts/service.js"></script>
 <script type="text/javascript">
-function calc( formName ) {
-	if ( gettingNewPrice ) {
+function calc( formName, force ) {
+	if ( gettingNewPrice && ! force ) {
 		setTimeout( "calc('" + formName + "');", 1000 );
 	} else {
 		remove_div('AlertDiv');
 		gettingNewPrice = true;
 		var form = getFormObj( formName );
-		jsrsExecute( '/jsrs.htm', cbFillUPSResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+		var h = form.serialize(true);
+		h.callback = 'cbFillUPSResults';
+		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 	} // end if
 } // end calc()
+
 function cbFillUPSResults( results ) {
 	cbFillResults( results );
 	var form = getFormObj( 'f1' );
@@ -18,7 +21,7 @@ function cbFillUPSResults( results ) {
 	} // end if
 }
 function validate_data(formName) {
-	var form = getFormObj( formName );
+	//var form = getFormObj( formName );
 	var text = '';
 	return true;
 } // end function
@@ -32,7 +35,6 @@ function validate_data(formName) {
 ) ?>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend>UPS Shipping Services</legend>
 			<? if ( $$variable{'Mode'} eq 'Simple' ) ?>
 			<p> 
@@ -87,12 +89,12 @@ function validate_data(formName) {
 			</p>
 			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
 			<p>
-				<label><b>Price:</b></label>
+				<label><b>Price: ($)</b></label>
 				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 				<span class="<?Columns?>Columns">
-				$ <input type="text" name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
+				<input type="text" name="txtPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
 				</span>
 				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>

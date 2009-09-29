@@ -63,7 +63,7 @@ table.List tr td.Range input, table.List tr td.Range input[type="text"] {
 }
 .Price {
 	width: 90px;
-	text-align: center;
+	text-align: right;
 }
 .Discount {
 	width: 95px;

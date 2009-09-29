@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf8">
+		<meta name="mobileoptimized" content="240">
+
+		<title><?PageTitle?></title>	
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js"></script>
+		<script type="text/javascript" src="/javascripts/barcode.js"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
+		<link href="/css/handheld-main.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
+		<link rel="shortcut icon" href="/images/favicon.ico"/>
+	</head>
+	<body>
+			<? echo (
+				my @options = ('<a href="/handheld/index.html">HOME</a>');
+				push @options, '<a href="/handheld/paper_inventory/index.html">Inventory</a>';
+				return join('&raquo;',@options);
+			) ?>
+			<?PageContent?>
+	</body>
+</html>

@@ -51,6 +51,8 @@ sub handler {
 
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
+	$r->content_type(q{text/html; charset=utf-8});
+
 
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);
@@ -80,30 +82,40 @@ sub handler {
 			'password'	=> $r->dir_config('db_password'),
 			);
 
-	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-	configuration::init_cache( $log, $dbh, $r->dir_config() );
-	openprint::session_init();
-
-	foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
-		eval sprintf('openprint::%s::init_cache();', $o );
-		$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
-	} # end foreach
-
 	my $lastpage = '';
 	my $page = $r->uri();
-$openprint::log->debug("Page: $page");
-	while ( $page and $lastpage ne $page ) {
-		# This is for loop detection
-		$lastpage = $page;
-$variable{'uri'} = $page;
-		parse_page( $page );
-		if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
-			$page = $variable{'Redirect'};
-			$variable{'Redirect'} = '';
-		} # end if
-	} # end while
 
-	if ( exists $variable{'Download'} and $variable{'Download'} ) {
+
+		# This one has to go here, because it loads data, the others clear data, so they can go after the requires
+		configuration::init_cache( $log, $dbh, $r->dir_config() );
+	if ( $dbh ) {
+		openprint::session_init();
+
+		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
+			eval sprintf('openprint::%s::init_cache();', $o );
+			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
+		} # end foreach
+
+	$openprint::log->debug("Page: $page");
+		while ( $page and $lastpage ne $page ) {
+			# This is for loop detection
+			$lastpage = $page;
+	$variable{'uri'} = $page;
+			parse_page( $page );
+			if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
+				$page = $variable{'Redirect'};
+				$variable{'Redirect'} = '';
+			} # end if
+		} # end while
+
+	} # end if
+
+	if ( $variable{'ExternalRedirect'} ) {
+		$r->headers_out->set(Location=>$variable{'ExternalRedirect'});
+		$r->status(Apache2::Const::REDIRECT);
+		#$r->send_http_header;
+$log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
+	} elsif ( exists $variable{'Download'} and $variable{'Download'} ) {
 		foreach ( @{$variable{'File_Data'}} ) {
 			$r->print( $_ );
 		} # end foreach
@@ -162,9 +174,11 @@ $variable{'uri'} = $page;
 		} # end foreach
 	} # end if
 
-	$session{'lastupdated'} = time;
-	untie %session;
-	$dbh->disconnect();
+	if ( $dbh ) {
+		$session{'lastupdated'} = time;
+		untie %session;
+		$dbh->disconnect();
+	} # end if
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();
@@ -215,7 +229,7 @@ $log->debug("User Type: $session{'user_type'}");
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				if ( sql::execute( $log, $dbh, 'SELECT type FROM Users WHERE type=?', 'A' ) ) {
 					$variable{'Redirect'} = '/administrator/error/login.html';
-					$variable{'Destination'} = misc::get_destination( $r, $log );
+					$variable{'Destination'} = misc::get_destination( $r, $r->uri() );
 					return $status;
 				} # end if
 			} # end if
@@ -236,7 +250,6 @@ $log->debug("User Type: $session{'user_type'}");
 			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
 
 		} elsif ( $first ) {
-$log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
 			$eval .= '_'.$second if $second;
 			eval	'require '.$eval;
@@ -245,7 +258,6 @@ $log->debug("1 $first _ $second $filename");
 			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
 			eval $eval;
 			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
-$log->debug('2');
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
@@ -261,7 +273,7 @@ $log->debug('2');
 		if ( ! sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) )	) {
 				$variable{'Redirect'} = '/employee/error/login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
@@ -298,15 +310,46 @@ $log->debug('2');
 						} # end while
 						$duedatedays -= 1;
 					} # end while
-					@variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = ( $year, $month, $day );
+					@variable{'duedate_year','duedate_month','duedate_day'} = ( $year, $month, $day );
 				} else {
-					@variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = split('-', $variable{'ddmDueDate'});
+					@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{'ddmDueDate'});
 				} # end if
 
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
 				if ( $filename eq '_production_feedback.html' ) {
 					openprint::employee_project::_production_feedback( );
+				} elsif ( $filename eq 'prin_multi.html' ) {
+					if ( $param{'action'} eq 'SendPPF' ) {
+						my $Project = new openprint::Project( $param{'ProjectIndex'} );
+						require openprint::CIP3_PPF;
+						my $PPF = new openprint::CIP3_PPF( $param{'ppf_id'} );
+
+						my $Equipment;
+						foreach my $sig_id ( $Project->signatures() ) {
+							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+							if ( $$sig_specs{'SignatureIndex'} == $$PPF{'signature'} ) {
+$log->debug("Found sig");
+								my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+								if ( @Equipment ) {
+									$Equipment = $Equipment[0];
+									last;
+								} 	
+							} # end if
+						} # end foreach
+						if ( ! $Equipment ) {
+							$log->debug("Looking it up from Schedule");
+							my @rows = openprint::press_schedule::find('project_id'=>$param{'ProjectIndex'},'service_id'=>$param{'ServiceIndex'});
+							if ( @rows == 1 ) {
+								$Equipment = new openprint::Equipment( $rows[0]{'equipment_id'} );
+							} 
+						} # end if
+						if ( ! $Equipment ) {
+$log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'signature'}.");
+						} else {
+						$PPF->send_ppf( $Equipment );
+						} # end if
+					} # end if
 				} # end if
 			} # end if
 		} elsif ( ( $second eq 'accounting' ) and ($session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
@@ -330,9 +373,31 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			# if not logged in, determine if they are allowed to see this page or not.
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
+		} # end if
+		eval( 'require openprint::'.join('_', @path ) );
+		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+	} elsif ( $first eq 'account' ) {
+		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+$log->debug("Account ($status) ($variable{'Redirect'})");
+		return $status if $variable{'Redirect'};	
+
+		if ( ! $session{'user_id'} ) {
+			# if not logged in, determine if they are allowed to see this page or not.
+$log->debug("Not logged in");
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+$log->debug("redirecting");
+				$variable{'Redirect'} = '/error/error_login.html';
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
+				return Apache2::Const::OK;
+			} # end if
+		} else {
+$log->debug("logged in");
 		} # end if
 		eval( 'require openprint::'.join('_', @path ) );
 		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
@@ -347,8 +412,7 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 			# if not logged in, determine if they are allowed to see this page or not.
 			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
-				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
-$log->debug("Dset: $variable{'Destination'}");
+				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;
 			} # end if
 		} # end if
@@ -357,13 +421,13 @@ $log->debug("Dset: $variable{'Destination'}");
 			require openprint::order;
 			openprint::order::quantity_select_display( $r, $log, $dbh, $session{_session_id}, \%variable )		if $filename eq 'selection.html';
 			openprint::order::information( $r, $log, $dbh, $session{_session_id}, \%variable )					if $filename eq 'information.html';
-			openprint::order::verify_order( $r, $log, $dbh, $session{_session_id}, \%variable )				if $filename eq 'submit.html';
+			openprint::order::submit( $r, $log, $dbh, $session{_session_id}, \%variable )				if $filename eq 'submit.html';
 			openprint::order::finalise_order( $r, $log, $dbh, $session{_session_id}, \%variable )				if $filename eq 'confirmation_make_order.html';
 			openprint::order::history( $r, $log, $dbh, \%variable )								if $filename eq 'history.html';
 			openprint::order::history_details( $r, $log, $dbh, \%variable )						if $filename eq 'history_details.html';
 		
 		} elsif ( $second eq 'project' ) {
-			if ( defined $third ) {
+			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
 				if ( ! $variable{'ServiceIndex'} ) {
 					$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
 				} # end if
@@ -488,11 +552,11 @@ $openprint::log->debug("$1");
 		} else {
 			my $module = 'openprint::' . join('_', ($first, $second )	);
 			eval( "require $module;" );
-			$log->warn( "Eval error of require, Reason: " . $@ );	# if $@;
+			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
 			if ( $proc ) {
 			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
+			$log->warn( "Eval error of ($proc), Reason: " . $@ )  if $@;
 			} # end if
 		} # end if main:$second
 

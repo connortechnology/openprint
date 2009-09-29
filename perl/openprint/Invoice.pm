@@ -57,6 +57,7 @@ require sql;
 	'deleted'		=> 0,
 	'posted'		=> 0,
 	'interest'		=> undef,
+	'monthly_interest'		=> undef,
 	'paid'			=> undef,
 	'statetax'		=> undef,
 	'federaltax'	=> undef,
@@ -167,16 +168,6 @@ sub load {
 	@$self{keys %$data} = @$data{keys %$data};
 } # end sub load
 
-sub delete {
-	my $self = shift;
-	return sql::update( undef, undef, 'Invoices', ['id=?', $$self{'id'} ], 'deleted', 1 );
-} # end sub delete
-
-sub destroy {
-	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM Invoices WHERE id=?}, $$self{'id'} );
-} # end sub destroy
-
 sub save {
 	my ( $self, $param ) = @_;
 	
@@ -186,7 +177,7 @@ sub save {
 	$$self{'federaltax'} = $self->federaltax();
 	$$self{'statetax'} = $self->statetax();
 	
-	$self->set( $param ) if $param;
+	$self->set( $param );
 
 	my %sql;
 	foreach my $k ( keys %fields ) {
@@ -214,14 +205,6 @@ sub save {
 	return '';
 } # end sub save
 
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Invoice();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
-
 sub Currency {
 	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
@@ -235,11 +218,12 @@ sub is_paid {
 	if ( ! $$self{'posted'} ) {
 		return 0;
 	} # end if
-	return ( $self->total() - $self->paid() > 0 ) ? 0 : 1;
+	return $self->owing() > 0 ? 0 : 1;
 } # end sub is_paid
 
 sub owing {
-	return $_[0]->total() + $_[0]->interest() - $_[0]->paid();
+$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
+	return sprintf('%.2f', $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
 } # end sub owing
 
 sub Invoicee {
@@ -258,8 +242,9 @@ sub subtotal {
 		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack::find('invoice_id'=>$$self{id});
 		map { $$self{'subtotal'} += $_->total() } openprint::Invoiced_Product::find('invoice_id'=>$$self{id});
 	} # end if
-	return $$self{'subtotal'};
+	return sprintf('%.2f', $$self{'subtotal'} );
 } # end sub subtotal
+
 sub total {
 	my ( $self ) = @_;
 
@@ -268,7 +253,8 @@ sub total {
 		$$self{'total'} += $self->federaltax();
 		$$self{'total'} += $self->statetax();
 	} # end if
-	return $$self{'total'};
+$log->debug("Invoice_total: sub: " . $self->subtotal() . ' fed: ' . $self->federaltax() . ' prov: ' . $self->statetax() );
+	return sprintf('%.2f', $$self{'total'} );
 } # end sub total
 
 sub interest {
@@ -305,7 +291,7 @@ sub federaltax {
 		} # end if
 			return $self->subtotal() * ( $self->federaltaxrate()/100 );
 	} # end if
-	return $$self{'federaltax'};
+	return sprintf('%.2f', $$self{'federaltax'} );
 } # end sub federaltax
 sub statetax {
 	my ( $self ) = @_;
@@ -319,7 +305,7 @@ sub statetax {
 		} # end if
 		return $self->subtotal() * ($self->statetaxrate()/100 );
 	} # end if
-	return $$self{'statetax'};
+	return sprintf('%.2f', $$self{'statetax'} );
 } # end sub statetax
 
 sub add_Payment {
@@ -395,7 +381,7 @@ sub send {
 } # end sub send
 
 sub Products {
-	return openprint::Invoiced_Product::find('invoice_id'=>$_[0]{'id'});
+	return openprint::Invoiced_Product::find('invoice_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Products
 
 sub Interests {

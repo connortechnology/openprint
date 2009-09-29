@@ -36,7 +36,7 @@ sub handler {
 		$code = "*$code*";
 		$barcode = GD::Barcode->new($codetype, $code );
 		if ( ! $barcode ) {
-			$r->log->debug("Error generating barcode: " . $GD::Barcode::errStr );
+			$r->log->error("Error generating barcode for $code: " . $GD::Barcode::errStr );
 			return Apache2::Const::OK;
 		} # end if
 		$blob = $barcode->plot(NoText=>$no_text, Height => $height )->png;

@@ -1,8 +1,5 @@
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
-	<? if ( $$variable{'error'} ) ?>
-	<div class="error"><?error?></div>
-	<? endif ( $$variable{'error'} ) ?>
-
 	<fieldset class="filters"><legend>Search Information</legend>
 		<p>
 			<label>Equipment ID:</label>
@@ -82,7 +79,14 @@
 			<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->useinscheduling(); ) ?> />
 			<label class="radio" for="useinschedulingfalse">No</label>
 		</p>
-<? if ( $openprint::config{'JMFEnabled'} eq 'Y' ) ?>
+		<p>
+			<label>Smart Scheduling:</label>
+			<input type="radio" id="smartscheduling1" name="smartscheduling" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->smartscheduling() ); ) ?> />
+			<label class="radio" for="useinscheduling1">Yes</label>
+			<input type="radio" id="smartscheduling0" name="smartscheduling" value="0"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->smartscheduling() ); ) ?> />
+			<label class="radio" for="smartscheduling0">No</label>
+		</p>
+<? if ( $config{'JMFEnabled'} eq 'Y' ) ?>
 		<p>
 			<label>Use JMF:</label>
 			<input type="radio" id="jmf_enabledtrue" name="jmf_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->jmf_enabled(); ) ?> />
@@ -90,8 +94,8 @@
 			<input type="radio" id="jmf_enabledfalse" name="jmf_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->jmf_enabled(); ) ?> />
 			<label class="radio" for="jmf_enabledfalse">No</label>
 		</p>
-<? endif ( $openprint::config{'JMFEnabled'} eq 'Y' ) ?>
-<? if ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
+<? endif ( $config{'JMFEnabled'} eq 'Y' ) ?>
+<? if ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
 		<p>
 			<label>Use InstantGate:</label>
 			<input type="radio" id="instantgate_enabledtrue" name="instantgate_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').show();" />
@@ -99,7 +103,7 @@
 			<input type="radio" id="instantgate_enabledfalse" name="instantgate_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').hide();" />
 			<label class="radio" for="instantgate_enabledfalse">No</label>
 		</p>
-<? endif ( $openprint::config{'InstantGateEnabled'} eq 'Y' ) ?>
+<? endif ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
 <? if ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
 		<p id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{'Equipment'}->instantgate_enabled() ) ?>>
 			<label>Cost Center:</label>
@@ -120,6 +124,36 @@
 				<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $$variable{'Equipment'}->location_id() ); ) ?>
 			</select>
+		</p>
+		<p>
+			<label>CIP3 Integration:</label>
+			<input type="radio" id="cip3_monitor1" name="cip3_monitor" value="1"  <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').show();" />
+			<label class="radio" for="cip3_monitor1">Yes</label>
+			<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').hide();" />
+			<label class="radio" for="cip3_monitor0">No</label>
+		</p>
+		<div id="CIP3" <? echo ( $$variable{'Equipment'}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>	
+		<p>
+			<label>Input Hotfolder:</label>
+			<input type="text" name="cip3_in" value="<? hecho ( $$variable{'Equipment'}->cip3_in(); ) ?>" />
+		</p>
+		<p>
+			<label>Output Hotfolder:</label>
+			<input type="text" name="cip3_out" value="<? hecho ( $$variable{'Equipment'}->cip3_out(); ) ?>" />
+		</p>
+		<p>
+			<label>Hold PPFs?:</label>
+			<input type="radio" id="cip3_hold1" name="cip3_hold" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_hold() ); ) ?> />
+			<label class="radio" for="cip3_hold1">Yes</label>
+			<input type="radio" id="cip3_hold0" name="cip3_hold" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_hold() ); ) ?> />
+			<label class="radio" for="cip3_hold0">No</label>
+		</p>
+		<p>
+			<label>Merge PPFs?:</label>
+			<input type="radio" id="cip3_merge1" name="cip3_merge" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_merge() ); ) ?> />
+			<label class="radio" for="cip3_merge1">Yes</label>
+			<input type="radio" id="cip3_merge0" name="cip3_merge" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_merge() ); ) ?> />
+			<label class="radio" for="cip3_merge0">No</label>
 		</p>
 		</div>
 	</fieldset>

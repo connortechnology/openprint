@@ -1,0 +1,29 @@
+<? echo (
+	my $html = '';
+	my $stock_id = join( '-', @$variable{'ss_id', 'stock_index'} );
+	my $stock_string = $$variable{'Stock'}->to_string();
+
+	$html .= '<p><label>'.$stock_string.'</label>';
+	$html .= sprintf('<input type="hidden" id="id-%1$d-%2$d" name="id-%1$d-%2$d" value="%3$s" />', @$variable{'ss_id', 'stock_index','paper_id'} );;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html.= '<span class="'.$$variable{'Columns'}.'Columns">';
+
+		$html .= sprintf(q`<input size="6" type="text" id="qty-%1$s-%2$d" name="qty-%1$s-%2$d" value="%3$s" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />lbs `, $stock_id, $qty_index, $$variable{"qty-$stock_id-$qty_index"} );
+		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
+			$html .= sprintf(q`<input size="6" type="text" id="sheets-%1$s-%2$d" name="sheets-%1$s-%2$d" value="%3$s" onkeyup="calc(this.value=this.value.replace(/\D/g,'');this.form.name);" />`, $stock_id, $qty_index, $$variable{"qty-$stock_id-$qty_index"} );
+
+		} # end if
+		$html .= ssi::write_override( "overrideqty-$stock_id-$qty_index", $$variable{"overrideqty-$stock_id-$qty_index"}, '', "calc('f1')" );
+		$html .= $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets';
+
+		$html .= sprintf(q` @ %4$s<input size="6" type="text" id="cost-%1$s-%2$d" name="cost-%1$s-%2$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc(this.form.name);" />`, $stock_id, $qty_index, $$variable{"cost-$stock_id-$qty_index"}, $$variable{'Currency'}->symbol() );
+		$html .= ssi::write_override( "overridecost-$stock_id-$qty_index", $$variable{"overridecost-$stock_id-$qty_index"}, '', "calc('f1')" );
+		$html .= '/100lb';
+		$html .= sprintf(q` = %4$s<input size="9" type="text" id="price-%1$s-%2$d" name="price-%1$s-%2$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc(this.form.name);" />`, $stock_id, $qty_index, $$variable{"price-$stock_id-$qty_index"}, $$variable{'Currency'}->symbol() );
+
+
+		$html .= '</span>';
+	} # end foreach qty_index
+	$html .= '</p>';
+) ?>
+

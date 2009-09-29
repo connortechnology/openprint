@@ -1,0 +1,221 @@
+.Claim .DateSelector {
+	float: none;
+}
+
+@media screen {
+.unprintable {
+}
+}
+@media print {
+.unprintable {
+	display: none;
+}
+}
+
+.Claim {
+	background-color: white;
+
+}
+
+.Claim table {
+	border-top: 1px solid #3b5e91;
+	table-layout: fixed;
+}
+.Claim table td {
+	border: 1px solid #aebdd2;
+	vertical-align: top;
+}
+.Claim table th {
+	border: 1px solid #aebdd2;
+	background-color: #e4ebf4;
+}
+	
+.Claim table td.totals {
+	text-align: right;
+}
+.Claim table td input {
+	width: 96%;
+	min-width:0px;
+	margin: 0px;
+	padding: 0px;
+}
+.Claim table td input.RollQTY {
+	width: 60px;
+} 
+.Claim table td.Cost {
+	width: 80px;
+}
+.Claim table .RFID {
+	width: 120px;
+	text-align: left;
+}
+.Claim table .Skid {
+	width: 90px;
+	text-align: left;
+}
+.Claim table .Quantity {
+	width: 90px;
+}
+.Claim table td.Quantity {
+	text-align: right;
+}
+.Claim table td input.StockCost {
+	width: 40px;
+} 
+.Claim table td input.SheetQTY {
+	width: 60px;
+} 
+.Claim table td input.SheetName {
+	width: 240px;
+} 
+.Claim table td input.SheetWidth, .Claim table td input.SheetHeight {
+	width: 60px;
+} 
+.Claim table td input.SheetMWeight {
+	width: 40px;
+} 
+.Claim table td textarea {
+	width: 98%;
+	min-width:0px;
+	margin: 0px;
+	padding: 0px;
+	min-height: 0px;
+}
+
+@media print {
+body div#Header {
+	display: none;
+}
+}
+
+div.Claim div.Header {
+	display: block;
+	position: relative;
+	width: 100%;
+	height: 100px;
+	background-image: url(/images/bluegradient.png);
+	background-repeat: repeat-x;
+	vertical-align: top;
+	border-top: 1px solid #3b5e91;
+	padding-top: 5px;
+}
+div.Claim div.Header .Logo {
+	margin: 7px;
+	padding: 0px;
+	color: black;
+	width: 270px;
+	background: none;
+	float: left;
+}
+.Claim div.Header .Logo table {
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	border: none;
+	border-top: none;
+}
+.Claim .Header .Logo table td {
+	border: none;
+	vertical-align: top;
+	padding: 1px;
+}
+.Claim .Header .Logo table.HeaderText td {
+	font-size: 12px;
+}
+
+div.Claim .Header .Logo a {
+	color: black;
+	border: none;
+}
+div.Claim .Header .Logo a img {
+	width: 100%;
+}
+div.Claim .Header .Logo .PointOne {
+	border-bottom: none;
+	font-family: Georgia, Times, serif;
+	padding: 0px;
+	margin: 0px; 
+	font-size: 42px;
+}
+div.Claim .Header .Logo .GraphicsInc {
+	padding: 0px;
+	margin: 0px; 
+	font-size:24px;
+}
+div.Claim .Header .PageTitle {
+	float: right;
+	width: 230px;
+}
+div.Claim .Header .PageTitle h1 {
+	font-size:24px;
+	color: #3b5e91;
+} 
+div.Claim #Contents {
+	margin-top: 20px;
+}
+p {
+    margin: 0px;
+    margin-top: .4em;
+    display: inline-block;
+    padding: 0px;
+    padding-left: 100px;
+    overflow: hidden;
+}
+
+p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html p {height: 1%;}
+* p {display: block;}
+/* End hide from IE-mac */
+
+label {
+outline: 0;
+}
+
+p label {
+    width: 95px;
+    text-align: right;
+    margin-left: -100px;
+    vertical-align: top;
+    float: left;
+    overflow: visible;
+}
+
+td p {
+    padding: 0px;
+}
+td p label {
+    width: auto;
+    margin-left: 0px;
+}
+
+div.autocomplete {
+  position:absolute;
+  width:250px;
+  background-color:white;
+  border:1px solid #888;
+  margin:0px;
+  padding:0px;
+}
+div.autocomplete ul {
+  list-style-type:none;
+  margin:0px;
+  padding:0px;
+}
+div.autocomplete ul li.selected { background-color: #ffb;}
+div.autocomplete ul li {
+  list-style-type:none;
+  display:block;
+  margin:0;
+  padding:2px;
+  height:32px;
+  cursor:pointer;
+}
+

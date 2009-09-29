@@ -28,9 +28,11 @@ require sql;
 my @variables = (
 		'Markup1', 'Markup2', 'Markup3',
         'txtPrice1', 'txtPrice2', 'txtPrice3',
+        'MPrice1', 'MPrice2', 'MPrice3',
         'txtQuantity1', 'txtQuantity2', 'txtQuantity3',
 		'txtHoleQty',
 		'txtHoleSize',
+		'ItemsPerLift','OverrideItemsPerLift',
 		'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 		'chkOverrideEquipment1', 'chkOverrideEquipment2', 'chkOverrideEquipment3',
 		'chkOverrideFinishedCalliper','txtFinishedCalliper',
@@ -42,11 +44,13 @@ sub variables {
 
 my @outputs = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
+        'MPrice1', 'MPrice2', 'MPrice3',
         'txtUnitPrice1', 'txtUnitPrice2', 'txtUnitPrice3',
 		'ddmEquipment1', 'ddmEquipment2', 'ddmEquipment3',
 		'txtFinishedCalliper',
 		'hdnBreakdown1', 'hdnBreakdown2', 'hdnBreakdown3',
-		'alert',
+		'alert','Status',
+		'ItemsPerLift',
 );
 sub outputs {
 	return @outputs;
@@ -58,14 +62,14 @@ sub calc {
 	$$specs{'Status'} = 'calculated';
 
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
 	my $stitching_service_index;
     # Can only use the stitcher for drilling if we are stitching.  There are also thickness constraints
-	if ( $services{'SaddleStitching'} ) {
-		$stitching_service_index = $services{'SaddleStitching'}[0] ;
-	} elsif ( $services{'LoopStitching'} ) {
-		$stitching_service_index = $services{'LoopStitching'}[0];
+	if ( $$services{'SaddleStitching'} ) {
+		$stitching_service_index = $$services{'SaddleStitching'}[0] ;
+	} elsif ( $$services{'LoopStitching'} ) {
+		$stitching_service_index = $$services{'LoopStitching'}[0];
 	} # end if
 
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
@@ -80,18 +84,16 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
 	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Drilling Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
-		next if ! $qty;
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
-		my $bestPrice = 0;
-		my $bestEquipment = '';
+		my %BestPrice;
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY $qty_index ($qty):<br/>";
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtFinishedCalliper'}.'<br/>';
 		if ( $$specs{'txtPressSheetComboItems'} > 1 ) {
@@ -137,6 +139,18 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Minimum Charge: $%.2f<br/>', $minPrice );
 
 			my $price = 0;
+			my $mprice = 0;
+
+			my $items_per_lift;
+			if ( $$specs{'OverrideItemsPerLift'} ne 'Y' ) {
+				if ( $$services{'Scoring'} or $$services{'Perforating'} ) {
+					$items_per_lift = 10;
+				} elsif ( $Equipment->specification('Maximum Lift Depth') ) {
+					$items_per_lift = int($Equipment->specification('Maximum Lift Depth')/$$specs{'txtFinishedCalliper'});
+				} # end if
+			} else {
+				$items_per_lift = $$specs{'ItemsPerLift'};
+			} # end if
 
 			my $makeReady = openprint::service::get_price( 'DrillingMakeReady', $$specs{'txtHoleQty'}, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= "MakeReadyPrice: $makeReady<br/>";
@@ -145,19 +159,16 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No Service Price found for this quantity.<br/>";
 				next;
 			} # end if
+			my $runs = ceil( $$specs{'txtHoleQty'} / $Equipment->specification('Number of Drills'));
 			if ( sets::isin( $servicePrice{'units'}, 'Per M', 'Per 1000' ) ) {
-				my $runs = ceil( $$specs{'txtHoleQty'} / $Equipment->specification('Number of Drills'));
 				%servicePrice = openprint::service::get_price_object( 'Drilling', $runs * $qty, $Equipment);
 
 				$servicePrice{'Total'} = $runs * $qty * ($servicePrice{Price}/1000);
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: %d * %.3f %s = $%.2f<br/>',$qty, $servicePrice{'Price'}/1000, @servicePrice{'units','Total'} );
 			} elsif ( sets::isin( lc $servicePrice{'units'}, [ 'per lift', 'per drill' ] ) ) {
-				my $runs = ceil( $$specs{'txtHoleQty'} / $Equipment->specification('Number of Drills'));
-
-				if ( $Equipment->specification('Maximum Lift Depth') ) {
-					my $items_per_run = int($Equipment->specification('Maximum Lift Depth')/$$specs{'txtFinishedCalliper'});
-					$runs *= ceil($qty/$items_per_run);
-					$$specs{'hdnBreakdown'.$qty_index} .= "$items_per_run Items per run = $runs runs.<br/>";
+				if ( $items_per_lift ) {
+					$runs *= ceil($qty/$items_per_lift);
+					$$specs{'hdnBreakdown'.$qty_index} .= "$items_per_lift Items per lift = $runs lifts.<br/>";
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= "$runs runs.<br/>";
 				} # end if
@@ -172,26 +183,30 @@ sub calc {
 			if ( $minPrice > 0 and $price < $minPrice ) {
 				$price = $minPrice;
 			} # end if
-			if ( $price < $bestPrice or ! $bestPrice ) {
-				$bestPrice = $price;
-				$bestEquipment = $Equipment;
+			if ( $price < $BestPrice{'Total'} or ! %BestPrice ) {
+				$BestPrice{'Total'} = $price;
+				$BestPrice{'Equipment'} = $Equipment;
+				$BestPrice{'ItemsPerLift'} = $items_per_lift;
+				$BestPrice{'MPrice'} = ( $servicePrice{'Total'} / $qty ) * 1000;
 			} # end if
 		} # end foreach equipment_id
 
-		if ( ! $bestEquipment ) {
+		if ( ! %BestPrice ) {
 			$$specs{'Status'} = 'uncalculated';
 			next;
 		} # end if
 
-		my $unitPrice = 0;
-		$unitPrice = $bestPrice / $qty;
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{"Markup$qty_index"}/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
-		$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $BestPrice{'Total'} / $qty );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $BestPrice{'MPrice'} );
+		$$specs{"ddmEquipment$qty_index"} = $BestPrice{'Equipment'}->id();
+		if ( $$specs{'OverrideItemsPerLift'} ne 'Y' ) {
+			$$specs{'ItemsPerLift'} = $BestPrice{'ItemsPerLift'};
+		} # end if
 
 	} # end foreach qty_index
 
@@ -201,8 +216,9 @@ sub calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
+	my $Project = new openprint::Project( $project_index );
 	my @equipment = openprint::Equipment::find( 'Specifications' => {'Drilling Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 	} # end foreach qty_index
 

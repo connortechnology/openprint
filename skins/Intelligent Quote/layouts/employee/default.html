@@ -35,8 +35,8 @@
 					<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoCustomer', 'customer.gif', '', '/', 'Customer' ); ) ?></span>
 			</div>
 			<br/>
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/employee_menu.html"-->
-			<?PageContent?>
+<? echo ( ssi::include( $config{'SkinPath'}.'/includes/employee_menu.html' ); ) ?>
+<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 			<br/>
 		</div><!--ContentInner-->
 		</div><!--Content-->

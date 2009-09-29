@@ -289,3 +289,6 @@ ul#ProjectTypes {
     margin: 0px;
 }
 
+#AlertDiv {
+	color: red;
+}

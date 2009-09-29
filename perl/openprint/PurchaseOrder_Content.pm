@@ -32,9 +32,9 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 );
 
 %transforms = (
-	'price'			=>	[ 's/[^\d\.]//g' ],
-	'total'			=>	[ 's/[^\d\.]//g' ],
-	'qty'			=>	[ 's/[^\d\.]//g' ],
+	'price'			=>	[ 's/[^\-\d\.]//g' ],
+	'total'			=>	[ 's/[^\-\d\.]//g' ],
+	'qty'			=>	[ 's/[^\-\d\.]//g' ],
 );
 
 %defaults = (
@@ -78,9 +78,13 @@ sub find {
 		$sql .= ' AND description LIKE ?';
 		push @values, $params{'description_like'};
 	} # end if
-	if ( $params{'docket'} ) {
-		$sql .= 'AND docket=?';
-		push @values, $params{'docket'};
+	if ( exists $params{'docket'} ) {
+		if ( defined $params{'docket'} ) {
+			$sql .= 'AND docket=?';
+			push @values, $params{'docket'};
+		} else {
+			$sql .= 'AND docket IS NULL';
+		} # end if
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';

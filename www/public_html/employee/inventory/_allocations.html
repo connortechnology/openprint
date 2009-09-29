@@ -1,0 +1,116 @@
+<? eval (
+	if ( $session{'/employee/inventory/allocations.html?Docket'} ) {
+		@{$$variable{'Allocations'}} = openprint::PaperAllocation::find( 
+			'docket'	=>	$session{'/employee/inventory/allocations.html?Docket'},
+			'order'		=>	'id',
+			);
+	} else {
+		@{$$variable{'Allocations'}} = openprint::PaperAllocation::find( 
+			'created_on_start'	=>	$session{'/employee/inventory/allocations.html?created_on_start_year'} ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+				'/employee/inventory/allocations.html?created_on_start_year',
+				'/employee/inventory/allocations.html?created_on_start_month',
+				'/employee/inventory/allocations.html?created_on_start_day'} ) : undef,
+			'created_on_end'	=>	$session{'/employee/inventory/allocations.html?created_on_end_year'} ? sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+				'/employee/inventory/allocations.html?created_on_end_year',
+				'/employee/inventory/allocations.html?created_on_end_month',
+				'/employee/inventory/allocations.html?created_on_end_day'} ) : undef,
+			'order'		=>	'id',
+			);
+	} # end if
+) ?>
+<? if ( @{$$variable{'Allocations'}} ) ?>
+<form id="PaperAllocationResults" name="PaperAllocationResults" action="allocations.html" method="post">
+	<table class="List">
+		<tr>
+			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'allocations', this.checked );"/></th>
+			<th class="Docket">Docket</th>
+			<th class="Company">Company</th>
+			<th class="Stock">Stock</th>
+			<th class="StockQuantity">Quantity</th>
+			<th class="Date">Max Age</th>
+			<th class="Date">Allocated On</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $total_rolls;
+			my $total_allocations;
+			my $total_weight;
+			my $total_sheets;
+
+			my %allocations;
+			foreach my $Allocation ( @{$$variable{'Allocations'}} ) {
+				push @{$allocations{"$$Allocation{docket}-$$Allocation{paper_id}"}},  $Allocation;
+			} # end foreach Allocation
+			
+			foreach my $key ( sort keys %allocations ) {
+				my $Allocation = $allocations{$key}[0];
+
+				if ( ! sets::isin( $Allocation->Paper()->type(), split(';', $session{'/employee/inventory/allocations.html?Type'} ) ) ) {
+					next;
+				} # end if
+				my $quantity = 0;
+				my $max_age;
+				
+				foreach my $A ( @{$allocations{$key}} ) {	
+					$quantity += $A->quantity();
+					if ( $A->skid_id() ) {
+						my $age = time - Date::Parse::str2time( $A->Skid()->created_on() );
+						if ( $age > $max_age ) {
+							$max_age = $age;
+						} # end if
+					} else {
+						foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$A->paper_id(),'quantity_>'=>0) ) {
+							my $age = time - Date::Parse::str2time( $SkidContent->Skid()->created_on() );
+							if ( $age > $max_age ) {
+								$max_age = $age;
+							} # end if
+						} # end if
+					} # end if
+					if ( $A->Paper()->type() eq 'Roll' ) {
+						$total_rolls += 1 if $A->skid_id();
+						$total_weight += $A->quantity;
+					} else {
+						$total_allocations += 1 if $A->skid_id();
+						$total_sheets += $A->quantity;
+					} # end if
+				} # end foreach Allocation
+				if ( $session{'/employee/inventory/allocations.html?stock_age_start_year'} ) {
+					my $max_age_start = time - Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/allocations.html?stock_age_start_year','/employee/inventory/allocations.html?stock_age_start_month','/employee/inventory/allocations.html?stock_age_start_day'} ) );
+					if ( $max_age_start ) {
+						next if $max_age_start <= $max_age;
+					} # end if
+				} # end if
+				if ( $session{'/employee/inventory/allocations.html?stock_age_end_year'} ) {
+					my $max_age_end = time - Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/allocations.html?stock_age_end_year','/employee/inventory/allocations.html?stock_age_end_month','/employee/inventory/allocations.html?stock_age_end_day'} ) );
+$log->debug("Max end: $max_age_end Max Age $max_age");
+					if ( $max_age_end ) {
+						next if $max_age_end >= $max_age;
+					} # end if
+				} # end if
+
+				$html .= "<tr$rowclass>";
+				$html .= qq`<td class="checkbox"><input type="checkbox" name="allocations" value="$$Allocation{'id'}"/></td>`;
+				$html .= sprintf( '<td class="Docket"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, $Allocation->docket() );
+				$html .= sprintf( '<td class="Company"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, $Allocation->Project()->Company()->name() );
+				$html .= sprintf( '<td class="Stock"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, $Allocation->Paper()->to_string() );
+				$html .= sprintf( '<td class="StockQuantity"><a href="skid_details.html?skid_id=%d">%s%s</a></td>', $$Allocation{'id'}, Number::Format::format_number($quantity), $Allocation->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
+				$html .= sprintf( '<td class="Date"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, misc::seconds_to_pretty_interval( $max_age ) );
+				$html .= sprintf( '<td class="Date"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Allocation{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Allocation->created_on()) ), );
+				$html .= '</tr>';
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach key "docket-paper_id"
+			$html .= '<tr class="totals"><td colspan="4" style="text-align: right;">Totals:</td><td class="StockQuantity">';
+			$html .= Number::Format::format_number($total_allocations) . 'allocations ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_allocations;
+			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
+			$html .= '</td><td></td><td></td></tr>';
+			return $html;
+		) ?>
+	</table>
+	<input type="hidden" name="btnFunction"/>
+	<span style="float: right;">
+	</span>
+</form>
+<? else ( @{$$variable{'Allocations'}} ) ?>
+There were no allocations matching your search criteria.
+<? endif ( @{$$variable{'Allocations'}} ) ?>

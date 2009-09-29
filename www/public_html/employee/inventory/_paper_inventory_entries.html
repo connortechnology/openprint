@@ -23,22 +23,20 @@
 			</tr>
 			<? echo (
 				my $html;
-				my @data = sql::execute( $log, $dbh, q{SELECT skid_id, quantity, units FROM Skid_Contents WHERE paper_id=? ORDER BY skid_id}, $param{'paper_id'} );
 				my $rowclass;
-				while ( my ( $skid_id, $quantity, $units ) = splice @data, 0, 3 ) {
-					next if ! $quantity;
-					my $Skid = new openprint::Skid( $skid_id );
+				foreach my $C ( openprint::SkidContent::find('paper_id'=>$param{'paper_id'}, 'quantity_>'=>0,'order'=>'skid_id') ) {
+					my $Skid = $C->Skid();
 					my $last_seen_days = $Skid->last_seen_days();
 					$html .= sprintf('<tr%1$s><td><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
 <td><a href="skid_details.html?skid_id=%2$d">%4$s (%7$x)</a></td>
 <td><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
 <td align="right"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>
-<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$d%6$s</a></td><td>', $rowclass, $skid_id, $Skid->Location()->name(), $Skid->rfidtag_id(), $quantity, $units, substr($Skid->RFIDTag()->id(),1,15), $last_seen_days ? $last_seen_days . ' days' : 'Today' );
-					$html .= ssi::writeButton( $log, $dbh, "label$skid_id", 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$skid_id', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Label' );
+<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$d%6$s</a></td><td>', $rowclass, $C->skid_id(), $Skid->Location()->name(), $Skid->rfidtag_id(), $C->quantity(), $C->units, substr($Skid->RFIDTag()->id(),1,15), $last_seen_days ? $last_seen_days . ' days' : 'Today' );
+					$html .= ssi::writeButton( $log, $dbh, "label$$C{skid_id}", 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$$C{skid_id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Label' );
 					$html .= q`</td></tr>`;
 					$rowclass = $rowclass ? '' : ' class="colRow"';
-					$$variable{'InventoryTotal'} += $quantity;
-				} # end while
+					$$variable{'InventoryTotal'} += $$C{quantity};
+				} # end foreach SkidContent
 				return $html;
 			) ?>
 			<tr class="totals">

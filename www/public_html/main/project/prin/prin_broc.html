@@ -1,8 +1,8 @@
 <div class="PageTitle">
 <h1>Printing</h1>
 </div>
-<script type="text/javascript" src="/javascripts/printing.js?version=1.3"></script>
 <script type="text/javascript" src="/javascripts/service.js?version=1.1"></script>
+<script type="text/javascript" src="/javascripts/printing.js?version=1.3"></script>
 <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.2"></script>
 <script type="text/javascript">
 	var quantities=new Array();
@@ -31,11 +31,18 @@
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 		<fieldset><legend><?ProjectTypeName?></legend>
+<? if ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
+                <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
+                <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
+<? endif ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
 
-<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Envelopes'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Envelopes'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectTypeID'},['Banners'] ) ) ?>
+		<!--#include virtual="/includes/main/proj/banner_printing.html"-->
+<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Banners'] ) ) ?>
 
 <? if ( $$variable{'ProjectTypeID'} eq 'Door Hangers' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
@@ -46,11 +53,6 @@
 		<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Brochures' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Rack Cards' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/posters.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Rack Cards' ) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'Custom' ) ?>
 		<!--#include virtual="/includes/main/proj/dimensions_boxes_only.html"-->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Custom' ) ?>
@@ -106,9 +108,9 @@
 <? endif ( $$variable{'ProjectTypeID'} eq 'Scratch/WritingPads' or $$variable{'ProjectType'} eq 'ScratchPads' ) ?>
 
 <? if ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/labels.html" -->
-		<!--#include virtual="/includes/main/proj/dimensions.html"-->
+	<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
+	<!--#include virtual="/includes/main/proj/templates/labels.html" -->
+	<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
 <? if ( $$variable{'ProjectTypeID'} eq 'Tags/Tickets' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->

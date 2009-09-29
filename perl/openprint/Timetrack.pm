@@ -13,10 +13,10 @@ require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
 
-my $debug = 1;
+my $debug = 0;
 
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $table $serial %fields %defaults %transforms %find_cache );
 
 require sql;
 
@@ -61,6 +61,9 @@ $serial = 'timetracks_id_seq';
 sub find {
 	my %params = @_;
 
+	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
+	return map { new openprint::Timetrack( $_ ) } @{$find_cache{$hash_key}} if $find_cache{$hash_key};
+
 	my $sql = q{SELECT * FROM Timetracks WHERE 1>0};
 	my @values;
 
@@ -71,6 +74,16 @@ sub find {
 		} else {
 			$sql .= q{ AND id=?};
 			push @values, $params{'id'};
+		} # end if
+	} # end if
+
+	if ( $params{'service_id'} ) {
+		if ( ref $params{'service_id'} eq 'ARRAY' ) {
+			$sql .= q{ AND service_id IN (}.join(',', map {'?'} @{$params{'service_id'}} ).')';
+			push @values, @{$params{'service_id'}};
+		} else {
+			$sql .= q{ AND service_id=?};
+			push @values, $params{'service_id'};
 		} # end if
 	} # end if
 
@@ -180,6 +193,7 @@ sub find {
 	} elsif ($debug ) {
 		$openprint::log->debug("openprint::Timetrack::find($sql) (@values)");
 	} # end if
+	@{$find_cache{$hash_key}} = map { $_->{id} } @$data;
 	return map { new openprint::Timetrack( $_->{id}, $_ ); } @$data;
 } # end sub find
 
@@ -254,6 +268,19 @@ sub paid {
 sub invoiced {
 	return $_[0]->invoice_id() ? 1 : 0;
 } # end sub invoiced
+
+sub save {
+	%find_cache = ();
+	my $self = shift;
+	return $self->SUPER::save(@_);
+}
+
+sub copy {
+	my $New = $_[0]->SUPER::copy();
+	delete $$New{'invoice_id'};
+	delete $$New{'paycheque_id'};
+	return $New;
+} # end sub copy
 
 1;
 

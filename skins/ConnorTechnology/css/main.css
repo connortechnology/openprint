@@ -16,12 +16,6 @@ body {
 	}
 }
 
-body, p, ol, ul, td {
-	font-family: verdana, arial, helvetica, sans-serif;
-	font-size: xx-small;
-}
-
-
 #Portfolio ul {
 	float: none;
 	list-style:none;

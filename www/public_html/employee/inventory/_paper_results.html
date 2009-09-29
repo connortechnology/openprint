@@ -1,6 +1,4 @@
 <? eval (
-	ssi::save_params( '/employee/inventory/paper.html', ( 'Owner','Group','Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','outofstock' ) );
- 
 	$session{'/employee/inventory/paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?Owner'};
 	if ( $session{'/employee/inventory/paper.html?Docket'} ) {
 		@{$$variable{'Papers'}} = openprint::Paper::find(
@@ -8,23 +6,22 @@
 			'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
 			);
 	} else {
-	@{$$variable{'Papers'}} = openprint::Paper::find(
-		'owner_id'	=>	$session{'/employee/inventory/paper.html?Owner'},
-		'manufacturer_id'	=>	( defined $session{'/employee/inventory/paper.html?Manufacturer'} ? $session{'/employee/inventory/paper.html?Manufacturer'} : '' ),
-		'name_id'	=>	( defined $session{'/employee/inventory/paper.html?Name'} ? $session{'/employee/inventory/paper.html?Name'} : '' ),
-		'finish_id'	=>	( defined $session{'/employee/inventory/paper.html?Finish'} ? $session{'/employee/inventory/paper.html?Finish'} : '' ),
-		'colour_id'	=>	( defined $session{'/employee/inventory/paper.html?Colour'} ? $session{'/employee/inventory/paper.html?Colour'} : '' ),
-		'weight_id'	=>	( defined $session{'/employee/inventory/paper.html?Weight'} ? $session{'/employee/inventory/paper.html?Weight'} : '' ),
-		'group_id'	=>	( defined $session{'/employee/inventory/paper.html?Group'} ? $session{'/employee/inventory/paper.html?Group'} : '' ),
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/paper.html?StartYear','/employee/inventory/paper.html?StartMonth','/employee/inventory/paper.html?StartDay'} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/paper.html?EndYear','/employee/inventory/paper.html?EndMonth','/employee/inventory/paper.html?EndDay'} ),
-		'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
-		'type'      => split(';', $session{'/employee/inventory/paper.html?Type'} ),
-		'fsc_code'	=>	$session{'/employee/inventory/paper.html?fsc_code'},
-		($param{'OrLarger'} ? 'width_start' : 'width') => $param{'width'},
-		($param{'OrLarger'} ? 'height_start' : 'height') => $param{'height'},
-
-		);
+		@{$$variable{'Papers'}} = openprint::Paper::find(
+			'owner_id'	=>	$session{'/employee/inventory/paper.html?Owner'},
+			'manufacturer_id'	=>	( defined $session{'/employee/inventory/paper.html?Manufacturer'} ? $session{'/employee/inventory/paper.html?Manufacturer'} : '' ),
+			'name_id'	=>	( defined $session{'/employee/inventory/paper.html?Name'} ? $session{'/employee/inventory/paper.html?Name'} : '' ),
+			'finish_id'	=>	( defined $session{'/employee/inventory/paper.html?Finish'} ? $session{'/employee/inventory/paper.html?Finish'} : '' ),
+			'colour_id'	=>	( defined $session{'/employee/inventory/paper.html?Colour'} ? $session{'/employee/inventory/paper.html?Colour'} : '' ),
+			'weight_id'	=>	( defined $session{'/employee/inventory/paper.html?Weight'} ? $session{'/employee/inventory/paper.html?Weight'} : '' ),
+			'group_id'	=>	( defined $session{'/employee/inventory/paper.html?Group'} ? $session{'/employee/inventory/paper.html?Group'} : '' ),
+			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/paper.html?StartYear','/employee/inventory/paper.html?StartMonth','/employee/inventory/paper.html?StartDay'} ),
+			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/paper.html?EndYear','/employee/inventory/paper.html?EndMonth','/employee/inventory/paper.html?EndDay'} ),
+			'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
+			'type'      => split(';', $session{'/employee/inventory/paper.html?Type'} ),
+			'fsc_code'	=>	$session{'/employee/inventory/paper.html?fsc_code'},
+			($param{'OrLarger'} ? 'width_start' : 'width') => $param{'width'},
+			($param{'OrLarger'} ? 'height_start' : 'height') => $param{'height'},
+			);
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
@@ -50,8 +47,10 @@
 			my $allocated_sheets;
 
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
-				next if $Paper->in_stock() and ! $session{'/employee/inventory/paper.html?instock'};
-				next if (!$Paper->in_stock()) and ! $session{'/employee/inventory/paper.html?outofstock'};
+				if ( ! $session{'/employee/inventory/paper.html?Docket'} ) {
+					next if $Paper->in_stock() and $session{'/employee/inventory/paper.html?instock'} eq 'N';
+					next if (!$Paper->in_stock()) and $session{'/employee/inventory/paper.html?instock'} eq 'Y';
+				} # end if
 
 				$html .= sprintf( '<tr class="%1$s %11$s"><td><a href="paper_details.html?paper_id=%2$d">%3$s</a></td><td>%4$.2f</td><td>%5$.2f</td><td align="right">%6$d</td><td align="right">%7$s</td><td align="right">%8$s</td><td align="right">%9$s</td>',
 					$rowclass,
@@ -62,17 +61,17 @@
 					$Paper->back_ordered(),
 					Number::Format::format_number($Paper->allocated()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
 					Number::Format::format_number($Paper->in_stock()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  in stock
-					Number::Format::format_number($Paper->in_stock() - $Paper->allocated()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  available
-					$Paper->in_stock() - $Paper->allocated() < 0 ? 'warning' : '',
+					Number::Format::format_number($Paper->available()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  available
+					$Paper->available() < 0 ? 'warning' : '',
 					);
 				$html .= '</tr>',
 				$rowclass = $rowclass ? '' : 'colRow';
 				if ( $Paper->type() eq 'Roll' ) {
-					$available_lbs += $Paper->in_stock() - $Paper->allocated();
+					$available_lbs += $Paper->available();
 					$total_lbs += $Paper->in_stock();
 					$allocated_lbs += $Paper->allocated();
 				} else {
-					$available_sheets += $Paper->in_stock() - $Paper->allocated();
+					$available_sheets += $Paper->available();
 					$total_sheets += $Paper->in_stock();
 					$allocated_sheets += $Paper->allocated();
 				} # end if

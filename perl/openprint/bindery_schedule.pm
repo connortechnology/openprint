@@ -92,7 +92,8 @@ sub add {
 	my ( $start_time ) = sql::execute( undef, undef, 'SELECT MAX(starttime+runtime) FROM Bindery_Schedule WHERE servicetype_id=?', $service_type_id );
 	( $start_time ) = sql::execute( undef, undef, 'SELECT NOW()' ) if ! $start_time;
 
-	my $runtime = openprint::service::get_runtime( $openprint::log, $openprint::dbh, $p_id, $s_id );
+	my $Project = new openprint::Project( $p_id );
+	my $runtime = openprint::service::get_runtime( $Project, $s_id );
 
 	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $s_id, 'RunTime', $runtime );
 	
@@ -222,7 +223,7 @@ sub get_lis {
 
 				my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $Project->id(), $services{$service}[0] );
 				if ( ! $specs{'RunTime'} ) {
-					$specs{'RunTime'} = openprint::service::get_runtime( $openprint::log, $openprint::dbh, $Project->id(), $services{$service}[0] );
+					$specs{'RunTime'} = openprint::service::get_runtime( $Project, $services{$service}[0] );
 					$openprint::log->debug("RunTime: $specs{'RunTime'}");
 					if ( $specs{'RunTime'} ) {
 						openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $Project->id(), $services{$service}[0], 'RunTime', $specs{'RunTime'} );

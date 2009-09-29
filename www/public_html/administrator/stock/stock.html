@@ -325,10 +325,10 @@ ul.Recommendations li {
 	<ul class="Recommendations">
 		<? echo ( 
 			my $html;
-			foreach my $ProjectType ( openprint::ProjectType::find('order'=>'lower(strid)') ) {
+			foreach my $ProjectType ( openprint::ProjectType::find('order'=>'lower(name)') ) {
 				$html .= sprintf('<li><input type="checkbox" id="chkPRF%1$s" name="chkPRF%1$s" %2$s /><label class="radio" for="chkPRF%1$s">%1$s</label></li>',
-					$ProjectType->strid(),
-					( sets::isin( $ProjectType->strid(), [ $$variable{'Stock'}->recommendations() ] ) ? 'checked' : '' ),
+					$ProjectType->name(),
+					( sets::isin( $ProjectType->name(), [ $$variable{'Stock'}->recommendations() ] ) ? 'checked' : '' ),
 					);
 			} # end foreach
 			return $html;

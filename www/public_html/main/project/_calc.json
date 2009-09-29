@@ -1,0 +1,34 @@
+<? echo (
+	$r->content_type('text/javascript');
+    # Not sure this is a good idea, but it's neccessary for printing... why is it neccessary?
+    $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
+    my %specs = %param;
+	$param{'function'} = 'calc' if ! $param{'function'};
+    eval 'require openprint::Estimating::'.$param{'ServiceType'};
+        $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: $@") if $@;
+    eval q/$specs{'Status'} = openprint::Estimating::/.$param{'ServiceType'}.'::'.$param{function}.'( $log, $dbh, $variable, @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
+        $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: in eval: $@") if $@;
+    my @results = ();
+    my @vars = eval( 'openprint::Estimating::'.$param{'ServiceType'}.'::outputs()' );
+    @vars = keys %specs if ! @vars;
+
+    my @no_outputs = eval( 'return openprint::Estimating::'.$param{'ServiceType'}.'::no_outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
+    @vars = sets::exclude( \@no_outputs, \@vars );
+$log->debug("No outputs: @no_outputs");
+	foreach my $key ( @no_outputs ) {
+		delete $specs{$key};
+	} # end foreach
+
+    foreach my $key ( @vars ) {
+        if ( (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
+			delete $specs{$key};
+        } # end if
+    } # end foreach
+#foreach my $key ( keys %specs ) {
+#$log->debug("$key => $specs{$key}");
+#} # end foreach
+
+	$param{'callback'} = 'cbFillResults' if ! $param{'callback'};
+	my $json = JSON->new;
+	return 'var results = new Hash(' . $json->encode( \%specs ) . ");\n$param{'callback'}(results);";
+) ?>

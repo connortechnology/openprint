@@ -150,12 +150,17 @@
 			</select>
 		</p>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
-		<? eval ( @{$$variable{'Groups'}} = openprint::user::groups( $log, $dbh, $$variable{'User'}->id() ); )?>
 		<p>
 			<label>Groups:</label>
-			<select name="UserGroups" multiple="multiple" size="4">
-				<? echo ( ssi::make_select( [openprint::usergroup::find( $log, $dbh )], $$variable{'Groups'} ) ) ?>
-			</select>
+			<? echo (
+				require openprint::Usergroup;
+				my $html = '<ul>';
+				my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
+				foreach my $Group ( openprint::Usergroup::find( 'order'=>'lower(name)' ) ) {
+					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label>%2$s</label></li>', $Group->id(), $Group->name(), sets::isin( $Group->id(), \@UserGroups ) ? 'checked="checked"' : '' );
+				} # end foreach
+				return $html . '</ul>';
+			) ?>
 		</p>
 		<p> 
 			<label>User Category:</label>

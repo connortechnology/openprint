@@ -1,12 +1,5 @@
 <? eval (
-	require Date::Parse;
-	require Date::Format;
-
-	if ( $param{'created_on_start_year'} ) {
-		ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id','bad_debt') );
-	} # end if
-
-$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
+	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Invoices'}} = ();
 	if ( $param{'invoice_id'} ) {
 		foreach my $Invoice ( openprint::Invoice::find( 'id'=>$param{'invoice_id'} ) ) {
@@ -29,19 +22,17 @@ $$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = 
 			) ) {
 			if ( $session{'/invoice/history.html?paid'} ne '' ) {
 				if ( $Invoice->is_paid() ) {
-$openprint::log->debug("Next cuz paid " . $Invoice->id() );
+#$log->debug("Invoice $$Invoice{id} is paid : " . $Invoice->owing() );
 					next if $session{'/invoice/history.html?paid'} == 0;
 				} else {
-$openprint::log->debug("Next cuz not paid " . $Invoice->id() );
+#$log->debug("Invoice $$Invoice{id} is not paid: " . $Invoice->owing() );
 					next if $session{'/invoice/history.html?paid'} == 1;
 				} # end if
 			} # end if
 			if ( $session{'/invoice/history.html?bad_debt'} != 2 ) {
 				if ( $Invoice->bad_debt() ) {
-$openprint::log->debug("Next cuz bad debt " . $Invoice->id() );
 					next if $session{'/invoice/history.html?bad_debt'} == 0;
 				} elsif ( $Invoice->bad_debt() eq '0' ) {
-$openprint::log->debug("Next cuz not bad debt " . $Invoice->id() );
 					next if $session{'/invoice/history.html?bad_debt'} == 1;
 				} # end if
 			} # end if

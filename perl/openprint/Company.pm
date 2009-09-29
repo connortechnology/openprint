@@ -11,6 +11,7 @@ use openprint ();
 require sql;
 require openprint::Object;
 require openprint::User;
+require openprint::customer_credit;
 
 $table = 'companies';
 $serial = 'companies_id_seq';
@@ -64,8 +65,9 @@ $serial = 'companies_id_seq';
 		'deleted'					=>	'deleted',
 		);
 %transforms = (
-	'name' => [ 's/\.//g' ],
 	'established'	=> [ 's/[^\d\-]//g' ],
+	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
+	'discount'	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
 	'detail_level'	=>	undef,
@@ -82,7 +84,12 @@ $serial = 'companies_id_seq';
 	'deleted'		=>	0,
 );
 
-my $debug = 1;
+my $debug = 0;
+
+sub find_one {
+	my @results = find( @_ );
+	return $results[0] if @results;
+} # end sub find_one
 
 # Returns a paper object specified by the parameters
 sub find {
@@ -248,8 +255,7 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k};
 	} # end foreach
 	$sql{'updated_on'} = 'NOW()';
-	delete $sql{'created_on'};
-	$sql{'name'} = Text::Unaccent::unac_string('LATIN1', $sql{'name'} );
+	$sql{'name'} = Text::Unaccent::unac_string('UTF-8', $sql{'name'} );
 
     my $ac = sql::start_transaction( $dbh );
     if ( ! $$self{'id'} ) {
@@ -268,6 +274,7 @@ sub save {
 			return $e;
 		} # end if
     } else {
+		delete $sql{'created_on'};
         if ( my $e = sql::update( undef, undef, 'Companies', ['id=?', $$self{'id'}], \%sql ) ) {
 			$dbh->rollback();
     sql::end_transaction( $dbh, $ac );
@@ -333,11 +340,6 @@ sub save_tradereferences {
 	return;
 } # end sub save_tradereferences
 
-sub start_year {
-	my $self = shift;
-	$$self{'established'} =~ /(\d\d\d\d)-(\d\d)-(\d\d)/;
-	return $1;
-} # end sub start_year
 
 sub Credit {
 	my ( $self, $supplier ) = @_;
@@ -400,6 +402,28 @@ sub AccountingContacts {
 
 	return openprint::User::find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{'id'} )] );
 } # end sub AccountingContacts
+
+sub get_shipping_address {
+	my $self = shift;
+
+	my ( $address_index ) = sql::execute( undef,undef, 'SELECT MAX(lngIndex) FROM tbl_Addresses WHERE Company_id=?', $$self{id} );
+	my $Address = new openprint::address( $log, $dbh, $address_index, $$self{id} );
+	return $Address;
+} # end sub get_shipping_address
+
+sub save_shipping {
+	my ( $self, $params ) = @_;
+
+	my $address = $self->get_shipping_address();
+	$address->set( $params );
+} # end sub save_shipping
+
+sub load_shipping {
+	my ( $self, @params ) = @_;
+
+	my $address = $self->get_shipping_address();
+	return $address->get( @params );
+} # end sub save_shipping
 
 1;
 __END__

@@ -1,4 +1,4 @@
-<? if ( @{$$variable{'Projects'}} ) ?>
+<? if ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects() ) ?>
 <table class="List">
 	<tr>
 		<th width="75" align="left">Project #</th>
@@ -63,4 +63,4 @@
 	) ?>
 	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 </table>
-<? endif ( @{$$variable{'Projects'}} ) ?>
+<? endif ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects() ) ?>

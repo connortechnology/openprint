@@ -175,6 +175,7 @@ table.List td textarea {
 
 .Currency {
 	font-weight: bold;
+float: right;
 }
 
 fieldset {
@@ -319,6 +320,10 @@ hr {
 .colRow {
 	background-color: #ded9c2;
  }					/* alternating row color in generated tables */
+.changed {
+    background-color: yellow;
+}
+
 
 div.row {
 	p\osition: relative;
@@ -392,7 +397,20 @@ span.DateSelector {
     float: left;
 	width: 205px;
 }
+span.DateTimeSelector {
+	float: left;
+	width: 400px;
+}
+span.DateSelector select, span.DateTimeSelector select {
+	width: auto;
+	max-width: none;
+}
+span.DateSelector select option {
+}
 
+div.PopupWindow {
+    display: none;
+}
 div.Popup {
     position:absolute;
     visibility: hidden;
@@ -438,8 +456,8 @@ ul#menubar:after {
 }
 /* Hides from IE-mac \*/
 * html ul#menubar {height: 1%;}
-* *     ul#menubar{display:block;}
-* */* End hide from IE-mac */
+*     ul#menubar{display:block;}
+/* End hide from IE-mac */
 ul#menubar li {
     float: left;
     list-style: none;
@@ -516,8 +534,7 @@ ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
 }
 
 ul#menubar li.off:hover ul, ul#menubar li.over ul {
-    /*  display the other topics when
- *   *              their parent is hovered */
+/*  display the other topics when their parent is hovered */
     display: block;
     z-index: 6000;
 }
@@ -567,4 +584,7 @@ h1,h2,h3,h5 {
 }
 div#NewDimensions {
 	display: none;
+}
+img.Override {
+	height: 16px;
 }

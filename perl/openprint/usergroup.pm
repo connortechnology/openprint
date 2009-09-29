@@ -28,6 +28,8 @@ sub names {
 sub is_user_in {
 	my ( $groups, $user_id ) = @_;
 
+	return if ! $user_id;
+
 	if ( ! exists $cache{$user_id} ) {
         @{$cache{$user_id}} = sql::execute(undef, undef, 'SELECT usergroup_id FROM users_in_usergroups WHERE user_id=?', $user_id );
     } # end if
@@ -42,6 +44,13 @@ sub is_user_in {
 	
     return sets::intersection( @{$cache{$user_id}}, @groups_cache{@$groups} );
 } # end if
+
+sub users_in {
+	my ( $group_name ) = @_;
+
+	return sql::execute( undef, undef, 'SELECT user_id FROM users_in_usergroups WHERE usergroup_id=?', $groups_cache{$group_name} );
+
+} # sub users_in
 
 1;
 __END__

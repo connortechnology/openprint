@@ -14,6 +14,7 @@ $table = 'par_areas';
 $serial = 'par_areas_id_seq';
 
 %fields = (
+	'id'		=>	'id',
 	'name'		=>	'name',
 	'assignee_id'	=>	'assignee_id',
 	'deleted'	=>	'deleted',

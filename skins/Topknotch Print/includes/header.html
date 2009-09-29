@@ -1,7 +1,7 @@
 <div id="header">
    <div id="header_banner">
       <div id="logo">
-         <a href="/index.html" title="Home"><img src="/images/topknotch_logo.gif" alt="Topnotch" /></a>
+         <a href="/index.html" title="Home"><img src="/images/topknotch_logo.gif" alt="Topknotch" /></a>
       </div>
       <div id="contact_information">
          <div><span class="headline_medium"><a href="mailto:sales@topknotchprint.com">sales@topknotchprint.com</a></span></div>
@@ -14,12 +14,34 @@
          <a href="/index.html?Country=CA&amp;Currency=CAD"><img src="/images/canada_top.gif" alt="Canadian Dollars" /></a>
          <div id="choose_currencies_top">choose currency</div>
       </div>
+	<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+		<div id="CurrencySelection">
+			<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param ); ) ?>" method="post">
+				<p>
+					<label>Company:</label>
+					<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
+					<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.submit();">
+					<option value="">Select a Company</option>
+					<? echo ( openprint::Company::get_dropdown( $session{'company_id'} );) ?>
+					</select>
+					<? echo ( ssi::writeButton( $log, $dbh, 'SelectGo', 'submit.gif', 'SelectCurrency.submit();', '', 'Go' ); ) ?>
+				</p>
+				<input type="hidden" name="btnFunction" value="SelectCompany" />
+			</form>
+			<? if ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
+			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoAdmin', 'admin.gif', '', '/administrator/', 'Administrators' ); ) ?></span>
+			<? endif ( sets::isin( $session{'user_type'}, ['A'] ) ) ?>
+			<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+			<span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'GoEmployee', 'employee.gif', '', '/employee/', 'Employees' ); ) ?></span>
+			<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+		</div>
+	<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
       <div id="nav_icons">
          <a href="/index.html"><img src="/images/home_icon.gif" alt="Home" /></a>
          <? if ( $session{'user_id'} ) ?>
-         <a href="/main/account/logout.html"><img src="/images/logout_icon.gif" alt="Logout" /></a>
+         <a href="/account/logout.html"><img src="/images/logout_icon.gif" alt="Logout" /></a>
          <? else ( $session{'user_id'} ) ?>
-         <a href="/main/account/login.html"><img src="/images/login_icon.gif" alt="Login" /></a>
+         <a href="/account/login.html"><img src="/images/login_icon.gif" alt="Login" /></a>
          <? endif ( $session{'user_id'} ) ?>
          <a href="/contact.html"><img src="/images/contact_icon.gif" alt="Contact" /></a>
       </div>         

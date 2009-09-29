@@ -9,13 +9,14 @@
 	}
 </style>
 <div align="center">
-	<h2>Group Run Specials for 
+	<h2>Specials for 
 <? echo (
 require Date::Calc;
 my ( $y, $m, $d ) = Date::Calc::Today();
 return Date::Calc::Month_to_Text($m) . ' ' . $y;
 ) ?>
 	</h2>
+<p>Specials pricing only applies to print ready pdf files with bleed and crop marks. All other file formats will be automatically charged between $10-$30.</p>
 <? eval (
 	@{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)' );
 ) ?>

@@ -28,8 +28,7 @@
 	} // end function
 -->
 </script>	 
-<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
-<? if ( $$variable{'information'} ) ?><div class="information"><?information?></div><? endif ( $$variable{'information'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/invoice/history.html">
 	<input type="hidden" name="btnFunction"/>
@@ -98,12 +97,15 @@
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">
-			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.invoice_id.value='';load_invoices(f1);", '', 'Show Results' ),
-ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f1.btnFunction.value='Download';f1.submit();", '', 'Download' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-				ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'edit.html', 'New Invoice' ),
-				); ) ?>
+			<? echo (
+				my $html = '';
+				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "f1.invoice_id.value='';load_invoices(f1);", '', 'Show Results' );
+				$html .= ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f1.btnFunction.value='Download';f1.submit();", '', 'Download' );
+				$html .= ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
+				$html .= ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'edit.html', 'New Invoice' );
+				$html .= ssi::writeButton( $log, $dbh, 'AccountStatement', 'account_statement.gif', "f1.btnFunction.value='Account Statement';f1.submit();", '', 'Account Statement' ) if $session{'/invoice/history.html?company_id'};
+				return $html;
+			) ?>
 		</p>
 	</fieldset>
 	<div id="InvoiceList"><!--#include virtual="_history.html"--></div>

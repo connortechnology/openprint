@@ -12,7 +12,7 @@ use strict;
 use openprint ();
 
 sub send_email_with_attached_files {
-    my ( $r, $log, $mail, @attachments ) = @_; 
+	my ( $r, $log, $mail, @attachments ) = @_; 
 
 	for ( my $index = 0; $index < @attachments; $index += 4 ) {
 
@@ -30,12 +30,12 @@ sub send_email_with_attached_files {
 } # end sub send_email_with_attached_files
 
 sub send_email_with_attachment {
-    my ( $log, $mail, @attachments ) = @_; 
+	my ( $log, $mail, @attachments ) = @_; 
 
-    my $message = $$mail{BODY};
+	my $message = $$mail{BODY};
 
-    my $boundary = "====" . time() . "====";
-	$$mail{'content-type'} = "multipart/mixed;\r\n  boundary=\"$boundary\"\r\n";
+	my $boundary = "====" . time() . "====";
+	$$mail{'content-type'} = "multipart/mixed;\r\n	boundary=\"$boundary\"\r\n";
 	$boundary = '--'.$boundary;
 
 	# start with the current body
@@ -70,7 +70,7 @@ sub send_email_with_attachment {
 	sendmail(%{$mail}) || $log->error( "Error: $Mail::Sendmail::error\n" );
 } # end sub send_email_with_attachment
 
-# Loads the specified file and returns it.  Returns undef on failure.
+# Loads the specified file and returns it.	Returns undef on failure.
 sub load_file {
 	my ( $log, $file ) = @_;
 
@@ -86,6 +86,17 @@ sub load_file {
 	$log->warn( "Error opening $file, Reason: $!" );
 	return undef;
 } # end sub load_file
+
+sub save_file {
+	my ( $log, $file, $contents ) = @_;
+	if ( open( F, "> $file" ) ) {
+		print F $contents;
+	} else {
+		$log->warn( "Error opening $file, Reason: $!" );
+		return "Error opening $file, Reason: $!";
+	} # end if
+	return;
+} # end sub save_file
 
 sub build_city_prov_country {
 	my ( $city, $prov, $country ) = @_;
@@ -110,7 +121,7 @@ sub data_to_csv {
 	my $csv = Text::CSV_XS->new( {'binary'=>1});
 
 	my $columns = scalar @{$header};
-	$csv->combine( @{$header} );    # combine columns into a string
+	$csv->combine( @{$header} );	# combine columns into a string
 	push @data, $csv->string() . "\n";
 
 	for ( my $index = 0; $index < @{$data}; $index += 1 ) {
@@ -118,7 +129,7 @@ sub data_to_csv {
 	} # end for
 	
 	while ( @{$data} ) {
-		my $status = $csv->combine( splice( @{$data}, 0, $columns ) );    # combine columns into a string
+		my $status = $csv->combine( splice( @{$data}, 0, $columns ) );	# combine columns into a string
 		push @data, $csv->string() . "\n";
 	} # end while
 
@@ -127,6 +138,10 @@ sub data_to_csv {
 
 sub export_csv {
 	my ( $r, $log, $variable, $filename, $header, $data ) = @_;
+	if ( scalar @{$header}<= 0 ) {
+		$log->error('Invalid Header!');
+		return;
+	} # end if
 	my @data = data_to_csv( $header, $data );
 	return export( $r, $log, $variable, $filename, \@data );
 } # end sub
@@ -141,18 +156,19 @@ sub export {
 } # end sub export
 
 sub get_destination {
-    my ( $r, $log, $uri ) = @_;
-    my $dest = $uri ? $uri : $r->uri();
-    my @keys = $r->param();
-    if ( @keys ) {
-        $dest .= '?';
-        my @params;
-        foreach my $key ( @keys ) {
-            push @params, join( '=', ($key, $r->param($key)));
-        } # end foreach
-        $dest .=  join( '&', @params );
-    } # end if
-    return $dest;
+	my ( $r, $uri ) = @_;
+	my $dest = $uri ? $uri : $r->uri();
+	my @keys = $r->param();
+	if ( @keys ) {
+		$dest .= '?';
+		my @params;
+		foreach my $key ( @keys ) {
+			next if $key eq 'password';
+			push @params, join( '=', ($key, $r->param($key)));
+		} # end foreach
+		$dest .=	join( '&', @params );
+	} # end if
+	return $dest;
 } # end sub get_destination
 
 sub get_url {
@@ -185,20 +201,20 @@ sub sum {
 } # end sub sum
 
 sub error {
-    my ( $log, $dbh, $variable, $error, $details ) = @_;
-    
-    $log->debug("Error: $error");
-    $log->debug("Details: $details");
+	my ( $log, $dbh, $variable, $error, $details ) = @_;
+	
+	$log->debug("Error: $error");
+	$log->debug("Details: $details");
 
-    $$variable{'error'} = $error;
-    $$variable{'details'} = $details;
-    $$variable{'Redirect'} = $openprint::config{'errorpage'};
+	$$variable{'error'} = $error;
+	$$variable{'details'} = $details;
+	$$variable{'Redirect'} = $openprint::config{'errorpage'};
 } # end sub error
 
 sub trim {
 	my @results;
 	foreach my $thing ( @_ ) {
-		$thing =~ s/^\s*(.*)\s*$/$1/;
+		s/^\s+//, s/\s+$// for $thing;
 		push @results, $thing;
 	}
 	return @results;
@@ -217,25 +233,25 @@ sub moneyfilter {
 } # end sub moneyfilter
 
 sub seconds_to_interval {
-    $_[0] = int $_[0];
-    my $h = int ($_[0]/3600);
-    my $m = $_[0] - ($h*3600);
-    return ( $h, int($m/60), $m%60 );
+	$_[0] = int $_[0];
+	my $h = int ($_[0]/3600);
+	my $m = $_[0] - ($h*3600);
+	return ( $h, int($m/60), $m%60 );
 }
 
 sub seconds_to_JDF_interval {
-    $_[0] = int $_[0];
+	$_[0] = int $_[0];
 	my $d = int ($_[0]/86400);
 	$_[0] -= $d*86400;
-    my $h = int ($_[0]/3600);
-    my $m = $_[0] - ($h*3600);
+	my $h = int ($_[0]/3600);
+	my $m = $_[0] - ($h*3600);
 	my $return;
 	$return .= $d.'D' if $d;
 	$return .= $h.'H' if $h;
 	$return .= int($m/60).'M' if int($m/60);
 	$return .= ($m%60).'S' if $m%60;
 
-    return $return;
+	return $return;
 }
 
 sub seconds_to_pretty_interval {
@@ -255,60 +271,107 @@ sub seconds_to_pretty_interval {
 	} # end if
 	return $string if ! $remainder;
 
-	my $hours = int( $remainder / (60*60) );
-	$remainder = $remainder % ( 60*60 );
-	my $minutes = int ( $remainder / 60 );
-	$remainder = $remainder % 60;
-	
-	if ( $remainder ) {
-		$string .= sprintf('%d:%.2d:%.2d', $hours, $minutes, $remainder );
-	} else {
-		$string .= sprintf('%d:%.2d', $hours, $minutes );
-	} # end if
+	$string .= seconds2hms( $remainder );
 	return $string;
-
 } # end sub seconds_to_pretty_interval
 
 sub interval_to_seconds {
-    my $interval = shift;
-    my ( $h, $m, $s ) = split ':', $interval;
-    return ($h*3600) + ($m*60) + $s;
+	my $interval = shift;
+	my ( $h, $m, $s ) = split ':', $interval;
+	return ($h*3600) + ($m*60) + $s;
 } # end sub interval_to_seconds
 
 sub rle_decode {
 	my ( $source, $width, $height ) = @_;
 	my $result = '';
 	my $position = 0;
-$openprint::log->warn("RLE::DECODE:: source: " . length $source );
-    while ($source ne "") {
-        my $l = unpack("C", $source);
-        if ($l == 128) {
-			if ( length $source > 1 ) {
-				$openprint::log->debug("End while still data at position $position " . unpack("H",$source) . ' ' . substr($source,0,1) . ' length of result: ' . length($result));
+	while ( $source ) {
+		my $l = unpack( 'C', $source );
+		if ( $l == 128 ) {
+			# Could be end of scan line
+			substr($source, 0, 1) = '';
+#$openprint::log->warn("scanline length: $position");
+#$position = 0;
+		} elsif ($l > 128) {
+			if (length($source) < 2) {
+				$openprint::log->warn("Premature end to data in RunLengthEncoded data");
+				return $result;
 			} # end if
-            return $result;
-        } elsif ($l > 128) {
-        #if ($l > 128) {
-            if (length($source) < 2) {
-                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
-                return $result;
-            } # end if
-            $result .= substr($source, 1, 1) x (257 - $l);
-            substr($source, 0, 2) = "";
+			$result .= substr($source, 1, 1) x (257 - $l);
+			substr($source, 0, 2) = '';
 			$position += 2;
-        } else {
-            if (length($source) < $l + 1) {
-                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
-                return $result;
-            }
-            $result .= substr($source, 1, $l);
-            substr($source, 0, $l + 1) = "";
-			$position += $l+1;
-        }
-    }
-$openprint::log->warn("RLE::DECODE:: results: " . length $result );
+		} else {
+			if (length($source) < $l + 1) {
+				$openprint::log->warn("Premature end to data in RunLengthEncoded data");
+				return $result;
+			}
+			$result .= substr($source, 1, $l+1);
+			substr($source, 0, $l + 2) = '';
+			$position += $l+2;
+		}
+	} # end while source
 	return $result;
 } # end sub rle_decode
+
+# We do not encode single chars, must be more than 2.
+sub rle_encode {	
+	my $input = $_[0];
+	my $output;
+
+	my $last = '';
+	my $count = 0;
+
+	while ( $input ) {
+		my $next = substr($input, 0, 1);
+		substr($input, 0, 1) = '';
+
+		if ( $next ne $last ) {
+			if ( $count == 1 ) {
+				$output .= pack( 'C', 2 );
+				$output .= $last.$next;;
+				$count = 0;
+				$last = '';
+			} elsif ( $count > 1 ) {
+				$output .= pack( 'C', 257-$count );
+				$output .= $last;
+				$last = $next;
+				$count = 1;
+			} else {
+				$last = $next;
+				$count = 1;
+			} # end if
+		} else {
+			if ( $count == 127 ) {
+				$output .= pack( 'C', 257-$count );
+				$output .= $last;
+				$count = 0;
+			} # end if
+			$count += 1;
+		} # end if
+	} # end while
+	if ( $count ) {
+		$output .= pack('C', 257-$count );
+		$output .= $last;
+	} # end if
+	return $output. (pack('C', 128));
+} # end sub rle_encode
+
+sub hms2time {
+	my ($h,$m,$s) = split(':', $_[0]);
+	return ($h*3600) + ($m*60) + $s;
+} # end sub hms2time
+sub seconds2hms {
+	my ( $seconds ) = @_;
+	my $hours = int( $seconds / (60*60) );
+	$seconds = $seconds % ( 60*60 );
+	my $minutes = int ( $seconds / 60 );
+	$seconds = $seconds % 60;
+
+	if ( $seconds ) {
+		return sprintf('%d:%.2d:%.2d', $hours, $minutes, $seconds );
+	} # end if
+	return sprintf('%d:%.2d', $hours, $minutes );
+} # end sub seconds2hms
 
 1;
 

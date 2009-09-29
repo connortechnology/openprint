@@ -62,7 +62,7 @@
 			<p><label for="method">Method</label>
 				<select name="method">
 <? echo ( 
-	my @options = ( '', 'Cash','Cheque','Email Transfer','Paypal' );
+	my @options = ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' );
 	return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'Payment'}->method() );
 ) ?>
 				</select>

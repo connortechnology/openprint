@@ -8,15 +8,19 @@ require openprint::logs;
 require openprint::Usergroup;
 use openprint ();
 use strict;
-use vars qw(%variable $log $dbh %config);
-*variable = \%openprint::variable;
+use vars qw( $log $dbh %config %variable %param %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*param = \%openprint::param;
+*variable = \%openprint::variable;
+$table = 'Users';
+$serial = 'users_id_seq';
 
-my $debug = 1;
+my $debug = 0;
 
-my %fields = (
+%fields = (
+	'id'				=>	'id',
 	'company_id'		=>	'company_id',
 	'salutation'		=>	'salutation',
 	'title'				=>	'title',
@@ -46,19 +50,20 @@ my %fields = (
 	'purchasing_limit'	=>	'purchasing_limit',
 	'purchasing_total_limit'	=>	'purchasing_total_limit',
 	'notes'				=>	'notes',
+	'deleted'			=>	'deleted',
 ); # end %fields
 
-my %transforms = (
+%transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'wage'			=>	[ 's/[^\d\.]//g' ],
-	'purchasing_limit'			=>	[ 's/[^\d\.]//g' ],
-	'purchasing_total_limit'	=>	[ 's/[^\d\.]//g' ],
+	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
+	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
 	'created_on'		=> [ 's/.*//g' ],
 	'updated_on'		=> [ 's/.*//g' ],
 );
 
-my %defaults = (
+%defaults = (
 	'web_active'	=>	'N',
 	'ftp_active'	=>	'0',
 	'created_on'	=>	'NOW()',
@@ -71,26 +76,8 @@ my %defaults = (
 	'purchasing_limit'	=>	undef,
 	'purchasing_total_limit'	=>	undef,
 	'wage'				=>	undef,
+	'deleted'			=>	0,
 );
-
-sub get {
-	my $self = shift;
-
-	return @$self{@_};
-} # end sub get
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	my @fields = keys %fields;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( 'SELECT * FROM Users WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) {
-			$log->error( "Error loading User( $$self{'id'} ): " . $dbh->errstr() );
-		} # end if
-	} # end if
-	@$self{@fields} = @$data{@fields{@fields}};
-} # end sub load
 
 sub set {
 	my ( $self, $params ) = @_;
@@ -150,7 +137,7 @@ sub save {
 		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
 	} # end if
 
-	if ( $params and (defined $$params{'web_active'}) and ( $$self{web_active} ne $$params{'web_active'} ) ) {
+	if ( $params and (defined $$params{'web_active'} and defined $$self{'web_active'} ) and ( $$self{'web_active'} ne $$params{'web_active'} ) ) {
 		my %info;
 		$info{'User'} = $self;
 		$_ = $$params{'web_active'} eq 'Y' ? 'user_account_activated.html' : 'user_account_deactivated.html';
@@ -212,11 +199,6 @@ sub save {
 	return;
 } # end sub save
 
-sub delete {
-	my $self = shift;
-	sql::update( undef, undef, 'Users', ['index=?', $$self{'id'}], 'deleted', 1 );
-} # end sub delete
-
 sub destroy {
 	my $self = shift;
 
@@ -244,8 +226,6 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM paper_purchase_orders WHERE userindex=?', $$self{'id'} );
-
 
 	sql::execute( $log, $dbh, 'DELETE FROM Users WHERE id=?', $$self{'id'} );
 
@@ -318,15 +298,12 @@ sub name {
 	} # end if
 } # end sub name
 
-sub email {
-	my $self = shift;
-	return $$self{'email'};
-} # end sub email
-
-sub id {
-	my $self = shift;
-	return $$self{'id'};
-} # end sub id
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 
 sub find {
 	my %param = @_;
@@ -349,10 +326,10 @@ sub find {
 	if ( $param{'name'} ) {
 		my ( $first, $last ) = $param{'name'} =~ /(\S+)\s*(\S*)/;
 		if ( $first and $last ) {
-			$sql .= ' AND strfirstname=? AND strlastname=?';
+			$sql .= ' AND firstname=? AND lastname=?';
 			push @values, $first, $last;
 		} elsif ( $first ) {
-			$sql .= ' AND strfirstname=?';
+			$sql .= ' AND firstname=?';
 			push @values, $first;
 		} # end if
 	} # end if
@@ -386,6 +363,14 @@ sub find {
 		$sql .= ' AND strpassword=?';
 		push @values, $param{'password'};
 	} # end if
+	if ( exists $param{'email_like'} ) {
+		$sql .= ' AND email LIKE ?';
+		push @values, lc $param{'email_like'};
+	} # end if
+	if ( exists $param{'purchasing_limit_>='} ) {
+		$sql .= ' AND purchasing_limit >= ?';
+		push @values, $param{'purchasing_limit_>='};
+	} # end if
 	if ( exists $param{'web_active'} ) {
 		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
 		$param{'web_active'} = 'N' if $param{'web_active'} == 0;
@@ -411,7 +396,7 @@ sub find {
 	} # end if
 	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->error( "Error loading Users: ($sql) (@values)" );
+		$log->error( "Error loading Users: ($sql) (@values)" . $dbh->errstr() );
 		return;
 	} elsif ( $debug ) {
 		$log->debug( "loading Users: ($sql) (@values) " . $data );
@@ -450,7 +435,61 @@ sub Groups {
 	my ( $self ) = @_;
 
     return openprint::Usergroup::find('user_id'=>$$self{id} );
-} # end sub groups
+} # end sub Groups
+sub notifications {
+	my ( $self, $notifications_hash ) = @_;
+	
+	if ( $notifications_hash ) {
+		my %types = sql::execute( undef, undef, 'SELECT id, name FROM User_Notification_types' );
+		my $ac = sql::start_transaction( $dbh );
+		sql::execute( undef, undef, 'DELETE FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+		foreach my $k ( keys %types ) {
+			sql::insert( undef, undef, 'User_Notifications', { 'user_id'=>$$self{'id'},'type_id'=>$k, 'value'=>$$notifications_hash{$types{$k}} } ) if $$notifications_hash{$types{$k}};
+		} # end foreach k
+		sql::end_transaction( $dbh, $ac );
+		$$self{'notifications'} = $notifications_hash;
+	} elsif ( ! exists $$self{'notifications'} ) {
+		%{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT (SELECT name FROM User_Notification_Types WHERE id=type_id),value FROM User_Notifications WHERE user_id=?', $$self{'id'} );
+	} # end if
+	
+	return $$self{'notifications'};
+} # end sub notifications
+
+sub notification {
+	my ( $self, $name ) = @_;
+
+	$self->notifications() if ( ! exists $$self{'notifications'} );
+	return $$self{'notifications'}{$name} if $$self{'notifications'} and $$self{'notifications'}{$name};
+	return '';
+} # end sub notification
+
+sub purchasing_total {
+	require openprint::PurchaseOrder;
+	my $total = 0;
+	foreach my $PO ( openprint::PurchaseOrder::find('authorized'=>'N') ) {
+		$total += $PO->total();
+	} # end foreach $PO
+} # end sub purchasing_total
+
+sub po_limit {
+	my ( $self, $type_id, $new_value ) = @_;
+
+	if ( ! exists $$self{'po_limits'} ) {
+		%{$$self{'po_limits'}} = sql::execute( undef, undef, 'SELECT type_id, po_limit FROM User_PurchaseOrder_limits WHERE user_id=?', $$self{'id'} );
+	} # end if
+
+	if ( defined $new_value ) {
+		if ( exists $$self{'po_limits'}{$type_id} ) {
+			sql::update( undef, undef, 'user_purchaseorder_limits', ['user_id=? AND type_id=?', $$self{'id'},$type_id], 'po_limit', 1*$new_value );
+		} else {
+			sql::insert( undef, undef, 'user_purchaseorder_limits', ['user_id',$$self{'id'},'type_id', $type_id, 'po_limit', 1*$new_value ] );
+		} # end if
+		$$self{'po_limits'}{$type_id} = 1*$new_value;
+	} # end if
+
+	return $$self{'po_limits'}{$type_id};
+} # end sub po_limit
+
 1;
 
 __END__

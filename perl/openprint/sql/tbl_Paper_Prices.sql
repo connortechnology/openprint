@@ -1,8 +1,8 @@
-DROP TABLE tbl_Paper_Prices;
+DROP TABLE IF EXISTS tbl_Paper_Prices;
 
 CREATE TABLE tbl_Paper_Prices (
-	lngListIndex		INT4 NOT NULL, FOREIGN KEY (lngListIndex) REFERENCES Pricelists (Index),
-	lngPaperIndex		INT4 NOT NULL, FOREIGN KEY (lngPaperIndex) REFERENCES tbl_Paper (lngIndex),
+	lngListIndex		INTEGER NOT NULL, FOREIGN KEY (lngListIndex) REFERENCES Pricelists (id),
+	lngPaperIndex		INTEGER NOT NULL, FOREIGN KEY (lngPaperIndex) REFERENCES Paper (id),
 	dtmStart			TIMESTAMP with time zone,
 	dtmEnd				TIMESTAMP with time zone,
 	lngMin				NUMERIC( 12,4 ),

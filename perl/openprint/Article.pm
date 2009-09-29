@@ -14,32 +14,34 @@ my $debug = 1;
 
 require sql;
 
-$table = 'contents';
-$serial = 'contents_id_seq';
+$table = 'articles';
+$serial = 'articles_id_seq';
 
 %fields = (
 	'id'				=>	'id',
-	'extended'			=>	'extended',
-	'excerpt'			=>	'exerpt',
-	'keywords'			=>	'keywords',
-	'created_on'		=>	'created_at',
-	'updated_on'		=>	'updated_at',
-	'user_id'			=>	'user_id',
-	'permalink'			=>	'permalink',
-	'guid'				=>	'guid',
-	'text_filter_id'	=>	'text_filter_id',
-	'whiteboard'		=>	'whiteboard',
+	#'extended'			=>	'extended',
+	#'excerpt'			=>	'exerpt',
+	#'keywords'			=>	'keywords',
+	'created_by'		=>	'created_by',
+	'created_on'		=>	'created_on',
+	'updated_on'		=>	'updated_on',
+	#'user_id'			=>	'user_id',
+	'company_id'		=>	'company_id',
+	#'permalink'			=>	'permalink',
+	#'created_by'		=>	'guid',
+	#'text_filter_id'	=>	'text_filter_id',
+	#'whiteboard'		=>	'whiteboard',
 	'deleted'			=> 'deleted',
-	'type'				=>	'type',
-	'name'				=>	'name',
-	'allow_pings'		=>	'allow_pings',
-	'allow_comments'	=>	'allow_comments',
-	'published_at'		=>	'published_at',
+	#'type'				=>	'type',
+	#'name'				=>	'name',
+	#'allow_pings'		=>	'allow_pings',
+	#'allow_comments'	=>	'allow_comments',
+	'published_on'		=>	'published_on',
 	'published'			=>	'published',
 	'title'				=>	'title',
-	'author'			=>	'author',
+	#'author'			=>	'author',
 	'body'				=>	'body',
-	'state'				=>	'state',
+	#'state'				=>	'state',
 );
 
 %transforms = (
@@ -47,6 +49,7 @@ $serial = 'contents_id_seq';
 %defaults = (
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
+	'published_on'	=> 'NOW()',
 	'deleted'		=> 0,
 );
 
@@ -151,6 +154,12 @@ $openprint::log->debug( $body );
 	} # end if to
 
 } # end sub send_notification
+sub save {
+	my ( $self, $data ) = @_;
+	$$self{'created_by'} = $session{'user_id'} if ! $$self{'created_by'};
+	return $self->SUPER::save( $data );
+} # end sub save
+
 1;
 
 __END__

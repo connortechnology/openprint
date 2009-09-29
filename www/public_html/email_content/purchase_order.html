@@ -1,6 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 		<title><? echo ( $config{'SiteTitle'} ) ?></title>
 		<style type="text/css">
 		<? echo ( misc::load_file( $log, $config{'SkinPath'}.'/css/email.css' ); ) ?>
@@ -139,14 +140,14 @@
 			<div class="rightColumn" style="text-align: right;">
 			All prices are in <? echo ( $$variable{'PurchaseOrder'}->Currency()->name() ) ?>.
 			<br/>
-		<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+		<? if ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 				<div class="leftColumn"><? echo ( $$variable{'PurchaseOrder'}->Authorized_By()->name() ) ?><br/></div>
 				<div class="rightColumn"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'PurchaseOrder'}->authorized_on())); ) ?><br/></div>
 				<br class="spacer"/>
 				<hr/>
-				<div class="leftColumn"><i>Authorized by</i></div>
+				<div class="leftColumn"><i>Authorized<? if ( $$variable{'PurchaseOrder'}->authorized_by() ) ?> by<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?></i></div>
 				<div class="rightColumn"><i>Date</i></div>
-		<? endif ( $$variable{'PurchaseOrder'}->authorized_by() ) ?>
+		<? endif ( $$variable{'PurchaseOrder'}->authorized() ) ?>
 			</div>
 			<br class="spacer"/>
 			<fieldset><legend>Logs</legend>

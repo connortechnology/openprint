@@ -67,25 +67,103 @@ sub _unpaid {
 } # end sub _paid
 
 sub make {
+	$param{'order_id'} = $param{'OrderID'} if $param{'OrderID'};
+	$variable{'Order'} = new openprint::Order( $param{'order_id'} );
 
-	if ( $param{'btnFunction'} eq 'Submit' ) {
-		if ( $config{'PaymentProcessor'} eq 'PayPal' ) {
+	$variable{'Payment'} = new openprint::Payment( $param{'payment_id'} );
+	
+	$variable{'Payment'}->set( \%param );
+	$variable{'Payment'}->amount( $variable{'Order'}->balance() ) if ! $variable{'Payment'}->amount();
+
+	if ( $param{'btnFunction'} eq 'SetExpressCheckOut' ) {
+		# Express CheckOut takes an Order
+		my $Order = new openprint::Order( $param{'order_id'} );
+		require PayPal;
+		my $PayPal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+		my $result = $PayPal->Call_Service({
+					METHOD			=>	'SetExpressCheckout',
+					PAYMENTACTION	=>	'Sale',
+					CURRENCYCODE	=>	openprint::Currency::get_current()->short(),
+					AMT				=>	$Order->balance(),
+					RETURNURL		=>	$config{'ExternalSiteURL'}.'/payment/make.html?btnFunction=DoExpressCheckOut&order_id='.$Order->id(),
+					CANCELURL		=>	$config{'ExternalSiteURL'}.'/payment/make.html?btnFunction=CancelExpressCheckOut&order_id='.$Order->id(),
+					});
+		if ($$result{ack} ne 'Success') {
+			$variable{'error'} .= 'Api call failed:<br/>';
+			foreach my $error ( $PayPal->Parse_Errors($result) ) {
+				$variable{'error'} .= "$$error{errorcode} $$error{longmessage}<br/>";
+			} # end foreach error
+		} else {
+foreach my $k ( keys %$result ) {
+$log->debug("Results: $k => $$result{$k}");
+}
+			$session{'PayPal_token'} = $$result{'token'};	
+			$session{'PayPal_correlationid'} = $$result{'correlationid'};
+			$variable{'ExternalRedirect'} = $PayPal::url.$$result{'token'};
+			return;
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'DoExpressCheckOut' ) {
+		my $Order = new openprint::Order( $param{'order_id'} );
+		require PayPal;
+		my $PayPal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+		my $result = $PayPal->Call_Service({
+				METHOD			=>	'DoExpressCheckout',
+				PAYMENTACTION	=>	'Sale',
+				CURRENCYCODE	=>	openprint::Currency::get_current()->short(),
+				AMT				=>	$Order->balance(),
+				PAYERID			=>	$param{'PayPal_PayerID'},
+				TOKEN			=>	$session{'PayPal_token'},
+				});
+		if ($$result{ack} ne 'Success') {
+			$variable{'error'} .= 'Api call failed:<br/>';
+			foreach my $error ( $PayPal->Parse_Errors($result) ) {
+				$variable{'error'} .= "$$error{errorcode} $$error{longmessage}<br/>";
+			} # end foreach error
+		} else {
+			foreach my $k ( keys %$result ) {
+				$log->debug("Results: $k => $$result{$k}");
+			}
+			my $Payment = new openprint::Payment();
+			$variable{'error'} .= $Payment->save({
+					'order_id'		=>	$Order->id(),
+					'recipient_id'	=>	$config{'Owner'},
+					'payor_id'		=>	$session{'company_id'},
+					'amount'		=>	$Order->balance(),
+					'method'		=>	'PayPal',
+					'transaction_id'	=>	$session{'PayPal_correlationid'},
+					'memo'			=>	'',
+					'completed'		=>	1,
+					'currency_id'	=>	openprint::Currency::get_current()->id(),
+					}); 
+			delete $session{'PayPal_token'};
+			delete $session{'PayPal_PayerID'};
+			delete $session{'PayPal_correlationid'};
+			$variable{'information'} .= 'Payment was received.';
+			$variable{'Redirect'} = '/main/order/history_details.html';
+		} # end if
+		return;
+	} elsif ( $param{'btnFunction'} eq 'CancelExpressCheckOut' ) {
+		delete $session{'payment_id'};
+		delete $session{'PayPal_token'};
+		delete $session{'PayPal_PayerID'};
+		delete $session{'PayPal_correlationid'};
+		$variable{'information'} .= 'Payment was cancelled.';
+		$variable{'Redirect'} = '/main/order/history_details.html';
+		return;
+	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
+		if ( $variable{'Payment'}->Type()->name() eq 'PayPal' ) {
 			require PayPal;
 
-			my $Paypal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PASSWORD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
+			my $Paypal=PayPal->new('api_USER'=>$config{'PayPal API Username'},'api_PWD'=>$config{'PayPal API Password'},'api_SIGNATURE'=>$config{'PayPal API Signature'} );
 
 			my $result = $Paypal->Call_Service({
 					#METHOD=>'GetBalance',
-					METHOD=>'SetExpressCheckout',
-					PAYMENTACTION=>'Sale',
-					AMT=>$param{'amount'},
-					#CURRENCYCODE=>openprint::Currency::get_current()->short(),
+					METHOD			=>	'SetExpressCheckout',
+					PAYMENTACTION	=>	'Sale',
+					AMT				=>	$param{'amount'},
 					#COUTNRYCODE=>'CA',
 
 					#creditcardtype=>$param{'cc_type'},
-					#acct=>$param{'cc_number'},
-					#expdate=>$param{'exp_month'}.$param{'exp_year'},
-					#cvv2=>$param{'cc_cvv2'},
 					#firstname=>$param{'firstname'},
 					#lastname=>$param{'lastname'},
 					#street=>$param{'address1'},
@@ -93,9 +171,8 @@ sub make {
 					#state=>$param{'state'},
 					#zip=>$param{'postalcode'},
 					#country=>$param{'country'},
-					RETURNURL=>'http://testing.connortechnology.com/payment/make.html',
-					CANCELURL=>'http://testing.connortechnology.com/payment/make.html',
-#4739731052277472
+					RETURNURL=>$config{'ExternalSiteURL'}.'/payment/make.html',
+					CANCELURL=>$config{'ExternalSiteURL'}.'/payment/make.html',
 					});
 
 			if ($$result{ack} eq 'Success') {
@@ -106,9 +183,8 @@ sub make {
 					$variable{'error'} .= "$$error{errorcode} $$error{longmessage}<br/>";
 				} # end foreach error
 			} # end if
-		} else {
-			$log->error("Unknown Payment Processor in payment::make : $config{'PaymentProcessor'}");
 		} # end if PaymentProcessor == Paypal
+	} elsif ( $param{'btnFunction'} eq '' ) {
 	} else {
 		$log->error("Unknown btnFunction in payment::make : $param{'btnFunction'}");
 	} # end if btnFunction

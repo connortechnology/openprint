@@ -107,14 +107,22 @@ sub handler {
 	} else {
 		configuration::init_cache( $log, $dbh, $r->dir_config() );
 		my $serial = $r->param('serial');
-		sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
+		if ( $serial ) {
+			sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
+		} else {
+			$log->error("No serial in upload, dumping session");
+			foreach my $k ( keys %session ) {
+				$log->error( "$k -> $session{$k}" );
+			} # end foreach
+		} # end if
 		upload_files( $r, $log, $dbh, \%variable );
 		my $page = '/upload/_upload_complete.html';
-		if (-e $config{'SkinPath'} . $page) {
-			$page = $config{'SkinPath'} . $page;
+		my $content;
+		if (-e $r->dir_config('SkinPath') . $page) {
+			$page = $r->dir_config('SkinPath') . $page;
 		} else {
 			$page = $ENV{'DOCUMENT_ROOT'} . $page;
-		}
+		} # end if
 		my $content = misc::load_file( $log, $page );
         $variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 		my @page_path = split('/', $page );
@@ -122,12 +130,12 @@ sub handler {
         my $template;
 
 		while ( @page_path ) {
-			my $file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, $filename );
+			my $file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, $filename );
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
 				last;
 			} # end if
-			$file = join( '/', $config{'SkinPath'}, 'layouts', @page_path, 'default.html' );
+			$file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, 'default.html' );
 			if ( -e $file ) {
 				$template = misc::load_file( $log, $file );
 				last;
@@ -203,10 +211,12 @@ sub upload_files {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	if ( $param{'project_id'} ) {
+		$param{'project_id'} =~ s/\D//g;
 		$param{'docket'} = new openprint::Project( $param{'project_id'} )->docket();
 	} elsif ( $param{'docket'} and ! $param{'project_id'} ) {
+		$param{'docket'} =~ s/\D//g;
 		my @Projects = openprint::Project::find('docket'=>$param{'docket'});
-		$param{'project_id'} = $Projects[0]->id();
+		$param{'project_id'} = $Projects[0]->id() if @Projects;
 	} # end if
 
 	my $destdir = get_destdir();
@@ -246,8 +256,9 @@ sub upload_files {
 			} # end if
 		} # end foreach
 # Notify CSR, and Customer of upload
-		if (-e $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_csr_notification.html' );
+		$$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
+		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html') {
+			$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html' );
 		} else {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 		} # end if
@@ -285,8 +296,8 @@ sub upload_files {
 		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
 
 		# Send transcript to uploader
-		if (-e $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html' );
+		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
+			$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
 		} else {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
 		} # end if

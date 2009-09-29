@@ -23,6 +23,7 @@ my @fields = (
 	'cropmark_top','cropmark_bottom','cropmark_left','cropmark_right',
 	'stock_width','stock_height',
 	'quantity',
+	'bleed_size',
 );
 
 use strict;
@@ -85,14 +86,23 @@ sub AUTOLOAD {
 
 sub display {
 	my ( $self, $prefix ) = @_;
-	$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s', $prefix,
-	@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'}) );
+	$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s', $prefix,
+	@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction() ) );
 } # end sub display
 
 sub get {
 	my ( $self, @fields ) = @_;
 	return map { $self->$_ } @fields;
 } # end sub get
+sub to_string {
+	my $self = shift;
+	my $string = sprintf('%dout %dx%d', @$self{'imposition','columns','rows'} );
+	if ( $$self{'dutch_columns'} ) {
+		$string .= sprintf('+%dx%d', @$self{'dutch_columns','dutch_rows'} );
+	} # end if
+	$string .= ' ' . $$self{'image_orientation'};
+	return $string;
+} # end sub to_string
 
 sub set {
 	my $self = shift;
@@ -163,6 +173,7 @@ sub load_used {
 	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRowsUsed'} ? $$specs{'hdnImpositionDutchRowsUsed'} : $$specs{'hdnImpositionDutchRows'.$qty_index};
 	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumnsUsed'} ? $$specs{'hdnImpositionDutchColumnsUsed'} : $$specs{'hdnImpositionDutchColumns'.$qty_index};
 	$$self{'dutch_orientation'} = $$self{'image_orientation'} eq 'Vertical' ? 'Horizontal' : 'Vertical';
+	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
 
 } # edn sub load_used
 
@@ -197,6 +208,7 @@ sub load {
 	$$self{'runstyle'} = 'Sheet Work' if ! $$self{'runstyle'};
 	$$self{'image_orientation'} = $$specs{'hdnImageOrientation'.$qty_index};
 	$$self{'grain_direction'} = $$specs{'rdbGrainDirection'.$qty_index};
+	$$self{'bleed_size'} = $$specs{'ddmBleedSize'.$qty_index};
 
 	if ( ! $$self{'image_orientation'} ) {
 		# Guess the image orientation
@@ -364,19 +376,22 @@ sub pages {
 
 sub grain_direction {
 	my $self = shift;
-	if ( $$self{'rotate_sheet'} ) {
-		if ( $$self{'image_orientation'} eq 'Vertical' ) {
-			return 'width';
+	if ( ! $$self{'grain_direction'} ) {
+		if ( $$self{'rotate_sheet'} ) {
+			if ( $$self{'image_orientation'} eq 'Vertical' ) {
+				$$self{'grain_direction'} = $self->Paper()->grain_direction() eq 'width' ? 'height' : 'width';
+			} else {
+				$$self{'grain_direction'} = $self->Paper()->grain_direction();
+			} # end if
 		} else {
-			return 'height';
-		} # end if
-	} else {
-		if ( $$self{'image_orientation'} eq 'Vertical' ) {
-			return 'height';
-		} else {
-			return 'width';
+			if ( $$self{'image_orientation'} eq 'Vertical' ) {
+				$$self{'grain_direction'} = $self->Paper()->grain_direction();
+			} else {
+				$$self{'grain_direction'} = $self->Paper()->grain_direction() eq 'width' ? 'height' : 'width';
+			} # end if
 		} # end if
 	} # end if
+	return $$self{'grain_direction'};
 } # end sub grain_direction
 
 sub equals {

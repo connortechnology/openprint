@@ -3,19 +3,19 @@
 <img id="FoldType" src="/images/templates/NoFold.gif" alt="FoldType"/>
 <div id="NewDimensions">
 <? echo ( 
-	$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars'] );
+	$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars'] );
 
 	if ( $$variable{'DimensionsDisplay'} eq 'Finished' ) {
-		$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?)};
+		$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id=?};
 	} else {
-		$_ = q{SELECT DISTINCT dblFlatWidth::float || 'x' || dblFlatHeight::float || 'Flat' AS size, dblFlatWidth::float || '" x ' || dblFlatHeight::float || '" Flat' FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?)};
+		$_ = q{SELECT DISTINCT dblFlatWidth::float || 'x' || dblFlatHeight::float || 'Flat' AS size, dblFlatWidth::float || '" x ' || dblFlatHeight::float || '" Flat' FROM projecttemplate WHERE projecttype_id=?};
 	} # end if
 	
 	my @options;
 	if ( $$variable{'FoldType'} ) {
-		@options = sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', @$variable{'ProjectTypeName','FoldType'} );
+		@options = sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', $$variable{'ProjectType'}->id(),$$variable{'FoldType'} );
 	} else {
-		@options = sql::execute( undef, undef, $_, $$variable{'ProjectTypeName'} );
+		@options = sql::execute( undef, undef, $_, $$variable{'ProjectType'}->() );
 	} # end if
 
 	my @output;

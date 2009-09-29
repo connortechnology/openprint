@@ -25,6 +25,10 @@
 			<label>Creation Date:</label>
 	  		<span title="<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></span>
 		</p>
+	  	<p> 
+			<label>Last Updated:</label>
+	  		<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
+		</p>
 		<? if ( $$variable{'Project'}->docket() ) ?>
 		<? if ( $$variable{'Project'}->shippingtype() ) ?>
 	  	<p> 
@@ -51,6 +55,18 @@
 		<? endif ( $$variable{'PrepressOperator'} = openprint::project::get_prepress_operator( $log, $dbh, $$variable{'ProjectIndex'} ); ) ?>
 
 		<? endif ( $$variable{'Project'}->docket() ) ?>
+		<? if ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+		<p>
+			<label>Predefined For:</label>
+			<? echo (
+				my $html = '';
+				foreach my $Product ( openprint::Product::find('project_id'=>$$variable{'Project'}->id()) ) {
+					$html .= $Product->name() . '<br/>';
+				} # end foreach Product
+				return $html;
+			) ?>
+		</p>
+		<? endif ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 	</fieldset>
 	<fieldset id="ContactInformation"><legend>Contact Information</legend>
 		<p>

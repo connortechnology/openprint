@@ -14,6 +14,7 @@ $table = 'par_reasons';
 $serial = 'par_reasons_id_seq';
 
 %fields = (
+	'id'		=>	'id',
 	'name'		=> 'name',
 	'deleted'	=> 'deleted',
 	'sorting'	=>	'sorting',

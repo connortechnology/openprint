@@ -65,11 +65,13 @@
 					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_paycheques(f1);", '', 'Show Results' ),
 					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
 					ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'edit.html', 'New Paycheque' ),
+					ssi::writeButton( $log, $dbh, 'Export', 'export.gif', "f1.btnFunction.value='Export';f1.submit();", '', 'Export' ),
 					); ) ?>
 			</p>
 		</fieldset>
 	</div>
 		<div id="PaychequeList"><!--#include virtual="_history.html"--></div>
+		<input type="hidden" name="btnFunction"/>
 	</form>
 <? else ( $session{'user_id'} ) ?>
 	Only logged in users have a paycheque history.

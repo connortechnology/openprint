@@ -12,6 +12,6 @@
 		<label for="txtPerfQty"># of Perforations:</label>
 	</span>
 	<span class="input">
-		<input type="text" id="txtPerfQty" name="txtPerfQty" value="<?txtPerfQty?>" size="2" />
+		<input type="text" id="txtPerfQty" name="txtPerfQty" value="<?txtPerfQty?>" size="2" onkeyup="this.value=this.value.replace(/\D/g,'');remove_div('OrderButton');" />
 	</span>
 </div>

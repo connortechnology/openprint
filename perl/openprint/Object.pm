@@ -51,12 +51,15 @@ sub load {
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
+	if ( ! $table ) {
+		$log->error( 'NO table for type ' . $type );
+		return;
+	} # end if
 
 	if ( ! $data ) {
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
-			return;
 		} # end if
 	} # end if
 
@@ -81,6 +84,7 @@ sub save {
 	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
 
 	if ( ! $$self{'id'} ) {
+		
 		my $ac = sql::start_transaction( $dbh );
 		($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
 		if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
@@ -95,6 +99,8 @@ sub save {
 		} # end if
 	} # end if
 	$self->load();
+	delete $openprint::Object::cache{$type}{$$self{id}};
+	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return;
 } # end sub save
 
@@ -114,18 +120,12 @@ sub AUTOLOAD {
 
 sub get {
     my $self = shift;
-	if ( $debug ) {
-		my $type = ref $self;
-		my %fields = eval ('%'.$type.'::fields');
+	my @results;
+	foreach ( @_ ) {
+		push @results, $self->$_();
+	} # end foreach
 
-		foreach my $field ( @_ ) {
-			if ( ! defined $fields{$field} ) {
-				$openprint::log->warn( $type . ": Invalid field requested: ($field)." );
-			} # end if
-		} # end foreach
-	} # end if
-
-    return @$self{@_};
+    return @results;
 } # end sub get
 
 sub set {
@@ -167,14 +167,6 @@ $openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults
 	return @set_fields;
 } # end sub set
 
-sub delete {
-    my ( $self ) = @_;
-	my $type = ref $self;
-	my $table = eval '$'.$type.'::table';
-    sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
-	delete $openprint::Object::cache{$type}{$$self{id}};
-} # end sub delete
-
 sub copy {
 	my $self = shift;
 
@@ -183,10 +175,17 @@ sub copy {
 	my %fields = eval ('%'.$type.'::fields');
 	@$new{keys %fields} = @$self{keys %fields};
 	delete $$new{id};
-	$$new{'name'} = 'Copy of ' . $$new{'name'};
+	$$new{'name'} = 'Copy of ' . $$new{'name'} if $fields{'name'};
 
 	return $new;
 } # end sub copy
+
+sub clone {
+	my $self = shift;
+	my $new = new ref $self;
+	@$new{keys %$self} = @$self{keys %$self};
+	return $new;
+} # end sub clone
 
 sub delete {
     my ( $self ) = @_;
@@ -200,8 +199,18 @@ sub delete {
 		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
 		delete $openprint::Object::cache{$type}{$$self{id}};
 	} # end if
+	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return;
 } # end sub delete
+
+sub destroy {
+	my ( $self ) = @_;
+	my $type = ref $self;
+	my $table = eval '$'.$type.'::table';
+	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+	delete $openprint::Object::cache{$type}{$$self{id}};
+	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
+} # end sub destroy
 
 sub undelete {
     my ( $self ) = @_;
@@ -209,12 +218,15 @@ sub undelete {
     my $table = eval '$'.$type.'::table';
 	sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 0 );
 	$$self{'deleted'}=0;
+	my %find_cache = eval '%'.$type.'::find_cache';
+	%find_cache = () if %find_cache;
 	return;
-} # end sub delete
+} # end sub undelete
 
-
-1;
-__END__
+sub Creator {
+	require openprint::User;
+	return new openprint::User( $_[0]{'created_by'} );
+} # end sub Creator
 
 1;
 __END__

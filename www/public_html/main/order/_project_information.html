@@ -1,19 +1,16 @@
 <fieldset>
-	<? eval (
-		$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ( ! $$variable{'Project'} );
-	) ?>
 	<legend>Project # <? echo ( $$variable{'Project'}->id() ) ?></legend>
 	<span style="float: right;">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'ProjectIndex'}, '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'ProjectIndex'}", 'Remove' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'ProjectIndex'}, '', '', "/main/project/view.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Edit Project' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'Project'}->id(), '', '', "/main/project/view.html?ProjectIndex=$$variable{'Project'}{id}", 'Edit Project' ); ) ?>
 	</span>
-	<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>">
+	<a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>">
 	<? echo ( return $$variable{'Project'}->summary();) ?>
 	</a>
 	<br class="spacer"/>
 	<p>
 		<label>Reference:</label>
-		<textarea name="Reference<?ProjectIndex?>" cols="" rows="<? echo ( scalar split("\n",  $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
+		<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( scalar split("\n",  $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
 	</p>
 <? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <!--#include virtual="_quantity_select.html"-->

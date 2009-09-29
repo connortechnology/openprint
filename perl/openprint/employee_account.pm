@@ -52,15 +52,15 @@ sub profile {
         if ( ! $variable{'error'} ) {
 			if ( $config{mail_db_name} and $param{'email'} =~ /(.*)\@point\-one\.com/ ) {
 				if ( $param{'VacationState'} ) {
-					email::start_vacation( $r, $log, @param{'email','VacationSubject','VacationMessage'} );
+					email::start_vacation( @param{'email','VacationSubject','VacationMessage'} );
 				} else {
-					email::stop_vacation( $r, $log, $param{'email'} );
+					email::stop_vacation( $param{'email'} );
 				} # end if
 				if ( $param{'EmailPassword'} ) {
 					if ( ! $param{'VerifyEmailPassword'} ) {
 						$variable{'warning'} .= 'Verify Email password left blank, password not changed.<br/>';
 					} elsif ( $param{'EmailPassword'} eq $param{'VerifyEmailPassword'} ) {
-						email::set_password( $r, $log, @param{'email','EmailPassword'} );
+						email::set_password( @param{'email','EmailPassword'} );
 					} else {
 						$variable{'error'} .= 'Email Password fields do not match.<br/>';
 					} # end if
@@ -71,8 +71,7 @@ sub profile {
 					push @aliases, $alias;
 				} # end foreach
 				push @aliases, $User->email() if ! @aliases;
-				email::aliases( $log, $User->email(), @aliases );
-				$sql::dbh = $dbh;
+				email::aliases( $User->email(), @aliases );
 			} # end if
 
 			if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
@@ -101,9 +100,8 @@ sub profile {
 	} # end if
 	$variable{'User'} = $User;
 	if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
-		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
-		@{$variable{'Aliases'}} = email::aliases( $log, $User->email() );
-		$sql::dbh = $dbh;
+		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+		@{$variable{'Aliases'}} = email::aliases( $User->email() );
 	} # end if
 
 } # end sub profile

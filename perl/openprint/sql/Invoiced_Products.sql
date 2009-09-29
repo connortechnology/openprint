@@ -1,4 +1,4 @@
-DROP TABLE Invoiced_Products;
+DROP TABLE IF EXISTS Invoiced_Products;
 
 CREATE TABLE Invoiced_Products (
 	id	SERIAL NOT NULL,

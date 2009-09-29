@@ -65,11 +65,10 @@ sub view_services {
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
-	my ( $cust_id ) = $Project->company_id();
 
-	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index *** $openprint::session{'company_id'}");
+	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
 
-	if ( $cust_id eq $openprint::session{'company_id'} or $openprint::session{'user_type'} eq 'A' ) {
+	if ( ( $Project->company_id() == $openprint::session{'company_id'} ) or sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
 
 		if ( defined $openprint::param{'btnFunction'} ) {
 			if ( $openprint::param{'btnFunction'} eq 'Export JDF' ) {
@@ -83,13 +82,20 @@ sub view_services {
 				$log->debug("** Save Service in View Services Function **");
 
 				my $service_index = $r->param('ServiceIndex');
+				my $Currency = openprint::Currency::get_current();
+				my $recalc = 0;	
 				save_service( $r, $log, $dbh, $variable, $Project, $service_index );
+				if ( $Project->currency_id() != $Currency->id() ) {
+					$Project->Currency( $Currency );
+					# Change of currency calls for complete recalc
+					$recalc = 1;
+				} # end if
 
 				if ( $r->param('NewBook') eq 'Y' ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
-				} elsif ( $r->param('PrintingService') eq 'Y' ) {
+				} elsif ( $r->param('PrintingService') eq 'Y' or $recalc ) {
 
 					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					# Now run code to modify all other services
@@ -100,7 +106,6 @@ sub view_services {
 					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index );
 				} # end if
-				$Project->Currency( openprint::Currency::get_current() );
 				$Project->summary(undef);
 				$Project->save();
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {
