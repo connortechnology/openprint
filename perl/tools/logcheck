@@ -88,6 +88,7 @@ foreach my $log_file ( @log_files ) {
 					} # end if
 					next if $ip =~ /^209\.250\.156/;
 					next if $ip =~ /^173\.34\.14\.197/;
+					next if $ip =~ /^208\.89\.51\.122/;
 					if ( ! $ip ) {
 						print "No ip for $source\n";
 					} else {
@@ -128,7 +129,7 @@ if ( $opts->{'blacklist'} ) {
 	if ( ! open( FH, '>'.$opts->{'blacklist'} ) ) {
 		die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
 	} else {
-		foreach my $ip ( sql::execute( undef, undef, q`SELECT ip FROM blacklist WHERE updated_on > NOW()-'1 month'::interval AND count > 10 ORDER BY ip` ) ) {
+		foreach my $ip ( sql::execute( undef, undef, q`SELECT ip FROM blacklist WHERE updated_on > NOW()-'2 months'::interval AND count > 5 ORDER BY ip` ) ) {
 			print FH "$ip\n";
 		} # end foreach ip
 		close(FH);

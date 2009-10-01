@@ -728,7 +728,7 @@ if ( $version < 1902 ) {
 	print "Updating to version 1902\n";
 	my $ac = sql::start_transaction( $dbh );
 	my @projects;
-	push @projects, openprint::Project::find( 'order'=>'index desc', 'created_on_start'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) );
+	push @projects, openprint::Project::find( 'order'=>'id desc', 'created_on_start'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ) );
 
 	foreach my $Project ( @projects ) {
 		my $services = $Project->services();
@@ -1764,13 +1764,13 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ordered_products L
 if ( $data and ! exists $$data{'project_id'} ) {
 print "Adding project_id to ordered_Products\n";
 	$dbh->do(q`alter table ordered_products add project_id INTEGER`);
-	$dbh->do(q`alter table ordered_products add FOREIGN KEY (project_id) REFERENCES Projects (index)`);
+	$dbh->do(q`alter table ordered_products add FOREIGN KEY (project_id) REFERENCES Projects (id)`);
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM products LIMIT 1', {} );
 if ( $data and ! exists $$data{'project_id'} ) {
 print "Adding project_id to Products\n";
 	$dbh->do(q`alter table products add project_id INTEGER`);
-	$dbh->do(q`alter table products add FOREIGN KEY (project_id) REFERENCES Projects (index)`);
+	$dbh->do(q`alter table products add FOREIGN KEY (project_id) REFERENCES Projects (id)`);
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Projects LIMIT 1', {} );
 if ( $data and ! exists $$data{'predefined'} ) {
@@ -2243,6 +2243,11 @@ if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/User_Notifications.sql});
 	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
 } # end if
+if ( ! sets::isin('log',\@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Logs.sql});
+	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
+} # end if
+$dbh->commit();
 
 $dbh->disconnect();
 1;

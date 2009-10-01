@@ -38,15 +38,15 @@ CREATE TABLE Companies (
 	strBankEmail			TEXT,
 	lngPriceList			INT4,
 	dblPricingPercent		numeric(16,4) DEFAULT '0.0000' NOT NULL,
-	lngSalesperson			INT4, FOREIGN KEY (lngSalesPerson) REFERENCES Users (Index),
+	salesrep_id			INTEGER, FOREIGN KEY (Salesrep_id) REFERENCES Users (id),
 	created_on			timestamp with time zone NOT NULL default NOW(),
 	updated_on			timestamp with time zone NOT NULL default NOW(),
 	LastLoggedIn			timestamp with time zone,
-	currency_id		INT2, FOREIGN KEY (currency_id) REFERENCES Currency (Index),
+	currency_id		INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
 	ysnAccountActivation	CHAR(1) DEFAULT 'N' NOT NULL,
 	strCustomGreeting		TEXT,
 	strWebURL				TEXT,
 	ysnMailingList			CHAR(1) DEFAULT 'N' NOT NULL,
 	quote_project_breakdown	CHAR(1) DEFAULT 'N',
-	PRIMARY KEY (Index)
+	PRIMARY KEY (id)
 );

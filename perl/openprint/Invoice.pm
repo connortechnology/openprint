@@ -238,6 +238,7 @@ sub subtotal {
 	my ( $self ) = @_;
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
+$log->debug("Recalculating subtotal");
 		$$self{'subtotal'} = 0;
 		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack::find('invoice_id'=>$$self{id});
 		map { $$self{'subtotal'} += $_->total() } openprint::Invoiced_Product::find('invoice_id'=>$$self{id});
