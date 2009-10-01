@@ -77,6 +77,10 @@ div.row {
 * div.PressColumn ul li {display: block;}
 /* End hide from IE-mac */
 
+div.PressColumn li br {
+clear: both;
+}
+
 	div.PressColumn li.yellow {
 		background-color: #ffff99;
 	}
@@ -123,7 +127,7 @@ div.row {
 		float: left;
 		display: inline;
 		border: 1px outset gray;
-		width: 50px;
+		width: 65px;
 		text-align: center;
 	}
 	.DueDate {
