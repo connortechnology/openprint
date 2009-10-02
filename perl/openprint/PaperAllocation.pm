@@ -25,7 +25,7 @@ require openprint::Manufacturer;
 
 my $debug = 1;
 
-$table = 'PaperAllocations';
+$table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
 
 %fields = (
