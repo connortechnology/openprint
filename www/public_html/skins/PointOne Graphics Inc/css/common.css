@@ -479,9 +479,25 @@ td.Elapsed, th.Elapsed {
 	width: 120px;
 	text-align: left;
 }
+td.Docket, th.Docket {
+	width: 50px;
+	text-align: center;
+}
+td.Stock, th.Stock {
+	text-align: right;
+}
+td.StockQuantity, th.StockQuantity {
+	width: 80px;
+	text-align: right;
+}
 td.User, th.User {
 	width: 120px;
 	text-align: left;
+}
+td.Company, th.Company {
+	width: 200px;
+	text-align: left;
+	overflow:hidden;
 }
 td.checkbox, th.checkbox {
 	width: 20px;

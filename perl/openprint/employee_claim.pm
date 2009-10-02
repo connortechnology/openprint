@@ -21,7 +21,19 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 *config = \%openprint::config;
 
 sub history {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		foreach my $claim_id ( ref $param{'claims'} eq 'ARRAY' ? @{$param{'claims'}} : split(',',$param{'claims'}) ) {
+			my $Claim = new openprint::Claim( $claim_id );
+			$variable{'error'} .= $Claim->delete();
+
+		} # end foreach claim_id
+	} # end if
+	ssi::save_params( '/employee/inventory/claim/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','supplier_id', 'created_by', 'status' ) );
 } # end sub history
+
+sub _history {
+	ssi::save_params( '/employee/inventory/claim/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','supplier_id', 'created_by', 'status' ) );
+} # end sub _claims
 
 sub view {
 	$param{'claim_id'} =~ s/\s//g;
@@ -59,6 +71,8 @@ sub view {
 			$variable{'information'} .= 'Information successfully stored.<br/>';
 		} # end if
 		%param = ();
+	} elsif ( $param{'btnFunction'} eq 'Send' ) {
+		$variable{'information'} .= $Claim->send();
 	} # end if btnfunction
 	$variable{'Claim'} = $Claim;
 } # end sub view
@@ -141,26 +155,10 @@ sub _contents {
 	} # end if
 } # end sub _contents
 
-sub claims {
-	if ( $param{'btnFunction'} eq 'Delete' ) {
-		foreach my $claim_id ( ref $param{'claims'} eq 'ARRAY' ? @{$param{'claims'}} : split(',',$param{'claims'}) ) {
-			my $Claim = new openprint::Claim( $claim_id );
-			$variable{'error'} .= $Claim->delete();
-
-		} # end foreach claim_id
-	} # end if
-	ssi::save_params( '/employee/inventory/claims.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
-} # end sub claims
-
-sub _claims {
-	ssi::save_params( '/employee/inventory/claims.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
-} # end sub _claims
-
 sub _select_vendor {
 } # end sub _select_vendor
 sub _select_contact {
 } # end sub _select_contact
-
 sub _check_for_skid {
 } # end sub _check_for_skid
 
