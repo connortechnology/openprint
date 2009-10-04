@@ -102,6 +102,8 @@ sub profile {
 	if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
 		@{$variable{'Aliases'}} = email::aliases( $User->email() );
+	} else {
+		@{$variable{'Aliases'}} = ();
 	} # end if
 
 } # end sub profile
