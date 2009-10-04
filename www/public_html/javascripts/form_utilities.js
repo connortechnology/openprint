@@ -250,32 +250,36 @@ function filterDDM( filter, ddm ) {
 		return;
 	} // end if
 	var old_selected_index = ddm.selectedIndex;
+	if ( old_selected_index <= 0 )
+		old_selected_index = 1;
 
 	var chunk1 = filter.value.toLowerCase();
 	var chunk2 =  ddm.options[old_selected_index].text.toLowerCase();
 
-	if ( chunk1 > chunk2 ) {
+	if ( chunk1 < chunk2 ) {
 		// search down
+//alert( 'down' + chunk1 + ' ' + chunk2 + ' ' + old_selected_index );
 		for ( var index = old_selected_index-1; index > 0; index -= 1 ) {
-			var chunk2 = ddm.options[index].text.toLowerCase();
-			if ( chunk1 <= chunk2 ) {
-				ddm.selectedIndex = index;
-				return true;
-			} // end if
-		} // end for
-		ddm.selectedIndex = 0;
-		return 0 != old_selected_index;
-	} else if ( chunk2 > chunk1 ) {
-		// search up
-		for ( var index = old_selected_index+1; index < ddm.options.length; index += 1 ) {
 			var chunk2 = ddm.options[index].text.toLowerCase();
 			if ( chunk1 > chunk2 ) {
 				// Need to back up 1
-				ddm.selectedIndex = index-1;
+				ddm.selectedIndex = index+1;
 				return index != old_selected_index;
 			} else if ( chunk1 == chunk2 ) {
 				ddm.selectedIndex = index;
 				return index != old_selected_index;
+			} // end if
+		} // end for
+		//ddm.selectedIndex = 0;
+		//return 0 != old_selected_index;
+	} else if ( chunk1 > chunk2 ) {
+//alert( 'up' + chunk1 + ' ' + chunk2 + ' ' + old_selected_index );
+		// search up
+		for ( var index = old_selected_index+1; index < ddm.options.length; index += 1 ) {
+			var chunk2 = ddm.options[index].text.toLowerCase();
+			if ( chunk1 <= chunk2 ) {
+				ddm.selectedIndex = index;
+				return true;
 			} // end if
 		} // end for
 	} // end if
