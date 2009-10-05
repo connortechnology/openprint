@@ -638,34 +638,6 @@ sub send_duedate_change_notification {
 	} # end if
 } # end sub send_duedate_change_notification
 
-sub load_press_use {
-	my ( $log, $dbh, $variable, $project_index ) = @_;
-
-	$variable{'Project'} = new openprint::Project( $project_index );
-
-	#@{$variable{'Presses'}} = openprint::Equipment::find( 'category'=>'Printing', 'order'=>'lower(strName)' );
-
-	my $duedatedays = 0;
-	foreach my $signature_service_index ( $variable{'Project'}->signatures() ) {
-		my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $signature_service_index );
-		push @{$variable{'Signatures'}}, @printing_specs{'SignatureIndex','txtServiceDescription'};
-		if ( ! $printing_specs{'UsePress'} ) {
-			$printing_specs{'UsePress'} = $printing_specs{'ddmPress'.$variable{'Project'}->ordered_quantity_index()};
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $signature_service_index, 'UsePress', $printing_specs{'UsePress'} );
-		} # end if
-		$variable{"UsePress-$signature_service_index"} = $printing_specs{"UsePress"};
-# Lookup how many days to add to due date
-		if ( my @Equipment = openprint::Equipment::find( 'strid'=>$printing_specs{'UsePress'} ) ) {
-			( $_ ) = $Equipment[0]->specification('DueDateDays');
-			if ( $_ > $duedatedays ) {
-				$duedatedays = int $_;
-			} # end if
-		} # end if
-	} # end foreach signature_service_index
-	return $duedatedays;
-} # end sub load_press_use
-
-
 sub load_press_completion {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 
@@ -838,8 +810,7 @@ sub barcode {
 			return;
 		} # end if
 		$message = sprintf('Marked project %d Approved from %s<br/>Notified CSR', $Project->id(), $status );
-		my ( $year, $month, $day ) = get_due_date( $log, $dbh, $Project->id() );
-		$Project->due_date( join('-', $year, $month, $day ) );
+		$Project->due_date( $Project->get_due_date() );
 		$Project->save();
 		mark_proofs_approved( $log, $dbh, \%variable, $Project->id(), $service_index, $status );
 		send_proofs_approved_email( $Project->id(), $param{'Order'} );
@@ -914,42 +885,6 @@ sub mark_proofs_approved {
 	my $approval_date = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', Date::Calc::Today_and_Now() );
 	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'ApprovalDate', $approval_date );
 } # end sub mark_proofs_approved
-
-
-sub get_due_date {
-	my ( $log, $dbh, $project_index ) = @_;
-
-	my $Project = new openprint::Project( $project_index );
-
-	my $duedatedays = 0;
-	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $printing_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		if ( ! exists $$printing_specs{'UsePress'} ) {
-			$$printing_specs{'UsePress'} = $$printing_specs{'ddmPress'.$Project->ordered_quantity_index()};
-		} # end if
-		if ( my @Equipment = openprint::Equipment::find( 'strid'=>$$printing_specs{'UsePress'} ) ) {
-			# Lookup how many days to add to due date
-			( $_ ) = $Equipment[0]->specification('DueDate Days');
-			if ( $_ > $duedatedays ) {
-				$duedatedays = int $_;
-			} # end if
-		} # end if
-	} # end foreach signature_service_index
-
-	if ( ! $duedatedays ) {
-		$duedatedays = 5;
-	} # end if
-# Make sure that it is a business day!
-	my ( $year, $month, $day ) = Date::Calc::Today();
-	while ($duedatedays) {
-		( $year, $month, $day ) = Add_Delta_Days( $year, $month, $day, 1 );
-		while ( 6 <= Date::Calc::Day_of_Week( $year, $month, $day ) ) {
-			( $year, $month, $day ) = Add_Delta_Days( $year, $month, $day, 1 );
-		} # end while
-		$duedatedays -= 1;
-	} # end while
-	return ( $year, $month, $day );
-} # end sub get_due_date
 
 
 sub add_to_barcode_log {
@@ -1083,6 +1018,7 @@ sub _drop {
 	if ( ! $Shift->Equipment()->smartscheduling() ) {
 		return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'ul_id'}, $param{'services'} );
 	} # end if
+
 if ( 0 ) {
 	if ( $Shift->starttime() and ! $Shift->operator_id() ) {
 		$variable{'alert'} .= 'Shifts must have an operator in order to schedule jobs in them.';
@@ -1098,8 +1034,9 @@ if ( 0 ) {
 		my @order = split( '&', $services );
 		return if ! @order;
 
-	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+
 		if ( $Shift->starttime() ) {
 			my @final_order;
 			# Get jobs before the shift, leave them in order.
@@ -1171,14 +1108,46 @@ $log->debug("Order after coalesce: @order");
 		sql::end_transaction( $dbh, $ac );
 
 	} # end if services
+
+	# If there is a changed ul that is newer than our filter, it won't be shown, but a redraw will happen.... so we should adjust the filter to show it.
+	my $filter_seconds = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d', @session{
+				'/employee/production/print_overview.html?schedule_end_year',
+				'/employee/production/print_overview.html?schedule_end_month',
+				'/employee/production/print_overview.html?schedule_end_day',
+				} ) );
+	foreach ( @{$variable{'changed'}} ) {
+		my $Shift = openprint::Shift::get_from_ul_id( $_ );
+		my $time = $Shift->starttime_seconds();
+		if ( $time > $filter_seconds ) {
+			@session{
+				'/employee/production/print_overview.html?schedule_end_year',
+				'/employee/production/print_overview.html?schedule_end_month',
+				'/employee/production/print_overview.html?schedule_end_day',
+			} = Date::Calc::Time_to_Date( $time );
+			$filter_seconds = $time;
+		} # end if
+	} # end foreach
 } # end sub _drop.json
 
 sub reorder_jobs {
 	my ( @order ) = @_;
 
-foreach my $Job ( @order ) {
-$log->debug($Job->Project()->docket() . ' ' . $Job->Project()->Company()->name() );
-}
+	if ( ! @order ) {
+		$log->warn("No Jobs");
+		return;
+	} # end if
+
+	foreach my $Job ( @order ) {
+		my $Project = $Job->Project();
+		$log->debug($Job->Project()->docket() . ' ' . $Job->Project()->Company()->name() . ' Due: (' . $Project->due_date().')' );
+		if ( ! $Project->due_date() ) {
+			$log->debug("Saving project");
+			if ( $_ = $Project->save({'due_date'=>$Project->get_due_date()}) ) {
+			$log->error("Error Saving project") if $_;
+			} # end if
+			$log->debug("DOne Saving project");
+		} # end if
+	} # end foreach Job
 
 	my $start_time = time;
 
@@ -1186,10 +1155,8 @@ $log->debug($Job->Project()->docket() . ' ' . $Job->Project()->Company()->name()
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
 	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
-$log->debug("Downing starttime, " . $row->Project()->docket() . ' locked: ' . $row->locked() );
 		$start_time = $row->starttime_seconds();
 	} # end if
-
 
 	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift::find(
@@ -1398,8 +1365,19 @@ $log->debug('Shift: ' . $Job->Shift()->ul_id() );
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
+		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+		# Have to update all ul's
+		my $filter_seconds = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d', @session{
+					'/employee/production/print_overview.html?schedule_end_year',
+					'/employee/production/print_overview.html?schedule_end_month',
+					'/employee/production/print_overview.html?schedule_end_day',
+					} ) );
+		foreach my $Shift ( openprint::Shift::find('starttime_start'=>$Job->starttime(), 'equipment_id'=>$Job->equipment_id() ) ) {
+			push @{$variable{'changed'}}, $Shift->ul_id();
+			last if $Shift->starttime_seconds() > $filter_seconds;
+
+		} # end foreach Shift
 		if ( $Job->id() ) {
-			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 			$Job->delete();
 		} else {
 $log->debug("Already deleted");

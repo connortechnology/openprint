@@ -369,6 +369,8 @@ sub seconds2hms {
     } # end if
 	return sprintf('%d:%.2d', $hours, $minutes );
 } # end sub seconds2hms
+sub seconds2ymd {
+} # end sub seconds2ymd 
 
 1;
 

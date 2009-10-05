@@ -66,7 +66,7 @@ sub find {
 		} # end if
 	} # end if
 	if ( exists $params{'name'} and $params{'equipment_id'} ) {
-		$sql .= ' AND shift_id =(SELECT id FROM Equipment_shifts WHERE name=? AND equipment_id=?)';
+		$sql .= ' AND shift_id IN (SELECT id FROM Equipment_shifts WHERE name=? AND equipment_id=?)';
 		push @values, $params{'name'},$params{'equipment_id'};
 	} # end if
 	if ( exists $params{'equipment_id'} ) {
@@ -136,6 +136,7 @@ sub find {
 sub starttime_seconds {
 	return Date::Parse::str2time( $_[0]{'starttime'} );
 } # endsub
+
 sub startdate_seconds {
 	my ( $self ) = @_;
 	my $time = $self->starttime_seconds();

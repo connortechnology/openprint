@@ -238,7 +238,7 @@
 				'/employee/production/print_overview.html?schedule_end_day'}
 				) + 1;
 
-			$end = 10 if $end > 10;
+			$end = 100 if $end > 100;
 			foreach ( 1 .. $end ) {
 
 				my @Shifts = openprint::Shift::find( 

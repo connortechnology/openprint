@@ -284,26 +284,19 @@ $log->debug('2');
 			$variable{'Employee'} = new openprint::User( $openprint::session{'user_id'} )->name();
 			
 			if ( $filename eq 'proofs.html' or $filename eq 'FilmStripping.html' ) {
-				my $printing_service_index = openprint::project::get_project_type_service_index( $log, $dbh, $variable{'ProjectIndex'} );
-				my $duedatedays = openprint::employee_production::load_press_use( $log, $dbh, \%variable, $variable{'ProjectIndex'} );
+				foreach my $signature_service_index ( $variable{'Project'}->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $variable{'Project'}, $signature_service_index );
+					push @{$variable{'Signatures'}}, @$sig_specs{'SignatureIndex','txtServiceDescription'};
+					if ( ! $$sig_specs{'UsePress'} ) {
+						openprint::service::insert_service_spec( $log, $dbh, $variable{'ProjectIndex'}, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$variable{'Project'}->ordered_quantity_index()} );
+					} # end if
+					$variable{"UsePress-$signature_service_index"} = $$sig_specs{'UsePress'};
+				} # end foreach signature_service_index
 
 				if ( ! $variable{'ddmDueDate'} ) {
-					if ( ! $duedatedays ) {
-						$duedatedays = 5;
-					} # end if
-# Make sure that it is a business day!
-					my ( $year, $month, $day ) = Date::Calc::Today();
-					while ($duedatedays) {
-						( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-						while ( 6 <= Date::Calc::Day_of_Week( $year, $month, $day ) ) {
-							( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-						} # end while
-						$duedatedays -= 1;
-					} # end while
-					@variable{'duedate_year','duedate_month','duedate_day'} = ( $year, $month, $day );
-				} else {
-					@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{'ddmDueDate'});
+					$variable{'ddmDueDate'} = $variable{'Project'}->get_due_date();
 				} # end if
+				@variable{'duedate_year','duedate_month','duedate_day'} = split('-', $variable{'ddmDueDate'});
 
 			} elsif ( $third eq 'prin' ) {	
 				openprint::employee_production::load_press_completion( $log, $dbh, \%variable, $variable{'ProjectIndex'} );

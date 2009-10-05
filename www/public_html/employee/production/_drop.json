@@ -13,5 +13,5 @@ $log->debug("Drops: @drops");
 ) ?>
 if ( new_shifts ) {
 	alert('New shifts have been added.  I will now refresh the screen.');
-	f1.submit();
+	window.location = '/employee/production/print_overview.html';
 }
