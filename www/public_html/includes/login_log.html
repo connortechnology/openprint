@@ -12,7 +12,7 @@
 	foreach my $Log ( openprint::logRecord::find('company_id'=>$session{'company_id'},'user_id'=>$session{user_id},'order'=>'date_time DESC', 'limit'=>5, 'action_type'=>[2,3,78,79] ) ) {
 		$html .= sprintf('<tr><td>%s</td><td style="overflow:hidden;">%s</td><td>%s</td></tr>',
 			Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
-			$Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->note() );
+			$$Log{'hostname'} ? $Log->hostname(): $Log->ip_address(), $Log->note() );
 	} # end foreach
 	return $html;
 ) ?>
