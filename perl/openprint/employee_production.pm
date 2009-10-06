@@ -1245,6 +1245,7 @@ sub _li_change {
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
 		my $Project = new openprint::Project( $$row{'projectindex'} );
+		$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
 		my ( $starttime, $equipment_id ) = @$row{'starttime','equipment_id'};
 		$equipment_id = $param{'equipment_id'} if $param{'equipment_id'};
 
