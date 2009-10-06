@@ -1079,8 +1079,8 @@ $openprint::log->debug("No papers found");
 		} # end if
 	} # end if
 
+	$Paper = $Paper->clone();
 	if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
-		$Paper = $Paper->clone();
 		$Paper->width( $$specs{'StockWidth'.$qty_index} );
 		$Paper->height( $$specs{'StockHeight'.$qty_index} );
 		$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
@@ -1092,18 +1092,11 @@ $openprint::log->debug("No papers found");
 sub grain_direction {
 	my $self = shift;
 	if ( @_ ) {
-		my $gd = shift;
-		if ( lc $gd eq 'width' ) {
-			$$self{'grain_direction'} = $$self{'width'} > $$self{'height'} ? 'Long' : 'Short';
-		} elsif ( lc $gd eq 'height' ) {
-			$$self{'grain_direction'} = $$self{'width'} > $$self{'height'} ? 'Short' : 'Long';
-		} else {
-			$$self{'grain_direction'} = $gd;
-		} # end if
+		$$self{'grain_direction'} = $_[0];
 	} # end if
 	if ( ! $$self{'grain_direction'} ) {
 		# Default to second measurement
-		$$self{'grain_direction'} = $$self{'width'} > $$self{'height'} ? 'Short' : 'Long';
+		$$self{'grain_direction'} = $$self{'height'};
 	} # end if
 	
 	return $$self{'grain_direction'};

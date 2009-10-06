@@ -48,16 +48,16 @@
 			</select>
 		</p>
 		<? eval (
-				ssi::setup_date_select( '/employee/claim/history.html', 'starting', -31 );
+				ssi::setup_date_select( '/employee/claim/history.html', 'created_on', -31 );
         ) ?>
 		<p>
 			<label>Date:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'starting_start', join('-', @session{'/employee/claim/history.html?starting_start_year','/employee/claim/history.html?starting_start_month','/employee/claim/history.html?starting_start_day'} ), "load('Results',\$('f1'));" ); ) ?>
+<? echo ( ssi::date_select( 'created_on_start', join('-', @session{'/employee/claim/history.html?created_on_start_year','/employee/claim/history.html?created_on_start_month','/employee/claim/history.html?created_on_start_day'} ), "load('Results',\$('f1'));" ); ) ?>
             to
             </span>
             <span class="DateSelector">
-<? echo ( ssi::date_select( 'starting_end', join('-', @session{'/employee/claim/history.html?starting_end_year','/employee/claim/history.html?starting_end_month','/employee/claim/history.html?starting_end_day'} ), "load('Results',\$('f1'));" ); ) ?>
+<? echo ( ssi::date_select( 'created_on_end', join('-', @session{'/employee/claim/history.html?created_on_end_year','/employee/claim/history.html?created_on_end_month','/employee/claim/history.html?created_on_end_day'} ), "load('Results',\$('f1'));" ); ) ?>
             </span>
 		</p>
 		<p>
