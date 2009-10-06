@@ -1214,7 +1214,7 @@ sub get_due_date {
 		} # end while
 		$duedatedays -= 1;
 	} # end while
-$log->debug("$year-$month-$day");
+#$log->debug("$year-$month-$day");
 
 	return sprintf('%.4d-%.2d-%.2d', $year, $month, $day );
 
