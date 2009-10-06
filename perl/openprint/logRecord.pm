@@ -106,7 +106,10 @@ sub Action {
 } # end sub Action
 
 sub hostname {
-	my ( $self ) = @_;
+	my ( $self, $new ) = @_;
+	if ( defined $new ) {
+		$$self{'hostname'} = $new;
+	} # end if
 	if ( ! defined $$self{'hostname'} ) {
 		return $$self{'ip_address'} unless $$self{'ip_address'} =~ /\d+\.\d+\.\d+\.\d+/;
 		my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip_address'})),2);
