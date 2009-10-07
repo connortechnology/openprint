@@ -192,18 +192,21 @@ sub choose_service {
 		$log->debug("***************** NO IMCOMPLETE SERVICES FOUND ***********************");
 		return ( '', '' );
 	} # end if
+
 	# get the printing service
 	$_ = "SELECT strValue, lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='ProjectType'";
 	my ( $project_type_id, $service_index ) = sql::execute( $log, $dbh, $_, $project_index );
 
-	my $status = openprint::service::get_status( $log, $dbh, $service_index );
-	
-	# if the printing service is unfinished, return it.
-	# the no url test will only occurr for the "no printing required" project type :)
-	if ( $status eq 'uncalculated' ) {
-		$_ = "SELECT strDetailedURL FROM Project_Types WHERE strID=?";
-		my ( $url ) = sql::execute( $log, $dbh, $_, $project_type_id );
-		return ( $service_index, '/main/project/'.$url ) if $url ne '';
+	if ( $service_index ) {
+		my $status = openprint::service::status( $project_index, $service_index );
+		
+		# if the printing service is unfinished, return it.
+		# the no url test will only occurr for the "no printing required" project type :)
+		if ( $status eq 'uncalculated' ) {
+			$_ = "SELECT strDetailedURL FROM Project_Types WHERE strID=?";
+			my ( $url ) = sql::execute( $log, $dbh, $_, $project_type_id );
+			return ( $service_index, '/main/project/'.$url ) if $url ne '';
+		} # end if
 	} # end if
 
 	$log->debug("****** GETTING INCOMPLETE PRINTING SERVICES ********");

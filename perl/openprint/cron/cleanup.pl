@@ -1,5 +1,5 @@
 #!/usr/bin/perl 
-use lib '/var/www/p1/perl';
+use lib '/etc/apache2/lib/perl';
 use strict;
 use warnings;
 
