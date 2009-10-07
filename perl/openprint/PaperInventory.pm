@@ -202,5 +202,18 @@ sub comment_html {
 	return $$self{'comment'};
 } # end comment_html
 
+sub instock {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'instock'} = shift;
+	} # end if
+	if ( ! defined $$self{'instock'} ) {
+$log->warn("Loading instock");
+		@$self{'instock'} = sql::execute( undef, undef, 'SELECT SUM(delta) FROM Paper_Inventory WHERE paper_id=? AND id <= ?', @$self{'paper_id', 'id'} );
+$log->warn("Loading instock $$self{instock}");
+	} # end if
+	return $$self{'instock'};
+} # end sub instock
+
 1;
 __END__
