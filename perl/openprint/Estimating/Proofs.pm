@@ -23,6 +23,7 @@ require openprint::print;
 require openprint::service;
 require openprint::Estimating::Printing;
 
+my $debug = 0;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -414,12 +415,12 @@ sub get_proof_specs {
 			if ( $$sig_specs{'txtImposition'.$qty_index} ) {
 				if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
 					push @{$proof_indexes{$signature_index}}, 1;
-					$openprint::log->debug("ADDING Layout Proof to $signature_index");
+					$openprint::log->debug("ADDING Layout Proof to $signature_index") if $debug;
 					insert_layout_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 1, $qty_index, $variable );
 				} # end if
 				if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y') {
 					push @{$proof_indexes{$signature_index}}, 2;
-					$openprint::log->debug("ADDING Colour Proof to $signature_index");
+					$openprint::log->debug("ADDING Colour Proof to $signature_index") if $debug;
 					insert_colour_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 2, $qty_index, $variable );
 				} # end if
 				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y') {
