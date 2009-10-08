@@ -623,14 +623,13 @@ sub add_inventory {
 	} # end if
 
 	$Skid = new openprint::Skid( $Skid ) if ref $Skid ne 'openprint::Skid';
-	my $C = $Skid->Content( $self );
 
-	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
+	$units = $self->units() if ! $units;
     sql::insert( undef, undef, 'Paper_Inventory',
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  ($C ? $C->quantity() : $self->in_stock() + $quantity),
+        'InStock',  $self->in_stock() + $quantity,
         'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
@@ -1183,6 +1182,10 @@ sub basis_height {
 	} # end if
 	return $$self{'basis_height'};
 } # end sub basis_height
+
+sub units {
+	return $_[0]{'type'} eq 'Roll' ? 'lbs' : 'sheets';
+} # end sub units
 
 1;
 __END__
