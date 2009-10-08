@@ -94,7 +94,7 @@
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				$total += $PI->delta();
 			} # end foreach
-			$html .= '<tr class="totals"><td colspan="5" align="right">Totals:</td><td>' . Number::Format::format_number( $total ) . '</td><td>&nbsp;</td></tr>';
+			$html .= '<tr class="totals"><td colspan="5" align="right">Totals:</td><td align="right">' . Number::Format::format_number( $total ) . $$variable{'Paper'}->units() .'</td><td>&nbsp;</td></tr>';
 			return $html;
 		) ?>
 	</table>
