@@ -215,5 +215,12 @@ $log->warn("Loading instock $$self{instock}");
 	return $$self{'instock'};
 } # end sub instock
 
+sub units {
+	if ( ! $_[0]{'units'} ) {
+		$_[0]{'units'} = $_[0]->Paper()->units();
+	} 
+	return $_[0]{'units'};
+} # end sub units
+
 1;
 __END__
