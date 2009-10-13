@@ -505,6 +505,7 @@ sub get_runtime {
 		} # end if
 
 		my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'UsePress'} );
+		return 0 if ! @Equipment;
 		my $Equipment = shift @Equipment;
 		return 0 if ! $Equipment;
 

@@ -76,6 +76,11 @@ sub calc {
 		@outputs = sets::exclude( ['txtFinishedCalliper'], \@outputs );
 	} # end if
 
+	if ( ! $$specs{'txtFinishedCalliper'} ) {
+		$$specs{'alert'} = 'Please specify the finished calliper.';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+
 	if ( $$specs{'txtHoleQty'} eq '' ) {
 		$$specs{'alert'} = 'Please specify the # of holes.';
 		return $$specs{'Status'} = 'uncalculated';

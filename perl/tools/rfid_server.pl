@@ -27,6 +27,7 @@ my %Scanners;
 
 $sql::timing = 0;
 my $debug = 0;
+my $location_cache_size = 10;
 
 sub Checkout_Skid {
 	my ( $Scanner, $Tag, $context, $checkout_tags ) = @_;
@@ -80,7 +81,8 @@ sub process_request {
 	my @Users = openprint::User::find('email'=>'rfid');
 	if ( @Users ) {
 		$openprint::session{'user_id'} = $Users[0]->id();
-	} # end nif
+		$openprint::session{'company_id'} = $Users[0]->company_id();
+	} # end if
 
 	eval {
 		local $SIG{'ALRM'} = sub { die "Timed Out!\n" };
@@ -98,6 +100,9 @@ sub process_request {
 				next;
 			} # end if
 			$tag = $end;
+
+# Make sure our record is up to date, this shouldn't be a big hit, because the db server will cache this
+			$Scanner->load();
 
 			$date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 			if ( (time - Date::Parse::str2time($Scanner->lastseen_on())) > 60 ) {
@@ -138,7 +143,9 @@ sub process_request {
 			my $Tag = new openprint::RFIDTag( $tag_id );
 			if ( ! $Tag->id() ) {
 				#$self->log(1, sprintf('%s : going to allocate ', $self->{server}->{peeraddr} ));
-				$Tag->save( {'id'=>$tag_id} );
+				if ( $_ = $Tag->save( {'id'=>$tag_id} ) ) {
+					$self->log(1, sprintf('%s : %s : Error saving tag %s', $date, $self->{server}->{peeraddr}, $_ ) );
+				} # end if
 			} # end if
 
 			if ( $Scanner->type() eq 'Mobile' ) {
@@ -147,15 +154,16 @@ sub process_request {
 					#$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
 					if ( ( ! @last_seen ) or ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
 						$Scanner->location_id( $Tag->location_id(), $Tag->id() );
-						shift @last_seen if @last_seen > 7;
+						shift @last_seen if @last_seen > $location_cache_size;
 						push @last_seen, $Tag->location_id();
-						$self->log(1, sprintf('%s : %s : updating location of scanner %s to %s', $date, $self->{server}->{peeraddr}, $Scanner->name(), $Scanner->location_id() ));
-						my $e = $Scanner->save();
-						$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
+						$self->log(1, sprintf('%s : %s : updating location of scanner %s to %s', $date, $self->{server}->{peeraddr}, $Scanner->name(), $Scanner->Location()->name() ));
+						if ( $_ = $Scanner->save() ) {
+							$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $_ ));
+						} # end if
 					} # end if
 				} elsif ( $Scanner->location_id() != $Tag->location_id() ) {
 					$changed = 1;
-					$self->log(1, sprintf('%s : %s : updating location of tag %s to %d', $date, $self->{server}->{peeraddr}, $Tag->id(), $Scanner->location_id() ));
+					$self->log(1, sprintf('%s(%s) : %s : updating location of tag %s to %s', $date, $self->{server}->{peeraddr}, $Scanner->name(), $Tag->id(), $Scanner->Location()->name() ));
 					$Tag->location_id( $Scanner->location_id(), $Scanner->id() );
 					#$self->log(1, sprintf('%s : %s : done updating location of tag %s to %d', $date, $self->{server}->{peeraddr}, $Tag->id(), $Scanner->location_id() ));
 					#if ( $Tag->type() eq 'Skid' ) {

@@ -67,7 +67,9 @@ sub drop_project {
 		my @rows = openprint::press_schedule::find('id'=>$row_id);
 		next if ! @rows;
 		my $row = shift @rows;
-		new openprint::Project( $$row{projectindex} )->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
+		my $Project = new openprint::Project( $$row{'projectindex'} );
+		$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
 
 		if ( $$row{'starttime'} ne $start_time or $$row{'equipment_id'} != $Shift->equipment_id() ) {
 			sql::update( $log, $dbh, 'Schedule', ['id=?', $row_id], 'StartTime', $start_time, 'equipment_id', $Shift->equipment_id() );

@@ -10,6 +10,12 @@
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend>Drilling</legend>
 			<p>
+				<label>Finished Caliiper:</label>
+				<input name="txtFinishedCalliper" value="<?txtFinishedCalliper?>" type="text" size="9"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc(this.form.name);" />
+				<input type="checkbox" id="chkOverrideFinishedCalliper" name="chkOverrideFinishedCalliper" value="Y" <? echo ( ssi::checked( $$variable{'chkOverrideFinishedCalliper'} eq 'Y' ); ) ?> />
+				<label class="radio" for="chkOverrideFinishedCalliper">Override</label>
+			</p>
+			<p>
 				<label># of holes per item:</label>
 				<input name="txtHoleQty" value="<?txtHoleQty?>" type="text" size="9"  onkeyup="calc(this.form.name);" />
 			</p>

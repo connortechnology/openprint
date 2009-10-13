@@ -67,6 +67,13 @@ sub find {
 	$sql .= ' * FROM ' . $table . ' WHERE 1>0';
 	my @values;
 
+	if ( exists $params{'data_null'} ) {
+		if ( $params{'data_null'} ) {
+			$sql .= ' AND data IS NULL';
+		} else {
+			$sql .= ' AND data IS NOT NULL';
+		} # end if
+	} # end if
 	if ( exists $params{'docket'} ) {
 		$sql .= ' AND docket=?';
 		push @values, $params{'docket'};
