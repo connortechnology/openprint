@@ -204,3 +204,8 @@ div.ProjectHeader legend {
 	font-size: x-small;
 	font-weight: normal;
 }
+#QuickLogin p label.radio {
+	float: none;
+	width: auto;
+	margin-left: 0px;
+}

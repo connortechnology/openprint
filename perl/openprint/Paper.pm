@@ -1025,7 +1025,7 @@ sub load_from_signature {
 		$Paper->gsm( $$specs{'txtStockGSM'} );
 		$Paper->type( $$specs{'StockType'} );
 
-		$Paper->cuttable('Y');
+		$Paper->cuttable(1);
 		$Paper->perfecting('N');
 		$Paper->doublesided($$specs{'CustomSheetDoubleSided'});
 		$Paper->grade( $$specs{'StockGrade'});

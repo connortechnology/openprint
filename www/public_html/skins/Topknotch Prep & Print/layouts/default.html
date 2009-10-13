@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><? echo ( ssi::htmlize( $$variable{'PageTitle'} ); ) ?></title>
-		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 		<link rel="stylesheet" href="/css/common.css" type="text/css"/>
 		<link rel="stylesheet" href="/css/main.css" type="text/css"/>
 		<link rel="stylesheet" href="/css/menu.css" type="text/css"/>
@@ -39,7 +39,7 @@
 		<? endif ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
-	<body>
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
         <div class="shadow_left"><div class="shadow_right">
 			<div id="Header"><!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"--></div>

@@ -94,9 +94,13 @@ sub calc {
 	foreach my $qty_index ( 1 .. 3 ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
+		my $qty = $$specs{"txtQuantity$qty_index"};
+		if ( ! $$printing_specs{'PageQuantity'} ) {
+			$qty /= int( $$specs{'PageQuantity'} );
+		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= "Minimum Charge: $minimumCharge\n";
-		$$specs{'hdnBreakdown'.$qty_index} .= "QTY $qty_index: ".$$specs{"txtQuantity$qty_index"}. "\n";
-		my $price = openprint::service::get_price( $log, $dbh, $variable, 'Padding', $$specs{"txtQuantity$qty_index"}, undef );
+		$$specs{'hdnBreakdown'.$qty_index} .= "QTY $qty_index: $qty\n";
+		my $price = openprint::service::get_price( $log, $dbh, $variable, 'Padding', $qty, undef );
 		if ( ! $price ) {
 			$log->debug('No price');
 			$status = 'uncalculated';
@@ -111,7 +115,7 @@ sub calc {
 
 		if ( $$specs{'rdbCardboardBacking'} eq 'Y' ) {
 			if ( my @Materials = openprint::Material::find('name'=>'CardboardBacking') ) {
-				my %CardboardPrice = $Materials[0]->get_price( $$specs{"txtQuantity$qty_index"}, undef );
+				my %CardboardPrice = $Materials[0]->get_price( $qty, undef );
 				if ( $CardboardPrice{'units'} eq 'Per Square Inch' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * $$specs{'txtFinalWidth'} * $$specs{'txtFinalHeight'};
 				} elsif ( $CardboardPrice{'units'} eq 'Per Square Foot' ) {
@@ -125,7 +129,7 @@ sub calc {
 		} # end if
 		if ( $$specs{'rdbDTape'} eq 'Y' ) {
 			if ( my @Materials = openprint::Material::find('name'=>'DTape') ) {
-				my %DTapePrice = $Materials[0]->get_price( $$specs{"txtQuantity$qty_index"}, undef );
+				my %DTapePrice = $Materials[0]->get_price( $qty, undef );
 				my $dtape_price += $DTapePrice{Price} * $$specs{'txtWidth'};
 				$$specs{'hdnBreakdown'.$qty_index} .= "\tDTape Price: $dtape_price per pad\n";
 				$price += $dtape_price;
@@ -134,7 +138,7 @@ sub calc {
 
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $price );
 	
-		$price *= $$specs{"txtQuantity$qty_index"};
+		$price *= $qty;
 		$price = $minimumCharge if $price < $minimumCharge;
 		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
 
