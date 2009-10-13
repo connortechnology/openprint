@@ -310,7 +310,8 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 } # end sub paper
 
 sub _paper_results {
-	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','Owner' ) );
+	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' ) );
+	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 } # end sub _paper_results
 
 sub paper_details {
@@ -1095,7 +1096,6 @@ sub highlight_paper {
 		} # end if
 	} # end while
 
-
 	my @results;
 	foreach my $P ( openprint::Paper::find(
 				'in_stock_start'	=> 1,
@@ -1562,6 +1562,9 @@ sub _skid_allocations {
 
 
 sub available_paper {
+	ssi::save_params('/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id', 'owner_id_exclude' );
+	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
+	$session{'/employee/inventory/available_paper.html?Type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?Type'};
 	if ( $param{'btnFunction'} eq 'Allocate' ) {
 		allocate( @param{'skid_id','paper_id','Quantity','Project','Docket','specific','reason'} );
 	} # end if
