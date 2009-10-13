@@ -27,7 +27,7 @@ require openprint::StockQuality;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
@@ -60,6 +60,10 @@ sub find {
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
+	} # end if
+	if ( $params{'owner_id !='} ) {
+		$sql .= ' AND owner_id != ?';
+		push @values, $params{'owner_id !='};
 	} # end if
 	if ( $params{'manufacturer_id'} ) {
 		$sql .= ' AND manufacturer_id=?';
