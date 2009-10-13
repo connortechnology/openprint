@@ -6,8 +6,7 @@
 			'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
 			);
 	} else {
-		@{$$variable{'Papers'}} = openprint::Paper::find(
-			'owner_id'	=>	$session{'/employee/inventory/paper.html?Owner'},
+		my %params = (
 			'manufacturer_id'	=>	( defined $session{'/employee/inventory/paper.html?Manufacturer'} ? $session{'/employee/inventory/paper.html?Manufacturer'} : '' ),
 			'name_id'	=>	( defined $session{'/employee/inventory/paper.html?Name'} ? $session{'/employee/inventory/paper.html?Name'} : '' ),
 			'finish_id'	=>	( defined $session{'/employee/inventory/paper.html?Finish'} ? $session{'/employee/inventory/paper.html?Finish'} : '' ),
@@ -16,12 +15,18 @@
 			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/paper.html?StartYear','/employee/inventory/paper.html?StartMonth','/employee/inventory/paper.html?StartDay'} ),
 			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/paper.html?EndYear','/employee/inventory/paper.html?EndMonth','/employee/inventory/paper.html?EndDay'} ),
 			'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
-			'type'      => split(';', $session{'/employee/inventory/paper.html?Type'} ),
+			'type'      => [ split(';', $session{'/employee/inventory/paper.html?Type'} ) ],
 			'fsc_code'	=>	$session{'/employee/inventory/paper.html?fsc_code'},
 			($param{'OrLarger'} ? 'width_start' : 'width') => $param{'width'},
 			($param{'OrLarger'} ? 'height_start' : 'height') => $param{'height'},
 
 			);
+		if ( $session{'/employee/inventory/paper.html?owner_id_exclude'} ) {
+			$params{'owner_id !='} = $session{'/employee/inventory/paper.html?Owner'};
+		} else {
+			$params{'owner_id'} = $session{'/employee/inventory/paper.html?Owner'};
+		} # end if
+		@{$$variable{'Papers'}} = openprint::Paper::find( %params );
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
