@@ -144,6 +144,7 @@ $openprint::log->warn('Object::set called on an object with no fields');
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
 				$$self{$field} = $$params{$field};
+				eval "\$self->$field( \$\$params{\$field} );";
 				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
 			} # end if
 		} # end if

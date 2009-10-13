@@ -10,7 +10,7 @@ use vars qw( $serial $table $log $dbh %fields %transforms %defaults );
 
 my $debug = 1;
 
-$serial = 'ordered_products_id_seq';
+$serial = 'ordered_product_id_seq';
 $table = 'ordered_products';
 
 %fields = (

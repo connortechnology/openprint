@@ -113,6 +113,8 @@ Please select a Paper to view/edit.<br>
 			<option value=""> All </option>
 			<? echo ( openprint::Company::get_dropdown( $session{'/employee/inventory/paper.html?Owner'} ); ) ?>
 			</select>
+			<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" />
+			<label class="radio" for="owner_id_exclude">Exclude</label>
 		</p>
 		<p>
 			<label>Date Added:</label>

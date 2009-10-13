@@ -667,9 +667,9 @@ $openprint::log->debug("No presses in used_press_name");
 } # end sub find
 
 sub save {
-	my ( $self, %hash ) = @_;
+	my ( $self, $hash ) = @_;
 
-	@$self{ keys %hash } = @hash{keys %hash};
+	@$self{ keys %{$hash} } = @$hash{keys %{$hash} };
 
 	$$self{'currency_id'} = $openprint::session{'Currency_id'} if ! $$self{'currency_id'};
 	$$self{'company_id'} = $openprint::session{'company_id'} if ! $$self{'company_id'};
@@ -718,8 +718,8 @@ sub save {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
-	} elsif ( $hash{'force_install'} ) {
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'id',    @$self{'id'}, @sql ) ) {
+	} elsif ( $$hash{'force_install'} ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'tbl_Projects', 'Index',	@$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
@@ -1306,6 +1306,45 @@ sub copy_signature {
 sub Template {
 	return new openprint::QuoteLevel( $_[0]{'style_id'} );
 } # end sub Template
+sub get_due_date {
+	my ( $self ) = @_;
+	my $duedatedays = 0;
+	foreach my $signature_service_index ( $self->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $self, $signature_service_index );
+# Lookup how many days to add to due date
+		if ( my @Equipment = openprint::Equipment::find( 'strid'=>$$sig_specs{'UsePress'} ) ) {
+			( $_ ) = $Equipment[0]->specification('DueDateDays');
+			if ( $_ > $duedatedays ) {
+				$duedatedays = int $_;
+			} # end if
+		} # end if
+	} # end foreach signature_service_index
+
+	if ( ! $duedatedays ) {
+		$duedatedays = 5;
+	} # end if
+
+	my $runtime = 0;
+	foreach ( $self->signatures() ) {
+		$runtime += openprint::service::get_runtime( $self, $_ );
+	} # end foreach
+	$duedatedays += int( $runtime / ( 24*60 ) );
+
+	# Make it business days
+	my ( $year, $month, $day ) = Date::Calc::Today();
+	while ($duedatedays) {
+		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+		while ( 6 <= Date::Calc::Day_of_Week( $year, $month, $day ) ) {
+			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+		} # end while
+		$duedatedays -= 1;
+	} # end while
+#$log->debug("$year-$month-$day");
+
+	return sprintf('%.4d-%.2d-%.2d', $year, $month, $day );
+
+} # end sub get_due_date
+
 sub Ordered_Product {
 	my ( $self ) = @_;
 	if ( ! exists $$self{'Ordered_Product'} ) {

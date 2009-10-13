@@ -200,11 +200,31 @@ sub comment_html {
 
 	if ( $$self{'comment'} =~ /^Checked out for docket (\d+) by (.*)$/ ) {
 		return qq`Checked out for docket <a href="/employee/project/view.html?docket=$1">$1</a> by $2`;
-	} elsif ( $$self{'comment'} =~ /^Inventory adjusted from manifest (.+)$/ ) { 
+	} elsif ( $$self{'comment'} =~ /^Inventory adjusted from manifest (.+)\.$/ ) { 
 		return qq`Inventory adjusted from manifest <a href="/employee/inventory/manifest.html?manifest_id=$1">$1</a>`;
 	} # end if
 	return $$self{'comment'};
 } # end comment_html
+
+sub instock {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'instock'} = shift;
+	} # end if
+	if ( ! defined $$self{'instock'} ) {
+$log->warn("Loading instock");
+		@$self{'instock'} = sql::execute( undef, undef, 'SELECT SUM(delta) FROM Paper_Inventory WHERE paper_id=? AND id <= ?', @$self{'paper_id', 'id'} );
+$log->warn("Loading instock $$self{instock}");
+	} # end if
+	return $$self{'instock'};
+} # end sub instock
+
+sub units {
+	if ( ! $_[0]{'units'} ) {
+		$_[0]{'units'} = $_[0]->Paper()->units();
+	} 
+	return $_[0]{'units'};
+} # end sub units
 
 1;
 __END__
