@@ -931,19 +931,35 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$Fold->page_rows( $rows );
 			$Fold->spine_direction( $spine_direction );
 			if ( $_ = $E->Specification( $fold.'MinimumWidth' ) ) {
-				$Fold->min_width( sprintf( '%.3f', ($_->value()/$columns)) );
+				if ( $spine_direction eq 'Vertical' ) {
+					$Fold->min_width( sprintf( '%.3f', ($_->value()/$columns)) );
+				} else {
+					$Fold->min_height( sprintf( '%.3f', ($_->value()/$rows)) );
+				} # end if
 				$_->delete();
 			} #end if
 			if ( $_ = $E->Specification( $fold.'MaximumWidth' ) ) {
+				if ( $spine_direction eq 'Vertical' ) {
 				$Fold->max_width( sprintf('%.3f', ($_->value()/$columns)) );
+				} else {
+				$Fold->max_height( sprintf('%.3f', ($_->value()/$rows)) );
+				} # end if
 				$_->delete();
 			} # en dif
 			if ( $_ = $E->Specification( $fold.'MinimumHeight' ) ) {
+				if ( $spine_direction eq 'Vertical' ) {
 				$Fold->min_height( sprintf('%.3f', ($_->value()/$rows)) );
+				} else {
+				$Fold->min_width( sprintf('%.3f', ($_->value()/$columns)) );
+				} # end if
 				$_->delete();
 			} # end if
 			if ( $_ = $E->Specification( $fold.'MaximumHeight' ) ) {
+				if ( $spine_direction eq 'Vertical' ) {
 				$Fold->max_height( sprintf('%.3f', ($_->value()/$rows)) );
+				} else {
+				$Fold->max_width( sprintf('%.3f', ($_->value()/$columns)) );
+				} # end if
 				$_->delete();
 			} # end if
 			if ( $_ = $E->Specification( $fold.'MaximumImposition' ) ) {

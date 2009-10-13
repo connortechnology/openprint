@@ -11,26 +11,31 @@
         } // end if
         timeout = null;
         gettingNewPrice = true;
-        jsrsExecute( '/jsrs.htm', cbFoldingResults, 'openprint::service::external_calc', get_variables(formName,'Folding') );
+
+		var h = form.serialize(true);
+		h.ServiceType = 'Folding';
+		h.callback = 'cbFoldingResults';
+		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+
     }
     function cbFoldingResults( results ) {
+		
         var form = getFormObj('f1');
 
-		var pairs = results.split('|');
-
 		var re = /FoldQty-(\d+)-(\d+)-(\d+)/;
-		for ( var i = 0; i < pairs.length; i += 1 ){
-			if ( pairs[i].indexOf('~') != -1 ) {
-				var data = pairs[i].split('~');
-				var matches = re.exec( data[0] );
-				if ( matches ) {
-					if ( data[1] > 0 ) {
-						$('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]).show();
-					} else {
-						$('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]).hide();
-					} // end if
-				} // end if matches
-			} // end if
+		var keys = results.keys();
+		for ( var index = 0; index < keys.length; index += 1 ) {
+			var key = keys[index];
+			var value = results.get(keys[index]);
+
+			var matches = re.exec( key );
+			if ( matches ) {
+				if ( value > 0 ) {
+					$('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]).show();
+				} else {
+					$('Fold-'+matches[1]+'-'+matches[2]+'-'+matches[3]).hide();
+				} // end if
+			} // end if matches
 		} // end foreach pair
         cbFillResults(results);
 

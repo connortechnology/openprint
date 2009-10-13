@@ -1341,5 +1341,13 @@ sub units {
 	return $_[0]{'type'} eq 'Roll' ? 'lbs' : 'sheets';
 } # end sub units
 
+sub Supplied {
+	my ( $self ) = @_;
+	my $Supplied = $self->clone();
+	@$Supplied{'width','height'} = @$Supplied{'start_width','start_height'};
+	$Supplied->mweight(0); # force recalc
+	return $Supplied;
+} # end sub Supplied
+
 1;
 __END__
