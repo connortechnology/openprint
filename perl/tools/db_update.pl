@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/testing/perl';
 use strict;
 
 require sql;
