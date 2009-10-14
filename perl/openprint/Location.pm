@@ -3,7 +3,7 @@ package openprint::Location;
 
 use strict;
 use openprint ();
-use vars qw( %variable %cache $log $dbh );
+use vars qw( %variable $log $dbh );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;

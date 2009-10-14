@@ -30,7 +30,7 @@ require openprint::StockGroup;
 require openprint::StockMaterial;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
@@ -77,6 +77,10 @@ sub find {
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
+	} # end if
+	if ( $params{'owner_id !='} ) {
+		$sql .= ' AND owner_id != ?';
+		push @values, $params{'owner_id !='};
 	} # end if
 	if ( $params{'manufacturer_id'} ) {
 		$sql .= ' AND manufacturer_id=?';
@@ -418,7 +422,6 @@ sub merge {
 	my $ac = sql::start_transaction( $openprint::dbh );
 	sql::update( undef, undef, 'Paper_allocations', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	sql::update( undef, undef, 'Paper_Inventory', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
-	sql::update( undef, undef, 'Paper_purchase_order_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	sql::update( undef, undef, 'skid_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
 	$Duplicate->delete();
@@ -758,7 +761,7 @@ sub add_inventory {
 			'paper_id'		=> $$self{'id'},
 			'user_id'		=> $openprint::session{'user_id'},
 			'poindex'		=> undef,
-			'instock'		=> ( $C ? $C->quantity() : $self->in_stock() + $quantity),
+			'instock'		=> $self->in_stock() + $quantity,
 			'delta'			=> $quantity,
 			'comment'		=> $description,
 			'skid_id'		=> $Skid->id(),
@@ -1147,7 +1150,7 @@ sub load_from_signature {
 	} else {
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
-			$Paper = $Paper->id() ? $Paper->clone() : undef;
+			$Paper = $Paper->id() ? $Paper : undef;
 		} # end if
 
 		if ( ! $Paper ) {
@@ -1186,8 +1189,6 @@ sub load_from_signature {
 		if ( ! $Paper ) {
 #$log->debug("No paper found");
 			$Paper = new openprint::Paper();
-		} else {
-			$Paper = $Paper->clone();
 		} # end if
 		
 		if ( $$specs{'rdbSuppliedStock'} eq 'Y' and ! $Paper->supplied() ) {
@@ -1199,6 +1200,7 @@ $openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
 		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
 	} # end if
 
+	$Paper = $Paper->clone();
 	if ( $qty_index ) {
 		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
 #$log->debug("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
@@ -1216,7 +1218,6 @@ sub grain_direction {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{'grain_direction'} = $_[0];
-		my $gd = shift;
 	} # end if
 	if ( ! $$self{'grain_direction'} ) {
 		# Default to second measurement
@@ -1330,10 +1331,23 @@ sub sheet_weight {
 	my ( $self ) = @_;
 	$$self{'width'} * $$self{'height'} * $self->wpsi();
 } # end sub sheet_weight
+
 sub start_sheet_weight {
 	my ( $self ) = @_;
 	$$self{'start_width'} * $$self{'start_height'} * $self->wpsi();
 } # end sub start_sheet_weight
+
+sub units {
+	return $_[0]{'type'} eq 'Roll' ? 'lbs' : 'sheets';
+} # end sub units
+
+sub Supplied {
+	my ( $self ) = @_;
+	my $Supplied = $self->clone();
+	@$Supplied{'width','height'} = @$Supplied{'start_width','start_height'};
+	$Supplied->mweight(0); # force recalc
+	return $Supplied;
+} # end sub Supplied
 
 1;
 __END__

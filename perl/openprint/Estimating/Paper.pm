@@ -89,7 +89,6 @@ sub neccessary {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-$openprint::log->debug("Starting Paper::calc");
 	my $Project = new openprint::Project( $project_index );
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		delete $$specs{'txtPrice'.$qty_index};
@@ -109,31 +108,27 @@ $openprint::log->debug("Starting Paper::calc");
         foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
             my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-			@$Paper{'width','height'} = @$Paper{'start_width','start_height'};
-			$Paper->mweight(0); # force recalc
-			my $paper_string = $Paper->to_string();
-            $papers{$paper_string} = $Paper;
+			my $Supplied = $Paper->Supplied();
+            $papers{$Supplied->to_string()} = $Supplied;
         } # end foreach
 	} # end foreach signature
 
 	my @stocks = sort keys %papers;
 	foreach my $stock_index ( 1 .. @stocks ) {
-		$indexes{$stocks[$stock_index-1]} = $stock_index;
+		my $paper_string = $stocks[$stock_index-1];
+		$indexes{$paper_string} = $stock_index;
+$openprint::log->debug("Indexes: $paper_string => $stock_index");
 	} # end foreach
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-
-		foreach my $paper_string ( @stocks ) {
 
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				next if ! $$sig_specs{'txtImposition'.$qty_index};
 				my $PressSheet = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
 				# This paper is in the printing format, not the supplied
 				# Convert to supplied Stock
-				my $SuppliedStock = $PressSheet->clone();
-				@$SuppliedStock{'width','height'} = @$SuppliedStock{'start_width','start_height'};
-				$SuppliedStock->mweight(0); # force recalc
+				my $SuppliedStock = $PressSheet->Supplied();
 				my $paper_string = $SuppliedStock->to_string();
 
 				my $stock_index = $indexes{$paper_string};
@@ -157,13 +152,13 @@ $openprint::log->debug("Starting Paper::calc");
 					$totals{$paper_string}[$qty_index] += $$specs{"qty-$ss_id-$stock_index-$qty_index"};
 				} # end if
 			} # end foreach qty_index
-		} # end foreach stock_index
 	} # end foreach signature
 
+$openprint::log->debug('Total Paper Totals:');
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-$openprint::log->debug($paper_string . ' => ' . $totals{$paper_string}[$qty_index] );
+$openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_string}[$qty_index] );
 		} # end foreach
 	} # end if
 	# Enforce minimum orders and full packages
@@ -196,30 +191,24 @@ $openprint::log->debug($paper_string . ' => ' . $totals{$paper_string}[$qty_inde
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-$openprint::log->debug("After minimum: " . $paper_string . ' => ' . $totals{$paper_string}[$qty_index] );
+$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $totals{$paper_string}[$qty_index] );
 		} # end foreach
 	} # end if
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
-		foreach my $stock_index ( 1 .. 4 ) {
-			last if ( $stock_index > 1 ) and ( ! $$specs{"id-$ss_id-$stock_index"} );
-
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				next if ! $$sig_specs{'txtImposition'.$qty_index};
-				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-
 				# We are doing this because we calculate on the parent sheet, but if the parent sheet is a generic... then it all goes for shit.
-				@$Paper{'width','height'} = @$Paper{'start_width','start_height'};
-				$Paper->mweight(0); # force recalc
+				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index )->Supplied();
 				my $paper_id = $Paper->to_string();
-$openprint::log->warn("Getting prices for $paper_id");
+				my $stock_index = $indexes{$paper_id};
 				next if $Paper->supplied();
 
 				if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 					my %price = $Paper->get_price( $totals{$paper_id}[$qty_index] );
 					$$specs{"cost-$ss_id-$stock_index-$qty_index"} = $price{'100lb Price'};
-$openprint::log->warn("Getting prices for $paper_id (".$totals{$paper_id}[$qty_index].")+> " . $price{'100lb Price'});
+$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}[$qty_index].") => " . $price{'100lb Price'});
 				} # end if
 				$$specs{"price-$ss_id-$stock_index-$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},$$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
 				if ( $Paper->type() eq 'Sheet' ) {
@@ -230,7 +219,6 @@ $openprint::log->warn("Getting prices for $paper_id (".$totals{$paper_id}[$qty_i
 $openprint::log->warn("$qty_index $paper_id $$sig_specs{'txtImposition'.$qty_index} $$Paper{width}x$$Paper{height}" . ' : ' . $Paper->start_sheet_weight() );
 				$$specs{"MPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * ceil( ((1000/$$sig_specs{'txtImposition'.$qty_index})/( $Paper->start_area() /$Paper->area() )) * $Paper->start_sheet_weight() )/ 100;
 			} # end foreach qty_index
-		} # end foreach stock_index
 	} # end foreach signature
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
@@ -318,6 +306,7 @@ sub summary {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			# Convert back to original size
 			@$Paper{'width','height'} = @$Paper{'start_width','start_height'};
 			$Paper->mweight(0); # force recalc
 			$Papers{$Paper->to_string()} = $Paper;
