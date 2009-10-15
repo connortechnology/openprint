@@ -9,6 +9,7 @@ my @fields = (
 	'image_width','image_height', # dimensions + bleed
 	'object_width','object_height', # Flat dimensions
 	'layout_width','layout_height',
+	'cut_off',
 	'runstyle',
 	'spread_rows','spread_columns','spreads','spread_size',
 	'grip','gutters',
@@ -201,6 +202,7 @@ sub load {
 	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRows'.$qty_index};
 	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumns'.$qty_index};
 	$$self{'dutch_orientation'} = $$specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ? 'Horizontal' : 'Vertical';
+	$$self{'cut_off'} = $$specs{'CutOff'.$qty_index};
 
 	#'layout_width','layout_height',
 #,'rotate_sheet',
@@ -293,6 +295,12 @@ sub save {
 	$$specs{'txtLayoutWidth'.$qty_index} = $self->layout_width();
 	$$specs{'txtLayoutHeight'.$qty_index} = $self->layout_height();
 	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction();
+	my $Paper = $self->Paper();
+	if ( $Paper and ($Paper->type() eq 'Roll') and $Paper->height() ) {
+		$$specs{'CutOff'.$qty_index} = $Paper->height();
+	} else {
+		$$specs{'CutOff'.$qty_index} = '';
+	} # end if
 } # end sub Save
 
 sub used_width {
@@ -348,6 +356,7 @@ sub page_width {
 sub page_height {
 	return $_[0]{object_height};
 }
+
 sub sheet_width {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
@@ -358,6 +367,7 @@ sub sheet_width {
 		return $self->Paper()->width();
 	} # end if
 } # end sub sheet_width
+
 sub sheet_height {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
@@ -365,7 +375,11 @@ sub sheet_height {
 		return $self->Paper()->width();
 	} else {
 		$$self{'paper'}->height( @_ ) if @_;
-		return $self->Paper()->height();
+		if ( ! $self->Paper()->height() ) {
+			return $$self{'cut_off'};
+		} else {
+			return $self->Paper()->height();
+		} # end if
 	} # end if
 } # end sub sheet_height
 

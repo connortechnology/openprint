@@ -210,7 +210,7 @@ sub signature_calc {
 	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) ) {
 		if ( $_ =~ /Aqueous/ ) {
 			push @front_aq, $_;
-			$openprint::log->debug("Side one Aqueous: $_");
+			#$openprint::log->debug("Side one Aqueous: $_");
 		} # end if
 	} # end foreach colour
 
@@ -218,7 +218,7 @@ sub signature_calc {
 	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) ) {
 		if ( $_ =~ /Aqueous/ ) {
 			push @back_aq, $_;
-			$openprint::log->debug("Side two Aqueous: $_");
+			#$openprint::log->debug("Side two Aqueous: $_");
 		} # end if
 	} # end foreach colour
 	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $sig_specs );
@@ -232,12 +232,17 @@ sub signature_calc {
 	} # end if
 
 	# Should include overs
-	my $qty = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
+	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{'txtPressSheetComboItems'} ) {
-		$qty *= $$specs{'txtPressSheetComboItems'};
+		$impressions *= $$specs{'txtPressSheetComboItems'};
 	} # end if
 	if ( $$sig_specs{'Versions'} ) {
-		$qty *= $$sig_specs{'Versions'};
+		$impressions *= $$sig_specs{'Versions'};
+	} # end if
+	if ( sets::isin( $imposition->runstyle(), ['Perfecting','Sheet Work'] ) ) {
+		if ( ! ( @front_aq and @back_aq ) ) {
+			$impressions = int($impressions/2);
+		} # end if
 	} # end if
 
 	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
@@ -264,7 +269,7 @@ sub signature_calc {
 		my @imps = openprint::imposition::get_all_impositions( $imposition );
 		#$openprint::log->debug('After get all Cutting' . @imps);
 		for ( my $i = 0; $i < @imps; $i += 1 ) {
-			$openprint::log->debug("Imposition: " . $imps[$i]{'imposition'} . 'out' );
+			#$openprint::log->debug("Imposition: " . $imps[$i]{'imposition'} . 'out' );
 			if ( ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' )
 					or ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} == $imps[$i]->imposition() )
 			   ) {
@@ -293,7 +298,7 @@ sub signature_calc {
 			next if ! ( $imp->rows() * $imp->columns() );
 			my $width = $imposition->sheet_width() / ( $imposition->columns()/$imp->columns() );
 			my $height = $imposition->sheet_height() / ( $imposition->rows()/$imp->rows() );
-			$$specs{'hdnBreakdown'.$qty_index} .= $width . 'x' . $height.'<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= $imposition->sheet_width() . 'x'.$imposition->sheet_height().'=>'.$width . 'x' . $height.'<br/>';
 
 			if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
@@ -301,7 +306,7 @@ sub signature_calc {
 			} # end if
 
 			my %Price;
-			my $run_qty = $qty / $imp->imposition();
+			my $run_qty = $impressions / $imp->imposition();
 
 			my @types;
 			if ( sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
@@ -340,10 +345,15 @@ sub signature_calc {
 					$$specs{'hdnBreakdown'.$qty_index} = 'No Service price for ' . $type . '<br/>';
 					$ServicePrice{'Total'} = 1000000;
 				} # end if
-				$ServicePrice{'Quantity'} = $run_qty;
-				if ( sets::isin( lc $ServicePrice{'units'}, [ 'per m', 'per 1000' ] ) ) {
+				if ( sets::isin( lc $ServicePrice{'units'}, [ 'per 1000 impressions' ] ) ) {
+					%ServicePrice = openprint::service::get_price_object( $type, $impressions, $Equipment );
+					$ServicePrice{'Quantity'} = $impressions;
+					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $impressions / 1000;
+				} elsif ( sets::isin( lc $ServicePrice{'units'}, [ 'per m', 'per 1000' ] ) ) {
+					$ServicePrice{'Quantity'} = $run_qty;
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / 1000;
 				} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
+					$ServicePrice{'Quantity'} = $run_qty;
 					$ServicePrice{'Total'} = $ServicePrice{'Price'} * $run_qty / $Equipment->specification('AqueousRunSpeed') if $Equipment->specification('AqueousRunSpeed');
 				} # end if
 # Div by imposition
@@ -408,7 +418,7 @@ sub signature_calc {
 
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
-$openprint::log->debug('Aqueous');
+#$openprint::log->debug('Aqueous');
 	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 } # end sub display
 

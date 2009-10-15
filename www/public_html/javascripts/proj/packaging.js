@@ -1,7 +1,8 @@
 function calc( formName ){
 	gettingNewPrice = true;
+    var form = getFormObj(formName);
 	var h = form.serialize(true);
-	h.service_type = 'Packaging';
+	h.ServiceType = 'Packaging';
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end calc
 

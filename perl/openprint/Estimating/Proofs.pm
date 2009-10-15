@@ -549,9 +549,10 @@ sub summary {
 				} # end if
 			} # end foreach key
 		} # end foreach signature
-		my $summary = '<table style="width:auto;table-layout:auto;">';
+		my $summary = '<table class="ProofsSummary">';
 		foreach my $k ( keys %proof_totals ) {
-			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;</td>'.$k.'</td></tr>';
+			next if ! $proof_totals{$k};
+			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;</td><td>'.$k.'</td></tr>';
 		} # end foreach
 		return $summary.'</table>';
 	} # end if qty_index
@@ -597,6 +598,7 @@ sub breakupsummary {
 		my $summary = '<table style="width:100%;table-layout:auto;">';
 
 		foreach my $k ( keys %proof_totals ) {
+			next if ! $proof_totals{$k};
 			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;&nbsp;&nbsp;</td>'.$k.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>';
 			$summary .= '<td align="right"><b>'.sprintf('%s%.2f',$Currency->symbol(), $Totprice{$k}).'</b></td></tr>';
 #$openprint::log->debug("TESTING TEXT : ".$Totprice{$k}." |||||| ".$k." ENDING TEXT");
