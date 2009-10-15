@@ -4,13 +4,12 @@ package openprint::Currency;
 use strict;
 use Number::Format;
 use openprint ();
-use vars qw( $log $dbh $table $serial %fields );
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 require openprint::Object;
 require sql;
 
-use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'Currencies';
 $serial = 'CurrencyIndex_seq';
 %fields = (

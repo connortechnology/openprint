@@ -53,29 +53,14 @@
 	<hr style="clear: both;"/>
 	<? echo (
 		my $html;
+		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/production/_operator_shift_li.html' );
 		foreach my $E ( @{$$variable{'Presses'}} ) {
 			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Presses'}})).'%;"><ul>';
 
-			my @OperatorShifts = openprint::Operator_Shift::find('equipment_id'=>$E->id(), 'order'=>'starttime' );
+			my @OperatorShifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(), 'order'=>'starttime' );
 			foreach my $Shift ( @OperatorShifts ) {	
-				$html .= sprintf( '<li id="item_%d">', $$Shift{'id'} );
-				$html .= $Shift->Shift()->name();
-				$html .= ' - ';
-				$html .= sprintf('<span id="operator_id-%d">', $Shift->id() );
-				if ( $Shift->operator_id() ) {
-					$html .= $Shift->Operator()->name();
-				} else {
-					$html .= 'assign';
-				} # end if
-				$html .= '</span>';
-				$html .= '<span class="Buttons">';
-				$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$Shift{'id'}, '', "if(confirm('Are you sure?')){}", '', 'D' );
-				$html .= '</span>';
-
-				$html .= "<br/></li>\n";
-				$html .= sprintf(q`<script type="text/javascript">
-					new Ajax.InPlaceCollectionEditor( 'operator_id-%1$d', '_operator_shift_li.html', { loadCollectionURL: '_operators.json', cancelControl:false, default: %2$d } );
-				</script>`, $Shift->id(), $Shift->operator_id() );
+				$$variable{'Shift'} = $Shift;
+				$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			} # end foreach Shift
 
 			$html .= '</ul></div>';
