@@ -46,15 +46,17 @@
 			<fieldset>
 			<p>
 				<label># of items to ship:</label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-				<input type="text" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? echo (
+					my $html = '';
+$log->debug("QI" . $$variable{'Project'}->quantity_indexes() );
+					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+						$html .= sprintf(q`	
+							<span class="%3$sColumns">
+							<input type="text" name="txtQuantity%1$d" value="%2$d" size="9" onkeyup="calc(this.form.name);" />
+							</span>`, $qty_index, $$variable{"txtQuantity$qty_index"}, $$variable{'Columns'} );
+					} # end foreach qty_index
+					return $html;
+				) ?>
 			</p>
 			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
 			<!--#include virtual="/includes/main/proj/_service_price.html"-->

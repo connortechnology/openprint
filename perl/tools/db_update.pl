@@ -934,15 +934,15 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 				if ( $spine_direction eq 'Vertical' ) {
 					$Fold->min_width( sprintf( '%.3f', ($_->value()/$columns)) );
 				} else {
-					$Fold->min_height( sprintf( '%.3f', ($_->value()/$rows)) );
+					$Fold->min_height( sprintf( '%.3f', ($_->value()/$columns)) );
 				} # end if
 				$_->delete();
 			} #end if
 			if ( $_ = $E->Specification( $fold.'MaximumWidth' ) ) {
 				if ( $spine_direction eq 'Vertical' ) {
-				$Fold->max_width( sprintf('%.3f', ($_->value()/$columns)) );
+					$Fold->max_width( sprintf('%.3f', ($_->value()/$columns)) );
 				} else {
-				$Fold->max_height( sprintf('%.3f', ($_->value()/$rows)) );
+					$Fold->max_height( sprintf('%.3f', ($_->value()/$columns)) );
 				} # end if
 				$_->delete();
 			} # en dif
@@ -1619,6 +1619,7 @@ foreach my $S ( openprint::Service::find('name'=>'Aqueous') ) {
 		foreach my $P ( $S->prices() ) {
 			$P = $P->copy();
 			$P->service_id( $S2->id() );
+			$P->units('per 1000 impressions');
 			$P->save();
 		} # end foreach
 	} # end if
@@ -1638,6 +1639,7 @@ foreach my $S ( openprint::Service::find('name'=>'AqueousMakeReady') ) {
 		foreach my $P ( $S->prices() ) {
 			$P = $P->copy();
 			$P->service_id( $S2->id() );
+			$P->units('per 1000 impressions');
 			$P->save();
 		} # end foreach
 	} # en dif
