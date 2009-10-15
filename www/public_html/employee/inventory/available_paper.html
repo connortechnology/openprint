@@ -328,7 +328,6 @@ Please select a Paper to view/edit.<br>
 			my $available_sheets;
 
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
-$log->debug("Got paper Available: " . $Paper->available() ) if $Paper->id() == 7626;
 				next if $Paper->available() <= 0;
 				my %skid_age;
 				my %last_seen;

@@ -12,10 +12,10 @@ use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$log = new logger( 'warn' );
+$log = new logger( 'debug' );
 
 $openprint::Object::no_cache = 1;
-$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>'www4') );
+$dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 	
 my @PIS = openprint::PaperInventory::find();
 foreach my $PI ( @PIS ) {
@@ -24,6 +24,7 @@ foreach my $PI ( @PIS ) {
 	} elsif ( $PI->comment() =~ /^Checked out for docket <a href="\/employee\/project\/view\.html\?ProjectIndex=(\d+)">(\d+)<\/a> by (.+)$/ ) {
 		$PI->comment( qq`Checked out for docket $2 by $3` );
 	} # end if
+	$PI->instock(undef);
 	$_ = $PI->save();
 	$log->error( $_ ) if $_;
 } # end foreach PI

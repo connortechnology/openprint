@@ -1,0 +1,239 @@
+div.Popup {
+	position:absolute;
+	visibility: hidden;
+	background-color: #ffffff;
+	border:1px solid;
+	width: auto;
+	padding: 5px;
+	z-index: 100;
+}
+div.row {
+	clear: none;
+	width: 100%;
+	font-weight: normal;
+	font-size: 10px;
+	margin:0px;
+	padding: 0px;
+	margin-bottom: 4px;
+	height: auto;
+	float: left;
+		p\osition: relative;
+}
+
+.PressScheduleHeader {
+	border-top: solid 1px;
+	border-bottom: solid 1px;
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+	background-color: #E3E4F0;
+	font-weight: bold;
+	font-size: 16px;
+}
+	div.PressColumn {
+		float: left;
+		margin: 0px 0px 0px 0px;
+		padding: 0px;
+		border: none;
+		text-align: center;
+		font-size:16px;
+		font-weight:bold;
+	}
+	div.PressColumn ul {
+		padding: 0px;
+		margin: 0px;
+		margin-left: 1px;
+		margin-right: 1px;
+		border-bottom: 1px solid black;
+		list-style: none none inside;
+		text-indent: 0px;
+		font-weight: normal;
+		text-align: left;
+		font-size: 12px;
+	}
+	div.PressColumn ul li {
+		padding: 0px;
+		margin: 0px;
+		margin-top: 2px;
+		margin-bottom: 2px;
+		border-top: 1px solid black;
+		list-style: none;
+		text-indent: 0px;
+		background-color: #ffffff;
+		z-index: 0;
+		max-height: 2048px;
+	}
+#div.PressColumn ul li:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html div.PressColumn ul li {height: 1%;}
+* div.PressColumn ul li {display: block;}
+/* End hide from IE-mac */
+
+div.PressColumn li br {
+clear: both;
+}
+
+	div.PressColumn li.yellow {
+		background-color: #ffff99;
+	}
+	div.PressColumn li.blue {
+	}
+	div.PressColumn li.green {
+		background-color: #99ff99;
+	}
+	div.PressColumn li.pink {
+		background-color: #FAC6FF;
+	}
+	div.PressColumn li.red {
+		background-color: #FF0000;
+		color: black;
+	}
+	div.PressColumn li.rush {
+		border: 2px solid blue;
+	} 
+	.When {
+		background-color: #ffb4da;
+		font-weight: bold;
+		font-size: 14px;
+	   margin: 0px;
+	   margin-left: 1px;
+	   margin-right: 1px;
+	   padding: 0px;
+	}
+	.When span {
+		padding: 2px;
+		width: auto;
+	}
+	.docket {
+		float: right;
+		p\osition: relative;
+		margin-left: 5px;
+	}
+	.Company {
+		font-weight: bold;
+		font-size: 14px;
+		overflow: hidden;
+		text-align: left;
+	}
+	.Forms {
+		float: left;
+		display: inline;
+		border: 1px outset gray;
+		width: 65px;
+		text-align: center;
+	}
+	.DueDate {
+		font-weight: bold;
+		float: right;
+		margin-left: 5px;
+		display: inline;
+	}
+	.Impressions {
+		float: left;
+		min-width: 70px;
+		border: 1px outset gray;
+		width: 90px;
+		text-align: center;
+	}
+	.RunTime {
+		float: left;
+		display: inline;
+		border: 1px outset gray;
+		width: 40px;
+		text-align: center;
+	}
+	.StartTime {
+		float: left;
+		display: inline;
+		border: 1px outset gray;
+		width: 80px;
+		text-align: center;
+		padding: 0px;
+	}
+.StartTime img {
+	margin: 0px;
+	padding: 0px;
+	height: 11px;
+	border: none;
+}
+	.Buttons {
+		float: right;
+		margin: 2px;
+		display: inline;
+	}
+	.Services {
+		margin: 2px;
+		float: right;
+		display: inline;
+	}
+	.Services .Service {
+		float: left;
+		margin-right: 5px;
+	}
+	.commands {
+		border-top: 1px solid #000000;
+	}
+	.Comment {
+		padding-left: 6px;
+		padding-right: 6px;
+		text-align: left;
+	}
+	.TotalImpressions {
+		margin-left: auto;
+		margin-right: auto;
+		float: left;
+		p\osition: relative;
+	}
+	.Operator, .assign {
+		float: right;
+	}
+	@media print {
+		.assign {
+			display: none;
+		}
+		.TotalImpressions {
+			display: none;	
+		}
+		.Comment {
+			border: none;
+		}
+		ul {
+			border: 1px solid black;
+			margin: 2px;
+		}
+		li { 
+			margin: 0px;
+			padding: 1px;
+		}
+		td { 
+			padding: 0px;
+			margin: 0px;
+		}
+		span {
+			margin: 0px;
+			padding: 0px;
+			width: auto;
+		}
+	#Header {
+		display: none;
+	}
+	}
+
+a.buttonImageOff, a.buttonImageOn {
+	margin: 1px;
+}
+a.buttonImageOff .c {
+	padding: 1px 2px 1px 2px;
+}
+
+a.buttonImageOn .c {
+	padding: 1px 2px 1px 2px;
+}

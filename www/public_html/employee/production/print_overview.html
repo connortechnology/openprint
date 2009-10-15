@@ -228,49 +228,65 @@
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
                     '/employee/production/print_overview.html?schedule_start_month',
                     '/employee/production/print_overview.html?schedule_start_day'};
-			my ( $h, $min, $s );
-			my $end = 1;
-				$end = Date::Calc::Delta_Days( 
-					@session{'/employee/production/print_overview.html?schedule_start_year',
-					'/employee/production/print_overview.html?schedule_start_month',
-					'/employee/production/print_overview.html?schedule_start_day',
-					'/employee/production/print_overview.html?schedule_end_year',
-					'/employee/production/print_overview.html?schedule_end_month',
-					'/employee/production/print_overview.html?schedule_end_day'}
-					) + 1;
+			my $end = Date::Calc::Delta_Days( 
+				@session{
+				'/employee/production/print_overview.html?schedule_start_year',
+				'/employee/production/print_overview.html?schedule_start_month',
+				'/employee/production/print_overview.html?schedule_start_day',
+				'/employee/production/print_overview.html?schedule_end_year',
+				'/employee/production/print_overview.html?schedule_end_month',
+				'/employee/production/print_overview.html?schedule_end_day'}
+				) + 1;
 
-			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
-
+			$end = 100 if $end > 100;
 			foreach ( 1 .. $end ) {
-				
-				foreach my $S ( @Equipment_Shifts ) {
-					my $starttime = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $S->starttime() );
-					my $Shift;
-					my @Shifts = openprint::Shift::find(
-							'equipment_id'	=>	$E->id(),
-							'starttime'		=>	$starttime,
-							);
-					if ( ! @Shifts ) {
-						$Shift = new openprint::Shift();
-						$Shift->save({
-							'starttime'		=>	$starttime,
-							'endtime'		=>	Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $starttime ) + $S->duration_seconds() ),
-							'equipment_id'	=>	$E->id(),
-							'shift_id'		=>	$S->id(),
-						});
-					} else {
-						$Shift = $Shifts[0];
-						if ( @Shifts != 1 ) {
-							$log->error("Too many shifts");
-						} # end if
-					} # end if
 
+				my @Shifts = openprint::Shift::find( 
+					'equipment_id' 		=>  $E->id(),
+					'starttime_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ),
+					'starttime_end'		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', $year, $month, $day ),
+					'order'				=>	'starttime',
+					);
+				if ( ! @Shifts ) {
+					my $NextES;
+					my $PreviousShift = openprint::Shift::find_one( 
+							'equipment_id'	=>	$E->id(), 
+							'order'			=>	'starttime DESC'
+							);
+					if ( $PreviousShift ) {
+						$NextES = openprint::Equipment_Shift::find_one(
+								'equipment_id'      =>  $E->id(),
+								'starttime_start'   =>  $PreviousShift->Equipment_Shift()->endtime(),
+								'order'             =>  'starttime',
+								);
+					} # end if
+					if ( ! $NextES ) {
+						$NextES = openprint::Equipment_Shift::find_one('equipment_id'=>$E->id(),'order'=>'starttime');
+					} # end if
+					if ( $NextES ) {
+						# This adds 1, need to add until we hit the next day
+						my $today = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ) );
+						my $tomorrow = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, 1 ) ) );
+						my $Shift;
+						do {
+							$Shift = $NextES->emanantise( $today );
+							push @Shifts, $Shift;
+							$NextES = $NextES->Next();
+						} while ( $NextES and ( $Shift->endtime_seconds() < $tomorrow ) );
+					} # end if
+				} # end if
+if ( @Shifts > 5 ) {
+$log->debug("Shifts: " . @Shifts );
+} else {
+
+				foreach my $Shift ( @Shifts ) {	
 					push @{$$variable{'drops'}}, $Shift->ul_id();
 					$html .= $Shift->get_ul( );
-				} # end while shift
-
+				} # end foreach Shift
+}
 				( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-			} # end foreach delta day
+            } # end foreach delta day
+
 			$html .= '</div>';
 		} # end foreach press
 		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;

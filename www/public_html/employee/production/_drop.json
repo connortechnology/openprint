@@ -1,3 +1,4 @@
+	var new_shifts = 0;
 <? echo ( 
 	my @drops = sets::union( @{$$variable{'changed'}} );
 $log->debug("Drops: @drops");
@@ -6,7 +7,11 @@ $log->debug("Drops: @drops");
 	$html .= "alert('$variable{error}');" if $variable{'error'};
 	$html .= "alert('$variable{alert}');" if $variable{'alert'};
 	foreach my $id ( sort @drops ) {
-		$html .= sprintf(q`new Ajax.Updater( '%1$s', '_ul.html', { method: 'get', parameters: { ul_id: '%1$s' }, evalScripts: true } );`, $id );
+		$html .= sprintf(q`if ( $('%1$s') ){new Ajax.Updater( '%1$s', '_ul.html', { method: 'get', parameters: { ul_id: '%1$s' }, evalScripts: true } );} else {new_shifts=1;}`, $id );
 	} # end foreach id
 	return $html;
 ) ?>
+if ( new_shifts ) {
+	alert('New shifts have been added.  I will now refresh the screen.');
+	window.location = '/employee/production/print_overview.html';
+}

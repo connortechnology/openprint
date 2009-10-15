@@ -756,7 +756,7 @@ sub add_inventory {
 		$docket = $1;
 	} # end if
 
-	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
+	$units = $self->units() if ! $units;
 	new openprint::PaperInventory()->save({
 			'paper_id'		=> $$self{'id'},
 			'user_id'		=> $openprint::session{'user_id'},

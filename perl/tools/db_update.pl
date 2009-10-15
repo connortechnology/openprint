@@ -2267,6 +2267,19 @@ if ( ! sets::isin('log',\@tables ) ) {
 } # end if
 $dbh->commit();
 
+if ( ! sets::isin( 'claims', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Claims.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+if ( ! sets::isin( 'claim_contents', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Claim_Contents.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

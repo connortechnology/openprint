@@ -295,8 +295,14 @@ sub signature_calc {
 
 	foreach my $Equipment ( @equipment ) {
 		$Results{'Breakdown'} .= "<br/>Equipment: ".$Equipment->name().', ';
-		next if ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'};
-		next if ( $Equipment->specification('Type') eq 'Stitcher' ) and ! $stitching_service_index;
+		if ( ( $Equipment->specification('Type') eq 'Folder' ) and ! $$services{'Folding'} ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Not being folded.<br/>';
+			next;
+		} # end if
+		if ( ( $Equipment->specification('Type') eq 'Stitcher' ) and ! $stitching_service_index ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Not being stitched.<br/>';
+			next;
+		} # end if
 		next if ( $Equipment->specification('Type') eq 'PerfectBinder' ) and ! $$services{'PerfectBound'};
 		if ( $Equipment->specification('Scoring Capable') eq 'When Printing' and $Equipment->strid() ne $$sig_specs{'ddmPress'.$qty_index} ) {
 			$Results{'Breakdown'} .= "Not printing on $$Equipment{name}.<br/>";

@@ -139,8 +139,8 @@ Please select a Paper to view/edit.<br>
         <label class="radio" for="instockY">In Stock</label>
         <input type="radio" id="instockN" name="instock" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?instock'} eq 'N' ); ) ?> />
         <label class="radio" for="instockN">Out Of Stock</label>
-        <input type="radio" id="instockB" name="instock" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?instock'} eq 'B' ); ) ?> />
-        <label class="radio" for="instockB">Both</label>
+        <input type="radio" id="instock" name="instock" value="" <? echo ( ssi::checked( ! $session{'/employee/inventory/skids.html?instock'} ); ) ?> />
+        <label class="radio" for="instock">Both</label>
         </p>
 
 		<p class="buttons">

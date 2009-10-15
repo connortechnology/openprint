@@ -1,45 +1,50 @@
 <p>
 	<label>Full Package Weight:</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-	<span class="<?Columns?>Columns">
-		<input name="txtPackageWeight<?QTYIndex?>" value="<? echo ( $$variable{'txtPackageWeight'.$$variable{'QTYIndex'}} ) ?>" type="text" size="9" onkeyup="calc(this.form.name);" /> lbs
-<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="checkbox" id="chkOverridePackageWeight<?QTYIndex?>" name="chkOverridePackageWeight<?QTYIndex?>" value="Y" onclick="if ( ! this.checked ) { calc(this.form.name); }" <? echo ( 'checked' if $$variable{'chkOverridePackageWeight'.$$variable{'QTYIndex'}} eq 'Y' ) ?> /> 
-		<label class="radio" for="chkOverridePackageWeight">Override</label>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-	</span>
-<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= sprintf(q`
+			<span class="%3$sColumns">
+			<input name="txtPackageWeight%1$d" value="%2$s" type="text" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc(this.form.name);" /> lbs`,
+			$qty_index, $$variable{"txtPackageWeight$qty_index"}, $$variable{'Columns'} );
+
+		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+			$html .= sprintf(q`<input type="checkbox" id="chkOverridePackageWeight%1$d" name="chkOverridePackageWeight%1$d" value="Y" onclick="if ( ! this.checked ) { calc(this.form.name); }" %2$s />
+			<label class="radio" for="chkOverridePackageWeight%1$d">Override</label>`, $qty_index, ssi::checked( $$variable{'chkOverridePackageWeight'.$qty_index} eq 'Y' ) );
+		} # end if
+		$html .= '</span>';
+	} # end foreach qty_index
+	return $html;
+) ?>
 </p>
 <p>
 	<label>Package Quantity:</label>
-<? if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="checkbox" id="chkOverridePackageQuantity" name="chkOverridePackageQuantity" value="Y" onclick="if ( ! this.checked ) { calc('f1'); }" <? echo ( 'checked' if $$variable{'chkOverridePackageQuantity'} eq 'Y' ) ?> /> 
-		<label class="radio" for="chkOverridePackageQuantity">Override</label>
-		<br/>
-<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-	<span class="<?Columns?>Columns">
-		<input name="txtPackageQuantity<?QTYIndex?>" value="<? echo ( $$variable{"txtPackageQuantity$$variable{'QTYIndex'}"} ) ?>" type="text" size="9" onkeyup="calc('f1');" />
-	</span>
-<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+	<input type="checkbox" id="chkOverridePackageQuantity" name="chkOverridePackageQuantity" value="Y" onclick="if ( ! this.checked ) { calc(this.form.name); }" <? echo ( ssi::checked( $$variable{'chkOverridePackageQuantity'} eq 'Y' ); ) ?> /> 
+	<label class="radio" for="chkOverridePackageQuantity">Override</label>
+	<br/>
+<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= sprintf(q`
+			<span class="%3$sColumns">
+			<input name="txtPackageQuantity%1$d" value="%2$d" type="text" size="9" onkeyup="this.value=this.value.replace(/[\D]/g,'');calc(this.form.name);" />
+			</span>`, $qty_index, $$variable{"txtPackageQuantity$qty_index"}, $$variable{'Columns'} );
+	} # end foreach qty_index
+	return $html;
+) ?>
 </p>
 <p>
 	<label>Total Weight:</label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-	<span class="<?Columns?>Columns">
-		<input name="txtTotalWeight<?QTYIndex?>" value="<? echo ( $$variable{"txtTotalWeight$$variable{'QTYIndex'}"} ) ?>" type="text" size="9" readonly="readonly" /> lbs
-	 </span>
-<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-	 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? echo (
+	my $html = '';
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= sprintf(q`
+			<span class="%3$sColumns">
+			<input name="txtTotalWeight%1$d" value="%2$d" type="text" size="9" readonly="readonly" /> lbs
+			</span>`, $qty_index, $$variable{"txtTotalWeight$qty_index"}, $$variable{'Columns'} );
+	} # end foreach qty_index
+	return $html;
+) ?>
 </p>
