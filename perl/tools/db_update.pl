@@ -1315,6 +1315,10 @@ foreach my $Type ( openprint::ServiceType::find('name'=>'KraftWrap') ) {
     $Type->type( 'Packaging' );
     $Type->save();
 }
+foreach my $Type ( openprint::ServiceType::find('name'=>'ColourCorrection') ) {
+    $Type->type( 'Prepress' );
+    $Type->save();
+}
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
 if ( $data ) {
