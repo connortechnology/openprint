@@ -19,12 +19,11 @@ package openprint::Estimating::CDBurning;
 use strict;
 
 require sql;
-require openprint::print;
 require openprint::service;
 
 my @variables = (
-        'txtPrice1', 'txtPrice2', 'txtPrice3',
-        'txtNegativeQuantity1', 'txtNegativeQuantity3', 'txtNegativeQuantity2',
+		'txtPrice1', 'txtPrice2', 'txtPrice3',
+		'txtQuantity1', 'txtQuantity3', 'txtQuantity2',
 		'chkOverrideNegativeQuantity',
 );
 
@@ -47,12 +46,12 @@ sub calc {
 	my $status = 'calculated';
 	my $Project = new openprint::Project( $project_index );
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		next if ! $$specs{'txtQuantity'.$qty_index};
-		if ( $$specs{'chkOverrideNegativeQuantity'} ne 'Y' ) {
-			@no_output = sets::exclude( ['txtNegativeQuantity'.$qty_index], \@no_output );
-			$$specs{'txtNegativeQuantity'.$qty_index} = 0;
+
+		if ( $$specs{'chkOverrideQuantity'} ne 'Y' ) {
+			@no_output = sets::exclude( ['txtQuantity'.$qty_index], \@no_output );
+			$$specs{'txtQuantity'.$qty_index} = 0;
 			foreach my $ss_id ( $Project->signatures() ) {
 				my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
 				$$specs{'txtNegativeQuantity'.$qty_index} += $$sig_specs{'txtPlateQuantity'.$qty_index};
@@ -69,7 +68,7 @@ sub calc {
 		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $service_price * $$specs{'txtNegativeQuantity'.$qty_index} );
 	} # end foreach
 
-	return $status;
+	return $$specs{'Status'} = $status;
 } # end sub calc
 
 sub summary {
