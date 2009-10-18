@@ -702,7 +702,7 @@ sub get_finished_calliper {
 	my $finished_calliper;
     foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*1000);
+		my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
 
 		if ( $Project->Type()->name() eq 'ScratchPads' ) {
 			$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
@@ -737,7 +737,7 @@ sub get_finished_calliper {
 		} # end if
 	} # end foreach
 	$openprint::log->debug("******************************* FINSIHED CALLIPER is $finished_calliper/1000 *********************************");
-	return sprintf('%.3f', $finished_calliper/1000);
+	return sprintf('%.4f', $finished_calliper/10000);
 } # end sub get_finished_calliper
 
 sub get_quantities {

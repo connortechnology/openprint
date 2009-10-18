@@ -1243,10 +1243,6 @@ sub area {
 	return $$self{width} if ! $$self{height};
 	return $$self{width}*$$self{height};
 }
-sub start_area {
-	my $self = shift;
-	return $$self{start_width}*$$self{start_height};
-}
 
 sub gsm_to_mweight {
 	my ( $gsm ) = @_;
@@ -1264,6 +1260,7 @@ sub gsm_to_weight {
 
 sub start_area {
 	my $self = shift;
+	return $$self{'width'} * $$self{'height'} if ! ( $$self{'start_width'} and $$self{'start_height'} );
 	return $$self{start_width} if ! $$self{start_height};
 	return $$self{start_width}*$$self{start_height};
 }
@@ -1344,7 +1341,8 @@ sub units {
 sub Supplied {
 	my ( $self ) = @_;
 	my $Supplied = $self->clone();
-	@$Supplied{'width','height'} = @$Supplied{'start_width','start_height'};
+	$$Supplied{'width'} = $$Supplied{'start_width'} if $$Supplied{'start_width'};
+	$$Supplied{'height'} = $$Supplied{'start_height'} if $$Supplied{'start_height'};
 	$Supplied->mweight(0); # force recalc
 	return $Supplied;
 } # end sub Supplied
