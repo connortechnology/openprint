@@ -780,6 +780,13 @@ sub get_price {
 		return if ! $bestPrice;
 		$price{'Price'} = $bestPrice->Price();
 		$price{'units'} = $bestPrice->Units();
+		if ( $openprint::config{'ApplyMarkup'} ) {
+		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
+			my $pricingpercent = $openprint::config{'ApplyMarkup'};
+			$pricingpercent =~ s/[^\d\.\-]//g;
+			$pricingpercent /= 100;
+			$price{'Price'} *= ( 1 + $pricingpercent );
+		} # end if
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$price{'currency_id'} = $Pricelist->currency_id();

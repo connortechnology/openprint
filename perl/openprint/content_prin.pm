@@ -10,3 +10,7 @@ sub _breakdown {
 
 sub prin_broc {
 } # end sub prin_broc
+sub prin_multi {
+} # end sub prin_broc
+sub envelopes {
+} # end sub prin_broc

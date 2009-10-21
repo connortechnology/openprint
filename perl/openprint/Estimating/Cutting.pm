@@ -133,6 +133,11 @@ sub signature_calc_stock_cutting {
 	my ( $log, $dbh, $variable, $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper ) = @_;
 
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
+	if ( ! $Paper->cuttable() ) {
+		$$specs{'alert'} = 'Stock is not cuttable.';
+		$$specs{'Status'} = 'calculated';
+		return;
+	} # end if
 
 # Have an imposition, so can do all calculations
 	my ( $sheet_width, $sheet_height ) = ( $Paper->width(), $Paper->height() );
@@ -349,6 +354,11 @@ sub signature_calc {
 	my ( $log, $dbh, $variable, $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I ) = @_;
 
 	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
+	if ( ! $Paper->cuttable() ) {
+		$$specs{'alert'} = 'Stock is not cuttable.';
+		$$specs{'Status'} = 'calculated';
+		return;
+	} # end if
 	if ( ! $I ) {
 		$I = new openprint::Imposition();
 		$I->paper( $Paper );

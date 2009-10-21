@@ -6,22 +6,31 @@
 			<? echo ( 
 				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars'] );
 
-				if ( $$variable{'DimensionsDisplay'} eq 'Finished' ) {
-					$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?)};
-				} else {
-					$_ = q{SELECT DISTINCT dblFlatWidth::float || 'x' || dblFlatHeight::float || 'Flat' AS size, dblFlatWidth::float || '" x ' || dblFlatHeight::float || '" Flat' FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?)};
-				} # end if
+				my $html;
+				if ( $$variable{'ProjectTypeName'} eq 'Envelopes' ) {
+					$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, description FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?) ORDER BY SIZE};
+					$html = ssi::make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectTypeName'}) ] );
 				
+				} else {
+					if ( $$variable{'DimensionsDisplay'} eq 'Finished' ) {
+						$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?)};
+					} else {
+						$_ = q{SELECT DISTINCT dblFlatWidth::float || 'x' || dblFlatHeight::float || 'Flat' AS size, dblFlatWidth::float || '" x ' || dblFlatHeight::float || '" Flat' FROM projecttemplate WHERE projecttype_id = (SELECT lngIndex FROM project_types where strid=?)};
+					} # end if
+					
 
-				my $html = $$variable{'FoldType'} ? 
-ssi::make_drop_down( [ sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', @$variable{'ProjectTypeName','FoldType'} ) ] ) :
-ssi::make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectTypeName'} ) ] );
-				if ( ! $html ) {
-					$$variable{'Dimensions'} = 'Custom';
+					$html = $$variable{'FoldType'} ? 
+	ssi::make_drop_down( [ sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', @$variable{'ProjectTypeName','FoldType'} ) ] ) :
+	ssi::make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectTypeName'} ) ] );
+					if ( ! $html ) {
+						$$variable{'Dimensions'} = 'Custom';
+					} # end if
 				} # end if
 				return $html;
 			) ?>
+<? if ( $$variable{'ProjectTypeName'} ne 'Envelopes' ) ?>
 			<option value="Custom">Custom</option>
+<? endif ( $$variable{'ProjectTypeName'} ne 'Envelopes' ) ?>
 		</select>
 	</span>
 </div>
