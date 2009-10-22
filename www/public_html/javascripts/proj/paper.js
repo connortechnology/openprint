@@ -55,6 +55,8 @@ function get_parameters( form, id, selected ) {
 	parameters[parameters.length] = form.ProjectType ? form.ProjectType.value : '';
 	parameters[parameters.length] = form.txtSpecificStockWidth ? form.txtSpecificStockWidth.value : '';
 	parameters[parameters.length] = form.txtSpecificStockHeight ? form.txtSpecificStockHeight.value : '';
+	parameters[parameters.length] = form.txtWidth ? form.txtWidth.value : '';
+	parameters[parameters.length] = form.txtHeight ? form.txtHeight.value : '';
 	return parameters;
 } // end function get_parameters( form )
 
@@ -228,33 +230,37 @@ function fill_drop_down( results ) {
 				ddm_select_by_value( form.elements['ddmStockBrand'+id], selectedValue, 0 );
 			} // end if
 		} // end if
-		form.elements['ddmStockBrand'+id].disabled = false;
+		if ( BrandOptions.length > 2 ) {
+			form.elements['ddmStockBrand'+id].disabled = false;
+		} // end if
 	} // end if
 
 	if ( form.elements['ddmStockFinish'+id] ) {
 		if ( FinishOptions.length > 1 ) {
-		var selectedValue = get_ddm_value( form.elements['ddmStockFinish'+id] );
-		fill_ddm( form.elements['ddmStockFinish'+id], FinishOptions, 'ddmStockFinish_onchange' );
-		if ( FinishOptions.length == 2 ) {
-			ddm_select_by_index( form.elements['ddmStockFinish'+id], 1 );
-		} else {
-			ddm_select_by_value( form.elements['ddmStockFinish'+id], selectedValue, 0 );
+			var selectedValue = get_ddm_value( form.elements['ddmStockFinish'+id] );
+			fill_ddm( form.elements['ddmStockFinish'+id], FinishOptions, 'ddmStockFinish_onchange' );
+			if ( FinishOptions.length == 2 ) {
+				ddm_select_by_index( form.elements['ddmStockFinish'+id], 1 );
+			} else {
+				ddm_select_by_value( form.elements['ddmStockFinish'+id], selectedValue, 0 );
+			} // end if
 		} // end if
-		} // end if
-		form.elements['ddmStockFinish'+id].disabled = false;
+		if ( FinishOptions.length > 2 ) 
+			form.elements['ddmStockFinish'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockColour'+id] ) {
 		if ( ColourOptions.length > 1 ) {
-		var selectedValue = get_ddm_value( form.elements['ddmStockColour'+id] );
-		fill_ddm( form.elements['ddmStockColour'+id], ColourOptions, 'ddmStockColour_onchange' );
-		if ( ColourOptions.length == 2 ) {
-			ddm_select_by_index( form.elements['ddmStockColour'+id], 1 );
-		} else {
-			ddm_select_by_value( form.elements['ddmStockColour'+id], selectedValue, 0 );
+			var selectedValue = get_ddm_value( form.elements['ddmStockColour'+id] );
+			fill_ddm( form.elements['ddmStockColour'+id], ColourOptions, 'ddmStockColour_onchange' );
+			if ( ColourOptions.length == 2 ) {
+				ddm_select_by_index( form.elements['ddmStockColour'+id], 1 );
+			} else {
+				ddm_select_by_value( form.elements['ddmStockColour'+id], selectedValue, 0 );
+			} // end if
 		} // end if
-		} // end if
-		form.elements['ddmStockColour'+id].disabled = false;
+		if ( ColourOptions.length > 2 ) 
+			form.elements['ddmStockColour'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockWeight'+id] ) {
@@ -267,7 +273,8 @@ function fill_drop_down( results ) {
 				ddm_select_by_value( form.elements['ddmStockWeight'+id], selectedValue, 0 );
 			} // end if
 		} // end if
-		form.elements['ddmStockWeight'+id].disabled = false;
+		if ( WeightOptions.length > 2 ) 
+			form.elements['ddmStockWeight'+id].disabled = false;
 	} // end if
 
 	// Sheetsize gets special treatment, cuz it gets selected during price calcs

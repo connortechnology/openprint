@@ -113,7 +113,7 @@ function cbCalc( results ) {
 }
 
 
-function Dimensions_onchange( select ) {
+function Dimensions_onchange( select, signature ) {
 	//var value = get_ddm_value( select );
 	//if ( value == 'Custom' ) {
 	//add_div('CustomDimensions');
@@ -121,7 +121,10 @@ function Dimensions_onchange( select ) {
 	//remove_div('CustomDimensions');
 	//} // end if
 	remove_div('OrderButton');
-	calc( select.form.name );
+	// Refreshes Paper
+	///jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(select.form, '', '' ) );
+	rdbSuppliedStock_onchange( select, signature );
+	//calc( select.form.name );
 } // end if
 
 var contentWin;

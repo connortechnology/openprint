@@ -1,7 +1,7 @@
 <div class="row">
 	<span class="label">Size:</span>
 	<span class="input">
-		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this );">
+		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this, '<?Signature?>' );">
 			<option value=""> select </option>
 			<? echo ( 
 				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars'] );

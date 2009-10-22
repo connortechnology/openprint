@@ -27,7 +27,7 @@ require openprint::StockQuality;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
@@ -127,6 +127,11 @@ sub find {
 		$sql .= ' AND width=?';
 		push @values, 1*$params{'width'};
 	} # end if
+	if ( $params{'width_>='} ) {
+		$params{'width_>='} =~ s/[^\d\.]//g;
+		$sql .= ' AND ( width IS NULL or width>=?)';
+		push @values, 1*$params{'width_>='};
+	} # end if
 	if ( $params{'width_start'} ) {
 		$params{'width_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND width>=?';
@@ -141,6 +146,11 @@ sub find {
 		$params{'height_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND height>=?';
 		push @values, 1*$params{'height_start'};
+	} # end if
+	if ( $params{'height_>='} ) {
+		$params{'height_>='} =~ s/[^\d\.]//g;
+		$sql .= ' AND ( height IS NULL OR height>=? )';
+		push @values, 1*$params{'height_>='};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
 		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id IN (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';

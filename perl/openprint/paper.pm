@@ -21,11 +21,15 @@ sub get_paper {
 			( sets::isin( $selected, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'	=> $specs{'Finish'} ) : () ),
 			( sets::isin( $selected, [ 'Colour','Weight' ] ) ? ( 'colour_id'	=> $specs{'Colour'} ) : () ),
 			( sets::isin( $selected, [ 'Weight' ] ) ? ( 'weight_id'	=> $specs{'Weight'} ) : () ),
+			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
+			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
 			'type'=>\@types,
 				);
 	if ( ! @papers ) {
 		@papers = openprint::Paper::find( 
 			( $selected eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
+			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
+			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
 			'type'=>\@types,
 				);
 	} # end if
@@ -56,7 +60,7 @@ sub get_paper {
 } # end sub get_paper
 
 sub select_paper {
-	my ( $r, $log, $dbh, $variable, $selected, $name, $finish, $colour, $weight, $supplied, $press, $project_index, $type, $specific_width, $specific_height ) = @_;
+	my ( $r, $log, $dbh, $variable, $selected, $name, $finish, $colour, $weight, $supplied, $press, $project_index, $type, $specific_width, $specific_height, $flat_width, $flat_height ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $type ) {
@@ -69,7 +73,7 @@ sub select_paper {
 		push @types, 'Roll';
 	} # end if
 
-	$log->debug("******** START OF select_paper_names, Press: $type $press *****************");
+	$log->debug("******** START OF select_paper_names, Press: $type $press $flat_width $flat_height*****************");
 	my @papers = openprint::Paper::find( 
 			( $project_index ? ( 'project_type_id'=>$Project->type_id() ) : (  'project_type_name'=>$type ) ),
 			( $selected eq 'Name' ? ( 'name'=>$name ) : ()  ),
@@ -78,7 +82,9 @@ sub select_paper {
 			( sets::isin( $selected, [ 'Weight' ] ) ? ( 'weight'	=> $weight ) : () ),
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 			'type'=>\@types,
-				);
+			( $flat_width ? ( ($type eq 'Envelopes' ? 'width' : 'width_>=')=>$flat_width ) : () ),
+			( $flat_height ? ( ($type eq 'Envelopes' ? 'height' : 'height_>=')=>$flat_height ) : () ),
+			);
 	my %names;
 	my %finishes;
 	my %colours;
