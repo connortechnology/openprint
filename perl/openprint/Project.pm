@@ -19,7 +19,7 @@ require Math::Units;
 
 require sql;
 require openprint::JDF;
-require openprint::SheduledJob;
+require openprint::ScheduledJob;
 
 my $debug = 1;
 
