@@ -264,10 +264,11 @@ function fill_drop_down( results ) {
 		} // end if
 	} // end if
 
+	
 	if ( form.elements['ddmStockWeight'+id] ) {
 
 		// Try to convert to a dropdown if we need one
-		if ( ( WeightOptions.length > 2 ) && ( form.elements['ddmStockWeight'+id].type != 'select' ) ) {
+		if ( ( WeightOptions.length > 2 ) && ( form.elements['ddmStockWeight'+id].type != 'select-one' ) ) {
 			var input = $('StockWeightSelect'+id);
 			if ( input ) {
 				input.innerHTML = '<label>Weight:</label><select name="ddmStockWeight'+id+'" size="1" onchange="ddmStockWeight_onchange( this, \''+id+'\' );"></select>';
@@ -276,7 +277,7 @@ function fill_drop_down( results ) {
 			} // end if
 		} // end if
 
-		if ( form.elements['ddmStockWeight'+id].type == 'select' ) {
+		if ( form.elements['ddmStockWeight'+id].type == 'select-one' ) {
 			if ( WeightOptions.length > 1 ) {
 				var selectedValue = get_ddm_value( form.elements['ddmStockWeight'+id] );
 				fill_ddm( form.elements['ddmStockWeight'+id], WeightOptions, 'ddmStockWeight_onchange' );
