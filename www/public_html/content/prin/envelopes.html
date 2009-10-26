@@ -16,7 +16,7 @@
 					<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
 					<!--#include virtual="/includes/paper_dropdowns.html"-->
 					<p><label>Size:</label>
-						<select name="ddmStockSheetSize<?QTYIndex?>" size="1" onchange="ddmStockSheetSize_onchange();">
+						<select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
 							<option value="">Please select one</option>
 							<? echo (
 								ssi::make_drop_down( [ map { $_,$_ } openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
@@ -24,7 +24,7 @@
 										'ddmStockFinish'.$$variable{'Signature'},
 										'ddmStockColour'.$$variable{'Signature'},
 										'ddmStockWeight'.$$variable{'Signature'},
-										} ) ], $$variable{'ddmStockSheetSize'.$$variable{'QTYIndex'}} );
+										} ) ], $$variable{'ddmStockSheetSize'} );
 							) ?>
 						</select>
 					</p>

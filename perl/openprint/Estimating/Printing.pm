@@ -128,7 +128,7 @@ my %variables = (
 		'SpreadRows1' => ['save','output'],'SpreadCols1' => ['save','output'],
 		'SpreadRows2' => ['save','output'],'SpreadCols2' => ['save','output'],
 		'SpreadRows3' => ['save','output'],'SpreadCols3' => ['save','output'],
-		'ddmStockSheetSize1' => ['save','output'], 'ddmStockSheetSize2' => ['save','output'], 'ddmStockSheetSize3' => ['save','output'],
+		'ddmStockSheetSize' => ['save'],'ddmStockSheetSize1' => ['save','output'], 'ddmStockSheetSize2' => ['save','output'], 'ddmStockSheetSize3' => ['save','output'],
 		'ddmRunStyle1' => ['save','output'], 'ddmRunStyle2' => ['save','output'], 'ddmRunStyle3' => ['save','output'],
 		'ddmPress1' => ['save','output'], 'ddmPress2' => ['save','output'], 'ddmPress3' => ['save','output'], 
 		'PrintingType1' => ['save','output'], 'PrintingType2' => ['save','output'], 'PrintingType3' => ['save','output'], 
@@ -517,10 +517,36 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 		$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 	} # end if
 
+	if ( ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) and ( $Project->Type()->name() eq 'Envelopes' ) ) {
+		if ( $$specs{'rdbSpecificStock'} ne 'Y' ) {
+			my @Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+					'project_type_id'=>$Project->type()->id(),
+					);
+$log->debug("# of papers: " . @Papers );
+			my %sizes;
+			foreach my $Paper ( @Papers ) {
+				$sizes{(1*$$Paper{width}).'x'.(1*$$Paper{height})} = $Paper;
+			} # end foreach Paper	
+			my @keys = keys %sizes;
+$log->debug("# of sizes: " . @keys );
+			if ( 1 == @keys ) {
+				@$specs{'txtWidth','txtHeight'} = ( $sizes{$keys[0]}->width(), $sizes{$keys[0]}->height() );	
+			} # end if
+		} else {
+			@$specs{'txtWidth','txtHeight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight'};
+		} # end if
+		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
+		$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
+		$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
+		$variables{'txtFinalWidth'} = [ sets::union( 'output', @{$variables{'txtFinalWidth'}} ) ];
+		$variables{'txtFinalHeight'} = [ sets::union( 'output', @{$variables{'txtFinalHeight'}} ) ];
+	} # end if
+
 	if ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) {
-		$$specs{'alert'} .= "Please enter Width and Height<br/>";
+		$$specs{'alert'} .= 'Please enter Width and Height<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+
 	if ( $$specs{'txtFinalWidth'} and ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) ) {
 		$$specs{'alert'} .= 'Flat Width must be greater than Final Width.<br/>';
 		return $$specs{'Status'} = 'uncalculated';

@@ -66,6 +66,11 @@ sub signature_needs {
 	my ( $log, $dbh, $project_index, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
+	if ( $Project->Type()->strid() eq 'Envelopes' ) {
+        $log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
+		return 0;
+	} # end if 
+
 	my $services = $Project->services();
 
     if ( $$services{'NoBindery'} ) {
