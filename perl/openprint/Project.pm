@@ -935,10 +935,10 @@ sub summary {
 			} # end if
 			$summary .= sprintf('%d%s%s/%d%s%s ',
 					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideOne' ),
-					$specs{'rdbAqueousSideOne'} ne 'None' ? '+AQ' : '',
+					( $specs{'rdbAqueousSideOne'} and $specs{'rdbAqueousSideOne'} ne 'None' ) ? '+AQ' : '',
 					($specs{'SideOneUVCoatingType'} and $specs{'SideOneUVCoatingType'} ne 'None' ? '+UV' : ''),
 					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideTwo' ),
-					$specs{'rdbAqueousSideTwo'} ne 'None' ? '+AQ' : '',
+					( $specs{'rdbAqueousSideTwo'} and $specs{'rdbAqueousSideTwo'} ne 'None' ) ? '+AQ' : '',
 					($specs{'SideTwoUVCoatingType'} and $specs{'SideTwoUVCoatingType'} ne 'None' ? '+UV' : ''),
  );
 			if ( $specs{'rdbSuppliedStock'} eq 'Y' ) {

@@ -517,20 +517,24 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 		$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 	} # end if
 
-	if ( ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) and ( $Project->Type()->name() eq 'Envelopes' ) ) {
+	if ( $Project->Type()->name() eq 'Envelopes' ) {
 		if ( $$specs{'rdbSpecificStock'} ne 'Y' ) {
-			my @Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
-					'project_type_id'=>$Project->type()->id(),
-					);
-$log->debug("# of papers: " . @Papers );
-			my %sizes;
-			foreach my $Paper ( @Papers ) {
-				$sizes{(1*$$Paper{width}).'x'.(1*$$Paper{height})} = $Paper;
-			} # end foreach Paper	
-			my @keys = keys %sizes;
-$log->debug("# of sizes: " . @keys );
-			if ( 1 == @keys ) {
-				@$specs{'txtWidth','txtHeight'} = ( $sizes{$keys[0]}->width(), $sizes{$keys[0]}->height() );	
+			if ( $$specs{'ddmStockSheetSize'} ) {
+				@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
+			} else {
+				my @Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+						'project_type_id'=>$Project->type()->id(),
+						);
+	$log->debug("# of papers: " . @Papers );
+				my %sizes;
+				foreach my $Paper ( @Papers ) {
+					$sizes{(1*$$Paper{width}).'x'.(1*$$Paper{height})} = $Paper;
+				} # end foreach Paper	
+				my @keys = keys %sizes;
+	$log->debug("# of sizes: " . @keys );
+				if ( 1 == @keys ) {
+					@$specs{'txtWidth','txtHeight'} = ( $sizes{$keys[0]}->width(), $sizes{$keys[0]}->height() );	
+				} # end if
 			} # end if
 		} else {
 			@$specs{'txtWidth','txtHeight'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight'};
@@ -750,7 +754,7 @@ $openprint::log->debug('cloning');
 	} # end if override
 
 	push @Papers, @Ps;
-if ( $debug ) {
+if ( $debug or 1 ) {
 foreach my $P ( @Papers ) {
 $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() );
 } 
