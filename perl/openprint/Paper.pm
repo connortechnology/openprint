@@ -35,7 +35,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','full_packages',
+		'minimum_order','full_packages','in_stock',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -146,6 +146,11 @@ sub find {
 		$params{'height_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND height>=?';
 		push @values, 1*$params{'height_start'};
+	} # end if
+	if ( $params{'in_stock_start'} ) {
+		$params{'in_stock_start'} =~ s/[^\d\.]//g;
+		$sql .= ' AND ( in_stock IS NULL OR in_stock >= ?)';
+		push @values, 1*$params{'in_stock_start'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
 		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id IN (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
@@ -284,6 +289,9 @@ sub save {
 		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
 		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
 	} # end if manufacturer
+
+	delete $$self{'in_stock'};
+	$self->in_stock();
 
 	foreach my $key ( @fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
@@ -723,7 +731,8 @@ sub available {
 sub skids {
     my $self = shift;
 	return 0 if ! $$self{'id'};
-    return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
+	return openprint::Skid::find('paper_id'=>$$self{'id'}, 'quantity_>='=>1);
+    #return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
 sub previous {
