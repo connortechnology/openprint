@@ -50,6 +50,7 @@ $serial = 'claims_id_seq';
 	'statetax_rate'		=>	'statetax_rate',
 	'statetax_charge'	=>	'statetax_charge',
 	'deleted'			=>	'deleted',
+	'reason'			=>	'reason',
 );
 
 %transforms = (
@@ -57,6 +58,7 @@ $serial = 'claims_id_seq';
 	'po_id'			=>	[ 's/\D//g' ],
 	'docket'		=>	[ 's/\D//g' ],
 	'supplier_id'	=>	[ 's/\D//g' ],
+	'contact_id'	=>	[ 's/\D//g' ],
 	'currency_id'	=>	[ 's/\D//g' ],
 );
 
@@ -69,6 +71,7 @@ $serial = 'claims_id_seq';
 	'po_id'			=>	undef,
 	'docket'		=>	undef,
 	'supplier_id'	=>	undef,
+	'contact_id'	=>	undef,
 	'invoice_id'	=>	undef,
 	'currency_id'	=>	undef,
 	'total'			=>	0,
@@ -290,7 +293,7 @@ sub federaltax_charge {
 	if ( @_ ) {
 		$$self{'federaltax_charge'} = $_[0];
 	} # end if
-	if ( ! defined $$self{'federaltax_charge'} ) {
+	if ( $$self{'company_id'} and ! defined $$self{'federaltax_charge'} ) {
 		if ( $self->Company()->taxexempt1() eq 'Y' ) {
 			$$self{'federaltax_charge'} = 0;
 		} # end if
@@ -332,18 +335,16 @@ sub statetax_charge {
 	if ( @_ ) {
 		$$self{'statetax_charge'} = $_[0];
 	} # end if
-	if ( ! defined $$self{'statetax_charge'} ) {
+	if ( $$self{'company_id'} and ! defined $$self{'statetax_charge'} ) {
 		if ( $self->Company()->taxexempt2() eq 'Y' ) {
-			return 0;
+			$$self{'statetax_charge'} = 0;
+		} else {
+			$$self{'statetax_charge'} = 1;
 		} # end if
-# This is true, but can't expect people to type it in
-#if ( ! $self->Vendor()->pst_number() ) {
-#   return 0;
-#} # end if
-		$$self{'statetax_charge'} = 1;
 	} # end if
 	return $$self{'statetax_charge'};
 } # end sub statetax_charge
+
 sub total {
 	my ( $self ) = @_;
 	return $$self{'subtotal'} + $self->federaltax() + $self->statetax();
