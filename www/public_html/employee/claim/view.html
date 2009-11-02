@@ -116,7 +116,7 @@ Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable
 		if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 			$html .= sprintf('<tr>
 				<td class="RFID">%1$s</td>
-				<td class="Skid">%2$d</td>
+				<td class="Skid">%2$s</td>
 				<td class="Quantity">%3$slbs</td>
 				<td>%4$s</td>
 				<td>%5$s</td>
@@ -125,9 +125,9 @@ Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable
 			</tr>', $C->Skid()->rfidtag_id(), $C->skid_id(), Number::Format::format_number($C->quantity()), $C->description(), $C->reason(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
 		} else {
 			$html .= sprintf('<tr>
-				<td>%1$s</td>
-				<td>%2$d</td>
-				<td>%3$slbs</td>
+				<td class="RFID">%1$s</td>
+				<td class="Skid">%2$s</td>
+				<td class="Quantity">%3$slbs</td>
 				<td>%4$s</td>
 				<td colspan="3">%5$s</td>
 			</tr>', $C->Skid()->rfidtag_id(), $C->skid_id(), Number::Format::format_number($C->quantity()), $C->description(), $C->reason() );

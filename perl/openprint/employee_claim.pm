@@ -52,7 +52,20 @@ sub view {
 			$variable{'error'} .= $Claim->save();
 		} # end if
 		foreach my $C ( $Claim->Contents() ) {
-			# Save any new entries that might have been entered but not added.
+			if ( ! $param{"rfidtag_id-$$C{id}"} ) { $param{"rfidtag_id-$$C{id}"} = undef; };
+			if ( ! $param{"skid_id-$$C{id}"} ) { $param{"skid_id-$$C{id}"} = undef; };
+
+			if ( $param{"rfidtag_id-$$C{id}"} and ! $param{"skid_id-$$C{id}"} ) {
+				my $RFIDTag = new openprint::RFIDTag( $param{"rfidtag_id-$$C{id}"} );
+				$param{"skid_id-$$C{id}"} = $RFIDTag->skid_id();
+			} # end if
+			if ( ! $param{"qty_lbs-$$C{id}"} ) {
+				my $Skid = new openprint::Skid( $param{"skid_id-$$C{id}"} );
+				my @SkidContents  = $Skid->Contents();
+				if ( @SkidContents == 1 ) {
+					$param{'qty_lbs-new'} = $SkidContents[0]->quantity();
+				} # end if
+			} # end if
 			$variable{'error'} .= $C->save( {
 					'quantity'		=>	sprintf('%d', $param{"qty_lbs-$$C{id}"}),
 					'cost'			=>	$param{"cost-$$C{id}"},
@@ -121,37 +134,8 @@ sub _contents {
 						} );
 			} # end if Content has changed
 		} # end foreach C
-		if ( $param{'rfidtag_id-new'} or $param{'skid_id-new'} ) {
-			@param{'rfidtag_id-new','skid_id-new'} = misc::trim(@param{'rfidtag_id-new','skid_id-new'});
-			my $Tag = new openprint::RFIDTag( $param{'rfidtag_id-new'} );
-			$variable{'error'} .= $Tag->save({'id'=>$param{'rfidtag_id-new'}}) if $param{'rfidtag_id-new'} and ! $Tag->id();
-			my $Skid = new openprint::Skid( $param{'skid_id-new'} );
-			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
-			$variable{'error'} .= $Skid->save({'rfidtag_id'=>$param{'rfidtag_id-new'}}) if ! $Skid->id();
-			return if $variable{'error'};
-
-			if ( $Tag->id() and sets::isin( $Tag->id(), map { $_->Skid()->rfidtag_id() } $Claim->Contents() ) ) {
-				$variable{'error'} .= 'RFID Tag ' . $Tag->id() . ' has already been added.<br/>';
-			} elsif ( $Skid->id() and sets::isin( $Skid->id(), map { $_->skid_id() } $Claim->Contents() ) ) {
-				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been added.<br/>';
-			} else {
-				my $C = new openprint::Claim_Content();
-				if ( ! $param{'qty_lbs-new'} ) {
-					my @SkidContents  = Skid->Contents();
-					if ( @SkidContents == 1 ) {
-						$param{'qty_lbs-new'} = $SkidContents[0]->quantity();
-					} # end if
-				} # end if
-				$variable{'error'} .= $C->save( {
-						'claim_id'	=>	$Claim->id(),
-						'skid_id'	=>	$Skid->id(),
-						'reason'	=>	$param{'reason-new'},
-						'quantity'	=>	sprintf('%d', $param{'qty_lbs-new'}),
-						'cost'		=>	$param{'cost-new'},
-						} );
-				$variable{'C'} = $C;
-			} # end if
-		} # end if
+		my $C = new openprint::Claim_Content();
+		$variable{'error'} .= $C->save( { 'claim_id'	=>	$Claim->id() } );
 	} # end if
 } # end sub _contents
 
