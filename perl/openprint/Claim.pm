@@ -215,6 +215,8 @@ sub save {
 		my $Currency = openprint::Currency::get_current();
 		$$hash{'currency_id'} = $Currency->id();
 	} # end if
+	$$self{'created_by'} = $session{'user_id'} if ! $$self{'created_by'};
+	$$self{'company_id'} = $session{'company_id'} if ! $$self{'company_id'};
 	return $self->SUPER::save( $hash );
 } # end sub save
 

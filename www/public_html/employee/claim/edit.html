@@ -7,7 +7,7 @@ function calc_price( element ) {
 		var index = matches[2];
 		var cost = parseFloat( $('cost-'+index).value.replace(/[^\d\-\.]/g, '' ) );
 		var qty = parseFloat( $('qty_lbs-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-		var units = $('units-'+index).value;
+		var units = $('cost_units-'+index).value;
 		if ( units == '/100lb' ) {
 			qty /= 100;
 		} else if ( units == '/M' ) {
