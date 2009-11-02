@@ -1493,7 +1493,7 @@ sub _skid_allocations {
 
 sub available_paper {
 	ssi::save_params( '/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id', 'owner_id_exclude' );
-	$session{'/employee/inventory/available_paper.html?Owner'} = $session{'company_id'} if ! $session{'/employee/inventory/available_paper.html?Owner'};
+	$session{'/employee/inventory/available_paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 	$session{'/employee/inventory/available_paper.html?Type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?Type'};
 	if ( $param{'btnFunction'} eq 'Allocate' ) {

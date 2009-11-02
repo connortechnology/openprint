@@ -52,18 +52,18 @@ Please select a Paper to view/edit.<br>
 		<div class="leftColumn">
 			<p>
 				<label>Owner:</label>
-				<select name="Owner" size="1" onchange="f1.submit();">
+				<select name="Owner" size="1" onchange="calc('f1');">
 				<option value=""> All </option>
 				<? echo ( 
 					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(strName)' ) ], $session{'/employee/inventory/available_paper.html?Owner'} );
 				) ?>
 				</select>
-				<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="f1.submit();" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ); ) ?> />
+				<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="calc('f1');" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ); ) ?> />
 				<label class="radio" for="owner_id_exclude">Exclude</label>
 			</p>
 			<p>
 				<label>Last seen:</label>
-				<select name="last_seen" onchange="f1.submit();">
+				<select name="last_seen" onchange="calc('f1');">
 					<? echo (
 						my @options = (
 							'',		'Ever',
@@ -77,9 +77,9 @@ Please select a Paper to view/edit.<br>
 		</div>
 		<div class="rightColumn">
 			<p><label>Type:</label>
-				<input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ) ); ) ?> onclick="f1.submit();"/>
+				<input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ) ); ) ?> onclick="calc('f1');"/>
 				<label class="radio" for="TypeSheet">Sheet</label>
-				<input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ) ); ) ?> onclick="f1.submit();"/>
+				<input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ) ); ) ?> onclick="calc('f1');"/>
 				<label class="radio" for="TypeRoll">Roll</label>
 			</p>
 		</div>
@@ -311,6 +311,12 @@ Please select a Paper to view/edit.<br>
 				<label class="radio" for="unmatchedN">No</label>
 			</p>
 		</div>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_available_paper.html', \$('f1').serialize() );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				); ) ?>
+		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
