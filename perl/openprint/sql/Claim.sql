@@ -26,5 +26,6 @@ CREATE TABLE CLAIMS (
 	statetax			float,
 	statetax_charge		boolean,
 	deleted				boolean default false,
+	reason				text,
 	PRIMARY KEY (id)
 );
