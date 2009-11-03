@@ -3,9 +3,9 @@
 
 apt-get -y install lm-sensors sensord smartmontools liblinux-inotify2-perl
 apt-get -y install make postgresql
-apt-get -y install apache2 libapache2-mod-perl2 libapache2-request-perl libapache-session-perl libtext-csv-perl libxml-dom-perl libbsd-resource-perl
+apt-get -y install apache2 libapache2-mod-perl2 libapache2-request-perl libapache-session-perl libtext-csv-perl libxml-dom-perl libbsd-resource-perl apache2-mpm-prefork
 
-apt-get -y install libmail-sendmail-perl
+apt-get -y install libmail-sendmail-perl libjson-perl libjson-xs-perl
 apt-get -y install libdate-calc-perl libbit-vector-perl libcarp-clan-perl
 
 apt-get -y libtext-csv-perl

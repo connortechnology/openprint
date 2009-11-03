@@ -56,28 +56,31 @@ if ( ! sets::isin( 'quotelevels', \@tables ) ) {
 	die "Unable to create quotelevels" if ! sets::isin( 'quotelevels', \@tables );
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{'style_id'} ) {
-	my $ac = sql::start_transaction( $dbh );
-		$dbh->do('ALTER TABLE tbl_Projects ADD style_id INTEGER');
-		$dbh->do('ALTER TABLE tbl_Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
-	sql::end_transaction( $dbh, $ac );
+if ( sets::isin( 'tbl_projects', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Projects LIMIT 1', {} );
+	if ( $data ) {
+		if ( ! exists $$data{'style_id'} ) {
+			my $ac = sql::start_transaction( $dbh );
+			$dbh->do('ALTER TABLE tbl_Projects ADD style_id INTEGER');
+			$dbh->do('ALTER TABLE tbl_Projects ADD FOREIGN KEY (style_id) REFERENCES QuoteLevels (id)');
+			sql::end_transaction( $dbh, $ac );
+		} # end if
+		if ( ! exists $$data{'rush'} ) {
+			print "Adding rush to projects";
+			$dbh->do(q`alter table tbl_Projects add rush boolean default false`);
+		} # end if
+		if ( ! exists $$data{'predefined'} ) {
+			my $ac = sql::start_transaction( $dbh );
+			print "Adding predefined to tbl_Projects\n";
+			$dbh->do(q`alter table tbl_Projects add predefined boolean`);
+			$dbh->do(q`alter table tbl_Projects alter predefined set default false`);
+			$dbh->do(q`update tbl_Projects set predefined=false`);
+			$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
+			sql::end_transaction( $dbh, $ac );
+		} # end if
+		$dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
 	} # end if
-	if ( ! exists $$data{'rush'} ) {
-		print "Adding rush to projects";
-		$dbh->do(q`alter table tbl_Projects add rush boolean default false`);
-	} # end if
-	if ( ! exists $$data{'predefined'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		print "Adding predefined to tbl_Projects\n";
-		$dbh->do(q`alter table tbl_Projects add predefined boolean`);
-		$dbh->do(q`alter table tbl_Projects alter predefined set default false`);
-		$dbh->do(q`update tbl_Projects set predefined=false`);
-		$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
-		sql::end_transaction( $dbh, $ac );
-	} # end if
-    $dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
+	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Projects LIMIT 1', {} );
 if ( $data ) {
@@ -490,34 +493,38 @@ if ( $version < 1600 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1600;
 } # end if
-my $data = $dbh->selectrow_hashref( 'SELECT * FROM Services LIMIT 1', {} );
-if ( ! $data ) {
-} else {
-	if ( sql::execute( undef, undef, "SELECT nextval('serviceindex_seq')" ) ) {
-		$dbh->do('DROP SEQUENCE serviceindex_seq');
-		$dbh->do('CREATE SEQUENCE services_id_seq');
-		$dbh->do("ALTER TABLE Services alter column id set default nextval('services_id_seq')");
-		$dbh->do("SELECT setval('services_id_seq', (SELECT MAX(id) FROM Services))");
-	} # end if
-	if ( ! exists $$data{'owner_id'} ) {
-		$dbh->do('ALTER TABLE Services add owner_id INTEGER');
-		$dbh->do('ALTER TABLE Services add FOREIGN KEY(owner_id) REFERENCES companies (id)');
+if ( sets::isin( 'services', \@tables ) ) {
+	my $data = $dbh->selectrow_hashref( 'SELECT * FROM Services LIMIT 1', {} );
+	if ( ! $data ) {
+	} else {
+		if ( sets::isin( 'serviceindex_seq', \@sequences ) ) {
+			$dbh->do('DROP SEQUENCE serviceindex_seq');
+			$dbh->do('CREATE SEQUENCE services_id_seq');
+			$dbh->do("ALTER TABLE Services alter column id set default nextval('services_id_seq')");
+			$dbh->do("SELECT setval('services_id_seq', (SELECT MAX(id) FROM Services))");
+		} # end if
+		if ( ! exists $$data{'owner_id'} ) {
+			$dbh->do('ALTER TABLE Services add owner_id INTEGER');
+			$dbh->do('ALTER TABLE Services add FOREIGN KEY(owner_id) REFERENCES companies (id)');
+		} # end if
 	} # end if
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Categories LIMIT 1', {} );
-if ( $data ) {
-	my $ac = sql::start_transaction( $dbh );
-	$dbh->do(q{alter table tbl_Service_Categories rename column lngindex to id});
-	$dbh->do(q{alter table tbl_Service_Categories rename column strid to name});
-	$dbh->do(q{alter table tbl_Service_Categories drop column strname});
-	$dbh->do(q{alter table tbl_Service_Categories rename to Service_Categories});
-	$dbh->do(q{update Services set category_id=NULL where category_id NOT IN (SELECT id FROM Service_Categories)});
-	$dbh->do(q{ALTER TABLE Services ADD foreign key (category_id) REFERENCES Service_Categories (id)});
-	sql::end_transaction( $dbh, $ac );
+if ( sets::isin( 'tbl_service_categories', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Categories LIMIT 1', {} );
+	if ( $data ) {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do(q{alter table tbl_Service_Categories rename column lngindex to id});
+		$dbh->do(q{alter table tbl_Service_Categories rename column strid to name});
+		$dbh->do(q{alter table tbl_Service_Categories drop column strname});
+		$dbh->do(q{alter table tbl_Service_Categories rename to Service_Categories});
+		$dbh->do(q{update Services set category_id=NULL where category_id NOT IN (SELECT id FROM Service_Categories)});
+		$dbh->do(q{ALTER TABLE Services ADD foreign key (category_id) REFERENCES Service_Categories (id)});
+		sql::end_transaction( $dbh, $ac );
+		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	} # end if
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_Categories LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'service_categories', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Service_Categories.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
@@ -579,12 +586,15 @@ if ( $config{'public_URIs'} ) {
 			$paths[$p] = '/index.html';
 		} elsif ( $paths[$p] =~ /main(\/account.*)/ ) {
 			$paths[$p] = $1;
-		#} elsif ( $paths[$p] =~ /\.\*(\/account.*)/ ) {
-			#$paths[$p] = $1;
+		} elsif ( $paths[$p] =~ /\.\*(\/account.*)/ ) {
+			$paths[$p] = $1;
 		}
 	} # end foreach
 	sql::update( undef, undef, 'configuration', ['name=?', 'public_URIs'], 'value', join(',',sets::union(@paths)) );
 } # end inf
+if ( $config{cookie_issue_URIs} ) {
+sql::execute( undef, undef, 'delete from configuration where name=?', 'cookie_issue_URIs' );
+} # end if
 
 if ( $version < 1897 ) {
 	print "Updating to version 1897\n";
@@ -682,25 +692,28 @@ if ( $version < 1900 ) {
 	sql::insert( undef, undef, 'database_info', 'version', 1900, 'backup', $backup );
 	$version = 1900;
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Prices LIMIT 1', {} );
-if ( $data ) {
-my $ac = sql::start_transaction( $dbh );
-	$dbh->do('ALTER TABLE tbl_Service_Prices RENAME TO Service_Prices');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lnglistindex TO pricelist_id');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngserviceindex TO service_id');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngequipmentindex TO equipment_id');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblcost TO cost');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblmarkup TO markup');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblprice TO price');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN strunits TO units');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN ysndiscountable TO discountable');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmin TO min');
-	$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmax TO max');
-	if ( ! exists $$data{'owner_id'} ) {
-		$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
-		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
+if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Prices LIMIT 1', {} );
+	if ( $data ) {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do('ALTER TABLE tbl_Service_Prices RENAME TO Service_Prices');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lnglistindex TO pricelist_id');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngserviceindex TO service_id');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngequipmentindex TO equipment_id');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblcost TO cost');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblmarkup TO markup');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN dblprice TO price');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN strunits TO units');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN ysndiscountable TO discountable');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmin TO min');
+		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmax TO max');
+		if ( ! exists $$data{'owner_id'} ) {
+			$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
+			$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
+		} # end if
+		sql::end_transaction( $dbh, $ac );
+		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 	} # end if
-sql::end_transaction( $dbh, $ac );
 } # end if
 if ( $version < 1901 ) {
 	print "Updating to version 1901\n";
@@ -1171,28 +1184,30 @@ if ( ! sets::isin( 'manifests', \@tables ) ) {
 	}
 } else {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Manifests LIMIT 1', {} );
-my $ac = sql::start_transaction( $dbh );
-	if ( ! exists $$data{'po_id'} ) {
-		$dbh->do('ALTER TABLE Manifests add po_id INTEGER');
-		$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id)');
+	if ( $data ) {
+		my $ac = sql::start_transaction( $dbh );
+		if ( ! exists $$data{'po_id'} ) {
+			$dbh->do('ALTER TABLE Manifests add po_id INTEGER');
+			$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id)');
+		} # end if
+		if ( ! exists $$data{'supplier_id'} ) {
+			$dbh->do('ALTER TABLE Manifests add supplier_id INTEGER');
+			$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (supplier_id) REFERENCES Companies (id)');
+		} # end if
+		if ( ! exists $$data{'docket'} ) {
+			$dbh->do('ALTER TABLE Manifests add docket INTEGER');
+		} # end if
+		if ( ! exists $$data{'delivered_on_switch'} ) {
+			$dbh->do('ALTER TABLE Manifests add delivered_on_switch TEXT');
+		} # end if
+		if ( ! exists $$data{'vendor_sms'} ) {
+			$dbh->do('ALTER TABLE Manifests add vendor_sms TEXT');
+		} # end if
+		if ( ! exists $$data{'shipto_sms'} ) {
+			$dbh->do('ALTER TABLE Manifests add shipto_sms TEXT');
+		} # end if
+		sql::end_transaction( $dbh, $ac );
 	} # end if
-	if ( ! exists $$data{'supplier_id'} ) {
-		$dbh->do('ALTER TABLE Manifests add supplier_id INTEGER');
-		$dbh->do('ALTER TABLE Manifests add FOREIGN KEY (supplier_id) REFERENCES Companies (id)');
-	} # end if
-	if ( ! exists $$data{'docket'} ) {
-		$dbh->do('ALTER TABLE Manifests add docket INTEGER');
-	} # end if
-	if ( ! exists $$data{'delivered_on_switch'} ) {
-		$dbh->do('ALTER TABLE Manifests add delivered_on_switch TEXT');
-	} # end if
-	if ( ! exists $$data{'vendor_sms'} ) {
-		$dbh->do('ALTER TABLE Manifests add vendor_sms TEXT');
-	} # end if
-	if ( ! exists $$data{'shipto_sms'} ) {
-		$dbh->do('ALTER TABLE Manifests add shipto_sms TEXT');
-	} # end if
-sql::end_transaction( $dbh, $ac );
 } # end if
 
 if ( ! sets::isin( 'purchaseorders', \@tables ) ) {

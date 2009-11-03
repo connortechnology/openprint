@@ -45,9 +45,8 @@ sub verify_login {
 	my ( $r, $log, $dbh, $cookie, $variable, $site ) = @_;
 		
 	# convert the email address to lower case. All email addresses stored in DB will be lower case.
-	my $email = $openprint::param{'email'};
+	my $email = lc $openprint::param{'email'};
 	$email =~ s/^\s*(.*?)\s*$/$1/;
-	$email =~ tr/[A-Z]/[a-z]/;
 
 	$log->debug("** Verifying Login for Email Adress: $email **");
 

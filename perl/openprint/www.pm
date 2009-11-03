@@ -377,13 +377,15 @@ $log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'account' ) {
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
-$log->debug("Account ($status) ($variable{'Redirect'})");
+$log->debug("Account status($status) redirect($variable{'Redirect'}) error($variable{'details'}) details($variable{'error'})");
 		return $status if $variable{'Redirect'};	
 
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.
 $log->debug("Not logged in");
-			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+			if ( ! $config{'public_URIs'} ) {
+$log->error("No public_URIs");
+			} elsif ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 $log->debug("redirecting");
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $uri );
