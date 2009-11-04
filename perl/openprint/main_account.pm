@@ -111,6 +111,10 @@ sub registration {
 		$$variable{'error'} = $openprint::param{'email'} .' is already a user!';
 		return;
 	} # end if
+	if ( openprint::User::find('email'=>$openprint::param{email},'deleted'=>1 ) ) {
+		$$variable{'error'} = $openprint::param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
+		return;
+	} # end if
 
 	my @agents = split(',', $openprint::config{'UserRegistrationEmail'} );
 	my $agent = $agents[0] if @agents;
