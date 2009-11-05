@@ -29,6 +29,10 @@
 			<label>Creation Date:</label>
 	  		<?CreationDate?>
 		</p>
+	  	<p> 
+			<label>Last Updated:</label>
+	  		<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
+		</p>
 		<? if ( $$variable{'DocketNumber'} ) ?>
 		<? if ( $$variable{'Project'}->shippingtype() ) ?>
 	  	<p> 

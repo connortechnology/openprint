@@ -12,11 +12,14 @@
 	} else {
 		@$variable{'EndYears','EndMonths','EndDays','End'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 	} # end if
+	$param{'limit'} = 10 if ! exists $param{'limit'};
 
 	my @PI = openprint::PaperInventory::find(
 		'paper_id'	=>	$param{'paper_id'},
 		'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
 		'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
+		'limit'				=>	$param{'limit'},
+		'order'				=>	'updated_on',
 	);
 	if ( (! @PI) and ! $param{'ddmStartYear'} ) {
 		@PI = openprint::PaperInventory::find('paper_id'=>$param{'paper_id'}, 'limit'=>1, 'order'=>'updated_on DESC');
@@ -27,6 +30,7 @@
 				'paper_id'	=>	$param{'paper_id'},
 				'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
 				'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
+				'order'				=>	'updated_on',
 				);
 		} # end if
 	} # end if
@@ -47,6 +51,13 @@
 			<select name="ddmEndMonth" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?EndMonths?></select>
 			<select name="ddmEndDay" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );"><?EndDays?></select>
 		</span>
+		<span class="DateSelector">
+		Limit 
+		<select name="limit" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );">
+			<? echo ( ssi::make_drop_down( [ 10, 10, 25, 25,100, 100, 0, 'All' ], $param{'limit'} ); ) ?>
+		</select>
+		entries
+		</span>
 	</p>
 	<hr/>
 	<table class="List">
@@ -55,32 +66,35 @@
 			<th align="left">Employee</th>
 			<th align="left" width="70">Skid</th>
 			<th align="left" width="170">RFID</th>
-			<th align="left" width="100">Amount</th>
-			<th align="left" width="100">In Stock</th>
 			<th align="left">Comment</th>
+			<th align="right" width="90">Amount</th>
+			<th align="right" width="90">In Stock</th>
 		</tr>
 		<? echo (
 			my $html;
-		
+			my $total = 0;		
 			my $rowclass;
 			foreach my $PI ( @{$$variable{'PI'}} ) {
 				$html .= sprintf( '<tr%1$s><td>%2$s</td><td>%3$s</td>
 	<td><a href="skid_details.html?skid_id=%4$d">%4$d</a></td>
 	<td><a href="rfidtag_details.html?rfidtag_id=%5$s">%5$s</a></td>
-	<td>%6$d%8$s</td><td>%7$d%8$s</td><td>%9$s</td>
+	<td>%9$s</td>
+	<td align="right">%6$s%8$s</td><td align="right">%7$s%8$s</td>
 	</tr>',
 					$rowclass,
 					Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PI->updated_on()) ),
 					$PI->User()->name(),
 					$PI->skid_id(),
 					$PI->Skid()->rfidtag_id(),
-					$PI->delta(),
-					$PI->instock(),
+					Number::Format::format_number( $PI->delta() ),
+					Number::Format::format_number( $PI->instock() ),
 					$PI->units(),
-					$PI->comment(),
+					$PI->comment_html(),
 					);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
+				$total += $PI->delta();
 			} # end foreach
+			$html .= '<tr class="totals"><td colspan="5" align="right">Totals:</td><td align="right">' . Number::Format::format_number( $total ) . $$variable{'Paper'}->units() .'</td><td>&nbsp;</td></tr>';
 			return $html;
 		) ?>
 	</table>

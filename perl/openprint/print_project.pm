@@ -352,7 +352,7 @@ sub get_services_in_category {
 			} # end while
 		} # end if
 	} else { 
-		$_ = "SELECT lngServiceIndex, id FROM tbl_Service_Specifications, Service_Types WHERE lngProjectIndex=?
+		$_ = "SELECT lngServiceIndex, Service_Types.id FROM tbl_Service_Specifications, Service_Types WHERE lngProjectIndex=?
 			  AND tbl_Service_Specifications.strName='ServiceType'
 			  AND strValue IN ( SELECT name FROM Service_Types WHERE category = ? )
 			  AND strValue = name

@@ -20,6 +20,7 @@ require Math::Units;
 require sql;
 require openprint::JDF;
 require openprint::OrderedProduct;
+require openprint::ScheduledJob;
 
 my $debug = 1;
 
@@ -319,8 +320,8 @@ sub is_printed {
 	
 	my %statuses = sql::execute( undef, undef, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	foreach ( $self->signatures() ) {
-		return 0 if $statuses{$_} eq 'Ordered';
-	} # end foreac
+		return 0 if sets::isin( $statuses{$_}, ['Ordered','In Production'] );
+	} # end foreach
 	return 1;
 } # end sub is_printed
 
@@ -350,6 +351,13 @@ sub update_status {
             if ( $$self{status} ne 'Waiting For Customer Approval' ) {
 				$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Waiting For Customer Approval from $$self{'status'}" );
 				$$self{'status'} = 'Waiting For Customer Approval';
+				$self->save();
+            } # end if
+            return $$self{status};
+		} elsif ( sets::isin( 'Waiting For QA Approval', \@statuses ) ) {
+            if ( $$self{status} ne 'Waiting For QA Approval' ) {
+				$self->add_to_log( @openprint::session{'company_id','user_id'}, "Marked Waiting For QA Approval from $$self{'status'}" );
+				$$self{'status'} = 'Waiting For QA Approval';
 				$self->save();
             } # end if
             return $$self{status};
@@ -446,8 +454,7 @@ sub update_status {
 			$new_status = 'uncalculated';
 		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
 			$new_status = 'Unordered';
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $$self{'quantity'.$qty_index};
+			foreach my $qty_index ( $self->quantity_indexes() ) {
 				if ( openprint::Estimating::Multipage::status( $$self{'id'}, undef, $qty_index ) ) {
 					$new_status = 'uncalculated';
 					last;
@@ -643,9 +650,9 @@ $openprint::log->debug("No presses in used_press_name");
 } # end sub find
 
 sub save {
-	my ( $self, %hash ) = @_;
+	my ( $self, $hash ) = @_;
 
-	@$self{ keys %hash } = @hash{keys %hash};
+	@$self{ keys %{$hash} } = @$hash{keys %{$hash} };
 
 	$$self{'currency_id'} = $openprint::session{'Currency_id'} if ! $$self{'currency_id'};
 	$$self{'company_id'} = $openprint::session{'company_id'} if ! $$self{'company_id'};
@@ -692,14 +699,14 @@ sub save {
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
-	} elsif ( $hash{'force_install'} ) {
+	} elsif ( $$hash{'force_install'} ) {
 		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'tbl_Projects', 'Index',	@$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
 		} # end if
 	} else {
-		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'tbl_Projects', "Index=$$self{'id'}", @sql ) ) {
+		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'tbl_Projects', ['index=?', $$self{'id'}], @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;
@@ -1097,12 +1104,13 @@ sub status_change {
 		foreach $_ ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $_, 'Complete' );
 		} # end foreach signature
-        sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $self->id() );
+		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+			$Job->delete();
+		} # end foreach
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 			$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
 		} # end foreach AP
-
 	} elsif ( sets::isin( $new_status, ['Bindery Complete' ] ) ) {
 		foreach my $s_id ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
@@ -1112,7 +1120,9 @@ sub status_change {
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
 		} # end foreach
-		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
+		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+			$Job->delete();
+		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
@@ -1122,7 +1132,9 @@ sub status_change {
 	} elsif ( sets::isin( $new_status, ['Shipped','Picked Up', 'Complete'] ) ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus != ''", $$self{id}], 'strStatus', 'Complete' );
 # Remove jobs from the Schedule when marked complete.
-		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=?}, $$self{'id'} );
+		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+			$Job->delete();
+		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
 		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
@@ -1192,8 +1204,44 @@ sub Ordered_Product {
 	return $$self{'Ordered_Product'};
 } # end sub Ordered_Product
 
+sub get_due_date {
+	my ( $self ) = @_;
+	my $duedatedays = 0;
+	foreach my $signature_service_index ( $self->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $self, $signature_service_index );
+# Lookup how many days to add to due date
+		if ( my @Equipment = openprint::Equipment::find( 'strid'=>$$sig_specs{'UsePress'} ) ) {
+			( $_ ) = $Equipment[0]->specification('DueDateDays');
+			if ( $_ > $duedatedays ) {
+				$duedatedays = int $_;
+			} # end if
+		} # end if
+	} # end foreach signature_service_index
+
+	if ( ! $duedatedays ) {
+		$duedatedays = 5;
+	} # end if
+
+	my $runtime = 0;
+	foreach ( $self->signatures() ) {
+		$runtime += openprint::service::get_runtime( $self, $_ );
+	} # end foreach
+	$duedatedays += int( $runtime / ( 24*60 ) );
+
+	# Make it business days
+	my ( $year, $month, $day ) = Date::Calc::Today();
+	while ($duedatedays) {
+		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+		while ( 6 <= Date::Calc::Day_of_Week( $year, $month, $day ) ) {
+			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+		} # end while
+		$duedatedays -= 1;
+	} # end while
+#$log->debug("$year-$month-$day");
+
+	return sprintf('%.4d-%.2d-%.2d', $year, $month, $day );
+
+} # end sub get_due_date
 
 1;
-
 __END__
-~		

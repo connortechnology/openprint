@@ -8,6 +8,7 @@ use openprint ();
 
 require sql;
 require openprint::Object;
+require openprint::customer_credit;
 
 %fields = (
 		'id'						=>	'index',

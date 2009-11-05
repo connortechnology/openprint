@@ -3,7 +3,7 @@
 	require openprint::Project;
 
 	# Look for jobs that should be on here, but arent
-	my @missing_jobs = sql::execute( undef, undef, q{SELECT Index FROM tbl_Projects WHERE strStatus='Printed' AND Index NOT IN (SELECT ProjectIndex FROM Bindery_Schedule) AND ( SELECT invoice_id FROM Orders WHERE Orders.Index IN (SELECT OrderIndex FROM Order_Contents WHERE Order_Contents.lngProjectIndex=tbl_Projects.Index) ) IS NULL} );
+	my @missing_jobs = sql::execute( undef, undef, q{SELECT Index FROM tbl_Projects WHERE strStatus='Printed' AND Index NOT IN (SELECT ProjectIndex FROM Bindery_Schedule) AND ( SELECT invoice_id FROM Orders WHERE Orders.Index IN (SELECT OrderIndex FROM Order_Contents WHERE Order_Contents.lngProjectIndex=tbl_Projects.Index) LIMIT 1) IS NULL} );
 	foreach my $Project ( openprint::Project::find('id'=>\@missing_jobs) ) {
 		openprint::bindery_schedule::add_project( $Project );
 	} # end foreach project

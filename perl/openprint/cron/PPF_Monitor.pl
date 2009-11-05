@@ -66,6 +66,7 @@ if ( ! @Equipment ) {
 	die "No equipment found.\n";
 } # end if
 foreach my $Equipment ( @Equipment ) {
+	#$log->warn("Processing " . $Equipment->name() ) if $debug;
 	my @filenames;
 	if ( ! open(S, "> $$Equipment{cip3_in}/.lock.lck") ) {
 		$log->error("Unable to open semaphore\n");
@@ -84,13 +85,21 @@ foreach my $Equipment ( @Equipment ) {
 	} # end if
 
 	if ( $$Equipment{'cip3_merge'} ) {
+		#$log->warn("Merging..." ) if $debug;
 		# First have to look for Back's, so that we don't process fronts before backs.
-		foreach my $file ( @filenames ) {
+		# Have to copy, because we modify filenames
+		my @Bs = @filenames;
+
+		foreach my $file ( @Bs ) {
 			# Will ignore ., .., any hidden file
+		$log->warn("File... $file" ) if $debug;
 			next if $file =~ /^\./; 
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
 $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
-			next if $side ne 'B';
+			if ( $side ne 'B' ) {
+$log->warn("Not a b") if $debug;
+				next;
+			} # end if
 
 			my $out_base = $file_base;
 			$out_base =~ s/\./_/g;
@@ -100,18 +109,20 @@ $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			$sig = 0 if ! $sig;
 			my $data;
 			$side = 'M';
-			if ( ! sets::isin( $file_base.'A.'.$extension, @filenames ) ) {
-				print "A file not found " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension ignoring B\n" ;
+#$log->warn("FIlenames before: @filenames");
+			if ( ! sets::isin( $file_base.'A.'.$extension, \@filenames ) ) {
+				$log->warn( "A file not found " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension ignoring B\n" );
 				next;
 			} # end if
 			@filenames = sets::exclude( [$file_base.'A.'.$extension,$file_base.'B.'.$extension], \@filenames );	
+#$log->warn("FIlenames after: @filenames");
 
 			if ( ! open ( FH, '< ' . $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension ) ) {
-				print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."B.$extension\n" ;
+				$log->error( "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."B.$extension\n" );
 				next;
 			} # end if
 			if ( ! flock(FH, LOCK_EX) ) {
-				$log->error("Unable to lock B!\n");
+				$log->error("Unable to lock B!");
 				close(FH);
 				next;
 			} # end if
@@ -139,17 +150,17 @@ if ( $mangle ) {
 } # end if
 				push @Back, $line if ( $back_flag );
 				last if $line =~ /CIPEndBack/;
-			} # end while
+			} # end while FH
 			close( FH );
 			if ( ! @Back ) {
-				print "No Back found in B file!\n";
+				$log->error( "No Back found in B file!" );
 				rename $$Equipment{'cip3_in'}.'/'.$file_base.'B.'.$extension, $$Equipment{'cip3_in'}.'/'.$file_base.'E.'.$extension;
 				next;
 			} # end if
 
 			my $A;
 			if ( ! open( $A, '< '.$$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension ) ) {
-				print "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension\n" ;
+				$log->error( "Error opening " . $$Equipment{'cip3_in'}.'/'.$file_base."A.$extension" );
 				next;
 			} # end if
 			if ( ! flock($A, LOCK_EX) ) {
@@ -195,10 +206,9 @@ if ( $mangle ) {
 			close $A;
 
 			if ( ! $complete ) {
-$log->error("File was not complete! $file_base");
-next;
+				$log->error("File was not complete! $file_base");
+				next;
 			} # end if
-$log->debug('Storing PPF');
 			my $PPF = store_PPF( $docket, $sig, $side, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
@@ -206,11 +216,19 @@ $log->debug('Storing PPF');
 		} # end foreach file in input hotfolder
 	} # end if cip3_merge
 
+#$log->warn("Remaining FIlenames before: @filenames");
 	foreach my $file ( @filenames ) {
 		# Will ignore ., .., any hidden file
 		next if $file =~ /^\./; 
+
+        # CHeck AGE
+		my $mtime = ( stat $file )[9];
+		if ( time - $mtime < 2*60 ) {
+			next;
+		} # end if
+
 		my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
-$log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
+$log->warn("SINGLE SIDE Parsed to $file_base, $side, $extension from $file") if $debug;
 		my $out_base = $file_base;
 		$out_base =~ s/\./_/g;
 		my $data;

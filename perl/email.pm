@@ -1,37 +1,39 @@
 package email;
 
 use strict;
+use openprint ();
+use vars qw( $r %config $log );
+*r = \$openprint::r;
+*log = \$openprint::log;
+*config = \%openprint::config;
 
 require sql;
 
 my $dbh;
 
 sub db_connect {
-	my ( $r, $log ) = @_;
-	my %info = (
+	return $dbh = sql::open_sql( $log, 
+	(
 		'host'		=>	$r->dir_config('mail_db_hostname'),
 		'database'	=>	$r->dir_config('mail_db_name'),
 		'login'		=>	$r->dir_config('mail_db_username'),
 		'password'	=>	$r->dir_config('mail_db_password'),
 		'driver'	=>	$r->dir_config('mail_db_driver'),
-	);
-	return $dbh = sql::open_sql( $log, %info );
+	) );
 } # end sub connect
 
 sub set_password {
-    my ( $r, $log, $email, $password ) = @_;
+    my ( $email, $password ) = @_;
 
-    db_connect( $r, $log ) if ! $dbh;
+    $dbh = db_connect() if ! $dbh;
 
     sql::update( $log, $dbh, 'mailbox', ['username=?', $email], 'password', $password );
 } # end sub set_password
 
-
-
 sub get_vacation {
-	my ( $r, $log, $email ) = @_;
+	my ( $email ) = @_;
 
-	db_connect( $r, $log ) if ! $dbh; 
+	$dbh = db_connect() if ! $dbh; 
 
 	my ( $subject, $message ) = sql::execute( $log, $dbh, q{SELECT subject, body FROM vacation WHERE email=?}, $email );
 	if ( $message or $subject ) {
@@ -40,9 +42,9 @@ sub get_vacation {
 } # end sub get_vacation
 
 sub start_vacation {
-	my ( $r, $log, $email, $subject, $message ) = @_;
+	my ( $email, $subject, $message ) = @_;
 
-	db_connect( $r, $log ) if ! $dbh; 
+	$dbh = db_connect() if ! $dbh; 
 
 	$email =~ /(.*)\@.*/;
 	my $autoreply_address = $1.'@'.$r->dir_config('mail_autoreply_domain');
@@ -67,9 +69,9 @@ sub start_vacation {
 } # end sub set_vacation
 
 sub stop_vacation {
-	my ( $r, $log, $email ) = @_;
+	my ( $email ) = @_;
 
-	db_connect( $r, $log ) if ! $dbh; 
+	$dbh = db_connect() if ! $dbh; 
 
 	sql::execute( $log, $dbh, q{DELETE FROM vacation_cache WHERE to_email=?}, $email );
 	sql::execute( $log, $dbh, q{DELETE FROM vacation WHERE email=?}, $email );
@@ -84,7 +86,7 @@ sub stop_vacation {
 } # end sub stop_vacation
 
 sub aliases {
-	my ( $log, $email, @new ) = @_;
+	my ( $email, @new ) = @_;
 
 	my @aliases;
 	my $auto_alias = '';

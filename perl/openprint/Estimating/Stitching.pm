@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-my $debug = 0;
+my $debug = 1;
 
 require openprint::project;
 require openprint::Equipment;
@@ -258,7 +258,7 @@ $openprint::log->debug( sprintf('QTY %d imp:%d, %dx%d, %s', $qty_index, $imposit
 
 			if ( ( $$sig_specs{'txtImposition'.$qty_index} % 2 ) or (sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) and $$sig_specs{'txtImposition'.$qty_index} % 4 ) ) {
 
-				$openprint::log->warn("Setting imposition to 1 :" . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'ddmRunStyle'.$qty_index} );
+				$openprint::log->warn("Setting imposition to 1 : Imp:" . $$sig_specs{'txtImposition'.$qty_index} . ' ' . $$sig_specs{'ddmRunStyle'.$qty_index} );
 				$imposition = 1 
 			} # end if
 			last if $imposition == 1;
@@ -305,11 +305,11 @@ $openprint::log->debug("Overriding imposiion");
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'hdnBreakdown'.$qty_index} .= 'Finished Calliper: ' . $$specs{'txtCalliper'} . '<br/>';
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Face Trim: ' . $$specs{'Width'} . '<br/>';
+		$$specs{'hdnBreakdown'.$qty_index} .= "Face Trim: $$specs{'Width'} Spine Length: $$specs{'Height'}<br/>";
 
 		if ( $$specs{'OverridePockets'.$qty_index} ne 'Y' ) {
 			foreach my $signature_service_index ( $Project->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 				if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Signature $$sig_specs{SignatureIndex} has no imposition.<br/>";
@@ -346,7 +346,6 @@ $openprint::log->debug("Overriding imposiion");
 		} else { # Override Pockets
 			foreach my $pages ( 4, 8, 12, 16, 20, 24, 32, 36, 40, 48, 64 ) {
 				$$specs{"txtPockets$qty_index"} += $$specs{'txtSignatureQty'.$pages.'Page-'.$qty_index};
-#$openprint::log->debug("Pckets $qty_index: " . $$specs{"txtPockets$qty_index"} );
 			} # end foreach
 		} # end if
 	} # end foreach qty_index
@@ -376,7 +375,7 @@ $openprint::log->debug("Overriding imposiion");
 
 		if ( 1 > $$specs{"txtPockets$qty_index"} ) {
 			$$specs{'Status'} = 'uncalculated';
-			$$specs{'alert'} .= 'We are unable to determine how many pockets your project requires.  Please contact us.';
+			$$specs{'alert'} .= 'We are unable to determine how many pockets your project requires.  Please contact us.<br/>';
 			if ( $$specs{'OverrideImposition'.$qty_index} ne 'Y' ) {
 				$$specs{'Imposition'.$qty_index} = '';
 			} # end if
@@ -417,14 +416,14 @@ $openprint::log->debug("Overriding imposiion");
 				$bestEquipment = $Equipment;
 				$bestPrice = $price;
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ", Equipment: ".$Equipment->strid() ."<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$price{'RunTime'} ) . ",<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$price{'Passes'} ) . ",<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$price{'Imposition'} ) . ",<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%<br/>', @$price{'RunCost Discount','Imposition Discount'} );
-			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$price{'MakeReady'}).",<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Service: $' . sprintf( '%.2f', $$price{'Service'}).",<br/>";
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'}))."<br/><br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ", Equipment: ".$Equipment->strid() .'<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$price{'RunTime'} ) . ',<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$price{'Passes'} ) . ',<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$price{'Imposition'} ) . ',<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%, SpineLength: %d%<br/>', @$price{'RunCost Discount','Imposition Discount','SpineLength Discount'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$price{'MakeReady'}).',<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Service: $' . sprintf( '%.2f', $$price{'Service'}).',<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'})).'<br/><br/>';
 		} # end foreach
 		if ( ! $bestEquipment ) {
 			$$specs{'Status'} = 'uncalculated';
@@ -580,6 +579,10 @@ $openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max
 	$price{'Service'} *= ( 1 - $price{'RunCost Discount'}/100);
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
+	if ( $Equipment->specification( 'SpineLength Discount' ) ) {
+		$price{'SpineLength Discount'} = $Equipment->specification( 'SpineLength Discount', $$specs{'Height'} );
+		$price{'Service'} *= ( 1 - $price{'SpineLength Discount'}/100);
+	} # end if
 
 	$price{'txtPrice'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'};
 $openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'txtPrice'} ) if $debug;

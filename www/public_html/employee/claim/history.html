@@ -1,0 +1,90 @@
+<script type="text/javascript">
+<!--
+	function load( div, form ) {
+		new Ajax.Updater( div, '_history.html', { method: 'get', parameters: form.serialize() } );
+	} // end function load
+	function open_decline_window( form ) {
+		var claim_ids;
+		if ( ! form.claim_id.length ) {
+			if ( form.claim_id && form.claim_id.checked ) {
+				claim_ids = new Array();
+				claim_ids[claim_ids.length] = form.claim_id.value;
+			} // end if
+		} else {
+			claim_ids = $A(form.claim_id).filter(function(e){return e.checked}).map(function(e){return e.value});
+		} // end if
+		if ( ! claim_ids.length ) {
+			alert('Please select a claim to decline.');
+		} else {
+			ajax_window('_po_decline_popup.html?po_id='+claim_ids.join(','), 400 );
+		} // end if
+	} // end function open_decline_window()
+-->
+</script>
+	<!--#include virtual="/includes/error_reporting.html"-->
+<form id="f1" name="f1" action="history.html" method="post">
+	<fieldset class="filters"><legend>Select Search Criteria:</legend>
+		<p><label>CLAIM #:</label>
+			<input type="text" id="claim_id" name="claim_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "load('Results', \$('f1'));",'','Go' ); ) ?>
+		</p>
+		<p><label>Manifest:</label>
+			<input type="text" id="manifest_id" name="manifest_id" size="10" onkeydown="if(event.keyCode == 13){load('Results', $('f1') );}" onkeyup="this.value=this.value.replace(/\s/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load('Results', \$('f1'));",'','Go' ); ) ?>
+		</p>
+		<hr/>
+		<p><label>Created By:</label>
+			<select name="created_by" onchange="load('Results',$('f1'));">
+				<option value="">All</option>
+				<? echo ( 
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)','type'=>['A','E'] ) ], $session{'/employee/claim/history.html?created_by'} ); ) ?>
+			</select>
+		</p>
+		<p><label>Vendor:</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
+			<select name="supplier_id" onchange="load('Results',$('f1'));">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/claim/history.html?supplier_id'} ); ) ?>
+			</select>
+		</p>
+		<? eval (
+				ssi::setup_date_select( '/employee/claim/history.html', 'created_on', -31 );
+        ) ?>
+		<p>
+			<label>Date:</label>
+			<span class="DateSelector">
+<? echo ( ssi::date_select( 'created_on_start', join('-', @session{'/employee/claim/history.html?created_on_start_year','/employee/claim/history.html?created_on_start_month','/employee/claim/history.html?created_on_start_day'} ), "load('Results',\$('f1'));" ); ) ?>
+            to
+            </span>
+            <span class="DateSelector">
+<? echo ( ssi::date_select( 'created_on_end', join('-', @session{'/employee/claim/history.html?created_on_end_year','/employee/claim/history.html?created_on_end_month','/employee/claim/history.html?created_on_end_day'} ), "load('Results',\$('f1'));" ); ) ?>
+            </span>
+		</p>
+		<p>
+			<label>Status:</label>
+			<input type="radio" name="status" id="statusAll" value="" <? echo ( ssi::checked( $session{'/employee/claim/history.html?status'} eq '' ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="statusAll">All</label>
+			<input type="radio" name="status" id="statusFiled" value="Filed" <? echo ( ssi::checked( $session{'/employee/claim/history.html?status'} eq 'Filed' ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="statusFiled">Filed</label>
+			<input type="radio" name="status" id="statusAccounting" value="Accounting" <? echo ( ssi::checked( $session{'/employee/claim/history.html?status'} eq 'Accounting' ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="statusAccounting">Sent to Accounts</label>
+			<input type="radio" name="status" id="statusInvoiced" value="Invoiced" <? echo ( ssi::checked( $session{'/employee/claim/history.html?status'} eq 'Invoiced' ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="statusInvoiced">Invoiced</label>
+			<input type="radio" name="status" id="statusCancelled" value="Cancelled" <? echo ( ssi::checked( $session{'/employee/claim/history.html?status'} eq 'Cancelled' ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="statusCancelled">Cancelled</label>
+		</p>
+		<p>
+			<label>Contains</label>
+			<input type="text" id="contains" name="contains" onkeyup="load('Results',$('f1'));" />
+		</p>
+		<p class="buttons">
+				<? echo ( join( '',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', '/employee/claim/edit.html', 'Add New' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+	<div id="Results"><!--#include virtual="_history.html"--></div>
+</form>

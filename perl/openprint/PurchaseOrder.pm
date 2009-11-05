@@ -21,6 +21,7 @@ require openprint::User;
 require openprint::Tax;
 require openprint::PurchaseOrder_Content;
 require openprint::PurchaseOrder_Log;
+require openprint::Email;
 
 my $debug = 0;
 
@@ -232,6 +233,10 @@ sub save {
 	foreach my $C ( $self->Contents() ) {
 		$sql{'subtotal'} += $C->total();
 	} # end foreach
+	delete $$self{'federaltax'};
+	delete $$self{'statetax'};
+	$sql{'federaltax'} = $self->federaltax();
+	$sql{'statetax'} = $self->statetax();
 	$sql{'total'} = $sql{'subtotal'};
 	if ( ! $sql{'currency_id'} ) {
 		my $Currency = openprint::Currency::get_current();
@@ -313,7 +318,7 @@ sub send_to_vendor {
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
-	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ), 'text/html', 'quoted-printable';
+	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
 
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
@@ -330,25 +335,25 @@ sub send_to_vendor {
 		$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
 	} # end foreach
 	if ( $self->shipto_email() and ( $self->vendor_email() ne $self->shipto_email() ) ) {
-		foreach my $email ( split(',', $self->shipto_email() ) ) {
-			$email =~ s/^\s*(.*)\s*$/$1/;
-			next if ! $email;
-			$mail{'TO'} = $email;
-			misc::send_email_with_attachment( $log, \%mail, @attachments );
-			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
-		} # end foreach
+		my $Email = new openprint::Email();
+		$results .= $Email->send( 
+				TO	=>	[ split(',', $self->shipto_email() ) ],
+				FROM	=>	$mail{'FROM'},
+				SUBJECT	=>	$mail{'SUBJECT'},
+				ATTACHMENTS =>	\@attachments,
+				);
 	} # end if
 	if ( $self->notifications() ) {
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
 		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
 		@attachments = ('', $_, 'text/html', 'quoted-printable');
-		$results .= 'Notification sent to: ';
-		foreach my $user_id ( $self->notifications() ) {
-			my $U = new openprint::User( $user_id );
-			$mail{'TO'} = sprintf( '"%s" <%s>', $U->name(), $U->email() );
-			misc::send_email_with_attachment( $log, \%mail, @attachments );
-			$results .= ssi::htmlize( $mail{'TO'} ) . '<br/>';
-		} # end foreach U
+		my $Email = new openprint::Email();
+		$results .= 'Notifications: <br/>' . $Email->send( 
+				TO	=>	[ map { new openprint::User( $_ ) } $self->notifications() ],
+				FROM	=>	$mail{'FROM'},
+				SUBJECT	=>	$mail{'SUBJECT'},
+				ATTACHMENTS =>	\@attachments,
+				);
 	} # end if
 
 	my $L = new openprint::PurchaseOrder_Log();

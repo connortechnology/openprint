@@ -272,16 +272,7 @@ sub seconds_to_pretty_interval {
     } # end if
     return $string if ! $remainder;
 
-    my $hours = int( $remainder / (60*60) );
-    $remainder = $remainder % ( 60*60 );
-    my $minutes = int ( $remainder / 60 );
-    $remainder = $remainder % 60;
-
-    if ( $remainder ) {
-        $string .= sprintf('%d:%.2d:%.2d', $hours, $minutes, $remainder );
-    } else {
-        $string .= sprintf('%d:%.2d', $hours, $minutes );
-    } # end if
+	$string .= seconds2hms( $remainder );
     return $string;
 
 } # end sub seconds_to_pretty_interval
@@ -376,6 +367,19 @@ sub format_bytes {
 		return $_[0].' B';
 	} # end if
 } # end sub format_bytes
+
+sub seconds2hms {
+	my ( $seconds ) = @_;
+    my $hours = int( $seconds / (60*60) );
+    $seconds = $seconds % ( 60*60 );
+    my $minutes = int ( $seconds / 60 );
+    $seconds = $seconds % 60;
+
+    if ( $seconds ) {
+        return sprintf('%d:%.2d:%.2d', $hours, $minutes, $seconds );
+    } # end if
+	return sprintf('%d:%.2d', $hours, $minutes );
+} # end sub seconds2hms
 
 1;
 

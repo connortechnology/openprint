@@ -141,6 +141,7 @@ sub set {
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
 				$$self{$field} = $$params{$field};
+				eval "\$self->$field( \$\$params{\$field} );";
 				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
 			} # end if
 		} # end if
@@ -198,9 +199,10 @@ sub undelete {
 	return;
 } # end sub delete
 
-
-1;
-__END__
+sub Creator {
+	require openprint::User;
+	return new openprint::User( $_[0]{'created_by'} );
+} # end sub Creator
 
 1;
 __END__

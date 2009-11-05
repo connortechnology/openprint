@@ -10,12 +10,9 @@
 			<!--#include virtual="/includes/employee/feedback/complete_date.html"-->
 			<p id="DueDate">
 				<label>Due Date:</label>
-				<? eval (
-					 @$variable{'years','months','days'} = ssi::get_dates( $log, $dbh, @$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} ); 
-) ?>
-				<select style="width: auto;" name="ddmDueDateMonth" size="1"><?months?></select>
-				<select style="width: auto;" name="ddmDueDateDay" size="1"><?days?></select>
-				<select style="width: auto;" name="ddmDueDateYear" size="1"><?years?></select>
+				<span class="DateSelector">
+				<? echo ( ssi::date_select( 'duedate', [ @$variable{'duedate_year','duedate_month','duedate_day'} ] ) ) ?>
+				</span>
 			</p>
 			<p class="buttons">
 			<? echo ( join('',

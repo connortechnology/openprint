@@ -334,7 +334,7 @@ function open_window( page ) {
 			my %Allocations;
 			my $rowclass;
 
-			foreach my $Allocation ( openprint::PaperAllocation::find('project_id'=>$$variable{'Project'}->id(), 'order'=>'created_on' ) ) {
+			foreach my $Allocation ( openprint::PaperAllocation::find('project_id'=>$$variable{'Project'}->id(), 'order'=>'skid_id,created_on' ) ) {
 				push @{$Allocations{$Allocation->paper_id()}}, $Allocation;
 			} # end foreach Allocation
 			foreach my $paper_id ( keys %Allocations ) {

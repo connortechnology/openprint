@@ -163,12 +163,12 @@ sub user_profiles {
 
 		if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 			if ( $openprint::param{'VacationState'} ) {
-				email::start_vacation( $r, $log, $User->email(), @openprint::param{'VacationSubject','VacationMessage'} );
+				email::start_vacation( $User->email(), @openprint::param{'VacationSubject','VacationMessage'} );
 			} else {
-				email::stop_vacation( $r, $log, $User->email() );
+				email::stop_vacation( $User->email() );
 			} # end if
 			if ( $openprint::param{'EmailPassword'} and $openprint::param{'EmailPassword'} eq $openprint::param{'VerifyEmailPassword'} ) {
-                email::set_password( $r, $log, @openprint::param{'email','EmailPassword'} );
+                email::set_password( @openprint::param{'email','EmailPassword'} );
             } # end if
             my @aliases = ();
             foreach my $alias ( split "\r\n", $openprint::param{'aliases'} ) {
@@ -176,9 +176,7 @@ sub user_profiles {
                 push @aliases, $alias;
             } # end foreach
 			push @aliases, $User->email() if ! @aliases;
-            email::aliases( $log, $User->email(), @aliases );
-
-			$sql::dbh = $dbh;
+            email::aliases( $User->email(), @aliases );
         } # end if
 
 		my @categories = sql::execute( $log, $dbh, 'SELECT id FROM Marketing_Categories' );
@@ -239,9 +237,8 @@ sub user_profiles {
 	} # end if 
 
 	if ( $openprint::config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
-		@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $r, $log, $User->email() );
-		@{$$variable{'Aliases'}} = email::aliases( $log, $User->email() );
-		$sql::dbh = $dbh;
+		@$variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
+		@{$$variable{'Aliases'}} = email::aliases( $User->email() );
 	} # end if
 
 				

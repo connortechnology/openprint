@@ -13,7 +13,9 @@
 		my $Paper = new openprint::Paper( $$variable{'paper_id'} );
 		$html .= '<table style="float: right; width:50%;">';
 		#$html .= sprintf('<tr><td>ID:</td><td align="right"><img style="margin-bottom: 7px;" src="/barcode.png?code=P%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'paper_id'} );
-		$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} );
+		my $C = $$variable{'Skid'}->Content( $Paper );
+		my $qty = $C->quantity() if $C;
+		$html .= sprintf('<tr><td>Qty:</td><td align="right"><img src="/barcode.png?code=Q%1$d+&amp;NoText=1&amp;Height=30" alt="%1$d"/></td></tr>', $qty );
 		$html .= '</table>';
 		my $paper_detail = sprintf('%s %s %s', $Paper->name(), $Paper->finish(), $Paper->colour() );
 		$paper_detail .= '<br/>';
@@ -27,7 +29,7 @@
 		} else {
 			$html .= $paper_detail;
 		} # end if
-		$html .= '<br/><b>'. $$variable{'Skid'}{'Paper'}{$$variable{'paper_id'}} . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
+		$html .= '<br/><b>'. $qty . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
 	} # end if
 	return $html;
 ) ?>
@@ -49,11 +51,11 @@
 		} # end foreach
 		
 		return $html;
-	} elsif ( $openprint::param{'docket'} ) {
+	} elsif ( $param{'docket'} ) {
 			my $html;
 			$html .= '<div style="padding:0px 7px 0px 7px;">';
-			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$openprint::param{docket}+&amp;NoText=1&amp;Height=30"><b>Docket:</b><br class="spacer"/>`;
-			$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$openprint::param{docket}</b></div></div><br class="pagebreak"/>`;
+			$html .= qq`<img style="float: right; margin-bottom: 7px;" src="/barcode.png?code=D$param{docket}+&amp;NoText=1&amp;Height=30"><b>Docket:</b><br class="spacer"/>`;
+			$html .= qq`<div style="font-size: 99pt; text-align: center;"><b>$param{docket}</b></div></div><br class="pagebreak"/>`;
 			return $html;
 	} else {
 		return '<br class="pagebreak"/>';

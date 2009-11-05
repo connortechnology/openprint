@@ -1312,7 +1312,9 @@ sub _li_change {
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		my ( $starttime, $equipment_id ) = @$Job{'starttime','equipment_id'};
+		my $Project = new openprint::Project( $$row{'projectindex'} );
+		$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
+		my ( $starttime, $equipment_id ) = @$row{'starttime','equipment_id'};
 		$equipment_id = $param{'equipment_id'} if $param{'equipment_id'};
 $log->debug('Shift: ' . $Job->Shift()->ul_id() );
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
@@ -1419,8 +1421,10 @@ sub _job_popup {
 sub _signature_completion_popup {
 	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
 }
+sub _check_for_skid {
+
+} # end sub _check_for_skid
 
 1;
-
 __END__
 ~	   

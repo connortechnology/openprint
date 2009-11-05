@@ -3,7 +3,7 @@ package openprint::Location;
 
 use strict;
 use openprint ();
-use vars qw( %variable %cache $log $dbh );
+use vars qw( %variable $log $dbh );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -42,14 +42,6 @@ sub find {
 	} # end if
 
 } # end sub find
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Location();
-	@$new{'location'} = @$self{'location'};
-	%{$$new{'Paper'}} = %{$$self{'Paper'}};
-	return $new;
-} # end sub copy
 
 sub load {
 	my ( $self, $data ) = @_;

@@ -19,7 +19,7 @@
 ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
 Please select a Paper to view/edit.<br>
-<form name="f1" method="post" action="paper.html">
+<form id="f1" name="f1" method="post" action="paper.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Docket:</label>
@@ -104,6 +104,8 @@ Please select a Paper to view/edit.<br>
 			<option value=""> All </option>
 			<? echo ( openprint::Company::get_dropdown( $session{'/employee/inventory/paper.html?Owner'} ); ) ?>
 			</select>
+			<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" />
+			<label class="radio" for="owner_id_exclude">Exclude</label>
 		</p>
 		<p>
 			<label>Date Added:</label>
@@ -124,18 +126,20 @@ Please select a Paper to view/edit.<br>
 		</p>
 		<p>
         <label>In Stock/Out of Stock?</label>
-        <input type="checkbox" id="instock" name="instock" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/paper.html?instock'} eq 'Y'  or ! exists $session{'/employee/inventory/paper.html?instock'} ) ?> />
-        <label class="radio" for="instock">In Stock</label>
-        <input type="checkbox" id="outofstock" name="outofstock" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/skids.html?outofstock'} eq 'Y' ) ?> />
-        <label class="radio" for="outofstock">Out Of Stock</label>
+        <input type="radio" id="instockY" name="instock" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/paper.html?instock'} eq 'Y'  or ! exists $session{'/employee/inventory/paper.html?instock'} ); ) ?> />
+        <label class="radio" for="instockY">In Stock</label>
+        <input type="radio" id="instockN" name="instock" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?instock'} eq 'N' ); ) ?> />
+        <label class="radio" for="instockN">Out Of Stock</label>
+        <input type="radio" id="instockB" name="instock" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?instock'} eq 'B' ); ) ?> />
+        <label class="radio" for="instockB">Both</label>
         </p>
 
 		<p class="buttons">
 			<? echo (
 				my $html = '';
-				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent('Results','/employee/inventory/_paper_results.html', Serialize(f1) );", '', 'Show Results' );
+				$html .= ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent('Results','/employee/inventory/_paper_results.html', f1.serialize() );", '', 'Show Results' );
 				$html .= ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'paper_details.html', 'Add New Paper' );
-				if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+				if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'DownloadInventory', 'download.gif', "f1.btnFunction.value='Download Inventory';f1.action='paper.html?Download';f1.submit();", '', 'Download Inventory' );
 					$html .= ssi::writeButton( $log, $dbh, 'DownloadLog', 'download.gif', "f1.btnFunction.value='Download Log';f1.action='paper.html?Download';f1.submit();", '', 'Download Log' );
 					$html .= ssi::writeButton( $log, $dbh, 'Consumption', 'consumption.gif', "f1.btnFunction.value='Consumption Report';f1.action='paper.html?Download';f1.submit();", '', 'Consumption Report' ) if $session{'email'} =~ /iconnor/;

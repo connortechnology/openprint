@@ -25,8 +25,8 @@ Please select a company or user to obtain login information.<br/>
 			</p>	
 			<p>
 				<label>Company Name:</label>
-				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
-				<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='';this.form.submit();}" size="4" />
+				<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';f1.submit();}">
 					<option value="">All Companies</option>
 					<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomer'} ); ) ?>
 				</select>
@@ -34,14 +34,14 @@ Please select a company or user to obtain login information.<br/>
 			</p>
 			<p>
 				<label>User Type:</label>
-				<select name="ddmUserRole" onchange="f1.submit();">
+				<select name="ddmUserRole" onchange="f1.btnFunction.value='';f1.submit();">
 					<option value="">All User Types</option>
 					<? echo ( ssi::make_drop_down( [ 'C', 'Customer', 'E', 'Employee','A', 'Administrator' ], $openprint::param{'ddmUserRole'} ); ) ?>
 				</select>
 			</p>
 			<p>
 				<label>User Name:</label>
-				<select name="ddmUser" onchange="f1.submit();">
+				<select name="ddmUser" onchange="f1.btnFunction.value='';f1.submit();">
 					<option value="">Select a User</option>
 					<?FILL_USER_NAME?>
 				</select>

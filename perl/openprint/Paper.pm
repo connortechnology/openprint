@@ -35,7 +35,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','full_packages',
+		'minimum_order','full_packages','in_stock',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -45,6 +45,7 @@ sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
+	# Can't auto-load in_stock because we have to not count Missing paper
 	my $sql = 'SELECT papers.*, manufacturers.shortname AS manufacturer, papernames.shortname AS name, paperfinishes.shortname AS finish, papercolours.shortName AS colour, paperweights.shortname AS weight,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated FROM Papers, manufacturers, papernames,paperfinishes,papercolours,paperweights WHERE papers.manufacturer_id=manufacturers.id AND papers.name_id=papernames.id AND papers.finish_id=paperfinishes.id AND papers.colour_id=papercolours.id AND papers.weight_id=paperweights.id';
 
 	if ( exists $params{'id'} ) {
@@ -59,6 +60,10 @@ sub find {
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
+	} # end if
+	if ( $params{'owner_id !='} ) {
+		$sql .= ' AND owner_id != ?';
+		push @values, $params{'owner_id !='};
 	} # end if
 	if ( $params{'manufacturer_id'} ) {
 		$sql .= ' AND manufacturer_id=?';
@@ -152,6 +157,11 @@ sub find {
 		$sql .= ' AND ( height IS NULL OR height>=? )';
 		push @values, 1*$params{'height_>='};
 	} # end if
+	if ( $params{'in_stock_start'} ) {
+		$params{'in_stock_start'} =~ s/[^\d\.]//g;
+		$sql .= ' AND ( in_stock IS NULL OR in_stock >= ?)';
+		push @values, 1*$params{'in_stock_start'};
+	} # end if
 	if ( $params{'allocated_to_docket'} ) {
 		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id IN (SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
@@ -216,11 +226,11 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT *,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated,(SELECT SUM(quantity) FROM skid_contents WHERE paper_id=papers.id) AS in_stock FROM Papers WHERE id=?}, {}, $$self{'id'} );
+		$data = $openprint::dbh->selectrow_hashref( q{SELECT *,(SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=papers.id) AS allocated FROM Papers WHERE id=?}, {}, $$self{'id'} );
 	} # end if
 	@$self{@fields} = @$data{@fields};
 	@$self{'start_width','start_height'} = @$self{'width','height'};
-	@$self{'allocated','in_stock'} = @$data{'allocated','in_stock'};
+	@$self{'allocated'} = @$data{'allocated'};
 } # end sub load
 
 
@@ -289,6 +299,9 @@ sub save {
 		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
 		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
 	} # end if manufacturer
+
+	delete $$self{'in_stock'};
+	$self->in_stock();
 
 	foreach my $key ( @fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
@@ -367,15 +380,26 @@ sub save {
 	return;
 } # end sub save
 
+sub merge {
+	my ( $self, $Duplicate ) = @_;
+	my $ac = sql::start_transaction( $openprint::dbh );
+	sql::update( undef, undef, 'Paper_allocations', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	sql::update( undef, undef, 'Paper_Inventory', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	sql::update( undef, undef, 'skid_contents', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	sql::update( undef, undef, 'manifest_content_types', [ 'paper_id=?', $Duplicate->id() ], 'paper_id', $self->id() );
+	$Duplicate->delete();
+	sql::end_transaction( $openprint::dbh, $ac );
+} # end sub merge
+
 sub delete {
-    my $self = shift;
+	my $self = shift;
     my $ac = sql::start_transaction( );
-	sql::update( undef, undef, 'manifest_content_types', ['paper_id=?', $$self{'id'}], 'paper_id', undef );
+	# We don't want to lose the paper if it's in a manifest
+	#sql::update( undef, undef, 'manifest_content_types', ['paper_id=?', $$self{'id'}], 'paper_id', undef );
     sql::execute( undef, undef, q{DELETE FROM Paper_Allocations WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_Inventory WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_prices WHERE lngpaperindex=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_recommendations WHERE lngpaperindex=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM Paper_Purchase_Order_Contents WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{'id'} );
 
@@ -621,14 +645,13 @@ sub add_inventory {
 	} # end if
 
 	$Skid = new openprint::Skid( $Skid ) if ref $Skid ne 'openprint::Skid';
-	#Skid{Paper}{paper_id} has already been adjusted
 
-	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
+	$units = $self->units() if ! $units;
     sql::insert( undef, undef, 'Paper_Inventory',
         'paper_id', $$self{'id'},
         'user_id',  $openprint::session{'user_id'},
         'POIndex',  undef,
-        'InStock',  ($Skid->id() ? 1*$$Skid{Paper}{$$self{id}} : $self->in_stock() + $quantity),
+        'InStock',  $self->in_stock() + $quantity,
         'updated_on',   'NOW()',
         'delta',    $quantity,
         'Comment',  $description,
@@ -671,8 +694,7 @@ sub back_ordered {
     my $self = shift;
 	return 0 if ! $$self{'id'};
 
-    ( $_ ) = sql::execute( undef, undef, q{SELECT Quantity FROM Paper_Purchase_Order_Contents WHERE paper_id=? AND PaperPurchaseOrder_id IN ( SELECT id FROM Paper_Purchase_Orders WHERE Status='Sent')}, $$self{'id'} );
-    return int $_;
+    return 0;
 } # end sub back_ordered
 
 sub allocated {
@@ -695,10 +717,10 @@ sub in_stock {
 	if ( ! exists $$self{in_stock} ) {
 		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
-			@$self{in_stock} += int $SkidContent->quantity();
+			$$self{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
 	} # end if
-    return $$self{in_stock};
+    return 1*$$self{in_stock};
 } # end sub in_stock
 
 sub available {
@@ -719,7 +741,8 @@ sub available {
 sub skids {
     my $self = shift;
 	return 0 if ! $$self{'id'};
-    return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
+	return openprint::Skid::find('paper_id'=>$$self{'id'}, 'quantity_>='=>1);
+    #return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
 sub previous {
@@ -1088,8 +1111,8 @@ $openprint::log->debug("No papers found");
 		} # end if
 	} # end if
 
+	$Paper = $Paper->clone();
 	if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
-		$Paper = $Paper->clone();
 		$Paper->width( $$specs{'StockWidth'.$qty_index} );
 		$Paper->height( $$specs{'StockHeight'.$qty_index} );
 		$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
@@ -1101,18 +1124,11 @@ $openprint::log->debug("No papers found");
 sub grain_direction {
 	my $self = shift;
 	if ( @_ ) {
-		my $gd = shift;
-		if ( lc $gd eq 'width' ) {
-			$$self{'grain_direction'} = $$self{'width'} > $$self{'height'} ? 'Long' : 'Short';
-		} elsif ( lc $gd eq 'height' ) {
-			$$self{'grain_direction'} = $$self{'width'} > $$self{'height'} ? 'Short' : 'Long';
-		} else {
-			$$self{'grain_direction'} = $gd;
-		} # end if
+		$$self{'grain_direction'} = $_[0];
 	} # end if
 	if ( ! $$self{'grain_direction'} ) {
 		# Default to second measurement
-		$$self{'grain_direction'} = $$self{'width'} > $$self{'height'} ? 'Short' : 'Long';
+		$$self{'grain_direction'} = $$self{'height'};
 	} # end if
 	
 	return $$self{'grain_direction'};
@@ -1199,6 +1215,10 @@ sub basis_height {
 	} # end if
 	return $$self{'basis_height'};
 } # end sub basis_height
+
+sub units {
+	return $_[0]{'type'} eq 'Roll' ? 'lbs' : 'sheets';
+} # end sub units
 
 1;
 __END__

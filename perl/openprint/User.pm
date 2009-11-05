@@ -39,18 +39,18 @@ my %fields = (
 	'password',			=>	'strpassword',
 	'ftp_active'		=>	'ftp_active',
 	'web_active'		=>	'ysnaccountactivation',
-	'howdidyouhearaboutus'	=>	'howdidyouhearaboutus',
+	'howdidyouhearaboutus'		=>	'howdidyouhearaboutus',
 	'howdidyouhearaboutusother'	=>	'howdidyouhearaboutusother',
-	'purchasing_limit'	=>	'purchasing_limit',
+	'purchasing_limit'			=>	'purchasing_limit',
 	'purchasing_total_limit'	=>	'purchasing_total_limit',
-	'notes'				=>	'notes',
+	'notes'						=>	'notes',
 ); # end %fields
 
 my %transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
-	'created_on'		=> [ 's/.*//g' ],
-	'updated_on'		=> [ 's/.*//g' ],
+	'created_on'		=>	[ 's/.*//g' ],
+	'updated_on'		=>	[ 's/.*//g' ],
 	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
 	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 );
@@ -238,8 +238,6 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM EmailCampaign_sent WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE user_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM uploads WHERE user_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM paper_purchase_orders WHERE userindex=?', $$self{'id'} );
-
 
 	sql::execute( $openprint::log, $openprint::dbh, 'DELETE FROM Users WHERE Index=?', $$self{'id'} );
 
@@ -322,6 +320,13 @@ sub id {
 	return $$self{'id'};
 } # end sub id
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
+
 sub find {
 	my %param = @_;
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
@@ -373,6 +378,10 @@ sub find {
 	if ( exists $param{'email_like'} ) {
 		$sql .= ' AND strEmail LIKE ?';
 		push @values, lc $param{'email_like'};
+	} # end if
+	if ( exists $param{'purchasing_limit_>='} ) {
+		$sql .= ' AND purchasing_limit >= ?';
+		push @values, $param{'purchasing_limit_>='};
 	} # end if
 	if ( exists $param{'web_active'} ) {
 		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
@@ -457,7 +466,8 @@ sub notification {
 	my ( $self, $name ) = @_;
 
 	$self->notifications() if ( ! exists $$self{'notifications'} );
-	return $$self{'notifications'}{$name} if $$self{'notifications'};
+	return $$self{'notifications'}{$name} if $$self{'notifications'} and $$self{'notifications'}{$name};
+	return '';
 } # end sub notification
 
 sub purchasing_total {
