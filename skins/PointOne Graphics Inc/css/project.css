@@ -227,3 +227,8 @@ span.SpotColour label, span.Coverages label {
 fieldset legend label {
 	font-weight: normal;
 }
+table.ProofsSummary {
+	width: auto;
+	float: right;
+	table-layout: auto;
+}

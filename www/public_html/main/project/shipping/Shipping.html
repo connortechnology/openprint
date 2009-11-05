@@ -1,3 +1,4 @@
+<<<<<<< HEAD:www/public_html/main/project/shipping/Shipping.html
 <script type="text/javascript" src="/javascripts/service.js"></script>
 <script type="text/javascript">
 <!--
@@ -8,10 +9,12 @@
 			remove_div('AlertDiv');
 			gettingNewPrice = true;
 			var form = getFormObj( formName );
-			jsrsExecute( '/jsrs.htm', cbFillUPSResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+			var h = form.serialize(true);
+			h.callback = 'cbShippingResults';
+			new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 		} // end if
 	} // end calc()
-	function cbFillUPSResults( results ) {
+	function cbShippingResults( results ) {
 		cbFillResults( results );
 		var form = getFormObj( 'f1' );
 		if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
@@ -34,7 +37,6 @@
 ) ?>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend>Shipping Services</legend>
 			<div class="leftColumn">
 			<!--#include virtual="/includes/main/proj/shipping_from_address.html"-->
@@ -46,15 +48,17 @@
 			<fieldset>
 			<p>
 				<label># of items to ship:</label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-				<input type="text" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? echo (
+					my $html = '';
+$log->debug("QI" . $$variable{'Project'}->quantity_indexes() );
+					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+						$html .= sprintf(q`	
+							<span class="%3$sColumns">
+							<input type="text" name="txtQuantity%1$d" value="%2$d" size="9" onkeyup="calc(this.form.name);" />
+							</span>`, $qty_index, $$variable{"txtQuantity$qty_index"}, $$variable{'Columns'} );
+					} # end foreach qty_index
+					return $html;
+				) ?>
 			</p>
 			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
 			<!--#include virtual="/includes/main/proj/_service_price.html"-->
@@ -75,3 +79,95 @@
 		<input type="hidden" name="Status" />
 	</form>
 </div><!-- Service -->
+=======
+<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+<script type="text/javascript">
+function calc( formName ) {
+	if ( gettingNewPrice ) {
+		setTimeout( "calc('" + formName + "');", 1000 );
+	} else {
+		remove_div('AlertDiv');
+		gettingNewPrice = true;
+		var form = getFormObj( formName );
+		jsrsExecute( '/jsrs.htm', cbFillUPSResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+	} // end if
+} // end calc()
+function cbFillUPSResults( results ) {
+	cbFillResults( results );
+	var form = getFormObj( 'f1' );
+	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
+		addService( 'f1', 'PlainCartons' );
+	} // end if
+}
+function validate_data(formName) {
+	var form = getFormObj( formName );
+	var text = '';
+	return true;
+} // end function
+</script>
+<? eval (
+	if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
+	$$variable{'Columns'} = 'Three';
+	} else {
+	$$variable{'Columns'} = 'Two';
+	} # end if
+) ?>
+<div class="Service">
+	<form name="f1" method="post" action="/main/project/view.html">
+		<!--#include virtual="/includes/main/proj/required_fields.html"-->
+		<fieldset><legend>Shipping Services</legend>
+			<div class="leftColumn">
+				<!--#include virtual="/includes/main/proj/shipping_from_address.html"-->
+			</div>
+			<div class="rightColumn">
+				<!--#include virtual="/includes/main/proj/shipping_to_address.html"-->
+			</div>
+			<br class="spacer"/>
+			<fieldset>
+			<p>
+				<label># of items to ship:</label>
+				<? echo (
+					my $html = '';
+					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+						$html .= sprintf(q`
+							<span class="%3$sColumns">
+							<input type="text" name="txtQuantity%1$d" value="%2$d" size="9" onkeyup="calc(this.form.name);" />
+							</span>`, $qty_index, $$variable{"txtQuantity$qty_index"}, $$variable{'Columns'} );
+					} # end foreach qty_index
+					return $html;
+				) ?>
+			</p>
+			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
+			<p>
+				<label><b>Price (<?CurrencySymbol?>):</b></label>
+				<? echo (
+					my $html = '';
+					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+						$html .= sprintf(q`
+							<span class="%3$sColumns">
+							<input type="text" name="txtPrice%1$d" size="9" value="%2$s" %4$s />
+							</span>`, $qty_index, $$variable{"txtPrice$qty_index"}, $$variable{'Columns'},
+							sets::isin($session{'user_type'},['E','A']) ? '' : 'readonly="readonly" onFocus="this.blur();"',
+							);
+					} # end foreach qty_index
+					return $html;
+				) ?>
+			</p>
+			<p><label>More Shipping?</label>
+				<input type="radio" id="AdditionalY" name="Additional" value="Y" /><label class="radio" for="AdditionalY">Yes</label>
+				<input type="radio" id="AdditionalN" name="Additional" value="N" checked="checked" /><label class="radio" for="AdditionalN">No</label>
+			</p>
+		</fieldset>
+			
+		</fieldset>
+		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
+		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+		<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
+		<input type="hidden" name="ServiceType" value="<?ServiceTypeID?>"/>
+		<input type="hidden" name="btnFunction" value="Save Service"/>
+		<input type="hidden" name="ContinueProject" value="Y" />
+		<input type="hidden" name="NeedPlainCartons" />
+		<input type="hidden" name="Status" />
+	</form>
+</div><!-- Service -->
+>>>>>>> 0d56e08d54da3c6bb5886432267c1a6d5c7bb0f3:www/public_html/main/project/shipping/Shipping.html

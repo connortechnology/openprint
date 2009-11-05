@@ -3,8 +3,7 @@ html {
 body {
 	color: #000000;
 	padding: 10px;
-min-width: 980px;
-
+	min-width: 980px;
 }
 
 #Header {
@@ -23,7 +22,7 @@ min-width: 980px;
 	margin-left: 5px;
 }
 
-	#Footer {
+#Footer {
 		background-color: maroon;
 		font-weight: bold;
 	margin: 0px;
@@ -104,74 +103,6 @@ img#Butterfly {
 .UserProfile legend {
 	font-weight: bold;
 }
-.Order {
-	padding: 5px;
-}
-.Content {
-	padding: 0px;
-}
-div.ProjectHeader {
-}
-div.ProjectHeader fieldset {
-	width: auto;
-}
-div.ProjectHeader legend {
-}
-	div.ProjectHeader div.row {
-		text-align: right;
-		margin-bottom: 2px;
-	}
-	div.ProjectHeader div.Left {
-		float: left;
-		width: 45%;
-	}
-	div.ProjectHeader div.Right {
-		float: right;
-		width: 45%;
-	}
-	div.ProjectHeader div.row span.label {
-		float: left;
-		width: auto;
-		p\osition: relative;
-		font-weight: bold;
-	}
-	div.ProjectHeader div.row span.value {
-		width: auto;
-		text-align: left;
-		p\osition: relative;
-	}
-
-.Service {
-}
-.Service div.row {
-	width: 100%;
-	p\osition: relative;
-	clear: both;
-	margin-bottom: 10px;
-	padding-bottom: 10px;
-}
-.Service div.row .required {
-	width: 10px;
-	height: 100%;
-	float:left;
-	clear: left;
-}
- .Service div.row .label {
-	margin-left: 10px;
-	width: auto;
-	text-align: left;
-	float: none;
-	display:inline;
-	line-height: 22px;
-}
-
-.Service div.row span.input {
-	margin-left: 10px;
-	width: 360px;
-	text-align: left;
-	float:right;
-	p\osition: relative;
-}
 .PageTitle {
 	font-weight: bold;
 	font-size: 11pt;
@@ -203,4 +134,17 @@ div.ProjectHeader legend {
 	color: black;
 	font-size: x-small;
 	font-weight: normal;
+}
+#QuickLogin p label.radio {
+	float: none;
+	width: auto;
+	margin-left: 0px;
+}
+div.Registration form fieldset#Contact {
+	width: 375px;
+	float left;
+}
+div.Registration form fieldset#Address {
+	width: 375px;
+	float right;
 }

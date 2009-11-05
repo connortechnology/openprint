@@ -987,3 +987,18 @@ function setup_ie_menu() {
 		} // end if
 	}
 } // end function setup_ie_menu
+
+function convert_lbs_to_kg( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = do_decimals( parseFloat(qtys[i] / 2.2046), 4 );
+	} // end for
+	to.value = qtys.join(',');
+} // end function convert_lbs_to_kg
+function convert_kg_to_lbs( from, to ) {
+	var qtys = from.value.split(',');
+	for ( var i=0; i< qtys.length; i+=1 ) {
+		qtys[i] = do_decimals( parseFloat(qtys[i] * 2.2046), '0' );
+	} // end for
+	to.value = qtys.join(',');
+} // end function convert_kg_to_lbs

@@ -23,6 +23,7 @@ require openprint::print;
 require openprint::service;
 require openprint::Estimating::Printing;
 
+my $debug = 0;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -426,12 +427,12 @@ sub get_proof_specs {
 			if ( $$sig_specs{'txtImposition'.$qty_index} ) {
 				if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
 					push @{$proof_indexes{$signature_index}}, 1;
-					$openprint::log->debug("ADDING Layout Proof to $signature_index");
+					$openprint::log->debug("ADDING Layout Proof to $signature_index") if $debug;
 					insert_layout_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 1, $qty_index, $variable );
 				} # end if
 				if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y') {
 					push @{$proof_indexes{$signature_index}}, 2;
-					$openprint::log->debug("ADDING Colour Proof to $signature_index");
+					$openprint::log->debug("ADDING Colour Proof to $signature_index") if $debug;
 					insert_colour_proof( $log, $dbh, $project_index, $service_index, $signature_service_index, 2, $qty_index, $variable );
 				} # end if
 				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y') {
@@ -548,9 +549,10 @@ sub summary {
 				} # end if
 			} # end foreach key
 		} # end foreach signature
-		my $summary = '<table style="width:auto;table-layout:auto;">';
+		my $summary = '<table class="ProofsSummary">';
 		foreach my $k ( keys %proof_totals ) {
-			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;</td>'.$k.'</td></tr>';
+			next if ! $proof_totals{$k};
+			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;</td><td>'.$k.'</td></tr>';
 		} # end foreach
 		return $summary.'</table>';
 	} # end if qty_index
@@ -596,6 +598,7 @@ sub breakupsummary {
 		my $summary = '<table style="width:100%;table-layout:auto;">';
 
 		foreach my $k ( keys %proof_totals ) {
+			next if ! $proof_totals{$k};
 			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;&nbsp;&nbsp;</td>'.$k.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>';
 			$summary .= '<td align="right"><b>'.sprintf('%s%.2f',$Currency->symbol(), $Totprice{$k}).'</b></td></tr>';
 #$openprint::log->debug("TESTING TEXT : ".$Totprice{$k}." |||||| ".$k." ENDING TEXT");

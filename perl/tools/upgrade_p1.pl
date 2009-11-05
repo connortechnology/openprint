@@ -1,7 +1,8 @@
 #!/usr/bin/perl
+use strict;
+my $lib_path = '/var/www/testing/perl';
 use lib '/var/www/testing/perl';
 use Date::Calc;
-use strict;
 require sql;
 require logger;
 require openprint::Object;
@@ -24,7 +25,7 @@ if ( $year ) {
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		print "Getting db backup $month-$day-$year\n";
 		if ( $src_host ne 'localhost' ) {
-		`su postgres -c "scp $src_host:/var/backups/www2/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
+			`su postgres -c "scp $src_host:/media/Storage/backups/localhost/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
 		} else {
 			`ln -s /media/Storage/backups/localhost/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2`;
 		} 
@@ -59,11 +60,11 @@ if ( $year ) {
 
 } # end if
 
-`chmod +x /etc/apache2/lib/perl/tools/db_update.pl`;
+`chmod +x $lib_path/perl/tools/db_update.pl`;
 print "upgrading structures 2...";
-`/etc/apache2/lib/perl/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
+`$lib_path/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
 print "upgrading signatures...";
-`/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db point-one point-one >> /tmp/db_update.log` or $log->error($!);
+`$lib_path/tools/update_p1_signatures.pl $dst_db point-one point-one >> /tmp/db_update.log` or $log->error($!);
 print "done\n";
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );

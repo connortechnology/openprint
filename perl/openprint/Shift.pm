@@ -42,6 +42,14 @@ $serial = 'shifts_id_seq';
 	'operator_id'		=>	undef,
 );
 
+sub find_one {
+    my %params = @_;
+    $params{'limit'} = 1;
+    my @Results = find(%params);
+    return $Results[0] if @Results;
+} # end sub find_one
+
+
 sub find {
 	my %params = @_;
 
@@ -58,7 +66,7 @@ sub find {
 		} # end if
 	} # end if
 	if ( exists $params{'name'} and $params{'equipment_id'} ) {
-		$sql .= ' AND shift_id =(SELECT id FROM Equipment_shifts WHERE name=? AND equipment_id=?)';
+		$sql .= ' AND shift_id IN (SELECT id FROM Equipment_shifts WHERE name=? AND equipment_id=?)';
 		push @values, $params{'name'},$params{'equipment_id'};
 	} # end if
 	if ( exists $params{'equipment_id'} ) {
@@ -128,6 +136,7 @@ sub find {
 sub starttime_seconds {
 	return Date::Parse::str2time( $_[0]{'starttime'} );
 } # endsub
+
 sub startdate_seconds {
 	my ( $self ) = @_;
 	my $time = $self->starttime_seconds();
@@ -188,10 +197,9 @@ sub assign_operator_id {
 $log->debug( "assign_operator_id $$self{'starttime'} => $Y, $M, $D, $h, $m, $s");
 	if ( Date::Calc::check_date( 1970, 1, $D ) and Date::Calc::check_time( $h, $m, $s ) ) {
 		my $time = Date::Calc::Mktime( 1970, 1, $D, $h, $m, $s );
-		my $Shift = openprint::Operator_Shift::find_one(
-				'equipment_id'=>$$self{'equipment_id'}, 
-				'shift_id'=>$$self{'shift_id'}, 
-				'starttime'=>Date::Format::time2str( '%H:%M:%S', $time ),
+		my $Shift = openprint::Equipment_Shift::find_one(
+				'equipment_id'	=>	$$self{'equipment_id'}, 
+				'starttime'		=>	Date::Format::time2str( '%H:%M:%S', $time ),
 				);
 		if ( $Shift and $Shift->operator_id() ) {
 			return $$self{'operator_id'} = $Shift->operator_id();

@@ -51,16 +51,16 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
-		next if ! $$specs{'txtQuantity'.$qty_index};
+
 		if ( $$specs{'chkOverrideNegativeQuantity'} ne 'Y' ) {
 			@no_output = sets::exclude( ['txtNegativeQuantity'.$qty_index], \@no_output );
 			$$specs{'txtNegativeQuantity'.$qty_index} = 0;
 			foreach my $ss_id ( $Project->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $project_index, $ss_id );
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 				$$specs{'txtNegativeQuantity'.$qty_index} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			} # end foreach
 			if ( ! $$specs{'txtNegativeQuantity'.$qty_index} ) {
@@ -87,6 +87,17 @@ sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 } # end sub display
+
+sub summary {
+	my ( $Project, $service_id, $specs, $qty_index ) = @_;
+
+	$specs = openprint::service::get_specs_ref( $Project, $service_id ) if ! $specs;
+	if ( $qty_index ) {
+		return $$specs{'txtNegativeQuantity'.$qty_index}.' negative' . ( $$specs{'txtNegativeQuantity'.$qty_index} == 1 ? '' : 's');
+	} else {
+	} # end if
+	return '';
+} # end sub summary
 
 1;
 __END__

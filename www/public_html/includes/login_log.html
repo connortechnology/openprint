@@ -1,10 +1,12 @@
 <fieldset><legend>Last 5 Login Attempts</legend>
 	<table class="List">
+		<thead>
 		<tr>
 			<th align="left" width="145">When</th>
 			<th align="left">From</th>
 			<th align="left" width="120">Result</th>
 		</tr>
+		</thead>
 <? echo (
 	require openprint::logRecord;
 	my $html = '';

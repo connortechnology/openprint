@@ -1,58 +1,56 @@
 <? eval (
-	if ( $r->param('btnFunction') eq 'Submit' ) {
-		my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
-		$openprint::param{'ReplacementText'} = q{<!--#include virtual="/email_content/custom_quote.html"-->};
-		$template = encode_qp( ssi::variable_substitution( $r, $log, $dbh, $template, \%openprint::param ) );
+	if ( $param{'btnFunction'} eq 'Submit' ) {
+		my $template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+		$param{'ReplacementText'} = q{<!--#include virtual="/email_content/custom_quote.html"-->};
+		$template = encode_qp( ssi::variable_substitution( \$template, \%param ) );
 		my @body = ('', $template, 'text/html', 'quoted-printable');
 
 		my %mail = (
-			SMTP    => $openprint::config{'Mail Server'},
-			FROM    => sprintf('%s" <%s>', @openprint::param{'Name','Email'}),
-			#TO      => $openprint::config{'QuotingEmail'},
+			SMTP    => $config{'Mail Server'},
+			FROM    => sprintf('"%s" <%s>', @param{'Name','Email'}),
+			#TO      => $config{'QuotingEmail'},
 			TO      => 'iconnor@penultima.org',
-			SUBJECT => "Custom Quote for $openprint::param{'Company'}",
+			SUBJECT => "Custom Quote for $param{'Company'}",
 			);
 		misc::send_email_with_attachment( $log, \%mail, @body, ('', $template, 'text/html', 'quoted-printable') );
 
 	} # end if
-	$$variable{'User'} = new openprint::User( $log, $dbh, $openprint::session{'user_id'} );
+	$$variable{'User'} = new openprint::User( $session{'user_id'} );
 ) ?>
-<? if ( $openprint::param{'btnFunction'} eq 'Submit' ) ?>
+    <div id="masthead" style="background: url(/images/mastheads/custom-quote.jpg) no-repeat top center;">Custom Quote</div>
+    <div id="crumbs"><a href="#">Home</a>&nbsp;&nbsp;&raquo;&nbsp;&nbsp;<a href="#">Custom Quote</a></div>
+<? if ( $param{'btnFunction'} eq 'Submit' ) ?>
 	Thank you for your quote request.  A customer service representative will contact you shortly regarding your quote.
-<? else ( $openprint::param{'btnFunction'} eq 'Submit' ) ?>
-	
+<? else ( $param{'btnFunction'} eq 'Submit' ) ?>
+
+    <h5>If your project has unique printing requirements just fill out the form below and we'll put together a custom quote for you.</h5>
 
 <form id="f1" name="f1" action="custom_quote.html" method="post">
-	<div class="row">
-		<span class="label">Name:</span>
-		<span class="fullinput"><input type="text" id="Name" name="Name" value="<? echo ( $$variable{'User'}->name();) ?>" /></span>
-	</div>
-	<div class="row">
-		<span class="label">Company:</span>
-		<span class="fullinput"><input type="text" id="Company" name="Company" value="<? echo ( $$variable{'User'}->Company()->name();) ?>" /></span>
-	</div>
-	<div class="row">
-		<span class="label">Phone:</span>
-		<span class="fullinput"><input type="text" id="Phone" name="Phone" value="<? echo ( $$variable{'User'}->phone();) ?>" /></span>
-	</div>
-	<div class="row">
-		<span class="label">Email:</span>
-		<span class="fullinput"><input type="text" id="Email" name="Email" value="<? echo ( $$variable{'User'}->email();) ?>" /></span>
-	</div>
-	<div class="row">
-		<span class="label">Quantity:</span>
-		<span class="fullinput"><input type="text" id="Quantity" name="Quantity" /></span>
-	</div>
-	<div class="row">
-		<span class="label">Pages:</span>
-		<span class="fullinput"><input type="text" id="Pages" name="Pages" /></span>
-	</div>
-	<div class="row">
-		<span class="label">Providing Media:</span>
-		<span class="fullinput">
-			<input type="radio" id="MediaFormatPC" name="MediaFormat" value="PC"><label for="MediaFormat">PC</label>
-			<input type="radio" id="MediaFormatMac" name="MediaFormat" value="Mac"><label for="MediaFormatMac">Mac</label>
-
+    <div id="full-light-blue">
+        <h4>Contact Info</h4>
+        <div id="full-form-frame">
+            <div class="half-form left">
+                    <p><label>NAME <span class="dark-purple">*</span></label><input id="Name" name="Name" type="text" class="large-text-field" value="<? echo ( $$variable{'User'}->name();) ?>" /></p>
+                    <p><label>TITLE</label><input id="Title" name="Title" type="text" class="large-text-field" value="<? echo ( $$variable{'User'}->title();) ?>"/></p>
+                    <p><label>COMPANY</label><input id="Company" name="Company" type="text" class="large-text-field" value="<? echo ( $$variable{'User'}->Company()->name();) ?>" /></p>
+            </div>
+            <div class="half-form right">
+				<p><label>PHONE <span class="dark-purple">*</span></label><input id="Phone" name="Phone" type="text" class="large-text-field" value="<? echo ( $$variable{'User'}->phone();) ?>" /></p>
+				<p><label>EMAIL <span class="dark-purple">*</span></label><input id="Email" name="Email" type="text" class="large-text-field" value="<? echo ( $$variable{'User'}->email();) ?>" /></p>
+            </div>
+        </div>
+        <div class="space-twenty"></div>
+        <h4>Project Description</h4>
+        <div id="full-form-frame">
+            <div class="half-form left">
+		<p>
+			<label>Quantity:</label>
+			<input type="text" id="Quantity" name="Quantity" />
+		</p>
+		<p>
+			<label>Providing Media:</label>
+			<input type="radio" id="MediaFormatPC" name="MediaFormat" value="PC"><label class="radio" for="MediaFormat">PC</label>
+			<input type="radio" id="MediaFormatMac" name="MediaFormat" value="Mac"><label class="radio" for="MediaFormatMac">Mac</label>
 			<select name="MediaType" id="MediaType">
 				<option value="No type specified">Type</option>
 				<option value="TIFF">TIFF</option>
@@ -68,27 +66,9 @@
 				<option value="Camera Ready">Camera Ready Art</option>
 				<option value="See Comments">Other (in Comments)</option>
 			</select>
-		</span>
-	</div>
-	<div class="row">
-		<span class="label">Type of Proof:</span>
-		<span class="fullinput">
-			<select name="Proof">
-				<option value="laser proof">Laser Proof</option>
-				<option value="Epson Proof">Epson Proof</option>
-				<option value="Blueline Dylux">Blueline Dylux</option>
-				<option value="blueline and color key">Blueline and Color Key</option>
-				<option value="matchprint">Matchprint</option>
-				<option value="polar proofs">Polar Proof</option>
-				<option value="proofs supplied">Film &amp; Proof Supplied</option>
-				<option value="Film (no CTP)">Film instead of CTP</option>
-				<option value="See Comments">Other (in Comments)</option>
-			</select>
-		</span>
-	</div>
-	<div class="row">
-		<span class="label">Size:</span>
-		<span class="fullinput">
+		</p>
+		<p>
+			<label>Size:</label>
 			<select name="Size" id="Size">
 				<option value="3.5 x 2 (BCards)">3 1/2&quot; x 2&quot; (Business Cards)</option>
 				<option value="3 x 5">3&quot; x 5&quot;</option>
@@ -107,11 +87,9 @@
 				<option value="25 1/2 x 11">25 1/2&quot; x 11&quot;</option>
 				<option value="See Comments">Other (in Comments)</option>
 			</select>
-		</span>
-	</div>
-	<div class="row">
-		<span class="label">Cover Stock:</span>
-		<span class="fullinput">
+		</p>
+		<p>
+			<label>Cover Stock:</label>
 			<select name="Cover_Stock" id="Cover_Stock">
 				<option value="Same as Body Stock">Same as Body Stock</option>
 				<option value="50lb Offset Text">50lb Offset Text</option>
@@ -134,37 +112,9 @@
 				<option value="12pt Cover C2S">12pt Cover C2S</option>
 				<option value="See Comments">Other (in Comments)</option>
 			</select>
-		</span>
-	</div>
-	<div class="row">
-		<span class="label">Stock:</span>
-		<span class="fullinput">
-			<select name="Paper_Stock">
-				<option value="50lb Offset Text">50lb Offset Text</option>
-				<option value="60lb Offset Text">60lb Offset Text</option>
-				<option value="70lb Offset Text">70lb Offset Text</option>
-				<option value="80lb Offset Text">80lb Offset Text</option>
-				<option value="60lb Gloss Text">60lb Gloss Text</option>
-				<option value="70lb Gloss Text">70lb Gloss Text</option>
-				<option value="80lb Gloss Text">80lb Gloss Text</option>
-				<option value="100lb Gloss Text">100lb Gloss Text</option>
-				<option value="80lb Matte Text">80lb Matte Text</option>
-				<option value="100lb Matte Text">100lb Matte Text</option>
-				<option value="10pt Matte Cover">10pt Matte Cover</option>
-				<option value="12pt Matte Cover">12pt Matte Cover</option>
-				<option value="8pt Cover C1S">8pt Cover C1S</option>
-				<option value="10pt Cover C1S">10pt Cover C1S</option>
-				<option value="12pt Cover C1S">12pt Cover C1S</option>
-				<option value="8pt Cover C2S">8pt Cover C2S</option>
-				<option value="10pt Cover C2S">10pt Cover C2S</option>
-				<option value="12pt Cover C2S">12pt Cover C2S</option>
-				<option value="See Comments">Other (in Comments)</option>
-			</select>
-		</span>
-	</div>
-	<div class="row">
-		<span class="label">Colours on Cover:</span>
-		<span class="fullinput">
+		</p>
+		<p>
+			<label>Colours on Cover:</label>
 			<select name="Colors_Cover_Front" id="Colors_Cover_Front">
 				<option selected>Front</option>
 				<option value="1 color">1 color</option>
@@ -193,11 +143,54 @@
 				<option value="10 colors">10 colors</option>
 				<option value="11 colors">11 colors</option>
 			</select>
-		</span>
-	</div>
-	<div class="row">
-		<span class="label">Colours on Body:</span>
-		<span class="fullinput">
+	</p>
+            </div>
+            <div class="half-form right">
+	<p>
+		<label>Pages:</label>
+		<input type="text" id="Pages" name="Pages" />
+	</p>
+	<p>
+		<label>Type of Proof:</label>
+		<select name="Proof">
+			<option value="laser proof">Laser Proof</option>
+			<option value="Epson Proof">Epson Proof</option>
+			<option value="Blueline Dylux">Blueline Dylux</option>
+			<option value="blueline and color key">Blueline and Color Key</option>
+			<option value="matchprint">Matchprint</option>
+			<option value="polar proofs">Polar Proof</option>
+			<option value="proofs supplied">Film &amp; Proof Supplied</option>
+			<option value="Film (no CTP)">Film instead of CTP</option>
+			<option value="See Comments">Other (in Comments)</option>
+		</select>
+	</p>
+	<p><label>&nbsp;</label> </p>
+	<p>
+		<label>Body Stock:</label>
+			<select name="Paper_Stock">
+				<option value="50lb Offset Text">50lb Offset Text</option>
+				<option value="60lb Offset Text">60lb Offset Text</option>
+				<option value="70lb Offset Text">70lb Offset Text</option>
+				<option value="80lb Offset Text">80lb Offset Text</option>
+				<option value="60lb Gloss Text">60lb Gloss Text</option>
+				<option value="70lb Gloss Text">70lb Gloss Text</option>
+				<option value="80lb Gloss Text">80lb Gloss Text</option>
+				<option value="100lb Gloss Text">100lb Gloss Text</option>
+				<option value="80lb Matte Text">80lb Matte Text</option>
+				<option value="100lb Matte Text">100lb Matte Text</option>
+				<option value="10pt Matte Cover">10pt Matte Cover</option>
+				<option value="12pt Matte Cover">12pt Matte Cover</option>
+				<option value="8pt Cover C1S">8pt Cover C1S</option>
+				<option value="10pt Cover C1S">10pt Cover C1S</option>
+				<option value="12pt Cover C1S">12pt Cover C1S</option>
+				<option value="8pt Cover C2S">8pt Cover C2S</option>
+				<option value="10pt Cover C2S">10pt Cover C2S</option>
+				<option value="12pt Cover C2S">12pt Cover C2S</option>
+				<option value="See Comments">Other (in Comments)</option>
+			</select>
+	</p>
+	<p>
+		<label>Body Colours:</label>
 			<select name="Colors_Body" id="Colors_Body">
 				<option selected>Front</option>
 				<option value="1 color">1 color</option>
@@ -226,17 +219,13 @@
 				<option value="10 colors">10 colors</option>
 				<option value="11 colors">11 colors</option>
 			</select>
-		</span>
-	</div>
-	<div class="row">
-		<span class="label">Description:</span>
-		<span class="fullinput"><textarea name="Description" rows="10" style="width: 100%;"></textarea></span>
-	</div>
-	<div class="row">
-		<span style="float: right;">
+	</p>
+            </div>
+            <textarea name="Description" cols="" rows="10" style="width:99%;"></textarea>
+        </div>
+        <div class="space-twenty"></div>
 		<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Submit' ); ) ?>
-		</span>
-	</div>
+    </div>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<? endif ( $openprint::param{'btnFunction'} eq 'Submit' ) ?>
+<? endif ( $param{'btnFunction'} eq 'Submit' ) ?>

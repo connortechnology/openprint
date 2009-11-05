@@ -61,17 +61,16 @@ sub calc {
 	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price );
 
 	$price *= $$specs{'txtQuantity'};
-	$$specs{"txtPrice"} = $price;
-	foreach my $qty_index ( 1 .. 3 ) {
+	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtUnitPrice$qty_index"} = $$specs{"txtUnitPrice"};
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'},$$specs{"txtPrice"} * (1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice"} * (1+$$specs{"Markup$qty_index"}/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach
-	$$specs{'Status'} = $status;
-	return $status;
+	return $$specs{'Status'} = $status;
 } # end sub calc
 
 sub summary {

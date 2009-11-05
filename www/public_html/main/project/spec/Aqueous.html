@@ -20,13 +20,13 @@
 				#$$variable{'Reference'} = ssi::htmlize( $$variable{'Reference'} );
 				$$variable{'SignatureIndex'} = $$variable{'sig_specs'}{'SignatureIndex'};
 				$$variable{'FrontCoatings'} = $$variable{'BackCoatings'} = '';
-				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
+				foreach my $index ( 1 .. $config{'SpecialColourQuantity'} ) {
 					next if ! $$variable{'sig_specs'}{"ColourCoatingSideOne$index"};
 					next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} =~ /Aqueous/ );
 					$$variable{'FrontCoatings'} .= $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} . '<br/>';
 				} # end foreach
 				$$variable{'FrontCoatings'} = 'None' if $$variable{'FrontCoatings'} eq '';
-				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
+				foreach my $index ( 1 .. $config{'SpecialColourQuantity'} ) {
 					next if ! $$variable{'sig_specs'}{"ColourCoatingSideTwo$index"};
 					next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} =~ /Aqueous/ );
 					$$variable{'BackCoatings'} .= $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} . '<br/>';
@@ -54,13 +54,13 @@
 					<p><label>Make Ready (<?CurrencySymbol?>):</label>
 					<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 					<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-					<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+					<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 						<span class="<?Columns?>Columns">
 						<input type="text" name="MakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" value="<? echo ( $$variable{"MakeReadyPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
 						<input type="checkbox" id="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" name="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{"OverrideMakeReadyPrice-$$variable{SignatureIndex}-$$variable{QTYIndex}"} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 						<label class="radio" for="OverrideMakeReadyPrice-<?SignatureIndex?>-<?QTYIndex?>">Override</label>
 						</span>
-					<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+					<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 					<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 					<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 					</p>

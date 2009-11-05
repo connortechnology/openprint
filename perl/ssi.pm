@@ -203,12 +203,19 @@ sub encode_html {
 
 sub make_drop_down {
 	my ( $search_data, $checkval, $length ) = @_;
-	my ( $temp, $checked );
+	my @check_array; 
+	if ( ref $checkval eq 'ARRAY' ) {
+		*check_array = $checkval;
+	} else {
+		@check_array = ( $checkval );
+	} # end if
 
-	$temp = '';
+	my $temp = '';
 	for ( my $n = 0; $n < @{$search_data}; $n += 2) {
-		$checked = $checkval eq $$search_data[$n] ? ' selected="selected"' : '';
-		$temp .= sprintf('<option value="%s"%s>%s</option>', HTML::Entities::encode_entities($$search_data[$n]), $checked, HTML::Entities::encode_entities( $length ? substr($$search_data[$n + 1],0, $length) : $$search_data[$n + 1] ) );
+		$temp .= sprintf('<option value="%s"%s>%s</option>', 
+			HTML::Entities::encode_entities(Encode::encode('utf-8',$$search_data[$n])), 
+			( sets::isin( $$search_data[$n], \@check_array ) ? ' selected="selected"' : '' ),
+			HTML::Entities::encode_entities( Encode::encode('utf-8',$length ? substr($$search_data[$n + 1],0, $length) : $$search_data[$n + 1] ) ) );
 	} # end for
 	return $temp;
 } # sub make_drop_down
@@ -221,30 +228,18 @@ sub fill_drop_down {
 
 	return make_drop_down( \@search_data, $checkval, $length );
 } # sub customer_drop_down
-sub make_select {
-	my ( $options, $checkarray, $length ) = @_;
-
-	my $temp = '';
-
-	for ( my $n = 0; $n < @{$options}; $n += 2 ) {
-		my $checked = ( sets::isin( $$options[$n], @{$checkarray} ) ? ' selected="selected"' : '' );
-		$temp .= "<option value=\"$$options[$n]\"$checked>" . ( $length ne '' ? substr($$options[$n + 1],0, $length): $$options[$n+1] ) . "</option>\n";
-	} # end for
-
-	return $temp;
-} # end sub make_select
 
 sub fill_select {
 	my ( $log, $dbh, $search, $length, @checkarray ) = @_;
 	my @search_data = sql::execute( $log, $dbh, $search );
-	return make_select( \@search_data, \@checkarray, $length );
+	return make_drop_down( \@search_data, \@checkarray, $length );
 } # sub customer_drop_down
 
 sub return_states_and_provinces {
 	my @states_and_provinces = ();
 	push @states_and_provinces, @states::states;
 	push @states_and_provinces, @provinces::provinces;
-	return make_select( \@states_and_provinces, \@_ );
+	return make_down_down( \@states_and_provinces, \@_ );
 } # end sub return_states_and_provinces
 
 sub return_states {
@@ -256,7 +251,7 @@ sub return_provinces {
 } # end sub return_provinces
 
 sub return_countries {
-	return make_select( \@countries::countries, \@_ );
+	return make_drop_down( \@countries::countries, \@_ );
 } # end sub return_countries
 
 sub return_years {

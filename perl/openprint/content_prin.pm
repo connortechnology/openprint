@@ -11,7 +11,7 @@ use vars qw( $log $dbh %variable %param );
 *variable = \%openprint::variable;
 
 sub _breakdown {
-	openprint::project::view( $log, $dbh, \%variable, $param{'project_id'} );
+	openprint::project::view( $log, $dbh, \%variable, $param{'project_id'} ) if $param{'project_id'};
 }
 
 sub prin_broc {

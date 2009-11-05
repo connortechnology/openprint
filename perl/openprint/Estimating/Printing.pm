@@ -1134,10 +1134,10 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 	} # end if
 	@Papers = map { $_->clone() } @Papers;
 
-		foreach my $P ( @Papers ) {
-			$openprint::log->debug("Paper: " . $P->to_string() ) if ( $debug or 1 );
-			$Papers{$P->to_string()} = $P;
-		} # end foreach
+	foreach my $P ( @Papers ) {
+		$openprint::log->debug("Paper: " . $P->to_string() ) if ( $debug or 0 );
+		$Papers{$P->to_string()} = $P;
+	} # end foreach
 
 	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage );
 
@@ -1544,11 +1544,13 @@ $openprint::log->debug('blah'.$Paper->to_string());
 						foreach my $i ( @i ) {
 							my $i2 = $i->copy();
 							$i2->Paper()->width( $i2->used_width() ) if ! $i2->Paper()->width();
+							$Papers{$i2->Paper()->to_string()} = $i2->Paper() if ! $Papers{$i2->Paper()->to_string()};
 							while ( $i2->columns() ) {
 								push @imps, $i2;
 								$i2 = $i2->copy();
 								$i2->columns( $i2->columns()-1 );
 								$i2->Paper()->width( $i2->used_width() );
+								$Papers{$i2->Paper()->to_string()} = $i2->Paper() if ! $Papers{$i2->Paper()->to_string()};
 								openprint::imposition::check_setup( $i2, $project );
 								$i2->columns(0) if $Press->specification('Minimum Sheet Width') and ($i2->paper()->width() < $Press->specification('Minimum Sheet Width'));
 								$i2->columns(0) if $Press->specification('Minimum Roll Width') and ($i2->paper()->width() < $Press->specification('Minimum Roll Width'));
@@ -1824,11 +1826,6 @@ $i->display();
 		$$specs{'StockWidth'.$qty_index} = $Paper->width();
 		$$specs{'StockHeight'.$qty_index} = $Paper->height();
 		$$specs{'StockType'.$qty_index} = $Paper->type();
-		if ( ($Paper->type() eq 'Roll') and $Paper->height() ) {
-			$$specs{'CutOff'.$qty_index} = $Paper->height();
-		} else {
-			$$specs{'CutOff'.$qty_index} = '';
-		} # end if
 
 		$$specs{'txtPlateQuantity'.$qty_index} = $best_price{'txtPlateQuantity'};
 		my $plate_setup = $best_price{'Plate Costs'};
@@ -2576,6 +2573,9 @@ $imp->display();
 				my $Paper = $Papers{$paper_string};
 				if ( ! $Paper ) {
 					$log->error("No Paper Object for $paper_string");
+					foreach my $paper_string ( keys %Papers ) {
+						$log->error("$paper_string $Papers{$paper_string}");
+					} 
 					next;
 				} # end if
 
@@ -2659,7 +2659,7 @@ $imp->display();
 					$$price{'Comparison Cost'} += 10000000; # Can't stich this on
 					$$price{'Stitching Cost'} = 10000000;
 				} else {
-					$$price{'Stitching Breakdown'} .= sprintf('Stitching (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
+					$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) Price: $%.2f<br/>', @$results{'alert','Price'} );
 					$$price{'Stitching Cost'} = $$results{'Price'};
 					$$price{'Comparison Cost'} += $$results{'Price'};
 				} # end if
@@ -2943,7 +2943,7 @@ sub calc_price {
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
 
 		$price{'Comparison Cost'} += $folding_results{'Price'};
-$price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison Cost'}.'<br/>';
+#$price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison Cost'}.'<br/>';
 	} else {
 		$price{'Folding Breakdown'} .= 'Folding not needed<br/>';
 	} # end if
@@ -3320,9 +3320,7 @@ $price{'Folding Breakdown'} .= 'FOlding comparison price: ' . $price{'Comparison
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
 		$price{'Plate Total'} += $_->{'Plate Total'};
 	} # end if
-	$price{'Comparison Cost'} += $press_setup;
-	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Runstyle Charge'} + $price{'Plate Total'};
-	$setup_cost += $price{'Ink Mix Charge'} + $price{'Press Wash Total'};
+	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Runstyle Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'};
 
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	if ( $$project{'print_sides'} == 1 ) {

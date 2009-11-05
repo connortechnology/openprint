@@ -3,8 +3,8 @@
 	<tr>
 		<th width="60">&nbsp;</th>
 		<th>Reason</th>
-		<th align="left" width="120">RFID</th>
-		<th align="left" width="90">Skid/Roll</th>
+		<th class="RFID" align="left">RFID</th>
+		<th class="Skid" align="left">Skid/Roll</th>
 		<th>Quantity (lbs)</th>
 		<th>Quantity (kgs)</th>
 		<th class="Cost">Cost</th>
@@ -18,7 +18,7 @@
 		<td><input type="text" id="qty_lbs-new" name="qty_lbs-new" value="" onkeyup="this.value=this.value.replace(/\D/g,'');convert_lbs_to_kg( this, $('qty_kgs') );" /></td>
 		<td><input type="text" id="qty_kgs-new" name="qty_kgs-new" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');convert_kg_to_lbs( this, $('qty_lbs-new') );" /></td>
 		<td><input type="text" id="cost-new" name="cost-new" value="" class="StockCost" onkeyup="this.value=this.value.replace(/[^\.\d]/g,'');calc_price(this);update_totals($('f1'));" /><select id="cost_units-new" name="cost_units-new"><? echo ( ssi::make_drop_down( [ '/100lb', '/100lb' ] ); ) ?></select></td>
-		<td><input type="text" id="total-new" name="total-new" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>
+		<td class="Price"><input type="text" id="total-new" name="total-new" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>
 	</tr><tr><td colspan="6" id="description-new">
 	</td></tr>
 	<? echo (
@@ -35,7 +35,7 @@
 			$html .= sprintf(q`<td><input type="text" id="qty_lbs-%1$d" name="qty_lbs-%1$d" value="%2$d" onkeyup="this.value=this.value.replace(/\D/g,'');convert_lbs_to_kg( this, $('qty_kgs-%1$d') );" /></td>`, $C->id(), $C->quantity() );
 			$html .= sprintf(q`<td><input type="text" id="qty_kgs-%1$d" name="qty_kgs-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');convert_kg_to_lbs( this, $('qty_lbs-%1$d') );" /></td>`, $C->id(), Math::Units::convert($C->quantity(), 'lb','kg' ) );
 			$html .= sprintf(q`<td><input type="text" id="cost-%1$d" name="cost-%1$d" value="%2$.2f" class="StockCost" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);update_totals($('f1'));" /><select name="cost_units-%1$d" id="cost_units-%1$d">%3$s</select></td>`, $C->id(), $C->cost(), ssi::make_drop_down( [ '/100lb', '/100lb' ] ) );
-			$html .= sprintf(q`<td><input type="text" id="total-%1$d" name="total-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>`, $C->id(), $C->quantity()*$C->cost()/100 );
+			$html .= sprintf(q`<td class="Price"><input type="text" id="total-%1$d" name="total-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>`, $C->id(), $C->quantity()*$C->cost()/100 );
 			$html .= sprintf( '</tr><tr><td colspan="6" id="description-%1$s">', $C->id() );
 			foreach my $SkidContent ( $C->Skid()->Contents() ) {
 				$html .= $SkidContent->Paper()->to_string().'<br/>';

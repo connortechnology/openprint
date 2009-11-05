@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 use utf8;
-use lib '/var/www/p1/perl';
+use lib '/etc/apache2/lib/perl';
 use strict;
 
 require configuration;
@@ -77,7 +77,7 @@ unless ($opts->{'smtp-server'}) {
 }
 my $smtp_server = $opts->{'smtp-server'};
 
-print "file path: " .  $opts->{file_path} . "\n";
+#print "file path: " .  $opts->{file_path} . "\n";
 
 my $delay = 0.5;
 if ($opts->{sleep}) {
@@ -182,6 +182,7 @@ if (open($fifoh, "< $fifo")) {
 				}
 
 				if ($send_email) {
+print "Sending email.\n";
 					send_email({
 						timestamp => $curr_time,
 						duration => $xfer_nsecs,
@@ -193,7 +194,8 @@ if (open($fifoh, "< $fifo")) {
 						user => $user_name,
 						status => $completion_status,
 					});
-				}
+print "Sent email.\n";
+				} # end if send email
 			}
 
 			if ($opts->{log}) {
@@ -214,23 +216,22 @@ if (open($fifoh, "< $fifo")) {
 				} else {
 					print STDERR "$program: error opening log file '$log_file': $!\n";
 				}
-			}
-
+			} # end if log file
 		} else {
 			# No input at this time.	Sleep for half a second (or less) and check
 			# again.
 			usleep($delay * 1000000);
-		}
-	}
+		} # End if $line
+	} # end while <input>
 
 	close($fifoh);
-
+	print "Fifo closed.\n";
 } else {
 	die "$program: unable to read FIFO '$fifo': $!\n";
 }
-	if ( $opts->{'pid_file'} ) {
-		unlink $opts->{'pid_file'};
-	} # end if
+if ( $opts->{'pid_file'} ) {
+	unlink $opts->{'pid_file'};
+} # end if
 
 sub send_email {
 	my $upload_info = shift;
@@ -299,16 +300,16 @@ EOT
 
 	if ( $company_name ) {
 # Try to figure out the company
-		if ( my @Companies = openprint::Company::find('name'=>$company_name) ) {
+		if ( my @Companies = openprint::Company::find('name'=>$company_name,'limit'=>1) ) {
 			$Company = $Companies[0];
 		} # end if
 	} # end if
 	if ( $Company ) {
-		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user}) ) {
+		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user},'limit'=>1) ) {
 			$User = $Users[0];
 		} # end if
 	} else {
-		if ( my @Users = openprint::User::find('email'=>lc $upload_info->{user}) ) {
+		if ( my @Users = openprint::User::find('email'=>lc $upload_info->{user},'limit'=>1) ) {
 			$User = $Users[0];
 			$Company = $User->Company();
 		} # end if
@@ -352,7 +353,9 @@ EOT
 							#CC		=>	'iconnor@penultima.org',
 							SUBJECT => $subject,
 					   );
+print("Sending email to $mail{TO} from $mail{FROM}\n" );
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
+print("Sent email to $mail{TO}\n" );
 		} # end if
 	
 	} elsif ( 1 ) {
@@ -428,7 +431,7 @@ EOT
 			print STDERR "$program: $timestamp: error sending email: $Mail::Sendmail::error\n";
 		}
 	} # end if can figure out company name or not
-}
+} # end sub send_email
 
 sub usage {
 	print <<EOH;
