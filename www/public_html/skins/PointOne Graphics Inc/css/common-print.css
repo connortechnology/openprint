@@ -33,6 +33,9 @@ display: none;
 .unprintable {
 	display: none;
 }
+.error, .warning, .information {
+	display: none;
+}
 
 .filters {
 	display: none;

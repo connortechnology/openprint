@@ -55,7 +55,7 @@
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 		<th width="35">ID</th>
 		<th class="Date">Date</th>
-		<th style="text-align: left;">Vendor</th>
+		<th class="Company">Vendor</th>
 		<th style="text-align: left;">Created By</th>
 		<th class="Date">Filed On</th>
 		<th class="Date">Sent to Accounts</th>
@@ -77,7 +77,7 @@
 			$html .= sprintf( q`
 				<td><a href="view.html?claim_id=%1$d">%1$d</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%2$s</a></td>
-				<td><a href="view.html?claim_id=%1$d">%3$s</a></td>
+				<td class="Company"><a href="view.html?claim_id=%1$d">%3$s</a></td>
 				<td><a href="view.html?claim_id=%1$d">%4$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%5$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%6$s</a></td>

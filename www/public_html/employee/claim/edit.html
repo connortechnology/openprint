@@ -6,12 +6,18 @@ function calc_price( element ) {
 	if ( matches ) {
 		var index = matches[2];
 		var cost = parseFloat( $('cost-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-		var qty = parseFloat( $('qty_lbs-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+		var qty = parseFloat( $('quantity-'+index).value.replace(/[^\d\-\.]/g, '' ) );
 		var units = $('cost_units-'+index).value;
 		if ( units == '/100lb' ) {
+			qty = parseFloat( $('qty_lbs-'+index).value.replace(/[^\d\-\.]/g, '' ) );
 			qty /= 100;
 		} else if ( units == '/M' ) {
 			qty = qty/1000;
+		} else if ( units == '/1000' ) {
+			qty = qty/1000;
+		} else if ( units == '/kg' ) {
+			qty = parseFloat( $('qty_kgs-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+		} else if ( units == 'Each' ) {
 		} // end if
 		$('total-'+index).value = do_decimals( cost * qty, 2 );
 	} // end if
