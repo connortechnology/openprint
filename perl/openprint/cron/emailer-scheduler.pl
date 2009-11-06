@@ -14,18 +14,19 @@ require openprint::EmailCampaign;
 use MIME::QuotedPrint;
 use Mail::Sendmail;
 use openprint;
-use vars qw( %variable $log $dbh %config);
+use vars qw( %variable $log $dbh %config %session);
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*session = \%openprint::session;
+
 
 
 $log = logger->new();
 $log->{level} = "warn";
 my %sql_server;
 
-my $site_admin_email = 'iconnor@point-one.com';
 $openprint::Object::no_cache = 1;
 
 # This is a bit of a hack, but it allows us to use similar styled code
@@ -51,6 +52,8 @@ configuration::init_cache( $log, $dbh, {
 		'SiteTitle'	=>'PointOne Graphics Inc',
 		}
 		);
+$session{'company_id'} = 6;
+my $site_admin_email = 'iconnor@point-one.com';
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
@@ -69,5 +72,4 @@ $dbh->disconnect();
 
 
 1;
-
 __END__
