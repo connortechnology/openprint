@@ -83,11 +83,21 @@
 
 <!-- PRINT NAV //-->
 
-<div id="p-nav"><ul>
+<div class="p-nav"><ul>
 <? echo ( 
 	my $html = '';
 	foreach my $ProjectTypeCategory ( openprint::ProjectTypeCategory::find() ) {
-		$html .= sprintf('<li><a href="#" title="%1$s">%1$s</a></li>', $ProjectTypeCategory->name() );
+		$html .= sprintf(q`<li id="Menu%1$s" class="%2$s"><a href="#" title="%1$s" onclick="toggleMenu($('Menu%1$s'), 'off', 'on');return false;">%1$s</a>`, $ProjectTypeCategory->name(), 
+			( ( $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->category_id() == $ProjectTypeCategory->id() ) ) ? 'on' : 'off' ),
+			);
+		$html .= '<ul>';
+		foreach my $ProjectType ( openprint::ProjectType::find('category_id'=>$ProjectTypeCategory->id()) ) {
+			$html .= sprintf('<li class="%2$s"><a href="/content/%3$s?projecttype_id=%4$d" title="%1$s">%1$s</a></li>', $ProjectType->name(),
+				( ( $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->id() == $ProjectType->id() ) ) ? 'on' : 'off' ),
+				$ProjectType->url(), $ProjectType->id(),
+				);
+		} # end foreach
+		$html .= "</ul></li>\n";
 	} # end foreach ProjectTypeCategory
 	return $html;
 ) ?>

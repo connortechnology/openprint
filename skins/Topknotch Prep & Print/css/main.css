@@ -147,4 +147,59 @@ div.Registration form fieldset#Contact {
 div.Registration form fieldset#Address {
 	width: 375px;
 	float right;
+}o
+div#Login {
+	background-color:#daf3fc;
+	width: 100%;
+	height: 100%;
+	float: left;
+border: 1px solid black;
+}
+#Login:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html #Login {height: 1%;}
+* #Login {display:block;}
+/* End hide from IE-mac */
+
+#Login fieldset.Register {
+	float: right;
+	width: 50%;
+	border: none;
+	padding: 20px 0px 0px 0px;
+	margin: 0px;
+	background:#daf3fc;
+}
+
+#Login fieldset.Login {
+	float: left;
+	width: 50%;
+	border: none;
+	padding: 20px 0px 0px 0px;
+	margin: 0px;
+	background:#daf3fc;
+	
+}
+#Login fieldset legend {
+	background:#daf3fc;
+	color:#07759f;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 22px;
+    margin: 5px 0 -27px -8px;
+    padding: 0px;
+	width: 100%;
+	display: block;
+}
+#Login fieldset div.body {
+	text-align: left;
+	margin:0px;
+	padding: 0px;
+	height: 180px;
 }
