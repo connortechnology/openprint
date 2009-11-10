@@ -49,10 +49,21 @@
 .InstantPricing h3 {
 	margin: 0px;
 }
-.InstantPricing .Questions h3 {
+.InstantPricing h1 {
+	margin: 0px;
+	
 	color: #99000a;
 	text-align:center;
-        font-size: 16px;
+        font-size: medium;
+	line-height: auto;
+}
+.InstantPricing h2 {
+	display: none;
+}
+.InstantPricing .Stock h2 {
+	margin: 0px;
+	display: block;
+	font-size: small;
 }
 .InstantPricing .Prices {
 	font-weight: normal;

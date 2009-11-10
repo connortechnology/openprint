@@ -17,7 +17,11 @@
 	<br class="spacer"/><b class="importantNotice">
 	<? echo (
 		my $Currency = openprint::Currency::get_current();
+		if ( $Currency ) {
 		return 'Prices in ' .$Currency->name;
+		} else {
+			return 'Currency not selected.';
+		} # end if
 		) ?></b>
 </div><!--Prices-->
 
