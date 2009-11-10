@@ -123,6 +123,9 @@ img#Butterfly {
 	padding-left: 20px;
 	margin: 0px;
 }
+.ProjectTypes ul {
+	margin: 0px;
+}
 .ProjectTypes li {
 	margin-left: 0px;
 }
