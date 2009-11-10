@@ -25,6 +25,9 @@
 	margin-bottom: 10px;
 }
 
+.InstantPricing p {
+	padding:5px;
+}
 .InstantPricing ul {
 	list-style: none;
 	margin: 0px;
@@ -34,6 +37,7 @@
 .InstantPricing ul li {
 	text-align: right;
 	list-style: none;
+	padding:5px;
 }
 .InstantPricing ul li label {
 	width: auto;
@@ -92,4 +96,7 @@ div.Prices
 }
 #steps {
 	display: none;
+}
+#reference {
+	width: 95%;
 }

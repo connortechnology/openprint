@@ -88,3 +88,7 @@ div#instant_price_section {
 #Specials {
 	width: 420px;
 }
+#steps {
+    display: none;
+}
+
