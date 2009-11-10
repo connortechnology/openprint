@@ -15,9 +15,19 @@ sub _breakdown {
 }
 
 sub prin_broc {
-	$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	if ( $variable{'Project'}->id() ) {
+		$variable{'ProjectType'} = $variable{'Project'}->Type();
+	} else {
+		$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
+	} # end if
 } # end sub prin_broc
 
 sub prin_multi {
-	$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	if ( $variable{'Project'}->id() ) {
+		$variable{'ProjectType'} = $variable{'Project'}->Type();
+	} else {
+		$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
+	} # end if
 } # end sub prin_multi
