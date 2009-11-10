@@ -220,6 +220,7 @@ sub delete {
 	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex IN ( SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Log WHERE order_id=?}, $$self{'id'} );
 	sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
+	sql::execute( $log, $dbh, q{DELETE FROM Ordered_Products WHERE order_id=?}, $$self{'id'} );
 	sql::update( undef, undef, 'tbl_Projects', [ 'order_id=?', $$self{'id'}], [ 'order_id', undef ] );
 	sql::update( undef, undef, 'payments', [ 'order_id=?', $$self{'id'}], [ 'order_id', undef ] );
 	sql::execute( $log, $dbh, q{DELETE FROM Orders WHERE Index=?}, $$self{'id'} );
