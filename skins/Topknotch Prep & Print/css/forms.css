@@ -127,7 +127,9 @@
 	overflow:auto;
 	}
 	
-#full-purple h1, #full-purple h2, #full-purple h3, #full-purple h4, #full-purple h5, #full-purple h6, #full-purple p { color:#FF; margin:0px; padding:0px; }
+#full-purple h1, #full-purple h2, #full-purple h3, #full-purple h4, #full-purple h5, #full-purple h6, #full-purple p { 
+	color:#FFF; margin:0px; padding:0px;
+ }
 
 #full-form-frame {
 	position:relative;
@@ -177,9 +179,21 @@ fieldset p {
 	margin:0px;
 	}
 
-.half-form p {
-	width:361px;
+.half-form ul {
+    overflow:auto;
 	}
+
+.half-form li {
+    margin:0px;
+    padding:5px 7px 5px 7px;
+    list-style: none;
+    text-align: right;
+    overflow:auto;
+    font-size:12px;
+    line-height:16px;
+    font-weight:normal;
+    color:#000;
+    }
 
 #one-third-light-blue {
 	position: relative;
@@ -295,5 +309,5 @@ label.radio {
 .form-title { font-weight:bold; float: left; }
 .blue-bg { background:#c4e5f1; }
 
-.total { color:FFF;	font-size: 20px; font-weight: bold; line-height: 24px; margin: 0px;	padding: 0px; float:right; }
+.total { color: #FFF;	font-size: 20px; font-weight: bold; line-height: 24px; margin: 0px;	padding: 0px; float:right; }
 .fine { color: #FFF; font-size: 10px; font-weight: normal; line-height: 12px; margin: 0px; padding: 0px; float:left; }

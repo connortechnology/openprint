@@ -1,15 +1,19 @@
 <div class="Prices">
-	<label>Price each:</label>
-	<span class="input"><input type="text" size="9" name="txtUnitPrice1" readonly="readonly" style="text-align: right;" /></span>
-	<br class="spacer"/>
-	<span class="label" style="color: red;font-size: large;">Total:</span>
-	<span class="input"><input type="text" size="9" name="txtPrice1" readonly="readonly" style="text-align: right; color: red;" /></span>
-	<br class="spacer"/>
+	<ul>
+		<li class="unitprice">
+			<label>Price each:</label>
+			<input type="text" size="9" name="txtUnitPrice1" readonly="readonly" />
+		</li>
+		<li class="totalprice">
+			<label>Total:</label>
+			<input type="text" size="9" name="txtPrice1" readonly="readonly" />
+		</li>
+		<li class="project_id">
+			<label>Quote #:</label>
+			<input type="text" size="9" name="ProjectIndex" readonly="readonly" />
+		</li>
+	</ul>
 	Price quoted is an approximate estimate. All orders will be + or - 5%. If exact quantities are required - please add 5% the required quantity.
-
-	<br/>
-	<label>Quote #:</label>
-	<span class="input"><input type="text" size="9" name="ProjectIndex" readonly="readonly" style="text-align: right;" /></span>
 	<br class="spacer"/><b class="importantNotice">
 	<? echo (
 		my $Currency = openprint::Currency::get_current();

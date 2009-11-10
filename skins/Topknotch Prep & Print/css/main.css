@@ -142,11 +142,11 @@ img#Butterfly {
 }
 div.Registration form fieldset#Contact {
 	width: 375px;
-	float left;
+	float: left;
 }
 div.Registration form fieldset#Address {
 	width: 375px;
-	float right;
+	float: right;
 }o
 div#Login {
 	background-color:#daf3fc;

@@ -17,7 +17,7 @@ function cbFoldType_onchange( results ) {
 	//Dimensions_onchange( select );
 }
 
-function calc( formName ) {
+function calc( formName, force ) {
 	var form = getFormObj(formName);
 
 	if ( form.HoleDrilling && ( get_rdb_value( form.HoleDrilling ) == 'Y' ) ) {
@@ -26,26 +26,34 @@ function calc( formName ) {
 		} // end if
 	} // end if
 
-	if ( ! form.txtQuantity1 )
+	if ( ! form.txtQuantity1 ) {
+		alert( 'No Quantity element' );
 		return;
+	} // end if
 	form.txtQuantity1.value = parseInt(1*form.txtQuantity1.value);
 
 	var div = document.getElementById('AlertDiv');
+	if ( ! div ) {
+		alert('No alert div.');
+	} else {
+		div.hide();
+		if ( ! ( form.txtQuantity1.value > 0 ) ) {
+			div.innerHTML = 'Please enter a quantity';
+			div.show();
+			return;
+		} // end if
 
-	if ( ! ( form.txtQuantity1.value > 0 ) ) {
-		div.innerHTML = "Please enter a quantity";
-		div.style.display = 'block';
-	} // end if
-	if ( form.txtTotalPageQuantity ) {
-		form.txtTotalPageQuantity.value = parseInt(1*form.txtTotalPageQuantity.value);
-		if ( ! ( form.txtTotalPageQuantity.value > 0 ) ) {
-			div.innerHTML = "Please enter the number of pages";
-			div.style.display = 'block';
+		if ( form.txtTotalPageQuantity ) {
+			form.txtTotalPageQuantity.value = parseInt(1*form.txtTotalPageQuantity.value);
+			if ( ! ( form.txtTotalPageQuantity.value > 0 ) ) {
+				div.innerHTML = 'Please enter the number of pages.';
+				div.show();
+				return;
+			} // end if
 		} // end if
 	} // end if
-	div.style.display = 'none';
 
-	if ( gettingNewPrice ) {
+	if ( gettingNewPrice && ! force ) {
 		setTimeout("calc('"+formName+"');", 1000 );
 		return;
 	} // end if
@@ -54,7 +62,6 @@ function calc( formName ) {
 	h.ServiceType = 'Project';
 	h.callback = 'cbCalc';
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-	//jsrsExecute( '/jsrs.htm', cbCalc, 'openprint::print_project::calc', get_variables( formName ) );
 	remove_div('Buttons');
 	add_div('Processing');
 }
@@ -115,3 +122,24 @@ onDestroy: function(eventName, win) {
 	}
 } // end function breakdown_window
 
+function click_order( form ) {
+	if ( ! form.txtPrice1.value ) {
+		alert( "The project is not complete, and so cannot be ordered yet." );
+		return;
+	} // end if
+	form.action='/main/order/information.html';
+	form.btnFunction.value='Process Order';
+	form.submit();
+}
+function click_quote( form ) {
+	if ( ! form.txtPrice1.value ) {
+		alert( "The project is not complete, and so cannot be quoted yet." );
+		return;
+	} // end if 
+	form.action='/main/quote/information.html';
+	form.btnFunction.value='Process Quote';
+	form.submit();
+}
+function click_upload( form ) {
+	window.location = '/upload/upload_center.html?ProjectIndex=' + form.ProjectIndex.value;
+}

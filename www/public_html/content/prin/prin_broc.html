@@ -4,6 +4,15 @@
 		$$variable{'DimensionsDisplay'} = 'Finished';
 	} # end if
 ) ?>
+<div id="steps">
+	<ul>
+		<li><div id="steps-container" style="background: url(/images/bg-step1.jpg) no-repeat 0px -60px; margin-right:2px;"><span class="steps-number-on">STEP 1</span><br /><span class="steps-title-on">Specify Project</span></div></li>
+		<li><div id="steps-container" style="background: url(/images/bg-step2.jpg) no-repeat 0px 0px; margin-right:2px;"><span class="steps-number-incomplete">STEP 2</span><br /><span class="steps-title-incomplete">Review Order</span></div></li>
+		<li><div id="steps-container" style="background: url(/images/bg-step3.jpg) no-repeat 0px 0px; margin-right:2px;"><span class="steps-number-incomplete">STEP 3</span><br /><span class="steps-title-incomplete">Upload Files</span></div></li>
+		<li><div id="steps-container" style="background: url(/images/bg-step4.jpg) no-repeat 0px 0px;"><span class="steps-number-incomplete">STEP 4</span><br /><span class="steps-title-incomplete">Place Order</span></div></li>
+	</ul>
+</div>
+
 <form name="f1" method="post" action="">
 	<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" name="Status" value="<?Status?>" />
@@ -11,114 +20,122 @@
 
 	<div class="InstantPricing">
 		<div id="instant_price_section">
-		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
-		   <div class="shadow_left"><div class="shadow_right">
-                        
-				<div class="Questions">
-					<h3>Instant Pricing</h3>
-
-					<!--#include virtual="/includes/sizes.html"-->
-<? if ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
-	<!--#include virtual="/includes/main/proj/banner_printing.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
-					<p><label>Colours:</label>
-						<select name="Colours" onchange="calc(this.form.name);">
-							<option value="4/0">4 Colour One Side</option>
-							<option value="4/1">4 Colour/Black</option>
-							<option value="4/4">4 Colour Both Sides</option>
-						</select>
-					</p>
-					<br/>
-					<!--#include virtual="/includes/aqueous.html"-->
-					<!--#include virtual="/includes/uvcoating.html"-->
-					<p>
-						<label>Stock Information</label><br/>
-						<!--#include virtual="/includes/paper_dropdowns.html"-->
-					</p>
-					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+			<div class="ProjectName">
+				<h1>Project Name</h1>
+				<p>
+					<input type="text" name="reference" id="reference" value="<? echo ( $$variable{'Project'}->reference() ) ?>" size="100" />
+					Limit of 100 Characters (About the length of the field)
+				</p>
+			</div>
+			<div class="ProjectSpecifications">
+				<h1>Project Specifications</h1>
+				<!--#include virtual="/includes/sizes.html"-->
+				<? if ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
+				<!--#include virtual="/includes/main/proj/banner_printing.html"-->
+				<? endif ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
+				<div class="Colours">
+					<h2>Colours</h2>
+					<div class="half-form">
+						<ul class="half-form-frame">
+							<li><label>Colours:</label>
+								<select name="Colours" onchange="calc(this.form.name);">
+									<option value="4/0">4 Colour One Side</option>
+									<option value="4/1">4 Colour/Black</option>
+									<option value="4/4">4 Colour Both Sides</option>
+								</select>
+							</li>
+							<!--#include virtual="/includes/aqueous.html"-->
+							<!--#include virtual="/includes/uvcoating.html"-->
+						</ul>
+					</div>
+				</div>
+				<!--#include virtual="/includes/paper_dropdowns.html"-->
+				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+				<p>
+					<label>Fold Type:</label>
+					<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
+						<? echo (
+							ssi::make_drop_down( [ 'NoFold','No Fold', 
+										'2PanelFold','2 Panel Fold',
+										'3PanelFold','3 Panel Fold',
+										'3PanelZFold','3 Panel Z Fold',
+										'4PanelFold','4 Panel Fold',
+										'4PanelZFold','4 Panel Z Fold',
+										'4PanelRollFold','4 Panel Roll Fold',
+										'5PanelFold','5 Panel Fold',
+										'5PanelZFold','5 Panel Z Fold',
+										'6PanelFold','6 Panel Fold',
+										'6PanelZFold','6 Panel Z Fold',
+										'8PageSignatureFold','8 Page Fold',
+										'12pg3PanelZFold','Half + 3 Panel Z Fold',
+										'12pg3PanelRollFold','Half + 3 Panel Roll Fold',
+										'DoubleGateFold','Doube Gate Fold',
+										'MapFold', 'Map Fold',
+							], $$variable{'FoldType'} );
+						 ) ?>
+					</select>
+				</p>
+				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+				<? if ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
+					<input type="hidden" name="FoldType" value="2PanelFold"/>
+				<? endif ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
+				<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
 					<p>
 						<label>Fold Type:</label>
 						<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
-							<? echo (
-								ssi::make_drop_down( [ 'NoFold','No Fold', 
-			'2PanelFold','2 Panel Fold',
-			'3PanelFold','3 Panel Fold',
-			'3PanelZFold','3 Panel Z Fold',
-			'4PanelFold','4 Panel Fold',
-			'4PanelZFold','4 Panel Z Fold',
-			'4PanelRollFold','4 Panel Roll Fold',
-			'5PanelFold','5 Panel Fold',
-			'5PanelZFold','5 Panel Z Fold',
-			'6PanelFold','6 Panel Fold',
-			'6PanelZFold','6 Panel Z Fold',
-			'8PageSignatureFold','8 Page Fold',
-			'12pg3PanelZFold','Half + 3 Panel Z Fold',
-			'12pg3PanelRollFold','Half + 3 Panel Roll Fold',
-			'DoubleGateFold','Doube Gate Fold',
-			'MapFold', 'Map Fold',
-], $$variable{'FoldType'} ); ) ?>
-
+							<option value="NoFold">No Fold</option>
+							<option value="2PanelFold">2 Panel Fold</option>
 						</select>
 					</p>
-					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
-					<? if ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
-						<input type="hidden" name="FoldType" value="2PanelFold"/>
-					<? endif ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
-					<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
-						<p>
-							<label>Fold Type:</label>
-							<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
-								<option value="NoFold">No Fold</option>
-								<option value="2PanelFold">2 Panel Fold</option>
-							</select>
-						</p>
-					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
-
-					<!--#include virtual="_proofs.html"-->
-					<!--#include virtual="/includes/drilling.html"-->
-					<!--#include virtual="/includes/scoring.html"-->
-					<!--#include virtual="/includes/perfing.html"-->
-		<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
-					<!--#include virtual="/includes/shrinkwrapping.html"-->
-					<!--#include virtual="/includes/bundling.html"-->
-		<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
-
-					<!--#include virtual="/includes/turnaround.html"-->
-					<br class="spacer"/>
-					<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
-					<p>
-						<label>Number of pages per pad:</label>
-						<input type="text" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" size="4" />
-					</p>
-					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
-					<!--#include virtual="/includes/quantity.html"-->
-					<br class="spacer"/>
-					<!--#include virtual="/includes/press_type.html"-->
-					<br class="spacer"/>
-					<!--#include virtual="/includes/prices.html"-->
-					<div class="Prices">
-						<!--#include virtual="/includes/buttons.html"-->
-						<br class="spacer"/>
+				<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
+				<div class="Finishing">
+					<h2>Finishing</h2>
+					<div class="half-form">
+						<ul class="half-form-frame">
+							<!--#include virtual="/includes/drilling.html"-->
+							<!--#include virtual="/includes/scoring.html"-->
+							<!--#include virtual="/includes/perfing.html"-->
+							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
+							<!--#include virtual="/includes/shrinkwrapping.html"-->
+							<!--#include virtual="/includes/bundling.html"-->
+							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
+						</ul>
 					</div>
-				</div><!--Questions-->
-				   <br class="spacer"/>
-			  </div>
-		   </div>
-		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
-		</div>
-		<h2><? echo ( $$variable{'ProjectType'}->name() ) ?> printing - full colour</h2>
-<? if ( ! ( $config{'ExternalSiteURL'} =~ /trade/ ) ) ?>
-<div style="width: 480px;">
-<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div><div class="shadow_left"><div class="shadow_right">
-<div style="font-size: large; font-weight: bold; text-align: center;">Free shipping on all orders over $100 within GTA*</div>
-</div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
-</div>
-<? endif ( ! ( $config{'ExternalSiteURL'} =~ /trade/ ) ) ?>
-<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
-<? else ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
-		<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ); ) ?>
-<p style="font-size: small;">* Free shipping does not apply to trade clients or any job that has been discounted below our standard pricing.</p>
-<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
-</div><!--instant_price_section-->
+				</div>
+				<div class="Production">
+					<h2>Production</h2>
+					<div class="half-form">
+						<ul class="half-form-frame">
+							<!--#include virtual="_proofs.html"-->
+							<!--#include virtual="/includes/turnaround.html"-->
+							<!--#include virtual="/includes/quantity.html"-->
+							<!--#include virtual="/includes/press_type.html"-->
+						</ul>
+					</div>
+				</div>
+				<div id="AlertDiv" style="display:none;"></div>
+				<br class="spacer"/>
+				<!--#include virtual="/includes/prices.html"-->
+				<p class="buttons">
+					<? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate'); ) ?>
+					<? echo ( 
+						if ( sets::isin( $session{'user_type'},['A','E'] ) ) { 
+							return ssi::writeButton( $log, $dbh, 'Breakdown', 'price_breakdown.gif', "breakdown_window(document.f1.ProjectIndex.value);", '', 'Detailed Pricing' ); 
+						} else {
+							return '';
+						} # end if
+					) ?>
+				</p>
+				<!--#include virtual="_ups.html"-->
+				<p class="buttons">
+				<? echo ( ssi::writeButton( $log, $dbh, 'CalculateUPS', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate'); ) ?>
+				</p>
+				<p class="buttons" id="OrderButton" <? echo ( 'style="display:none;"' if $$variable{'Status'} ne 'Unordered' ) ?> >
+				<? echo ( ssi::writeButton( $log, $dbh, 'Upload', '', "click_upload( document.f1 );", '', 'Upload Files'); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Quote', '', "click_quote( document.f1 );", '', 'Email Quote'); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Order', '', "click_order( document.f1 );", '', 'Place Order') if $config{AllowOrdering} ne 'false'; ) ?>
+				</p>
+		  </div><!--ProjectSpecifications-->
+	   </div><!--instant_price_section-->
 	</div><!--InstantPricing-->
 </form>

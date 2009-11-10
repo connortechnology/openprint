@@ -355,7 +355,7 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 
 table {
 	width:100%;
-	border-top:1px solid #FFFs;
+	border-top:1px solid #FFF;
 	border-right:1px solid #a5cddd;
 	border-collapse:collapse;
 	background:#FFF;
@@ -376,7 +376,7 @@ thead th {
 	background:#07759f;
 	border-right:1px solid #2d8aad;
 	text-align:left;
-	font-eight:bold;
+	font-weight:bold;
 	padding:3px 5px 3px 5px;
 	color:#FFF;
 	}
@@ -654,4 +654,7 @@ a.btn-upload:hover { text-decoration: none; color: #FFF; background: url(/images
 	height: 0px;
 	margin: 0px;
 	padding: 0px;
+}
+p.buttons {
+	text-align: right;
 }

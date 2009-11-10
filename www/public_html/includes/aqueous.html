@@ -1,12 +1,9 @@
-<div class="row" id="Aqueous">
-	<span class="label">Aqueous Coating</span><br class="spacer"/>
-	<span class="input">
-		<input type="radio" id="<?Signature?>AqueousGloss" name="<?Signature?>Aqueous" value="Gloss" onclick="remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Aqueous'} eq 'Gloss' ) ?> />
-		<label class="radio" for="<?Signature?>AqueousGloss">Gloss</label>
-		<input type="radio" id="<?Signature?>AqueousMatte" name="<?Signature?>Aqueous" value="Matte" onclick="remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Aqueous'} eq 'Matte' ) ?> />
-		<label class="radio" for="<?Signature?>AqueousMatte">Matte</label>
-		<input type="radio" id="<?Signature?>AqueousNone" name="<?Signature?>Aqueous" value="None" onclick="remove_div('OrderButton');" <? echo ( 'checked="checked"' if sets::isin( $$variable{'Aqueous'},'', 'None' ) ) ?> />
-		<label class="radio" for="<?Signature?>AqueousNone">None</label>
-	</span>
-	<br class="spacer"/>
-</div>
+<li id="Aqueous">
+	<label>Aqueous Coating</label>
+	<input type="radio" id="<?Signature?>AqueousGloss" name="<?Signature?>Aqueous" value="Gloss" onclick="remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Aqueous'} eq 'Gloss' ) ?> />
+	<label class="radio" for="<?Signature?>AqueousGloss">Gloss</label>
+	<input type="radio" id="<?Signature?>AqueousMatte" name="<?Signature?>Aqueous" value="Matte" onclick="remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Aqueous'} eq 'Matte' ) ?> />
+	<label class="radio" for="<?Signature?>AqueousMatte">Matte</label>
+	<input type="radio" id="<?Signature?>AqueousNone" name="<?Signature?>Aqueous" value="None" onclick="remove_div('OrderButton');" <? echo ( 'checked="checked"' if sets::isin( $$variable{'Aqueous'},'', 'None' ) ) ?> />
+	<label class="radio" for="<?Signature?>AqueousNone">None</label>
+</li>

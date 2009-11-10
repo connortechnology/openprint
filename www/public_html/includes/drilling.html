@@ -3,33 +3,22 @@
 		$$variable{'HoleDrilling'} = 'Y';
 	} # end if
  ) ?>
-<div class="row">
-	<span class="label">Hole Drilling:</span>
-	<span class="input">
-		<input type="radio" id="HoleDrillingY" name="HoleDrilling" value="Y" onclick="add_div('HoleDrillingDiv');remove_div('OrderButton');calc('f1');" <? echo ( $$variable{'HoleDrilling'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="HoleDrillingY">Yes</label>
-		<input type="radio" id="HoleDrillingN" name="HoleDrilling" value="N" onclick="remove_div('HoleDrillingDiv');remove_div('OrderButton');calc('f1');" <? echo ( $$variable{'HoleDrilling'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
-		<label class="radio" for="HoleDrillingN">No</label>
-	</span>
-</div>
-
-<div id="HoleDrillingDiv" <? echo ( 'style="display:none;"' if $$variable{'HoleDrilling'} ne 'Y' ) ?> >
-<div class="row">
-	<span class="label">
-		<label for="txtHoleQty"># of Holes:</label>
-	</span>
-	<span class="input">
-		<input type="text" id="txtHoleQty" name="txtHoleQty" value="<?txtHoleQty?>" size="2" onkeyup="remove_div('OrderButton');" />
-	</span>
+<li>
+	<label>Hole Drilling:</label>
+	<input type="radio" id="HoleDrillingY" name="HoleDrilling" value="Y" onclick="add_p('HoleDrillingDiv');remove_p('OrderButton');calc('f1');" <? echo ( $$variable{'HoleDrilling'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="HoleDrillingY">Yes</label>
+	<input type="radio" id="HoleDrillingN" name="HoleDrilling" value="N" onclick="remove_p('HoleDrillingDiv');remove_p('OrderButton');calc('f1');" <? echo ( $$variable{'HoleDrilling'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
+	<label class="radio" for="HoleDrillingN">No</label>
+</li>
+<li id="HoleDrillingDiv" <? echo ( 'style="display:none;"' if $$variable{'HoleDrilling'} ne 'Y' ) ?> >
+	<label for="txtHoleQty"># of Holes:</label>
+	<input type="text" id="txtHoleQty" name="txtHoleQty" value="<?txtHoleQty?>" size="2" onkeyup="remove_p('OrderButton');" />
 	<br class="spacer"/>
-	<span class="label"><label>Hole Size:</label></span>
-	<span class="input">
-		<select name="txtHoleSize">
-			<option value=".125">1/8 inch</option>
-			<option value=".25">1/4 inch</option>
-			<option value=".5">1/2 inch</option>
-		</select>
-	</span>
-</div>
-</div>
+	<label>Hole Size:</label>
+	<select name="txtHoleSize">
+		<option value=".125">1/8 inch</option>
+		<option value=".25">1/4 inch</option>
+		<option value=".5">1/2 inch</option>
+	</select>
+</li>
 

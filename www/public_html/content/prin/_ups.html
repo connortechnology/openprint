@@ -1,0 +1,40 @@
+<? eval (
+	$$variable{'ProjectIndex'} = openprint::print_project::get_unfinished_project( $log, $dbh, $$variable{'Session'}{_session_id} );
+) ?>
+<div class="Delivery">
+	<div class="half-form">
+		<ul class="half-form-frame">
+			<li>
+				<label>Pick-Up or Delivery</label>
+			</li>
+			<li>
+				<label>Service Type:</label>
+				<span id="ServiceTypeDiv">
+					Please wait while services types are loaded.
+					<input type="hidden" name="ddmServiceType" value="<?ddmServiceType?>" />
+				</span>
+			</li>
+			<li>
+				<label>Pickup Type:</label>
+				<span id="PickupTypeDiv">
+					Please wait while pickup types are loaded.
+					<input type="hidden" name="ddmPickupType" value="<?ddmPickupType?>" />
+				</span>
+			</li>
+		</ul>
+		<ul>
+			<li>
+				<label>Price:</label>
+				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+				<input id="ShippingPrice<?QTYIndex?>" name="ShippingPrice<?QTYIndex?>" size="9" readonly="readonly" onfocus="this.blur();" />
+				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
+				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+			</li>
+		</ul>
+	</div>
+	UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved
+	
+</div>

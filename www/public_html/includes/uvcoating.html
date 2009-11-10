@@ -5,34 +5,28 @@
 	$$variable{'SideOneCoatingType'} = 'None' if ! $$variable{'SideOneCoatingType'};
 	$$variable{'SideTwoCoatingType'} = 'None' if ! $$variable{'SideTwoCoatingType'};
 ) ?>
-<div class="row">
-	<span class="label">UV Coating</span>
-</div>
-<div id="UVCoatings">
-<div class="row">
-	<span class="label" style="font-weight:normal;">On Front:</span>
-	<span class="input">
-<? echo (
-    my $html;
-    foreach my $type ( @{$$variable{'uvoptions'}} ) {
-        $html .= qq`<input type="radio" id="SideOneCoatingType$type" name="SideOneCoatingType" value="$type" onclick="calc(this.form.name);" ` . ( $$variable{"SideOneCoatingType"} eq $type ? 'checked="checked"' : '' ) . " />\n";
-        $html .= qq`<label class="radio" for="SideOneCoatingType$type">$type</label>\n`;
-    } # end foreach
-    return $html;
-) ?>
-	</span>
-</div>
-<div class="row">
-	<span class="label" style="font-weight:normal;">On Back:</span>
-	<span class="input">
-<? echo (
-    my $html;
-    foreach my $type ( @{$$variable{'uvoptions'}} ) {
-        $html .= qq`<input type="radio" id="SideTwoCoatingType$type" name="SideTwoCoatingType" value="$type" onclick="calc(this.form.name);" ` . ( $$variable{"SideTwoCoatingType"} eq $type ? 'checked="checked"' : '' ) . " />\n";
-        $html .= qq`<label class="radio" for="SideTwoCoatingType$type">$type</label>\n`;
-    } # end foreach
-    return $html;
-) ?>
-	</span>
-</div>
-</div>
+<li id="UVCoatings">
+	<label>UV Coating</label>
+	<p>
+		<label>On Front:</label>
+	<? echo (
+		my $html;
+		foreach my $type ( @{$$variable{'uvoptions'}} ) {
+			$html .= qq`<input type="radio" id="SideOneCoatingType$type" name="SideOneCoatingType" value="$type" onclick="calc(this.form.name);" ` . ( $$variable{"SideOneCoatingType"} eq $type ? 'checked="checked"' : '' ) . " />\n";
+			$html .= qq`<label class="radio" for="SideOneCoatingType$type">$type</label>\n`;
+		} # end foreach
+		return $html;
+	) ?>
+	</p>
+	<p>
+		<label>On Back:</label>
+	<? echo (
+		my $html;
+		foreach my $type ( @{$$variable{'uvoptions'}} ) {
+			$html .= qq`<input type="radio" id="SideTwoCoatingType$type" name="SideTwoCoatingType" value="$type" onclick="calc(this.form.name);" ` . ( $$variable{"SideTwoCoatingType"} eq $type ? 'checked="checked"' : '' ) . " />\n";
+			$html .= qq`<label class="radio" for="SideTwoCoatingType$type">$type</label>\n`;
+		} # end foreach
+		return $html;
+	) ?>
+	</p>
+</li>

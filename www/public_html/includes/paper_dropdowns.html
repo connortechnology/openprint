@@ -1,4 +1,7 @@
-<p>
+<div class="Stock"><h2>Stock</h2>
+<div class="half-form">
+<ul class="half-form-frame">
+<li>
 	<label>Type:</label>
 	<select name="ddmStockBrand<?Signature?>" size="1" onchange="ddmStockBrand_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
@@ -12,8 +15,8 @@
 } ) ], $$variable{'ddmStockBrand'.$$variable{'Signature'}} );
 			) ?>
 	</select>
-</p>
-<p><label>Finish:</label>
+</li>
+<li><label>Finish:</label>
 	<select name="ddmStockFinish<?Signature?>" size="1" onchange="ddmStockFinish_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
 		<? echo ( 
@@ -26,8 +29,8 @@
 } ) ], $$variable{'ddmStockFinish'.$$variable{'Signature'}} );
 			) ?>
 	</select>
-</p>
-<p><label>Colour:</label>
+</li>
+<li><label>Colour:</label>
 	<select name="ddmStockColour<?Signature?>" size="1" onchange="ddmStockColour_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
 		<? echo ( 
@@ -40,8 +43,8 @@
 } ) ], $$variable{'ddmStockColour'.$$variable{'Signature'}} );
 			) ?>
 	</select>
-</p>
-<p><label>Weight:</label>
+</li>
+<li><label>Weight:</label>
 	<select name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
 		<? echo (
@@ -54,4 +57,7 @@
 } ) ], $$variable{'ddmStockWeight'.$$variable{'Signature'}} );
 			) ?>
 	</select>
-</p>
+</li>
+</ul>
+</div>
+</div>

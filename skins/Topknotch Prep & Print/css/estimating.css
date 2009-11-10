@@ -1,8 +1,9 @@
 .InstantPricing {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-    font-size: 12px;
+    font-size: small;
     font-style: normal;
     color: #000000;
+	width: 100%;
 }
 .InstantPricing IMG {
 	border: none;
@@ -12,57 +13,93 @@
 	display: none;
 }
 .InstantPricing select {
-    font-size: 9px;
+    font-size: x-small;
 }
 
-.InstantPricing .Questions {
-	color: black;
-	font-weight: normal;
-	margin-left: 10px;
-	margin-bottom: 10px;
-	padding: 5px;
-}
-.InstantPricing .Questions p {
+div#instant_price_section ul li {
     text-align: right;
 }
-.InstantPricing .Questions p label {
-	text-align: left;
-	float: left;
-}
-.InstantPricing .Questions span.label {
+div#instant_price_section ul li label.radio {
+	float: none;
 	width: auto;
-	float: left;
-	color: #800000;
-	font-weight: bold;
-}
-.InstantPricing .Questions span.input {
-	width: auto;
-	float: right;
-}
-.InstantPricing h3 {
-	margin: 0px;
-}
-.InstantPricing .Questions h3 {
-	background-color: #800000;
-	color: #ffffff;
-	text-align:center;
-}
-.InstantPricing .Prices {
 	font-weight: normal;
-	background-color: #ffffff;
-	padding: 2px;
-	text-align: center;
-}
-
-.checkOption {
-	float: left;
+	text-transform: none;
 }
 
 div#instant_price_section {
-float: right;
-         width: 289px;
-
+	width: 100%;
 }
 #Specials {
 	width: 420px;
+}
+div#instant_price_section .ProjectSpecifications {
+	background:#daf3fc;
+}
+div#instant_price_section .Colours, 
+div#instant_price_section .Stock, 
+div#instant_price_section .Size, 
+div#instant_price_section .Finishing,
+div#instant_price_section .Production,
+div#instant_price_section .AlertDiv
+{
+	width: 385px;
+	margin: 0px;
+	padding: 5px;
+} 
+div#instant_price_section .Size {
+	float: left;
+}
+div#instant_price_section .Stock {
+	float: left;
+} 
+div#instant_price_section .Colours {
+	float: right;
+} 
+div#instant_price_section .Finishing {
+	float: right;
+} 
+div#instant_price_section .Production {
+	float: right;
+} 
+div#instant_price_section .AlertDiv {
+	float: right;
+} 
+div#instant_price_section .ProjectName p {
+	background: #07759f;
+	margin: 0px;
+	padding: 10px;
+	color: #fff;
+	font-size:xx-small;
+	text-align: left;
+    overflow:auto;
+}
+div#instant_price_section .ProjectName h1 {
+}
+div#instant_price_section h2 {
+	font-size:medium;
+	color: #07759f;
+}
+div#instant_price_section .ProjectName input {
+	width: 75%;
+}
+div#instant_price_section .Prices, div#instant_price_section.Delivery {
+	background: #07759f;
+	color: #fff;
+	font-size:xx-small;
+	margin-top: 5px;
+}
+div#instant_price_section .Prices ul, div#instant_price_section .Delivery ul {
+	width: 50%;
+	float: right;
+	list-style: none;
+	margin: 10px;
+	padding: 0px;
+	color: #fff;
+}
+div#instant_price_section .Prices ul li.unitprice {
+	display: none;
+}
+
+div#instant_price_section .Prices ul li label {
+	font-size: large;
 }
