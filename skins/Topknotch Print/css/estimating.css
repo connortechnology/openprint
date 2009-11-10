@@ -17,7 +17,7 @@
     font-size: 9px;
 }
 
-.InstantPricing .Questions {
+.InstantPricing #instant_price_section {
 	color: black;
 	font-weight: normal;
 	width: 235px;
@@ -25,24 +25,27 @@
 	margin-bottom: 10px;
 }
 
-.InstantPricing .Questions p {
-	text-align: right;
+.InstantPricing ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
 }
-.InstantPricing .Questions span.label, .InstantPricing .Questions label {
+
+.InstantPricing ul li {
+	text-align: right;
+	list-style: none;
+}
+.InstantPricing ul li label {
 	width: auto;
 	float: left;
 	color: #000000;
 	font-weight: bold;
 }
-.InstantPricing .Questions label.radio {
+.InstantPricing label.radio {
 	float: none;
 	font-weight: normal;
 }
 
-.InstantPricing .Questions span.input {
-	width: auto;
-	float: right;
-}
 .InstantPricing h3 {
 	margin: 0px;
 }
@@ -57,7 +60,7 @@
 	padding: 2px;
 }
 
-.Questions fieldset {
+.InstantPricing fieldset {
 	padding: 0px;
     border: none;
     width: 100%;
@@ -75,4 +78,7 @@ div.Prices
 }
 #Specials {
 	width: 380px;
+}
+#steps {
+	display: none;
 }
