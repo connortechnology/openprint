@@ -594,6 +594,8 @@ $log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
 				my $service_specs = openprint::service::get_specs_ref( $Project, $_ );
 				$$specs{'ProductionPrice1'} -= $$service_specs{'txtPrice1'};
 				$$specs{'ShippingPrice1'} += $$service_specs{'txtPrice1'};
+				$$specs{'ServiceTypeDiv'} = $$service_specs{'ServiceTypeDiv'};
+				$$specs{'PickupTypeDiv'} = $$service_specs{'PickupTypeDiv'};
 			} # end foreach service
 		} # end if UPS
 

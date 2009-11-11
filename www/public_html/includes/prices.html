@@ -5,24 +5,17 @@
 			<input type="text" size="9" name="txtUnitPrice1" readonly="readonly" />
 		</li>
 		<li class="totalprice">
-			<label>Total:</label>
+			<label>Production Cost <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
 			<input type="text" size="9" name="ProductionPrice1" readonly="readonly" />
 		</li>
 		<li class="project_id">
-			<label>Quote #:</label>
+			<label>Quote #</label>
 			<input type="text" size="9" name="ProjectIndex" readonly="readonly" />
 		</li>
 	</ul>
-	Price quoted is an approximate estimate. All orders will be + or - 5%. If exact quantities are required - please add 5% the required quantity.
-	<br class="spacer"/><b class="importantNotice">
-	<? echo (
-		my $Currency = openprint::Currency::get_current();
-		if ( $Currency ) {
-		return 'Prices in ' .$Currency->name;
-		} else {
-			return 'Currency not selected.';
-		} # end if
-		) ?></b>
+	Price quoted is an approximate estimate. All orders will be + or - 5%.<br/>
+	If exact quantities are required - please add 5% the required quantity.
+	<br class="spacer"/>
 </div><!--Prices-->
 <p class="buttons">
 	<? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate'); ) ?>
@@ -39,10 +32,20 @@
 <? echo ( ssi::writeButton( $log, $dbh, 'CalculateUPS', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate'); ) ?>
 </p>
 <div id="subtotal">
-	<p>
-		<label>Sub Total:</label>
-		<input type="text" size="9" name="txtPrice1" readonly="readonly" value="<?txtPrice1?>" />
-	</p>
+	<? echo (
+		my $Currency = openprint::Currency::get_current();
+		if ( $Currency ) {
+		return 'All prices listed in ' .$Currency->name .' and are subject to applicable taxes.';
+		} else {
+			return 'Currency not selected.';
+		} # end if
+		) ?>
+	<ul>
+		<li>
+			<label>Sub Total <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
+			<input type="text" size="9" name="txtPrice1" readonly="readonly" value="<?txtPrice1?>" />
+		</li>
+	</ul>
 </div>
 <p class="buttons" id="OrderButton" <? echo ( 'style="display:none;"' if $$variable{'Status'} ne 'Unordered' ) ?> >
 <? echo ( ssi::writeButton( $log, $dbh, 'Upload', '', "click_upload( document.f1 );", '', 'Upload Files'); ) ?>
