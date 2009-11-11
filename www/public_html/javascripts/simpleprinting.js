@@ -26,31 +26,11 @@ function calc( formName, force ) {
 		} // end if
 	} // end if
 
-	if ( ! form.txtQuantity1 ) {
-		alert( 'No Quantity element' );
-		return;
-	} // end if
-	form.txtQuantity1.value = parseInt(1*form.txtQuantity1.value);
-
 	var div = document.getElementById('AlertDiv');
 	if ( ! div ) {
 		alert('No alert div.');
 	} else {
 		div.hide();
-		if ( ! ( form.txtQuantity1.value > 0 ) ) {
-			div.innerHTML = 'Please enter a quantity';
-			div.show();
-			return;
-		} // end if
-
-		if ( form.txtTotalPageQuantity ) {
-			form.txtTotalPageQuantity.value = parseInt(1*form.txtTotalPageQuantity.value);
-			if ( ! ( form.txtTotalPageQuantity.value > 0 ) ) {
-				div.innerHTML = 'Please enter the number of pages.';
-				div.show();
-				return;
-			} // end if
-		} // end if
 	} // end if
 
 	if ( gettingNewPrice && ! force ) {

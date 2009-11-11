@@ -1,129 +1,167 @@
 <form name="f1" method="post" action="/main/order/information.html">
 	<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
-	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
 	<input type="hidden" name="Status" value="<?Status?>" />
 <? if ( $param{'projecttype_id'} ) ?>
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
-			<div class="shadow_left">
-				<div class="shadow_right">
+			<div class="shadow_left"><div class="shadow_right">
 
-		<div class="Questions">
-			<h3>Instant Pricing</h3>
-			<? eval ( $$variable{'TemplateType'} = $$variable{'TemplateType'} ? $$variable{'TemplateType'} : 'SaddleStitching' ) ?>
-			<? eval ( $$variable{'DimensionsDisplay'} = 'Finished' ) ?>
-			<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
-			<!--#include virtual="/includes/sizes.html"-->
-			<p>
-				<label>Number of pages:</label>
-				<input name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="remove_div('OrderButton');"/>
-				<br class="spacer"/>
-				<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('CoverStocks');remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} ne 'Different' ) ?> />
-				<label class="radio" for="rdbCoverSelf">Self Cover</label>
-				<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('CoverStocks');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
-				<label class="radio" for="rdbCoverDifferent">Different Cover</label>
-				<br class="spacer"/>
-			</p>
-			<p>
-				<label>Binding Type</label>
-				<select name="rdbTemplateType" onchange="remove_div('OrderButton');">
-					<option value="SaddleStitching">Saddle Stitching</option>
-					<option value="PerfectBound">Perfect Bound</option>
-				</select>
-			</p>
-			<div id="CoverStocks" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
-				<h4>Information for Cover</h4>
-				<p>
-					<label>Colours:</label>
-					<select name="ColoursCover" onchange="calc(this.form.name);">
-						<option value="4/0">4 Colour One Side</option>
-						<option value="4/1">4 Colour/Black</option>
-						<option value="4/4">4 Colour Both Sides</option>
-					</select>
-				</p>
-				<br class="spacer"/>
-				<? echo ( 
-						# Load Defaults
-						if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
-                            $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
-                            my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
-                            while ( my ( $name, $value ) = splice @defaults,0,2 ) {
-                                $$variable{$name.'1'} = $value;
-								$$variable{$name.'2'} = $value;
-                            } # end while
-                        } # end if
+			<div class="Questions">
+				<h3>Instant Pricing</h3>
+				<? eval ( $$variable{'TemplateType'} = $$variable{'TemplateType'} ? $$variable{'TemplateType'} : 'SaddleStitching' ) ?>
+				<? eval ( $$variable{'DimensionsDisplay'} = 'Finished' ) ?>
+				<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
+				<!--#include virtual="_project_name.html"-->
+				<div class="ProjectSpecifications">
+					<h1>Project Specifications</h1>
+					<div class="Size">
+						<h2>Size</h2>
+						<div class="half-form">
+							<ul class="half-form-frame">
+								<li>
+									<label>Size:</label>
+									<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this );">
+										<option value=""> select </option>
+										<? echo ( 
+											$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id=?};
 
-					$$variable{'Signature'} = '1';
-					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
-					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
-					return variable_substitution( \$html, $variable );
-					) ?>
-				<input type="hidden" name="rdbColourBar1" value="<?rdbColourBar1?>"/>
-				<input type="hidden" name="txtCropMarkSpace1" value="<?txtCropMarkSpace1?>"/>
-				<input type="hidden" name="chkBleedLeft1" value="<?chkBleedLeft1?>"/>
-				<input type="hidden" name="chkBleedRight1" value="<?chkBleedRight1?>"/>
-				<input type="hidden" name="chkBleedTop1" value="<?chkBleedTop1?>"/>
-				<input type="hidden" name="chkBleedBottom1" value="<?chkBleedBottom1?>"/>
-			</div>
-			<br class="spacer"/>
-			<div class="row">
-				<h4>Information for Interior Pages</h4>
-				<p>
-					<label>Colours:</label>
-					<select name="Colours" onchange="calc(this.form.name);">
-						<option value="4/4">4 Colour</option>
-						<option value="1/1">Black</option>
-					</select>
-				</p>
-				<br class="spacer"/>
-				<? echo ( 
-					$$variable{'Signature'} = '2';
-					my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
-					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
-					return variable_substitution( \$html, $variable );
-					) ?>
-				<input type="hidden" name="rdbColourBar2" value="<?rdbColourBar2?>"/>
-				<input type="hidden" name="txtCropMarkSpace2" value="<?txtCropMarkSpace2?>"/>
-				<input type="hidden" name="chkBleedLeft2" value="<?chkBleedLeft2?>"/>
-				<input type="hidden" name="chkBleedRight2" value="<?chkBleedRight2?>"/>
-				<input type="hidden" name="chkBleedTop2" value="<?chkBleedTop2?>"/>
-				<input type="hidden" name="chkBleedBottom2" value="<?chkBleedBottom2?>"/>
-				<br class="spacer"/>
-			</div>
-			<!--#include virtual="/includes/shrinkwrapping.html"-->
-			<!--#include virtual="/includes/drilling.html"-->
-			<!--#include virtual="/includes/turnaround.html"-->
-			<!--#include virtual="/includes/quantity.html"-->
-			<!--#include virtual="/includes/press_type.html"-->
-			<br class="spacer"/>
-			<!--#include virtual="/includes/prices.html"-->
-			<div class="Prices">
-				<!--#include virtual="/includes/buttons.html"-->
-				<br class="spacer"/>
-			</div>
-		</div><!--Questions-->
-				<br class="spacer"/>
-				</div>
-			</div>
+											my $html .= ssi::make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id() ) ] );
+											if ( ! $html ) {
+												$$variable{'Dimensions'} = 'Custom';
+											} # end if
+											return $html;
+										) ?>
+										<option value="Custom">Custom</option>
+									</select>
+								</li>
+								<!--#include virtual="/includes/dimensions.html"-->
+								<li>
+									<label>Number of pages:</label>
+									<input id="txtTotalPageQuantity" name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="remove_div('OrderButton');"/>
+								</li>
+								</li>
+									<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('Cover');remove_div('OrderButton');" <? echo ( ssi::checked( $$variable{'rdbCover'} ne 'Different' ); ) ?> />
+									<label class="radio" for="rdbCoverSelf">Self Cover</label>
+									<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="add_div('Cover');remove_div('OrderButton');jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(this.form, 'Cover','' ) );" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Different' ); ) ?> />
+									<label class="radio" for="rdbCoverDifferent">Different Cover</label>
+								</li>
+								<li>
+									<label>Binding Type</label>
+									<select id="rdbTemplateType" name="rdbTemplateType" onchange="remove_div('OrderButton');">
+										<option value="SaddleStitching">Saddle Stitching</option>
+										<option value="PerfectBound">Perfect Bound</option>
+									</select>
+								</li>
+							</ul>
+						</div>
+					</div>
+					<div id="Cover" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
+						<h2>Cover</h2>
+						<div class="half-form">
+							<ul class="half-form-frame">
+								<li>
+									<label>Colours:</label>
+									<select name="ColoursCover" onchange="calc(this.form.name);">
+										<option value="4/0">4 Colour One Side</option>
+										<option value="4/1">4 Colour/Black</option>
+										<option value="4/4">4 Colour Both Sides</option>
+									</select>
+								</li>
+						<? echo ( 
+								# Load Defaults
+								if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+									$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
+									my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
+									while ( my ( $name, $value ) = splice @defaults,0,2 ) {
+										$$variable{$name.'1'} = $value;
+										$$variable{$name.'2'} = $value;
+									} # end while
+								} # end if
+
+							$$variable{'Signature'} = '1';
+							my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
+							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
+							return variable_substitution( \$html, $variable );
+							) ?>
+							</ul>
+						</div>
+					</div>
+					<input type="hidden" name="rdbColourBar1" value="<?rdbColourBar1?>"/>
+					<input type="hidden" name="txtCropMarkSpace1" value="<?txtCropMarkSpace1?>"/>
+					<input type="hidden" name="chkBleedLeft1" value="<?chkBleedLeft1?>"/>
+					<input type="hidden" name="chkBleedRight1" value="<?chkBleedRight1?>"/>
+					<input type="hidden" name="chkBleedTop1" value="<?chkBleedTop1?>"/>
+					<input type="hidden" name="chkBleedBottom1" value="<?chkBleedBottom1?>"/>
+					<div id="Interior">
+						<h4>Interior Pages</h4>
+						<div class="half-form">
+							<ul class="half-form-frame">
+								<li>
+									<label>Colours:</label>
+									<select name="Colours" onchange="calc(this.form.name);">
+										<option value="4/4">4 Colour</option>
+										<option value="1/1">Black</option>
+									</select>
+								</li>
+								<? echo ( 
+									$$variable{'Signature'} = '2';
+									my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
+									$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
+									return variable_substitution( \$html, $variable );
+									) ?>
+							</ul>
+						</div>
+					</div>
+					<input type="hidden" name="rdbColourBar2" value="<?rdbColourBar2?>"/>
+					<input type="hidden" name="txtCropMarkSpace2" value="<?txtCropMarkSpace2?>"/>
+					<input type="hidden" name="chkBleedLeft2" value="<?chkBleedLeft2?>"/>
+					<input type="hidden" name="chkBleedRight2" value="<?chkBleedRight2?>"/>
+					<input type="hidden" name="chkBleedTop2" value="<?chkBleedTop2?>"/>
+					<input type="hidden" name="chkBleedBottom2" value="<?chkBleedBottom2?>"/>
+					<div class="Finishing">
+						<h2>Finishing</h2>
+						<div class="half-form">
+							<ul class="half-form-frame">
+							<!--#include virtual="/includes/shrinkwrapping.html"-->
+							<!--#include virtual="/includes/drilling.html"-->
+							</ul>
+						</div>
+					</div>
+					<div class="Production">
+						<h2>Production</h2>
+						<div class="half-form">
+							<ul class="half-form-frame">
+							<!--#include virtual="/includes/turnaround.html"-->
+							<!--#include virtual="/includes/quantity.html"-->
+							<!--#include virtual="/includes/press_type.html"-->
+							</ul>
+						</div>
+					</div>
+					<div id="AlertDiv" style="display:none;"></div>
+					<br class="spacer"/>
+				</div><!--ProjectSpecifications-->
+
+				<!--#include virtual="/includes/prices.html"-->
+				</div><!--Questions-->
+			</div></div>
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
-		</div>
+		</div><!--instant_pricing_section-->
 		<h2><? echo ( $$variable{'ProjectType'}->name() ) ?> printing - full colour</h2>
-<? if ( ! ( $r->uri() =~ /trade/ ) ) ?>
-<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
-<? else ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
-<div style="width: 480px;">
-<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div><div class="shadow_left"><div class="shadow_right">
-<div style="font-size: large; font-weight: bold; text-align: center;">Free shipping on all orders over $100 within GTA*</div>
-</div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
-</div>
-<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
-<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ); ) ?>
-<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
-<p style="font-size: small;">* Free shipping does not apply to trade clients or any job that has been discounted below our standard pricing.</p>
-<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
-<? else ( $param{'projecttype_id'} ) ?>
-Please select the type of your project.
-<? endif ( $param{'projecttype_id'} ) ?>
+		<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+		<? else ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+		<div style="width: 480px;">
+		<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div><div class="shadow_left"><div class="shadow_right">
+		<div style="font-size: large; font-weight: bold; text-align: center;">Free shipping on all orders over $100 within GTA*</div>
+		</div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+		</div>
+		<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+		<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ); ) ?>
+		<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+		<p style="font-size: small;">* Free shipping does not apply to trade clients or any job that has been discounted below our standard pricing.</p>
+		<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+		<? else ( $param{'projecttype_id'} ) ?>
+		Please select the type of your project.
+		<? endif ( $param{'projecttype_id'} ) ?>
 	</div><!--InstantPricing-->
 </form>

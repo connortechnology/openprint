@@ -252,6 +252,15 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 	list-style: none;
 	clear: both;
 	}
+.p-nav li.header {
+	background: url(/images/p-nav-header-bg.png) no-repeat 0 0px;
+	height: 22px;
+	width: 150px;
+	font-size:14px;
+	color: #FFF;
+	padding: 15px 3px 3px 17px;
+	text-shadow: 1px 1px #00682a;
+}
 	
 .p-nav a:link, .p-nav a:visited {
 	text-decoration: none;
@@ -302,6 +311,10 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 	padding: 3px 3px 3px 17px;
 	background: url(/images/bg-p-sub-nav.png) no-repeat 0 0px;
 	text-shadow: 1px 1px #606;
+}
+.p-nav ul li.on ul li.on a {
+	color: #606;
+	background: url(/images/bg-p-sub-nav-on.png) no-repeat top right;
 }
 
 #p-sub-nav {
@@ -657,4 +670,55 @@ a.btn-upload:hover { text-decoration: none; color: #FFF; background: url(/images
 }
 p.buttons {
 	text-align: right;
+}
+span.DateSelector {
+    float: left;
+	width: 300px;
+}
+span.DateTimeSelector {
+	float: left;
+	width: 400px;
+}
+span.DateSelector select, span.DateTimeSelector select {
+	width: auto;
+	max-width: none;
+}
+span.DateSelector select option {
+}
+fieldset {
+	border: none;
+}
+fieldset legend {
+}
+fieldset p {
+    margin: .5em;
+	padding-left: 185px;
+}
+fieldset p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset p {height: 1%;}
+* fieldset p {display:block;}
+/* End hide from IE-mac */
+
+fieldset p label {
+    width: 185px;
+	margin-left: -185px;
+    text-align: right;
+    vertical-align: top;
+	float: left;
+}
+fieldset.filters {
+	width: auto;
+}
+fieldset.filters legend {
+}
+fieldset.filters p input {
+	width: auto;
 }

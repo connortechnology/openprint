@@ -1,6 +1,6 @@
 package openprint::paper;
 
-my $debug = 1;
+my $debug = 0;
 
 use strict;
 

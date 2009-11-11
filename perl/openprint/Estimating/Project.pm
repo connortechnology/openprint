@@ -60,6 +60,7 @@ sub calc {
 	
 	$Project->mode( 'Simple' );
 	$Project->design( 'ElectronicFile' );
+	$Project->reference( $$specs{'reference'} );
 	if ( $_ = $Project->save() ) {
 		$log->error( $_ );
 	} # end if
@@ -142,7 +143,7 @@ sub calc {
 			} # end if
 			if ( $$specs{'rdbCover'} eq 'Different' ) {
 				if ( ! $$specs{'ddmStockBrand1'} ) {
-					$$specs{'alert'} .= 'Please select Cover Stock Brand<br/>';
+					$$specs{'alert'} .= 'Please select Cover Stock Type<br/>';
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
 				if ( ! $$specs{'ddmStockFinish1'} ) {
@@ -218,7 +219,7 @@ sub calc {
 				$$specs{'chkProcessColourSideOne2'} = undef;
 				$$specs{'chkProcessColourSideTwo2'} = undef;
 			} # end if
-			@$specs{'rdbAqueousSideOne2','rdbAqueousSideTwo2'} = @$specs{'2Aqueous','2Aqueous'};
+			@$specs{'rdbAqueousSideOne2','rdbAqueousSideTwo2'} = @$specs{'Aqueous2','Aqueous2'};
 
 			if ( $$specs{'rdbCover'} eq 'Different' ) {
 				if ( $$specs{'ColoursCover'} eq '4/4' ) {
@@ -237,7 +238,7 @@ sub calc {
 					$$specs{'chkProcessColourSideOne1'} = 'ProcessColour';
 					$$specs{'chkProcessColourSideTwo1'} = undef;
 				} # end if
-			@$specs{'rdbAqueousSideOne1','rdbAqueousSideTwo1'} = @$specs{'1Aqueous','1Aqueous'};
+				@$specs{'rdbAqueousSideOne1','rdbAqueousSideTwo1'} = @$specs{'Aqueous1','Aqueous1'};
 			} # end if
 # The adding of signatures will be done automatically by multipage_signatures
 # This will add bindery services, and a printing service
@@ -342,9 +343,6 @@ sub calc {
 				push @{$$services{$servicetype_id}}, openprint::print_project::insert_service( $log, $dbh, $$Project{'id'}, $servicetype_id );
 			} # end if
 		} # end foreach
-
-		# Force a reload
-		$services = $Project->services();
 
 		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $$Project{'id'}, 'Proofs' ) if ! $$services{'Proofs'};
 $openprint::log->debug("Proofs: $$specs{'proof_type'}");
@@ -588,9 +586,20 @@ $log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
 			$log->error( $_ );
 		} # end if
 
+		$$specs{'ProductionPrice1'} = $$specs{'txtPrice1'};
+		$$specs{'ShippingPrice1'} = 0;
+		# Subtract shipping costs from total
+		if ( $$services{'UPS'} ) {
+			foreach ( @{$$services{'UPS'}} ) {
+				my $service_specs = openprint::service::get_specs_ref( $Project, $_ );
+				$$specs{'ProductionPrice1'} -= $$service_specs{'txtPrice1'};
+				$$specs{'ShippingPrice1'} += $$service_specs{'txtPrice1'};
+			} # end foreach service
+		} # end if UPS
+
 		my %printing_types;
 		foreach my $ss_id ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 			$printing_types{$$sig_specs{'PrintingType1'}} = 1;
 		} # end foreach
 		my @printing_types = keys %printing_types;

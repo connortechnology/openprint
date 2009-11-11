@@ -224,7 +224,9 @@
             <textarea name="Description" cols="" rows="10" style="width:99%;"></textarea>
         </div>
         <div class="space-twenty"></div>
+		<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Submit' ); ) ?>
+		</p>
     </div>
 	<input type="hidden" name="btnFunction"/>
 </form>

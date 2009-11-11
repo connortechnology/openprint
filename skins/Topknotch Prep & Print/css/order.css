@@ -73,3 +73,25 @@ div.OrderHeader fieldset p label {
 div#main_content_inner {
 	padding: 0px;
 }
+div.OrderHistory fieldset p {
+	padding-left: 90px;
+}
+div.OrderHistory fieldset p label {
+	margin-left: -90px;
+	width: 85px;
+}
+div.OrderHistory fieldset p input {
+	vertical-align: top;
+}
+div.OrderHistory fieldset#JumpTo {
+	float: left;
+	width: 40%;
+	padding: 0px;
+	margin: 0px;
+}
+div.OrderHistory fieldset#Filter {
+	float: right;
+	width: 59%;
+	padding: 0px;
+	margin: 0px;
+}

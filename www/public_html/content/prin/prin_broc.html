@@ -24,13 +24,7 @@
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 			<div class="shadow_left"><div class="shadow_right">
 
-			<div class="ProjectName">
-				<h1>Project Name</h1>
-				<p>
-					<input type="text" name="reference" id="reference" value="<? echo ( $$variable{'Project'}->reference() ) ?>" size="100" />
-					Limit of 100 Characters (About the length of the field)
-				</p>
-			</div>
+			<!--#include virtual="_project_name.html"-->
 			<div class="ProjectSpecifications">
 				<h1>Project Specifications</h1>
 				<!--#include virtual="/includes/sizes.html"-->
@@ -53,7 +47,14 @@
 						</ul>
 					</div>
 				</div>
+<div class="Stock"><h2>Stock</h2>
+<div class="half-form">
+<ul class="half-form-frame">
+
 				<!--#include virtual="/includes/paper_dropdowns.html"-->
+						</ul>
+					</div>
+				</div>
 				<div class="Finishing">
 					<h2>Finishing</h2>
 					<div class="half-form">
@@ -81,27 +82,8 @@
 				</div>
 				<div id="AlertDiv" style="display:none;"></div>
 				<br class="spacer"/>
-				<!--#include virtual="/includes/prices.html"-->
-				<p class="buttons">
-					<? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate'); ) ?>
-					<? echo ( 
-						if ( sets::isin( $session{'user_type'},['A','E'] ) ) { 
-							return ssi::writeButton( $log, $dbh, 'Breakdown', 'price_breakdown.gif', "breakdown_window(document.f1.ProjectIndex.value);", '', 'Detailed Pricing' ); 
-						} else {
-							return '';
-						} # end if
-					) ?>
-				</p>
-				<!--#include virtual="_ups.html"-->
-				<p class="buttons">
-				<? echo ( ssi::writeButton( $log, $dbh, 'CalculateUPS', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate'); ) ?>
-				</p>
-				<p class="buttons" id="OrderButton" <? echo ( 'style="display:none;"' if $$variable{'Status'} ne 'Unordered' ) ?> >
-				<? echo ( ssi::writeButton( $log, $dbh, 'Upload', '', "click_upload( document.f1 );", '', 'Upload Files'); ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Quote', '', "click_quote( document.f1 );", '', 'Email Quote'); ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Order', '', "click_order( document.f1 );", '', 'Place Order') if $config{AllowOrdering} ne 'false'; ) ?>
-				</p>
 		  </div><!--ProjectSpecifications-->
+				<!--#include virtual="/includes/prices.html"-->
 		  </div></div>
            <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br">
 		  </div></div>

@@ -157,16 +157,6 @@
 	overflow:auto;
 	}
 
-fieldset p {
-	margin:0px;
-	padding:5px 7px 5px 7px;
-	text-align:right;
-	overflow:auto;
-	font-size:12px;
-	line-height:16px;
-	font-weight:normal;
-	color:#000;
-} 
 .full-form p {
 	width:754px;
 }
@@ -178,6 +168,11 @@ fieldset p {
 	padding:0px;
 	margin:0px;
 	}
+.half-form p {
+    text-align: right;
+    padding:5px 7px 5px 7px;
+	margin: 0px;
+}
 
 .half-form ul {
     overflow:auto;

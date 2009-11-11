@@ -1,14 +1,14 @@
 <? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
 <li>
 	<label>Press type:</label>
-		<select id="PrintingType" name="PrintingType" onchange="remove_div('OrderButton');calc(this.form.name);">
-			<? echo (
-				my $html;
-				
-				ssi::make_drop_down( [
- '', 'No Preference', sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{'PrintingType'} );
-			) ?>
-		</select>
+	<select id="PrintingType" name="PrintingType" onchange="remove_div('OrderButton');calc(this.form.name);">
+		<? echo (
+			my $html;
+			
+			ssi::make_drop_down( [
+'', 'No Preference', sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{'PrintingType'} );
+		) ?>
+	</select>
 </li>
 <? else ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
 <input type="hidden" name="PrintingType" id="PrintingType" value="<?PrintingType?>" />

@@ -11,7 +11,7 @@
 <? if ( $session{'user_id'} ) ?>
 <form name="f1" action="history.html" method="post">
 	<div class="OrderHistory">
-		<fieldset class="filters unprintable" style="margin: 0px; width:42%; float: left;"><legend>Enter Order ID:</legend>
+		<fieldset id="JumpTo" class="filters unprintable"><legend>Enter Order ID:</legend>
 			<p>
 				<label for="OrderID">Order ID:</label>
 				<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" />
@@ -23,7 +23,7 @@
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load_orders(f1);", '', 'Go' ); ) ?>
 			</p>
 		</fieldset>
-		<fieldset class="filters unprintable" style="margin: 0px; width:57%; float: right;"><legend>or Select Search Criteria:</legend>
+		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria:</legend>
 			<p>
 				<label>Ordered by:</label>
 				<select name="ddmOrderedBy" size="1" onchange="load_orders( this.form );">
@@ -34,8 +34,8 @@
 				</select>
 			</p>
 	<? eval (
-		if ( $openprint::param{'ddmStartYear'} ) {
-			openprint::store_session( '/main/order/history.html', \%openprint::param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
+		if ( $param{'ddmStartYear'} ) {
+			openprint::store_session( '/main/order/history.html', \%param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
 		} elsif ( ( ! $session{'/main/order/history.html?ddmStartYear'} ) or $session{'/main/order/history.html?lastupdated'} < (time-3600) ) {
 			@session{'/main/order/history.html?ddmStartYear','/main/order/history.html?ddmStartMonth','/main/order/history.html?ddmStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
 			@session{'/main/order/history.html?ddmEndYear','/main/order/history.html?ddmEndMonth','/main/order/history.html?ddmEndDay'} = Date::Calc::Today();
