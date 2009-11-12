@@ -372,7 +372,6 @@ sub add_project_to_press_schedule {
 			my $Job = new openprint::ScheduledJob();
 			$_ = $Job->save({
 				'project_id'	=>	$Project->id(),
-				'service_id'	=>	\@service_ids,
 				'equipment_id'	=>	$Equipment[0]->id(),
 				'starttime'		=>	undef,
 				'runtime'		=>	($runtime ? "$runtime minutes" : undef )

@@ -161,6 +161,21 @@
 				  ) ?>
 				</select>
 			</p>
+<? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
+            <p><label>Stock Size:</label>
+                <select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
+                    <option value="">Please select one</option>
+                    <? echo (
+                        ssi::make_drop_down( [ map { $_,$_ } openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
+                                'ddmStockBrand'.$$variable{'Signature'},
+                                'ddmStockFinish'.$$variable{'Signature'},
+                                'ddmStockColour'.$$variable{'Signature'},
+                                'ddmStockWeight'.$$variable{'Signature'},
+                                } ) ], $$variable{'ddmStockSheetSize'} );
+                    ) ?>
+                </select>
+            </p>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 		</div><!-- House -->
 	</fieldset>
 </div>

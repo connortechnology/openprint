@@ -1,3 +1,4 @@
+<<<<<<< HEAD:www/public_html/includes/paper_dropdowns.html
 <li>
 	<label>Type:</label>
 	<select name="ddmStockBrand<?Signature?>" size="1" onchange="ddmStockBrand_onchange( this, '<?Signature?>' );">
@@ -41,7 +42,8 @@
 			) ?>
 	</select>
 </li>
-<li><label>Weight:</label>
+<li id="StockWeightSelect<?Signature?>"><label>Weight:</label>
+<? if ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 	<select name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
 		<? echo (
@@ -54,4 +56,7 @@
 } ) ], $$variable{'ddmStockWeight'.$$variable{'Signature'}} );
 			) ?>
 	</select>
+<? else ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
+	<input type="hidden" name="ddmStockWeight<?Signature?>" id="ddmStockWeight<?Signature?>" value="<? echo ( $$variable{'ddmStockWeight'.$$variable{'Signature'}} ) ?>" />
+<? endif ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 </li>

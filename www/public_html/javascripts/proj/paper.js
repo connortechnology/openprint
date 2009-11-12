@@ -82,7 +82,7 @@ function get_parameters( form, id, selected ) {
 			form.elements['ddmStockBrand'+id] ? get_ddm_value( form.elements['ddmStockBrand'+id] ) : '',
 			form.elements['ddmStockFinish'+id] ? get_ddm_value( form.elements['ddmStockFinish'+id] ) : '',
 			form.elements['ddmStockColour'+id] ? get_ddm_value( form.elements['ddmStockColour'+id] ) : '',
-			form.elements['ddmStockWeight'+id] ? get_ddm_value( form.elements['ddmStockWeight'+id] ) : '',
+			form.elements['ddmStockWeight'+id] ? get_value( form.elements['ddmStockWeight'+id] ) : '',
 			form.elements['rdbSuppliedStock'+id] ? get_value( form.elements['rdbSuppliedStock'+id] ) : '',
 			id, /* press */
 			form.ProjectIndex.value
@@ -90,6 +90,8 @@ function get_parameters( form, id, selected ) {
 	parameters[parameters.length] = form.ProjectType ? form.ProjectType.value : '';
 	parameters[parameters.length] = form.txtSpecificStockWidth ? form.txtSpecificStockWidth.value : '';
 	parameters[parameters.length] = form.txtSpecificStockHeight ? form.txtSpecificStockHeight.value : '';
+	parameters[parameters.length] = form.txtWidth ? form.txtWidth.value : '';
+	parameters[parameters.length] = form.txtHeight ? form.txtHeight.value : '';
 	return parameters;
 } // end function get_parameters( form )
 
@@ -100,28 +102,27 @@ function rdbSuppliedStock_onchange( element, id ) {
 		timeout = setTimeout( 'rdbSuppliedStock_onchange($(' + element.id + '),"' + id + '");', 1000 );
 		return;
 	} // end if
-	form.elements['ddmStockBrand'+id].disabled = true;
-	form.elements['ddmStockFinish'+id].disabled = true;
-	form.elements['ddmStockColour'+id].disabled = true;
-	form.elements['ddmStockWeight'+id].disabled = true;
+	timeout = null;
+	if ( form.elements['ddmStockBrand'+id] ) form.elements['ddmStockBrand'+id].disabled = true;
+	if ( form.elements['ddmStockFinish'+id] ) form.elements['ddmStockFinish'+id].disabled = true;
+	if ( form.elements['ddmStockColour'+id] ) form.elements['ddmStockColour'+id].disabled = true;
+	if ( form.elements['ddmStockWeight'+id] ) form.elements['ddmStockWeight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Supplied') );
 } // end function rdbSuppliedStock_onchange( element, id )
 
 function ddmStockBrand_onchange( element, id ) {
 	var form = element.form;
-
-	// Disable them all first so that we can't select an invalid paper while it's chugging away
-	form.elements['ddmStockBrand'+id].disabled = true;
-	form.elements['ddmStockFinish'+id].disabled = true;
-	form.elements['ddmStockColour'+id].disabled = true;
-	if ( form.elements['ddmStockWeight'+id] )
-		form.elements['ddmStockWeight'+id].disabled = true;
-
 	if ( gettingNewPrice ) {
-		if ( timeout ) clearTimeout( timeout );
+		if ( timeout )
+			clearTimeout( timeout );
 		timeout = setTimeout( 'ddmStockBrand_onchange(document.' + element.form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
+	timeout = null;
+	if ( form.elements['ddmStockBrand'+id] ) form.elements['ddmStockBrand'+id].disabled = true;
+	if ( form.elements['ddmStockFinish'+id] ) form.elements['ddmStockFinish'+id].disabled = true;
+	if ( form.elements['ddmStockColour'+id] ) form.elements['ddmStockColour'+id].disabled = true;
+	if ( form.elements['ddmStockWeight'+id] ) form.elements['ddmStockWeight'+id].disabled = true;
 
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Name') );
 
@@ -135,15 +136,17 @@ function txtSpecificStockBrand_onKeyUp( element ) {
 
 function ddmStockFinish_onchange( element, id ) {
 	var form = element.form;
-	form.elements['ddmStockBrand'+id].disabled = true;
-	form.elements['ddmStockFinish'+id].disabled = true;
-	form.elements['ddmStockColour'+id].disabled = true;
-	form.elements['ddmStockWeight'+id].disabled = true;
 	if ( gettingNewPrice ) {
-		if ( timeout ) clearTimeout( timeout );
+		if ( timeout )
+			clearTimeout( timeout );
 		timeout = setTimeout( 'ddmStockFinish_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
+	timeout = null;
+	if ( form.elements['ddmStockBrand'+id] ) form.elements['ddmStockBrand'+id].disabled = true;
+	if ( form.elements['ddmStockFinish'+id] ) form.elements['ddmStockFinish'+id].disabled = true;
+	if ( form.elements['ddmStockColour'+id] ) form.elements['ddmStockColour'+id].disabled = true;
+	if ( form.elements['ddmStockWeight'+id] ) form.elements['ddmStockWeight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Finish') );
 
 } // end function ddmStockFinish_onchange();
@@ -158,15 +161,17 @@ function txtSpecificStockFinish_onKeyUp( element ) {
 
 function ddmStockColour_onchange( element, id ) {
 	var form = element.form;
-	form.elements['ddmStockBrand'+id].disabled = true;
-	form.elements['ddmStockFinish'+id].disabled = true;
-	form.elements['ddmStockColour'+id].disabled = true;
-	form.elements['ddmStockWeight'+id].disabled = true;
 	if ( gettingNewPrice ) {
-		if ( timeout ) clearTimeout( timeout );
+		if ( timeout )
+			clearTimeout( timeout );
 		timeout = setTimeout( 'ddmStockColour_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
+	timeout = null;
+	if ( form.elements['ddmStockBrand'+id] ) form.elements['ddmStockBrand'+id].disabled = true;
+	if ( form.elements['ddmStockFinish'+id] ) form.elements['ddmStockFinish'+id].disabled = true;
+	if ( form.elements['ddmStockColour'+id] ) form.elements['ddmStockColour'+id].disabled = true;
+	if ( form.elements['ddmStockWeight'+id] ) form.elements['ddmStockWeight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id,'Colour') );
 
 	//if ( form.txtSpecificStockColour && get_ddm_value(form.ddmStockColour) ) form.txtSpecificStockColour.value='';
@@ -182,16 +187,18 @@ function txtSpecificStockColour_onKeyUp( element ) {
 
 function ddmStockWeight_onchange( element, id ) {
 	var form = element.form;
-	form.elements['ddmStockBrand'+id].disabled = true;
-	form.elements['ddmStockFinish'+id].disabled = true;
-	form.elements['ddmStockColour'+id].disabled = true;
-	form.elements['ddmStockWeight'+id].disabled = true;
 	if ( gettingNewPrice ) {
-		if ( timeout ) clearTimeout( timeout );
+		if ( timeout )
+			clearTimeout( timeout );
 		timeout = setTimeout( 'ddmStockWeight_onchange(document.' + form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if
+	timeout = null;
 
+	if ( form.elements['ddmStockBrand'+id] ) form.elements['ddmStockBrand'+id].disabled = true;
+	if ( form.elements['ddmStockFinish'+id] ) form.elements['ddmStockFinish'+id].disabled = true;
+	if ( form.elements['ddmStockColour'+id] ) form.elements['ddmStockColour'+id].disabled = true;
+	if ( form.elements['ddmStockWeight'+id] ) form.elements['ddmStockWeight'+id].disabled = true;
 	jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::select_paper', get_parameters(form, id, 'Weight') );
 } // end function ddmStockWeight_onchange();
 
@@ -255,64 +262,107 @@ function fill_drop_down( results ) {
 				ddm_select_by_index( form.elements['ddmStockBrand'+id], 1 );
 			} else {
 				ddm_select_by_value( form.elements['ddmStockBrand'+id], selectedValue, 0 );
+				form.elements['ddmStockBrand'+id].disabled = false;
 			} // end if
+		} else {
+			form.elements['ddmStockBrand'+id].disabled = false;
 		} // end if
-		form.elements['ddmStockBrand'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockFinish'+id] ) {
 		if ( FinishOptions.length > 1 ) {
-		var selectedValue = get_ddm_value( form.elements['ddmStockFinish'+id] );
-		fill_ddm( form.elements['ddmStockFinish'+id], FinishOptions, 'ddmStockFinish_onchange' );
-		if ( FinishOptions.length == 2 ) {
-			ddm_select_by_index( form.elements['ddmStockFinish'+id], 1 );
+			var selectedValue = get_ddm_value( form.elements['ddmStockFinish'+id] );
+			fill_ddm( form.elements['ddmStockFinish'+id], FinishOptions, 'ddmStockFinish_onchange' );
+			if ( FinishOptions.length == 2 ) {
+				ddm_select_by_index( form.elements['ddmStockFinish'+id], 1 );
+			} else {
+				ddm_select_by_value( form.elements['ddmStockFinish'+id], selectedValue, 0 );
+				form.elements['ddmStockFinish'+id].disabled = false;
+			} // end if
 		} else {
-			ddm_select_by_value( form.elements['ddmStockFinish'+id], selectedValue, 0 );
+			form.elements['ddmStockFinish'+id].disabled = false;
 		} // end if
-		} // end if
-		form.elements['ddmStockFinish'+id].disabled = false;
 	} // end if
 
 	if ( form.elements['ddmStockColour'+id] ) {
 		if ( ColourOptions.length > 1 ) {
-		var selectedValue = get_ddm_value( form.elements['ddmStockColour'+id] );
-		fill_ddm( form.elements['ddmStockColour'+id], ColourOptions, 'ddmStockColour_onchange' );
-		if ( ColourOptions.length == 2 ) {
-			ddm_select_by_index( form.elements['ddmStockColour'+id], 1 );
+			var selectedValue = get_ddm_value( form.elements['ddmStockColour'+id] );
+			fill_ddm( form.elements['ddmStockColour'+id], ColourOptions, 'ddmStockColour_onchange' );
+			if ( ColourOptions.length == 2 ) {
+				ddm_select_by_index( form.elements['ddmStockColour'+id], 1 );
+			} else {
+				ddm_select_by_value( form.elements['ddmStockColour'+id], selectedValue, 0 );
+				form.elements['ddmStockColour'+id].disabled = false;
+			} // end if
 		} else {
-			ddm_select_by_value( form.elements['ddmStockColour'+id], selectedValue, 0 );
+			form.elements['ddmStockColour'+id].disabled = false;
 		} // end if
-		} // end if
-		form.elements['ddmStockColour'+id].disabled = false;
 	} // end if
 
+	
 	if ( form.elements['ddmStockWeight'+id] ) {
-		if ( WeightOptions.length > 1 ) {
-			var selectedValue = get_ddm_value( form.elements['ddmStockWeight'+id] );
-			fill_ddm( form.elements['ddmStockWeight'+id], WeightOptions, 'ddmStockWeight_onchange' );
-			if ( WeightOptions.length == 2 ) {
-				ddm_select_by_index( form.elements['ddmStockWeight'+id], 1 );
-			} else {
-				ddm_select_by_value( form.elements['ddmStockWeight'+id], selectedValue, 0 );
+
+		// Try to convert to a dropdown if we need one
+		if ( ( WeightOptions.length > 2 ) && ( form.elements['ddmStockWeight'+id].type != 'select-one' ) ) {
+			var input = $('StockWeightSelect'+id);
+			if ( input ) {
+				input.innerHTML = '<label>Weight:</label><select name="ddmStockWeight'+id+'" size="1" onchange="ddmStockWeight_onchange( this, \''+id+'\' );"></select>';
+			} else { 
+				alert('StockWeightSelect'+id+ ' not found');
 			} // end if
 		} // end if
-		form.elements['ddmStockWeight'+id].disabled = false;
+
+		if ( form.elements['ddmStockWeight'+id].type == 'select-one' ) {
+			if ( WeightOptions.length > 1 ) {
+				var selectedValue = get_ddm_value( form.elements['ddmStockWeight'+id] );
+				fill_ddm( form.elements['ddmStockWeight'+id], WeightOptions, 'ddmStockWeight_onchange' );
+				if ( WeightOptions.length == 2 ) {
+					ddm_select_by_index( form.elements['ddmStockWeight'+id], 1 );
+				} else {
+					ddm_select_by_value( form.elements['ddmStockWeight'+id], selectedValue, 0 );
+					form.elements['ddmStockWeight'+id].disabled = false;
+				} // end if
+			} else {
+				form.elements['ddmStockWeight'+id].disabled = false;
+			} // end if
+		} else { // must be hidden
+			if ( WeightOptions.length == 2 ) {
+				form.elements['ddmStockWeight'+id].value = WeightOptions[1].value;
+			} else {
+				form.elements['ddmStockWeight'+id].value = '';
+			} // end if
+		} // end if
 	} // end if
 
 	// Sheetsize gets special treatment, cuz it gets selected during price calcs
     if ( SheetSizeOptions.length > 1 ) {
-		for ( var qty_index = 1; qty_index <= 3; qty_index += 1 ) {
-			var ddm = form.elements['ddmStockSheetSize'+qty_index];
-			if ( ddm ) {
-				if ( form.elements['chkOverrideSheetSize'+qty_index].checked ) {
-					var selectedValue = get_ddm_value( ddm );
-					fill_ddm( ddm, SheetSizeOptions, 'ddmStockSheetSize_onchange' );
-					ddm_select_by_value( ddm, selectedValue, 0 );
-				} else {
-					fill_ddm( ddm, SheetSizeOptions, 'ddmStockSheetSize_onchange' );
-				} // end if
+		if ( form.elements['ddmStockSheetSize'+id] ) {
+			var selectedValue = get_ddm_value( form.elements['ddmStockSheetSize'+id] );
+			fill_ddm( form.elements['ddmStockSheetSize'+id], SheetSizeOptions, 'ddmStockSheetSize_onchange' );
+			if ( SheetSizeOptions.length == 2 ) {
+				ddm_select_by_index( form.elements['ddmStockSheetSize'+id], 1 );
+			} else {
+				ddm_select_by_value( form.elements['ddmStockSheetSize'+id], selectedValue, 0 );
+				form.elements['ddmStockSheetSize'+id].disabled = false;
 			} // end if
-		} // end for
+		} else {
+			for ( var qty_index = 1; qty_index <= 3; qty_index += 1 ) {
+				var ddm = form.elements['ddmStockSheetSize'+qty_index];
+				if ( ddm ) {
+					if ( form.elements['chkOverrideSheetSize'+qty_index].checked ) {
+						var selectedValue = get_ddm_value( ddm );
+						fill_ddm( ddm, SheetSizeOptions, 'ddmStockSheetSize_onchange' );
+						ddm_select_by_value( ddm, selectedValue, 0 );
+					} else {
+						fill_ddm( ddm, SheetSizeOptions, 'ddmStockSheetSize_onchange' );
+					} // end if
+				} // end if
+			} // end for
+		} // end if
+	} else {
+		if ( form.elements['ddmStockSheetSize'+id] ) {
+			form.elements['ddmStockSheetSize'+id].disabled = false;
+		} // end if
     } // end if
 } // end function fill_drop_down( results ) {
 

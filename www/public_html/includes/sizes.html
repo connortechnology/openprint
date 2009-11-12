@@ -9,24 +9,33 @@
 			<? echo ( 
 				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars'] );
 
-				if ( $$variable{'DimensionsDisplay'} eq 'Finished' ) {
-					$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id=?};
+<<<<<<< HEAD:www/public_html/includes/sizes.html
+				my $html;
+				if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
+                    $_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, description FROM projecttemplate WHERE projecttype_id = ? ORDER BY SIZE};
+                    $html = ssi::make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id()) ] );
 				} else {
-					$_ = q{SELECT DISTINCT dblFlatWidth::float || 'x' || dblFlatHeight::float || 'Flat' AS size, dblFlatWidth::float || '" x ' || dblFlatHeight::float || '" Flat' FROM projecttemplate WHERE projecttype_id=?};
-				} # end if
-				
-				my $html = $$variable{'FoldType'} ? 
-				ssi::make_drop_down( [ sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', $$variable{'ProjectType'}->id(), $$variable{'FoldType'} ) ] ) :
-				ssi::make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id() ) ] );
-				if ( ! $html ) {
-					$$variable{'Dimensions'} = 'Custom';
+					if ( $$variable{'DimensionsDisplay'} eq 'Finished' ) {
+						$_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, dblFinishedWidth::float || '" x ' || dblFinishedHeight::float || '" Finished' FROM projecttemplate WHERE projecttype_id=?};
+					} else {
+						$_ = q{SELECT DISTINCT dblFlatWidth::float || 'x' || dblFlatHeight::float || 'Flat' AS size, dblFlatWidth::float || '" x ' || dblFlatHeight::float || '" Flat' FROM projecttemplate WHERE projecttype_id=?};
+					} # end if
+					
+					$html = $$variable{'FoldType'} ? 
+					ssi::make_drop_down( [ sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', $$variable{'ProjectType'}->id(), $$variable{'FoldType'} ) ] ) :
+					ssi::make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id() ) ] );
+					if ( ! $html ) {
+						$$variable{'Dimensions'} = 'Custom';
+					} # end if
 				} # end if
 				return $html;
 			) ?>
+<? if ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 			<option value="Custom">Custom</option>
+<? endif ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 		</select>
 	</li>
-				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
 				<li>
 					<label>Fold Type:</label>
 					<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
@@ -51,7 +60,7 @@
 						 ) ?>
 					</select>
 				</li>
-				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
 				<? if ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
 					<input type="hidden" name="FoldType" value="2PanelFold"/>
 				<? endif ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>

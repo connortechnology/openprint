@@ -105,5 +105,19 @@ sub total {
 	return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'}/100 );
 } # end sub total
 
+sub save {
+	my ( $self, $hash ) = @_;
+	if ( $$self{'id'} ) {
+		return $self->SUPER::save( $hash );
+	} else {
+		my $rc = $self->SUPER::save( $hash );	
+		my $Claim = $self->Claim();
+		if ( ! sets::isin( $$self{'id'}, [ map { $_->id() } $Claim->Contents() ] ) ) {
+			push @{$$Claim{'Contents'}}, $self;
+		} # end if
+		return $rc;
+	} # end if
+} # end sub save
+
 1;
 __END__

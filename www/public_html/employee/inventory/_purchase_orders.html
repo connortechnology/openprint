@@ -22,6 +22,7 @@
 			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?created_on_end_year','/employee/inventory/purchase_orders.html?created_on_end_month','/employee/inventory/purchase_orders.html?created_on_end_day'} ),
 			'order',			'id desc',
 		);
+		$search{'deleted'} = $session{'/employee/inventory/purchase_orders.html?deleted'} if exists $session{'/employee/inventory/purchase_orders.html?deleted'};
 		$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'};
 		$search{'created_by'} = $session{'/employee/inventory/purchase_orders.html?created_by'} if $session{'/employee/inventory/purchase_orders.html?created_by'};
 

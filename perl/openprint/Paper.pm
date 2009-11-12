@@ -38,7 +38,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','inventory_number','full_packages','message','req_die_scoring',
+		'minimum_order','inventory_number','full_packages','message','req_die_scoring','in_stock',
 		'material_id',
 		);
 
@@ -166,6 +166,11 @@ sub find {
 		$sql .= ' AND width=?';
 		push @values, 1*$params{'width'};
 	} # end if
+	if ( $params{'width_>='} ) {
+		$params{'width_>='} =~ s/[^\d\.]//g;
+		$sql .= ' AND ( width IS NULL or width>=?)';
+		push @values, 1*$params{'width_>='};
+	} # end if
 	if ( $params{'width_start'} ) {
 		$params{'width_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND width>=?';
@@ -180,6 +185,16 @@ sub find {
 		$params{'height_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND height>=?';
 		push @values, 1*$params{'height_start'};
+	} # end if
+	if ( $params{'height_>='} ) {
+		$params{'height_>='} =~ s/[^\d\.]//g;
+		$sql .= ' AND ( height IS NULL OR height>=? )';
+		push @values, 1*$params{'height_>='};
+	} # end if
+	if ( $params{'in_stock_start'} ) {
+		$params{'in_stock_start'} =~ s/[^\d\.]//g;
+		$sql .= ' AND ( in_stock IS NULL OR in_stock >= ?)';
+		push @values, 1*$params{'in_stock_start'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
 		$sql .= ' AND papers.id IN (SELECT paper_id FROM paper_allocations WHERE project_id IN (SELECT Index FROM Projects WHERE lngDocketNumber=?))';
@@ -337,6 +352,9 @@ sub save {
 		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
 		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
 	} # end if manufacturer
+
+	delete $$self{'in_stock'};
+	$self->in_stock();
 
 	foreach my $key ( @fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
@@ -850,7 +868,8 @@ sub available {
 sub skids {
     my $self = shift;
 	return 0 if ! $$self{'id'};
-    return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
+	return openprint::Skid::find('paper_id'=>$$self{'id'}, 'quantity_>='=>1);
+    #return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
 sub previous {
@@ -911,6 +930,13 @@ sub get_price {
 		return if ! $bestPrice;
 		$price{'Price'} = $bestPrice->Price();
 		$price{'units'} = $bestPrice->Units();
+		if ( $openprint::config{'ApplyMarkup'} ) {
+		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
+			my $pricingpercent = $openprint::config{'ApplyMarkup'};
+			$pricingpercent =~ s/[^\d\.\-]//g;
+			$pricingpercent /= 100;
+			$price{'Price'} *= ( 1 + $pricingpercent );
+		} # end if
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$price{'currency_id'} = $Pricelist->currency_id();

@@ -21,7 +21,7 @@ require openprint::SkidContent;
 require openprint::Manifest;
 require openprint::ManifestContent;
 
-my $debug = 1;
+my $debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -70,6 +70,14 @@ sub find {
 		push @values, $params{'verification_code'};
 	} # end if
 
+	if ( $params{'paper_id'} ) {
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
+		push @values, $params{'paper_id'};
+	} # end if
+	if ( $params{'quantity_>='} ) {
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
+		push @values, $params{'quantity_>='};
+	} # end if
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};

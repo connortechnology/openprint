@@ -22,6 +22,7 @@ require Math::Units;
 require sql;
 require openprint::JDF;
 require openprint::OrderedProduct;
+require openprint::ScheduledJob;
 
 my $debug = 1;
 
@@ -1305,6 +1306,7 @@ sub copy_signature {
 sub Template {
 	return new openprint::QuoteLevel( $_[0]{'style_id'} );
 } # end sub Template
+
 sub get_due_date {
 	my ( $self ) = @_;
 	my $duedatedays = 0;
@@ -1357,5 +1359,4 @@ sub Ordered_Product {
 } # end sub Ordered_Product
 
 1;
-
 __END__

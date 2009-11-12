@@ -9,7 +9,12 @@
 		} # end if
 		$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/templates/project_template_select.html' );
 		foreach my $template ( @templates ) {
-			$html .= sprintf('<p><img src="/images/templates/%3$s/%1$s.gif" alt="%1$s"/><input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s /><label for="rdbTemplateType%1$s">%1$s</label>', $template, $template eq $$variable{'rdbTemplateType'} ? ' checked="checked"' : '', $$variable{Project}->Type()->name() );
+			if ( -f $config{'SkinPath'}.'/images/templates/'.$$variable{Project}->Type()->name().'/'.$template.'.gif' ) {
+			$html .= sprintf('<p><img src="/images/templates/%3$s/%1$s.gif" alt="%1$s"/><input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s /><label for="rdbTemplateType%1$s">%1$s</label></p>', $template, ssi::checked( $template eq $$variable{'rdbTemplateType'} ), $$variable{Project}->Type()->name() );
+			} else {
+				$log->error("No Project Template image for " . $config{'SkinPath'}.'/images/templates/'.$$variable{Project}->Type()->name().'/'.$template.'.gif' );
+				$html .= sprintf('<p><input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s /><label for="rdbTemplateType%1$s">%1$s</label></p>', $template, $template eq $$variable{'rdbTemplateType'} ? ' checked="checked"' : '', $$variable{Project}->Type()->name() );
+			} # end if
 		} # end foreach
 		return $html;
 	) ?>

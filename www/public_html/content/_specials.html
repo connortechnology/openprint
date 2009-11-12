@@ -6,16 +6,17 @@
 <? if ( $$variable{'ProjectType'} ) ?>
 <div id="Specials" align="center">
 	<h2>
-<? if ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines'] ) ) ?>
-Individual
-<? else ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines'] ) ) ?>
-Group
-<? endif ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines'] ) ) ?>
- Run Specials for
 <? echo (
-require Date::Calc;
+	my $html = '';
+	if ( sets::isin( $param{ProjectType} , ['Brochures','Posters','Magazines','Letterhead'] ) ) {
+		$html .= 'Individual Run Specials';
+	} elsif ( sets::isin( $param{ProjectType} , ['BusinessCards'] ) ) {
+		$html .= 'Specials';
+	} else {
+		$html .= 'Group Run Specials';
+	} # end if
 my ( $y, $m, $d ) = Date::Calc::Today();
-return Date::Calc::Month_to_Text($m) . ' ' . $y;
+return $html .' for ' . Date::Calc::Month_to_Text($m) . ' ' . $y;
 ) ?>
     </h2>
 <? eval (

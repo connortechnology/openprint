@@ -1515,9 +1515,9 @@ sub _operator_shift_popup {
 } # end sub operator_shift_li
 
 sub _check_for_skid {
+
 } # end sub _check_for_skid
 
 1;
-
 __END__
 ~	   

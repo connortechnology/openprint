@@ -7,7 +7,7 @@ function calc_price( element ) {
 		var index = matches[2];
 		var cost = parseFloat( $('cost-'+index).value.replace(/[^\d\-\.]/g, '' ) );
 		var qty = parseFloat( $('qty_lbs-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-		var units = $('units-'+index).value;
+		var units = $('cost_units-'+index).value;
 		if ( units == '/100lb' ) {
 			qty /= 100;
 		} else if ( units == '/M' ) {
@@ -161,19 +161,20 @@ function del_content(form, content_id ) {
 		</div>
 <table class="List">
     <tr>
+		<td rowspan="4"><textarea class="mce" id="reason" name="reason" rows="2" cols=""><? echo ( $$variable{'Claim'}->reason() ) ?></textarea></td>
         <td class="totals">SUBTOTAL</td>
         <td class="Price"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->subtotal() ); ) ?></td>
     </tr>
     <tr>
         <td class="totals">
-            <? echo ( $$variable{'Claim'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?>
+            <? echo ( $$variable{'Claim'}->Company()->country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?>
             <input type="checkbox" id="federaltax_charge" name="federaltax_charge" value="1" <? echo ( ssi::checked( $$variable{'Claim'}->federaltax_charge() ); ) ?> onclick="update_totals(this.form);" />
         </td>
         <td class="Price"><? echo ( sprintf('%s<span id="federaltax">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->federaltax() ); ) ?></td>
     </tr>
     <tr>
         <td class="totals">
-            <? echo ( $$variable{'Claim'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?>
+            <? echo ( $$variable{'Claim'}->Company()->state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?>
             <input type="checkbox" id="statetax_charge" name="statetax_charge" value="1" <? echo ( ssi::checked( $$variable{'Claim'}->statetax_charge() ); ) ?> onclick="update_totals(this.form);" />
         </td>
         <td class="Price"><? echo ( sprintf('%s<span id="statetax">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->statetax() ); ) ?></td>

@@ -73,6 +73,13 @@
 			<label class="radio" for="authorizedAll">All</label>
 		</p>
 		<p>
+			<label>Deleted:</label>
+			<input type="radio" name="deleted" id="deleted1" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?deleted'} ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="deleted1">Yes</label>
+			<input type="radio" name="deleted" id="deleted0" value="0" <? echo ( ssi::checked( ! $session{'/employee/inventory/purchase_orders.html?deleted'} ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="deleted0">No</label>
+		</p>
+		<p>
 			<label>Contains</label>
 			<input type="text" id="contains" name="contains" onkeyup="load('Results',$('f1'));" />
 		</p>

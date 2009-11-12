@@ -75,9 +75,12 @@ function cbCalc( results ) {
 }
 
 
-function Dimensions_onchange( select ) {
+function Dimensions_onchange( select, signature ) {
 	remove_div('OrderButton');
-	calc( select.form.name );
+	// Refreshes Paper
+	///jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(select.form, '', '' ) );
+	rdbSuppliedStock_onchange( select, signature );
+	//calc( select.form.name );
 } // end if
 
 var contentWin;

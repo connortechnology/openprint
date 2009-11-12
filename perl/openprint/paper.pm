@@ -22,11 +22,15 @@ sub get_paper {
 			( sets::isin( $specs{'Selected'}, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'	=> $specs{'Finish'} ) : () ),
 			( sets::isin( $specs{'Selected'}, [ 'Colour','Weight' ] ) ? ( 'colour_id'	=> $specs{'Colour'} ) : () ),
 			( sets::isin( $specs{'Selected'}, [ 'Weight' ] ) ? ( 'weight_id'	=> $specs{'Weight'} ) : () ),
+			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
+			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
 			'type'=>\@types,
 				);
 	if ( ! @papers ) {
 		@papers = openprint::Paper::find( 
 			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
+			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
+			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
 			'type'=>\@types,
 				);
 	} # end if
@@ -57,7 +61,7 @@ sub get_paper {
 } # end sub get_paper
 
 sub select_paper {
-	my ( $r, $log, $dbh, $variable, $selected, $name, $finish, $colour, $weight, $supplied, $press, $project_index, $type, $specific_width, $specific_height ) = @_;
+	my ( $r, $log, $dbh, $variable, $selected, $name, $finish, $colour, $weight, $supplied, $press, $project_index, $type, $specific_width, $specific_height, $flat_width, $flat_height ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $type ) {
@@ -69,16 +73,18 @@ sub select_paper {
 		push @types, 'Roll';
 	} # end if
 
-	$log->debug("******** START OF select_paper_names, Press: $type $press *****************");
+	$log->debug("******** START OF select_paper_names, Press: $type $press $flat_width $flat_height*****************");
 	my @papers = openprint::Paper::find( 
 			( $project_index ? ( 'project_type_id'=>$Project->type_id() ) : (  'project_type_name'=>$type ) ),
 			( $selected eq 'Name' ? ( 'name'=>$name ) : ()  ),
 			( sets::isin( $selected, [ 'Finish','Colour','Weight' ] ) ? ( 'finish'	=> $finish ) : () ),
 			( sets::isin( $selected, [ 'Colour','Weight' ] ) ? ( 'colour'	=> $colour ) : () ),
 			( sets::isin( $selected, [ 'Weight' ] ) ? ( 'weight'	=> $weight ) : () ),
-			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
-			'type'=>\@types,
-				);
+			'supplied'	=>	[undef,$supplied eq 'Y' ? 1 : 0],
+			'type'		=>	\@types,
+			( $flat_width ? ( ($type eq 'Envelopes' ? 'width' : 'width_>=')=>$flat_width ) : () ),
+			( $flat_height ? ( ($type eq 'Envelopes' ? 'height' : 'height_>=')=>$flat_height ) : () ),
+			);
 	my %names;
 	my %finishes;
 	my %colours;
@@ -98,7 +104,7 @@ sub select_paper {
 		push @results, jsrs::encode_array( 'Weight', map { $_, $_ } 
 				sort { $a =~ s/^(\d*)/$1/; $b =~ s/^(\d*)/$1/; return $a <=> $b } keys %weights );
 	} # end if
-	push @results, select_sheetsize( $r, $log, $dbh, $variable, $project_index, $name, $finish, $colour, $weight, $supplied, $press );
+	push @results, jsrs::encode_array( 'SheetSize', map {$_,$_} get_sheetsizes( $type, $name, $finish, $colour, $weight, $supplied, @papers ) );
 	push @results, "Press~$press~$press";
 
 	return join('|', @results ); 
@@ -290,18 +296,14 @@ sub select_by_weight {
 } # end sub select_by_weight
 
 sub select_sheetsize {
-	my ( $r, $log, $dbh, $variable, $project_index, $name, $finish, $colour, $weight, $supplied, $press, $type ) = @_;
+	my ( $r, $log, $dbh, $variable, $project_index, $name, $finish, $colour, $weight, $supplied, $press, $type, $flat_width, $flat_height ) = @_;
 
-	my @sheets = get_sheetsizes( $type, $name, $finish, $colour, $weight, $supplied );
-	my @results;
-	while ( @sheets ) {
-		push @results, join('~', 'SheetSize', shift @sheets, shift @sheets);
-	} # end while
-	return join( '|', @results );
+	return join( '|', map { 'SheetSize~'.$_.'~'.$_ } get_sheetsizes( $type, $name, $finish, $colour, $weight, $supplied, $flat_width, $flat_height ) );
+
 } # end sub select_sheetsize
 
 sub get_sheetsizes {
-	my ( $type, $name, $finish, $colour, $weight, $supplied ) = @_;
+	my ( $type, $name, $finish, $colour, $weight, $supplied, @papers ) = @_;
 	my @results;
 	$openprint::log->debug("************* START OF select_sheetsize: $type, $name, $finish, $colour, $weight, $supplied ********************");
 	
@@ -309,9 +311,11 @@ sub get_sheetsizes {
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
-	my @papers = openprint::Paper::find( 'name', $name, 'finish', $finish, 'colour', $colour, 'weight', $weight, 'type'=>\@types,
-			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
-			);
+	if ( ! @papers ) {
+		@papers = openprint::Paper::find( 'name', $name, 'finish', $finish, 'colour', $colour, 'weight', $weight, 'type'=>\@types,
+				'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
+				);
+	} # end if
 	return if ! @papers;
 
 	my @presses = openprint::Equipment::find( 'category'=>'Printing' );

@@ -29,6 +29,10 @@ function get_parameters( form, id, selected ) {
 		parameters.push( 'Weight', get_ddm_value( form.elements['Weight'+id] ) );
 	if ( form.elements['ddmWeight'+id] ) 
 		parameters.push( 'weight_id', get_ddm_value( form.elements['ddmWeight'+id] ) );
+	if ( form.elements['txtWidth'] ) 
+		parameters.push( 'width', get_ddm_value( form.elements['txtWidth'] ) );
+	if ( form.elements['txtHeight'] ) 
+		parameters.push( 'height', get_ddm_value( form.elements['txtHeight'] ) );
 
 	return parameters;
 } // end function get_parameters( form )

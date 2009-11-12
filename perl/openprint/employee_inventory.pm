@@ -1086,77 +1086,6 @@ sub send_paper_arrival_notification {
 	} # end foreach Paper
 } # end sub send_paper_arrival_notification
 
-sub highlight_paper {
-	my ( undef, undef, undef, undef, @params ) = @_;
-
-	my %param;
-	while ( @params ) {
-		my ( $name, $value ) = splice @params, 0, 2;
-		if ( exists $param{$name} ) {
-			if ( ref($param{$name}) =~ /ARRAY/ ) {
-				push @{$param{$name}}, $value;
-			} else {
-				$param{$name} = [ $param{$name}, $value ];
-			} # end if
-		} else {
-			$param{$name} = $value;
-		} # end if
-	} # end while
-
-	my @results;
-	foreach my $P ( openprint::Paper::find(
-				'in_stock_start'	=> 1,
-				) ) {
-		#next if $P->available() <= 0;
-		if ( $param{Manufacturer} and ($P->manufacturer_id() != $param{Manufacturer} ) ) {
-			push @results, $P->id().'~';
-			next;
-		} # end if
-		if ( $param{Name} and ($P->name_id() != $param{Name} ) ) {
-			push @results, $P->id().'~';
-			next;
-		} # end if
-		if ( $param{Finish} and ($P->finish_id() != $param{Finish} ) ) {
-			push @results, $P->id().'~';
-			next;
-		} # end if
-		if ( $param{Colour} and ($P->colour_id() != $param{Colour} ) ) {
-			push @results, $P->id().'~';
-			next;
-		} # end if
-		if ( $param{Weight} and ($P->weight_id() != $param{Weight} ) ) {
-			push @results, $P->id().'~';
-			next;
-		} # end if
-		if ( $param{Type} and ! sets::isin( $P->type(), $param{Type} ) ) {
-			push @results, $P->id().'~';
-			next;
-		} # end if
-		if ( $param{fsc_code} and ($P->fsc_code() != $param{fsc_code} ) ) {
-			push @results, $P->id().'~';
-			next;
-		} # end if
-		if ( $param{Size} and ($P->size() ne $param{Size} ) ) {
-			push @results, $P->id().'~';
-			next;
-		} # end if
-		if ( $param{width} ) {
-			if (
-					($P->width() != $param{width} ) and ( (!$param{'OrLarger'}) or $P->width() < $param{width} )
-			   ) {
-				push @results, $P->id().'~';
-				next;
-			} # end if
-		} # end if
-		if ( $param{height} and ($P->height() ne $param{height} ) ) {
-			push @results, $P->id().'~';
-			next;
-		} # end if
-		push @results, $P->id().'~#f8df00';
-	} # end foreach
-	return join('|',@results );
-} # end sub highlight_paper
-
 sub rfidtags {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		foreach my $rfidtag_id ( ref $param{'rfidtags'} eq 'ARRAY' ? @{$param{'rfidtags'}} : split(',',$param{'rfidtags'}) ) {
@@ -1569,13 +1498,17 @@ sub _skid_allocations {
 
 
 sub available_paper {
-	ssi::save_params('/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id', 'owner_id_exclude' );
+	ssi::save_params( '/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id', 'owner_id_exclude' );
+	$session{'/employee/inventory/available_paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 	$session{'/employee/inventory/available_paper.html?Type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?Type'};
 	if ( $param{'btnFunction'} eq 'Allocate' ) {
 		allocate( @param{'skid_id','paper_id','Quantity','Project','Docket','specific','reason'} );
 	} # end if
 } # end sub available_paper
+sub _available_paper {
+	ssi::save_params( '/employee/inventory/available_paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','width','height','OrLarger','fsc_code','unmatched','location_id','Type','last_seen','Owner','owner_id_exclude' ) );
+} # end sub _available_paper
 
 sub _allocate_popup {
     if ( $param{'referer'} ) {
@@ -1825,7 +1758,7 @@ sub purchase_order_edit {
 } # end sub purchase_order_edit
 
 sub purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by' ) {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'created_on', -31 );
@@ -1889,7 +1822,7 @@ sub purchase_orders {
 } # end sub purchase_orders
 
 sub _purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id','created_by' ) {
+    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id','created_by','deleted' ) {
         $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
     } # end foreach
 } # end sub _purchase_orders

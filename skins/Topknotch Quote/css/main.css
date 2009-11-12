@@ -154,23 +154,6 @@ div.Service fieldset p select, div.Service fieldset p input {
 }
 
 
-div.ProjectCreateEdit ul {
-    list-style: none;
-}
-div.ProjectCreateEdit li {
-    float: left;
-    width: 200px;
-}
-div.ProjectCreateEdit ul:after {
-    content: "."; 
-    display: block; 
-    height: 0; 
-    clear: both; 
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div.ProjectCreateEdit ul {height: 1%;}
-/* End hide from IE-mac */
 div.Order fieldset p label {
 	width: 30%;
 }

@@ -36,10 +36,10 @@
                 <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
 <? endif ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
 
-<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels'] ) ) ?>
 <? if ( sets::isin( $$variable{'ProjectTypeID'},['Banners'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/banner_printing.html"-->
 <? endif ( sets::isin( $$variable{'ProjectTypeID'},['Banners'] ) ) ?>

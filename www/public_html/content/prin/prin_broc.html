@@ -42,8 +42,10 @@
 									<option value="4/4">4 Colour Both Sides</option>
 								</select>
 							</li>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
 							<!--#include virtual="/includes/aqueous.html"-->
 							<!--#include virtual="/includes/uvcoating.html"-->
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
 						</ul>
 					</div>
 				</div>
@@ -59,9 +61,11 @@
 					<h2>Finishing</h2>
 					<div class="half-form">
 						<ul class="half-form-frame">
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
 							<!--#include virtual="/includes/drilling.html"-->
 							<!--#include virtual="/includes/scoring.html"-->
 							<!--#include virtual="/includes/perfing.html"-->
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
 							<!--#include virtual="/includes/shrinkwrapping.html"-->
 							<!--#include virtual="/includes/bundling.html"-->

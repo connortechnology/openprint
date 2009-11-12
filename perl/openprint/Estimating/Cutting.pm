@@ -80,13 +80,12 @@ sub variables {
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 
-	my $services = $Project->services();
-
 	if ( $Project->Type()->name() eq 'Envelopes' ) {
         $openprint::log->debug(" ** Project Type is Envelopes, Cutting Service is NOT needed ** ");
 		return 0;
 	} # end if 
 
+	my $services = $Project->services();
     if ( $$services{'NoBindery'} ) {
         $openprint::log->debug(" ** Project is marked as No bindery, Cutting not needed ! ** ");
         return 0;
@@ -151,6 +150,12 @@ sub neccessary {
 
 sub signature_calc_stock_cutting {
 	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
+
+	if ( ! $Paper->cuttable() ) {
+		$$specs{'alert'} = 'Stock is not cuttable.';
+		$$specs{'Status'} = 'calculated';
+		return;
+	} # end if
 
 	my %results = (
 			'Status'	=> 'calculated',
@@ -400,6 +405,12 @@ sub signature_calc_folding_cutting {
 
 sub signature_calc {
 	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I ) = @_;
+
+	if ( ! $Paper->cuttable() ) {
+		$$specs{'alert'} = 'Stock is not cuttable.';
+		$$specs{'Status'} = 'calculated';
+		return;
+	} # end if
 
 	my %results = (
 			'Status'	=> 'calculated',
