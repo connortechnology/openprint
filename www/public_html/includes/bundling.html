@@ -4,8 +4,8 @@
 	<label class="radio" for="BundlingY">Yes</label>
 	<input type="radio" id="BundlingN" name="Bundling" value="N" onclick="$('BundlingDiv').hide();$('OrderButton').hide();" <? echo ( 'checked="checked"' if $$variable{'Bundling'} ne 'Y' ) ?> />
 	<label class="radio" for="BundlingN">No</label>
-</p>
-<p id="BundlingDiv" <? echo ( 'style="display:none;"' if $$variable{'Bundling'} ne 'Y' ) ?> >
+</li>
+<li id="BundlingDiv" <? echo ( 'style="display:none;"' if $$variable{'Bundling'} ne 'Y' ) ?> >
 	<label for="txtItemsPerBundle">Items per bundle:</label>
 	<input type="text" id="txtItemsPerBundle" name="txtItemsPerBundle" value="<?txtItemsPerBundle?>" size="5" onkeyup="this.value=this.value.replace(/\D/g,'');$('OrderButton').hide();" />
 </li>

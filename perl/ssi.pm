@@ -205,7 +205,7 @@ sub make_drop_down {
 	my ( $search_data, $checkval, $length ) = @_;
 	my @check_array; 
 	if ( ref $checkval eq 'ARRAY' ) {
-		*check_array = $checkval;
+		@check_array = @{$checkval};
 	} else {
 		@check_array = ( $checkval );
 	} # end if
@@ -251,7 +251,7 @@ sub return_provinces {
 } # end sub return_provinces
 
 sub return_countries {
-	return make_drop_down( \@countries::countries, \@_ );
+	return make_drop_down( \@countries::countries, [@_] );
 } # end sub return_countries
 
 sub return_years {

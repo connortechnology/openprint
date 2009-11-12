@@ -15,30 +15,11 @@
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
 		<script type="text/javascript" src="/javascripts/popups.js"></script>
-<script type="text/javascript">
+		<script type="text/javascript">
 <!--
-        var startList = function() {
-            if (document.all && document.getElementById) {
-                var navRoot = document.getElementById("menubar");
-                if ( navRoot ) {
-                    for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-                        var node = navRoot.childNodes[i];
-                        if (node.nodeName=="LI") {
-                            node.onmouseover=function() {
-                                this.className+=' over';
-                            }
-                            node.onmouseout=function() {
-                                this.className=this.className.replace(' over', '');
-                            }
-                        } // end if
-                    } // end for
-                } // end if
-            }
-        }
-        window.onload=startList;
+		window.onload=setup_ie_menu;
 -->
-        </script>
-
+		</script>
 		<!-- calendar stylesheet -->
 		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
 
@@ -62,15 +43,15 @@
 					</div>
 					<div id="nav_icons">
 					 <a href="/"><img src="/images/home_icon.gif" alt="Home" /></a>
-					 <? if ( $openprint::session{'user_id'} ) ?>
+					 <? if ( $session{'user_id'} ) ?>
 					 <a href="/account/logout.html"><img src="/images/logout_icon.gif" alt="Logout" /></a>
-					 <? else ( $openprint::session{'user_id'} ) ?>
+					 <? else ( $session{'user_id'} ) ?>
 					 <a href="/account/login.html"><img src="/images/login_icon.gif" alt="Login" /></a>
-					 <? endif ( $openprint::session{'user_id'} ) ?>
+					 <? endif ( $session{'user_id'} ) ?>
 					</div>		 
 				</div>
 			</div>
-			<!--#include virtual="/skins/<? echo ( $openprint::config{'SiteTitle'} ) ?>/includes/administrator_menu.html"-->
+			<? echo ( ssi::include( $config{'SkinPath'}.'/includes/administrator_menu.html' ); ) ?>
 			<div id="main_content">
 				<div id="main_content_inner">
 					<div id="main_page">
@@ -79,7 +60,9 @@
 							 <div class="shadow_tr"></div>
 							</div>
 							<div id="main_page_content">
-							 <div id="main_page_inner"><?PageContent?></div>
+							 <div id="main_page_inner">
+	<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+</div>
 						</div>
 						<div class="bottom_shadow">
 							<div class="shadow_bl"></div>

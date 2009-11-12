@@ -669,6 +669,7 @@ a.btn-upload:hover { text-decoration: none; color: #FFF; background: url(/images
 	padding: 0px;
 }
 p.buttons {
+	margin-top: 10px;
 	text-align: right;
 }
 span.DateSelector {
