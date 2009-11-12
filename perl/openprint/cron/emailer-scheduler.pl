@@ -22,7 +22,6 @@ use vars qw( %variable $log $dbh %config %session);
 *session = \%openprint::session;
 
 
-
 $log = logger->new();
 $log->{level} = "warn";
 my %sql_server;
@@ -52,8 +51,8 @@ configuration::init_cache( $log, $dbh, {
 		'SiteTitle'	=>'PointOne Graphics Inc',
 		}
 		);
-$session{'company_id'} = 6;
 my $site_admin_email = 'iconnor@point-one.com';
+$session{'company_id'} = 6;
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
