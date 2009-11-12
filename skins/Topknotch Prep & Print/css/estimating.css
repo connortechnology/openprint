@@ -40,6 +40,7 @@ div#instant_price_section .ProjectSpecifications h1 {
 	padding-bottom: 10px;
 }
 div#instant_price_section .Colours, 
+div#instant_price_section .Envelopes, 
 div#instant_price_section .Stock, 
 div#instant_price_section .Size, 
 div#instant_price_section .Finishing,
@@ -53,6 +54,9 @@ div#instant_price_section #AlertDiv
 	padding: 5px;
 } 
 div#instant_price_section .Size {
+	float: left;
+}
+div#instant_price_section .Envelopes {
 	float: left;
 }
 div#instant_price_section .Stock {

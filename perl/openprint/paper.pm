@@ -104,7 +104,8 @@ sub select_paper {
 		push @results, jsrs::encode_array( 'Weight', map { $_, $_ } 
 				sort { $a =~ s/^(\d*)/$1/; $b =~ s/^(\d*)/$1/; return $a <=> $b } keys %weights );
 	} # end if
-	push @results, jsrs::encode_array( 'SheetSize', map {$_,$_} get_sheetsizes( $type, $name, $finish, $colour, $weight, $supplied, @papers ) );
+	my %papers = get_sheetsizes( $type, $name, $finish, $colour, $weight, $supplied, @papers );
+	push @results, jsrs::encode_array( 'SheetSize', map {$_,$papers{$_}} sort keys %papers );
 	push @results, "Press~$press~$press";
 
 	return join('|', @results ); 
@@ -298,7 +299,7 @@ sub select_by_weight {
 sub select_sheetsize {
 	my ( $r, $log, $dbh, $variable, $project_index, $name, $finish, $colour, $weight, $supplied, $press, $type, $flat_width, $flat_height ) = @_;
 
-	return join( '|', map { 'SheetSize~'.$_.'~'.$_ } get_sheetsizes( $type, $name, $finish, $colour, $weight, $supplied, $flat_width, $flat_height ) );
+	return map { 'SheetSize~'.$_.'~'.$_ } get_sheetsizes( $type, $name, $finish, $colour, $weight, $supplied, $flat_width, $flat_height );
 
 } # end sub select_sheetsize
 
@@ -313,6 +314,7 @@ sub get_sheetsizes {
 	} # end if
 	if ( ! @papers ) {
 		@papers = openprint::Paper::find( 'name', $name, 'finish', $finish, 'colour', $colour, 'weight', $weight, 'type'=>\@types,
+				'project_type_name'	=>	$type,
 				'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 				);
 	} # end if

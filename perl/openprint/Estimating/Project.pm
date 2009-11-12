@@ -122,9 +122,9 @@ sub calc {
 					$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
 				} # end if
 			} # end if
-        } elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $specs{'ddmStockSheetSize'} ) ) {
-            @specs{'txtWidth','txtHeight'} = split('x', $specs{'ddmStockSheetSize'} );
-            @specs{'txtFinalWidth','txtFinalHeight'} = @specs{'txtWidth','txtHeight'};
+        } elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSheetSize'} ) ) {
+            @$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
+            @$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 		} else {
 			$$specs{'txtWidth'} =~ s/[^\.\d]//g;
 			$$specs{'txtFinalWidth'} =~ s/[^\.\d]//g;

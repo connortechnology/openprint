@@ -3,7 +3,6 @@
 	$$variable{'DimensionsDisplay'} = 'Finished';
 ) ?>
 <form name="f1" method="post" action="/content/prin/prin_broc.html">
-	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
 	<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" name="Status" value="<?Status?>" />
 	<div class="InstantPricing">
@@ -17,19 +16,21 @@
 					<!--#include virtual="_project_name.html"-->
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
-						<div class="Size">
+						<div class="Envelopes">
 							<div class="half-form">
 								<ul class="half-form-frame">
+									<!--#include virtual="/includes/paper_dropdowns.html"-->
 									<li><label>Size:</label>
 										<select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
 										<option value="">Please select one</option>
 										<? echo (
-												ssi::make_drop_down( [ map { $_,$_ } openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
+												my %sizes = openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(),@$variable{
 														'ddmStockBrand'.$$variable{'Signature'},
 														'ddmStockFinish'.$$variable{'Signature'},
 														'ddmStockColour'.$$variable{'Signature'},
 														'ddmStockWeight'.$$variable{'Signature'},
-														} ) ], $$variable{'ddmStockSheetSize'} );
+														} );
+												ssi::make_drop_down( [ map { $_,$sizes{$_} } keys %sizes ], $$variable{'ddmStockSheetSize'} );
 												) ?>
 										</select>
 										<input type="hidden" id="txtWidth" name="txtWidth" value="<?txtWidth?>" />
@@ -47,14 +48,7 @@
 									</li>
 								</ul>
 							</div>
-						</div><!--Colours-->
-						<div class="Stock"><h2>Stock</h2>
-							<div class="half-form">
-								<ul class="half-form-frame">
-									<!--#include virtual="/includes/paper_dropdowns.html"-->
-								</ul>
-							</div>
-						</div><!--Stock-->
+						</div><!--Envelopes-->
 						<div class="Production">
 							<h2>Production</h2>
 							<div class="half-form">
