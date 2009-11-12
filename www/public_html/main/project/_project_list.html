@@ -47,6 +47,7 @@
         <? if ( @{$$variable{'Projects'}} > 0 ) ?>
             The following are results belonging to other companies:<br/>
 	<table class="List">
+		<thead>
 		<tr> 
 			<th width="70" align="left">Project #</th>
 			<th align="left">Company</th>
@@ -57,6 +58,7 @@
 			<th width="85" align="right">Status</th>
 			<th width="120" align="right">Created</th>
 		</tr>
+		</thead>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 		<? eval ( 
 			$$variable{'conversion_rate'} = $$variable{'Project'}->Currency()->conversions( $session{'Currency_id'} );

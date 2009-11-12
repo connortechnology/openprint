@@ -41,6 +41,7 @@
 	</div>
 	<br/>
 	<table class="List">
+		<thead>
 		<tr> 
 			<th align="left" width="75">Order ID</th>
 			<th align="left" width="75">Docket</th>
@@ -50,6 +51,7 @@
 			<th align="right" width="75">Total</th>
 			<th align="right" width="100">Balance</th>
 		</tr>
+		</thead>
 		<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
 		<? eval (
 				$$variable{'total'} = $$variable{'Order'}->total();

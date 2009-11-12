@@ -87,6 +87,7 @@
 		<br class="spacer"/>
 		<!--#include virtual="/includes/project_header.html" -->
 		<table class="List" style="table-layout: auto;">
+			<thead>
 			<tr> 
 				<th align="left">Services</th>
 				<? echo (
@@ -103,6 +104,7 @@
 				<th width="90" align="right">Status</th>
 				<th class="unprintable" width="70" align="right">Changes</th>
 			</tr>
+			</thead>
 			<? if ( @{$$variable{'SERVICES'}} ) ?>
 			<? while ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
 			<tr <?rowclass?>> 

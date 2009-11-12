@@ -3,14 +3,16 @@
 <? if ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) ?>
 <fieldset><legend>Payments</legend>
 	<table class="List">
+		<thead>
         <tr>
             <th width="50" align="left">Ref #</th>
             <th width="100" align="center">Date</th>
             <th width="100" align="left">Type</th>
             <th align="left">Description</th>
             <th width="120" align="right">Amount</th>
-            <th width="70" align="right">&nbsp;</th>
+            <th width="120" align="right">&nbsp;</th>
         </tr>
+		</thead>
         <? while ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
             <tr<?rowclass?>>
                 <td><? echo ( $$variable{'Payment'}->id() ) ?></td>
