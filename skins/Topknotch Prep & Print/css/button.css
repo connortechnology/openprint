@@ -42,6 +42,7 @@ outline: 0;
 cursor: default;
 text-shadow: 1px 1px #333;
 color: #FFF !important;
+overflow: none;
 	}
 	a.buttonImageOn {
 		font-family: Arial, Helvetica, sans-serif;

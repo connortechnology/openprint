@@ -25,7 +25,8 @@ return Date::Calc::Month_to_Text($m) . ' ' . $y;
 <h4><? echo ( $$variable{'Category'}->name(); ) ?></h4>
 <p><? echo ( $$variable{'Category'}->description(); ) ?></p>
 <table class="List">
-    <tr>
+	<thead>
+		<tr>
 <? echo (
     my $html;
     @{$$variable{'Products'}} = $$variable{'Category'}->products('order'=>'sort, lower(name)');
@@ -40,7 +41,8 @@ return Date::Calc::Month_to_Text($m) . ' ' . $y;
     } # end foreach
     return $html;
 ) ?>
-</tr>
+		</tr>
+	</thead>
 <? while ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
 <? eval (
     @{$$variable{'QTYS'}} = sql::execute( $log, $dbh, q{SELECT DISTINCT min FROM Product_Prices WHERE product_id=? AND pricelist_id=? ORDER BY min}, $$variable{'Product'}->id(), $$variable{'Pricelist'}->id() );

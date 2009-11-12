@@ -53,3 +53,6 @@ sub prin_broc {
 sub prin_multi {
 	load_simple();
 } # end sub prin_multi
+sub envelopes {
+	load_simple();
+} # end sub envelopes
