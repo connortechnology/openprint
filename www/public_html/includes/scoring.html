@@ -1,14 +1,14 @@
 <li>
 	<label>Scoring:</label>
-	<input type="radio" id="ScoringY" name="Scoring" value="Y" onclick="add_p('ScoringDiv');remove_p('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Scoring'} eq 'Y' ) ?> />
+	<input type="radio" id="ScoringY" name="Scoring" value="Y" onclick="$('ScoringDiv').show();$('OrderButton').hide();" <? echo ( 'checked="checked"' if $$variable{'Scoring'} eq 'Y' ) ?> />
 	<label class="radio" for="ScoringY">Yes</label>
-	<input type="radio" id="ScoringN" name="Scoring" value="N" onclick="remove_p('ScoringDiv');remove_p('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Scoring'} ne 'Y' ) ?> />
+	<input type="radio" id="ScoringN" name="Scoring" value="N" onclick="$('ScoringDiv').hide();$('OrderButton').hide();" <? echo ( 'checked="checked"' if $$variable{'Scoring'} ne 'Y' ) ?> />
 	<label class="radio" for="ScoringN">No</label>
 </li>
 <li id="ScoringDiv" <? echo ( 'style="display:none;"' if $$variable{'Scoring'} ne 'Y' ) ?> >
 	<label for="txtScoreQty"># of Scores:</label>
 	<input type="text" id="txtScoreQty" name="txtScoreQty" value="<?txtScoreQty?>" size="2" onkeyup="this.value=this.value.replace(/\D/g,'');remove_p('OrderButton');"/>
-	<input type="checkbox" id="chkOverrideScoreQty" name="chkOverrideScoreQty" value="Y" <? echo ( 'checked="checked"' if $$variable{'chkOverrideScoreQty'} eq 'Y' ) ?> onclick="remove_p('OrderButton');" />
+	<input type="checkbox" id="chkOverrideScoreQty" name="chkOverrideScoreQty" value="Y" <? echo ( 'checked="checked"' if $$variable{'chkOverrideScoreQty'} eq 'Y' ) ?> onclick="$('OrderButton').hide();" />
 	<label class="radio" for="chkOverrideScoreQty">Override</label>
 </li>
 

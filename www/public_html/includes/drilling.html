@@ -5,14 +5,14 @@
  ) ?>
 <li>
 	<label>Hole Drilling:</label>
-	<input type="radio" id="HoleDrillingY" name="HoleDrilling" value="Y" onclick="add_p('HoleDrillingDiv');remove_p('OrderButton');calc('f1');" <? echo ( $$variable{'HoleDrilling'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+	<input type="radio" id="HoleDrillingY" name="HoleDrilling" value="Y" onclick="$('HoleDrillingDiv').show();$('OrderButton').hide();calc('f1');" <? echo ( $$variable{'HoleDrilling'} eq 'Y' ? 'checked="checked"' : '' ) ?> />
 	<label class="radio" for="HoleDrillingY">Yes</label>
-	<input type="radio" id="HoleDrillingN" name="HoleDrilling" value="N" onclick="remove_p('HoleDrillingDiv');remove_p('OrderButton');calc('f1');" <? echo ( $$variable{'HoleDrilling'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
+	<input type="radio" id="HoleDrillingN" name="HoleDrilling" value="N" onclick="$('HoleDrillingDiv').hide();$('OrderButton').hide();calc('f1');" <? echo ( $$variable{'HoleDrilling'} ne 'Y' ? 'checked="checked"' : '' ) ?> />
 	<label class="radio" for="HoleDrillingN">No</label>
 </li>
 <li id="HoleDrillingDiv" <? echo ( 'style="display:none;"' if $$variable{'HoleDrilling'} ne 'Y' ) ?> >
 	<label for="txtHoleQty"># of Holes:</label>
-	<input type="text" id="txtHoleQty" name="txtHoleQty" value="<?txtHoleQty?>" size="2" onkeyup="remove_p('OrderButton');" />
+	<input type="text" id="txtHoleQty" name="txtHoleQty" value="<?txtHoleQty?>" size="2" onkeyup="$('OrderButton').hide();" />
 	<br class="spacer"/>
 	<label>Hole Size:</label>
 	<select name="txtHoleSize">
