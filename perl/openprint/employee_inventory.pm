@@ -1492,7 +1492,7 @@ sub _skid_allocations {
 
 
 sub available_paper {
-	ssi::save_params( '/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id', 'owner_id_exclude' );
+	ssi::save_params( '/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'width','height','OrLarger', 'Type', 'fsc_code', 'last_seen', 'location_id', 'unmatched' );
 	$session{'/employee/inventory/available_paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 	$session{'/employee/inventory/available_paper.html?Type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?Type'};
@@ -1501,7 +1501,8 @@ sub available_paper {
 	} # end if
 } # end sub available_paper
 sub _available_paper {
-	ssi::save_params( '/employee/inventory/available_paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','width','height','OrLarger','fsc_code','unmatched','location_id','Type','last_seen','Owner','owner_id_exclude' ) );
+	ssi::save_params( '/employee/inventory/available_paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','width','height','OrLarger','fsc_code','unmatched','location_id','Type','last_seen','Owner' ) );
+	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 } # end sub _available_paper
 
 sub _allocate_popup {
