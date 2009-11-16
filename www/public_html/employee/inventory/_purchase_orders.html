@@ -41,6 +41,10 @@
 				} # end foreach
 				next if $next;
 			} # end if
+			if ( $session{'/employee/inventory/purchase_orders.html?purchase_orders.html'} ) {
+				my @types = map{ $_->type_id() } $PO->Contents();
+				next if ! sets::union( @types, split(';', $session{'/employee/inventory/purchase_orders.html?purchase_orders.html'} ) );
+			} # end if
 			push @{$$variable{'PurchaseOrders'}}, $PO;
 		} # end foreach PO
 	} # end if

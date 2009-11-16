@@ -55,7 +55,7 @@ Please select a Paper to view/edit.<br>
 		<div class="leftColumn">
 			<p>
 				<label>Owner:</label>
-				<select name="Owner" size="1" onchange="calc('f1');">
+				<select id="Owner" name="Owner" size="1" onchange="calc('f1');">
 				<option value=""> All </option>
 				<? echo ( 
 					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(strName)' ) ], $session{'/employee/inventory/available_paper.html?Owner'} );
