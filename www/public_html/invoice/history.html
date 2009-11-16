@@ -59,21 +59,21 @@
 			<p>
 				<label>Created:</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_start', join('-', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ), 'load_invoices(this.form);' ); ) ?>
+<? echo ( ssi::date_select( 'created_on_start', [ @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ], 'load_invoices(this.form);' ); ) ?>
 					to 
 				</span>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_end', join('-', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ), 'load_invoices(this.form);' ); ) ?>
+<? echo ( ssi::date_select( 'created_on_end', [ @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ], 'load_invoices(this.form);' ); ) ?>
 				</span>
 			</p>
 			<p>
 				<label>Due:</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'due_on_start', join('-', @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ), 'load_invoices(this.form);' ); ) ?>
+<? echo ( ssi::date_select( 'due_on_start', [ @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ], 'load_invoices(this.form);' ); ) ?>
 					to 
 				</span>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'due_on_end', join('-', @session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'} ), 'load_invoices(this.form);' ); ) ?>
+<? echo ( ssi::date_select( 'due_on_end', [ @session{'/invoice/history.html?due_on_end_year','/invoice/history.html?due_on_end_month','/invoice/history.html?due_on_end_day'}], 'load_invoices(this.form);' ); ) ?>
 				</span>
 			</p>
 		</div>

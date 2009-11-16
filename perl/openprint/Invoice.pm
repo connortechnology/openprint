@@ -361,10 +361,10 @@ sub send {
 	my @attachments;
 	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice_body.html' );
 	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
-	push @attachments, '', encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
+	push @attachments, '', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice.html' );
 	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
-	push @attachments, 'Invoice '.$$self{'id'}.'.html', encode_qp( ssi::variable_substitution( \$email_template, \%data ) ), 'text/html', 'quoted-printable';
+	push @attachments, 'Invoice '.$$self{'id'}.'.html', encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 
 	#my @recipients = ('iconnor@connortechnology.com');
 	my @recipients = map { sprintf('"%s" <%s>', $_->name(), $_->email() ) } $self->Invoicee()->AccountingContacts();
