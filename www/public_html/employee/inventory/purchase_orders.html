@@ -39,7 +39,7 @@
 		<hr/>
 		<p><label>Created By:</label>
 			<select name="created_by" onchange="load('Results',$('f1'));">
-				<option value="">All</option>
+				<option value="">None</option>
 				<? echo ( 
 					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)','type'=>['A','E'] ) ], $session{'/employee/inventory/purchase_orders.html?created_by'} ); ) ?>
 			</select>
@@ -81,6 +81,17 @@
 			<label class="radio" for="deleted1">Yes</label>
 			<input type="radio" name="deleted" id="deleted0" value="0" <? echo ( ssi::checked( ! $session{'/employee/inventory/purchase_orders.html?deleted'} ) ) ?> onclick="load('Results',$('f1'));" />
 			<label class="radio" for="deleted0">No</label>
+		</p>
+		<p>
+			<label>Types:</label>
+			<? echo (
+				my $html;
+				foreach my $Type ( openprint::PurchaseOrder_ContentType::find('order'=>'name') ) {
+					$html .= sprintf('<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="radio_all(this);" /><label class="radio" for="types%1$s">%2$s</label>', $Type->id(), $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(';', $session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! $session{'/employee/inventory/purchase_orders.html?types'} ) );
+				} # end foreach Type
+				$html .= sprintf('<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="radio_all(this);" /><label class="radio" for="types%1$s">%2$s</label>', '', 'None', ssi::checked( ! $session{'/employee/inventory/purchase_orders.html?types'} ) );
+				return $html;
+			) ?>
 		</p>
 		<p>
 			<label>Contains</label>

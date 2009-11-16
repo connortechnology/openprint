@@ -490,6 +490,14 @@ td.StockQuantity, th.StockQuantity {
 	width: 80px;
 	text-align: right;
 }
+td.Quantity, th.Quantity {
+	width: 40px;
+	text-align: right;
+}
+td.Weight, th.Weight {
+	width: 80px;
+	text-align: right;
+}
 td.User, th.User {
 	width: 120px;
 	text-align: left;
@@ -505,6 +513,10 @@ td.checkbox, th.checkbox {
 }
 td.Price, th.Price {
 	width: 100px;
+	text-align: right;
+}
+td.Cost, th.Cost {
+	width: 130px;
 	text-align: right;
 }
 span.DateSelector {

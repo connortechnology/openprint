@@ -1,4 +1,4 @@
-package openprint::PurchaseOrder_ContentType;
+package openprint::Claim_ContentType;
 @ISA = qw(openprint::Object);
 require openprint::Object;
 
@@ -16,8 +16,8 @@ require misc;
 
 my $debug = 1;
 
-$table = 'PurchaseOrder_ContentTypes';
-$serial = 'PurchaseOrder_ContentTypes_id';
+$table = 'Claim_ContentTypes';
+$serial = 'Claim_ContentTypes_id';
 %fields = (
 	'id'		=>	'id',
 	'name'		=>	'name',
@@ -55,11 +55,11 @@ sub find {
 	if ( ! $data ) {
 		$log->debug("Error loading $table SQL($sql)" . DBI->errstr );
 	} elsif ( ! @$data ) {
-		$log->debug('No PurchaseOrder_ContentTypes loaded (' . $sql . ") (@values)" );
+		$log->debug('No Claim_ContentTypes loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
-		$log->debug("Debug loaded PurchaseOrder_ContentTypes ($sql) (@values) records:" . @$data );
+		$log->debug("Debug loaded Claim_ContentTypes ($sql) (@values) records:" . @$data );
 	} # end if
-	@{$find_cache{$hash_key}} = map { new openprint::PurchaseOrder_ContentType( $_->{id}, $_ ) } @$data;
+	@{$find_cache{$hash_key}} = map { new openprint::Claim_ContentType( $_->{id}, $_ ) } @$data;
 	return @{$find_cache{$hash_key}};
 } # end sub find
 

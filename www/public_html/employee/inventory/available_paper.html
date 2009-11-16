@@ -41,6 +41,9 @@
 	} // end function body_onLoad();
 	function calc( formName ) {
 		var f1 = $(formName);
+		if ( ! f1 ) {
+			alert('No form. Tell Isaac about this please.');
+		} 
 		AjaxLoadContent( 'Results',  '_available_paper.html', f1.serialize() );
 	} // end function calc
 
@@ -52,7 +55,7 @@ Please select a Paper to view/edit.<br>
 		<div class="leftColumn">
 			<p>
 				<label>Owner:</label>
-				<select name="Owner" size="1" onchange="calc('f1');">
+				<select id="Owner" name="Owner" size="1" onchange="calc('f1');">
 				<option value=""> All </option>
 				<? echo ( 
 					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(strName)' ) ], $session{'/employee/inventory/available_paper.html?Owner'} );
@@ -287,7 +290,7 @@ Please select a Paper to view/edit.<br>
 		</p>
 		<p>
 			<label>Location:</label>
-			<select id="location_id" name="location_id" multiple="multiple" onchange="f1.submit();">
+			<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form.name);">
 				<? echo ( 
 					my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') );
 					my @selected = split(';', $session{'/employee/inventory/available_paper.html?location_id'} );
@@ -313,7 +316,7 @@ Please select a Paper to view/edit.<br>
 		</div>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_available_paper.html', \$('f1').serialize() );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "calc('f1');", '', 'Show Results' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
 				); ) ?>
 		</p>
