@@ -35,7 +35,10 @@
 			my $selected;
 			my @location_ids;
 			foreach ( split(';', $session{'/employee/inventory/available_paper.html?location_id'} ) ) {
-				next if $_ eq 'All';
+				if ( $_ eq 'All' ) {
+					@location_ids = ();
+					last;
+				} # end if
 				push @location_ids, $_;
 			} # end foreach
 			$log->debug("Locations: @location_ids");
