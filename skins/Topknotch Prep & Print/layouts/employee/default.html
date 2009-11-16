@@ -18,25 +18,7 @@
 		<script type="text/javascript" src="/javascripts/service.js"></script>
 <script type="text/javascript">
 <!--
-		var startList = function() {
-			if (document.all && document.getElementById) {
-				var navRoot = document.getElementById("menubar");
-				if ( navRoot ) {
-					for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-						var node = navRoot.childNodes[i];
-						if (node.nodeName=="LI") {
-							node.onmouseover=function() {
-								this.className+=' over';
-							}
-							node.onmouseout=function() {
-								this.className=this.className.replace(' over', '');
-							}
-						} // end if
-					} // end for
-				} // end if
-			}
-		}
-		window.onload=startList;
+		window.onload=setup_ie_menu;
 -->
 		</script>
 
@@ -50,14 +32,14 @@
 	</head>
 	<body>
 		<div id="Header">
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
+		<? echo ( ssi::include( $config{'SkinPath'}.'/includes/header.html' ); ) ?>
 		</div><!-- Header -->
 		<div id="Menu">
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/employee_menu.html"-->
+		<? echo ( ssi::include( $config{'SkinPath'}.'/includes/employee_menu.html' ); ) ?>
 		</div>
 		<div id="Content">
 			<div class="Content">
-			<?PageContent?>
+<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 			</div>
 		</div>
 		<div id="Footer"></div>

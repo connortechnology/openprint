@@ -70,7 +70,7 @@
 					</div>		 
 				</div>
 			</div>
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/employee_menu.html"-->
+		<? echo ( ssi::include( $config{'SkinPath'}.'/includes/employee_menu.html' ); ) ?>
 			<div id="main_content">
 				<div id="main_content_inner">
 					<div id="main_page">
@@ -79,7 +79,9 @@
 							 <div class="shadow_tr"></div>
 							</div>
 							<div id="main_page_content">
-							 <div id="main_page_inner"><?PageContent?></div>
+							 <div id="main_page_inner">
+<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+</div>
 						</div>
 						<div class="bottom_shadow">
 							<div class="shadow_bl"></div>
