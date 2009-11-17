@@ -417,11 +417,11 @@ sub get_start_end_dates {
 } # end sub get_start_end_dates
 
 sub writeButton {
-	my ( $log, $dbh, $name, $gif, $onclick, $href, $text ) = @_;
+	my ( $log, $dbh, $name, $gif, $onclick, $href, $text, $options ) = @_;
 	if ( $href eq '' ) {
 		$href='#';
 	} # end if
-	my $html = qq{<a id="Button$name" href="$href" class="buttonImageOff" };
+	my $html = qq{<a id="Button$name" href="$href" class="buttonImageOff $$options{class}" };
 	if ( $onclick ne '' ) {
 		$html .= 'onclick="';
 		if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
@@ -429,7 +429,8 @@ sub writeButton {
 		} # end if
 		$html .= $onclick."return false;\" ";
 	} # end if
-	$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\">";
+	#$html .= "onmouseover=\"if ( typeof(btnOn) == 'function' ) { btnOn('Button$name');}\" onmouseout=\"if ( typeof(btnOff) == 'function' ) { btnOff('Button$name');}\"";
+	$html .= '>';
 	if ( ( $openprint::config{'ButtonsUseImages'} and ($openprint::config{'ButtonsUseImages'} eq 'true') ) and $gif ) {
 		$html .= "<img src=\"/images/buttons/off/$gif\" border=\"0\" name=\"Button$name\"";
 		if ( $text ne '' ) {

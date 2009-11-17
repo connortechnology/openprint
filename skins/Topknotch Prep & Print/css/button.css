@@ -44,7 +44,7 @@ text-shadow: 1px 1px #333;
 color: #FFF !important;
 overflow: none;
 	}
-	a.buttonImageOn {
+	a.buttonImageOff:hover {
 		font-family: Arial, Helvetica, sans-serif;
 		text-decoration: none;
 		font-size: 15px;
@@ -78,7 +78,6 @@ text-shadow: 1px 1px #333;
 	}
 }
 
-
 a.buttonImageOff .l {
 	background: url(/images/btn-left.gif) no-repeat 0 0px;
 	display: -moz-inline-box;
@@ -88,12 +87,16 @@ a.buttonImageOff .l {
 	padding: 0px 0 0 0px;
 }
 a.buttonImageOff .r {
-	background: url(/images/btn-right-arrow.gif) no-repeat 0 0px;
+	background: url(/images/btn-right.gif) no-repeat 0 0px;
 	display: -moz-inline-box;
 	display: inline-block;
-	width: 25px;
+	width: 4px;
 	height: 24px;
 	padding: 7px 0 0 0px;
+}
+a.rightarrow .r {
+	background: url(/images/btn-right-arrow.gif) no-repeat 0 0px;
+	width: 25px;
 }
 a.buttonImageOff .c {
 	background: url(/images/btn-background.gif) repeat-x 0 0px;
@@ -101,11 +104,14 @@ a.buttonImageOff .c {
 	display: inline-block;
 	vertical-align: top;
 	height: 24px;
-	padding: 7px 40px 0 10px;
+	padding: 7px 10px 0 10px;
 	text-shadow: 1px 1px #333;
 }
+a.buttonImageOff:hover .c {
+	padding: 7px 40px 0 10px;
+}
 
-a.buttonImageOn .l {
+a.buttonImageOff:hover .l {
 	background: url(/images/btn-left.gif) no-repeat 0 -31px;
 	display: -moz-inline-box;
 	display: inline-block;
@@ -113,20 +119,27 @@ a.buttonImageOn .l {
 	height: 24px;
 	padding: 7px 0 0 0px;
 }
-a.buttonImageOn .r {
-	background: url(/images/btn-right-arrow.gif) no-repeat 0 -31px;
+a.buttonImageOff:hover .r {
+	background: url(/images/btn-right.gif) no-repeat 0 -31px;
 	display: -moz-inline-box;
 	display: inline-block;
 	height: 24px;
-	width: 25px;
+	width: 4px;
 	padding: 7px 0 0 0px;
 }
-a.buttonImageOn .c {
+a.rightarrow:hover .r {
+	background: url(/images/btn-right-arrow.gif) no-repeat 0 -31px;
+	width: 25px;
+}
+a.buttonImageOff:hover .c {
 	background: url(/images/btn-background.gif) repeat-x 0 -31px;
 	display: -moz-inline-box;
 	display: inline-block;
 	vertical-align: top;
 	height: 24px;
+	padding: 7px 10px 0px 10px;
+	text-shadow: 1px 1px #333;
+}
+a.rightarrow:hover .c {
 	padding: 7px 40px 0px 10px;
-text-shadow: 1px 1px #333;
 }

@@ -156,7 +156,12 @@
 		</div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
 		<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
-		<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ); ) ?>
+<? echo ( 
+	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
+		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
+	} # end if
+	return '';
+) ?>
 		<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
 		<p style="font-size: small;">* Free shipping does not apply to trade clients or any job that has been discounted below our standard pricing.</p>
 		<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>

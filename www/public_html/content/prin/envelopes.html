@@ -69,6 +69,11 @@
 		   </div>
 		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div><!--instant_price_section-->
-		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+<? echo ( 
+	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
+		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
+	} # end if
+	return '';
+) ?>
 	</div><!--InstantPricing-->
 </form>
