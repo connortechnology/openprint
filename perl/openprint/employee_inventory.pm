@@ -1517,7 +1517,7 @@ sub _allocate_popup {
     if ( exists $param{'quantity'} ) {
         $variable{'quantity'} = $param{'quantity'};
     } else {
-        $variable{'quantity'} = $variable{'Paper'}->in_stock() - $variable{'Paper'}->allocated();
+        $variable{'quantity'} = $variable{'Paper'}->available();
     } # end if
 } # end sub _allocate_popup
 
