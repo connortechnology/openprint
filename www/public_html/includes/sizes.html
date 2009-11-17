@@ -9,7 +9,6 @@
 			<? echo ( 
 				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars'] );
 
-<<<<<<< HEAD:www/public_html/includes/sizes.html
 				my $html;
 				if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
                     $_ = q{SELECT DISTINCT dblFinishedWidth::float || 'x' || dblFinishedHeight::float || 'Finished' AS size, description FROM projecttemplate WHERE projecttype_id = ? ORDER BY SIZE};

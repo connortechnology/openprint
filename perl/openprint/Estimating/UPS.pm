@@ -99,8 +99,8 @@ $log->debug("Carton Status: $carton_status");
 		$$specs{'hdnBreakdown'.$qty_i} = '';
 		if ( $$specs{"chkOverridePackageQuantity"} ne 'Y' ) {
 			$$specs{"txtPackageQuantity$qty_i"} = $$carton_specs{"txtPackageQuantity$qty_i"};
-			my $full_cartons = int ( $$specs{'txtQuantity'.$qty_i} / $$carton_specs{'txtItemsPerPackage'} );
-			my $remaining = $$specs{'txtQuantity'.$qty_i} % $$carton_specs{'txtItemsPerPackage'};
+			my $full_cartons = int ( $$specs{'txtQuantity'.$qty_i} / $$carton_specs{"txtItemsPerPackage$qty_i"} );
+			my $remaining = $$specs{'txtQuantity'.$qty_i} % $$carton_specs{"txtItemsPerPackage$qty_i"};
 			$$specs{"txtTotalWeight$qty_i"} = $full_cartons * $$specs{"txtPackageWeight"} + $remaining * $$carton_specs{'txtFinishedWeight'};;
 		} else {
 			$$specs{"txtTotalWeight$qty_i"} = $$specs{"txtPackageWeight"} * $$specs{"txtPackageQuantity$qty_i"};
@@ -219,12 +219,12 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 			if ( $$specs{"chkOverridePackageQuantity"} ne 'Y' ) {
 				#@outputs = sets::union( @outputs, 'chkOverridePackageQuantity' );	
 				$$specs{"txtPackageQuantity$qty_index"} = $$carton_specs{"txtPackageQuantity$qty_index"};
-				foreach ( 1 .. int ( $$specs{'txtQuantity'.$qty_index} / $$carton_specs{'txtItemsPerPackage'} ) ) {
+				foreach ( 1 .. int ( $$specs{'txtQuantity'.$qty_index} / $$carton_specs{"txtItemsPerPackage$qty_index"} ) ) {
 					my %package = ('Length' => '','Width' => '','Height' => '', 'Weight' => $$specs{'txtPackageWeight'} );
 					push @{$ups{'Packages'}}, \%package;
 				} # end foreach
 
-				if ( my $remaining = $$specs{'txtQuantity'.$qty_index} % $$carton_specs{'txtItemsPerPackage'} ) {
+				if ( my $remaining = $$specs{'txtQuantity'.$qty_index} % $$carton_specs{"txtItemsPerPackage$qty_index"} ) {
 					my %package = ('Length' => '','Width' => '','Height' => '', 'Weight' => $remaining * $$carton_specs{'txtFinishedWeight'} );
 					push @{$ups{'Packages'}}, \%package;
 				} # end if

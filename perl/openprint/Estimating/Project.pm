@@ -501,7 +501,7 @@ $openprint::log->debug('Deleting Folding');
 			push @{$$services{'UPS'}}, openprint::print_project::insert_service( $log, $dbh, $$Project{'id'}, 'UPS' ) if ! $$services{'UPS'};
 			my $ac = sql::start_transaction( $dbh );
 			foreach my $sid ( @{$$services{'UPS'}} ) {
-				foreach my $spec ( 'txtShippingPostalCode' ) {
+				foreach my $spec ( 'ToPostalCode' ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, $spec, $$specs{$spec} );
 				} # end foreach
 			} # end foreach
