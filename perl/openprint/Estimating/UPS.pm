@@ -58,17 +58,12 @@ sub no_outputs {
     return @v;
 }
 
-sub calc {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
+sub get_ratings {
+	my ( $Project, $service_index, $specs ) = @_;
 
-	my $status = 'calculated';
 
 $log->debug("UPS!!!!!!!!!!");
-	$$specs{'alert'} = '';
 
-	@$specs{'txtPrice1','txtPrice2','txtPrice3'} = ('','','');
-
-	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
 	if ( ! $$services{'PlainCartons'} ) {
@@ -164,18 +159,37 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 	my $rssRequest = ups::createShoppingRequest(%ups);
 	my $response = ups::sendRequest( $log, 'https://www.ups.com/ups.app/xml/Rate', $accessRequest.$rssRequest );
 	if ( $response eq '' ) {
-		$$specs{'alert'} = 'Could not connect to ups.com.  We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
-		return 'uncalculated';
+		return;
 	} # end if
 	my $parser = XML::LibXML->new();
 	my $doc = $parser->parse_string($response);
 	$log->error( "Error parsing: " . $@ ) if $@;
 	my %upsResponse;
+	$upsResponse{'UPS'} = \%ups;
+	$upsResponse{'AccessRequest'} = $accessRequest;
 	ups::extract_RSS( $log, \%upsResponse, $doc );
-	if ( $upsResponse{'UPSErrorDescription'} ) {
+	return %upsResponse;
+} # end sub get_ratings
+
+sub calc {
+	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
+
+	my $status = 'calculated';
+	$$specs{'alert'} = '';
+
+	@$specs{'txtPrice1','txtPrice2','txtPrice3'} = ('','','');
+
+	my $Project = new openprint::Project( $project_index );
+	my %upsResponse = get_ratings( $Project, $service_index, $specs );
+	if ( ! %upsResponse ) {
+		$$specs{'alert'} = 'Could not connect to ups.com.  We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
+		return $$specs{'Status'} = 'uncalculated';
+	} elsif ( $upsResponse{'UPSErrorDescription'} ) {
 		$$specs{'alert'} = "Unable to retrieve available service types.  UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+	my $ups = $upsResponse{'UPS'};
+	my $accessRequest = $upsResponse{'AccessRequest'};
 
 	my %bestService;
 	my %rated_services;
@@ -217,33 +231,33 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 		my %bestPrice;
 
 		if ( $$specs{'ddmPickupType'} and $$specs{'ddmServiceType'} ) {
-			@{$ups{'Packages'}} = ();
+			@{$$ups{'Packages'}} = ();
 
 			if ( $$specs{"chkOverridePackageQuantity"} ne 'Y' ) {
 				#@outputs = sets::union( @outputs, 'chkOverridePackageQuantity' );	
 				$$specs{"txtPackageQuantity$qty_index"} = $$carton_specs{"txtPackageQuantity$qty_index"};
 				foreach ( 1 .. int ( $$specs{'txtQuantity'.$qty_index} / $$carton_specs{"txtItemsPerPackage$qty_index"} ) ) {
 					my %package = ('Length' => '','Width' => '','Height' => '', 'Weight' => $$specs{'txtPackageWeight'} );
-					push @{$ups{'Packages'}}, \%package;
+					push @{$$ups{'Packages'}}, \%package;
 				} # end foreach
 
 				if ( my $remaining = $$specs{'txtQuantity'.$qty_index} % $$carton_specs{"txtItemsPerPackage$qty_index"} ) {
 					my %package = ('Length' => '','Width' => '','Height' => '', 'Weight' => $remaining * $$carton_specs{'txtFinishedWeight'} );
-					push @{$ups{'Packages'}}, \%package;
+					push @{$$ups{'Packages'}}, \%package;
 				} # end if
 			} else {
 				foreach my $package_index ( 1 .. $$specs{"txtPackageQuantity$qty_index"} ) {
 					my %package = ('Length' => '','Width' => '','Height' => '', 'Weight' => $$specs{'txtPackageWeight'} );
-					push @{$ups{'Packages'}}, \%package;
+					push @{$$ups{'Packages'}}, \%package;
 				} # end foreach
 			} # end if
 
 
-			my $rssRequest = ups::createRatingServiceSelectionRequest(%ups);
+			my $rssRequest = ups::createRatingServiceSelectionRequest($ups);
 			my $response = ups::sendRequest( $log, 'https://www.ups.com/ups.app/xml/Rate', $accessRequest.$rssRequest );
 			if ( $response eq '' ) {
 				$$specs{'alert'} = 'Could not connect to ups.com.  We were unable to obtain a shipping estimate. Please select an alternate shipping method, or wait five minutes and try again.';
-				return 'uncalculated';
+				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 			my $parser = XML::LibXML->new();
 			my $doc = $parser->parse_string($response);
@@ -252,7 +266,7 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 			ups::extract_RSS( $log, \%upsResponse, $doc );
 			if ( $upsResponse{'UPSErrorDescription'} ) {
 				$$specs{'alert'} = "Unable to retrieve a price.  UPS returned the following error:\n$upsResponse{'UPSErrorDescription'}";
-				return 'uncalculated';
+				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 
 			$_ = $upsResponse{'RatedShipments'}[1];
