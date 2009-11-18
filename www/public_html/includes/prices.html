@@ -52,3 +52,4 @@
 <? echo ( ssi::writeButton( $log, $dbh, 'Quote', '', "click_quote( document.f1 );", '', 'Email Quote', {'class'=>'rightarrow'}); ) ?>
 <? echo ( ssi::writeButton( $log, $dbh, 'Order', '', "click_order( document.f1 );", '', 'Place Order', {'class'=>'rightarrow'}) if $config{AllowOrdering} ne 'false'; ) ?>
 </p>
+<input type="hidden" name="btnFunction" id="btnFunction" />

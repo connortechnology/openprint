@@ -89,7 +89,10 @@ $log->debug("Carton Status: $carton_status");
 
 	if ( $$specs{'chkOverridePackageWeight'} ne 'Y' ) {
 		# Load from skids or cartons
-		$$specs{"txtPackageWeight"} = $$carton_specs{"txtPackageWeight"};
+		foreach my $qty_i ( $Project->quantity_indexes() ) {
+			$$specs{"txtPackageWeight"} = $$carton_specs{"txtPackageWeight$qty_i"};
+			last;
+		} # end foreach qty
 	} # end if
 
 	my %packages;
@@ -199,7 +202,7 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 		$$specs{'ddmPickupType'} = ups::get_pickup_type('One Time Pickup');
 	} # end if
 	@ups{'PickupType','ServiceType'} = @$specs{'ddmPickupType','ddmServiceType'};
-
+$log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}");
 	$$specs{'ServiceTypeDiv'} = qq{<select name="ddmServiceType" onchange="calc(this.form.name);"><option value=""> Select </option>};
 	$$specs{'ServiceTypeDiv'} .= ssi::make_drop_down( [ map { $_, ups::get_service_name( $_ ) } keys %rated_services ], $$specs{'ddmServiceType'} );
 	$$specs{'ServiceTypeDiv'} .= '</select>';
@@ -252,10 +255,6 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 				return 'uncalculated';
 			} # end if
 
-foreach ( @{$upsResponse{'RatedShipments'}} ) {
-	$log->debug("RS: $_");
-}
-
 			$_ = $upsResponse{'RatedShipments'}[1];
 			$_ =~ /([\d\.]*)(\w*)/;
 			my $cost = $1;
@@ -285,7 +284,7 @@ foreach ( @{$upsResponse{'RatedShipments'}} ) {
 	} # end foreach qty_index
 
 	$log->debug("UPS!!!!!!!!!!!!!!!!!!");
-	return $status;
+	return $$specs{'Status'} = $status;
 } # end sub calc
 
 sub display {

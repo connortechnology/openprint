@@ -140,6 +140,6 @@ a.buttonImageOff:hover .c {
 	padding: 7px 10px 0px 10px;
 	text-shadow: 1px 1px #333;
 }
-a.rightarrow:hover .c {
+a.rightarrow .c, a.rightarrow:hover .c {
 	padding: 7px 40px 0px 10px;
 }

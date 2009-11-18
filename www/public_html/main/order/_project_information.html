@@ -1,5 +1,7 @@
 <fieldset>
 	<legend>Project # <? echo ( $$variable{'Project'}->id() ) ?></legend>
+	<div class="content">
+<? if ( $config{'OrderMode'} ne 'Simple' ) ?>
 	<span style="float: right;">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'Project'}->id(), '', '', "/main/project/view.html?ProjectIndex=$$variable{'Project'}{id}", 'Edit Project' ); ) ?>
@@ -7,11 +9,20 @@
 	<a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>">
 	<? echo ( return $$variable{'Project'}->summary();) ?>
 	</a>
+<? else ( $config{'OrderMode'} ne 'Simple' ) ?>
+	<? echo ( return $$variable{'Project'}->summary();) ?>
+<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
 	<br class="spacer"/>
-	<p>
-		<label>Reference:</label>
-		<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( scalar split("\n",  $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
-	</p>
+	<ul>
+		<li>
+			<label>Reference:</label>
+			<? if ( ! $$variable{'Project'}->reference() ) ?>
+			<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( scalar split("\n",  $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
+			<? else ( ! $$variable{'Project'}->reference() ) ?>
+			<? echo ( $$variable{'Project'}->reference(); ) ?>
+			<? endif ( ! $$variable{'Project'}->reference() ) ?>
+		</li>
+<? if ( $config{'OrderMode'} ne 'Simple' ) ?>
 <? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <!--#include virtual="_quantity_select.html"-->
 <? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
@@ -19,4 +30,11 @@
 <!--#include virtual="_required_by.html"-->
 <? endif ( ! $$variable{'Project'}->requested_date() ) ?>
 <!--#include virtual="_shipping_type_select.html"-->
+<? else ( $config{'OrderMode'} ne 'Simple' ) ?>
+	<li><label>Type</label><? echo ( $$variable{'Project'}->Type()->name() ) ?></li>
+	<li><label>Quantity</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
+	<li><label>Created</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></li>
+<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
+	</ul>
+	</div>
 </fieldset>

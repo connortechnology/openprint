@@ -83,76 +83,80 @@
 		$$variable{"$spec-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} = $$specs{$spec};
 	} # end foreach
 ) ?>
-<br/><b>Destination Address:</b><br/>
-	<p> 
-		<label>Company Name:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToCompanyName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCompanyName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
-	</p>
-	<p>
-		<label>Salutation:<span class="requiredFieldIndicator">&nbsp;</span></label>
-		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mr." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mr.' ) ?> />
-		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr.">Mr. </label>
-		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mrs." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mrs.' ) ?> />
-		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs.">Mrs. </label>
-		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Ms." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Ms.' ) ?> />
-		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms.">Ms. </label>
-		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss" name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Miss" <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Miss' ) ?> />
-		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss">Miss</label>
-	</p>
-	<p>
-		<label>First Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
-		<input type="text" name="ToFirstName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFirstName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>"/>
-	</p>
-	<p>
-		<label>Last Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
-		<input type="text" name="ToLastName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToLastName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
-	</p>
-	<p> 
-		<label>Address:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToAddress1-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress1-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
-	</p>
-	<p> 
-		<label>&nbsp;</label>
-		<input type="text" name="ToAddress2-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress2-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
-	</p>
-	<p> 
-		<label>Country:<span class="requiredFieldIndicator">*</span></label>
-			<select name="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>" onchange="Country_onchange(this, this.form.elements['ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>'] );" >
-				<option value=""> Select </option>
-				<? echo ( 
-					ssi::make_drop_down( \@countries::countries, $$variable{'ToCountry-'.$$variable{ProjectIndex}.'-'.$$variable{ServiceIndex}} );
-				) ?> 
-			</select>
-	</p>
-	<p> 
-		<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_state">State/Province:</span><span class="requiredFieldIndicator">*</span></label>
-		<select name="ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>">
-			<option value=""> Select </option>
-			<? echo ( join('',
-				ssi::make_drop_down( \@states::states, $$variable{"ToStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
-				ssi::make_drop_down( \@provinces::provinces, $$variable{"ToStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
-			);
-			) ?> 
-		</select>
-	</p>
-	<p> 
-		<label>City:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToCity-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCity-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
-	</p>
-	<p> 
-		<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_postal">Zip/Postal Code:</span><span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToPostalCode-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPostalCode-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
-	</p>
-	<p> 
-		<label>Phone:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" style="width: auto;" size="15"/> ext:
-		<input type="text" name="ToExtension-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToExtension-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" style="width: auto;" size="4" />
-	</p>
-	<p> 
-		<label>Fax:<span class="requiredFieldIndicator">&nbsp;</span></label>
-		<input type="text" name="ToFax-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFax-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
-	</p>
-	<p> 
-		<label>E-mail:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToEmail-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToEmail-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
-	</p>
+<fieldset><legend>Destination Address:<legend>
+	<div class="content">
+		<ul> 
+			<li>
+				<label>Company Name:<span class="requiredFieldIndicator">*</span></label>
+				<input type="text" name="ToCompanyName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCompanyName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+			</li>
+			<li>
+				<label>Salutation:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mr." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mr.' ) ?> />
+				<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr.">Mr. </label>
+				<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mrs." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mrs.' ) ?> />
+				<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs.">Mrs. </label>
+				<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Ms." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Ms.' ) ?> />
+				<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms.">Ms. </label>
+				<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss" name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Miss" <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Miss' ) ?> />
+				<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss">Miss</label>
+			</li>
+			<li>
+				<label>First Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<input type="text" name="ToFirstName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFirstName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>"/>
+			</li>
+			<li>
+				<label>Last Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<input type="text" name="ToLastName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToLastName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+			</li>
+			<li> 
+				<label>Address:<span class="requiredFieldIndicator">*</span></label>
+				<input type="text" name="ToAddress1-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress1-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+			</li>
+			<li> 
+				<label>&nbsp;</label>
+				<input type="text" name="ToAddress2-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress2-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+			</li>
+			<li> 
+				<label>Country:<span class="requiredFieldIndicator">*</span></label>
+					<select name="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>" onchange="Country_onchange(this, this.form.elements['ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>'] );" >
+						<option value=""> Select </option>
+						<? echo ( 
+							ssi::make_drop_down( \@countries::countries, $$variable{'ToCountry-'.$$variable{ProjectIndex}.'-'.$$variable{ServiceIndex}} );
+						) ?> 
+					</select>
+			</li>
+			<li> 
+				<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_state">State/Province:</span><span class="requiredFieldIndicator">*</span></label>
+				<select name="ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>">
+					<option value=""> Select </option>
+					<? echo ( join('',
+						ssi::make_drop_down( \@states::states, $$variable{"ToStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
+						ssi::make_drop_down( \@provinces::provinces, $$variable{"ToStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
+					);
+					) ?> 
+				</select>
+			</li>
+			<li> 
+				<label>City:<span class="requiredFieldIndicator">*</span></label>
+				<input type="text" name="ToCity-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCity-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
+			</li>
+			<li> 
+				<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_postal">Zip/Postal Code:</span><span class="requiredFieldIndicator">*</span></label>
+				<input type="text" name="ToPostalCode-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPostalCode-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
+			</li>
+			<li> 
+				<label>Phone:<span class="requiredFieldIndicator">*</span></label>
+				<input type="text" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} . ($$variable{"ToExtension-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ? $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} : '' ) ) ?>"/>
+			</li>
+			<li> 
+				<label>Fax:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<input type="text" name="ToFax-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFax-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+			</li>
+			<li> 
+				<label>E-mail:<span class="requiredFieldIndicator">*</span></label>
+				<input type="text" name="ToEmail-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToEmail-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+			</li>
+		</ul>
+	</div>
+</fieldset>

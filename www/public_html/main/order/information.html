@@ -6,7 +6,7 @@
 <!--
 	function company_id_onchange( e ) {
 		if ( e.getValue() ) {
-		new Ajax.Updater('ContactInformation','_contact_information.html', { method:'get', parameters:e.form.serialize() });
+			new Ajax.Updater('ContactInformation','_contact_information.html', { method:'get', parameters:e.form.serialize() });
 			$('AddFromBelow').hide();
 		} else {
 			$('AddFromBelow').show();
@@ -47,58 +47,86 @@
 -->
 </script>
 <div class="Order">
-<!--#include virtual="/includes/error_reporting.html"-->
+	<!--#include virtual="/includes/error_reporting.html"-->
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		If you have a purchase order number please enter it below.<br/>
 		<br/>
 		(Fields marked with an * are required.)
 		<br/>
 		<br/>
-		<div class="leftColumn">
+		<div class="Header">
 			<fieldset>
-				<p> 
-					<label>Order ID:</label><? echo ( $$variable{'Order'}->id() ) ?>
-				</p>
-				<p> 
-					<label>Purchase Order:</label>
-					<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
-				</p>
-<? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
-				<p>
-					<label>Company:</label>
-					<span id="CompanyDropDown">
-					<!--#include virtual="_company_dropdown.html"-->
-					</span>
-					<? echo ( ssi::writeButton( $log, $dbh, 'AddFromBelow', 'add_from_below.gif', 'save_company();', '', 'Save Company' ); ) ?>
-				</p>
-<? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
+				<ul>
+					<li> 
+						<label>Order ID:</label><? echo ( $$variable{'Order'}->id() ) ?>
+					</li>
+					<li> 
+						<label>Purchase Order:</label>
+						<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
+					</li>
+	<? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
+					<li>
+						<label>Company:</label>
+						<span id="CompanyDropDown">
+						<!--#include virtual="_company_dropdown.html"-->
+						</span>
+						<? echo ( ssi::writeButton( $log, $dbh, 'AddFromBelow', 'add_from_below.gif', 'save_company();', '', 'Save Company' ); ) ?>
+					</li>
+	<? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
+				</ul>
 			</fieldset>
 			<div id="ContactInformation"><!--#include virtual="_contact_information.html"--></div>
+<? if ( $config{'PaymentOnOrderInformation'} ) ?>
 			<div id="PaymentOptions">
 			<!--#include virtual="_payment_options.html"-->
 			</div>
-		</div>
-		<div class="rightColumn">
+<? endif ( $config{'PaymentOnOrderInformation'} ) ?>
+<? if ( $config{'OrderMode'} eq 'Simple' ) ?>
+			<div id="ShippingInformation">
+	<? echo (
+		my @Projects = $$variable{'Order'}->Projects();
+		if ( @Projects != 1 ) {
+			$log->error('Wrong # of projects in order ' . @Projects);
+		} # end if
+		if ( @Projects ) {
+			$$variable{'Project'} = $Projects[0];
+			my $services = $$variable{'Project'}->services();
+			$$variable{'ServiceIndex'} = $$services{'UPS'}[0] if $$services{'UPS'};
+			return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_shipping_address.html' );
+		} # end if
+	) ?>
+	</div>
+<? endif ( $config{'OrderMode'} eq 'Simple' ) ?>
+
+		</div><!--Header-->
+		<div id="Contents">
 			<? eval ( 
 				@{$$variable{'PROJECTS'}} = $$variable{'Order'}->Projects();
 				@{$$variable{'PRODUCTS'}} = $$variable{'Order'}->Products();
  ) ?>
 			<? if ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
+				<div id="Projects">
 				<? while ( $$variable{'Project'} = shift @{$$variable{'PROJECTS'}}; ) ?>
-				<div id="Projects"><!--#include virtual="_project_information.html"--></div>
+				<div class="Project"><!--#include virtual="_project_information.html"--></div>
 				<? endwhile ( $$variable{'Project'} = shift @{$$variable{'PROJECTS'}}; ) ?>
-				<div id="Products"><!--#include virtual="_product_information.html"--></div>
+				</div>
+				<div id="Products">
+				<div class="Product"><!--#include virtual="_product_information.html"--></div>
+				</div>
 			<? else ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
 				<p>This order appears to be empty.</p>
 			<? endif ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
 		</div>
 		<br class="spacer"/>
-		<div style="float: right;">
-			<? echo ( ssi::writeButton( $log, $dbh, 'AddProject','add_project.gif','','/main/project/history.html','Add Project From History' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue' ); ) ?>
-		</div>
+		<p class="buttons">
+			<? echo ( 
+				my $html;
+				$html .= ssi::writeButton( $log, $dbh, 'AddProject','add_project.gif','','/main/project/history.html','Add Project From History' ) if $config{'OrderMode'} ne 'Simple';
+				$html .= ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue' ); 
+				return $html;
+			) ?>
+		</p>
 		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 		<input type="hidden" name="btnFunction" value="Continue"/>
 	</form>
-</div>
-<br class="spacer"/>
+</div><!--class=Order-->

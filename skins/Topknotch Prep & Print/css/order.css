@@ -3,31 +3,31 @@ float: none;
 width: auto;
 padding: 5px;
 }
-div.Order fieldset p {
+div.Order fieldset li {
 	padding-left: 130px;
 }
-div.Order fieldset p label {
+div.Order fieldset li label {
 	width: 125px;
 	margin-left: -130px;
 }
-div.Order fieldset p label.radio {
+div.Order fieldset li label.radio {
 	width: auto;
 	margin: 0px;
 	padding: 0px;
 	float: none;
 }
 
-div.Order fieldset p input {
+div.Order fieldset li input {
     width: expression( (this.type=="text" || this.type=="password") ?'94%':'auto');
 	margin: 0px;
 }
-div.Order fieldset p input[type="text"] {
+div.Order fieldset li input[type="text"] {
 	width: 95%;
 }
-div.Order fieldset p select {
+div.Order fieldset li select {
 	width: 95%;
 }
-div.Order fieldset p textarea {
+div.Order fieldset li textarea {
 	width: 95%;
 }
 div.OrderHeader {
@@ -94,4 +94,30 @@ div.OrderHistory fieldset#Filter {
 	width: 59%;
 	padding: 0px;
 	margin: 0px;
+}
+div.Order div.Header {
+	background:#daf3fc;
+}
+div.Order div.Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Order div.Header {height: 1%;}
+* div.Order div.Header {display:block;}
+/* End hide from IE-mac */
+div.Order div#ContactInformation {
+	float:left;
+	width: 50%;
+}
+div.Order div#ShippingInformation {
+	float:right;
+	width: 50%;
+}
+div.Order div#Contents {
+	width: 100%;
 }
