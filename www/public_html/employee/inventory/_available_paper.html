@@ -79,9 +79,6 @@ $log->debug("Next for " . $Paper->to_string() );
 				my %inventory;
 				my $skids = 0;
 				my @Skids = $Paper->skids();
-				if ( ! @Skids ) {
-					$log->error("No skids");
-				} # end if
 
 				foreach my $Skid ( @Skids ) {
 					if ( $session{'/employee/inventory/available_paper.html?last_seen'} ) {
@@ -105,7 +102,7 @@ $log->debug("Next for " . $Paper->to_string() );
 
 				} # end foreach Skid
 				if ( ! $skids ) {
-					#$log->error("No skids");
+					$log->warn("No skids");
 					next;
 				} # end if
 
