@@ -2,47 +2,36 @@
 <h1>Order</h1>
 <h2>Submit</h2>
 </div>
-<form method="post" name="f1" action="confirmation_make_order.html">
-	<!--#include virtual="/includes/order_header.html" -->
-	<br class="spacer"/>
-	<!--#include virtual="/includes/order_project_list.html" -->
-	<!--#include virtual="_product_list.html" -->
-	<table class="List">
-		<tr>
-			<td>
-				<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
-				<table>
-					<tr>
-						<td valign="top"><b>Representative:</b></td>
-						<td><input type="text" name="AdministratorName" value="<?AdministratorName?>" /></td>
-					</tr>
-					<tr>
-						<td valign="top"><b>Comments:</b></td>
-						<td><textarea name="AdministratorComments" cols="30" rows="5" ><?AdministratorComments?></textarea></td>
-					</tr>
-				</table>
-				<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
-			</td>
-			<td align="right" valign="top">
-				<!--#include virtual="/includes/order_totals.html" -->
-				<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name() ) ?>.
-<? echo ( 
-	if ( $$variable{'Currency'}->id() != $$variable{'Order'}->Currency()->id() ) {
-		return 'Order originally in ' . $$variable{'Order'}->Currency()->name();
-	} # end if
-	return;
-) ?>
-				</span>
-			</td>
-		</tr>
-	</table>
-	<br class="spacer"/>
-	<? echo ( $config{'OrderViewDisclaimer'} ) ?>
-	<br/>
-	<span style="float: right;">
-	<? echo ( ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', 'f1.submit();', '', 'Complete Order' ); ) ?>
-	</span>
-	<input type="hidden" name="OrderID" value="<?OrderID?>"/>
-	<input type="hidden" name="btnFunction" value="Complete"/>
-</form>
-<br class="spacer"/>
+<div class="Order">
+	<form method="post" name="f1" action="confirmation_make_order.html">
+		<!--#include virtual="/includes/order_header.html" -->
+		<br class="spacer"/>
+		<!--#include virtual="_project_list.html" -->
+		<!--#include virtual="_product_list.html" -->
+		<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
+		<div id="AdminOptions"><ul>
+			<li>
+				<label>Representative:</label>
+				<input type="text" name="AdministratorName" value="<?AdministratorName?>" />
+			</li>
+			<li>
+				<label>Comments:</label>
+				<textarea name="AdministratorComments" cols="30" rows="<? echo ( ssi::count_lines( $$variable{'AdministratorComments'} ); ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
+			</li>
+		</ul></div>
+		<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
+		<!--#include virtual="_totals.html" -->
+		<br class="spacer"/>
+		<? echo ( $config{'OrderViewDisclaimer'} ) ?>
+		<br/>
+		<p class="buttons">
+		<? echo ( 
+			my $html;
+			$html .= ssi::writeButton( $log, $dbh, 'Back', 'back.gif', '', '/main/order/information.html', 'Back' );
+			$html .= ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', 'f1.submit();', '', 'Complete Order' ); 
+		) ?>
+		</p>
+		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
+		<input type="hidden" name="btnFunction" value="Complete"/>
+	</form>
+</div>

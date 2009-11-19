@@ -1,5 +1,5 @@
 <fieldset>
-	<legend>Project # <? echo ( $$variable{'Project'}->id() ) ?></legend>
+	<legend>Project Information</legend>
 	<div class="content">
 <? if ( $config{'OrderMode'} ne 'Simple' ) ?>
 	<span style="float: right;">
@@ -17,7 +17,7 @@
 		<li>
 			<label>Reference:</label>
 			<? if ( ! $$variable{'Project'}->reference() ) ?>
-			<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( scalar split("\n",  $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
+			<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
 			<? else ( ! $$variable{'Project'}->reference() ) ?>
 			<? echo ( $$variable{'Project'}->reference(); ) ?>
 			<? endif ( ! $$variable{'Project'}->reference() ) ?>

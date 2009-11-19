@@ -589,6 +589,14 @@ sub write_override {
 	} # end if
 } # end sub write_override
 
+sub count_lines {
+	if ( $_[0] ) {
+		return 2;
+	} else {
+		return scalar split("\n",  $_[0] );
+	} # end if
+} # end sub count_lines
+
 1;
 
 __END__

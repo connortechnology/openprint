@@ -92,7 +92,10 @@
 			$$variable{'Project'} = $Projects[0];
 			my $services = $$variable{'Project'}->services();
 			$$variable{'ServiceIndex'} = $$services{'UPS'}[0] if $$services{'UPS'};
-			return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_shipping_address.html' );
+			my $html = '';
+			$html .= sprintf('<input type="hidden" name="ShippingType%1$d" value="%2$s"/>', $$variable{'Project'}->id(), 'UPS' );
+			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_shipping_address.html' );
+			return $html;
 		} # end if
 	) ?>
 	</div>

@@ -30,12 +30,11 @@ div.Order fieldset li select {
 div.Order fieldset li textarea {
 	width: 95%;
 }
-div.OrderHeader {
+div.Order div.Header {
 	width: 100%;
-    border-bottom: 1px solid #800000;
     margin-bottom: 5px;
 }
-div.OrderHeader:after {
+div.Order div.Header:after {
     content: ".";
     display: block;
     height: 0;
@@ -43,7 +42,7 @@ div.OrderHeader:after {
     visibility: hidden;
 }
 /* Hides from IE-mac \*/
-* html div.OrderHeader {height: 1%;}
+* html div.Order div.Header {height: 1%;}
 * */* End hide from IE-mac */
 
 div.OrderHeader fieldset {
@@ -121,3 +120,79 @@ div.Order div#ShippingInformation {
 div.Order div#Contents {
 	width: 100%;
 }
+div.Order div.Project {
+	width: 100%;
+}
+div.Order div.Project:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Order div.Project {height: 1%;}
+* div.Order div.Project {display:block;}
+/* End hide from IE-mac */
+
+div.Order div.Project fieldset {
+	padding: 0px;
+	margin: 0px;
+}
+div.Order div.Project fieldset legend {
+	font-size:x-large;
+	font-weight: bold;
+	padding: 10px 0px 10px 0px;
+}
+div.Order div.Header fieldset .content, div.Order div.Project fieldset .content {
+	background:#daf3fc;
+	padding: 10px;
+}
+div.Order ul {
+	margin: 0px;
+	list-style: none;
+}
+div.Order div#AdminOptions {
+	display: none;
+}
+div.Order div#Totals {
+	float: right;
+	width: 100%;
+}
+div.Order div#Totals ul li {
+	font-weight: bold;
+}
+div.Order div#Totals ul li label {
+	font-size: large;
+	width: 73%;
+	text-align: right;
+}
+div.Order div#Totals li#SubTotal {
+	background: #07759f;
+	color: #fff;
+	padding: 10px;
+	margin-top: 5px;
+	text-align: right;
+	font-weight: bold;
+} 
+div.Order div#Totals li#Total {
+	background: #606;
+	color: #fff;
+	padding: 10px;
+	margin-top: 5px;
+	text-align: right;
+	font-weight: bold;
+}
+div.Order div.Header #OrderInformation {
+	float: left;
+	width: 50%;
+	margin: 0px;
+	padding: 0px;
+} 
+div.Order div.Header #BillingInformation {
+	float: right;
+	width: 50%;
+	margin: 0px;
+	padding: 0px;
+} 

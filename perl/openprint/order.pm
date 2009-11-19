@@ -10,6 +10,7 @@ use openprint ();
 use vars qw( %config );
 *config = \%openprint::config;
 
+my $debug = 1;
 
 require sql;
 require configuration;
@@ -350,6 +351,7 @@ sub save_project_information {
 
 	my $services = $Project->services();
 	my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+$log->debug("ServiceTypes: @ServiceTypes") if $debug;
 
 	# If we are specifying the Shipping Type
 	if ( $openprint::param{'ShippingType'.$project_index} ) {
@@ -369,26 +371,26 @@ sub save_project_information {
 			} # end if
 
 			if ( $$services{$ShippingType->name()} ) {
-				my %shipping_fields = (
-						'txtQuantity'.$Project->ordered_quantity_index()	=> 'txtQuantity'.$Project->ordered_quantity_index(),
-						'ToCompanyName'		=>	'ToCompanyName',
-						'ToSalutation'		=>	'ToSalutation',
-						'ToFirstName'		=>	'ToFirstName',
-						'ToLastName'		=>	'ToLastName',
-						'ToAddress1'		=>	'ToAddress1',
-						'ToAddress2'		=>	'ToAddress2',
-						'ToCity'			=>	'ToCity',
-						'ToStateProvince'	=>	'ToStateProvince',
-						'ToCountry'			=>	'ToCountry',
-						'ToPostalCode'		=>	'ToPostalCode',
-						'ToPhone'			=>	'ToPhone',
-						'ToExtension'		=>	'ToExtension',
-						'ToFax'				=>	'ToFax',
-						'ToEmail'			=>	'ToEmail',
+				my @shipping_fields = (
+						'txtQuantity'.$Project->ordered_quantity_index(),
+						'ToCompanyName',
+						'ToSalutation',
+						'ToFirstName',
+						'ToLastName',
+						'ToAddress1',
+						'ToAddress2',
+						'ToCity',
+						'ToStateProvince',
+						'ToCountry',
+						'ToPostalCode',
+						'ToPhone',
+						'ToFax',
+						'ToEmail',
 						);
 				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
-					foreach my $spec ( keys %shipping_fields ) {
-						openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $shipping_fields{$spec}, $openprint::param{"$spec-$project_index-$service_id"} ) if exists $openprint::param{"$spec-$project_index-$service_id"};
+					foreach my $spec ( @shipping_fields ) {
+$log->debug("Sacing: $spec => $openprint::param{$spec-$project_index-$service_id}");
+						openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $openprint::param{"$spec-$project_index-$service_id"} ) if exists $openprint::param{"$spec-$project_index-$service_id"};
 					} # end foreach field
 					my $specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, $ShippingType->name() );
 $openprint::log->warn($$specs{'alert'}) if $$specs{'alert'};
@@ -399,7 +401,7 @@ $openprint::log->warn($$specs{'alert'}) if $$specs{'alert'};
 
 	sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $order_id, $project_index], \%sql ) if %sql;
 
-	$Project->reference( $openprint::param{"Reference$project_index"} );
+	$Project->reference( $openprint::param{"Reference$project_index"} ) if $openprint::param{"Reference$project_index"};
 	$Project->save();
 
 } # end foreach save_project_information
@@ -697,6 +699,9 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 		
 			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+foreach my $k ( keys %$specs ) {
+$log->debug("UPS Specs: $k=>$$specs{$k}");
+}
 
 # do error checks
 				push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{'ToCompanyName'};
@@ -731,11 +736,11 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 		#$Order->currency_id( $Currency->id() );
 		#$Order->save();
 	#} # end if
-	@$variable{'Order','ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments'} = 
-( $Order, $Order->first_name() .' '.$Order->last_name(), $Order->created_on(), $Order->status(), $Order->currency_id(), $Order->po(), $Order->administrator_comments() );
+	$$variable{'Order'} = $Order;
 
 	my @Taxes = openprint::Tax::find('state'=>$Order->state(),'country'=>$Order->country() );
 	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
+	$log->debug("Taxes: " . @Taxes . " pst: $pst_rate, hst: $hst_rate, gst: $gst_rate") if $debug;
 	
 	my $Company = new openprint::Company( $openprint::session{'company_id'} );
 	my ( $pst_exempt, $gst_exempt ) = ( $Company->pst_exempt(), $Company->gst_exempt() );

@@ -723,3 +723,6 @@ fieldset.filters legend {
 fieldset.filters p input {
 	width: auto;
 }
+.PageTitle {
+	display: none;
+}
