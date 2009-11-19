@@ -1,0 +1,7 @@
+<? echo ( 
+	my $html;
+	foreach my $k ( sort keys %session ) {
+		$html .= "$k = $session{$k}<br/>\n";
+	}
+	return $html;
+) ?>
