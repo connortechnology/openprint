@@ -1830,6 +1830,9 @@ if ( ! $data ) {
 	if ( exists $$data{'dblstatepercent'} ) {
 		$dbh->do( 'ALTER TABLE Taxes rename column dblstatepercent to statetax' );
 	} # end if
+	if ( exists $$data{'dblharmonisedpercent'} ) {
+		$dbh->do( 'ALTER TABLE Taxes rename column dblharmonisedpercent to harmonizedtax' );
+	} # end if
 }
 if ( ! sets::isin( 'invoices', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Invoices.sql});

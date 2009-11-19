@@ -471,30 +471,33 @@ sub federal_tax {
 	if ( $new ) {
 		$$self{'federal_tax'} = $new;
 	} elsif ( ! $$self{'federal_tax'} ) {
-		my @Taxes = openprint::Tax::find('country'=>$self->country() );
-		if ( @Taxes == 1 ) {
-			my $tax_rate = $Taxes[0]->federaltax_rate();
-			my $tax_amount = 0;
-			my $Company = $self->Company();
-			my $gst_exempt = $Company->gst_exempt();
+		if ( $self->Company()->gst_exempt() ne 'Y' ) {
+			my @Taxes = openprint::Tax::find('country'=>$self->country() );
+			if ( @Taxes == 1 ) {
+				my $tax_rate = $Taxes[0]->federaltax_rate();
+				my $tax_amount = 0;
 
-			foreach my $Project ( $Order->Projects() ) {
-				my $price = $Project->ordered_price();
-				if ( $Project->currency_id() != $$self{'currency_id'} ) {
-					my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
-					$price *= $rate;
-				} # end if
-				$tax_amount += $price * ($tax_rate/100) if ( $tax_rate and $gst_exempt ne 'Y' );
-			} # end foreach Project
-			foreach my $Product ( $Order->Products() ) {
-				if ( $Product->currency_id() != $$self{'currency_id'} ) {
-					my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
-					$price *= $rate;
-				} # end if
-				$tax_amount += $price * ($tax_rate/100) if ( $tax_rate and $gst_exempt ne 'Y' );
-			} # end foreach Project
-			$$self{'federal_tax'} = $tax_amount;
-		} # no tax for this state/country
+				if ( $tax_rate ) {
+					foreach my $Project ( $self->Projects() ) {
+						my $price = $Project->ordered_price();
+						if ( $Project->currency_id() != $$self{'currency_id'} ) {
+							my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
+							$price *= $rate;
+						} # end if
+						$tax_amount += $price * ($tax_rate/100);
+					} # end foreach Project
+					foreach my $Product ( $self->Products() ) {
+						my $price = $Product->price();
+						if ( $Product->currency_id() != $$self{'currency_id'} ) {
+							my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
+							$price *= $rate;
+						} # end if
+						$tax_amount += $price * ($tax_rate/100);
+					} # end foreach Project
+				} # end if tax_rate 
+				$$self{'federal_tax'} = $tax_amount;
+			} # no tax for this state/country
+		} # end if exempt
 	} # end if ! $$self{'federal_tax'};
 	return $$self{'federal_tax'};
 } # end sub federal_tax
@@ -503,31 +506,34 @@ sub state_tax {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
 		$$self{'state_tax'} = $new;
-	} elsif ( ! $$self{'state_tax'} ) {
-		my @Taxes = openprint::Tax::find('state'=>$self->state() );
-		if ( @Taxes == 1 ) {
-			my $tax_rate = $Taxes[0]->statetax_rate();
-			my $tax_amount = 0;
-			my $Company = $self->Company();
-			my $pst_exempt = $Company->pst_exempt();
+	} elsif ( ! defined $$self{'state_tax'} ) {
+		if ( $self->Company()->pst_exempt() ne 'Y' ) {
+			my @Taxes = openprint::Tax::find('state'=>$self->state() );
+			if ( @Taxes == 1 ) {
+				my $tax_rate = $Taxes[0]->statetax_rate();
+				my $tax_amount = 0;
 
-			foreach my $Project ( $Order->Projects() ) {
-				my $price = $Project->ordered_price();
-				if ( $Project->currency_id() != $$self{'currency_id'} ) {
-					my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
-					$price *= $rate;
-				} # end if
-				$tax_amount += $price * ($tax_rate/100) if ( $tax_rate and $pst_exempt ne 'Y' );
-			} # end foreach Project
-			foreach my $Product ( $Order->Products() ) {
-				if ( $Product->currency_id() != $$self{'currency_id'} ) {
-					my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
-					$price *= $rate;
-				} # end if
-				$tax_amount += $price * ($tax_rate/100) if ( $tax_rate and $pst_exempt ne 'Y' );
-			} # end foreach Project
-			$$self{'state_tax'} = $tax_amount;
-		} # no tax for this state/country
+				if ( $tax_rate ) {
+					foreach my $Project ( $self->Projects() ) {
+						my $price = $Project->ordered_price();
+						if ( $Project->currency_id() != $$self{'currency_id'} ) {
+							my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
+							$price *= $rate;
+						} # end if
+						$tax_amount += $price * ($tax_rate/100);
+					} # end foreach Project
+					foreach my $Product ( $self->Products() ) {
+						my $price = $Product->price();
+						if ( $Product->currency_id() != $$self{'currency_id'} ) {
+							my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
+							$price *= $rate;
+						} # end if
+						$tax_amount += $price * ($tax_rate/100);
+					} # end foreach Project
+				} # end if tax_rate
+				$$self{'state_tax'} = $tax_amount;
+			} # no tax for this state/country
+		} # end if pst_exempt ne 'Y'
 	} # end if ! $$self{'state_tax'};
 	return $$self{'state_tax'};
 } # end sub state_tax
@@ -536,31 +542,34 @@ sub harmonized_tax {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
 		$$self{'harmonized_tax'} = $new;
-	} elsif ( ! $$self{'harmonized_tax'} ) {
-		my @Taxes = openprint::Tax::find('state'=>$self->state(),'country'=>$self->country() );
-		if ( @Taxes == 1 ) {
-			my $tax_rate = $Taxes[0]->harmonisedtax_rate();
-			my $tax_amount = 0;
-			my $Company = $self->Company();
-			my ( $pst_exempt, $gst_exempt ) = ( $Company->pst_exempt(), $Company->gst_exempt() );
+	} elsif ( ! defined $$self{'harmonized_tax'} ) {
+		if ( $self->Company()->pst_exempt() ne 'Y' ) {
+			my @Taxes = openprint::Tax::find('state'=>$self->state() );
+			if ( @Taxes == 1 ) {
+				my $tax_rate = $Taxes[0]->harmonizedtax_rate();
+				my $tax_amount = 0;
 
-			foreach my $Project ( $Order->Projects() ) {
-				my $price = $Project->ordered_price();
-				if ( $Project->currency_id() != $$self{'currency_id'} ) {
-					my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
-					$price *= $rate;
-				} # end if
-				$tax_amount += $price * ($tax_rate/100) if ( $tax_rate and $pst_exempt ne 'Y' );
-			} # end foreach Project
-			foreach my $Product ( $Order->Products() ) {
-				if ( $Product->currency_id() != $$self{'currency_id'} ) {
-					my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
-					$price *= $rate;
-				} # end if
-				$tax_amount += $price * ($tax_rate/100) if ( $tax_rate and $pst_exempt ne 'Y' );
-			} # end foreach Project
-			$$self{'harmonized_tax'} = $tax_amount;
-		} # no tax for this state/country
+				if ( $tax_rate ) {
+					foreach my $Project ( $self->Projects() ) {
+						my $price = $Project->ordered_price();
+						if ( $Project->currency_id() != $$self{'currency_id'} ) {
+							my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
+							$price *= $rate;
+						} # end if
+						$tax_amount += $price * ($tax_rate/100);
+					} # end foreach Project
+					foreach my $Product ( $self->Products() ) {
+						my $price = $Product->price();
+						if ( $Product->currency_id() != $$self{'currency_id'} ) {
+							my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
+							$price *= $rate;
+						} # end if
+						$tax_amount += $price * ($tax_rate/100);
+					} # end foreach Project
+					$$self{'harmonized_tax'} = $tax_amount;
+				} # end if tax_rate
+			} # no tax for this state/country
+		} # end if exempt
 	} # end if ! $$self{'harmonized_tax'};
 	return $$self{'harmonized_tax'};
 } # end sub harmonized_tax

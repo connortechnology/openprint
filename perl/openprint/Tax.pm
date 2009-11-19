@@ -25,6 +25,7 @@ $serial = 'taxes_id_seq';
 	'id'				=>	'id',
 	'federaltax_rate'	=>	'federaltax',
 	'statetax_rate'		=>	'statetax',
+	'harmonizedtax_rate'	=>	'harmonizedtax',
 	'state'				=>	'state',
 	'country'			=>	'country',
 );

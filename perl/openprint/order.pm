@@ -738,57 +738,12 @@ $log->debug("UPS Specs: $k=>$$specs{$k}");
 	#} # end if
 	$$variable{'Order'} = $Order;
 
-	my @Taxes = openprint::Tax::find('state'=>$Order->state(),'country'=>$Order->country() );
-	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
-	$log->debug("Taxes: " . @Taxes . " pst: $pst_rate, hst: $hst_rate, gst: $gst_rate") if $debug;
-	
-	my $Company = new openprint::Company( $openprint::session{'company_id'} );
-	my ( $pst_exempt, $gst_exempt ) = ( $Company->pst_exempt(), $Company->gst_exempt() );
-
-	my $gst_total;
-	my $pst_total;
-	my $hst_total;
-	my $total = 0;
-
 	foreach my $Project ( $Order->Projects() ) {
 		if ( $Project->order_id() != $order_id ) {
 			$Project->order_id( $order_id );
 			$Project->save();
 		} # end if
-
-		my $price = $Project->ordered_price();
-
-		if ( $Project->currency_id() != $openprint::session{'Currency_id'} ) {
-			my $rate = $Project->Currency()->conversions( $openprint::session{'Currency_id'} );
-			$price *= $rate;
-		} # end if
-
-		my $pst_amount = $price * ($pst_rate/100) if ( $pst_rate and $pst_exempt ne 'Y' ); 
-		my $gst_amount = $price * ($gst_rate/100) if ( $gst_rate and $gst_exempt ne 'Y' );
-		my $hst_amount = $price * ($hst_rate/100) if ( $hst_rate and $gst_exempt ne 'Y' );
-
-		$pst_total += $pst_amount if defined $pst_amount;
-		$gst_total += $gst_amount if defined $gst_amount;
-		$hst_total += $hst_amount if defined $hst_amount;
-		$total += $price + $gst_amount + $pst_amount + $hst_amount;
-	} # end while project data
-
-	foreach my $Product ( $Order->Products() ) {
-		my $price = $Product->price();
-		my $pst_amount = $price * ($pst_rate/100) if ( $pst_rate and $pst_exempt ne 'Y' ); 
-		my $gst_amount = $price * ($gst_rate/100) if ( $gst_rate and $gst_exempt ne 'Y' );
-		my $hst_amount = $price * ($hst_rate/100) if ( $hst_rate and $gst_exempt ne 'Y' );
-		$gst_total += $gst_amount if defined $gst_amount;
-		$pst_total += $pst_amount if defined $pst_amount;
-		$hst_total += $hst_amount if defined $hst_amount;
-		$total += $price + $gst_amount + $pst_amount + $hst_amount;
-	} # end foreach Product
-
-	$gst_total = sprintf('%.2f',$gst_total) if defined $gst_total;
-	$pst_total = sprintf('%.2f',$pst_total) if defined $pst_total;
-	$hst_total = sprintf('%.2f',$hst_total) if defined $hst_total;
-
-	@$variable{'GST','PST','HST', 'TOTAL'} = ( $gst_total, $pst_total, $hst_total, sprintf('%.2f',$total) );
+	} # end foreach Project
 
 	$$variable{'OrderID'} = $order_id;
 
