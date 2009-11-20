@@ -487,6 +487,9 @@ $variable{'ServiceIndex'} = $service_index;
 					} elsif ( $filename eq 'collating.html' ) {
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
+					} elsif ( $filename eq 'DTaping.html' ) {
+						require openprint::Estimating::DTaping;
+						openprint::Estimating::DTaping::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename eq 'lamination.html' ) {
