@@ -8,7 +8,6 @@
 ) ?>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
-		<!--#include virtual="/includes/main/proj/required_fields.html"-->
 		<fieldset><legend><?ServiceTypeName?></legend>
 <? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures(); ) ?>
 <? while ( $$variable{'signature_service_id'} = shift @{$$variable{'Signatures'}} ) ?>
