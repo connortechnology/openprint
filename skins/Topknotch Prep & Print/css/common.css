@@ -726,3 +726,15 @@ fieldset.filters p input {
 .PageTitle {
 	display: none;
 }
+
+fieldset div.content {
+    background:#daf3fc;
+    padding: 10px;
+	margin: 0px;
+}
+fieldset .content ul {
+	list-style: none;
+	margin: 0px;
+}
+
+

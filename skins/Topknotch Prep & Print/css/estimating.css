@@ -96,6 +96,9 @@ div#instant_price_section .ProjectName input {
 	width: 75%;
 	float: left;
 }
+div#instant_price_section h3 {
+	display: none;
+}
 div#instant_price_section h2 {
 	font-size:medium;
 	color: #07759f;

@@ -140,6 +140,11 @@ div.Order div.Project fieldset {
 	padding: 0px;
 	margin: 0px;
 }
+div.Order fieldset legend {
+	font-size:large;
+	font-weight: bold;
+	padding: 10px 10px 0px 10px;
+}
 div.Order div.Project fieldset legend {
 	font-size:x-large;
 	font-weight: bold;
@@ -148,10 +153,6 @@ div.Order div.Project fieldset legend {
 div.Order div.Header fieldset .content, div.Order div.Project fieldset .content {
 	background:#daf3fc;
 	padding: 10px;
-}
-div.Order ul {
-	margin: 0px;
-	list-style: none;
 }
 div.Order div#AdminOptions {
 	display: none;

@@ -124,6 +124,17 @@
 		<p class="buttons">
 			<? echo ( 
 				my $html;
+				my @Projects = $$variable{'Order'}->Projects();
+				if ( @Projects ) {
+					my $Project = $Projects[0];
+					if ( $Project->mode() eq 'Simple' ) {
+					$html .= ssi::writeButton( $log, $dbh, 'Back','back.gif','','/content/'.$Project->Type()->url().'?project_id='.$Project->id(),'Back' );
+					} else {
+					$html .= ssi::writeButton( $log, $dbh, 'Back','back.gif','','/main/project/view.html?ProjectIndex='.$Project->id(),'Back' );
+					} 
+				} else {
+					$log->debug("NO Project");
+				} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'AddProject','add_project.gif','','/main/project/history.html','Add Project From History' ) if $config{'OrderMode'} ne 'Simple';
 				$html .= ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','f1.submit();','','Save And Continue' ); 
 				return $html;

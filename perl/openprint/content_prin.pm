@@ -44,6 +44,13 @@ $log->debug("Country: Session: $session{'Country'}");
 			$variable{'ToPostalCode'} = new openprint::Company( $session{'company_id'} )->postalcode();
 		} # end if
 	} # end if
+
+	my $services = $variable{'Project'}->services();
+	my $printing_specs = openprint::service::get_specs_ref( $variable{'Project'}, $$services{''}[0] ) if $$services{''};
+	foreach my $k ( 'txtFinalWidth','txtFinalHeight','txtWidth','txtHeight','ddmStockFinish','ddmStockBrand','ddmStockWeight','ddmStockColour','ddmStockSheetSize' ) {
+		$variable{$k} = $$printing_specs{$k};
+	} # end foreach
+
 } # end sub load_simple
 
 sub prin_broc {

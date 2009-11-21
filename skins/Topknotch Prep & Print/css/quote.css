@@ -3,16 +3,17 @@ div.QuoteHeader {
 	padding: 0px;
     float: left;
     width: 33%;
+
 }
 div.QuoteHeader fieldset {
     margin-right: .5em;
 }
-div.QuoteHeader fieldset p {
+div.QuoteHeader fieldset li {
     text-align: right;
 	width: auto;
 	padding: 0px;
 }
-div.QuoteHeader fieldset p label {
+div.QuoteHeader fieldset li label {
     font-weight: bold;
     margin-right: 10px;
 	margin-left: 0px;
@@ -21,36 +22,71 @@ div.QuoteHeader fieldset p label {
     text-align: left;
 }
 
+div.QuoteInformation {
+	background:#daf3fc;
+	padding: 10px;
+}
 div.QuoteInformation fieldset {
 	padding: 0px;
 	margin: 0px;
 	font-size: 10px;
 }
 	
-div.QuoteInformation fieldset p {
+div.QuoteInformation fieldset li {
 	padding-left: 105px;
 }
-div.QuoteInformation fieldset p label {
+div.QuoteInformation fieldset li label {
 	width: 105px;
 	margin-left: -105px;
 }
-div.QuoteInformation fieldset p label.radio {
+div.QuoteInformation fieldset li label.radio {
 	width: auto;
 	margin: 0px;
 	padding: 0px;
 	float: none;
 }
 
-div.QuoteInformation fieldset p input {
+div.QuoteInformation fieldset li input {
     width: expression( (this.type=="text" || this.type=="password") ?'94%':'auto');
 	margin: 0px;
 }
-div.QuoteInformation fieldset p input[type="text"] {
+div.QuoteInformation fieldset li input[type="text"] {
     width: 95%;
 }
-div.QuoteInformation fieldset p select {
+div.QuoteInformation fieldset li select {
     width: 95%;
+}
+div.QuoteInformation fieldset li select#company_id, div.QuoteInformation fieldset li select#user_id {
+    width: 75%;
 }
 div#Quote table {
 	font-size: 10px;
+}
+
+div.QuoteInformation #PreparedBy {
+	width: 50%;
+	float: left;
+}
+
+div.QuoteInformation #PreparedFor {
+	width: 50%;
+	float: right;
+}
+
+div.QuoteInformation:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.QuoteInformation {height: 1%;}
+* div.QuoteInformation {display:block;}
+/* End hide from IE-mac */
+div.QuoteInformation fieldset legend {
+    font-size:large;
+    font-weight: bold;
+    padding: 10px 10px 0px 10px;
 }

@@ -2,5 +2,5 @@
 	<label>Quantity
 	<? if ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>(No. of Pads)<? endif ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?> :
 	</label>
-	<input type="text" name="txtQuantity1" value="<?txtQuantity1?>" size="9" onkeyup="this.value=this.value.replace(/\D/g,'');remove_div('OrderButton');" style="text-align: right;" />
+	<input type="text" name="txtQuantity1" value="<? echo ( $$variable{'Project'}->quantity1() ) ?>" size="9" onkeyup="this.value=this.value.replace(/\D/g,'');remove_div('OrderButton');" style="text-align: right;" />
 </li>

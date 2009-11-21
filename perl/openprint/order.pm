@@ -210,7 +210,7 @@ sub make_order_from_quote {
 	my $error = '';
 	my $order_id;
 
-	my @quote = sql::execute( $log, $dbh, q{SELECT ProjectIndex FROM tbl_Quote_Details WHERE quoteindex=?}, $quote_id );
+	my @quote = sql::execute( $log, $dbh, q{SELECT ProjectIndex FROM tbl_Quote_Details WHERE quote_id=?}, $quote_id );
 
 	if ( @quote > 0 ) {
 		foreach my $project_index ( @quote ) {

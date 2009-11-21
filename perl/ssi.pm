@@ -239,7 +239,7 @@ sub return_states_and_provinces {
 	my @states_and_provinces = ();
 	push @states_and_provinces, @states::states;
 	push @states_and_provinces, @provinces::provinces;
-	return make_down_down( \@states_and_provinces, \@_ );
+	return make_drop_down( \@states_and_provinces, \@_ );
 } # end sub return_states_and_provinces
 
 sub return_states {

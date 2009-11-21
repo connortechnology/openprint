@@ -29,7 +29,7 @@ my $debug = 0;
 			'template_id'		=>	'template_id',
 			'include_detailed'	=>	'include_detailed',
 			'project_id'		=>	'projectindex',
-			'quote_id'			=>	'quoteindex',
+			'quote_id'			=>	'quote_id',
 );
 
 %transforms = (

@@ -20,9 +20,13 @@
 						$_ = q{SELECT DISTINCT dblFlatWidth::float || 'x' || dblFlatHeight::float || 'Flat' AS size, dblFlatWidth::float || '" x ' || dblFlatHeight::float || '" Flat' FROM projecttemplate WHERE projecttype_id=?};
 					} # end if
 					
-					$html = $$variable{'FoldType'} ? 
-					ssi::make_drop_down( [ sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', $$variable{'ProjectType'}->id(), $$variable{'FoldType'} ) ] ) :
-					ssi::make_drop_down( [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id() ) ] );
+					$html = 
+					ssi::make_drop_down( 
+						( $$variable{'FoldType'} ? 
+						  [ sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', $$variable{'ProjectType'}->id(), $$variable{'FoldType'} ) ] :
+						  [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id() ) ] ),
+						join('x', @$variable{'txtFinalWidth','txtFinalHeight'} )
+						);
 					if ( ! $html ) {
 						$$variable{'Dimensions'} = 'Custom';
 					} # end if

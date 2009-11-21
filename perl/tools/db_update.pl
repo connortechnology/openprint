@@ -589,7 +589,7 @@ if ( $config{'public_URIs'} ) {
 			$paths[$p] = $1;
 		}
 	} # end foreach
-	push @paths, '/main/project/calc.json' if ! sets::isin( '/main/project/calc.json', \@paths );
+	push @paths, '/main/project/_calc.json' if ! sets::isin( '/main/project/_calc.json', \@paths );
 	sql::update( undef, undef, 'configuration', ['name=?', 'public_URIs'], 'value', join(',',sets::union(@paths)) );
 } # end inf
 if ( $config{cookie_issue_URIs} ) {
