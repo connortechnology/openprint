@@ -110,6 +110,7 @@
 </div>
 <!-- CONTENT OPEN //-->
 <div id="content">
+<? if ( $$variable{'uri'} =~ /\/content\/prin/ or $$variable{'uri'} =~ /\/main\/order/ or $$variable{'uri'} =~ /\/upload/ ) ?>
 	<div id="steps">
 		<ul>
 			<? echo (
@@ -139,7 +140,7 @@
 			) ?>
 		</ul>
 	</div>
-		<? endif ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
+<? endif ( $$variable{'uri'} =~ /\/content\/prin/ or $$variable{'uri'} =~ /\/main\/order/ or $$variable{'uri'} =~ /\/upload/ ) ?>
 	<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 </div><!-- CONTENT CLOSE //-->
 
