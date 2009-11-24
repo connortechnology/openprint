@@ -4,14 +4,6 @@
 		$$variable{'DimensionsDisplay'} = 'Finished';
 	} # end if
 ) ?>
-<div id="steps">
-	<ul>
-		<li><div class="steps-container" style="background: url(/images/bg-step1.jpg) no-repeat 0px -60px; margin-right:2px;"><span class="steps-number-on">STEP 1</span><br /><span class="steps-title-on">Specify Project</span></div></li>
-		<li><div class="steps-container" style="background: url(/images/bg-step2.jpg) no-repeat 0px 0px; margin-right:2px;"><span class="steps-number-incomplete">STEP 2</span><br /><span class="steps-title-incomplete">Review Order</span></div></li>
-		<li><div class="steps-container" style="background: url(/images/bg-step3.jpg) no-repeat 0px 0px; margin-right:2px;"><span class="steps-number-incomplete">STEP 3</span><br /><span class="steps-title-incomplete">Upload Files</span></div></li>
-		<li><div class="steps-container" style="background: url(/images/bg-step4.jpg) no-repeat 0px 0px;"><span class="steps-number-incomplete">STEP 4</span><br /><span class="steps-title-incomplete">Place Order</span></div></li>
-	</ul>
-</div>
 
 <form name="f1" method="post" action="">
 	<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
@@ -34,9 +26,9 @@
 				<!--#include virtual="/includes/main/proj/banner_printing.html"-->
 				<? endif ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
 				<div class="Colours">
-					<h2>Colours</h2>
-					<div class="half-form">
-						<ul class="half-form-frame">
+					<fieldset><legend>Colours</legend>
+					<div class="content">
+						<ul>
 							<li><label>Colours:</label>
 								<select name="Colours" onchange="calc(this.form.name);">
 									<option value="4/0">4 Colour One Side</option>
@@ -49,20 +41,21 @@
 							<!--#include virtual="/includes/uvcoating.html"-->
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
 						</ul>
-					</div>
 				</div>
-<div class="Stock"><h2>Stock</h2>
-<div class="half-form">
-<ul class="half-form-frame">
-
-				<!--#include virtual="/includes/paper_dropdowns.html"-->
+					</fieldset>
+				</div>
+				<div class="Stock"><fieldset><legend>Stock</legend>
+					<div class="content">
+						<ul>
+						<!--#include virtual="/includes/paper_dropdowns.html"-->
 						</ul>
 					</div>
+					</fieldset>
 				</div>
-				<div class="Finishing">
-					<h2>Finishing</h2>
-					<div class="half-form">
-						<ul class="half-form-frame">
+				<div class="Finishing"><fieldset>
+					<legend>Finishing</legend>
+					<div class="content">
+						<ul>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
 							<!--#include virtual="/includes/drilling.html"-->
 							<!--#include virtual="/includes/scoring.html"-->
@@ -74,11 +67,11 @@
 							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
 						</ul>
 					</div>
+					</fieldset>
 				</div>
-				<div class="Production">
-					<h2>Production</h2>
-					<div class="half-form">
-						<ul class="half-form-frame">
+				<div class="Production"><fieldset><legend>Production</legend>
+					<div class="content">
+						<ul>
 							<!--#include virtual="_proofs.html"-->
 							<!--#include virtual="/includes/turnaround.html"-->
 							<!--#include virtual="/includes/quantity.html"-->
@@ -87,7 +80,6 @@
 					</div>
 				</div>
 				<div id="AlertDiv" style="display:none;"></div>
-				<br class="spacer"/>
 		  </div><!--ProjectSpecifications-->
 				<!--#include virtual="/includes/prices.html"-->
 				</div><!--Questions-->

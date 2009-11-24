@@ -1,7 +1,6 @@
-<div class="Size">
-	<h2>Size</h2>
-	<div class="half-form">
-	<ul class="half-form-frame">
+<div class="Size"><fieldset><legend>Size</legend>
+	<div class="content">
+	<ul>
 	<li>
 		<label>Size:</label>
 		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this );">
@@ -83,6 +82,7 @@
 		<input type="text" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" size="4" />
 	</li>
 	<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
-	</ul><!--inner-->
+	</ul>
 	</div>
+	</fieldset>
 </div><!--Sizes-->

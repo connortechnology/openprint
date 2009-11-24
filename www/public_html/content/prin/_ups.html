@@ -4,9 +4,9 @@
 		<ul class="full-form-frame">
 			<li>
 				<label>Pick-Up or Delivery</label>
-				<input type="radio" name="UPSShipping" id="UPSShippingN" value="N" onclick="$('UPSOptions').hide();$('ShippingPrice').hide();calc('f1');" <? echo ( ssi::checked( $$variable{'UPSShipping'} ne 'Y' ); ) ?> />
+				<input type="radio" name="UPSShipping" id="UPSShippingN" value="N" onclick="$('UPSOptions').hide();$('ShippingPrice').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'UPSShipping'} ne 'Y' ); ) ?> />
 				<label class="radio" for="UPSShippingN">Pickup</label>
-				<input type="radio" name="UPSShipping" id="UPSShippingY" value="Y" onclick="$('UPSOptions').show();$('ShippingPrice').show();calc('f1');" <? echo ( ssi::checked( $$variable{'UPSShipping'} eq 'Y' ); ) ?> />
+				<input type="radio" name="UPSShipping" id="UPSShippingY" value="Y" onclick="$('UPSOptions').show();$('ShippingPrice').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'UPSShipping'} eq 'Y' ); ) ?> />
 				<label class="radio" for="UPSShippingY">Delivery</label>
 			</li>
 		</ul>
@@ -15,7 +15,7 @@
 		<ul class="full-form-frame">
 			<li class="ToCountry">
 				<label>Country:</label>
-				<select id="ToCountry" name="ToCountry" onchange="calc(this.form.name);">
+				<select id="ToCountry" name="ToCountry" onchange="Country_onchange(this);calc(this.form.name);">
 				<option value=""> Select </option>
 				<? echo ( ssi::return_countries( $$variable{'ToCountry'} ); ) ?>
 				</select>

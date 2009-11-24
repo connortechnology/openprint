@@ -15,21 +15,20 @@
 	</ul>
 	Price quoted is an approximate estimate. All orders will be + or - 5%.<br/>
 	If exact quantities are required - please add 5% the required quantity.
-	<br class="spacer"/>
 </div><!--Prices-->
 <p class="buttons">
-	<? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate'); ) ?>
 	<? echo ( 
-			if ( sets::isin( $session{'user_type'},['A','E'] ) ) { 
+		if ( sets::isin( $session{'user_type'},['A','E'] ) ) { 
 			return ssi::writeButton( $log, $dbh, 'Breakdown', 'price_breakdown.gif', "breakdown_window(document.f1.ProjectIndex.value);", '', 'Detailed Pricing' ); 
-			} else {
+		} else {
 			return '';
-			} # end if
-			) ?>
+		} # end if
+	) ?>
+	<? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate',{'class'=>'Calculate'}); ) ?>
 </p>
 <!--#include virtual="_ups.html"-->
 <p class="buttons">
-<? echo ( ssi::writeButton( $log, $dbh, 'CalculateUPS', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate'); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'CalculateUPS', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate',{'class'=>'Calculate'}); ) ?>
 </p>
 <div id="subtotal">
 	<? echo (

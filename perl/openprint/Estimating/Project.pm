@@ -548,7 +548,7 @@ $openprint::log->debug('Deleting Folding');
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 $openprint::log->warn("Before auto");
-		$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'} );
+		$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'}, ['UPS'] );
 $openprint::log->warn("Aftere auto");
 
 		if ( $$services{'Scoring'} ) {
@@ -593,12 +593,13 @@ $log->debug("Prices for $service_name : $$service_specs{'txtPrice1'}");
 		$$specs{'ShippingPrice1'} = 0;
 		# Subtract shipping costs from total
 		if ( $$services{'UPS'} ) {
-			foreach ( @{$$services{'UPS'}} ) {
-				my $service_specs = openprint::service::get_specs_ref( $Project, $_ );
+			foreach my $service_id ( @{$$services{'UPS'}} ) {
+				my $service_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, 'UPS' );
 				$$specs{'ProductionPrice1'} -= $$service_specs{'txtPrice1'};
 				$$specs{'ShippingPrice1'} += $$service_specs{'txtPrice1'};
 				$$specs{'ServiceTypeDiv'} = $$service_specs{'ServiceTypeDiv'};
 				$$specs{'PickupTypeDiv'} = $$service_specs{'PickupTypeDiv'};
+				$$specs{'alert'} .= $$service_specs{'alert'};
 			} # end foreach service
 		} # end if UPS
 $log->debug("ServiceTypeDIV: $$specs{'ServiceTypeDiv'}");

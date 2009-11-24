@@ -1,37 +1,41 @@
-<div class="QuoteHeader">
+<div id="PreparedFor">
 	<fieldset><legend>Prepared For:</legend>
+		<div class="content">
+			<ul>
 <? if ( $$variable{'Quote'}->for_firstname() or $$variable{'Quote'}->for_lastname() ) ?>
-	<p><label>Contact:</label>
+	<li><label>Contact:</label>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_salutation() ) ) ?>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_firstname() ) ) ?>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_lastname() ) ) ?><br/>
-	</p>
+	</li>
 <? endif ( $$variable{'Quote'}->for_firstname() or $$variable{'Quote'}->for_lastname() ) ?>
 <? if ( $$variable{'Quote'}->for_companyname(); ) ?>
-	<p><label>Company:</label>
+	<li><label>Company:</label>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_companyname() ).'<br/>'; ) ?>
-	</p>
+	</li>
 <? endif ( $$variable{'Quote'}->for_companyname(); ) ?>
 <? if ( $$variable{'Quote'}->for_address1() or $$variable{'Quote'}->for_address2() ) ?>
-	<p><label>Address:</label>
+	<li><label>Address:</label>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_address1() ).'<br/>' if $$variable{'Quote'}->for_address1(); ) ?>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_address2() ).'<br/>' if $$variable{'Quote'}->for_address2(); ) ?>
 		<? echo ( misc::build_city_prov_country($$variable{'Quote'}->for_city(),$$variable{'Quote'}->for_state(),$$variable{'Quote'}->for_country() ).'<br/>' if $$variable{'Quote'}->for_city() or $$variable{'Quote'}->for_state() or $$variable{'Quote'}->for_country(); ) ?>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_postalcode() ).'<br/>' if $$variable{'Quote'}->for_postalcode(); ) ?>
-	</p>
+	</li>
 <? endif ( $$variable{'Quote'}->for_address1() or $$variable{'Quote'}->for_address2() ) ?>
 <? if ( $$variable{'Quote'}->for_phone() ) ?>
-	<p><label>Phone:</label>
+	<li><label>Phone:</label>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_phone() ).'<br/>' ) ?>
-	</p>
+	</li>
 <? endif ( $$variable{'Quote'}->for_phone() ) ?>
 	<? if ( $$variable{'Quote'}->for_fax() ) ?>
-	<p><label>Fax:</label>
+	<li><label>Fax:</label>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_fax() ); ) ?>
-	</p>
+	</li>
 	<? endif ( $$variable{'Quote'}->for_fax() ) ?>
-	<p><label>Email:</label>
+	<li><label>Email:</label>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_email() ).'<br/>' if $$variable{'Quote'}->for_email(); ) ?>
-	</p>
+	</li>
+			</ul>
+		</div>
 	</fieldset>
 </div>

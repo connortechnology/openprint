@@ -1,7 +1,11 @@
-<div class="QuoteHeader" id="Information">
+<div id="Information">
 	<fieldset><legend>Quote Information</legend>
-		<p><label>Quote ID:</label><a href="/main/quote/history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>"><? echo ( $$variable{'Quote'}->id() ) ?></a></p>
-		<p><label>Created:</label><? echo ( Date::Format::time2str($openprint::config{'QuoteDateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></p>
-		<p id="Status"><label>Status:</label><? echo ( $$variable{'Quote'}->status(); ) ?></p>
+		<div class="content">
+			<ul>
+				<li><label>Quote ID:</label><a href="/main/quote/history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>"><? echo ( $$variable{'Quote'}->id() ) ?></a></li>
+				<li><label>Created:</label><? echo ( Date::Format::time2str($config{'QuoteDateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></li>
+				<li id="Status"><label>Status:</label><? echo ( $$variable{'Quote'}->status(); ) ?></li>
+			</ul>
+		</div>
 	</fieldset>
 </div>

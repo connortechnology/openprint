@@ -561,49 +561,6 @@ thead th {
 	}
 	
 
-/* --------------------------- BUTTONS --------------------------- */
-
-.btn-large { text-shadow: 1px 1px #333; float: right; width: 180px; height: 24px; padding: 7px 0 0 10px; font-size: 15px; font-weight: bold; line-height: 15px; color: #FFF !important; background: url(/images/btn-large.gif) no-repeat 0 0px; }
-a.btn-large:link { text-decoration: none; color: #FFF; background: url(/images/btn-large.gif) no-repeat 0 0px; }
-a.btn-large:hover { text-decoration: none; color: #FFF; background: url(/images/btn-large.gif) no-repeat 0 -31px; }
-
-.btn-medium { text-shadow: 1px 1px #333; float: right; width: 120px; height: 24px; padding: 7px 0 0 10px; font-size: 15px; font-weight: bold; line-height: 15px; color: #FFF !important; background: url(/images/btn-medium.gif) no-repeat 0 0px; }
-a.btn-medium:link { text-decoration: none; color: #FFF; background: url(/images/btn-medium.gif) no-repeat 0 0px; }
-a.btn-medium:hover { text-decoration: none; color: #FFF; background: url(/images/btn-medium.gif) no-repeat 0 -31px; }
-
-.btn-small { text-shadow: 1px 1px #333; float: right; width: 71px; height: 24px; padding: 7px 0 0 10px; font-size: 15px; font-weight: bold; line-height: 15px; color: #FFF !important; background: url(/images/btn-small.gif) no-repeat 0 0px; }
-a.btn-small:link { text-decoration: none; color: #FFF; background: url(/images/btn-small.gif) no-repeat 0 0px; }
-a.btn-small:hover { text-decoration: none; color: #FFF; background: url(/images/btn-small.gif) no-repeat 0 -31px; }
-
-.btn-order { text-shadow: 1px 1px #333; float: left; width: 500px; height: 50px; padding: 20px 0 0 20px; font-size: 24px; font-weight: bold; line-height: 24px; color: #FFF !important; background: url(/images/btn-order.gif) no-repeat 0 0px; }
-a.btn-order:link { text-decoration: none; color: #FFF; background: url(/images/btn-order.gif) no-repeat 0 0px; }
-a.btn-order:hover { text-decoration: none; color: #FFF; background: url(/images/btn-order.gif) no-repeat 0 -70px; }
-
-.btn-next { text-shadow: 1px 1px #333; float: right; width: 71px; height: 24px; padding: 7px 0 0 10px; margin:40px 0 20px 0; font-size: 15px; font-weight: bold; line-height: 15px; color: #FFF !important; background: url(/images/btn-next.gif) no-repeat 0 0px; }
-a.btn-next:link { text-decoration: none; color: #FFF; background: url(/images/btn-next.gif) no-repeat 0 0px; }
-a.btn-next:hover { text-decoration: none; color: #FFF; background: url(/images/btn-next.gif) no-repeat 0 -31px; }
-
-.btn-back { text-shadow: 1px 1px #333; float: left; text-align:right; width: 71px; height: 24px; padding: 7px 10px 0 0; margin:40px 0 20px 0; font-size: 15px; font-weight: bold; line-height: 15px; color: #FFF !important; background: url(/images/btn-back.gif) no-repeat 0 0px; }
-a.btn-back:link { text-decoration: none; color: #FFF; background: url(/images/btn-back.gif) no-repeat 0 0px; }
-a.btn-back:hover { text-decoration: none; color: #FFF; background: url(/images/btn-back.gif) no-repeat 0 -31px; }
-
-.btn-calculate { text-shadow: 1px 1px #333; float: right; width: 111px; height: 24px; padding: 7px 0 0 10px; margin:10px 0 20px 0; font-size: 15px; font-weight: bold; line-height: 15px; color: #FFF !important; background: url(/images/btn-calculate.gif) no-repeat 0 0px; }
-a.btn-calculate:link { text-decoration: none; color: #FFF; background: url(/images/btn-calculate.gif) no-repeat 0 0px; }
-a.btn-calculate:hover { text-decoration: none; color: #FFF; background: url(/images/btn-calculate.gif) no-repeat 0 -31px; }
-
-.btn-accordion { text-shadow:1px 1px #333; width:785px; height:21px; display:block; padding:9px 0 0 5px; font-size:12px; font-weight:bold; line-height:12px; color: #FFF !important; background: url(/images/btn-accordion.gif) no-repeat 0 0px; }
-a.btn-accordion:link { text-decoration:none; color:#FFF; background:url(/images/btn-accordion.gif) no-repeat 0 0px; }
-a.btn-accordion:hover { text-decoration:none; color:#FFF; background:url(/images/btn-accordion.gif) no-repeat 0 -30px; }
-
-.btn-choose-file { text-shadow:1px 1px #333; float:left; text-align:center; width:110px; height:24px; padding:7px 0 0 0px; margin:7px 0 0 5px; font-size:15px; font-weight:bold; line-height:15px; color: #FFF !important; background: url(/images/btn-choose-file.gif) no-repeat 0 0px; }
-a.btn-choose-file:link { text-decoration: none; color: #FFF; background: url(/images/btn-choose-file.gif) no-repeat 0 0px; }
-a.btn-choose-file:hover { text-decoration: none; color: #FFF; background: url(/images/btn-choose-file.gif) no-repeat 0 -31px; }
-
-.btn-upload { float:right; width:114px; height:21px; padding:6px 0 0 25px; margin-top:10px; font-size:11px; font-weight:bold; line-height:11px; color: #FFF !important; background: url(/images/btn-upload.gif) no-repeat 0 0px; }
-a.btn-upload:link { text-decoration: none; color: #FFF; background: url(/images/btn-upload.gif) no-repeat 0 0px; }
-a.btn-upload:hover { text-decoration: none; color: #FFF; background: url(/images/btn-upload.gif) no-repeat 0 -27px; }
-
-
 /* --------------------------- CLASSES --------------------------- */
 
 .left {float: left;}
@@ -688,6 +645,8 @@ span.DateSelector select option {
 }
 fieldset {
 	border: none;
+	margin: 0px;
+	padding: 5px;
 }
 fieldset legend {
 }
@@ -727,14 +686,76 @@ fieldset.filters p input {
 	display: none;
 }
 
-fieldset div.content {
-    background:#daf3fc;
-    padding: 10px;
-	margin: 0px;
+fieldset .content {
+	position:relative;
+	padding:0px;
+	margin:0px;
 }
 fieldset .content ul {
+	background:#FFF;
+	border:1px solid #a0b5ca;
 	list-style: none;
 	margin: 0px;
+    overflow:auto;
+}
+fieldset .content ul li {
+    margin:0px;
+    padding:5px 7px 5px 7px;
+    list-style: none;
+    text-align: right;
+    overflow:auto;
+    font-size:12px;
+    line-height:16px;
+    font-weight:normal;
+    color:#000;
 }
 
+table.List {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+	border: none;
+    border-bottom: 1px solid #07759f;
+}
+table.List table {
+	border: none;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+	vertical-align: top;
+	background: none;
+}
+table.List th {
+    background-color: #07759f;
+    font-weight: bold;
+    color: #fff;
+	font-size: medium;
+	border: none;
+}
+table.List td {
+    padding-top: 1px;
+	border: none;
+	font-size: medium;
+	vertical-align: top;
+}
 
+table.List td a {
+    text-decoration: none;
+}
+table.List tr.totals {
+    border-top: 1px solid #07759f;
+}
+
+.colRow {
+	background:#cde3ec;
+}   
+@media print {
+	#nav, .p-nav, #masthead {
+		display: none;
+	}
+	#content {
+		width: 100%;
+		margin: 0px;
+		padding: 0px;
+	}
+}

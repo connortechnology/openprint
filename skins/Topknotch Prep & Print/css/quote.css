@@ -1,19 +1,41 @@
-div.QuoteHeader {
+div#Quote div.Header {
 	margin: 0px;
 	padding: 0px;
-    float: left;
-    width: 33%;
+    width: 100%;
+	background:#daf3fc;
+}
+div#Quote div.Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#Quote div.Header {height: 1%;}
+* div#Quote div.Header {display:block;}
+/* End hide from IE-mac */
 
+div#Quote div.Header fieldset {
+	margin: 0px;
+	padding: 0px;
 }
-div.QuoteHeader fieldset {
-    margin-right: .5em;
+div#Quote fieldset legend {
+	font-size:large;
+	font-weight: bold;
+	padding: 10px 10px 0px 10px;
+	color: #07759f;
 }
-div.QuoteHeader fieldset li {
+div#Quote div.Header fieldset ul {
+	padding: 5px;
+}
+div#Quote div.Header fieldset li {
     text-align: right;
 	width: auto;
 	padding: 0px;
 }
-div.QuoteHeader fieldset li label {
+div#Quote div.Header fieldset li label {
     font-weight: bold;
     margin-right: 10px;
 	margin-left: 0px;
@@ -22,6 +44,10 @@ div.QuoteHeader fieldset li label {
     text-align: left;
 }
 
+div#Quote div.Header div#Information,div#Quote div.Header div#PreparedBy,div#Quote div.Header div#PreparedFor {
+	float: left;
+	width: 33.3%;
+}
 div.QuoteInformation {
 	background:#daf3fc;
 	padding: 10px;
@@ -89,4 +115,13 @@ div.QuoteInformation fieldset legend {
     font-size:large;
     font-weight: bold;
     padding: 10px 10px 0px 10px;
+}
+div#Quote .newprice, div#Quote .price, div#Quote .markup, div#Quote .quantity {
+	text-align: right;
+}
+div#Quote .newprice, div#Quote .price, div#Quote .quantity {
+	width: 90px;
+}
+div#Quote .markup {
+	width: 50px;
 }

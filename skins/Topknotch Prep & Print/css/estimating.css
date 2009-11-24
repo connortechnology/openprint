@@ -39,6 +39,19 @@ div#instant_price_section .ProjectSpecifications h1 {
 	padding-top: 20px;
 	padding-bottom: 10px;
 }
+div#instant_price_section .ProjectSpecifications:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#instant_price_section .ProjectSpecifications {height: 1%;}
+* div#instant_price_section .ProjectSpecifications {display:block;}
+/* End hide from IE-mac */
+
 div#instant_price_section .Colours, 
 div#instant_price_section .Envelopes, 
 div#instant_price_section .Stock, 
@@ -99,6 +112,11 @@ div#instant_price_section .ProjectName input {
 div#instant_price_section h3 {
 	display: none;
 }
+div#instant_price_section fieldset legend {
+	font-weight: bold;
+	font-size:medium;
+	color: #07759f;
+}
 div#instant_price_section h2 {
 	font-size:medium;
 	color: #07759f;
@@ -109,7 +127,52 @@ div#instant_price_section .Prices, div#instant_price_section .Delivery #Shipping
 	background: #07759f;
 	color: #fff;
 	font-size:xx-small;
-	margin-top: 5px;
+}
+div#instant_price_section .Delivery #ShippingPrice {
+	margin-top: 10px;
+}
+div#instant_price_section .Prices:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#instant_price_section .Prices {height: 1%;}
+* div#instant_price_section .Prices {display:block;}
+/* End hide from IE-mac */
+div#instant_price_section #subtotal:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#instant_price_section #subtotal {height: 1%;}
+* div#instant_price_section #subtotal {display:block;}
+/* End hide from IE-mac */
+div#instant_price_section #UPSOptions {
+	margin-top: 10px;
+}
+div#instant_price_section #UPSOptions:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#instant_price_section #UPSOptions {height: 1%;}
+* div#instant_price_section #UPSOptions {display:block;}
+/* End hide from IE-mac */
+
+div#instant_price_section #subtotal {
+	background: #606;
 }
 div#instant_price_section .Prices ul, div#instant_price_section .Delivery #ShippingPrice ul, div#instant_price_section #subtotal ul {
 	list-style: none;
@@ -120,6 +183,7 @@ div#instant_price_section .Prices ul li label, div#instant_price_section .Delive
 	font-size: large;
 	text-align: right;
 	width: 73%;
+	text-transform: capitalize;
 }
 div#instant_price_section .Prices ul li.unitprice {
 	display: none;

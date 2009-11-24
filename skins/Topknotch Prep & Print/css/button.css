@@ -94,10 +94,6 @@ a.buttonImageOff .r {
 	height: 24px;
 	padding: 7px 0 0 0px;
 }
-a.rightarrow .r {
-	background: url(/images/btn-right-arrow.gif) no-repeat 0 0px;
-	width: 25px;
-}
 a.buttonImageOff .c {
 	background: url(/images/btn-background.gif) repeat-x 0 0px;
 	display: -moz-inline-box;
@@ -127,10 +123,6 @@ a.buttonImageOff:hover .r {
 	width: 4px;
 	padding: 7px 0 0 0px;
 }
-a.rightarrow:hover .r {
-	background: url(/images/btn-right-arrow.gif) no-repeat 0 -31px;
-	width: 25px;
-}
 a.buttonImageOff:hover .c {
 	background: url(/images/btn-background.gif) repeat-x 0 -31px;
 	display: -moz-inline-box;
@@ -142,4 +134,24 @@ a.buttonImageOff:hover .c {
 }
 a.rightarrow .c, a.rightarrow:hover .c {
 	padding: 7px 40px 0px 10px;
+}
+a.rightarrow .r {
+	background: url(/images/btn-right-arrow.gif) no-repeat 0 0px;
+	width: 25px;
+}
+a.rightarrow:hover .r {
+	background: url(/images/btn-right-arrow.gif) no-repeat 0 -31px;
+	width: 25px;
+}
+
+a.Calculate .c, a.Calculate:hover .c {
+	padding: 7px 40px 0px 10px;
+}
+a.Calculate .r {
+	background: url(/images/btn-calculate.gif) no-repeat 0 0px;
+	width: 25px;
+}
+a.Calculate:hover .r {
+	background: url(/images/btn-calculate.gif) no-repeat 0 -31px;
+	width: 25px;
 }

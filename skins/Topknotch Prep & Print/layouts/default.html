@@ -92,7 +92,6 @@
 	return $html;
 ) ?>
 	<li><img src="/images/p-nav-footer.png" width="160" height="20" border="0" alt="" /></li>
-</ul>
 <? echo (
 	my $html = '';
 	if ( $session{'user_type'} eq 'A' ) {
@@ -107,9 +106,40 @@
 	} # end if
 	return $html;
 ) ?>
+</ul>
 </div>
 <!-- CONTENT OPEN //-->
 <div id="content">
+	<div id="steps">
+		<ul>
+			<? echo (
+				my $html = '';
+				if ( $$variable{'uri'} =~ /\/content\/prin/ ) {
+					$html .= '<li class="step1on"><label>STEP 1</label>Specify Project</li>';
+					$html .= '<li class="step2"><label>STEP 2</label>Review Order</li>';
+					$html .= '<li class="step3"><label>STEP 3</label>Place Order</li>';
+					$html .= '<li class="step4"><label>STEP 4</label>Upload Files</li>';
+				} elsif ( $$variable{'uri'} =~ /\/main\/order\/information/ ) {
+					$html .= '<li class="step1complete"><label>STEP 1</label>Specify Project</li>';
+					$html .= '<li class="step2on"><label>STEP 2</label>Review Order</li>';
+					$html .= '<li class="step3"><label>STEP 3</label>Place Order</li>';
+					$html .= '<li class="step4"><label>STEP 4</label>Upload Files</li>';
+				} elsif ( $$variable{'uri'} =~ /\/main\/order\/submit/ ) {
+					$html .= '<li class="step1complete"><label>STEP 1</label>Specify Project</li>';
+					$html .= '<li class="step2complete"><label>STEP 2</label>Review Order</li>';
+					$html .= '<li class="step3on"><label>STEP 3</label>Place Order</li>';
+					$html .= '<li class="step4"><label>STEP 4</label>Upload Files</li>';
+				} elsif ( $$variable{'uri'} =~ /\/upload/ ) {
+					$html .= '<li class="step1complete"><label>STEP 1</label>Specify Project</li>';
+					$html .= '<li class="step2complete"><label>STEP 2</label>Review Order</li>';
+					$html .= '<li class="step3complete"><label>STEP 3</label>Place Order</li>';
+					$html .= '<li class="step4on"><label>STEP 4</label>Upload Files</li>';
+				} # end if
+				return $html;
+			) ?>
+		</ul>
+	</div>
+		<? endif ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 	<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 </div><!-- CONTENT CLOSE //-->
 

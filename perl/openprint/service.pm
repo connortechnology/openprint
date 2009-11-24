@@ -241,7 +241,7 @@ sub insert_service_specs {
 } # end sub
 
 sub auto_calculate {
-	my ( $r, $log, $dbh, $variable, $project_index ) = @_;
+	my ( $r, $log, $dbh, $variable, $project_index, $exclude ) = @_;
 
 	my $alert;
 	my $specs;
@@ -383,8 +383,6 @@ $openprint::log->debug("Apres Skdis");
 		foreach my $service_index ( @{$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
-			eval "require openprint::Estimating::$service_type";
-			$openprint::log->error("Error requiring openprint::Estimating::$service_type: " . $@ ) if $@;
 			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
@@ -392,13 +390,12 @@ $openprint::log->debug("Apres Skdis");
 
 	foreach my $type ( keys %services ) {
 		next if sets::isin( $type, [ 'SaddleStitching','LoopStitching','Folding' ] );
+		next if $exclude and sets::isin( $type, $exclude );
 
 		foreach my $service_index ( @{$services{$type}} ) {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			my $service_type = $ServiceType->type();
 			next if sets::isin( $service_type, ['','AdditionalSignature'] );
-			eval "require openprint::Estimating::$service_type";
-			$openprint::log->error('Error requiring openAprint::Estimating::$service_type: ' . $@ ) if $@;
 			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
@@ -469,14 +466,11 @@ sub get_type {
 sub internal_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type ) = @_;
 
-	if ( ! exists $specs_cache{$service_index} ) {
-		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
-				q{SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
-	} # end if
-	my %specs = %{$specs_cache{$service_index}};
+	my $Project = new openprint::Project( $project_index );
+	my $specs = get_specs_ref( $Project, $service_index );
+	my %specs = %{$specs};
 
 	if ( ! $service_type ) {
-		my $Project = new openprint::Project( $project_index );
 		my $ServiceType = $Project->ServiceType( $service_index );
 		$service_type = $ServiceType->type();
 	} # end if
@@ -493,7 +487,7 @@ sub internal_calc {
 	$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d', $service_type, $status, $elapsed ) );
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', $status );
+	status( $project_index, $service_index, $status );
 
 	foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, \%specs )') ) {
 $log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
