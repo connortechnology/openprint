@@ -36,6 +36,9 @@
 			<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
 			<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.1"></script>
 		<? endif ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
+		<? if ( $$variable{'uri'} =~ /\/administrator/ ) ?>
+		<link href="/css/administrator.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $$variable{'uri'} =~ /\/administrator/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
@@ -78,11 +81,12 @@
 	my $html = '';
 	foreach my $ProjectTypeCategory ( openprint::ProjectTypeCategory::find() ) {
 		$html .= sprintf(q`<li id="Menu%1$d" class="%3$s"><a href="#" title="%2$s" onclick="toggleMenu($('Menu%1$d'), 'off', 'on');return false;">%2$s</a>`, $ProjectTypeCategory->id(), $ProjectTypeCategory->name(), 
-			( ( $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->category_id() == $ProjectTypeCategory->id() ) ) ? 'on' : 'off' ),
+			( ( ( ! $$variable{'uri'} =~ /administrator/ ) and $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->category_id() == $ProjectTypeCategory->id() ) ) ? 'on' : 'off' ),
 			);
 		$html .= '<ul>';
 		foreach my $ProjectType ( openprint::ProjectType::find('category_id'=>$ProjectTypeCategory->id()) ) {
-			$html .= sprintf('<li class="%2$s"><a href="/content/%3$s?projecttype_id=%4$d" title="%1$s">%1$s</a></li>', $ProjectType->name(),
+			$html .= sprintf('<li class="%2$s"><a href="/content/%3$s?projecttype_id=%4$d" title="%1$s">%1$s</a></li>', 
+				URI::Escape::uri_escape($ProjectType->description()),
 				( ( $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->id() == $ProjectType->id() ) ) ? 'on' : 'off' ),
 				$ProjectType->url(), $ProjectType->id(),
 				);

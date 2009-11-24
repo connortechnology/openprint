@@ -55,7 +55,15 @@
 			<label>Owner:</label>
 			<select id="Owner" name="Owner" size="1" onchange="calc(this.form.name);">
 				<option value=""> All </option>
-				<? echo ( openprint::Company::get_dropdown( $session{'/administrator/stock/list.html?Owner'} ); ) ?>
+				<? echo (
+					my @company_ids = sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} );
+					my Companies = openprint::Company::find('id'=>\@company_ids, 'order'=>'lower(name)' );
+					if ( ! sets::isin( $session{'/administrator/stock/list.html?Owner'}, \@company_ids ) ) {
+						$session{'/administrator/stock/list.html?Owner'} = '';
+					} # end if
+
+					make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $session{'/administrator/stock/list.html?Owner'} );
+				) ?>
 			</select>
 		</p>
 		<p>

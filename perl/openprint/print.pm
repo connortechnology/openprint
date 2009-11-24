@@ -662,15 +662,15 @@ sub get_finished_weight {
 	# We do a weird thing with qty_index here, becasue all quantities should have the same weight, but may be calculated diferent ways, so we run through them until we get a valid weight.
 
 # calculate project weight
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity($qty_index);
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			next if $$sig_specs{'txtSignatureType'} and ! $$sig_specs{'PageQuantity'.$qty_index};
 			my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
 			if ( ! $sig_weight ) {
 				# unable to get weight for a sig, must recalc printing service
+$openprint::log->debug("Unable to get sig_weight for signature $$sig_specs{'SignatureIndex'}");
 				return 0;
 			} # end if
 			$project_weight += $sig_weight;

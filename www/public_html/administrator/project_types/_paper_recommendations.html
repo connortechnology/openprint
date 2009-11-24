@@ -1,15 +1,7 @@
-<? eval ( 
-$$variable{'ProjectType'} = new openprint::ProjectType( $openprint::param{'projecttype_id'} ) if ! $$variable{'ProjectType'};
-if ( $openprint::param{'btnFunction'} eq 'Add' ) {
-	sql::execute( undef, undef, 'DELETE FROM Paper_recommendations WHERE lngPaperIndex=? AND lngProjectTypeIndex=?', @openprint::param{'paper_id','projecttype_id'} );
-	sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$openprint::param{'paper_id'},'lngProjectTypeIndex', $openprint::param{'projecttype_id'} );
-} elsif ( $openprint::param{'btnFunction'} eq 'Remove' ) {
-	sql::execute( undef, undef, 'DELETE FROM Paper_recommendations WHERE lngPaperIndex=? AND lngProjectTypeIndex=?', @openprint::param{'paper_id','projecttype_id'} );
-} # end if
-
-) ?>
 <table class="List">
-<tr><th>Paper</th><th>&nbsp;</th></tr>
+	<thead>
+		<tr><th>Paper</th><th>&nbsp;</th></tr>
+	</thead>
 <? echo (
 	my $html;
 	

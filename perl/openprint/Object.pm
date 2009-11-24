@@ -162,7 +162,7 @@ $openprint::log->warn('Object::set called on an object with no fields');
 #$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			$$self{$field} = $defaults{$field};
 		} else {
-$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+#$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 		} # end if
 	} # end foreach
 	return @set_fields;

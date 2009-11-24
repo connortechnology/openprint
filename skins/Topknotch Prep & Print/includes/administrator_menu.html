@@ -1,12 +1,12 @@
 <? if ( $session{'user_type'} eq 'A' ) ?>
-	<li id="Paper" class="off"><a href="#">Stock</a>
+	<li id="Paper" class="off"><a href="#" onclick="toggleMenu($('Paper'), 'off', 'on');return false;">Stock</a>
 		<ul>
 			<li><a href="/administrator/stock/list.html;SSL">View/Edit</a></li>
 			<li><a href="/administrator/stock/import_export.html;SSL">Import/Export</a></li>
 			<li><a href="/administrator/production/pricelists.html;SSL">Pricelists</a></li>
 		</ul>
 	</li>
-	<li id="Managerial" class="off"><a href="#">Managerial</a>
+	<li id="Managerial" class="off"><a href="#" onclick="toggleMenu($('Managerial'), 'off', 'on');return false;">Managerial</a>
 		<ul>
 			<li><a href="/administrator/managerial/credit_applications.html;SSL">Credit Applications</a></li>
 			<li><a href="/administrator/managerial/company_profiles.html;SSL">Company Profiles</a></li>
@@ -16,7 +16,7 @@
 			<li><a href="/administrator/managerial/payment_options.html;SSL">Payment Options</a></li>
 		</ul>
 	</li>
-	<li id="Reports" class="off"><a href="#">Reports</a>
+	<li id="Reports" class="off"><a href="#" onclick="toggleMenu($('Reports'), 'off', 'on');return false;">Reports</a>
 		<ul>
 			<li><a href="/administrator/reports/orders.html;SSL">Orders</a></li>
 			<li><a href="/administrator/reports/quotes.html;SSL">Quotes</a></li>
@@ -27,7 +27,7 @@
 			<li><a href="/administrator/reports/bindery.html;SSL">Bindery</a></li>
 		</ul>
    </li>
-	<li id="Setup" class="off"><a href="#">Setup</a>
+	<li id="Setup" class="off"><a href="#" onclick="toggleMenu($('Setup'), 'off', 'on');return false;">Setup</a>
 		<ul>
 			<li><a href="/administrator/equipment/edit.html;SSL">Equipment</a></li>
 			<li><a href="/administrator/service_types/edit.html;SSL">Service Types</a></li>

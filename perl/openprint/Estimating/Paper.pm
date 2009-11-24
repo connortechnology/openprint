@@ -191,7 +191,7 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $totals{$paper_string}[$qty_index] );
+#$openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $totals{$paper_string}[$qty_index] );
 		} # end foreach
 	} # end if
 
@@ -208,7 +208,7 @@ $openprint::log->debug("After minimum: QTY $qty_index $paper_string  => " . $tot
 				if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 					my %price = $Paper->get_price( $totals{$paper_id}[$qty_index] );
 					$$specs{"cost-$ss_id-$stock_index-$qty_index"} = $price{'100lb Price'};
-$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}[$qty_index].") => " . $price{'100lb Price'});
+$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}[$qty_index].'sheets) => $' . $price{'100lb Price'}.'/100lb');
 				} # end if
 				$$specs{"price-$ss_id-$stock_index-$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},$$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
 				#if ( $Paper->type() eq 'Sheet' ) {
@@ -216,7 +216,7 @@ $openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$pap
 				#} else {
 					#$$specs{"txtPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * $totals{$paper_id}[$qty_index] / 100;
 				#} # end if
-$openprint::log->warn("$qty_index $paper_id $$sig_specs{'txtImposition'.$qty_index} $$Paper{width}x$$Paper{height}" . ' : ' . $Paper->start_sheet_weight() );
+#$openprint::log->warn("$qty_index $paper_id $$sig_specs{'txtImposition'.$qty_index} $$Paper{width}x$$Paper{height}" . ' : ' . $Paper->start_sheet_weight() );
 				$$specs{"MPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * ceil( ((1000/$$sig_specs{'txtImposition'.$qty_index})/( $Paper->start_area() /$Paper->area() )) * $Paper->start_sheet_weight() )/ 100;
 			} # end foreach qty_index
 	} # end foreach signature

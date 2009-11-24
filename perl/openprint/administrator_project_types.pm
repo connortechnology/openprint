@@ -22,11 +22,7 @@ use vars qw( $r $log $dbh %variable %param %session );
 sub edit {
 	my $ProjectType = new openprint::ProjectType( $param{'ddmProjectType'} );
 
-	if ( $param{'btnFunction'} eq 'Go' ) {
-		if ( my @project_types = openprint::ProjectType::find( 'name' => $param{'txtGoProjectTypeID'} ) ) {
-			$ProjectType = shift @project_types;
-		} # end if
-	} elsif ( $param{'btnFunction'} eq '<<' ) {
+	if ( $param{'btnFunction'} eq '<<' ) {
 		$ProjectType = $ProjectType->prev();
 	} elsif ( $param{'btnFunction'} eq '>>' ) {
 		$ProjectType = $ProjectType->next();
@@ -34,14 +30,7 @@ sub edit {
 		$ProjectType->delete();
 		$ProjectType = $ProjectType->next();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
-		$variable{'error'} .= $ProjectType->save( {
-		'name'				=> $param{'txtID'},
-		'description'		=> $param{'txtName'},
-		'url'				=> $param{'txtURL'},
-		'sorting'			=> $param{'txtSort'},
-		'required_services'	=> $param{'RequiredServices'},
-		'category_id'		=> $param{'category_id'},
-		});
+		$variable{'error'} .= $ProjectType->save( \%param );
 
 		sql::execute( undef, undef, 'DELETE FROM Paper_Recommendations WHERE lngProjectTypeIndex=?', $ProjectType->id() );
 		foreach my $key ( keys %param ) {
@@ -85,7 +74,7 @@ sub edit {
 		} # end if
 
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
-	    my @header = ( 'Project Type ID', 'Project Type Name', 'URL', 'Sort Order');
+	    my @header = ( 'Name', 'Description', 'URL', 'Sort Order');
 	    my @data = map { $_->name(), $_->description(), $_->url(), $_->sorting() } openprint::ProjectType::find('order'=>'sorting');
     	misc::export_csv( $r, $log, \%variable, 'projectTypes.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
@@ -285,6 +274,16 @@ sub _template_line {
 		$variable{'error'} .= $variable{'Template'}->save();
 	} # end if
 } # end sub _template_line
+
+sub _paper_recommendations {
+	$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
+	if ( $param{'btnFunction'} eq 'Add' ) {
+		sql::execute( undef, undef, 'DELETE FROM Paper_recommendations WHERE lngPaperIndex=? AND lngProjectTypeIndex=?', @param{'paper_id','projecttype_id'} );
+		sql::insert( undef, undef, 'Paper_recommendations','lngPaperIndex',$param{'paper_id'},'lngProjectTypeIndex', $param{'projecttype_id'} );
+	} elsif ( $param{'btnFunction'} eq 'Remove' ) {
+		sql::execute( undef, undef, 'DELETE FROM Paper_recommendations WHERE lngPaperIndex=? AND lngProjectTypeIndex=?', @param{'paper_id','projecttype_id'} );
+	} # end if
+} # end sub _paper_recommendations
 
 1;
 __END__

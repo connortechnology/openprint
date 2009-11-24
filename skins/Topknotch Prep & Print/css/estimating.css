@@ -208,3 +208,6 @@ div#instant_price_section .Delivery .ToCountry, div#instant_price_section .Deliv
 	width: 48%;
 	float: left;
 }
+.Envelopes .StockWeightSelect {
+	display: none;
+}

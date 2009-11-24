@@ -275,7 +275,7 @@ sub auto_calculate {
 	} # end if
 $openprint::log->debug("Apres Paper");
 
-	if ( openprint::Estimating::Cutting::neccessary( $log, $dbh, $project_index ) ) {
+	if ( openprint::Estimating::Cutting::neccessary( $Project ) ) {
 		if ( ! $services{'Cutting'} ) {
 			if ( $Project->mode() ne 'Detailed' ) { 
 				push @{$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' );

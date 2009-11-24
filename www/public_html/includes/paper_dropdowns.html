@@ -41,8 +41,7 @@
 			) ?>
 	</select>
 </li>
-<li id="StockWeightSelect<?Signature?>">
-<? if ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
+<li id="StockWeightSelect<?Signature?>" class="StockWeightSelect">
 	<label>Weight:</label>
 	<select name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
@@ -56,7 +55,4 @@
 } ) ], $$variable{'ddmStockWeight'.$$variable{'Signature'}} );
 			) ?>
 	</select>
-<? else ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
-	<input type="hidden" name="ddmStockWeight<?Signature?>" id="ddmStockWeight<?Signature?>" value="<? echo ( $$variable{'ddmStockWeight'.$$variable{'Signature'}} ) ?>" />
-<? endif ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 </li>

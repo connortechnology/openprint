@@ -241,7 +241,7 @@ sub find {
 			if ( (! defined $params{'supplied'} ) or ($params{'supplied'} eq '' ) ) {
 				$sql .= ' AND supplied IS NULL';
 			} else {
-				$sql .= ' AND supplied=?';
+				$sql .= ' AND (supplied IS NULL OR supplied=?)';
 				push @values, $params{'supplied'} eq 'Y' ? 1 : 0;
 			} # end if
 		} # end if
@@ -917,17 +917,19 @@ sub get_price {
 			return %price;
 		} # end if
 		foreach my $Price ( @Prices ) {
-#$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->Min(), $Price->Max(), $Price->Price() ) );
+$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->Min(), $Price->Max(), $Price->Price() ) );
 			if ( 
-					( $Price->pricelist_id() == $list_id ) and 
-					( $Price->Min() eq '' or $Price->Min() <= $qty ) and
-					( $Price->Max() eq '' or $Price->Max() >= $qty )
+					( (!(1*$Price->Min())) or $Price->Min() <= $qty ) and
+					( (!(1*$Price->Max())) or $Price->Max() >= $qty )
 			   ) {
 				$bestPrice = $Price;
 				last;
 			} # end if
 		} # end foreach Price
-		return if ! $bestPrice;
+		if ( ! $bestPrice ) {
+			$openprint::log->warn("Unable to find price for $qty");
+			return;
+		} # end if
 		$price{'Price'} = $bestPrice->Price();
 		$price{'units'} = $bestPrice->Units();
 		if ( $openprint::config{'ApplyMarkup'} ) {
@@ -967,7 +969,7 @@ sub get_price {
 		#$price{'Cost'} *= $$self{'mweight'} / 100000;
 		#$price{'Price'} *= $$self{'mweight'} / 100000;
 	} # end if
-#$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'}) ($price{'100lb Cost'}) ($price{'Price'})") if $debug;
+$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'})/100lb ($price{'100lb Cost'}) ($price{'Price'})") if $debug or 1;
 	return %price;
 
 } # end sub get_price
@@ -1186,7 +1188,7 @@ sub load_from_signature {
 					'finish'    => $$specs{'ddmStockFinish'},
 					'colour'    => $$specs{'ddmStockColour'},
 					'weight'    => $$specs{'ddmStockWeight'},
-					'project_type_id'=> $Project ? $Project->Type()->id() : undef,
+					'project_type_id'=> $Project ? $Project->type_id() : undef,
 					'order'		=>	'minimum_order',
 			);
 			if ( $qty_index ) {

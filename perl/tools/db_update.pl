@@ -6,6 +6,7 @@ require sql;
 require logger;
 require openprint::Object;
 require openprint::Paper;
+require openprint::PaperPrice;
 require openprint::Equipment;
 require openprint::EquipmentSpecification;
 require openprint::ServicePrice;
@@ -856,6 +857,10 @@ if ( ! @FoldingServices ) {
 } # en dif
 	
 foreach my $E ( openprint::Equipment::find('category'=>'Printing') ) {
+	foreach my $Spec ( $E->Specifications('name'=>'Envelope Ready') ) {
+		$Spec->name('Envelope Capable');
+		$Spec->save();
+	} 
 	foreach my $Spec ( $E->Specifications('name'=>'Default Bleed Size') ) {
 		if ( $Spec->max() == 1 ) {
 			$Spec->max('');
@@ -987,9 +992,12 @@ if ( ! $blah ) {
 } # end if
 
 	$dbh->do('drop sequence if exists materialcategoriesindex_seq') if sets::isin('materialcategoriesindex_seq', \@sequences );
-	$dbh->do('drop sequence if exists material_categories_id_seq');
+	if ( sets::isin('material_categories_id_seq', \@sequences ) ) {
+	$dbh->do(q{alter table material_categories alter column id drop default});
+	$dbh->do('drop sequence material_categories_id_seq');
 	$dbh->do('create sequence material_categories_id_seq');
 	$dbh->do(q{select setval('material_categories_id_seq', (select max(id) from material_categories))});
+	}
 	$dbh->do(q{alter table material_categories alter column id set default nextval('material_categories_id_seq')});
 
 
@@ -1195,7 +1203,7 @@ if ( ! sets::isin( 'rfidtags', \@tables ) ) {
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skids LIMIT 1', {} );
-if ( ! exists $$data{'rfidtag_id'} ) {
+if ( $data and ! exists $$data{'rfidtag_id'} ) {
 	$dbh->do(q`alter table skids add rfidtag_id TEXT`);
 	$dbh->do(q`alter table skids add FOREIGN KEY (rfidtag_id) REFERENCES RFIDTags (id)`);
 } # end if
@@ -2246,6 +2254,14 @@ if ( $version < $new_version ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = $new_version;
 } # end if
+
+foreach my $PP ( openprint::PaperPrice::find('units'=>'Per M') ) {
+	$PP->Cost( sprintf('%.2f', $PP->Cost() * 100 / $PP->Paper()->mweight() ) );
+	$PP->Price( sprintf('%.2f', $PP->Price() * 100 / $PP->Paper()->mweight() ) );
+	$PP->Units('Per 100lbs');
+	$PP->save();
+}
+	$dbh->commit();
 $dbh->disconnect();
 1;
 __END__

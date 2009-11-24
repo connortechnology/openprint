@@ -21,6 +21,7 @@ $serial = 'project_types_id_seq';
 	'sorting'		=>	'sorting',
 );
 %transforms = (
+	'name'	=>	[ 's/\s//g' ],
 );
 %defaults = (
 	'id'			=>	undef,
@@ -61,10 +62,10 @@ sub find {
 sub save {
 	my ( $self, $params ) = @_;
 
-
 	if ( ( my $error = $self->SUPER::save( $params ) ) ) {
 		return $error;
 	} else {
+		$$self{'required_services'} = $$params{'required_services'} if exists $$params{'required_services'};
 		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
 		if ( $$self{'required_services'} ) {
 			# The union gets rid of duplicates

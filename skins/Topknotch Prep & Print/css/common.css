@@ -676,6 +676,7 @@ fieldset p label {
 }
 fieldset.filters {
 	width: auto;
+	border-bottom: 1px solid black;
 }
 fieldset.filters legend {
 }
@@ -716,6 +717,7 @@ table.List {
     border-spacing: 0;
 	border: none;
     border-bottom: 1px solid #07759f;
+	table-layout: fixed;
 }
 table.List table {
 	border: none;
@@ -758,4 +760,12 @@ table.List tr.totals {
 		margin: 0px;
 		padding: 0px;
 	}
+}
+.leftColumn {
+	width: 48%;
+	float: left;
+}
+.rightColumn {
+	width: 48%;
+	float: right;
 }

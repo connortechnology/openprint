@@ -1,4 +1,4 @@
-<form name="Prices">
+<form name="Prices" action="">
 	<? eval ( 
 		$$variable{'Stock'} = new openprint::Paper( $param{'stock_id'} );
 		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(Name)');
@@ -38,10 +38,10 @@
 				<td class="Discount">
 				<input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='Y'
 				<? echo ( $$variable{'Price'}->Discountable() ne 'N' ? 'checked="checked"' : '' ) ?>
-				 /><label for="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y">Yes</label>
+				 /><label class="radio" for="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y">Yes</label>
 				<input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>N" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='N'
 				<? echo ( $$variable{'Price'}->Discountable() eq 'N' ? 'checked="checked"' : '' ) ?>
-				 /><label for="discount-<? echo ( $$variable{'Price'}->id() ) ?>N">No</label></td>
+				 /><label class="radio" for="discount-<? echo ( $$variable{'Price'}->id() ) ?>N">No</label></td>
 				<td>
 					<? echo ( ssi::writeButton( $log, $dbh, 'DelPrice'.$$variable{'Price'}->id(), 'delete.gif', 'delPrice('.$$variable{'Price'}->id().');', '', 'Delete' ); ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'CopyPrice'.$$variable{'Price'}->id(), 'copy.gif', 'copyPrice('.$$variable{'Price'}->id().');', '', 'Copy' ); ) ?>

@@ -66,7 +66,9 @@ sub calc {
 	} # end if
 
 	my $services = $Project->services();
-	push @{$$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $$Project{'id'}, 'Cutting' ) if ! $$services{'Cutting'};
+	if ( openprint::Estimating::Cutting::neccessary( $Project ) and ! $$services{'Cutting'} ) {
+		push @{$$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $$Project{'id'}, 'Cutting' );
+	} # end if
 
 	if ( $$Project{'id'} ) {
 		$openprint::session{'project_id'} = $Project->id();

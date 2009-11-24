@@ -122,8 +122,7 @@ sub signature_needs {
 
 # A function that is smart enough to return true if the project needs cutting, and false if it doesn't.
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
-	my $Project = new openprint::Project( $project_index );
+	my ( $Project ) = @_;
 
 	my $services = $Project->services();
 

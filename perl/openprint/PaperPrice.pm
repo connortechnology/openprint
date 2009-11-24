@@ -1,7 +1,7 @@
 package openprint::PaperPrice;
 @ISA = qw(openprint::Object);
 
-my $debug = 0;
+my $debug = 1;
 
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'Paper_Prices';
@@ -58,6 +58,10 @@ sub find {
 	} elsif ( $params{'Pricelist'} ) {
 		$sql .= ' AND lngListindex=?';
 		push @values, $params{'Pricelist'}->id();
+	} # end if
+	if ( exists $params{'units'} ) {
+		$sql .= ' AND strunits=?';
+		push @values, $params{'units'};
 	} # end if
 	if ( $params{'order'} ) {
 		$sql .= " ORDER BY $params{'order'}";
