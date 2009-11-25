@@ -81,6 +81,7 @@
 <? if ( $config{'OrderMode'} eq 'Simple' ) ?>
 			<div id="ShippingInformation">
 				<? echo (
+					my $html = '';
 					my @Projects = $$variable{'Order'}->Projects();
 					if ( @Projects != 1 ) {
 						$log->error('Wrong # of projects in order ' . @Projects);
@@ -88,12 +89,13 @@
 					if ( @Projects ) {
 						$$variable{'Project'} = $Projects[0];
 						my $services = $$variable{'Project'}->services();
-						$$variable{'ServiceIndex'} = $$services{'UPS'}[0] if $$services{'UPS'};
-						my $html = '';
+if ( $$services{'UPS'} ) {
+						$$variable{'ServiceIndex'} = $$services{'UPS'}[0];
 						$html .= sprintf('<input type="hidden" name="ShippingType%1$d" value="%2$s"/>', $$variable{'Project'}->id(), 'UPS' );
 						$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_shipping_address.html' );
-						return $html;
+}
 					} # end if
+					return $html;
 				) ?>
 			</div>
 <? endif ( $config{'OrderMode'} eq 'Simple' ) ?>

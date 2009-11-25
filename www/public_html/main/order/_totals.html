@@ -22,12 +22,12 @@
 		<?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->harmonized_tax() ) ); ) ?>
 	</li>
 	<? endif ( defined $$variable{'Order'}->harmonized_tax() ) ?>
-	<? if ( $$variable{'Orer'}->total() ) ?>
+	<? if ( $$variable{'Order'}->total() ) ?>
 	<li id="Total">
 		<label>Total:</label>
 		<?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->total() ) ); ) ?>
 	</li>
-	<? endif ( $$variable{'Orer'}->total() ) ?>
+	<? endif ( $$variable{'Order'}->total() ) ?>
 	</ul>
 		<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name() ) ?>.
 	<? echo ( 

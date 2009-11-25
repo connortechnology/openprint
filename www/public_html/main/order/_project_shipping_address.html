@@ -127,7 +127,18 @@
 					</select>
 			</li>
 			<li> 
-				<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_state">State/Province:</span><span class="requiredFieldIndicator">*</span></label>
+				<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_state">
+<? echo (
+if ( $$variable{"ToCountry-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'US' ) {
+    return 'State';
+} elsif ( $$variable{"ToCountry-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} eq 'CA' ) {
+    return 'Province';
+} else {
+    return 'State/Province';
+} # end if
+) ?>
+
+:</span><span class="requiredFieldIndicator">*</span></label>
 				<select name="ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>">
 					<option value=""> Select </option>
 					<? echo ( join('',

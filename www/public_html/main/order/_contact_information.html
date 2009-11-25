@@ -83,7 +83,17 @@
 				</select>
 			</li>
 			<li> 
-				<label><span id="ddmCountry_state">State/Province:</span><span class="requiredFieldIndicator">*</span></label>
+				<label><span id="ddmCountry_state">
+<? echo (
+if ( $$variable{'ddmCountry'} eq 'US' ) {
+    return 'State';
+} elsif ( $$variable{'ddmCountry'} eq 'CA' ) {
+    return 'Province';
+} else {
+    return 'State/Province';
+} # end if
+) ?>
+:</span><span class="requiredFieldIndicator">*</span></label>
 				<select name="ddmStateProvince">
 					<option value=""> Select </option>
 					<? echo ( 
