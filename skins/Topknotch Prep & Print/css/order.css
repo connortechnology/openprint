@@ -159,29 +159,34 @@ div.Order div#Totals {
 	float: right;
 	width: 100%;
 }
+div.Order div#Totals ul {
+	margin: 0px;
+	padding: 0px;
+}
 div.Order div#Totals ul li {
+	font-weight: bold;
+	font-size: large;
+	padding: 10px;
+	text-align: right;
 	font-weight: bold;
 }
 div.Order div#Totals ul li label {
 	font-size: large;
-	width: 73%;
+	width: 75%;
 	text-align: right;
+	text-transform: capitalize;
+	margin: 0px;
+	padding: 0px;
 }
 div.Order div#Totals li#SubTotal {
 	background: #07759f;
 	color: #fff;
-	padding: 10px;
 	margin-top: 5px;
-	text-align: right;
-	font-weight: bold;
 } 
 div.Order div#Totals li#Total {
 	background: #606;
 	color: #fff;
-	padding: 10px;
 	margin-top: 5px;
-	text-align: right;
-	font-weight: bold;
 }
 div.Order div.Header #OrderInformation {
 	float: left;

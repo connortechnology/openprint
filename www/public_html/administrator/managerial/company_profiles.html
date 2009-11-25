@@ -236,11 +236,11 @@
 		</p>
 		<p> 
 			<label>Date Established:</label>
-			<select name="start_month">
+			<select name="start_month" id="start_month">
 				<option value=""> Select </option>
 				<? echo ( ssi::getmonths( $$variable{'Company'}->start_month() ); ) ?>
 			</select>
-			<input type="text" name="start_year" value="<? echo ( $$variable{'Company'}->start_year() ) ?>" style="width:auto;" size="6" />
+			<input type="text" name="start_year" id="start_year" value="<? echo ( $$variable{'Company'}->start_year(); ) ?>" style="width:auto;" size="6" />
 		</p>
 		<p> 
 			<label>President/Owner/CEO:</label>
@@ -277,9 +277,9 @@
 		</p>
 		<p> 
 			<label>State/Provincial Tax Exempt?:</label>
-			<input type="radio"	name="rdbPSTExempt" value="Y" <? echo ( ssi::checked( $$variable{'Company'}->pst_exempt() eq 'Y' ); ) ?> />
+			<input type="radio"	name="pst_exempt" id="pst_exemptY" value="Y" <? echo ( ssi::checked( $$variable{'Company'}->pst_exempt() eq 'Y' ); ) ?> />
 			<label class="radio" for="pst_exemptY">Yes</label>
-			<input type="radio"	name="rdbPSTExempt" value="N" <? echo ( ssi::checked( $$variable{'Company'}->gst_exempt() ne 'Y' ); ) ?> />
+			<input type="radio"	name="pst_exempt" id="pst_exemptN" value="N" <? echo ( ssi::checked( $$variable{'Company'}->pst_exempt() ne 'Y' ); ) ?> />
 			<label class="radio" for="pst_exemptN">No</label>
 		</p>
 	</fieldset>

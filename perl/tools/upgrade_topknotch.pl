@@ -81,4 +81,7 @@ sql::insert( undef, undef, 'configuration',[
 require openprint::PaymentType;
 my $PayPal = new openprint::PaymentType();
 $PayPal->save({'name'=>'PayPal','description'=>'PayPal'});
+
+$dbh->do("DELETE FROM Taxes WHERE state != 'ON'");
+
 $dbh->disconnect();

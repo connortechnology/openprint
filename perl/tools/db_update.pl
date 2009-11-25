@@ -211,6 +211,7 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		$dbh->do(q`alter table Companies rename column index to id`);
 		$dbh->do(q`alter table Companies rename column strprovstate to state`) if exists $$data2{'strprovstate'};
 		$dbh->do(q`alter table Companies rename column lngsalesperson to salesrep_id`);
+		$dbh->do(q`alter table Companies rename column ysnmailinglist to mailinglist`);
 		$dbh->do(q`alter table Companies rename column strweburl to url`);
 		$dbh->do(q`alter table Companies rename column strcustomgreeting to greeting`);
 		$dbh->do(q`alter table Companies rename column dblpricingpercent to discount`);
@@ -1829,17 +1830,24 @@ foreach my $PI ( openprint::PaperInventory::find('docket'=>undef) ) {
 	$PI->save() if $PI->docket();
 } # end foreach
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Taxes LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'taxes', \@tables ) ) {
 } else {
-	if ( exists $$data{'dblfederalpercent'} ) {
-		$dbh->do( 'ALTER TABLE Taxes rename column dblfederalpercent to federaltax' );
-	} # end if
-	if ( exists $$data{'dblstatepercent'} ) {
-		$dbh->do( 'ALTER TABLE Taxes rename column dblstatepercent to statetax' );
-	} # end if
-	if ( exists $$data{'dblharmonisedpercent'} ) {
-		$dbh->do( 'ALTER TABLE Taxes rename column dblharmonisedpercent to harmonizedtax' );
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Taxes LIMIT 1', {} );
+	if ( $data ) {
+		if ( exists $$data{'dblfederalpercent'} ) {
+			$dbh->do( 'ALTER TABLE Taxes rename column dblfederalpercent to federaltax' );
+		} # end if
+		if ( exists $$data{'dblstatepercent'} ) {
+			$dbh->do( 'ALTER TABLE Taxes rename column dblstatepercent to statetax' );
+		} # end if
+		if ( exists $$data{'dblharmonisedpercent'} ) {
+			$dbh->do( 'ALTER TABLE Taxes rename column dblharmonisedpercent to harmonizedtax' );
+		} # end if
+		if ( ! exists $$data{'id'} ) {
+			$dbh->do( 'ALTER TABLE Taxes add id SERIAL' );
+			$dbh->do( 'ALTER TABLE Taxes DROP Constraint taxes_pkey' );
+			$dbh->do( 'ALTER TABLE Taxes add PRIMARY KEY(id)' );
+		} # end if
 	} # end if
 }
 if ( ! sets::isin( 'invoices', \@tables ) ) {
@@ -2261,6 +2269,12 @@ foreach my $PP ( openprint::PaperPrice::find('units'=>'Per M') ) {
 	$PP->Units('Per 100lbs');
 	$PP->save();
 }
+if ( ! sets::isin( 'companies_accountingcontacts', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Companies_AccountingContacts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
 	$dbh->commit();
 $dbh->disconnect();
 1;

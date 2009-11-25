@@ -699,10 +699,6 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 		
 			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
-foreach my $k ( keys %$specs ) {
-$log->debug("UPS Specs: $k=>$$specs{$k}");
-}
-
 # do error checks
 				push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{'ToCompanyName'};
 				push @errors, 'Please enter the Shipping Address.' if ! $$specs{'ToAddress1'};
@@ -732,10 +728,6 @@ $log->debug("UPS Specs: $k=>$$specs{$k}");
 	my $Currency = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
 	$$variable{'Currency'} = $Currency;
-	#if ( $Order->currency_id() != $Currency->id() ) {
-		#$Order->currency_id( $Currency->id() );
-		#$Order->save();
-	#} # end if
 	$$variable{'Order'} = $Order;
 
 	foreach my $Project ( $Order->Projects() ) {
@@ -763,7 +755,6 @@ sub finalise_order {
 	my ( $r, $log, $dbh, $cookie, $variable ) = @_;
 
 	my $order_id = $openprint::param{'OrderID'};
-	$order_id = $openprint::session{'OrderID'} if ! $order_id;
 	$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
 	if ( $order_id eq '' ) {
 		$log->error( "Still no Order ID" );
@@ -947,7 +938,7 @@ sub send_completion_notice {
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_completion_notice.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
+	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice.html' );
@@ -988,7 +979,7 @@ sub send_invoice {
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
+	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice.html' );
@@ -1009,7 +1000,7 @@ sub send_invoice {
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
+	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_for_admin.html' );
 	if ( $_ ) {
@@ -1043,7 +1034,7 @@ sub send_sales_order {
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
+	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	my @sales_order;
@@ -1082,7 +1073,7 @@ sub send_sales_order {
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
+	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my @sales_order;
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );

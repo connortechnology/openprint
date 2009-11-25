@@ -299,7 +299,7 @@ Please select a Paper to view/edit.<br>
 						$session{'/employee/inventory/available_paper.html?location_id'} = join(';', @selected);
 					} # end if
 					$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
-					return ssi::make_select( \@options, \@selected );
+					return ssi::make_drop_down( \@options, \@selected );
 				) ?>
 			</select>
 		</p>

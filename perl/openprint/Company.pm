@@ -389,12 +389,14 @@ sub Pricelist {
 } # end sub Pricelist
 
 sub start_month {
-	$_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/;
-	return $2;
+	if ( $_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/ ) {
+		return $2;
+	} # end if
 } # end sub start_month
 sub start_year {
-	$_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/;
-	return $1;
+	if ( $_[0]{'established'} =~ /^(\d+)-(\d+)-(\d+)/ ) {
+		return $1;
+	} # end if
 } # end sub start_year
 
 sub AccountingContacts {

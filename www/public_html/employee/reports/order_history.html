@@ -23,7 +23,7 @@
 			<select name="status" multiple size="4" >
 			<? echo (
 					my @options = sql::execute( undef, undef, q{SELECT name, name FROM order_statuses ORDER BY lower(name)} );
-					return ssi::make_select( \@options, $param{'status'} ? $param{'status'} : \@options);
+					return ssi::make_drop_down( \@options, $param{'status'} ? $param{'status'} : \@options);
 					) ?>
 			</select>
 		</p>

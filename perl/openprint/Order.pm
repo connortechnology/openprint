@@ -160,7 +160,6 @@ $openprint::log->debug("Loaded order: " . $$self{'id'} );
 		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
-$openprint::log->debug("Loaded order: " . $$self{'id'} . ', company_id: ' . $$self{'company_id'} );
 } # end sub load
 
 sub save {
@@ -466,36 +465,20 @@ sub send_cancellation_notice {
 	
 } # end sub send_cancellation_notice
 
+# These fields have 3 possible values, undef meaning not yet calculated. Empty string means calculated, but no tax applies.  Numeric = value;
 sub federal_tax {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
 		$$self{'federal_tax'} = $new;
-	} elsif ( ! $$self{'federal_tax'} ) {
+	} elsif ( ! defined $$self{'federal_tax'} ) {
+		$$self{'federal_tax'} = '';
 		if ( $self->Company()->gst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax::find('country'=>$self->country() );
+			my @Taxes = openprint::Tax::find('country'=>$self->country(),'state'=>$self->state() );
 			if ( @Taxes == 1 ) {
 				my $tax_rate = $Taxes[0]->federaltax_rate();
-				my $tax_amount = 0;
-
 				if ( $tax_rate ) {
-					foreach my $Project ( $self->Projects() ) {
-						my $price = $Project->ordered_price();
-						if ( $Project->currency_id() != $$self{'currency_id'} ) {
-							my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
-							$price *= $rate;
-						} # end if
-						$tax_amount += $price * ($tax_rate/100);
-					} # end foreach Project
-					foreach my $Product ( $self->Products() ) {
-						my $price = $Product->price();
-						if ( $Product->currency_id() != $$self{'currency_id'} ) {
-							my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
-							$price *= $rate;
-						} # end if
-						$tax_amount += $price * ($tax_rate/100);
-					} # end foreach Project
+					$$self{'federal_tax'} = $self->subtotal() * ( $tax_rate/100 );
 				} # end if tax_rate 
-				$$self{'federal_tax'} = $tax_amount;
 			} # no tax for this state/country
 		} # end if exempt
 	} # end if ! $$self{'federal_tax'};
@@ -504,35 +487,24 @@ sub federal_tax {
 
 sub state_tax {
 	my ( $self, $new ) = @_;
+$log->debug("state_tax");
 	if ( $new ) {
 		$$self{'state_tax'} = $new;
 	} elsif ( ! defined $$self{'state_tax'} ) {
+		$$self{'state_tax'} = '';
 		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax::find('state'=>$self->state() );
+$log->debug("Not exempt");
+			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
+$log->debug("Taxes: " . @Taxes );
 			if ( @Taxes == 1 ) {
 				my $tax_rate = $Taxes[0]->statetax_rate();
-				my $tax_amount = 0;
-
+$log->debug("State tax rate: $tax_rate");
 				if ( $tax_rate ) {
-					foreach my $Project ( $self->Projects() ) {
-						my $price = $Project->ordered_price();
-						if ( $Project->currency_id() != $$self{'currency_id'} ) {
-							my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
-							$price *= $rate;
-						} # end if
-						$tax_amount += $price * ($tax_rate/100);
-					} # end foreach Project
-					foreach my $Product ( $self->Products() ) {
-						my $price = $Product->price();
-						if ( $Product->currency_id() != $$self{'currency_id'} ) {
-							my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
-							$price *= $rate;
-						} # end if
-						$tax_amount += $price * ($tax_rate/100);
-					} # end foreach Project
+					$$self{'state_tax'} = $self->subtotal() * ( $tax_rate/100 );
 				} # end if tax_rate
-				$$self{'state_tax'} = $tax_amount;
 			} # no tax for this state/country
+} else {
+$log->debug("exempt" . $self->Company()->pst_exempt());
 		} # end if pst_exempt ne 'Y'
 	} # end if ! $$self{'state_tax'};
 	return $$self{'state_tax'};
@@ -543,36 +515,55 @@ sub harmonized_tax {
 	if ( $new ) {
 		$$self{'harmonized_tax'} = $new;
 	} elsif ( ! defined $$self{'harmonized_tax'} ) {
+		$$self{'harmonized_tax'} = '';
 		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax::find('state'=>$self->state() );
+			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
 			if ( @Taxes == 1 ) {
 				my $tax_rate = $Taxes[0]->harmonizedtax_rate();
-				my $tax_amount = 0;
-
 				if ( $tax_rate ) {
-					foreach my $Project ( $self->Projects() ) {
-						my $price = $Project->ordered_price();
-						if ( $Project->currency_id() != $$self{'currency_id'} ) {
-							my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
-							$price *= $rate;
-						} # end if
-						$tax_amount += $price * ($tax_rate/100);
-					} # end foreach Project
-					foreach my $Product ( $self->Products() ) {
-						my $price = $Product->price();
-						if ( $Product->currency_id() != $$self{'currency_id'} ) {
-							my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
-							$price *= $rate;
-						} # end if
-						$tax_amount += $price * ($tax_rate/100);
-					} # end foreach Project
-					$$self{'harmonized_tax'} = $tax_amount;
+					$$self{'harmonized_tax'} = $self->subtotal() * ( $tax_rate/100 );
 				} # end if tax_rate
 			} # no tax for this state/country
 		} # end if exempt
 	} # end if ! $$self{'harmonized_tax'};
 	return $$self{'harmonized_tax'};
 } # end sub harmonized_tax
+
+sub subtotal {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'subtotal'} = shift;
+	} elsif ( ! $$self{'subtotal'} ) {
+		$$self{'subtotal'} = 0;
+		foreach my $Project ( $self->Projects() ) {
+			my $price = $Project->ordered_price();
+			if ( $Project->currency_id() != $$self{'currency_id'} ) {
+				my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
+				$price *= $rate;
+			} # end if
+			$$self{'subtotal'} += $price;
+		} # end foreach Project
+		foreach my $Product ( $self->Products() ) {
+			my $price = $Product->price();
+			if ( $Product->currency_id() != $$self{'currency_id'} ) {
+				my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
+				$price *= $rate;
+			} # end if
+			$$self{'subtotal'} += $price;
+		} # end foreach Project
+	} # end if
+	return $$self{'subtotal'};
+} # end sub subtotal
+
+sub total {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'total'} = shift;
+	} elsif ( ! $$self{'total'} ) {
+		$$self{'total'} = $self->subtotal() + $self->state_tax() + $self->federal_tax() + $self->harmonized_tax();
+	} # end if
+	return $$self{'total'};
+} # end sub total
 
 1;
 __END__

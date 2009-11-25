@@ -862,7 +862,6 @@ sub copy {
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-$log->debug("Loading $$self{id}");
 		$data = $dbh->selectrow_hashref( q{SELECT * FROM Projects WHERE id=?}, {}, $$self{'id'} );
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
@@ -870,7 +869,6 @@ $log->debug("Loading $$self{id}");
 	} # endif
 	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
 		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
-$log->debug("PROJECT: $$self{id}");
 } # end sub load
 
 sub type {

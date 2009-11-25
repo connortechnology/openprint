@@ -202,7 +202,7 @@ AjaxLoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.s
                         } # end foreach $L
                          $session{'/employee/reports/stock.html?location_id'} = join(';', @selected);
                     } # end if
-                    return ssi::make_select( \@options, \@selected );
+                    return ssi::make_drop_down( \@options, \@selected );
                 ) ?>
             </select>
         </p>

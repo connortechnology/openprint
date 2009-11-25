@@ -160,7 +160,7 @@ sub bindery_overview {
 
 	my @possible_statuses = ( 'Approved','Printed','Complete' );
 	my @statuses = $r->param('Status') ? sets::intersection( @possible_statuses , $r->param('Status') ) : ( 'Printed' );
-	$variable{'Status'} = ssi::make_select( [ map { $_, $_ } @possible_statuses ], [@statuses] );
+	$variable{'Status'} = ssi::make_drop_down( [ map { $_, $_ } @possible_statuses ], [@statuses] );
 
 	my %services = (
 			'Cut'               => [ 'Cutting' ],

@@ -13,7 +13,7 @@
 				) ?>
 		<? while ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
 		<tr>
-			<td><input type="checkbox" id="chkDelete-<? echo ( $$variable{'Tax'}->id() ) ?>" name="chkDelete-<? echo ( $$variable{'Tax'}->id() ) ?>" /></td>
+			<td><input type="checkbox" id="tax_ids<? echo ( $$variable{'Tax'}->id() ) ?>" name="tax_ids" value="<? echo ( $$variable{'Tax'}->id() ) ?>" /></td>
 			<td><? echo ( $countries::countries{$$variable{'Tax'}->country()} ? $countries::countries{$$variable{'Tax'}->country()} : $$variable{'Tax'}->country() ) ?></td>
 			<td><? echo (
 				if ( $$variable{'Tax'}->country() eq 'CA' and $provinces::provinces{$$variable{'Tax'}->state()} ) {

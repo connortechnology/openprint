@@ -50,13 +50,10 @@ sub taxes {
 
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $key ( keys %param ) {
-			if ( $key =~ /chkDelete-(\d*)/ ) {
-				my $Tax = new openprint::Tax( $1 );
-				$variable{'error'} .= $Tax->delete();
-				
-				openprint::logs::insertLogRecord('74', sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() ) );
-			} # end if
+		foreach my $id ( ref $param{'tax_ids'} eq 'ARRAY' ? @{$param{'tax_ids'}} : $param{'tax_ids'} ) {
+			my $Tax = new openprint::Tax( $id );
+			openprint::logs::insertLogRecord('74', sprintf('Country: %s | State: %s', $Tax->country(), $Tax->state() ) );
+			$variable{'error'} .= $Tax->delete();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
@@ -264,7 +261,7 @@ sub user_profiles {
 	if ( $User->id() ) {
 		@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $User->id() );
 	} # end if
-	$variable{'selectUserCategories'} = ssi::make_select( \@available_categories, \@users_categories );
+	$variable{'selectUserCategories'} = ssi::make_drop_down( \@available_categories, \@users_categories );
 
 } # end sub user_profiles
 
@@ -447,7 +444,7 @@ sub company_profiles {
 
 	# Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
 	my @available_categories = map { $_->id(), $_->name() } openprint::MarketingCategory::find();
-	$variable{'selectCustomerCategories'} = ssi::make_select( \@available_categories, \@customers_categories );
+	$variable{'selectCustomerCategories'} = ssi::make_drop_down( \@available_categories, \@customers_categories );
 
 	$variable{'CreditBalance'} = '$ '.sprintf( '%.2f', ( $total - $payments ) );
 	if ( $variable{'txtCreditLimit'} < ($total - $payments) ) {

@@ -1,7 +1,6 @@
 package openprint::Tax;
 @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
@@ -13,10 +12,8 @@ use vars qw(%variable $log $dbh %config %session $table $serial %fields %transfo
 *session = \%openprint::session;
 
 require sql;
-require ssi;
-require misc;
 
-my $debug = 0;
+my $debug = 1;
 
 $table = 'Taxes';
 $serial = 'taxes_id_seq';
@@ -31,12 +28,16 @@ $serial = 'taxes_id_seq';
 );
 
 %transforms = (
-	'id'			=>	[ 's/\D//g' ],
+	'id'					=>	[ 's/\D//g' ],
+	'federaltax_rate'		=>	[ 's/[^\d\.]//g' ],
+	'statetax_rate'			=>	[ 's/[^\d\.]//g' ],
+	'harmonizedtax_rate'	=>	[ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
-	'federaltax_rate'	=>	undef,
-	'statetax_rate'		=>	undef,
+	'federaltax_rate'		=>	undef,
+	'statetax_rate'			=>	undef,
+	'harmonizedtax_rate'	=>	undef,
 );
 
 my %find_cache;
@@ -81,11 +82,6 @@ sub find {
 	@{$find_cache{$hash_key}} = map { new openprint::Tax( $_->{id}, $_ ) } @$data;
 	return @{$find_cache{$hash_key}};
 } # end sub find
-
-sub delete {
-	my $self = shift;
-    sql::execute( undef, undef, q{DELETE FROM Taxes WHERE id=?}, $$self{'id'} );
-} # end sub delete
 
 1;
 #__END__

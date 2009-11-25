@@ -15,7 +15,7 @@
 			<? echo ( 
 				my @options = ( 'Shipped','Shipped','Picked Up', 'Picked Up' );
 				my @selected = defined $r->param('Status') ? $r->param('Status') : ( 'Shipped', 'Picked Up' );
-				return ssi::make_select( \@options, \@selected );
+				return ssi::make_drop_down( \@options, \@selected );
 			 ) ?>
 			</select>
 		</p>

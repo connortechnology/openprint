@@ -225,7 +225,7 @@ onDestroy: function(eventName, win) {
 	} else {
 		@selected_presses = map { $_->id() } @{$$variable{'Presses'}};
 	} # end if
-	return ssi::make_select( map { $_->id(), $_->name() } @{$$variable{'Presses'}}, \@selected_presses  );
+	return ssi::make_drop_down( map { $_->id(), $_->name() } @{$$variable{'Presses'}}, \@selected_presses  );
 ) ?>
 				</select>
 		</p>

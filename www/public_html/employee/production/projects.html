@@ -80,7 +80,7 @@
 			} # end if
 			$session{'/employee/production/projects.html?ProjectStatus'} = join(';',@status_filter );
 		} # end if
-		return ssi::make_select( [ map { $_, $_ } @statuses ], \@status_filter );
+		return ssi::make_drop_down( [ map { $_, $_ } @statuses ], \@status_filter );
 ) ?>
 			</select>
 	</p>

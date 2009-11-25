@@ -56,7 +56,7 @@
 				<label>Equipment</label>
 				<select multiple="multiple" size="4" name="ddmEquipment-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New">
 					<option value="" selected="selected">All Equipment</option>
-					<? echo ( ssi::make_select( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strID)') ] ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strID)') ] ); ) ?>
 				</select>
 			</p>
 <? endif ( openprint::Equipment::find() ) ?>
