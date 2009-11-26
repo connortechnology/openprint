@@ -856,7 +856,7 @@ sub reuse_project {
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 
 	if ( $r->param('ddmCompany') and $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
-		openprint::account::select_company( $r, $log, $dbh, $cookie, $variable ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
+		openprint::switch_company( new openprint::Company( $r->param('ddmCompany') ) ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
 	} # end if
 
 	# Make this all one transaction... Don't need locking because a reload would get a different projectindex

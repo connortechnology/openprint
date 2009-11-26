@@ -764,23 +764,20 @@ sub finalise_order {
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
-
 		# Commit Project Information
-		# get taxes
 		my @Taxes = openprint::Tax::find('state'=>$Order->state(),'country'=>$Order->country() );
 		my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
 
-		$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
-		my ( $pst_exempt, $gst_exempt ) = sql::execute( $log, $dbh, $_, $openprint::session{'company_id'} );
+		my $Company = $Order->Company();
+		my ( $pst_exempt, $gst_exempt ) = ( $Company->pst_exempt(), $Company->gst_exempt() );
 
-		my @Projects = $Order->Projects();
 		my $sub_total = 0;
 		my $gst_total;
 		my $pst_total;
 		my $hst_total;
 		my $total = 0;
 
-		foreach my $Project ( @Projects ) {
+		foreach my $Project ( $Order->Projects() ) {
 			my ( $pst_amount, $gst_amount, $hst_amount );
 
 			my $price = $Project->ordered_price();
@@ -856,10 +853,7 @@ sub finalise_order {
 		$downpayment = $total * ( $downpayment / 100 );
 		$downpayment = sprintf( '%.2f', $downpayment );
 
-		my $status = 'In Production';
-		if ( ( $downpayment - $Order->paid() ) > 0 ) {
-			$status = 'Pending Deposit';
-		} # end if
+		my $status = ( ( $downpayment - $Order->paid() ) > 0 ) ? 'Pending Deposit': 'In Production';
 		# Get Docket #
 		my ( $docket_number ) = $Order->docket();
 		if ( ! $docket_number ) {
@@ -887,7 +881,7 @@ sub finalise_order {
 		$$variable{'Downpayment'} = 0 if $$variable{'Downpayment'} < 0;
 		$$variable{'Downpayment'} = sprintf( '%.2f', $$variable{'Downpayment'} );
 
-		foreach my $Project ( @Projects ) {
+		foreach my $Project ( $Order->Projects() ) {
 			sql::update( $log, $dbh, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus NOT IN ( 'Complete', 'Approved', 'Proofs Out', 'Waiting For Customer Approval','Waiting For QA Approval','')", $Project->id()], 'strStatus', 'Ordered' );
 			$Project->docket( $docket_number );
 			$Project->order_id( $Order->id() );

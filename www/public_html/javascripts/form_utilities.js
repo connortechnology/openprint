@@ -1002,3 +1002,33 @@ function convert_kg_to_lbs( from, to ) {
 	} // end for
 	to.value = qtys.join(',');
 } // end function convert_kg_to_lbs
+
+function radio_all(element) {
+	// assume the element is part of an array
+	var radio_array = element.form.elements[element.name];	
+	if ( ! radio_array ) {
+		alert('no aray');
+	} else if ( ! radio_array.length ) {
+		alert('not an array');
+	} // end if
+
+	if ( element.value == '' ) {
+		for ( var i = 0; i < radio_array.length; i += 1 ) {
+			if ( radio_array[i].value != '' ) {
+				radio_array[i].checked = ! element.checked;
+			} // end if
+		} // end for
+	} else {
+		var all_element;
+		var on = false;
+		for ( var i = 0; i < radio_array.length; i += 1 ) {
+			if ( radio_array[i].value == '' ) {
+				all_element = radio_array[i];
+			} else if ( radio_array[i].checked ) {
+				on = true;
+			} // end if
+		} // end for
+		if ( all_element ) 
+			all_element.checked = ! on;	
+	} // end if
+} // end function radio_all

@@ -1123,6 +1123,7 @@ sub calc {
 						$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = '';
 					} # end if
 					$status = 'uncalculated';
+$openprint::log->debug("Unable to fold $qty_index $$sig_specs{SignatureIndex}");
 				} # end if
 				if ( $results{'Status'} eq 'uncalculated' ) {
 					$status = 'uncalculated';

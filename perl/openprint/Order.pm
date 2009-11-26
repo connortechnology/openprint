@@ -322,8 +322,7 @@ sub status {
 sub update_status {
 	my $self = shift;
 
-	# selects are very lightweight, so let's only update when we have to!
-	$_ = q{SELECT DISTINCT(strStatus) FROM Projects WHERE Index IN (SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)};
+	$_ = q{SELECT DISTINCT(strStatus) FROM Projects WHERE id IN (SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?)};
 	my @statuses = sql::execute( $log, $dbh, $_, $$self{id} );
 
 	if ( sets::isin( 'Pending Deposit', \@statuses ) and $self->status() ne 'Pending Deposit' ) {

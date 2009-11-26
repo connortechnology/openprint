@@ -6,7 +6,7 @@ package openprint::Project;
 use strict;
 use openprint ();
 
-use vars qw( $log $dbh %config );
+use vars qw( $log $dbh %config $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -26,9 +26,12 @@ require openprint::ScheduledJob;
 
 my $debug = 1;
 
+$table = 'projects';
+$serial = 'lngProjectIndex_seq';
+
 sub delete {
 	my $self = shift;
-	sql::update( undef, undef, 'tbl_Projects', ['id=?', $$self{'id'}], ['strStatus', 'Deleted'] );
+	sql::update( undef, undef, $table, ['id=?', $$self{'id'}], ['strStatus', 'Deleted'] );
 } # end sub delete
 
 sub destroy {
@@ -652,6 +655,16 @@ $openprint::log->debug("No presses in used_press_name");
 		$sql .= ' AND lngdocketnumber=?';
 		push @values, $params{'docket'};
 	} # end if
+	if ( $params{'docket_>='} and $params{'docket_<='} ) {
+		$sql .= ' AND ( lngdocketnumber BETWEEN ? AND ? )';
+		push @values, @params{'docket_>=','docket_<='};
+	} elsif ( $params{'docket_>='} ) {
+		$sql .= ' AND lngdocketnumber >= ?';
+		push @values, $params{'docket_>='};
+	} elsif ( $params{'docket_<='} ) {
+		$sql .= ' AND lngdocketnumber <= ?';
+		push @values, $params{'docket_<='};
+	} # end if
 	$sql .= $params{'misc'} if $params{'misc'};
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
@@ -720,7 +733,7 @@ sub save {
 			return $e;
 		} # end if
 	} elsif ( $$hash{'force_install'} ) {
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'tbl_Projects', 'Index',	@$self{'id'}, @sql ) ) {
+		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'id',	@$self{'id'}, @sql ) ) {
 			$openprint::dbh->rollback;
 			sql::end_transaction( $openprint::dbh, $ac );
 			return $e;

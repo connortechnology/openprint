@@ -67,10 +67,12 @@ sub view {
 				} # end if
 			} # end if
 			$variable{'error'} .= $C->save( {
-					'quantity'		=>	sprintf('%d', $param{"qty_lbs-$$C{id}"}),
+					'quantity'		=>	sprintf('%d', $param{"quantity-$$C{id}"}),
+					'weight'		=>	sprintf('%d', $param{"qty_lbs-$$C{id}"}),
 					'cost'			=>	$param{"cost-$$C{id}"},
 					'skid_id'		=>	$param{"skid_id-$$C{id}"},
 					'reason'		=>	$param{"reason-$$C{id}"},
+					'description'	=>	$param{"description-$$C{id}"},
 					'cost_units'	=>	$param{"cost_units-$$C{id}"},
 					} );
 		} # end foreach Contents
