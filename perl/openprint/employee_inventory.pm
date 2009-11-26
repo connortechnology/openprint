@@ -806,7 +806,7 @@ sub check_out {
 			my $amount = $C->quantity();
 			$qty -= $amount;
 			$amount *= -1;
-			$Skid->add( $Paper, $amount );
+			$C->save({'quantity'=>0});
 			$Paper->add_inventory( $Skid, $amount, $units, $description );
 			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if @Projects and $Paper->allocated( $Projects[0]->id() );
 		} else {
