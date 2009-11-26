@@ -745,6 +745,15 @@ sub save {
 			return $e;
 		} # end if
 	} # end if
+	if ( $$self{'order_id'} ) {
+		sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', @$self{'order_id','id'} ], {
+			'shippingtype'	=>	$$self{'shippingtype'},
+			'daterequired'	=>	$$self{'requested_date'},
+			'intquantity'	=>	$$self{'ordered_quantity_index'},
+			'cursalesprice'	=>	$$self{'ordered_price'},
+} );
+			
+	} # end if
 	$self->load();
 	sql::end_transaction( $openprint::dbh, $ac );
 	return;
@@ -882,6 +891,9 @@ sub load {
 	} # endif
 	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
 		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
+	if ( $$self{'order_id'} ) {
+		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
+	} # end if
 } # end sub load
 
 sub type {
@@ -1089,32 +1101,23 @@ sub Company {
 
 sub requested_date {
 	my $self = shift;
-	if ( ! exists $$self{'requested_date'} ) {
-		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
-	} # end if
 	return $$self{'requested_date'};
 } # end sub requested_date
 
 sub shippingtype {
-	my $self = shift;
-	if ( ! exists $$self{'shippingtype'} ) {
-		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
+	my ( $self, $new ) = @_;
+	if ( $new ) {
+		$$self{'shippingtype'} = $new;
 	} # end if
 	return $$self{'shippingtype'};
 } # end sub shippingtype
 sub ordered_quantity {
 	my $self = shift;
-	if ( (! exists $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {
-		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
-	} # end if
 	return $$self{'quantity'.$self->ordered_quantity_index()};
 } # end sub ordered_quantity
 
 sub ordered_quantity_index {
 	my $self = shift;
-	if ( (! $$self{'ordered_quantity_index'}) and $$self{'order_id'} ) {
-		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
-	} # end if
 	if ( ! $$self{ordered_quantity_index} ) {
 		my @qtys = $self->quantity_indexes();
 $openprint::log->debug("Project ordered_qty_index @qtys ");
@@ -1127,9 +1130,6 @@ $openprint::log->debug("Project ordered_qty_index @qtys ");
 
 sub ordered_price {
 	my $self = shift;
-	if ( ! exists $$self{'ordered_price'} ) {
-		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
-	} # end if
 	return $$self{'ordered_price'} if $$self{'ordered_price'};
 	return $$self{'price'.$self->ordered_quantity_index()};
 } # end sub ordered_price

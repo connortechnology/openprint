@@ -1,20 +1,7 @@
 <? if ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>
 <? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 <div class="Project">
-	<fieldset><legend>Project Information</legend>
-		<div class="content">
-			<? echo ( return $$variable{'Project'}->summary();) ?>
-			<ul>
-				<li>
-					<label>Reference:</label>
-					<? echo ( $$variable{'Project'}->reference(); ) ?>
-				</li>
-				<li><label>Type</label><? echo ( $$variable{'Project'}->Type()->name() ) ?></li>
-				<li><label>Quantity</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
-				<li><label>Created</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></li>
-			</ul>
-		</div>
-	</fieldset>
+<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' ); ) ?>
 </div>
 <? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 <? endif ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>

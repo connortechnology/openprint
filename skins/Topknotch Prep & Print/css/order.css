@@ -31,6 +31,7 @@ div.Order fieldset li textarea {
 div.Order div.Header {
 	width: 100%;
     margin: 5px 0px 5px 0px;
+	background:#daf3fc;
 }
 div.Order div.Header:after {
     content: ".";
@@ -93,21 +94,6 @@ div.OrderHistory fieldset#Filter {
 	padding: 0px;
 	margin: 0px;
 }
-div.Order div.Header {
-	background:#daf3fc;
-}
-div.Order div.Header:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div.Order div.Header {height: 1%;}
-* div.Order div.Header {display:block;}
-/* End hide from IE-mac */
 div.Order div#ContactInformation {
 	float:left;
 	width: 50%;
@@ -143,14 +129,15 @@ div.Order fieldset legend {
 	font-size:large;
 	font-weight: bold;
 	padding: 10px 10px 0px 10px;
+	color: #07759f;
 }
 div.Order div.Project fieldset legend {
-	font-size:x-large;
-	font-weight: bold;
-	padding: 10px 0px 10px 0px;
 }
-div.Order div.Header fieldset .content, div.Order div.Project fieldset .content {
+div.Order div.Header fieldset .content {
 	padding: 5px;
+}
+div.Order div.Project fieldset .content {
+	padding: 10px;
 }
 div.Order div#AdminOptions {
 	display: none;
@@ -201,3 +188,75 @@ div.Order div.Header #BillingInformation {
 	padding: 0px;
 } 
 
+div.Order div.Project {
+	background:#daf3fc;
+}
+div.Order div.Project div.Header {
+	margin: 0px;
+}
+div.Order div.Project div.Summary {
+	float: right;
+	width: 50%;
+}
+div.Order div.Project div.Summary ul li {
+	padding-left: 5px;
+}
+div.Order div.Project div.Information {
+	float: right;
+	width: 50%;
+}
+div.Order div.Project div.ProjectContents {
+	margin: 10px;
+}
+div.Order div.Project table {
+}
+div.Order div.Project table thead tr {
+	background:#daf3fc;
+}
+div.Order div.Project table thead tr th {
+	background:#daf3fc;
+	font-size:large;
+	font-weight: bold;
+	padding: 10px 0px 10px 0px;
+	color: #07759f;
+}
+div.Order div.Project table tbody {
+	border:1px solid #a0b5ca;
+}
+div.Order div.Project table th {
+	font-size: medium;
+	font-weight: bold;
+	text-align: left;
+}
+div.Order div.Project th.price {
+	text-align: right;
+	width: 90px;
+}
+div.Order div.Project td.price {
+	font-weight: normal;
+	width: 90px;
+	text-align: right;
+	font-size: small;
+}
+div.Order div.Project th.service {
+	width: 120px;
+}
+div.Order div.Project td.service {
+	width: 120px;
+	text-align: left;
+	font-size: small;
+	text-transform: uppercase;
+	font-weight: bold;
+}
+div.Order div.Project td.description {
+	font-weight: normal;
+	text-align: left;
+	font-size: small;
+}
+div.Order div.Project th.description {
+}
+div.Order fieldset ul li.help {
+	padding-left: 5px;
+	font-size: xx-small;
+	color: #07759f;
+}

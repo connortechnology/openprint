@@ -158,7 +158,7 @@ sub add_project_to_order {
 	} # end if
 	my $services = $Project->services();
 	if ( $$services{'Turnaround'} ) {
-		my $specs = openprint::service::get_specs_ref( $project_index, $$services{'Turnaround'}[0] );
+		my $specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
 		my ( $year, $month, $day ) = Date::Calc::Today();
 		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, $$specs{'TurnaroundDays'} );
 		if ( Date::Calc::Day_of_Week( $year, $month, $day ) == 6 ) {
@@ -171,6 +171,7 @@ sub add_project_to_order {
 	my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
 	if ( @ShippingServices ) {
 		foreach my $ShippingType ( @ShippingServices ) {
+			next if sets::isin( $ShippingType->name(), ['Turnaround'] );
 			if ( $$services{$ShippingType->name()} ) {
 				$sql{'ShippingType'}=$ShippingType->name();
 				last;
@@ -325,19 +326,13 @@ sub save_project_information {
 	my $Project = new openprint::Project( $project_index );
 
 	my %sql;
-	my $qty;
 	if ( $openprint::param{"rdbQuantity$project_index"} ) {
-		$sql{'intQuantityIndex'}=$openprint::param{"rdbQuantity$project_index"};
-		$qty = $openprint::param{"rdbQuantity$project_index"};
-		$Project->ordered_quantity_index( $qty );
+		$Project->ordered_quantity_index( $openprint::param{"rdbQuantity$project_index"} );
 	} elsif ( ! $Project->ordered_quantity_index() ) {
 		my @qtys = $Project->quantity_indexes();
 		if ( 1 == scalar @qtys ) {
 			$Project->ordered_quantity_index( $qtys[0] );
-			$qty = $qtys[0];
 		} # end if
-	} else {
-		$qty = $Project->ordered_quantity_index();
 	} # end if
 
 	if ( $openprint::param{'ddmDueDateYear'.$project_index} and $openprint::param{'ddmDueDateMonth'.$project_index} and $openprint::param{'ddmDueDateDay'.$project_index} ) {
@@ -350,11 +345,11 @@ sub save_project_information {
 	} # end if
 
 	my $services = $Project->services();
-	my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
-$log->debug("ServiceTypes: @ServiceTypes") if $debug;
 
 	# If we are specifying the Shipping Type
 	if ( $openprint::param{'ShippingType'.$project_index} ) {
+		my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if $debug;
 		foreach my $ShippingType ( @ServiceTypes ) {
 
 			# Add or delete services as relevant
@@ -370,7 +365,7 @@ $log->debug("ServiceTypes: @ServiceTypes") if $debug;
 				delete $$services{$ShippingType->name()};
 			} # end if
 
-			if ( $$services{$ShippingType->name()} ) {
+			if ( $$services{$ShippingType->name()} and ! sets::isin( $ShippingType->name(), ['CustomerPickUp'] ) ) {
 				my @shipping_fields = (
 						'txtQuantity'.$Project->ordered_quantity_index(),
 						'ToCompanyName',
@@ -389,7 +384,7 @@ $log->debug("ServiceTypes: @ServiceTypes") if $debug;
 						);
 				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 					foreach my $spec ( @shipping_fields ) {
-$log->debug("Sacing: $spec => $openprint::param{$spec-$project_index-$service_id}");
+$log->debug("Sacing: $$ShippingType{name} $spec-$project_index-$service_id => " . $openprint::param{"$spec-$project_index-$service_id"} );
 						openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $spec, $openprint::param{"$spec-$project_index-$service_id"} ) if exists $openprint::param{"$spec-$project_index-$service_id"};
 					} # end foreach field
 					my $specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, $ShippingType->name() );
@@ -397,9 +392,8 @@ $openprint::log->warn($$specs{'alert'}) if $$specs{'alert'};
 				} # end foreach service_id
 			} # end if exists service
 		} # end foreach ShippingType
+		$Project->shippingtype( join(',', sets::intersection( keys %{$services}, map { $_->name() } @ServiceTypes ) ) );
 	} # end if
-
-	sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $order_id, $project_index], \%sql ) if %sql;
 
 	$Project->reference( $openprint::param{"Reference$project_index"} ) if $openprint::param{"Reference$project_index"};
 	$Project->save();
@@ -679,25 +673,24 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 	} # end if
 
 	my @errors;
-	my @data = sql::execute( $log, $dbh, q{SELECT intQuantityIndex, ShippingType, lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $order_id );
-	while ( my ( $qty, $shipping, $project_index ) = splice @data, 0, 3 ) {
-		my $Project = new openprint::Project( $project_index );
-		if ( ! $qty ) {
-			push @errors, "Please select the quantity to order for project $project_index";
+	foreach my $Project ( $Order->Projects() ) {
+		if ( ! $Project->ordered_quantity() ) {
+			push @errors, "Please select the quantity to order for project $$Project{id}";
 		} # end if
-		if ( ! $shipping ) {
-			push @errors, "Please select a shipping type for project $project_index";
+		if ( ! $Project->shippingtype() ) {
+			push @errors, "Please select a shipping type for project $$Project{id}";
 		} # end if
 		if ( ! $Project->reference() ) {
-			push @errors, "Please give project $project_index a reference";
+			push @errors, "Please give project $$Project{id} a reference";
 		} # end if
 		my $services = $Project->services();
 		my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
 		foreach my $ServiceType ( @ServiceTypes ) {
 			next if ! $$services{$ServiceType->name()};
-			next if $ServiceType->name() eq 'CustomerPickUp';
+			next if sets::isin( $ServiceType->name(), [ 'CustomerPickUp','Turnaround'] );
 		
 			foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+$log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 				my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 # do error checks
 				push @errors, 'Please enter the Shipping Company Name.' if ! $$specs{'ToCompanyName'};
@@ -713,13 +706,14 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 					push @errors, 'Shipping Email is not a valid email address.';
 				} # end if
 	
-				if ( openprint::service::status( $project_index, $service_id ) eq 'uncalculated' ) {
+				if ( openprint::service::status( $Project->id(), $service_id ) eq 'uncalculated' ) {
 					push @errors, 'Unable to calculate shipping:' . $$specs{'alert'}.'.';
 				} # end if
 			} # end foreach service_id
 		} # end foreach ServiceType
-	} # end while Project
+	} # end foreach  Project
 	if ( @errors ) {
+		%openprint::param = ();
 		$$variable{'error'} .= join('<br/>', @errors );
 		$$variable{'Redirect'} = '/main/order/information.html';
 		return;

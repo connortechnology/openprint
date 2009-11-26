@@ -1,6 +1,3 @@
-<fieldset>
-	<legend>Project Information</legend>
-	<div class="content">
 <? if ( $config{'OrderMode'} ne 'Simple' ) ?>
 	<span style="float: right;">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' ); ) ?>
@@ -9,32 +6,103 @@
 	<a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>">
 	<? echo ( return $$variable{'Project'}->summary();) ?>
 	</a>
+		<? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
+		<!--#include virtual="_quantity_select.html"-->
+		<? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
+		<? if ( ! $$variable{'Project'}->requested_date() ) ?>
+		<!--#include virtual="_required_by.html"-->
+		<? endif ( ! $$variable{'Project'}->requested_date() ) ?>
+		<!--#include virtual="_shipping_type_select.html"-->
 <? else ( $config{'OrderMode'} ne 'Simple' ) ?>
-	<? echo ( return $$variable{'Project'}->summary();) ?>
-<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
-	<br class="spacer"/>
-	<ul>
-		<li>
-			<label>Reference:</label>
-			<? if ( ! $$variable{'Project'}->reference() ) ?>
-			<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
-			<? else ( ! $$variable{'Project'}->reference() ) ?>
-			<? echo ( $$variable{'Project'}->reference(); ) ?>
-			<? endif ( ! $$variable{'Project'}->reference() ) ?>
-		</li>
-<? if ( $config{'OrderMode'} ne 'Simple' ) ?>
-<? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
-<!--#include virtual="_quantity_select.html"-->
-<? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
-<? if ( ! $$variable{'Project'}->requested_date() ) ?>
-<!--#include virtual="_required_by.html"-->
-<? endif ( ! $$variable{'Project'}->requested_date() ) ?>
-<!--#include virtual="_shipping_type_select.html"-->
-<? else ( $config{'OrderMode'} ne 'Simple' ) ?>
-	<li><label>Type</label><? echo ( $$variable{'Project'}->Type()->name() ) ?></li>
-	<li><label>Quantity</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
-	<li><label>Created</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></li>
-<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
-	</ul>
+<div class="Header">
+	<div class="Summary">
+		<fieldset>
+			<legend>Description</legend>
+			<div class="content">
+				<ul><li><? echo ( return $$variable{'Project'}->summary();) ?></li></ul>
+			</div>
+		</fieldset>
 	</div>
-</fieldset>
+	<div class="Information">
+		<fieldset><legend>Information</legend>
+			<div class="content">
+				<ul>
+					<li>
+						<label>Reference:</label>
+						<? if ( ! $$variable{'Project'}->reference() ) ?>
+						<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
+						<? else ( ! $$variable{'Project'}->reference() ) ?>
+						<? echo ( $$variable{'Project'}->reference(); ) ?>
+						<? endif ( ! $$variable{'Project'}->reference() ) ?>
+					</li>
+					<li><label>Project Number</label><? echo ( $$variable{'Project'}->id() ) ?></li>
+					<li><label>Type</label><? echo ( $$variable{'Project'}->Type()->name() ) ?></li>
+					<li><label>Quantity</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
+					<li><label>Created</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></li>
+				</ul>
+			</div>
+		</fieldset>
+	</div>
+</div><!--Header-->
+<div class="ProjectContents">
+		<table class="List">
+			<thead>
+				<tr> 
+					<th class="service">Service</th>
+					<th class="description">Description</th>
+					<th class="price">Price</th>
+				</tr>
+			</thead>
+			<tbody>
+	<? echo (
+		my $html;
+		my $Currency = openprint::Currency::get_current();
+		my $services = $$variable{'Project'}->services();
+		my $rowclass;
+		foreach my $category ( 'Prepress','Printing','Bindery','Packaging','Shipping','Custom Services','Paper' ) {
+			my @totals;
+			my $line_html = '';
+
+			if ( $category eq 'Printing' ) {
+				if ( $$services{'AdditionalSignature'} ) {
+					foreach my $service_id ( @{$$services{'AdditionalSignature'}} ) {
+					} # end if
+				} elsif ( $$services{''} ) {
+					my $service_id = $$services{''}[0];
+					my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
+					my $summary = openprint::service::summary( $$variable{'Project'}, $service_id );
+					$summary .= '<br/>' if $summary;
+					$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td><td class="price">%4$s%5$s</td></tr>', 
+						$rowclass, 'Printing', $summary.  openprint::service::summary( $$variable{'Project'}, $service_id, $$variable{'Project'}->ordered_quantity_index() )
+,
+						$Currency->symbol(),
+						Number::Format::format_number($$variable{'Project'}->Currency()->convert_from($$service_specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()}),2,2),
+					);
+					$html .= "\n";
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end if
+			} else {
+				foreach my $ServiceType ( openprint::ServiceType::find( 'category' => $category,'order'=>'sorting', 'view_visible'=>1 ) ) {
+					next if ! $$services{$ServiceType->name()};
+					foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+						my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
+						my $summary = openprint::service::summary( $$variable{'Project'}, $service_id );
+						$summary .= '<br/>' if $summary;
+						$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td><td class="price">%4$s%5$s</td>', 
+							$rowclass, $ServiceType->description(), 
+							$summary.  openprint::service::summary( $$variable{'Project'}, $service_id, $$variable{'Project'}->ordered_quantity_index() ),
+							$Currency->symbol(),
+							Number::Format::format_number($$variable{'Project'}->Currency()->convert_from($$service_specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()}),2,2),
+						);
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end foreach service_id
+				} # end foreach ServiceType
+			} # end if Printing or not
+		} # end foreach category
+		return $html;
+	) ?>
+		</tbody>
+	</table>
+
+</div>
+<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
