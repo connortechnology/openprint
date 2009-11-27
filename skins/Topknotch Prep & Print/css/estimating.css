@@ -62,9 +62,8 @@ div#instant_price_section #Cover,
 div#instant_price_section #Interior,
 div#instant_price_section #AlertDiv
 {
-	width: 385px;
+	width: 50%;
 	margin: 0px;
-	padding: 5px;
 } 
 div#instant_price_section .Size {
 	float: left;
@@ -128,9 +127,6 @@ div#instant_price_section .Prices, div#instant_price_section .Delivery #Shipping
 	color: #fff;
 	font-size:xx-small;
 }
-div#instant_price_section .Delivery #ShippingPrice {
-	margin-top: 10px;
-}
 div#instant_price_section .Prices:after {
     content: ".";
     display: block;
@@ -156,24 +152,12 @@ div#instant_price_section #subtotal:after {
 * div#instant_price_section #subtotal {display:block;}
 /* End hide from IE-mac */
 div#instant_price_section #UPSOptions {
-	margin-top: 10px;
 }
-div#instant_price_section #UPSOptions:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div#instant_price_section #UPSOptions {height: 1%;}
-* div#instant_price_section #UPSOptions {display:block;}
-/* End hide from IE-mac */
 
 div#instant_price_section #subtotal {
 	background: #606;
 }
+
 div#instant_price_section .Prices ul, div#instant_price_section .Delivery #ShippingPrice ul, div#instant_price_section #subtotal ul {
 	list-style: none;
 	float: right;
@@ -189,16 +173,25 @@ div#instant_price_section .Prices ul li.unitprice {
 	display: none;
 }
 
-div#instant_price_section .Delivery {
+div#instant_price_section .Delivery:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#instant_price_section .Delivery{height: 1%;}
+* div#instant_price_section .Delivery {display:block;}
+/* End hide from IE-mac */
+div#instant_price_section .Delivery .content {
 	background:#daf3fc;
 }  
 div#instant_price_section .Delivery h1 {
 	background:#fff;
 	padding-top: 20px;
 	padding-bottom: 10px;
-}
-div#instant_price_section .Delivery div.full-form {
-	margin-left: 10px;
 }
 div#instant_price_section .Delivery .ServiceTypes, div#instant_price_section .Delivery .PickupTypes {
 	width: 48%;

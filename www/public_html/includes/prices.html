@@ -27,9 +27,6 @@
 	<? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate',{'class'=>'Calculate'}); ) ?>
 </p>
 <!--#include virtual="_ups.html"-->
-<p class="buttons">
-<? echo ( ssi::writeButton( $log, $dbh, 'CalculateUPS', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate',{'class'=>'Calculate'}); ) ?>
-</p>
 <div id="subtotal">
 	<? echo (
 		my $Currency = openprint::Currency::get_current();
