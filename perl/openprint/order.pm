@@ -1091,25 +1091,23 @@ sub history {
 } # end sub history
 
 sub get_misc {
-	my ( $log, $dbh, $variable, $order_id ) = @_;
+	my ( $variable, $Order ) = @_;
 
-	$$variable{'Order'} = new openprint::Order( $order_id );
+	$openprint::log->debug("********* START OF Get Misc **************");
+	$$variable{'Order'} = $Order;
 
-	$log->debug("********* START OF Get Misc **************");
-
-	@$variable{'Downpayment','TOTAL', 'GST', 'HST', 'PST', 'ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $$variable{'Order'}->get('downpayment','total','gst','hst','pst','ordered_by','created_on','status','currency_id','po','administrator_comments','administrator_name');
+	@$variable{'Downpayment','TOTAL', 'GST', 'HST', 'PST', 'ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $Order->get('downpayment','total','gst','hst','pst','ordered_by','created_on','status','currency_id','po','administrator_comments','administrator_name');
 
 	my $Currency = new openprint::Currency( $$variable{'CurrencyIndex'} );
 	@$variable{'CurrencyName','CurrencySymbol'} = ($Currency->name(), $Currency->symbol() );
 	$$variable{'Currency'} = $Currency;
 
-	$$variable{'AmountPaid'} = $$variable{'Order'}->paid();
-	if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
-		$$variable{'AmountOutstanding'} = sprintf( '%.2f', $$variable{'Order'}->total() - $$variable{'Order'}->paid() );
-		$$variable{'DepositDue'} = sprintf( '%.2f', $$variable{'Order'}->downpayment() - $$variable{'Order'}->paid() ) if $$variable{'Order'}->paid() < $$variable{'Order'}->downpayment();
+	if ( $Order->status() ne 'Cancelled' ) {
+		$$variable{'AmountOutstanding'} = sprintf( '%.2f', $Order->total() - $Order->paid() );
+		$$variable{'DepositDue'} = sprintf( '%.2f', $Order->downpayment() - $Order->paid() ) if $Order->paid() < $Order->downpayment();
 	} # end if
 
-	$$variable{'AmountPaid'} = sprintf( '%.2f', $$variable{'AmountPaid'} );
+	$$variable{'AmountPaid'} = sprintf( '%.2f', $Order->paid() );
 } # end sub get_misc
 
 # called for orde_hisd
@@ -1143,7 +1141,7 @@ sub history_details {
             return misc::error( $log, $dbh, $variable, 'Error Saving Payment', $error );
         } # end if
 
-        openprint::order::get_misc( $log, $dbh, $variable, $order_id );
+        openprint::order::get_misc( $variable, $Order );
 
         if ( $$variable{'DepositDue'} > 0 ) {
             foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
@@ -1188,8 +1186,9 @@ sub display_order {
 	my ( $log, $dbh, $variable, $order_id ) = @_;
 
 	if ( $order_id ) {
-		get_invoice_to( $variable, $order_id );
-		get_misc( $log, $dbh, $variable, $order_id );
+		my $Order = new openprint::Oorder( $order_id );
+		get_invoice_to( $variable, $Order );
+		get_misc( $variable, $Order );
 		$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'city','state','country'} );
 		$$variable{'OrderID'} = $order_id;
 	} # end if
