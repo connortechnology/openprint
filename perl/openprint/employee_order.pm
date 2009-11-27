@@ -33,21 +33,18 @@ sub view {
 			return misc::error( $log, $dbh, $variable, 'Error Saving Payment', $error );
 		} # end if
 
-		openprint::order::get_misc( $log, $dbh, $variable, $order_id );
+		openprint::order::get_misc( $variable, $Order );
 
 		if ( $$variable{'DepositDue'} > 0 ) {
-			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
-				sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus='Ordered'", 'strStatus', 'Pending Deposit' );
-			} # end foreach
+			foreach my $Project ( $Order->Projects() ) {
+				$Project->status('Pending Deposit');
+			} # end foreach Project
 		} else {
 			$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
+			foreach my $Project ( $Order->Projects() ) {
+				$Project->status('In Production');
+			} # end foreach Project
 
-			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-				sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
-
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
-			} # end foreach
 			if ( $$variable{'AmountPaid'} >= $$variable{'TOTAL'} ) {
 				$Order->status('Paid') if $Order->status() eq 'Complete';
 			} # end if

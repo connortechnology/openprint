@@ -352,7 +352,7 @@ sub order_details {
 			return misc::error( $log, $dbh, $variable, 'Error Saving Payment', $error );
 		} # end if
 
-		openprint::order::get_misc( $log, $dbh, $variable, $order_id );
+		openprint::order::get_misc( $variable, $Order );
 
 		if ( $$variable{'DepositDue'} > 0 ) {
 			foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {

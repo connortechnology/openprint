@@ -585,9 +585,8 @@ sub store_order_info {
 } # end sub store_order_info
 
 sub get_invoice_to {
-	my ( $variable, $order_id ) = @_;
+	my ( $variable, $Order ) = @_;
 
-	my $Order = new openprint::Order( $order_id );
 	@$variable{
 		'companyname',
 		'salutation',
@@ -717,7 +716,7 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 	@{$$variable{'Projects'}} = $Order->Projects();
 	$$variable{'Order'} = $Order;
 
-	get_invoice_to(  $variable, $order_id );
+	get_invoice_to( $variable, $Order );
 	$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'city','state','country'} );
 
 	if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
@@ -896,8 +895,9 @@ sub send_completion_notice {
 	my ( $r, $log, $dbh, $order_id ) = @_;
 	my %order;
 
-	get_invoice_to( \%order, $order_id );
-	get_misc( $log, $dbh, \%order, $order_id );
+	my $Order = new openprint::Order( $order_id );
+	get_invoice_to( \%order, $Order );
+	get_misc( \%order, $Order );
 
 	$order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'city','state','country'} );
 	$order{'OrderID'} = $order_id;
@@ -929,8 +929,9 @@ sub send_invoice {
 	my ( $r, $log, $dbh, $order_id ) = @_;
 	my %order;
 
-	get_invoice_to( \%order, $order_id );
-	get_misc( $log, $dbh, \%order, $order_id );
+	my $Order = new openprint::Order( $order_id );
+	get_invoice_to( \%order, $Order );
+	get_misc( \%order, $Order );
 
 	my $credit = new openprint::customer_credit( $order{'CompanyIndex'} );
 	@order{$credit->fields()} = $credit->get($credit->fields());
@@ -993,8 +994,8 @@ sub send_sales_order {
 
 	my $Order = new openprint::Order( $order_id );
 
-	get_invoice_to( %order, $order_id );
-	get_misc( $log, $dbh, \%order, $order_id );
+	get_invoice_to( \%order, $Order );
+	get_misc( \%order, $Order );
 	$order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'city','stateprovince','country'} );
 	$order{'OrderID'} = $order_id;
 	$order{'Order'} = $Order;
@@ -1186,7 +1187,7 @@ sub display_order {
 	my ( $log, $dbh, $variable, $order_id ) = @_;
 
 	if ( $order_id ) {
-		my $Order = new openprint::Oorder( $order_id );
+		my $Order = new openprint::Order( $order_id );
 		get_invoice_to( $variable, $Order );
 		get_misc( $variable, $Order );
 		$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'city','state','country'} );

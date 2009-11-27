@@ -44,8 +44,11 @@
 	</ul>
 </div>
 <p class="buttons" id="OrderButton" <? echo ( 'style="display:none;"' if $$variable{'Status'} ne 'Unordered' ) ?> >
-<? echo ( ssi::writeButton( $log, $dbh, 'Upload', '', "click_upload( document.f1 );", '', 'Upload Files', {'class'=>'rightarrow'}); ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'Quote', '', "click_quote( document.f1 );", '', 'Email Quote', {'class'=>'rightarrow'}); ) ?>
+<? echo ( 
+	sets::isin( $session{'user_type'}, ['E','A'] ) ? 
+	ssi::writeButton( $log, $dbh, 'Quote', '', "click_quote( document.f1 );", '', 'Email Quote', {'class'=>'rightarrow'}); 
+	: ''
+) ?>
 <? echo ( ssi::writeButton( $log, $dbh, 'Order', '', "click_order( document.f1 );", '', 'Place Order', {'class'=>'rightarrow'}) if $config{AllowOrdering} ne 'false'; ) ?>
 </p>
 <input type="hidden" name="btnFunction" id="btnFunction" />
