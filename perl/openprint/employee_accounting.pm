@@ -103,11 +103,9 @@ sub details {
        openprint::order::cancel_order( $log, $dbh, $order_id );
 	} # end if
 
-	openprint::order::get_invoice_to( $log, $dbh, \%variable, $order_id );
-	openprint::order::get_ship_to( $log, $dbh, \%variable, $order_id );
+	openprint::order::get_invoice_to( \%variable, $Order );
 	$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@variable{'txtCity','txtStateProvince','txtCountry'} );
-	$variable{'FCITYPROVCOUNTRY'} = misc::build_city_prov_country(@variable{'txtShippingCity','txtShippingStateProvince','txtShippingCountry'} );
-	openprint::order::get_misc( $log, $dbh, \%variable, $order_id );
+	openprint::order::get_misc( \%variable, $Order );
 	openprint::order::get_projects( $log, $dbh, \%variable, $order_id );
 	$variable{'OrderID'} = $order_id;
 	my $Currency = $Order->Currency();
