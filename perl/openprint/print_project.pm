@@ -88,6 +88,7 @@ sub add_service {
 
 sub insert_service {
 	my ( $log, $dbh, $project_index, $service_id ) = @_;
+	my $Project = new openprint::Project( $project_index );
 	my $service_index = 0;
 	
 	my $ServiceType;
@@ -115,13 +116,11 @@ sub insert_service {
 	while ( @defaults ) {
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, shift @defaults, shift @defaults, 1 );
 	} # end while
-	my @quantities = openprint::project::get_quantities( $log, $dbh, $project_index );
-	foreach my $index ( 1 .. 3 ) {
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtQuantity$index", $quantities[$index-1], 1 );
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtQuantity$qty_index", $Project->quantity($qty_index), 1 );
 	} # end foreach
 
 	sql::end_transaction( $dbh, $ac );
-	my $Project = new openprint::Project( $project_index );
 	delete $$Project{'Services'};
 	delete $$Project{'service_types'};
 	delete $$Project{'signatures'};

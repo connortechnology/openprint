@@ -484,7 +484,7 @@ sub internal_calc {
 	} # end if
 	$specs{'Status'} = $status;
 	my $elapsed = time - $starttime;
-	$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d', $service_type, $status, $elapsed ) );
+	$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d (%s)', $service_type, $status, $elapsed, $specs{'alert'} ) );
 
 	my $ac = sql::start_transaction( $dbh );
 	status( $project_index, $service_index, $status );

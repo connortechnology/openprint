@@ -165,29 +165,29 @@ sub calc {
 				} # end if
 			} # end if
 			if ( ! $$specs{'ddmStockBrand2'} ) {
-                    $$specs{'alert'} .= 'Please select Interior Stock Brand<br/>';
-                    return $$specs{'Status'} = 'uncalculated';
-                } # end if
-                if ( ! $$specs{'ddmStockFinish2'} ) {
-                    $$specs{'alert'} .= 'Please select Interior Stock Finish<br/>';
-                    return $$specs{'Status'} = 'uncalculated';
-                } # end if
-                if ( ! $$specs{'ddmStockColour2'} ) {
-                    $$specs{'alert'} .= 'Please select Interior Stock Colour<br/>';
-                    return $$specs{'Status'} = 'uncalculated';
-                } # end if
-                if ( ! $$specs{'ddmStockWeight2'} ) {
-                    $$specs{'alert'} .= 'Please select Interior Stock Weight<br/>';
-                    return $$specs{'Status'} = 'uncalculated';
-                } # end if
+				$$specs{'alert'} .= 'Please select Interior Stock Brand<br/>';
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
+			if ( ! $$specs{'ddmStockFinish2'} ) {
+				$$specs{'alert'} .= 'Please select Interior Stock Finish<br/>';
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
+			if ( ! $$specs{'ddmStockColour2'} ) {
+				$$specs{'alert'} .= 'Please select Interior Stock Colour<br/>';
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
+			if ( ! $$specs{'ddmStockWeight2'} ) {
+				$$specs{'alert'} .= 'Please select Interior Stock Weight<br/>';
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
 
-				if ( $$specs{'rdbTemplateType'} eq 'SaddleStitching' and $$specs{'txtTotalPageQuantity'} % 4 ) {
-                    $$specs{'alert'} .= '# of pages should be a multiple of 4<br/>';
-                    return $$specs{'Status'} = 'uncalculated';
-				} elsif ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'txtTotalPageQuantity'} % 2 ) {
-                    $$specs{'alert'} .= '# of pages should be a multiple of 2<br/>';
-                    return $$specs{'Status'} = 'uncalculated';
-				} # end if
+			if ( $$specs{'rdbTemplateType'} eq 'SaddleStitching' and $$specs{'txtTotalPageQuantity'} % 4 ) {
+				$$specs{'alert'} .= '# of pages should be a multiple of 4<br/>';
+				return $$specs{'Status'} = 'uncalculated';
+			} elsif ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'txtTotalPageQuantity'} % 2 ) {
+				$$specs{'alert'} .= '# of pages should be a multiple of 2<br/>';
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
 
 # It's a multi-page publication
 			my $ac = sql::start_transaction( $dbh );

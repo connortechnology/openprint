@@ -313,8 +313,10 @@ sub multipage_signatures {
 	foreach my $k ( keys %$param ) {
 		if ( $k =~ /txtSignatureType(\d*)/ ) {
 			my $group_id = $1;
+$log->debug("special group $group_id");
 
 			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
+$log->debug("adding special group $group_id");
 				my $ac = sql::start_transaction( $dbh );
 				$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 				my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
@@ -395,6 +397,7 @@ $openprint::log->debug("Max group: $max_group");
 
 	if ( ! $Project->signatures({'type'=>'Interior Pages'}) ) {
 # Must have at least 1 interioer signature
+$log->debug('add interiorpages');
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
@@ -412,11 +415,12 @@ $openprint::log->debug("Max group: $max_group");
 		$$param{'GroupPageQuantity2'} = $needed_pages{'Interior Pages'};
 	} # end if
 
+	my $services = $Project->services();
+
 	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $type = $$sig_specs{'Group'};
 		if ( $type == 1 ) {
-			my $services = $Project->services();
 			# Presentation Folder Cover -> Make sure required services like Die Cutting and Gluing are present
 			if ( sets::isin( $$param{'rdbTemplateType'.$type}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 				if ( my @ProjectTypes = openprint::ProjectType::find('name'=>'PresentationFolders') ) {
@@ -469,7 +473,9 @@ $openprint::log->debug("Max group: $max_group");
 				'rdbPanels','PocketSize','chkPocketLeft','chkPocketCenter','chkPocketRight',
 				'txtFinalWidth','txtFinalHeight','chkOverrideDimensions','txtQuantity1','txtQuantity2','txtQuantity3',
 				) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
+#$log->debug("Group $type : $spec " .$$param{$spec.$type});
+			
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} ) if exists $$param{$spec.$type};
 		} # end foreach spec
 		foreach my $spec ( 'Press','RunStyle' ) {
 			next if ! exists $$param{'ddm'.$spec.$type};
@@ -516,13 +522,12 @@ $openprint::log->debug("Max group: $max_group");
 		return;
 	} # end if
 
-	my %services = $Project->get_services();
 	my $old_bindery_type = get_book_type( $project_index );
-	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $services{$old_bindery_type} ) {
-		foreach ( @{$services{$old_bindery_type}} ) {
+	if ( $old_bindery_type and ($$param{'rdbTemplateType'} ne $old_bindery_type) and $$services{$old_bindery_type} ) {
+		foreach ( @{$$services{$old_bindery_type}} ) {
 			openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 		} # end foreach
-		delete $services{$old_bindery_type};
+		delete $$services{$old_bindery_type};
 	} # end if
 
 	if ( $$param{'rdbTemplateType'} eq 'NoBindery' ) {
@@ -531,28 +536,28 @@ $openprint::log->debug("Max group: $max_group");
 			my $ServiceType = new openprint::ServiceType( $bindery_services{$service_id} );
 			if ( $ServiceType->name() ne 'NoBindery' ) {
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
-				@{$services{$_}} = sets::exclude( [ $service_id ], $services{$service_id} );
+				@{$$services{$_}} = sets::exclude( [ $service_id ], $$services{$service_id} );
 			} # end if
 		} # end foreach
 		
-		push @{$services{'NoBindery'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'NoBindery' ) if ! $services{'NoBindery'};
+		push @{$$services{'NoBindery'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'NoBindery' ) if ! $$services{'NoBindery'};
 	} elsif ( $$param{'rdbTemplateType'} ) {
 		# Delete No Bindery Service
-		if ( $services{'NoBindery'} ) {
-			foreach ( @{$services{'NoBindery'}} ) {
+		if ( $$services{'NoBindery'} ) {
+			foreach ( @{$$services{'NoBindery'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 			} # end foreach
-			delete $services{'NoBindery'};
+			delete $$services{'NoBindery'};
 		} # end if
 
 		# Insert the desired Bindery Type
-		push @{$services{$$param{'rdbTemplateType'}}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $$param{'rdbTemplateType'} ) if ! $services{$$param{'rdbTemplateType'}};
+		push @{$$services{$$param{'rdbTemplateType'}}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $$param{'rdbTemplateType'} ) if ! $$services{$$param{'rdbTemplateType'}};
 	} # end if
 
 	if ( sets::isin( $$param{'rdbTemplateType'}, ('SaddleStitching','LoopStitching','PerfectBound','Unbound') ) ) {
 		# Saddle and Loop Stitching requires Folding
-		push @{$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' ) if ! $services{'Folding'};
-		push @{$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' ) if ! $services{'Cutting'};
+		push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' ) if ! $$services{'Folding'};
+		push @{$$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' ) if ! $$services{'Cutting'};
 	} # end if
 	return openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 } # end sub multipage_signatures

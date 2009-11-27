@@ -123,7 +123,7 @@ sub calc {
 	} # end if
 
 	foreach my $group_id ( @Groups ) {
-#$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
+$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 		openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 		openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
 		openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
@@ -152,7 +152,7 @@ sub calc {
 	$$specs{'groups'} = join(',', @Groups );
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'help'} = 'Please select the dimensions.';
+		$$specs{'alert'} = 'Please select the dimensions.';
 		return 'uncalculated';
 	} # end if
 	$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
@@ -168,12 +168,12 @@ sub calc {
 	} # end if
 
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
-		$$specs{'help'} = 'Please enter the # of pages';
+		$$specs{'alert'} = 'Please enter the # of pages';
 		return 'uncalculated';
 	} # end if
 
 	if ( ! $$specs{'rdbCover'} ) {
-		$$specs{'help'} = 'Please select the cover type.';
+		$$specs{'alert'} = 'Please select the cover type.';
 		return 'uncalculated';
 	} # end if
 

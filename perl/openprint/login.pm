@@ -60,9 +60,9 @@ sub verify_login {
 	if ( ! @Users ) {
 		# user not found.	Let's see if we got the password wrong, or the email wrong.
 		if ( ! ( @Users = openprint::User::find('email'=>$email) ) ) {
-			$$variable{'details'} = "\"$email\" is not a valid account.	Please try again.";
+			$$variable{'information'} = "\"$email\" is not a valid account.	Please try again.";
 		} else {
-			$$variable{'details'} = "The password you entered was not correct.	Please try again.";
+			$$variable{'information'} = "The password you entered was not correct.	Please try again.";
 			openprint::logs::insertLogRecord(78,'Invalid Password', $Users[0]->id() );
 		} # end if
 		$$variable{'error'} = 'Authentication Failed.';
@@ -73,35 +73,35 @@ sub verify_login {
 	# Have a valid user now.
 	if ( $User->Company()->activation() eq 'N' ) {
 		$$variable{'error'} = 'Company not activated.';
-		$$variable{'details'} = 'Your company account has not been looked over and activated by an administrator yet. You will be notified when your application has been approved.';
+		$$variable{'information'} = 'Your company account has not been looked over and activated by an administrator yet. You will be notified when your application has been approved.';
 		openprint::logs::insertLogRecord(78,'Company Account Not Activated', $User->id() );
 		return;
 	} elsif ( $User->Company()->activation() ne 'Y' ) {
 		$$variable{'error'} = 'Company Account activation status is unknown.('.$User->Company()->activation().')';
-		$$variable{'details'} = 'Please report this error.';
+		$$variable{'information'} = 'Please report this error.';
 		return;
 	} # end if
 
 	# Have a valid user now.
 	if ( $User->web_active() eq 'N' ) {
 		$$variable{'error'} = "User not activated.";
-		$$variable{'details'} = "Applications for existing corporate accounts must be approved by and administrator. You will be notified when you application had been approved.";
+		$$variable{'information'} = "Applications for existing corporate accounts must be approved by and administrator. You will be notified when you application had been approved.";
 		openprint::logs::insertLogRecord(78,'User Account Not Activated', $User->id() );
 		return;
 	} elsif ( $User->web_active() ne 'Y' ) {
 		$$variable{'error'} = "User Account activation status is unknown.";
-		$$variable{'details'} = "Please report this error.";
+		$$variable{'information'} = "Please report this error.";
 		return;
 	} # end if
 
 	if ( $site eq 'E' and ! sets::isin( $User->type, ['E','A'] ) ) {
 		$$variable{'error'} = "Not authorised.";
-		$$variable{'details'} = "You are not an employee.	You do not have access to the employee site.";
+		$$variable{'information'} = "You are not an employee.	You do not have access to the employee site.";
 		openprint::logs::insertLogRecord(78,'User not an employee', $User->id() );
 		return;
 	} elsif ( $site eq 'A' and $User->type() ne 'A' ) {
 		$$variable{'error'} = "Not authorised.";
-		$$variable{'details'} = "You are not an administrator.	You do not have access to the administrator site.";
+		$$variable{'information'} = "You are not an administrator.	You do not have access to the administrator site.";
 		openprint::logs::insertLogRecord(78,'User not an administrator', $User->id() );
 		return;
 	} # end if

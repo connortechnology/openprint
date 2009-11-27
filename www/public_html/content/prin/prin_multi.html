@@ -16,9 +16,9 @@
 				<div class="ProjectSpecifications">
 					<h1>Project Specifications</h1>
 					<div class="Size">
-						<h2>Size</h2>
-						<div class="half-form">
-							<ul class="half-form-frame">
+						<fieldset><legend>Size</legend>
+						<div class="content">
+							<ul>
 								<li>
 									<label>Size:</label>
 									<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this );">
@@ -55,11 +55,12 @@
 								</li>
 							</ul>
 						</div>
+						</fieldset>
 					</div>
 					<div id="Cover" <? echo ( 'style="display:none;"' if $$variable{'rdbCover'} ne 'Different' ) ?> >
-						<h2>Cover</h2>
-						<div class="half-form">
-							<ul class="half-form-frame">
+						<fieldset><legend>Cover</legend>
+						<div class="content">
+							<ul>
 								<li>
 									<label>Colours:</label>
 									<select name="ColoursCover" onchange="calc(this.form.name);">
@@ -86,6 +87,7 @@
 							) ?>
 							</ul>
 						</div>
+						</fieldset>
 					</div>
 					<input type="hidden" name="rdbColourBar1" value="<?rdbColourBar1?>"/>
 					<input type="hidden" name="txtCropMarkSpace1" value="<?txtCropMarkSpace1?>"/>
@@ -94,24 +96,25 @@
 					<input type="hidden" name="chkBleedTop1" value="<?chkBleedTop1?>"/>
 					<input type="hidden" name="chkBleedBottom1" value="<?chkBleedBottom1?>"/>
 					<div id="Interior">
-						<h4>Interior Pages</h4>
-						<div class="half-form">
-							<ul class="half-form-frame">
-								<li>
-									<label>Colours:</label>
-									<select name="Colours" onchange="calc(this.form.name);">
-										<option value="4/4">4 Colour</option>
-										<option value="1/1">Black</option>
-									</select>
-								</li>
-								<? echo ( 
-									$$variable{'Signature'} = '2';
-									my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
-									$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
-									return variable_substitution( \$html, $variable );
-									) ?>
-							</ul>
-						</div>
+						<fieldset><legend>Interior Pages</legend>
+							<div class="content">
+								<ul>
+									<li>
+										<label>Colours:</label>
+										<select name="Colours" onchange="calc(this.form.name);">
+											<option value="4/4">4 Colour</option>
+											<option value="1/1">Black</option>
+										</select>
+									</li>
+									<? echo ( 
+										$$variable{'Signature'} = '2';
+										my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
+										$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
+										return variable_substitution( \$html, $variable );
+										) ?>
+								</ul>
+							</div>
+						</fieldset>
 					</div>
 					<input type="hidden" name="rdbColourBar2" value="<?rdbColourBar2?>"/>
 					<input type="hidden" name="txtCropMarkSpace2" value="<?txtCropMarkSpace2?>"/>
@@ -120,23 +123,25 @@
 					<input type="hidden" name="chkBleedTop2" value="<?chkBleedTop2?>"/>
 					<input type="hidden" name="chkBleedBottom2" value="<?chkBleedBottom2?>"/>
 					<div class="Finishing">
-						<h2>Finishing</h2>
-						<div class="half-form">
-							<ul class="half-form-frame">
+						<fieldset><legend>Finishing</legend>
+						<div class="content">
+							<ul>
 							<!--#include virtual="/includes/shrinkwrapping.html"-->
 							<!--#include virtual="/includes/drilling.html"-->
 							</ul>
 						</div>
+						</fieldset>
 					</div>
 					<div class="Production">
-						<h2>Production</h2>
-						<div class="half-form">
-							<ul class="half-form-frame">
-							<!--#include virtual="/includes/turnaround.html"-->
-							<!--#include virtual="/includes/quantity.html"-->
-							<!--#include virtual="/includes/press_type.html"-->
-							</ul>
-						</div>
+						<fieldset><legend>Production</legend>
+							<div class="content">
+								<ul>
+								<!--#include virtual="/includes/turnaround.html"-->
+								<!--#include virtual="/includes/quantity.html"-->
+								<!--#include virtual="/includes/press_type.html"-->
+								</ul>
+							</div>
+						</fieldset>
 					</div>
 					<div id="AlertDiv" style="display:none;"></div>
 					<br class="spacer"/>
