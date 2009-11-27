@@ -1,22 +1,21 @@
 <? eval (
 	if ( $param{'company_id'} ) {
 		my $Company = new openprint::Company( $param{'company_id'} );
-		@$variable{'txtCompanyName',
-			 'txtAddress1',
-			 'txtAddress2',
-			 'txtCity',
-			 'ddmStateProvince',
-			 'txtPostalCode',
-			 'ddmCountry',
-			 'txtPhone',
-			 'txtExtension',
-			 'txtFax'} = $Company->get( 'name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
+		@$variable{'companyname',
+			 'address1',
+			 'address2',
+			 'city',
+			 'state',
+			 'postalcode',
+			 'country',
+			 'phone',
+			 'fax'} = $Company->get( 'name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
 		my @Users = openprint::User::find( 
 			 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
 			 'order'=>'lower(lastname),lower(firstname)'
 		);
 		if ( scalar @Users == 1 ) {
-			@$variable{'rdbSalutation','txtFirstName','txtLastName','txtEmail'} = $Users[0]->get('salutation','firstname','lastname','email');
+			@$variable{'salutation','firstname','lastname','email'} = $Users[0]->get('salutation','firstname','lastname','email');
 		} # end if
 	} # end if
 ) ?>
@@ -25,24 +24,24 @@
 		<ul> 
 			<li>
 				<label>Company Name:<span class="requiredFieldIndicator">*</span></label>
-				<input type="text" id="txtCompanyName" name="txtCompanyName" value="<?txtCompanyName?>"/>
+				<input type="text" id="companyname" name="companyname" value="<?companyname?>"/>
 			</li>
 			<li> 
 				<label>Salutation:<span class="requiredFieldIndicator">&nbsp;</span></label>
-				<input type="radio" id="rdbSalutationMr." name="rdbSalutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'rdbSalutation'} eq 'Mr.' ) ?> />
-				<label class="radio" for="rdbSalutationMr.">Mr.</label>
-				<input type="radio" id="rdbSalutationMrs." name="rdbSalutation" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'rdbSalutation'} eq 'Mrs.' ) ?> />
-				<label class="radio" for="rdbSalutationMrs.">Mrs.</label>
-				<input type="radio" id="rdbSalutationMs." name="rdbSalutation" value="Ms." <? echo ( 'checked="checked"' if $$variable{'rdbSalutation'} eq 'Ms.' ) ?> />
-				<label class="radio" for="rdbSalutationMs.">Ms.</label>
-				<input type="radio" id="rdbSalutationMiss" name="rdbSalutation" value="Miss" <? echo ( 'checked="checked"' if $$variable{'rdbSalutation'} eq 'Miss' ) ?> />
-				<label class="radio" for="rdbSalutationMiss">Miss</label>
+				<input type="radio" id="salutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Mr.' ); ) ?> />
+				<label class="radio" for="salutationMr.">Mr.</label>
+				<input type="radio" id="salutationMrs." name="salutation" value="Mrs." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Mrs.' ); ) ?> />
+				<label class="radio" for="salutationMrs.">Mrs.</label>
+				<input type="radio" id="salutationMs." name="salutation" value="Ms." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Ms.' ); ) ?> />
+				<label class="radio" for="salutationMs.">Ms.</label>
+				<input type="radio" id="salutationMiss" name="salutation" value="Miss" <? echo ( ssi::checked( $$variable{'salutation'} eq 'Miss' ); ) ?> />
+				<label class="radio" for="salutationMiss">Miss</label>
 			</li>
 		<? if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
 				<label>Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
-				<input type="hidden" name="txtFirstName" value="<?txtFirstName?>"/>
-				<input type="hidden" name="txtLastName" value="<?txtLastName?>"/>
+				<input type="hidden" name="firstname" value="<?firstname?>"/>
+				<input type="hidden" name="lastname" value="<?lastname?>"/>
 				<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 					<option value="">Please Select</option>
 		<? echo ( 
@@ -61,77 +60,78 @@
 		<? else ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
 				<label >First Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
-				<input type="text" name="txtFirstName" value="<?txtFirstName?>"/>
+				<input type="text" id="firstname" name="firstname" value="<?firstname?>"/>
 			</li>
 			<li> 
 				<label>Last Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
-				<input type="text" name="txtLastName" value="<?txtLastName?>"/>
+				<input type="text" id="lastname" name="lastname" value="<?lastname?>"/>
 			</li>
 		<? endif ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
 				<label>Address:<span class="requiredFieldIndicator">*</span></label>
-				<input type="text" name="txtAddress1" value="<?txtAddress1?>" /><br/>
-				<input type="text" name="txtAddress2" value="<?txtAddress2?>" />
+				<input type="text" id="address1" name="address1" value="<?address1?>" /><br/>
+				<input type="text" id="address2" name="address2" value="<?address2?>" />
 			</li>
 			<li> 
 				<label>Country:<span class="requiredFieldIndicator">*</span></label>
-				<select name="ddmCountry" onchange="Country_onchange(this, this.form.ddmStateProvince);">
+				<select name="country" onchange="Country_onchange(this, this.form.state);">
 					<option value=""> Select </option>
 					<? echo ( 
-						ssi::make_drop_down( \@countries::countries, $$variable{'ddmCountry'} );
+						ssi::make_drop_down( \@countries::countries, $$variable{'country'} );
 					) ?> 
 				</select>
 			</li>
 			<li> 
-				<label><span id="ddmCountry_state">
+				<label><span id="country_state">
 <? echo (
-if ( $$variable{'ddmCountry'} eq 'US' ) {
+if ( $$variable{'country'} eq 'US' ) {
     return 'State';
-} elsif ( $$variable{'ddmCountry'} eq 'CA' ) {
+} elsif ( $$variable{'country'} eq 'CA' ) {
     return 'Province';
 } else {
     return 'State/Province';
 } # end if
 ) ?>
 :</span><span class="requiredFieldIndicator">*</span></label>
-				<select name="ddmStateProvince">
+				<select name="state">
 					<option value=""> Select </option>
 					<? echo ( 
-						ssi::make_drop_down( \@states::states, $$variable{'ddmStateProvince'} ).
-						ssi::make_drop_down( \@provinces::provinces, $$variable{'ddmStateProvince'} );
+						ssi::make_drop_down( \@states::states, $$variable{'state'} ).
+						ssi::make_drop_down( \@provinces::provinces, $$variable{'state'} );
 					) ?> 
 				</select>
 			</li>
 			<li> 
 				<label>City:<span class="requiredFieldIndicator">*</span></label>
-				<input type="text" name="txtCity" value="<?txtCity?>" />
+				<input type="text" id="city" name="city" value="<?city?>" />
 			</li>
 			<li> 
-				<label><span id="ddmCountry_postal">
+				<label><span id="country_postal">
                     <? echo (
-                       if ( $$variable{'ddmCountry'} eq 'US' ) {
+                       if ( $$variable{'country'} eq 'US' ) {
                                return 'Zip Code:';
-                       } elsif ( $$variable{'ddmCountry'} eq 'CA' ) {
+                       } elsif ( $$variable{'country'} eq 'CA' ) {
                                return 'Postal Code:';
                        } else {
                                return 'Zip/Postal Code:';
                        } # end if
 					) ?>
 					   </span><span class="requiredFieldIndicator">*</span></label>
-				<input type="text" name="txtPostalCode" value="<?txtPostalCode?>" />
+				<input type="text" id="postalcode" name="postalcode" value="<?postalcode?>" />
 			</li>
 			<li> 
 				<label>Phone:<span class="requiredFieldIndicator">&nbsp;</span></label>
-				<input type="text" name="txtPhone" value="<?txtPhone?><? echo ( $$variable{'txtExtension'} ? 'x'.$$variable{'txtExtension'} : '' ) ?>" />
+				<input type="text" id="phone" name="phone" value="<?phone?>" />
 			</li>
 			<li> 
 				<label>Fax:<span class="requiredFieldIndicator">&nbsp;</span></label>
-				<input type="text" name="txtFax" value="<?txtFax?>" />
+				<input type="text" id="fax" name="fax" value="<?fax?>" />
 			</li>
 			<li> 
 				<label>E-mail:<span class="requiredFieldIndicator">*</span></label>
-				<input type="text" name="txtEmail" value="<?txtEmail?>" />
+				<input type="text" id="email" name="email" value="<?email?>" />
 			</li>
+			<li class="help">We use your email to send your order confirmation and updates.</li>
 		</ul>
 	</div>
 </fieldset>

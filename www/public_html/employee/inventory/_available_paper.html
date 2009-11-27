@@ -35,7 +35,10 @@
 			my $selected;
 			my @location_ids;
 			foreach ( split(';', $session{'/employee/inventory/available_paper.html?location_id'} ) ) {
-				next if $_ eq 'All';
+				if ( $_ eq 'All' ) {
+					@location_ids = ();
+					last;
+				} # end if
 				push @location_ids, $_;
 			} # end foreach
 			$log->debug("Locations: @location_ids");
@@ -76,9 +79,6 @@ $log->debug("Next for " . $Paper->to_string() );
 				my %inventory;
 				my $skids = 0;
 				my @Skids = $Paper->skids();
-				if ( ! @Skids ) {
-					$log->error("No skids");
-				} # end if
 
 				foreach my $Skid ( @Skids ) {
 					if ( $session{'/employee/inventory/available_paper.html?last_seen'} ) {
@@ -102,7 +102,7 @@ $log->debug("Next for " . $Paper->to_string() );
 
 				} # end foreach Skid
 				if ( ! $skids ) {
-					#$log->error("No skids");
+					$log->warn("No skids");
 					next;
 				} # end if
 
@@ -134,6 +134,11 @@ $log->debug("Next for " . $Paper->to_string() );
 				$html .= '</tr>',
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Paper
+			if ( ! $html ) {
+				foreach my $k ( keys %session ) {
+$log->error("No Paper in available paper session: $k=>$session{$k} ");
+		}
+			} # end if
 			$html .= '<tr class="totals"><td>Totals:</td><td>';
 			$html .= Number::Format::format_number($available_weight).'lbs<br/>' if $available_weight;
 			$html .= Number::Format::format_number($available_sheets).'sheets<br/>' if $available_sheets;

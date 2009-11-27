@@ -63,22 +63,9 @@ sub session_init {
 		if ( $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
 			my $Company = new openprint::Company( $r->param('ddmCompany') );
 			if ( ! $Company->id() ) {
-				$variable{'error'} .= 'Unknown company selected.	Please try again.';
+				$variable{'error'} .= 'Unknown company selected.  Please try again.';
 			} else {
-				$session{'company_id'} = $Company->id();
-				openprint::logs::insertLogRecord('79',);
-
-				if ( $Company->currency_id() ) {
-					$session{'Currency_id'} = $Company->currency_id();
-				} elsif ( $Company->country() eq 'US' ) {
-					my @currencies = openprint::Currency::find('short'=>'USD');
-					$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
-				} elsif ( $Company->country() eq 'CA' ) {
-					my @currencies = openprint::Currency::find('short'=>'CAD');
-					$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
-				} # end if
-				my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
-				delete @session{@keys};
+				switch_company( $Company );
 			} # end if
 		} # end if
 	} # end if
@@ -107,6 +94,24 @@ sub session_init {
 	} # end if
 
 } # end sub session_init
+
+sub switch_company {
+	my ( $Company ) = @_;
+	$session{'company_id'} = $Company->id();
+	openprint::logs::insertLogRecord('79',);
+
+	if ( $Company->currency_id() ) {
+		$session{'Currency_id'} = $Company->currency_id();
+	} elsif ( $Company->country() eq 'US' ) {
+		my @currencies = openprint::Currency::find('short'=>'USD');
+		$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
+	} elsif ( $Company->country() eq 'CA' ) {
+		my @currencies = openprint::Currency::find('short'=>'CAD');
+		$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
+	} # end if
+	my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );
+	delete @session{@keys};
+} # end sub switch_company
 
 sub index {
 } # end sub index

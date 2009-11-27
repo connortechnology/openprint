@@ -13,6 +13,7 @@ use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defa
 require sql;
 require ssi;
 require misc;
+require openprint::Claim_ContentType;
 
 my $debug = 0;
 
@@ -24,19 +25,25 @@ $serial = 'claim_contents_id_seq';
 	'claim_id'			=>	'claim_id',
 	'skid_id'			=>	'skid_id',
 	'quantity'			=>	'quantity',
+	'weight'			=>	'weight',
 	'reason'			=>	'reason',
+	'description'		=>	'description',
 	'cost'				=>	'cost',
 	'cost_units'		=>	'cost_units',
+	'type_id'			=>	'type_id',
 );
 
 %transforms = (
 	'quantity'	=> [ 's/\D//g' ],
 	'skid_id'	=> [ 's/\D//g' ],
+	'type_id'	=> [ 's/\D//g' ],
 	'cost'		=> [ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
 	'quantity'	=> 0,
+	'weight'	=> 0,
+	'type_id'	=>	undef,
 	'skid_id'	=>	undef,
 	'cost'		=>	undef,
 );
@@ -90,14 +97,28 @@ sub Claim {
 	return new openprint::Claim( $_[0]{claim_id} );
 } # end sub Manifest
 
+sub Type {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'type_id'} = $_[0]->id();
+	} # end if
+	return new openprint::Claim_ContentType( $_[0]{type_id} );
+} # end sub Manifest
+
 sub description {
 	my ( $self ) = @_;
-	my $description;
-	foreach my $SkidContent ( $self->Skid()->Contents() ) {
-		$description .= $SkidContent->Paper()->to_string().'<br/>';
-	} # end foreach SkidContent
+	if ( @_ > 1 ) {
+		$$self{'description'} = $_[1];
+	} # end if
+	if ( ! $$self{'description'} ) {
+		my $description;
+		foreach my $SkidContent ( $self->Skid()->Contents() ) {
+			$description .= $SkidContent->Paper()->to_string().'<br/>';
+		} # end foreach SkidContent
+		$$self{'description'} = $description;
+	} # end if
 
-	return $description;
+	return $$self{'description'};
 } # end sub description
 
 sub total {

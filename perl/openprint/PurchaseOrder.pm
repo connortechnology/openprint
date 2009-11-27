@@ -298,6 +298,31 @@ sub Contents {
 	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Contents
 
+sub send_approval_required_notification {
+	my ( $self ) = @_;
+
+	my $Me = new openprint::User( $session{'user_id'} );
+	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
+	my %info;
+	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
+	$info{'From'} = $Me;
+	$info{'PurchaseOrder'} = $self;
+
+	foreach my $U ( openprint::User::find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$self->total() ) ) {
+		next if $U->id() == $Me->id();
+
+		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
+		my @body = ('', $_, 'text/html', 'quoted-printable');
+		my %mail = (
+				SMTP    => $config{'Mail Server'},
+				FROM    => sprintf( '"%s" <%s>', $Me->name(), $Me->email() ),
+				TO      => sprintf( '"%s" <%s>', $U->name(), $U->email() ),
+				SUBJECT => 'Purchase Order requiring approval: ' . $self->id(),
+				);
+		misc::send_email_with_attachment( $log, \%mail, @body );
+	} # end foreach U
+} # end sub send_approval_required_notification
+
 sub send_to_vendor {
 	my ( $self ) = @_;
 
