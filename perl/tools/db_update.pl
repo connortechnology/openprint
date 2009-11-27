@@ -2037,20 +2037,26 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_monitor TEXT') if ! exists $$data{'cip3_monitor'};
 	$dbh->do('ALTER TABLE tbl_Equipment ADD smartscheduling BOOLEAN default false') if ! exists $$data{'smartscheduling'};
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Schedule LIMIT 1', {} );
-if ( ! $data ) {
+
+if ( ! sets::isin( 'schedule', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Schedule.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
 } else {
-	if ( ! exists $$data{'id'} ) {
-		$dbh->do('ALTER TABLE Schedule ADD id SERIAL');
-	} # end if
-	if ( exists $$data{'serviceindex'} and ! exists $$data{'service_id'} ) {
-		$dbh->do('ALTER TABLE Schedule ADD service_id INTEGER[]');
-		$dbh->do('UPDATE Schedule SET service_id=ARRAY[serviceindex]');
-		#$dbh->do('ALTER TABLE Schedule DROP serviceindex');
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Schedule LIMIT 1', {} );
+	if ( $data ) {
+		if ( ! exists $$data{'id'} ) {
+			$dbh->do('ALTER TABLE Schedule ADD id SERIAL');
+		} # end if
+		if ( exists $$data{'serviceindex'} and ! exists $$data{'service_id'} ) {
+			$dbh->do('ALTER TABLE Schedule ADD service_id INTEGER[]');
+			$dbh->do('UPDATE Schedule SET service_id=ARRAY[serviceindex]');
+#$dbh->do('ALTER TABLE Schedule DROP serviceindex');
+		} # end if
+		if ( ! exists $$data{'starttime_locked'} ) {
+			$dbh->do('ALTER TABLE Schedule ADD starttime_locked boolean');
+		} # end if
 	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );

@@ -1,5 +1,5 @@
 <? echo (
-		my $Company = new openprint::Company( $openprint::session{'company_id'} );
+		my $Company = new openprint::Company( $session{'company_id'} );
 		my $company_name = $Company->name();
 		$param{'docket'} =~ s/\D//g;
 		$param{'project_id'} =~ s/\D//g;
@@ -62,49 +62,45 @@
 			} # end if directory or file
         } # end foreach
 	) ?>
-		<form name="f1" action="upload.html" method="post">
-			<table class="List">
-				<tr> 
-					<th align="left">Filename</th>
-					<th width="75" align="right">Size</th>
-					<th width="75" align="center"><span style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', Serialize(f1));}", '', 'Delete' ); ) ?></span></th>
-				</tr>
-
-<? if ( ( $param{'docket'} or $param{'project_id'} ) ) ?>
-				<tr>
-				   <td><a href="/upload/upload_center.html"><img src="/images/parent-folder.gif" alt="Parent Folder" border="0" /> ..</a></td>
-				   <td>&nbsp;</td>
-				   <td>&nbsp;</td>
-				</tr>
-<? endif ( ( $param{'docket'} or $param{'project_id'} ) ) ?>
-<? if ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
-   	<tr>
-   	   <td colspan="3">No files have been uploaded.</td>
-   	</tr>
-<? else ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
-
-				<? while ( @$variable{'path','filename','size', 'description'} = splice @{$$variable{'PROJECT_FILES'}},0,4; ) ?>
-				<tr<?rowclass?>> 
-<? if ( $$variable{'size'} ne '' ) ?>
-					<td><a href="/getfile.html?<? if (  $param{'docket'} ) ?>docket=<? echo( $param{'docket'} ) ?><? endif (  $param{'docket'} ) ?><? if (  $param{'project_id'} ) ?>&project_id=<? echo( $param{'project_id'} ) ?><? endif (  $param{'project_id'} ) ?>&filename=<?filename?>" title="<?description?>" target="SendFileFrame"><?filename?></a><br/>
-						<?description?>
-					</td>
-					<td align="right" valign="top"><?size?></td>
-					<td align="center" valign="top"><input type="checkbox" name="chkFiles" value="<?filename?>"/></td>
-<? else ( $$variable{'size'} ne '' ) ?>
-					<td><a href="/upload/upload_center.html?docket=<?filename?>" title="<?description?>"><img src="/images/folder.gif" alt="Parent Folder" border="0" /> <?filename?></a><br/>
-						<?description?>
-					</td>
-					<td align="right" valign="top"><?size?></td>
-					<td align="center" valign="top"></td>
-<? endif ( $$variable{'size'} ne '' ) ?>
-				</tr>
-				<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-				<? endwhile ( @$variable{'path','filename','size', 'description'} = splice @{$$variable{'PROJECT_FILES'}},0,4; ) ?>
+<form name="f1" action="upload.html" method="post">
+	<table class="List">
+		<thead>
+			<tr> 
+				<th class="Filename">Filename</th>
+				<th class="Size">Size</th>
+				<th class="Delete"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', Serialize(f1));}", '', 'Delete' ); ) ?></th>
+			</tr>
+		</thead>
+		<? if ( ( $param{'docket'} or $param{'project_id'} ) ) ?>
+		<tr>
+		   <td><a href="/upload/upload_center.html"><img src="/images/parent-folder.gif" alt="Parent Folder" border="0" /> ..</a></td>
+		   <td>&nbsp;</td>
+		   <td>&nbsp;</td>
+		</tr>
+		<? endif ( ( $param{'docket'} or $param{'project_id'} ) ) ?>
+		<? if ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
+		<tr>
+		   <td colspan="3">No files have been uploaded.</td>
+		</tr>
+		<? else ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
+		<? while ( @$variable{'path','filename','size', 'description'} = splice @{$$variable{'PROJECT_FILES'}},0,4; ) ?>
+			<tr<?rowclass?>> 
+			<? if ( $$variable{'size'} ne '' ) ?>
+				<td><a href="/getfile.html?<? if (  $param{'docket'} ) ?>docket=<? echo( $param{'docket'} ) ?><? endif (  $param{'docket'} ) ?><? if (  $param{'project_id'} ) ?>&project_id=<? echo( $param{'project_id'} ) ?><? endif (  $param{'project_id'} ) ?>&filename=<?filename?>" title="<?description?>" target="SendFileFrame"><?filename?></a><br/><?description?></td>
+				<td align="right" valign="top"><?size?></td>
+				<td align="center" valign="top"><input type="checkbox" name="chkFiles" value="<?filename?>"/></td>
+			<? else ( $$variable{'size'} ne '' ) ?>
+				<td><a href="/upload/upload_center.html?docket=<?filename?>" title="<?description?>"><img src="/images/folder.gif" alt="Parent Folder" border="0" /> <?filename?></a><br/><?description?></td>
+				<td align="right" valign="top"><?size?></td>
+				<td align="center" valign="top"></td>
+			<? endif ( $$variable{'size'} ne '' ) ?>
+			</tr>
+		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
+		<? endwhile ( @$variable{'path','filename','size', 'description'} = splice @{$$variable{'PROJECT_FILES'}},0,4; ) ?>
 <? endif ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
-			</table>
-   		<input type="hidden" name="project_id" value="<? echo($param{'project_id'}) ?>"/>
-   		<input type="hidden" name="docket" value="<? echo($param{'docket'}) ?>"/>
-			<input type="hidden" name="btnFunction" />
-		</form>
+	</table>
+	<input type="hidden" name="project_id" value="<? echo($param{'project_id'}) ?>"/>
+	<input type="hidden" name="docket" value="<? echo($param{'docket'}) ?>"/>
+	<input type="hidden" name="btnFunction" />
+</form>
 <iframe scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" style="width: 0; height: 0; display:none;" id="SendFileFrame" name="SendFileFrame" src=""></iframe>

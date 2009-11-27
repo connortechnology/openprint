@@ -53,10 +53,6 @@ table.List tr td.Units, table.List tr th.Units {
 	width: 80px;
 	text-align: center;
 }
-table.List thead tr th.Price, table.List tr td.Price {
-	width: 55px;
-	text-align: right;
-}
 table.List tr th.Discount, table.List tr td.Discount {
 	width: 95px;
 	text-align: center;

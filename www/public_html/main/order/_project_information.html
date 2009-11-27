@@ -1,19 +1,9 @@
 <? if ( $config{'OrderMode'} ne 'Simple' ) ?>
-	<span style="float: right;">
+	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'Project'}->id(), '', '', "/main/project/view.html?ProjectIndex=$$variable{'Project'}{id}", 'Edit Project' ); ) ?>
-	</span>
-	<a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>">
-	<? echo ( return $$variable{'Project'}->summary();) ?>
-	</a>
-		<? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
-		<!--#include virtual="_quantity_select.html"-->
-		<? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
-		<? if ( ! $$variable{'Project'}->requested_date() ) ?>
-		<!--#include virtual="_required_by.html"-->
-		<? endif ( ! $$variable{'Project'}->requested_date() ) ?>
-		<!--#include virtual="_shipping_type_select.html"-->
-<? else ( $config{'OrderMode'} ne 'Simple' ) ?>
+	</p>
+<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
 <div class="Header">
 	<div class="Summary">
 		<fieldset>
@@ -39,11 +29,23 @@
 					<li><label>Type</label><? echo ( $$variable{'Project'}->Type()->name() ) ?></li>
 					<li><label>Quantity</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
 					<li><label>Created</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></li>
+<? if ( $config{'OrderMode'} ne 'Simple' ) ?>
+		<? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
+		<!--#include virtual="_quantity_select.html"-->
+		<? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
+		<? if ( ! $$variable{'Project'}->requested_date() ) ?>
+		<!--#include virtual="_required_by.html"-->
+		<? endif ( ! $$variable{'Project'}->requested_date() ) ?>
+<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
 				</ul>
 			</div>
 		</fieldset>
 	</div>
 </div><!--Header-->
+<? if ( $config{'OrderMode'} ne 'Simple' ) ?>
+		<!--#include virtual="_shipping_type_select.html"-->
+<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
+<? if ( $config{'OrderMode'} eq 'Simple' ) ?>
 <div class="ProjectContents">
 		<table class="List">
 			<thead>
@@ -105,4 +107,4 @@
 	</table>
 
 </div>
-<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
+<? endif ( $config{'OrderMode'} eq 'Simple' ) ?>

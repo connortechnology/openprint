@@ -89,42 +89,7 @@ sub add_service {
 sub insert_service {
 	my ( $log, $dbh, $project_index, $service_id ) = @_;
 	my $Project = new openprint::Project( $project_index );
-	my $service_index = 0;
-	
-	my $ServiceType;
-	if ( ref $service_id ne 'openprint::ServiceType' ) {
-		if ( my @ServiceTypes = openprint::ServiceType::find('name'=>$service_id) ) {
-			$ServiceType = $ServiceTypes[0];
-		} else {
-			$log->warn("Service $service_id IS NOT in the system.");
-			return;
-		} # end if
-	} else {
-		$ServiceType = $service_id;
-	} # end if
-		
-	# Make this all one transaction...
-	my $ac = sql::start_transaction( $dbh );
-
-	sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex',	$project_index, 'strStatus', 'uncalculated', 'servicetype_id', $ServiceType->id() );
-	( $service_index ) = sql::execute( $log, $dbh, q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $project_index );
-	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'ServiceType', $ServiceType->name(), 1 );
-	$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
-	my @defaults = sql::execute( $log, $dbh, $_, $ServiceType->id() );
-	$_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
-	push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
-	while ( @defaults ) {
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, shift @defaults, shift @defaults, 1 );
-	} # end while
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtQuantity$qty_index", $Project->quantity($qty_index), 1 );
-	} # end foreach
-
-	sql::end_transaction( $dbh, $ac );
-	delete $$Project{'Services'};
-	delete $$Project{'service_types'};
-	delete $$Project{'signatures'};
-	return $service_index;
+	return $Project->add_service( $service_id );
 } # end sub insert_service
 
 sub create_edit_display {

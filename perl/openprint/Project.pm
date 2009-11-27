@@ -1183,7 +1183,8 @@ sub signatures {
 	my ( $self, $params ) = @_;
 	if ( ! exists $$self{'signatures'} ) {
 		my $services = $self->services();
-		if ( $self->Type()->name() ne 'MultiPagePublication' ) {
+		if ( ! sets::isin( $self->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines' ] ) ) {
+$openprint::log->debug("Project Type: " . $self->Type()->name() );
 			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
 		} # end if
 		if ( $$services{'AdditionalSignature'} ) {
@@ -1368,6 +1369,46 @@ sub Ordered_Product {
 	} # end if
 	return $$self{'Ordered_Product'};
 } # end sub Ordered_Product
+
+sub add_service {
+	my ( $self, $type ) = @_;
+    my $service_index = 0;
+
+    my $ServiceType;
+    if ( ref $type ne 'openprint::ServiceType' ) {
+        if ( my @ServiceTypes = openprint::ServiceType::find('name'=>$type) ) {
+            $ServiceType = $ServiceTypes[0];
+        } else {
+            $log->warn("Service $type IS NOT in the system.");
+            return;
+        } # end if
+    } else {
+        $ServiceType = $type;
+    } # end if
+
+    # Make this all one transaction...
+    my $ac = sql::start_transaction( $dbh );
+
+    sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $$self{'id'}, 'strStatus', 'uncalculated', 'servicetype_id', $ServiceType->id() );
+    ( $service_index ) = sql::execute( $log, $dbh, q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+    openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, 'ServiceType', $ServiceType->name(), 1 );
+    $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
+    my @defaults = sql::execute( $log, $dbh, $_, $ServiceType->id() );
+    $_ = q{SELECT name, value FROM User_Service_Defaults WHERE servicetype_id=? AND user_id=?};
+    push @defaults, sql::execute( $log, $dbh, $_, $ServiceType->id(), $openprint::session{'user_id'} );
+    while ( @defaults ) {
+        openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, shift @defaults, shift @defaults, 1 );
+    } # end while
+    foreach my $qty_index ( $self->quantity_indexes() ) {
+        openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, "txtQuantity$qty_index", $self->quantity($qty_index), 1 );
+    } # end foreach
+
+    sql::end_transaction( $dbh, $ac );
+    delete $$self{'Services'};
+    delete $$self{'service_types'};
+    delete $$self{'signatures'};
+    return $service_index;
+} # end sub add_service
 
 1;
 __END__

@@ -84,7 +84,7 @@
 	} # end foreach
 ) ?>
 <fieldset><legend>Destination Address:</legend>
-	<div class="SameAsBilling">Same as Billing <input type="checkbox" name="same_as_billing-<?ProjectIndex?>-<?ServiceIndex?>" id="same_as_billing-<?ProjectIndex?>-<?ServiceIndex?>" onclick="same_as_billing(this.checked, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+	<div class="same_as_billing">Same as Billing <input type="checkbox" name="same_as_billing-<?ProjectIndex?>-<?ServiceIndex?>" id="same_as_billing-<?ProjectIndex?>-<?ServiceIndex?>" onclick="same_as_billing(this.checked, '-<?ProjectIndex?>-<?ServiceIndex?>' );" /></div>
 	<div class="content">
 		<ul> 
 			<li>
@@ -104,7 +104,7 @@
 			</li>
 			<li>
 				<label>First Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
-				<input type="text" name="ToFirstName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFirstName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>"onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+				<input type="text" name="ToFirstName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFirstName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 			</li>
 			<li>
 				<label>Last Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
@@ -169,7 +169,7 @@ if ( $$variable{"ToCountry-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} e
 			</li>
 			<li> 
 				<label>Phone:<span class="requiredFieldIndicator">*</span></label>
-				<input type="text" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} . ($$variable{"ToExtension-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ? $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} : '' ) ) ?>"onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
+				<input type="text" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} . ($$variable{"ToExtension-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ? $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} : '' ) ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 			</li>
 			<li> 
 				<label>Fax:<span class="requiredFieldIndicator">&nbsp;</span></label>

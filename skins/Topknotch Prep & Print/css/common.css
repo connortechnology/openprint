@@ -677,7 +677,6 @@ fieldset p label {
 }
 fieldset.filters {
 	width: auto;
-	border-bottom: 1px solid black;
 }
 fieldset.filters legend {
 }
@@ -747,6 +746,10 @@ table.List td a {
 table.List tr.totals {
     border-top: 1px solid #07759f;
 }
+table.List thead tr th.Price, table.List tr td.Price {
+	width: 75px;
+	text-align: right;
+}
 
 .colRow {
 	background:#cde3ec;
@@ -769,3 +772,4 @@ table.List tr.totals {
 	width: 48%;
 	float: right;
 }
+

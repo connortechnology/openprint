@@ -23,14 +23,14 @@
 			<? if ( $$variable{'Order'}->address1() ) ?><? echo ( $$variable{'Order'}->address1() ) ?><br/><? endif ( $$variable{'Order'}->address1() ) ?>
 			<? if ( $$variable{'Order'}->address2() ) ?><? echo ( $$variable{'Order'}->address2() ) ?><br/><? endif ( $$variable{'Order'}->address2() ) ?>
 			<?CCITYPROVCOUNTRY?><br/>
-			<? if ( $$variable{'Order'}->postal_code() ) ?><? echo ( $$variable{'Order'}->postal_code() ) ?><br/><? endif ( $$variable{'Order'}->postal_code() ) ?>
+			<? if ( $$variable{'Order'}->postalcode() ) ?><? echo ( $$variable{'Order'}->postalcode() ) ?><br/><? endif ( $$variable{'Order'}->postalcode() ) ?>
 			</li>
 			<? if ( $$variable{'Order'}->firstname() or $$variable{'Order'}->lastname() ) ?>
 			<li><label>Name:</label><? echo ( join(' ', $$variable{'Order'}->get('salutation','firstname','lastname') ); ) ?><br/></li>
 			<? endif ( $$variable{'Order'}->firstname() or $$variable{'Order'}->lastname() ) ?>
 			<? if ( $$variable{'Order'}->phone() ) ?>
 				<li><label>Phone:</label>
-				<? echo ( $$variable{'Order'}->phone() ) ?><? if ( $$variable{'Order'}->extension() ) ?>&nbsp;ext:<? echo ( $$variable{'Order'}->extension() ) ?><? endif ( $$variable{'Order'}->extension() ) ?><br/>
+				<? echo ( $$variable{'Order'}->phone() ) ?><? if ( $$variable{'Order'}->extension() ) ?>x<? echo ( $$variable{'Order'}->extension() ) ?><? endif ( $$variable{'Order'}->extension() ) ?><br/>
 				</li>
 			<? endif ( $$variable{'Order'}->phone() ) ?>
 			<? if ( $$variable{'Order'}->fax() ) ?><li><label>Fax:</label><? echo ( $$variable{'Order'}->fax() ) ?><br/></li><? endif ( $$variable{'Order'}->fax() ) ?>

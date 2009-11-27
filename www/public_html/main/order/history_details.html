@@ -13,7 +13,7 @@
 <h2>Viewing Order <?OrderID?></h2>
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
-<span style="float: right;">
+<p class="buttons">
 <? echo ( my $html = '';
 		$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
@@ -21,7 +21,7 @@
 		} # end if
 		return $html;
 	) ?>
-</span>
+</p>
 <? if ( sets::isin( $$variable{'Order'}->status(), ['Complete','Paid'] ) ) ?>
 To make another order from this one, please click on the ReOrder button below.<br/>
 <? endif ( sets::isin( $$variable{'Order'}->status(), ['Complete','Paid'] ) ) ?>
@@ -29,49 +29,19 @@ To see individual service production status and upload files please click on the
 <b>Attention:</b> <br/>
 Projects listed in red have changed price from the time this order was originally generated.<br/>
 <br/>
+<div class="Order">
 <!--#include virtual="/includes/order_header.html" -->
-<br class="spacer"/>
-<!--#include virtual="/includes/order_project_list.html" -->
+<!--#include virtual="_project_list.html" -->
 <!--#include virtual="_product_list.html" -->
-<span style="float: left;">
-	<br/>
+<div id="AdminOptions"><ul>
 	<? if ( $$variable{'Order'}->administrator_name() ) ?>
-	<b>Representative:</b> <? echo ( $$variable{'Order'}->administrator_name() ) ?><br/>
+	<li><label>Representative:</label><? echo ( $$variable{'Order'}->administrator_name() ) ?></li>
 	<? endif ( $$variable{'Order'}->administrator_name() ) ?>
 	<? if ( $$variable{'Order'}->administrator_comments() ) ?>
-	<? if ( $$variable{'AdministratorComments'} ) ?>
-	<b>Representative Comments:</b> <? echo ( $$variable{'Order'}->administrator_comments() ) ?><br/>
+	<li><label>Representative Comments:</label><? echo ( $$variable{'Order'}->administrator_comments() ) ?></li>
 	<? endif ( $$variable{'Order'}->administrator_comments() ) ?>
-</span>
-<div style="float: right; text-align: right;">
-	<!--#include virtual="/includes/order_totals.html" -->
-	<? if ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
-	<table width="250" border="0" cellspacing="0" cellpadding="0" cols="2">
-		<tr> 
-			<td height="0" width="175">&nbsp;</td>
-			<td height="0" width="75">&nbsp;</td>
-		</tr>
-		<tr> 
-			<td align="right"><b>Amount Paid:</b></td>
-			<td align="right"><?CurrencySymbol?><?AmountPaid?></td>
-		</tr>
-		<? if ( $$variable{'DepositDue'} ) ?>
-		<tr> 
-			<td align="right"><b>Deposit Due:</b></td>
-			<td align="right"><?CurrencySymbol?><?DepositDue?></td>
-		</tr>
-		<? endif ( $$variable{'DepositDue'} ) ?>
-		<? if ( $$variable{'AmountOutstanding'} ) ?>
-		<tr> 
-			<td align="right"><b>Amount Owing:</b></td>
-			<td align="right"><?CurrencySymbol?><?AmountOutstanding?></td>
-		</tr>
-		<? endif ( $$variable{'AmountOutstanding'} ) ?>
-	</table>
-	<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
-</div>
-<br class="spacer"/>
-	<span class="Currency">All prices listed in <?CurrencyName?>.</span>
+</ul></div>
+	<!--#include virtual="_totals.html" -->
 <br class="spacer"/><br/>
 <? echo ( $config{'OrderViewDisclaimer'} ) ?>
 <br class="spacer"/>
@@ -109,5 +79,4 @@ Projects listed in red have changed price from the time this order was originall
 	<br class="spacer"/>
 	<!--#include virtual="/includes/_order_payments.html"-->
 </form>
-
-<br class="spacer"/>
+</div><!--Order-->

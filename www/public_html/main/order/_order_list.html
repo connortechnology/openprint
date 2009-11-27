@@ -48,8 +48,8 @@
 			<th align="left">Ordered By</th>
 			<th align="center" width="120">Date</th>
 			<th align="right" width="125">Status</th>
-			<th align="right" width="75">Total</th>
-			<th align="right" width="100">Balance</th>
+			<th class="Price">Total</th>
+			<th class="Price">Balance</th>
 		</tr>
 		</thead>
 		<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
@@ -76,8 +76,8 @@
 			<td align="left"><? echo ( $$variable{'Order'}->name(); ) ?></td>
 			<td align="right"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></td>
 			<td align="right"><? echo ( $$variable{'Order'}->status(); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'total'} ); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'balance'} ); ) ?></td>
+			<td class="Price"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'total'} ); ) ?></td>
+			<td class="Price"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'balance'} ); ) ?></td>
 		</tr>
 		<tr<?rowclass?>>
 			<td colspan="2">&nbsp;</td>
@@ -92,8 +92,8 @@
 		<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
 		<tr class="totals">
 			<td colspan="5" align="right"><b>Report Totals:</b></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'ReportTotal'} ); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'ReportBalance'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 		</tr>
 	</table>
 	<br/>

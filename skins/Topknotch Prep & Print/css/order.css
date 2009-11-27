@@ -260,3 +260,11 @@ div.Order fieldset ul li.help {
 	font-size: xx-small;
 	color: #07759f;
 }
+div.Order ul li.RequiredBy select {
+	width: auto;
+}
+div.Order div.same_as_billing {
+	margin-top: -20px;
+	margin-right: 10px;
+	text-align: right;
+}

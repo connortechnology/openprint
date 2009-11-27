@@ -79,8 +79,13 @@ sub calc {
 	} # end if
 
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
-	if ( (! sets::isin( 1, \@Groups ) ) and $$specs{'rdbCover'} eq 'Different' ) {
-		push @Groups, 1;
+	if ( $$specs{'rdbCover'} eq 'Different' ) {
+
+		if ( ! sets::isin( 1, \@Groups ) ) {
+			push @Groups, 1;
+		} # end if
+	} else {
+		@Groups = sets::exclude( [1], \@Groups );
 	} # end if
 	if ( ! sets::isin( 2, \@Groups ) ) {
 		push @Groups, 2;
@@ -93,9 +98,9 @@ sub calc {
 
 	my $remaining_pages = $$specs{'txtTotalPageQuantity'};
 	my %override_pages;
-
+$openprint::log->debug("Groups: @Groups");
 	foreach my $group_id ( @Groups ) {
-#$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
+$openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override_pages{$group_id}");
 		if ( $override_pages{$group_id} ) {
 # DO nothing
 		} elsif ( exists $$specs{'OverrideGroupPageQuantity'.$group_id} ) {
@@ -204,7 +209,7 @@ sub calculate_signatures {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 
 	my $status;
-$openprint::log->debug("Starting Multipage::calculate_signatures");
+$openprint::log->debug("****************************************************************Starting Multipage::calculate_signatures");
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 

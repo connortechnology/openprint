@@ -28,6 +28,24 @@
 			<?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->total() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->total() ) ?>
+		<? if ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
+		<li>
+			<label>Amount Paid:</label>
+			<?CurrencySymbol?><?AmountPaid?>
+		</li>
+        <? if ( $$variable{'DepositDue'} ) ?>
+        <li>
+            <label>Deposit Due:</label>
+            <?CurrencySymbol?><?DepositDue?>
+        </li>
+        <? endif ( $$variable{'DepositDue'} ) ?>
+        <? if ( $$variable{'AmountOutstanding'} ) ?>
+        <li>
+            <label>Amount Owing:</label>
+            <?CurrencySymbol?><?AmountOutstanding?>
+        </li>
+        <? endif ( $$variable{'AmountOutstanding'} ) ?>
+		<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
 	</ul>
 	<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name() ) ?>.
 	<? echo ( 

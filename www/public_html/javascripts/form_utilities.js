@@ -17,7 +17,7 @@ function get_value( obj ) {
 	if ( obj.type == 'select-one' ) {
 		return get_ddm_value( obj );
 	} else if ( obj.type == 'radio' ) {
-		return get_rdb_value( obj.form, obj.name );
+		return get_rdb_value( obj );
 	} else if ( obj.type == 'hidden' || obj.type == 'text' ) {
 		return obj.value;
 	} else if ( obj.length ) {

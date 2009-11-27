@@ -506,7 +506,7 @@ $openprint::log->debug("Making order from quote");
 
 	if ( $$variable{'companyname'} eq '' ) {
 		my $Company = new openprint::Company($openprint::session{'company_id'});
-		@$variable{'companyName',
+		@$variable{'companyname',
 			'address1',
 			'address2',
 			'city',

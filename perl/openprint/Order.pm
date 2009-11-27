@@ -165,6 +165,8 @@ $openprint::log->debug("Loaded order: " . $$self{'id'} );
 sub save {
 	my ( $self, $params ) = @_;
 
+	$self->set( $params );
+
 	my $ac = sql::start_transaction( $dbh );
 
 	my %sql;

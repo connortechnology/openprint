@@ -10,7 +10,7 @@ function same_as_billing( on, id ) {
 	var form = checkbox.form;	
 	if ( on ) {
 		form.elements['ToCompanyName'+id].value = form.elements['companyname'].value;
-		set_rdb_value( form.elements['ToSalutation'+id], get_value( form.elements['salutation'].value ) );
+		set_rdb_value( form.elements['ToSalutation'+id], get_value( form.elements['salutation'] ) );
 		form.elements['ToFirstName'+id].value = form.elements['firstname'].value;
 		form.elements['ToLastName'+id].value = form.elements['lastname'].value;
 		form.elements['ToAddress1'+id].value = form.elements['address1'].value;
@@ -21,6 +21,7 @@ function same_as_billing( on, id ) {
 		form.elements['ToPostalCode'+id].value = form.elements['postalcode'].value;
 		form.elements['ToPhone'+id].value = form.elements['phone'].value;
 		form.elements['ToFax'+id].value = form.elements['fax'].value;
+		form.elements['ToEmail'+id].value = form.elements['email'].value;
 	} else if ( checkbox.checked ) {	
 		checkbox.checked = false;
 	} // end if

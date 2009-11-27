@@ -1,6 +1,6 @@
 
 <? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
-<p>
+<li>
 	<label>Quantity:</label>
 	<span style="width: 67%;">
 	<table class="List">
@@ -26,13 +26,7 @@
 		) ?>
 	</table>
 	</span>
-</p>
+</li>
 <? else ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
-		<? echo ( 
-			my $html = '';
-			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$html .= sprintf('<input type="hidden" name="rdbQuantity%1$d" value="%2$d" />', $$variable{'Project'}->id(), $qty_index );
-			} # end foreach qty_index
-			return $html;
-		) ?>
+<? echo ( return sprintf('<input type="hidden" name="rdbQuantity%1$d" value="%2$d" />', $$variable{'Project'}->id(), $$$variable{'Project'}->ordered_quantity_index() );) ?>
 <? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
