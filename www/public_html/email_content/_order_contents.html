@@ -53,55 +53,7 @@
 <? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 </table>
 <? endif ( @{$$variable{'Projects'}} = $$variable{'Order'}->projects(); ) ?>
-<table class="List">
-	<tr class="totals"> 
-		<td colspan="2" align="right">Sub-Total:</td>
-		<td width="120" align="right"><?CurrencySymbol?><? echo ( sprintf('%.2f', $$variable{'Order'}->sub_total() ); ) ?></td>
-	</tr>
-	<? if ( $$variable{'GST'} ) ?>
-	<tr> 
-		<td colspan="2" align="right">Federal Sales Tax:</td>
-		<td align="right"><?CurrencySymbol?><?GST?></td>
-	</tr>
-	<? endif ( $$variable{'GST'} ) ?>
-	<? if ( $$variable{'PST'} ) ?>
-	<tr> 
-		<td colspan="2" align="right">State/Prov. Sales Tax:</td>
-		<td align="right"><?CurrencySymbol?><?PST?></td>
-	</tr>
-	<? endif ( $$variable{'PST'} ) ?>
-	<? if ( $$variable{'HST'} ) ?>
-	<tr> 
-		<td colspan="2" align="right">Harmonized Tax:</td>
-		<td align="right"><?CurrencySymbol?><?HST?></td>
-	</tr>
-	<? endif ( $$variable{'HST'} ) ?>
-	<tr class="totals">
-		<td colspan="2" align="right"><b>Total:</b></td>
-		<td align="right"><?CurrencySymbol?><?TOTAL?></td>
-	</tr>
-	<tr>
-		<td colspan="2" align="right"><b>Amount Paid:</b></td>
-		<td align="right"><?CurrencySymbol?><?AmountPaid?></td>
-	</tr>
-	<? if ( $$variable{'DepositDue'} ) ?>
-	<tr> 
-		<td colspan="2" align="right"><b>Deposit Due immediately:</b></td>
-		<td align="right"><?CurrencySymbol?><?DepositDue?></td>
-	</tr>
-	<? else ( $$variable{'DepositDue'} ) ?>
-	<? if ( $$variable{'AmountOutstanding'} > 0 and $$variable{'ORDER_STATUS'} eq 'Complete' ) ?>
-	<tr> 
-		<td>
-			<? if ( $$variable{'Terms'} ) ?>Payment is due within <?Terms?> days.
-			<? else ( $$variable{'Terms'} ) ?>Payment is due immediately.
-			<? endif ( $$variable{'Terms'} ) ?>
-		</td>
-		<td width="100" align="right"><b>Outstanding Balance:</b></td>
-		<td width="120" align="right"><?CurrencySymbol?><?AmountOutstanding?></td>
-	</tr>
-	<? endif ( $$variable{'AmountOutstanding'} > 0 and $$variable{'ORDER_STATUS'} eq 'Complete' ) ?>
-	<? endif ( $$variable{'DepositDue'} ) ?>
+<!--#include virtual="/main/order/_totals.html"-->
 	<? if ( $$variable{'AdministratorName'} ne '' ) ?>
 	<tr>
 		<td colspan="3" align="left"><b>Service Representative:</b> <?AdministratorName?></td>

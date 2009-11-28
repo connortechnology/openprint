@@ -60,6 +60,6 @@ There is no current project.
 </div><!-- Project Summary -->
 <? endif ( $$variable{'ProjectIndex'} eq '' ) ?>
 <br/>
-<span style="float: right;">
+<p class="buttons">
 <? echo ( ssi::writeButton($log, $dbh, 'ReturnToProjectView', 'back.gif', '', 'view.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Return to Project View' ); ) ?>
-</span>
+</p>

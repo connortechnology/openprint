@@ -1,6 +1,7 @@
 package openprint::order;
 
 use MIME::QuotedPrint;
+use MIME::Base64;
 use Mail::Sendmail;
 use Email::Valid;
 use Date::Calc qw(Add_Delta_Days check_date);
@@ -901,12 +902,12 @@ sub send_completion_notice {
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_completion_notice.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
 	if ( $_ ) {
-		$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$_, \%order ) ) );
+		$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$_, \%order ) ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
 	} # end if
 	#my %mail = (
@@ -927,28 +928,31 @@ sub send_sales_order {
 	my $Order = new openprint::Order( $order_id );
 	$order{'OrderID'} = $order_id;
 	$order{'Order'} = $Order;
+	my $Currency = new openprint::Currency( $openprint::session{'CurrencyIndex'} );
+	@order{'CurrencyName','CurrencySymbol'} = ($Currency->name(), $Currency->symbol() );
+	$order{'Currency'} = $Currency;
+	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
+	my @body = ('', MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) ), 'text/html', 'quoted-printable');
 
 	my @sales_order;
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	@sales_order = ( "Order$order_id.html", encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ), 'text/html', 'quoted-printable' ) );
+	@sales_order = ( "Order$order_id.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ), 'text/html', 'quoted-printable' ) );
 
 	# Add a project summary for each project in the order
 	my @project_summaries = ();
-
+if ( 0 ) {
 	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_summary.html' );
 	foreach my $Project ($Order->Projects()) {
 		my %variable;
 		openprint::print_project::summary( $r, $log, $dbh, \%variable, $Project->id() );
 		$variable{'ReplacementText'} = ssi::variable_substitution( \$content, \%variable );
-		push @project_summaries, "ProjectSummary$$Project{id}.html", encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%variable ))), 'text/html', 'quoted-printable';
+		push @project_summaries, "ProjectSummary$$Project{id}.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%variable ))), 'text/html', 'quoted-printable';
 	} # for each Project
+}
 
 	my $sales_person_email;
 	if ( $Order->salesrep_id() ) {
@@ -970,12 +974,12 @@ sub send_sales_order {
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my @sales_order;
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	@sales_order = ( "Order$order_id.html", $_, 'text/html', 'quoted-printable' );
 	my @project_dockets = ();
 
@@ -985,7 +989,7 @@ sub send_sales_order {
 		my %variable;
 		openprint::print_project::summary( $r, $log, $dbh, \%variable, $Project->id() );
 		if ( $_ ) {
-			$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$content, \%variable ) ) );
+			$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$content, \%variable ) ) );
 			push @project_dockets, "ProjectDocket$$Project{id}.html", $_, 'text/html', 'quoted-printable';
 		} # end if
 	} # for each
@@ -1014,7 +1018,6 @@ sub send_sales_order {
 } # end sub send_sales_order
 
 sub history {
-	my ( $r, $log, $dbh, $variable ) = @_;
 
 } # end sub history
 
@@ -1026,9 +1029,6 @@ sub get_misc {
 
 	@$variable{'Downpayment','TOTAL', 'GST', 'HST', 'PST', 'ORDERED_BY', 'CreationDate', 'ORDER_STATUS', 'CurrencyIndex', 'PONUM','AdministratorComments','AdministratorName'} = $Order->get('downpayment','total','gst','hst','pst','ordered_by','created_on','status','currency_id','po','administrator_comments','administrator_name');
 
-	my $Currency = new openprint::Currency( $$variable{'CurrencyIndex'} );
-	@$variable{'CurrencyName','CurrencySymbol'} = ($Currency->name(), $Currency->symbol() );
-	$$variable{'Currency'} = $Currency;
 
 	if ( $Order->status() ne 'Cancelled' ) {
 		$$variable{'AmountOutstanding'} = sprintf( '%.2f', $Order->total() - $Order->paid() );
@@ -1115,10 +1115,11 @@ sub display_order {
 
 	if ( $order_id ) {
 		my $Order = new openprint::Order( $order_id );
-		get_invoice_to( $variable, $Order );
-		get_misc( $variable, $Order );
-		$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'city','state','country'} );
+		my $Currency = openprint::Currency::get_current();
+		@$variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+		$$variable{'Currency'} = $Currency;
 		$$variable{'OrderID'} = $order_id;
+		$$variable{'Order'} = $Order;
 	} # end if
 } # end sub display_order
 

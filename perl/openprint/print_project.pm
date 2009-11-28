@@ -345,18 +345,17 @@ sub summary {
 	$$variable{'OrderId'} = $order_id;
 	my $Project = new openprint::Project( $project_index );
 	$$variable{'Project'} = $Project;
-	my %services = $Project->get_services();
-	$$variable{'Services'} = \%services;
+	my $services = $Project->services();
+	$$variable{'Services'} = $services;
 
-	if ( $services{''} ) {
+	if ( $$services{''} ) {
 		my $ProjectType = $Project->Type();
 		# print service comes first
 		@$variable{'ProjectTypeName','ProjectTypeURL'} = ( $ProjectType->name(), $ProjectType->url() );
 
-		@services = ( $services{''}[0], 'Printing', $$variable{'ProjectTypeURL'} );
+		@services = ( $$services{''}[0], 'Printing', $$variable{'ProjectTypeURL'} );
 
-		#@{$$variable{$project_type_id}} = ( $service_index );
-		openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $project_index, $services{''}[0] );
+		openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $project_index, $$services{''}[0] );
 	} # end if
 	
    push @services, sql::execute( $log, $dbh, q{SELECT lngServiceIndex, name, strdetailedurl FROM tbl_Project_Contents, Service_Types WHERE servicetype_id=Service_Types.id AND lngProjectIndex=? AND view_visible=true AND servicetype_id IS NOT NULL ORDER BY sorting,lngServiceIndex}, $project_index );
@@ -374,29 +373,17 @@ sub summary {
 	$$variable{'UNITPRICE2'} = $$variable{'txtQuantity2'} ? sprintf( "%.2f", $$variable{'TOTAL2'}/$$variable{'txtQuantity2'} ) : '0.00';
 	$$variable{'UNITPRICE3'} = $$variable{'txtQuantity3'} ? sprintf( "%.2f", $$variable{'TOTAL3'}/$$variable{'txtQuantity3'} ) : '0.00';
 
-	openprint::print::get_quantities( $variable, $project_index);
-
 	$$variable{'ProjectIndex'} = $project_index;
 	$$variable{'NoPriceBreakDown'} = $r->param('NoPriceBreakDown');
 
 	@{$$variable{'PrintingServices'}} = $Project->signatures();
 	# new stuff
 
-	$$variable{'ProofServiceIndex'}	= $services{'Proofs'} ? $services{'Proofs'}[0] : $services{'FilmStripping'}[0];
-
-	if ( my %services = get_services_in_category( $log, $dbh, $project_index, 'Bindery') ) {
-		$_ = "SELECT description FROM Service_Types WHERE id IN ( '" . join("','", @services{keys %services} ) . "') ORDER BY sorting";
-		$$variable{'BinderyServices'} = join(',', sql::execute( $log, $dbh, $_ ));
-	} # end if
-
-	if ( my %services = get_services_in_category( $log, $dbh, $project_index, 'Packaging') ) {
-		$_ = "SELECT description FROM Service_Types WHERE id IN ( '" . join("','", @services{keys %services} ) . "') ORDER BY sorting";
-		$$variable{'PackagingServices'} = join(',', sql::execute( $log, $dbh, $_ ));
-	} # end if
+	$$variable{'ProofServiceIndex'}	= $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0];
 
 	my $Currency = openprint::Currency::get_current();
 	if ( $Currency ) {
-		@$variable{'CurrencyName', 'CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
+		@$variable{'Currency','CurrencyName', 'CurrencySymbol'} = ( $Currency, $Currency->name(), $Currency->symbol() );
 	} # end if
 } # end sub summary
 

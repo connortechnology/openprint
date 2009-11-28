@@ -1,3 +1,10 @@
+<? eval (
+    if ( my %services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'Project'}->id(), 'Bindery') ) {
+        $_ = "SELECT description FROM Service_Types WHERE id IN ( '" . join("','", @services{keys %services} ) . "') ORDER BY sorting";
+        $$variable{'BinderyServices'} = join(',', sql::execute( $log, $dbh, $_ ));
+    } # end if
+
+) ?>
 <? if ( $config{'Barcodes Enabled'} ne 'N' ) ?>
 <table width="100%" border="0">
 	<tr>
@@ -538,14 +545,16 @@
 		<? endwhile ( $$variable{'ShrinkWrapServiceIndex'} = pop @{$$variable{'ShrinkWrapServices'}} ) ?>
 		<? endif ( $$variable{Services}{'ShrinkWrap'} ) ?>
 
-		<? if ( $$variable{Services}{'Bundling'} ) ?>
-		<? eval ( @{$$variable{'ShrinkWrapServices'}} = $$variable{Services}{'Bundling'}[0] ) ?>
-		<? while ( $$variable{'BundleServiceIndex'} = pop @{$$variable{'BundleServices'}} ) ?>
-		<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'BundleServiceIndex'} ); ) ?>
-, Bundles in <?txtWrapQuantity?>'s
-		<? endwhile ( $$variable{'BundleServiceIndex'} = pop @{$$variable{'BundleServices'}} ) ?>
-		<? endif ( $$variable{Services}{'Bundling'} ) ?>
-
+		<? echo (
+			my $html;
+			if ( $$variable{Services}{'Bundling'} ) {
+				foreach ( @{$$variable{Services}{'Bundling'}} ) {
+					openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $_ ); ) ?>
+					$html .= ", Bundles in <?txtWrapQuantity?>'s";
+				} # endforeach
+			} # endif
+			return $html;
+		) ?>
 		<? if ( $$variable{Services}{'KraftWrap'} ) ?>
 		<? eval ( @{$$variable{'KraftWrapServices'}} = $$variable{Services}{'KraftWrap'}[0] ) ?>
 		<? while ( $$variable{'KraftWrapServiceIndex'} = pop @{$$variable{'KraftWrapServices'}} ) ?>
@@ -554,9 +563,9 @@
 		<? endwhile ( $$variable{'KraftWrapServiceIndex'} = pop @{$$variable{'KraftWrapServices'}} ) ?>
 		<? endif ( $$variable{Services}{'KraftWrap'} ) ?>
 
-		<? if ( sets::isin( 'Plain Cartons', split(',',$$variable{'PackagingServices'})) ) ?>
+		<? if ( $$variable{Services}{'PlainCartons'} ) ?>
 		, Bulk Pack in Cartons<br>
-		<? endif ( sets::isin( 'Plain Cartons', split(',',$$variable{'PackagingServices'})) ) ?>
+		<? endif ( $$variable{Services}{'PlainCartons'} ) ?>
 	</td>
 		<td class="docketText">&nbsp;</td>
 		<td class="docketText">&nbsp;</td>

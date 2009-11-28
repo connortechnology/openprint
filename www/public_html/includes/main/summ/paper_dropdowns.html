@@ -49,32 +49,3 @@
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </div>
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-<div class="row">
-    <span class="label">Stock Cost:</span>
-<? echo ( 
-	my $html = '';
-	my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $$variable{'Project'}->quantity( $qty_index );
-		my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $qty_index );
-
-		my $qty = 0;
-		$qty  = $$sig_specs{'txtPressSheetQty'.$qty_index};
-		$qty =~ s/\D//g;
-
-		if ( $Paper->type() eq 'Roll' ) {
-			my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $qty );
-			$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $qty, $paper_price{'Paper Price'} );
-		} else {
-			my $weight = $qty * $Paper->width() * $Paper->height() * $Paper->wpsi();
-			my %paper_price = openprint::Estimating::Paper::sheet_calc( $Paper, $qty );
-			$html .= sprintf('<span class="value">$%.2fPer 100lb * %dlbs = $%.2f</span>', $paper_price{'100lb'}, $weight, $paper_price{'Paper Price'} );
-		} # end if
-	} # end foreach qty_index
-	return $html;
-) ?>
-
-</div>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-<div

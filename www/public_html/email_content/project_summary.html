@@ -1,10 +1,7 @@
 <style type="text/css">
 	<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/project.css' ); ) ?>
 	<? eval ( 
-		$$variable{'QTYS'} = 0;
-		foreach my $qty_index ( 1 .. 3 ) {
-			$$variable{'QTYS'} += 1 if ( $$variable{'txtQuantity'.$qty_index} );
-		} # end foreach
+		$$variable{'QTYS'} = scalar $$variable{'Project'}->quantity_indexes();
 	) ?>
 	div.ProjectSummary div.row span.label {
 		width: 45%;

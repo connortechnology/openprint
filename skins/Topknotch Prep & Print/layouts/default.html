@@ -134,7 +134,7 @@
 					$html .= '<li class="step2complete"><label>STEP 2</label>Review Order</li>';
 					$html .= '<li class="step3on"><label>STEP 3</label>Place Order</li>';
 					$html .= '<li class="step4"><label>STEP 4</label>Upload Files</li>';
-				} elsif ( $$variable{'uri'} =~ /\/upload/ ) {
+				} elsif ( $$variable{'uri'} =~ /\/upload/ or $$variable{'uri'} =~ /\/main\/order\/history_details/ or $$variable{'uri'} =~ /\/main\/order\/confirm/ ) {
 					$html .= '<li class="step1complete"><label>STEP 1</label>Specify Project</li>';
 					$html .= '<li class="step2complete"><label>STEP 2</label>Review Order</li>';
 					$html .= '<li class="step3complete"><label>STEP 3</label>Place Order</li>';

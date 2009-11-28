@@ -220,7 +220,7 @@ div.Order div.Project table thead tr th {
 	padding: 10px 0px 10px 0px;
 	color: #07759f;
 }
-div.Order div.Project table tbody {
+div.Order div.Project table.List tbody {
 	border:1px solid #a0b5ca;
 }
 div.Order div.Project table th {
@@ -241,8 +241,7 @@ div.Order div.Project td.price {
 div.Order div.Project th.service {
 	width: 150px;
 }
-div.Order div.Project table tbody tr td.service {
-border: 1px solid red;
+div.Order div.Project td.service {
 	width: 150px;
 	text-align: left;
 	font-size: small;
@@ -269,8 +268,10 @@ div.Order div.same_as_billing {
 	margin-right: 10px;
 	text-align: right;
 }
-div.Order div.Project table tbody tr td table, div.Order div.Project table tr td table.ProofsSummary tbody tr td{
- border: none;
-border: 1px solid red;
-background-color: green;
+table.ProofsSummary, table.ProofSummary tbody, table.ProofsSummary tbody tr, table.ProofsSummary tbody tr td {
+ border: 1px solid white;
+font-weight: normal;
+font-size: small;
+	text-transform: capitalize;
+
 }
