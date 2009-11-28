@@ -938,9 +938,13 @@ sub send_sales_order {
 	my @body = ('', MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) ), 'text/html', 'quoted-printable');
 
 	my @sales_order;
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	@sales_order = ( "Order$order_id.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ), 'text/html', 'quoted-printable' ) );
+	my $sales_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
+$log->debug("sales order: $sales_order");
+	$order{'ReplacementText'} = ssi::variable_substitution( \$sales_order, \%order );
+$log->debug("Populated: $order{'ReplacementText'}");
+$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
+	@sales_order = ( "Order$order_id.html", $_, 'text/html', 'quoted-printable' );
+$log->debug("template: $_");
 
 	# Add a project summary for each project in the order
 	my @project_summaries = ();
@@ -958,14 +962,16 @@ if ( 0 ) {
 	if ( $Order->salesrep_id() ) {
 		my $CSR = new openprint::User( $Order->salesrep_id() );
 		$sales_person_email = sprintf( '"%s" <%s>', $CSR->name(), $CSR->email() );
-	} else {
+	}
+	if ( ! $sales_person_email ) {
 		$sales_person_email = $config{'OrderingEmail'};
 	} # end if
+$log->debug("FROM: $sales_person_email");
 
 	my %mail = (
 		SMTP	=> $config{'Mail Server'},
 		FROM	=> $sales_person_email,
-		TO		=> $order{'email'},
+		TO		=> sprintf('"%s %s" <%s>', $Order->get('firstname','lastname','email')),
 		BCC		=>	'iconnor@penultima.org',
 		SUBJECT => "Order $order_id",
 );

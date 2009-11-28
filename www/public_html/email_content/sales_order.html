@@ -1,9 +1,12 @@
 <style type="text/css">
 <? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/order.css' ); ) ?>
 </style>
-<!--#include virtual="/includes/order_header.html" -->
-<br class="spacer"/>
-<!--#include virtual="/main/order/_product_list.html" -->
-<!--#include virtual="/email_content/_order_contents.html" -->
-<br class="spacer"/>
-<p><? echo ( $config{'OrderViewDisclaimer'} ) ?></p>
+<div class="Order">
+	<!--#include virtual="/includes/order_header.html" -->
+	<br class="spacer"/>
+	<!--#include virtual="/main/order/_project_list.html" -->
+	<!--#include virtual="/main/order/_product_list.html" -->
+	<!--#include virtual="/main/order/_totals.html" -->
+	<br class="spacer"/>
+	<p><? echo ( $config{'OrderViewDisclaimer'} ) ?></p>
+</div>
