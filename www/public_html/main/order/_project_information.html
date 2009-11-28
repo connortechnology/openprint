@@ -90,7 +90,7 @@
 						my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
 						my $summary = openprint::service::summary( $$variable{'Project'}, $service_id );
 						$summary .= '<br/>' if $summary;
-						$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td><td class="price">%4$s%5$s</td>', 
+						$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td><td class="price">%4$s%5$s</td></tr>', 
 							$rowclass, $ServiceType->description(), 
 							$summary.  openprint::service::summary( $$variable{'Project'}, $service_id, $$variable{'Project'}->ordered_quantity_index() ),
 							$Currency->symbol(),
