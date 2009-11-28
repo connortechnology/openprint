@@ -716,9 +716,6 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 	@{$$variable{'Projects'}} = $Order->Projects();
 	$$variable{'Order'} = $Order;
 
-	get_invoice_to( $variable, $Order );
-	$$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@$variable{'city','state','country'} );
-
 	if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 		$$variable{'AdministratorName'} = new openprint::User( $openprint::session{'user_id'} )->name();
 	} # end if
@@ -896,11 +893,8 @@ sub send_completion_notice {
 	my %order;
 
 	my $Order = new openprint::Order( $order_id );
-	get_invoice_to( \%order, $Order );
-	get_misc( \%order, $Order );
-
-	$order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'city','state','country'} );
 	$order{'OrderID'} = $order_id;
+	$order{'Order'} = $Order;
 
 	my @attachments = ();
 
@@ -910,7 +904,7 @@ sub send_completion_notice {
 	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
-	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice.html' );
+	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
 	if ( $_ ) {
 		$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$_, \%order ) ) );
 		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
@@ -925,81 +919,14 @@ sub send_completion_notice {
 	#misc::send_email_with_attachment( $log, \%mail, @body, @attachments );
 } # end sub send_completion_notice
 
-sub send_invoice {
-	my ( $r, $log, $dbh, $order_id ) = @_;
-	my %order;
-
-	my $Order = new openprint::Order( $order_id );
-	get_invoice_to( \%order, $Order );
-	get_misc( \%order, $Order );
-
-	my $credit = new openprint::customer_credit( $order{'CompanyIndex'} );
-	@order{$credit->fields()} = $credit->get($credit->fields());
-
-	$order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'city','state','country'} );
-	$order{'OrderID'} = $order_id;
-
-	$order{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
-	$order{'siteURL'} = $r->dir_config('ExternalSiteURL');
-	$order{'SiteTitle'} = $r->dir_config('SiteTitle');
-
-	my @attachments = ();
-
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
-
-	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice.html' );
-	if ( $_ ) {
-		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$_, \%order ) ) );
-		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
-	} # end if
-	my %mail = (
-		SMTP	=> $config{'Mail Server'},
-		FROM	=> $config{'AccountingEmail'},
-		TO		=> $order{'email'},
-		SUBJECT => "Invoice for Order $order_id",
-);
-	misc::send_email_with_attachment( $log, \%mail, @body, @attachments );
-
-
-	my @attachments = ();
-	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_body.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
-	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-	$_ = encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
-	my @body = ('', $_, 'text/html', 'quoted-printable');
-	$_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_invoice_for_admin.html' );
-	if ( $_ ) {
-		$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$_, \%order ) ) );
-		push @attachments, "Order$order_id.html", $_, 'text/html', 'quoted-printable';
-	} # end if
-	my %mail = (
-		SMTP	=> $config{'Mail Server'},
-		FROM	=> $config{'AccountingEmail'},
-		TO		=> $config{'AccountingEmail'},
-		SUBJECT => "Invoice for Order $order_id",
-	);
-	misc::send_email_with_attachment( $log, \%mail, @body, @attachments );
-
-} # end sub send_invoice
-
 # This is a self-contained function that sends the email messages for a specified order to the apropriate people.
 sub send_sales_order {
 	my ( $r, $log, $dbh, $order_id ) = @_;
 	my %order;
 
 	my $Order = new openprint::Order( $order_id );
-
-	get_invoice_to( \%order, $Order );
-	get_misc( \%order, $Order );
-	$order{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@order{'city','stateprovince','country'} );
 	$order{'OrderID'} = $order_id;
 	$order{'Order'} = $Order;
-	$order{'Docket'} = $Order->docket();
 
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
 	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );

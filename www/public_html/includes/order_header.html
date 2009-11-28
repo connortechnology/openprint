@@ -22,7 +22,7 @@
 			<li><label>Address:</label>
 			<? if ( $$variable{'Order'}->address1() ) ?><? echo ( $$variable{'Order'}->address1() ) ?><br/><? endif ( $$variable{'Order'}->address1() ) ?>
 			<? if ( $$variable{'Order'}->address2() ) ?><? echo ( $$variable{'Order'}->address2() ) ?><br/><? endif ( $$variable{'Order'}->address2() ) ?>
-			<?CCITYPROVCOUNTRY?><br/>
+			<? echo ( misc::build_city_prov_country($$variable{'Order'}->get('city','state','country') ); ) ?><br/>
 			<? if ( $$variable{'Order'}->postalcode() ) ?><? echo ( $$variable{'Order'}->postalcode() ) ?><br/><? endif ( $$variable{'Order'}->postalcode() ) ?>
 			</li>
 			<? if ( $$variable{'Order'}->firstname() or $$variable{'Order'}->lastname() ) ?>
