@@ -6,8 +6,6 @@ use vars qw( %config $log $dbh %session );
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
 
 require openprint::Currency;
 require openprint::Company;
@@ -220,6 +218,22 @@ sub elapsed {
 		return Date::Parse::str2time( $end ) - Date::Parse::str2time( $start );
 	} # end if
 } # end sub elapsed
+
+sub rate {
+	my ( $self ) = @_;
+	my $Service = $self->Service();
+	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+	if ( $$self{'rate'} ) {
+		$Price{'Cost'} = $Price{'Price'} = $$self{'rate'};
+	} # end if
+	return $Price{'Price'};
+}
+sub units {
+	my ( $self ) = @_;
+	my $Service = $self->Service();
+	my %Price = $Service->get_price( undef, undef, $self->Company()->Pricelist() );
+	return $Price{'units'};
+} # end sub units
 
 sub Price {
 	my ( $self ) = @_;
