@@ -222,3 +222,7 @@ div.autocomplete ul li {
   cursor:pointer;
 }
 
+.Claim #VendorInformation {
+	width: 48%;
+	float: left;
+}

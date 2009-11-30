@@ -1,14 +1,17 @@
 The following stock has been allocated for docket <b><? echo ( $$variable{'Project'}->docket() ) ?></b>:<br/>
 
-<? if ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><br/>Some of these stocks have not been seen in over 30 days.  Please verify the availability of these stocks.<? endif ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><br/>
+<? if ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?><p>Some of these stocks have not been seen in over 30 days.  Please verify the availability of these stocks.<? endif ( $$variable{'OldSkids'} and @{$$variable{'OldSkids'}} ) ?></p>
 
 <? if ( $$variable{'nolocation'} ) ?>
-Some of the allocated stock does not have a location stored in the system.  Please discover it's location and availability.
+<p>Some of the allocated stock does not have a location stored in the system.  Please discover it's location and availability.</p>
 <? endif ( $$variable{'nolocation'} ) ?>
 
 <? if ( $$variable{'offsite'} ) ?>
-Some of the allocated stock is located offsite.  Please be aware of this and arrange for it to be brought onsite in time to be used.
+<p>Some of the allocated stock is located offsite.  Please be aware of this and arrange for it to be brought onsite in time to be used.</p>
 <? endif ( $$variable{'offsite'} ) ?>
+<? if ( $$variable{'Paper'}->allocated() > $$variable{'in_stock'} ) ?>
+	<p><b>There is more stock allocated than in stock.  More paper must be ordered to satisfy the allocation!</b></p>
+<? endif ( $$variable{'Paper'}->allocated() > $$variable{'in_stock'} ) ?>
 <br/>
 <b><? echo ( $$variable{'Paper'}->to_string(); ) ?></b><br/><br/>
 <table class="List">

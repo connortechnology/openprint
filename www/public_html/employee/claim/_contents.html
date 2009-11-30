@@ -33,7 +33,7 @@
 			$html .= sprintf(q`<td class="Weight"><input type="text" id="qty_lbs-%1$d" name="qty_lbs-%1$d" value="%2$d" onkeyup="this.value=this.value.replace(/\D/g,'');convert_lbs_to_kg( this, $('qty_kgs-%1$d') );" /></td>`, $C->id(), $C->weight() );
 			$html .= sprintf(q`<td class="Weight"><input type="text" id="qty_kgs-%1$d" name="qty_kgs-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');convert_kg_to_lbs( this, $('qty_lbs-%1$d') );" /></td>`, $C->id(), Math::Units::convert($C->weight(), 'lb','kg' ) );
 			$html .= sprintf(q`<td class="Cost"><input type="text" id="cost-%1$d" name="cost-%1$d" value="%2$.2f" class="StockCost" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);update_totals($('f1'));" /><select name="cost_units-%1$d" id="cost_units-%1$d" onchange="calc_price(this);update_totals($('f1'));">%3$s</select></td>`, $C->id(), $C->cost(), ssi::make_drop_down( [ '/100lb', '/100lb', '/Kg', '/Kg', ,'/1000', '/1000', 'Each', 'Each' ], $$C{'cost_units'} ) );
-			$html .= sprintf(q`<td class="Price"><input type="text" id="total-%1$d" name="total-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>`, $C->id(), $C->quantity()*$C->cost()/100 );
+			$html .= sprintf(q`<td class="Price"><input type="text" id="total-%1$d" name="total-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>`, $C->id(), $C->total() );
 			$html .= '</tr>';
 			$html .= "\n";
 		} # end foreach tag_id

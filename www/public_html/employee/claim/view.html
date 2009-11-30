@@ -57,10 +57,10 @@
 <? echo (
 	my $html = '';
 	$html .= $$variable{'Claim'}->Contact()->name().'<br/>' if $$variable{'Claim'}->contact_id();
-	$html .= $$variable{'Claim'}->Vendor()->name().'<br/>' if $$variable{'Claim'}->Vendor()->name();
-	$html .= $$variable{'Claim'}->Vendor()->address1().'<br/>' if $$variable{'Claim'}->Vendor()->address1();
-	$html .= $$variable{'Claim'}->Vendor()->address2().'<br/>' if $$variable{'Claim'}->Vendor()->address2();
-	$html .= sprintf('%s %s, %s', $$variable{'Claim'}->Vendor()->get('city','state', 'postalcode')) . '<br/>';
+	$html .= $$variable{'Claim'}->vendor_name().'<br/>' if $$variable{'Claim'}->vendor_name();
+	$html .= $$variable{'Claim'}->vendor_address1().'<br/>' if $$variable{'Claim'}->vendor_address1();
+	$html .= $$variable{'Claim'}->vendor_address2().'<br/>' if $$variable{'Claim'}->vendor_address2();
+	$html .= sprintf('%s %s, %s', $$variable{'Claim'}->get('vendor_city','vendor_state', 'vendor_postalcode')) . '<br/>';
 	$html .= 'Phone: ' . $$variable{'Claim'}->vendor_phone().'<br/>' if $$variable{'Claim'}->vendor_phone();
 	$html .= 'Fax: '.$$variable{'Claim'}->vendor_fax().'<br/>' if $$variable{'Claim'}->vendor_fax();
 	$html .= 'SMS: '.$$variable{'Claim'}->vendor_sms().'<br/>' if $$variable{'Claim'}->vendor_sms();
@@ -113,18 +113,22 @@ Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable
 	foreach my $C ( $$variable{'Claim'}->Contents() ) {
 		if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 			$html .= sprintf('<tr>
-				<td>%4$s</td>
+				<td>%3$s</td>
 				<td class="Quantity">%1$s</td>
-				<td class="Weight">%2$slb / %3$skg</td>
-				<td style="text-align: right;">%5$s%6$s</td>
-				<td style="text-align: right;">%7$s</td>
-			</tr>', $C->quantity(), Number::Format::format_number($C->weight()), Number::Format::format_number(Math::Units::convert($C->weight(), 'lb','kg' )), $C->description(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
+				<td class="Weight">%2$s</td>
+				<td style="text-align: right;">%4$s%5$s</td>
+				<td style="text-align: right;">%6$s</td>
+			</tr>', $C->quantity(), 
+( $C->weight() ?  Number::Format::format_number($C->weight()).'lb / '.Number::Format::format_number(Math::Units::convert($C->weight(), 'lb','kg' )).'kg' : '' ),
+ $C->description(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
 		} else {
 			$html .= sprintf('<tr>
-				<td>%4$s</td>
+				<td>%3$s</td>
 				<td class="Quantity">%1$s</td>
-				<td class="Weight">%2$slb/%3$skg</td>
-			</tr>', $C->quantity(), Number::Format::format_number($C->weight()), Number::Format::format_number(Math::Units::convert($C->weight(), 'lb','kg' )), $C->description());
+				<td class="Weight">%2$s</td>
+			</tr>', $C->quantity(), 
+( $C->weight() ?  Number::Format::format_number($C->weight()).'lb / '.Number::Format::format_number(Math::Units::convert($C->weight(), 'lb','kg' )).'kg' : '' ),
+ $C->description());
 		} # end if
 	} # end foreach C
 	return $html;
@@ -156,30 +160,6 @@ Reason:<br/>
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 		All prices are in <? echo ( $$variable{'Claim'}->Currency()->name() ) ?>.
 	<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
-		<br/>
-		<br/>
-			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'Claim'}->Creator()->name() ) ?></i><br/></div>
-<? if ( $$variable{'Claim'}->authorized() ) ?>
-		<br/>
-		<br class="spacer"/>
-		<hr/>
-			<div class="leftColumn"><i>Authorized <? if ( $$variable{'Claim'}->authorized_by() ) ?>by: <? echo ( $$variable{'Claim'}->Authorized_By()->name() ) ?><? endif ( $$variable{'Claim'}->authorized_by() ) ?></i></div>
-			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Claim'}->authorized_on())); ) ?></div>
-<? endif ( $$variable{'Claim'}->authorized() ) ?>
-<? if ( $$variable{'Claim'}->authorized() eq '0' ) ?>
-		<br/>
-		<br class="spacer"/>
-		<hr/>
-			<div class="leftColumn"><i>Declined by: <? echo ( $$variable{'Claim'}->Authorized_By()->name() ) ?></i></div>
-			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Claim'}->authorized_on())); ) ?></div>
-<? endif ( $$variable{'Claim'}->authorized() eq '0' ) ?>
-<? if ( $$variable{'Claim'}->authorized() eq '' ) ?>
-		<br/>
-		<br class="spacer"/>
-		<hr/>
-			<div class="leftColumn"><i>This Claim has NOT been approved.</i></div>
-			<div class="rightColumn">&nbsp;</div>
-<? endif ( $$variable{'Claim'}->authorized() eq '' ) ?>
 		</div>
 		<br class="spacer"/>
 	</div><!--Claim-->

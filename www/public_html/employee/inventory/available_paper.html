@@ -28,11 +28,9 @@
 		} // end if
 		if ( form.available_quantity && ( parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) ) {
 			if ( form.Units ) {
-				alert( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available' );
-			} else {
-				alert( 'There are only ' + form.available_quantity.value + ' available' );
+				return confirm( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available. Do you want to proceed with the allocation?' );
 			} // end if
-			return false;
+			return confirm( 'There are only ' + form.available_quantity.value + ' available. Do you want to proceed with the allocation?' );
 		} // end if
 		return true;
 	} // end function check_inputs(form)
@@ -282,7 +280,7 @@ Please select a Paper to view/edit.<br>
 					return ssi::make_drop_down( [map { $_, $_ } sort keys %data ], $session{'/employee/inventory/available_paper.html?height'} );
 				) ?>
 			</select>
-			<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="calc(this.form.name);" /><label class="radio" for="OrLarger">or larger</label>
+			<input type="checkbox" id="OrLarger" name="OrLarger" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?OrLarger'} eq 'Y' ); ) ?> /><label class="radio" for="OrLarger">or larger</label>
 		</p>
 		<p>
 			<label>FSC Code:</label>
@@ -299,9 +297,8 @@ Please select a Paper to view/edit.<br>
 							next if $L->name() eq 'Missing';
 							push @selected, $L->id();
 						} # end foreach $L
-						$session{'/employee/inventory/available_paper.html?location_id'} = join(';', @selected);
 					} # end if
-					$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
+					$session{'/employee/inventory/available_paper.html?location_id'} = join(';',sets::intersection( @selected, @options ));
 					return ssi::make_select( \@options, \@selected );
 				) ?>
 			</select>

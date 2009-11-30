@@ -51,6 +51,18 @@ $serial = 'claims_id_seq';
 	'statetax_charge'	=>	'statetax_charge',
 	'deleted'			=>	'deleted',
 	'reason'			=>	'reason',
+	'vendor_contact'	=>	'vendor_contact',
+	'vendor_name'		=>	'vendor_name',
+	'vendor_address1'	=>	'vendor_address1',
+	'vendor_address2'	=>	'vendor_address2',
+	'vendor_city'		=>	'vendor_city',
+	'vendor_country'	=>	'vendor_country',
+	'vendor_state'		=>	'vendor_state',
+	'vendor_postalcode'	=>	'vendor_postalcode',
+	'vendor_phone'		=>	'vendor_phone',
+	'vendor_fax'		=>	'vendor_fax',
+	'vendor_sms'		=>	'vendor_sms',
+	'vendor_email'		=>	'vendor_email',
 );
 
 %transforms = (
@@ -205,12 +217,10 @@ sub find {
 
 sub save {
 	my ( $self, $hash ) = @_;
-	$$hash{'subtotal'} = 0;
-	foreach my $C ( $self->Contents() ) {
-		$$hash{'subtotal'} += $C->total();
-	} # end foreach
+	delete $$self{'subtotal'};
 	delete $$self{'federaltax'};
 	delete $$self{'statetax'};
+	$$hash{'subtotal'} = $self->subtotal();
 	$$hash{'federaltax'} = $self->federaltax();
 	$$hash{'statetax'} = $self->statetax();
 	$$hash{'total'} = $self->total();
@@ -345,9 +355,20 @@ sub statetax_charge {
 	return $$self{'statetax_charge'};
 } # end sub statetax_charge
 
+sub subtotal {
+	my ( $self ) = @_;
+	if ( ! $$self{'subtotal'} ) {
+		$$self{'subtotal'} = 0;
+		foreach my $C ( $self->Contents() ) {
+			$$self{'subtotal'} += $C->total();
+		} # end foreach
+	} # endif
+	return $$self{'subtotal'};
+} # end sub subtotal
+
 sub total {
 	my ( $self ) = @_;
-	return $$self{'subtotal'} + $self->federaltax() + $self->statetax();
+	return $self->subtotal() + $self->federaltax() + $self->statetax();
 } # end sub total
 
 sub Company {
