@@ -1,0 +1,62 @@
+<div id="VendorInformation">
+	<fieldset><legend>VENDOR:</legend>
+		<p><label>Select:</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" onkeydown="if(event.keyCode == 13){this.form.supplier_id.onchange();}" class="filter" />
+			<select name="supplier_id" onchange="new Ajax.Request('_po_select_vendor.json', {method:'get', parameters: { supplier_id: this.value } } );">
+				<option value="">select</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'PurchaseOrder'}->supplier_id() ); ) ?>
+			</select>
+		</p>
+		<p id="contacts" <? echo ( $$variable{'PurchaseOrder'}->supplier_id() ? '' : ' style="display:none;"' ) ?>><label>Available Contacts:</label>
+			<select id="contact_id" name="contact_id" onchange="new Ajax.Request('_po_select_contact.json', {method:'get', parameters: { contact_id: this.value } } );">
+				<option value="">select</option>
+				<? echo ( 
+					if ( $$variable{'PurchaseOrder'}->supplier_id() ) {
+						my @Users = openprint::User::find('company_id'=>$$variable{'PurchaseOrder'}->supplier_id(), 'name'=>$$variable{'PurchaseOrder'}->vendor_contact() );
+			
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'company_id'=>$$variable{'PurchaseOrder'}->supplier_id() ) ], @Users ? $Users[0]->id() : undef );
+					} # end if
+					return;
+				) ?>
+			</select>
+		</p>
+		<p><label for="vendor_contact">Contact:</label><input type="text" name="vendor_contact" id="vendor_contact" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_contact() ) ?>" /></p>
+		<p><label for="vendor_name">Name:</label><input type="text" name="vendor_name" id="vendor_name" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_name() ) ?>" /></p>
+		<p><label for="vendor_address1">Address:</label><input type="text" name="vendor_address1" id="vendor_address1" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_address1() ) ?>" />
+		<input type="text" name="vendor_address2" id="vendor_address2" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_address2() ) ?>" /></p>
+		<p><label for="vendor_country">Country:</label>
+			<select id="vendor_country" name="vendor_country" onchange="Country_onchange( this, this.form.vendor_state );">
+				<option value=""> select </option>
+				<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->vendor_country() ); ) ?>
+			</select>
+		</p>
+		<p><label for="vendor_state"><span id="vendor_country_state"><? echo (
+				if ( $$variable{'PurchaseOrder'}->vendor_country() eq 'US' ) {
+					return 'State:';
+				} elsif ( $$variable{'PurchaseOrder'}->vendor_country() eq 'CA' ) {
+					return 'Province:';
+				} else {
+					return 'State/Province:';
+				} # end if
+			) ?></span></label>
+			<select id="vendor_state" name="vendor_state">
+			<option value=""> Select </option>
+			<? echo ( ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->vendor_state()); ) ?>
+			</select>
+		</p>
+		<p><label for="vendor_city">City:</label><input type="text" name="vendor_city" id="vendor_city" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_city() ) ?>" /></p>
+		<p><label for="vendor_postalcode"><span id="vendor_country_postal"><? echo (
+				   if ( $$variable{'PurchaseOrder'}->vendor_country() eq 'US' ) {
+					   return 'Zip Code:';
+				   } elsif ( $$variable{'PurchaseOrder'}->vendor_country() eq 'CA' ) {
+					   return 'Postal Code:';
+				   } else {
+					   return 'Zip/Postal Code:';
+				   } # end if
+				) ?></span></label><input type="text" name="vendor_postalcode" id="vendor_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_postalcode() ) ?>" /></p>
+		<p><label for="vendor_phone">Phone:</label><input type="text" name="vendor_phone" id="vendor_phone" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_phone() ) ?>" /></p>
+		<p><label for="vendor_fax">Fax:</label><input type="text" name="vendor_fax" id="vendor_fax" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_fax() ) ?>" /></p>
+		<p><label for="vendor_sms">SMS:</label><input type="text" name="vendor_sms" id="vendor_sms" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_sms() ) ?>" /></p>
+		<p><label for="vendor_email">Email:</label><input type="text" name="vendor_email" id="vendor_email" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_email() ) ?>" /></p>
+	</fieldset>
+</div>

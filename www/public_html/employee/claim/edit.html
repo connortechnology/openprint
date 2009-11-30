@@ -111,32 +111,7 @@ function del_content(form, content_id ) {
 		<div class="PageTitle">
 		<h1>CLAIM (<? echo ( $$variable{'Claim'}->id() ) ?>)</h1>
 		</div>
-		<div class="leftColumn">
-			<fieldset><legend>VENDOR:</legend>
-				<p><label>Select:</label>
-					<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" onkeydown="if(event.keyCode == 13){this.form.supplier_id.onchange();}" class="filter" />
-					<select name="supplier_id" onchange="if(this.value){$('contacts').show();};new Ajax.Request('_select_vendor.json', {method:'get', parameters: { supplier_id: this.value } } );">
-						<option value="">select</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'Claim'}->supplier_id() ); ) ?>
-					</select><br/>
-					<span id="vendor_info"></span>
-				</p>
-				<p id="contacts"><label>Available Contacts:</label>
-					<select id="contact_id" name="contact_id" onchange="new Ajax.Request('_select_contact.json', {method:'get', parameters: { contact_id: this.value } } );">
-						<option value="">select</option>
-						<? echo ( 
-							if ( $$variable{'Claim'}->supplier_id() ) {
-								my @Users = openprint::User::find('company_id'=>$$variable{'Claim'}->supplier_id(), 'name'=>$$variable{'Claim'}->vendor_contact() );
-					
-								return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'company_id'=>$$variable{'Claim'}->supplier_id() ) ], @Users ? $Users[0]->id() : undef );
-							} # end if
-							return;
-						) ?>
-					</select><br/>
-					<span id="contact_info"></span>
-				</p>
-			</fieldset>
-		</div>
+		<!--#include virtual="_vendor.html"-->
 		<div class="rightColumn">
 			<fieldset>
 				<p><label>Filed On:</label>
@@ -199,23 +174,6 @@ function del_content(form, content_id ) {
 				<option value=""> select one </option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'Claim'}->currency_id() ? $$variable{'Claim'}->currency_id() : $session{'Currency_id'} ); ) ?>
 			</select>
-			<br/>
-			<br/>
-			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'Claim'}->Creator()->name() ) ?></i><br/></div>
-		<? if ( $$variable{'Claim'}->authorized() ) ?>
-			<br/>
-			<br class="spacer"/>
-			<hr/>
-			<div class="leftColumn"><i>Authorized by: <? echo ( $$variable{'Claim'}->Authorized_By()->name() ) ?></i></div>
-			<div class="rightColumn"><i>Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Claim'}->authorized_on())) ) ?></i></div>
-		<? endif ( $$variable{'Claim'}->authorized() ) ?>
-		<? if ( $$variable{'Claim'}->authorized() eq '0' ) ?>
-			<br/>
-			<br class="spacer"/>
-			<hr/>
-				<div class="leftColumn"><i>Declined by: <? echo ( $$variable{'Claim'}->Authorized_By()->name() ) ?></i></div>
-				<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Claim'}->authorized_on())); ) ?></div>
-		<? endif ( $$variable{'Claim'}->authorized() eq '0' ) ?>
 			<br class="spacer"/>
 		</div>
 		<br class="spacer"/><br/>

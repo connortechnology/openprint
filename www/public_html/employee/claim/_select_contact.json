@@ -5,13 +5,12 @@
 		if ( ! $$Contact{id} ) {
 			$log->error("Contact ($param{'contact_id'}) not found.");
 		} else {
-			my $contact_info = "$$Contact{firstname} $$Contact{strlastname}<br/>";
-			$contact_info .= "PHONE: $$Contact{phone}<br/>" if $$Contact{phone};
-			$contact_info .= "FAX: $$Contact{fax}<br/>" if $$Contact{fax};
-			$contact_info .= "EMAIL: $$Contact{email}<br/>" if $$Contact{email};
-			$contact_info .= "SMS: $$Contact{sms}<br/>" if $$Contact{sms};
-			my $html .= "\$('contact_info').innerHTML = '$contact_info';";
-			return $html;
+			return "
+				\$('vendor_contact').value = '$$Contact{firstname} $$Contact{lastname}';
+				\$('vendor_phone').value = '$$Contact{phone}';
+				\$('vendor_fax').value = '$$Contact{fax}';
+				\$('vendor_email').value = '$$Contact{email}';
+			";
 		} # end if
 	} # end if
 ) ?>

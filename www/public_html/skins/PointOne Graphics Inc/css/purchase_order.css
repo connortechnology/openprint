@@ -196,3 +196,7 @@ div.autocomplete ul li {
   cursor:pointer;
 }
 
+.PO #VendorInformation {
+	width: 48%;
+	float: left;
+}

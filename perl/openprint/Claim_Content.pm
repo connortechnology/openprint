@@ -123,7 +123,16 @@ sub description {
 
 sub total {
 	my ( $self ) = @_;
-	return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'}/100 );
+	if ( $$self{'cost_units'} eq 'Each' ) {
+		return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'} );
+	} elsif ( $$self{'cost_units'} eq '/100lb' ) {
+		return sprintf('%.2f', $$self{'cost'} * $$self{'weight'}/100 );
+	} elsif ( $$self{'cost_units'} eq '/Kg' ) {
+		return sprintf('%.2f',$$self{'cost'} * Math::Units::convert($$self{'weight'}, 'lb','kg' ) );
+	} elsif ( $$self{'cost_units'} eq '/1000' ) {
+		return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'}/1000 );
+	} # end if
+	return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'} );
 } # end sub total
 
 sub save {
