@@ -1,10 +1,7 @@
 package openprint::employee_claim;
-use MIME::QuotedPrint;
-use Text::CSV_XS;
 use strict;
 require sql;
 require misc;
-require openprint::paper;
 
 require openprint::RFIDTag;
 require openprint::Claim;
@@ -68,7 +65,7 @@ sub view {
 			} # end if
 			$variable{'error'} .= $C->save( {
 					'quantity'		=>	sprintf('%d', $param{"quantity-$$C{id}"}),
-					'weight'		=>	sprintf('%d', $param{"qty_lbs-$$C{id}"}),
+					'weight'		=>	$param{"qty_lbs-$$C{id}"} ? sprintf('%d', $param{"qty_lbs-$$C{id}"}) : undef,
 					'cost'			=>	$param{"cost-$$C{id}"},
 					'skid_id'		=>	$param{"skid_id-$$C{id}"},
 					'reason'		=>	$param{"reason-$$C{id}"},
@@ -124,13 +121,15 @@ sub _contents {
 		foreach my $C ( $Claim->Contents() ) {
 			if ( ( $C->skid_id() != $param{'skid_id-'.$C->id()} )
 					or ( $C->reason() ne $param{'reason-'.$C->id()} )
-					or ( $C->quantity() != $param{'qty_lbs-'.$C->id()} )
+					or ( $C->quantity() != $param{'quantity-'.$C->id()} )
+					or ( $C->quantity() != $param{'weight-'.$C->id()} )
 					or ( $C->cost() != $param{'cost-'.$C->id()} )
 			   ) {
 				$variable{'error'} .= $C->save( {
 						'skid_id'	=>	$param{'skid_id-'.$C->id()},
 						'reason'	=>	$param{'reason-'.$C->id()},
-						'quantity'	=>	sprintf('%d', $param{'qty_lbs-'.$C->id()}),
+						'weight'	=>	$param{"qty_lbs-$$C{id}"} ? sprintf('%d', $param{'qty_lbs-'.$C->id()}) : undef,
+						'quantity'	=>	sprintf('%d', $param{'quantity-'.$C->id()}),
 						'cost'		=>	$param{'cost-'.$C->id()},
 						'cost_units'	=>	$param{'cost_units-'.$C->id()},
 						} );

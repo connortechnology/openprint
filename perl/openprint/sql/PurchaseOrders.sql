@@ -28,6 +28,7 @@ CREATE TABLE PurchaseOrders (
 	deleted		BOOLEAN NOT NULL default false,
 	shipping_terms	TEXT,
 	shipping_method	TEXT,
+	vendor_contact		text,
 	vendor_name			text,
 	vendor_address1		text,
 	vendor_address2		text,
@@ -37,6 +38,7 @@ CREATE TABLE PurchaseOrders (
 	vendor_postalcode	text,
 	vendor_phone		text,
 	vendor_fax			text,
+	vendor_sms			text,
 	vendor_email		text,
 	shipto_name			text,
 	shipto_address1		text,
@@ -47,6 +49,7 @@ CREATE TABLE PurchaseOrders (
 	shipto_postalcode	text,
 	shipto_phone		text,
 	shipto_fax			text,
+	shipto_sms			text,
 	shipto_email		text,
 	PRIMARY KEY (id)
 );
