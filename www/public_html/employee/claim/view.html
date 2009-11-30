@@ -156,30 +156,6 @@ Reason:<br/>
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 		All prices are in <? echo ( $$variable{'Claim'}->Currency()->name() ) ?>.
 	<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
-		<br/>
-		<br/>
-			<div class="leftColumn"><i>Prepared by: <? echo ( $$variable{'Claim'}->Creator()->name() ) ?></i><br/></div>
-<? if ( $$variable{'Claim'}->authorized() ) ?>
-		<br/>
-		<br class="spacer"/>
-		<hr/>
-			<div class="leftColumn"><i>Authorized <? if ( $$variable{'Claim'}->authorized_by() ) ?>by: <? echo ( $$variable{'Claim'}->Authorized_By()->name() ) ?><? endif ( $$variable{'Claim'}->authorized_by() ) ?></i></div>
-			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Claim'}->authorized_on())); ) ?></div>
-<? endif ( $$variable{'Claim'}->authorized() ) ?>
-<? if ( $$variable{'Claim'}->authorized() eq '0' ) ?>
-		<br/>
-		<br class="spacer"/>
-		<hr/>
-			<div class="leftColumn"><i>Declined by: <? echo ( $$variable{'Claim'}->Authorized_By()->name() ) ?></i></div>
-			<div class="rightColumn"><i>Date:</i> <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Claim'}->authorized_on())); ) ?></div>
-<? endif ( $$variable{'Claim'}->authorized() eq '0' ) ?>
-<? if ( $$variable{'Claim'}->authorized() eq '' ) ?>
-		<br/>
-		<br class="spacer"/>
-		<hr/>
-			<div class="leftColumn"><i>This Claim has NOT been approved.</i></div>
-			<div class="rightColumn">&nbsp;</div>
-<? endif ( $$variable{'Claim'}->authorized() eq '' ) ?>
 		</div>
 		<br class="spacer"/>
 	</div><!--Claim-->

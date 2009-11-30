@@ -28,11 +28,9 @@
 		} // end if
 		if ( form.available_quantity && ( parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) ) {
 			if ( form.Units ) {
-				alert( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available' );
-			} else {
-				alert( 'There are only ' + form.available_quantity.value + ' available' );
+				return confirm( 'There are only ' + form.available_quantity.value + get_value( form.Units ) + ' available. Do you want to proceed with the allocation?' );
 			} // end if
-			return false;
+			return confirm( 'There are only ' + form.available_quantity.value + ' available. Do you want to proceed with the allocation?' );
 		} // end if
 		return true;
 	} // end function check_inputs(form)
