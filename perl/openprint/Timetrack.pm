@@ -41,6 +41,7 @@ $serial = 'timetracks_id_seq';
 );
 
 %transforms = (
+	'rate'	=>	[ 's/[^\d\.]//g' ],
 );
 %defaults = (
 	'created_on'	=> 'NOW()',
