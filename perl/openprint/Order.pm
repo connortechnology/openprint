@@ -386,7 +386,7 @@ sub name {
 
 sub balance {
 	my $self = shift;
-	return 1*($$self{'total'} - $$self{'paid'});
+	return 1*($self->total() - $$self{'paid'});
 } # end sub balance
 
 sub sub_total {

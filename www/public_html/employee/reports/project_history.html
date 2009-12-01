@@ -8,7 +8,7 @@
 <h1>REPORTS</h1>
 <h2>Project History</h2>
 </div>
-<form id="f1" name="f1">
+<form id="f1" name="f1" action="">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
 			<label>Company:</label>
@@ -30,7 +30,7 @@
 		</p>
 		<p>
 			<label>Project Status:</label>
-			<select name="status" multiple size="4" >
+			<select name="status" multiple="multiple" size="4" >
 			<? echo (
 				my @options = sql::execute( undef, undef, q{SELECT name, name FROM Project_statuses ORDER BY sort, lower(name)} );
 				return ssi::make_drop_down( \@options, $param{'status'} ? $param{'status'} : \@options);
@@ -87,8 +87,6 @@
 		 <p class="buttons">
 			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_contents(f1);", '', 'Show Results' ); ) ?>
 		 </p>
-
-
 	</fieldset>
 </form>
 <div id="Results">

@@ -248,5 +248,6 @@ sub previous {
 	return new openprint::Product( $id );
 } # end sub previous
 
+
 1;
 __END__

@@ -56,7 +56,7 @@ sub quotes {
 			@param{'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
 	my %filters = (
-			'order'=>'index',
+			'order'=>'id',
 			);
 	$filters{'status'} = $param{'ddmStatus'} if $param{'ddmStatus'};
 	$filters{'company_id'} = $param{'ddmCustomers'} if $param{'ddmCustomers'};
@@ -224,12 +224,12 @@ sub customer_login {
 	} # end if
 	if ( $param{'lastlogin_start_year'} and $param{'lastlogin_start_month'} and $param{'lastlogin_start_day'} ) {
 		if ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
-			$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Company.Index) BETWEEN date('%.4d-%.2d-%.2d') AND date('%.4d-%.2d-%.2d')`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day','lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
+			$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Companies.id) BETWEEN date('%.4d-%.2d-%.2d') AND date('%.4d-%.2d-%.2d')`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day','lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
 		} else {
-			$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Company.Index) > date('%.4d-%.2d-%.2d')`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'} );
+			$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Companies.id) > date('%.4d-%.2d-%.2d')`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'} );
 		} # end if
 	} elsif ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
-		$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Company.Index) < date('%.4d-%.2d-%.2d')`, @param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
+		$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Companies.id) < date('%.4d-%.2d-%.2d')`, @param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
 	} # end if
 	if ( $param{'rdbActive'} ) {
 		$query .= " AND Companies.ysnAccountActivation = '$param{'rdbActive'}' AND (companies.deleted = false OR companies.deleted IS NULL)\n";

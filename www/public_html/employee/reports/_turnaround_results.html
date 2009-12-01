@@ -1,30 +1,30 @@
 <? eval (
-		$$variable{'DateStart'} = join('-', ssi::fix_date( @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} ) );
-		$$variable{'DateEnd'} = join('-', ssi::fix_date( @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
-		my $sql = "SELECT OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber,".
+		$$variable{'DateStart'} = join('-', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) );
+		$$variable{'DateEnd'} = join('-', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
+		my $sql = "SELECT OrderIndex, Projects.Id, Projects.lngDocketNumber,".
 			"to_char(due_date, 'MM/DD/YYYY 17:00'), strStatus ".
-			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=tbl_Projects.Index and description IN ('Marked In Prepress') OR description LIKE 'Add to Order%' ) AS Produced".
-			", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=tbl_Projects.Index and (description LIKE 'Assigning%' OR description LIKE 'Taken Over by%') ) AS PickedUp".
-			", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=tbl_Projects.Index and description LIKE ('Marked Proofs Out%') ) AS ProofsOut".
-			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=tbl_Projects.Index and description IN ('Marked Approved','Marked Proofs QA Approved') ) AS Approved".
-			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') as completed FROM Project_Log WHERE project_id=tbl_Projects.Index and description IN ('Marked Waiting For Pickup','Marked Shipped','Marked Picked Up') ) AS completed".
-			" FROM Order_Contents, tbl_Projects WHERE 1>0";
+			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=Projects.id and description IN ('Marked In Prepress') OR description LIKE 'Add to Order%' ) AS Produced".
+			", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=Projects.id and (description LIKE 'Assigning%' OR description LIKE 'Taken Over by%') ) AS PickedUp".
+			", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=Projects.id and description LIKE ('Marked Proofs Out%') ) AS ProofsOut".
+			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE project_id=Projects.id and description IN ('Marked Approved','Marked Proofs QA Approved') ) AS Approved".
+			", (SELECT to_char(MIN(dtmtimestamp),'MM/DD/YYYY HH24:MI') as completed FROM Project_Log WHERE project_id=Projects.id and description IN ('Marked Waiting For Pickup','Marked Shipped','Marked Picked Up') ) AS completed".
+			" FROM Order_Contents, Projects WHERE 1>0";
 		$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
-		$sql .= " AND Order_Contents.lngProjectIndex = tbl_Projects.Index";
-		if ( $openprint::param{'Status'} ) {
-			if ( ref $openprint::param{'Status'} eq 'ARRAY' ) {
-				$sql .= " AND tbl_Projects.strStatus IN ('".join("','",@{$openprint::param{'Status'}})."')";
+		$sql .= " AND Order_Contents.lngProjectIndex = Projects.id";
+		if ( $param{'Status'} ) {
+			if ( ref $param{'Status'} eq 'ARRAY' ) {
+				$sql .= " AND Projects.strStatus IN ('".join("','",@{$param{'Status'}})."')";
 			} else {
-				$sql .= " AND tbl_Projects.strStatus='$openprint::param{'Status'}'";
+				$sql .= " AND Projects.strStatus='$param{'Status'}'";
 			} # end if
 		} # end if
-		$sql .= " AND (SELECT lngSalesPerson FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex) = $openprint::param{'CSR'}" if $openprint::param{'CSR'};
+		$sql .= " AND (SELECT salesrep_id FROM Companies WHERE Companies.id=Projects.company_id) = $param{'CSR'}" if $param{'CSR'};
 		$sql .= " ORDER BY lngDocketNumber";
 		@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, $sql );
 ) ?>
 Results for <? echo ( 
-		if ( $openprint::param{'CSR'} ) {
-			return new openprint::User( $openprint::param{'CSR'} )->name();	
+		if ( $param{'CSR'} ) {
+			return new openprint::User( $param{'CSR'} )->name();	
 		} # end if
 		$$variable{'FastCount'} = 0;
 		$$variable{'MediumCount'} = 0;

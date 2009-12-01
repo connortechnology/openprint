@@ -144,6 +144,7 @@ sub calc {
 		} else {
 			@Materials = openprint::Material::find('category'=>$ServiceType->name() );
 		} # end if
+$log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 
 		foreach my $Material ( @Materials ) {
 			my ( $items_by_weight, $items_by_size, $items_per_package );
@@ -203,15 +204,11 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: %.2f, Packing Charge: %.2f: Service Charge: %.2f, Material Charge: %.2f<br/>', $makeReady, $packingCharge, $serviceCharge, $material_charge );
 		} # end foreach Material
 
-		$$specs{'txtPackageWeight'.$qty_index} = sprintf('%.2f', $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'.$qty_index} );
-
-		if ( $$specs{'txtItemsPerPackage'.$qty_index} ) {
-			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{"txtPackageWeight$qty_index"}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
-		} # end if
-
 
 		my $m_qty = 0;
 		if ( $$specs{'txtItemsPerPackage'.$qty_index} ) {
+			$$specs{'txtPackageWeight'.$qty_index} = sprintf('%.2f', $$specs{'txtFinishedWeight'} * $$specs{'txtItemsPerPackage'.$qty_index} );
+			$$specs{"totalWeight$qty_index"} = sprintf('%.2f', (int( $qty/$$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{"txtPackageWeight$qty_index"}) + (($qty % $$specs{'txtItemsPerPackage'.$qty_index} ) * $$specs{'txtFinishedWeight'}) );
 			$qty = ceil( $qty/$$specs{'txtItemsPerPackage'.$qty_index} );
 			$m_qty = ceil( 1000/$$specs{'txtItemsPerPackage'.$qty_index} );
 		} else {
@@ -226,7 +223,8 @@ sub calc {
 		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * $m_qty );
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+			
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"Markup$qty_index"} ? $price*(1+$$specs{"Markup$qty_index"}/100) : $price );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if

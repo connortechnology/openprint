@@ -10,7 +10,9 @@
         $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: in eval: $@") if $@;
     my @results = ();
     my @vars = eval( 'openprint::Estimating::'.$param{'ServiceType'}.'::outputs()' );
+$log->debug("vars @vars");
     @vars = keys %specs if ! @vars;
+$log->debug("vars @vars");
 
     my @no_outputs = eval( 'return openprint::Estimating::'.$param{'ServiceType'}.'::no_outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
     @vars = sets::exclude( \@no_outputs, \@vars );
@@ -19,14 +21,14 @@ $log->debug("No outputs: @no_outputs");
 		delete $specs{$key};
 	} # end foreach
 
+foreach my $key ( keys %specs ) {
+$log->debug("$key => $specs{$key}");
+} # end foreach
     foreach my $key ( @vars ) {
         if ( (exists $specs{$key}) and ($specs{$key} eq $param{$key}) ) {
 			delete $specs{$key};
         } # end if
     } # end foreach
-#foreach my $key ( keys %specs ) {
-#$log->debug("$key => $specs{$key}");
-#} # end foreach
 
 	$param{'callback'} = 'cbFillResults' if ! $param{'callback'};
 	my $json = JSON->new;

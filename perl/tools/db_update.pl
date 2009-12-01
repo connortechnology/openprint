@@ -992,13 +992,16 @@ if ( ! $blah ) {
 	} 
 } # end if
 
-	$dbh->do('drop sequence if exists materialcategoriesindex_seq') if sets::isin('materialcategoriesindex_seq', \@sequences );
-	if ( sets::isin('material_categories_id_seq', \@sequences ) ) {
 	$dbh->do(q{alter table material_categories alter column id drop default});
-	$dbh->do('drop sequence material_categories_id_seq');
-	$dbh->do('create sequence material_categories_id_seq');
-	$dbh->do(q{select setval('material_categories_id_seq', (select max(id) from material_categories))});
+	if ( sets::isin('materialcategoriesindex_seq', \@sequences ) ) {
+		$dbh->do('drop sequence materialcategoriesindex_seq') 
+	}elsif ( sets::isin('material_categories_id_seq', \@sequences ) ) {
+		$dbh->do('drop sequence material_categories_id_seq');
+		$dbh->do('create sequence material_categories_id_seq');
+	}elsif ( ! sets::isin('material_categories_id_seq', \@sequences ) ) {
+		$dbh->do('create sequence material_categories_id_seq');
 	}
+	$dbh->do(q{select setval('material_categories_id_seq', (select max(id) from material_categories))});
 	$dbh->do(q{alter table material_categories alter column id set default nextval('material_categories_id_seq')});
 
 
@@ -1364,7 +1367,11 @@ print "Updating Press RUn Overs Rate to MakeReady Overs Minimum\n";
     } # end if
 } # end foreach E
 
-if ( ! openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
+if ( my @C = openprint::MaterialCategory::find('name'=>'Plain Cartons') ) {
+	foreach ( @C ) {
+		$_->save({'name'=>'PlainCartons'});
+	}
+} elsif ( ! openprint::MaterialCategory::find('name'=>'PlainCartons') ) {
     my $Category = new openprint::MaterialCategory();
     $Category->save({'name'=>'PlainCartons'});
     print "Adding PlainCartons Category\n";
@@ -1401,7 +1408,7 @@ foreach my $M ( openprint::Material::find('name'=>'BulkSkid') ) {
 				'value'	=>	'1500',
 				});
 	} # end if
-	next if $M->Category()->name() eq 'BulkdSkids';
+	next if $M->Category()->name() eq 'BulkSkids';
 	foreach my $C ( openprint::MaterialCategory::find('name'=>'BulkSkids') ) {
 		$M->category_id( $C->id() );
 		last;

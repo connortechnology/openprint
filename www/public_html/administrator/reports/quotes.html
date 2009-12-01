@@ -85,9 +85,9 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::
 			<th align="left">Company</th>
 			<th align="left">Prepared For</th>
 			<th align="left" width="80">Status</th>
-			<th align="right" width="90">Total1</th>
-			<th align="right" width="90">Total2</th>
-			<th align="right" width="90">Total3</th>
+			<th class="Price">Total1</th>
+			<th class="Price">Total2</th>
+			<th class="Price">Total3</th>
 		</tr>
 		<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}}; ) ?>
 		<tr<?rowclass?>> 
@@ -97,9 +97,9 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::
 			<td align="left"><? echo ( $$variable{'Quote'}->Company()->name() ) ?></td>
 			<td align="left"><? echo ( $$variable{'Quote'}->for_name() ) ?></td>
 			<td align="left"><? echo ( $$variable{'Quote'}->status() ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total1() ); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total2() ); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total3() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total1() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total2() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total3() ); ) ?></td>
 		</tr>
 		<? eval ( 
 			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; 
@@ -110,9 +110,9 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::
 		<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}}; ) ?>
 		<tr class="totals"> 
 			<td colspan="6" align="right"><b>Report Totals:</b></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Total1'} ); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Total2'} ); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Total3'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total1'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total2'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Total3'} ); ) ?></td>
 		</tr>
 	</table>
 	<? else ( @{$$variable{'Quotes'}} ) ?>

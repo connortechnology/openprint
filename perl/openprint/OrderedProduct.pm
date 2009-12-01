@@ -130,6 +130,9 @@ sub price {
 	} # end if
 	return $$self{price};
 } # end sub price
+sub Currency {
+	return $_[0]->Project()->Currency();
+}
 
 1;
 __END__

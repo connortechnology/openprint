@@ -575,6 +575,16 @@ sub find {
 		push @values, $params{'updated_on_end'};
 	} # end if
 
+	if ( $params{'take_over_start'} and $params{'take_over_end'} ) {
+		$sql .= q{ AND ((SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id) BETWEEN ? AND ?)};
+		push @values, @params{'take_over_start','take_over_end'};
+	} elsif ( $params{'take_over_start'} ) {
+		$sql .= q{ AND ((SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id) >= ?)};
+		push @values, $params{'take_over_start'};
+	} elsif ( $params{'take_over_end'} ) {
+		$sql .= q{ AND ((SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id) <= ?)};
+		push @values, $params{'take_over_end'};
+	} # end if
 	
 	if ( $params{'ordered_on_start'} and $params{'ordered_on_end'} ) {
 		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) BETWEEN ? AND ?)};
@@ -1410,5 +1420,17 @@ sub add_service {
     return $service_index;
 } # end sub add_service
 
+sub Operator {
+    my ( $self ) = @_;
+
+    my $services = $self->services();
+    my $User = new openprint::User( sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$self{id}, ( $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0] ) ) );
+    return $User;
+} # end sub get_prepressoperator
+
+sub started_on {
+	my ( $self ) = @_;
+	return sql::execute( undef, undef, q{ SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+} # end sub started_on
 1;
 __END__

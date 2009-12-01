@@ -14,10 +14,13 @@
 	margin-right: 5px;
 }
 
+div#ProjectView {
+	margin: 5px;
+}
+
 div.ProjectHeader {
-	border-bottom: 1px solid #800000;
+	background:#daf3fc;
 	margin: 0px;
-	margin-bottom: 5px;
 }
 div.ProjectHeader:after {
     content: ".";
@@ -37,41 +40,23 @@ div.ProjectHeader fieldset {
 	border-right: none;
 	border-bottom: none;
 	margin-bottom: 0px;
-	padding: 6px;
+	padding: 0px;
 	text-align: left;
+	width: 50%;
 }
 div.ProjectHeader fieldset#ProjectInformation {
 	float: left;
-	width: 47%;
 }
 div.ProjectHeader fieldset#ContactInformation {
 	float: right;
-	width: 47%;
 }
 div.ProjectHeader fieldset#Reference {
 	float: left;
 	text-align: left;
-	width: 47%;
 }
 div.ProjectHeader fieldset#Description {
 	float: right;
 	text-align: left;
-	width: 47%;
-}
-
-
-div.ProjectHeader fieldset p {
-	text-align: right;
-	padding: 0px;
-	margin: 0px;
-}
-div.ProjectHeader fieldset p label {
-	margin: 0px;
-	padding: 0px;
-	float: left;
-	font-weight: bold;
-	text-align: left;
-	width: auto;
 }
 
 .ProjectSummary div.row {

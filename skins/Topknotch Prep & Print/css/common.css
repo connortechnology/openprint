@@ -112,8 +112,8 @@ a:hover, a:active {
 	
 #content {
 	width: 790px;
-	float: right;
-	margin: 0px 30px 20px 20px;
+	float: left;
+	margin: 0px 30px 20px 30px;
 	padding: 0px;
 	text-align:left;
 	}
@@ -131,6 +131,7 @@ a:hover, a:active {
 	letter-spacing: -1px;
 	background: #4bb0d7;
 	text-shadow: 1px 1px #369;
+	text-transform: capitalize;
 	}
 #website-masthead li img {
 	margin-right: 10px;
@@ -369,19 +370,23 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 	}
 
 /* --------------------------- TABLES --------------------------- */
-
-table {
-	width:100%;
+table.styled {
 	border-top:1px solid #FFF;
 	border-right:1px solid #a5cddd;
-	border-collapse:collapse;
 	background:#FFF;
-	}
-
-td {
+}
+table.styled td {
 	border-bottom:1px solid #a5cddd;
 	border-left:1px solid #a5cddd;
 	padding:3px 5px 3px 5px;
+}
+
+table {
+	width:100%;
+	border-collapse:collapse;
+	}
+
+td {
 	text-align:left;
 	}
 	
@@ -452,7 +457,22 @@ thead th {
 	font-weight: normal;
 	text-shadow: 1px 1px #000;
 	}
-	
+#crumbs:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html #crumbs {height: 1%;}
+* #crumbs {display:block;}
+/* End hide from IE-mac */
+
+#crumbs a {
+	text-transform: capitalize;
+}	
 #crumbs a:link, #crumbs a:visited {
 	text-decoration: none;
 	color: #FFF;
@@ -653,7 +673,10 @@ fieldset {
 	padding: 0px;
 }
 fieldset legend {
-	padding-left:10px;
+	font-size:large;
+	font-weight: bold;
+	padding: 10px 10px 0px 10px;
+	color: #07759f;
 }
 fieldset p {
     margin: .5em;
@@ -762,7 +785,7 @@ table.List td a {
 table.List tr.totals {
     border-top: 1px solid #07759f;
 }
-table.List thead tr th.Price, table.List tr td.Price {
+table.List thead tr th.Price, table.List tr th.Price, table.List tr td.Price {
 	width: 75px;
 	text-align: right;
 }

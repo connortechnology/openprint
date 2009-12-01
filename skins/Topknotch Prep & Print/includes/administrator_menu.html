@@ -6,7 +6,7 @@
 			<li><a href="/administrator/production/pricelists.html;SSL">Pricelists</a></li>
 		</ul>
 	</li>
-	<li id="Managerial" class="off"><a href="#" onclick="toggleMenu($('Managerial'), 'off', 'on');return false;">Managerial</a>
+	<li id="Managerial" class="<? echo ( $r->uri() =~ /administrator\/managerial/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('Managerial'), 'off', 'on');return false;">Managerial</a>
 		<ul>
 			<li><a href="/administrator/managerial/credit_applications.html;SSL">Credit Applications</a></li>
 			<li><a href="/administrator/managerial/company_profiles.html;SSL">Company Profiles</a></li>
@@ -16,7 +16,7 @@
 			<li><a href="/administrator/managerial/payment_options.html;SSL">Payment Options</a></li>
 		</ul>
 	</li>
-	<li id="Reports" class="off"><a href="#" onclick="toggleMenu($('Reports'), 'off', 'on');return false;">Reports</a>
+	<li id="Reports" class="<? echo ( $r->uri() =~ /administrator\/reports/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('Reports'), 'off', 'on');return false;">Reports</a>
 		<ul>
 			<li><a href="/administrator/reports/orders.html;SSL">Orders</a></li>
 			<li><a href="/administrator/reports/quotes.html;SSL">Quotes</a></li>
@@ -27,7 +27,7 @@
 			<li><a href="/administrator/reports/bindery.html;SSL">Bindery</a></li>
 		</ul>
    </li>
-	<li id="Setup" class="off"><a href="#" onclick="toggleMenu($('Setup'), 'off', 'on');return false;">Setup</a>
+	<li id="Setup" class="<? echo ( $r->uri() =~ /administrator\/equipment/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('Setup'), 'off', 'on');return false;">Setup</a>
 		<ul>
 			<li><a href="/administrator/equipment/edit.html;SSL">Equipment</a></li>
 			<li><a href="/administrator/service_types/edit.html;SSL">Service Types</a></li>

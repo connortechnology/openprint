@@ -115,7 +115,6 @@ sub do_include {
 	my ( $text, $variable ) = @_;
 	if ( $$text =~ /(.*?)<!--\s*#include\s+virtual="(.*?)"\s*-->(.*)/ms ) {
 		my ( $before, $middle, $after ) = ( $1, $2, $3 );
-		#my $file = variable_substitution( $r, $log, $dbh, \$middle, $variable );
 		my $file = $middle;
 		if ( ! ( $file =~ /^\// ) ) {
 # Use a path relative to the current page
@@ -123,8 +122,13 @@ sub do_include {
 			$path =~ s/(.*\/).*/$1/;
 			$file = $path . $file;
 		} # end if
-		my $blah = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $file);
-		return $before . variable_substitution( \$blah, $variable ).variable_substitution( \$after, $variable );
+		my $content;
+		if ( -f $config{'SkinPath'}.$file ) {
+			$content = misc::load_file( $log, $config{'SkinPath'}.$file );
+		} else {
+			$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.$file );
+		} # endif
+		return $before . variable_substitution( \$content, $variable ).variable_substitution( \$after, $variable );
 	} # end if
 	return $$text;
 } # end sub do_include

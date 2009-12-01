@@ -165,14 +165,6 @@ sub insert_into_log {
 	$Project->add_to_log( $cust_id, $user_id, $text );
 } # end sub insert_into_log
 
-sub get_prepress_operator {
-    my ( $log, $dbh, $project_index ) = @_;
-
-	my $Project = new openprint::Project( $project_index );
-    my %services = $Project->get_services();
-    my $User = new openprint::User( sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, ( $services{'Proofs'} ? $services{'Proofs'}[0] : $services{'FilmStripping'}[0] ) ) );
-    return $User->name();
-} # end sub get_prepressoperator
 
 1;
 

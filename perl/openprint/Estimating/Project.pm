@@ -133,7 +133,7 @@ sub calc {
 			$$specs{'txtHeight'} =~ s/[^\.\d]//g;
 			$$specs{'txtFinalHeight'} =~ s/[^\.\d]//g;
 		} # end if
-		if ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} and $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
+		if ( $$specs{'FoldType'} and ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} and $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
 			$$specs{'alert'} .= 'No dimensions found for this fold type.';
 			return $$specs{'Status'} = 'uncalculated';
 		} elsif ( ! $$specs{'txtQuantity1'} ) {

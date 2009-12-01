@@ -126,8 +126,8 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 			<th align="left" width="120">Date</th>
 			<th align="left">Company</th>
 			<th align="left" width="100">Status</th>
-			<th align="right" width="75">Total</th>
-			<th align="right" width="125">Balance</th>
+			<th class="Price">Total</th>
+			<th class="Price">Balance</th>
 <? if ( ! $param{'ddmCurrency'} ) ?>
 			<th align="right" width="30">&nbsp;</th>
 <? endif ( ! $param{'ddmCurrency'} ) ?>
@@ -139,10 +139,10 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on())); ) ?></a></td>
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->Company()->name(); ) ?></a></td>
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
-			<td align="right"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->total() ); ) ?></a></td>
-			<td align="right"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->balance() ); ) ?></a></td>
+			<td class="Price"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->total() ); ) ?></a></td>
+			<td class="Price"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->balance() ); ) ?></a></td>
 <? if ( ! $param{'ddmCurrency'} ) ?>
-			<th align="right"><? echo ( $$variable{'Order'}->Currency()->short() ) ?></th>
+			<td align="right"><? echo ( $$variable{'Order'}->Currency()->short() ) ?></td>
 <? endif ( ! $param{'ddmCurrency'} ) ?>
 		</tr>
 		<? eval ( 

@@ -67,7 +67,7 @@
 <div id="nav"><ul>
 	<li><a class="nav01" href="#" title="Print" onclick="window.print();">Print</a></li>
 	<li><a class="nav02" href="/specials.html" title="Specials">Specials</a></li>
-	<li><a class="nav03" href="/waterless.html" title="Green Printing">Green Printing</a></li>
+	<li><a class="nav03" href="/waterless.html" title="Waterless Printing">Waterless Printing</a></li>
 	<li><a class="nav04" href="/paper.html" title="Paper">Paper</a></li>
 	<li><a class="nav05" href="/custom_quote.html" title="Custom Quote">Custom Quote</a></li>
 	<li><a class="nav06" href="/support/FAQ.html" title="Help Centre">Help Centre</a></li>
@@ -115,6 +115,7 @@
 </div>
 <!-- CONTENT OPEN //-->
 <div id="content">
+
 <? if ( $$variable{'uri'} =~ /\/content\/prin/ or $$variable{'uri'} =~ /\/main\/order/ or $$variable{'uri'} =~ /\/upload/ ) ?>
 	<div id="steps">
 		<ul>
@@ -145,6 +146,19 @@
 			) ?>
 		</ul>
 	</div>
+<? else ( $$variable{'uri'} =~ /\/content\/prin/ or $$variable{'uri'} =~ /\/main\/order/ or $$variable{'uri'} =~ /\/upload/ ) ?>
+<? eval ( 
+	@$variable{'crumb'} = $$variable{'uri'} =~ /(\w*)\.html/;
+	$$variable{'Crumb'} = $$variable{'crumb'};
+	$$variable{'Crumb'} =~ s/_/ /g;
+) ?>
+<? if ( -f $config{'SkinPath'}.'/images/mastheads/'.$$variable{'crumb'}.'.jpg' ) ?>
+    <div id="masthead" style="background: url(/images/mastheads/<?crumb?>.jpg) no-repeat top center;"><?Crumb?></div>
+<? endif ( -f $config{'SkinPath'}.'/images/mastheads/'.$$variable{'crumb'}.'.jpg' ) ?>
+    <div id="crumbs"><a href="/index.html">Home</a>&nbsp;&nbsp;&raquo;&nbsp;&nbsp;
+	<a class="crumb" href="/<?crumb?>.html"><?Crumb?></a>
+	</div>
+	<br class="spacer"/>
 <? endif ( $$variable{'uri'} =~ /\/content\/prin/ or $$variable{'uri'} =~ /\/main\/order/ or $$variable{'uri'} =~ /\/upload/ ) ?>
 	<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 </div><!-- CONTENT CLOSE //-->
