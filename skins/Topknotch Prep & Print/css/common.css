@@ -132,6 +132,9 @@ a:hover, a:active {
 	background: #4bb0d7;
 	text-shadow: 1px 1px #369;
 	}
+#website-masthead li img {
+	margin-right: 10px;
+}
 	
 #half {
 	width: 385px;
@@ -786,3 +789,6 @@ table.List thead tr th.Price, table.List tr td.Price {
 	float: right;
 }
 
+img {
+	border: none;
+}
