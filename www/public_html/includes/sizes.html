@@ -37,7 +37,7 @@
 <? endif ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 		</select>
 	</li>
-				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards','PresentationFolders'] ) ) ?>
 				<li>
 					<label>Fold Type:</label>
 					<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
@@ -62,7 +62,7 @@
 						 ) ?>
 					</select>
 				</li>
-				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards','PresentationFolders'] ) ) ?>
 				<? if ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
 					<input type="hidden" name="FoldType" value="2PanelFold"/>
 				<? endif ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
@@ -82,6 +82,9 @@
 		<input type="text" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" size="4" />
 	</li>
 	<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
+	<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'PresentationFolders' ) ) ?>
+	<!--#include virtual="/includes/presentation_folder_printing.html"-->
+	<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'PresentationFolders' ) ) ?>
 	</ul>
 	</div>
 	</fieldset>

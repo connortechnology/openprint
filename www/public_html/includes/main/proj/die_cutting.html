@@ -1,8 +1,8 @@
 <p> 
 	<label>Will you be supplying the die:</label>
-	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>Y" name="rdbSuppliedDie-<?SignatureIndex?>" value="Y" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>' ).hide(); } calc(this.form.name);" <? echo ( $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>Y" name="rdbSuppliedDie-<?SignatureIndex?>" value="Y" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>' ).hide(); } calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbSuppliedDie'} eq 'Y' or $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} eq 'Y' ); ) ?> />
 	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>Y">Yes</label>
-	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>N" name="rdbSuppliedDie-<?SignatureIndex?>" value="N" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>').show(); } calc(this.form.name);" <? echo ( $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ne 'Y' ? 'checked="checked"' : '' ) ?> />
+	<input type="radio" id="rdbSuppliedDie-<?SignatureIndex?>N" name="rdbSuppliedDie-<?SignatureIndex?>" value="N" onclick="if ( this.checked ) { $('CustomDie<?SignatureIndex?>').show(); } calc(this.form.name);" <? echo ( ssi::checked( (exists $$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ) and ($$variable{'rdbSuppliedDie-'.$$variable{'SignatureIndex'}} ne 'Y' ) ); ) ?> />
 	<label class="radio" for="rdbSuppliedDie-<?SignatureIndex?>N">No</label>
 </p>
 <div id="CustomDie<?SignatureIndex?>" style="<? echo ( 'display: none;' if $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>" >

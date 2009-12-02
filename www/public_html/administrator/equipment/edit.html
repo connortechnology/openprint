@@ -231,7 +231,7 @@
 			<select style="width: auto;" id="type" name="type" onchange="new Ajax.Updater( 'Folds', '_fold.html', {method:'get', evalScripts:true, onLoading:function(){ $('Folds').innerHTML='Loading...';}, parameters:{equipment_id: <? echo ( $$variable{'Equipment'}->id() ) ?>, type: $('type').getValue() } } );">
 				<option value="">select</option>
 				<option value="all">All</option>
-<? echo ( ssi::make_drop_down( [ map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types ] );) ?>
+<? echo ( ssi::make_drop_down( [ map { $_->type(), $openprint::Estimating::Folding::fold_types{$_->type()} } $$variable{'Equipment'}->Folds() ] );) ?>
 			</select>
 <? echo ( ssi::writeButton( $log, $dbh, 'AddFold', 'add.gif',"new Ajax.Request('/administrator/equipment/_fold.html?action=add&equipment_id=". $$variable{'Equipment'}->id() ."', { method: 'get', onSuccess: function(response){new Insertion.Top(\$('Folds'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
 		</p>

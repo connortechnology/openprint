@@ -234,7 +234,7 @@ sub signature_calc {
 		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 	} else {
 		my @capabilities = 'Y','When Printing';
-		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'Presentation Folders';
+		push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 		push @capabilities, 'When Folding' if $$services{'Folding'};
 		push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
 		push @capabilities, 'When Stitching' if $stitching_service_index;
@@ -540,7 +540,7 @@ sub get_specs {
 	@{$$variable{'SignatureGroups'}} = ();
 
 	my @capabilities = 'Y', 'When Printing';
-	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'Presentation Folders';
+	push @capabilities, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 	push @capabilities, 'When Folding' if $$services{'Folding'};
 	push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
 	push @capabilities, 'When Stitching' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};

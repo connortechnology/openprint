@@ -46,8 +46,7 @@ sub variables {
 			 "rdbDieCutting-$$sig_specs{'SignatureIndex'}","Needed-$$sig_specs{SignatureIndex}",
 			 "rdbSuppliedDie-$$sig_specs{'SignatureIndex'}","txtDieCutPunches-$$sig_specs{'SignatureIndex'}",
 			 "txtSteelRuleLength-$$sig_specs{'SignatureIndex'}","txtDieCutBends-$$sig_specs{'SignatureIndex'}","txtHoleClearingHoles-$$sig_specs{'SignatureIndex'}");
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity( $qty_index );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v,(
 				 "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
 				 "txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index", "chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index",
@@ -88,6 +87,7 @@ sub calc_price {
 	$Total{'Total'} += $MakeReady{'Price'};
 
 	my %DiePrice;
+
 	if ( $$specs{'rdbSuppliedDie-'.$$sig_specs{'SignatureIndex'}} eq 'Y' ) {
 		# if customer is supplying die, then there is no die cost.
 		$log->debug(" ** Customer is Supplying Die ** ");
@@ -222,6 +222,9 @@ sub calc {
 			next;
 		} # end if
 
+		if ( exists $$specs{'rdbSuppliedDie'} and ! exists $$specs{'rdbSuppliedDie-'.$$sig_specs{'SignatureIndex'}} ) {
+			$$specs{'rdbSuppliedDie-'.$$sig_specs{'SignatureIndex'}} = $$specs{'rdbSuppliedDie'};
+		} # end if
 		if ( ! $$specs{'rdbSuppliedDie-'.$$sig_specs{'SignatureIndex'}} ) {
 			$$specs{'alert'} .= 'Please select whether the die is to be supplied by the customer or not for signature ' . $$sig_specs{'SignatureIndex'} . '.<br/>';
 			return $$specs{'Status'} = 'uncalculated';

@@ -6,11 +6,11 @@
 	<span class="requiredFieldIndicator">*</span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
 		<div class="UserProfile">
-			<fieldset>
+			<fieldset class="filter">
 			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
 				<p>
-					<label for="ddmUser">User Name:&nbsp;</label>
-					<select name="ddmUser" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
+					<label for="ddmUser">User Name:</label>
+					<select id="ddmUser" name="ddmUser" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 						<option value="">Select a User</option>
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $$variable{'User'}->id() ); ) ?>
 					</select>
@@ -27,9 +27,10 @@
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
 				</p>
 			</fieldset>
-   			<fieldset>
-   			   <legend>User Information:</legend>
-   				<p> 
+   			<fieldset id="UserInformation"><legend>User Information:</legend>
+				<div class="content">
+					<ul>
+   				<li> 
    					<label>Salutation: <span class="requiredFieldIndicator">*</span></label>
 					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
 					<label class="radio" for="SalutationMr.">Mr.</label>
@@ -39,87 +40,91 @@
 					<label class="radio" for="SalutationMs.">Ms.</label>
 					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Miss' ) ?> />
 					<label class="radio" for="SalutationMiss">Miss</label>
-   				</p>
-   				<p> 
+   				</li>
+   				<li> 
    					<label for="firstname">First Name: <span class="requiredFieldIndicator">*</span></label>
    					<input type="text" id="firstname" name="firstname" value="<? echo ( $$variable{'User'}->firstname() ) ?>" />
-   				</p>
-   				<p> 
+   				</li>
+   				<li> 
    					<label for="lastname">Last Name: <span class="requiredFieldIndicator">*</span></label>
    					<input type="text" id="lastname" name="lastname" value="<? echo ( $$variable{'User'}->lastname() ) ?>" />
-   				</p>
-   				<p> 
+   				</li>
+   				<li> 
    					<label for="title">Title:&nbsp;&nbsp;&nbsp;</label>
    					<input type="text" id="title" name="title" value="<? echo ( $$variable{'User'}->title() ) ?>" />
-   				</p>
-   				<p> 
+   				</li>
+   				<li> 
    					<label for="phone">Phone: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="text" id="phone" name="phone" value="<? echo ( $$variable{'User'}->phone() ) ?>" style="width: auto;" size="15"/> ext:
-   					<input type="text" id="extension" name="extension" value="<? echo ( $$variable{'User'}->extension() ) ?>" style="width: auto;" size="4" />
-   				</p>
-   				<p>
+   					<input type="text" id="phone" name="phone" value="<? echo ( $$variable{'User'}->phone() ) ?>" />
+   				</li>
+   				<li>
    					<label for="mobile">Mobile:&nbsp;&nbsp;&nbsp;</label>
    					<input type="text" id="mobile" name="mobile" value="<? echo ( $$variable{'User'}->mobile() ) ?>" />
-   				</p>
-   				<p>
+   				</li>
+   				<li>
    					<label for="fax">Fax:&nbsp;&nbsp;&nbsp;</label>
    					<input type="text" id="fax" name="fax" value="<? echo ( $$variable{'User'}->fax() ) ?>" />
-   				</p>
-   				<p>
+   				</li>
+   				<li>
    					<label>Add to our Mailing List:&nbsp;&nbsp;&nbsp;</label>
-					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
+					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( ssi::checked( $$variable{'User'}->mailinglist() eq 'Y' ); ) ?> value="Y" />
 					<label class="radio" for="MailingListY">Yes</label>
-					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
+					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( ssi::checked( $$variable{'User'}->mailinglist() ne 'Y' ); ) ?> value="N" />
 					<label class="radio" for="MailingListN">No</label>
-   				</p>
+   				</li>
 			<? if ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
-   				<p>
+   				<li>
    					<label>Can login to the web site?&nbsp;&nbsp;&nbsp;</label>
    					<input type="radio" id="web_activeY" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() eq 'Y' ) ?> value="Y" />
    					<label class="radio" for="web_activeY">Yes</label>
    					<input type="radio" id="web_activeN" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() ne 'Y' ) ?> value="N" />
    					<label class="radio" for="web_activeN">No</label>
-   				</p>
-				<p>
+   				</li>
+				<li>
 					<label>Can login to the FTP site?&nbsp;&nbsp;&nbsp;</label>
 					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="1" />
 					<label class="radio" for="ftp_active1"/>Yes</label>
 					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( 'checked="checked"' if ! $$variable{'User'}->ftp_active() ) ?> value="0" />
 					<label class="radio" for="ftp_active0"/>No</label>
-				</p>
-   				<p>
+				</li>
+   				<li>
    					<label>Company administrator?&nbsp;&nbsp;&nbsp;</label>
    					<input type="radio" id="AdministratorY" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() eq 'Y' ) ?> value="Y" />
    					<label class="radio" for="AdministratorY">Yes</label>
    					<input type="radio" id="AdministratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" /> 
    					<label class="radio" for="AdministratorN">No</label>
-   				</p>
+   				</li>
 <? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
-   				<p>
+   				<li>
    					<label>Quote Level:&nbsp;&nbsp;&nbsp;</label>
-					<select name="quote_level">
+					<select id="quote_level" name="quote_level">
 						<option value="">select</option>
 						<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ) ) ?>
 					</select>
-   				</p>
+   				</li>
 <? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 			<? endif ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
+				</ul>
+				</div>
    			</fieldset>
-   			<fieldset>
-   			   <legend>Login Information</legend>
-   				<p>
-   					<label for="Email">E-mail Address: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="text" id="Email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
-   				</p>
-   				<p>
-   					<label for="Password">Password: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="Password" id="Password" name="password" />
-   				</p>
-   				<p>
-   					<label for="VerifyPassword">Verify Password: <span class="requiredFieldIndicator">*</span></label>
-   					<input type="Password" id="VerifyPassword" name="verifypassword" />
-   				</p>
+   			<fieldset id="LoginInformation"><legend>Login Information</legend>
+				<div class="content">
+					<ul>
+						<li>
+							<label for="email">E-mail Address: <span class="requiredFieldIndicator">*</span></label>
+							<input type="text" id="email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+						</li>
+						<li>
+							<label for="password">Password: <span class="requiredFieldIndicator">*</span></label>
+							<input type="password" id="password" name="password" />
+						</li>
+						<li>
+							<label for="verifypassword">Verify Password: <span class="requiredFieldIndicator">*</span></label>
+							<input type="password" id="verifypassword" name="verifypassword" />
+						</li>
+					</ul>
+				</div>
    			</fieldset>
 		</div><!--UserProfile-->
 		<input type="hidden" name="btnFunction"/>

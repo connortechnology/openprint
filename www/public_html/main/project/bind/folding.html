@@ -1,14 +1,16 @@
 <script type="text/javascript" src="/javascripts/service.js"></script>
 <script type="text/javascript">
-    function calc( formName ) {
+    function calc( formName, force ) {
         var form = getFormObj( formName );
         if ( gettingNewPrice ) {
             if ( timeout ) {
                 clearTimeout( timeout );
             } // end if
-            setTimeout( "calc('"+formName+"');", 1000 );
-            return;
-        } // end if
+			if ( ! force ) {
+				setTimeout( "calc('"+formName+"');", 1000 );
+				return;
+			} // end if
+		} // end if
         timeout = null;
         gettingNewPrice = true;
 

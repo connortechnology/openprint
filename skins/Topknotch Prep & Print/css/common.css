@@ -789,6 +789,9 @@ table.List thead tr th.Price, table.List tr th.Price, table.List tr td.Price {
 	width: 75px;
 	text-align: right;
 }
+fieldset#LoginLog table.List td {
+	font-size: small;
+}
 
 .colRow {
 	background:#cde3ec;

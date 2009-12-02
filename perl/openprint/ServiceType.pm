@@ -119,15 +119,5 @@ sub delete {
 	sql::end_transaction( $dbh, $ac );
 } # end sub delete
 
-# Returns a copy of the Material object.
-sub copy {
-	my $self = shift;
-	my $new = new openprint::ServiceType();
-	@$new{keys %fields} = @$self{keys %fields};
-	delete $$new{id};
-	$$new{'name'} = 'Copy of ' . $$new{'name'};
-
-	return $new;
-} # end sub copy
 1;
 __END__

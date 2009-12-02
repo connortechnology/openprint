@@ -775,7 +775,7 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Cutting Capable'=
 		} # end if
 	} # end foreach
 }
-foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>'Y'}) ) {
+foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=>['For Pocket Folders','Y']}) ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		if ( $Spec->name() =~ /^(\d+)PageSignatureFoldRunSpeed$/ ) {
 			my $pages = $1;
@@ -810,6 +810,30 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$_ =  $FS->save();
 			die $_ if $_;
 			$Spec->delete();
+		} elsif ( $Spec->name() =~ /^(\d+)Panel(\d+)Pocket(\w*)RunSpeed/ ) {
+			my ($panel, $pocket, $gusset ) = ( $1, $2, $3 );
+			my $Fold = new openprint::Fold();
+			$Fold->equipment_id( $E->id() );
+			$Fold->name( $panel.'Panel'.$pocket.'Pocket'.$gusset );
+			$Fold->type( $panel.'Panel'.$pocket.'Pocket'.$gusset );
+			$Fold->max_imposition( 1 );
+			$_ = $Fold->save();
+			die $_ if $_;
+			my $FS = new openprint::FoldSpecification();
+			$FS->fold_id( $Fold->id() );
+			$FS->runspeed( $Spec->value() );
+			$FS->interpolate( $Spec->interpolate() );
+			$_ =  $FS->save();
+			die $_ if $_;
+			$Spec->delete();
+			if ( ! openprint::Service::find('name'=>$panel.'Panel'.$pocket.'Pocket'.$gusset) ) {
+				my $Service = new openprint::Service();
+				$Service->save({
+					'name'=>$panel.'Panel'.$pocket.'Pocket'.$gusset,
+					'description'=>$panel.'Panel'.$pocket.'Pocket'.$gusset,
+					'category'=>'Bindery',
+				});
+			}
 		}
 	}  # end foreach Spec
 	foreach my $Spec ( $E->Specifications() ) {
@@ -1436,6 +1460,11 @@ if ( ! openprint::ServiceType::find('name'=>'Aqueous') ) {
 		'view_visible'		=>	1,
 });
 } # end if
+
+foreach my $ST ( openprint::ServiceType::find('name'=>'DieCutting') ) {
+	$_ = $ST->save({'url'=>'bind/DieCutting.html'}) if $ST->url() ne 'bind/DieCutting.html';
+	die $_ if $_;
+}
 
 if ( ! openprint::ServiceCategory::find('name'=>'Coating') ) {
 	print "Adding Coating Service Category\n";

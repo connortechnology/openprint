@@ -53,13 +53,35 @@ img#Butterfly {
 .CompanyProfile legend {
 	font-weight: bold;
 }
-.UserProfile fieldset {
-	float: left;
-	width: 45%;
-	margin-right: 5px;
+
+.UserProfile {
+	background:#daf3fc;
 }
-.UserProfile legend {
-	font-weight: bold;
+div.UserProfile:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.UserProfile {height: 1%;}
+* div.UserProfile {display:block;}
+/* End hide from IE-mac */
+
+.UserProfile fieldset.filters p {
+	width: 50%;
+	float: left;
+}
+
+.UserProfile fieldset#UserInformation {
+	float: left;
+	width: 50%;
+}
+.UserProfile fieldset#LoginInformation {
+	float: right;
+	width: 50%;
 }
 .PageTitle {
 	font-weight: bold;
