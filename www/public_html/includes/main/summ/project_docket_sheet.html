@@ -254,7 +254,11 @@
 				my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
 				my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()};
+				$impressions *= 2 if $Imposition->runstyle() eq 'Web';
 				foreach my $colour ( sets::union( @side_one_colours, @side_two_colours ) ) {
+					if ( $colour =~ /Overall/ ) {
+$inkCoverage{$colour} = 100;
+					} 
 					my $area = $Imposition->object_area() * $impressions * ($inkCoverage{$colour}/100);
 					my $grade = $Paper->grade();
 					$grade = 4 if ! $grade;
@@ -263,14 +267,32 @@
 						$area /= 2;
 					} # end if
 					my $InkMaterial;
-					if ( my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
+					if ( sets::isin( $colour, ['Cyan','Magenta','Yellow','Black'] ) ) {
+						if ( my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
 						$InkMaterial = $materials[0];
+						} # end if
+					} elsif ( sets::isin( $colour, ['Overall Varnish Matte', 'Spot Varnish Matte' ] ) ) {
+						if ( my @materials = openprint::Material::find('name'=>'MatteVarnish') ) {
+						$InkMaterial = $materials[0];
+						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
+						$InkMaterial = $materials[0];
+						} # end if
+					} elsif ( sets::isin( $colour, ['Overall Varnish Gloss', 'Spot Varnish Gloss' ] ) ) {
+						if ( my @materials = openprint::Material::find('name'=>'GlossVarnish') ) {
+						$InkMaterial = $materials[0];
+						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
+						$InkMaterial = $materials[0];
+						} # end if
+					} else {
+						if ( my @materials = openprint::Material::find('name'=>'PMSInk') ) {
+						$InkMaterial = $materials[0];
+						} # end if
 					} # end if
 					my $coverage;
 					if ( $InkMaterial ) {
 						$coverage = $InkMaterial->specification('Coverage', $grade);
 					}
-					$html .= '<tr><td>'.$colour . '</td><td>'.( $coverage ? sprintf('%.1fkg', $area/$coverage ) : 'unknown' ) . '</td></tr>';
+					$html .= '<tr><td>'. $colour . '</td><td>'.( $coverage ? sprintf('%.1fkg', $area/$coverage ) : 'unknown' ) . '</td></tr>';
 				} # end foreach colour
 				$html .= '</table>';
 			} # endif
