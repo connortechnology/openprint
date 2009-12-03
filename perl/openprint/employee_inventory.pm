@@ -806,7 +806,7 @@ sub check_out {
 			my $amount = $C->quantity();
 			$qty -= $amount;
 			$amount *= -1;
-			$Skid->add( $Paper, $amount );
+			$C->save({'quantity'=>0});
 			$Paper->add_inventory( $Skid, $amount, $units, $description );
 			$Paper->allocate( $Skid->id(), $Projects[0]->id(), $amount ) if @Projects and $Paper->allocated( $Projects[0]->id() );
 		} else {
@@ -895,8 +895,9 @@ sub allocate {
 	my $available_qty = $Paper->in_stock() - $Paper->allocated();
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	if ( $available_qty < $quantity ) {
-		$variable{'error'} .= "Only $available_qty$units are available to be allocated. Please try again.<br/>";
-		return;
+		$variable{'warning'} .= "Only $available_qty$units are available to be allocated. The paper will be allocated, however the stock must be acquired to satisfy the allocation. Notifications are being sent.<br/>";
+		# Send notifications
+		
 	} # end if
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
@@ -1016,7 +1017,7 @@ sub stock_allocation_notification {
 	$info{'offsite'} = $offsite;
 	$info{'nolocation'} = $nolocation;
 
-	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @$old_skids;
+	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @$old_skids or ( $Paper->allocated() > $Paper->in_stock() );
 
 	foreach my $User ( @recipients ) {
 		my $From = new openprint::User( $session{'user_id'} );
@@ -1492,8 +1493,8 @@ sub _skid_allocations {
 
 
 sub available_paper {
-	ssi::save_params( '/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id', 'owner_id_exclude' );
-	$session{'/employee/inventory/available_paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
+	ssi::save_params( '/employee/inventory/available_paper.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'width','height','OrLarger', 'Type', 'fsc_code', 'last_seen', 'location_id', 'unmatched' );
+	$session{'/employee/inventory/available_paper.html?Owner'} = new openprint::User( $session{'user_id'} )->company_id() if ! exists $session{'/employee/inventory/available_paper.html?Owner'};
 	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 	$session{'/employee/inventory/available_paper.html?Type'} = 'Roll' if ! $session{'/employee/inventory/available_paper.html?Type'};
 	if ( $param{'btnFunction'} eq 'Allocate' ) {
@@ -1501,7 +1502,8 @@ sub available_paper {
 	} # end if
 } # end sub available_paper
 sub _available_paper {
-	ssi::save_params( '/employee/inventory/available_paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','width','height','OrLarger','fsc_code','unmatched','location_id','Type','last_seen','Owner','owner_id_exclude' ) );
+	ssi::save_params( '/employee/inventory/available_paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','width','height','OrLarger','fsc_code','unmatched','location_id','Type','last_seen','Owner' ) );
+	$session{'/employee/inventory/available_paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 } # end sub _available_paper
 
 sub _allocate_popup {
@@ -1516,7 +1518,7 @@ sub _allocate_popup {
     if ( exists $param{'quantity'} ) {
         $variable{'quantity'} = $param{'quantity'};
     } else {
-        $variable{'quantity'} = $variable{'Paper'}->in_stock() - $variable{'Paper'}->allocated();
+        $variable{'quantity'} = $variable{'Paper'}->available();
     } # end if
 } # end sub _allocate_popup
 
@@ -1565,6 +1567,17 @@ sub purchase_order_view {
 			$New->save();
 			$variable{'information'} .= 'PO ' . $PO->id() . ' copied to PO ' . $New->id() .'<br/>';
 			$PO = $New;
+		} # end if
+		if ( ! $PO->authorized() ) {
+			if ( $PO->total() < $Me->purchasing_limit() ) {
+				$variable{'error'} .= $PO->save({
+						'authorized'	=> 1,
+						'authorized_on'	=> 'NOW()',
+						'authorized_by'	=> $session{'user_id'},
+						});
+			} else {
+				$PO->send_approval_required_notification();
+			} # end if
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{'po_id'} ) {
@@ -1664,25 +1677,7 @@ $log->debug("PO total: " . $PO->total() . ' Me total: ' . $Me->purchasing_limit(
 						'authorized_by'	=> $session{'user_id'},
 						});
 			} else {
-				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-				my %info;
-				$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
-				$info{'From'} = $Me;
-				$info{'PurchaseOrder'} = $PO;
-
-				foreach my $U ( openprint::User::find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$PO->total() ) ) {
-					next if $U->id() == $Me->id();
-
-					$_ = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
-					my @body = ('', $_, 'text/html', 'quoted-printable');
-					my %mail = (
-							SMTP    => $config{'Mail Server'},
-							FROM    => sprintf( '"%s" <%s>', $Me->name(), $Me->email() ),
-							TO      => sprintf( '"%s" <%s>', $U->name(), $U->email() ),
-							SUBJECT => 'Purchase Order requiring approval: ' . $PO->id(),
-							);
-					misc::send_email_with_attachment( $log, \%mail, @body );
-				} # end foreach U
+				$PO->send_approval_required_notification();
 			} # end if
 		} # end if
 		if ( ( ! $variable{'error'} ) and $param{'reason'} ) {
@@ -1751,9 +1746,7 @@ sub purchase_order_edit {
 } # end sub purchase_order_edit
 
 sub purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted' ) {
-        $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
-    } # end foreach
+	ssi::save_params( '/employee/inventory/purchase_orders.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types' ) );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {
 			my $PO = new openprint::PurchaseOrder( $po_id );
@@ -1814,9 +1807,7 @@ sub purchase_orders {
 } # end sub purchase_orders
 
 sub _purchase_orders {
-    foreach my $key ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized','supplier_id','created_by','deleted' ) {
-        $session{'/employee/inventory/purchase_orders.html?'.$key} = $param{$key} if exists $param{$key};
-    } # end foreach
+	ssi::save_params( '/employee/inventory/purchase_orders.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types' ) );
 } # end sub _purchase_orders
 
 sub _po_autocomplete {

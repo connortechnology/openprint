@@ -660,7 +660,8 @@ sub add_inventory {
 		'docket',	$docket,
         );
 	delete $$self{allocated};
-	delete $$self{in_stock};
+	# Updates in_stock
+	$self->save();
 
 } # end sub add_inventory
 

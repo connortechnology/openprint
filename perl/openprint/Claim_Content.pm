@@ -13,6 +13,7 @@ use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defa
 require sql;
 require ssi;
 require misc;
+require openprint::Claim_ContentType;
 
 my $debug = 0;
 
@@ -24,21 +25,30 @@ $serial = 'claim_contents_id_seq';
 	'claim_id'			=>	'claim_id',
 	'skid_id'			=>	'skid_id',
 	'quantity'			=>	'quantity',
+	'weight'			=>	'weight',
+	'weight_units'		=>	'weight_units',
 	'reason'			=>	'reason',
+	'description'		=>	'description',
 	'cost'				=>	'cost',
 	'cost_units'		=>	'cost_units',
+	'type_id'			=>	'type_id',
 );
 
 %transforms = (
 	'quantity'	=> [ 's/\D//g' ],
 	'skid_id'	=> [ 's/\D//g' ],
+	'type_id'	=> [ 's/\D//g' ],
 	'cost'		=> [ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
-	'quantity'	=> 0,
-	'skid_id'	=>	undef,
-	'cost'		=>	undef,
+	'quantity'		=> 0,
+	'weight'		=> 0,
+	'weight_units'	=>	undef,
+	'type_id'		=>	undef,
+	'skid_id'		=>	undef,
+	'cost'			=>	undef,
+	'cost_units'	=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -90,19 +100,42 @@ sub Claim {
 	return new openprint::Claim( $_[0]{claim_id} );
 } # end sub Manifest
 
+sub Type {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'type_id'} = $_[0]->id();
+	} # end if
+	return new openprint::Claim_ContentType( $_[0]{type_id} );
+} # end sub Manifest
+
 sub description {
 	my ( $self ) = @_;
-	my $description;
-	foreach my $SkidContent ( $self->Skid()->Contents() ) {
-		$description .= $SkidContent->Paper()->to_string().'<br/>';
-	} # end foreach SkidContent
+	if ( @_ > 1 ) {
+		$$self{'description'} = $_[1];
+	} # end if
+	if ( ! $$self{'description'} ) {
+		my $description;
+		foreach my $SkidContent ( $self->Skid()->Contents() ) {
+			$description .= $SkidContent->Paper()->to_string().'<br/>';
+		} # end foreach SkidContent
+		$$self{'description'} = $description;
+	} # end if
 
-	return $description;
+	return $$self{'description'};
 } # end sub description
 
 sub total {
 	my ( $self ) = @_;
-	return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'}/100 );
+	if ( $$self{'cost_units'} eq 'Each' ) {
+		return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'} );
+	} elsif ( $$self{'cost_units'} eq '/100lb' ) {
+		return sprintf('%.2f', $$self{'cost'} * $$self{'weight'}/100 );
+	} elsif ( $$self{'cost_units'} eq '/Kg' ) {
+		return sprintf('%.2f',$$self{'cost'} * Math::Units::convert($$self{'weight'}, 'lb','kg' ) );
+	} elsif ( $$self{'cost_units'} eq '/1000' ) {
+		return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'}/1000 );
+	} # end if
+	return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'} );
 } # end sub total
 
 sub save {

@@ -137,6 +137,9 @@
 		my $part = 0;
 		while ( my $service_index = shift @sigs ) {
 			my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_index );
+			my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs );
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
 
 			my $signatures = 1;
 			for ( my $i=0; $i < @sigs; $i += 1 ) {
@@ -231,8 +234,10 @@
 				} # end if
 			} # end if
 			$html .= '</td><td class="docketText">';
+
 			foreach my $side ( 'SideOne','SideTwo' ) {
-				$html .= scalar openprint::Estimating::Printing::get_colours( $sig_specs, $side );
+				my @colours = openprint::Estimating::Printing::get_colours( $sig_specs, $side );
+				$html .= scalar @colours;
 				$html .= '+AQ (Gloss)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Gloss' );
 				$html .= '+AQ (Matte)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Matte' );
 				$html .= '+Varnish (Spot Gloss)' if ( $$sig_specs{'chkVarnishSpotGloss'.$side} );
@@ -241,9 +246,57 @@
 				$html .= '+Varnish (Overall Gloss)' if ( $$sig_specs{'chkVarnishOverallGloss'.$side} );
 				$html .= '+Varnish (Overall Matte)' if ( $$sig_specs{'chkVarnishOverallMatte'.$side} );
 				$html .= '/' if $side eq 'SideOne'; 
-			} # end foreach side
+			} # end foreach side;
 
-		my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs );
+			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
+				$html .= '<br/><table>';
+				my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $sig_specs );
+				my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+				my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
+				my $impressions = $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()};
+				$impressions *= 2 if $Imposition->runstyle() eq 'Web';
+				foreach my $colour ( sets::union( @side_one_colours, @side_two_colours ) ) {
+					if ( $colour =~ /Overall/ ) {
+$inkCoverage{$colour} = 100;
+					} 
+					my $area = $Imposition->object_area() * $impressions * ($inkCoverage{$colour}/100);
+					my $grade = $Paper->grade();
+					$grade = 4 if ! $grade;
+
+					if ( sets::isin( $colour, \@side_one_colours ) and sets::isin( $colour, \@side_two_colours ) ) {
+						$area /= 2;
+					} # end if
+					my $InkMaterial;
+					if ( sets::isin( $colour, ['Cyan','Magenta','Yellow','Black'] ) ) {
+						if ( my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
+						$InkMaterial = $materials[0];
+						} # end if
+					} elsif ( sets::isin( $colour, ['Overall Varnish Matte', 'Spot Varnish Matte' ] ) ) {
+						if ( my @materials = openprint::Material::find('name'=>'MatteVarnish') ) {
+						$InkMaterial = $materials[0];
+						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
+						$InkMaterial = $materials[0];
+						} # end if
+					} elsif ( sets::isin( $colour, ['Overall Varnish Gloss', 'Spot Varnish Gloss' ] ) ) {
+						if ( my @materials = openprint::Material::find('name'=>'GlossVarnish') ) {
+						$InkMaterial = $materials[0];
+						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
+						$InkMaterial = $materials[0];
+						} # end if
+					} else {
+						if ( my @materials = openprint::Material::find('name'=>'PMSInk') ) {
+						$InkMaterial = $materials[0];
+						} # end if
+					} # end if
+					my $coverage;
+					if ( $InkMaterial ) {
+						$coverage = $InkMaterial->specification('Coverage', $grade);
+					}
+					$html .= '<tr><td>'. $colour . '</td><td>'.( $coverage ? sprintf('%.1fkg', $area/$coverage ) : 'unknown' ) . '</td></tr>';
+				} # end foreach colour
+				$html .= '</table>';
+			} # endif
+				
 
 		if ( $Paper->type() eq 'Roll' ) {
 			my $net_impressions = $$variable{'Project'}->ordered_quantity();

@@ -2,9 +2,15 @@
 <script type="text/javascript">
 <!--
 	function check_inputs(form ) {
-		if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
-			alert( 'There are only ' + form.available_quantity.value + ' available!' );
-			return false;
+		if ( form.btnFunction && form.btnFunction.value=='Allocate' ) {
+			if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
+				return confirm( 'There are only ' + form.available_quantity.value + ' available! Do you want to proceed with the allocation?' );
+			} // end if
+		} else {
+			if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
+				alert( 'There are only ' + form.available_quantity.value + ' available!' );
+				return false;
+			} // end if
 		} // end if
 		return true;
 	}

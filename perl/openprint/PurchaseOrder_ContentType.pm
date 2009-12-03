@@ -1,7 +1,6 @@
 package openprint::PurchaseOrder_ContentType;
 @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
