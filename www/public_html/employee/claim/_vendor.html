@@ -31,9 +31,9 @@
 			</select>
 		</p>
 		<p><label for="vendor_state"><span id="vendor_country_state"><? echo (
-				if ( $$variable{'country'} eq 'US' ) {
+				if ( $$variable{'Claim'}->vendor_country() eq 'US' ) {
 					return 'State:';
-				} elsif ( $$variable{'country'} eq 'CA' ) {
+				} elsif ( $$variable{'Claim'}->vendor_country() eq 'CA' ) {
 					return 'Province:';
 				} else {
 					return 'State/Province:';
@@ -46,9 +46,9 @@
 		</p>
 		<p><label for="vendor_city">City:</label><input type="text" name="vendor_city" id="vendor_city" value="<? echo ( $$variable{'Claim'}->vendor_city() ) ?>" /></p>
 		<p><label for="vendor_postalcode"><span id="vendor_country_postal"><? echo (
-				   if ( $$variable{'country'} eq 'US' ) {
+				   if ( $$variable{'Claim'}->vendor_country() eq 'US' ) {
 					   return 'Zip Code:';
-				   } elsif ( $$variable{'country'} eq 'CA' ) {
+				   } elsif ( $$variable{'Claim'}->vendor_country() eq 'CA' ) {
 					   return 'Postal Code:';
 				   } else {
 					   return 'Zip/Postal Code:';

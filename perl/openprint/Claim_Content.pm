@@ -26,6 +26,7 @@ $serial = 'claim_contents_id_seq';
 	'skid_id'			=>	'skid_id',
 	'quantity'			=>	'quantity',
 	'weight'			=>	'weight',
+	'weight_units'		=>	'weight_units',
 	'reason'			=>	'reason',
 	'description'		=>	'description',
 	'cost'				=>	'cost',
@@ -41,11 +42,13 @@ $serial = 'claim_contents_id_seq';
 );
 
 %defaults = (
-	'quantity'	=> 0,
-	'weight'	=> 0,
-	'type_id'	=>	undef,
-	'skid_id'	=>	undef,
-	'cost'		=>	undef,
+	'quantity'		=> 0,
+	'weight'		=> 0,
+	'weight_units'	=>	undef,
+	'type_id'		=>	undef,
+	'skid_id'		=>	undef,
+	'cost'			=>	undef,
+	'cost_units'	=>	undef,
 );
 
 # Returns a paper object specified by the parameters
