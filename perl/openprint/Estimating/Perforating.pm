@@ -378,6 +378,8 @@ sub signature_calc {
 					} else {
 						$Results{'Breakdown'} .= "Unknown units set on rule price ($horizontal_price{'units'})<br/>";
 					} # end if
+				} else {
+					$Results{'Breakdown'} .= "No price for Perforating Rule";
 				} # end if
 				$totalPrice += $horizontal_price{'Total'};
 			} # end if
@@ -396,7 +398,7 @@ sub signature_calc {
 
 		#$openprint::log->debug("Vertical: $vertical_rule");	
 			if ( $vertical_rule ) {
-				if ( my @Materials = openprint::Material::find('name'=>'ScoringWheel') ) {
+				if ( my @Materials = openprint::Material::find('name'=>'PerforatingWheel') ) {
 					%vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );
 					if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_rule;
@@ -410,6 +412,8 @@ sub signature_calc {
 					} else {
 						$Results{'Breakdown'} .= "Unknown units set on wheel price ($vertical_price{'units'})<br/>";
 					} # end if
+				} else {
+					$Results{'Breakdown'} .= "No price set for perfing wheel<br/>";
 				} # end if
 				$totalPrice += $vertical_price{'Total'};
 			} # end if

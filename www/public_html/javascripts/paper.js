@@ -10,10 +10,14 @@ function get_parameters( form, id, selected ) {
 
 	if ( form.elements['Manufacturer'+id] ) 
 		parameters.push( 'Manufacturer', get_ddm_value( form.elements['Manufacturer'+id] ) ); 
+
 	if ( form.elements['Name'+id] ) 
 		parameters.push( 'Name', get_ddm_value( form.elements['Name'+id] ) ); 
+
 	if ( form.elements['ddmName'+id] ) 
 		parameters.push( 'name_id', get_ddm_value( form.elements['ddmName'+id] ) ); 
+	if ( form.elements['name_id'+id] ) 
+		parameters.push( 'name_id', get_ddm_value( form.elements['name_id'+id] ) ); 
 
 	if ( form.elements['Finish'+id] ) 
 		parameters.push( 'Finish', get_ddm_value( form.elements['Finish'+id] ) );

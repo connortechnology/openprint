@@ -82,7 +82,7 @@
 	my $html = '';
 	foreach my $ProjectTypeCategory ( openprint::ProjectTypeCategory::find() ) {
 		$html .= sprintf(q`<li id="Menu%1$d" class="%3$s"><a href="#" title="%2$s" onclick="toggleMenu($('Menu%1$d'), 'off', 'on');return false;">%2$s</a>`, $ProjectTypeCategory->id(), $ProjectTypeCategory->name(), 
-			( ( ( ! $$variable{'uri'} =~ /administrator/ ) and $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->category_id() == $ProjectTypeCategory->id() ) ) ? 'on' : 'off' ),
+			( ( ( $$variable{'uri'} =~ /content\/prin/ ) and $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->category_id() == $ProjectTypeCategory->id() ) ) ? 'on' : 'off' ),
 			);
 		$html .= '<ul>';
 		foreach my $ProjectType ( openprint::ProjectType::find('category_id'=>$ProjectTypeCategory->id()) ) {

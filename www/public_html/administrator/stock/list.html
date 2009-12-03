@@ -57,7 +57,7 @@
 				<option value=""> All </option>
 				<? echo (
 					my @company_ids = sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} );
-					my Companies = openprint::Company::find('id'=>\@company_ids, 'order'=>'lower(name)' );
+					my @Companies = openprint::Company::find('id'=>\@company_ids, 'order'=>'lower(name)' );
 					if ( ! sets::isin( $session{'/administrator/stock/list.html?Owner'}, \@company_ids ) ) {
 						$session{'/administrator/stock/list.html?Owner'} = '';
 					} # end if
@@ -86,7 +86,7 @@
 		</p>
 		<p>
 			<label>Name:</label>
-			<select name="Name" onchange="calc(this.form.name);">
+			<select name="Name" onchange="Name_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
                     return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $session{'/administrator/stock/list.html?Name'} );
@@ -95,7 +95,7 @@
 		</p>
 		<p> 
 			<label>Finish:</label>
-			<select name="Finish" size="1" onchange="calc(this.form.name);">
+			<select name="Finish" size="1" onchange="Finish_onChange(this,'');">
 				<option value=""> select one </option>
 			<? echo (
 					my %finishes;

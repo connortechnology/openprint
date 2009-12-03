@@ -18,7 +18,7 @@ sub get_paper {
 	my @papers = openprint::Paper::find( 
 			( $specs{'Selected'} eq 'Manufacturer' ? ( 'manufacturer_id'=>$specs{'Manufacturer'} ) : () ),
 			( $specs{'Selected'} eq 'Group' ? ( 'group_id'=>$specs{'Group'} ) : ()  ),
-			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
+			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=> $specs{'name_id'} ? $specs{'name_id'} : $specs{'Name'} ) : ()  ),
 			( sets::isin( $specs{'Selected'}, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'	=> $specs{'Finish'} ) : () ),
 			( sets::isin( $specs{'Selected'}, [ 'Colour','Weight' ] ) ? ( 'colour_id'	=> $specs{'Colour'} ) : () ),
 			( sets::isin( $specs{'Selected'}, [ 'Weight' ] ) ? ( 'weight_id'	=> $specs{'Weight'} ) : () ),
@@ -28,7 +28,7 @@ sub get_paper {
 				);
 	if ( ! @papers ) {
 		@papers = openprint::Paper::find( 
-			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=>$specs{'Name'} ) : ()  ),
+			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=> $specs{'name_id'} ? $specs{'name_id'} : $specs{'Name'} ) : ()  ),
 			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
 			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
 			'type'=>\@types,
@@ -41,9 +41,9 @@ sub get_paper {
 	foreach my $Paper ( @papers ) {
 #$log->debug("Paper: " . $Paper->to_string() );
 		$names{$Paper->name()} = $Paper->name_id();
-		$finishes{$Paper->finish()} = $Paper->finish_id() if ( ! $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'Name'} );
-		$colours{$Paper->colour()} = $Paper->colour_id() if ( ! $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'Name'} );
-		$weights{$Paper->weight()} = $Paper->weight_id() if ( ! $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'Name'} );
+		$finishes{$Paper->finish()} = $Paper->finish_id() if ( ! $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'name_id'} );
+		$colours{$Paper->colour()} = $Paper->colour_id() if ( ! $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'name_id'} );
+		$weights{$Paper->weight()} = $Paper->weight_id() if ( ! $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'Name'} ) or ( $Paper->name_id() eq $specs{'name_id'} );
 	} # end foreach
 
 	my @results;

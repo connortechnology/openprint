@@ -263,17 +263,6 @@ sub Previous {
 	return new openprint::Material( $self->prev($params) );
 } # end sub Next
 
-# Returns a copy of the Material object.
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Material();
-	@$new{keys %fields} = @$self{keys %fields};
-	delete $$new{id};
-	$$new{'name'} = 'Copy of ' . $$new{'name'};
-
-	return $new;
-} # end sub copy
-
 sub Category {
 	return new openprint::MaterialCategory( $_[0]{'category_id'} );
 }

@@ -298,7 +298,9 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 .p-nav ul li.off {
 }
 .p-nav ul li.on {
-
+}
+.p-nav ul li.on a {
+	background: url(/images/bg-p-nav-on.png) no-repeat top right;
 }
 .p-nav ul li.off ul {
 	display:none;
@@ -320,55 +322,15 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 .p-nav ul li.on ul li.on a {
 	color: #606;
 	background: url(/images/bg-p-sub-nav-on.png) no-repeat top right;
+	text-shadow: none;
 }
 
-#p-sub-nav {
-	position: relative;
-	float:left;
-	width: 150px;
-	padding: 0px;
-	margin: 0px;
-	text-align:left;
-	}
-
-#p-sub-nav ul {	
-	padding: 0px;
-	margin: 0px;
-	}
-
-#p-sub-nav li {
-	padding: 0px;
-	margin: 0px;
-	list-style: none;
-	clear: both;
-	}
-
-#p-sub-nav a:link, #p-sub-nav a:visited {
-	text-decoration: none;
-	font-size:14px;
-	color: #FFF;
-	display: block;
-	width: 140px;
-	height: 19px;
-	padding: 3px 3px 3px 17px;
-	background: url(/images/bg-p-sub-nav.png) no-repeat 0 0px;
-	text-shadow: 1px 1px #606;
-	}
-	
-#p-sub-nav a:hover, #p-sub-nav a:link:active {
+.p-nav ul li.on ul li a:hover, .p-nav ul li.on ul li a:link:active {
 	background: url(/images/bg-p-sub-nav.png) no-repeat 0 -25px;
+	color: #FFF;
+text-shadow: 1px 1px #606;
 	}
 	
-.p-sub-nav-on {
-	background: url(/images/bg-p-sub-nav-on.png) no-repeat top right;
-	font-size: 13px;
-	color: #606;
-	width: 140px;
-	height: 19px;
-	padding: 3px 3px 3px 17px !important;
-	margin: 0px;
-	}
-
 /* --------------------------- TABLES --------------------------- */
 table.styled {
 	border-top:1px solid #FFF;
@@ -650,6 +612,7 @@ thead th {
 	padding: 0px;
 }
 p.buttons {
+	padding-left: 0px;
 	margin-top: 10px;
 	text-align: right;
 }

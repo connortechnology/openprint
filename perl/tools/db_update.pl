@@ -1473,6 +1473,26 @@ if ( ! openprint::ServiceCategory::find('name'=>'Coating') ) {
 		'name'=>'Coating',
 	});
 } # end if
+if ( ! openprint::Service::find('name'=>'Perforating') ) {
+	if ( my @S = openprint::Service::find('name'=>'Perforation') ) {
+		foreach my $S ( @S ) {
+			$S->save({'name'=>'Perforating'});
+		}
+	} # end if
+}
+if ( ! openprint::Material::find('name'=>'PerforatingWheel') ) {
+	if ( my @M = openprint::Material::find('PerforatingRule') ) {
+		foreach my $M ( @M ) {
+			my $New = $M->copy();
+			$New->save({'name'=>'PerforatingWheel'});
+			foreach my $P ( $M->prices() ) {
+				$P=$P->copy();
+				$P->save({'material_id'=>$New->id()});
+			} # end foreach
+		} # end foreach $M
+	} # en d if
+} # end if
+
 foreach my $S ( openprint::Service::find('name'=>'Aqueous') ) {
 	if ( ! openprint::Service::find('name'=>'Aqueous Gloss Overall') ) {
 		print "Converting Service Aqueous\n";

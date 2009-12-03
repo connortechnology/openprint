@@ -9,13 +9,8 @@ function FoldType_onchange( select ) {
 			image.style.display = 'none';
 		} // end if
 	} // end if
-	remove_div('OrderButton');
+	Dimensions_onchange( select );
 } // end function
-
-function cbFoldType_onchange( results ) {
-	//var select = jsrs_cbFillDDM( results, 'Custom' );
-	//Dimensions_onchange( select );
-}
 
 function calc( formName, force ) {
 	var form = getFormObj(formName);
@@ -77,7 +72,7 @@ function cbCalc( results ) {
 
 function Dimensions_onchange( select, signature ) {
 	remove_div('OrderButton');
-	// Refreshes Paper
+	// Refreshes Paper: we do this so that we don't get any stocks in the list that are smaller than our size.
 	///jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(select.form, '', '' ) );
 	rdbSuppliedStock_onchange( select, signature );
 	//calc( select.form.name );
