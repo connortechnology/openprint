@@ -8,6 +8,7 @@ CREATE TABLE Claim_Contents (
 	skid_id		INTEGER, 	FOREIGN KEY (skid_id) REFERENCES Skids (id),
 	quantity	INTEGER,	
 	weight		float,
+	weight_units	text,
 	reason		TEXT,
 	description	TEXT,
 	type_id		INTEGER NOT NULL, FOREIGN KEY (type_id) REFERENCES Claim_ContentTypes(id),
