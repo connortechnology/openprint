@@ -56,21 +56,22 @@ sub view {
 				my $RFIDTag = new openprint::RFIDTag( $param{"rfidtag_id-$$C{id}"} );
 				$param{"skid_id-$$C{id}"} = $RFIDTag->skid_id();
 			} # end if
-			if ( ! $param{"qty_lbs-$$C{id}"} ) {
+			if ( ! $param{"weight-$$C{id}"} ) {
 				my $Skid = new openprint::Skid( $param{"skid_id-$$C{id}"} );
 				my @SkidContents  = $Skid->Contents();
 				if ( @SkidContents == 1 ) {
-					$param{'qty_lbs-new'} = $SkidContents[0]->quantity();
+					$param{'weight-new'} = $SkidContents[0]->quantity();
 				} # end if
 			} # end if
 			$variable{'error'} .= $C->save( {
 					'quantity'		=>	sprintf('%d', $param{"quantity-$$C{id}"}),
-					'weight'		=>	$param{"qty_lbs-$$C{id}"} ? sprintf('%d', $param{"qty_lbs-$$C{id}"}) : undef,
+					'weight'		=>	$param{"weight-$$C{id}"} ? sprintf('%d', $param{"weight-$$C{id}"}) : undef,
+					'weight_units'	=>	$param{"weight_units-$$C{id}"},
 					'cost'			=>	$param{"cost-$$C{id}"},
+					'cost_units'	=>	$param{"cost_units-$$C{id}"},
 					'skid_id'		=>	$param{"skid_id-$$C{id}"},
 					'reason'		=>	$param{"reason-$$C{id}"},
 					'description'	=>	$param{"description-$$C{id}"},
-					'cost_units'	=>	$param{"cost_units-$$C{id}"},
 					} );
 		} # end foreach Contents
 		$Claim->filed_on( $param{'filed'} ? join('-', @param{'filed_on_year','filed_on_month','filed_on_day'} ) : undef );
@@ -104,37 +105,44 @@ sub edit {
 } # end sub edit
 
 sub _contents {
+	if ( ! $param{'claim_id'} ) {
+		$variable{'error'} .= 'No claim id.  Please enter the claim id before adding items to it.<br/>';
+		return;
+	} # end if
+	my $Claim = new openprint::Claim( $param{'claim_id'} );
+	if ( $param{'claim_id'} and ! $Claim->id() ) {
+		$variable{'error'} .= $Claim->save({'id'=>$param{'claim_id'}});
+	} # end if
+	$variable{'Claim'} = $Claim;
+
+	# On any loading of the contents, save anything that may have been changed
+	foreach my $C ( $Claim->Contents() ) {
+		next if ( $param{'action'} eq 'Delete' ) and ( $C->id() == $param{'content_id'} );
+		if ( ( $C->skid_id() != $param{'skid_id-'.$C->id()} )
+				or ( $C->description() ne $param{'description-'.$C->id()} )
+				or ( $C->quantity() != $param{'quantity-'.$C->id()} )
+				or ( $C->weight() != $param{'weight-'.$C->id()} )
+				or ( $C->weight_units() != $param{'weight_units-'.$C->id()} )
+				or ( $C->cost() != $param{'cost-'.$C->id()} )
+				or ( $C->cost_units() != $param{'cost_units-'.$C->id()} )
+		   ) {
+			$variable{'error'} .= $C->save( {
+					'skid_id'	=>	$param{'skid_id-'.$C->id()},
+					'description'	=>	$param{'description-'.$C->id()},
+					'weight'	=>	$param{"weight-$$C{id}"} ? sprintf('%d', $param{'weight-'.$C->id()}) : undef,
+					'weight_units'	=>	$param{'weight_units-'.$C->id()},
+					'quantity'	=>	sprintf('%d', $param{'quantity-'.$C->id()}),
+					'cost'		=>	$param{'cost-'.$C->id()},
+					'cost_units'	=>	$param{'cost_units-'.$C->id()},
+					} );
+		} # end if Content has changed
+	} # end foreach C
+
 	if ( $param{'action'} eq 'Delete' ) {
 		my $C = new openprint::Claim_Content( $param{'content_id'} );
 		$variable{'Claim'} = $C->Claim();
 		$variable{'error'} .= $C->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
-		if ( ! $param{'claim_id'} ) {
-			$variable{'error'} .= 'No claim id.  Please enter the claim id before adding items to it.<br/>';
-			return;
-		} # end if
-		my $Claim = new openprint::Claim( $param{'claim_id'} );
-		$variable{'Claim'} = $Claim;
-		if ( $param{'claim_id'} and ! $Claim->id() ) {
-			$variable{'error'} .= $Claim->save({'id'=>$param{'claim_id'}});
-		} # end if
-		foreach my $C ( $Claim->Contents() ) {
-			if ( ( $C->skid_id() != $param{'skid_id-'.$C->id()} )
-					or ( $C->reason() ne $param{'reason-'.$C->id()} )
-					or ( $C->quantity() != $param{'quantity-'.$C->id()} )
-					or ( $C->quantity() != $param{'weight-'.$C->id()} )
-					or ( $C->cost() != $param{'cost-'.$C->id()} )
-			   ) {
-				$variable{'error'} .= $C->save( {
-						'skid_id'	=>	$param{'skid_id-'.$C->id()},
-						'reason'	=>	$param{'reason-'.$C->id()},
-						'weight'	=>	$param{"qty_lbs-$$C{id}"} ? sprintf('%d', $param{'qty_lbs-'.$C->id()}) : undef,
-						'quantity'	=>	sprintf('%d', $param{'quantity-'.$C->id()}),
-						'cost'		=>	$param{'cost-'.$C->id()},
-						'cost_units'	=>	$param{'cost_units-'.$C->id()},
-						} );
-			} # end if Content has changed
-		} # end foreach C
 		my $C = new openprint::Claim_Content();
 		$variable{'error'} .= $C->save( { 'claim_id'	=>	$Claim->id() } );
 	} # end if

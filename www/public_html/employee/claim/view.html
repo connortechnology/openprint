@@ -43,8 +43,6 @@
 			<div class="PageTitle" style="text-align: left;">
 				<h1>CLAIM</h1><br/>
 				CLAIM # [ <? echo ( $$variable{'Claim'}->id() ) ?> ]
-<? echo ( $$variable{'Claim'}->is_FSC() ? 'FSC' : '' ) ?>
-<? echo ( $$variable{'Claim'}->is_PEFC() ? 'PEFC' : '' ) ?>
 				<br/>
 				Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->created_on() ) ) ) ?><br/>
 			</div>
@@ -101,34 +99,34 @@ Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable
 		<br class="spacer"/>
 <table id="Contents">
 	<tr>
-		<th>DESCRIPTION</th>
-		<th class="Quantity">QUANTITY</th>
+		<th>Description</th>
+		<th class="Quantity">Quantity</th>
 		<th class="Weight">Weight</th>
 		<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
-		<th width="110">UNIT PRICE</th>
-		<th width="90">LINE TOTAL</th>
+		<th width="110">Unit Cost</th>
+		<th width="90">Total</th>
 		<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( my $html = '';
 	foreach my $C ( $$variable{'Claim'}->Contents() ) {
 		if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 			$html .= sprintf('<tr>
-				<td>%3$s</td>
+				<td>%4$s</td>
 				<td class="Quantity">%1$s</td>
-				<td class="Weight">%2$s</td>
-				<td style="text-align: right;">%4$s%5$s</td>
-				<td style="text-align: right;">%6$s</td>
+				<td class="Weight">%2$s%3$s</td>
+				<td style="text-align: right;">%5$s%6$s</td>
+				<td style="text-align: right;">%7$s</td>
 			</tr>', $C->quantity(), 
-( $C->weight() ?  Number::Format::format_number($C->weight()).'lb / '.Number::Format::format_number(Math::Units::convert($C->weight(), 'lb','kg' )).'kg' : '' ),
- $C->description(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
+			( $C->weight() ?  Number::Format::format_number($C->weight()) : '' ), $C->weight_units(), 
+			$C->description(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
 		} else {
 			$html .= sprintf('<tr>
 				<td>%3$s</td>
 				<td class="Quantity">%1$s</td>
 				<td class="Weight">%2$s</td>
 			</tr>', $C->quantity(), 
-( $C->weight() ?  Number::Format::format_number($C->weight()).'lb / '.Number::Format::format_number(Math::Units::convert($C->weight(), 'lb','kg' )).'kg' : '' ),
- $C->description());
+			( $C->weight() ? Number::Format::format_number($C->weight()) : '' ), $C->weight_units(),
+			$C->description());
 		} # end if
 	} # end foreach C
 	return $html;
@@ -152,9 +150,9 @@ Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable
 	</tr>
 	<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 </table>
-		<div class="leftColumn">
-Reason:<br/>
-<? echo ( $$variable{'Claim'}->reason() ) ?>
+		<div id="Remarks">
+		<h3>Remarks:</h3>
+		<? echo ( $$variable{'Claim'}->reason() ) ?>
 		</div>
 		<div class="rightColumn" style="text-align: right;">
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>

@@ -42,8 +42,8 @@
 .Claim table td input.RollQTY {
 	width: 60px;
 } 
-.Claim table td.Cost {
-	width: 80px;
+.Claim table .Cost {
+	width: 150px;
 }
 .Claim table td.Price input {
 	text-align: right;
@@ -57,25 +57,20 @@
 	text-align: left;
 }
 .Claim table .Quantity {
-	width: 90px;
+	width: 75px;
 }
 .Claim table td.Quantity {
 	text-align: right;
 }
-.Claim table td input.StockCost {
-	width: 40px;
+.Claim table td.Weight, .Claim table th.Weight {
+	width: 120px;
+}
+.Claim table td.Weight input[type="text"] {
+	width: 50px;
 } 
-.Claim table td input.SheetQTY {
+.Claim table td.Cost input[type="text"] {
 	width: 60px;
-} 
-.Claim table td input.SheetName {
-	width: 240px;
-} 
-.Claim table td input.SheetWidth, .Claim table td input.SheetHeight {
-	width: 60px;
-} 
-.Claim table td input.SheetMWeight {
-	width: 40px;
+	text-align: right;
 } 
 .Claim table td textarea {
 	width: 98%;
@@ -156,16 +151,16 @@ div.Claim .Header .PageTitle h1 {
 div.Claim #Contents {
 	margin-top: 20px;
 }
-p {
+fieldset p {
     margin: 0px;
     margin-top: .4em;
     display: inline-block;
     padding: 0px;
-    padding-left: 100px;
+    padding-left: 170px;
     overflow: hidden;
 }
 
-p:after {
+fieldset p:after {
     content: ".";
     display: block;
     height: 0;
@@ -174,18 +169,18 @@ p:after {
     visibility: hidden;
 }
 /* Hides from IE-mac \*/
-* html p {height: 1%;}
-* p {display: block;}
+* html fieldset p {height: 1%;}
+* fieldset p {display: block;}
 /* End hide from IE-mac */
 
 label {
 outline: 0;
 }
 
-p label {
-    width: 95px;
+fieldset p label {
+    width: 165px;
     text-align: right;
-    margin-left: -100px;
+    margin-left: -170px;
     vertical-align: top;
     float: left;
     overflow: visible;
