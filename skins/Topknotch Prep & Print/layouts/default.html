@@ -57,8 +57,8 @@
 		<li><a href="/main/order/history.html" title="ORDERS"><img src="/images/orders-icon.gif" alt=""/>ORDERS</a></li>
 		<li><a href="/account/logout.html" title="LOG OUT"><img src="/images/logout-icon.gif" alt=""/> LOG OUT</a></li>
 		<? else ( $session{'user_id'} ) ?>
-		<li><a href="/account/registration.html" title="REGISTRATION">REGISTRATION</a></li>
-		<li><a href="/account/login.html" title="LOG IN">LOG IN</a></li>
+		<li><a href="/account/registration.html" title="REGISTRATION"><img src="/images/account-icon.gif" alt=""/>REGISTRATION</a></li>
+		<li><a href="/account/login.html" title="LOG IN"><img src="/images/logout-icon.gif" alt=""/>LOG IN</a></li>
 		<? endif ( $session{'user_id'} ) ?>
 	</ul>
 </div>

@@ -26,5 +26,18 @@ CREATE TABLE CLAIMS (
 	contact_id			INTEGER, FOREIGN KEY (contact_id) REFERENCES Users (id),
 	subtotal			float,
 	deleted				boolean default false,
+	reason				text,
+	vendor_contact		text,
+	vendor_name			text,
+	vendor_address1		text,
+	vendor_address2		text,
+	vendor_city			text,
+	vendor_country		text,
+	vendor_state		text,
+	vendor_postalcode	text,
+	vendor_phone		text,
+	vendor_fax			text,
+	vendor_sms			text,
+	vendor_email		text,
 	PRIMARY KEY (id)
 );

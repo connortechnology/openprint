@@ -26,6 +26,7 @@ $serial = 'claim_contents_id_seq';
 	'skid_id'			=>	'skid_id',
 	'quantity'			=>	'quantity',
 	'weight'			=>	'weight',
+	'weight_units'		=>	'weight_units',
 	'reason'			=>	'reason',
 	'description'		=>	'description',
 	'cost'				=>	'cost',
@@ -41,11 +42,13 @@ $serial = 'claim_contents_id_seq';
 );
 
 %defaults = (
-	'quantity'	=> 0,
-	'weight'	=> 0,
-	'type_id'	=>	undef,
-	'skid_id'	=>	undef,
-	'cost'		=>	undef,
+	'quantity'		=> 0,
+	'weight'		=> 0,
+	'weight_units'	=>	undef,
+	'type_id'		=>	undef,
+	'skid_id'		=>	undef,
+	'cost'			=>	undef,
+	'cost_units'	=>	undef,
 );
 
 # Returns a paper object specified by the parameters
@@ -123,7 +126,16 @@ sub description {
 
 sub total {
 	my ( $self ) = @_;
-	return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'}/100 );
+	if ( $$self{'cost_units'} eq 'Each' ) {
+		return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'} );
+	} elsif ( $$self{'cost_units'} eq '/100lb' ) {
+		return sprintf('%.2f', $$self{'cost'} * $$self{'weight'}/100 );
+	} elsif ( $$self{'cost_units'} eq '/Kg' ) {
+		return sprintf('%.2f',$$self{'cost'} * Math::Units::convert($$self{'weight'}, 'lb','kg' ) );
+	} elsif ( $$self{'cost_units'} eq '/1000' ) {
+		return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'}/1000 );
+	} # end if
+	return sprintf('%.2f', $$self{'cost'} * $$self{'quantity'} );
 } # end sub total
 
 sub save {

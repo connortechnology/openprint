@@ -902,8 +902,9 @@ sub allocate {
 	my $available_qty = $Paper->in_stock() - $Paper->allocated();
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	if ( $available_qty < $quantity ) {
-		$variable{'error'} .= "Only $available_qty$units are available to be allocated. Please try again.<br/>";
-		return;
+		$variable{'warning'} .= "Only $available_qty$units are available to be allocated. The paper will be allocated, however the stock must be acquired to satisfy the allocation. Notifications are being sent.<br/>";
+		# Send notifications
+		
 	} # end if
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
@@ -1023,7 +1024,7 @@ sub stock_allocation_notification {
 	$info{'offsite'} = $offsite;
 	$info{'nolocation'} = $nolocation;
 
-	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @$old_skids;
+	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @$old_skids or ( $Paper->allocated() > $Paper->in_stock() );
 
 	foreach my $User ( @recipients ) {
 		my $From = new openprint::User( $session{'user_id'} );
