@@ -746,7 +746,10 @@ table.List td a {
     text-decoration: none;
 }
 table.List tr.totals {
-    border-top: 1px solid #07759f;
+	border-top:1px solid #a5cddd;
+}
+table.List tr.totals td {
+	text-align: right;
 }
 table.List thead tr th.Price, table.List tr th.Price, table.List tr td.Price {
 	width: 75px;

@@ -95,19 +95,21 @@ sub add_product {
 
 	$order_id = get_unfinished_order( $openprint::log, $openprint::dbh, $openprint::session{_session_id}, $openprint::variable ) if ! $order_id;
 	$order_id = create_order( $openprint::log, $openprint::dbh, $openprint::session{_session_id}, $openprint::variable ) if ! $order_id;
+	my $Order = new openprint::Order( $order_id );
 
 	my $Product;
 	if ( my @Products = openprint::OrderedProduct::find( 'order_id'=>$order_id, 'product_id'=>$product_id ) ) {
 		$Product = shift @Products;
-		$Product->quantity( $Product->quantity() + $quantity );
-		$error .= $Product->save();
+		# The logic here used to be that we would increase the quantity, but now we are thinking that we will reset the quantity.  Since this would really only happen on a reload anyways.  
 	} else {
 		$Product = new openprint::OrderedProduct();
 		$Product->product_id( $product_id );
 		$Product->order_id( $order_id );
-		$Product->quantity( $quantity );
-		$error .= $Product->save();
 	} # end if	
+	$Product->quantity( $quantity );
+	$error .= $Product->save();
+	delete $$Order{'Products'};
+
 	my $Project = $Product->Project();
 	$Project->order_id( $order_id );
 	$Project->quantity1( $Product->quantity() );
@@ -137,6 +139,7 @@ sub add_project_to_order {
 
 	$order_id = get_unfinished_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
 	$order_id = create_order( $log, $dbh, $cookie, $variable ) if ! $order_id;
+	my $Order = new openprint::Order( $order_id );
 
 	# make sure project isn't already in the order.
 	my %sql = (
@@ -198,6 +201,7 @@ sub add_project_to_order {
 
 	add_to_log( $log, $dbh, $order_id, @openprint::session{'company_id','user_id'}, "Add Project $project_index" );
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Add to Order $order_id" );
+	delete $$Order{'Projects'};
 
 	return ( $order_id, $error );
 } # end sub add_project_to_order

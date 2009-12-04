@@ -133,6 +133,9 @@ sub price {
 sub Currency {
 	return $_[0]->Project()->Currency();
 }
+sub currency_id {
+	return $_[0]->Project()->currency_id();
+}
 
 1;
 __END__

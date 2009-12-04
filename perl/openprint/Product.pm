@@ -86,11 +86,6 @@ sub find {
 	return map { new openprint::Product( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub delete {
-	my $self = shift;
-	sql::update( undef, undef, 'Products', ['id=?', $$self{id}], 'deleted', 1 );
-} # end sub delete
-
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $dbh );

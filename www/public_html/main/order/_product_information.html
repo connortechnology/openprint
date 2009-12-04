@@ -1,25 +1,27 @@
-<? eval (
-	if ( $openprint::param{'action'} eq 'delete' ) {
-		my @Products = openprint::OrderedProduct::find('id'=>$openprint::param{'product_id'} );
-		if ( @Products == 1 ) {
-			$Products[0]->delete();
-		} # end if
-	} # end if
-	$$variable{'Order'} = new openprint::Order( $openprint::param{'order_id'} ) if ! $$variable{'Order'};
-	@{$$variable{'PRODUCTS'}} = new openprint::Order( $openprint::param{'order_id'} )->Products() if ! $$variable{'PRODUCTS'};
-) ?>
-<? while ( $$variable{'Product'} = shift @{$$variable{'PRODUCTS'}} ) ?>
-<? eval ( 
-	$$variable{'Project'} = $$variable{'Product'}->Project();
-	$$variable{'ProjectIndex'} = $$variable{'Project'}->id();
-) ?>
-<fieldset>
-	<span style="float: right;">
-		<? echo ( ssi::writeButton( $log, $dbh, 'delete'.$$variable{'Product'}->id(), '', "new Ajax.Updater('Products','_product_information.html', { method:'get', parameters: {product_id:".$$variable{'Product'}->id().",order_id:".$$variable{'Order'}->id().",action:'delete'} } );", '', 'Remove' );) ?>
-	</span>
-	<input type="text" id="ProductQuantity<? echo ( $$variable{'Product'}->id() ) ?>" name="ProductQuantity<? echo ( $$variable{'Product'}->id() ) ?>" value="<? echo ( $$variable{'Product'}->quantity() ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');" />
-<? hecho ( return $$variable{'Product'}->Product()->name();) ?><br class="spacer"/>
-<!--#include virtual="_required_by.html"-->
+<div class="Project">
+<p class="buttons">
+	<? echo ( 
+		my $html;
+		if ( ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) {
+			$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' );
+		} # endif
+		if ( $config{'OrderMode'} ne 'Simple' ) {
+			$html .= ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'Project'}->id(), '', '', "/main/project/view.html?ProjectIndex=$$variable{'Project'}{id}", 'Edit Project' );
+		} # endif
+		return $html;
+	) ?>
+</p>
+<!--#include virtual="_project_header.html"-->
+<? if ( $config{'OrderMode'} ne 'Simple' ) ?>
 <!--#include virtual="_shipping_type_select.html"-->
-</fieldset>
-<? endwhile ( $$variable{'Product'} = shift @{$$variable{'PRODUCTS'}} ) ?>
+<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
+<div class="PrintingFinishing">
+	<h3>Printing &amp; Finishing</h3>
+	<ul>
+		<li class="SubTotal">
+			<label>Cost:</label>
+			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Product'}->price() ) ); ) ?>
+		</li>
+	</ul>
+</div>
+</div><!--PROJECT-->

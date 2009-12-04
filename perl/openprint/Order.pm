@@ -369,14 +369,17 @@ sub Company {
 
 sub Projects {
 	my $self = shift;
+	return @{$$self{'Projects'}} if $$self{'Projects'};
 	return () if ! $$self{'id'};
-	return map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
-}
+	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?}, $$self{'id'} );
+	return @{$$self{'Projects'}};
+} # end sub Projects
 
 sub Products {
 	my $self = shift;
 	return () if ! $$self{'id'};
-	return openprint::OrderedProduct::find( 'order_id'=>$$self{id} );
+	@{$$self{'Products'}} = openprint::OrderedProduct::find( 'order_id'=>$$self{id} );
+	return @{$$self{'Products'}};
 } # end sub Products
 
 sub name {
@@ -388,25 +391,6 @@ sub balance {
 	my $self = shift;
 	return 1*($self->total() - $$self{'paid'});
 } # end sub balance
-
-sub sub_total {
-	my $self = shift;
-	my $subtotal = 0;
-	foreach my $Project ($self->Projects() ) {
-		# This is really neat actually.	When the project is ordered, this gives the price stored in order_contents, but if the order isn't finalized, then it gives the price stored in the project...
-		if ( $Project->currency_id() != $$self{'currency_id'} ) {
-$openprint::log->debug("sub_total: $$Project{'currency_id'} != $$self{'currency_id'}");
-			my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
-			$subtotal += ( $rate * $Project->ordered_price() );
-		} else {
-			$subtotal += $Project->ordered_price();
-		} # end if
-	} # end foreach
-	foreach my $P ($self->Products() ) {
-		$subtotal += $P->price();
-	} # end foreach
-	return $subtotal;
-} # end sub sub_total
 
 sub Currency {
 	my $self = shift;
@@ -538,17 +522,21 @@ sub subtotal {
 		$$self{'subtotal'} = 0;
 		foreach my $Project ( $self->Projects() ) {
 			my $price = $Project->ordered_price();
+$log->debug("subtotal: ordered price: $price");
 			if ( $Project->currency_id() != $$self{'currency_id'} ) {
 				my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
 				$price *= $rate;
+$log->debug("subtotal: ordered price converted to: $price");
 			} # end if
 			$$self{'subtotal'} += $price;
 		} # end foreach Project
 		foreach my $Product ( $self->Products() ) {
 			my $price = $Product->price();
+$log->debug("subtotal: ordered price: $price");
 			if ( $Product->currency_id() != $$self{'currency_id'} ) {
 				my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
 				$price *= $rate;
+$log->debug("subtotal: ordered price converted to: $price rate($rate) $$self{'currency_id'} != ".$Product->currency_id());
 			} # end if
 			$$self{'subtotal'} += $price;
 		} # end foreach Project

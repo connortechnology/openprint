@@ -47,7 +47,7 @@ return Date::Calc::Month_to_Text($m) . ' ' . $y;
 						my %price = openprint::pricing::get_best_price_object( $log, $dbh, $session{'company_id'}, $Product->id(), $$variable{'Pricelist'}->id(), 'openprint::product_priceset', $qty );
 						if ( $price{'Price'} ) {
 							openprint::Currency::convert( \%price );
-							$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $price{'Price'} ) );
+							$html .= sprintf('<td class="Price"><a href="/main/order/information.html?Product=%d&amp;Quantity=%d">%s</a></td>', $$variable{'Product'}->id(), $qty, openprint::Currency::format( $price{'Price'} ) );
 						} else {
 							$html .= '<td class="Price">Call</td>';
 						} # end if

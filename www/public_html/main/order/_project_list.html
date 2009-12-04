@@ -1,7 +1,5 @@
 <? if ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>
 <? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
-<div class="Project">
 <? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' ); ) ?>
-</div>
 <? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 <? endif ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>

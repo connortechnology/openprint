@@ -68,7 +68,7 @@ function same_as_billing( on, id ) {
 	} // end function
 -->
 </script>
-<div class="Order">
+<div class="Order"><div class="Information">
 	<!--#include virtual="/includes/error_reporting.html"-->
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		<div class="Header">
@@ -126,22 +126,43 @@ if ( $$services{'UPS'} ) {
 		</div><!--Header-->
 		<div id="Contents">
 			<? eval ( 
-				@{$$variable{'PROJECTS'}} = $$variable{'Order'}->Projects();
-				@{$$variable{'PRODUCTS'}} = $$variable{'Order'}->Products();
+				@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
+				@{$$variable{'Products'}} = $$variable{'Order'}->Products();
 			) ?>
-			<? if ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
+			<? if ( @{$$variable{'Projects'}} or @{$$variable{'Products'}} ) ?>
 				<div id="Projects">
-					<? while ( $$variable{'Project'} = shift @{$$variable{'PROJECTS'}}; ) ?>
-					<div class="Project"><!--#include virtual="_project_information.html"--></div>
-					<? endwhile ( $$variable{'Project'} = shift @{$$variable{'PROJECTS'}}; ) ?>
+					<? echo (
+						my $html;
+						foreach my $Project ( @{$$variable{'Projects'}} ) {
+							$$variable{'Project'} = $Project;
+							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' );
+						} # end foreach
+						return $html;
+					) ?>
 				</div>
 				<div id="Products">
-					<div class="Product"><!--#include virtual="_product_information.html"--></div>
+					<? echo (
+						my $html;
+						foreach my $Product ( @{$$variable{'Products'}} ) {
+							$$variable{'Product'} = $Product;
+							$$variable{'Project'} = $$variable{'Product'}->Project();
+							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_product_information.html' );
+						} # end foreach
+						return $html;
+					) ?>
 				</div>
-			<? else ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
+			<? else ( @{$$variable{'Projects'}} or @{$$variable{'Products'}} ) ?>
 				<p>This order appears to be empty.</p>
-			<? endif ( @{$$variable{'PROJECTS'}} or @{$$variable{'PRODUCTS'}} ) ?>
+			<? endif ( @{$$variable{'Projects'}} or @{$$variable{'Products'}} ) ?>
 		</div>
+<div id="Totals">
+	<ul>
+		<li id="SubTotal">
+			<label>Sub Total:</label>
+			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->subtotal() ) ); ) ?>
+		</li>
+	</ul>
+</div>
 		<p class="buttons">
 			<? echo ( 
 				my $html;
@@ -164,4 +185,4 @@ if ( $$services{'UPS'} ) {
 		<input type="hidden" name="OrderID" value="<?OrderID?>"/>
 		<input type="hidden" name="btnFunction" value="Continue"/>
 	</form>
-</div><!--class=Order-->
+</div><!--Information--></div><!--class=Order-->
