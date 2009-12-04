@@ -176,3 +176,48 @@ div#Login:after {
 	padding: 0px;
 	height: 180px;
 }
+.Specials {
+}
+.Specials div.Category {
+	margin-top: 10px;
+	padding-top: 20px;
+	border-top: 2px solid #a0b5ca;
+}
+.Specials div.Category:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .Specials div.Category {height: 1%;}
+* .Specials div.Category {display:block;}
+/* End hide from IE-mac */
+.Specials div.Category h3 {
+	font-size: 18px;
+}
+.Specials div.Category div.content {
+	width: 23%;
+	float:left;
+}
+
+.Specials div.Category table {
+	width: 75%;
+	float: right;
+	border-right:1px solid #a5cddd;
+}
+.Specials table tr th, .Specials table tr td {
+	font-size: 12px;
+	padding:3px 5px 3px 5px;
+	border-bottom:1px solid #a5cddd;
+	border-left:1px solid #a5cddd;
+}
+.Specials table tr .Spec {
+	text-align: left;
+}
+.Specials table tr th.Price, .Specials table tr td.Price {
+	text-align: right;
+	width: 60px;
+}
