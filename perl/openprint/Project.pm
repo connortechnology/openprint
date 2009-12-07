@@ -950,7 +950,7 @@ sub ServiceType {
 } # end sub ServiceType
 
 sub services {
-	my $self = shift;
+	my ( $self, $name ) = shift;
 	if ( ! exists $$self{'Services'} ) {
 		my %results;
 		my @data = sql::execute( $openprint::log, $openprint::dbh, q{SELECT (SELECT name FROM Service_Types WHERE id=servicetype_id), lngServiceIndex FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
@@ -958,6 +958,12 @@ sub services {
 			push @{$results{$id}}, $index;
 		} # end while
 		$$self{'Services'} = \%results;
+	} # end if
+	if ( $name ) {
+		if ( $$self{'Services'}{$name} ) {
+			return @{$$self{'Services'}{$name}};
+		} # end if
+		return;
 	} # end if
 	return $$self{'Services'};
 } # end sub services

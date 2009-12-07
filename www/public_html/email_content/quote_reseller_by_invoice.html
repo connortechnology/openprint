@@ -1,19 +1,19 @@
 <style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?></style>
 <div id="Quote">
-<br class="spacer"/>
-<!--#include virtual="/includes/quote_header.html"-->
-<!--#include virtual="/includes/quote_prepared_by.html"-->
-<!--#include virtual="/includes/quote_prepared_for.html"-->
-<br class="spacer" style="clear: both;"/>
+	<div class="Header">
+		<!--#include virtual="/includes/quote_header.html"-->
+		<!--#include virtual="/includes/quote_prepared_by.html"-->
+		<!--#include virtual="/includes/quote_prepared_for.html"-->
+	</div>
 <table class="List">
 	<tr> 
 		<th width="60" align="left">ID</th>
 		<th align="left">Description</th>
 		<th width="130" align="right">Weight</th>
-		<th width="50" align="right">MU</th>
-		<th width="90" align="right">Quantity</th>
-		<th width="90" align="right">Price</th>
-		<th width="90" align="right">Final Price</th>
+		<th class="markup">MU</th>
+		<th class="quantity">Quantity</th>
+		<th class="price">Price</th>
+		<th class="newprice">Final Price</th>
 	</tr>
 	<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 	<tr<?rowclass?>> 
@@ -32,31 +32,31 @@ return $html;
 				<tr>
 					<td width="130" align="right">
 <? echo (
-my $Project = new openprint::Project( $$variable{'project_index'} );
-my %services = $Project->services();
-my $weight;
+	my $Project = new openprint::Project( $$variable{'project_index'} );
+	my $services = $Project->services();
+	my $weight;
 
-if ( $services{'BulkSkids'} ) {
-my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
-$weight = $$specs{'totalWeight'.$$variable{qty_index}};
-} elsif ( $services{'PlainCartons'} ) {
-my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
-$weight = $$specs{'totalWeight'.$$variable{qty_index}};
-} else {
-$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{'qty'};
-} # end if
-my $g = Math::Units::convert( $weight, 'lbs','g');
-if ( $g > 1000 ) {
-	return sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
-} else {
-	return sprintf( '%.0flbs (%.0fg)', $weight, $g );
-} # end if
+	if ( $$services{'BulkSkids'} ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
+		$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+	} elsif ( $$services{'PlainCartons'} ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
+		$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+	} else {
+		$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{'qty'};
+	} # end if
+	my $g = Math::Units::convert( $weight, 'lbs','g');
+	if ( $g > 1000 ) {
+		return sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
+	} else {
+		return sprintf( '%.0flbs (%.0fg)', $weight, $g );
+	} # end if
 ) ?></td>
 
-					<td width="50" align="right"><?markup?>%</td>
-					<td width="90" align="right"><?qty?></td>
-					<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol() ) ?><?stdprice?></td>
-					<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency->symbol() ) ?><?newprice?></td>
+					<td class="markup"><?markup?>%</td>
+					<td class="quantity"><?qty?></td>
+					<td class="price"><? echo ( openprint::Currency::format( $$variable{'stdprice'} ); ) ?></td>
+					<td class="newprice"><? echo ( openprint::Currency::format( $$variable{'newprice'} ); ) ?></td>
 					</tr>
 				<? endif ( $$variable{'qty'} ) ?>
 				<? endwhile ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>

@@ -12,7 +12,7 @@ use vars qw( $log $dbh %session %config %fields %transforms %defaults );
 require sql;
 require openprint::QuoteLevel;
 
-my $debug = 0;
+my $debug = 1;
 
 
 %fields = (
@@ -28,7 +28,7 @@ my $debug = 0;
 			'price3'			=>	'dblprice3',
 			'template_id'		=>	'template_id',
 			'include_detailed'	=>	'include_detailed',
-			'project_id'		=>	'projectindex',
+			'project_id'		=>	'project_id',
 			'quote_id'			=>	'quote_id',
 );
 
@@ -38,12 +38,12 @@ my $debug = 0;
 
 %defaults = (
 	'id'	=> undef,
-	'markup1'	=> 0,
-	'markup2'	=> 0,
-	'markup3'	=> 0,
-	'price1'	=> 0,
-	'price2'	=> 0,
-	'price3'	=> 0,
+	'markup1'	=> undef,
+	'markup2'	=> undef,
+	'markup3'	=> undef,
+	'price1'	=> undef,
+	'price2'	=> undef,
+	'price3'	=> undef,
 );
 
 sub find {
@@ -53,11 +53,11 @@ sub find {
 	my @values;
 
 	if ( $params{'quote_id'} ) {
-		$sql .= ' AND quoteindex=?';
+		$sql .= ' AND quote_id=?';
 		push @values, $params{'quote_id'};
 	} # end if
 	if ( $params{'project_id'} ) {
-		$sql .= ' AND projectindex=?';
+		$sql .= ' AND project_id=?';
 		push @values, $params{'project_id'};
 	} # end if
 
@@ -158,6 +158,11 @@ sub price {
 	my ( $self, $qty_index, $new_value ) = @_;
 	if ( defined $new_value ) {
 		$$self{'price'.$qty_index} = $new_value;
+	} # end if
+$log->debug("QuotedPrice price$qty_index " . $$self{"price$qty_index"});
+	if ( ! (1*$$self{'price'.$qty_index}) ) {
+		$$self{'price'.$qty_index} = sprintf('%.2f', $self->Project()->price($qty_index) * ( 1 + $$self{'markup'}/100 ) );
+$log->debug("QuotedPrice price$qty_index " . $self->Project()->price($qty_index) );
 	} # end if
 	return $$self{'price'.$qty_index};
 } # end sub total

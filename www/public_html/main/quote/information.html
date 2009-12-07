@@ -162,7 +162,7 @@ if ( $config{'Country'} eq 'US' ) {
 			<div class="content"><ul>
 			<li> 
 				<label><? echo ( sets::isin( 'ForEmail', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>E-mail:</label>
-				<input type="text" name="ForEmail" value="<?ForEmail?>" />
+				<input type="text" id="ForEmail" name="ForEmail" value="<?ForEmail?>" />
 			</li>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<li> 
@@ -227,9 +227,9 @@ if ( $config{'Country'} eq 'US' ) {
 			<li> 
 				<label>&nbsp;<span id="ForCountry_state">
 <? echo (
-if ( $config{'Country'} eq 'US' ) {
+if ( $$variable{'ForCountry'} eq 'US' ) {
 	return 'State';
-} elsif ( $config{'Country'} eq 'CA' ) {
+} elsif ( $$variable{'ForCountry'} eq 'CA' ) {
 	return 'Province';
 } else {
 	return 'State/Province';
@@ -247,9 +247,9 @@ if ( $config{'Country'} eq 'US' ) {
 			<li> 
 				<label>&nbsp;<span id="ForCountry_postal">
 <? echo (
-if ( $config{'Country'} eq 'US' ) {
+if ( $$variable{'ForCountry'} eq 'US' ) {
 	return 'Zip Code';
-} elsif ( $config{'Country'} eq 'CA' ) {
+} elsif ( $$variable{'ForCountry'} eq 'CA' ) {
 	return 'Postal Code';
 } else {
 	return 'Zip/Postal Code';
@@ -259,16 +259,11 @@ if ( $config{'Country'} eq 'US' ) {
 			</li>
 			<li> 
 				<label>&nbsp;Phone:</label>
-				<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" size="15" style="width:auto;"/> ext:
-				<input type="text" id="ForExtension" name="ForExtension" value="<?ForExtension?>" size="4" style="width: auto;"/>
+				<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" />
 			</li>
 			<li> 
 				<label>&nbsp;Fax:</label>
 				<input type="text" id="ForFax" name="ForFax" value="<?ForFax?>" />
-			</li>
-			<li> 
-				<label>*E-mail:</label>
-				<input type="text" id="ForEmail" name="ForEmail" value="<?ForEmail?>" />
 			</li>
 			</ul></div>
 		</fieldset></div>
@@ -288,9 +283,12 @@ if ( $config{'Country'} eq 'US' ) {
 				<th width="100" align="right">Changes</th>
 			</tr>
 			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
-			<? eval ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
+			<? eval ( 
+				@$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; 
+				$$variable{'Project'} = new openprint::Project( $$variable{'project_index'} );
+			) ?>
 			<tr<?rowclass?>> 
-				<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?>&nbsp;</a></td>
+				<td rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><span class="reference"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?></span>&nbsp;<? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 				<td align="center"> 
 					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="5" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
 				</td>
@@ -307,7 +305,6 @@ if ( $config{'Country'} eq 'US' ) {
 			<? while ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
 			<? if ( $$variable{'qty'} ) ?>
 			<tr<?rowclass?>> 
-				<td>&nbsp;</td>
 				<td align="center"> 
 					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6"  value="<?markup?>" onkeyup="calc_from_markup(f1, this);"/>
 				</td>

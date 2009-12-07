@@ -1,6 +1,11 @@
 <div id="ProjectView">
 <!--#include virtual="/includes/project_header.html" -->
 <div class="ProjectServices">
-<? echo ( ssi::include( $config{'SkinPath'}.'/main/project/view_'.$$variable{'QuotedProject'}->Template()->name().'.html', $variable ); ) ?>
+<? echo ( 
+	if ( $$variable{'QuotedProject'}->template_id() ) {
+		return ssi::include( $config{'SkinPath'}.'/main/project/view_'.$$variable{'QuotedProject'}->Template()->name().'.html', $variable );
+	} # end if
+	return '';
+) ?>
 </div>
 </div>

@@ -206,7 +206,7 @@ sub delete {
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_By WHERE quote_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM tbl_Quote_Users_For WHERE quote_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Quote_Log WHERE quote_id=?', $$self{'id'} );
-	sql::execute( undef, undef, 'DELETE FROM tbl_Quotes WHERE Index=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Quotes WHERE id=?', $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
 	openprint::logs::insertLogRecord('11', "Quote Index: " . $$self{'id'},);
 } # end sub delete
@@ -254,7 +254,7 @@ sub Quoted_Projects {
 sub Projects {
 	my $self = shift;
 	if ( ! exists $$self{'Projects'} ) {
-	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT ProjectIndex FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
+	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT project_id FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
 	} # end if
 	return @{$$self{'Projects'}};
 } # end sub projects
@@ -367,7 +367,6 @@ sub send {
 	foreach my $Project ($self->Quoted_Projects()) {
 		next if ! $Project->include_detailed();
 		my %variable;
-		#openprint::project::view( $log, $dbh, \%variable, $Project->id() );
 		if ( $Project->template_id() ) {
 			$variable{'Quote'} = $self;
 			$variable{'Project'} = $Project->Project();

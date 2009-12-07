@@ -15,6 +15,16 @@ function FoldType_onchange( select ) {
 function calc( formName, force ) {
 	var form = getFormObj(formName);
 
+	if ( form.txtPrice1 ) {
+		form.txtPrice1.value = '';
+	} // end if
+	if ( form.ProductionPrice1 ) {
+		form.ProductionPrice1.value = '';
+	} // end if
+	if ( form.ShippingPrice1 ) {
+		form.ShippingPrice1.value = '';
+	} // end if
+
 	if ( form.HoleDrilling && ( get_rdb_value( form.HoleDrilling ) == 'Y' ) ) {
 		if ( form.txtHoleQty.value == '' ) {
 			form.txtHoleQty.value = '1';

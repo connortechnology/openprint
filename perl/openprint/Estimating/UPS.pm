@@ -350,13 +350,16 @@ sub summary {
 	if ( $qty_index ) {
 		return sprintf( qq{%d items in %d package%s\nWeighing %.2flbs}, @$specs{'txtQuantity'.$qty_index,'txtPackageQuantity'.$qty_index},( $$specs{'txtPackageQuantity'.$qty_index}==1?'' : 's'), $$specs{'txtTotalWeight'.$qty_index} );
 	} else {
-		return join("\n", 
-			join(',', ups::get_service_name($$specs{'ddmServiceType'}),ups::get_pickup_name($$specs{'ddmPickupType'}) ),
-			join(',', $$specs{'ToCompanyName'} ) ,
-			join(',', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
-			@$specs{'ToCity','ToStateProvince','ToCountry'},
-			@$specs{'ToPostalCode'} ),
-			);
+		my $html;
+		$html .= join(' ', ups::get_service_name($$specs{'ddmServiceType'}),ups::get_pickup_name($$specs{'ddmPickupType'}) ) . "\n";
+		$html .= ', ' . $$specs{'ToCompanyName'} if $$specs{'ToCompanyName'};
+		$html .= ', ' . $$specs{'ToAddress1'} if $$specs{'ToAddress1'};
+		$html .= ', ' . $$specs{'ToAddress2'} if $$specs{'ToAddress2'};
+		$html .= ', ' . $$specs{'ToCity'} if $$specs{'ToCity'};
+		$html .= ', ' . $$specs{'ToStateProvince'} if $$specs{'ToStateProvince'};
+		$html .= ', ' . $countries::countries{$$specs{'ToCountry'}} if $$specs{'ToCountry'};
+		$html .= ', ' . $$specs{'ToPostalCode'} if $$specs{'ToPostalCode'};
+		return $html;
 	} # end if
 } # end sub summary
 

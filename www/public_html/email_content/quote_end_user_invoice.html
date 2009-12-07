@@ -10,8 +10,8 @@
 			<th width="60" align="left">ID</th>
 			<th align="left">Description</th>
 			<th width="130" align="right">Weight</th>
-			<th width="100" align="right">Qty</th>
-			<th width="120" align="right">Price</th>
+			<th class="quantity">Qty</th>
+			<th class="price">Price</th>
 		</tr>
 		<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 		<tr<?rowclass?>> 
@@ -44,8 +44,8 @@
 								return sprintf( '%.0flbs (%.0fg)', $weight, $g );
 							} # end if
 						) ?></td>
-						<td width="100" align="right"><?qty?></td>
-						<td width="120" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol() ) ?><?newprice?></td>
+						<td class="quantity"><?qty?></td>
+						<td class="price"><? echo ( openprint::Currency::format( $$variable{'newprice'} ); ) ?></td>
 					</tr>
 					<? endif ( $$variable{'qty'} ) ?>
 					<? endwhile ( @$variable{'qty_index', 'markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>

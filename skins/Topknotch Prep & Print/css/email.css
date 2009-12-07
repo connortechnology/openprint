@@ -27,39 +27,6 @@ a:link,
 	a:active
 {
 	text-decoration: none;
-color: #800000;
-}
-
-table {
-	width: 100%;
-    border-collapse: collapse;
-    border-spacing: 0;
-    table-layout: fixed;
-    border: none;
-
-}
-
-table.List {
-    border-bottom: 1px solid #800000;
-}
-table.List th {
-    border-bottom: 1px solid #800000;
-    background: transparent;
-    padding-top: 2px;
-    padding-bottom: 2px;
-}
-table.List td {
-    padding-top: 2px;
-    padding-bottom: 2px;
-    vertical-align: top;
-}
-table.List tr.totals {
-    border-top: 1px solid #800000;
-}
-
-
-table.List input.text {
-    width: 100%;
 }
 
 hr {
@@ -80,19 +47,6 @@ img {
     padding: 0px;
 }
 
-fieldset {
-    border-right: none;
-    border-left: none;
-    border-top: 1px solid #800000;
-    border-bottom: none;
-    padding-bottom: 10px;
-}
-fieldset legend {
-    font-weight: bold;
-	color: #800000;
-}
-fieldset label {
-}
 .Currency {
     float: right;
     font-weight: bold;
@@ -104,3 +58,252 @@ fieldset label {
     padding: 0px;
 }
 
+/* --------------------------- BASIC ELEMENTS --------------------------- */
+
+
+p { 
+	padding: 0px;
+	margin: 0px 0px 10px 0px;
+	}
+
+h1 {
+	color:#54585d;
+	font-size: 30px;
+	font-weight: bold;
+	line-height: 30px;
+	letter-spacing: -1px;
+	margin: 0px 0px 10px 0px;
+	padding: 0px;
+	}
+
+h2 {
+	color:#1fb25a;
+	font-size: 20px;
+	font-weight: bold;
+	line-height: 24px;
+	margin: 0px 0px 5px 0px;
+	padding: 0px;
+	}
+
+h3 {
+	color:#606;
+	font-size: 21px;
+	font-weight: bold;
+	line-height: 23px;
+	margin: 0px;
+	padding: 0px;
+	}
+
+h4 {
+	color:#07759f;
+	font-size: 18px;
+	font-weight: bold;
+	line-height: 22px;
+	margin: 0 0 10px 0;
+	padding: 0px;
+	}
+
+h5 {
+	color:#333;
+	font-size: 18px;
+	font-weight: normal;
+	line-height: 22px;
+	margin: 0px 0px 10px 0px;
+	padding: 0px;
+	}
+
+h6 {
+	color: #07759f;
+	font-size: 10px;
+	font-weight: normal;
+	line-height: 12px;
+	margin: 0 0 4px 0;
+	padding: 0px;
+	}
+
+ul { 
+	list-style: none;
+	padding: 0px;
+	margin: 0 0 0 13px;
+	}
+	
+li {
+	margin: 0px;
+	padding: 0px;
+	}
+	
+a {
+outline: 0;
+}
+a:link, a:visited {
+	color:#606;
+	text-decoration: none;
+	}
+
+a:hover, a:active {
+	color:#606;
+	text-decoration: underline;
+	}
+
+thead th {
+	background:#07759f;
+	border-right:1px solid #2d8aad;
+	text-align:left;
+	font-weight:bold;
+	padding:3px 5px 3px 5px;
+	color:#FFF;
+	}
+
+#footer {
+	width: 810px;
+	height: 50px;
+	background: #daf3fc url(/images/bg-footer.jpg) no-repeat top center;
+	margin: 0 auto;
+	padding: 40px 20px 30px 170px;
+	clear:both;
+	text-align:left;
+	font-size:10px;
+	line-height: 12px;
+	font-weight: normal;
+	color: #07759f;
+	}
+	
+#footer a:link, #footer a:visited {
+	text-decoration: none;
+	color: #92278f;
+	}
+
+#footer a:hover, #footer a:link:active {
+	text-decoration: underline;
+	color: #92278f;
+	}
+fieldset {
+	border: none;
+	margin: 0px;
+	padding: 0px;
+}
+fieldset legend {
+	font-size:large;
+	font-weight: bold;
+	padding: 10px 10px 0px 10px;
+	color: #07759f;
+}
+fieldset p {
+    margin: .5em;
+	padding-left: 185px;
+}
+fieldset p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset p {height: 1%;}
+* fieldset p {display:block;}
+/* End hide from IE-mac */
+
+fieldset p label {
+    width: 185px;
+	margin-left: -185px;
+    text-align: right;
+    vertical-align: top;
+	float: left;
+}
+
+fieldset .content {
+	position:relative;
+	padding:10px;
+	margin:0px;
+}
+fieldset .content ul {
+	background:#FFF;
+	border:1px solid #a0b5ca;
+	margin: 0px;
+    overflow:auto;
+}
+fieldset .content ul:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset .content ul {height: 1%;}
+* fieldset .content ul {display:block;}
+/* End hide from IE-mac */
+fieldset .content ul li {
+    margin:0px;
+    padding:5px 7px 5px 7px;
+    list-style: none;
+    text-align: right;
+    overflow:auto;
+    font-size:12px;
+    line-height:16px;
+    font-weight:normal;
+    color:#000;
+}
+
+table.List {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+	border: none;
+    border-bottom: 1px solid #07759f;
+	table-layout: fixed;
+}
+table.List table {
+	border: none;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+	vertical-align: top;
+	background: none;
+}
+table.List th {
+    background-color: #07759f;
+    font-weight: bold;
+    color: #fff;
+	font-size: medium;
+	border: none;
+}
+table.List td {
+    padding-top: 1px;
+	border: none;
+	font-size: medium;
+	vertical-align: top;
+}
+
+table.List td a {
+    text-decoration: none;
+}
+table.List tr.totals {
+	border-top:1px solid #a5cddd;
+}
+table.List tr.totals td {
+	text-align: right;
+}
+table.List thead tr th.Price, table.List tr th.Price, table.List tr td.Price {
+	width: 75px;
+	text-align: right;
+}
+
+.colRow {
+	background:#cde3ec;
+}   
+.leftColumn {
+	width: 48%;
+	float: left;
+}
+.rightColumn {
+	width: 48%;
+	float: right;
+}
+
+img {
+	border: none;
+}

@@ -1,17 +1,18 @@
 <style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?></style>
-<!--#include virtual="/includes/quote_header.html"-->
-<!--#include virtual="/includes/quote_prepared_by.html"-->
-<!--#include virtual="/includes/quote_prepared_for.html"-->
-<br class="spacer"/>
+	<div class="Header">
+		<!--#include virtual="/includes/quote_header.html"-->
+		<!--#include virtual="/includes/quote_prepared_by.html"-->
+		<!--#include virtual="/includes/quote_prepared_for.html"-->
+	</div>
 <table class="List">
 	<tr> 
 		<th width="60" align="left">ID</th>
 		<th align="left">Description</th>
 		<th width="130" align="right">Weight</th>
-		<th width="90" align="right">MU</th>
-		<th width="90" align="right">Quantity</th>
-		<th width="90" align="right">Price</th>
-		<th width="90" align="right">Final Price</th>
+		<th class="markup">MU</th>
+		<th class="quantity">Quantity</th>
+		<th class="price">Price</th>
+		<th class="newprice">Final Price</th>
 	</tr>
 <? eval ( $$variable{'rowclass'} = ''; ) ?>
 	<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
@@ -53,10 +54,10 @@ if ( $g > 1000 ) {
 } # end if
 ) ?></td>
 
-					<td width="90" align="right"><?markup?></td>
-					<td width="90" align="right"><?qty?></td>
-					<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol() ) ?><?stdprice?></td>
-					<td width="90" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol() ) ?><?newprice?></td>
+					<td class="markup"><?markup?></td>
+					<td class="quantity"><?qty?></td>
+					<td class="price"><? echo ( openprint::Currency::format( $$variable{'stdprice'} ); ) ?></td>
+					<td class="newprice"><? echo ( openprint::Currency::format( $$variable{'newprice'} ); ) ?></td>
 				</tr>
 				<? endif ( $$variable{'qty'} ) ?>
 				<? endwhile ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>

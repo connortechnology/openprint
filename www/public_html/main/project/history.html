@@ -64,7 +64,7 @@
 				<label>Type:</label>
 				<select id="type_id" name="type_id" onchange="load_projects( this.form );">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(strname)') ], $session{'/main/project/history.html?type_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(name)') ], $session{'/main/project/history.html?type_id'} ); ) ?>
 				</select>
 			</p>
 <? eval (

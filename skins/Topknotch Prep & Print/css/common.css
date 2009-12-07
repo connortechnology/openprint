@@ -133,9 +133,6 @@ a:hover, a:active {
 	text-shadow: 1px 1px #369;
 	text-transform: capitalize;
 	}
-#website-masthead li img {
-	margin-right: 10px;
-}
 	
 #half {
 	width: 385px;
@@ -375,18 +372,26 @@ thead th {
 	text-align: left;
 	background: url(/images/bg-website-masthead.jpg) no-repeat top left;
 	}
+
+#website-masthead A.Logo {
+}
+#website-masthead li img {
+	margin-right: 10px;
+}
 	
 #website-masthead ul {
 	float: right;
 	list-style: none;
 	display: inline;
 	padding: 0px;
+	margin: 0px;
 	margin-top: 70px;
 	}
 
 #website-masthead li {
 	display: inline;
 	margin: 0px;
+	padding:0px;
 	text-align: right;
 	}
 
@@ -395,7 +400,7 @@ thead th {
 	color: #606;
 	font-size: 10px;
 	font-weight: bold;
-	margin: 0px 10px 0px 30px;
+	margin: 0px 10px 0px 20px;
 	}
 
 #website-masthead a:hover, #website-masthead a:link:active {
@@ -615,6 +620,7 @@ p.buttons {
 	padding-left: 0px;
 	margin-top: 10px;
 	text-align: right;
+	width: 100%;
 }
 span.DateSelector {
     float: left;

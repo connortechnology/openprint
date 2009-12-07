@@ -47,6 +47,7 @@
 #steps li.step1on {
 	background: url(/images/bg-step1.jpg) no-repeat 0px -60px;
 	margin-right: 1px;
+	color: #fff;
 }
 #steps li.step1on label {
 	color: #c4e5f1;

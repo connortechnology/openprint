@@ -21,6 +21,7 @@ sub load_simple {
 		$variable{'ProjectType'} = $variable{'Project'}->Type();
 		my $services = $variable{'Project'}->services();
 		if ( $$services{'UPS'} ) {
+			$variable{'UPSShipping'} = 'Y';
 			foreach my $service_id ( @{$$services{'UPS'}} ) {
 				my $service_specs = openprint::service::get_specs_ref( $variable{'Project'}, $service_id );
 				@variable{'ToPostalCode','ToCountry'} = @$service_specs{'ToPostalCode','ToCountry'};

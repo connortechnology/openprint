@@ -50,20 +50,18 @@ div#Quote div.Header div#Information,div#Quote div.Header div#PreparedBy,div#Quo
 }
 div.QuoteInformation {
 	background:#daf3fc;
-	padding: 10px;
 }
 div.QuoteInformation fieldset {
 	padding: 0px;
 	margin: 0px;
-	font-size: 10px;
 }
 	
 div.QuoteInformation fieldset li {
-	padding-left: 105px;
+	padding-left: 115px;
 }
 div.QuoteInformation fieldset li label {
-	width: 105px;
-	margin-left: -105px;
+	width: 110px;
+	margin-left: -115px;
 }
 div.QuoteInformation fieldset li label.radio {
 	width: auto;
@@ -111,6 +109,7 @@ div.QuoteInformation:after {
 * html div.QuoteInformation {height: 1%;}
 * div.QuoteInformation {display:block;}
 /* End hide from IE-mac */
+
 div.QuoteInformation fieldset legend {
     font-size:large;
     font-weight: bold;

@@ -24,8 +24,8 @@
 		<? if ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
 		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
-		<? if ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
 		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+		<? if ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/main\/project\/prin/ ) ?>
 		<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
@@ -50,16 +50,37 @@
 <!-- MASTHEAD //-->
 
 <div id="website-masthead">
-		<a href="/"><img src="/images/topknotch.gif" width="220" height="90" border="0" alt="Topknotch Print &amp; Prep" class="left"  /></a>
+	<a class="Logo" href="/"><img src="/images/topknotch.gif" width="220" height="90" border="0" alt="Topknotch Print &amp; Prep" /></a>
 	<ul>
 		<? if ( $session{'user_id'} ) ?>
 		<li><a href="/account/user_profile.html" title="ACCOUNT"><img src="/images/account-icon.gif" alt=""/>ACCOUNT</a></li>
+		<? if ( sets::isin($session{'user_type'},['A','E'] ) ) ?>
+		<li><a href="/main/project/history.html" title="PROJECTS"><img src="/images/orders-icon.gif" alt=""/>PROJECTS</a></li>
+		<li><a href="/main/quote/history.html" title="QUOTES"><img src="/images/orders-icon.gif" alt=""/>QUOTES</a></li>
+		<? endif ( sets::isin($session{'user_type'},['A','E'] ) ) ?>
 		<li><a href="/main/order/history.html" title="ORDERS"><img src="/images/orders-icon.gif" alt=""/>ORDERS</a></li>
 		<li><a href="/account/logout.html" title="LOG OUT"><img src="/images/logout-icon.gif" alt=""/> LOG OUT</a></li>
 		<? else ( $session{'user_id'} ) ?>
 		<li><a href="/account/registration.html" title="REGISTRATION"><img src="/images/account-icon.gif" alt=""/>REGISTRATION</a></li>
 		<li><a href="/account/login.html" title="LOG IN"><img src="/images/logout-icon.gif" alt=""/>LOG IN</a></li>
 		<? endif ( $session{'user_id'} ) ?>
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+  <div align="center">
+    <input type="hidden" name="cmd" value="_xclick">
+    <input type="hidden" name="business" value="lenka@lingo-star.com">
+    <input type="hidden" name="item_name" value="LingoStar Funds Transfer">
+    <input type="hidden" name="item_number" value="MSD-01">
+    <input type="hidden" name="no_shipping" value="1">
+    <input type="hidden" name="return" value="http://www.lingo-star.com">
+
+    <input type="hidden" name="no_note" value="1">
+    <input type="hidden" name="currency_code" value="CAD">
+    <input type="hidden" name="tax" value="0">
+    <input type="hidden" name="bn" value="EZ Donate">
+    <input type="image" src="modules/mod_ezdonate/donate.gif" border="0" name="submit" alt="language service vancouver paypal image">
+  </div>
+</form>
+
 	</ul>
 </div>
 <!-- NAV //-->
@@ -151,12 +172,19 @@
 	@$variable{'crumb'} = $$variable{'uri'} =~ /(\w*)\.html/;
 	$$variable{'Crumb'} = $$variable{'crumb'};
 	$$variable{'Crumb'} =~ s/_/ /g;
+	if ( $$variable{'uri'} =~ '^\/main\/quote\/' ) {
+		$$variable{'crumb'} = 'quote_'.$$variable{'crumb'};
+		$$variable{'Crumb'} = 'Quote ' . $$variable{'Crumb'};
+	} elsif ( $$variable{'uri'} =~ '^\/main\/order\/' ) {
+		$$variable{'crumb'} = 'order_'.$$variable{'crumb'};
+		$$variable{'Crumb'} = 'Order ' . $$variable{'Crumb'};
+	}
 ) ?>
 <? if ( -f $config{'SkinPath'}.'/images/mastheads/'.$$variable{'crumb'}.'.jpg' ) ?>
     <div id="masthead" style="background: url(/images/mastheads/<?crumb?>.jpg) no-repeat top center;"><?Crumb?></div>
 <? endif ( -f $config{'SkinPath'}.'/images/mastheads/'.$$variable{'crumb'}.'.jpg' ) ?>
     <div id="crumbs"><a href="/index.html">Home</a>&nbsp;&nbsp;&raquo;&nbsp;&nbsp;
-	<a class="crumb" href="/<?crumb?>.html"><?Crumb?></a>
+	<a class="crumb" href="/<?uri?>"><?Crumb?></a>
 	</div>
 	<br class="spacer"/>
 <? endif ( $$variable{'uri'} =~ /\/content\/prin/ or $$variable{'uri'} =~ /\/main\/order/ or $$variable{'uri'} =~ /\/upload/ ) ?>
@@ -178,17 +206,16 @@
 <!-- CLOSE CONTAINERS //-->
 </div>
 </div>
-
+<? if ( $config{'GoogleAnalytics'} ) ?>
 <script type="text/javascript">
-var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	try {
+		var pageTracker = _gat._getTracker("UA-10915494-1");
+		pageTracker._trackPageview();
+	} catch(err) {}
 </script>
-<script type="text/javascript">
-try {
-var pageTracker = _gat._getTracker("UA-10915494-1");
-pageTracker._trackPageview();
-} catch(err) {}
-</script>
+<? endif ( $config{'GoogleAnalytics'} ) ?>
 
 	</body>
 </html>

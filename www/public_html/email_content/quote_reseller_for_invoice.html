@@ -16,18 +16,18 @@
 				<td align="right"><?QUOTE_ID?></td>
 			</tr>
 		</table>
-		<br class="spacer"/>
+	<div class="Header">
 		<!--#include virtual="/includes/quote_header.html" -->
 		<!--#include virtual="/includes/quote_prepared_by.html" -->
 		<!--#include virtual="/includes/quote_prepared_for.html" -->
-		<br class="spacer"/>
+	</div>
 		<table class="List">
 			<tr> 
 				<th width="60" align="left">ID</th>
 				<th align="left">Description</th>
 				<th width="130" align="right">Weight</th>
-				<th width="100" align="right">Qty</th>
-				<th width="120" align="right">Price</th>
+				<th class="quantity">Qty</th>
+				<th class="price">Price</th>
 			</tr>
 			<? eval (
 					$$variable{'rowclass'} = '';
@@ -48,7 +48,7 @@ return $html;
 						<? while ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
 						<? if ( $$variable{'qty'} ) ?>
 						<tr> 
-               <td width="130" align="right">
+							<td width="130" align="right">
 <? echo (
     my $Project = new openprint::Project( $$variable{'project_index'} );
     my %services = $Project->services();
@@ -71,8 +71,8 @@ return $html;
         } # end if
 ) ?></td>
 
-							<td width="100" align="right"><?qty?></td>
-							<td width="120" align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol() ) ?><?newprice?></td>
+							<td class="quantity"><?qty?></td>
+							<td class="price"><? echo ( openprint::Currency::format( $$variable{'newprice'} ); ) ?></td>
 						</tr>
 						<? endif ( $$variable{'qty'} ) ?>
 						<? endwhile ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>

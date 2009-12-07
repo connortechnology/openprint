@@ -53,22 +53,17 @@ sub get_unfinished_quote_contents {
 	my $subtotal2 = 0;
 	my $subtotal3 = 0;
 
-	$_ = 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE quote_id=?';
-	my @projects = sql::execute( $log, $dbh, $_, $quote_id );
-	while ( my ( $project_index, $markup1, $markup2, $markup3 ) = splice @projects, 0, 4 ) {
-		my ( $reference, $qty1, $qty2, $qty3, $price1, $price2, $price3 ) = get_project_info( $log, $dbh, $project_index );
-		my $newprice1 = sprintf( '%.2f',($price1*(1+($markup1/100))));
-		my $newprice2 = sprintf( '%.2f',($price2*(1+($markup2/100))));
-		my $newprice3 = sprintf( '%.2f',($price3*(1+($markup3/100))));
-		$subtotal1 += $newprice1;
-		$subtotal2 += $newprice2;
-		$subtotal3 += $newprice3;
+	my $Quote = new openprint::Quote( $quote_id );
+	foreach my $QP ( $Quote->Quoted_Projects() ) {
+		$subtotal1 += $QP->price1();
+		$subtotal2 += $QP->price2();
+		$subtotal3 += $QP->price3();
 
-		push @{$$variable{'PROJECTS'}}, $project_index, $reference;
-		push @{$$variable{"PROJECT_PRICES_$project_index"}}, 
-			'1', $markup1, $qty1, sprintf( '%.2f',$price1), $newprice1,
-			'2', $markup2, $qty2, sprintf( '%.2f',$price2), $newprice2,
-			'3', $markup3, $qty3, sprintf( '%.2f',$price3), $newprice3;
+		push @{$$variable{'PROJECTS'}}, $QP->project_id(), $QP->Project()->reference();
+		push @{$$variable{"PROJECT_PRICES_".$QP->project_id()}}, 
+			'1', $QP->markup1(), $QP->Project()->quantity1(), sprintf( '%.2f',$QP->Project()->price1()), $QP->price1(),
+			'2', $QP->markup2(), $QP->Project()->quantity2(), sprintf( '%.2f',$QP->Project()->price2()), $QP->price2(),
+			'3', $QP->markup3(), $QP->Project()->quantity3(), sprintf( '%.2f',$QP->Project()->price3()), $QP->price3();
 	} # end while
 	@{$$variable{'TOTALS'}} = ( '1', sprintf( '%.2f',$subtotal1), '2', sprintf( '%.2f',$subtotal2),'3', sprintf( '%.2f',$subtotal3));
 } # end sub get_unfinished_quote_contents
@@ -177,15 +172,6 @@ sub get_finished_quote_contents {
 	} # end foreach QP
 	return @{$$variable{'PROJECTS'}};
 } # end sub get_finished_quote_contents
-
-sub get_project_info {
-	my ( $log, $dbh, $project_index ) = @_;
-
-	my $Project = new openprint::Project( $project_index );
-	my $reference = $Project->reference();
-
-	return ( $reference, $Project->quantity1(), $Project->quantity2(), $Project->quantity3(), $Project->price(1), $Project->price(2), $Project->price(3) );
-} # end sub get_project_info
 
 1;
 

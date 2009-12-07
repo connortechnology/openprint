@@ -18,7 +18,7 @@
 			<label>Creation Date:</label>
 	  		<span title="<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></span>
 		</li>
-	  	<li> label>Last Updated:</label>
+	  	<li><label>Last Updated:</label>
 	  		<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
 		</li>
 		<? if ( $$variable{'Project'}->docket() ) ?>

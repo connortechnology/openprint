@@ -45,11 +45,11 @@ sub make_quote_from_quote {
 # pull info for the quote we are duplicating
 		my $new_quote_id = create_quote();
 		
-		my @data = sql::execute( $log, $dbh, 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE quote_id=?', $quote_id );
+		my @data = sql::execute( $log, $dbh, 'SELECT project_id, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE quote_id=?', $quote_id );
 		while ( @data ) {
 			my ( $project_index, $markup1, $markup2, $markup3 ) = splice @data, 0, 4;
 			add_project_to_quote( $r, $log, $dbh, \%variable, $new_quote_id, $project_index );
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND ProjectIndex=?', $new_quote_id, $project_index],[
+			sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND project_id=?', $new_quote_id, $project_index],[
 					'dblMarkup1', 1*$markup1,
 					'dblMarkup2', 1*$markup2,
 					'dblMarkup3', 1*$markup3,
@@ -101,19 +101,6 @@ sub history_details {
 		} # end if
 	} # end if
 } # end sub history_details
-
-sub get_project_info {
-	my $project_index = shift;
-
-	my $Project = new openprint::Project( $project_index );
-	my $reference = $Project->reference();
-	if ( ! $reference ) {
-		$reference = $Project->summary();
-	} # end if
-
-	return ( $reference, $Project->quantities(), $Project->price1(), $Project->price2(), $Project->price3() );
-} # end sub get_project_info
-
 
 sub add_project_to_quote {
 	my ( $r, $log, $dbh, $variable, $quote_id, $project_id ) = @_;
@@ -195,14 +182,14 @@ sub information {
 	$session{'quote_id'} = $quote_id;
 
 	if ( $param{'remove'} ) {
-		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE quote_id=? AND ProjectIndex=?', @param{'quote_id','remove'} );
+		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE quote_id=? AND project_id=?', @param{'quote_id','remove'} );
 		$Quote->add_log( 'Remove project ' . $param{'remove'} );
 	} # end if
 
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
 	foreach my $key ( keys %param ) {
 		if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND ProjectIndex=?', $quote_id, $2],
+			sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND project_id=?', $quote_id, $2],
 					'dblMarkup'.$1,         1*$r->param($key),
 					);
 		} # end if
@@ -220,6 +207,7 @@ sub information {
 $openprint::log->debug("No for info");
 		foreach my $k ( 'CompanyName','Address1','Address2','City','StateProvince','PostalCode','Country','Phone','Extension','Fax','FirstName','LastName','Title','Email','Salutation' ) {
 			if ( $session{'/main/quote/information.html?For'.$k} ) {
+$log->debug("Session: For$k". $session{'/main/quote/information.html?For'.$k} );
 				$$variable{'For'.$k} = $session{'/main/quote/information.html?For'.$k};
 				$populated = 1;
 			} # end if
@@ -271,18 +259,17 @@ sub submit {
 		$quote_id = create_quote();
 		$session{'quote_id'} = $quote_id;
 	} # end if
-    $$variable{'Quote'} = new openprint::Quote( $quote_id );
+    my $Quote = $$variable{'Quote'} = new openprint::Quote( $quote_id );
 
     if ( $param{'btnFunction'} eq 'Continue' ) {
         if ( $_ = openprint::quote::store_quote_info( $r, $log, $dbh, $quote_id, $variable ) ) {
             return misc::error( $log, $dbh, $variable, 'Error', $_ );
         } # end if
 # store fields from recalculate, we only store the markup, the NewPrices will calculate on the fly
-		foreach my $key ( keys %param ) {
-			if ( $key =~ /^txtMarkup(\d+)_(\d+)$/ ) {
-				sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND ProjectIndex=?', $quote_id, $2],
-						'dblMarkup'.$1,         1*$r->param($key),
-						);
+		foreach my $QP ( $Quote->Quoted_Projects() ) {
+			foreach my $qty_index ( 1 .. 3 ) {
+				$QP->markup( $qty_index, $param{'markup'.$qty_index.'_'.$QP->project_id()} );
+				$QP->save();
 			} # end if
 		} # end foreach
     } # end if

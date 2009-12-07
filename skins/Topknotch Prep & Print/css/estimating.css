@@ -204,3 +204,6 @@ div#instant_price_section .Delivery .ToCountry, div#instant_price_section .Deliv
 .Envelopes .StockWeightSelect {
 	display: none;
 }
+.Prices input, #subtotal input, #ShippingPrice input {
+	text-align: right;
+}

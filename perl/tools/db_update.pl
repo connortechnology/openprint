@@ -2155,6 +2155,7 @@ if ( sets::isin( 'tbl_quotes', \@tables ) ) {
 	$dbh->do('ALTER TABLE tbl_Quote_Users_For rename column quoteindex to quote_id');
 	$dbh->do('ALTER TABLE tbl_Quote_Users_By rename column quoteindex to quote_id');
 	$dbh->do('ALTER TABLE tbl_Quote_Details rename column quoteindex to quote_id');
+	$dbh->do('ALTER TABLE tbl_Quote_Details rename column projectindex to project_id');
 	$dbh->do('DROP SEQUENCE IF EXISTS quotes_id_seq');
 	$dbh->do('CREATE SEQUENCE quotes_id_seq');
 	$dbh->do("SELECT setval('quotes_id_seq', (select MAX(id) FROM Quotes) )");

@@ -1,23 +1,19 @@
-<? if ( $$variable{'QuotedProject'}->include_detailed() ) ?>
-	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		Template:
-		<select name="template_<? echo ( $$variable{'QuotedProject'}->id() ) ?>" onchange="new Ajax.Updater( 'QuotedProjectView_<? echo ( $$variable{'QuotedProject'}->id() ) ?>', '_project_template_view.html', {method: 'get', parameters: { quote_id: <? echo ( $$variable{'Quote'}->id() ) ?>, project_id: <? echo ( $$variable{'QuotedProject'}->id() ) ?>, template_id: this.value } } );">
-		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::QuoteLevel::find( 'order'=>'lower(name)' ) ], $$variable{'QuotedProject'}->template_id() ); ) ?>
-		</select>
-		<br/>
-	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-	<div id="QuotedProjectView_<? echo ( $$variable{'QuotedProject'}->id() ) ?>" class="ProjectTemplate">
+<? echo (
+		return '' if ! $$variable{'QuotedProject'}->include_detailed();
+		return '' if ! sets::isin( $session{'user_type'}, ['A','E'] );
+		my @QuoteLevels = openprint::QuoteLevel::find( 'order'=>'lower(name)' );
+		return '' if ! @QuoteLevels;
+
+		my $html = 'Template:'; 
+		$html .= sprintf('<select name="template_%1$d" onchange="new Ajax.Updater( 'QuotedProjectView_%1$d', '_project_template_view.html', {method: 'get', parameters: { quote_id: %2$d, project_id: %1$d, template_id: this.value } } );">%3$s</select>', 
+			$$variable{'QuotedProject'}->id(), $$variable{'Quote'}->id(), 
+			ssi::make_drop_down( [ map { $_->id(), $_->name() } @QuoteLevels ], $$variable{'QuotedProject'}->template_id() ),
+			); 
+		return $html;
+) ?>
+<div id="QuotedProjectView_<? echo ( $$variable{'QuotedProject'}->id() ) ?>" class="ProjectTemplate">
 	<? echo (
 		$$variable{'Project'} = $$variable{'QuotedProject'}->Project();
 		return ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template_view.html', $variable );
 	) ?>
-	<br class="spacer"/>
-	</div>
-<? else ( $$variable{'QuotedProject'}->include_detailed() ) ?>
-	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-	<div id="QuotedProjectView_<? echo ( $$variable{'QuotedProject'}->id() ) ?>" class="ProjectView">
-	<? eval ( $$variable{'Project'} = $$variable{'QuotedProject'}->Project(); ) ?>
-	<!--#include virtual="/includes/project_header.html" -->
-	</div>
-	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-<? endif ( $$variable{'QuotedProject'}->include_detailed() ) ?>
+</div>
