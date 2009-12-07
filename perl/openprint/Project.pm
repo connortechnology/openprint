@@ -832,11 +832,6 @@ sub quantity3 {
 	return $$self{'quantity3'};
 } # end sub quantity2
 
-sub get {
-	my $self = shift;
-	return @$self{@_};
-} # end sub get
-
 sub copy {
 	my $self = shift;
 	my $new = new openprint::Project();

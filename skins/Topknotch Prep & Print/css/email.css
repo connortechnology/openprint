@@ -247,6 +247,12 @@ fieldset .content ul li {
     font-weight:normal;
     color:#000;
 }
+div.Header fieldset ul li label {
+    font-weight: bold;
+    float: left;
+    text-align: left;
+	text-transform: uppercase;
+}
 
 table.List {
     width: 100%;

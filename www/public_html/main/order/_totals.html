@@ -2,47 +2,47 @@
 	<ul>
 		<li id="SubTotal">
 			<label>Sub Total:</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->subtotal() ) ); ) ?>
+			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->subtotal() ) ); ) ?>
 		</li>
 		<? if ( $$variable{'Order'}->federal_tax() ne '' ) ?>
 		<li id="FederalTax">
 			<label><? echo ( $$variable{'Order'}->country() eq 'CA' ? 'GST': 'Federal Tax' ) ?>:</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->federal_tax() ) ); ) ?>
+			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->federal_tax() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->federal_tax() ne '' ) ?>
 		<? if ( $$variable{'Order'}->state_tax() ne '' ) ?>
 		<li id="StateTax">
 			<label><? echo ( $$variable{'Order'}->country() eq 'CA' ? 'PST': 'State Tax' ) ?>:</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->state_tax() ) ); ) ?>
+			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->state_tax() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->state_tax() ne '' ) ?>
 		<? if ( $$variable{'Order'}->harmonized_tax() ne '' ) ?>
 		<li id="HarmonizedTax">
 			<label>Harmonized Tax:</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->harmonized_tax() ) ); ) ?>
+			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->harmonized_tax() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->harmonized_tax() ne '' ) ?>
 		<? if ( $$variable{'Order'}->total() ) ?>
 		<li id="Total">
 			<label>Total:</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->total() ) ); ) ?>
+			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->total() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->total() ) ?>
 		<? if ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
 		<li>
 			<label>Amount Paid:</label>
-			<?CurrencySymbol?><?AmountPaid?>
+            <? echo ( $$variable{'Currency'}->format( $$variable{'AmountPaid'} ); ) ?>
 		</li>
         <? if ( $$variable{'DepositDue'} ) ?>
         <li>
             <label>Deposit Due:</label>
-            <?CurrencySymbol?><?DepositDue?>
+            <? echo ( $$variable{'Currency'}->format( $$variable{'DepositDue'} ); ) ?>
         </li>
         <? endif ( $$variable{'DepositDue'} ) ?>
         <? if ( $$variable{'AmountOutstanding'} ) ?>
         <li>
             <label>Amount Owing:</label>
-            <?CurrencySymbol?><?AmountOutstanding?>
+            <? echo ( $$variable{'Currency'}->format( $$variable{'AmountOutstanding'} ); ) ?>
         </li>
         <? endif ( $$variable{'AmountOutstanding'} ) ?>
 		<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>

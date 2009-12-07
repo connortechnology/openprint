@@ -1,27 +1,4 @@
-<div class="Project">
-<p class="buttons">
-	<? echo ( 
-		my $html;
-		if ( ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' );
-		} # endif
-		if ( $config{'OrderMode'} ne 'Simple' ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'Project'}->id(), '', '', "/main/project/view.html?ProjectIndex=$$variable{'Project'}{id}", 'Edit Project' );
-		} # endif
-		return $html;
-	) ?>
-</p>
-<!--#include virtual="_project_header.html"-->
+<!--#include virtual="/main/order/_project_header.html"-->
 <? if ( $config{'OrderMode'} ne 'Simple' ) ?>
-<!--#include virtual="_shipping_type_select.html"-->
+<!--#include virtual="/main/order/_shipping_type_select.html"-->
 <? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
-<div class="PrintingFinishing">
-	<h3>Printing &amp; Finishing</h3>
-	<ul>
-		<li class="SubTotal">
-			<label>Cost:</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Product'}->price() ) ); ) ?>
-		</li>
-	</ul>
-</div>
-</div><!--PROJECT-->

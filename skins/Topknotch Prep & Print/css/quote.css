@@ -27,22 +27,6 @@ div#Quote fieldset legend {
 	padding: 10px 10px 0px 10px;
 	color: #07759f;
 }
-div#Quote div.Header fieldset ul {
-	padding: 5px;
-}
-div#Quote div.Header fieldset li {
-    text-align: right;
-	width: auto;
-	padding: 0px;
-}
-div#Quote div.Header fieldset li label {
-    font-weight: bold;
-    margin-right: 10px;
-	margin-left: 0px;
-    float: left;
-    width: auto;
-    text-align: left;
-}
 
 div#Quote div.Header div#Information,div#Quote div.Header div#PreparedBy,div#Quote div.Header div#PreparedFor {
 	float: left;
@@ -56,14 +40,11 @@ div.QuoteInformation fieldset {
 	margin: 0px;
 }
 	
-div.QuoteInformation fieldset li {
-	padding-left: 115px;
+div#Quote div.Header fieldset li {
 }
-div.QuoteInformation fieldset li label {
-	width: 110px;
-	margin-left: -115px;
+div#Quote div.Header fieldset li label {
 }
-div.QuoteInformation fieldset li label.radio {
+div#Quote div.Header fieldset li label.radio {
 	width: auto;
 	margin: 0px;
 	padding: 0px;

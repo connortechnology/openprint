@@ -1,6 +1,7 @@
 <? echo (
 	my $html;
-	foreach my $Product ( $$variable{'Order'}->Products() ) {
+	@{$$variable{'Products'}} = $$variable{'Order'}->Products();
+	foreach my $Product ( @{$$variable{'Products'}} ) {
 		$$variable{'Product'} = $Product;
 		$$variable{'Project'} = $$variable{'Product'}->Project();
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_product_information.html' );

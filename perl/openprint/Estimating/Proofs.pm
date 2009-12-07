@@ -549,6 +549,9 @@ sub summary {
 				} # end if
 			} # end foreach key
 		} # end foreach signature
+		if ( ! %proof_totals ) {
+			return '';
+		} # end if
 		my $summary = '<table class="ProofsSummary">';
 		foreach my $k ( keys %proof_totals ) {
 			next if ! $proof_totals{$k};

@@ -1,36 +1,22 @@
-	div.Order {
+div.Order {
 	width: 100%;
 }
-div.Order fieldset li {
-	padding-left: 130px;
-}
-div.Order fieldset li label {
-	width: 125px;
-	margin-left: -130px;
-}
-div.Order fieldset li label.radio {
-	width: auto;
-	margin: 0px;
-	padding: 0px;
-	float: none;
-}
 
-div.Order fieldset li input {
+div.Order fieldset ul li input {
     width: expression( (this.type=="text" || this.type=="password") ?'94%':'auto');
 	margin: 0px;
 }
-div.Order fieldset li input[type="text"] {
+div.Order fieldset ul li input[type="text"] {
 	width: 95%;
 }
-div.Order fieldset li select {
+div.Order fieldset ul li select {
 	width: 95%;
 }
-div.Order fieldset li textarea {
+div.Order fieldset ul li textarea {
 	width: 95%;
 }
 div.Order div.Header {
-	width: 100%;
-    margin: 5px 0px 5px 0px;
+	margin: 0px;
 	background:#daf3fc;
 }
 div.Order div.Header:after {
@@ -45,33 +31,6 @@ div.Order div.Header:after {
 * div.Order div.Header {display:block;}
 /* End hide from IE-mac */
 
-div.OrderHeader fieldset {
-	border-left: none;
-    border-right: none;
-    border-bottom: none;
-    margin-bottom: 0px;
-    padding: 5px;
-    width: 48%;
-    text-align: left;
-	float: left;
-}
-
-div.OrderHeader fieldset p {
-	text-align: right;
-	padding: 0px;
-	margin: 0px;
-}
-div.OrderHeader fieldset p label {
-	padding: 0px;
-	margin: 0px;
-	float: left;
-	font-weight: bold;
-	text-align: left;
-	width: auto;
-}
-div#main_content_inner {
-	padding: 0px;
-}
 div.OrderHistory fieldset p {
 	padding-left: 90px;
 }
@@ -134,7 +93,7 @@ div.Order fieldset legend {
 div.Order div.Project fieldset legend {
 }
 div.Order div.Header fieldset .content {
-	padding: 5px;
+	padding: 10px;
 }
 div.Order div.Project fieldset .content {
 	padding: 10px;

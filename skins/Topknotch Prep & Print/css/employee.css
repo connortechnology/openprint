@@ -73,31 +73,3 @@ border-right: 1px solid black;
     margin-bottom: 10px;
     }
 
-fieldset p {
-    padding-left: 115px;
-}
-fieldset p label {
-    margin-left: -115px;
-    width: 110px;
-}
-fieldset p.buttons {
-    margin: 0px;
-    padding: 0px;
-    margin-left: 115px;
-    float: left;
-}
-label.radio {
-	margin: 0px;
-	width: auto;
-	float: none;
-} 
-
-ul#menubar li#Account a {
-	width: 65px;
-}
-ul#menubar li#Reports a {
-	width: 75px;
-}
-ul#menubar li#Support a {
-	width: 65px;
-}

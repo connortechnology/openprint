@@ -1,18 +1,5 @@
 .Docket {
 }
-.Project span {
-	width: 31%;
-	margin-right: 10px;
-	margin-bottom: 5px;
-	float: left;
-	p\osition: relative;
-}
-.Project label {
-	font-weight: bold;
-	float: left;
-	p\osition: relative;
-	margin-right: 5px;
-}
 
 div#ProjectView {
 	margin: 5px;
@@ -92,7 +79,7 @@ div.ProjectHeader fieldset#Description {
     float: left;
     width: 50%;
 }
-.InksBack, .Back {
+.InksBack, div.Back {
     float: left;
     width: 50%;
 }

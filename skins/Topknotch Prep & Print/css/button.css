@@ -45,18 +45,8 @@ color: #FFF !important;
 overflow: none;
 	}
 	a.buttonImageOff:hover {
-		font-family: Arial, Helvetica, sans-serif;
 		text-decoration: none;
-		font-size: 15px;
-		font-weight: bold;
-		padding: 0px;
-		margin: 0px 0px 0px 5px;
-display: -moz-inline-box;
-display: inline-block;
-outline: 0;
-cursor: default;
-text-shadow: 1px 1px #333;
-		color: #FFF !important;
+		cursor: default;
 	}
 
 }
@@ -84,15 +74,17 @@ a.buttonImageOff .l {
 	display: inline-block;
 	width: 4px;
 	height: 31px;
-	padding: 0px 0 0 0px;
+	padding: 0px;
+	margin: 0px;
 }
 a.buttonImageOff .r {
 	background: url(/images/btn-right.gif) no-repeat 0 0px;
 	display: -moz-inline-box;
 	display: inline-block;
 	width: 4px;
-	height: 24px;
-	padding: 7px 0 0 0px;
+	height: 31px;
+	padding: 0px;
+	margin: 0px;
 }
 a.buttonImageOff .c {
 	background: url(/images/btn-background.gif) repeat-x 0 0px;
@@ -102,45 +94,44 @@ a.buttonImageOff .c {
 	height: 24px;
 	padding: 7px 10px 0 10px;
 	text-shadow: 1px 1px #333;
+	margin: 0px;
+	width: auto;
 }
 a.buttonImageOff:hover .c {
-	padding: 7px 40px 0 10px;
 }
 
 a.buttonImageOff:hover .l {
 	background: url(/images/btn-left.gif) no-repeat 0 -31px;
-	display: -moz-inline-box;
-	display: inline-block;
-	width: 4px;
-	height: 24px;
-	padding: 7px 0 0 0px;
 }
 a.buttonImageOff:hover .r {
 	background: url(/images/btn-right.gif) no-repeat 0 -31px;
-	display: -moz-inline-box;
-	display: inline-block;
-	height: 24px;
-	width: 4px;
-	padding: 7px 0 0 0px;
 }
 a.buttonImageOff:hover .c {
 	background: url(/images/btn-background.gif) repeat-x 0 -31px;
-	display: -moz-inline-box;
-	display: inline-block;
-	vertical-align: top;
-	height: 24px;
-	padding: 7px 10px 0px 10px;
-	text-shadow: 1px 1px #333;
 }
-a.rightarrow .c, a.rightarrow:hover .c {
+a.rightarrow .c, a.rightarrow:hover .c, a.Complete .c, a.Complete:hover .c {
 	padding: 7px 40px 0px 10px;
 }
-a.rightarrow .r {
+a.rightarrow .r, a.Complete .r {
 	background: url(/images/btn-right-arrow.gif) no-repeat 0 0px;
 	width: 25px;
 }
-a.rightarrow:hover .r {
+a.rightarrow:hover .r, a.Complete:hover .r {
 	background: url(/images/btn-right-arrow.gif) no-repeat 0 -31px;
+	width: 25px;
+}
+a.leftarrow .c, a.leftarrow:hover .c, a.Back .c, a.Back:hover .c {
+	padding: 7px 10px 0px 40px;
+}
+a.Back {
+	float: left;
+}
+a.leftarrow .l, a.Back .l {
+	background: url(/images/btn-left-arrow.gif) no-repeat 0 0px;
+	width: 25px;
+}
+a.leftarrow:hover .l, a.Back:hover .l {
+	background: url(/images/btn-left-arrow.gif) no-repeat 0 -31px;
 	width: 25px;
 }
 

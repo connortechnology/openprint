@@ -617,8 +617,8 @@ thead th {
 	padding: 0px;
 }
 p.buttons {
-	padding-left: 0px;
-	margin-top: 10px;
+	padding: 0px;
+	margin: 10px 0px 0px 0px;
 	text-align: right;
 	width: 100%;
 }
@@ -670,6 +670,15 @@ fieldset p label {
     text-align: right;
     vertical-align: top;
 	float: left;
+	text-transform: capitalize;
+}
+div.Header fieldset ul li {
+}
+div.Header fieldset ul li label {
+    font-weight: bold;
+    float: left;
+    text-align: left;
+	text-transform: uppercase;
 }
 fieldset.filters {
 	width: auto;
@@ -789,4 +798,10 @@ fieldset#LoginLog table.List td {
 
 img {
 	border: none;
+}
+.requiredFieldIndicator {
+	float: none;
+	width: 20px;
+	padding: 0px;
+	margin: 0px 0px 0px 5px;
 }

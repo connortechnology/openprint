@@ -1,13 +1,13 @@
 <table width="100%" border="0">
 	<tr>
-		<td valign="top"><fieldset style="border: none; border-top: 1px solid;"><legend>Quote Information</legend>
+		<td valign="top"><fieldset><legend>Quote Information</legend>
 				<p><label>Quote ID:</label><a href="/main/quote/history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>"><? echo ( $$variable{'Quote'}->id() ) ?></a></p>
 				<p><label>Created:</label><? echo ( Date::Format::time2str($openprint::config{'QuoteDateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></p>
 				<p><label>Status:</label><? echo ( $$variable{'Quote'}->status(); ) ?></p>
 			</fieldset>
 		</td>
 		<td valign="top">
-			<fieldset style="border: none; border-top: 1px solid;"><legend>Prepared By:</legend>
+			<fieldset><legend>Prepared By:</legend>
 		<? if ( $$variable{'Quote'}->by_companyname(); ) ?>
 			<p><label>Company:</label>
 				<? echo ( ssi::htmlize( $$variable{'Quote'}->by_companyname() ).'<br/>' ) ?>
@@ -38,7 +38,7 @@
 			</fieldset>
 		</td>
 		<td valign="top">
-			<fieldset style="border: none; border-top: 1px solid;"><legend>Prepared For:</legend>
+			<fieldset><legend>Prepared For:</legend>
 		<? if ( $$variable{'Quote'}->for_companyname(); ) ?>
 			<p><label>Company:</label>
 				<? echo ( ssi::htmlize( $$variable{'Quote'}->for_companyname() ).'<br/>'; ) ?>

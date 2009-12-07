@@ -2,9 +2,12 @@
 	<style type="text/css">
 		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?>
 	</style>
-	<br class="spacer"/>
+	<div class="Header">
+		<!--#include virtual="/includes/quote_header.html" -->
+		<!--#include virtual="/includes/quote_prepared_by.html" -->
+		<!--#include virtual="/includes/quote_prepared_for.html" -->
+	</div>
 	<!--#include virtual="/email_content/quote_header.html" -->
-	<br class="spacer"/>
 	<table class="List"> 
 		<tr> 
 			<th width="60" align="left">ID</th>

@@ -40,8 +40,6 @@
 		<? if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
 				<label>Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
-				<input type="hidden" name="firstname" value="<?firstname?>"/>
-				<input type="hidden" name="lastname" value="<?lastname?>"/>
 				<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 					<option value="">Please Select</option>
 		<? echo ( 
@@ -49,13 +47,18 @@
 				'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
 				'order'=>'lower(LastName),lower(FirstName)'
 			 );
+			if ( scalar @Users == 1 ) {
+				$param{'ddmUsers'} = $Users[0]->id();
+				$$variable{'firstname'} = $Users[0]->firstname();
+				$$variable{'lastname'} = $Users[0]->lastname();
+			} # end if
 			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ],
-				scalar @Users == 1 ? $Users[0]->id() : (
 					$param{'ddmUsers'} ? $param{'ddmUsers'} : $session{'user_id'} 
-					)
 			);
 		) ?>
 				</select>
+				<input type="hidden" name="firstname" value="<?firstname?>"/>
+				<input type="hidden" name="lastname" value="<?lastname?>"/>
 			</li>
 		<? else ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 

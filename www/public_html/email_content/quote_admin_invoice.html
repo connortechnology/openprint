@@ -1,4 +1,5 @@
 <style type="text/css"><? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/quote.css' ); ) ?></style>
+<div id="Quote">
 	<div class="Header">
 		<!--#include virtual="/includes/quote_header.html"-->
 		<!--#include virtual="/includes/quote_prepared_by.html"-->
@@ -72,3 +73,4 @@ if ( $g > 1000 ) {
 <br/>
 <? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name:</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
 <? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments:</b> <?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>
+</div>

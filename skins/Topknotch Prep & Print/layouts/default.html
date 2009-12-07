@@ -7,7 +7,6 @@
 		<link rel="stylesheet" href="/css/forms.css" type="text/css"/>
 		<link rel="stylesheet" href="/css/main.css" type="text/css"/>
 		<link rel="stylesheet" href="/css/button.css" type="text/css"/>
-		<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
@@ -32,6 +31,7 @@
 		<? endif ( $$variable{'uri'} =~ /\/main\/project\/prin/ ) ?>
 		<? endif ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
+			<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
 			<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
 			<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
 			<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.1"></script>
@@ -64,23 +64,19 @@
 		<li><a href="/account/registration.html" title="REGISTRATION"><img src="/images/account-icon.gif" alt=""/>REGISTRATION</a></li>
 		<li><a href="/account/login.html" title="LOG IN"><img src="/images/logout-icon.gif" alt=""/>LOG IN</a></li>
 		<? endif ( $session{'user_id'} ) ?>
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-  <div align="center">
-    <input type="hidden" name="cmd" value="_xclick">
-    <input type="hidden" name="business" value="lenka@lingo-star.com">
-    <input type="hidden" name="item_name" value="LingoStar Funds Transfer">
-    <input type="hidden" name="item_number" value="MSD-01">
-    <input type="hidden" name="no_shipping" value="1">
-    <input type="hidden" name="return" value="http://www.lingo-star.com">
-
-    <input type="hidden" name="no_note" value="1">
-    <input type="hidden" name="currency_code" value="CAD">
-    <input type="hidden" name="tax" value="0">
-    <input type="hidden" name="bn" value="EZ Donate">
-    <input type="image" src="modules/mod_ezdonate/donate.gif" border="0" name="submit" alt="language service vancouver paypal image">
-  </div>
-</form>
-
+<li><form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+    <input type="hidden" name="cmd" value="_xclick"/>
+    <input type="hidden" name="business" value="amin@topknotch.com"/>
+    <input type="hidden" name="item_name" value="Topknotch Prep &amp; Print Funds Transfer"/>
+    <input type="hidden" name="item_number" value="MSD-01"/>
+    <input type="hidden" name="no_shipping" value="1"/>
+    <input type="hidden" name="return" value="http://www.topknotch.com"/>
+    <input type="hidden" name="no_note" value="1"/>
+    <input type="hidden" name="currency_code" value="CAD"/>
+    <input type="hidden" name="tax" value="0"/>
+    <input type="hidden" name="bn" value="EZ Donate"/>
+    <input type="image" src="/images/donate.gif" name="submit" alt="paypal image"/>
+</form></li>
 	</ul>
 </div>
 <!-- NAV //-->

@@ -1,5 +1,9 @@
-<? if ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>
-<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
-<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' ); ) ?>
-<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
-<? endif ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>
+<? echo (
+	my $html;
+	@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
+	foreach my $Project ( @{$$variable{'Projects'}} ) {
+		$$variable{'Project'} = $Project;
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' );
+	} # end foreach
+	return $html;
+) ?>

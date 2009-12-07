@@ -925,6 +925,7 @@ sub send_completion_notice {
 } # end sub send_completion_notice
 
 # This is a self-contained function that sends the email messages for a specified order to the apropriate people.
+# >Something to note:  the order email is sent in the currency that the order is stored in, not neccessarily the current currency
 sub send_sales_order {
 	my ( $r, $log, $dbh, $order_id ) = @_;
 	my %order;
@@ -932,7 +933,7 @@ sub send_sales_order {
 	my $Order = new openprint::Order( $order_id );
 	$order{'OrderID'} = $order_id;
 	$order{'Order'} = $Order;
-	my $Currency = new openprint::Currency( $openprint::session{'CurrencyIndex'} );
+	my $Currency = $Order->Currency();
 	@order{'CurrencyName','CurrencySymbol'} = ($Currency->name(), $Currency->symbol() );
 	$order{'Currency'} = $Currency;
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
@@ -943,16 +944,12 @@ sub send_sales_order {
 
 	my @sales_order;
 	my $sales_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
-$log->debug("sales order: $sales_order");
 	$order{'ReplacementText'} = ssi::variable_substitution( \$sales_order, \%order );
-$log->debug("Populated: $order{'ReplacementText'}");
-$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
 	@sales_order = ( "Order$order_id.html", $_, 'text/html', 'quoted-printable' );
-$log->debug("template: $_");
 
 	# Add a project summary for each project in the order
 	my @project_summaries = ();
-if ( 0 ) {
 	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_summary.html' );
 	foreach my $Project ($Order->Projects()) {
 		my %variable;
@@ -960,7 +957,6 @@ if ( 0 ) {
 		$variable{'ReplacementText'} = ssi::variable_substitution( \$content, \%variable );
 		push @project_summaries, "ProjectSummary$$Project{id}.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%variable ))), 'text/html', 'quoted-printable';
 	} # for each Project
-}
 
 	my $sales_person_email;
 	if ( $Order->salesrep_id() ) {
@@ -970,7 +966,6 @@ if ( 0 ) {
 	if ( ! $sales_person_email ) {
 		$sales_person_email = $config{'OrderingEmail'};
 	} # end if
-$log->debug("FROM: $sales_person_email");
 
 	my %mail = (
 		SMTP	=> $config{'Mail Server'},
@@ -1116,6 +1111,7 @@ sub history_details {
 	   $Order->save();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Resend') {
 		send_sales_order( $r, $log, $dbh, $order_id );
+		$$variable{'information'} .= "Order emails sent.<br/>";
 	} # end if
 	display_order( $log, $dbh, $variable, $order_id );
 } # end sub history_details

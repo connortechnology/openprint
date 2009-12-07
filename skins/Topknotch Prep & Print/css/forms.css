@@ -330,16 +330,6 @@
 .medium-drop-down {	width: 80px; margin:0px; padding:0px; }
 	
 .field-heading { font-weight: bold;	padding-top:4px; float:left; }
-form label {
-text-transform: uppercase;
-font-weight: bold;	padding-top:4px; float:left;
-}
-label.radio {
-    margin: 0px;
-    width: auto;
-    float: none;
-}
-
 
 .form-title { font-weight:bold; float: left; }
 .blue-bg { background:#c4e5f1; }

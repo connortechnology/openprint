@@ -13,6 +13,8 @@
 		} # end if
 	} # end if
 ) ?>
+<? if ( $config{'OrderMode'} ne 'Simple' ) ?>
 <fieldset><legend>Pick Up</legend>
 	<!--#include virtual="_project_shipping_quantity.html"-->
 </fieldset>
+<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>

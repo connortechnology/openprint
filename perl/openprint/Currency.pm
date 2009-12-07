@@ -167,10 +167,15 @@ sub get_current {
 } # end sub get_currenct
 
 sub format {
-    my ( $price, $precision ) = @_;
+	my ( $Currency, $price, $precision );
+	if ( ref $_[0] eq 'openprint::Currency' ) {
+		( $Currency, $price, $precision ) = @_;
+	} else {
+		( $price, $precision ) = @_;
+		$Currency = get_current();
+	} # end if
 
     $precision = 2 if ! defined $precision;
-    my $Currency = get_current();
 
     my $Formatter = new Number::Format(
             -decimal_digits     =>  $precision,
