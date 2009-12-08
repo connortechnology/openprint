@@ -2488,6 +2488,7 @@ sub calc_price {
 			if ( ( ! $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) or ( $$Imposition{runstyle} eq 'Perfecting' and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) and $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} < 2 )
 			   ) {
 				$price{'Press Washes'} += $$special_colours{$real_colour}{washups};
+$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour Washups: " . $$special_colours{$real_colour}{washups} );
 			} # end if
 #
 #$openprint::log->debug("Special Colour: $real_colour $$inkCoverage{$real_colour}");
@@ -2505,6 +2506,8 @@ sub calc_price {
 			if ( ( ! $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} ) or ( $$Imposition{runstyle} eq 'Perfecting' and sets::isin( $real_colour, $side_one_colours ) and sets::isin( $real_colour, $side_two_colours ) and $$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} < 2 )
 			   ) {
 				$price{'Press Washes'} += 1;
+				$$washed_colours{$real_colour.'-'.$Press->strid().'-'.$qty_index} += 1;
+$openprint::log->debug("Press Washes: $price{'Press Washes'} colour: $real_colour " );
 			} # end if
 		} # end if
 		if ( ! %ink_price ) {
