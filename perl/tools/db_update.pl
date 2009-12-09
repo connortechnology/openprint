@@ -1046,16 +1046,6 @@ if ( ! $data ) {
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
-if ( ! $data ) {
-	my $ac = sql::start_transaction( $dbh );
-	$_ = misc::load_file( $log, q{../openprint/sql/Labels.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	}
-	sql::end_transaction( $dbh, $ac );
-} # end if
-
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM folds LIMIT 1', {} );
 my $ac = sql::start_transaction( $dbh );
 if ( ! exists $$data{'folds'} ) {
@@ -2115,6 +2105,7 @@ if ( ! sets::isin( 'schedule', \@tables ) ) {
 		} # end if
 	} # end if
 } # end if
+
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
 if ( ! $data ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Labels.sql});
@@ -2123,6 +2114,7 @@ if ( ! $data ) {
 	} # end foreach
 } else {
 } # end if
+
 if ( sets::isin('shifts',\@tables) and ! sets::isin( 'equipment_shifts', \@tables ) ) {
 $log->warn( "Tbales @tables");
 	$dbh->do( 'ALTER TABLE Shifts rename to Equipment_Shifts' );
@@ -2180,6 +2172,12 @@ $dbh->commit();
 
 if ( ! sets::isin( 'claims', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Claims.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+if ( ! sets::isin( 'claim_contenttypes', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Claim_ContentTypes.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
@@ -2343,7 +2341,13 @@ $dbh->do('create sequence order_id_seq');
 $dbh->do(q`select setval('order_id_seq', (select max(index) from orders) )`);
 $dbh->do(q`alter table orders alter column index set default nextval('order_id_seq');`);
 }
+sql::update( undef, undef, 'tbl_service_specifications', ['strname=? AND strvalue=?','rdbCardboardBacking','Y'], [ 'strname', 'Backing', 'strvalue', 'Cardboard' ] );
+sql::update( undef, undef, 'tbl_service_specifications', ['strname=? AND strvalue=?','rdbCardboardBacking','N'], [ 'strname', 'Backing', 'strvalue', 'None' ] );
+
+sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
+sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
 	$dbh->commit();
 $dbh->disconnect();
+print "Finished\n";
 1;
 __END__

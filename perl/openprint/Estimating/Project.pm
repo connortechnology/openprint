@@ -513,18 +513,18 @@ sub calc {
 		delete $$services{'Perforating'};
 	} # end if
 
-	if ( $specs{'Numbering'} eq 'Y' ) {
-		push @{$$services{'Numbering'}}, $project->add_service( 'Numbering' ) if ! $$services{'Numbering'};
+	if ( $$specs{'Numbering'} eq 'Y' ) {
+		push @{$$services{'Numbering'}}, $Project->add_service( 'Numbering' ) if ! $$services{'Numbering'};
 	} else {
 		foreach ( @{$$services{'Numbering'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
+			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
 		} # end foreach
 		delete $$services{'Numbering'};
 	} # end if
 
 	if ( $$services{'Padding'} ) {
 		foreach my $service_id ( @{$$services{'Padding'}} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $service_id, 'Backing', $specs{'Backing'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $service_id, 'Backing', $$specs{'Backing'} ) if exists $$specs{'Backing'};
 		} # end foreach
 	} # end if Padding
 

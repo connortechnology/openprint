@@ -61,7 +61,6 @@
 						<!--#include virtual="/includes/paper_dropdowns.html"-->
 						</ul>
 					</div>
-<<<<<<< HEAD:www/public_html/content/prin/prin_broc.html
 					</fieldset>
 				</div>
 				<div class="Finishing"><fieldset>
@@ -81,15 +80,6 @@
 							<!--#include virtual="/includes/shrinkwrapping.html"-->
 							<!--#include virtual="/includes/bundling.html"-->
 							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
-					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
-					<li>
-						<label>Cardboard Backing:</label>
-	<input type="radio" id="rdbCardboardBackingY" name="rdbCardboardBacking" value="Y" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCardboardBacking'} eq 'Y' ); ) ?> />
-	<label class="radio" for="rdbCardboardBackingY">Yes</label>
-	<input type="radio" id="rdbCardboardBackingN" name="rdbCardboardBacking" value="N" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCardboardBacking'} ne 'Y' ); ) ?> />
-	<label class="radio" for="rdbCardboardBackingN">No</label>
-					</li>
-					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 						</ul>
 					</div>
 					</fieldset>

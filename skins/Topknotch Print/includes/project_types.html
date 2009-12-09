@@ -1,11 +1,21 @@
+<? eval ( 
+	require openprint::ProjectTypeCategory;
+	@{$$variable{'ProjectTypeCategories'}} = openprint::ProjectTypeCategory::find(); ) ?>
 <ul id="ProjectTypes">
+	<? while ( $$variable{'ProjectTypeCategory'} = shift @{$$variable{'ProjectTypeCategories'}} ) ?>
+	<li class="Category"><? echo ( $$variable{'ProjectTypeCategory'}->name(); ) ?></li>
+	<? eval ( @{$$variable{'ProjectTypes'}} = $$variable{'ProjectTypeCategory'}->project_types(); ) ?>
 <? echo (
-	my $html = '';
-	foreach my $Category ( openprint::ProjectTypeCategory::find('order'=>'sort,name') ) {
-		foreach my $PT ( openprint::ProjectType::find('category_id'=>$Category->id(), 'order'=>'sorting,name' ) ) {
-$html .= sprintf('<li><a href="/content/%1$s?projecttype_id=%2$d" title="%3$s">%3$s</a></li>', $PT->url(), $PT->id(), ssi::htmlize($PT->description()) );
-		} # end foreach PT
-	} # end foreach Category
-	return $html;
-) ?>
+		my $html;
+		while ( $$variable{'ProjectType'} = shift @{$$variable{'ProjectTypes'}} ) {
+		$html .= sprintf('<li><a href="/content/%4$s?ProjectType=%1$s&amp;ProjectTypeName=%3$s" title="%3$s">%2$s</a></li>',
+			$$variable{'ProjectType'}->strid(), 
+			ssi::htmlize( $$variable{'ProjectType'}->name() ),
+			URI::Escape::uri_escape($$variable{'ProjectType'}->name()), 
+			$$variable{'ProjectType'}->url()
+			);
+		} # end while
+		return $html;
+	) ?>
+	<? endwhile ( $$variable{'ProjectTypeCategory'} = shift @{$$variable{'ProjectTypeCategories'}} ) ?>
 </ul>
