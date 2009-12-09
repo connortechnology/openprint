@@ -273,6 +273,11 @@ sub calc {
 			$$specs{'chkBlackSideTwo'} = 'Black';
 			$$specs{'chkProcessColourSideOne'} = 'ProcessColour';
 			$$specs{'chkProcessColourSideTwo'} = undef;
+		} elsif ( $$specs{'Colours'} eq '1/0' ) {
+			$$specs{'chkBlackSideOne'} = 'Black';
+			$$specs{'chkBlackSideTwo'} = undef;
+			$$specs{'chkProcessColourSideOne'} = undef;
+			$$specs{'chkProcessColourSideTwo'} = undef;
 		} elsif ( $$specs{'Colours'} eq '1/1' ) {
 			$$specs{'chkBlackSideOne'} = 'Black';
 			$$specs{'chkBlackSideTwo'} = 'Black';
@@ -508,6 +513,22 @@ sub calc {
 		delete $$services{'Perforating'};
 	} # end if
 
+	if ( $specs{'Numbering'} eq 'Y' ) {
+		push @{$$services{'Numbering'}}, $project->add_service( 'Numbering' ) if ! $$services{'Numbering'};
+	} else {
+		foreach ( @{$$services{'Numbering'}} ) {
+			openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
+		} # end foreach
+		delete $$services{'Numbering'};
+	} # end if
+
+	if ( $$services{'Padding'} ) {
+		foreach my $service_id ( @{$$services{'Padding'}} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $service_id, 'Backing', $specs{'Backing'} );
+		} # end foreach
+	} # end if Padding
+
+
 # Handle cartons
 	push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' ) if ! $$services{'PlainCartons'};
 	if ( $$specs{'UPSShipping'} eq 'Y' ) {
@@ -626,13 +647,6 @@ $log->warn("Have uncalculated service: ");
 	} # end foreach
 	my @printing_types = keys %printing_types;
 	if ( ! @printing_types ) {
-	} elsif ( @printing_types == 1 ) {
-		if ( $printing_types[0] eq 'Offset' ) {
-			$$specs{'alert'} .= 'This quote is for printing on an ' . join(',', keys %printing_types ) . ' press.<br/>';
-		} else {
-			$$specs{'alert'} .= 'This quote is for printing on a ' . join(',', keys %printing_types ) . ' press.<br/>';
-		} # end if
-	} else {
 		$$specs{'alert'} .= 'This quote is for printing on ' . join(',', keys %printing_types ) . ' presses.<br/>';
 	} # end if
 

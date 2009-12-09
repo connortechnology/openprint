@@ -99,5 +99,6 @@ CREATE TABLE Papers (
 	fsc_code		text,
 	message			text,
 	purpose_id		integer, foreign key (purpose_id) REFERENCES stockpurposes (id),
+	parts			integer,
 	PRIMARY KEY (id)
 );

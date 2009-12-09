@@ -892,7 +892,7 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 #$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 	} # end if
 
-	if ( $Project->Type()->name() eq 'Envelopes' ) {
+	if ( sets::isin( $Project->Type()->strid(), [ 'Envelopes', 'NCR' ] ) ) {
 		if ( $$specs{'rdbSpecificStock'} ne 'Y' ) {
 			if ( $$specs{'ddmStockSheetSize'} ) {
 				@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
@@ -1445,7 +1445,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 			} # end if
 
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
-			if ( $Project->Type()->name() ne 'Envelopes' ) {
+			if ( ! sets::isin( $Project->Type()->strid(), [ 'Envelopes', 'NCR' ] ) ) {
 				$$project{'Grip'} = $Press->specification('Grip');
 				$$project{'Gutter'} = $Press->specification('Gutter');
 				$$project{'Orientation'} = $Press->specification('Orientation');
@@ -3098,6 +3098,7 @@ sub calc_price {
 		$additional_overs = $minimum if $minimum > $additional_overs;
 		$impressions += $additional_overs;
 	} # end if
+	$impressions *= $Paper->parts() if $Paper->parts();
 
 	my $plate_impressions = $impressions;
 	$plate_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Work & Turn','Work & Tumble'] ));
@@ -3393,6 +3394,7 @@ sub calc_price {
 	} # end if
 	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
 	$total_overs = $min_overs if $total_overs < $min_overs;
+	$impressions *= $Paper->parts() if $Paper->parts();
 
 	my $additional_overs=0;
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
@@ -3531,8 +3533,6 @@ sub calc_price {
 	} # end if
 	$price{'Run Total'} = $run_cost;
 	$price{'Comparison Cost'} += $run_cost;
-
-
 	$price{'Comparison Cost'} += $price{'Ink Price'};
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	$price{'Total Cost'} = $run_cost + $setup_cost + $price{'Ink Price'};

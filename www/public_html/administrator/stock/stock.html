@@ -256,12 +256,18 @@
 			</p>
 			<p> 
 				<span class="input">
-					<input type="radio" id="multipartY" name="multipart" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->multipart() ); ) ?> />
+					<input type="radio" id="multipartY" name="multipart" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->multipart() ); ) ?> onclick="$('parts_div').show();" />
 					<label class="radio" for="multipartY">Yes</label>
-					<input type="radio" id="multipartN" name="multipart" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->multipart() ); ) ?> />
+					<input type="radio" id="multipartN" name="multipart" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->multipart() ); ) ?> onclick="$('parts_div').hide();" />
 					<label class="radio" for="multipartN">No</label>
 				</span>
 				Does this stock have multiple parts (eg: forms)?:
+			</p>
+			<p id="parts_div" <? echo ( $$variable{'Paper'}->multipart() ? '' : 'style="display:none;"' ) ?>>
+				<span class="input">
+					<input type="text" id="parts" name="parts" value="<? echo ( $$variable{'Paper'}->parts() ) ?>" />
+				</span>
+				How many parts:
 			</p>
 			<p> 
 				<span class="input">

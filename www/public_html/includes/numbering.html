@@ -1,0 +1,10 @@
+<? if ( 0 ) ?>
+<p>
+	<label>Numbering:</label>
+	<input type="radio" id="NumberingY" name="Numbering" value="Y" onclick="add_div('NumberingDiv');remove_div('OrderButton');" <? echo ( ssi::checked( $$variable{'Numbering'} eq 'Y' ); ) ?> />
+	<label class="radio" for="NumberingY">Yes</label>
+	<input type="radio" id="NumberingN" name="Numbering" value="N" onclick="remove_div('NumberingDiv');remove_div('OrderButton');" <? echo ( ssi::checked( $$variable{'Numbering'} ne 'Y' ); ) ?> />
+	<label class="radio" for="NumberingN">No</label>
+</p>
+<p id="NumberingDiv"></p>
+<? endif ( 0 ) ?>

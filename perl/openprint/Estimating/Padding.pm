@@ -19,6 +19,7 @@ use strict;
 
 require openprint::service;
 require openprint::Material;
+require openprint::Paper;
 
 require sql;
 
@@ -76,9 +77,17 @@ sub calc {
 		$$specs{'alert'} = 'Please select your backing type.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( ( ! $$specs{'PageQuantity'} ) and $$printing_specs{'PageQuantity'} ) {
-		$$specs{'PageQuantity'} = $$printing_specs{'PageQuantity'};
-		@no_output = sets::exclude( ['PageQuantity'], \@no_output );
+	if ( ! $$specs{'PageQuantity'} ) {
+		if ( $$printing_specs{'PageQuantity'} ) {
+			$$specs{'PageQuantity'} = $$printing_specs{'PageQuantity'};
+			@no_output = sets::exclude( ['PageQuantity'], \@no_output );
+		} else {
+			my $Paper = openprint::Paper::load_from_signature( $Project, $printing_specs, 1 );
+			if ( $Paper and $Paper->parts() ) {
+				$$specs{'PageQuantity'} = $Paper->parts();
+				@no_output = sets::union( @no_output, 'PageQuantity' );
+			} # end if
+		} # end if
 	} else {
 		@no_output = sets::union(@no_output, 'PageQuantity');
 	} # end if

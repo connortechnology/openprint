@@ -82,8 +82,8 @@ sub select_paper {
 			( sets::isin( $selected, [ 'Weight' ] ) ? ( 'weight'	=> $weight ) : () ),
 			'supplied'	=>	[undef,$supplied eq 'Y' ? 1 : 0],
 			'type'		=>	\@types,
-			( $flat_width ? ( ($type eq 'Envelopes' ? 'width' : 'width_>=')=>$flat_width ) : () ),
-			( $flat_height ? ( ($type eq 'Envelopes' ? 'height' : 'height_>=')=>$flat_height ) : () ),
+			( $flat_width ? ( (sets::isin($type,[ 'Envelopes','NCR' ]) ? 'width' : 'width_>=')=>$flat_width ) : () ),
+			( $flat_height ? ( (sets::isin($type,[ 'Envelopes','NCR']) ? 'height' : 'height_>=')=>$flat_height ) : () ),
 			);
 	my %names;
 	my %finishes;
@@ -99,7 +99,7 @@ sub select_paper {
 	my @results;
 	push @results, jsrs::encode_array( 'Brand', map {$_, $_ } sort keys %names ) if ! sets::isin( $selected, ['Name','Finish','Colour','Weight'] );
 	push @results, jsrs::encode_array( 'Finish', map { $_, $_ } sort keys %finishes ) if ! sets::isin( $selected, [ 'Finish', 'Colour', 'Weight' ] );
-	push @results, jsrs::encode_array( 'Colour', map { $_, $_ } sort keys %colours ) if ! sets::isin( $selected, [ 'Weight' ] );
+	push @results, jsrs::encode_array( 'Colour', map { $_, $_ } sort keys %colours ) if ( ! $colour ) or ! sets::isin( $selected, [ 'Weight','Colour' ] );
 	if ( $selected ne 'Weight' ) {
 		push @results, jsrs::encode_array( 'Weight', map { $_, $_ } 
 				sort { $a =~ s/^(\d*)/$1/; $b =~ s/^(\d*)/$1/; return $a <=> $b } keys %weights );

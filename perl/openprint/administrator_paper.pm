@@ -179,6 +179,7 @@ sub paper {
 		$Paper->minimum_order( $param{'minimum_order'} );
 		$Paper->full_packages( $param{'full_packages'} );
 		$Paper->message( $param{'message'} );
+		$Paper->parts( $param{'parts'} );
 
 		my %types = map { $_->name(), $_->id() } openprint::ProjectType::find();
 		@{$$Paper{'recommendations'}} = ();

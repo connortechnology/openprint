@@ -38,7 +38,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','inventory_number','full_packages','message','req_die_scoring','in_stock',
+		'minimum_order','inventory_number','full_packages','message','req_die_scoring','in_stock','parts',
 		'material_id',
 		);
 
@@ -211,6 +211,10 @@ sub find {
 	if ( $params{'fsc_code'} ) {
 		$sql .= ' AND fsc_code=?';
 		push @values, $params{'fsc_code'};
+	} # end if
+	if ( $params{'parts'} ) {
+		$sql .= ' AND parts=?';
+		push @values, $params{'parts'};
 	} # end if
 	if ( $params{'type'} ) {
 		if ( ref $params{'type'} eq 'ARRAY' ) {

@@ -29,6 +29,16 @@
 					<fieldset><legend>Colours</legend>
 					<div class="content">
 						<ul>
+					<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+					<li><label>Colours:</label>
+						<select name="Colours" onchange="calc(this.form.name);">
+							<option value="1/0">Black One Side</option>
+							<option value="1/1">Black Both Sides</option>
+							<option value="4/0">4 Colour One Side</option>
+							<option value="4/4">4 Colour Both Sides</option>
+						</select>
+					</li>
+					<? else ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 							<li><label>Colours:</label>
 								<select name="Colours" onchange="calc(this.form.name);">
 									<option value="4/0">4 Colour One Side</option>
@@ -36,10 +46,11 @@
 									<option value="4/4">4 Colour Both Sides</option>
 								</select>
 							</li>
-					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
+					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR'] ) ) ?>
 							<!--#include virtual="/includes/aqueous.html"-->
 							<!--#include virtual="/includes/uvcoating.html"-->
-					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR'] ) ) ?>
 						</ul>
 				</div>
 					</fieldset>
@@ -50,6 +61,7 @@
 						<!--#include virtual="/includes/paper_dropdowns.html"-->
 						</ul>
 					</div>
+<<<<<<< HEAD:www/public_html/content/prin/prin_broc.html
 					</fieldset>
 				</div>
 				<div class="Finishing"><fieldset>
@@ -57,14 +69,27 @@
 					<div class="content">
 						<ul>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 							<!--#include virtual="/includes/drilling.html"-->
 							<!--#include virtual="/includes/scoring.html"-->
+					<? else ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+							<!--#include virtual="/includes/numbering.html"-->
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 							<!--#include virtual="/includes/perfing.html"-->
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
 							<!--#include virtual="/includes/shrinkwrapping.html"-->
 							<!--#include virtual="/includes/bundling.html"-->
 							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+					<li>
+						<label>Cardboard Backing:</label>
+	<input type="radio" id="rdbCardboardBackingY" name="rdbCardboardBacking" value="Y" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCardboardBacking'} eq 'Y' ); ) ?> />
+	<label class="radio" for="rdbCardboardBackingY">Yes</label>
+	<input type="radio" id="rdbCardboardBackingN" name="rdbCardboardBacking" value="N" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCardboardBacking'} ne 'Y' ); ) ?> />
+	<label class="radio" for="rdbCardboardBackingN">No</label>
+					</li>
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 						</ul>
 					</div>
 					</fieldset>
