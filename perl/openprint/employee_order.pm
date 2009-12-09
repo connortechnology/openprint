@@ -62,10 +62,10 @@ sub view {
 		$Order->invoiced_on( 'NOW()' );
 		$Order->save();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Cancel' ) {
-		openprint::order::cancel_order( $log, $dbh, $order_id );
+		openprint::order::cancel_order( $order_id );
     } # end if
 	$$variable{'Order'} = $Order;
-    openprint::order::display_order( $log, $dbh, $variable, $order_id );
+    openprint::order::display_order( $order_id );
 } # end sub view
 
 1;

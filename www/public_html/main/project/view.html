@@ -14,7 +14,7 @@
 	}
 -->
 </script>
-<div id="ProjectView">
+<div class="Project"><div class="View">
 	<? if ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
 	<div class="warning">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <? echo ( $$variable{'Project'}->Company()->name() ) ?>!</div>
 	<? endif ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
@@ -153,7 +153,7 @@
 			<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
 			<? endif ( @{$$variable{'SERVICES'}} ) ?>
 <? if ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) ?>
-			<tr class="totals"> 
+			<tr class="Prices"> 
 				<td align="left">Unit Prices:</td>
 				<? echo ( my $html = '';
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
@@ -217,4 +217,4 @@ name and then make changes. If you have any questions please click on our <a hre
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <? echo ( $config{'ProjectViewDisclaimer'} ) ?>
 <? endif ( $$variable{'ProjectIndex'} eq '' ) ?>
-</div>
+</div><!--View--></div><!--Project-->

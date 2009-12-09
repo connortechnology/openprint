@@ -2338,6 +2338,11 @@ if ( ! sets::isin( 'companies_accountingcontacts', \@tables ) ) {
 		$dbh->do($st);
 	} # end foreach
 } # end if
+if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
+$dbh->do('create sequence order_id_seq');
+$dbh->do(q`select setval('order_id_seq', (select max(index) from orders) )`);
+$dbh->do(q`alter table orders alter column index set default nextval('order_id_seq');`);
+}
 	$dbh->commit();
 $dbh->disconnect();
 1;

@@ -1,7 +1,7 @@
 .Docket {
 }
 
-div#ProjectView {
+div.Project div.View {
 	margin: 5px;
 }
 
@@ -224,3 +224,6 @@ div.ProjectCreateEdit ul:after {
 /* Hides from IE-mac \*/
 * html div.ProjectCreateEdit ul {height: 1%;}
 /* End hide from IE-mac */
+div.Project table.List td {
+	font-size: small;
+}

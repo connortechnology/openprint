@@ -7,13 +7,13 @@ div.Order fieldset ul li input {
 	margin: 0px;
 }
 div.Order fieldset ul li input[type="text"] {
-	width: 95%;
+	width: 55%;
 }
 div.Order fieldset ul li select {
-	width: 95%;
+	width: 55%;
 }
 div.Order fieldset ul li textarea {
-	width: 95%;
+	width: 55%;
 }
 div.Order div.Header {
 	margin: 0px;

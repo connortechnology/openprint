@@ -805,3 +805,8 @@ img {
 	padding: 0px;
 	margin: 0px 0px 0px 5px;
 }
+label.radio, fieldset ul li label.radio, fieldset p label.radio, fieldset .content ul li label.radio {
+	margin: 0px;
+	width: auto;
+	float: none;
+} 

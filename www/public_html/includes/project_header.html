@@ -39,12 +39,13 @@
 				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?>
 				</li>
 	  		<? endif ( $$variable{'Project'}->due_date() ) ?>
-		<? if ( $$variable{'PrepressOperator'} = openprint::project::get_prepress_operator( $log, $dbh, $$variable{'ProjectIndex'} ); ) ?>
+		<? if ( $$variable{'Project'}->Operator()->id() ) ?>
 		<li>
 			<label>Prepress Operator:</label>
+			<? echo ( $$variable{'Project'}->Operator()->name() ) ?>
 			<?PrepressOperator?>
 		</li>
-		<? endif ( $$variable{'PrepressOperator'} = openprint::project::get_prepress_operator( $log, $dbh, $$variable{'ProjectIndex'} ); ) ?>
+		<? endif ( $$variable{'Project'}->Operator()->id() ) ?>
 
 		<? endif ( $$variable{'Project'}->docket() ) ?>
 		<? if ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>

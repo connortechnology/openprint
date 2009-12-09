@@ -18,6 +18,7 @@ require openprint::Tax;
 
 %fields = (
 	'id'						=> 'index',
+	'session_id'				=>	'strsessionid',
 	'company_id'				=> 'companyindex',
 	'user_id'					=> 'userindex',
 	'docket'					=> 'lngdocketnumber',
@@ -118,6 +119,10 @@ sub find {
 			$sql .= q{ AND (strStatus=?)};
 			push @values, $params{'status'};
 		} # end if
+	} # end if
+	if ( $params{'session_id'} ) {
+		$sql .= ' AND strsessionid=?';
+		push @values, $params{'session_id'};
 	} # end if
 	if ( $params{'salesrep_id'} ) {
 		$sql .= ' AND employeeindex=?';
@@ -328,24 +333,30 @@ sub update_status {
 	my @statuses = sql::execute( $log, $dbh, $_, $$self{id} );
 
 	if ( sets::isin( 'Pending Deposit', \@statuses ) and $self->status() ne 'Pending Deposit' ) {
-		return $self->status( 'Pending Deposit' );
+		$self->status( 'Pending Deposit' );
 	} elsif (	sets::isin( 'Waiting For Customer Approval', \@statuses ) ) {
-		return $self->status( 'Waiting For Customer Approval' );
+		$self->status( 'Waiting For Customer Approval' );
 	} elsif ( sets::intersection( @statuses, 'In Prepress','Proofs Out','Approved','Printed') ) {
 		$self->status( 'In Production' );
-		return 'Incomplete';
 	} else { # Projcets are complete
 		# All projects have same shipping type, so if one is waiting, all must be waiting
 		if ( sets::isin( 'Waiting For Pickup', \@statuses ) ) {
-			return $self->status( 'Waiting For Pickup' );
+			$self->status( 'Waiting For Pickup' );
 		} elsif ( sets::isin( 'Picked Up', \@statuses ) ) {
-			return $self->status( 'Picked Up' );
+			$self->status( 'Picked Up' );
 		} elsif ( sets::isin( 'Shipped', \@statuses ) ) {
-			return $self->status( 'Shipped' );
+			$self->status( 'Shipped' );
 		} # end if
-		return $self->status('Complete');
+		$self->status('Complete');
 	} # end if
+   if ( 'Complete' eq $$self{'status'} ) {
+        $self->send_completion_notice( );
 
+        if ( $config{'SendInvoiceOnProjectCompletion'} ne 'N' ) {
+            #send_invoice( $r, $log, $dbh, $order_id );
+        } # end if
+    } # end if
+	return $$self{'status'};
 } # end sub update_status
 
 sub add_log {
@@ -553,6 +564,133 @@ sub total {
 	} # end if
 	return $$self{'total'};
 } # end sub total
+
+sub send_completion_notice {
+    my ( $self ) = @_;
+
+    my %order;
+    $order{'OrderID'} = $self->id();
+    $order{'Order'} = $self;
+
+    my @attachments = ();
+
+    $order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_completion_notice.html' );
+    $order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+    my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+    $_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
+    my @body = ('', $_, 'text/html', 'quoted-printable');
+
+    $_ = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
+    if ( $_ ) {
+        $_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$_, \%order ) ) );
+        push @attachments, "Order$$self{id}.html", $_, 'text/html', 'quoted-printable';
+    } # end if
+    #my %mail = (
+        #SMTP   => $config{'Mail Server'},
+        #FROM   => $config{'AccountingEmail'},
+        ##TO        => $order{'txtEmail'},
+        #TO     => 'keith@point-one.com, iconnor@point-one.com',
+        #SUBJECT => "Order $order_id Is Complete",
+#);
+    #misc::send_email_with_attachment( $log, \%mail, @body, @attachments );
+} # end sub send_completion_notice
+
+# This is a self-contained function that sends the email messages for a specified order to the apropriate people.
+# >Something to note:  the order email is sent in the currency that the order is stored in, not neccessarily the current currency
+sub send_sales_order {
+    my ( $self ) = @_;
+    my %order;
+
+    $order{'OrderID'} = $$self{'id'};
+    $order{'Order'} = $self;
+    my $Currency = $self->Currency();
+    @order{'CurrencyName','CurrencySymbol'} = ($Currency->name(), $Currency->symbol() );
+    $order{'Currency'} = $Currency;
+    my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+
+    $order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_body.html' );
+    $order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+    my @body = ('', MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) ), 'text/html', 'quoted-printable');
+
+    my @sales_order;
+    my $sales_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order.html' );
+    $order{'ReplacementText'} = ssi::variable_substitution( \$sales_order, \%order );
+    $_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
+    @sales_order = ( "Order$$self{id}.html", $_, 'text/html', 'quoted-printable' );
+
+    # Add a project summary for each project in the order
+    my @project_summaries = ();
+    my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/project_summary.html' );
+    foreach my $Project ($self->Projects()) {
+        my %data;
+        openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
+        $variable{'ReplacementText'} = ssi::variable_substitution( \$content, \%data );
+        push @project_summaries, "ProjectSummary$$Project{id}.html", MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ))), 'text/html', 'quoted-printable';
+    } # for each Project
+
+    my $sales_person_email;
+    if ( $self->salesrep_id() ) {
+        my $CSR = new openprint::User( $self->salesrep_id() );
+        $sales_person_email = sprintf( '"%s" <%s>', $CSR->name(), $CSR->email() );
+    }
+    if ( ! $sales_person_email ) {
+        $sales_person_email = $config{'OrderingEmail'};
+    } # end if
+    my %mail = (
+        SMTP    => $config{'Mail Server'},
+        FROM    => $sales_person_email,
+        TO      => sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
+        BCC     =>  'iconnor@penultima.org',
+        SUBJECT => "Order $$self{id}",
+);
+    misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries );
+
+    $order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_admin_body.html' );
+    $order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+    my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+    $_ = MIME::QuotedPrint::encode_qp( Encode::encode( 'utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
+    my @body = ('', $_, 'text/html', 'quoted-printable');
+    my @sales_order;
+    $order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/sales_order_for_admin.html' );
+    $order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
+    $_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%order ) ) );
+    @sales_order = ( "Order$$self{id}.html", $_, 'text/html', 'quoted-printable' );
+    my @project_dockets = ();
+
+    $log->debug("***************** ADDING PROJECT DOCKET *************************");
+    my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_docket_sheet.html' );
+    foreach my $Project ($self->Projects()) {
+        my %data;
+        openprint::print_project::summary( $openprint::r, $log, $dbh, \%data, $Project->id() );
+        if ( $_ ) {
+            $_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$content, \%data ) ) );
+            push @project_dockets, "ProjectDocket$$Project{id}.html", $_, 'text/html', 'quoted-printable';
+        } # end if
+    } # for each
+
+    my @admin_emails = split( ',', $config{'OrderingEmail'} );
+    @admin_emails = map { lc; misc::trim($_) } @admin_emails;
+
+    my @accounting_emails = split( ',', $config{'AccountingEmail'} );
+    @accounting_emails = map { lc; misc::trim($_) } @accounting_emails;
+
+    @admin_emails = sets::union( @admin_emails, @accounting_emails, $sales_person_email );
+
+    if ( @admin_emails ) {
+        my %mail = (
+                SMTP    => $config{'Mail Server'},
+# Only for Amin
+                FROM    => $order{'email'},
+                #FROM   => $config{'OrderingEmail'},
+                TO      => join(',',@admin_emails),
+                BCC     =>  'iconnor@penultima.org',
+                SUBJECT => "Order $$self{id}",
+                );
+        misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries, @project_dockets );
+    } # end if
+
+} # end sub send_sales_order
+
 
 1;
 __END__
