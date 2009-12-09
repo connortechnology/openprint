@@ -19,6 +19,7 @@ use strict;
 
 require openprint::service;
 require openprint::Material;
+require openprint::Paper;
 
 require sql;
 
@@ -67,12 +68,24 @@ sub calc {
 	} # end if
 
 	if ( ! $$specs{'rdbCardboardBacking'} ) {
-		$$specs{'alert'} = 'Please select whether you need cardboard backing.';
-		return $$specs{'Status'} = 'uncalculated';
+		if ( $$printing_specs{'rdbCardboardBacking'} ) {
+			$$specs{'rdbCardboardBacking'} = $$printing_specs{'rdbCardboardBacking'};
+		} else {
+			$$specs{'alert'} = 'Please select whether you need cardboard backing.';
+			return $$specs{'Status'} = 'uncalculated';
+		} # end if
 	} # end if
-	if ( ( ! $$specs{'PageQuantity'} ) and $$printing_specs{'PageQuantity'} ) {
-		$$specs{'PageQuantity'} = $$printing_specs{'PageQuantity'};
-		@no_output = sets::union( @no_output, 'PageQuantity' );
+	if ( ! $$specs{'PageQuantity'} ) {
+		if ( $$printing_specs{'PageQuantity'} ) {
+			$$specs{'PageQuantity'} = $$printing_specs{'PageQuantity'};
+			@no_output = sets::union( @no_output, 'PageQuantity' );
+		} else {
+			my $Paper = openprint::Paper::load_from_signature( $Project, $printing_specs, 1 );
+			if ( $Paper and $Paper->parts() ) {
+				$$specs{'PageQuantity'} = $Paper->parts();
+				@no_output = sets::union( @no_output, 'PageQuantity' );
+			} # end if
+		} # end if
 	} # end if
 	if ( ! $$specs{'PageQuantity'} ) {
 		$$specs{'alert'} = 'Please select how many pages each pad will have.';

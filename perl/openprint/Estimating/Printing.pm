@@ -517,7 +517,7 @@ $openprint::log->debug("Cover size calc: $finished_calliper");
 		$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 	} # end if
 
-	if ( $Project->Type()->name() eq 'Envelopes' ) {
+	if ( sets::isin( $Project->Type()->strid(), [ 'Envelopes', 'NCR' ] ) ) {
 		if ( $$specs{'rdbSpecificStock'} ne 'Y' ) {
 			if ( $$specs{'ddmStockSheetSize'} ) {
 				@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
@@ -1111,9 +1111,11 @@ $openprint::log->debug("No spread layout for you!");
 			} # end fi
 
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
-			if ( $Project->Type()->name() ne 'Envelopes' ) {
+			if ( ! sets::isin( $Project->Type()->strid(), [ 'Envelopes', 'NCR' ] ) ) {
 				$project{'Grip'} = $Press->specification('Grip');
 				$project{'Gutter'} = $Press->specification('Gutter');
+			} else {
+$openprint::log->debug("Not adding GRIP and GUTTER");
 			} # end if
 			$project{'Orientation'} = $Press->specification('Orientation');
 			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
@@ -2182,6 +2184,7 @@ sub calc_price {
 		$additional_overs = $minimum if $minimum > $additional_overs;
 		$impressions += $additional_overs;
 	} # end if
+	$impressions *= $Paper->parts() if $Paper->parts();
 
 	my $plate_impressions = $impressions;
 	$plate_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Work & Turn','Work & Tumble'] ));
@@ -2331,6 +2334,8 @@ sub calc_price {
 	#my $gross_qty = $impressions;
 	my $gross_qty = ceil( $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
 #$openprint::log->error( "1 Stock: $gross_qty: $base_impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) " );
+	$impressions *= $Paper->parts() if $Paper->parts();
+
 	my $additional_overs=0;
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );

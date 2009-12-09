@@ -35,7 +35,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','full_packages','in_stock',
+		'minimum_order','full_packages','in_stock','parts',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -177,6 +177,10 @@ sub find {
 	if ( $params{'fsc_code'} ) {
 		$sql .= ' AND fsc_code=?';
 		push @values, $params{'fsc_code'};
+	} # end if
+	if ( $params{'parts'} ) {
+		$sql .= ' AND parts=?';
+		push @values, $params{'parts'};
 	} # end if
 	if ( $params{'type'} ) {
 		if ( ref $params{'type'} eq 'ARRAY' ) {
@@ -1075,7 +1079,7 @@ sub load_from_signature {
 			'finish'    => $$specs{'ddmStockFinish'},
 			'colour'    => $$specs{'ddmStockColour'},
 			'weight'    => $$specs{'ddmStockWeight'},
-			'project_type_id'=> $Project ? $Project->Type()->id() : undef,
+			'project_type_id'=> ( $Project and $Project->type_id() ) ? $Project->Type()->id() : undef,
 		);
 		if ( $qty_index ) {
 			$params{'width'}	=	$$specs{'hdnSuppliedStockWidth'.$qty_index};

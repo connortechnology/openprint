@@ -4,7 +4,7 @@
 		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this, '<?Signature?>' );">
 			<option value=""> select </option>
 			<? echo ( 
-				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars'] );
+				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars','NCR'] );
 
 				my $html;
 				if ( $$variable{'ProjectTypeName'} eq 'Envelopes' ) {
@@ -28,9 +28,9 @@
 				} # end if
 				return $html;
 			) ?>
-<? if ( $$variable{'ProjectTypeName'} ne 'Envelopes' ) ?>
+<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Envelopes','NCR'] ) ) ?>
 			<option value="Custom">Custom</option>
-<? endif ( $$variable{'ProjectTypeName'} ne 'Envelopes' ) ?>
+<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Envelopes','NCR'] ) ) ?>
 		</select>
 	</span>
 </div>
