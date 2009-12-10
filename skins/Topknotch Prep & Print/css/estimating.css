@@ -185,13 +185,16 @@ div#instant_price_section .Delivery:after {
 * html div#instant_price_section .Delivery{height: 1%;}
 * div#instant_price_section .Delivery {display:block;}
 /* End hide from IE-mac */
+.Delivery fieldset legend {
+	display: none;
+}
 div#instant_price_section .Delivery .content {
 	background:#daf3fc;
 }  
 div#instant_price_section .Delivery h1 {
 	background:#fff;
-	padding-top: 20px;
-	padding-bottom: 10px;
+	padding-top: 10px;
+	padding-bottom: 0px;
 }
 div#instant_price_section .Delivery .ServiceTypes, div#instant_price_section .Delivery .PickupTypes {
 	width: 48%;
