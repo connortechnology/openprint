@@ -101,6 +101,14 @@ div.ProjectHeader fieldset#Description {
 	float: left;
 	width: 100px;
 }
+div.Service span.ThreeColumns {
+	width: 32%;
+	float: left;
+}
+div.Service span.TwoColumns {
+	width: 48%;
+	float: left;
+}
 div.Service fieldset p span.checkOption label, div.Service fieldset p label label {
     clear: none;
     width: auto;

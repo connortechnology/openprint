@@ -1207,14 +1207,15 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 		} else {
 			$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		} # end if
-		next if ! $Project->quantity($qty_index);
 		my $qty = $$specs{"txtQuantity$qty_index"};
+		$qty = $Project->quantity($qty_index) if $qty eq '';
 		next if ! defined $qty;
 		next if ! int $qty;
 
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty: ";
 		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
 		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
+$log->debug("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) $qty");
 
 		$$specs{'totalSpreads'} = 1;
 # Figure out how many spreads we need!
@@ -1367,7 +1368,8 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 		if ( $Project->Type()->name() eq 'ScratchPads' ) {
 			delete $$project{'SpreadLayout'};
 
-			$qty *= $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
+			# I do not understand this, but I assume it has something to do with separate backer
+			$qty *= $$specs{'txtUnspecifiedPageQuantity'.$qty_index} if $$specs{'txtUnspecifiedPageQuantity'.$qty_index};
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 1;
 		} elsif ( $$specs{'txtSignatureType'} ) {
 			if ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) {
@@ -1644,7 +1646,7 @@ $openprint::log->debug('blah'.$Paper->to_string());
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( $debug ) {
+if ( $debug or 1 ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
@@ -1656,7 +1658,9 @@ $i->display();
 		} # end foreach
 	} # end if
 				foreach my $imp ( @imps ) {
-					next if $imp->imposition() > $qty;
+					if ( $imp->imposition() > $qty ) {
+						$openprint::log->debug("Next because $$imp{imposition} > $qty");
+					} # end if
 					my $add = 1;
 					my $str = sprintf('%dx%d+%dx%d-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
 					if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $imp->Paper()->type() eq 'Sheet' )
@@ -1716,7 +1720,7 @@ $i->display();
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			if ( $debug or 1 ) {
-				$openprint::log->warn('Impositions for '. $Press->strid() );
+				$openprint::log->warn('Impositions for '. $Press->strid() . @impositions );
 				foreach my $I ( @impositions ) {
 					$I->display();
 				} # end foreach

@@ -1255,7 +1255,7 @@ sub grain_direction {
 	} # end if
 	if ( ! $$self{'grain_direction'} ) {
 		# Default to second measurement
-		$$self{'grain_direction'} = $$self{'height'};
+		$$self{'grain_direction'} = 'height';
 	} # end if
 	
 	return $$self{'grain_direction'};
@@ -1380,6 +1380,15 @@ sub Supplied {
 	$Supplied->mweight(0); # force recalc
 	return $Supplied;
 } # end sub Supplied
+sub long {
+	my ( $self ) = @_;
+	return $$self{'width'} > $$self{'height'} ? 'width' : 'height';
+}
+
+sub short {
+	my ( $self ) = @_;
+	return $$self{'width'} > $$self{'height'} ? 'height' : 'width';
+}
 
 1;
 __END__

@@ -143,14 +143,14 @@ sub calc {
 			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', 0 );
 			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, 0 );
 			next;
-		} elsif ( lc $ServicePrice{'units'} eq 'each' ) {
-			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $$specs{"txtQuantity$qty_index"};
+		} elsif ( sets::isin( lc $ServicePrice{'units'}, [ 'per pad', 'each' ] ) ) {
+			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
 		} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
-			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $$specs{"txtQuantity$qty_index"} / 1000;
+			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
 		} # end if
 		$price += $ServicePrice{'Total'};
 			
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'} );
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 
 		if ( $$specs{'Backing'} eq 'Cardboard' ) {
 			if ( my @Materials = openprint::Material::find('name'=>'CardboardBacking') ) {
