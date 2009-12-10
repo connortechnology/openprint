@@ -207,3 +207,6 @@ div#instant_price_section .Delivery .ToCountry, div#instant_price_section .Deliv
 .Prices input, #subtotal input, #ShippingPrice input {
 	text-align: right;
 }
+input#rdbPocketSize {
+	width: 70px;
+}

@@ -2346,6 +2346,15 @@ sql::update( undef, undef, 'tbl_service_specifications', ['strname=? AND strvalu
 
 sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
 sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
+
+foreach my $PT ( openprint::ProjectType::find() ) {
+	if ( $PT->name() =~ / / ) {
+		$_ = $PT->name();
+		$_ =~ s/ //g;
+		$PT->name( $_ );
+		$PT->save();
+	} # end if
+} # end foreach
 	$dbh->commit();
 $dbh->disconnect();
 print "Finished\n";

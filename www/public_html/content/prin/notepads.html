@@ -32,7 +32,7 @@
 				<span class="label">Stock Information</span><br/>
 				<!--#include virtual="/includes/paper_dropdowns.html"-->
 			</div>
-<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'Door Hangers', 'ScratchPads' ) ) ?>
+<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
 		<div class="row">
 			<span class="label">Fold Type:</span>
 			<span class="input">
@@ -50,7 +50,7 @@
 				</select>
 			</span>
 		</div>
-<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'Door Hangers', 'ScratchPads' ) ) ?>
+<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, 'BusinessCards', 'DoorHangers', 'ScratchPads' ) ) ?>
 			<!--#include virtual="/includes/drilling.html"-->
 			<!--#include virtual="/includes/scoring.html"-->
 			<!--#include virtual="/includes/perfing.html"-->

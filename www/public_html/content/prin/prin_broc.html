@@ -66,16 +66,18 @@
 					</div>
 					</fieldset>
 				</div>
-				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead'] ) ) ?>
+				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead','Posters','Labels'] ) ) ?>
 				<div class="Finishing"><fieldset>
 					<legend>Finishing</legend>
 					<div class="content">
 						<ul>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
-					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads','RackCards'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['GreetingCards'] ) ) ?>
 							<!--#include virtual="/includes/drilling.html"-->
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['GreetingCards'] ) ) ?>
 							<!--#include virtual="/includes/scoring.html"-->
-					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads'] ) ) ?>
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads','RackCards'] ) ) ?>
 					<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 							<!--#include virtual="/includes/numbering.html"-->
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
@@ -84,15 +86,15 @@
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
 							<!--#include virtual="/includes/perfing.html"-->
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
-							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
+							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
 							<!--#include virtual="/includes/shrinkwrapping.html"-->
 							<!--#include virtual="/includes/bundling.html"-->
-							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
+							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
 						</ul>
 					</div>
 					</fieldset>
 				</div>
-				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead'] ) ) ?>
+				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead','Posters','Labels'] ) ) ?>
 				<div class="Production">
 					<fieldset><legend>Production</legend>
 						<div class="content">

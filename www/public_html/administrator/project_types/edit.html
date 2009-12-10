@@ -5,7 +5,7 @@
 			<select name="ddmProjectType" onchange="form.btnFunction.value='';f1.submit();"/>
 				<option value="">select one</option>
 				<? echo ( 
-						ssi::make_drop_down( [ map { $_->id(), ssi::htmlize($_->name()) } openprint::ProjectType::find('order'=>'lower(name)') ], $param{'ddmProjectType'} );
+						ssi::make_drop_down( [ map { $_->id(), ssi::htmlize($_->description()) } openprint::ProjectType::find('order'=>'lower(name)') ], $param{'ddmProjectType'} );
 						) ?>
 			</select>
 		</p>
@@ -28,7 +28,7 @@
 ); ) ?>
 		</p>
 	</fieldset>
-	<fieldset class="leftColumn"><legend><? echo ( $$variable{'ProjectType'}->id() ? $$variable{'ProjectType'}->name() : 'New Project Type' ) ?></legend>
+	<fieldset class="leftColumn"><legend><? echo ( $$variable{'ProjectType'}->id() ? $$variable{'ProjectType'}->description() : 'New Project Type' ) ?></legend>
 		<p> 
 			<label>Name:</label>
 			<input type="text" id="name" name="name" value="<? echo ( $$variable{'ProjectType'}->name(); ) ?>" /> 

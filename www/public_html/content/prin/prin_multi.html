@@ -38,7 +38,13 @@
 								<!--#include virtual="/includes/dimensions.html"-->
 								<li>
 									<label>Number of pages:</label>
+<? if ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ?>
+<select id="txtTotalPageQuantity" name="txtTotalPageQuantity" onchange="remove_div('OrderButton');calc(this.form.name);">
+<? echo ( ssi::make_drop_down( [ map { $_, $_ . ' pages' } ( 12, 24, 28, 32 ) ], $$variable{'txtTotalPageQuantity'} ); ) ?>
+</select>
+<? else ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ?>
 									<input id="txtTotalPageQuantity" name="txtTotalPageQuantity" value="<?txtTotalPageQuantity?>" type="text" size="4" onkeyup="remove_div('OrderButton');"/>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Calendars' ) ?>
 								</li>
 								</li>
 									<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="remove_div('Cover');remove_div('OrderButton');" <? echo ( ssi::checked( $$variable{'rdbCover'} ne 'Different' ); ) ?> />
@@ -49,8 +55,18 @@
 								<li>
 									<label>Binding Type</label>
 									<select id="rdbTemplateType" name="rdbTemplateType" onchange="remove_div('OrderButton');">
+<? if ( openprint::ServiceType::find('name'=>'SaddleStitching'); ) ?>
 										<option value="SaddleStitching">Saddle Stitching</option>
+<? endif ( openprint::ServiceType::find('name'=>'SaddleStitching'); ) ?>
+<? if ( openprint::ServiceType::find('name'=>'PerfectBound'); ) ?>
 										<option value="PerfectBound">Perfect Bound</option>
+<? endif ( openprint::ServiceType::find('name'=>'PerfectBound'); ) ?>
+<? if ( openprint::ServiceType::find('name'=>'PlasticCoil'); ) ?>
+										<option value="PlasticCoil">Koil Bound</option>
+<? endif ( openprint::ServiceType::find('name'=>'PlasticCoil'); ) ?>
+<? if ( openprint::ServiceType::find('name'=>'DoubleLoopWire'); ) ?>
+										<option value="DoubleLoopWire">Wire-O Bound</option>
+<? endif ( openprint::ServiceType::find('name'=>'DoubleLoopWire'); ) ?>
 									</select>
 								</li>
 							</ul>
@@ -82,6 +98,7 @@
 
 							$$variable{'Signature'} = '1';
 							my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
+							my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/uvcoating.html' );
 							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
 							return variable_substitution( \$html, $variable );
 							) ?>
@@ -126,8 +143,11 @@
 						<fieldset><legend>Finishing</legend>
 						<div class="content">
 							<ul>
-							<!--#include virtual="/includes/shrinkwrapping.html"-->
 							<!--#include virtual="/includes/drilling.html"-->
+							<!--#include virtual="/includes/bundling.html"-->
+<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
+							<!--#include virtual="/includes/shrinkwrapping.html"-->
+<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
 							</ul>
 						</div>
 						</fieldset>

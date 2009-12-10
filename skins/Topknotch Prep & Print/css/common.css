@@ -674,10 +674,16 @@ fieldset p label {
 }
 div.Header fieldset ul li {
 }
-div.Header fieldset ul li label {
+fieldset ul li label {
     font-weight: bold;
     float: left;
     text-align: left;
+	text-transform: uppercase;
+}
+fieldset ul li p label {
+    font-weight: bold;
+    float: none;
+    text-align: right;
 	text-transform: uppercase;
 }
 fieldset.filters {
