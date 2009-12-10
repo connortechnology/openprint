@@ -28,6 +28,10 @@
 	color: #07759f;
 	}
 
+#steps ul li a:hover {
+	text-decoration: none;
+}
+
 #steps li label {
 	width: 100%;
 	float: left;

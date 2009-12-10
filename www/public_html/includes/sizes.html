@@ -23,7 +23,7 @@
 						( $$variable{'FoldType'} ? 
 						  [ sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', $$variable{'ProjectType'}->id(), $$variable{'FoldType'} ) ] :
 						  [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id() ) ] ),
-						join('x', @$variable{'txtFinalWidth','txtFinalHeight'} )
+						join('x', @$variable{'txtFinalWidth','txtFinalHeight'} ) . ( $$variable{'DimensionsDisplay'} eq 'Finished' ? 'Finished' : 'Flat' ),
 						);
 					if ( ! $html ) {
 						$$variable{'Dimensions'} = 'Custom';
