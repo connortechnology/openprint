@@ -15,7 +15,7 @@
 
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 			<div class="shadow_left"><div class="shadow_right">
-				<div class="Questions">
+				<div class="Questions"><div class="<? echo ( $$variable{'ProjectType'}->name() ) ?>">
 					<h3>Instant Pricing</h3>
 
 			<!--#include virtual="_project_name.html"-->
@@ -47,10 +47,13 @@
 								</select>
 							</li>
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
-					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
 							<!--#include virtual="/includes/aqueous.html"-->
+
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
 							<!--#include virtual="/includes/uvcoating.html"-->
-					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR'] ) ) ?>
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
 						</ul>
 				</div>
 					</fieldset>
@@ -63,17 +66,22 @@
 					</div>
 					</fieldset>
 				</div>
+				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead'] ) ) ?>
 				<div class="Finishing"><fieldset>
 					<legend>Finishing</legend>
 					<div class="content">
 						<ul>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
-					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads'] ) ) ?>
 							<!--#include virtual="/includes/drilling.html"-->
 							<!--#include virtual="/includes/scoring.html"-->
-					<? else ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads'] ) ) ?>
+					<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 							<!--#include virtual="/includes/numbering.html"-->
-					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+					<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
+							<!--#include virtual="/includes/padding.html"-->
+					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
 							<!--#include virtual="/includes/perfing.html"-->
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus'] ); ) ?>
@@ -84,6 +92,7 @@
 					</div>
 					</fieldset>
 				</div>
+				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead'] ) ) ?>
 				<div class="Production">
 					<fieldset><legend>Production</legend>
 						<div class="content">
@@ -99,7 +108,7 @@
 				<div id="AlertDiv" style="display:none;"></div>
 		  </div><!--ProjectSpecifications-->
 				<!--#include virtual="/includes/prices.html"-->
-				</div><!--Questions-->
+				</div></div><!--Questions-->
 		  </div></div>
            <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br">
 		  </div></div>

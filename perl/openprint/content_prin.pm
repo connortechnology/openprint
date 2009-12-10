@@ -52,6 +52,11 @@ $log->debug("Country: Session: $session{'Country'}");
 		$variable{$k} = $$printing_specs{$k};
 	} # end foreach
 
+	# So that default services start turned on
+	foreach my $ServiceType ( $variable{'ProjectType'}->required_ServiceTypes() ) {
+		$variable{$ServiceType->name()} = 'Y';
+	} # end foreach ServiceType
+
 } # end sub load_simple
 
 sub prin_broc {

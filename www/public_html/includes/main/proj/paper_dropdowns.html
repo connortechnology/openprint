@@ -106,7 +106,7 @@
 				<option value=""> Please select </option>
 
 				<? echo (
-					 ssi::make_drop_down( [ openprint::paper::get_names( @$variable{'ProjectTypeID',
+					 ssi::make_drop_down( [ openprint::paper::get_names( $$variable{'ProjectType'}->name(), @$variable{
 							 'ddmStockBrand'.$$variable{'Signature'},
 							 'ddmStockFinish'.$$variable{'Signature'},
 							 'ddmStockColour'.$$variable{'Signature'},
@@ -121,7 +121,7 @@
 				<select name="ddmStockFinish<?Signature?>" size="1" onchange="ddmStockFinish_onchange( this, '<?Signature?>' );">
 				<option value=""> Please select </option>
 				<? echo (
-						ssi::make_drop_down( [ openprint::paper::get_finishes( @$variable{'ProjectTypeID',
+						ssi::make_drop_down( [ openprint::paper::get_finishes( $$variable{'ProjectType'}->name(), @$variable{
 								'ddmStockBrand'.$$variable{'Signature'},
 								'ddmStockFinish'.$$variable{'Signature'},
 								'ddmStockColour'.$$variable{'Signature'},
@@ -136,7 +136,7 @@
 				<select name="ddmStockColour<?Signature?>" size="1" onchange="ddmStockColour_onchange( this, '<?Signature?>' );">
 				<option value=""> Please select </option>
 				<? echo (
-						ssi::make_drop_down( [ openprint::paper::get_colours( @$variable{'ProjectTypeID',
+						ssi::make_drop_down( [ openprint::paper::get_colours( $$variable{'ProjectType'}->name(), @$variable{
 								'ddmStockBrand'.$$variable{'Signature'},
 								'ddmStockFinish'.$$variable{'Signature'},
 								'ddmStockColour'.$$variable{'Signature'},
@@ -151,7 +151,7 @@
 				<select name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
 				<option value=""> Please select </option>
 				<? echo (
-						ssi::make_drop_down( [ openprint::paper::get_weights( @$variable{'ProjectTypeID',
+						ssi::make_drop_down( [ openprint::paper::get_weights( $$variable{'ProjectType'}->name(), @$variable{
 								'ddmStockBrand'.$$variable{'Signature'},
 								'ddmStockFinish'.$$variable{'Signature'},
 								'ddmStockColour'.$$variable{'Signature'},
@@ -166,7 +166,7 @@
                 <select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
                     <option value="">Please select one</option>
                     <? echo (
-                        ssi::make_drop_down( [ map { $_,$_ } openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
+                        ssi::make_drop_down( [ map { $_,$_ } openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(), @$variable{
                                 'ddmStockBrand'.$$variable{'Signature'},
                                 'ddmStockFinish'.$$variable{'Signature'},
                                 'ddmStockColour'.$$variable{'Signature'},

@@ -10,7 +10,7 @@
 	var projectType = "<?ProjectTypeID?>";
 </script>
 <!--#include virtual="/main/project/prin/_templates.html"-->
-<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js?version=1.0"></script>
 <script type="text/javascript">
 	function calc() {
@@ -18,125 +18,125 @@
 	}
 </script>
 <script type="text/javascript" src="/javascripts/presentation_folders.js?version=1.0"></script>
-<? else ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+<? else ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <script type="text/javascript">
 	function calc( formName, force ) {
 		calc_print( formName, force );
 	}
 </script>
-<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <div class="Service">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
 		<fieldset><legend><?ProjectTypeName?></legend>
-<? if ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
                 <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
                 <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Envelopes' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 
-<? if ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectType'}->name(),['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels'] ) ) ?>
-<? if ( sets::isin( $$variable{'ProjectTypeID'},['Banners'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectType'}->name(),['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/banner_printing.html"-->
-<? endif ( sets::isin( $$variable{'ProjectTypeID'},['Banners'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
 
-<? if ( $$variable{'ProjectTypeID'} eq 'Door Hangers' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Door Hangers' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Door Hangers' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Brochures' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Door Hangers' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Brochures' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Custom' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Custom' ) ?>
 		<!--#include virtual="/includes/main/proj/dimensions_boxes_only.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Custom' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Flyers' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Custom' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Flyers' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Flyers' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Cards' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Flyers' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Cards' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/cards.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Cards' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Pamphlets/Leaflets' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Cards' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Pamphlets/Leaflets' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Pamphlets/Leaflets' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'NewsLetters' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Pamphlets/Leaflets' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'NewsLetters' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/newsletters.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'NewsLetters' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'BusinessCards' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'NewsLetters' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'BusinessCards' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/business_card_names.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'BusinessCards' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Packaging' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'BusinessCards' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Packaging' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/packaging.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Packaging' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'PressSheetCombination' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Packaging' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'PressSheetCombination' ) ?>
 		<!--#include virtual="/includes/main/proj/press_sheet_combo.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'PressSheetCombination' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'PressSheetCombination' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/presentation_folders.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
 		<!--#include virtual="/includes/main/proj/presentation_folder_printing.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'PresentationFolders' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Letterhead' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Letterhead' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Letterhead' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Scratch/WritingPads' or $$variable{'ProjectType'} eq 'ScratchPads' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Letterhead' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<p id="NotepadPages">
 			<label># of pages per pad:</label>
 			<input type="text" name="PageQuantity" value="<?PageQuantity?>" onkeyup="calc(this.form.name);" />
 		</p>
 		<!--#include virtual="/includes/main/proj/dimensions.html" -->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Scratch/WritingPads' or $$variable{'ProjectType'} eq 'ScratchPads' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>
 
-<? if ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Labels' ) ?>
 	<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 	<!--#include virtual="/includes/main/proj/templates/labels.html" -->
 	<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Labels' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Tags/Tickets' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Labels' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Tags/Tickets' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/tags_tickets.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Tags/Tickets' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Maps' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Tags/Tickets' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Maps' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/maps.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Maps' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Inserts' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Maps' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Inserts' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/inserts.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Inserts' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Forms' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Inserts' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Forms' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/forms.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Forms' ) ?>
-<? if ( $$variable{'ProjectTypeID'} eq 'Covers' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Forms' ) ?>
+<? if ( $$variable{'ProjectType'}->name() eq 'Covers' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/covers.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectTypeID'} eq 'Covers' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() eq 'Covers' ) ?>
 <? if ( ! $$variable{'NoPrinting'} ) ?>
 	<div id="OtherSpecifications">
 		<fieldset><legend>Other Specifications</legend>
@@ -149,9 +149,9 @@
 	<br class="spacer"/>
 	<!--#include virtual="/includes/main/proj/colours_coatings.html"-->
 	<br class="spacer"/>
-<? if ( $$variable{'ProjectTypeID'} ne 'Envelopes' ) ?>
+<? if ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 	<!--#include virtual="/includes/main/proj/bleeds_colourbars.html"-->	
-<? endif ( $$variable{'ProjectTypeID'} ne 'Envelopes' ) ?>
+<? endif ( $$variable{'ProjectType'}->name() ne 'Envelopes' ) ?>
 <? endif ( ! $$variable{'NoPrinting'} ) ?>
 	<!--#include virtual="/includes/main/proj/paper_dropdowns.html"-->
 	<br class="spacer"/>

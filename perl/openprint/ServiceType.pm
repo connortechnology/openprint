@@ -27,7 +27,7 @@ $serial = 'ServiceTypeIndex';
 	'sorting'	=>	undef,
 );
 
-my $debug = 0;
+my $debug = 1;
 
 my %cache;
 

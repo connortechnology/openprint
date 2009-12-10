@@ -38,7 +38,7 @@
 			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq 'class="colRow"' ? '' : 'class="colRow"' ) ?>
 			<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
 			<? endif ( @{$$variable{'SERVICES'}} ) ?>
-			<tr class="totals"> 
+			<tr class="Prices"> 
 				<td align="left">Unit Prices:</td>
 				<? echo ( my $html = '';
 					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {

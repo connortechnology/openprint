@@ -36,7 +36,7 @@
 <? endif ( ! sets::isin( $$variable{'ProjectType'}->name(),[ 'Envelopes','NCR' ] ); ) ?>
 		</select>
 	</li>
-				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards','PresentationFolders','NCR'] ) ) ?>
+				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards','PresentationFolders','NCR','Letterhead'] ) ) ?>
 				<li>
 					<label>Fold Type:</label>
 					<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
@@ -61,7 +61,7 @@
 						 ) ?>
 					</select>
 				</li>
-				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards','PresentationFolders','NCR'] ) ) ?>
+				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards','PresentationFolders','NCR','Letterhead'] ) ) ?>
 				<? if ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
 					<input type="hidden" name="FoldType" value="2PanelFold"/>
 				<? endif ( $$variable{'ProjectType'}->name() eq 'Greeting Cards' ) ?>
@@ -79,13 +79,6 @@
 					<li>
 						<label>Number of pages per pad:</label>
 						<input type="text" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" size="4" />
-					</li>
-					<li>
-						<label>Cardboard Backing:</label>
-						<input type="radio" id="rdbCardboardBackingY" name="rdbCardboardBacking" value="Y" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCardboardBacking'} eq 'Y' ); ) ?> />
-						<label class="radio" for="rdbCardboardBackingY">Yes</label>
-						<input type="radio" id="rdbCardboardBackingN" name="rdbCardboardBacking" value="N" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCardboardBacking'} ne 'Y' ); ) ?> />
-						<label class="radio" for="rdbCardboardBackingN">No</label>
 					</li>
 				<? endif ( sets::isin( $$variable{'ProjectType'}->name(), 'ScratchPads' ) ) ?>
 				<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'PresentationFolders' ) ) ?>

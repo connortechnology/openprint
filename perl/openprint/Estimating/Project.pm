@@ -428,8 +428,8 @@ sub calc {
 
 	} # end if
 
-	if ( my $S = openprint::ServiceType::find_one('name'=>'Paper' ) ) {
-		push @{$$services{'Paper'}}, $Project->add_service( $S ) if ! $$services{'Paper'};
+	if ( my $S = openprint::ServiceType::find_one('name'=>'Paper') ) {
+		push @{$$services{'Paper'}}, $Project->add_service( $S ) if ! ( $$services{'Paper'} and @{$$services{'Paper'}} );
 	} # end if
 
 	if ( openprint::Estimating::Folding::neccessary( $$Project{'id'} ) ) {
@@ -584,6 +584,8 @@ sub calc {
 	$openprint::log->warn("Before auto");
 	$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'}, ['UPS'] );
 	$openprint::log->warn("Aftere auto");
+	# Need to reload this because the auto calculation can add services, and we wouldn't otherwise pick them up
+	my $services = $Project->services();
 
 	if ( $$services{'Scoring'} ) {
 		my $score_specs = openprint::service::get_specs_ref( $Project, $$services{'Scoring'}[0] );

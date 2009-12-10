@@ -1,28 +1,28 @@
-    <input type="hidden" name="btnFunction" value="Save Service"/>
-    <input type="hidden" name="ContinueProject" value="Y" />
-    <input type="hidden" name="PrintingService" value="Y" />
+<input type="hidden" name="btnFunction" value="Save Service"/>
+<input type="hidden" name="ContinueProject" value="Y" />
+<input type="hidden" name="PrintingService" value="Y" />
 <div id="hdnBreakdown1" style="display: none;"></div>
 <div id="hdnBreakdown2" style="display: none;"></div>
 <div id="hdnBreakdown3" style="display: none;"></div>
 
-    <input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
-    <input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
-	
-	<? echo ( my $html = '';
-        foreach my $key ( 'Roll2SheetCharge','hdnImpressionQuantity','StockQuantity','hdnNetSheetCount','hdnImageOrientation','txtMWeight' ) {
-        foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
+<input type="hidden" name="ServiceIndex" value="<?ServiceIndex?>"/>
 
-            $html .= sprintf('<input type="hidden" name="%2$s%1$d" value="%3$s" />%4$s', $qty_index, $key, $$variable{$key.$qty_index}, "\n" );
-        } # end foreach qty_index
-        } # end foreach key
-        return $html;
-    ) ?>
+<? echo ( my $html = '';
+	foreach my $key ( 'Roll2SheetCharge','hdnImpressionQuantity','StockQuantity','hdnNetSheetCount','hdnImageOrientation','txtMWeight' ) {
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 
-	<input type="hidden" name="NeedScoring"/>
-	<input type="hidden" name="HasScoring"/>
-	<input type="hidden" name="NeedFolding"/>
-	<input type="hidden" name="HasFolding"/>
-	<input type="hidden" name="NeedCutting"/>
-	<input type="hidden" name="HasCutting"/>
+		$html .= sprintf('<input type="hidden" name="%2$s%1$d" value="%3$s" />%4$s', $qty_index, $key, $$variable{$key.$qty_index}, "\n" );
+	} # end foreach qty_index
+	} # end foreach key
+	return $html;
+) ?>
+
+<input type="hidden" name="NeedScoring"/>
+<input type="hidden" name="HasScoring"/>
+<input type="hidden" name="NeedFolding"/>
+<input type="hidden" name="HasFolding"/>
+<input type="hidden" name="NeedCutting"/>
+<input type="hidden" name="HasCutting"/>
 <input type="hidden" name="SignatureIndex" value="<?SignatureIndex?>" />
-<input type="hidden" name="ProjectType" value="<?ProjectType?>" />
+<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />

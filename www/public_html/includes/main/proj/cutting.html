@@ -37,7 +37,7 @@
 		<br>
 	</div>
 
-	<? if ( sets::isin( $$variable{'ProjectTypeID'}, ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
+	<? if ( sets::isin( $$variable{'ProjectType'}->name(), ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
 	<div class="row">
 		<span class="required">*</span>
     	<span class="label">How many additional cuts are required?:</span>
@@ -46,7 +46,7 @@
 		</span>
 		<br>
 	</div>
-	<? endif ( sets::isin( $$variable{'ProjectTypeID'}, ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
+	<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ('PressSheetCombination','NoPrintingRequired')) or sets::isin( $openprint::session{'user_type'},'E','A') ) ?>
 	<? if ( $$variable{'hdnCutsPerSheet'} eq '-3' || $$variable{'hdnCutsPerSheet'} eq '-4' ) ?>
 	<div class="row">
 		<span class="required">*</span>

@@ -420,8 +420,6 @@ $log->debug("logged in");
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
-				my $ProjectType = $variable{'Project'}->Type();
-				@variable{'ProjectTypeID','ProjectTypeName'} = ($ProjectType->name(), $ProjectType->description() );
 				$variable{'ServiceType'} = openprint::print::get_ServiceType( @variable{'ProjectIndex','ServiceIndex'} );
 				
 				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
@@ -437,6 +435,7 @@ $log->debug("logged in");
 					my $specs = openprint::service::get_specs_ref( $variable{'Project'}, $service_index );
 					@variable{keys %$specs} = @$specs{keys %$specs};
 				} # end if
+				$variable{'ProjectType'} = $variable{'Project'}->Type();
 #$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");
 if ( ! $variable{'ServiceIndex'} ) {
 #$openprint::log->warn("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");

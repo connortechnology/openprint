@@ -47,7 +47,7 @@
 		<select name="ddmStockSheetSize<?QTYIndex?>" size="1" onchange="this.form.OverrideStockWidth<?QTYIndex?>.value='';this.form.OverrideStockHeight<?QTYIndex?>.value='';ddmStockSheetSize_onchange();">
 			<option value="">Please select one</option>
 		 <? echo (
-					ssi::make_drop_down( [ openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
+					ssi::make_drop_down( [ openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(), @$variable{
 							'ddmStockBrand'.$$variable{'Signature'},
 							'ddmStockFinish'.$$variable{'Signature'},
 							'ddmStockColour'.$$variable{'Signature'},
@@ -109,7 +109,7 @@
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? if ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectTypeID'}, ['Envelopes' ] ) ) ?>
+<? if ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectType'}->name(), ['Envelopes' ] ) ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -117,7 +117,7 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectTypeID'}, ['Envelopes' ] ) ) ?>
+<? else ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectType'}->name(), ['Envelopes' ] ) ) ?>
 <p>
 	<label>Bleed Size:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -135,7 +135,7 @@
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? endif ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectTypeID'}, ['Envelopes' ] ) ) ?>
+<? endif ( ($$variable{'Mode'} eq 'Easy') or $$variable{'txtSignatureType'} or sets::isin( $$variable{'ProjectType'}->name(), ['Envelopes' ] ) ) ?>
 
 <? if ( $$variable{'Mode'} eq 'Easy' ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -368,7 +368,7 @@
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? if ( sets::isin( $$variable{'ProjectTypeID'}, [ 'PresentationFolders','Envelopes' ] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -376,7 +376,7 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( sets::isin( $$variable{'ProjectTypeID'}, [ 'PresentationFolders','Envelopes' ] ) ) ?>
+<? else ( sets::isin( $$variable{'ProjectType'}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
 <p>
 	<label>Grain direction:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -397,7 +397,7 @@
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? endif ( sets::isin( $$variable{'ProjectTypeID'}, [ 'PresentationFolders','Envelopes' ] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'PresentationFolders','Envelopes' ] ) ) ?>
 
 <? if ( $$variable{'txtSignatureType'} ) ?>
 <p>
@@ -420,7 +420,7 @@
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <? endif ( $$variable{'txtSignatureType'} ) ?>
-<? if ( sets::isin( $$variable{'ProjectTypeID'}, [ 'Envelopes' ] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
@@ -438,7 +438,7 @@
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? else ( sets::isin( $$variable{'ProjectTypeID'}, [ 'Envelopes' ] ) ) ?>
+<? else ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
 <p>
 	<label><? echo ( ssi::writeTip('Imposition'); ) ?>:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -460,7 +460,7 @@
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
-<? endif ( sets::isin( $$variable{'ProjectTypeID'}, [ 'Envelopes' ] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Envelopes' ] ) ) ?>
 
 <!--#include virtual="/includes/main/proj/_unit_price.html"-->
 <!--#include virtual="/includes/main/proj/_service_price.html"-->
