@@ -161,6 +161,9 @@ div.row {
 		float: right;
 	}
 	@media print {
+	div.PressColumn, a.docket {
+		color: black;
+		}
 		.assign {
 			display: none;
 		}
