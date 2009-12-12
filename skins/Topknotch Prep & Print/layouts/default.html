@@ -98,7 +98,7 @@
 <? echo ( 
 	my $html = '';
 	foreach my $ProjectTypeCategory ( openprint::ProjectTypeCategory::find() ) {
-		$html .= sprintf(q`<li id="Menu%1$d" class="%3$s"><a href="#" title="%2$s" onclick="toggleMenu($('Menu%1$d'), 'off', 'on');return false;">%2$s</a>`, $ProjectTypeCategory->id(), $ProjectTypeCategory->name(), 
+		$html .= sprintf(q`<li id="Menu%1$d" class="%3$s"><a href="#" title="%2$s" onclick="toggleMenu($('Menu%1$d'), '%3$s', 'on');return false;">%2$s</a>`, $ProjectTypeCategory->id(), $ProjectTypeCategory->name(), 
 			( ( ( $$variable{'uri'} =~ /content\/prin/ ) and $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->category_id() == $ProjectTypeCategory->id() ) ) ? 'on' : 'off' ),
 			);
 		$html .= '<ul>';
@@ -144,13 +144,25 @@
 					$html .= '<li class="step3"><label>STEP 3</label>Place Order</li>';
 					$html .= '<li class="step4"><label>STEP 4</label>Upload Files</li>';
 				} elsif ( $$variable{'uri'} =~ /\/main\/order\/information/ ) {
-					$html .= '<li class="step1complete"><label>STEP 1</label>Specify Project</li>';
+					my @Projects = $$variable{'Order'}->Projects();
+					if ( @Projects == 1 ) {
+					$html .= sprintf('<li class="step1complete"><a href="/content/%1$s?project_id=%2$d"><label>STEP 1</label>Specify Project</a></li>', 
+						$Projects[0]->Type()->url(), $Projects[0]->id() );
+					} else {
+						$html .= '<li class="step1complete"><label>STEP 1</label>Specify Project</li>', 
+					} 
 					$html .= '<li class="step2on"><label>STEP 2</label>Review Order</li>';
 					$html .= '<li class="step3"><label>STEP 3</label>Place Order</li>';
 					$html .= '<li class="step4"><label>STEP 4</label>Upload Files</li>';
 				} elsif ( $$variable{'uri'} =~ /\/main\/order\/submit/ ) {
-					$html .= '<li class="step1complete"><label>STEP 1</label>Specify Project</li>';
-					$html .= '<li class="step2complete"><label>STEP 2</label>Review Order</li>';
+					my @Projects = $$variable{'Order'}->Projects();
+					if ( @Projects == 1 ) {
+						$html .= sprintf('<li class="step1complete"><a href="/content/%1$s?project_id=%2$d"><label>STEP 1</label>Specify Project</a></li>', 
+						$Projects[0]->Type()->url(), $Projects[0]->id() );
+					} else {
+						$html .= '<li class="step1complete"><label>STEP 1</label>Specify Project</li>';
+					} 
+					$html .= '<li class="step2complete"><a href="/main/order/information.html"><label>STEP 2</label>Review Order</a></li>';
 					$html .= '<li class="step3on"><label>STEP 3</label>Place Order</li>';
 					$html .= '<li class="step4"><label>STEP 4</label>Upload Files</li>';
 				} elsif ( $$variable{'uri'} =~ /\/upload/ or $$variable{'uri'} =~ /\/main\/order\/history_details/ or $$variable{'uri'} =~ /\/main\/order\/confirm/ ) {
