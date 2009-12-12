@@ -159,7 +159,7 @@ if ( 0 ) {
 				my $html = '';
 				foreach my $Group ( @Groups ) {
 					$$variable{'Group'} = $Group;
-					$$variable{'Signature'} = $Group;
+					$$variable{'SignatureIndex'} = $Group;
 				
 					my $h .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_signature.html' );
 					$html .= variable_substitution( \$h, $variable );

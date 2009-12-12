@@ -39,14 +39,18 @@ cursor: default;
 display: -moz-inline-box;
 display: inline-block;
 outline: 0;
+/*
 cursor: default;
+*/
 text-shadow: 1px 1px #333;
 color: #FFF !important;
 overflow: none;
 	}
 	a.buttonImageOff:hover {
 		text-decoration: none;
+/*
 		cursor: default;
+*/
 	}
 
 }

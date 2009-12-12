@@ -120,14 +120,50 @@ div.UserProfile:after {
 	width: auto;
 	margin-left: 0px;
 }
-div.Registration form fieldset#Contact {
-	width: 375px;
-	float: left;
+div.Registration .Information {
+	background-color:#daf3fc;
 }
-div.Registration form fieldset#Address {
-	width: 375px;
+div.Registration .Information:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Registration .Information {height: 1%;}
+* div.Registration .Information {display:block;}
+/* End hide from IE-mac */
+div.Registration div.Address {
 	float: right;
+	width: 50%;
 }
+div.Registration div.Miscellaneous {
+	display: none;
+}
+div.Registration div.Account {
+	float: left;
+	width: 50%;
+}
+div.Registration select {
+	width: 51%;
+}
+div.Registration .mailinglist label {
+	font-size: x-small;
+	font-weight: normal;
+	text-transform: none;
+	color: #07759f;
+}
+div.Registration .Instructions {
+	background-color: #07759f;
+	color: #fff;
+	padding: 10px;
+	font-size: large;
+font-weight: bold;
+	margin:0px;
+}
+
 div#Login {
 	background-color:#daf3fc;
 }
