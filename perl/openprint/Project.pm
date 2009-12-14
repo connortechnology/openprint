@@ -1221,6 +1221,121 @@ sub get_due_date {
 
 } # end sub get_due_date
 
+sub takeover_on {
+	my ( $self ) = @_;
+	if ( ! $$self{'takeover_on'} ) {
+		@$self{'takeover_on'} = sql::execute( undef, undef, q`SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=? AND (description LIKE 'Assigning%' OR description LIKE 'Taken Over by%' OR description LIKE 'Marked Approved' OR description LIKE 'Marked Proofs Out%' OR description LIKE 'Added Proof%' OR description LIKE 'Additional Charges%')`, $$self{'id'} );
+	} # end if
+	return $$self{'takeover_on'};
+} # end sub takeover_on
+sub takeover_on_seconds {
+	return Date::Parse::str2time( $_[0]->takeover_on() );
+} # end sub takeover_on_seconds
+
+sub prepress_start_on {
+	my ( $self ) = @_;
+	if ( ! $$self{'prepress_start_on'} ) {
+	@$self{'prepress_start_on'} = sql::execute( undef, undef, q`SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=? AND ( description IN ('Marked In Prepress') OR description LIKE 'Add to Order%' )`, $$self{'id'} );
+	} # end if
+	return $$self{'prepress_start_on'};
+} # end sub prepress_start_on
+sub prepress_start_on_seconds {
+	return Date::Parse::str2time( $_[0]->prepress_start_on() );
+} # end sub prepress_start_on_seconds
+
+sub ordered_on {
+	my ( $self ) = @_;
+	if ( ! exists $$self{'ordered_on'} ) {
+		@$self{'ordered_on'} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Add to Order%'`, $$self{'id'} );
+	} # end if
+	return $$self{'ordered_on'};
+} # end sub ordered_on
+sub ordered_on_seconds {
+	return Date::Parse::str2time( $_[0]->ordered_on() );
+} # end sub ordered_on_seconds
+
+sub completed_on {
+	my ( $self ) = @_;
+	if ( ! exists $$self{'completed_on'} ) {
+		@$self{'completed_on'} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Waiting For Pickup','Marked Shipped','Marked Picked Up')`, $$self{'id'} );
+	} # end if
+	return $$self{'completed_on'};
+} # end sub completed_on
+sub completed_on_seconds {
+	return Date::Parse::str2time( $_[0]->completed_on() );
+} # end sub completed_on_seconds
+
+sub printed_on {
+	my ( $self ) = @_;
+	if ( ! exists $$self{'printed_on'} ) {
+		@$self{'printed_on'} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Printed')`, $$self{'id'} );
+	} # end if
+	return $$self{'printed_on'};
+} # end sub printed_on
+
+sub printed_on_seconds {
+	return Date::Parse::str2time( $_[0]->printed_on() );
+} # end sub printed_on_seconds
+
+sub approved_on {
+	my ( $self ) = @_;
+	if ( ! exists $$self{'approved_on'} ) {
+		@$self{'approved_on'} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description IN ('Marked Approved','Marked Proofs QA Approved')`, $$self{'id'} );
+	} # end if
+	return $$self{'approved_on'};
+} # end sub approved_on
+sub approved_on_seconds {
+	return Date::Parse::str2time( $_[0]->approved_on() );
+} # end sub approved_on_seconds
+
+sub proofsout_on {
+	my ( $self ) = @_;
+	if ( ! exists $$self{'proofsout_on'} ) {
+		@$self{'proofsout_on'} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE ('Marked Proofs Out%')`, $$self{'id'} );
+	} # end if
+	return $$self{'proofsout_on'};
+} # end sub completed_on
+
+sub proofsout_on_seconds {
+	return Date::Parse::str2time( $_[0]->proofsout_on() );
+} # end sub proofsout_on_seconds
+#
+sub production_seconds {
+	my ( $self ) = @_;
+	return $self->completed_on_seconds() - $self->approved_on_seconds();
+} # end sub production_seconds
+
+sub ordered_to_takeover_seconds {
+	return $_[0]->takeover_on_seconds() - $_[0]->ordered_on_seconds();
+} # end sub ordered_to_takeover_seconds
+sub takeover_to_approved_seconds {
+	return $_[0]->approved_on_seconds() - $_[0]->takeover_on_seconds();
+} # end sub ordered_to_takeover_seconds
+sub ordered_to_printed_seconds {
+	return $_[0]->printed_on_seconds() - $_[0]->ordered_on_seconds();
+} # end sub ordered_to_takeover_seconds
+
+sub first_scheduled {
+	my ( $self ) = @_;
+	if ( ! exists $$self{'first_scheduled'} ) {
+		@$self{'first_scheduled'} = sql::execute( undef, undef, q`SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=? AND (description LIKE 'Scheduled%' OR description LIKE 'Job bumped%')`, $$self{'id'} );
+	} # end if
+	return $$self{'first_scheduled'};
+} # end sub first_scheduled
+sub first_scheduled_seconds {
+	return Date::Parse::str2time( $_[0]->first_scheduled() );
+} # end sub first_scheduled_seconds
+
+sub last_scheduled {
+	my ( $self ) = @_;
+	if ( ! exists $$self{'last_scheduled'} ) {
+		@$self{'last_scheduled'} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND (description LIKE 'Scheduled%' OR description LIKE 'Job bumped%')`, $$self{'id'} );
+	} # end if
+	return $$self{'last_scheduled'};
+} # end sub last_schedule
+sub last_scheduled_seconds {
+	return Date::Parse::str2time( $_[0]->last_scheduled() );
+} # end sub last_scheduled_seconds
 
 1;
 
