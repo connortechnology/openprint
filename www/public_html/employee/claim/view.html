@@ -4,7 +4,6 @@
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
-	my $User = new openprint::User( $session{'user_id'} );
 	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 	if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send Email' );
