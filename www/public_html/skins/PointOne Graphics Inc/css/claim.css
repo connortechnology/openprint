@@ -286,6 +286,7 @@ text-align: right;
 width: 100%;
 margin: 0px;
 padding: 0px;
+float: none;
 }
 p.buttons:after {
     content: ".";
