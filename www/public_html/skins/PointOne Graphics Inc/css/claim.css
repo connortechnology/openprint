@@ -300,6 +300,9 @@ p.buttons:after {
 * html p.buttons {height: 1%;}
 * p.buttons {display: block;}
 /* End hide from IE-mac */
+fieldset.filters p.buttons {
+	text-align: left;
+}
 div.Claim .Disclaimer {
 	font-weight: bold;
 	font-size: small;
