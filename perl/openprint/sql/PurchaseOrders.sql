@@ -51,6 +51,7 @@ CREATE TABLE PurchaseOrders (
 	shipto_fax			text,
 	shipto_sms			text,
 	shipto_email		text,
+	manifest_id			INTEGER, FOREIGN KEY (manifest_id) REFERENCES Manifests (id),
 	PRIMARY KEY (id)
 );
 
