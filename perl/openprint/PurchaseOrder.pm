@@ -22,6 +22,7 @@ require openprint::Tax;
 require openprint::PurchaseOrder_Content;
 require openprint::PurchaseOrder_Log;
 require openprint::Email;
+require openprint::Manifest;
 
 my $debug = 0;
 
@@ -556,5 +557,8 @@ sub copy {
 	$$New{'created_by'} = $session{'user_id'};
 	return $New;
 } # end sub copy
+sub Manifest {
+	return new openprint::Manifest( $_[0]{'manifest_id'} );
+}# end sub Manifest
 1;
 #__END__
