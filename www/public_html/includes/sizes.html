@@ -28,9 +28,9 @@
 				} # end if
 				return $html;
 			) ?>
-<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Envelopes','NCR'] ) ) ?>
+<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Envelopes'] ) ) ?>
 			<option value="Custom">Custom</option>
-<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Envelopes','NCR'] ) ) ?>
+<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Envelopes'] ) ) ?>
 		</select>
 	</span>
 </div>

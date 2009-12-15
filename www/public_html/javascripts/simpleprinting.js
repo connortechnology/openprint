@@ -114,12 +114,12 @@ function cbCalc( results ) {
 
 
 function Dimensions_onchange( select, signature ) {
-	//var value = get_ddm_value( select );
-	//if ( value == 'Custom' ) {
-	//add_div('CustomDimensions');
-	//} else {
+	var value = get_ddm_value( select );
+	if ( value == 'Custom' ) {
+	add_div('CustomDimensions');
+	} else {
 	//remove_div('CustomDimensions');
-	//} // end if
+	} // end if
 	remove_div('OrderButton');
 	// Refreshes Paper
 	///jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(select.form, '', '' ) );
