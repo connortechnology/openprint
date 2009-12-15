@@ -1209,7 +1209,6 @@ sub manifest {
 			%param = ();
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Submit' ) {
-		$Manifest->id( $param{'manifest_id'} ) if ! $Manifest->id();
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
 		if ( $param{'supplier'} and ! $param{'supplier_id'} ) {
@@ -1308,7 +1307,7 @@ sub manifest {
 								} );
 					} # end if
 					$total_qty += $C->quantity();
-					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->id() ) );
+					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project ) {
 						my @PAs = openprint::PaperAllocation::find('skid_id'=>$C->skid_id());

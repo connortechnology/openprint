@@ -5,8 +5,8 @@ Please select a Manifest to view/edit.<br>
 	<fieldset class="filters"><legend>Choose Manifest</legend>
 		<p>
 			<label for="manifest_id">Manifest ID #</label>
-			<input type="text" id="manifest_id" name="manifest_id" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'if(f1.manifest_id.value){f1.submit()};','','Go' ); ) ?>
+			<input type="text" id="manifest_name" name="manifest_name" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){f1.submit();}"/>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', 'if(f1.manifest_name.value){f1.submit()};','','Go' ); ) ?>
 			<input type="text" id="manifest_like" name="manifest_like" size="10" onkeyup="this.value=this.value.replace(/\s/g,'');" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_manifests.html', document.forms.f1.serialize() );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Show', 'go.gif', "AjaxLoadContent( 'Results', '_manifests.html', \$('f1').serialize() );",'','Show' ); ) ?>
 		</p>
@@ -50,5 +50,5 @@ Please select a Manifest to view/edit.<br>
 		</p>
 	</fieldset>
 </form>
-<script type="text/javascript">document.f1.manifest_id.focus();</script>
+<script type="text/javascript">document.f1.manifest_name.focus();</script>
 <div id="Results"><!--#include virtual="_manifests.html"--></div>

@@ -50,10 +50,11 @@ function add_content(form, type_id) {
 </script>
 <div class="Manifest">
 	<form name="f1" id="f1" method="post" action="manifest.html">
+		<input type="hidden" id="manifest_id" name="manifest_id" value="<? echo ( $$variable{'Manifest'}->id() ) ?>" />
 		<fieldset>
 			<div class="leftColumn">
-				<p><label for="manifest_id">Manifest #:</label>
-					<input type="text" id="manifest_id" name="manifest_id" value="<? hecho ( $$variable{'Manifest'}->id() ) ?>" />
+				<p><label for="manifest_name">Manifest #:</label>
+					<input type="text" id="name" name="name" value="<? hecho ( $$variable{'Manifest'}->name() ) ?>" />
 				</p>
 				<p><label>Vendor:</label>
 					<input id="supplier_id_filter" type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
