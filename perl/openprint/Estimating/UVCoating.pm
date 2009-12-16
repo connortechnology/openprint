@@ -33,7 +33,7 @@ use vars qw( $log $dbh %config @outputs );
 # Let's assume that each piece of equipment can do 1 coat at a time
 # This service doesn't store it's own data, other than price.  It gets the info from the printing service.
 #
-my $debug = 1;
+my $debug = 0;
 
 my @variables = (
 	'txtQuantity1','txtQuantity2','txtQuantity3',

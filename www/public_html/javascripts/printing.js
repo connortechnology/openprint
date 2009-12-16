@@ -27,14 +27,14 @@ function filter_colours( side, signature ) {
 } // end function filter_colours
 
 function SpecialColour_onchange( element, side, index, signature ) {
-	var spec = 'ColourCoating'+side+index+signature;
+	var spec = 'ColourCoating'+side+'-'+index+'-'+signature;
 
-	var type_element = $('ColourCoatingType'+side+index+signature);
+	var type_element = $('ColourCoatingType'+side+'-'+index+'-'+signature);
 	var type = type_element.value;
 	if ( type ) {
 		element.form.elements[spec].checked=true;
 
-		if ( ! $('ColourCoating'+side+(1+parseInt(index))+signature) ) {
+		if ( ! $('ColourCoating'+side+'-'+(1+parseInt(index))+'-'+signature) ) {
 			// Add another colour
 			new Ajax.Request('/includes/main/proj/_additional_colour_coating.html', { 
 				method: 'get', 
@@ -60,7 +60,7 @@ function SpecialColour_onchange( element, side, index, signature ) {
 				if ( i == index ) continue;
 
 				// if the colour exists
-				var t = $('ColourCoatingType'+side+i+signature);
+				var t = $('ColourCoatingType'+side+'-'+i+'-'+signature);
 				if ( t ) {
 
 					for ( var m = 0; m < type_element.options.length; m += 1 ) {
@@ -78,14 +78,14 @@ function SpecialColour_onchange( element, side, index, signature ) {
 	} // end if
 
 	if ( (!type) || ( -1 != type.indexOf('Overall') ) ) {
-		$('ColourCoatingCoverage'+side+index+signature).hide();
+		$('ColourCoatingCoverage'+side+'-'+index+'-'+signature).hide();
 	} else {
-		$('ColourCoatingCoverage'+side+index+signature).show();
+		$('ColourCoatingCoverage'+side+'-'+index+'-'+signature).show();
 	} // end if
 	if ( -1 != type.indexOf('PMS') ) {
-		$('ColourCoatingColour'+side+index+signature).show();
+		$('ColourCoatingColour'+side+'-'+index+'-'+signature).show();
 	} else {
-		$('ColourCoatingColour'+side+index+signature).hide();
+		$('ColourCoatingColour'+side+'-'+index+'-'+signature).hide();
 	} // end if
 	calc(element.form.name);
 } // end function

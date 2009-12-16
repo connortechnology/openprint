@@ -32,10 +32,10 @@ div#instant_price_section {
 	width: 420px;
 }
 div#instant_price_section .ProjectSpecifications {
-	background:#daf3fc;
+	background-color:#daf3fc;
 }
 div#instant_price_section .ProjectSpecifications h1 {
-	background:#fff;
+	background-color:#fff;
 	padding-top: 20px;
 	padding-bottom: 10px;
 }
@@ -93,7 +93,7 @@ div#instant_price_section #AlertDiv {
 	float: right;
 } 
 div#instant_price_section .ProjectName p {
-	background: #07759f;
+	background-color: #07759f;
 	margin: 0px;
 	padding: 10px;
 	color: #fff;

@@ -25,7 +25,7 @@ require openprint::service;
 require openprint::Currency;
 require openprint::Estimating::Printing;
 
-my $debug = 1;
+my $debug = 0;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -117,7 +117,7 @@ sub calc {
 	foreach my $stock_index ( 1 .. @stocks ) {
 		my $paper_string = $stocks[$stock_index-1];
 		$indexes{$paper_string} = $stock_index;
-$openprint::log->debug("Indexes: $paper_string => $stock_index");
+$openprint::log->debug("Indexes: $paper_string => $stock_index") if $debug;
 	} # end foreach
 
 	foreach my $ss_id ( $Project->signatures() ) {
@@ -154,6 +154,7 @@ $openprint::log->debug("Indexes: $paper_string => $stock_index");
 			} # end foreach qty_index
 	} # end foreach signature
 
+if ( $debug ) {
 $openprint::log->debug('Total Paper Totals:');
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
@@ -161,6 +162,7 @@ $openprint::log->debug('Total Paper Totals:');
 $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_string}{"qty_$qty_index"} );
 		} # end foreach
 	} # end if
+} # end if
 	# Enforce minimum orders and full packages
 	foreach my $paper_string ( keys %papers ) {
 		my $Paper = $papers{$paper_string};
@@ -232,7 +234,7 @@ $totals{$paper_id}{"Cost"} = $$specs{"cost-$ss_id-$stock_index-$qty_index"};
 		$$specs{"txtPrice$qty_index"} = 0;
 		foreach my $paper_id ( sort keys %papers ) {
 			my $Paper = $papers{$paper_id};
-$openprint::log->debug($paper_id . ' => ' . $totals{$paper_id}{"qty_$qty_index"} );
+$openprint::log->debug($paper_id . ' => ' . $totals{$paper_id}{"qty_$qty_index"} ) if $debug;
 			if ( $Paper->type() eq 'Sheet' ) {
 				$$specs{"qty-$stock_index-$qty_index"} = ceil( $totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight() );
 				$$specs{"sheets-$stock_index-$qty_index"} = $totals{$paper_id}{"qty_$qty_index"};
@@ -245,7 +247,7 @@ $openprint::log->debug($paper_id . ' => ' . $totals{$paper_id}{"qty_$qty_index"}
 		} # end foreach Stock
 		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} );
 		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
-$openprint::log->debug("Price $qty_index " . $$specs{"txtPrice$qty_index"} );
+$openprint::log->debug("Price $qty_index " . $$specs{"txtPrice$qty_index"} ) if $debug;
 	} # end foreach qty_index
 
 	return $$specs{'Status'} = 'calculated';

@@ -1,0 +1,110 @@
+<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+<table class="List">
+	<thead>
+		<tr> 
+			<th align="left">Projects</th>
+			<th width="130" align="right">Weight</th>
+			<th class="markup">%</th>
+			<th class="quantity">Qty</th>
+			<th class="price">Price</th>
+			<th class="newprice">New Price</th>
+		</tr>
+	</thead>
+	<? eval ( @{$$variable{'Projects'}} = $$variable{'Quote'}->Quoted_Projects(); ) ?>
+	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+	<tr<?rowclass?>> 
+		<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->Project()->reference()) . ':<br/>' if $$variable{'Project'}->Project()->reference() ) ?><? echo ( $$variable{'Project'}->Project()->summary(); ) ?></a></td>
+		<td colspan="5">
+			<table>
+				<? echo (
+					my $html = '';
+					my $Project = $$variable{'Project'}->Project();
+					my $services = $Project->services();
+
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						$html .= '<tr><td width="130" align="right">';
+						my $weight;
+
+						if ( $$services{'BulkSkids'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
+							$weight = $$specs{'totalWeight'.$qty_index};
+						} elsif ( $$services{'PlainCartons'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
+							$weight = $$specs{'totalWeight'.$qty_index};
+						} else {
+							$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{'Project'}->quantity($qty_index);
+						} # end if
+						my $g = Math::Units::convert( $weight, 'lbs','g');
+						if ( $g > 1000 ) {
+							$html .= sprintf( '%.0flb%s (%.0fkg)', $weight, ($weight>1?'s':''),$g/1000 );
+						} else {
+							$html .= sprintf( '%.0flb%s (%.0fg)', $weight, ($weight>1?'s':''),$g );
+						} # end if
+						$html .= sprintf('</td><td class="markup">%1$s</td><td class="quantity">%2$s</td><td class="price">%3$s</td><td class="newprice">%4$s</td></tr>', 
+								$$variable{'Project'}->markup($qty_index), 
+								$$variable{'Project'}->quantity($qty_index), 
+								openprint::Currency::format( $Project->price($qty_index) ), 
+								openprint::Currency::format( $$variable{'Project'}->price($qty_index) )
+								);
+					} # end foreach qty_index
+					return $html
+				) ?>
+				</table>
+			</td>
+		</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+</table>
+<? else ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+<table class="List">
+	<thead>
+		<tr> 
+			<th align="left">Projects</th>
+			<th width="130" align="right">Weight</th>
+			<th width="100" align="right">Qty</th>
+			<th width="100" align="right">Price</th>
+		</tr>
+	</thead>
+	<? eval ( @{$$variable{'Projects'}} = $$variable{'Quote'}->Quoted_Projects(); ) ?>
+	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+	<tr<?rowclass?>> 
+		<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( ssi::htmlize($$variable{'reference'}) . ':<br/>'  if $$variable{'reference'} ) ?><? echo ( new openprint::Project( $$variable{'project_index'} )->summary(); ) ?></a></td>
+		<td colspan="3">
+			<table>
+				<? echo (
+					my $html;	
+					my $Project = $$variable{'Project'}->Project();
+					my $services = $Project->services();
+
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+						$html .= '<tr><td width="130" align="right">';
+						my $weight;
+
+						if ( $$services{'BulkSkids'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} elsif ( $$services{'PlainCartons'} ) {
+							my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
+							$weight = $$specs{'totalWeight'.$$variable{qty_index}};
+						} else {
+							$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{qty};
+						} # end if
+						my $g = Math::Units::convert( $weight, 'lbs','g');
+						if ( $g > 1000 ) {
+							return sprintf( '%.0flb%s (%.0fkg)', $weight, ($weight>1?'s':''),$g/1000 );
+						} else {
+							return sprintf( '%.0flb%s (%.0fg)', $weight, ($weight>1?'s':''),$g );
+						} # end if
+						$html .= sprintf('</td><td class="quantity">%1$s</td><td class="newprice">%2$s</td></tr>', 
+								$$variable{'Project'}->quantity($qty_index), 
+								openprint::Currency::format( $$variable{'Project'}->price($qty_index) )
+								);
+					} # end foreach qty_index
+					return $html
+				) ?>
+			</table>
+		</td>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
+</table>
+<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>

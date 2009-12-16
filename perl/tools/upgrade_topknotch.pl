@@ -7,9 +7,11 @@ require logger;
 require openprint::Object;
 
 use openprint ();
-use vars qw( $log $dbh );
+use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
+*config = \%openprint::config;
+
 
 $log = new logger( 'warn' );
 
@@ -60,6 +62,7 @@ print "upgrading signatures...";
 print "done\n";
 print "Add PayPal info...";
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>$dst_db, 'password'=>$dst_db, 'host'=>$ARGV[3]) );
+configuration::init_cache( $log, $dbh );
 sql::insert( undef, undef, 'configuration',[
     'name','PayPal API Username',
     'value','iconno_1247151292_biz_api1.connortechnology.com',
@@ -78,6 +81,7 @@ sql::insert( undef, undef, 'configuration',[
     'type','text',
     'description','API SIgnature.',
     'category', 'PayPal Settings'] );
+sql::update( undef, undef, 'configuration', ['name=?', 'public_URIs'], [ 'value', $config{'public_URIs'}.',/printing.html,/about.html' ] );
 require openprint::PaymentType;
 my $PayPal = new openprint::PaymentType();
 $PayPal->save({'name'=>'PayPal','description'=>'PayPal'});

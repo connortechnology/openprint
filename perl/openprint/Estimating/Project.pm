@@ -301,8 +301,10 @@ sub calc {
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'SideOneUVCoatingType', $$specs{'SideOneCoatingType'} );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'SideTwoUVCoatingType', $$specs{'SideTwoCoatingType'} );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoatingSideOne1', ( $$specs{'SideOneCoatingType'} and $$specs{'SideOneCoatingType'} ne 'None' ) ? 'Y' : '' );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingTypeSideOne1', 'UVCoating'.$$specs{'SideOneCoatingType'} );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoatingSideTwo1', ( $$specs{'SideTwoCoatingType'} and $$specs{'SideTwoCoatingType'} ne 'None' ) ? 'Y' : '' );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingTypeSideTwo1', 'UVCoating'.$$specs{'SideTwoCoatingType'} );
 		if ( 
 				( $$specs{'SideOneCoatingType'} and ( $$specs{'SideOneCoatingType'} ne 'None' ) ) or
 				( $$specs{'SideTwoCoatingType'} and ( $$specs{'SideTwoCoatingType'} ne 'None' ) ) 
