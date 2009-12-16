@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
+use vars qw($table $serial %variable $log $dbh %config %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -19,11 +19,14 @@ require openprint::ManifestContent;
 require openprint::PurchaseOrder;
 require openprint::Company;
 
+$table = 'manifests';
+$serial = 'manifests_id_seq';
 
 my $debug = 1;
 
 %fields = (
 	'id'			=>	'id',
+	'name'			=>	'name',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'received_on'	=>	'received_on',
@@ -66,6 +69,18 @@ sub find {
 	} # end if
 	if ( $params{'id_like'} ) {
 		$sql .= " AND id LIKE '%$params{id_like}%'";
+	} # end if
+	if ( exists $params{'name'} ) {
+		if ( ref $params{'name'} eq 'ARRAY' ) {
+			$sql .= ' AND name IN ('. join(',', map {'?'} @{$params{'name'}} ) . ')';
+			push @values, @{$params{'name'}};
+		} else {
+			$sql .= ' AND name=?';
+			push @values, $params{'name'};
+		} # end if
+	} # end if
+	if ( $params{'name_like'} ) {
+		$sql .= " AND name LIKE '%$params{name_like}%'";
 	} # end if
 	if ( exists $params{'po_id'} ) {
 		if ( ref $params{'po_id'} eq 'ARRAY' ) {
@@ -152,53 +167,10 @@ sub find {
 	return map { new openprint::Manifest( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM Manifests WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-	if ( ! $$data{'id'} ) {
-		delete $openprint::Object::cache{'openprint::Manifest'}{$$self{'id'}};
-		delete $$self{'id'};
-	} # end if
-#delete $$self{'id'};
-} # end sub load
-
-sub save {
-	my ( $self, $hash ) = @_;
-
-	$self->set( $hash );
-
-	if ( ! $$self{'id'} ) {
-		return 'Manifest must have an id';
-	} # end if
-	
-	my $ac = sql::start_transaction( $dbh );
-
-$openprint::log->debug("Updated: $$self{updated_on}");
-	if ( ! sql::execute( undef, undef, 'SELECT * FROM Manifests WHERE id=?', $$self{'id'} ) ) {
-		if ( my $error = sql::insert( undef, undef, 'Manifests', map { $_, $$self{$_} } keys %fields ) ) {
-			$$self{'id'} = undef;
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-    } else {
-		if ( my $error = sql::update( undef, undef, 'Manifests', ['id=?', $$self{id}], map { $_, $$self{$_} } keys %fields ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-    } # end if
-
-	sql::end_transaction( $dbh, $ac );
-	$self->load();
-	return;
-} # end sub save
-
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
-	foreach my $PO ( openprint::PurchaseOrder::find('manifest_id'=>$$self{'id'}) ) {
+	foreach my $PO ( openprint::PurchaseOrder::find('manifest_id'=>$$self{'name'}) ) {
 		$PO->save({'manifest_id'=>undef});
 	} # end foreach $PO
 	foreach my $T ( $self->Types() ) {

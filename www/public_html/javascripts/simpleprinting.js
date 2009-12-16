@@ -81,6 +81,12 @@ function cbCalc( results ) {
 
 
 function Dimensions_onchange( select, signature ) {
+	var value = get_ddm_value( select );
+	if ( value == 'Custom' ) {
+	add_div('CustomDimensions');
+	} else {
+	//remove_div('CustomDimensions');
+	} // end if
 	remove_div('OrderButton');
 	// Refreshes Paper: we do this so that we don't get any stocks in the list that are smaller than our size.
 	///jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(select.form, '', '' ) );

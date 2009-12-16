@@ -356,7 +356,9 @@ sub statetax_charge {
 } # end sub statetax_charge
 
 sub subtotal {
-	my ( $self ) = @_;
+	my ( $self, $new ) = @_;
+	
+	$$self{'subtotal'} = $_[1] if ( @_ > 1 );
 	if ( ! $$self{'subtotal'} ) {
 		$$self{'subtotal'} = 0;
 		foreach my $C ( $self->Contents() ) {

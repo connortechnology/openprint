@@ -53,7 +53,7 @@
 				<br/>
 				Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'PurchaseOrder'}->created_on() ) ) ) ?><br/>
 <? if ( $$variable{'PurchaseOrder'}->manifest_id() ) ?>
-Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$variable{'PurchaseOrder'}->manifest_id() ) ?>"><? echo ( $$variable{'PurchaseOrder'}->manifest_id() ) ?></a><br/>
+Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$variable{'PurchaseOrder'}->manifest_id() ) ?>"><? echo ( $$variable{'PurchaseOrder'}->Manifest()->name() ) ?></a><br/>
 <? endif ( $$variable{'PurchaseOrder'}->manifest_id() ) ?>
 			</div>
 			<br class="spacer"/>

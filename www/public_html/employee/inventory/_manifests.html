@@ -2,9 +2,9 @@
 	require openprint::Manifest;
 
 
-	if ( $param{'manifest_id'} ) {
+	if ( $param{'manifest_name'} ) {
 		@{$$variable{'Manifests'}} = openprint::Manifest::find( 
-			'id'	=>	$param{'manifest_id'},
+			'name'	=>	$param{'manifest_name'},
 			'order'		=>	'received_on',
 			);
 	} elsif ( $param{'po_id'} ) {
@@ -19,7 +19,7 @@
 			);
 	} else {
 		my %search = (
-			'id_like'	=> $param{'manifest_like'},
+			'name_like'	=> $param{'manifest_like'},
 			'received_on_start'	=>	Date::Calc::check_date( @session{
 				'/employee/inventory/manifests.html?received_on_start_year',
 				'/employee/inventory/manifests.html?received_on_start_month',
@@ -45,7 +45,7 @@
 	<table class="List sortable">
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'manifests', this.checked );"/></th>
-			<th align="left" width="100">Manifest ID</th>
+			<th align="left" width="100">Manifest #</th>
 			<th align="left" width="60">PO ID</th>
 			<th align="left" width="60">Docket</th>
 			<th align="left" width="120">Vendor</th>
@@ -59,26 +59,44 @@
 
 				$html .= '<tr>';
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="manifests" value="$$Manifest{'id'}"/></td>`;
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%1$s</a></td>', $$Manifest{'id'} );
+				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, $$Manifest{'name'} );
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, join('<br/>', $Manifest->po_ids() ) );
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, join('<br/>', $Manifest->dockets() ) );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', @$Manifest{'id'}, $Manifest->Vendor()->name() );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%s">%s</a></td>', $$Manifest{'id'}, Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($Manifest->received_on()) ) );
+				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, $Manifest->Vendor()->name() );
+				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%s">%s</a></td>', $$Manifest{'id'}, Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->received_on()) ) );
 
 				$html .= '<td>';
-				my %skids;
-				my %weight;
+
+				my %manifest_skids;
+				my %manifest_weight;
+				my %real_skids;
+				my %real_weight;
+
 				foreach my $MC ( $Manifest->Contents() ) {
+					$manifest_skids{$MC->Type()->paper_id()} += 1;
+					$manifest_weight{$MC->Type()->paper_id()} += $MC->quantity();
+
 					my $Skid = $MC->Skid();
 					foreach my $C ( $Skid->Contents() ) {
-						$skids{$C->paper_id} += 1;
-						$weight{$C->paper_id} += $MC->quantity();
+						$real_skids{$C->paper_id} += 1;
+						$real_weight{$C->paper_id} += $MC->quantity();
 					} # end foreach paper on skid
 				} # end foreach MC
-				foreach my $paper_id ( keys %weight ) {
+
+				foreach my $paper_id ( keys %manifest_weight ) {
 					my $Paper = new openprint::Paper( $paper_id );
-					$html .= sprintf('%s : %dlbs : %d skids<br/>', $Paper->to_string(), $weight{$paper_id}, $skids{$paper_id}  );
+					$html .= sprintf('%s : %dlbs : %d skids<br/>', $Paper->to_string(), $manifest_weight{$paper_id}, $manifest_skids{$paper_id}  );
 				} # end foreach
+
+				if ( misc::sum( map { $manifest_skids{$_} } keys %manifest_skids ) != misc::sum( map { $real_skids{$_} } keys %real_skids ) ) {
+					$html .= '<span class="warning"><br/>Actual skid contents:<br/>';
+					foreach my $paper_id ( keys %real_weight ) {
+						my $Paper = new openprint::Paper( $paper_id );
+						$html .= sprintf('%s : %dlbs : %d skids<br/>', $Paper->to_string(), $real_weight{$paper_id}, $real_skids{$paper_id}  );
+					} # end foreach
+					$html .= '</span>';
+				} # end if
+				
 				$html .= '</td>';	
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';

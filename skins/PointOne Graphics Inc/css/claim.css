@@ -7,9 +7,15 @@
 }
 }
 @media print {
-.unprintable {
-	display: none;
-}
+	.unprintable {
+		display: none;
+	}
+	div.Claim div.Dates {
+		display: none;
+	}
+	body div#Header {
+		display: none;
+	}
 }
 
 .Claim {
@@ -30,7 +36,7 @@
 	background-color: #e4ebf4;
 }
 	
-.Claim table td.totals {
+.Claim table tr.total td, .Claim table tr.subtotal td, .Claim table tr.federaltax td, .Claim table tr.statetax td {
 	text-align: right;
 }
 .Claim table td input {
@@ -65,6 +71,9 @@
 .Claim table td.Weight, .Claim table th.Weight {
 	width: 120px;
 }
+.Claim table th.Weight {
+	color: #e4ebf4;
+}
 .Claim table td.Weight input[type="text"] {
 	width: 50px;
 } 
@@ -80,23 +89,30 @@
 	min-height: 0px;
 }
 
-@media print {
-body div#Header {
-	display: none;
-}
-}
 
 div.Claim div.Header {
 	display: block;
 	position: relative;
 	width: 100%;
-	height: 100px;
 	background-image: url(/images/bluegradient.png);
 	background-repeat: repeat-x;
 	vertical-align: top;
 	border-top: 1px solid #3b5e91;
 	padding-top: 5px;
 }
+div.Claim .Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .Claim .Header {height: 1%;}
+* .Claim .Header {display: block;}
+/* End hide from IE-mac */
+
 div.Claim div.Header .Logo {
 	margin: 7px;
 	padding: 0px;
@@ -105,10 +121,22 @@ div.Claim div.Header .Logo {
 	background: none;
 	float: left;
 }
+div.Claim .Header .Logo:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .Claim .Header  .Logo{height: 1%;}
+* .Claim .Header  .Logo{display: block;}
+/* End hide from IE-mac */
+
 .Claim div.Header .Logo table {
 	text-align: center;
 	margin-left: auto;
-	margin-right: auto;
 	border: none;
 	border-top: none;
 }
@@ -116,6 +144,8 @@ div.Claim div.Header .Logo {
 	border: none;
 	vertical-align: top;
 	padding: 1px;
+}
+.Claim .Header table.HeaderText {
 }
 .Claim .Header .Logo table.HeaderText td {
 	font-size: 12px;
@@ -141,6 +171,7 @@ div.Claim .Header .Logo .GraphicsInc {
 	font-size:24px;
 }
 div.Claim .Header .PageTitle {
+	margin: 0px;
 	float: right;
 	width: 230px;
 }
@@ -150,6 +181,38 @@ div.Claim .Header .PageTitle h1 {
 } 
 div.Claim #Contents {
 	margin-top: 20px;
+}
+div.Claim .Information {
+	padding: 5px;
+}
+div.Claim .Information:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .Claim .Information {height: 1%;}
+* .Claim .Information {display: block;}
+/* End hide from IE-mac */
+div.Claim .Vendor {
+	width: 50%;
+	float: left;
+}
+div.Claim .Sender {
+	width: 50%;
+	float: right;
+	margin-bottom: 5px;
+}
+div.Claim .Dates {
+	width: 50%;
+	float: right;
+}
+div.Claim .Dates p, div.Claim .Sender p {
+	margin: 0px;
+	padding: 0px;
 }
 fieldset p {
     margin: 0px;
@@ -174,6 +237,7 @@ fieldset p:after {
 /* End hide from IE-mac */
 
 label {
+	text-transform: uppercase;
 outline: 0;
 }
 
@@ -217,7 +281,30 @@ div.autocomplete ul li {
   cursor:pointer;
 }
 
-.Claim #VendorInformation {
-	width: 48%;
-	float: left;
+p.buttons {
+text-align: right;
+width: 100%;
+margin: 0px;
+padding: 0px;
+float: none;
+}
+p.buttons:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html p.buttons {height: 1%;}
+* p.buttons {display: block;}
+/* End hide from IE-mac */
+fieldset.filters p.buttons {
+	text-align: left;
+}
+div.Claim .Disclaimer {
+	font-weight: bold;
+	font-size: small;
+	padding: 5px;
 }

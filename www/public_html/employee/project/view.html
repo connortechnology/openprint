@@ -381,18 +381,40 @@ function open_window( page ) {
 	<th align="left" width="150">When</th>
 	<th align="left">Description</th>
 	</tr>
-	<? eval ( 
+	<? echo ( 
+		my $html;
+		my $ordered;
+		my $prepress_start;
+		my $scheduled_end;
+		my $scheduled_start;
+
 		$_ = q{SELECT company_id, user_id, to_char(dtmTimestamp,'HH12:MIpm MM/DD/YYYY'), Description FROM Project_Log WHERE project_id=? ORDER BY dtmTimestamp DESC};
 		@{$$variable{'ProjectLog'}} = sql::execute( $log, $dbh, $_, $$variable{'ProjectIndex'} );
+		my $rowclass;
+		while ( my ( $company_id, $user_id, $when, $description ) = splice @{$$variable{'ProjectLog'}},0,4 ) {
+			if ( $description =~ /^Scheduled/ ) {
+				if ( ! $scheduled_end ) {
+					$scheduled_end = Date::Parse::str2time( $when );
+				} else {
+					$scheduled_start = Date::Parse::str2time( $when );
+				} # end if
+			} # end if
+			if ( ( ! $ordered ) and ( $description =~ /^Add to Order/ ) ) {
+				$ordered = Date::Parse::str2time( $when );
+			} # end if
+			if ( ( $description =~ /^Taken Over/ ) or ( $description =~ /^Marked Proofs/ ) ) {
+				$prepress_start = Date::Parse::str2time( $when );
+			} # end if
+			$html .= sprintf( '<tr%1$s><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr>', 
+				$rowclass, new openprint::User( $user_id )->name(), $when, $description );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end while
+		$html .= '<tr class="totals">';
+		$html .= '<td colspan="2">Time spent before prepress action:</td><td>'. misc::seconds_to_pretty_interval( $prepress_start - $ordered) . '</td></tr>';
+		$html .= '<td colspan="2">Time spent before first scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';
+		$html .= '<td colspan="2">Time spent before last scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_end - $ordered) . '</td></tr>';
+		return $html;
 	) ?>
-	<? while ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{'ProjectLog'}},0,4; ) ?>
-	<tr<?rowclass?>>
-	<td><? echo ( new openprint::User( $$variable{'UserIndex'} )->name(); ) ?></td>
-	<td width="150"><?When?></td>
-	<td><? echo ( $$variable{'Description'} ) ?></td>
-	</tr>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{'ProjectLog'}},0,4; ) ?>
 	</table>
 </fieldset>
 <? else ( $$variable{'Project'}->id() ) ?>

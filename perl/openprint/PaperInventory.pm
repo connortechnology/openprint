@@ -201,7 +201,7 @@ sub comment_html {
 	if ( $$self{'comment'} =~ /^Checked out for docket (\d+) by (.*)$/ ) {
 		return qq`Checked out for docket <a href="/employee/project/view.html?docket=$1">$1</a> by $2`;
 	} elsif ( $$self{'comment'} =~ /^Inventory adjusted from manifest (.+)\.$/ ) { 
-		return qq`Inventory adjusted from manifest <a href="/employee/inventory/manifest.html?manifest_id=$1">$1</a>`;
+		return qq`Inventory adjusted from manifest <a href="/employee/inventory/manifests.html?manifest_name=$1">$1</a>`;
 	} # end if
 	return $$self{'comment'};
 } # end comment_html
