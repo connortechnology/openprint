@@ -154,23 +154,6 @@ div.Service fieldset p select, div.Service fieldset p input {
 }
 
 
-div.ProjectCreateEdit ul {
-    list-style: none;
-}
-div.ProjectCreateEdit li {
-    float: left;
-    width: 200px;
-}
-div.ProjectCreateEdit ul:after {
-    content: "."; 
-    display: block; 
-    height: 0; 
-    clear: both; 
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div.ProjectCreateEdit ul {height: 1%;}
-/* End hide from IE-mac */
 div.Order fieldset p label {
 	width: 30%;
 }
@@ -267,6 +250,11 @@ ul#ProjectTypes {
 	font-size: x-small;
 	font-weight: normal;
 }
+#QuickLogin p label.radio {
+	float: none;
+	width: auto;
+	margin-left: 0px;
+}
 #CurrencySelection p label {
     width: 145px;
     margin-left: -150px;
@@ -289,3 +277,6 @@ ul#ProjectTypes {
     margin: 0px;
 }
 
+#AlertDiv {
+	color: red;
+}

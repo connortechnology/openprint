@@ -19,6 +19,16 @@
 
 					<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
 					<!--#include virtual="/includes/sizes.html"-->
+					<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['NCR'] ) ) ?>
+					<p><label>Colours:</label>
+						<select name="Colours" onchange="calc(this.form.name);">
+							<option value="1/0">Black One Side</option>
+							<option value="1/1">Black Both Sides</option>
+							<option value="4/0">4 Colour One Side</option>
+							<option value="4/4">4 Colour Both Sides</option>
+						</select>
+					</p>
+					<? else ( sets::isin( $$variable{'ProjectTypeName'}, ['NCR'] ) ) ?>
 					<p><label>Colours:</label>
 						<select name="Colours" onchange="calc(this.form.name);">
 							<option value="4/0">4 Colour One Side</option>
@@ -26,14 +36,17 @@
 							<option value="4/4">4 Colour Both Sides</option>
 						</select>
 					</p>
+					<? endif ( sets::isin( $$variable{'ProjectTypeName'}, ['NCR'] ) ) ?>
 					<br/>
+					<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Banners', 'InkjetOutputs','NCR'] ) ) ?>
 					<!--#include virtual="/includes/aqueous.html"-->
 					<!--#include virtual="/includes/uvcoating.html"-->
+					<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Banners', 'InkjetOutputs','NCR'] ) ) ?>
 					<div class="row">
 						<label>Stock Information</label><br/>
 						<!--#include virtual="/includes/paper_dropdowns.html"-->
 					</div>
-					<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards','NCR'] ) ) ?>
 					<div class="row">
 						<label>Fold Type:</label>
 						<span class="input">
@@ -60,7 +73,7 @@
 							</select>
 						</span>
 					</div>
-					<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+					<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Banners','InkjetOutputs','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards','NCR'] ) ) ?>
 					<? if ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) ?>
 						<input type="hidden" name="FoldType" value="2PanelFold"/>
 					<? endif ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) ?>
@@ -77,9 +90,15 @@
 					<? endif ( sets::isin( $$variable{'ProjectTypeName'}, 'Covers' ) ) ?>
 
 					<!--#include virtual="_proofs.html"-->
+					<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Banners', 'InkjetOutputs'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['NCR'] ) ) ?>
 					<!--#include virtual="/includes/drilling.html"-->
 					<!--#include virtual="/includes/scoring.html"-->
+					<? else ( ! sets::isin( $$variable{'ProjectTypeName'}, ['NCR'] ) ) ?>
+					<!--#include virtual="/includes/numbering.html"-->
+					<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['NCR'] ) ) ?>
 					<!--#include virtual="/includes/perfing.html"-->
+					<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['Banners', 'InkjetOutputs'] ) ) ?>
 		<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
 					<!--#include virtual="/includes/shrinkwrapping.html"-->
 					<!--#include virtual="/includes/bundling.html"-->
@@ -94,6 +113,13 @@
 							<input type="text" id="PageQuantity" name="PageQuantity" value="<?PageQuantity?>" size="4" />
 						</span>
 					</div>
+					<p>
+						<label>Cardboard Backing:</label>
+	<input type="radio" id="rdbCardboardBackingY" name="rdbCardboardBacking" value="Y" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCardboardBacking'} eq 'Y' ); ) ?> />
+	<label class="radio" for="rdbCardboardBackingY">Yes</label>
+	<input type="radio" id="rdbCardboardBackingN" name="rdbCardboardBacking" value="N" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCardboardBacking'} ne 'Y' ); ) ?> />
+	<label class="radio" for="rdbCardboardBackingN">No</label>
+					</p>
 					<? endif ( sets::isin( $$variable{'ProjectTypeName'}, 'ScratchPads' ) ) ?>
 					<!--#include virtual="/includes/quantity.html"-->
 					<br class="spacer"/>
@@ -111,7 +137,18 @@
 		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
 		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
+<? if ( ! ( $config{'ExternalSiteURL'} =~ /trade/ ) ) ?>
+<div style="width: 480px;">
+<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div><div class="shadow_left"><div class="shadow_right">
+<div style="font-size: large; font-weight: bold; text-align: center;">Free shipping on all orders over $100 within GTA*</div>
+</div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+</div>
+<? endif ( ! ( $config{'ExternalSiteURL'} =~ /trade/ ) ) ?>
 		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<? else ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<p style="font-size: small;">* Free shipping does not apply to trade clients or any job that has been discounted below our standard pricing.</p>
+<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
 </div><!--instant_price_section-->
 	</div><!--InstantPricing-->
 </form>

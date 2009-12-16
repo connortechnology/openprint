@@ -940,6 +940,9 @@ sub calc {
 					$specs{'txtHeight'} = $specs{'txtFinalHeight'};
 				} # end if
 			} # end if
+		} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $specs{'ddmStockSheetSize'} ) ) {
+			@specs{'txtWidth','txtHeight'} = split('x', $specs{'ddmStockSheetSize'} );
+			@specs{'txtFinalWidth','txtFinalHeight'} = @specs{'txtWidth','txtHeight'};
 		} else {
 			$specs{'txtWidth'} =~ s/[^\.\d]//g;
 			$specs{'txtFinalWidth'} =~ s/[^\.\d]//g;
@@ -1089,6 +1092,11 @@ sub calc {
 				$specs{'chkBlackSideTwo'} = 'Black';
 				$specs{'chkProcessColourSideOne'} = 'ProcessColour';
 				$specs{'chkProcessColourSideTwo'} = undef;
+			} elsif ( $specs{'Colours'} eq '1/0' ) {
+				$specs{'chkBlackSideOne'} = 'Black';
+				$specs{'chkBlackSideTwo'} = undef;
+				$specs{'chkProcessColourSideOne'} = undef;
+				$specs{'chkProcessColourSideTwo'} = undef;
 			} elsif ( $specs{'Colours'} eq '1/1' ) {
 				$specs{'chkBlackSideOne'} = 'Black';
 				$specs{'chkBlackSideTwo'} = 'Black';
@@ -1116,8 +1124,8 @@ sub calc {
 				return jsrs::encode_pairs(%specs);
 			} # end if
 
-			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $$services{''}[0], 'SideOneUVCoatingType', $specs{'SideOneCoatingType'} );
-			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $$services{''}[0], 'SideTwoUVCoatingType', $specs{'SideTwoCoatingType'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'SideOneUVCoatingType', $specs{'SideOneCoatingType'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'SideTwoUVCoatingType', $specs{'SideTwoCoatingType'} );
 			if ( 
 					( $specs{'SideOneCoatingType'} and ( $specs{'SideOneCoatingType'} ne 'None' ) ) or
 					( $specs{'SideTwoCoatingType'} and ( $specs{'SideTwoCoatingType'} ne 'None' ) ) 
@@ -1315,6 +1323,21 @@ $openprint::log->debug('Deleting Folding');
 			delete $$services{'Scoring'};
 		} # end if
 
+		if ( $specs{'Numbering'} eq 'Y' ) {
+			push @{$$services{'Numbering'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Numbering' ) if ! $$services{'Numbering'};
+		} else {
+			foreach ( @{$$services{'Numbering'}} ) {
+				openprint::print_project::delete_service( $log, $dbh, $$project{'id'}, $_ );
+			} # end foreach
+			delete $$services{'Numbering'};
+		} # end if
+
+		if ( $$services{'Padding'} ) {
+			foreach my $service_id ( @{$$services{'Padding'}} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $service_id, 'rdbCardboardBacking', $specs{'rdbCardboardBacking'} );
+			} # end foreach
+		} # end if Padding
+
 		if ( $specs{'Perfing'} eq 'Y' ) {
 			push @{$$services{'Perforating'}}, openprint::print_project::insert_service( $log, $dbh, $$project{'id'}, 'Perforating' ) if ! $$services{'Perforating'};
 			foreach my $sid ( @{$$services{'Perforating'}} ) {
@@ -1425,12 +1448,6 @@ $openprint::log->warn("Aftere auto");
 		} # end foreach
 		my @printing_types = keys %printing_types;
 		if ( ! @printing_types ) {
-		} elsif ( @printing_types == 1 ) {
-			if ( $printing_types[0] eq 'Offset' ) {
-				$specs{'alert'} .= 'This quote is for printing on an ' . join(',', keys %printing_types ) . ' press.<br/>';
-			} else {
-				$specs{'alert'} .= 'This quote is for printing on a ' . join(',', keys %printing_types ) . ' press.<br/>';
-			} # end if
 		} else {
 			$specs{'alert'} .= 'This quote is for printing on ' . join(',', keys %printing_types ) . ' presses.<br/>';
 		} # end if
@@ -1439,7 +1456,6 @@ $openprint::log->warn("Aftere auto");
 	foreach my $key ( @no_outputs ) {
 		delete $specs{$key};
 	} # end foreach
-
 	$project->update_status( $variable );
 	$specs{'Status'} = $project->status() if $specs{'Status'} ne 'uncalculated';
 	return jsrs::encode_pairs(%specs);

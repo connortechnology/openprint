@@ -106,6 +106,7 @@ sub paper {
 		$Paper->taxexempt1( $openprint::param{'taxexempt1'} );
 		$Paper->taxexempt2( $openprint::param{'taxexempt2'} );
 		$Paper->fsc_code( $openprint::param{'fsc_code'} );
+		$Paper->parts( $openprint::param{'parts'} );
 
 		my %types = sql::execute( undef, undef, q{SELECT strID, lngIndex FROM Project_Types} );
 		@{$$Paper{'recommendations'}} = ();

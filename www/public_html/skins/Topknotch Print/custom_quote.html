@@ -2,14 +2,14 @@
 	if ( $r->param('btnFunction') eq 'Submit' ) {
 		my $template = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/email_template.html' );
 		$openprint::param{'ReplacementText'} = q{<!--#include virtual="/email_content/custom_quote.html"-->};
-		$template = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$template, \%openprint::param ) );
+		$template = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$template, \%openprint::param ) );
 		my @body = ('', $template, 'text/html', 'quoted-printable');
 
 		my %mail = (
 			SMTP    => $openprint::config{'Mail Server'},
 			FROM    => sprintf('%s" <%s>', @openprint::param{'Name','Email'}),
-			#TO      => $openprint::config{'QuotingEmail'},
-			TO      => 'iconnor@penultima.org',
+			TO      => $openprint::config{'QuotingEmail'},
+			BCC      => 'iconnor@penultima.org',
 			SUBJECT => "Custom Quote for $openprint::param{'Company'}",
 			);
 		misc::send_email_with_attachment( $log, \%mail, @body, ('', $template, 'text/html', 'quoted-printable') );

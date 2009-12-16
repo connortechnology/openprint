@@ -63,6 +63,7 @@
 							my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
 							while ( my ( $name, $value ) = splice @defaults,0,2 ) {
 								$$variable{$name.'CoverSpreads'} = $value;
+								$$variable{$name.'InteriorSpreads'} = $value;
 							} # end while
 						} # end if
 
@@ -97,6 +98,12 @@
 					$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
 					return variable_substitution( $r, $log, $dbh, \$html, $variable );
 					) ?>
+				<input type="hidden" name="rdbColourBarInteriorSpreads" value="<?rdbColourBarInteriorSpreads?>"/>
+				<input type="hidden" name="txtCropMarkSpaceInteriorSpreads" value="<?txtCropMarkSpaceInteriorSpreads?>"/>
+				<input type="hidden" name="chkBleedLeftInteriorSpreads" value="<?chkBleedLeftInteriorSpreads?>"/>
+				<input type="hidden" name="chkBleedRightInteriorSpreads" value="<?chkBleedRightInteriorSpreads?>"/>
+				<input type="hidden" name="chkBleedTopInteriorSpreads" value="<?chkBleedTopInteriorSpreads?>"/>
+				<input type="hidden" name="chkBleedBottomInteriorSpreads" value="<?chkBleedBottomInteriorSpreads?>"/>
 				<br class="spacer"/>
 			</div>
 			<!--#include virtual="/includes/shrinkwrapping.html"-->
@@ -117,7 +124,20 @@
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
 		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
+<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<? else ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<div style="width: 480px;">
+<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div><div class="shadow_left"><div class="shadow_right">
+<div style="font-size: large; font-weight: bold; text-align: center;">Free shipping on all orders over $100 within GTA*</div>
+</div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+</div>
+<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
 		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
+<? if ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<? else ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
+<p style="font-size: small;">* Free shipping does not apply to trade clients or any job that has been discounted below our standard pricing.</p>
+<? endif ( $config{'ExternalSiteURL'} =~ /trade/ ) ?>
 <? else ( $param{'ProjectType'} ) ?>
 Please select the type of your project.
 <? endif ( $param{'ProjectType'} ) ?>
