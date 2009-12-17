@@ -11,6 +11,11 @@ $serial = 'ProjectType_Categories_id_seq';
 	'name'	=>	'name',
 	'sort'	=>	'sort',
 );
+%transforms = (
+);
+%defaults = (
+	'sort'	=>	undef,
+);
 
 sub find {
 	my %params = @_;
