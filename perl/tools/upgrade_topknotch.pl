@@ -5,6 +5,7 @@ use strict;
 require sql;
 require logger;
 require openprint::Object;
+require configuration;
 
 use openprint ();
 use vars qw( $log $dbh %config );

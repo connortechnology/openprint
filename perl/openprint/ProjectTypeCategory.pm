@@ -27,8 +27,11 @@ sub find {
 	return map { new openprint::ProjectTypeCategory( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub project_types {
+sub ProjectTypes {
 	my $self = shift;
 	
-	return openprint::ProjectType::find( 'category_id'=>$$self{'id'} );
+	if ( ! $$self{'ProjectTypes'} ) {
+		@{$$self{'ProjectTypes'}} = openprint::ProjectType::find( 'category_id'=>$$self{'id'} );
+	} # end if
+	return @{$$self{'ProjectTypes'}};
 } # end sub project_types

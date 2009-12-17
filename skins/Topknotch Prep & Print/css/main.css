@@ -257,3 +257,69 @@ div#Login:after {
 	text-align: right;
 	width: 60px;
 }
+
+.Printing {
+}
+div.Printing:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Printing {height: 1%;}
+* div.Printing {display:block;}
+/* End hide from IE-mac */
+.Printing .ProjectType {
+	position: relative;
+	width: 365px;
+	height: 130px;
+	padding: 10px;
+	margin: 0px 0px 20px 0px;
+	background: #4bb0d7;
+	text-align:left;
+}
+.Printing .ProjectType h3 {
+	width: 50%;
+	float: left;
+	color: #FFF;
+	font-size:24px;
+	line-height: 26px;
+	font-weight: bold;
+	letter-spacing: -1px;
+	text-shadow: 1px 1px #369;
+}
+.Printing .ProjectType ul {
+	width: 150px;
+    float: right;
+    padding: 0px;
+    margin: 0px;
+}
+.Printing .ProjectType li {
+    padding: 0px;
+    margin: 0px;
+    height: 22px;
+    list-style: none;
+    }
+
+.Printing .ProjectType a:link, .Printing .ProjectType a:visited {
+    display: block;
+    text-decoration: none;
+    width: 145px;
+    height: 18px;
+    padding: 3px 0px 0px 5px;
+    margin: 0px;
+    color: #FFF;
+    font-size: 12px;
+    line-height: 12px;
+    letter-spacing: 0px;
+    background: url(/images/btn-printing.png) no-repeat 0 0px;
+    text-shadow: 1px 1px #333;
+    }
+
+.Printing .ProjectType a:hover, .Printing .ProjectType a:link:active {
+    background: url(/images/btn-printing.png) no-repeat 0 -21px;
+    }
+
