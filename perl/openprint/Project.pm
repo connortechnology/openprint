@@ -564,7 +564,7 @@ sub find {
 		push @values, $params{'salesrep_id'};
 	} # end if
 	if ( $params{'csr_id'} ) {
-		$sql .= ' AND companyindex IN (SELECT index FROM Company WHERE lngsalesperson)=?';
+		$sql .= ' AND ( companyindex IN (SELECT index FROM Company WHERE lngsalesperson=?) )';
 		push @values, $params{'csr_id'};
 	} # end if
 
@@ -581,7 +581,7 @@ sub find {
 	if ( $params{'status'} ) {
 		if ( ref $params{'status'} eq 'ARRAY' ) {
 			if ( @{$params{'status'}} ) {
-				$sql .= q{ AND strStatus IN (} . join(',', map {'?'} @{$params{'status'}}). ')';
+				$sql .= q{ AND (strStatus IN (} . join(',', map {'?'} @{$params{'status'}}). ') )';
 						push @values, @{$params{'status'}};
 			} # end if
 		} else {

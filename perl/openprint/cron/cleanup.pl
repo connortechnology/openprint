@@ -21,10 +21,10 @@ use openprint ();
 use vars qw($log $dbh %config);
 *dbh = \$openprint::dbh;
 *log = \$openprint::log;
-*config = \$openprint::config;
+*config = \%openprint::config;
 
 my $r;
-$log = logger->new('warn');
+$log = logger->new('debug');
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],
@@ -40,7 +40,7 @@ configuration::init_cache( $log, $dbh );
 
 # Clear out old sessions
 my @session_ids = sql::execute( $log, $dbh, q{SELECT id FROM sessions} );
-$log->warn("Cleaning out sessions: " . @session_ids . " sessions");
+$log->warn("Cleaning out sessions: " . @session_ids . " sessionsn in system");
 my $deleted_session_count = 0;
 foreach my $session ( @session_ids ) {
     $session =~ s/\s//g;
@@ -61,7 +61,7 @@ foreach my $session ( @session_ids ) {
 		untie %session;
 	} # end if
 } # end foreach
-$log->debug("Deleted $deleted_session_count sessions");
+$log->warn("Deleted $deleted_session_count sessions");
 
 if ( 0 ) {
 # Clean out uncalculated projects
@@ -83,6 +83,8 @@ if ( 0 ) {
 				#$log->error('Quoted!' . $Project->id());
 				next;
 			} # end if
+			next if $Project->order_id();
+			next if $Project->docket();
 			$Project->delete();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
@@ -141,6 +143,7 @@ if ( 0 ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if Projects
 } # end if 1
+if ( 1 ) {
 		my @CIPS = openprint::CIP3_PPF::find('data_null'=>0);
 		$log->warn(@CIPS . " cip files to clear the data from" );
 		foreach my $CIP ( @CIPS ) {
@@ -149,23 +152,22 @@ if ( 0 ) {
 			$_ = $CIP->save({'data'=>undef,'data_length'=>0});
 			$log->error($_) if $_;
 		} # end foreach CIP
+}
 
-	my $ac = sql::start_transaction( $dbh );
+if ( 1 ) {
 # Clean out unfinished Orders
 	my @Orders = openprint::Order::find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
 	$log->warn('Cleaning out ' . @Orders . ' incomplete orders');
 	foreach my $Order ( @Orders ) {
 		$Order->delete();
 	} # end foreach
-	sql::end_transaction( $dbh, $ac );
 
-	$ac = sql::start_transaction( $dbh );
 	my @Quotes = openprint::Quote::find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
 	$log->warn('Cleaning out ' . @Quotes . ' incomplete quotes ');
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
 	} # end foreach
-	sql::end_transaction( $dbh, $ac );
+}
 
 if ( 0 ) {
 	my $ac = sql::start_transaction( $dbh );
@@ -239,8 +241,9 @@ if ( 0 ) {
 	} # end foreach
 } # end if 1
 
-if ( $config{'RFID Enabled'} ) {
+if ( $config{'RFID'} ) {
 	require openprint::RFIDTag;
+	require openprint::RFIDTagHistory;
 	require openprint::RFIDScannerHistory;
 	my @Hs = openprint::RFIDScannerHistory::find(
 			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
@@ -258,6 +261,18 @@ if ( $config{'RFID Enabled'} ) {
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
+	my @old_unassigned_tags = openprint::RFIDTag::find(
+			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -60 ) ),
+			'type'			=>	'Skid',
+			);
+	$log->warn( "Tag History Entries (unassigned and old): " . @old_unassigned_tags );
+	foreach my $H ( @old_unassigned_tags ) {
+		next if $H->skid_id();
+		$H->delete();
+	} # end foreach H
+} else {
+	$log->warn("Not clearing RFID $config{'RFID'}");
+		
 } # end if
 
 $dbh->disconnect();
