@@ -147,13 +147,12 @@ sub calc {
 			$price += $MR{'Price'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f%s=$%.2f<br/>', @MR{'Price','units','Total'});
 		} # end if
-<<<<<<< HEAD:perl/openprint/Estimating/Padding.pm
 
 		my $price = 0;
 
 		my %ServicePrice;
-		if ( ! ( %ServicePrice = openprint::service::get_price_object( 'Padding'.$Project->Type()->name(), $qty, undef ) ) {
-		%ServicePrice = openprint::service::get_price_object( 'Padding', $qty, undef );
+		if ( ! ( %ServicePrice = openprint::service::get_price_object( 'Padding'.$Project->Type()->name(), $qty, undef ) ) ) {
+			%ServicePrice = openprint::service::get_price_object( 'Padding', $qty, undef );
 		} # end if
 		if ( ! %ServicePrice ) {
 			$log->debug('No price');

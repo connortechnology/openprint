@@ -1019,10 +1019,8 @@ if ( ! $blah ) {
 	$dbh->do(q{alter table material_categories alter column id drop default});
 	if ( sets::isin('materialcategoriesindex_seq', \@sequences ) ) {
 		$dbh->do('drop sequence materialcategoriesindex_seq') 
-	}elsif ( sets::isin('material_categories_id_seq', \@sequences ) ) {
-		$dbh->do('drop sequence material_categories_id_seq');
-		$dbh->do('create sequence material_categories_id_seq');
-	}elsif ( ! sets::isin('material_categories_id_seq', \@sequences ) ) {
+	} 
+	if ( ! sets::isin('material_categories_id_seq', \@sequences ) ) {
 		$dbh->do('create sequence material_categories_id_seq');
 	}
 	$dbh->do(q{select setval('material_categories_id_seq', (select max(id) from material_categories))});
@@ -1471,7 +1469,7 @@ if ( ! openprint::Service::find('name'=>'Perforating') ) {
 	} # end if
 }
 if ( ! openprint::Material::find('name'=>'PerforatingWheel') ) {
-	if ( my @M = openprint::Material::find('PerforatingRule') ) {
+	if ( my @M = openprint::Material::find('name'=>'PerforatingRule') ) {
 		foreach my $M ( @M ) {
 			my $New = $M->copy();
 			$New->save({'name'=>'PerforatingWheel'});

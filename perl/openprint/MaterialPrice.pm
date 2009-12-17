@@ -8,7 +8,11 @@ require openprint::logs;
 
 my $debug = 1;
 
-my %fields = (
+use vars qw( $table $serial %defaults %transforms %fields );
+$table = 'tbl_Material_Prices';
+$serial = 'materialprices_id_seq';
+
+%fields = (
 	'id'			=>  'id',
 	'pricelist_id'	=>	'lnglistindex',
 	'material_id'	=>	'lngmaterialindex',
@@ -69,23 +73,6 @@ sub find {
 	return map { new openprint::MaterialPrice( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Material_Prices WHERE id=?', {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-
-} # end sub load
-
-sub delete {
-	my $self = shift;
-
-	sql::execute( undef, undef, 'DELETE FROM tbl_Material_Prices WHERE id=?', $$self{'id'} );
-	openprint::logs::insertLogRecord('13', "Material Price ID: " . $$self{'id'},);
-} # end sub delete
-
 sub save {
 	my ( $self, $param ) = @_;
 
@@ -122,7 +109,7 @@ sub save {
 
 sub next {
 	my $self = shift;
-	return new openprint::MaterialPrice( sql::execute( undef,undef, q{SELECT MIN(Index) WHERE Index > ?}, $$self{'id'} ) );
+	return new openprint::MaterialPrice( sql::execute( undef,undef, q{SELECT MIN(id) FROM 'tbl_material_prices WHERE id > ?}, $$self{'id'} ) );
 } # end sub next
 
 1;
