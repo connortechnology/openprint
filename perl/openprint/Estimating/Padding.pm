@@ -85,25 +85,23 @@ sub calc {
 			my $Paper = openprint::Paper::load_from_signature( $Project, $printing_specs, 1 );
 			if ( $Paper and $Paper->parts() ) {
 				$$specs{'PageQuantity'} = $Paper->parts();
-				@no_output = sets::union( @no_output, 'PageQuantity' );
+				@no_output = sets::exclude( ['PageQuantity'], \@no_output );
 			} # end if
 		} # end if
 	} else {
 		@no_output = sets::union(@no_output, 'PageQuantity');
 	} # end if
 	if ( ! $$specs{'PageQuantity'} ) {
-		$$specs{'alert'} = 'Please select how many pages each pad will have.';
+		$$specs{'alert'} = 'Please select how many pages each pad will have.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( $$specs{'PageQuantity'} < $openprint::config{'MinimumPagesWithoutCounting'} ) {
-		if ( ! $$services{'Counting'} ) {
-			$_ = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' );
-			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $_, 'Counting' ) if $_;
+	if ( $Project->Type()->strid() eq 'ScratchPads' ) {
+		if ( $$specs{'PageQuantity'} < $openprint::config{'MinimumPagesWithoutCounting'} ) {
+			if ( ! $$services{'Counting'} ) {
+				$_ = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' );
+				openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $_, 'Counting' ) if $_;
+			} # end if
 		} # end if
-	} elsif ( $$services{'Counting'} ) {
-		foreach my $si ( @{$$services{'Counting'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $si );
-		} # end foreach
 	} # end if
 
 	my @Materials = openprint::Material::find('category'=>'Padding Glue');
@@ -121,21 +119,42 @@ sub calc {
 		} # end foreach Material
 	} # end if
 
-	my $minimumCharge = openprint::service::get_price( 'PaddingChargeMinimum' );
+	my $minimumCharge;
+	if ( ! ( $minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'Padding'.$Project->Type()->strid().'ChargeMinimum' ) ) ) {
+		$minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'PaddingChargeMinimum' );
+	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		$$specs{'txtPrice'.$qty_index} = '';
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
-		if ( ! $$printing_specs{'PageQuantity'} ) {
+		if ( ( $Project->Type()->strid() eq 'ScratchPads' ) and ( ! $$printing_specs{'PageQuantity'} ) ) {
 			$qty /= int( $$specs{'PageQuantity'} );
+		} elsif ( ( $Project->Type()->strid() eq 'NCR' ) and ( ! $$printing_specs{'PageQuantity'} ) ) {
+			$qty *= int( $$specs{'PageQuantity'} );
 		} # end if
 		$$specs{'hdnBreakdown'.$qty_index} .= "Minimum Charge: $minimumCharge<br/>";
 		$$specs{'hdnBreakdown'.$qty_index} .= "QTY $qty_index: $qty<br/>";
+		my $price = 0;
+
+		my %MR = openprint::service::get_price_object( 'Padding'.$Project->Type()->name().'MakeReady', $qty, undef );
+		if ( ! %MR ) {
+			%MR = openprint::service::get_price_object( 'PaddingMakeReady', $qty, undef );
+		} # end if
+		if ( %MR ) {
+			$MR{'Total'} = $MR{'Price'};
+			$price += $MR{'Price'};
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f%s=$%.2f<br/>', @MR{'Price','units','Total'});
+		} # end if
+<<<<<<< HEAD:perl/openprint/Estimating/Padding.pm
 
 		my $price = 0;
 
-		my %ServicePrice = openprint::service::get_price_object( 'Padding', $qty, undef );
+		my %ServicePrice;
+		if ( ! ( %ServicePrice = openprint::service::get_price_object( 'Padding'.$Project->Type()->name(), $qty, undef ) ) {
+		%ServicePrice = openprint::service::get_price_object( 'Padding', $qty, undef );
+		} # end if
 		if ( ! %ServicePrice ) {
 			$log->debug('No price');
 			$status = 'uncalculated';
@@ -145,13 +164,15 @@ sub calc {
 			next;
 		} elsif ( sets::isin( lc $ServicePrice{'units'}, [ 'per pad', 'each' ] ) ) {
 			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty;
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
 		} elsif ( lc $ServicePrice{'units'} eq 'per m' ) {
 			$ServicePrice{'Total'} = $ServicePrice{'Price'} * $qty / 1000;
+		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
+		} else {
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Unknown units for padding service.<br/>';
 		} # end if
 		$price += $ServicePrice{'Total'};
 			
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('ServicePrice: $%1$.2f%2$s * %4$d = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $qty );
-
 		if ( $$specs{'Backing'} eq 'Cardboard' ) {
 			if ( my @Materials = openprint::Material::find('name'=>'CardboardBacking') ) {
 				my %CardboardPrice = $Materials[0]->get_price( $qty, undef );
@@ -160,7 +181,7 @@ sub calc {
 				} elsif ( $CardboardPrice{'units'} eq 'Per Square Foot' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * ($$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'}/144) * $$specs{"txtQuantity$qty_index"};
 				} elsif ( $CardboardPrice{'units'} eq 'Per Pad' ) {
-					$CardboardPrice{'Total'} = $CardboardPrice{'Price'};
+					$CardboardPrice{'Total'} = $qty * $CardboardPrice{'Price'};
 				} # end if
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Cardboard Price: $%1$.2f%2$s * %4$sx%5$s = $%3$.2f<br/>', @CardboardPrice{'Price','units','Total'}, @$printing_specs{'txtFinalWidth','txtFinalHeight'} );
 				$price += $CardboardPrice{'Total'};
@@ -196,7 +217,7 @@ sub calc {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach
-	return $status;
+	return $$specs{'Status'} = $status;
 } # end sub calc
 
 sub summary {

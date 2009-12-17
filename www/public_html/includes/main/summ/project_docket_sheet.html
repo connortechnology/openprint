@@ -137,7 +137,11 @@
 		@sigs = sort { 
 			my $a_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $a );
 			my $b_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $b );
+			if ( $$a_specs{'basis_mweight'} < 60 or $$b_specs{'basis_mweight'} < 60 ) {
+			return $$b_specs{'PageQuantity'.$$variable{'Project'}->ordered_quantity_index()} <=> $$a_specs{'PageQuantity'.$$variable{'Project'}->ordered_quantity_index()};
+			} else {
 			return $$a_specs{'PageQuantity'.$$variable{'Project'}->ordered_quantity_index()} <=> $$b_specs{'PageQuantity'.$$variable{'Project'}->ordered_quantity_index()};
+			}
 		} @sigs;
 		my $form = 1;
 
