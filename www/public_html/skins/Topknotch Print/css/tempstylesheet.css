@@ -93,12 +93,12 @@ html>body #left_sidebar {
 div#left_sidebar_content {
 	background-image: url(/images/shadow_border/left_sidebar_bg.gif);
 	background-repeat: repeat-y;
-	padding-left: 20px;
+	padding-left: 14px;
 }
 div#left_sidebar_inner {
 	text-align: left;
 	width: 150px;
-	margin: 0px auto 0px auto;
+	margin: 0px;
 }
 div#content_container {
 	background-color: #fff;
@@ -121,40 +121,35 @@ background-repeat: repeat-x;
 background-color: #fff;
 height: 22px;
 }
-div.shadow_tl
-{
+div.shadow_tl {
 float: left;
 background-image: url(/images/shadow_border/tl.gif);
 background-repeat: no-repeat;
 width: 26px;
 height: 22px;
 }
-div.shadow_tr
-{
+div.shadow_tr {
 float: right;
 background-image: url(/images/shadow_border/tr.gif);
 background-repeat: no-repeat;
 width: 17px;
 height: 22px;
 }
-div.bottom_shadow
-{
+div.bottom_shadow {
 clear: left;
 background-image: url(/images/shadow_border/bottom.gif);
 background-repeat: repeat-x;
 background-color: #fff;
 height: 22px;
 }
-div.shadow_bl
-{
+div.shadow_bl {
 float: left;
 background-image: url(/images/shadow_border/bl.gif);
 background-repeat: no-repeat;
 width: 26px;
 height: 22px;
 }
-div.shadow_br
-{
+div.shadow_br {
 float: right;
 background-image: url(/images/shadow_border/br.gif);
 background-repeat: no-repeat;
@@ -239,18 +234,26 @@ div.InstantPricing .shadow_tr {
 	width: 21px;
 	height: 20px;
 }
-div.InstantPricing .shadow_left {
-background-image: url(/images/instant_pricing/shadow_border/left.gif);
+.shadow_left {
+background-image: url(/images/shadow_border/left.gif);
 background-repeat: repeat-y;
 background-position: left;
-padding-left: 7px;
+padding: 0px 0px 0px 14px;
 }
-div.InstantPricing .shadow_right {
-background-color: #e4d9f2;
-background-image: url(/images/instant_pricing/shadow_border/right.gif);
+div.InstantPricing .shadow_left {
+padding-left: 7px;
+background-image: url(/images/instant_pricing/shadow_border/left.gif);
+}
+.shadow_right {
+background-image: url(/images/shadow_border/right.gif);
 background-repeat: repeat-y;
 background-position: right;
+padding: 0px 4px 0px 0px;
+}
+div.InstantPricing .shadow_right {
 padding-right: 7px;
+background-image: url(/images/instant_pricing/shadow_border/right.gif);
+background-color: #e4d9f2;
 }
 div.InstantPricing .bottom_shadow {
 clear: left;

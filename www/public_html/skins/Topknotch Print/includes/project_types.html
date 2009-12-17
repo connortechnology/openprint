@@ -1,6 +1,22 @@
-<? eval ( @{$$variable{'ProjectTypes'}} = sql::execute( $log, $dbh, q{SELECT lngIndex, strID, strName, strDetailedURL FROM Project_Types ORDER BY lngSort, lower(strName)} ); ) ?>
-<ul class="ProjectTypes">
-<? while ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
-<li><a href="/content/<?url?>?ProjectType=<? echo ( URI::Escape::uri_escape($$variable{'id'}) ) ?>&amp;ProjectTypeName=<? echo ( URI::Escape::uri_escape($$variable{'name'}) ) ?>" title="<? hecho ( $$variable{'name'} ) ?>"><? hecho ( $$variable{'name'} ) ?></a></li>
-<? endwhile ( @$variable{'index','id','name','url'} = splice @{$$variable{'ProjectTypes'}}, 0, 4; ) ?>
+<? eval ( 
+	require openprint::ProjectTypeCategory;
+	@{$$variable{'ProjectTypeCategories'}} = openprint::ProjectTypeCategory::find(); ) ?>
+<ul id="ProjectTypes">
+	<? while ( $$variable{'ProjectTypeCategory'} = shift @{$$variable{'ProjectTypeCategories'}} ) ?>
+	<? if ( @{$$variable{'ProjectTypes'}} = $$variable{'ProjectTypeCategory'}->project_types(); ) ?>
+	<li class="Category"><? echo ( $$variable{'ProjectTypeCategory'}->name(); ) ?></li>
+<? echo (
+		my $html;
+		while ( $$variable{'ProjectType'} = shift @{$$variable{'ProjectTypes'}} ) {
+		$html .= sprintf('<li><a href="/content/%4$s?ProjectType=%1$s&amp;ProjectTypeName=%3$s" title="%3$s">%2$s</a></li>',
+			$$variable{'ProjectType'}->strid(), 
+			ssi::htmlize( $$variable{'ProjectType'}->name() ),
+			URI::Escape::uri_escape($$variable{'ProjectType'}->name()), 
+			$$variable{'ProjectType'}->url()
+			);
+		} # end while
+		return $html;
+	) ?>
+	<? endif ( @{$$variable{'ProjectTypes'}} = $$variable{'ProjectTypeCategory'}->project_types(); ) ?>
+	<? endwhile ( $$variable{'ProjectTypeCategory'} = shift @{$$variable{'ProjectTypeCategories'}} ) ?>
 </ul>

@@ -87,50 +87,38 @@ body {
 	.MainBox .Content {
 		padding: 10px;
 	}
-	.MainBox .ProjectTypeBox {
-		display: none;
-	}
 }
 @media screen {
 	.MainBox .Content {
 		margin-left: 190px;
-	}
-
-	.MainBox .ProjectTypeBox {
-		float: left;
-		width: 182px;
-		background-color: #eeeeee;
-		border-right: 1px solid;
-		margin: 0px;
-		clear: none;
-		padding: 5px;
-		padding-top: 10px;
-		height: 100%;
-		padding-bottom: 32767px;
-		margin-bottom: -32767px;
 	}
 }
 img#Butterfly {
 	margin-top: 10px;
 	width: 130px;
 }
-.ProjectTypes {
-	font-family: Arial, Helvetica, sans-serif;
+ul#ProjectTypes {
 	font-size: 12px;
 	font-style: normal;
 	font-weight: normal;
-	padding: 3px;
-	padding-left: 20px;
+	padding: 0px;
 	margin: 0px;
+	list-style: none;
 }
-.ProjectTypes li {
+#ProjectTypes li {
 	margin-left: 0px;
+	list-style: none;
+	padding-left: 5px;
 }
-.ProjectTypes A {
+#ProjectTypes li.Category {
+	background-color: #6A00BE;
+	color: #fff;
+}
+#ProjectTypes A {
 	color: #000000;
 	text-decoration: none;
 }
-.ProjectTypes a:hover {
+#ProjectTypes a:hover {
 	color: #ff00ff;
 /*
 	text-decoration: underline;
