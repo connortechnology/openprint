@@ -4,7 +4,7 @@
 ul#menubar {
 	width:100%;
     left:0px;
-	background-color: #194D98;
+	background-color: maroon;
 	list-style: none;
     margin: 3px 0px 0px 0px;
     padding: 0px;
@@ -38,7 +38,7 @@ ul#menubar li {
 	padding: 0px;
 	border: none;
     display: block;
-    background-color: #194D98;
+    background-color: maroon;
 }
 
 ul#menubar li a {
@@ -79,7 +79,7 @@ ul#menubar li.on ul {
 
 ul#menubar li.on a {
     /*change border color for active topic area*/
-	color: #5a95d6; 
+	color: maroon; 
 	background-color: #ffffff;
 }
 
@@ -95,14 +95,14 @@ ul#menubar li ul li {
 
 ul#menubar li.on ul li a, #menubar li.off ul li a {
     /*ie doesn't inherit the float*/
-	background-color: #5a95d6;
+	background-color: maroon;
     color: #134984;
     margin: 0px;
 	border-bottom: 1px solid white;
 	border-top: 1px solid #ffffff;
 }
 ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
-	background-color: #5a95d6;
+	background-color: #666666;
     color: #FEE00F;
 }
 
