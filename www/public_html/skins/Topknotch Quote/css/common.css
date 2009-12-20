@@ -4,12 +4,12 @@ html {
 }
 body {
     font-family: Arial, Helvetica, sans-serif;
-	font-size: x-small;
+	font-size: small;
 	font-style: normal;
     margin: 0px;
 	padding: 0px;
     background-color: #ffffff;
-	min-width: 975px;
+	min-width: 680px;
 }
 
 @media print {
@@ -18,24 +18,32 @@ body {
 	}
 }
 
-body .Header {
-    height: 52px;
+div#Header {
+	padding: 5px 5px 0px 5px;
 }
+div#Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#Header {height: 1%;}
+* div#Header {display:block;}
+/* End hide from IE-mac */
 
-.Header p {
+#Header p {
 	color:#666666;
 	font-size: 18px;
 	padding: 0px;
 	margin: 0px;
 }
-.Header p label {
-	color:#BCA205;
+#Header p label {
+	color:#bca205;
 	text-align: right;
 	float: left;
 	width: 40px;
-}
-img {
-border: none;
 }
 
 .Content {
@@ -45,35 +53,24 @@ border: none;
 }
 .ContentInner {
     z-index: 0;
-    margin: 5px;
+	width: 100%;
 }
-A {
+a {
 	text-decoration: none;
-    color: #404171;
+	color:#404171;
 	outline:0;
 }
-A:visited {
-    color: #404171;
+a:visited {
+	color:#404171;
 }
-A:hover {
-	color: #687796;
-}
-
-.formOn {
-	background-color: #f1eee5;
-}
-.formOff {
-	background-color: #ffffff;
+a:hover {
+	color:#687796;
 }
 
 select, textarea, option {
     font-size: x-small;
-	background-color: white;
-	color: black;
 }
 input {
-	background-color: white;
-	color: black;
     font-size: x-small;
 }
 input[type="text"], input[type="password"]  {
@@ -136,7 +133,7 @@ table.List td {
 	padding-top: 1px;
 	vertical-align: top;
 }
-table.List tr.totals {
+tr.totals {
 	border-top: 1px solid #cfbb4b;
 }
 
@@ -156,21 +153,9 @@ table.List td textarea {
 .Application fieldset {
 	margin-bottom: 5px;
 }
-.Application span.label {
-    float: left;
-    width: 180px;
-    padding: 2px;
-    margin: 0px;
-    margin-top: 3px;
-}
 .Application legend {
 	color: #BCA205;
 	font-weight: bold;
-}
-.Application .text {
-	width: 200px;
-	margin:3px;
-	height:20px;
 }
 
 .Currency {
@@ -178,13 +163,13 @@ table.List td textarea {
 }
 
 fieldset {
-	border-top: 1px solid #BCA205;
+	border-top: 1px solid #bca205;
 	border-right: none;
 	border-left: none;
 	border-bottom: none;
 }
 fieldset legend {
-	color: #BCA205;
+	color: #bca205;
 	font-weight: bold;
 }
 
@@ -214,15 +199,6 @@ fieldset p label {
 	margin-left: -240px;
 	vertical-align: top;
 	float: left;
-	outline: 0;
-}
-label.radio {
-	width: auto;
-	display: inline;
-	float: none;
-	padding: 0px;
-	margin: 0px;
-	outline: 0;
 }
 p.buttons {
 	float: right;
@@ -255,6 +231,9 @@ fieldset p select {
 fieldset p textarea {
     width: 70%;
 }
+fieldset p option {
+    width: 70%;
+}
 fieldset.filters {
     margin-left: 0px;
     margin-right: 0px;
@@ -269,9 +248,9 @@ fieldset.filters p label {
 }
 fieldset.filters p label.radio {
 	width: auto;
-	margin: 0;
 	display: inline;
 	float: none;
+	margin: 0px;
 }
 fieldset.filters p select {
     width: auto;
@@ -311,9 +290,6 @@ hr {
 .rightColumn {
 	width: 48%;
 	float: right;
-}
-.PageTitle {
-	display: block;
 }
 
 .colRow {
@@ -384,26 +360,14 @@ div.row:after {
 	display: none;
 }
 .PageTitle h1 {
-	font-size: large;
 }
-.PageTitle h1 {
+.PageTitle h2 {
 }
 span.DateSelector {
     float: left;
-	width: 205px;
-}
-span.DateTimeSelector {
-    float: left;
-    width: 400px;
-}
-span.DateSelector select, span.DateTimeSelector select {
-    width: auto;
-    max-width: none;
+	width: 220px;
 }
 
-div.PopupWindow {
-    display: none;
-}
 div.Popup {
     position:absolute;
     visibility: hidden;
@@ -415,154 +379,8 @@ div.Popup {
     z-index: 100;
     display: none;
 }
-
-/* Begin Menu Styles */
-
-ul#menubar {
-	width:100%;
-    left:0px;
-	background-color: #ded9c2;
-	list-style: none;
-    margin: 0px;
-    margin-top: 3px;
-    margin-bottom: 12px;
-    padding: 0px;
-    z-index: 6000;
-    min-width: 325px;
-    display: block;
-}
-@media print {
-    .menubar {
-        display: none;
-    }
-}
-
-
-ul#menubar:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html ul#menubar {height: 1%;}
-*     ul#menubar{display:block;}
-/* End hide from IE-mac */
-
-ul#menubar li {
-    float: left;
-    list-style: none;
-    margin: 0px;
-	padding: 0px;
-	border: none;
-    display: block;
-    background-color: #ded9c2;
-}
-
-ul#menubar li a {
-    color: #404171;
-    display: block;
-    width:85px;
-    padding: 3px 10px 3px 10px;
-    text-decoration: none;
-	font-family: arial, helvetica, sans-serif;
-	font-size: 11px;
-    margin: 0px;
-    overflow: hidden;
-    text-align: left;
-    outline: 0;
-	border-left: 1px solid #ffffff;
-	border-right: 1px solid #ffffff;
-
-}
-ul#menubar li.off ul {
-    /*put the subnavs below and hide them all*/
-    display: none;
-    padding: 0px;
-    margin: 0px;
-    list-style: none;
-    position: absolute;
-	border-top: 1px solid #ffffff;
-}
-
-ul#menubar li.on ul {
-    /*display the current topic*/
-    display: block;
-    padding: 0px;
-    margin: 0px;
-    list-style: none;
-    position: absolute;
-}
-
-ul#menubar li.on a {
-    /*change border color for active topic area*/
-	color: #ffffff; 
-	background-color: #687796;
-}
-
-ul#menubar li ul li {
-    background-color: #ffffff;
-    border: 0;
-    float: none;
-    padding: 0px;
-    margin:0px;
-    list-style: none;
-    text-align: center;
-}
-
-ul#menubar li.on ul li a, #menubar li.off ul li a {
-    /*ie doesn't inherit the float*/
-   background-color: #f1eee5;
-    color: #7f7c75;
-    margin: 0px;
-	border-bottom: 1px solid white;
-	border-top: 1px solid #ffffff;
-    outline: 0;
-}
-ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
-	background-color: #ded9c2;
-	color: #404171;
-}
-
-ul#menubar li.off:hover ul, ul#menubar li.over ul {
-    /*  display the other topics when their parent is hovered */
-    display: block;
-    z-index: 6000;
-}
-
-/* Sub meny entry color */
-#menubar li.off:hover a {
-    color: #ffffff;
-	background-color: #687796;
-}
-#menubar li.off a:hover {
-    color: #ffffff;
-	background-color: #687796;
-}
-#menubar li:hover a {
-    color: #404171;
-}
-#menubar li.over a {
-    color: #ffffff;
-	background-color: #687796;
-}
-
-/* Sub meny entry color */
-#menubar li.off:hover ul li a {
-    color: #404171;
-   background-color: #f1eee5;
-}
-#menubar li.off ul li a:hover {
-    color: #404171;
-}
-#menubar li:hover ul li a {
-    color: #404171;
-}
-#menubar li.over ul li a {
-    color: #404171;
-   background-color: #f1eee5;
+img {
+border: none;
 }
 div.Service span.ThreeColumns {
 	width: 32%;
@@ -574,7 +392,14 @@ div.Service span.TwoColumns {
 }
 h1,h2,h3,h5 {
 	color: maroon;
+	margin-top: 0px;
 }
 div#NewDimensions {
 	display: none;
+}
+label.radio, #Header p label.radio {
+	width: auto;
+	display: inline;
+	float: none;
+	margin: 0px;
 }
