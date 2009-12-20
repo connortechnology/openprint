@@ -2162,6 +2162,8 @@ sub calc_price {
 
 	my $base_impressions = ceil($qty / $imposition);
 	$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
+	$base_impressions *= $Paper->parts() if $Paper->parts();
+$openprint::log->debug("Parts: " . $Paper->parts() );
 
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
@@ -2184,7 +2186,6 @@ sub calc_price {
 		$additional_overs = $minimum if $minimum > $additional_overs;
 		$impressions += $additional_overs;
 	} # end if
-	$impressions *= $Paper->parts() if $Paper->parts();
 
 	my $plate_impressions = $impressions;
 	$plate_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Work & Turn','Work & Tumble'] ));

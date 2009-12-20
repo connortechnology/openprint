@@ -189,30 +189,6 @@ img#Butterfly, img#IDEAG7, img#IDEAG7Master {
 	width: 130px;
 }
 
-ul#ProjectTypes {
-	p\osition: relative;
-	float: left;
-	width: 156px;
-    padding-left: 20px;
-    padding-right: 3px;
-    padding-top: 3px;
-    padding-bottom: 3px;
-    margin: 0px;
-	text-align: left;
-	font-size: 12px;
-	font-weight: bold;
-}
-#ProjectTypes li {
-    margin-left: 0px;
-}
-#ProjectTypes a {
-	color:#194D98;
-    text-decoration: none;
-}
-#ProjectTypes a:hover {
-	color:#FEE00F;
-}
-
 #QuickLogin {
     float: left;
     margin: 0px;
@@ -303,4 +279,33 @@ img#HomeCollage {
 }
 #AlertDiv {
 	color: red;
+}
+ul#ProjectTypes {
+	font-size: 12px;
+	font-style: normal;
+	font-weight: normal;
+	padding: 0px;
+	margin: 0px;
+	list-style: none;
+}
+#ProjectTypes li {
+	margin-left: 0px;
+	list-style: none;
+	padding-left: 5px;
+	text-align: left;
+}
+#ProjectTypes li.Category {
+	background-color: #194D98;
+	font-weight: bold;
+	color: #fff;
+}
+#ProjectTypes A {
+	color:#194D98;
+	text-decoration: none;
+}
+#ProjectTypes a:hover {
+	color:#FEE00F;
+/*
+	text-decoration: underline;
+*/
 }

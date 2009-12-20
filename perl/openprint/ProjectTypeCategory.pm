@@ -34,6 +34,7 @@ sub find {
 
 sub project_types {
 	my $self = shift;
-	
-	return openprint::ProjectType::find( 'category_id'=>$$self{'id'} );
+	my %params = @_;	
+	$params{'category_id'} = $$self{'id'};
+	return openprint::ProjectType::find( %params );
 } # end sub project_types

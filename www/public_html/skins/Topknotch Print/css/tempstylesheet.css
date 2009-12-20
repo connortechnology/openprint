@@ -90,16 +90,6 @@ div#left_sidebar {
 html>body #left_sidebar {
 	margin-left: -185px;
 }
-div#left_sidebar_content {
-	background-image: url(/images/shadow_border/left_sidebar_bg.gif);
-	background-repeat: repeat-y;
-	padding-left: 14px;
-}
-div#left_sidebar_inner {
-	text-align: left;
-	width: 150px;
-	margin: 0px;
-}
 div#content_container {
 	background-color: #fff;
 	width: 1000px;
@@ -157,46 +147,11 @@ width: 17px;
 height: 22px;
 }
 div#main_page {
-	float: left;
-	width: 100%;
-	background-image: url(/images/shadow_border/main_page_bg-l.png);
-	background-repeat: repeat-y;
-}
-div#main_page:after {
-	content: ".";
-	display: block;
-	height: 0;
-	clear: both;
-	visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div#main_page {height: 1%;}
-/* End hide from IE-mac */
-div#main_page2 {
-	background-image: url(/images/shadow_border/main_page_bg-r.png);
-	background-repeat: repeat-y;
-	background-position: right;
 }
 div#main_page_content {
 	padding-left: 20px;
 	padding-right: 10px;
 }
-div#main_page_inner
-{
-background-color: #fff;
-padding: 5px 0px 5px 0px;
-overflow: hidden;
-}
-div#main_page_inner:after {
-content: ".";
-display: block;
-height: 0;
-clear: both;
-visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div#main_page_inner {height: 1%;}
-/* End hide from IE-mac */
 div#choose_currencies_top
 {
 font-size: 12px;

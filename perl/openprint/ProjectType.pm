@@ -29,7 +29,7 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error loading ProjectTypes: ($sql) (@values)");
+		$openprint::log->error("Error loading ProjectTypes: ($sql) (@values) : " . $openprint::dbh->errstr() );
 		return;
 	} # end if
 	return map { new openprint::ProjectType( $_->{lngindex}, $_ ); } @$data;

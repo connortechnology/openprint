@@ -3,10 +3,10 @@
 	<head>
 		<title><?PageTitle?></title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
+        <link rel="stylesheet" href="/css/common.css" type="text/css"/>
+        <link rel="stylesheet" href="/css/main.css" type="text/css"/>
+        <link rel="stylesheet" href="/css/button.css" type="text/css"/>
 		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
-		<link href="/css/main.css" rel="stylesheet" type="text/css"/>
-		<link href="/css/button.css" rel="stylesheet" type="text/css"/>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
@@ -40,25 +40,7 @@
 
 <script type="text/javascript">
 <!--
-		var startList = function() {
-			if (document.all && document.getElementById) {
-				var navRoot = document.getElementById("menubar");
-				if ( navRoot ) {
-					for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-						var node = navRoot.childNodes[i];
-						if (node.nodeName=="LI") {
-							node.onmouseover=function() {
-								this.className+=' over';
-							}
-							node.onmouseout=function() {
-								this.className=this.className.replace(' over', '');
-							}
-						} // end if
-					} // end for
-				} // end if
-			}
-		}
-		window.onload=startList;
+		window.onload=setup_ie_menu;
 -->
 </script>
 
@@ -128,10 +110,11 @@
 				<br class="spacer"/>
 				<!--#include virtual="/skins/Topknotch Quote/includes/customer_menu.html"-->
 				<div id="MainBox">
+					<div id="left_sidebar">
 					<!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
-					<div style="float: right; p\osition: relative; margin:0px; width: 100%; padding: 0px;">
-					<?PageContent?>
+					<img id="Butterfly" src="/images/Butterfly.png" alt="Butterfly"/>
 					</div>
+					<?PageContent?>
 				</div>
 				<span class="unprintable">
 					<br class="spacer"/>

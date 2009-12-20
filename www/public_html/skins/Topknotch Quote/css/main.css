@@ -25,6 +25,7 @@
 }
 /* Hides from IE-mac \*/
 * html div.templates {height: 1%;}
+div.templates {display: block;}
 /* End hide from IE-mac */
 
 .Service div.templates p {
@@ -166,13 +167,10 @@ div.OrderHistory fieldset p label {
 }
 
 div#MainBox {
-    display: block;
     padding: 0px;
     padding-left: 190px;
-    margin: 5px;
-    width: auto;
-    clear: none;
 	min-width: 590px;
+border: 1px solid black;
 }
 div#MainBox:after {
     content: ".";
@@ -183,34 +181,41 @@ div#MainBox:after {
 }
 /* Hides from IE-mac \*/
 * html div#MainBox {height: 1%;}
+div#MainBox {display: block;}
 /* End hide from IE-mac */
+
 img#Butterfly {
 	width: 160px;
 	float: left;
 }
 ul#ProjectTypes {
-    p\osition: relative;
-    float: left;
-    width: 182px;
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
     font-style: normal;
     font-weight: normal;
     padding: 3px;
     margin: 0px;
-    margin-left: -190px;
     list-style: none;
 }
-.ProjectTypes li {
+#ProjectTypes li {
     margin-left: 0px;
+    list-style: none;
+    padding-left: 5px;
 }
-.ProjectTypes a {
+#ProjectTypes li.Category {
+    background-color: maroon;
+    color: #fff;
+}
+#ProjectTypes A {
     color: #000000;
     text-decoration: none;
 }
-.ProjectTypes a:hover {
+#ProjectTypes a:hover {
     color: #ff00ff;
+/*
+ *     text-decoration: underline;
+ */
 }
+
 #QuickLogin {
     float: left;
     margin: 0px;
@@ -280,3 +285,12 @@ ul#ProjectTypes {
 #AlertDiv {
 	color: red;
 }
+
+div#left_sidebar {
+    display: inline-block;
+    float: left;
+    width: 180px;
+    margin: 0px 4px 0px -180px;
+	padding: 0px;
+}
+
