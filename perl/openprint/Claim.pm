@@ -402,8 +402,7 @@ sub send {
 	my $results = 'CLAIM ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	my $Email = new openprint::Email();
 	$results .= $Email->send( 
-			#TO	=>	[ split(',', $self->Contact()->email() ) ],
-			TO	=>	[ 'iconnor@penultima.org' ],
+			TO	=>	[ split(',', $self->Contact()->email() ) ],
 			FROM	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 			SUBJECT	=>	'CLAIM ' . $self->id() . ' for ' . $self->Vendor()->name(),
 			ATTACHMENTS =>	\@attachments,
