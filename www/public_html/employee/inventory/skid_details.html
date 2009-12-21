@@ -265,7 +265,7 @@ function gsm_to_mweight( form ) {
 					my $html = '';
 					my @ManifestContents = openprint::ManifestContent::find('skid_id'=>$$variable{'Skid'}->id() );
 					foreach my $MC ( @ManifestContents ) {
-					$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a><br/>', $MC->manifest_id() );
+					$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%2$s</a><br/>', $MC->manifest_id(), $MC->Manifest()->name() );
 					} # end foreach MC
 					return $html;
 				) ?>
