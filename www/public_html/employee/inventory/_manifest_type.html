@@ -21,7 +21,9 @@
 				$param{'Name-'.$$variable{'type_id'}} = $Paper->name_id();
 				$param{'Finish-'.$$variable{'type_id'}} = $Paper->finish_id();
 				$param{'Colour-'.$$variable{'type_id'}} = $Paper->colour_id();
-				$param{'weight-'.$$variable{'type_id'}} = $Paper->weight();
+				if ( $Paper->weight() =~ /^(\d+)lb$/ ) {
+					$param{'weight-'.$$variable{'type_id'}} = $1;
+				} # end if
 				$param{'Quality-'.$$variable{'type_id'}} = $Paper->quality_id();
 				$param{'type-'.$$variable{'type_id'}} = $Paper->type();
 				$param{'calliper-'.$$variable{'type_id'}} = $Paper->calliper();

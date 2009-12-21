@@ -6,7 +6,7 @@
 	my $html = '';
 	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 	if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send Email' );
+		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send Email' ) if $$variable{'Claim'}->filed_on();
 		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?claim_id='.$$variable{'Claim'}->id(), 'Edit' );
 		#$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
 		if ( $$variable{'Claim'}->deleted() ) {
@@ -46,9 +46,9 @@
 			</div>
 		</div>
 		<div class="Information">
-		<div class="Vendor">
-			<p>
-				<label>Vendor:</label>
+			<div class="Vendor">
+				<p>
+					<label>Vendor:</label>
 <? echo (
 	my $html = '';
 	$html .= $$variable{'Claim'}->Contact()->name().'<br/>' if $$variable{'Claim'}->contact_id();
@@ -62,10 +62,10 @@
 	$html .= $$variable{'Claim'}->vendor_email().'<br/>' if $$variable{'Claim'}->vendor_email();
 	return $html;
 ) ?>
-			</p>
-		</div>
-		<div class="Sender">
-			<p><label>Sender:</label>
+				</p>
+			</div>
+			<div class="Sender">
+				<p><label>Sender:</label>
 				<? echo ( 
 					my $html;
 					$html .= $$variable{'Claim'}->Creator()->name().'<br/>';
@@ -74,37 +74,37 @@
 					$html .= 'Email: ' . $$variable{'Claim'}->Creator()->email().'<br/>' if $$variable{'Claim'}->Creator()->email();
 					return $html;
 				) ?>
-			</p>
-		</div>
-		<div class="Dates">
-			<p class="filed_on"><label>Filed On:</label>
-			<? echo ( 
-				$$variable{'Claim'}->filed_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->filed_on() ) ) : '';
+				</p>
+			</div>
+			<div class="Dates">
+				<p class="filed_on"><label>Filed On:</label>
+				<? echo ( 
+					$$variable{'Claim'}->filed_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->filed_on() ) ) : '';
+					) ?>
+				</p>
+				<p class="sent_to"><label>Sent To Accounts:</label>
+				<? echo ( 
+					$$variable{'Claim'}->sent_to_accounts_on() ?  Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->sent_to_accounts_on() ) ) : '';
 				) ?>
-			</p>
-			<p class="sent_to"><label>Sent To Accounts:</label>
-			<? echo ( 
-				$$variable{'Claim'}->sent_to_accounts_on() ?  Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->sent_to_accounts_on() ) ) : '';
-			) ?>
-			</p>
-			<p class="invoiced_on"><label>Invoiced On:</label>
-			<? echo ( 
-				$$variable{'Claim'}->invoiced_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->invoiced_on() ) ) : '';
-			) ?>
-			</p>
-<? if ( $$variable{'Claim'}->invoiced_on() ) ?>
-			<p class="invoice_no"><label>Invoice #:</label>
-			<? echo ( $$variable{'Claim'}->invoice_id() ) ?>
-			</p>
-<? endif ( $$variable{'Claim'}->invoiced_on() ) ?>
-			<p class="cancelled_on"><label>Cancelled On:</label>
-			<? echo ( 
-$$variable{'Claim'}->cancelled_on() ?
-Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->cancelled_on() ) )
-: '';
-) ?>
-			</p>
-		</div>
+				</p>
+				<p class="invoiced_on"><label>Invoiced On:</label>
+				<? echo ( 
+					$$variable{'Claim'}->invoiced_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->invoiced_on() ) ) : '';
+				) ?>
+				</p>
+	<? if ( $$variable{'Claim'}->invoiced_on() ) ?>
+				<p class="invoice_no"><label>Invoice #:</label>
+				<? echo ( $$variable{'Claim'}->invoice_id() ) ?>
+				</p>
+	<? endif ( $$variable{'Claim'}->invoiced_on() ) ?>
+				<p class="cancelled_on"><label>Cancelled On:</label>
+				<? echo ( 
+	$$variable{'Claim'}->cancelled_on() ?
+	Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->cancelled_on() ) )
+	: '';
+	) ?>
+				</p>
+			</div>
 		</div>
 		<div class="Contents">
 <table id="Contents">
