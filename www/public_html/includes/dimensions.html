@@ -1,4 +1,4 @@
-<li id="CustomDimensions" <? echo ( sets::isin( $$variable{'ProjectType'}->name(),[ 'Letterhead','ScratchPads','RackCards','DoorHangers','Posters','Labels' ] ) ? 'style="display:none;"' : ''; ) ?>
+<li id="CustomDimensions" <? echo ( sets::isin( $$variable{'ProjectType'}->name(),[ 'Letterhead','ScratchPads','RackCards','DoorHangers','Posters','Labels' ] ) ? 'style="display:none;"' : ''; ) ?>>
 	W x H in inches<br class="spacer"/>
 	<label>Finished:</label>
 	<input name="txtFinalWidth" size="6" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/> x

@@ -16,8 +16,6 @@
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 			<div class="shadow_left"><div class="shadow_right">
 				<div class="Questions"><div class="<? echo ( $$variable{'ProjectType'}->name() ) ?>">
-					<h3>Instant Pricing</h3>
-
 			<!--#include virtual="_project_name.html"-->
 			<div class="ProjectSpecifications">
 				<h1>Project Specifications</h1>
@@ -27,35 +25,35 @@
 				<? endif ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
 				<div class="Colours">
 					<fieldset><legend>Colours</legend>
-					<div class="content">
-						<ul>
-					<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
-					<li><label>Colours:</label>
-						<select name="Colours" onchange="calc(this.form.name);">
-							<option value="1/0">Black One Side</option>
-							<option value="1/1">Black Both Sides</option>
-							<option value="4/0">4 Colour One Side</option>
-							<option value="4/4">4 Colour Both Sides</option>
-						</select>
-					</li>
-					<? else ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
-							<li><label>Colours:</label>
-								<select name="Colours" onchange="calc(this.form.name);">
-									<option value="4/0">4 Colour One Side</option>
-									<option value="4/1">4 Colour/Black</option>
-									<option value="4/4">4 Colour Both Sides</option>
-								</select>
-							</li>
-					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
-					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
-							<!--#include virtual="/includes/aqueous.html"-->
+						<div class="content">
+							<ul>
+								<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+								<li><label>Colours:</label>
+									<select name="Colours" onchange="calc(this.form.name);">
+										<option value="1/0">Black One Side</option>
+										<option value="1/1">Black Both Sides</option>
+										<option value="4/0">4 Colour One Side</option>
+										<option value="4/4">4 Colour Both Sides</option>
+									</select>
+								</li>
+								<? else ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+								<li><label>Colours:</label>
+									<select name="Colours" onchange="calc(this.form.name);">
+										<option value="4/0">4 Colour One Side</option>
+										<option value="4/1">4 Colour/Black</option>
+										<option value="4/4">4 Colour Both Sides</option>
+									</select>
+								</li>
+								<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
+								<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
+								<!--#include virtual="/includes/aqueous.html"-->
 
-					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
-							<!--#include virtual="/includes/uvcoating.html"-->
-					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
-					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
-						</ul>
-				</div>
+								<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
+								<!--#include virtual="/includes/uvcoating.html"-->
+								<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
+								<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
+							</ul>
+						</div>
 					</fieldset>
 				</div>
 				<div class="Stock"><fieldset><legend>Stock</legend>

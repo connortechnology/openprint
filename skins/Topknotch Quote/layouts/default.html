@@ -53,37 +53,36 @@ padding-left: 0px;
 
 		<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 		<div class="shadow_left"><div class="shadow_right">
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/header.html"-->
-			<!--#include virtual="/skins/<?SiteTitle?>/includes/customer-menu.html"-->
+			<? echo ( join('',
+			ssi::include( $config{'SkinPath'}.'/includes/header.html' ),
+			ssi::include( $config{'SkinPath'}.'/includes/customer-menu.html' ),
+			); ) ?>
 		</div></div>
 		<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
-		 <div id="main_content">
+		<div id="main_content">
 			<div id="main_content_inner">
 				<? if ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 				<? else ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
-<div id="left_sidebar">
-	<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
-	<div class="shadow_left"><div class="shadow_right">
-
-		<!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
-		<img id="Butterfly" src="/images/logo_butterfly.jpg" alt="Butterfly"/>
-		<a href="http://www.idealliance.org"><img id="IDEAG7" src="/images/IDEA.G7.png" alt="IDEA.G7"/></a>
-		<a href="http://www.idealliance.org"><img id="IDEAG7Master" src="/images/IDEA.G7Master.png" alt="IDEA.G7Master"/></a>
-
-	</div></div>
-	<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
-</div>
-				<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
-						<div id="main_page">
+				<div id="left_sidebar">
 					<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 					<div class="shadow_left"><div class="shadow_right">
-<div id="main_page_content"><?PageContent?></div>
+					<? echo ( ssi::include( $config{'SkinPath'}.'/includes/project_types.html' ); ) ?>
+					<img id="Butterfly" src="/images/logo_butterfly.jpg" alt="Butterfly"/>
+					<a href="http://www.idealliance.org"><img id="IDEAG7" src="/images/IDEA.G7.png" alt="IDEA.G7"/></a>
+					<a href="http://www.idealliance.org"><img id="IDEAG7Master" src="/images/IDEA.G7Master.png" alt="IDEA.G7Master"/></a>
 					</div></div>
 					<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
-</div>
+				</div>
+				<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
+				<div id="main_page">
+					<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+					<div class="shadow_left"><div class="shadow_right">
+						<div id="main_page_content"><? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?></div>
+					</div></div>
+					<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+				</div>
 			</div>
-		 </div>
-		 &nbsp;
+		</div>
 		</div>
 	</body>
 </html>

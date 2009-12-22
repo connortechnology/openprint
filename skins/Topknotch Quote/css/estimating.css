@@ -1,16 +1,13 @@
 .InstantPricing {
-    font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
     font-style: normal;
     color: #000000;
 }
 .InstantPricing IMG {
 	border: 1px solid black;
-	height: 130px;
+	width: 150px;
 }
 .InstantPricing IMG#FoldType {
-	width: 130px;
-	height: 130px;
 	display: none;
 }
 .InstantPricing select {
@@ -20,11 +17,8 @@
 .InstantPricing .Questions {
 	color: black;
 	font-weight: normal;
-	width: 267px;
 	margin-left: 10px;
 	margin-bottom: 10px;
-	float: right;
-	border: 1px solid maroon;
 	padding: 5px;
 }
 .InstantPricing .Questions p {
@@ -36,6 +30,13 @@
 	color: #000000;
 	font-weight: bold;
 }
+div#instant_price_section ul li {
+	border: 1px solid black;
+}
+div#instant_price_section ul li p {
+	width: 100%;
+}
+
 div#instant_price_section ul li label.radio {
     float: none;
     width: auto;
@@ -44,9 +45,6 @@ div#instant_price_section ul li label.radio {
 }
 
 
-.InstantPricing h3 {
-	margin: 0px;
-}
 .InstantPricing .Questions h3 {
 	color: maroon;
 	text-align:center;
@@ -60,8 +58,12 @@ div#instant_price_section ul li label.radio {
 
 .Questions fieldset {
 	padding: 0px;
+	margin: 0px;
     border: none;
     width: 100%;
+}
+.Questions fieldset legend {
+	display: none;
 }
 .checkOption {
 	float: left;
@@ -74,9 +76,9 @@ div.Prices {
    text-align: center;
 }
 div#instant_price_section {
-         float: right;
-         width: 289px;
-      }
+	float: right;
+	width: 289px;
+}
 div#instant_price_section ul {
 	list-style: none;
 	margin: 0px;
@@ -94,8 +96,6 @@ div#instant_price_section .Stock {
 	float: none;
 	width: 100%;
 }
-
-
 
 #Specials {
 	width: 60%;

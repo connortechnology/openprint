@@ -3,7 +3,7 @@
 	my @ProjectTypeCategories = openprint::ProjectTypeCategory::find('order'=>'sort,lower(name)');
 	my $html = '<ul id="ProjectTypes">';
 	foreach my $ProjectTypeCategory ( @ProjectTypeCategories ) {
-		my @ProjectTypes = $ProjectTypeCategory->project_types('order'=>'lngsort,lower(strname)');
+		my @ProjectTypes = $ProjectTypeCategory->ProjectTypes('order'=>'sorting,lower(name)');
 		next if ! @ProjectTypes;
 
 		$html .= sprintf('<li class="Category">%s</li>', $ProjectTypeCategory->name() );
