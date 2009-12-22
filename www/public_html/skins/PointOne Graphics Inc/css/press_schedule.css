@@ -157,7 +157,7 @@ div.row {
 		float: left;
 		p\osition: relative;
 	}
-	.assign {
+	.Operator, .assign {
 		float: right;
 	}
 	@media print {
@@ -209,7 +209,7 @@ span.CSR {
 	font-weight: bold;
 	text-transform: uppercase;
 }
-span.Operator {
+span.PrepressOperator {
 	font-weight: normal;
 	text-transform: lowercase;
 }

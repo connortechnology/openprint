@@ -225,7 +225,7 @@ sub get_li {
 		$html .= ssi::htmlize( $n );
 		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
 		if ( $Project->operator_id() ) {
-			$html .= ' (<span class="Operator">'.$Project->Operator()->firstname().'</span>)';
+			$html .= ' (<span class="PrepressOperator">'.$Project->Operator()->firstname().'</span>)';
 		} # end if
 		$html .= '</div>';
 		$html .= qq`<span class="DueDate" id="JumpToDate$$row{'serviceindex'}">`;
