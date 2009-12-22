@@ -157,7 +157,7 @@ div.row {
 		float: left;
 		p\osition: relative;
 	}
-	.Operator, .assign {
+	.assign {
 		float: right;
 	}
 	@media print {
@@ -204,4 +204,12 @@ a.buttonImageOff .c {
 
 a.buttonImageOn .c {
 	padding: 1px 2px 1px 2px;
+}
+span.CSR {
+	font-weight: bold;
+	text-transform: uppercase;
+}
+span.Operator {
+	font-weight: normal;
+	text-transform: lowercase;
 }
