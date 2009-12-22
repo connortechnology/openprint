@@ -1337,6 +1337,26 @@ sub last_scheduled_seconds {
 	return Date::Parse::str2time( $_[0]->last_scheduled() );
 } # end sub last_scheduled_seconds
 
+sub operator_id {
+    my ( $self ) = @_;
+
+	if ( ! $$self{'operator_id'} ) {
+		my $services = $self->services();
+		@$self{'operator_id'} = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$self{id}, ( $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0] ) );
+	} # end if
+    return $$self{'operator_id'};
+} # end sub Operator
+
+sub Operator {
+    my ( $self ) = @_;
+
+	if ( ! $$self{'Operator'} ) {
+		$$self{'Operator'} = new openprint::User( $self->operator_id() );
+	} # end if
+    return $$self{'Operator'};
+} # end sub Operator
+
+
 1;
 
 __END__
