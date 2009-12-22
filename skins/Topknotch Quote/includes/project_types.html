@@ -1,14 +1,21 @@
-<ul id="ProjectTypes">
-	<? echo (
-		my $html = '';
-		foreach my $ProjectType ( openprint::ProjectType::find( 'order'=> 'sorting, lower(name)' ) ) {
-			$html .= sprintf('<li><a href="/content/%1$s?projecttype_id=%2$s" title="%3$s">%3$s</a></li>',
-				$ProjectType->url(), 
-				$ProjectType->id(), 
-				ssi::htmlize($ProjectType->description()) 
+<? echo ( 
+	require openprint::ProjectTypeCategory;
+	my @ProjectTypeCategories = openprint::ProjectTypeCategory::find('order'=>'sort,lower(name)');
+	my $html = '<ul id="ProjectTypes">';
+	foreach my $ProjectTypeCategory ( @ProjectTypeCategories ) {
+		my @ProjectTypes = $ProjectTypeCategory->project_types('order'=>'lngsort,lower(strname)');
+		next if ! @ProjectTypes;
+
+		$html .= sprintf('<li class="Category">%s</li>', $ProjectTypeCategory->name() );
+		foreach my $ProjectType ( @ProjectTypes ) {
+			$html .= sprintf('<li><a href="/content/%4$s?ProjectType=%1$s&amp;ProjectTypeName=%3$s" title="%3$s">%2$s</a></li>',
+				$ProjectType->strid(), 
+				ssi::htmlize( $ProjectType->name() ),
+				URI::Escape::uri_escape($ProjectType->name()), 
+				$ProjectType->url()
 				);
-		} # end foreach ProjectType
-		return $html;
-	) ?>
-	<img id="Butterfly" src="/images/logo_butterfly.jpg" alt="Butterfly" />
-</ul>
+		} # end foreach
+	} # end foreach
+	$html .= "</ul>\n";
+	return $html;
+) ?>

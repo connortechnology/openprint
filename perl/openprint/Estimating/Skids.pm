@@ -35,7 +35,7 @@ my %variables = (
 	'txtPrice1' => ['save','output'], 'txtPrice2' => ['save','output'], 'txtPrice3' => ['save','output'],
 	'Markup1'=>['save'], 'Markup2'=>['save'], 'Markup3'=>['save'],
 	'OverridePrice1'=>['save'], 'OverridePrice2'=>['save'], 'OverridePrice3'=>['save'],
-	'txtFinishedCalliper' => ['save','output'],
+	'txtFinishedCalliper' => ['save','output'], 'chkOverrideFinishedCalliper' => ['save'],
 	'txtFinishedWeight' => ['save','output'],
 	'ddmPackageType1' => ['save','output'], 'OverridePackageType1'=>['save'],
 	'ddmPackageType2' => ['save','output'], 'OverridePackageType2'=>['save'],
@@ -111,7 +111,9 @@ sub calc {
 		$$specs{'alert'} .= "Dimensions of project are not known. Please enter them.";
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
+	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
+		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
+	} # end if
 	if ( ! $$specs{'txtFinishedCalliper'} ) {
 		$$specs{'alert'} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{'Status'} = 'uncalculated';

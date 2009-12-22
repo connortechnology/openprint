@@ -2899,6 +2899,7 @@ sub calc_price {
 	} else {
 		$base_impressions = ceil($qty / $imposition);
 		$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
+		$base_impressions *= $Paper->parts() if $Paper->parts();
 	} # end if
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
 	if ( $max_impression_quantity and ($max_impression_quantity < $base_impressions ) ) {
@@ -3102,7 +3103,6 @@ sub calc_price {
 		$additional_overs = $minimum if $minimum > $additional_overs;
 		$impressions += $additional_overs;
 	} # end if
-	$impressions *= $Paper->parts() if $Paper->parts();
 
 	my $plate_impressions = $impressions;
 	$plate_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Work & Turn','Work & Tumble'] ));
