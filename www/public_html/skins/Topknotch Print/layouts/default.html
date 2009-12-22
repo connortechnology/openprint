@@ -50,20 +50,35 @@
 			<div id="main_content_inner">
 		<? if ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 		<? else ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
-<div id="left_sidebar">
-	<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
-			<div class="shadow_left"><div class="shadow_right">
-		 <!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
-		<img id="Butterfly" src="/images/Butterfly.png" alt="Butterfly"/>
-		</div></div>
-	<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
-</div>
+		<div id="left_sidebar">
+			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+				<div class="shadow_left"><div class="shadow_right">
+				 <!--#include virtual="/skins/<?SiteTitle?>/includes/project_types.html"-->
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+    <input type="hidden" name="cmd" value="_xclick"/>
+    <input type="hidden" name="business" value="amin@topknotch.com"/>
+    <input type="hidden" name="item_name" value="Topknotch Prep &amp; Print Funds Transfer"/>
+    <input type="hidden" name="item_number" value="MSD-01"/>
+    <input type="hidden" name="no_shipping" value="1"/>
+    <input type="hidden" name="return" value="http://www.topknotch.com"/>
+    <input type="hidden" name="no_note" value="1"/>
+    <input type="hidden" name="currency_code" value="CAD"/>
+    <input type="hidden" name="tax" value="0"/>
+    <input type="hidden" name="bn" value="EZ Donate"/>
+    <input type="image" width="100%" src="/images/paypal.gif" name="submit" alt="paypal image"/>
+</form>
+				<img id="Butterfly" src="/images/Butterfly.png" alt="Butterfly"/>
+				</div></div>
+			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+		</div>
 		<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
+			<div id="main_page">
 				<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 				<div class="shadow_left"><div class="shadow_right">
 					<div id="main_page_content"><?PageContent?></div>
 				</div></div>
 				<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+			</div>
 			</div>
 		</div>
 		&nbsp;
