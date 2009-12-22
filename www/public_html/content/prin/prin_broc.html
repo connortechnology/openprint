@@ -115,6 +115,7 @@
 	   </div><!--instant_price_section-->
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
+$log->debug("Including");
 		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
 	} # end if
 	return '';

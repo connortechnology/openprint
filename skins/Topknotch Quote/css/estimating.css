@@ -29,12 +29,11 @@
 	float: left;
 	color: #000000;
 	font-weight: bold;
+	margin: 0px;
 }
 div#instant_price_section ul li {
-	border: 1px solid black;
 }
 div#instant_price_section ul li p {
-	width: 100%;
 }
 
 div#instant_price_section ul li label.radio {
@@ -86,7 +85,7 @@ div#instant_price_section ul {
 }
 div#instant_price_section ul li {
     text-align: right;
-	padding:5px 7px 5px 7px;
+	padding:5px 0px 5px 0px;
     list-style: none;
 }
 div#instant_price_section .ProjectName input {
@@ -104,4 +103,18 @@ div#instant_price_section .Stock {
 #steps {
     display: none;
 }
-
+.Colours {
+}
+.Colours fieldset {
+}
+.Colours fieldset div.content {
+}
+.Colours fieldset div.content ul {
+}
+div#instant_price_section fieldset div.content ul li p {
+	padding: 0px;
+	margin: 0px;
+	width: 100%;
+}
+.Colours label {
+}
