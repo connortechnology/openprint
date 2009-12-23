@@ -55,12 +55,14 @@ my $debug = 0;
 
 %transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
-	'wage'			=>	[ 's/[^\d\.]//g' ],
+	'wage'				=>	[ 's/[^\d\.]//g' ],
+	'email'				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
+	'password'			=>	[ 's/^\s+//', 's/\s+$//' ],
 	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
 	'purchasing_total_limit'	=>	[ 's/[^\d\.\-]//g' ],
 	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
-	'created_on'		=> [ 's/.*//g' ],
-	'updated_on'		=> [ 's/.*//g' ],
+	'created_on'		=>	[ 's/.*//g' ],
+	'updated_on'		=>	[ 's/.*//g' ],
 );
 
 %defaults = (

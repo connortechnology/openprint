@@ -25,11 +25,11 @@ padding-left: 0px;
 		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
-				<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
-				<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
-				<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.1"></script>
-		<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
-		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+			<script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
+			<script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
+			<script type="text/javascript" src="/javascripts/simpleprinting.js?version=1.1"></script>
+			<link rel="stylesheet" href="/css/estimating.css" type="text/css"/>
+			<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/payment/ ) ?>
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
@@ -66,7 +66,7 @@ padding-left: 0px;
 				<div id="left_sidebar">
 					<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 					<div class="shadow_left"><div class="shadow_right">
-					<? echo ( ssi::include( $config{'SkinPath'}.'/includes/project_types.html' ); ) ?>
+					<? echo ( ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/project_types.html' ); ) ?>
 					<img id="Butterfly" src="/images/logo_butterfly.jpg" alt="Butterfly"/>
 					<a href="http://www.idealliance.org"><img id="IDEAG7" src="/images/IDEA.G7.png" alt="IDEA.G7"/></a>
 					<a href="http://www.idealliance.org"><img id="IDEAG7Master" src="/images/IDEA.G7Master.png" alt="IDEA.G7Master"/></a>

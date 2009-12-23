@@ -99,7 +99,7 @@ function rdbSuppliedStock_onchange( element, id ) {
 	var form = element.form;
 	if ( gettingNewPrice ) {
 		if ( timeout ) clearTimeout( timeout );
-		timeout = setTimeout( 'rdbSuppliedStock_onchange($(' + element.id + '),"' + id + '");', 1000 );
+		timeout = setTimeout( 'rdbSuppliedStock_onchange($(\'' + element.id + '\'),"' + id + '");', 1000 );
 		return;
 	} // end if
 	timeout = null;

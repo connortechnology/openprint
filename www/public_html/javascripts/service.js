@@ -12,8 +12,7 @@ function calc( formName, force ) {
 	var form = getFormObj( formName );
 	if ( form && form.ServiceType ) {
 		if ( gettingNewPrice && ! force ) {
-			if ( timeout )
-				clearTimeout( timeout );
+			if ( timeout ) clearTimeout( timeout );
 			timeout = setTimeout( "calc('" + formName + "');", 1000 );
 		} else {
 			timeout = null;
@@ -27,7 +26,6 @@ function calc( formName, force ) {
 		} // end if
 	} // end if
 } // end calc()
-
 
 function cbFillResults( results ) {
     var form = getFormObj('f1');
@@ -118,7 +116,6 @@ function cbAddService( results ) {
 function delService( formName, service ) {
     var form = getFormObj(formName);
     jsrsExecute( '/jsrs.htm', cbDelService, 'openprint::print_project::del_service', new Array( form.ProjectIndex.value, service ) );
-
 } // end function addService
 
 function cbDelService( results ) {

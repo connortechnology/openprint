@@ -4,48 +4,32 @@
 </div>
 <script type="text/javascript">
 	function load_projects( form ) {
-		LoadContent('Results','/employee/reports/_turnaround_results.html', Serialize( form ) );
+		//LoadContent('Results','/employee/reports/_turnaround_results.html', Serialize( form ) );
+        new Ajax.Updater('Results','/employee/reports/_turnaround_results.html', {method:'get',
+                onLoading:function(){ $('Results').innerHTML='Loading...'; },
+                onSuccess:function(){ TableKit.Sortable.reload('ResultsTable'); },
+                parameters:Form.serialize(form)});
+                //evalScripts:true, 
 	} // end function
 </script>
-
-<form name="f1" method="post" action="turnaround.html">
+<form id="f1" name="f1" method="post" action="turnaround.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>
 			<label>CSR:</label>
-				<select name="CSR" size="1" onchange="load_projects(this.form);">
-				<? echo ( 
-					my @options = ( '', 'All' );
-					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)','usergroup'=>'Sales');
-					return ssi::make_drop_down( \@options, $param{'CSR'} );
-				 ) ?>
-				
-				</select>
+			<select name="CSR" size="1" onchange="load_projects(this.form);">
+			<? echo ( 
+				my @options = ( '', 'All' );
+				push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)','usergroup'=>'Sales');
+				return ssi::make_drop_down( \@options, $param{'CSR'} );
+			 ) ?>
+			
+			</select>
 		</p>
-	<? eval (
-		my @time = localtime(time);
-		if ( ! $r->param('DateStartYear') ) {
-			@$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
-		} else {
-			@$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,
-			$r->param('DateStartYear'), $r->param('DateStartMonth'),$r->param('DateStartDay') );
-		} # end if
-
-		if ( ! $r->param('DateEndYear') ) {
-			@$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh, $time[5]+1900, $time[4]+1, $time[3] );
-		} else {
-			@$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh,
-			$r->param('DateEndYear'), $r->param('DateEndMonth'),$r->param('DateEndDay') );
-		} # end if
-	) ?>
 		<p>
 			<label>Due Date:</label>
-			<select name="DateStartYear" onchange="setDaysDropDown(this.value,this.form.DateStartMonth.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartYears?></select>
-			<select name="DateStartMonth" onchange="setDaysDropDown(this.form.DateStartYear.value,this.value,this.form.DateStartDay,this.form.DateStartDay.value);"><?DateStartMonths?></select>
-			<select name="DateStartDay"><?DateStartDays?></select>
+			<? echo ( ssi::date_select( 'duedate_start' ); ) ?>
 			to 
-			<select name="DateEndYear" onchange="setDaysDropDown(this.value,this.form.DateEndMonth.value,this.form.DateEndDay,this.form.DateEndDay.value);"><?DateEndYears?></select>
-			<select name="DateEndMonth" onchange="setDaysDropDown(this.form.DateEndYear.value,this.value,this.form.DateEndDay,this.form.DateEndDay.value);"><?DateEndMonths?></select>
-			<select name="DateEndDay"><?DateEndDays?></select>
+			<? echo ( ssi::date_select( 'duedate_end' ); ) ?>
 		</p>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', q{load_projects(f1);}, '', 'Show Results' ); ) ?>

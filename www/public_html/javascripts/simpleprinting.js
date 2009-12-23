@@ -83,7 +83,7 @@ function cbCalc( results ) {
 function Dimensions_onchange( select, signature ) {
 	var value = get_ddm_value( select );
 	if ( value == 'Custom' ) {
-	add_div('CustomDimensions');
+		$('CustomDimensions').show();
 	} else {
 	//remove_div('CustomDimensions');
 	} // end if

@@ -602,7 +602,7 @@ sub find {
 		push @values, $params{'salesrep_id'};
 	} # end if
 	if ( $params{'csr_id'} ) {
-		$sql .= ' AND company_id IN (SELECT id FROM Companies WHERE salesrep_id)=?';
+		$sql .= ' AND ( company_id IN (SELECT id FROM Companies WHERE salesrep_id=?) )';
 		push @values, $params{'csr_id'};
 	} # end if
 
@@ -619,7 +619,7 @@ sub find {
 	if ( $params{'status'} ) {
 		if ( ref $params{'status'} eq 'ARRAY' ) {
 			if ( @{$params{'status'}} ) {
-				$sql .= q{ AND strStatus IN (} . join(',', map {'?'} @{$params{'status'}}). ')';
+				$sql .= q{ AND (strStatus IN (} . join(',', map {'?'} @{$params{'status'}}). ') )';
 						push @values, @{$params{'status'}};
 			} # end if
 		} else {
@@ -1421,14 +1421,6 @@ sub add_service {
     return $service_index;
 } # end sub add_service
 
-sub Operator {
-    my ( $self ) = @_;
-
-    my $services = $self->services();
-    my $User = new openprint::User( sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$self{id}, ( $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0] ) ) );
-    return $User;
-} # end sub get_prepressoperator
-
 sub started_on {
 	my ( $self ) = @_;
 	return sql::execute( undef, undef, q{ SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
@@ -1548,6 +1540,26 @@ sub last_scheduled {
 sub last_scheduled_seconds {
 	return Date::Parse::str2time( $_[0]->last_scheduled() );
 } # end sub last_scheduled_seconds
+
+sub operator_id {
+    my ( $self ) = @_;
+
+	if ( ! $$self{'operator_id'} ) {
+		my $services = $self->services();
+		@$self{'operator_id'} = sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $$self{id}, ( $$services{'Proofs'} ? $$services{'Proofs'}[0] : $$services{'FilmStripping'}[0] ) );
+	} # end if
+    return $$self{'operator_id'};
+} # end sub Operator
+
+sub Operator {
+    my ( $self ) = @_;
+
+	if ( ! $$self{'Operator'} ) {
+		$$self{'Operator'} = new openprint::User( $self->operator_id() );
+	} # end if
+    return $$self{'Operator'};
+} # end sub Operator
+
 
 1;
 __END__

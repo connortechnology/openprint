@@ -1,20 +1,24 @@
 <div class="Prices">
-<ul>
-	<li class="unitprice">
-		<label>Price each:</label>
-		<input type="text" size="9" name="txtUnitPrice1" readonly="readonly" />
-	</li>
-	<li class="totalprice">
-		<label>Production Cost <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
-		<input type="text" size="9" name="ProductionPrice1" readonly="readonly" />
-	</li>
-	<li class="project_id">
-		<label>Quote #</label>
-		<input type="text" size="9" name="ProjectIndex" readonly="readonly" value="<? echo ( $param{'project_id'} ) ?>" />
-	</li>
-</ul>
-Price quoted is an approximate estimate. All orders will be + or - 5%.<br/>
-If exact quantities are required - please add 5% the required quantity.
+	<ul>
+		<li class="unitprice">
+			<label>Price each:</label>
+			<input type="text" size="9" name="txtUnitPrice1" readonly="readonly" />
+		</li>
+		<li class="totalprice">
+			<label>Production Cost <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
+			<input type="text" size="9" name="ProductionPrice1" readonly="readonly" />
+		</li>
+		<li id="ShippingPrice">
+			<label>Delivery Cost <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
+			<input type="text" id="ShippingPrice1" name="ShippingPrice1" size="9" readonly="readonly" onfocus="this.blur();" />
+		</li>
+		<li class="project_id">
+			<label>Quote #</label>
+			<input type="text" size="9" name="ProjectIndex" readonly="readonly" value="<? echo ( $param{'project_id'} ) ?>" />
+		</li>
+	</ul>
+	Price quoted is an approximate estimate. All orders will be + or - 5%.<br/>
+	If exact quantities are required - please add 5% the required quantity.
 </div><!--Prices-->
 <p class="buttons">
 <? echo ( 
@@ -26,29 +30,28 @@ If exact quantities are required - please add 5% the required quantity.
 ) ?>
 <? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate',{'class'=>'Calculate'}); ) ?>
 </p>
-<!--#include virtual="_ups.html"-->
 <div id="subtotal">
-<? echo (
-	my $Currency = openprint::Currency::get_current();
-	if ( $Currency ) {
-	return 'All prices listed in ' .$Currency->name .' and are subject to applicable taxes.';
-	} else {
-		return 'Currency not selected.';
-	} # end if
-	) ?>
-<ul>
-	<li>
-		<label>Sub Total <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
-		<input type="text" size="9" name="txtPrice1" readonly="readonly" value="<?txtPrice1?>" />
-	</li>
-</ul>
+	<? echo (
+		my $Currency = openprint::Currency::get_current();
+		if ( $Currency ) {
+		return 'All prices listed in ' .$Currency->name .' and are subject to applicable taxes.';
+		} else {
+			return 'Currency not selected.';
+		} # end if
+		) ?>
+	<ul>
+		<li>
+			<label>Sub Total <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
+			<input type="text" size="9" name="txtPrice1" readonly="readonly" value="<?txtPrice1?>" />
+		</li>
+	</ul>
 </div>
 <p class="buttons" id="OrderButton" <? echo ( 'style="display:none;"' if $$variable{'Status'} ne 'Unordered' ) ?> >
-<? echo ( 
-sets::isin( $session{'user_type'}, ['E','A'] ) ? 
-ssi::writeButton( $log, $dbh, 'Quote', '', "click_quote( document.f1 );", '', 'Email Quote', {'class'=>'rightarrow'}) 
-: ''
-) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'Order', '', "click_order( document.f1 );", '', 'Place Order', {'class'=>'rightarrow'}) if $config{AllowOrdering} ne 'false'; ) ?>
+	<? echo ( 
+	sets::isin( $session{'user_type'}, ['E','A'] ) ? 
+	ssi::writeButton( $log, $dbh, 'Quote', '', "click_quote( document.f1 );", '', 'Email Quote', {'class'=>'rightarrow'}) 
+	: ''
+	) ?>
+	<? echo ( ssi::writeButton( $log, $dbh, 'Order', '', "click_order( document.f1 );", '', 'Place Order', {'class'=>'rightarrow'}) if $config{AllowOrdering} ne 'false'; ) ?>
 </p>
 <input type="hidden" name="btnFunction" id="btnFunction" />

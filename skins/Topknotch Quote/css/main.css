@@ -106,7 +106,6 @@ img#HomeCollage {
 	color: red;
 }
 ul#ProjectTypes {
-	font-size: 12px;
 	font-style: normal;
 	font-weight: normal;
 	padding: 0px;
@@ -116,7 +115,7 @@ ul#ProjectTypes {
 #ProjectTypes li {
 	margin-left: 0px;
 	list-style: none;
-	padding-left: 5px;
+	padding: 2px 7px 2px 7px;
 	text-align: left;
 }
 #ProjectTypes li.Category {

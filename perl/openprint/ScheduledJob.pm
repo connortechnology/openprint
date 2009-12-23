@@ -328,6 +328,10 @@ sub get_li {
 	my $n = $Project->Company()->name();
 	$n =~ s/The //gi;
 	$html .= ssi::htmlize( $n );
+	$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
+	if ( $Project->operator_id() ) {
+		$html .= ' (<span class="PrepressOperator">'.$Project->Operator()->firstname().'</span>)';
+	} # end if
 	$html .= '</div>';
 	$html .= qq`<span class="DueDate" id="JumpToDate$$self{'id'}">`;
 	if ( ! $Project->due_date() ) {

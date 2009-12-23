@@ -1,6 +1,6 @@
 <? eval (
-	$param{'duedate_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) );
-	$param{'duedate_end'} =	sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
+	$param{'duedate_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'duedate_start_year','duedate_start_month','duedate_start_day'} ) );
+	$param{'duedate_end'} =	sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'duedate_end_year','duedate_end_month','duedate_end_day'} ) );
 
 	my %sql = (
 		'due_date_start'	=>	$param{'duedate_start'},
@@ -23,7 +23,7 @@ Results for <? echo (
 	return '';
 ) ?> <? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $param{'duedate_start'} ) ); ) ?> to <? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $param{'duedate_end'} ) ); ) ?><br/>
 <? if ( @{$$variable{'PROJECTS'}} ) ?>
-<table class="List">
+<table id="ResultsTable" class="List sortable">
 	<thead>
 	<tr> 
 		<th align="left" width="55">Docket</th>

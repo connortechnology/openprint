@@ -1366,6 +1366,7 @@ sub _manifest_content {
 			@param{'rfidtag_id','skid_id'} = misc::trim(@param{'rfidtag_id','skid_id'});
 			my $Tag = new openprint::RFIDTag( $param{'rfidtag_id'} );
 			$variable{'error'} .= $Tag->save({'id'=>$param{'rfidtag_id'}}) if $param{'rfidtag_id'} and ! $Tag->id();
+
 			my $Skid = new openprint::Skid( $param{'skid_id'} );
 			$Skid = $Tag->Skid() if $Tag->id() and ! $Skid->id();
 $log->debug("RFID: $param{'rfidtag_id'}");
@@ -1378,6 +1379,12 @@ $log->debug("RFID: $param{'rfidtag_id'}");
 				$variable{'error'} .= 'Skid ' . $Skid->id(). ' has already been scanned.';
 			} else {
 				my $MC = new openprint::ManifestContent();
+				if ( ! $param{"qty_lbs"} ) {
+					my @SC = $Skid->Contents();
+					if ( @SC == 1 ) {
+						$param{'qty_lbs'} = $SC[0]->quantity();
+					} # end if
+				} # end if
 				$variable{'error'} .= $MC->save( {
 						'type_id'		=>	$param{'type_id'},
 						'skid_id'		=>	$Skid->id(),

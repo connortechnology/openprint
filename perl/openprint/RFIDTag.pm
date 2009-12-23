@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config %fields %transforms %defaults $table $serial );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -18,7 +18,8 @@ require openprint::RFIDTagType;
 require openprint::Location;
 
 my $debug = 1;
-
+$table = 'rfidtags';
+$serial = 'rfidtags_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'location_id'	=>	'location_id',
@@ -54,7 +55,7 @@ sub find {
 		} # end if
 	} # end if
 	if ( $params{'type'} ) {
-		$sql .= ' AND type_id=(SELECT id FROM RFIDTagTypes WHERE name=?)';
+		$sql .= ' AND type_id=(SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?))';
 		push @values, $params{'type'};
 	} # end if
 	
@@ -103,19 +104,6 @@ sub find {
 	} # end if
 	return map { new openprint::RFIDTag( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM RFIDTags WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-	if ( ! $$data{'id'} ) {
-		delete $openprint::Object::cache{'openprint::RFIDTag'}{$$self{'id'}};
-		delete $$self{'id'};
-	} # end if
-#delete $$self{'id'};
-} # end sub load
 
 sub save {
 	my ( $self, $hash ) = @_;
