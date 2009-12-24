@@ -48,7 +48,8 @@ my %fields = (
 
 my %transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
-	'email'				=>	[ 'tr/[A-Z]/[a-z]/' ],
+	'email'				=>	[ 'tr/[A-Z]/[a-z]/', 's/^\s+//', 's/\s+$//' ],
+	'password'			=>	[ 's/^\s+//', 's/\s+$//' ],
 	'created_on'		=>	[ 's/.*//g' ],
 	'updated_on'		=>	[ 's/.*//g' ],
 	'purchasing_limit'	=>	[ 's/[^\d\.\-]//g' ],
