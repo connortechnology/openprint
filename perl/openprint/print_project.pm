@@ -1103,6 +1103,18 @@ sub calc {
 				$specs{'chkProcessColourSideOne'} = undef;
 				$specs{'chkProcessColourSideTwo'} = undef;
 			} # end if
+if ( 1 == ( my @Papers = openprint::Paper::find(
+	'name'		=>	$specs{'ddmStockBrand'},
+	'finish'	=>	$specs{'ddmStockFinish'},
+	'weight'	=>	$specs{'ddmStockWeight'},
+	'colour'	=>	$specs{'ddmStockColour'},
+	'size'		=>	$specs{'ddmStockSheetSize'},
+) ) ) {
+	$specs{'ddmStockBrand'} = $Papers[0]->name() if ! $specs{'ddmStockBrand'};
+	$specs{'ddmStockFinish'} = $Papers[0]->finish() if ! $specs{'ddmStockFinish'};
+	$specs{'ddmStockWeight'} = $Papers[0]->weight() if ! $specs{'ddmStockWeight'};
+	$specs{'ddmStockColour'} = $Papers[0]->colour() if ! $specs{'ddmStockColour'};
+} else {
 			if ( ! $specs{'ddmStockBrand'} ) {
 				$specs{'alert'} .= 'Please select Stock Brand<br/>';
 				$specs{'Status'} = 'uncalculated';
@@ -1123,6 +1135,7 @@ sub calc {
 				$specs{'Status'} = 'uncalculated';
 				return jsrs::encode_pairs(%specs);
 			} # end if
+} # end if
 
 			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'SideOneUVCoatingType', $specs{'SideOneCoatingType'} );
 			openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $printing_service_index, 'SideTwoUVCoatingType', $specs{'SideTwoCoatingType'} );

@@ -84,6 +84,15 @@ sub select_paper {
 			( $flat_width ? ( (sets::isin($type,[ 'Envelopes','NCR' ]) ? 'width' : 'width_>=')=>$flat_width ) : () ),
 			( $flat_height ? ( (sets::isin($type,[ 'Envelopes','NCR']) ? 'height' : 'height_>=')=>$flat_height ) : () ),
 			);
+    if ( $selected eq 'Name' and ! @papers ) {
+        @papers = openprint::Paper::find(
+                ( $project_index ? ( 'project_type_id'=>$Project->type_id() ) : (  'project_type_name'=>$type ) ),
+                ( $selected eq 'Name' ? ( 'name'=>$name ) : ()  ),
+                'supplied'  =>  [undef,$supplied eq 'Y' ? 1 : 0],
+                'type'      =>  \@types,
+                );
+    } # end if
+
 	my %names;
 	my %finishes;
 	my %colours;
