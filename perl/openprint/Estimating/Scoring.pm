@@ -314,6 +314,7 @@ $openprint::log->debug("Scores: $score_qty");
 			@impositions = @cut_impositions;
 		} # end if
 		foreach my $I ( @impositions ) {
+			next if ! $I->imposition();
 			next if ( $imposition->imposition() % $I->imposition() );
 			if ( $Equipment->specification('Type') ne 'Press' ) {
 				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$I->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->rows() );
@@ -326,8 +327,8 @@ $openprint::log->debug("Scores: $score_qty");
 				$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
 				next;
 			} # end if
-			if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ > $I->imposition() ) ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition too high. Maximum: $_<br/>";
+			if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $I->imposition() ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
 				next;
 			} # end if
 
