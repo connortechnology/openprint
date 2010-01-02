@@ -2,22 +2,6 @@
 <h1>REPORTS</h1>
 <h2>Turnaround</h2>
 </div>
-<script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f1.DateStartYear.value,document.f1.DateStartMonth.value,document.f1.DateStartDay,document.f1.DateStartDay.value);
-            setDaysDropDown(document.f1.DateEndYear.value,document.f1.DateEndMonth.value,document.f1.DateEndDay,document.f1.DateEndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-
-	function load_projects( form ) {
-		LoadContent('Results','/employee/reports/_turnaround_results.html', Serialize( form ) );
-	} // end function
-</script>
-
 <form name="f1" method="post" action="turnaround.html">
 	<fieldset class="filters"><legend>Report Criteria</legend>
 		<p>

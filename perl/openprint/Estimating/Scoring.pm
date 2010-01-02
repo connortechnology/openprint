@@ -326,6 +326,10 @@ $openprint::log->debug("Scores: $score_qty");
 				$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
 				next;
 			} # end if
+			if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ > $I->imposition() ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition too high. Maximum: $_<br/>";
+				next;
+			} # end if
 
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 				if ( $_ = $Equipment->fits( $I->Paper()->width(), $I->Paper()->height(), $$sig_specs{'txtSpecificStockCalliper'} ) ) {
