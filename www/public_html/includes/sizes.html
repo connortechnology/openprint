@@ -63,12 +63,12 @@
 				</li>
 				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels'] ) ) ?>
 				<? if ( $$variable{'ProjectType'}->name() eq 'GreetingCards' ) ?>
-					<input type="hidden" name="FoldType" value="2PanelFold"/>
+					<input type="hidden" id="FoldType" name="FoldType" value="2PanelFold"/>
 				<? endif ( $$variable{'ProjectType'}->name() eq 'GreetingCards' ) ?>
 				<? if ( sets::isin( $$variable{'ProjectType'}->name(), 'Covers' ) ) ?>
 					<li>
 						<label>Fold Type:</label>
-						<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
+						<select id="FoldType" name="FoldType" size="1" onchange="FoldType_onchange( this );">
 							<option value="NoFold">No Fold</option>
 							<option value="2PanelFold">2 Panel Fold</option>
 						</select>

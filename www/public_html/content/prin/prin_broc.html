@@ -6,9 +6,9 @@
 ) ?>
 
 <form name="f1" method="post" action="">
-	<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
-	<input type="hidden" name="Status" value="<?Status?>" />
-	<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
+	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
+	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
+	<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
 
 	<div class="InstantPricing">
 		<div id="instant_price_section">

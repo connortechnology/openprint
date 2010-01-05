@@ -2,11 +2,11 @@
 	<ul>
 		<li class="unitprice">
 			<label>Price each:</label>
-			<input type="text" size="9" name="txtUnitPrice1" readonly="readonly" />
+			<input type="text" size="9" id="txtUnitPrice1" name="txtUnitPrice1" readonly="readonly" />
 		</li>
 		<li class="totalprice">
 			<label>Production Cost <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
-			<input type="text" size="9" name="ProductionPrice1" readonly="readonly" />
+			<input type="text" size="9" id="ProductionPrice1" name="ProductionPrice1" readonly="readonly" />
 		</li>
 		<li id="ShippingPrice">
 			<label>Delivery Cost <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
@@ -14,7 +14,7 @@
 		</li>
 		<li class="project_id">
 			<label>Quote #</label>
-			<input type="text" size="9" name="ProjectIndex" readonly="readonly" value="<? echo ( $param{'project_id'} ) ?>" />
+			<input type="text" size="9" id="ProjectIndex" name="ProjectIndex" readonly="readonly" value="<? echo ( $param{'project_id'} ) ?>" />
 		</li>
 	</ul>
 	Price quoted is an approximate estimate. All orders will be + or - 5%.<br/>
@@ -42,7 +42,7 @@
 	<ul>
 		<li>
 			<label>Sub Total <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
-			<input type="text" size="9" name="txtPrice1" readonly="readonly" value="<?txtPrice1?>" />
+			<input type="text" size="9" id="txtPrice1" name="txtPrice1" readonly="readonly" value="<?txtPrice1?>" />
 		</li>
 	</ul>
 </div>

@@ -1,10 +1,10 @@
 <li id="CustomDimensions" <? echo ( sets::isin( $$variable{'ProjectType'}->name(),[ 'Letterhead','ScratchPads','RackCards','DoorHangers','Posters','Labels' ] ) ? 'style="display:none;"' : ''; ) ?>>
 	W x H in inches<br class="spacer"/>
 	<label>Finished:</label>
-	<input name="txtFinalWidth" size="6" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/> x
-	<input name="txtFinalHeight" size="6" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/>
+	<input id="txtFinalWidth" name="txtFinalWidth" size="6" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/> x
+	<input id="txtFinalHeight" name="txtFinalHeight" size="6" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/>
 	<br class="spacer"/>
 	<label>Flat:</label>
-	<input name="txtWidth" size="6" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/> x 
-	<input name="txtHeight" size="6" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/>
+	<input id="txtWidth" name="txtWidth" size="6" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/> x 
+	<input id="txtHeight" name="txtHeight" size="6" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');remove_div('OrderButton');"/>
 </li>
