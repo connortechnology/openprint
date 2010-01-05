@@ -2163,7 +2163,6 @@ sub calc_price {
 	my $base_impressions = ceil($qty / $imposition);
 	$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
 	$base_impressions *= $Paper->parts() if $Paper->parts();
-$openprint::log->debug("Parts: " . $Paper->parts() );
 
 	#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	my $min_overs = $Press->specification( 'Press Run Overs Minimum', scalar @colours );
@@ -3091,11 +3090,15 @@ sub press_setup_cost {
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
 			$Price{'Total'} += $PlateSetupPrice{'Price'} * $time;
 		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
+			%PlateSetupPrice = openprint::service::get_price_object( $log, $dbh, $variable, 'PlateMakeReady', $plates, $Press );
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
 			$Price{'Total'} += $PlateSetupPrice{'Price'} * $plates;
+#$log->debug("Have Plate Make Ready $plates $PlateSetupPrice{Price} $Price{'Plate Total'} $Price{'Total'}");
 		} else {
 			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
 		} # end if
+	#} else{
+		#$log->debug("No Plate Make Ready for plates on " . $Press->strid() );
 	} # end if
 	
 	return \%Price;
