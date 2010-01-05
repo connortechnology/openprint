@@ -79,6 +79,9 @@
     border: none;
     width: 100%;
 }
+.InstantPricing fieldset legend {
+display: none;				
+}
 .checkOption {
 	float: left;
 }
