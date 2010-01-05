@@ -39,15 +39,12 @@
 .Claim table tr.total td, .Claim table tr.subtotal td, .Claim table tr.federaltax td, .Claim table tr.statetax td {
 	text-align: right;
 }
-.Claim table td input {
-	width: 96%;
+.Claim table td input[type="text"] {
+	width: 93%;
 	min-width:0px;
 	margin: 0px;
 	padding: 0px;
 }
-.Claim table td input.RollQTY {
-	width: 60px;
-} 
 .Claim table .Cost {
 	width: 150px;
 }
@@ -71,7 +68,7 @@
 .Claim table td.Weight, .Claim table th.Weight {
 	width: 120px;
 }
-.Claim table th.Weight {
+.Claim .View table th.Weight {
 	color: #e4ebf4;
 }
 .Claim table td.Weight input[type="text"] {
@@ -307,4 +304,7 @@ div.Claim .Disclaimer {
 	font-weight: bold;
 	font-size: small;
 	padding: 5px;
+}
+.Claim table td.alert {
+	color: red;
 }
