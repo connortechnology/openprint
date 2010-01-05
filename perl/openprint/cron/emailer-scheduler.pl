@@ -13,6 +13,7 @@ require openprint::EmailCampaign;
 
 use MIME::QuotedPrint;
 use Mail::Sendmail;
+use Encode;
 use openprint;
 use vars qw( %variable $log $dbh %config %session);
 *variable = \%openprint::variable;
