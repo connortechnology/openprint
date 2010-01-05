@@ -1,6 +1,6 @@
 <li>
 	<label>Type:</label>
-	<select name="ddmStockBrand<?Signature?>" size="1" onchange="ddmStockBrand_onchange( this, '<?Signature?>' );">
+	<select id="ddmStockBrand<?Signature?>" name="ddmStockBrand<?Signature?>" size="1" onchange="ddmStockBrand_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
 		<? echo ( 
 			my @options = openprint::paper::get_names( $$variable{'ProjectType'}->name(),
@@ -18,7 +18,7 @@
 	</select>
 </li>
 <li><label>Finish:</label>
-	<select name="ddmStockFinish<?Signature?>" size="1" onchange="ddmStockFinish_onchange( this, '<?Signature?>' );">
+	<select id="ddmStockFinish<?Signature?>" name="ddmStockFinish<?Signature?>" size="1" onchange="ddmStockFinish_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
 		<? echo ( 
 			my @options = openprint::paper::get_finishes( $$variable{'ProjectType'}->name(),
@@ -34,7 +34,7 @@
 	</select>
 </li>
 <li><label>Colour:</label>
-	<select name="ddmStockColour<?Signature?>" size="1" onchange="ddmStockColour_onchange( this, '<?Signature?>' );">
+	<select id="ddmStockColour<?Signature?>" name="ddmStockColour<?Signature?>" size="1" onchange="ddmStockColour_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
 		<? echo ( 
 			my @options = openprint::paper::get_colours( $$variable{'ProjectType'}->name(),
@@ -51,7 +51,7 @@
 </li>
 <li id="StockWeightSelect<?Signature?>" class="StockWeightSelect">
 	<label>Weight:</label>
-	<select name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
+	<select id="ddmStockWeight<?Signature?>" name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
 		<option value=""> Please select one </option>
 		<? echo (
 				my @options = openprint::paper::get_weights( $$variable{'ProjectType'}->name(), 

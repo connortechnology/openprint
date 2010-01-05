@@ -1,7 +1,7 @@
 <form name="f1" method="post" action="">
-	<input type="hidden" name="ProjectType" value="<?ProjectTypeName?>" />
-	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
-	<input type="hidden" name="Status" value="<?Status?>" />
+	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
+	<input type="hidden" id="PrintingType" name="PrintingType" value="<?PrintingType?>" />
+	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
@@ -10,10 +10,10 @@
 				<div class="Questions">
 					<h3>Instant Pricing</h3>
 
-					<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
+					<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
 					<!--#include virtual="/includes/sizes.html"-->
 					<p><label>Colours:</label>
-						<select name="Colours" onchange="calc(this.form.name);">
+						<select id="Colours" name="Colours" onchange="calc(this.form.name);">
 							<option value="4/0">4 Colour One Side</option>
 							<option value="4/1">4 Colour/Black</option>
 							<option value="4/4">4 Colour Both Sides</option>
