@@ -941,6 +941,7 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
+$openprint::log->debug("SideOne " . @side_one_colours . " Side Two: " . @side_two_colours );
 	my %inkCoverage = get_inkcoverage( $specs );
 	if ( ! ( $$services{'NoPrinting'} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{'alert'} .= 'Please choose the colours to be printed.<br/>';
@@ -4011,6 +4012,7 @@ sub press_setup_cost {
 			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
 		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
+			%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', $plates, $Press );
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
 		} else {
 			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
