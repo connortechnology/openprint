@@ -20,11 +20,8 @@
 .InstantPricing .Questions {
 	color: black;
 	font-weight: normal;
-	width: 267px;
-	margin-left: 10px;
 	margin-bottom: 10px;
 	float: right;
-	border: 1px solid maroon;
 	padding: 5px;
 }
 .InstantPricing .Questions p {
@@ -81,9 +78,9 @@ div.Prices
 padding: 0px;
 }
 div#instant_price_section {
-         float: right;
-         width: 289px;
-      }
+	float: right;
+	width: 280px;
+}
 
 #Specials {
 	width: 420px;

@@ -60,9 +60,7 @@ div#main_content:after {
 /* End hide from IE-mac */
 
 div#main_content_inner {
-	padding: 0px;
-	padding-right: 20px;
-	padding-left: 186px;
+	padding: 0px 0px 0px 186px;
 	background-color: #fff;
 	display: inline-block;
 	overflow: hidden;
@@ -80,14 +78,9 @@ div#main_content_inner:after {
 /* End hide from IE-mac */
 
 div#left_sidebar {
-	display: inline-block;
 	float: left;
 	margin: 0px;
-	margin-right: 4px;
 	width: 180px;
-	margin-left: -90px;
-}
-html>body #left_sidebar {
 	margin-left: -185px;
 }
 div#content_container {
@@ -147,11 +140,25 @@ width: 17px;
 height: 22px;
 }
 div#main_page {
+padding-right: 10px;
+float: left;
 }
 div#main_page_content {
 	padding-left: 20px;
 	padding-right: 10px;
 }
+div#main_page_content:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#main_page_content {height: 1%;}
+* div#main_page_content {display:block;}
+/* End hide from IE-mac */
+
 div#choose_currencies_top
 {
 font-size: 12px;

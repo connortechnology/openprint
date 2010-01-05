@@ -72,7 +72,7 @@ img#Butterfly, img#IDEAG7, img#IDEAG7Master {
     font-size: small;
     font-weight: bold;
 }
-#QuickLogin p input, #CurrencySelection p input, #QuickLogin p select, #CurrencySelection p select {
+#QuickLogin p input[type="text"], #QuickLogin p input[type="password"], #CurrencySelection p input, #QuickLogin p select, #CurrencySelection p select {
     margin: 0px;
     width: 65%;
     vertical-align: top;
