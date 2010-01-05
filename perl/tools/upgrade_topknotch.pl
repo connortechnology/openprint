@@ -82,7 +82,7 @@ sql::insert( undef, undef, 'configuration',[
     'type','text',
     'description','API SIgnature.',
     'category', 'PayPal Settings'] );
-sql::update( undef, undef, 'configuration', ['name=?', 'public_URIs'], [ 'value', $config{'public_URIs'}.',/printing.html,/about.html' ] );
+sql::update( undef, undef, 'configuration', ['name=?', 'public_URIs'], [ 'value', $config{'public_URIs'}.',/printing.html,/about.html,/help-centre.html' ] );
 require openprint::PaymentType;
 my $PayPal = new openprint::PaymentType();
 $PayPal->save({'name'=>'PayPal','description'=>'PayPal'});

@@ -40,7 +40,7 @@ h3 {
 	font-size: 21px;
 	font-weight: bold;
 	line-height: 23px;
-	margin: 0px;
+	margin: 0px 0px 3px 0px;
 	padding: 0px;
 	}
 
@@ -72,13 +72,18 @@ h6 {
 	}
 
 ul { 
-	list-style: none;
+	list-style: disc;
+	padding: 0px;
+	margin: 0 0 0 13px;
+	}
+	
+ol { 
 	padding: 0px;
 	margin: 0 0 0 13px;
 	}
 	
 li {
-	margin: 0px;
+	margin: 0px 0px 7px 0px;
 	padding: 0px;
 	}
 	
@@ -130,7 +135,7 @@ a:hover, a:active {
 	font-weight:bold;
 	letter-spacing: -1px;
 	background: #4bb0d7;
-	text-shadow: 1px 1px #369;
+	text-shadow: 1px 1px #333;
 	text-transform: capitalize;
 	}
 	
@@ -140,7 +145,7 @@ a:hover, a:active {
 	text-align: left;
 	}
 	
-#one-third {
+.one-third {
 	width: 250px;
 	padding: 0px;
 	text-align: left;
@@ -196,7 +201,7 @@ a:hover, a:active {
 	display:block;
 	height: 26px;
 	padding-top: 14px;
-	text-shadow: 1px 1px #00682a;
+	text-shadow: 1px 1px #333;
 	}
 	
 .nav01 { float: left; width: 143px; background: url(/images/nav01.png) no-repeat 0 0px; margin-right:20px; text-align:left; padding-left:17px; }
@@ -261,7 +266,7 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 	font-size:14px;
 	color: #FFF;
 	padding: 15px 3px 3px 17px;
-	text-shadow: 1px 1px #00682a;
+	text-shadow: 1px 1px #333;
 }
 	
 .p-nav a:link, .p-nav a:visited {
@@ -273,7 +278,7 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 	height: 19px;
 	background: url(/images/bg-p-nav.png) no-repeat 0 0px;
 	padding: 3px 3px 3px 17px;
-	text-shadow: 1px 1px #00682a;
+	text-shadow: 1px 1px #333;
 	}
 	
 .p-nav a:hover, .p-nav a:link:active {
@@ -314,7 +319,7 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 	height: 19px;
 	padding: 3px 3px 3px 17px;
 	background: url(/images/bg-p-sub-nav.png) no-repeat 0 0px;
-	text-shadow: 1px 1px #606;
+	text-shadow: 1px 1px #333;
 }
 .p-nav ul li.on ul li.on a {
 	color: #606;
@@ -325,7 +330,7 @@ a.nav08:hover { background: url(/images/nav08.gif) no-repeat 0 -40px; }
 .p-nav ul li.on ul li a:hover, .p-nav ul li.on ul li a:link:active {
 	background: url(/images/bg-p-sub-nav.png) no-repeat 0 -25px;
 	color: #FFF;
-text-shadow: 1px 1px #606;
+text-shadow: 1px 1px #333;
 	}
 	
 /* --------------------------- TABLES --------------------------- */
@@ -465,7 +470,7 @@ thead th {
 	line-height: 26px;
 	font-weight: bold;
 	letter-spacing: -1px;
-	text-shadow: 1px 1px #369;
+	text-shadow: 1px 1px #333;
 	}
 	
 #print ul {
@@ -794,11 +799,11 @@ fieldset#LoginLog table.List td {
 	}
 }
 .leftColumn {
-	width: 48%;
+	width: 450px;
 	float: left;
 }
 .rightColumn {
-	width: 48%;
+	width: 268px;
 	float: right;
 }
 

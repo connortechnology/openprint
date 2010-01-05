@@ -340,3 +340,10 @@
 
 .total { color: #FFF;	font-size: 20px; font-weight: bold; line-height: 24px; margin: 0px;	padding: 0px; float:right; }
 .fine { color: #FFF; font-size: 10px; font-weight: normal; line-height: 12px; margin: 0px; padding: 0px; float:left; }
+
+
+/* --------------------------- FORM SIZES --------------------------- */
+
+#ServiceTypeDiv, #PickupTypeDiv, #Dimensions { width:200px; }
+
+

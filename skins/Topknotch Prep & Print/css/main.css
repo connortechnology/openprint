@@ -289,7 +289,7 @@ div.Printing:after {
 	line-height: 26px;
 	font-weight: bold;
 	letter-spacing: -1px;
-	text-shadow: 1px 1px #369;
+	text-shadow: 1px 1px #333;
 }
 .Printing .ProjectType ul {
 	width: 150px;

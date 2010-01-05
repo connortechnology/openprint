@@ -40,6 +40,9 @@
 		<link href="/css/administrator.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /\/administrator/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
+        
+        <script src="/swfobject_modified.js" type="text/javascript"></script>
+        
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 <a name="top"></a>
@@ -64,19 +67,6 @@
 		<li><a href="/account/registration.html" title="REGISTRATION"><img src="/images/account-icon.gif" alt=""/>REGISTRATION</a></li>
 		<li><a href="/account/login.html" title="LOG IN"><img src="/images/logout-icon.gif" alt=""/>LOG IN</a></li>
 		<? endif ( $session{'user_id'} ) ?>
-<li><form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-    <input type="hidden" name="cmd" value="_xclick"/>
-    <input type="hidden" name="business" value="amin@topknotch.com"/>
-    <input type="hidden" name="item_name" value="Topknotch Prep &amp; Print Funds Transfer"/>
-    <input type="hidden" name="item_number" value="MSD-01"/>
-    <input type="hidden" name="no_shipping" value="1"/>
-    <input type="hidden" name="return" value="http://www.topknotch.com"/>
-    <input type="hidden" name="no_note" value="1"/>
-    <input type="hidden" name="currency_code" value="CAD"/>
-    <input type="hidden" name="tax" value="0"/>
-    <input type="hidden" name="bn" value="EZ Donate"/>
-    <input type="image" src="/images/donate.gif" name="submit" alt="paypal image"/>
-</form></li>
 	</ul>
 </div>
 <!-- NAV //-->
@@ -87,7 +77,7 @@
 	<li><a class="nav03" href="/waterless.html" title="Waterless Printing">Waterless Printing</a></li>
 	<li><a class="nav04" href="/paper.html" title="Paper">Paper</a></li>
 	<li><a class="nav05" href="/custom_quote.html" title="Custom Quote">Custom Quote</a></li>
-	<li><a class="nav06" href="/support/FAQ.html" title="Help Centre">Help Centre</a></li>
+	<li><a class="nav06" href="/help-centre.html" title="Help Centre">Help Centre</a></li>
 	<li><a class="nav07" href="/about.html" title="About">About</a></li>
 	<li><a class="nav08" href="/contact.html" title="Contact">Contact</a></li>
 </ul></div>
@@ -98,6 +88,8 @@
 <? echo ( 
 	my $html = '';
 	foreach my $ProjectTypeCategory ( openprint::ProjectTypeCategory::find() ) {
+		my @Categories = openprint::ProjectType::find('category_id'=>$ProjectTypeCategory->id());
+		next if ! @Categories;
 		$html .= sprintf(q`<li id="Menu%1$d" class="%3$s"><a href="#" title="%2$s" onclick="toggleMenu($('Menu%1$d'), '%3$s', 'on');return false;">%2$s</a>`, $ProjectTypeCategory->id(), $ProjectTypeCategory->name(), 
 			( ( ( $$variable{'uri'} =~ /content\/prin/ ) and $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->category_id() == $ProjectTypeCategory->id() ) ) ? 'on' : 'off' ),
 			);
@@ -177,7 +169,7 @@
 	</div>
 <? else ( $$variable{'uri'} =~ /\/content\/prin/ or $$variable{'uri'} =~ /\/main\/order/ or $$variable{'uri'} =~ /\/upload/ ) ?>
 <? eval ( 
-	@$variable{'crumb'} = $$variable{'uri'} =~ /(\w*)\.html/;
+	@$variable{'crumb'} = $$variable{'uri'} =~ /([a-zA-Z\-]*)\.html/;
 	$$variable{'Crumb'} = $$variable{'crumb'};
 	$$variable{'Crumb'} =~ s/_/ /g;
 	if ( $$variable{'uri'} =~ '^\/main\/quote\/' ) {
@@ -203,11 +195,23 @@
 
 	<div id="footer">
 		<div class="leftColumn">
-			Topknotch Print - <a href="http://maps.google.com/maps?f=q&amp;source=s_q&amp;hl=en&amp;q=Topknotch+Print+Mississauga+ON&amp;sll=43.63114,-79.645747&amp;sspn=0.007564,0.01649&amp;g=855+Matheson+Blvd+E,+Mississauga,+ON+L4W+4L6&amp;ie=UTF8&amp;hq=Topknotch+Print&amp;hnear=Mississauga,+ON,+Canada&amp;z=13&amp;iwloc=A" title="Google Maps" target="_blank">Unit 5&amp;6, 855 Matheson Blvd E, Mississauga, ON L4W 4L6</a><br />
-		  <strong>(905) 624-5100</strong> - Copyright &copy; 2003 Topknotch. All rights reserved.
+			Topknotch Print - <a href="http://maps.google.com/maps?f=q&amp;source=s_q&amp;hl=en&amp;q=Topknotch+Print+Mississauga+ON&amp;sll=43.63114,-79.645747&amp;sspn=0.007564,0.01649&amp;g=855+Matheson+Blvd+E,+Mississauga,+ON+L4W+4L6&amp;ie=UTF8&amp;hq=Topknotch+Print&amp;hnear=Mississauga,+ON,+Canada&amp;z=13&amp;iwloc=A" title="Google Maps" target="_blank">Unit 5&amp;6, 855 Matheson Blvd E, Mississauga, ON L4W 4L6</a> - <strong>(905) 624-5100</strong><br />
+		  Copyright &copy; 2003 Topknotch. All rights reserved.&nbsp;&nbsp;<a href="/contact.html">Contact Us</a>&nbsp;&nbsp;&raquo;&nbsp;&nbsp;<a href="/privacy.html">Privacy Policy</a>&nbsp;&nbsp;&raquo;&nbsp;&nbsp;<a href="/terms.html">Terms of Use</a>
 		</div>
 		<div class="rightColumn" style="text-align:right;">
-			<a href="#">Contact Us</a>&nbsp;&nbsp;&raquo;&nbsp;&nbsp;<a href="#">Privacy Policy</a>&nbsp;&nbsp;&raquo;&nbsp;&nbsp;<a href="#">Terms of Use</a>&nbsp;&nbsp;&raquo;&nbsp;&nbsp;<a href="#">Site Map</a>
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+                <input type="hidden" name="cmd" value="_xclick"/>
+                <input type="hidden" name="business" value="amin@topknotch.com"/>
+                <input type="hidden" name="item_name" value="Topknotch Prep &amp; Print Funds Transfer"/>
+                <input type="hidden" name="item_number" value="MSD-01"/>
+                <input type="hidden" name="no_shipping" value="1"/>
+                <input type="hidden" name="return" value="http://www.topknotch.com"/>
+                <input type="hidden" name="no_note" value="1"/>
+                <input type="hidden" name="currency_code" value="CAD"/>
+                <input type="hidden" name="tax" value="0"/>
+                <input type="hidden" name="bn" value="EZ Donate"/>
+                <input type="image" src="/images/donate.png" name="submit" alt="paypal image"/>
+            </form>
 		</div>
 	</div>
 
