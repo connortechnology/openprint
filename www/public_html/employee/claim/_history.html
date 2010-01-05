@@ -90,12 +90,12 @@
 				($Claim->sent_to_accounts_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->sent_to_accounts_on())) : '' ),
 				($Claim->invoiced_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->invoiced_on())) : '' ),
 				($Claim->cancelled_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->cancelled_on())) : '' ),
-				$Currency->symbol(), Number::Format::format_number($total), 
+				$Currency->symbol(), Number::Format::format_number($total,2,2), 
 				);
 			$report_total += $total;
 		} # end while
 		$html .= '<tr class="totals"><td colspan="'.($session{'user_type'} eq 'A' ? '9' : '8' ).'" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
-		$html .= sprintf('%s%s', $Currency->symbol(), Number::Format::format_number( $report_total ) );
+		$html .= sprintf('%s%s', $Currency->symbol(), Number::Format::format_number( $report_total,2,2 ) );
 		$html .= '</td></tr>';
 		return $html;
 	) ?>
