@@ -17,7 +17,7 @@ require misc;
 require openprint::RFIDTagType;
 require openprint::Location;
 
-my $debug = 1;
+my $debug = 0;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (
