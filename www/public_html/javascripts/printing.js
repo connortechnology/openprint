@@ -5,7 +5,7 @@ function versions_onkeyup( e ) {
 function filter_colours( side, signature ) {
 	// For each of the colours
 	for ( var index = 1; index < 10; index += 1 ) {
-		var type_element = $('ColourCoatingType'+side+index+signature);
+		var type_element = $('ColourCoatingType'+index+side+signature);
 		if ( ! type_element ) continue;
 		var type = type_element.value;
 		if ( ! type ) continue;
@@ -14,7 +14,7 @@ function filter_colours( side, signature ) {
 
 		// clear my selected type out of the other dropdowns
 		for ( var j = index+1; j <= 10; j += 1 ) {
-			var t = $('ColourCoatingType'+side+j+signature);
+			var t = $('ColourCoatingType'+j+side+signature);
 			if ( ! t ) continue;
 
 			var option_index = get_option_index( t, type );
@@ -27,14 +27,15 @@ function filter_colours( side, signature ) {
 } // end function filter_colours
 
 function SpecialColour_onchange( element, side, index, signature ) {
-	var spec = 'ColourCoating'+side+'-'+index+'-'+signature;
+	var spec = 'ColourCoating'+index+side+signature;
 
-	var type_element = $('ColourCoatingType'+side+'-'+index+'-'+signature);
+	var type_element = $('ColourCoatingType'+index+side+signature);
+	if ( ! type_element ) alert( 'ColourCoatingType'+index+side+signature + ' not found!');
 	var type = type_element.value;
 	if ( type ) {
-		element.form.elements[spec].checked=true;
+		element.form.elements['chk'+spec].checked=true;
 
-		if ( ! $('ColourCoating'+side+'-'+(1+parseInt(index))+'-'+signature) ) {
+		if ( ! $('ColourCoating'+(1+parseInt(index))+side+signature) ) {
 			// Add another colour
 			new Ajax.Request('/includes/main/proj/_additional_colour_coating.html', { 
 				method: 'get', 
@@ -53,14 +54,14 @@ function SpecialColour_onchange( element, side, index, signature ) {
 			filter_colours(side,signature);
 		} // end if
 	} else {
-		element.form.elements[spec].checked=false;
+		element.form.elements['chk'+spec].checked=false;
 
 		if ( type != 'PMS' ) {
 			for ( var i = 1; i < 10; i += 1 ) {
 				if ( i == index ) continue;
 
 				// if the colour exists
-				var t = $('ColourCoatingType'+side+'-'+i+'-'+signature);
+				var t = $('ColourCoatingType'+i+side+signature);
 				if ( t ) {
 
 					for ( var m = 0; m < type_element.options.length; m += 1 ) {
@@ -78,14 +79,14 @@ function SpecialColour_onchange( element, side, index, signature ) {
 	} // end if
 
 	if ( (!type) || ( -1 != type.indexOf('Overall') ) ) {
-		$('ColourCoatingCoverage'+side+'-'+index+'-'+signature).hide();
+		$('ColourCoatingCoverage'+index+side+signature).hide();
 	} else {
-		$('ColourCoatingCoverage'+side+'-'+index+'-'+signature).show();
+		$('ColourCoatingCoverage'+index+side+signature).show();
 	} // end if
 	if ( -1 != type.indexOf('PMS') ) {
-		$('ColourCoatingColour'+side+'-'+index+'-'+signature).show();
+		$('ColourCoatingColour'+index+side+signature).show();
 	} else {
-		$('ColourCoatingColour'+side+'-'+index+'-'+signature).hide();
+		$('ColourCoatingColour'+index+side+signature).hide();
 	} // end if
 	calc(element.form.name);
 } // end function

@@ -29,7 +29,7 @@
 				my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/_additional_colour_coating.html' );
 				$$variable{index} = 0;
 				foreach my $index ( 1 .. $config{'SpecialColourQuantity'} ) {
-					next if ! $$variable{"ColourCoating$$variable{Side}-$index-$$variable{Signature}"};
+					next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
 					$$variable{index} = $index;
 					$html .= ssi::variable_substitution( \$fragment, $variable );
 				} # end foreach
@@ -80,7 +80,7 @@ same as front?
 				$$variable{'Side'} = 'SideTwo';
 				$$variable{index} = 0;
 				foreach my $index ( 1 .. $config{'SpecialColourQuantity'} ) {
-					next if ! $$variable{"ColourCoating$$variable{Side}-$index-$$variable{Signature}"};
+					next if ! $$variable{"chkColourCoating$index$$variable{Side}$$variable{Signature}"};
 					$$variable{index} = $index;
 					$html .= ssi::variable_substitution( \$fragment, $variable );
 				} # end foreach

@@ -215,11 +215,11 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 					%price = $Paper->get_price( $totals{$paper_id}{"qty_$qty_index"} );
 					} # end if
 					$$specs{"cost-$ss_id-$stock_index-$qty_index"} = $price{'100lb Price'};
-$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
+#$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
 				} # end if
 				$$specs{"price-$ss_id-$stock_index-$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'},$$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100 );
 				#if ( $Paper->type() eq 'Sheet' ) {
-$totals{$paper_id}{"Cost"} = $$specs{"cost-$ss_id-$stock_index-$qty_index"};
+					$totals{$paper_id}{"Cost"} = $$specs{"cost-$ss_id-$stock_index-$qty_index"};
 					#$$specs{"txtPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * $$specs{"qty-$ss_id-$stock_index-$qty_index"} / 100;
 				#} else {
 					#$$specs{"txtPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * $totals{$paper_id}[$qty_index] / 100;

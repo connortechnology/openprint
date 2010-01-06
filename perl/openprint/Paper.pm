@@ -30,7 +30,7 @@ require openprint::StockGroup;
 require openprint::StockMaterial;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 1;
+my $debug = 0;
 
 my @fields = (
 		'id', 'created_on',
@@ -695,7 +695,7 @@ sub mweight {
 			$$self{'mweight'} = sprintf('%.0f', ($1*$$self{'width'}*$$self{'height'})/(25*38));
 		} elsif ( ! $self->weight() =~ /\D/ ) {
 			# weigiht of 500sheets of 25x38
-$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
+#$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
 			$$self{'mweight'} = sprintf('%.0f', ($self->weight()*$$self{'width'}*$$self{'height'})/(25*38));
 		} # end if
     } # end if
@@ -975,7 +975,7 @@ $openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->Min(), $Price->Max()
 		#$price{'Cost'} *= $$self{'mweight'} / 100000;
 		#$price{'Price'} *= $$self{'mweight'} / 100000;
 	} # end if
-$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'})/100lb ($price{'100lb Cost'}) ($price{'Price'})") if $debug or 1;
+#$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'})/100lb ($price{'100lb Cost'}) ($price{'Price'})") if $debug;
 	return %price;
 
 } # end sub get_price

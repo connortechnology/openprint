@@ -21,15 +21,15 @@
 				$$variable{'SignatureIndex'} = $$variable{'sig_specs'}{'SignatureIndex'};
 				$$variable{'FrontCoatings'} = $$variable{'BackCoatings'} = '';
 				foreach my $index ( 1 .. $config{'SpecialColourQuantity'} ) {
-					next if ! $$variable{'sig_specs'}{"ColourCoatingSideOne$index"};
-					next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} =~ /Aqueous/ );
-					$$variable{'FrontCoatings'} .= $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} . '<br/>';
+					next if ! $$variable{'sig_specs'}{'chkColourCoating'.$index.'SideOne'};
+					next if ! ( $$variable{'sig_specs'}{'ColourCoatingType'.$index.'SideOne'} =~ /Aqueous/ );
+					$$variable{'FrontCoatings'} .= $$variable{'sig_specs'}{'ColourCoatingType'.$index.'SideOne'} . '<br/>';
 				} # end foreach
 				$$variable{'FrontCoatings'} = 'None' if $$variable{'FrontCoatings'} eq '';
 				foreach my $index ( 1 .. $config{'SpecialColourQuantity'} ) {
-					next if ! $$variable{'sig_specs'}{"ColourCoatingSideTwo$index"};
-					next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} =~ /Aqueous/ );
-					$$variable{'BackCoatings'} .= $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} . '<br/>';
+					next if ! $$variable{'sig_specs'}{'chkColourCoating'.$index.'SideTwo'};
+					next if ! ( $$variable{'sig_specs'}{'ColourCoatingType'.$index.'SideTwo'} =~ /Aqueous/ );
+					$$variable{'BackCoatings'} .= $$variable{'sig_specs'}{'ColourCoatingType'.$index.'SideTwo'} . '<br/>';
 				} # end foreach
 				$$variable{'BackCoatings'} = 'None' if ! $$variable{'BackCoatings'};
 			) ?>

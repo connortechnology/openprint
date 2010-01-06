@@ -232,7 +232,7 @@ sub calc {
 			$$specs{'chkProcessColourSideOne2'} = undef;
 			$$specs{'chkProcessColourSideTwo2'} = undef;
 		} # end if
-		@$specs{'rdbAqueousSideOne2','rdbAqueousSideTwo2'} = @$specs{'Aqueous2','Aqueous2'};
+		@$specs{'ColourCoatingTypeSideOne1-2','ColourCoatingTypeSideTwo1-2'} = @$specs{'Aqueous2','Aqueous2'};
 
 		if ( $$specs{'rdbCover'} eq 'Different' ) {
 			if ( $$specs{'ColoursCover'} eq '4/4' ) {
@@ -251,7 +251,7 @@ sub calc {
 				$$specs{'chkProcessColourSideOne1'} = 'ProcessColour';
 				$$specs{'chkProcessColourSideTwo1'} = undef;
 			} # end if
-			@$specs{'rdbAqueousSideOne1','rdbAqueousSideTwo1'} = @$specs{'Aqueous1','Aqueous1'};
+			@$specs{'ColourCoatingTypeSideOne1-1','ColourCoatingTypeSideTwo1-1'} = @$specs{'Aqueous1','Aqueous1'};
 		} # end if
 # The adding of signatures will be done automatically by multipage_signatures
 # This will add bindery services, and a printing service
@@ -301,26 +301,53 @@ sub calc {
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoatingSideOne1', ( $$specs{'SideOneCoatingType'} and $$specs{'SideOneCoatingType'} ne 'None' ) ? 'Y' : '' );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingTypeSideOne1', 'UVCoating'.$$specs{'SideOneCoatingType'} );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoatingSideTwo1', ( $$specs{'SideTwoCoatingType'} and $$specs{'SideTwoCoatingType'} ne 'None' ) ? 'Y' : '' );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingTypeSideTwo1', 'UVCoating'.$$specs{'SideTwoCoatingType'} );
+		my $colourindex = 1;
+
 		if ( 
 				( $$specs{'SideOneCoatingType'} and ( $$specs{'SideOneCoatingType'} ne 'None' ) ) or
 				( $$specs{'SideTwoCoatingType'} and ( $$specs{'SideTwoCoatingType'} ne 'None' ) ) 
 		   ) {
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', 'Y' );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', 'UVCoating'.$$specs{'SideOneCoatingType'} );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', 'Y' );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', 'UVCoating'.$$specs{'SideTwoCoatingType'} );
 			if ( ! $$services{'UVCoating'} ) {
 				push @{$$services{'UVCoating'}}, $Project->add_service( 'UVCoating' );
 			} # end if
+			$colourindex += 1;
 		} elsif ( $$services{'UVCoating'} ) {
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', '' );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', '' );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', '' );
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', '' );
 			foreach ( @{$$services{'UVCoating'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
 			} # end foreach
+			delete $$services{'UVCoating'};
 		} # end if
 
-		@$specs{'rdbAqueousSideOne','rdbAqueousSideTwo'} = @$specs{'Aqueous','Aqueous'};
+		if ( $$specs{'Aqueous'} and $$specs{'Aqueous'} ne 'None' ) {
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', 'Y' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', "Aqueous $$specs{'Aqueous'} Overall" );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', 'Y' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', "Aqueous $$specs{'Aqueous'} Overall" );
+			if ( ! $$services{'Aqueous'} ) {
+				push @{$$services{'Aqueous'}}, $Project->add_service( 'Aqueous' );
+			} # end if
+			$colourindex += 1;
+		} else {
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', '' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', '' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', '' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', '' );
+			foreach ( @{$$services{'Aqueous'}} ) {
+				openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+			} # end foreach
+			delete $$services{'Aqueous'};
+		} # end if
+
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','rdbAqueousSideOne','rdbAqueousSideTwo','PageQuantity' ) {
+		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','PageQuantity' ) {
 			if ( $printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
 				$printing_specs{$spec} = $$specs{$spec};
@@ -625,6 +652,7 @@ $log->warn("Have uncalculated service: ");
 	$$specs{'txtPrice1'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice1'} );
 	$$specs{'txtUnitPrice1'} = sprintf( '%.2f', $$specs{'txtPrice1'}/$$specs{'txtQuantity1'} );	
 	$Project->price1( $$specs{'txtPrice1'} );
+	$Project->summary(undef);
 	if ( $_ = $Project->save() ) {
 		$log->error( $_ );
 	} # end if
