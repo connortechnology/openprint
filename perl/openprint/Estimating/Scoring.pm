@@ -253,6 +253,10 @@ $openprint::log->debug("Scores: $score_qty");
 # Get the impositions to consider
 	my $imposition = new openprint::Imposition();
 	$imposition->load( $sig_specs, $qty_index );
+	if ( ! $imposition->imposition() ) {
+		$$specs{'alert'} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	if ( 1 ) {
 		# IF it's a W&T, we have to cut in half first, so just do it.
