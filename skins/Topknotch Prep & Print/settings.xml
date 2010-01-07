@@ -11,7 +11,7 @@
     <shuffleImages value="false"/>
     <xPosition value="100"/>
     <yPosition value="100"/>
-    <imagesXML value="images.xml"/>
+    <imagesXML value="/images.xml"/>
     <showAbout value="false"/>
   </General_Properties>
 

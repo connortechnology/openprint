@@ -344,6 +344,6 @@
 
 /* --------------------------- FORM SIZES --------------------------- */
 
-#ServiceTypeDiv, #PickupTypeDiv, #Dimensions { width:200px; }
+#ServiceTypeDiv, #PickupTypeDiv, #Dimensions, #ddmStockBrand, #ddmStockFinish, #ddmStockColour, #ddmStockWeight, #proof_type, #TurnaroundDays, #PrintingType { width:200px; }
 
 
