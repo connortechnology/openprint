@@ -283,11 +283,24 @@ height: 22px;
 }
 div#main_page {
 	padding-right: 10px;
-	float: left;
+	width: auto;
 }
+div#main_page:after {
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#main_page {height: 1%;}
+* div#main_page {display:block;}
+/* End hide from IE-mac */
+
 div#main_page_content {
 	padding-left: 20px;
 	padding-right: 10px;
+	float: right;
 }
 div#main_page_content:after {
 	content: ".";

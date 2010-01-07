@@ -134,7 +134,9 @@ sub delete {
 } # end sub delete
 
 sub Templates {
-	return openprint::ProjectType_Template::find('projecttype_id'=>$_[0]{'id'});
+	my ( $self, %params ) = @_;
+	$params{'projecttype_id'} = $$self{'id'};
+	return openprint::ProjectType_Template::find(%params);
 } # end sub Templates
 
 1;

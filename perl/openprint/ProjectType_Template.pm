@@ -44,6 +44,12 @@ $serial = 'projecttemplate_id_seq';
 );
 
 my %find_cache;
+sub find_one {
+    my %params = @_;
+    $params{'limit'} = 1;
+    my @Results = find(%params);
+    return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
@@ -63,6 +69,10 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( exists $params{'type'} ) {
+		$sql .= ' AND type=?';
+		push @values, $params{'type'};
+	} # end if type
 	if ( exists $params{'projecttype_id'} ) {
 		if ( ref $params{'projecttype_id'} eq 'ARRAY' ) {
 			$sql .= ' AND projecttype_id IN ('. join(',', map {'?'} @{$params{'projecttype_id'}} ) . ')';
