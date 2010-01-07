@@ -5,7 +5,7 @@
 		<select id="Dimensions" name="Dimensions" onchange="Dimensions_onchange( this );">
 			<option value=""> select </option>
 			<? echo ( 
-				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Postcards','Posters','RackCards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars','NCR'] );
+				$$variable{'FoldType'} = 'NoFold' if ( ! $$variable{'FoldType'} ) and ! sets::isin( $$variable{'ProjectType'}->name(), ['BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','Magazines','Inserts','Labels','Letterhead','Manuals','Custom','Newsletters','Reports','PresentationFolders','Calendars','NCR'] );
 
 				my $html;
 				if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) {
@@ -22,7 +22,7 @@
 					ssi::make_drop_down( 
 						( $$variable{'FoldType'} ? 
 						  [ sql::execute( undef, undef, $_ . ' AND type=? ORDER BY SIZE', $$variable{'ProjectType'}->id(), $$variable{'FoldType'} ) ] :
-						  [ sql::execute( undef, undef, $_, $$variable{'ProjectType'}->id() ) ] ),
+						  [ sql::execute( undef, undef, $_ . ' ORDER BY SIZE', $$variable{'ProjectType'}->id() ) ] ),
 						join('x', @$variable{'txtFinalWidth','txtFinalHeight'} ) . ( $$variable{'DimensionsDisplay'} eq 'Finished' ? 'Finished' : 'Flat' ),
 						);
 					if ( ! $html ) {

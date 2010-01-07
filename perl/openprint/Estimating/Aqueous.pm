@@ -240,9 +240,9 @@ sub signature_calc {
 		$impressions *= $$sig_specs{'Versions'};
 	} # end if
 	if ( sets::isin( $imposition->runstyle(), ['Perfecting','Sheet Work'] ) ) {
-		if ( ! ( @front_aq and @back_aq ) ) {
+		#if ( ! ( @front_aq and @back_aq ) ) {
 			$impressions = int($impressions/2);
-		} # end if
+		#} # end if
 	} # end if
 
 	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
@@ -294,6 +294,7 @@ sub signature_calc {
 		my %minimum = openprint::service::get_price_object( 'AqueousMinimumCharge', undef, $Equipment );
 
 		foreach my $imp ( @impositions ) {
+			my %MakeReadies = $MakeReadies ? %$MakeReadies : ();
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Imposition: %dx%d+%dx%d=%dout :', @$imp{'columns','rows','dutch_columns','dutch_rows','imposition'} );
 			next if ! ( $imp->rows() * $imp->columns() );
 			my $width = $imposition->sheet_width() / ( $imposition->columns()/$imp->columns() );
@@ -306,7 +307,7 @@ sub signature_calc {
 			} # end if
 
 			my %Price;
-			my $run_qty = $impressions / $imp->imposition();
+			my $run_qty = $impressions * ( $imposition->imposition() / $imp->imposition() );
 
 			my @types;
 			if ( sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
@@ -321,17 +322,22 @@ sub signature_calc {
 			} else {
 				@types = (@front_aq, @back_aq);
 			} # end if
+			my $area = $imp->Paper()->area();
+
 			foreach my $type ( @types ) {
 
 				my $setupPrice;
 
-				if ( $$MakeReadies{$Equipment->id()} and (
-							(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * 1.10 ) > $$MakeReadies{$Equipment->id()} ) and
-							(($$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index} * .90 ) < $$MakeReadies{$Equipment->id()} )
+$openprint::log->debug($type . ': ' . $imp->imposition() . 'out on ' . $area . ' MR: ' . $MakeReadies{$Equipment->id()} );
+
+				if ( $MakeReadies{$Equipment->id()} and (
+							(($area * 1.10 ) > $MakeReadies{$Equipment->id()} ) and
+							(($area * .90 ) < $MakeReadies{$Equipment->id()} )
 							) ) {
 				} else {
 					$setupPrice = openprint::service::get_price( $type.' MakeReady', $run_qty, $Equipment );
 					$Price{'MakeReady'} += $setupPrice;
+					$MakeReadies{$Equipment->id()} = $area;
 				} # end if
 				
 				my $BlanketCutPrice = 0;

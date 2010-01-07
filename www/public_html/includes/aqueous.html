@@ -1,11 +1,11 @@
 <li id="Aqueous<?Signature?>">
 	<label>Aqueous Coating:</label>
 	<p>
-		<input type="radio" id="Aqueous<?Signature?>Gloss" name="Aqueous<?Signature?>" value="Gloss" onclick="remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Aqueous'} eq 'Gloss' ) ?> />
+		<input type="radio" id="Aqueous<?Signature?>Gloss" name="Aqueous<?Signature?>" value="Gloss" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Aqueous'} eq 'Gloss' ); ) ?> />
 		<label class="radio" for="Aqueous<?Signature?>Gloss">Gloss</label>
-		<input type="radio" id="Aqueous<?Signature?>Matte" name="Aqueous<?Signature?>" value="Matte" onclick="remove_div('OrderButton');" <? echo ( 'checked="checked"' if $$variable{'Aqueous'} eq 'Matte' ) ?> />
+		<input type="radio" id="Aqueous<?Signature?>Matte" name="Aqueous<?Signature?>" value="Matte" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Aqueous'} eq 'Matte' ); ) ?> />
 		<label class="radio" for="Aqueous<?Signature?>Matte">Matte</label>
-		<input type="radio" id="Aqueous<?Signature?>None" name="Aqueous<?Signature?>" value="None" onclick="remove_div('OrderButton');" <? echo ( 'checked="checked"' if sets::isin( $$variable{'Aqueous'},'', 'None' ) ) ?> />
+		<input type="radio" id="Aqueous<?Signature?>None" name="Aqueous<?Signature?>" value="None" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( sets::isin( $$variable{'Aqueous'},'', 'None' ) ); ) ?> />
 		<label class="radio" for="Aqueous<?Signature?>None">None</label>
 	</p>
 </li>

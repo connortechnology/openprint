@@ -67,12 +67,17 @@ sub handler {
 		my @values = $r->param($key);
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
-				$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = shift @values;
-				$log->debug("Parameter $key is (" . $param{$key} . ")" );
 		} # end if
 	} # end foreach
+	foreach my $key ( sort keys %param ) {
+		if ( ref $param{$key} eq 'ARRAY' ) {
+			$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
+		} else {
+			$log->debug("Parameter $key is (" . $param{$key} . ")" );
+		} # end if
+	}  # end foreach
 
 	$dbh = sql::open_sql( $log, 
 			'database'	=> $r->dir_config('db_name'),

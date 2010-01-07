@@ -1488,6 +1488,9 @@ foreach my $S ( openprint::Service::find('name'=>'Aqueous') ) {
 		$S->description('Aqueous Gloss Overall');
 		$S->category('Coating');
 		$S->save();
+		foreach my $P ( $S->prices() ) {
+			$P->save({'cost'=>int($P->cost()/2),'price'=>int($P->price()/2)});
+		}
 	} # end if
 	if ( ! openprint::Service::find('name'=>'Aqueous Matte Overall') ) {
 		my $S2 = $S->copy();
