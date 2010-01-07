@@ -285,16 +285,16 @@ sub calc {
 			$$specs{'chkProcessColourSideTwo'} = undef;
 		} # end if
 		if ( 1 == ( my @Papers = openprint::Paper::find(
-						'name'		=>	$specs{'ddmStockBrand'},
-						'finish'	=>	$specs{'ddmStockFinish'},
-						'weight'	=>	$specs{'ddmStockWeight'},
-						'colour'	=>	$specs{'ddmStockColour'},
-						'size'		=>	$specs{'ddmStockSheetSize'},
+						'name'		=>	$$specs{'ddmStockBrand'},
+						'finish'	=>	$$specs{'ddmStockFinish'},
+						'weight'	=>	$$specs{'ddmStockWeight'},
+						'colour'	=>	$$specs{'ddmStockColour'},
+						'size'		=>	$$specs{'ddmStockSheetSize'},
 						) ) ) {
-			$specs{'ddmStockBrand'} = $Papers[0]->name() if ! $specs{'ddmStockBrand'};
-			$specs{'ddmStockFinish'} = $Papers[0]->finish() if ! $specs{'ddmStockFinish'};
-			$specs{'ddmStockWeight'} = $Papers[0]->weight() if ! $specs{'ddmStockWeight'};
-			$specs{'ddmStockColour'} = $Papers[0]->colour() if ! $specs{'ddmStockColour'};
+			$$specs{'ddmStockBrand'} = $Papers[0]->name() if ! $$specs{'ddmStockBrand'};
+			$$specs{'ddmStockFinish'} = $Papers[0]->finish() if ! $$specs{'ddmStockFinish'};
+			$$specs{'ddmStockWeight'} = $Papers[0]->weight() if ! $$specs{'ddmStockWeight'};
+			$$specs{'ddmStockColour'} = $Papers[0]->colour() if ! $$specs{'ddmStockColour'};
 		} else {
 			if ( ! $$specs{'ddmStockBrand'} ) {
 				$$specs{'alert'} .= 'Please select Stock Brand<br/>';
