@@ -712,7 +712,7 @@ fieldset .content ul {
 	background:#FFF;
 	border:1px solid #a0b5ca;
 	margin: 0px;
-    overflow:auto;
+    overflow:visible;
 }
 fieldset .content ul:after {
     content: ".";

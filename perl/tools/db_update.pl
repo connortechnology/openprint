@@ -2356,6 +2356,23 @@ foreach my $PT ( openprint::ProjectType::find() ) {
 		$PT->save();
 	} # end if
 } # end foreach
+if ( ! sets::isin( 'blacklist', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/blacklist.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+if ( ! sets::isin( 'whitelist', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/whitelist.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+$dbh->do(q{insert into whitelist (ip) values ('68.179.115.209')} );
+$dbh->do(q{insert into whitelist (ip) values ('68.179.115.210')} );
+$dbh->do(q{insert into whitelist (ip) values ('68.179.115.211')} );
+$dbh->do(q{insert into whitelist (ip) values ('68.179.115.212')} );
+$dbh->do(q{insert into whitelist (ip) values ('208.89.51.122')} );
+} # end if
 	$dbh->commit();
 $dbh->disconnect();
 print "Finished\n";

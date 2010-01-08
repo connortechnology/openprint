@@ -14,7 +14,7 @@
 		my $services = $$variable{'Project'}->services();
 		my $rowclass;
 		my $total;
-		foreach my $category ( 'Prepress','Printing','Bindery','Packaging','Shipping','Custom Services','Paper' ) {
+		foreach my $category ( 'Prepress','Printing','Bindery','Specialty','Packaging','Shipping','Custom Services','Materials' ) {
 			if ( $category eq 'Printing' ) {
 				if ( $$services{'AdditionalSignature'} ) {
 					foreach my $service_id ( @{$$services{'AdditionalSignature'}} ) {
