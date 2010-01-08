@@ -3,7 +3,7 @@
 	<head>
 		<title>Connor Technology</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<link type="text/css" rel="stylesheet" href="/css/common.css"/>
+		<link type="text/css" rel="stylesheet" href="/css/common.css"/>
 		<link type="text/css" rel="stylesheet" href="/css/handheld.css" media="handheld"/>
 <? if ( $r->uri() =~ /\/administrator/ ) ?>
 		<link type="text/css" rel="stylesheet" href="/css/administrator.css"/>
@@ -19,180 +19,173 @@
 		<link type="text/css" rel="stylesheet" href="/css/print.css" media="print"/>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
-        <script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
-        <script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
-        <script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js"></script>
-        <script type="text/javascript" src="/javascripts/fastinit.js"></script>
-        <script type="text/javascript" src="/javascripts/tablekit.js?version=1.2.1"></script>
+		<script type="text/javascript" src="/javascripts/fastinit.js"></script>
+		<script type="text/javascript" src="/javascripts/tablekit.js?version=1.2.1"></script>
 
 		<script type="text/javascript">
 <!--
 		window.onload=setup_ie_menu;
 -->
 		</script>
-        
-       
-        
-
-    <link href="/css/CT-NEW-CSS.css" rel="stylesheet" type="text/css" />
+		<link href="/css/CT-NEW-CSS.css" rel="stylesheet" type="text/css" />
 	</head>
-    
-    
 	<body>
-<div id="content"> 
-			
-  <div id="header-holder">
-  
-  <div id="header">
-  <img src="/images/logo.gif" alt="Connor Technology Home" width="344" height="71" style="float:left;"/>
-  
-  <div id="contact" style="float:right; text-align:right">
-	647.883.5483
-	<br />
-	<a href="mailto:info@connortechnology.com?Subject=Inquiry from Connortechnology.com">info@connortechnology.com</a>
-  </div>
-  
-  <div id="menu">
-  <ul id="menubar" class="unprintable">
-<? if ( $session{user_id} ) ?>
-				<li id="Accounts" class="off"><a href="#">Accounts</a>
-					<ul>
-						<li><a href="/account/logout.html">Logout</a></li>
+		<div id="content"> 
+			<div id="header-holder">
+				<div id="header">
+					<img src="/images/logo.gif" alt="Connor Technology Home" width="344" height="71" style="float:left;"/>
+						<div id="contact" style="float:right; text-align:right">
+						647.883.5483<br />
+						<a href="mailto:info@connortechnology.com?Subject=Inquiry from Connortechnology.com">info@connortechnology.com</a>
+						</div>
+	
+					<div id="menu">
+						<ul id="menubar" class="menu unprintable">
+						<? if ( $session{user_id} ) ?>
+							<li id="Accounts" class="off"><a href="#">Accounts</a>
+								<ul>
+									<li><a href="/account/logout.html">Logout</a></li>
+								</ul>
+							</li>
+							<li id="Accounting" class="off"><a href="#">Accounting</a>
+								<ul>
+									<li><a href="/timetrack/history.html">Timetracks</a></li>
+									<li><a href="/invoice/history.html">Invoices</a></li>
+									<li><a href="/payment/history.html">Payments</a></li>
+									<li><a href="/paycheque/history.html">Paycheques</a></li>
+									<li><a href="/employee/accounting/expenditures.html">Expenditures</a></li>
+									<li><a href="/employee/accounting/ledger.html">Ledger</a></li>
+								</ul>
+							</li>
+							<li id="Marketing" class="off"><a href="#">Sales</a>
+								<ul>
+									<li><a href="/main/quote/information.html">Current Quote</a></li>
+									<li><a href="/main/quote/history.html">Quote History</a></li>
+									<li><a href="/employee/marketing/email_campaigns.html">Email Campaigns</a></li>
+									<li><a href="/employee/marketing/email_templates.html">Email Templates</a></li>
+									<li><a href="/employee/marketing/categories.html">Categories</a></li>
+									<li><a href="/employee/marketing/surveys.html">Surveys</a></li>
+								</ul>
+							</li>
+						<? else ( $session{user_id} ) ?>
+							<li id="Login" class="off"><a href="/account/login.html">Login</a></li>
+						<? endif ( $session{user_id} ) ?>
+						<li id="About" class="off"><a href="/home/about.html">About</a></li>
+						<li id="Services" class="off"><a href="/home/services/show.html">Services</a>
+							<ul>
+								<li><a href="/home/services/it_support.html">IT Support</a></li>
+								<li><a href="/home/services/offsite_backups.html">Offsite Backups</a></li>
+								<li><a href="/home/services/webhosting.html">Web Hosting</a></li>
+								<li><a href="/home/services/webdesign.html">Website Design</a></li>
+							</ul>
+						</li>
+						<li id="Products" class="off"><a href="/home/products/show.html">Products</a>
+							<ul>
+								<li><a href="/home/products/intelligentquote.html">Intelligent Quote</a></li>
+								<li><a href="/home/products/servers.html">Servers</a></li>
+							</ul>
+						</li>
+						<li id="CaseStudies" class="off"><a href="/home/contact.html">Case Studies</a>
+						</li>
+						<li id="Careers" class="off"><a href="/home/contact.html">Careers</a>
+						</li>				
+						<li id="Content" class="off"><a href="/home/contact.html">Contact</a>
+						</li>
 					</ul>
-				</li>
-				<li id="Accounting" class="off"><a href="#">Accounting</a>
-					<ul>
-						<li><a href="/timetrack/history.html">Timetracks</a></li>
-						<li><a href="/invoice/history.html">Invoices</a></li>
-						<li><a href="/payment/history.html">Payments</a></li>
-						<li><a href="/paycheque/history.html">Paycheques</a></li>
-						<li><a href="/employee/accounting/expenditures.html">Expenditures</a></li>
-						<li><a href="/employee/accounting/ledger.html">Ledger</a></li>
-					</ul>
-				</li>
-				<li id="Marketing" class="off"><a href="#">Sales</a>
-					<ul>
-						<li><a href="/main/quote/information.html">Current Quote</a></li>
-						<li><a href="/main/quote/history.html">Quote History</a></li>
-						<li><a href="/employee/marketing/email_campaigns.html">Email Campaigns</a></li>
-						<li><a href="/employee/marketing/email_templates.html">Email Templates</a></li>
-						<li><a href="/employee/marketing/categories.html">Categories</a></li>
-						<li><a href="/employee/marketing/surveys.html">Surveys</a></li>
-					</ul>
-				</li>
+				</div><!--menu-->
+			 </div><!--header-->
+		 </div><!--header-holder-->
 <? if ( $session{'user_type'} eq 'A' ) ?>
-				<li id="Pricing" class="off"><a href="#">Pricing</a>
-					<ul>
-						<li><a href="/administrator/services/edit.html">Services</a></li>
-						<li><a href="/administrator/products/edit.html">Products</a></li>
-						<li><a href="/administrator/production/pricelists.html">Pricelists</a></li>
-					</ul>
-				</li>
-				<li id="Administrator" class="off"><a href="#">Administrator</a>
-					<ul>
-						<li><a href="/administrator/managerial/company_profiles.html">Companies</a></li>
-						<li><a href="/administrator/managerial/user_profiles.html">Users</a></li>
-						<li><a href="/administrator/managerial/configuration.html">Configuration</a></li>
-						<li><a href="/administrator/managerial/currency.html">Currencies</a></li>
-						<li><a href="/administrator/managerial/taxes.html">Taxes</a></li>
-					</ul>
-				</li>
-<? endif ( $session{'user_type'} eq 'A' ) ?>
-<? else ( $session{user_id} ) ?>
-<li id="Login" class="off"><a href="/account/login.html">Login</a></li>
-<? endif ( $session{user_id} ) ?>
-				<li id="About" class="off"><a href="/home/services/show.html">About</a></li>
-				<li id="Services" class="off"><a href="/home/services/show.html">Services</a>
-					<ul>
-						<li><a href="/home/services/it_support.html">IT Support</a></li>
-						<li><a href="/home/services/offsite_backups.html">Offsite Backups</a></li>
-						<li><a href="/home/services/webhosting.html">Web Hosting</a></li>
-						<li><a href="/home/services/webdesign.html">Website Design</a></li>
-					</ul>
-				</li>
-				<li id="Products" class="off"><a href="/home/products/show.html">Products</a>
-					<ul>
-						<li><a href="/home/products/intelligentquote.html">Intelligent Quote</a></li>
-						<li><a href="/home/products/servers.html">Servers</a></li>
-					</ul>
-				</li>
-				<li id="CaseStudies" class="off"><a href="/home/contact.html">Case Studies</a>
-				</li>
-				<li id="Careers" class="off"><a href="/home/contact.html">Careers</a>
-				</li>                
-				<li id="Content" class="off"><a href="/home/contact.html">Contact</a>
-				</li>
+	<div id="administrator_menu">
+		<h3>Administrator</h3>
+		<ul class="menu">
+			<li id="Pricing" class="off"><a href="#">Pricing</a>
+				<ul>
+					<li><a href="/administrator/services/edit.html">Services</a></li>
+					<li><a href="/administrator/products/edit.html">Products</a></li>
+					<li><a href="/administrator/production/pricelists.html">Pricelists</a></li>
+				</ul>
+			</li>
+			<li id="Managerial" class="off"><a href="#">Managerial</a>
+				<ul>
+					<li><a href="/administrator/managerial/company_profiles.html">Companies</a></li>
+					<li><a href="/administrator/managerial/user_profiles.html">Users</a></li>
+				</ul>
+			</li>
+			<li id="Settings" class="off"><a href="#">Settings</a>
+				<ul>
+					<li><a href="/administrator/managerial/configuration.html">Configuration</a></li>
+					<li><a href="/administrator/managerial/currency.html">Currencies</a></li>
+					<li><a href="/administrator/managerial/taxes.html">Taxes</a></li>
+				</ul>
+			</li>
 		</ul>
-  </div>
-  
-   </div>             
-   </div>
-			
-  
-    <!--Ind. Page Content is substituted in here -->
-
-            <div id="content2">
-				<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
-	  </div>
-		<div id="footer">
-        <div id="bluebar"></div>
-        
+	</div>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
+	<!--Ind. Page Content is substituted in here -->
+	<div id="content2">
+		<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
+	</div>
+	<div id="footer">
+		<div id="bluebar"></div>
+		
 <div id="footerbottom">
-        	<div id="summary">
-        	  <h4>Connor Technology</h4>
-        	    
-        	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sollicitudin, eros sed cursus lobortis, orci dui pellentesque erat, sit amet tincidunt dolor enim quis nisl. Etiam eu sagittis turpis. Aenean eros elit, iaculis non lobortis vitae, luctus non turpis.
-        	    
-        	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sollicitudin, eros sed cursus lobortis, orci dui pellentesque erat, sit amet tincidunt dolor enim quis nisl. Etiam eu sagittis turpis. Aenean eros elit, iaculis non lobortis vitae, luctus non turpis.<br />
-        	    <br />
-       	    &copy; Copyright 2010 Connor Technology. All Rights Reserved. </div>
-            
-            <div id="sitemap">
-              <h4>Site Map</h4>
-              <ul>
-                <li>Home</li>
-                <li>About</li>
-                <li>Services</li>
-                <li>Products</li>
-                <li>Contact</li>
-                <li>Login</li>
-                <li>Privacy Policy</li>
-                <li>Terms Of Use</li> 
-              </ul>
-            </div>
-            
+			<div id="summary">
+				<h4>Connor Technology</h4>
+				
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sollicitudin, eros sed cursus lobortis, orci dui pellentesque erat, sit amet tincidunt dolor enim quis nisl. Etiam eu sagittis turpis. Aenean eros elit, iaculis non lobortis vitae, luctus non turpis.
+				
+				<br />
+		 		&copy; Copyright 2010 Connor Technology. All Rights Reserved. </div>
+			
+			<div id="sitemap">
+				<h4>Site Map</h4>
+				<ul>
+				<li><a href="/index.html">Home</a></li>
+				<li><a href="/home/about.html">About</a></li>
+				<li><a href="/home/contact.html">Contact</a></li>
+<? if ( $session{'user_id'} ) ?>
+				<li><a href="/account/logout.html">Logout</a></li>
+<? else ( $session{'user_id'} ) ?>
+				<li><a href="/account/login.html">Login</a></li>
+<? endif ( $session{'user_id'} ) ?>
+				<li><a href="/home/privacy_policy.html">Privacy Policy</a></li>
+				<li><a href="/home/terms.html">Terms Of Use</a></li> 
+				</ul>
+			</div>
+			
 <div id="footer-services">
-            <h4>Our Services</h4>
-            <ul>
-            <li>IT Support</li>
-            <li>Offsite Backups</li>
-            <li>Web Design</li>
-            <li>Web Hosting</li>
-            </ul>
-            </div>
+			<h4>Our Services</h4>
+			<ul>
+			<li>IT Support</li>
+			<li>Offsite Backups</li>
+			<li>Web Design</li>
+			<li>Web Hosting</li>
+			</ul>
+			</div>
 
 <div id="footer-products">
-            <h4>Our Products</h4>
-            <ul>
-            <li>Intelligent Quote</li>
-            <li>Web Servers</li>
-            <li>Mail Servers</li>
-            <li>FTP Servers</li>
-            </ul>
-      </div>
-
-<div id="footer-logo">
-LOGO HERE
-            </div>
-            
-          </div>
-</div>
-	</div><!--content-->
-			</div><!--right-->
-</div><!--left-->
+			<h4>Our Products</h4>
+			<ul>
+			<li>Intelligent Quote</li>
+			<li>Web Servers</li>
+			<li>Mail Servers</li>
+			<li>FTP Servers</li>
+			</ul>
 		</div>
 
-</body>
+<div id="footer-logo"><a href="/"><img id="bottom-logo" src="/images/bottom-logo.png" alt="Home" /></a></div>
+			
+			</div>
+</div>
+					</div><!--content-->
+				</div><!--right-->
+			</div><!--left-->
+		</div>
+	</body>
 </html>
