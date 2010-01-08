@@ -2391,6 +2391,7 @@ $openprint::log->debug("Wrong stock want : ".$$sig_specs{'OverrideStockWidth'.$q
 #my $time = gettimeofday();
 #$imp->display($recursion_depth . ' Starting');
 			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts );
+#$imp->display("Actually calculating this imp $$price{'Comparison Cost'}") if sets::isin( $imp->imposition(), [2,4] );
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
 			if ( ! $$price{'complete'} ) {
@@ -2628,17 +2629,13 @@ $imp->display();
 						$PaperCounts{$paper_string} = $$Paper{'minimum_order'};
 					} # end if
 				} # end if
-
-				my %paper_price = $Paper->get_price( $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} * $Paper->sheet_weight() : $PaperCounts{$paper_string} );
-				$paper_price{'Total'} = $paper_price{'100lb Price'} * ( $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} * $Paper->sheet_weight() : $PaperCounts{$paper_string} ) / 100;
+				my $weight = $Paper->type() eq 'Sheet' ? ceil($PaperCounts{$paper_string} * $Paper->sheet_weight()) : $PaperCounts{$paper_string};
+				my %paper_price = $Paper->get_price( $weight );
+				$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $weight / 100 );
 				$$price{'Comparison Cost'} += $paper_price{'Total'};
 				$$price{'Stock Total'} += $paper_price{'Total'};
 				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s $%.2f<br/>', $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : $PaperCounts{$paper_string}.'lbs', $Paper->to_string(), $paper_price{'Total'} );
 			} # end foreach Paper in PaperCounts
-
-			my %paper_price = $Paper->get_price( $$price{'Stock Weight'} );
-			$paper_price{'Total'} = $paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100;
-			@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @paper_price{'100lb Cost', '100lb Price', 'Total'};
 
 			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
 				if ( my %SuppliedPaperPrice = openprint::service::get_price_object( 'Supplied'.$Paper->type(), undef, undef ) ) {
@@ -2654,6 +2651,9 @@ $imp->display();
 					$$price{'Total Cost'} += $SuppliedPaperPrice{'Total'};
 				} # end if
 			} elsif ( ! openprint::ServiceType::find('name'=>'Paper') ) {
+			my %paper_price = $Paper->get_price( $$price{'Stock Weight'} );
+			$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
+			@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @paper_price{'100lb Cost', '100lb Price', 'Total'};
 				$$price{'Total Cost'} += $$price{'Paper Total'};
 			} # end if
 
@@ -2672,6 +2672,7 @@ $imp->display();
 					$$price{'Comparison Cost'} += $plate_price{'Price'} * $PlateCounts{$plate_id};
 				} # end if
 			} # end foreach plate_id
+#$openprint::log->debug("After plates: $$price{'Plate Comparison Cost'} $$price{'Comparison Cost'}") if sets::isin( $imp->imposition(), [2,4] );
 
 			if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$sig_specs{'txtSignatureType'} ne 'Cover Spreads') ) {
 		#my $starttime = gettimeofday();
@@ -2722,10 +2723,10 @@ $imp->display();
 				$openprint::log->debug("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
 #$imp->display();
 			} elsif ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
-#$openprint::log->debug("No good, more expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
-#$best_price{'Imposition'}->display();
+$openprint::log->debug("No good, more expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
+$best_price{'Imposition'}->display();
 #$openprint::log->debug( breakdown( \%best_price, $specs ) );
-#$imp->display();
+$imp->display();
 #$openprint::log->debug( breakdown( $price, $specs ) );
 			} else {
 #$imp->display();
@@ -2894,28 +2895,6 @@ sub calc_price {
 		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $base_impressions" ) if $debug;
 		return \%price;
 	} # end if
-
-	if ( $$project{'HasUVCoating'} ) {
-		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
-		if ( $uv_results{'Status'} eq 'uncalculated' ) {
-			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
-			$price{'Comparison Cost'} += 1000000; 
-		} elsif ( $uv_results{'Equipment'} ) {
-			$price{'UVCoating Breakdown'} = sprintf('UVCoating Price: $%.2f on %s<br/>', $uv_results{'Total'}, $uv_results{'Equipment'}->name() );
-			$price{'Comparison Cost'} += $uv_results{'Total'};
-		} # end if
-	} # end if UVCoating
-
-	if ( $$project{'HasAqueous'} ) {
-		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
-		if ( $aq_results{'Status'} eq 'uncalculated' ) {
-			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{'alert'} $$project{'AqueousSpecs'}{alert} " . $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
-			$price{'Comparison Cost'} += 1000000; 
-		} elsif ( $aq_results{'Equipment'} ) {
-			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', @aq_results{'MakeReady','Blanket','Service','Material','Total'}, $aq_results{'Equipment'}->name() );
-			$price{'Comparison Cost'} += $aq_results{'Total'};
-		} # end if
-	} # end if Aqueous
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
     my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
@@ -3401,7 +3380,7 @@ sub calc_price {
 	} # end if
 
 	my $gross_qty = $base_impressions + $total_overs;
-	my $weight = ceil( $gross_qty * $$Paper{width} * $$Paper{height} * $Paper->wpsi() );
+	my $weight = ceil( $gross_qty * $Paper->sheet_weight() );
 
 	my %sheet_qty = (
 			'Impressions'				=> $gross_qty, 
@@ -3429,15 +3408,37 @@ sub calc_price {
 		$impressions -= $setup_overs;
 	} # end if
 	$impressions *= $$project{print_sides} if ($$project{print_sides} == 2) and sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] );
+	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 
+	if ( $$project{'HasUVCoating'} ) {
+		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
+		if ( $uv_results{'Status'} eq 'uncalculated' ) {
+			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} elsif ( $uv_results{'Equipment'} ) {
+			$price{'UVCoating Breakdown'} = sprintf('UVCoating Price: $%.2f on %s<br/>', $uv_results{'Total'}, $uv_results{'Equipment'}->name() );
+			$price{'Comparison Cost'} += $uv_results{'Total'};
+		} # end if
+	} # end if UVCoating
+
+	if ( $$project{'HasAqueous'} ) {
+		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		if ( $aq_results{'Status'} eq 'uncalculated' ) {
+			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{'alert'} $$project{'AqueousSpecs'}{alert} " . $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} elsif ( $aq_results{'Equipment'} ) {
+			$price{'Aqueous Breakdown'} = sprintf('Aqueous Price: %dout MR $%.2f + BC: $%.2f + Service $%.2f + Material $%.2f = $%.2f on %s<br/>', $aq_results{'Imposition'}->imposition(), @aq_results{'MakeReady','Blanket','Service','Material','Total'}, $aq_results{'Equipment'}->name() );
+			$price{'Comparison Cost'} += $aq_results{'Total'};
+		} # end if
+	} # end if Aqueous
 	my %run_price;
 
 	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
-		my @c = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @colours ] );
+		my @c = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall','Aqueous Matte Spot','Aqueous Matte Overall'], [ @colours ] );
 		%run_price = get_run_price( $impressions, scalar(@c), 0, $Imposition, $Press, $run_speed ); 
 	} else {
-		my @c1 = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], $$project{'side_one_colours'} );
-		my @c2 = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], $$project{'side_two_colours'} );
+		my @c1 = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall','Aqueous Matte Spot','Aqueous Matte Overall'], $$project{'side_one_colours'} );
+		my @c2 = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall','Aqueous Matte Spot','Aqueous Matte Overall'], $$project{'side_two_colours'} );
 		%run_price = get_run_price( $impressions, scalar @c1, scalar @c2, $Imposition, $Press, $run_speed );
 	} # end if
 

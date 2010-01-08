@@ -1,7 +1,7 @@
 package openprint::PaperPrice;
 @ISA = qw(openprint::Object);
 
-my $debug = 1;
+my $debug = 0;
 
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'Paper_Prices';

@@ -75,6 +75,13 @@ div.ProjectHeader fieldset#Description {
        p\osition: relative;
 }
 
+#Dimensions {
+	width: 100%;
+}
+#Versions {
+	display: none;
+}
+
 .InksFront, .Front {
     float: left;
     width: 50%;
@@ -117,8 +124,24 @@ div.Service fieldset p span.checkOption label, div.Service fieldset p label labe
     padding: 0px;
 }
 div.Service fieldset {
-    margin: 2px;
-    padding: 4px;
+    margin: 0px;
+    padding: 0px;
+}
+div.Service fieldset legend {
+    margin: 0px;
+    padding: 0px;
+}
+div.Service fieldset p {
+	padding-left: 105px;
+}
+div.Service fieldset p label {
+	width: 100px;
+	margin-left: -105px;
+}
+div.Service fieldset p label.radio {
+	margin: 0px;
+	width: auto;
+	float: none;
 }
 .AddToProjectButtons {
     float: right;
@@ -217,10 +240,6 @@ span.SpotColour label, span.Coverages label {
 div.ProjectCreateEdit ul {
     list-style: none;
 }
-div.ProjectCreateEdit li {
-    float: left;
-    width: 200px;
-}
 div.ProjectCreateEdit ul:after {
     content: "."; 
     display: block; 
@@ -231,6 +250,16 @@ div.ProjectCreateEdit ul:after {
 /* Hides from IE-mac \*/
 * html div.ProjectCreateEdit ul {height: 1%;}
 /* End hide from IE-mac */
+div.ProjectCreateEdit li {
+    float: left;
+    width: 200px;
+}
+div.ProjectCreateEdit li label {
+    float: none;
+    width: auto;
+}
+
 div.Project table.List td {
 	font-size: small;
 }
+
