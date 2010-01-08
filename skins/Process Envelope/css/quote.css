@@ -1,0 +1,107 @@
+div#Quote div.Header {
+	margin: 0px;
+	padding: 0px;
+    width: 100%;
+	background:#daf3fc;
+}
+div#Quote div.Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#Quote div.Header {height: 1%;}
+* div#Quote div.Header {display:block;}
+/* End hide from IE-mac */
+
+div#Quote div.Header fieldset {
+	margin: 0px;
+	padding: 0px;
+}
+div#Quote fieldset legend {
+	font-size:large;
+	font-weight: bold;
+	padding: 10px 10px 0px 10px;
+	color: #07759f;
+}
+
+div#Quote div.Header div#Information,div#Quote div.Header div#PreparedBy,div#Quote div.Header div#PreparedFor {
+	float: left;
+	width: 33.3%;
+}
+div.QuoteInformation {
+	background:#daf3fc;
+}
+div.QuoteInformation fieldset {
+	padding: 0px;
+	margin: 0px;
+}
+	
+div#Quote div.Header fieldset li {
+}
+div#Quote div.Header fieldset li label {
+}
+div#Quote div.Header fieldset li label.radio {
+	width: auto;
+	margin: 0px;
+	padding: 0px;
+	float: none;
+}
+
+div.QuoteInformation fieldset li input {
+    width: expression( (this.type=="text" || this.type=="password") ?'94%':'auto');
+	margin: 0px;
+}
+div.QuoteInformation fieldset li input[type="text"] {
+    width: 95%;
+}
+div.QuoteInformation fieldset li select {
+    width: 95%;
+}
+div.QuoteInformation fieldset li select#company_id, div.QuoteInformation fieldset li select#user_id {
+    width: 75%;
+}
+div#Quote table {
+	font-size: 10px;
+}
+
+div.QuoteInformation #PreparedBy {
+	width: 50%;
+	float: left;
+}
+
+div.QuoteInformation #PreparedFor {
+	width: 50%;
+	float: right;
+}
+
+div.QuoteInformation:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.QuoteInformation {height: 1%;}
+* div.QuoteInformation {display:block;}
+/* End hide from IE-mac */
+
+div.QuoteInformation fieldset legend {
+    font-size:large;
+    font-weight: bold;
+    padding: 10px 10px 0px 10px;
+}
+div#Quote .newprice, div#Quote .price, div#Quote .markup, div#Quote .quantity {
+	text-align: right;
+}
+div#Quote .newprice, div#Quote .price, div#Quote .quantity {
+	width: 90px;
+}
+div#Quote .markup {
+	width: 50px;
+}

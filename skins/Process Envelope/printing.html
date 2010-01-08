@@ -1,0 +1,39 @@
+<div class="Printing">
+<? echo ( 
+	my $html = '';
+	my @Categories = openprint::ProjectTypeCategory::find();
+	my @Left = splice ( @Categories,0, ( int @Categories/2 ) );
+	$html .= '<div class="left">';
+	foreach my $ProjectTypeCategory ( @Left ) {
+		next if ! $ProjectTypeCategory->ProjectTypes();
+		$html .= sprintf(q`<div class="ProjectType" style="background: url(/images/bg-printing-%2$s.jpg) no-repeat top left;"><h3>%3$s</h3>`, $ProjectTypeCategory->id(), URI::Escape::uri_escape( $ProjectTypeCategory->name() ),$ProjectTypeCategory->name(),
+			);
+		$html .= '<ul>';
+		foreach my $ProjectType ( $ProjectTypeCategory->ProjectTypes() ) {
+			$html .= sprintf('<li class="%2$s"><a href="/content/%3$s?projecttype_id=%4$d" title="%1$s">%1$s</a></li>', 
+				ssi::htmlize($ProjectType->description()),
+				( ( $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->id() == $ProjectType->id() ) ) ? 'on' : 'off' ),
+				$ProjectType->url(), $ProjectType->id(),
+				);
+		} # end foreach
+		$html .= "</ul></div>\n";
+	} # end foreach ProjectTypeCategory
+	$html .= '</div><div class="right">';
+	foreach my $ProjectTypeCategory ( @Categories ) {
+		next if ! $ProjectTypeCategory->ProjectTypes();
+		$html .= sprintf(q`<div class="ProjectType" style="background: url(/images/bg-printing-%2$s.jpg) no-repeat top left;"><h3>%3$s</h3>`, $ProjectTypeCategory->id(), URI::Escape::uri_escape( $ProjectTypeCategory->name() ),$ProjectTypeCategory->name(),
+			);
+		$html .= '<ul>';
+		foreach my $ProjectType ( $ProjectTypeCategory->ProjectTypes() ) {
+			$html .= sprintf('<li class="%2$s"><a href="/content/%3$s?projecttype_id=%4$d" title="%1$s">%1$s</a></li>', 
+				ssi::htmlize($ProjectType->description()),
+				( ( $$variable{'ProjectType'} and ( $$variable{'ProjectType'}->id() == $ProjectType->id() ) ) ? 'on' : 'off' ),
+				$ProjectType->url(), $ProjectType->id(),
+				);
+		} # end foreach
+		$html .= "</ul></div>\n";
+	} # end foreach ProjectTypeCategory
+	$html .= '</div>';
+	return $html;
+) ?>
+</div>
