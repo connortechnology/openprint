@@ -2367,6 +2367,7 @@ if ( ! sets::isin( 'whitelist', \@tables ) ) {
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
+$dbh->do(q{insert into whitelist (ip) values ('68.179.115.209')} );
 $dbh->do(q{insert into whitelist (ip) values ('68.179.115.210')} );
 $dbh->do(q{insert into whitelist (ip) values ('68.179.115.211')} );
 $dbh->do(q{insert into whitelist (ip) values ('68.179.115.212')} );

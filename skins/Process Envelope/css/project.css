@@ -1,0 +1,236 @@
+.Docket {
+}
+
+div.Project div.View {
+	margin: 5px;
+}
+
+div.ProjectHeader {
+	background:#daf3fc;
+	margin: 0px;
+}
+div.ProjectHeader:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+div.ProjectHeader {display: inline-block;}
+/* Hides from IE-mac \*/
+* html div.ProjectHeader {height: 1%;}
+div.ProjectHeader {display: block;}
+/* End hide from IE-mac */
+
+div.ProjectHeader fieldset {
+	border-left: none;
+	border-right: none;
+	border-bottom: none;
+	margin-bottom: 0px;
+	padding: 0px;
+	text-align: left;
+	width: 50%;
+}
+div.ProjectHeader fieldset#ProjectInformation {
+	float: left;
+}
+div.ProjectHeader fieldset#ContactInformation {
+	float: right;
+}
+div.ProjectHeader fieldset#Reference {
+	float: left;
+	text-align: left;
+}
+div.ProjectHeader fieldset#Description {
+	float: right;
+	text-align: left;
+}
+
+.ProjectSummary div.row {
+    margin: 0px;
+	padding: 0px;
+}
+.ProjectSummary div.row .label {
+       text-align: left;
+       p\osition: relative;
+       float:left;
+       font-weight: normal;
+       padding: 0px;
+}
+.ProjectSummary div.row .value {
+       text-align: left;
+       float:left;
+       p\osition: relative;
+       margin-right: 10px;
+       background-color: #ded9c2;
+       padding: 0px;
+}
+
+.ProjectSummary div.row .input {
+       line-height: 19px;
+       margin-left: 10px;
+       width: 200px;
+       text-align: left;
+       float:left;
+       p\osition: relative;
+}
+
+.InksFront, .Front {
+    float: left;
+    width: 50%;
+}
+.InksBack, div.Back {
+    float: left;
+    width: 50%;
+}
+.BleedsColourBars {
+    float: left;
+    width: 50%;
+}
+.Stock {
+    float: left;
+    width: 50%;
+}
+.VarnishCoverage {
+    float: none;
+}
+.VarnishCoverage input, .VarnishCoverage input[type="text"] {
+    width: 35px;
+}
+.bleedOption {
+	float: left;
+	width: 100px;
+}
+div.Service span.ThreeColumns {
+	width: 32%;
+	float: left;
+}
+div.Service span.TwoColumns {
+	width: 48%;
+	float: left;
+}
+div.Service fieldset p span.checkOption label, div.Service fieldset p label label {
+    clear: none;
+    width: auto;
+    float: none;
+    margin: 0px;
+    padding: 0px;
+}
+div.Service fieldset {
+    margin: 2px;
+    padding: 4px;
+}
+.AddToProjectButtons {
+    float: right;
+}
+
+span.SpotColour {
+    float: left;
+    width: 25%;
+}
+span.SpotColour label, span.Coverages label {
+    clear: none;
+    width: auto;
+    float: none;
+    margin: 0px;
+    padding: 0px 0px 0px 2px;
+}
+.checkOption {
+	width: 30%;
+	min-width: 104px;
+}
+.SpecialColour {
+	float: left;
+	width: 100%;
+}
+.SpecialColour .checkOption {
+	float: left;
+	width: 108px;
+}
+.colourOption {
+	float: left;
+	width: 104px;
+}
+#NotepadPages, p#NotepadPages label {
+	font-weight: bold;
+	color: red;
+}
+#hdnBreakdown1 b, #hdnBreakdown2 b, #hdnBreakdown3 b {
+	color: red;
+}
+.PresentationFolderQuestions {
+	float: left;
+	width: 50%;
+}
+
+.Service div.templates {
+    padding-right: 0px;
+}
+.Service div.templates:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.templates {height: 1%;}
+*/* End hide from IE-mac */
+
+.Service div.templates p {
+    float: left;
+    width: 165px;
+    height: 180px;
+    text-align: center;
+    margin: 0px 5px 10px 5px;
+    padding: 0px;
+}
+.Service div.templates p label {
+    clear: none;
+    float: none;
+    margin: 0px;
+}
+.Service div.templates p img {
+    clear: both;
+    width: 130px;
+    height: 130px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.templateOption {
+    float: left;
+    width: 165px;
+    text-align: center;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 10px;
+}
+.templateOption img {
+    clear: both;
+    width: 130px;
+    height: 130px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+div.ProjectCreateEdit ul {
+    list-style: none;
+}
+div.ProjectCreateEdit li {
+    float: left;
+    width: 200px;
+}
+div.ProjectCreateEdit ul:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.ProjectCreateEdit ul {height: 1%;}
+/* End hide from IE-mac */
+div.Project table.List td {
+	font-size: small;
+}

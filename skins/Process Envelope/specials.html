@@ -1,0 +1,66 @@
+<? eval (
+	$$variable{'Currency'} = new openprint::Currency( $session{'Currency_id'} );
+) ?>
+<div class="Specials">
+	<h2>Specials for 
+<? echo (
+require Date::Calc;
+my ( $y, $m, $d ) = Date::Calc::Today();
+return Date::Calc::Month_to_Text($m) . ' ' . $y;
+) ?>
+	</h2>
+<ul class="Notes">
+<li>Due to the quick turnaround on Gangrun business cards and postcards please ensure files are print ready.</li>
+<li>Proofs emailed for approval are only to check for ripping problems.</li>
+<li>Specials pricing only applies to print ready pdf files with bleed and crop marks. All other file formats will be automatically charged between $10-$30.</li>
+<li>All prices in <? echo ( $$variable{'Currency'}->name() ) ?></li>
+</ul>
+<? echo (
+    my $list_id = openprint::pricing::get_pricelist_id();
+    my $Pricelist = new openprint::Pricelist( $list_id );
+	my @Categories = openprint::ProductCategory::find( 'order' => 'lower(name)' );
+	my $rowclass;
+
+	my $html;
+	foreach my $Category ( @Categories ) {
+		my @Products = $Category->products('order'=>'sort, lower(name)');
+		if ( @Products ) {
+			$html .= '<div class="Category"><div class="content"><h3>'.$Category->name().'</h3>';
+			$html .= '<p>'.$Category->description().'</p></div>';
+			$html .= '<table class="List"><tr>';
+			my $Product = $Products[0];
+
+			foreach my $spec ( sort keys %{ $Product->specifications() } ) {
+				$html .= qq{<th class="Spec">$spec</th>};
+			} # end foreach specs
+
+			foreach my $qty ( sql::execute( $log, $dbh, q{SELECT DISTINCT min FROM Product_Prices WHERE product_id=? AND pricelist_id=? ORDER BY min}, $Product->id(), $Pricelist->id() ) ) {
+				$html .= qq{<th class="Price">}.Number::Format::format_number($qty).'</th>';
+			} # end foreach
+			$html .= "</tr>\n";
+			my @qtys = sql::execute( $log, $dbh, q{SELECT DISTINCT min FROM Product_Prices WHERE product_id=? AND pricelist_id=? ORDER BY min}, $Product->id(), $Pricelist->id() );
+
+			foreach my $Product ( @Products ) {
+				$html .= '<tr'.$rowclass.'>';
+				foreach my $spec ( sort keys %{ $Product->specifications() } ) {
+					$html .= sprintf('<td class="Spec">%s</td>', $Product->specification( $spec ) );
+				} # end foreach specs
+				foreach my $qty ( @qtys ) {
+					my %price = openprint::pricing::get_best_price_object( $log, $dbh, $session{'company_id'}, $Product->id(), $Pricelist->id(), 'openprint::product_priceset', $qty );
+					if ( $price{'Price'} ) {
+						openprint::Currency::convert( \%price );
+						$html .= sprintf('<td class="Price"><a href="/main/order/information.html?Product=%d&amp;Quantity=%d">%s</a></td>', $Product->id(), $qty, openprint::Currency::format( $price{'Price'} ) );
+					} else {
+						$html .= '<td class="Price">Call</td>';
+					} # end if
+				} # end foreach
+				$html .= "</tr>\n";
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Product
+			$html .= "</table>\n";
+			$html .= "</div><!--category-->";
+		} # end if Products
+	} # end foreach Category
+	return $html;
+) ?>
+</div>
