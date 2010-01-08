@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS blacklist;
 CREATE TABLE blacklist (
 	ip			inet not null,
 	count		integer,

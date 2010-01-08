@@ -1,9 +1,0 @@
-DROP TABLE IF EXISTS blacklist;
-
-CREATE TABLE blacklist (
-	ip	inet,
-	count	integer,
-	created_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-	PRIMARY KEY (ip)
-);
