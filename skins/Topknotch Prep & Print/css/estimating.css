@@ -128,7 +128,8 @@ div#instant_price_section h2 {
 	color: #07759f;
 }
 div#instant_price_section .Prices, div#instant_price_section #subtotal  {
-	padding: 10px;
+	padding: 10px 10px 5px 10px;
+	margin: 5px 0px 0px 0px;
 	text-align: left;
 	background: #07759f;
 	color: #fff;

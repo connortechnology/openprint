@@ -39,7 +39,7 @@
 				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners','InkjetOutputs','BusinessCards', 'DoorHangers', 'ScratchPads', 'Covers','Posters','RackCards','GreetingCards','PresentationFolders','NCR','Letterhead','Labels'] ) ) ?>
 				<li>
 					<label>Fold Type:</label>
-					<select name="FoldType" size="1" onchange="FoldType_onchange( this );">
+					<select name="FoldType" id="FoldType" size="1" onchange="FoldType_onchange( this );">
 						<? echo (
 							ssi::make_drop_down( [ 'NoFold','No Fold', 
 										'2PanelFold','2 Panel Fold',

@@ -180,6 +180,8 @@
 		$$variable{'Crumb'} = 'Order ' . $$variable{'Crumb'};
 	}
 ) ?>
+	<? if ( $$variable{'uri'} eq '' or $$variable{'uri'} =~ /^\/index.html/ ) ?>
+	<? else ( $$variable{'uri'} eq '' or $$variable{'uri'} =~ /^\/index.html/ ) ?>
 <? if ( -f $config{'SkinPath'}.'/images/mastheads/'.$$variable{'crumb'}.'.jpg' ) ?>
     <div id="masthead" style="background: url(/images/mastheads/<?crumb?>.jpg) no-repeat top center;"><?Crumb?></div>
 <? endif ( -f $config{'SkinPath'}.'/images/mastheads/'.$$variable{'crumb'}.'.jpg' ) ?>
@@ -187,6 +189,7 @@
 	<a class="crumb" href="/<?uri?>"><?Crumb?></a>
 	</div>
 	<br class="spacer"/>
+	<? endif ( $$variable{'uri'} eq '' or $$variable{'uri'} =~ /^\/index.html/ ) ?>
 <? endif ( $$variable{'uri'} =~ /\/content\/prin/ or $$variable{'uri'} =~ /\/main\/order/ or $$variable{'uri'} =~ /\/upload/ ) ?>
 	<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 </div><!-- CONTENT CLOSE //-->
