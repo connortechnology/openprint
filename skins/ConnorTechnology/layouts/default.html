@@ -2,8 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title>Connor Technology</title>
-		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-		<link type="text/css" rel="stylesheet" href="/css/common.css"/>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link type="text/css" rel="stylesheet" href="/css/common.css"/>
 		<link type="text/css" rel="stylesheet" href="/css/handheld.css" media="handheld"/>
 <? if ( $r->uri() =~ /\/administrator/ ) ?>
 		<link type="text/css" rel="stylesheet" href="/css/administrator.css"/>
@@ -32,24 +32,30 @@
 		window.onload=setup_ie_menu;
 -->
 		</script>
+        
+       
+        
+
+    <link href="/css/CT-NEW-CSS.css" rel="stylesheet" type="text/css" />
 	</head>
+    
+    
 	<body>
-		<div id="top">
-			<div id="top-left">
-				<div id="top-right">
-				</div>
-			</div>
-		</div>
-		<div id="middle">
-			<div id="left">
-			<div id="right">
-			<div id="content"> 
-			<div id="header"><a href="/"><img id="header-logo" src="/images/logo.gif" alt="Connor Technology Home" width="344" height="71"/></a>
-				<div id="header-text" class="unprintable">
-					We sell and support <a class="orange" href="http://www.connortechnology.com/home/products/intelligentquote.html/">Intelligent Quote</a>, a web based estimation and workflow package that is geared to increase productivity and revenue...
-				</div>
-			</div>
-			<ul id="menubar" class="unprintable">
+<div id="content"> 
+			
+  <div id="header-holder">
+  
+  <div id="header">
+  <img src="/images/logo.gif" alt="Connor Technology Home" width="344" height="71" style="float:left;"/>
+  
+  <div id="contact" style="float:right; text-align:right">
+	647.883.5483
+	<br />
+	<a href="mailto:info@connortechnology.com?Subject=Inquiry from Connortechnology.com">info@connortechnology.com</a>
+  </div>
+  
+  <div id="menu">
+  <ul id="menubar" class="unprintable">
 <? if ( $session{user_id} ) ?>
 				<li id="Accounts" class="off"><a href="#">Accounts</a>
 					<ul>
@@ -97,6 +103,7 @@
 <? else ( $session{user_id} ) ?>
 <li id="Login" class="off"><a href="/account/login.html">Login</a></li>
 <? endif ( $session{user_id} ) ?>
+				<li id="About" class="off"><a href="/home/services/show.html">About</a></li>
 				<li id="Services" class="off"><a href="/home/services/show.html">Services</a>
 					<ul>
 						<li><a href="/home/services/it_support.html">IT Support</a></li>
@@ -107,27 +114,85 @@
 				</li>
 				<li id="Products" class="off"><a href="/home/products/show.html">Products</a>
 					<ul>
-						<li><a href="/home/products/intelligentquote.html">IntelligentQuote</a></li>
+						<li><a href="/home/products/intelligentquote.html">Intelligent Quote</a></li>
 						<li><a href="/home/products/servers.html">Servers</a></li>
 					</ul>
 				</li>
+				<li id="CaseStudies" class="off"><a href="/home/contact.html">Case Studies</a>
+				</li>
+				<li id="Careers" class="off"><a href="/home/contact.html">Careers</a>
+				</li>                
 				<li id="Content" class="off"><a href="/home/contact.html">Contact</a>
 				</li>
-				<li style="width: auto;"><a style="width: auto;">&nbsp;</a></li>
-			</ul>
-			<div id="content2">
+		</ul>
+  </div>
+  
+   </div>             
+   </div>
+			
+  
+    <!--Ind. Page Content is substituted in here -->
+
+            <div id="content2">
 				<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
-			</div>
-		<div id="footer"><a href="/"><img id="bottom-logo" src="/images/bottom-logo.png" alt="Home" /></a></div>
-			</div><!--content-->
+	  </div>
+		<div id="footer">
+        <div id="bluebar"></div>
+        
+<div id="footerbottom">
+        	<div id="summary">
+        	  <h4>Connor Technology</h4>
+        	    
+        	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sollicitudin, eros sed cursus lobortis, orci dui pellentesque erat, sit amet tincidunt dolor enim quis nisl. Etiam eu sagittis turpis. Aenean eros elit, iaculis non lobortis vitae, luctus non turpis.
+        	    
+        	    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean sollicitudin, eros sed cursus lobortis, orci dui pellentesque erat, sit amet tincidunt dolor enim quis nisl. Etiam eu sagittis turpis. Aenean eros elit, iaculis non lobortis vitae, luctus non turpis.<br />
+        	    <br />
+       	    &copy; Copyright 2010 Connor Technology. All Rights Reserved. </div>
+            
+            <div id="sitemap">
+              <h4>Site Map</h4>
+              <ul>
+                <li>Home</li>
+                <li>About</li>
+                <li>Services</li>
+                <li>Products</li>
+                <li>Contact</li>
+                <li>Login</li>
+                <li>Privacy Policy</li>
+                <li>Terms Of Use</li> 
+              </ul>
+            </div>
+            
+<div id="footer-services">
+            <h4>Our Services</h4>
+            <ul>
+            <li>IT Support</li>
+            <li>Offsite Backups</li>
+            <li>Web Design</li>
+            <li>Web Hosting</li>
+            </ul>
+            </div>
+
+<div id="footer-products">
+            <h4>Our Products</h4>
+            <ul>
+            <li>Intelligent Quote</li>
+            <li>Web Servers</li>
+            <li>Mail Servers</li>
+            <li>FTP Servers</li>
+            </ul>
+      </div>
+
+<div id="footer-logo">
+LOGO HERE
+            </div>
+            
+          </div>
+</div>
+	</div><!--content-->
 			</div><!--right-->
 </div><!--left-->
 		</div>
-		<div id="bottom-left">
-			<div id="bottom-right">
-				<div id="bottom">
-				</div>
-			</div>
-		</div>
-	</body>
+
+</body>
 </html>
