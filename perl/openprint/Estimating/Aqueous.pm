@@ -253,14 +253,14 @@ sub signature_calc {
 		@equipment = @all_equipment;
 	} # endif
 
-	$imposition = $imposition->copy();
-
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
 			$$specs{'alert'} .= "The specified imposition is not possible.";
 			return %bestPrice;
 		} # end if
 	} # end if
+
+	$imposition = $imposition->copy();
 
 	my @impositions = ();
 	my $services = $Project->services();
@@ -307,7 +307,8 @@ sub signature_calc {
 			} # end if
 
 			my %Price;
-			my $run_qty = $impressions * ( $imposition->imposition() / $imp->imposition() );
+			my $run_qty = $impressions;
+			$run_qty +=  ( $imposition->imposition() / $imp->imposition() ) if $imposition->imposition() != $imp->imposition();
 
 			my @types;
 			if ( sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
@@ -328,7 +329,7 @@ sub signature_calc {
 
 				my $setupPrice;
 
-$openprint::log->debug($type . ': ' . $imp->imposition() . 'out on ' . $area . ' MR: ' . $MakeReadies{$Equipment->id()} );
+#$openprint::log->debug($type . ': ' . $imp->imposition() . 'out on ' . $area . ' MR: ' . $MakeReadies{$Equipment->id()} );
 
 				if ( $MakeReadies{$Equipment->id()} and (
 							(($area * 1.10 ) > $MakeReadies{$Equipment->id()} ) and

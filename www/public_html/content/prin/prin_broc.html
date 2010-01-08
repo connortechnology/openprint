@@ -29,7 +29,7 @@
 							<ul>
 								<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 								<li><label>Colours:</label>
-									<select name="Colours" onchange="calc(this.form.name);">
+									<select id="Colours" name="Colours" onchange="calc(this.form.name);">
 										<option value="1/0">Black One Side</option>
 										<option value="1/1">Black Both Sides</option>
 										<option value="4/0">4 Colour One Side</option>
@@ -38,7 +38,7 @@
 								</li>
 								<? else ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 								<li><label>Colours:</label>
-									<select name="Colours" onchange="calc(this.form.name);">
+									<select id="Colours" name="Colours" onchange="calc(this.form.name);">
 										<option value="4/0">4 Colour One Side</option>
 										<option value="4/1">4 Colour/Black</option>
 										<option value="4/4">4 Colour Both Sides</option>

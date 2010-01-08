@@ -93,6 +93,12 @@ sub calc {
 		%printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$Project{'id'}, $$services{''}[0] );
 	} # end if
 
+	foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $Project->type_id() ) ) {
+		if ( ! $$services{$servicetype_id} ) {
+			push @{$$services{$servicetype_id}}, $Project->add_service( $servicetype_id );
+		} # end if
+	} # end foreach
+
 	if ( ! sets::isin( $$specs{'Dimensions'}, ['', 'Custom'] ) ) {
 		my ( $width, $height, $type ) = $$specs{'Dimensions'} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
 		my @args = ( $$specs{'projecttype_id'}, $width, $height );
@@ -398,11 +404,6 @@ sub calc {
 	$services = $Project->services();
 
 #$log->debug("Adding Required Services");
-	foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $Project->type_id() ) ) {
-		if ( ! $$services{$servicetype_id} ) {
-			push @{$$services{$servicetype_id}}, openprint::print_project::insert_service( $log, $dbh, $$Project{'id'}, $servicetype_id );
-		} # end if
-	} # end foreach
 
 	push @{$$services{'Proofs'}}, $Project->add_service( 'Proofs' ) if ! $$services{'Proofs'};
 	$openprint::log->debug("Proofs: $$specs{'proof_type'}");

@@ -139,7 +139,7 @@
 	padding: 10px;
 	margin: 0px;
 	text-align: left;
-	overflow:auto;
+	overflow:visible;
 	}
 	
 #full-dark-blue {
@@ -150,7 +150,7 @@
 	margin: 0px;
 	text-align: left;
 	color:#FFF;
-	overflow:auto;
+	overflow:visible;
 	}
 	
 #full-dark-blue h1, #full-dark-blue h2, #full-dark-blue h3, #full-dark-blue h4, #full-dark-blue h5, #full-dark-blue h6 { color:#FFF; margin:0px; padding:0px; }
@@ -167,7 +167,7 @@
 	margin: 0px;
 	text-align: left;
 	color:#FFF;
-	overflow:auto;
+	overflow:visible;
 	}
 	
 #full-purple h1, #full-purple h2, #full-purple h3, #full-purple h4, #full-purple h5, #full-purple h6, #full-purple p { 
@@ -181,7 +181,7 @@
 	width:768px;
 	padding:0px;
 	margin:0px;
-	overflow:auto;
+	overflow:visible;
 	}
 
 .full-form {
@@ -197,7 +197,7 @@
 	list-style:none;
 	padding:0px;
 	margin:0px;
-	overflow:auto;
+	overflow:visible;
 	}
 
 .full-form p {
@@ -218,7 +218,7 @@
 }
 
 .half-form ul {
-    overflow:auto;
+    overflow:visible;
 	}
 
 
@@ -227,7 +227,7 @@
     padding:5px 7px 5px 7px;
     list-style: none;
     text-align: right;
-    overflow:auto;
+    overflow:visible;
     font-size:12px;
     line-height:16px;
     font-weight:normal;
@@ -241,7 +241,7 @@
 	padding: 10px;
 	margin: 0px;
 	text-align: left;
-	overflow:auto;
+	overflow:visible;
 	}
 
 .one-third-form-frame { background:#FFF; border:1px solid #a0b5ca; }
@@ -268,7 +268,7 @@
 	padding:7px;
 	list-style: none;
 	text-align:left;
-	overflow:auto;
+	overflow:visible;
 	font-size:12px;
 	line-height:20px;
 	font-weight:bold;
@@ -344,6 +344,7 @@
 
 /* --------------------------- FORM SIZES --------------------------- */
 
-#ServiceTypeDiv, #PickupTypeDiv, #Dimensions, #ddmStockBrand, #ddmStockFinish, #ddmStockColour, #ddmStockWeight, #proof_type, #TurnaroundDays, #PrintingType { width:200px; }
+#ServiceTypeDiv, #PickupTypeDiv, #Dimensions, #ddmStockBrand, #ddmStockFinish, #ddmStockColour, #ddmStockWeight, #proof_type, #TurnaroundDays, #PrintingType, #rdbTemplateType,
+#ddmStockFinish1, #ddmStockColour1, #ddmStockWeight1, #ddmStockBrand1, #ddmStockFinish2, #ddmStockColour2, #ddmStockWeight2, #ddmStockBrand2, #ddmStockSheetSize, #Colours { width:200px; }
 
 
