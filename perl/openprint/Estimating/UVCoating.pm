@@ -110,6 +110,10 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 
 	@all_equipment = openprint::Equipment::find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
+	if ( ! @all_equipment ) {
+		$$specs{'alert'} = 'We have no equipment for UV Coating.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;

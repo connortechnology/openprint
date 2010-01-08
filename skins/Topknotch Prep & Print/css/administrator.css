@@ -22,9 +22,11 @@ label.radio {
 
 fieldset.leftColumn p input[type="text"], fieldset .leftColumn p input[type="text"] {
 	width: 80%;
+	font-size: xx-small;
 }
 fieldset.leftColumn p select, fieldset .leftColumn p select {
 	width: 80%;
+	font-size: xx-small;
 }
 .Add {
 	width: 20px;
@@ -82,7 +84,7 @@ table.List tr th.Discount, table.List tr td.Discount {
 }
 /* Hides from IE-mac \*/
 * html #UserProfile ul {height: 1%;}
-*     #UserProfile ul {display:block;}
+* #UserProfile ul {display:block;}
 /* End hide from IE-mac */
 #Configuration fieldset p {
 	padding-left: 405px;
@@ -106,12 +108,21 @@ table.List td, table.List th, table.List td input {
 select {
 	font-size: xx-small;
 }
-ul.Recommendations {
+.Stock {
+	width: 100%;
+}
+.Stock .Information {
+	width: 100%;
+}
+.Stock .Recommendations {
+	width: 100%;
+}
+.Stock .Recommendations ul {
 	list-style: none;
 	margin: 0px;
 	padding: 0px;
 }
-ul.Recommendations li {
+.Stock .Recommendations ul li {
 	float: left;
 	width: 25%;
 	margin: 0px;

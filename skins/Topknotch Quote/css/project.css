@@ -186,3 +186,21 @@ span.SpotColour label, span.Coverages label {
 	text-align: right;
 	width: 160px;
 }
+div.ProjectCreateEdit ul {
+    list-style: none;
+}
+div.ProjectCreateEdit li {
+    float: left;
+    width: 200px;
+}
+div.ProjectCreateEdit ul:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.ProjectCreateEdit ul {height: 1%;}
+/* End hide from IE-mac */
+

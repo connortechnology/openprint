@@ -798,12 +798,13 @@ fieldset#LoginLog table.List td {
 		padding: 0px;
 	}
 }
+
 .leftColumn {
-	width: 450px;
+	width: 50%;
 	float: left;
 }
 .rightColumn {
-	width: 268px;
+	width: 50%;
 	float: right;
 }
 

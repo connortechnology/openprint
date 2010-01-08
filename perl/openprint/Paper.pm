@@ -923,7 +923,7 @@ sub get_price {
 			return %price;
 		} # end if
 		foreach my $Price ( @Prices ) {
-$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->Min(), $Price->Max(), $Price->Price() ) );
+#$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->Min(), $Price->Max(), $Price->Price() ) );
 			if ( 
 					( (!(1*$Price->Min())) or $Price->Min() <= $qty ) and
 					( (!(1*$Price->Max())) or $Price->Max() >= $qty )
