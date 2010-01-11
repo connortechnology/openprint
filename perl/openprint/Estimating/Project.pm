@@ -53,10 +53,15 @@ sub calc {
 
 	my $ProjectType = new openprint::ProjectType( $$specs{'projecttype_id'} );
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 	$Project->Currency( openprint::Currency::get_current() );
 	$Project->type_id( $ProjectType->id() );
-	if ( $$specs{'txtQuantity1'} != $Project->quantity1() ) {
-		sql::update( $log, $dbh, 'tbl_service_specifications', ['lngprojectindex=? and strName=?', $Project->id(), 'txtQuantity1'], 'strvalue', $$specs{'txtQuantity1'} );
+	if ( $Project->id() and ( $$specs{'txtQuantity1'} != $Project->quantity1() ) ) {
+		foreach my $service_name ( keys %$services ) {
+			foreach my $service_id ( @{$$services{$service_name}} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $service_id, 'txtQuantity1', $$specs{'txtQuantity1'} );
+			} # end foreach
+		} # end foreach
 		$Project->quantity1( $$specs{'txtQuantity1'} );
 	} # end if
 	
@@ -67,7 +72,6 @@ sub calc {
 		$log->error( $_ );
 	} # end if
 
-	my $services = $Project->services();
 
 	# I don't remember exactly why we need to add cutting so early.
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) and ! $$services{'Cutting'} ) {

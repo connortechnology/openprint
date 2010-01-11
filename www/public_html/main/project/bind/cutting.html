@@ -27,16 +27,29 @@
 <? while ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
 <fieldset>
 	<? if ( $$variable{'Reference'} ) ?>
-	<legend><?Reference?></legend><p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
+	<legend><?Reference?></legend>
 	<? endif ( $$variable{'Reference'} ) ?>
+
+	<p><? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex'} ); ) ?></p>
+	<p>
+		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<span class="<?Columns?>Columns">
+		<? echo ( openprint::service::summary( @$variable{'ProjectIndex','SignatureServiceIndex','QTYIndex'} ); ) ?>
+		</span>
+		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	</p>
 	<input name="txtStockCalliper-<?SignatureIndex?>" type="hidden" value="<? echo ( $$variable{'txtStockCalliper-'.$$variable{'SignatureIndex'}} ) ?>" />
 	<? if ( sets::isin( $$variable{'ProjectTypeID'}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $openprint::session{'user_type'},['E','A']) ) ?>
 	<p>
     	<label>Additional cuts:</label>
         <input name="txtAdditionalCuts<?SignatureIndex?>" size="9" value="<? echo ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>"  onkeyup="calc('f1');" />
 	</p>
-</fieldset>
 	<? endif ( sets::isin( $$variable{'ProjectTypeID'}, ['PressSheetCombination','NoPrintingRequired']) or sets::isin( $openprint::session{'user_type'},['E','A']) ) ?>
+</fieldset>
 <fieldset><legend>Pre-press Stock Cutting</legend>
 	<p>
 		<label>Quantity:</label>

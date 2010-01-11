@@ -428,7 +428,7 @@ $log->debug('add interiorpages');
 
 	foreach my $ss_id ( $Project->signatures() ) {
 		if ( $ss_id == $service_index ) {
-			$log->error("No signatures in multipage!");
+			$log->error("No signatures in multipage! Means we found the project service in the list of signatures");
 			next;
 		} # end if
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
