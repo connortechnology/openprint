@@ -345,6 +345,6 @@
 /* --------------------------- FORM SIZES --------------------------- */
 
 #ServiceTypeDiv, #PickupTypeDiv, #Dimensions, #ddmStockBrand, #ddmStockFinish, #ddmStockColour, #ddmStockWeight, #proof_type, #TurnaroundDays, #PrintingType, #rdbTemplateType,
-#ddmStockFinish1, #ddmStockColour1, #ddmStockWeight1, #ddmStockBrand1, #ddmStockFinish2, #ddmStockColour2, #ddmStockWeight2, #ddmStockBrand2, #ddmStockSheetSize, #Colours { width:200px; }
+#ddmStockFinish1, #ddmStockColour1, #ddmStockWeight1, #ddmStockBrand1, #ddmStockFinish2, #ddmStockColour2, #ddmStockWeight2, #ddmStockBrand2, #ddmStockSheetSize, #Colours, #FoldType { width:200px; }
 
 
