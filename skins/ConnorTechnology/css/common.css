@@ -9,6 +9,9 @@ body {
 	font-size: x-small;
 	min-width: 1070px;
 }
+img {
+border: none;
+}
 
 #content3 { 
 width: 75%; 
