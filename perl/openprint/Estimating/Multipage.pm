@@ -158,7 +158,7 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 
 	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} = 'Please select the dimensions.';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
 	if ( $$specs{'txtSpreadSize'} == 2 ) {
@@ -169,17 +169,17 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 
 	if ( ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) or ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} .= 'Flat size cannot be smaller than finished size!';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	if ( ! $$specs{'txtTotalPageQuantity'} ) {
 		$$specs{'alert'} = 'Please enter the # of pages';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	if ( ! $$specs{'rdbCover'} ) {
 		$$specs{'alert'} = 'Please select the cover type.';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	if ( $$specs{'rdbCover'} eq 'Different') {
@@ -202,7 +202,7 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 		} # end if
 	} # end if
 
-	return 'calculated';
+	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
 sub calculate_signatures {
@@ -260,6 +260,9 @@ if ( 0 ) {
 	if ( ! @groups ) {
 		foreach my $ss_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
+			if ( $$sig_specs{'Status'} ne 'calculated' ) {
+				return 'uncalculated';
+			} # end if
 		} # end if
 	} else {
 	foreach my $group ( @groups ) {
@@ -274,9 +277,9 @@ $openprint::log->debug("Sigs in group $group : @sigs " );
 			if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) {
 				$openprint::log->debug("Retrying after changing Printing Type");
 				foreach my $ss_id2 ( @signatures ) {
-					openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType1', '' ) if $$sig_specs{'txtQuantity1'};
-					openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType2', '' ) if $$sig_specs{'txtQuantity2'};
-					openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType3', '' ) if $$sig_specs{'txtQuantity3'};
+					foreach my $qty_index ( $Project->quantity_indexes() ) {
+					openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType'.$qty_index, '' ) if $$sig_specs{'txtQuantity1'};
+					} # end foreach
 				} # end foreach Signature
 				my $sig_specs2 = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
 				if ( $$sig_specs2{'Status'} eq 'uncalculated' ) {
