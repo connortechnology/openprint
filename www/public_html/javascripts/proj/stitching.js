@@ -7,6 +7,7 @@ function calc( formName ){
 	} // end if
 	timeout = null;
     gettingNewPrice = true;
+	var form = getFormObj(formName);
 	var h = form.serialize(true);
 	h.service_type = 'Stitching';
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
