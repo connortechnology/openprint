@@ -32,7 +32,7 @@ foreach my $bleed ( 'Top','Bottom','Left','Right' ) {
 sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 
-foreach my $Project ( openprint::Project::find('updated_on_start'=> sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), - 30 ) ) ) ) {
+foreach my $Project ( openprint::Project::find( 'id'=>66604, 'updated_on_start'=> sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), - 30 ) ) ) ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -78,42 +78,42 @@ foreach my $Project ( openprint::Project::find('updated_on_start'=> sprintf('%.4
 		foreach my $side ( 'SideOne','SideTwo' ) {
 			my $index;
 			foreach $index ( 1 .. 8 ) {
-				last if ! $$sig_specs{'ColourCoatingColour'.$side.$index};
+				last if ! $$sig_specs{'ColourCoatingColour'.$index.$side};
 			} # end foreach
 			$index += 1;
 			$index = 1 if $index >= 8;
 			foreach my $colour_index ( 1 .. 8 ) {
 				if ( $$sig_specs{"chkSpecialSideOneColour$colour_index"} eq 'Y' ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoating'.$side.$index, 'Y' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$side.$index, 'PMS' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingColour'.$side.$index,  $$sig_specs{"txtSpecialSideOneColour$colour_index"} );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingCoverage'.$side.$index,  $$sig_specs{"txtSpecialSideOneColourInkPercent$colour_index"} );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'PMS' );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingColour'.$index.$side,  $$sig_specs{"txtSpecialSideOneColour$colour_index"} );
+					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingCoverage'.$index.$side,  $$sig_specs{"txtSpecialSideOneColourInkPercent$colour_index"} );
 					$index += 1;
 				} # end if
 			} # end foreach index
 			if ( sets::isin( $$sig_specs{'rdbAqueous'.$side}, ['Gloss','Matte'] ) ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoating'.$side.$index, 'Y' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$side.$index, 'Aqueous '.$$sig_specs{'rdbAqueous'.$side}.' Overall' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Aqueous '.$$sig_specs{'rdbAqueous'.$side}.' Overall' );
 				$index += 1;
 			} # end if
 			if ( $$sig_specs{'chkVarnishOverallGloss'.$side} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoating'.$side.$index, 'Y' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$side.$index, 'Varnish Gloss Overall' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Gloss Overall' );
 				$index += 1;
 			} # end if	
 			if ( $$sig_specs{'chkVarnishSpotMatte'.$side} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoating'.$side.$index, 'Y' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$side.$index, 'Varnish Matte Spot' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Spot' );
 				$index += 1;
 			} # end if	
 			if ( $$sig_specs{'chkVarnishOverallMatte'.$side} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoating'.$side.$index, 'Y' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$side.$index, 'Varnish Matte Overall' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Overall' );
 				$index += 1;
 			} # end if	
 			if ( $$sig_specs{'chkVarnishSpotMatte'.$side} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoating'.$side.$index, 'Y' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$side.$index, 'Varnish Matte Spot' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Spot' );
 				$index += 1;
 			} # end if	
 		} # end foreach side
@@ -124,6 +124,11 @@ foreach my $Project ( openprint::Project::find('updated_on_start'=> sprintf('%.4
 				my $specs = openprint::service::get_specs_ref( $Project, $ss_id );
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $$specs{'ddmPackageType'} );
+					if ( $$specs{'ddmPackageType'.$qty_index} =~ /\D/ ) {
+						if ( my $Material = openprint::Material::find_one( 'name'=>$$specs{'ddmPackageType'.$qty_index} ) ) {
+							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $Material->id() );
+						} # end if
+					} # end if
 				} # end foreach
 			} # end foreach
 		} # end if

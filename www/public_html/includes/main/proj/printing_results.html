@@ -286,7 +286,6 @@
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
 </div>
-<? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
 <? if ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
 <p>
 	<label>Base:</label>
@@ -356,6 +355,7 @@
 		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? endif ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) ?>
+<? endif ( $$variable{'Mode'} eq 'Easy' ) ?>
 <p>
 	<label>Stock Quantity:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
