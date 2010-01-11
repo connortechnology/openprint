@@ -890,7 +890,7 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 #$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 	} # end if
 
-	if ( sets::isin( $Project->Type()->strid(), [ 'Envelopes', 'NCR' ] ) ) {
+	if ( sets::isin( $Project->Type()->name(), [ 'Envelopes', 'NCR' ] ) ) {
 		if ( $$specs{'rdbSpecificStock'} ne 'Y' ) {
 			if ( $$specs{'ddmStockSheetSize'} ) {
 				@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
@@ -1446,10 +1446,9 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 			} # end if
 
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
-			if ( ! sets::isin( $Project->Type()->strid(), [ 'Envelopes', 'NCR' ] ) ) {
+			if ( ! sets::isin( $Project->Type()->name(), [ 'Envelopes', 'NCR' ] ) ) {
 				$$project{'Grip'} = $Press->specification('Grip');
 				$$project{'Gutter'} = $Press->specification('Gutter');
-				$$project{'Orientation'} = $Press->specification('Orientation');
 				if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
 					$$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
 					$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
@@ -1487,6 +1486,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 			} else {
 				$$project{'colour_bar_size'} = 0;
 			} # end if Envelopes
+			$$project{'Orientation'} = $Press->specification('Orientation');
 			$$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 			$$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
 			$$project{'Runstyles'} = $Press->specification('Runstyles');
