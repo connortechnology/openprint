@@ -411,8 +411,13 @@ sub save_Paper {
 	if ( $param{'txtWeight'.$id} ) {
 		$weight = $param{'txtWeight'.$id};
 	} elsif ( $param{'weight'.$id} ) {
-		$weight = $param{'weight'.$id};
-		$weight .= 'lb' if ! ( $param{'weight'.$id} =~ /lb/ );
+		if ( $param{'weight'.$id} =~ /([\d\.]+)PT/i ) {
+			$param{'calliper'.$id} = $1 if ! $param{'calliper'.$id};
+			$weight = '';
+		} else {
+			$weight = $param{'weight'.$id};
+			$weight .= 'lb' if ! ( $param{'weight'.$id} =~ /lb/ );
+		} # end if
 	} elsif ( $param{'calliper'.$id} ) {
 		if ( $param{'calliper'.$id} < 1 ) {
 			$weight = ($param{'calliper'.$id}*1000).'PT';
@@ -435,9 +440,10 @@ sub save_Paper {
 			'weight'	=>	$weight,
 			'quality_id' => $param{'Quality'.$id},
 			'quality'	=>	$param{'txtQuality'.$id},
-			'width'	=> $param{'width'.$id},
+			'width'		=> $param{'width'.$id},
 			'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef,
-			'type'	=>	$param{'type'.$id},
+			'type'		=>	$param{'type'.$id},
+			'calliper'	=>	$param{'calliper'.$id},
 			);
 	my $Paper;
 
@@ -466,8 +472,8 @@ sub save_Paper {
 			$Paper->width( $param{'width'.$id} );
 			$Paper->height( $param{'height'.$id} );
 		} # end if
-		if ( $param{'weight'.$id} ) {
-			$Paper->basis_weight( $param{'weight'.$id} * 2 );
+		if ( $weight =~ /^([\d\.]+)lb$/ ) {
+			$Paper->basis_weight( $1 * 2 );
 		} # end if
 		$Paper->calliper( $param{'calliper'.$id} );
 		$Paper->mweight( $param{'mweight'.$id} );
