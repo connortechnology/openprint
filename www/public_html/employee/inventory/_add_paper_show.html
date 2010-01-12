@@ -71,7 +71,7 @@
 	</select>
 	<input style="display: none;" type="text" id="txtWeight" name="txtWeight" />
 -->
-	<input type="text" id="weight" name="weight" value="<? echo ( my $weight = $param{'weight'} ? $param{'weight'} : $$variable{'Paper'}->weight(); $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
+	<input type="text" id="weight" name="weight" value="<? echo ( my $weight = $param{'weight'} ? $param{'weight'} : $$variable{'Paper'}->weight(); if ( $weight =~ /PT/i ) { $weight = '' } $weight =~ s/lb//; return $weight; ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/>lb
 </p>
 <p>
 	<label for="txtQuality" onclick="toggleInput('Quality');">Quality:</label>
