@@ -142,6 +142,20 @@ sub calc {
 				$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
 			} # end if
 		} # end if
+if ( $ProjectType->name() eq 'PresentationFolders' ) {
+$log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPocketRight'} ");
+            $$specs{'txtWidth'} = $$specs{'txtFinalWidth'} * 2;
+            my $pockets;
+            if ( $$specs{'chkPocketLeft'} ) {
+                $$specs{'txtWidth'} += 0.75;
+                $pockets += 1;
+            } # end if
+            if ( $$specs{'chkPocketRight'} ) {
+                $$specs{'txtWidth'} += 0.75;
+                $pockets += 1;
+            } # end if
+            $$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'rdbPocketSize'};
+} # end if
 	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSheetSize'} ) ) {
 		@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
@@ -151,10 +165,13 @@ sub calc {
 		$$specs{'txtHeight'} =~ s/[^\.\d]//g;
 		$$specs{'txtFinalHeight'} =~ s/[^\.\d]//g;
 	} # end if
+
 	if ( $$specs{'FoldType'} and ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} and $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
 		$$specs{'alert'} .= 'No dimensions found for this fold type.';
 		return $$specs{'Status'} = 'uncalculated';
-	} elsif ( ! $$specs{'txtQuantity1'} ) {
+	} # end if
+
+	if ( ! $$specs{'txtQuantity1'} ) {
 		$$specs{'alert'} .= 'Please enter the quantity.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -330,19 +347,19 @@ sub calc {
 				( $$specs{'SideOneCoatingType'} and ( $$specs{'SideOneCoatingType'} ne 'None' ) ) or
 				( $$specs{'SideTwoCoatingType'} and ( $$specs{'SideTwoCoatingType'} ne 'None' ) ) 
 		   ) {
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', 'Y' );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', 'UVCoating'.$$specs{'SideOneCoatingType'} );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', 'Y' );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', 'UVCoating'.$$specs{'SideTwoCoatingType'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', 'Y' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', 'UVCoating'.$$specs{'SideOneCoatingType'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', 'Y' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', 'UVCoating'.$$specs{'SideTwoCoatingType'} );
 			if ( ! $$services{'UVCoating'} ) {
 				push @{$$services{'UVCoating'}}, $Project->add_service( 'UVCoating' );
 			} # end if
 			$colourindex += 1;
 		} elsif ( $$services{'UVCoating'} ) {
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', '' );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', '' );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', '' );
-		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', '' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', '' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', '' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', '' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', '' );
 			foreach ( @{$$services{'UVCoating'}} ) {
 				openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
 			} # end foreach
