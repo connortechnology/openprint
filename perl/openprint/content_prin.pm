@@ -47,10 +47,19 @@ $log->debug("Country: Session: $session{'Country'}");
 	} # end if
 
 	my $services = $variable{'Project'}->services();
-	my $printing_specs = openprint::service::get_specs_ref( $variable{'Project'}, $$services{''}[0] ) if $$services{''};
-	foreach my $k ( 'txtFinalWidth','txtFinalHeight','txtWidth','txtHeight','ddmStockFinish','ddmStockBrand','ddmStockWeight','ddmStockColour','ddmStockSheetSize' ) {
-		$variable{$k} = $$printing_specs{$k};
-	} # end foreach
+	if ( $$services{''} ) {
+		my $printing_specs = openprint::service::get_specs_ref( $variable{'Project'}, $$services{''}[0] );
+		foreach my $k ( 'txtFinalWidth','txtFinalHeight','txtWidth','txtHeight','ddmStockFinish','ddmStockBrand','ddmStockWeight','ddmStockColour','ddmStockSheetSize' ) {
+			$variable{$k} = $$printing_specs{$k};
+		} # end foreach
+	} else {
+		# Load defaults
+        $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex=?};
+        my %defaults = sql::execute( $log, $dbh, $_, $variable{'ProjectType'}->id() );
+        foreach my $k ( keys %defaults ) {
+            $variable{$k} = $defaults{$k};
+        } # end foreach
+	} # end if
 
 	# So that default services start turned on
 	foreach my $ServiceType ( $variable{'ProjectType'}->required_ServiceTypes() ) {

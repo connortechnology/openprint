@@ -38,7 +38,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','inventory_number','full_packages','message','req_die_scoring','in_stock','parts',
+		'minimum_order','inventory_number','full_packages','message','diescoring','in_stock','parts',
 		'material_id',
 		);
 
@@ -993,6 +993,18 @@ sub cut {
 	$$self{'grain_direction'} = undef; # force recalc of gd
 } # end sub cut
 
+sub minimum_order {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'minimum_order'} = shift;
+	} # end if
+
+	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} ) if $$self{'width'} and $$self{'height'};
+#$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
+	return $$self{'minimum_order'} * $factor if $factor;
+	return $$self{'minimum_order'};
+} # end minimum_order 
+
 sub sheets_per_package {
 	my $self = shift;
 	if ( @_ ) {
@@ -1010,19 +1022,7 @@ sub gsm {
 	if ( @_ ) {
 		$$self{'gsm'} = shift;
 	} elsif ( ! $$self{'gsm'} ) {
-		if ( ! $$self{'wpsi'} ) {
-			if ( $$self{'type'} eq 'Roll' ) {
-				if ( $self->basis_mweight() ) {
-					$$self{'wpsi'} = ($$self{'basis_mweight'}/1000)/($self->basis_width()*$self->basis_height());
-				} # end if
-			} else { # Sheet
-				if ( $$self{'width'} and $$self{'height'} and $self->mweight() ) {
-					$$self{'wpsi'} = ($$self{'mweight'}/1000)/($$self{'width'}*$$self{'height'});
-				} # end if
-			} # end if Roll or Sheet
-		} # end if ! wpsi
-
-		if ( $$self{'wpsi'} ) {
+		if ( $self->wpsi() ) {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
 			$openprint::log->warn("Can't calculate gsm");
@@ -1041,10 +1041,12 @@ sub wpsi {
 			$$self{'wpsi'} = $$self{'gsm'} / 703064.5;
 		} elsif ( ( $$self{'type'} eq 'Sheet' ) and $$self{'width'} and $$self{'height'} ) {
 			$$self{'wpsi'} = ($$self{'mweight'} / 1000)/($$self{'width'}*$$self{'height'});
+		} elsif ( $self->basis_mweight() ) {
+			$$self{'wpsi'} = ($$self{'basis_mweight'}/1000)/($self->basis_width()*$self->basis_height());
 		} # end if
 	} # end if
 	return $$self{'wpsi'};
-}
+} # end if wpsi
 
 sub Prices {
 	my $self = shift;
@@ -1360,12 +1362,12 @@ sub basis_height {
 
 sub sheet_weight {
 	my ( $self ) = @_;
-	$$self{'width'} * $$self{'height'} * $self->wpsi();
+	return $$self{'width'} * $$self{'height'} * $self->wpsi();
 } # end sub sheet_weight
 
 sub start_sheet_weight {
 	my ( $self ) = @_;
-	$$self{'start_width'} * $$self{'start_height'} * $self->wpsi();
+	return $$self{'start_width'} * $$self{'start_height'} * $self->wpsi();
 } # end sub start_sheet_weight
 
 sub units {

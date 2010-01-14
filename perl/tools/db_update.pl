@@ -740,10 +740,6 @@ if ( $version < 1901 ) {
 } # end if
 
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
-$dbh->do(q{alter table papers add minimum_order integer}) if ! exists $$data{'minimum_order'};
-$dbh->do(q{alter table papers add inventory_number	text}) if ! exists $$data{'inventory_number'};
-$dbh->do(q{alter table papers add full_packages boolean}) if ! exists $$data{'full_packages'};
 
 if ( ! sets::isin( 'folds', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
@@ -1195,13 +1191,42 @@ if ( ! sets::isin( 'stockgroups', \@tables ) ) {
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
-if ( ! exists $$data{'group_id'} ) {
-	$dbh->do(q`ALTER TABLE papers ADD group_id INTEGER`);
-	$dbh->do(q`ALTER TABLE papers ADD FOREIGN KEY (group_id) REFERENCES StockGroups (id)`);
+if ( ! $data ) {
+} else {
+	if ( ! exists $$data{'material_id'} ) {
+		my $ac = sql::start_transaction( $dbh );
+		print "Adding material_id to Papers";
+		$dbh->do(q`alter table Papers add material_id INTEGER`);
+			$_ = misc::load_file( $log, q{../openprint/sql/StockMaterials.sql});
+			foreach my $st ( split(';', $_ ) ) {
+				$dbh->do($st);
+			}
+		$dbh->do(q`insert into stockmaterials (name) values ('Paper')`);
+		$dbh->do(q`alter table Papers add foreign key (material_id) REFERENCES Stockmaterials (id)`);
+		$dbh->do(q`update Papers set material_id=1`);
+		sql::end_transaction( $dbh, $ac );
+	} # end if
+	$dbh->do(q{alter table papers add minimum_order integer}) if ! exists $$data{'minimum_order'};
+	$dbh->do(q{alter table papers add inventory_number	text}) if ! exists $$data{'inventory_number'};
+	$dbh->do(q{alter table papers add full_packages boolean}) if ! exists $$data{'full_packages'};
+	if ( exists $$data{'req_die_scoring'} ) {
+		$dbh->do(q{alter table papers rename column req_die_scoring to diescoring});
+	} else {
+		$dbh->do(q{alter table papers add diescoring boolean}) if ! exists $$data{'diescoring'};
+	}
+	if ( ! exists $$data{'group_id'} ) {
+		$dbh->do(q`ALTER TABLE papers ADD group_id INTEGER`);
+		$dbh->do(q`ALTER TABLE papers ADD FOREIGN KEY (group_id) REFERENCES StockGroups (id)`);
+	} # end if
+	if ( ! exists $$data{'message'} ) {
+		$dbh->do(q`alter table papers add message text`);
+	} # end if
 } # end if
-if ( ! exists $$data{'message'} ) {
-$dbh->do(q`alter table papers add message text`);
-} # end if
+foreach my $Paper ( openprint::Paper::find() ) {
+	if ( ! $Paper->wpsi() != $Paper->wpsi(undef) ) {
+		$Paper->save();
+	} # end if
+} # end foreach my Paper
 
 if ( ! sets::isin( 'locations', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Locations.sql});
@@ -1233,9 +1258,6 @@ if ( ! sets::isin( 'user_service_defaults', \@tables ) ) {
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-if ( ! exists $config{'MinimumPagesWithoutCounting'} ) {
-	sql::insert( undef, undef, 'configuration', 'name', 'MinimumPagesWithoutCounting','value','25','description', 'Minimum number of pages per pad before counting is required.', 'category','Miscellaneous Settings' ) if ! $config{'MinimumPagesWithoutCounting'};
-} # end if
 
 if ( sets::isin( 'projecttype_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
@@ -1317,23 +1339,6 @@ if ( ! $data ) {
 	}
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
-if ( ! $data ) {
-} else {
-	if ( ! exists $$data{'material_id'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		print "Adding material_id to Papers";
-		$dbh->do(q`alter table Papers add material_id INTEGER`);
-			$_ = misc::load_file( $log, q{../openprint/sql/StockMaterials.sql});
-			foreach my $st ( split(';', $_ ) ) {
-				$dbh->do($st);
-			}
-		$dbh->do(q`insert into stockmaterials (name) values ('Paper')`);
-		$dbh->do(q`alter table Papers add foreign key (material_id) REFERENCES Stockmaterials (id)`);
-		$dbh->do(q`update Papers set material_id=1`);
-		sql::end_transaction( $dbh, $ac );
-	} # end if
-} # end if
 
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Quote_Details LIMIT 1', {} );
@@ -1390,6 +1395,32 @@ if ( my @C = openprint::MaterialCategory::find('name'=>'Plain Cartons') ) {
 } # end if
 
 foreach my $M ( openprint::Material::find('name_like'=>'Plain Carton%') ) {
+	if ( my ( $w, $h, $d ) = $M->name() =~ /Plain Carton (\d+)x(\d+)x(\d+)/ ) {
+		if ( $d and ! $M->specification('Depth') ) {
+			my $S = new openprint::MaterialSpecification();
+			$S->save({
+				'material_id'	=>	$M->id(),
+				'name'			=>	'Depth',
+				'value'			=>	$d,
+			});
+		} # endif
+		if ( $w and ! $M->specification('Width') ) {
+			my $S = new openprint::MaterialSpecification();
+			$S->save({
+				'material_id'	=>	$M->id(),
+				'name'			=>	'Depth',
+				'value'			=>	$w,
+			});
+		} # end if
+		if ( $h and ! $M->specification('Height') ) {
+			my $S = new openprint::MaterialSpecification();
+			$S->save({
+				'material_id'	=>	$M->id(),
+				'name'			=>	'Height',
+				'value'			=>	$h,
+			});
+		} # end if
+	} # end if
 	if ( ! $M->specification('Maximum Weight') ) {
 		my $S = new openprint::MaterialSpecification();
 		$S->save({
@@ -1420,6 +1451,14 @@ foreach my $M ( openprint::Material::find('name'=>'BulkSkid') ) {
 				'value'	=>	'1500',
 				});
 	} # end if
+	if ( ! $M->specification('Depth') ) {
+		my $S = new openprint::MaterialSpecification();
+		$S->save({
+			'material_id'	=>	$M->id(),
+			'name'			=>	'Depth',
+			'value'			=>	56,
+		});
+	} # endif
 	next if $M->Category()->name() eq 'BulkSkids';
 	foreach my $C ( openprint::MaterialCategory::find('name'=>'BulkSkids') ) {
 		$M->category_id( $C->id() );

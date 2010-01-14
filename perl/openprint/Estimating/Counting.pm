@@ -66,10 +66,9 @@ sub calc {
 	my $makeReadyPrice = openprint::service::get_price( 'CountingMakeReady', undef, undef );
 	my $minimumCharge = openprint::service::get_price( 'CountingMinimumCharge', undef, undef );
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity( $qty_index ) if ! $$specs{"txtQuantity$qty_index"};
-		next if ! $$specs{"txtQuantity$qty_index"};
 		my $qty = $$specs{"txtQuantity$qty_index"};
 
 		if ( $$services{''} ) {

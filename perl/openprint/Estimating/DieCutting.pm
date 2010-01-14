@@ -186,7 +186,7 @@ sub calc_price {
 		$Total{'HoleClearingPrice'} = \%HoleClearingPrice;
 		$Total{'Total'} += $HoleClearingPrice{'Total'};
 		$Total{'MPrice'} += ( $HoleClearingPrice{'Total'} * $$specs{'txtHoleClearingHoles'} / $impressions ) * 1000;
-		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%.2f %s * %d impressions * %d holes = $%.2f<br/>', @HoleClearingPrice{'Price','units'}, $impressions, $hole_qty, $HoleClearingPrice{'Total'});
+		#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%.2f %s * %d impressions * %d holes = $%.2f<br/>', @HoleClearingPrice{'Price','units'}, $impressions, $hole_qty, $HoleClearingPrice{'Total'});
 	} # end if
 
 	$Total{'txtPrice'} = $Total{'Total'};
@@ -330,7 +330,6 @@ sub calc {
 			} # end if
 
 			foreach my $Equipment ( @equipment ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Equipment: ".$Equipment->strid()."<br/>";
 				if ( ( $$specs{'txtHoleClearingHoles'} > 0 ) and ( $Equipment->specification('HoleClearing Capable') ne 'Y') ) {
 					next;
 				} # end if
@@ -372,7 +371,8 @@ sub calc {
 				$totalDiePrice += $bestPrice{'DiePrice'}{'Price'} if $bestPrice{'DiePrice'};
 				$totalStrippingPrice += $bestPrice{'Stripping'}{'Total'} if $bestPrice{'Stripping'};
 
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $bestPrice{'MakeReadyPrice'}{'Price'});
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$bestEquipment->strid().'<br/>';
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $bestPrice{'MakeReady'}{'Price'});
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $bestPrice{'DiePrice'}{'Price'});
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$bestPrice{'ServicePrice'}}{'Price','units','Total'}, $bestPrice{'Impressions'} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %4$d impressions = $%3$.2f<br/>', @{$bestPrice{'HoleClearingPrice'}}{'Price','units','Total'}, $bestPrice{'Impressions'}, $$specs{"txtHoleClearingHoles-$$sig_specs{'SignatureIndex'}"} ) if $bestPrice{'HoleClearingPrice'};
