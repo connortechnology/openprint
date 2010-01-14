@@ -1346,6 +1346,9 @@ $openprint::log->debug('Deleting Folding');
 		} # end if
 
 		if ( $$services{'Padding'} ) {
+			if ( $printing_specs{'rdbCardboardBacking'} and ! $specs{'rdbCardboardBacking'} ) {
+				$specs{'rdbCardboardBacking'} = $printing_specs{'rdbCardboardBacking'};
+			} # end if
 			foreach my $service_id ( @{$$services{'Padding'}} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$project{'id'}, $service_id, 'rdbCardboardBacking', $specs{'rdbCardboardBacking'} );
 			} # end foreach

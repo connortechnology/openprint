@@ -3305,7 +3305,7 @@ sub get_weight {
 
 	my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
 	my $sig_weight = ($$specs{'txtSignatureSpreadQuantity'.$qty_index} > 0 ? $$specs{'txtSignatureSpreadQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * $Paper->wpsi();
-#$openprint::log->debug("Get_weight: ($$specs{'txtSignatureSpreadQuantity'.$qty_index} > 0 ? $$specs{'txtSignatureSpreadQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * ".$Paper->wpsi() . " = $sig_weight * $$specs{'PageQuantity'} = " . $sig_weight * $$specs{'PageQuantity'});
+$openprint::log->debug("Get_weight: ($$specs{'txtSignatureSpreadQuantity'.$qty_index} > 0 ? $$specs{'txtSignatureSpreadQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi().'==='.$Paper->wpsi(undef) . " = $sig_weight * $$specs{'PageQuantity'} = " . $sig_weight * $$specs{'PageQuantity'});
 	if ( $$specs{'PageQuantity'} ) {
 		# For Scratch Pads
 		$sig_weight *= $$specs{'PageQuantity'};

@@ -191,8 +191,14 @@ div.Service fieldset p label {
 	text-align: left;
 }
 
-div.Service fieldset p label.radio, div.Service fieldset p span.checkOption label {
+div.Service fieldset p label.radio, div.Service span.checkOption label {
     clear: none;
+    width: auto;
+    float: none;
+    margin: 0px;
+    padding: 0px;
+}
+label.radio {
     width: auto;
     float: none;
     margin: 0px;
