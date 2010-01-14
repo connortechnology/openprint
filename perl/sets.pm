@@ -116,6 +116,20 @@ sub max {
 	return $max;
 } # end sub max
 
+sub max_index {
+	my $array = ( ( @_ == 1 ) and ( ref $_[0] eq 'ARRAY' ) ) ? $_[0] : \@_;
+	my $max;
+	my $max_index;
+
+	for ( my $index = 0; $index < @$array; $index += 1 ) {
+		if ( ( ! defined $max ) or ($max < $$array[$index] ) ) {
+			$max = $$array[$index];
+			$max_index = $index;
+		} # endif
+	} # end foreach
+	return $max_index;
+} # end sub max_index
+
 1;
 
 __END__

@@ -201,7 +201,7 @@ sub customer_login {
 	$query .= '(SELECT MAX(index) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ), ';
 	$query .= '(SELECT SUM(curtotalsale) FROM Orders WHERE Orders.CompanyIndex = Company.Index ) ';
 	$query .=  'FROM Company ';
-	$query .=  "WHERE (Company.dtmdateentered BETWEEN '$variable{'StartDate'} 00:00:00' AND '$variable{'EndDate'} 23:59:59') AND Company.deleted != true ";
+	$query .=  "WHERE (Company.dtmdateentered BETWEEN '$variable{'StartDate'} 00:00:00' AND '$variable{'EndDate'} 23:59:59') AND (Company.deleted != true OR Company.deleted IS NULL)";
 	if ( $param{'ddmEmployees'} ) {
 		if ( $param{'ddmEmployees'} eq 'None' ) {
 			$query .= " AND lngsalesperson IS NULL OR lngSalesPerson NOT IN ( SELECT Index FROM Users WHERE chrType='E' AND strEmployeeType='Sales')";
@@ -212,35 +212,36 @@ sub customer_login {
 
 	if ( $param{'ddmLastProjectStartYear'} and $param{'ddmLastProjectStartMonth'} and $param{'ddmLastProjectStartDay'} ) {
 		if ( $param{'ddmLastProjectEndYear'} and $param{'ddmLastProjectEndMonth'} and $param{'ddmLastProjectEndDay'} ) {
-			$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) BETWEEN date('$variable{'LastProjectStart'}') AND date('$variable{'LastProjectEnd'}')";
+			$query .= " AND (SELECT MAX(dtmCreationDate) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) BETWEEN '$variable{'LastProjectStart'} 00:00:00' AND '$variable{'LastProjectEnd'} 23:59:59'";
 		} else {
-			$query .= " AND (SELECT date(MAX(dtmCreationDate)) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) > date('$variable{'LastProjectStart'}')";
+			$query .= " AND (SELECT MAX(dtmCreationDate) as lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) >= '$variable{'LastProjectStart'} 00:00:00'";
 		} # end if
 	} elsif ( $param{'ddmLastProjectEndYear'} and $param{'ddmLastProjectEndMonth'} and $param{'ddmLastProjectEndDay'} ) {
-		$query .= " AND (SELECT date(MAX(dtmCreationDate)) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) < date('$variable{'LastProjectEnd'}')";
+		$query .= " AND (SELECT MAX(dtmCreationDate) AS lastprojectdate FROM tbl_Projects WHERE tbl_Projects.CompanyIndex = Company.Index ) <= '$variable{'LastProjectEnd'} 23:59:59'";
 	} # end if
 
 	if ( $param{'ddmLastOrderStartYear'} and $param{'ddmLastOrderStartMonth'} and $param{'ddmLastOrderStartDay'} ) {
 		if ( $param{'ddmLastOrderEndYear'} and $param{'ddmLastOrderEndMonth'} and $param{'ddmLastOrderEndDay'} ) {
-			$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) BETWEEN date('$variable{'LastOrderStart'}') AND date('$variable{'LastOrderEnd'}')";
+			$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) BETWEEN '$variable{'LastOrderStart'} 00:00:00' AND '$variable{'LastOrderEnd'} 23:59:59'";
 		} else {
-			$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  > date('$variable{'LastOrderStart'}')";
+			$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  >= '$variable{'LastOrderStart'} 00:00:00'";
 		} # end if
 	} elsif ( $param{'ddmLastOrderEndYear'} and $param{'ddmLastOrderEndMonth'} and $param{'ddmLastOrderEndDay'} ) {
-		$query .= " AND (SELECT date(MAX(dtmOrderDate)) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index )  < date('$variable{'LastOrderEnd'}')";
+		$query .= " AND (SELECT MAX(dtmOrderDate) AS lastorder FROM Orders WHERE Orders.CompanyIndex = Company.Index ) <= '$variable{'LastOrderEnd'} 23:59:59'";
 	} # end if
 	if ( $param{'lastlogin_start_year'} and $param{'lastlogin_start_month'} and $param{'lastlogin_start_day'} ) {
 		if ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
-			$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Company.Index) BETWEEN date('%.4d-%.2d-%.2d') AND date('%.4d-%.2d-%.2d')`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day','lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
+			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Company.Index) BETWEEN '%.4d-%.2d-%.2d 00:00:00' AND '%.4d-%.2d-%.2d 23:59:59'`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day','lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
 		} else {
-			$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Company.Index) > date('%.4d-%.2d-%.2d')`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'} );
+			$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Company.Index) >= '%.4d-%.2d-%.2d 00:00:00'`, @param{'lastlogin_start_year','lastlogin_start_month','lastlogin_start_day'} );
 		} # end if
 	} elsif ( $param{'lastlogin_end_year'} and $param{'lastlogin_end_month'} and $param{'lastlogin_end_day'} ) {
-		$query .= sprintf(q` AND (SELECT date(MAX(date_time)) FROM log WHERE action_type=2 AND company_id=Company.Index) < date('%.4d-%.2d-%.2d')`, @param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
+		$query .= sprintf(q` AND (SELECT MAX(date_time) FROM log WHERE action_type=2 AND company_id=Company.Index) <= '%.4d-%.2d-%.2d 23:59:59'`, @param{'lastlogin_end_year','lastlogin_end_month','lastlogin_end_day'} );
 	} # end if
 	if ( $param{'rdbActive'} ) {
-		$query .= " AND Company.ysnAccountActivation = '$param{'rdbActive'}' AND (company.deleted = false OR company.deleted IS NULL)\n";
+		$query .= " AND Company.ysnAccountActivation = '$param{'rdbActive'}' AND (company.deleted = false OR company.deleted IS NULL)";
 	} # end if
+	$query .= ' ORDER BY lower(strname)';
 	@{$$variable{'DATA'}} = sql::execute( $log, $dbh, $query );
 
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
