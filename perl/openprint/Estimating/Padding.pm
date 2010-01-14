@@ -95,7 +95,7 @@ sub calc {
 		$$specs{'alert'} = 'Please select how many pages each pad will have.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-	if ( $Project->Type()->strid() eq 'ScratchPads' ) {
+	if ( $Project->Type()->name() eq 'ScratchPads' ) {
 		if ( $$specs{'PageQuantity'} < $openprint::config{'MinimumPagesWithoutCounting'} ) {
 			if ( ! $$services{'Counting'} ) {
 				$_ = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' );

@@ -29,6 +29,16 @@ $serial = 'project_types_id_seq';
 	'sorting'		=>	undef,
 );
 
+sub find_one {
+    my @results = find( @_, 'limit', 1 );
+    if ( @results > 1 ) {
+        $openprint::log->error('ProjectType::find_one more than 1 result!');
+    } elsif ( @results ) {
+        return $results[0];
+    } # end if
+    return;
+} # end sub find_one
+
 sub find {
 	my %params = @_;
 	my @values;

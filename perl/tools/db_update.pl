@@ -1258,9 +1258,6 @@ if ( ! sets::isin( 'user_service_defaults', \@tables ) ) {
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
-if ( ! exists $config{'MinimumPagesWithoutCounting'} ) {
-	sql::insert( undef, undef, 'configuration', 'name', 'MinimumPagesWithoutCounting','value','25','description', 'Minimum number of pages per pad before counting is required.', 'category','Miscellaneous Settings' ) if ! $config{'MinimumPagesWithoutCounting'};
-} # end if
 
 if ( sets::isin( 'projecttype_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM projecttype_categories LIMIT 1', {} );
