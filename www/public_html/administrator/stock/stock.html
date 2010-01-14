@@ -195,9 +195,9 @@
 				</p>
 				<p> 
 					<label>Grain Direction:</label>
-					<input type="radio" name="grain_direction" id="grain_directionLong" value="Long" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq 'Long' ); ) ?> />
+					<input type="radio" name="grain_direction" id="grain_directionLong" value="Long" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq $$variable{'Stock'}->long() ); ) ?> />
 					<label class="radio" for="grain_directionLong">Long</label>
-					<input type="radio" name="grain_direction" id="grain_directionShort" value="Short" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq 'Short' ); ) ?> />
+					<input type="radio" name="grain_direction" id="grain_directionShort" value="Short" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq $$variable{'Stock'}->short() ); ) ?> />
 					<label class="radio" for="grain_directionShort">Short</label>
 				</p>
 				<p> 
@@ -238,115 +238,89 @@
 					<label>Message:</label>
 					<textarea name="message" rows="2" cols="" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Stock'}->message(); ) ?></textarea>
 				</p>
-				<p> 
-					<span class="input">
-						<input type="radio" id="cuttableY" name="cuttable" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->cuttable() ); ) ?> />
-						<label class="radio" for="cuttableY">Yes</label>
-						<input type="radio" id="cuttableN" name="cuttable" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->cuttable() ); ) ?> />
-						<label class="radio" for="cuttableN">No</label>
-					</span>
-					Can this stock be cut?:
+				<p class="cuttable"> 
+					<label>Can this stock be cut?:</label>
+					<input type="radio" id="cuttableY" name="cuttable" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->cuttable() ); ) ?> />
+					<label class="radio" for="cuttableY">Yes</label>
+					<input type="radio" id="cuttableN" name="cuttable" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->cuttable() ); ) ?> />
+					<label class="radio" for="cuttableN">No</label>
 				</p>
-				<p> 
-					<span class="input">
-						<input type="radio" id="doublesidedY" name="doublesided" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->doublesided() ); ) ?> />
-						<label class="radio" for="doublesidedY">Yes</label>
-						<input type="radio" id="doublesidedN" name="doublesided" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->doublesided() ); ) ?> />
-						<label class="radio" for="doublesidedN">No</label>
-					</span>
-					Is this stock double sided?:
+				<p class="doublesided"> 
+					<label>Is this stock double sided?:</label>
+					<input type="radio" id="doublesidedY" name="doublesided" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->doublesided() ); ) ?> />
+					<label class="radio" for="doublesidedY">Yes</label>
+					<input type="radio" id="doublesidedN" name="doublesided" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->doublesided() ); ) ?> />
+					<label class="radio" for="doublesidedN">No</label>
 				</p>
-				<p> 
-					<span class="input">
-						<input type="radio" id="multipartY" name="multipart" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->multipart() ); ) ?> onclick="$('parts_div').show();" />
-						<label class="radio" for="multipartY">Yes</label>
-						<input type="radio" id="multipartN" name="multipart" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->multipart() ); ) ?> onclick="$('parts_div').hide();" />
-						<label class="radio" for="multipartN">No</label>
-					</span>
-					Does this stock have multiple parts (eg: forms)?:
+				<p class="multipart"> 
+					<label>Does this stock have multiple parts (eg: forms)?:</label>
+					<input type="radio" id="multipartY" name="multipart" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->multipart() ); ) ?> onclick="$('parts_div').show();" />
+					<label class="radio" for="multipartY">Yes</label>
+					<input type="radio" id="multipartN" name="multipart" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->multipart() ); ) ?> onclick="$('parts_div').hide();" />
+					<label class="radio" for="multipartN">No</label>
 				</p>
 				<p id="parts_div" <? echo ( $$variable{'Stock'}->multipart() ? '' : 'style="display:none;"' ) ?>>
-					<span class="input">
-						<input type="text" id="parts" name="parts" value="<? echo ( $$variable{'Stock'}->parts() ) ?>" />
-					</span>
-					How many parts:
+					<label>How many parts:</label>
+					<input type="text" id="parts" name="parts" value="<? echo ( $$variable{'Stock'}->parts() ) ?>" />
 				</p>
-				<p> 
-					<span class="input">
-						<input type="radio" id="perfectingY" name="perfecting" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->perfecting() ); ) ?> />
-						<label class="radio" for="perfectingY">Yes</label>
-						<input type="radio" id="perfectingN" name="perfecting" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->perfecting() ); ) ?> />
-						<label class="radio" for="perfectingN">No</label>
-					</span>
-					Is this stock stiff enough to perfect without gutters?:
+				<p class="perfecting"> 
+					<label>Is this stock stiff enough to perfect without gutters?:</label>
+					<input type="radio" id="perfectingY" name="perfecting" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->perfecting() ); ) ?> />
+					<label class="radio" for="perfectingY">Yes</label>
+					<input type="radio" id="perfectingN" name="perfecting" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->perfecting() ); ) ?> />
+					<label class="radio" for="perfectingN">No</label>
 				</p>
-				<p> 
-					<span class="input">
-						<input type="radio" id="scoringY" name="scoring" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->score_required() ); ) ?> />
-						<label class="radio" for="scoringY">Yes</label>
-						<input type="radio" id="scoringN" name="scoring" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->score_required() ); ) ?> />
-						<label class="radio" for="scoringN">No</label>
-					</span>
-					Does this stock require folder scoring before folding?:
+				<p class="scoring"> 
+					<label>Does this stock require folder scoring before folding?:</label>
+					<input type="radio" id="scoringY" name="scoring" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->score_required() ); ) ?> />
+					<label class="radio" for="scoringY">Yes</label>
+					<input type="radio" id="scoringN" name="scoring" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->score_required() ); ) ?> />
+					<label class="radio" for="scoringN">No</label>
 				</p>
-				<p> 
-					<span class="input">
-						<input type="radio" id="diescoringY" name="diescoring" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->req_die_scoring() ); ) ?> />
-						<label class="radio" for="diescoringY">Yes</label>
-						<input type="radio" id="diescoringN" name="diescoring" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->req_die_scoring() ); ) ?> />
-						<label class="radio" for="diescoringN">No</label>
-					</span>
-					Does this stock require die scoring before folding?:
+				<p class="diescoring"> 
+					<label>Does this stock require die scoring before folding?:</label>
+					<input type="radio" id="diescoringY" name="diescoring" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->req_die_scoring() ); ) ?> />
+					<label class="radio" for="diescoringY">Yes</label>
+					<input type="radio" id="diescoringN" name="diescoring" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->req_die_scoring() ); ) ?> />
+					<label class="radio" for="diescoringN">No</label>
 				</p>
-				<p> 
-					<span class="input">
-						<input type="radio" id="digitalY" name="digital" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->digital() ); ) ?> />
-						<label class="radio" for="digitalY">Yes</label>
-						<input type="radio" id="digitalN" name="digital" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->digital() ); ) ?> />
-						<label class="radio" for="digitalN">No</label>
-					</span>
-					Is this stock suitable for digital printing?:
+				<p class="digital"> 
+					<label>Is this stock suitable for digital printing?:</label>
+					<input type="radio" id="digitalY" name="digital" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->digital() ); ) ?> />
+					<label class="radio" for="digitalY">Yes</label>
+					<input type="radio" id="digitalN" name="digital" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->digital() ); ) ?> />
+					<label class="radio" for="digitalN">No</label>
 				</p>
-				<p> 
-					<span class="input">
-						<input type="radio" id="bladecleaningY" name="bladecleaning" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->bladecleaning() ); ) ?> />
-						<label class="radio" for="bladecleaningY">Yes</label>
-						<input type="radio" id="bladecleaningN" name="bladecleaning" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->bladecleaning() ); ) ?> />
-						<label class="radio" for="bladecleaningN">No</label>
-					</span>
-					Does this stock require blade cleaning after cutting?:
+				<p class="bladecleaning"> 
+					<label>Does this stock require blade cleaning after cutting?:</label>
+					<input type="radio" id="bladecleaningY" name="bladecleaning" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->bladecleaning() ); ) ?> />
+					<label class="radio" for="bladecleaningY">Yes</label>
+					<input type="radio" id="bladecleaningN" name="bladecleaning" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->bladecleaning() ); ) ?> />
+					<label class="radio" for="bladecleaningN">No</label>
 				</p>
 				<hr class="spacer"/>
 				<p> <b>Tax Information</b> </p>
-				<p> 
-					<span class="input">
+				<p class="taxexempt1"> 
+					<label>Federal Tax Exemption?</label>
 						<input type="radio" id="taxexempt1Y" name="taxexempt1" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->taxexempt1() ); ) ?> />
 						<label class="radio" for="taxexempt1Y">Yes</label>
 						<input type="radio" id="taxexempt1N" name="taxexempt1" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->taxexempt1() ); ) ?> />
 						<label class="radio" for="taxexempt1N">No</label>
-					</span>
-					Federal Tax Exemption?
 				</p>
-				<p> 
-					<span class="input">
+				<p class="taxexempt2"> 
+					<label>Prov/State Tax Exemption?</label>
 						<input type="radio" id="taxexempt2Y" name="taxexempt2" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->taxexempt2() ); ) ?> />
 						<label class="radio" for="taxexempt2Y">Yes</label>
 						<input type="radio" id="taxexempt2N" name="taxexempt2" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->taxexempt2() ); ) ?> />
 						<label class="radio" for="taxexempt2N">No</label>
-					</span>
-					Prov/State Tax Exemption?
 				</p>
 				<p>
-					<span class="input">
-						<? echo ( $$variable{'Stock'}->in_stock(); ) ?>
-					</span>
-					In Stock:
+					<label>In Stock:</label>
+					<? echo ( $$variable{'Stock'}->in_stock(); ) ?>
 				</p>
 				<p>
-					<span class="input">
-						<? echo ( $$variable{'Stock'}->back_ordered(); ) ?>
-					</span>
-					Ordered:
+					<label>Ordered:</label>
+					<? echo ( $$variable{'Stock'}->back_ordered(); ) ?>
 				</p>
 			</div><!-- right-->
 		</fieldset>
@@ -372,11 +346,13 @@
 	<input type="hidden" name="btnFunction" />
 </form>
 <? if ( $$variable{'stock_id'} ) ?>
+<div class="Pricing">
 <fieldset><legend>Pricing</legend>
 	<div id="Prices"><!--#include virtual="_prices.html"--></div>
 	<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'SavePrices', 'savePrices.gif', 'savePrices(document.Prices);', '', 'Save All Prices' ); ) ?>
 	</p>
 </fieldset>
+</div>
 <? endif ( $$variable{'stock_id'} ) ?>
 </div><!--Stock-->

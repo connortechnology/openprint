@@ -13,6 +13,7 @@ fieldset p.buttons {
     padding: 0px;
     margin-left: 115px;
     float: left;
+	width: auto;
 }
 label.radio {
 	margin: 0px;
@@ -37,7 +38,7 @@ fieldset.leftColumn p select, fieldset .leftColumn p select {
 	text-align: center;
 }
 table.List td input[type="text"] {
-	width: 98%;
+	width: 96%;
 }
 table.List tr td.Range input, table.List tr td.Range input[type="text"] {
 	width: 40%;
@@ -48,12 +49,15 @@ table.List tr td.Units, table.List tr th.Units {
 	text-align: center;
 }
 .Cost {
-	width: 90px;
+	width: 75px;
 	text-align: center;
 }
 .Markup {
-	width: 80px;
+	width: 50px;
 	text-align: center;
+}
+.Stock .Pricing table.List .Price {
+	width: 75px;
 }
 table.List tr th.Discount, table.List tr td.Discount {
 	width: 95px;
@@ -127,4 +131,22 @@ select {
 	width: 25%;
 	margin: 0px;
 	padding: 0px;
+}
+.Stock .Pricing {
+}
+.Stock .Pricing fieldset {
+}
+.Stock .Pricing .buttons {
+	float: right;
+}
+.Stock .Pricing table.List th.buttons {
+	width: 300px;
+}
+.Stock p.bladecleaning, .Stock p.scoring, .Stock p.perfecting, .Stock p.cuttable, .Stock p.doublesided, .Stock p.multipart, .Stock p.diescoring, .Stock p.digital {
+	text-align: right;
+	padding: 0px;
+}
+.Stock p.bladecleaning label, .Stock p.scoring label, .Stock p.perfecting label, .Stock p.cuttable label, .Stock p.doublesided label, .Stock p.multipart label, .Stock p.diescoring label, .Stock p.digital label {
+	margin: 0px;
+	width: 300px;
 }
