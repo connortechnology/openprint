@@ -44,6 +44,7 @@ $serial= 'fold_id_seq';
 	'run_overs'				=>	'run_overs',
 	'folds'					=>	'folds',
 	'angles'				=>	'angles',
+	'printing_type'			=>	'printing_type',
 );
 %transforms = (
 	'min_width' => [ 's/[^\d\.]//g' ],
@@ -83,6 +84,7 @@ $serial= 'fold_id_seq';
 	'spinepaste'	=> undef,
 	'folds'			=> undef,
 	'angles'		=> undef,
+	'printing_type'	=>	undef,
 );
 
 sub to_string {
@@ -188,7 +190,7 @@ $log->debug("Converting $range gsm to " . openprint::Paper::gsm_to_weight( $rang
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}[$i];
-$log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . "MIN(" . $Spec->min_weight() .     ') MAX(' . $Spec->max_weight() . $Spec->weight_units(). ') RUNSPEED(' . $Spec->runspeed() .') INTERPOLATE('.$Spec->interpolate() .') for range: ' . $range ) if $debug;
+$log->debug("Examining: ".$Spec->Fold()->Equipment()->name() . ' ' . $Spec->Fold()->name() . " MIN(" . $Spec->min_weight() .     ') MAX(' . $Spec->max_weight() . $Spec->weight_units(). ') RUNSPEED(' . $Spec->runspeed() .') INTERPOLATE('.$Spec->interpolate() .') for range: ' . $range ) if $debug;
 		#return $Spec if ( 1*$$Spec{min_weight} == $range ) or ( 1*$$Spec{max_weight} == $range );
 
 		return $Spec if ( ( $$Spec{min_weight} <= $range ) and ( $$Spec{max_weight} >= $range ) );
@@ -216,10 +218,15 @@ $log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight()
 
    for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
 	   my $Spec = $$self{'Specifications'}[$i];
-	   return $Spec if ( $$Spec{max_weight} == $range ) or ( !(1*$$Spec{max_weight}) and ! (1*$$Spec{interpolate}) );
+		# Don't need to check for equality, as we do that above
+	   return $Spec if ( !(1*$$Spec{max_weight}) and ! (1*$$Spec{interpolate}) );
 
+$log->debug("Examining spec for $range:" . $Spec->min_weight() . ' ' . $Spec->max_weight() . ' : ' . $Spec->runspeed() ) if $debug;
 # first step, find one less than the min
-	   last if $$Spec{max_weight} > $range;
+		if ( ( 1*$$Spec{max_weight} > 1*$range ) or ( ! (1*$$Spec{max_weight}) ) ) {
+			#$log->debug("Foudn Max at $i " . @{$$self{'Specifications'}} );
+			last;
+		} # end if
    } # end foreach
    if ( $i and $i < @{$$self{'Specifications'}} ) {
 # back up

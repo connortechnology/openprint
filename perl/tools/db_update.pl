@@ -750,6 +750,7 @@ if ( ! sets::isin( 'folds', \@tables ) ) {
 	my $ac = sql::start_transaction( $dbh );
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Folds LIMIT 1', {} );
 	$dbh->do('alter table folds add cutting boolean') if ! exists $$data{'cutting'};
+	$dbh->do('alter table folds add printing_type text') if ! exists $$data{'printing_type'};
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment_Specifications LIMIT 1', {} );
@@ -781,6 +782,10 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$Fold->type( $pages . 'PageFold' );
 			$Fold->pages( $pages );
 			$Fold->max_imposition( 1 );
+			if ( $_ = $E->Specification($pages.'PageSignatureFoldPrintingType') ) {
+				$Fold->printing_type( $_->value() );
+				$_->delete();
+			} # end if
 			$_ = $Fold->save();
 			die $_ if $_;
 			my $FS = new openprint::FoldSpecification();
@@ -797,6 +802,10 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$Fold->name( $type.'Fold' );
 			$Fold->type( $type.'Fold' );
 			$Fold->max_imposition( 1 );
+			if ( $_ = $E->Specification($type.'FoldPrintingType') ) {
+				$Fold->printing_type( $_->value() );
+				$_->delete();
+			} # end if
 			$_ = $Fold->save();
 			die $_ if $_;
 			my $FS = new openprint::FoldSpecification();
