@@ -194,7 +194,7 @@ sub stock {
 		} # end foreach
 
 		$variable{'error'} .= $Paper->save();
-		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.';
+		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.' if ! $variable{'error'};
 	} elsif ( $param{'btnFunction'} eq 'Prev' ) {
 		$Paper = $Paper->previous();
 		$param{'stock_id'} = $Paper->id();

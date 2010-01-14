@@ -173,7 +173,7 @@ sub signature_calc_stock_cutting {
 		$openprint::log->debug("Overriding Equipment! " . $$specs{"ddmStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		@my_equipment = ( new openprint::Equipment( @$specs{"ddmStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
 	} else {
-		@my_equipment = sets::exclude( \@stitchers, \@equipment );
+		@my_equipment = sets::exclude( \@stitchers, \@my_equipment );
 	} # end if
 
 	if ( ! @my_equipment ) {
