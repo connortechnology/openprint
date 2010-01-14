@@ -1222,6 +1222,11 @@ if ( ! $data ) {
 		$dbh->do(q`alter table papers add message text`);
 	} # end if
 } # end if
+foreach my $Paper ( openprint::Paper::find() ) {
+	if ( ! $Paper->wpsi() != $Paper->wpsi(undef) ) {
+		$Paper->save();
+	} # end if
+} # end foreach my Paper
 
 if ( ! sets::isin( 'locations', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Locations.sql});
