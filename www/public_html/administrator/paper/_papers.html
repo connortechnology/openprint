@@ -48,7 +48,7 @@
 			$html .= sprintf('<td><a href="paper.html?paper_id=%1$d">%2$s</a></td>', $$Paper{id}, $Paper->weight() );
 			$html .= sprintf('<td><a href="paper.html?paper_id=%1$d">%2$s</a></td>', $$Paper{id}, $Paper->size() );
 			$html .= sprintf('<td><a href="paper.html?paper_id=%1$d">%2$s</a></td>', $$Paper{id}, $Paper->calliper() );
-			$html .= sprintf('<td><a href="paper.html?paper_id=%1$d">%2$.2f</a></td>', $$Paper{id}, $Paper->mweight() );
+			$html .= sprintf('<td><a href="paper.html?paper_id=%1$d">%2$.2f</a></td>', $$Paper{id}, $Paper->type() eq 'Roll' ? $Paper->basis_mweight() : $Paper->mweight() );
 			$html .= sprintf('<td><a href="paper.html?paper_id=%1$d">%2$.2f</a></td>', $$Paper{id}, $Paper->gsm() );
 			$html .= sprintf('<td><a href="paper.html?paper_id=%1$d">%2$s</a></td>', $$Paper{id}, $Paper->sheets_per_package() );
 			$html .= sprintf('<td style="text-align:center;"><input type="checkbox" id="chkPaper" name="chkPaper" value="%1$d"/></td>', $$Paper{id} );
