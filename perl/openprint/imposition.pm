@@ -165,9 +165,21 @@ sub check_setup {
 sub calc_setup_object {
 	my ( $specs, $image_width, $image_height, $Paper, $run_style, $grain_direction, $Press ) = @_;
 
-	my $press_grain = $Press->specification('Grain', $Paper->gsm());
-	if ( $press_grain and ($press_grain ne $Paper->grain_direction() ) ) {
-		return;
+	if ( my $press_grain = $Press->specification('Grain', $Paper->gsm()) ) {
+		if ( $press_grain eq 'Long' ) {
+			if ( $Paper->grain_direction() ne $Paper->long() ) {
+				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")") if $debug;
+				return;
+			} # en dif
+		} elsif ( $press_grain eq 'Short' ) {
+			if ( $Paper->grain_direction() ne $Paper->short() ) {
+				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Short (".$Paper->short().")") if $debug;
+				return;
+			} # en dif
+		} elsif ($press_grain ne $Paper->grain_direction() ) {
+			$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if $debug;
+			return;
+		} # end if
 	} # end if
 
 	my $setup1 = new openprint::Imposition();
@@ -639,7 +651,10 @@ sub add_imposition {
 		$openprint::log->debug(" ** Processing Run Style: $run_style on $$Paper{'width'} x $$Paper{'height'} $override_grain_direction**") if $debug;
 
 		if ( ! $Paper->cuttable() ) {
-			next if ! sets::isin( $run_style, ['Web','Sheet Work','Perfecting'] );
+			if ( ! sets::isin( $run_style, ['Web','Sheet Work','Perfecting'] ) ) {
+				$openprint::log->debug("$run_style not possible when stock not cuttable") if $debug;
+				next;
+			} # end if
 			# this is usually evelopes or forms
 			#$log->debug(" ** Creating No Cut Imposition ** ");
 			#push @impositions, {'Imposition' => 1, 'Rows' => 1, 'Cols' => 1 };

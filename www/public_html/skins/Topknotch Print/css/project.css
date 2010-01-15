@@ -16,7 +16,7 @@
 
 div.ProjectHeader {
     border-bottom: 1px solid #6A00BE;
-	margin-bottom: 5px;
+	margin: 0px 0px 5px 0px;
 }
 div.ProjectHeader:after {
     content: ".";
@@ -27,7 +27,9 @@ div.ProjectHeader:after {
 }
 /* Hides from IE-mac \*/
 * html div.ProjectHeader {height: 1%;}
-*/* End hide from IE-mac */
+div.ProjectHeader {display: block;}
+/* End hide from IE-mac */
+
 div.ProjectHeader fieldset {
 	border-left: none;
 	border-right: none;
@@ -173,6 +175,10 @@ div.ProjectHeader fieldset p label {
 .VarnishCoverage input, .VarnishCoverage input[type="text"] {
     width: 35px;
 }
+div.Service fieldset {
+    margin: 2px;
+    padding: 4px;
+}
 div.Service fieldset p input, div.Service fieldset p select {
 	width: auto;
 }
@@ -185,16 +191,18 @@ div.Service fieldset p label {
 	text-align: left;
 }
 
-div.Service fieldset p label.radio, div.Service fieldset p span.checkOption label {
+div.Service fieldset p label.radio, div.Service span.checkOption label {
     clear: none;
     width: auto;
     float: none;
     margin: 0px;
     padding: 0px;
 }
-div.Service fieldset {
-    margin: 2px;
-    padding: 4px;
+label.radio {
+    width: auto;
+    float: none;
+    margin: 0px;
+    padding: 0px;
 }
 .AddToProjectButtons {
     float: right;

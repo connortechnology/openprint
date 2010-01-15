@@ -178,7 +178,16 @@
 	<span class="<?Columns?>Columns">
        <select name="PrintingType<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
             <? echo (
-                ssi::make_drop_down( [ sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' ORDER BY strValue} ) ], $$variable{'PrintingType'.$$variable{'QTYIndex'}} );
+				my %printingtypes;
+				foreach my $Press ( openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
+					my $printing_type = $Press->specification('Printing Type');
+					next if ! $printing_type;
+					my $printing_type_name = $Press->specification('Printing Type Name');
+					$printing_type_name = $printing_type if ! $printing_type_name;
+					$printingtypes{$printing_type} = $printing_type_name;
+				}
+				
+				ssi::make_drop_down( [ map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'} );
             ) ?>
         </select>
         <input type="checkbox" id="chkOverridePrintingType<?QTYIndex?>" name="chkOverridePrintingType<?QTYIndex?>" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverridePrintingType$$variable{'QTYIndex'}"} eq 'Y'; ) ?> onclick="if (this.checked == false) calc('f1');" />

@@ -35,7 +35,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','full_packages','in_stock',
+		'minimum_order','full_packages','in_stock','parts',
 		);
 
 # This is a whole new style of Paper.  A paper refers to all sheet sizes
@@ -132,6 +132,11 @@ sub find {
 		$sql .= ' AND width=?';
 		push @values, 1*$params{'width'};
 	} # end if
+	if ( $params{'width_>='} ) {
+		$params{'width_>='} =~ s/[^\d\.]//g;
+		$sql .= ' AND ( width IS NULL or width>=?)';
+		push @values, 1*$params{'width_>='};
+	} # end if
 	if ( $params{'width_start'} ) {
 		$params{'width_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND width>=?';
@@ -146,6 +151,11 @@ sub find {
 		$params{'height_start'} =~ s/[^\d\.]//g;
 		$sql .= ' AND height>=?';
 		push @values, 1*$params{'height_start'};
+	} # end if
+	if ( $params{'height_>='} ) {
+		$params{'height_>='} =~ s/[^\d\.]//g;
+		$sql .= ' AND ( height IS NULL OR height>=? )';
+		push @values, 1*$params{'height_>='};
 	} # end if
 	if ( $params{'in_stock_start'} ) {
 		$params{'in_stock_start'} =~ s/[^\d\.]//g;
@@ -167,6 +177,10 @@ sub find {
 	if ( $params{'fsc_code'} ) {
 		$sql .= ' AND fsc_code=?';
 		push @values, $params{'fsc_code'};
+	} # end if
+	if ( $params{'parts'} ) {
+		$sql .= ' AND parts=?';
+		push @values, $params{'parts'};
 	} # end if
 	if ( $params{'type'} ) {
 		if ( ref $params{'type'} eq 'ARRAY' ) {
@@ -193,7 +207,7 @@ sub find {
 			if ( (! defined $params{'supplied'} ) or ($params{'supplied'} eq '' ) ) {
 				$sql .= ' AND supplied IS NULL';
 			} else {
-				$sql .= ' AND supplied=?';
+				$sql .= ' AND (supplied IS NULL OR supplied=?)';
 				push @values, $params{'supplied'} eq 'Y' ? 1 : 0;
 			} # end if
 		} # end if
@@ -804,6 +818,13 @@ sub get_price {
 		return if ! $bestPrice;
 		$price{'Price'} = $bestPrice->Price();
 		$price{'units'} = $bestPrice->Units();
+		if ( $openprint::config{'ApplyMarkup'} ) {
+		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
+			my $pricingpercent = $openprint::config{'ApplyMarkup'};
+			$pricingpercent =~ s/[^\d\.\-]//g;
+			$pricingpercent /= 100;
+			$price{'Price'} *= ( 1 + $pricingpercent );
+		} # end if
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$price{'currency_id'} = $Pricelist->currency_id();
@@ -868,11 +889,14 @@ sub sheets_per_package {
 		$$self{sheets_per_package} = shift;
 	} # end if
 
-	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} ) if $$self{'width'} and $$self{'height'};
+	my $factor = 1;
+	if ( $$self{'width'} and $$self{'height'} ) {
+		$factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} );
+	} # end if
+	$factor = 1 if ! $factor;
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
 	
-	return $$self{'sheets_per_package'} * $factor if $factor;
-	return $$self{'sheets_per_package'};
+	return $$self{'sheets_per_package'} * $factor;
 }
 
 sub gsm {
@@ -1035,7 +1059,7 @@ sub load_from_signature {
 		$Paper->gsm( $$specs{'txtStockGSM'} );
 		$Paper->type( $$specs{'StockType'} );
 
-		$Paper->cuttable('Y');
+		$Paper->cuttable(1);
 		$Paper->perfecting('N');
 		$Paper->doublesided($$specs{'CustomSheetDoubleSided'});
 		$Paper->grade( $$specs{'StockGrade'});
@@ -1056,7 +1080,7 @@ sub load_from_signature {
 			'finish'    => $$specs{'ddmStockFinish'},
 			'colour'    => $$specs{'ddmStockColour'},
 			'weight'    => $$specs{'ddmStockWeight'},
-			'project_type_id'=> $Project ? $Project->Type()->id() : undef,
+			'project_type_id'=> ( $Project and $Project->type_id() ) ? $Project->Type()->id() : undef,
 		);
 		if ( $qty_index ) {
 			$params{'width'}	=	$$specs{'hdnSuppliedStockWidth'.$qty_index};
@@ -1109,7 +1133,7 @@ sub grain_direction {
 	} # end if
 	if ( ! $$self{'grain_direction'} ) {
 		# Default to second measurement
-		$$self{'grain_direction'} = $$self{'height'};
+		$$self{'grain_direction'} = 'height';
 	} # end if
 	
 	return $$self{'grain_direction'};
@@ -1200,6 +1224,16 @@ sub basis_height {
 sub units {
 	return $_[0]{'type'} eq 'Roll' ? 'lbs' : 'sheets';
 } # end sub units
+
+sub long {
+	my ( $self ) = @_;
+	return $$self{'width'} > $$self{'height'} ? 'width' : 'height';
+}
+
+sub short {
+	my ( $self ) = @_;
+	return $$self{'width'} > $$self{'height'} ? 'height' : 'width';
+}
 
 1;
 __END__

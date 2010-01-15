@@ -253,6 +253,10 @@ $openprint::log->debug("Scores: $score_qty");
 # Get the impositions to consider
 	my $imposition = new openprint::Imposition();
 	$imposition->load( $sig_specs, $qty_index );
+	if ( ! $imposition->imposition() ) {
+		$$specs{'alert'} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	if ( 1 ) {
 		# IF it's a W&T, we have to cut in half first, so just do it.
@@ -313,21 +317,27 @@ $openprint::log->debug("Scores: $score_qty");
 		} else {
 			@impositions = @cut_impositions;
 		} # end if
-		foreach my $imposition ( @impositions ) {
+		foreach my $I ( @impositions ) {
+			next if ! $I->imposition();
+			next if ( $imposition->imposition() % $I->imposition() );
 			if ( $Equipment->specification('Type') ne 'Press' ) {
-				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$imposition->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $imposition->rows() );
+				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$I->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->rows() );
 			} # end if
 
-			my $width = $imposition->layout_width();
-			my $height = $imposition->layout_height();
+			my $width = $I->layout_width();
+			my $height = $I->layout_height();
 
 			if ( $_ = fits_on_equipment( $Equipment, $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
 				next;
 			} # end if
+			if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $I->imposition() ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
+				next;
+			} # end if
 
 			if ( $Equipment->specification('Type') eq 'Press' ) {
-				if ( $_ = $Equipment->fits( $imposition->Paper()->width(), $imposition->Paper()->height(), $$sig_specs{'txtSpecificStockCalliper'} ) ) {
+				if ( $_ = $Equipment->fits( $I->Paper()->width(), $I->Paper()->height(), $$sig_specs{'txtSpecificStockCalliper'} ) ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
 					next;
 				} # end if
@@ -340,18 +350,19 @@ $openprint::log->debug("Scores: $score_qty");
 			$$specs{'hdnBreakdown'.$qty_index} .= '<br/>';
 			my $setupPrice = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'ScoringMakeReady', $score_qty, $Equipment );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice);
-			$$specs{'hdnBreakdown'.$qty_index} .= "\t\tImposition: $$imposition{'imposition'}: ";
+			$$specs{'hdnBreakdown'.$qty_index} .= "\t\tImposition: $$I{'imposition'}: ";
 
 			my $servicePrice;
 			my $materialPrice = 0;
+			my $use_qty = ($qty /$imposition->imposition()) * ( $imposition->imposition() / $I->imposition() );
 
-			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Scoring', $qty, $Equipment );
+			my %servicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Scoring', $use_qty, $Equipment );
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
-				$servicePrice = $servicePrice{'Price'} * $qty / 1000;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d=%.2f<br/>', @servicePrice{'Price','units'}, $qty, $servicePrice );
+				$servicePrice = $servicePrice{'Price'} * $use_qty / 1000;
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s * %d=%.2f<br/>', @servicePrice{'Price','units'}, $use_qty, $servicePrice );
 			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
-				my $hours = $qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
+				my $hours = $use_qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
 				$servicePrice = $servicePrice{'Price'} * $hours;
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f%s @ %d%s =%.2f', @servicePrice{'Price','units'}, $Equipment->specification('PerfScoreRunSpeed'), 'Per Hour', $servicePrice );
 			} elsif ( $servicePrice{'Price'} ) {
@@ -363,36 +374,33 @@ $openprint::log->debug("Scores: $score_qty");
 				if ( %materialPrice ) {
 					if ( sets::isin( lc $materialPrice{'units'},['per rule','per score'] ) ) {
 						$materialPrice = $materialPrice{'Price'} * $score_qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $score_qty );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $score_qty );
 					} elsif ( sets::isin( lc $materialPrice{'units'},['per item'] ) ) {
-						$materialPrice = $materialPrice{'Price'} * $imposition->imposition();
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $imposition->imposition() );
+						$materialPrice = $materialPrice{'Price'} * $I->imposition();
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dout = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $I->imposition() );
 					} elsif ( lc $materialPrice{'units'} eq 'per inch' ) {
 						$materialPrice = $materialPrice{'Price'} * $score_qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $score_qty );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $score_qty );
 					} elsif ( $materialPrice{'units'} eq 'per foot' ) {
 						$materialPrice = $materialPrice{'Price'} * $score_qty * $$specs{"txtLength-$$sig_specs{'SignatureIndex'}"} / 12;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $score_qty );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%1$.2f%2$s * %4$dscores = $%3$.2f', @materialPrice{'Price','units'}, $materialPrice, $score_qty );
 					} else {
 						$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units set on material price ($materialPrice{'units'})<br/>";
 					} # end if
 				} # end if
 			} # end if
 
-# Div by imposition
-			$servicePrice /= $imposition->imposition() if $imposition->imposition();
-
 			my $totalPrice = $setupPrice + $materialPrice + $servicePrice;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>', $totalPrice );
 
 			if ( $totalPrice < $bestPrice or $bestPrice == -1 ) {
-$openprint::log->debug(sprintf('Choosing %dout on %s : $%.2f', $imposition->imposition(), $Equipment->name(), $totalPrice ) );
+$openprint::log->debug(sprintf('Choosing %dout on %s : $%.2f', $I->imposition(), $Equipment->name(), $totalPrice ) );
 				$bestPrice = $totalPrice;
 				$bestSetupPrice = $setupPrice;
 				$bestMaterialPrice = $materialPrice;
 				$bestServicePrice = $servicePrice;
 				$bestEquipment = $Equipment;
-				$bestImposition = $imposition;
+				$bestImposition = $I;
 			} # end if
 		} # end foreach equipment
 	} # end foreach imposition

@@ -1,0 +1,107 @@
+<? if ( $$variable{'Payment'}->id() ) ?>
+<script type="text/javascript">
+	function pay_invoice( invoice_id ) {
+		new Ajax.Updater( 'Paid', '_paid.html', { 
+				method:'get', 
+				parameters: { 
+					payment_id:<? echo ( $$variable{'Payment'}->id() ) ?>,
+					invoice_id: invoice_id 
+				},
+				onSuccess: function(transport) {
+					new Ajax.Updater( 'Unpaid', '_unpaid.html', {
+						method:'get', 
+						parameters: { payment_id:<? echo ( $$variable{'Payment'}->id() ) ?> }
+						} );
+				},
+				onFailure: function(transport) {
+					alert('failure to pay');
+				}
+		} );
+	} // end function pay_invoice( invoice_id)
+	function unpay_invoice( invoice_id ) {
+		new Ajax.Updater( 'Unpaid', '_unpaid.html', {
+				method:'get',
+				parameters: {
+					payment_id:<? echo ( $$variable{'Payment'}->id() ) ?>,
+					invoice_id: invoice_id
+				},
+				onSuccess: function(transport) {
+					new Ajax.Updater( 'Paid', '_paid.html', {
+						method:'get',
+						parameters: { payment_id:<? echo ( $$variable{'Payment'}->id() ) ?> }
+						} );
+				},
+				onFailure: function(transport) {
+					alert('failure to unpay');
+				}
+			} );
+	} // end function unpay_invoice(invoice_id)
+
+</script>
+<? endif ( $$variable{'Payment'}->id() ) ?>
+<form name="f1" id="f1" action="<? echo ( $$variable{'Payment'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="payment_id" value="<? echo ( $$variable{'Payment'}->id() ) ?>" />
+	<fieldset><legend>Editing Payment</legend>
+		<div class="leftColumn">
+			<p><label for="payor_id">Company:</label>
+				<select id="payor_id" name="payor_id">
+					<option value=""> select </option>
+					<? echo ( openprint::Company::get_dropdown( $$variable{'Payment'}->payor_id() ? $$variable{'Payment'}->payor_id() : $session{'company_id'} ); ) ?>
+				</select>
+			</p>
+			<p><label>Received On:</label>
+			<span class="DateSelector"><? echo ( ssi::date_select( 'received_on', $$variable{'Payment'}->received_on() ); ) ?></span>
+			</p>
+			<p><label for="amount">Amount</label>
+				<input type="text" name="amount" id="amount" value="<? echo ( $$variable{'Payment'}->amount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />
+				<select name="currency_id" id="currency_id">
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ], $$variable{'Payment'}->currency_id() ? $$variable{'Payment'}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
+				</select>
+			</p>
+			<p><label for="method">Method</label>
+				<select name="method">
+<? echo ( 
+	my @options = ( '', 'Cash','Cheque','Email Transfer','Paypal' );
+	return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'Payment'}->method() );
+) ?>
+				</select>
+			</p>
+			<p><label for="transaction_id">Transaction ID</label>
+				<input type="text" name="transaction_id" id="transaction_id" value="<? echo ( $$variable{'Payment'}->transaction_id() ) ?>" />
+			</p>
+		</div>
+		<div class="rightColumn">
+			<p>
+				<label for="memo">Memo</label>
+				<textarea cols="40" id="memo" name="memo" rows="<? echo ( $$variable{'Payment'}->memo() ? scalar split("\n", $$variable{'Payment'}->memo()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Payment'}->memo() ) ?></textarea>
+			</p>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+				if ( $$variable{'Payment'}->id() ) {
+					if ( $$variable{'Payment'}->deleted() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'destroy', 'destroy.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					} else {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+					} # end if
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<? if ( $$variable{'Payment'}->id() ) ?>
+	<div class="leftColumn" id="Paid">
+		<!--#include virtual="_paid.html"-->
+	</fieldset>
+	</div>
+	<div class="rightColumn" id="Unpaid">
+		<!--#include virtual="_unpaid.html"-->
+	</div>
+	<? endif ( $$variable{'Payment'}->id() ) ?>
+	<br class="spacer"/>
+</form>

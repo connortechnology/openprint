@@ -28,6 +28,8 @@
 .InstantPricing .Questions p label {
 	text-align: left;
 	float: left;
+	color: #800000;
+	font-weight: bold;
 }
 .InstantPricing .Questions span.label {
 	width: auto;
