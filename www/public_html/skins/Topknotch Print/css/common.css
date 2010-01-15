@@ -1,24 +1,14 @@
 body {
     font-family: Arial, Helvetica, sans-serif;
-	font-size: 12px;
-	background-color: #a8a8a8;
+	font-size: small;
     font-style: normal;
-    margin: 0px;
-    padding: 0px;
 	min-width: 730px;
+	background-color: #C5C5C5;
+	margin: 0px;
+	padding: 0px;
+	font-style: normal;
+	height: 100%;
 }
-
-@media screen {
-    body {
-        padding: 0px;
-    }
-}
-@media print {
-    body {
-        padding: 0px;
-    }
-}
-
 
 img {
 	border: none;
@@ -26,6 +16,10 @@ img {
 
 a {
 	outline: 0;
+}
+
+h1,h2,h3,h4 {
+	margin: 0px 0px 10px 0px;
 }
 
 .colRow {
@@ -138,7 +132,7 @@ table.List tr td input[type="text"] {
 }
 
 select {
-	font-size: 11px;
+	font-size: x-small;
 	margin: 0px;
 	background-color: white;
 	color: black;
@@ -146,7 +140,7 @@ select {
 }
 input {
 	margin: 0px;
-	font-size: 10px;
+	font-size: x-small;
 	background-color: white;
 	color: black;
 }
@@ -167,7 +161,6 @@ fieldset {
     padding: 2px;
     margin: 0px;
     padding-bottom: 10px;
-
 }
 fieldset legend {
 	color: #6A00BE;

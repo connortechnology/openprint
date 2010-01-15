@@ -1,10 +1,16 @@
-.menubar {
-    width:100%;
-	height: 21px;
-	margin-top: 3px;
-	margin-bottom: 12px;
+/* Begin Menu Styles
+ * */
+
+ul#menubar {
+	width:100%;
     left:0px;
-    z-index: 1;
+	background-color: maroon;
+	list-style: none;
+    margin: 3px 0px 0px 0px;
+    padding: 0px;
+    z-index: 6000;
+    min-width: 600px;
+    display: block;
 }
 @media print {
     .menubar {
@@ -12,120 +18,114 @@
     }
 }
 
-div.menubar .filler {
-    background-color: #ded9c2;
-	float: right;
-	width: 100%;
-	font-size: 11px;
-	border: 1px solid #ffffff;
-	padding-top: 3px;
-	padding-bottom: 3px;
-}
 
-
-A.menuOff:link {
-	color: #404171;
-}
-A.menuOff:visited {
-	color: #404171;
-}
-A.menuOff:hover {
-	color: #404171;
-}
-A.menuOff:active {
-	color: #404171;
-}
-A.menuOff {
-	float: left;
-	p\osition: relative;
-	padding-top: 3px;
-	padding-bottom: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
-    background-color: #ded9c2;
-	font-size: 11px;
-	font-family: Arial, Helvetica, sans-serif;
-	color: #404171;
-    text-decoration: none;
-	border: 1px solid #ffffff;
-	border-bottom: 3px solid #ffffff;
-	outline: 0;
-}
-A.menuOn:visited {
-	color: #ffffff;
-}
-A.menuOn:hover {
-	color: #ffffff;
-}
-A.menuOn {
-	float: left;
-	p\osition: relative;
-	padding-top: 3px;
-	padding-bottom: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
-	font-size: 11px;
-	font-family: Arial, Helvetica, sans-serif;
-    text-decoration: none;
-	border: 1px solid #ffffff;
-	border-bottom: 3px solid #ffffff;
-	background-color: #687796;
-	color: #ffffff;
-	outline: 0;
-}
-
-A.submenuOff:hover, A.submenuOff:link, A.submenuOff:active, A.submenuOff:visited {
-	color: #7f7c75;
-}
-A.submenuOff {
-	float: left;
-	p\osition: relative;
-	padding-top: 3px;
-	padding-bottom: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
-	font-size: 11px;
-	font-family: Arial, Helvetica, sans-serif;
-    background-color: #f1eee5;
-	color: #7f7c75;
-    text-decoration: none;
-	border: 1px solid #ffffff;
-}
-A.submenuOn {
-	float: left;
-	p\osition: relative;
-	padding-top: 3px;
-	padding-bottom: 3px;
-    padding-left: 10px;
-    padding-right: 10px;
-	font-size: 11px;
-	font-family: Arial, Helvetica, sans-serif;
-    background-color: #ded9c2;
-	color: #404171;
-    text-decoration: none;
-	border: 1px solid #ffffff;
-}
-
-.MenuBox {
+ul#menubar:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
     clear: both;
     visibility: hidden;
-	position: absolute;
-	/*
-padding-top:2px;
-*/
-	background-color: #ffffff;
-	z-index: 100;
 }
-.MenuItem {
-/*
-	width: 85px;
-	padding-top: 2px;
-	float: left;
-*/
+/* Hides from IE-mac \*/
+* html ul#menubar {height: 1%;}
+*     ul#menubar{display:block;}
+/* End hide from IE-mac */
+ul#menubar li {
+    float: left;
+    list-style: none;
+    margin: 0px;
+	padding: 0px;
+	border: none;
+    display: block;
+    background-color: maroon;
 }
 
-.Main {
-/*
-	width: 703px;
-*/
+ul#menubar li a {
+    color: #ffffff;
+    display: block;
+    width:85px;
+    padding: 3px 10px 3px 10px;
+    text-decoration: none;
+	font-family: arial, helvetica, sans-serif;
+	font-size: 11px;
+	font-weight: bold;
+    margin: 0px;
+    overflow: hidden;
+    text-align: left;
+    outline: 0;
+	border-left: 1px solid #ffffff;
+	border-right: 1px solid #ffffff;
+
 }
+ul#menubar li.off ul {
+    /*put the subnavs below and hide them all*/
+    display: none;
+    padding: 0px;
+    margin: 0px;
+    list-style: none;
+    position: absolute;
+	border-top: 1px solid #ffffff;
+}
+
+ul#menubar li.on ul {
+    /*display the current topic*/
+    display: block;
+    padding: 0px;
+    margin: 0px;
+    list-style: none;
+    position: absolute;
+}
+
+ul#menubar li.on a {
+    /*change border color for active topic area*/
+	color: maroon; 
+	background-color: #ffffff;
+}
+
+ul#menubar li ul li {
+    background-color: #ffffff;
+    border: 0;
+    float: none;
+    padding: 0px;
+    margin:0px;
+    list-style: none;
+    text-align: center;
+}
+
+ul#menubar li.on ul li a, #menubar li.off ul li a {
+    /*ie doesn't inherit the float*/
+	background-color: maroon;
+    color: #134984;
+    margin: 0px;
+	border-bottom: 1px solid white;
+	border-top: 1px solid #ffffff;
+}
+ul#menubar li.on ul li a:hover, ul#menubar li.off ul li a:hover {
+	background-color: #666666;
+    color: #FEE00F;
+}
+
+ul#menubar li.off:hover ul, ul#menubar li.over ul {
+    /*  display the other topics when
+ *   *              their parent is hovered */
+    display: block;
+    z-index: 6000;
+}
+
+#menubar li.off:hover a {
+/*
+    color: #5a95d6;
+*/
+    color: #ffffff;
+}
+#menubar li.off a:hover {
+    color: #FEE00F;
+}
+#menubar li:hover a {
+    color: #FEE00F;
+}
+#menubar li.over a {
+    color: #FEE00F;
+}
+

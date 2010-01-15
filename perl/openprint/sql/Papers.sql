@@ -87,5 +87,6 @@ CREATE TABLE Papers (
 	grain_direction	text,
 	grade			integer,	
 	fsc_code		text,
+	parts			integer,
 	PRIMARY KEY (id)
 );

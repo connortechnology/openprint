@@ -44,40 +44,17 @@ div#main_content:after {
 /* End hide from IE-mac */
 
 div#main_content_inner {
-	padding: 0px;
-	padding-right: 0px;
-	padding-left: 186px;
+	padding: 0px 0px 0px 185px;
 	background-color: #fff;
-	display: inline-block;
-	overflow: hidden;
 }
-div#main_content_inner:after {
-	content: ".";
-	display: block;
-	height: 0;
-	clear: both;
-	visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div#main_content_inner {height: 1%;}
-* div#main_content_inner {display:block;}
-/* End hide from IE-mac */
 
 div#left_sidebar {
-	display: inline-block;
 	float: left;
 	margin: 0px;
 	margin-right: 0px;
 	width: 180px;
-	margin-left: -93px;
-	text-align: center;
-	padding: 0px;
-}
-html>body #left_sidebar {
 	margin-left: -185px;
-}
-div#left_sidebar div.shadow_right {
-	margin-right: 0px;
+	padding: 0px;
 }
 div#content_container {
 	background-color: #fff;
@@ -140,29 +117,10 @@ div.shadow_right {
 	background-position: right;
 	padding-right: 5px;
 }
+
 div#main_page {
-	float: left;
-	width: 98%;
-margin: 0px;
-padding: 0px;
-}
-html>body #main_page {
 	width: 100%;
-border: none;
 }
-
-div#main_page:after {
-	content: ".";
-	display: block;
-	height: 0;
-	clear: both;
-	visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div#main_page {height: 1%;}
-* div#main_page {display:block;}
-/* End hide from IE-mac */
-
 div#main_page_content {
 	padding-left: 20px;
 	padding-right: 10px;
@@ -179,14 +137,12 @@ div#main_page_content:after {
 * div#main_page_content {display:block;}
 /* End hide from IE-mac */
 
-div#choose_currencies_top
-{
+div#choose_currencies_top {
 font-size: 12px;
 text-decoration: none;
 color: #7c6aba;
 }
-div#contact_information div
-{
+div#contact_information div {
 line-height: 1.1em;
 }
 

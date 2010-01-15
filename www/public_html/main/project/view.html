@@ -60,9 +60,13 @@ if ( $$variable{'HiddenSignatures'} ) {
 	<table class="List" style="table-layout: auto;">
 		<tr> 
 			<th align="left">Services</th>
+<? if ( $$variable{'Project'}->Ordered_Product() ) ?>
+			<th width="160" align="right"><? echo ( $$variable{'Project'}->Ordered_Product()->quantity() ) ?></th>
+<? else ( $$variable{'Project'}->Ordered_Product() ) ?>
 			<? if ( $$variable{'Quantity1'} ) ?><th width="160" align="right"><?Quantity1?></th><? endif ( $$variable{'Quantity1'} ) ?>
 			<? if ( $$variable{'Quantity2'} ) ?><th width="160" align="right"><?Quantity2?></th><? endif ( $$variable{'Quantity2'} ) ?>
 			<? if ( $$variable{'Quantity3'} ) ?><th width="160" align="right"><?Quantity3?></th><? endif ( $$variable{'Quantity3'} ) ?>
+<? endif ( $$variable{'Project'}->Ordered_Product() ) ?>
 			<th width="90" align="right">Status</th>
 			<th class="unprintable" width="70" align="right">Changes</th>
 		</tr>
@@ -78,45 +82,26 @@ if ( $$variable{'HiddenSignatures'} ) {
 				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
 				<? endif ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
 			</td>
-	<? if ( $$variable{'Quantity1'} ) ?>
-			<td align="right">
-			<? echo ( 
-				my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
-				if ( $$specs{txtQuantity1} and $$specs{txtQuantity1} != $$variable{Quantity1} ) {
-					return "($$specs{txtQuantity1}) ";
+	<? echo ( 
+		my $html = '';
+		my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= qq`<td align="right">\n`;
+			if ( $$specs{"txtQuantity$qty_index"} and $$specs{"txtQuantity$qty_index"} != $$variable{"Quantity$qty_index"} ) {
+				$html .= "($$specs{txtQuantity$qty_index}) ";
+			} # end if
+			if ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) {
+				$html .= '<b>';
+				if ( $$variable{'price$qty_index'} ne '-' ) {
+					$html .= $$variable{'CurrencySymbol'};
 				} # end if
-				return '';
-			) ?>
-			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price1?></b><br/>
-			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 1 ); ) ?>
-			</td>
-	<? endif ( $$variable{'Quantity1'} ) ?>
-	<? if ( $$variable{'Quantity2'} ) ?>
-			<td align="right">
-			<? echo ( 
-				my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
-				if ( $$specs{txtQuantity2} and $$specs{txtQuantity2} != $$variable{Quantity2} ) {
-					return "($$specs{txtQuantity2}) ";
-				} # end if
-				return '';
-			) ?>
-			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price2?></b><br/>
-			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 2 ); ) ?>
-			</td>
-	<? endif ( $$variable{'Quantity2'} ) ?>
-	<? if ( $$variable{'Quantity3'} ) ?>
-			<td align="right">
-			<? echo ( 
-				my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
-				if ( $$specs{txtQuantity3} and $$specs{txtQuantity3} != $$variable{Quantity3} ) {
-					return "($$specs{txtQuantity3}) ";
-				} # end if
-				return '';
-			) ?>
-			<b><? if ($$variable{'price1'} ne '-') ?><?CurrencySymbol?><? endif ($$variable{'price1'} ne '-') ?>&nbsp;<?price3?></b><br/>
-			<? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'}, 3 ); ) ?>
-			</td>
-	<? endif ( $$variable{'Quantity3'} ) ?>
+				$html .= $$variable{"price$qty_index"} ."</b><br/>\n";
+			} # end if
+			$html .= openprint::service::summary( @$variable{'ProjectIndex','index'}, $qty_index );
+			$html .= "</td>\n";
+		} # end foreach qty_index
+		return $html;
+	) ?>
 			<td align="right"><?status?></td>
 			<td class="unprintable" align="right">
 				<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
@@ -134,6 +119,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq 'class="colRow"' ? '' : 'class="colRow"' ) ?>
 	<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
 	<? endif ( @{$$variable{'SERVICES'}} ) ?>
+<? if ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) ?>
 		<tr class="totals"> 
 			<td align="left">Unit Prices:</td>
 	<? if ( $$variable{'Quantity1'} ) ?><td align="right"><?CurrencySymbol?>&nbsp;<?UnitPrice1?></td><? endif ( $$variable{'Quantity1'} ) ?>
@@ -150,6 +136,15 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<td align="right">&nbsp;</td>
 			<td class="unprintable" align="right">&nbsp;</td>
 		</tr>
+<? endif ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) ?>
+<? if ( $$variable{'Project'}->Ordered_Product() ) ?>
+		<tr class="totals"> 
+			<td align="left">Ordered Price:</td>
+			<td align="right"><?CurrencySymbol?>&nbsp;<? echo ( $$variable{'Project'}->Ordered_Product()->price() ) ?></td>
+			<td align="right">&nbsp;</td>
+			<td class="unprintable" align="right">&nbsp;</td>
+		</tr>
+<? endif ( $$variable{'Project'}->Ordered_Product() ) ?>
 
 	<? if ( sets::isin( $openprint::session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 		<tr class="totals unprintable">

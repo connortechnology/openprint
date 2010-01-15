@@ -6,7 +6,7 @@
 		$Shift->name('Pending');
 
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn">';
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
 			$Shift->equipment_id( $E->id() );
 			push @{$$variable{'pending_drops'}}, $Shift->ul_id();
 			$html .= $Shift->get_ul( {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete']});

@@ -308,17 +308,20 @@ sub signature_calc {
 				%materialPrice = $Materials[0]->get_price( $rule_qty, $Equipment );
 				if ( $materialPrice{'units'} eq 'Per Rule' ) {
 					$materialPrice = $materialPrice{'Price'} * $rule_qty;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s * %d rules=%.2f<br/>', @materialPrice{'Price','units'}, $rule_qty, $materialPrice );
 				} elsif ( lc $materialPrice{'units'} eq 'per inch' ) {
 					my $length = ( $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $$specs{"txtWidth-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} * $$specs{"txtHeight-$$sig_specs{'SignatureIndex'}"} );
 					$materialPrice = $materialPrice{'Price'} * $length;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s * %.2finches=%.2f', @materialPrice{'Price','units'}, $length, $materialPrice );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s * %.2finches=%.2f<br/>', @materialPrice{'Price','units'}, $length, $materialPrice );
 				} elsif ( $materialPrice{'units'} eq 'per foot' ) {
 					my $length = ( $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $$specs{"txtWidth-$$sig_specs{'SignatureIndex'}"} + $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} * $$specs{"txtHeight-$$sig_specs{'SignatureIndex'}"} ) /12;
 					$materialPrice = $materialPrice{'Price'} * $length;
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s * %.2ffeet=%.2f', @materialPrice{'Price','units'}, $length, $materialPrice );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Material: $%.2f%s * %.2ffeet=%.2f<br/>', @materialPrice{'Price','units'}, $length, $materialPrice );
 				} else {
 					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units set on material price ($materialPrice{'units'})<br/>";
 				} # end if
+			} else {
+				$$specs{'hdnBreakdown'.$qty_index} .= "No charge for rule<br/>";
 			} # end if
 
 			my $totalPrice = $setupPrice + $materialPrice + $servicePrice;

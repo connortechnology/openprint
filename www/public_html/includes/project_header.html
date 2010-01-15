@@ -7,16 +7,16 @@
 			<label>Project #:</label>
 	  		<?ProjectIndex?>
 		</p>
-	  	<? if ( $$variable{'DocketNumber'} ) ?>
+	  	<? if ( $$variable{'Project'}->docket() ) ?>
 		<p>
 	  		<label>Docket Number:</label>
-	  		<?DocketNumber?>
+	  		<? echo ( $$variable{'Project'}->docket() ) ?>
 		</p>
 		<p>
 	  		<label>Ordered Quantity:</label>
-	  		<?OrderedQuantity?>   			
+	  		<? echo ( $$variable{'Project'}->ordered_quantity() ) ?>
    		</p>
-	  	<? endif ( $$variable{'DocketNumber'} ) ?>
+	  	<? endif ( $$variable{'Project'}->docket() ) ?>
    		<p>
 			<label>Status:</label>
 			<? if ( $$variable{'ProjectStatus'} eq 'Waiting For Customer Approval' ) ?>
@@ -59,6 +59,18 @@
 		<? endif ( $$variable{'PrepressOperator'} = openprint::project::get_prepress_operator( $log, $dbh, $$variable{'ProjectIndex'} ); ) ?>
 
 	  	<? endif ( $$variable{'DocketNumber'} ) ?>
+		<? if ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+		<p>
+			<label>Predefined For:</label>
+			<? echo (
+				my $html = '';
+				foreach my $Product ( openprint::Product::find('project_id'=>$$variable{'Project'}->id()) ) {
+					$html .= $Product->name() . '<br/>';
+				} # end foreach Product
+				return $html;
+			) ?>
+		</p>
+		<? endif ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 	</fieldset>
 	<fieldset id="ContactInformation"><legend>Contact Information</legend>
 		<p>

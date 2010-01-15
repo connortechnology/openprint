@@ -64,10 +64,10 @@
 					<input type="text" name="cost-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_cost(this);" />
 				</td>
 				<td class="Markup"> 
-					<input type="text" name="markup-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="6"  onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);" />
+					<input type="text" name="markup-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_markup(this);" />
 				</td>
 				<td class="Price"> 
-					<input type="text" name="price-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" size="9"  onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);" />
+					<input type="text" name="price-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" onkeyup="$('chk-<? echo ( $$variable{Pricelist}->id(); ) ?>-New').checked=true;this.value=this.value.replace(/[^\d\.]/,'');calc_from_price(this);" />
 				</td>
 				<td class="Discount"> 
 					<input type="radio" id="discount-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-NewY" name="rdbDiscount-<? echo ( $$variable{'Pricelist'}->id(); ) ?>-New" value='Y' checked="checked"  />

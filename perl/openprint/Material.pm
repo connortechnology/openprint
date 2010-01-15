@@ -199,6 +199,16 @@ sub Specifications {
 	return openprint::MaterialSpecification::find( 'Material'=>$self, 'order'=>'name,min' );
 } # end sub Specifications
 
+sub find_one {
+	my @results = find( @_, 'limit', 1 );
+	if ( @results > 1 ) {
+		$openprint::log->error('Material::find_one more than 1 result!');
+	} elsif ( @results ) {
+		return $results[0];
+	} # end if
+	return;
+} # end sub find_one
+
 sub find {
 	my %params = @_;
 	my $sql = 'SELECT * FROM Materials WHERE 1>0';

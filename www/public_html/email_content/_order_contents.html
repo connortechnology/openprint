@@ -1,7 +1,7 @@
 <? if ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>
 <table class="List">
 	<tr> 
-		<th width="50" align="left">ID</td>
+		<th width="60" align="left">ID</td>
 		<th align="left">Reference</td>
 		<th width="155" align="left">Required Date</td>
 		<th width="100" align="left">Quantity</td>
@@ -9,14 +9,13 @@
 	</tr>
 <? eval (
 	$$variable{'rowclass'} = ''; 
-	@{$$variable{'Projects'}} = $$variable{'Order'}->projects(); 
 ) ?>
 
 <? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 	<tr<?rowclass?>> 
-		<td><a href="<? echo ( $openprint::config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
-		<td><a href="<? echo ( $openprint::config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize( $$variable{'Project'}->reference() ) . ':<br/>' . $$variable{'Project'}->summary(); ) ?></a></td>
-		<td><? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></td>
+		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
+		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize( $$variable{'Project'}->reference() ) . ':<br/>' . $$variable{'Project'}->summary(); ) ?></a></td>
+		<td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></td>
 		<td><? echo ( $$variable{'Project'}->ordered_quantity(); ) ?></td>
 		<td align="right">
 <? echo (

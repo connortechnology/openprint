@@ -98,13 +98,11 @@ sub set_impressions {
 	my ( $r, $log, $dbh, $variable, $project_index, $service_index, $impressions ) = @_;
 	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'ImpressionQuantity', $impressions );
 } # end sub set_impressions
-sub set_forms {
-	my ( $r, $log, $dbh, $variable, $project_index, $service_index, $forms ) = @_;
-	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'SignatureQuantity', $forms );
-} # end sub set_impressions
+
 sub set_comment {
-	my ( $r, $log, $dbh, $variable, $project_index, $service_index, $comment ) = @_;
-	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtEmployeeComments', $comment );
+	my ( $r, $log, $dbh, $variable, $schedule_id, $comment ) = @_;
+	my $Job = new openprint::ScheduledJob( $schedule_id );
+	openprint::service::insert_service_spec( $log, $dbh, @$Job{'project_id','service_id'}, 'txtEmployeeComments', $comment );
 } # end sub set_comment
 sub set_duedate {
 	my ( $r, $log, $dbh, $variable, $service_index, $date ) = @_;

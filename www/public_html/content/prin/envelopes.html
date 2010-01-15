@@ -13,9 +13,25 @@
                         
 				<div class="Questions">
 					<h3>Instant Pricing</h3>
-
 					<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
-					<!--#include virtual="/includes/sizes.html"-->
+					<!--#include virtual="/includes/paper_dropdowns.html"-->
+					<p><label>Size:</label>
+						<select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
+							<option value="">Please select one</option>
+							<? echo (
+								ssi::make_drop_down( [ map { $_,$_ } openprint::paper::get_sheetsizes( @$variable{'ProjectTypeID',
+										'ddmStockBrand'.$$variable{'Signature'},
+										'ddmStockFinish'.$$variable{'Signature'},
+										'ddmStockColour'.$$variable{'Signature'},
+										'ddmStockWeight'.$$variable{'Signature'},
+										} ) ], $$variable{'ddmStockSheetSize'} );
+							) ?>
+						</select>
+					</p>
+					<input type="hidden" id="txtWidth" name="txtWidth" value="<?txtWidth?>" />
+					<input type="hidden" id="txtHeight" name="txtHeight" value="<?txtHeight?>" />
+					<input type="hidden" id="txtFinalWidth" name="txtFinalWidth" value="<?txtFinalWidth?>" />
+					<input type="hidden" id="txtFinalHeight" name="txtFinalHeight" value="<?txtFinalHeight?>" />
 					<p><label>Colours:</label>
 						<select name="Colours" onchange="calc(this.form.name);">
 							<option value="4/0">4 Colour One Side</option>
@@ -24,10 +40,6 @@
 						</select>
 					</p>
 					<br/>
-					<div class="row">
-						<label>Stock Information</label><br/>
-						<!--#include virtual="/includes/paper_dropdowns.html"-->
-					</div>
 					<!--#include virtual="_proofs.html"-->
 		<? if ( sets::isin( $$variable{'ProjectTypeName'}, ['Brochures','Postcards','Menus'] ); ) ?>
 					<!--#include virtual="/includes/shrinkwrapping.html"-->
