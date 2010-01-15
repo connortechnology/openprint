@@ -149,6 +149,9 @@ sub user_profiles {
 		} # end if
 
 		delete $openprint::param{'password'} if ! $openprint::param{'password'};
+		# This has to exist, in order to save the no assistants situation
+		$openprint::param{'assistant_ids'} = [] if ! exists $openprint::param{'assistant_ids'};
+		$openprint::param{'csr_ids'} = [] if ! exists $openprint::param{'csr_ids'};
 		my $error = $User->save( \%openprint::param );
 
 		if ( ! $error ) {

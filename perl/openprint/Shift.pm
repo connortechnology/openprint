@@ -42,6 +42,14 @@ $serial = 'shifts_id_seq';
 	'operator_id'		=>	undef,
 );
 
+sub find_one {
+    my %params = @_;
+    $params{'limit'} = 1;
+    my @Results = find(%params);
+    return $Results[0] if @Results;
+} # end sub find_one
+
+
 sub find {
 	my %params = @_;
 
@@ -58,7 +66,7 @@ sub find {
 		} # end if
 	} # end if
 	if ( exists $params{'name'} and $params{'equipment_id'} ) {
-		$sql .= ' AND shift_id =(SELECT id FROM Equipment_shifts WHERE name=? AND equipment_id=?)';
+		$sql .= ' AND shift_id IN (SELECT id FROM Equipment_shifts WHERE name=? AND equipment_id=?)';
 		push @values, $params{'name'},$params{'equipment_id'};
 	} # end if
 	if ( exists $params{'equipment_id'} ) {
@@ -128,6 +136,7 @@ sub find {
 sub starttime_seconds {
 	return Date::Parse::str2time( $_[0]{'starttime'} );
 } # endsub
+
 sub startdate_seconds {
 	my ( $self ) = @_;
 	my $time = $self->starttime_seconds();
@@ -181,6 +190,25 @@ sub operator_id {
 	} # end if
 	return $$self{'operator_id'};
 } # end sub operator_id
+
+sub assign_operator_id {
+	my ( $self ) = @_;
+	my ( $s, $m, $h, $D, $M, $Y, $Z ) = Date::Parse::strptime( $$self{'starttime'} );
+$log->debug( "assign_operator_id $$self{'starttime'} => $Y, $M, $D, $h, $m, $s");
+	if ( Date::Calc::check_date( 1970, 1, $D ) and Date::Calc::check_time( $h, $m, $s ) ) {
+		my $time = Date::Calc::Mktime( 1970, 1, $D, $h, $m, $s );
+		my $Shift = openprint::Equipment_Shift::find_one(
+				'equipment_id'	=>	$$self{'equipment_id'}, 
+				'starttime'		=>	Date::Format::time2str( '%H:%M:%S', $time ),
+				);
+		if ( $Shift and $Shift->operator_id() ) {
+			return $$self{'operator_id'} = $Shift->operator_id();
+		} # end if
+	} else {
+		$log->error("Invalid Date or Time $$self{'starttime'} => $Y, $M, $D, $h, $m, $s");
+	} # end if
+	return;
+} # end sub assign_operator_id
 
 sub Equipment {
 	return new openprint::Equipment( $_[0]{'equipment_id'} );
@@ -247,16 +275,16 @@ Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $da
 sub ul_id {
 	my ( $self ) = @_;
 	if ( $self->starttime() ) {
-		return sprintf('%d-%s-%s', $$self{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $self->starttime_seconds() ), $self->name() );
+		return sprintf('ul%d-%s-%s', $$self{'equipment_id'}, Date::Format::time2str('%Y-%m-%d', $self->starttime_seconds() ), $self->name() );
 	} else {
-		return sprintf('%d-%s', $$self{'equipment_id'}, $self->name() );
+		return sprintf('ul%d-%s', $$self{'equipment_id'}, $self->name() );
 	} # end if
 } # end sub ul_id
 
 sub get_from_ul_id {
 	my ( $id ) = @_;
 
-	$id =~ /^(\d*)-(\d\d\d\d-\d\d-\d\d)?-?(\w*)$/;
+	$id =~ /^ul(\d*)-(\d\d\d\d-\d\d-\d\d)?-?(\w*)$/;
     my ( $equipment_id, $date, $shift_name ) = ( $1, $2, $3 );
 
     my $Shift;
@@ -282,7 +310,7 @@ sub get_ul {
 	my ( $Shift, $filters ) = @_;
 
 	my $content = $Shift->get_lis($filters);
-	return sprintf('<ul id="ul%s" class="shift %s">%s</ul>%s', $Shift->ul_id(), ($content ? '' : ' Empty'), $content, "\n" );
+	return sprintf('<ul id="%s" class="shift %s">%s</ul>%s', $Shift->ul_id(), ($content ? '' : ' Empty'), $content, "\n" );
 } # end sub get_ul
 
 sub get {

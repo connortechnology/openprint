@@ -1086,7 +1086,6 @@ sub send_paper_arrival_notification {
 	} # end foreach Paper
 } # end sub send_paper_arrival_notification
 
-
 sub rfidtags {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		foreach my $rfidtag_id ( ref $param{'rfidtags'} eq 'ARRAY' ? @{$param{'rfidtags'}} : split(',',$param{'rfidtags'}) ) {
