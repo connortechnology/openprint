@@ -540,25 +540,43 @@ sub status {
 sub bump {
 	my ( $self, $equipment_id ) = @_;
 	push @{$variable{'changed'}}, $self->Shift()->ul_id();
-	my $Project = new openprint::Project( $$self{'projectindex'} );
+	my $Project = $self->Project();
 	$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
-	$$self{'equipment_id'} = $equipment_id if $equipment_id;
 
-	if ( ! $$self{'starttime'} ) {
-		@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+
+	if ( $equipment_id and ( $equipment_id != $$self{'equipment_id'} ) ) {
+		my $old_equipment_id = $$self{'equipment_id'};
+		$self->save({'equipment_id'=>$equipment_id});
+		# Shuffle the old list
+		if ( $old_equipment_id and new openprint::Equipment( $old_equipment_id )->smartscheduling() ) {
+		openprint::employee_production::reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$old_equipment_id,'starttime_null'=>0,'order'=>'starttime' ))
+		} # end if
 	} # end if
-	my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
-	$starttime_seconds = time if $starttime_seconds < time;
 
 	my $error;
-	$error .= $self->save({'starttime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds )});
-	$Project->add_to_log( @session{'company_id','user_id'}, 'Job bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $starttime_seconds ) . ' on ' . $self->Equipment()->name() );
-	push @{$variable{'changed'}}, $self->Shift()->ul_id();
+	if ( ! $$self{'starttime'} ) {
+		@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime+runtime+'1 second'::interval) FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
+		my $starttime_seconds = $self->starttime_seconds();
+		$starttime_seconds = time if $starttime_seconds < time;
 
-	if ( $self->Equipment()->smartscheduling() ) {
-		reorder_jobs(
-				openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$self{'equipment_id'},'order'=>'starttime' ) );
+		$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
+		push @{$variable{'changed'}}, $self->Shift()->ul_id();
+	} elsif ( $self->Equipment()->smartscheduling() ) {
+		my @final_order = openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_<'=>$self->starttime(),'order'=>'starttime' );
+		foreach my $Job ( $self->Shift()->Schedule() ) {
+			push @final_order, $Job if $$Job{'id'} != $$self{'id'};
+		} # end foreach job in schift
+		push @final_order, $self->Shift()->Next()->Schedule();
+		push @final_order, $self;
+		push @final_order, openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
+
+		openprint::employee_production::reorder_jobs( @final_order );
 	} # end if smartscheduling
+	sql::end_transaction( $dbh, $ac );
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Job bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
 	return $error;
 } # end sub bump
 

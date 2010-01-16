@@ -1,7 +1,6 @@
 package openprint::Shift;
 @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
@@ -49,7 +48,6 @@ sub find_one {
     return $Results[0] if @Results;
 } # end sub find_one
 
-
 sub find {
 	my %params = @_;
 
@@ -93,6 +91,9 @@ sub find {
     } elsif ( $params{'starttime_<'} ) {
         $sql .= ' AND starttime < ?';
         push @values, $params{'starttime_<'};
+    } elsif ( $params{'starttime_>'} ) {
+        $sql .= ' AND starttime > ?';
+        push @values, $params{'starttime_>'};
     } elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
         $sql .= ' AND starttime IS NULL';
     } elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
@@ -181,12 +182,14 @@ sub Schedule {
 sub operator_id {
 	my $self = shift;
 
-	if ( @_ ) {
+	if ( @_ and ( $$self{'operator_id'} != $_[0] ) ) {
 		$$self{'operator_id'} = shift;
-		foreach my $Job ( $self->Schedule() ) {
-			$Job->operator_id( $$self{'operator_id'} );	
-		} # end foreach
-		$self->save();
+		if ( $$self{'id'} ) {
+			foreach my $Job ( $self->Schedule() ) {
+				$Job->operator_id( $$self{'operator_id'} );	
+			} # end foreach
+			$self->save();
+		} # end if
 	} # end if
 	return $$self{'operator_id'};
 } # end sub operator_id
@@ -316,6 +319,20 @@ sub get_ul {
 sub get {
 	return $_[0]->Shift();
 } # end sub get
+
+sub Next {
+	my ( $self ) = @_;
+	my $Next = find_one('starttime_>' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
+	if ( ! $Next ) {
+		my $ES = openprint::Equipment_Shift::find_one(
+				'equipment_id'      =>  $$self{'equipment_id'},
+				'starttime_start'   =>  $self->Shift()->Equipment_Shift()->endtime(),
+				'order'             =>  'starttime',
+				);
+		$Next = $ES->emanantise( $self->endtime_seconds() );
+	} # end if
+	return $Next;
+} # end sub Next
 
 1;
 #__END__

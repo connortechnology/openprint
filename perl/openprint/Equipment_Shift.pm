@@ -1,7 +1,7 @@
 package openprint::Equipment_Shift;
 @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
+require openprint::Shift;
 
 use strict;
 use openprint ();
@@ -118,7 +118,7 @@ sub find {
 sub starttime_seconds {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
-		$$self{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $new );
+		$$self{'starttime'} = Date::Format::time2str( '%H:%M:%S', $new );
 	} # end if $new
 	return Date::Parse::str2time( $_[0]{'starttime'} );
 } # end sub starttime_seconds
@@ -133,7 +133,7 @@ sub duration_seconds {
 
 sub endtime {
 	if ( ! $_[0]{'endtime'} ) {
-		$_[0]{'endtime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0]->starttime_seconds() + $_[0]->duration_seconds() );
+		$_[0]{'endtime'} = Date::Format::time2str( '%H:%M:%S', $_[0]->starttime_seconds() + $_[0]->duration_seconds() );
 	} # end if
 	return $_[0]{'endtime'};
 } # end sub endtime_seconds
@@ -147,16 +147,27 @@ sub emanantise {
 
 $log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds ) );
 	#$date_seconds -= ($date_seconds % (24*3600));
-	$date_seconds = Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $date_seconds ) );
-$log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds + $self->starttime_time_seconds() ) );
+	# The point is to drop any additional time part, but how can that be right? What we want to do is jump gaps
+	my $date_part = Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $date_seconds ) );
+	my $time_part = $date_seconds - $date_part;
+	if ( $self->starttime_time_seconds() < $time_part ) {
+		# Need to add a day
+		$date_seconds = $date_part + ( 60*60*24 );
+	} # end if
+	my $starttime_seconds = $date_seconds + $self->starttime_time_seconds();
+	my $endtime_seconds = $starttime_seconds + $self->duration_seconds();
+
+$log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ) . " ending: " . 
+Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds)
+);
 
 	my $Shift = new openprint::Shift();
 	$Shift->save({
-		'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds + $self->starttime_time_seconds() ),
-		'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $date_seconds + $self->starttime_time_seconds() + $self->duration_seconds() ),
 		'equipment_id'	=>	$$self{'equipment_id'},
 		'operator_id'	=>	$$self{'operator_id'},
 		'shift_id'		=>	$$self{'id'},
+		'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ),
+		'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
 	});
 	return $Shift;
 } # end sub emanantise

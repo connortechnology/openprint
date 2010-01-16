@@ -99,27 +99,16 @@ sub press_schedule {
 		
 
 		# Dumps it in pending
-		sql::insert( $log, $dbh, 'Schedule',
-				'ProjectIndex', $Project->id(),
-				'ServiceIndex', $service_id,
-				'StartTime',    undef,
-				'equipment_id', $param{'press_id'},
-				'RunTime',      join(':', $h, $m, $s ),
-				);
+		my $Job = new openprint::ScheduledJob();
+		$variable{'error'} .= $Job->save({
+				'project_id'	=> $Project->id(),
+				'service_id'	=> [ $service_id ],
+				'starttime'		=> undef,
+				'equipment_id'	=> $param{'press_id'},
+				'runtime'		=> join(':', $h, $m, $s ),
+				});
 
 		%param = ();
-	} elsif ( $param{'btnFunction'} eq 'JumpToDate' ) {
-		my $service_index = $param{'ServiceIndex'};
-		my $date = $param{"ScheduleDate-$service_index"};
-		sql::update( $log, $dbh, 'Schedule', "ServiceIndex=$service_index", 'starttime', $date );
-	} elsif ( $param{'btnFunction'} eq 'SetDueDate' ) {
-		my $service_index = $param{'ServiceIndex'};
-		my $date = $param{"ScheduleDate-$service_index"};
-		my ( $project_index ) = sql::execute( $log, $dbh, q{SELECT ProjectIndex FROM Schedule WHERE ServiceIndex=?}, $service_index );
-		my $Project = new openprint::Project( $project_index );
-		$Project->due_date( $date );
-		$Project->save();
-		$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $date from Print Schedule" );
 	} elsif ( $param{'btnFunction'} eq 'ApproveJob' ) {
 		my $service_index = $param{'ServiceIndex'};
 		my $project_index = $param{'ProjectIndex'};
@@ -139,7 +128,6 @@ sub press_schedule {
 		} # end if
 	} # end if
 	openprint::employee_schedule::add_missing_jobs_to_schedule( $log, $dbh );
-#openprint::employee_schedule::update_late_jobs( $log, $dbh );
 } # end sub press_schedule
 
 sub bindery_overview {
@@ -1020,7 +1008,6 @@ $log->debug("No Shift!");
 	$log->debug("_ul for: $variable{'Shift'}{id} " . $variable{'Shift'}->to_string() );
 } # end sub _ul
 
-
 sub _drop {
 	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 
@@ -1049,6 +1036,7 @@ if ( 0 ) {
 
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 		if ( $Shift->starttime() ) {
 			my @final_order;
@@ -1177,9 +1165,10 @@ sub reorder_jobs {
 			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
 			'order'			=>	'starttime',
 			);
-#foreach my $S ( @Shifts ) {
-#$log->debug("Shifts: " . $S->to_string() );
-#} # end foreach S
+foreach my $S ( @Shifts ) {
+$log->debug("Shifts: " . $S->to_string() );
+last;
+} # end foreach S
 	if ( ! @Shifts ) {
 		# First, grab most recent shift, this will give us the last equipment shift.
 		my $NextES;
@@ -1232,7 +1221,9 @@ $log->debug("Runtime: $run_time");
 
 # Time to move on to next shift
 		while ( ( ! $Shift->operator_id() ) or ( $start_time > $Shift->endtime_seconds() ) ) {
+$log->debug("Moving on to next shift: " . $Shift->to_string() );
 			if ( ! @Shifts ) {
+$log->debug("Loading next Equipment_shift: " . $Shift->Equipment_Shift()->endtime() );
 				my $NextES = openprint::Equipment_Shift::find_one( 
 						'equipment_id'		=>	$$row{'equipment_id'}, 
 						'starttime_start'	=>	$Shift->Equipment_Shift()->endtime(),

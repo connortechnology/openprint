@@ -47,27 +47,6 @@
 		} else if ( img.src.match(/level=3/) ) {
 			img.src=img.src.replace(/level=3/,'level=2');
 		} 
-	}
-	function loadDivs( results ) {
-		var rows = results.split('|');
-		for ( var r = 0; r < rows.length; r += 1 ) {
-			var cols = rows[r].split('~');
-			if ( cols[0] == 'Div' ) {
-				var div=$(cols[1]);
-				if ( div ) {
-					div.style.display = 'none';
-					div.innerHTML = cols[2];
-					var containers = $$('ul.shift');
-					Sortable.create(cols[1], {dropOnEmpty:true,constraint:false,containment:containers,
-							onUpdate:function(){
-							jsrsExecute( '\/jsrs.htm', checkOrder, 'openprint::employee_schedule::drop_project', new Array( cols[1], Sortable.serialize(cols[1]) ) );
-							}
-							});
-
-					div.style.display = 'block';
-				} // end if
-			} // end if
-		} // end for
 	} // end function loadDivs( results )
 	function split_job( pid, sid, shift ) {
 		var div = $( shift );
@@ -96,61 +75,6 @@
 		calendar.hide();
 	}
 
-	function checkOrder( results ) {
-	} // end function
-
-	var popupWin;
-
-	function openPopup( popup, data1, data2, data3 ) {
-		if ( ! popupWin ) {
-			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400, height: 300} );
-			// Set up a windows observer, check ou debug window to get messages
-			myObserver = {
-				onDestroy: function(eventName, win) {
-					if (win == popupWin) {
-						var content = popupWin.getContent();
-						for(var i = 0; i < content.childNodes.length; i++) {
-							var node = content.childNodes[i];
-							node.hide();
-							popupWin._oldParent.appendChild( node );
-						} // end for
-						popupWin = null;
-						Windows.removeObserver(this);
-					} // end if
-				} // end function
-			} // end observer
-			Windows.addObserver(myObserver);
-		} // end if
-
-
-		if ( popup == 'Forms' ) {
-			var div = $( data1 + 'Forms' );
-			form = document.forms['f5'];
-			if ( form ) {
-				var reg = /(\d+) forms?/;
-				var ar = reg.exec( div.innerHTML );
-				if ( ar ) {
-					form.schedule_id.value = data1;
-					form.Forms.value = ar[1];
-				} else {
-					alert('Unable to read # of forms.');
-				} // end if
-			} // end if
-		} // end if
-		popupWin.setContent(popup+'Popup');
-		popupWin.showCenter();
-	} // end function openPopup
-
-	function saveForms( schedule_id, forms ) {
-		var div = $( schedule_id + 'Forms' );
-		if ( div )
-			div.innerHTML = forms+' forms';
-		new Ajax.Request( '_li_change.json', { parameters: { schedule_id: schedule_id, forms: forms, action: 'SetForms' }, onSuccess: function(){popupWin.destroy();
-} } );
-		//popupWin.destroy();
-		return false;
-	} // end function saveForms
-
 	var drops = new Array();
 -->
 </script>
@@ -171,6 +95,13 @@
 	} else {
 		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 	} # end if
+	if ( $endtime ) {
+		my $endtime_seconds = Date::Parse::str2time( $endtime );
+		if ( $endtime_seconds < time ) {
+			$endtime_seconds = time;
+			$endtime = Date::Format::time2str( '%Y-%m-%d', $endtime_seconds );
+		}
+	} # end if
 	if ( ! $session{'/employee/production/print_overview.html?schedule_start_year'} ) {
 		@session{
                 '/employee/production/print_overview.html?schedule_start_year',
@@ -187,16 +118,16 @@
                 = $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
 	} # end if
 ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="print_overview.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
 	<input type="hidden" name="ServiceIndex" />
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters"><legend>Display Criteria</legend>
-		<div class="leftColumn">
+		<div class="leftColumn" style="width:30%;">
 		<p>
 			<label>Presses:</label>
-			<select name="Presses" multiple="multiple" size="4">
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
 	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
@@ -204,29 +135,48 @@
 		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
 	} # end foreach press
 
+	my $html = '<select name="Presses" multiple="multiple" size="'. @presses.'">';
 	if ( $session{'/employee/production/print_overview.html?Presses'} ) {
-		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/print_overview.html?Presses'} ] );
+		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/print_overview.html?Presses'} ] );
 	} else {
-		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
+		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
+	return $html;
 ) ?>
 			</select>
 		</p>
 		</div>
-		<div style="float: right; width: 47%;">
+		<div class="rightColumn" style="width: 69%;">
 		<p>
 			<label>Schedule Date Range:</label>
 			<span class="DateSelector">
 				<? echo ( ssi::date_select( 'schedule_start', [ @session{'/employee/production/print_overview.html?schedule_start_year',
 '/employee/production/print_overview.html?schedule_start_month',
 '/employee/production/print_overview.html?schedule_start_day'} ] ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Today_start', 't.gif', 'set_today( f1.schedule_start_year, f1.schedule_start_month, f1.schedule_start_day );f1.submit();', '', 'T' ); ) ?>
 			&nbsp;to&nbsp;
 			</span>
 			<span class="DateSelector">
 				<? echo ( ssi::date_select( 'schedule_end', [ @session{'/employee/production/print_overview.html?schedule_end_year',
 '/employee/production/print_overview.html?schedule_end_month',
 '/employee/production/print_overview.html?schedule_end_day'} ] ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Today_end', 't.gif', 'set_today( f1.schedule_end_year, f1.schedule_end_month, f1.schedule_end_day );f1.submit();', '', 'T' ); ) ?>
 			</span>
+		</p>
+		<p>
+			<label>Scale:</label>
+			<select id="scale" name="scale" onchange="this.form.submit();">
+				<? echo ( 
+					my @options = ( 
+						''		=>	'Overview',	
+						'10'	=>	'10px / hour',
+						'20'	=>	'20px / hour',
+						'30'	=>	'30px / hour',
+						'40'	=>	'40px / hour',
+					);
+					return ssi::make_drop_down( \@options, $session{'/employee/production/print_overview.html?scale'} );
+				) ?>
+			</select>
 		</p>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
@@ -271,58 +221,72 @@
 		) ?>
 	<hr style="clear: both;"/>
 	<? echo (
-		require openprint::press_schedule;
-		require openprint::Equipment_Shift;
 		@{$$variable{'drops'}} = ();
 		my $html;
 		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="width:'.int (100/(@{$$variable{'Presses'}})).'%;">';
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
                     '/employee/production/print_overview.html?schedule_start_month',
                     '/employee/production/print_overview.html?schedule_start_day'};
-			my ( $h, $min, $s );
-			my $end = 1;
-				$end = Date::Calc::Delta_Days( 
-					@session{'/employee/production/print_overview.html?schedule_start_year',
-					'/employee/production/print_overview.html?schedule_start_month',
-					'/employee/production/print_overview.html?schedule_start_day',
-					'/employee/production/print_overview.html?schedule_end_year',
-					'/employee/production/print_overview.html?schedule_end_month',
-					'/employee/production/print_overview.html?schedule_end_day'}
-					) + 1;
+			my $end = Date::Calc::Delta_Days( 
+				@session{
+				'/employee/production/print_overview.html?schedule_start_year',
+				'/employee/production/print_overview.html?schedule_start_month',
+				'/employee/production/print_overview.html?schedule_start_day',
+				'/employee/production/print_overview.html?schedule_end_year',
+				'/employee/production/print_overview.html?schedule_end_month',
+				'/employee/production/print_overview.html?schedule_end_day'}
+				) + 1;
 
-			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
-
+			$end = 100 if $end > 100;
 			foreach ( 1 .. $end ) {
-				
-				foreach my $S ( @Equipment_Shifts ) {
-					my $starttime = sprintf('%.4d-%.2d-%.2d %s', $year, $month, $day, $S->starttime() );
-					my $Shift;
-					my @Shifts = openprint::Shift::find(
-							'equipment_id'	=>	$E->id(),
-							'starttime'		=>	$starttime,
-							);
-					if ( ! @Shifts ) {
-						$Shift = new openprint::Shift();
-						$Shift->save({
-							'starttime'		=>	$starttime,
-							'endtime'		=>	Date::Format::time2str( '%Y-%m-%d %H:%M:%S', Date::Parse::str2time( $starttime ) + $S->duration_seconds() ),
-							'equipment_id'	=>	$E->id(),
-							'shift_id'		=>	$S->id(),
-						});
-					} else {
-						$Shift = $Shifts[0];
-						if ( @Shifts != 1 ) {
-							$log->error("Too many shifts");
-						} # end if
-					} # end if
 
+				my @Shifts = openprint::Shift::find( 
+					'equipment_id' 		=>  $E->id(),
+					'starttime_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ),
+					'starttime_end'		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', $year, $month, $day ),
+					'order'				=>	'starttime',
+					);
+				if ( ! @Shifts ) {
+					my $NextES;
+					my $PreviousShift = openprint::Shift::find_one( 
+							'equipment_id'	=>	$E->id(), 
+							'order'			=>	'starttime DESC'
+							);
+					if ( $PreviousShift ) {
+						$NextES = openprint::Equipment_Shift::find_one(
+								'equipment_id'      =>  $E->id(),
+								'starttime_start'   =>  $PreviousShift->Equipment_Shift()->endtime(),
+								'order'             =>  'starttime',
+								);
+					} # end if
+					if ( ! $NextES ) {
+						$NextES = openprint::Equipment_Shift::find_one('equipment_id'=>$E->id(),'order'=>'starttime');
+					} # end if
+					if ( $NextES ) {
+						# This adds 1, need to add until we hit the next day
+						my $today = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ) );
+						my $tomorrow = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, 1 ) ) );
+						my $Shift;
+						do {
+							$Shift = $NextES->emanantise( $today );
+							push @Shifts, $Shift;
+							$NextES = $NextES->Next();
+						} while ( $NextES and ( $Shift->endtime_seconds() < $tomorrow ) );
+					} # end if
+				} # end if
+if ( @Shifts > 5 ) {
+$log->debug("Shifts: " . @Shifts );
+} else {
+
+				foreach my $Shift ( @Shifts ) {	
 					push @{$$variable{'drops'}}, $Shift->ul_id();
 					$html .= $Shift->get_ul( );
-				} # end while shift
-
+				} # end foreach Shift
+}
 				( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-			} # end foreach delta day
+            } # end foreach delta day
+
 			$html .= '</div>';
 		} # end foreach press
 		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;

@@ -9,66 +9,81 @@ use vars qw( $log $dbh %variable %session $AUTOLOAD %cache %fields %defaults %tr
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 
+my $debug = 0;
 $no_cache = 0;
 
 sub init_cache {
-	$no_cache = 0;
-	%cache = ();
+$no_cache = 0;
+%cache = ();
 } # end sub init_cache
 
 sub debug {
 $log->debug("Dumping Object cache");
-	foreach my $o ( keys %cache ) {
-		foreach my $id ( keys %{$cache{$o}} ) {
-			$log->debug( "$o : $id" );
-		} # end foreach
+foreach my $o ( keys %cache ) {
+	foreach my $id ( keys %{$cache{$o}} ) {
+		$log->debug( "$o : $id" );
 	} # end foreach
+} # end foreach
 } # end sub debug
 
 sub new {
-	my ( $parent, $id, $data ) = @_;
+my ( $parent, $id, $data ) = @_;
 
-	if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
-		return $openprint::Object::cache{$parent}{$id};
+if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+	return $openprint::Object::cache{$parent}{$id};
+} # end if
+
+my $self = {};
+bless $self, $parent;
+
+$$self{'log'} = $openprint::log;
+$$self{'dbh'} = $openprint::dbh;
+if ( ( $$self{'id'} = $id ) or $data ) {
+	$self->load( $data );
+} # end if
+if ( ! $no_cache ) {
+	if ( $$self{'id'} ) {
+		$openprint::Object::cache{$parent}{$id} = $self;
 	} # end if
+} # end if
 
-	my $self = {};
-	bless $self, $parent;
-
-	$$self{'log'} = $openprint::log;
-	$$self{'dbh'} = $openprint::dbh;
-	if ( ( $$self{'id'} = $id ) or $data ) {
-		$self->load( $data );
-	} # end if
-	if ( ! $no_cache ) {
-		if ( $$self{'id'} ) {
-			$openprint::Object::cache{$parent}{$id} = $self;
-		} # end if
-	} # end if
-
-	return $self;
+return $self;
 } # end sub new
 
 sub load {
-	my ( $self, $data ) = @_;
-	my $type = ref $self;
-	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
+my ( $self, $data ) = @_;
+my $type = ref $self;
+my $table = eval '$'.$type.'::table';
+my %fields = eval '%'.$type.'::fields';
 
+if ( ! $data ) {
+	$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
-		if ( ! $data ) {
-			$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
-		} # end if
+		$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
 	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
+} # end if
+@$self{keys %fields} = @$data{@fields{keys %fields}};
 
 } # end sub load
 
 sub save {
 	my ( $self, $data ) = @_;
-
-	$self->set( $data ? $data: {} );
+#if ( $data ) {
+	#foreach my $k ( keys %$data ) {
+		#$log->debug("Object::save $k => $$data{$k}");
+	#}
+#} else {
+	#$log->debug("No data");
+#}
+	$self->set( $data ? $data : {} );
+#if ( $data ) {
+	#foreach my $k ( keys %$data ) {
+		#$log->debug("Object::save after set $k => $$data{$k} $$self{$k}");
+	#}
+#} else {
+	#$log->debug("No data after set");
+#}
+#$debug = 0;
 
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
@@ -80,6 +95,11 @@ sub save {
 	delete $sql{'created_on'};
 	$sql{'updated_by'} = $session{'user_id'} if exists $fields{'updated_by'};
 	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
+	if ( $debug ) {
+		foreach my $k ( keys %sql ) {
+			$openprint::log->debug("Saving $k => $sql{$k}");
+		} # end foreach
+	} # end if
 
 	if ( ! $$self{'id'} ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -136,7 +156,7 @@ sub set {
 	my %fields = eval ('%'.$type.'::fields');
 
 	foreach my $field ( keys %fields ) {
-#$openprint::log->debug("field: $field, param: $$params{$field}");		
+$openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 		if ( exists $$params{$field} ) {
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
@@ -147,7 +167,7 @@ sub set {
 		} # end if
 
 		my @transforms = eval('@{$'.$type.'::transforms{$field}}');
-#$openprint::log->debug("Transforms: @transforms");
+$openprint::log->debug("Transforms: @transforms") if $debug;
 
 		foreach my $transform ( @transforms ) {
 			eval '$$self{$field} =~ ' . $transform;
@@ -156,7 +176,7 @@ sub set {
 		my %defaults = eval('%'.$type.'::defaults');
 
 		if ( ( (! defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
-#$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			$$self{$field} = $defaults{$field};
 		} # end if
 	} # end foreach
