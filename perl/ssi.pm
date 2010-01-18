@@ -433,7 +433,7 @@ return qq{<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) 
 
 sub setup_date_select {
     my ( $page, $prefix, $delta ) = @_;
-    if ( ( ! $session{$page.'?'.$prefix.'_start_year'} ) or ( time - $session{'lastupdated'} > 3600 ) ) {
+    if ( ( ! ( $session{$page.'?'.$prefix.'_start_year'} and $session{$page.'?'.$prefix.'_start_month'} and $session{$page.'?'.$prefix.'_start_day'} ) ) or ( time - $session{'lastupdated'} > 3600 ) ) {
         @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $delta );
         @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Today();
     } else {
@@ -452,6 +452,7 @@ sub date_select {
 		( $year, $month, $day ) = ( '', '', '' );
 	} else {
 		( $year, $month, $day ) = Date::Calc::Localtime( $value ne '' ? Date::Parse::str2time( $value ) : time );
+$log->debug("$year-$month-$day");
 	} # end if
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {
