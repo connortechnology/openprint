@@ -1,0 +1,27 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<form id="ShiftForm" name="ShiftForm" action="operator_schedule.html" method="post">
+	<input type="hidden" name="shift_id" value="<? echo ( $$variable{'Shift'}->id() ) ?>" />
+	<input type="hidden" name="action" value="save" />
+	<fieldset><legend>Edit Shift</legend>
+		<p><label>Name:</label>
+			<input type="text" name="name" id="name" value="<? echo ( $$variable{'Shift'}->name() ) ?>" />
+		</p>
+		<p><label>Start time:</label>
+			<input type="text" name="starttime" id="starttime" value="<? echo ( $$variable{'Shift'}->starttime() ) ?>" />
+		</p>
+		<p><label>Duration:</label>
+			<input type="text" name="duration" id="duration" value="<? echo ( $$variable{'Shift'}->duration() ) ?>" />
+		</p>
+		<p><label>Operator:</label>
+			<select name="operator_id" id="operator_id">
+				<option value=""> select </option>
+			<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } openprint::User::find('usergroup'=>'Press','type'=>'E','order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'Shift'}->operator_id() ); ) ?>
+			</select>
+		</p>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveEquipmentShift', 'save.gif', "\$('ShiftForm').submit();", '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelStartTime', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
+
+		</p>
+	</fieldset>
+</form>

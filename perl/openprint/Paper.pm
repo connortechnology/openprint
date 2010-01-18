@@ -1074,6 +1074,9 @@ sub load_from_signature {
 			$Paper->mweight( $$specs{'txtCustomMWeight'} );
 		} # end if
 	} else {
+		if ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
+			return new openprint::Paper();
+		} # end if
 		my %params = (
 			'supplied'	=> $$specs{'rdbSuppliedStock'},
 			'name'      => $$specs{'ddmStockBrand'},
@@ -1093,6 +1096,8 @@ $openprint::log->debug("No papers found, looking for paper with no width or heig
             delete $params{'width'};
             delete $params{'height'};
             @Papers = find( %params );
+		} elsif ( @Papers > 1 ) {
+			$openprint::log->warn("More than 1 paper found in load_from_signature");
         } # end if
         if ( ! @Papers ) {
 $openprint::log->debug("No papers found");
@@ -1220,6 +1225,16 @@ sub basis_height {
 	} # end if
 	return $$self{'basis_height'};
 } # end sub basis_height
+
+sub sheet_weight {
+    my ( $self ) = @_;
+    return $$self{'width'} * $$self{'height'} * $self->wpsi();
+} # end sub sheet_weight
+
+sub start_sheet_weight {
+    my ( $self ) = @_;
+    return $$self{'start_width'} * $$self{'start_height'} * $self->wpsi();
+} # end sub start_sheet_weight
 
 sub units {
 	return $_[0]{'type'} eq 'Roll' ? 'lbs' : 'sheets';
