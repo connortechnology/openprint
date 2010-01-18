@@ -786,6 +786,11 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 				$Fold->printing_type( $_->value() );
 				$_->delete();
 			} # end if
+			if ( $_ = $E->Specification($pages.'PageSignatureFoldOvers') ) {
+				$Fold->makeready_overs( $_->value() );
+				$Fold->makeready_overs_units( $_->units() );
+				$_->delete();
+			} # end if
 			$_ = $Fold->save();
 			die $_ if $_;
 			my $FS = new openprint::FoldSpecification();
@@ -804,6 +809,11 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$Fold->max_imposition( 1 );
 			if ( $_ = $E->Specification($type.'FoldPrintingType') ) {
 				$Fold->printing_type( $_->value() );
+				$_->delete();
+			} # end if
+			if ( $_ = $E->Specification($type.'FoldOvers') ) {
+				$Fold->makeready_overs( $_->value() );
+				$Fold->makeready_overs_units( $_->units() );
 				$_->delete();
 			} # end if
 			$_ = $Fold->save();
