@@ -257,7 +257,7 @@ sub get_lis {
 	if ( $Shift->name() and Date::Calc::check_date( $year, $month, $day ) ) {
 		my $Operator = $Shift->Operator();
 
-		if ( openprint::usergroup::is_user_in( ['PressManager'], $session{'user_id'} ) ) {
+		if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{'user_id'} ) ) {
 			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" onclick="popup_window('_shift_popup.html','shift_id=%d');">%s</span><br class="spacer"/></div>},
 Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
