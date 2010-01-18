@@ -10,11 +10,15 @@ body {
 	margin: 0px;
 	background: none;
 }
-#Header {
+body #Header {
+	position: relative;
 	background: none;
 	height: auto;
+	width: 100%;
+	height: 65px;
 }
 body #Header #Logo {
+	width: 190px;
 	background: none;
 	color: #000000;
 	float: none;
@@ -23,6 +27,10 @@ body #Header #Logo {
 body #Header #Logo a {
 	background: none;
 	color: #000000;
+}
+.PageTitle {
+	margin-top: -65px;
+	width: auto;
 }
 #Menu,.Menu {
 display: none;
