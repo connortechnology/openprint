@@ -439,12 +439,17 @@ sub to_string {
 	return $string;
 }
 
+sub Name {
+	return openprint::StockName( $_[0]{'name_id'} );
+}
+
 sub name {
     my ( $self, $name ) = @_;
 
 	if ( defined $name ) {
-		$name =~ s/^\s*(.*)\s*$/$1/;
-
+$name =~ s/^\s+//;
+$name =~ s/\s+$//;
+$name =~ s/\s\s+$/ /;
         @$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE lower(longname)=?}, lc $name );
         if ( ! $$self{'name_id'} ) {
 			$$self{'name'} = $name;
@@ -456,11 +461,16 @@ sub name {
     return $$self{'name'};
 } # end sub name
 
+sub Manufacturer {
+	return openprint::Manufacturer( $_[0]{'manufacturer_id'} );
+}
 sub manufacturer {
     my ( $self, $manufacturer ) = @_;
 
     if ( defined $manufacturer ) {
-		$manufacturer =~ s/^\s*(.*)\s*$/$1/;
+		$manufacturer =~ s/^\s+//;
+		$manufacturer =~ s/\s+$//;
+		$manufacturer =~ s/\s\s+$/ /;
         @$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE lower(longname)=?}, lc $manufacturer );
         if ( ! $$self{'manufacturer_id'} ) {
 			$$self{'manufacturer'} = $manufacturer;
@@ -472,11 +482,16 @@ sub manufacturer {
     return $$self{'manufacturer'};
 } # end sub manufacturer
 
+sub Finish {
+	return openprint::StockFinish( $_[0]{'finish_id'} );
+}
 sub finish {
     my ( $self, $finish ) = @_;
 
     if ( defined $finish ) {
-		$finish =~ s/^\s*(.*)\s*$/$1/;
+		$finish =~ s/^\s+//;
+		$finish =~ s/\s+$//;
+		$finish =~ s/\s\s+$/ /;
         @$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE lower(longname)=?}, lc $finish );
         if ( ! $$self{'finish_id'} ) {
 			$$self{'finish'} = $finish;
@@ -488,11 +503,16 @@ sub finish {
     return $$self{'finish'};
 } # end sub finish
 
+sub Colour {
+	return openprint::StockColour( $_[0]{'colour_id'} );
+}
 sub colour {
     my ( $self, $colour ) = @_;
 
     if ( defined $colour ) {
-		$colour =~ s/^\s*(.*)\s*$/$1/;
+		$colour =~ s/^\s+//;
+		$colour =~ s/\s+$//;
+		$colour =~ s/\s\s+$/ /;
         @$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE lower(longname)=?}, lc $colour );
         if ( ! $$self{'colour_id'} ) {
 			$$self{'colour'} = $colour;
@@ -504,12 +524,17 @@ sub colour {
     return $$self{'colour'};
 } # end sub colour
 
+sub Weight {
+	return openprint::StockWeight( $_[0]{'weight_id'} );
+}
 sub weight {
     my ( $self, $weight ) = @_;
 
 
     if ( defined $weight ) {
-		$weight =~ s/^\s*(.*)\s*$/$1/;
+		$weight =~ s/^\s+//;
+		$weight =~ s/\s+$//;
+		$weight =~ s/\s\s+$/ /;
         @$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE lower(longname)=?}, lc $weight );
         if ( ! $$self{'weight_id'} ) {
 			$$self{'weight'} = $weight;
@@ -525,7 +550,9 @@ sub quality {
     my ( $self, $quality ) = @_;
 
     if ( defined $quality ) {
-		$quality =~ s/^\s*(.*)\s*$/$1/;
+		$quality =~ s/^\s+//;
+		$quality =~ s/\s+$//;
+		$quality =~ s/\s\s+$/ /;
         @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
         if ( ! $$self{'quality_id'} ) {
 			$$self{'quality'} = $quality;
