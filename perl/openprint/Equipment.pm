@@ -14,7 +14,7 @@ use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
-my $debug = 0;
+my $debug = 1;
 my %find_cache;
 %fields = (
 	'id'	=>	'id',
@@ -227,8 +227,10 @@ sub Fold {
 			next;
 		} # end if
 		if ( $$params{type} and ( $$Fold{type} ne $$params{type} ) ) {
-			$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
+			#$openprint::log->debug("Looking at fold: " . $Fold->name() ) if $debug;
 			next;
+		} else {
+			$openprint::log->debug("Found fold: " . $Fold->name() ) if $debug;
 		} # end if
 
 		#$openprint::log->debug( 'Fold: ' . $Fold->name() );
@@ -286,6 +288,11 @@ sub Fold {
 		} # end if
 		$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
 		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
+
+		if ( $$Fold{'printing_type'} and ! sets::isin( $$params{'printing_type'}, split(',', $$Fold{'printing_type'}) ) ) {
+            $openprint::log->debug("Fold no good due to PrintingType ($$params{'printing_type'}) != " . $$Fold{'printing_type'} ) if $debug;
+            next;
+        } # end if
 		if ( exists $$params{'gsm'} ) {
 			$openprint::log->debug("Wanted gsm: $$params{'gsm'}") if $debug;
 			my $RunSpeed = $Fold->RunSpeed( $$params{'gsm'} );

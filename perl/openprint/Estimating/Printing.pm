@@ -1048,7 +1048,6 @@ $openprint::log->debug("SideOne " . @side_one_colours . " Side Two: " . @side_tw
 				'project_type_id'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
-#if ( $debug ) {
 		foreach my $P ( @Papers ) {
 			$P->prices();
 		} # end foreach
@@ -1058,7 +1057,6 @@ $openprint::log->debug("SideOne " . @side_one_colours . " Side Two: " . @side_tw
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
 		@$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade'} = $Papers[0]->get('name','finish','colour','weight','grade');
-	#} # end if
 		$$specs{'txtSpecificStockCalliper'} = $Papers[0]->calliper() if @Papers;
 		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight','StockGrade' ) {
 			$variables{$k} = [ sets::union( 'output', @{$variables{$k}} ) ];
@@ -1199,6 +1197,9 @@ $openprint::log->debug("SideOne " . @side_one_colours . " Side Two: " . @side_tw
 	my %prices;
 
 	my @blah = $Project->quantity_indexes();
+	if ( ! @blah ) {
+$log->warn("There are no quantities!");
+	} # end if
 
 	foreach my $qty_index ( reverse @blah ) {
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
@@ -1208,8 +1209,12 @@ $openprint::log->debug("SideOne " . @side_one_colours . " Side Two: " . @side_tw
 		} # end if
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		$qty = $Project->quantity($qty_index) if $qty eq '';
-		next if ! defined $qty;
-		next if ! int $qty;
+		if ( ! $qty ) {
+			$log->error("There must be a qty here!");
+			next;
+		} else {
+$log->debug("QTY: $qty");
+		} # end if
 
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty: ";
 		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
@@ -2623,10 +2628,10 @@ $imp->display();
 					} # end if
 				} # end if
 
-				if ( $$Paper{'minimum_order'} ) {
+				if ( $Paper->minimum_order() ) {
 					# Assume sheets for sheets, lbs for Rolls
 					if ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) { # Must be a roll
-						$PaperCounts{$paper_string} = $$Paper{'minimum_order'};
+						$PaperCounts{$paper_string} = $Paper->minimum_order();
 					} # end if
 				} # end if
 				my $weight = $Paper->type() eq 'Sheet' ? ceil($PaperCounts{$paper_string} * $Paper->sheet_weight()) : $PaperCounts{$paper_string};
@@ -2634,7 +2639,7 @@ $imp->display();
 				$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $weight / 100 );
 				$$price{'Comparison Cost'} += $paper_price{'Total'};
 				$$price{'Stock Total'} += $paper_price{'Total'};
-				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s $%.2f<br/>', $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : $PaperCounts{$paper_string}.'lbs', $Paper->to_string(), $paper_price{'Total'} );
+				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s SPP:%s Minimum: %s %slbs * %.2f/100lbs = $%.2f<br/>', $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : $PaperCounts{$paper_string}.'lbs', $Paper->to_string(), $Paper->sheets_per_package(), $Paper->minimum_order(), $weight, @paper_price{'100lb Price','Total'} );
 			} # end foreach Paper in PaperCounts
 
 			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
@@ -2723,10 +2728,10 @@ $imp->display();
 				$openprint::log->debug("Negative price! $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
 #$imp->display();
 			} elsif ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
-$openprint::log->debug("No good, more expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
-$best_price{'Imposition'}->display();
+#$openprint::log->debug("No good, more expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
+#$best_price{'Imposition'}->display() if $best_price{'Imposition'};
 #$openprint::log->debug( breakdown( \%best_price, $specs ) );
-$imp->display();
+#$imp->display();
 #$openprint::log->debug( breakdown( $price, $specs ) );
 			} else {
 #$imp->display();
@@ -4120,6 +4125,8 @@ sub get_weight {
 
 	my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
 	my $sig_weight = $$specs{'txtWidth'} * $$specs{'txtHeight'} * $Paper->wpsi();
+$openprint::log->debug("Get_weight: ($$specs{'txtSignatureSpreadQuantity'.$qty_index} > 0 ? $$specs{'txtSignatureSpreadQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '==='.$Paper->wpsi(undef)."wpsi = $sig_weight * $$specs{'PageQuantity'} = " . $sig_weight * $$specs{'PageQuantity'});
+
 	if ( $$specs{'PageQuantity'.$qty_index} ) {
 		$sig_weight *= $$specs{'PageQuantity'.$qty_index}/$$specs{'txtSpreadSize'};
 	} # end if

@@ -37,7 +37,7 @@ if ( $year ) {
 	`su postgres -c "dropdb $dst_db"`;
 	print "done\n";
 	print "Create db...";
-	`su postgres -c "createdb -E SQL_ASCII $dst_db"`;
+	`su postgres -c "createdb $dst_db"`;
 	print "done\n";
 	print "Loading db...";
 	`su postgres -c "bunzip2 < /tmp/$src_db-$month-$day-$year.sql.bz2 | psql $dst_db"`;

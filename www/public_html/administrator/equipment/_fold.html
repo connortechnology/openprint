@@ -67,6 +67,10 @@
 			Max: <input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-max_calliper" name="max_calliper" value="<? echo ( $$variable{'Fold'}->max_calliper() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" size="7" style="width:auto;" />inches
 		</p>
 		<p>
+			<label>Printing Type:</label>
+			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-printing_type" name="printing_type" value="<? echo ( $$variable{'Fold'}->printing_type() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />
+		</p>
+		<p>
 			<label>Make Ready Time:</label>
 			<input type="text" id="fold-<? echo ( $$variable{'Fold'}->id() ) ?>-makeready_time" name="makeready_time" value="<? echo ( $$variable{'Fold'}->makeready_time() ) ?>" onkeyup="if(this.value!=this.defaultValue){$('Fold<? echo ( $$variable{'Fold'}->id() ) ?>').addClassName('changed');}" />minutes
 		</p>
@@ -126,7 +130,7 @@
 		</p>
 		</fieldset>
 		<fieldset><legend>Runspeeds</legend>
-		<table id="FoldSpecifications<? echo ( $$variable{'Fold'}->id() ) ?>" class="List sortable">
+		<table id="FoldSpecifications<? echo ( $$variable{'Fold'}->id() ) ?>" class="FoldRunSpeed List sortable">
 			<thead>
 				<tr>
 					<th align="left">MinWeight</th>
@@ -134,7 +138,7 @@
 					<th align="left">Units</th>
 					<th align="left">Runspeed</th>
 					<th align="left">Interpolate</th>
-					<th>&nbsp;</th>
+					<th class="buttons">&nbsp;</th>
 				</tr>
 			</thead>
 			<tbody>

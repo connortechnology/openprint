@@ -779,11 +779,13 @@ sub Currency {
 
 sub quantity_indexes {
 	my ( $self ) = @_;
-	my @indexes;
-	foreach my $qty_index ( 1 .. 3 ) {
-		push @indexes, $qty_index if $$self{"quantity$qty_index"};
-	} # end foreach qty_index
-	return @indexes;
+	if ( ! exists $$self{'quantity_indexes'} ) {
+		@{$$self{'quantity_indexes'}} = ();
+		foreach my $qty_index ( 1 .. 3 ) {
+			push @{$$self{'quantity_indexes'}}, $qty_index if $$self{"quantity$qty_index"};
+		} # end foreach qty_index
+	} # end if
+	return @{$$self{'quantity_indexes'}};
 } # end sub quantity_indexes
 
 sub quantities {
@@ -797,6 +799,9 @@ sub quantity {
 		return $self->ordered_quantity();
 	} elsif ( defined $qty ) {
 		$$self{"quantity$index"} = $qty;
+		if ( exists $$self{'quantity_indexes'} ) {
+			$$self{'quantity_indexes'}[$index-1] = $index;
+		} # end if
 	} # end if
 	return $$self{'quantity'.$index};
 } # end sub quanitty
@@ -808,6 +813,7 @@ sub quantity1 {
 		if ( $new_qty != $$self{'quantity1'} ) {
 			$$self{'quantity1'} = $new_qty;
 		} # end if
+		delete $$self{'quantity_indexes'};
 	} # end if
 	return $$self{'quantity1'};
 } # end sub quantity1
@@ -818,6 +824,7 @@ sub quantity2 {
 		if ( $new_qty != $$self{'quantity2'} ) {
 			$$self{'quantity2'} = $new_qty;
 		} # end if
+		delete $$self{'quantity_indexes'};
 	} # end if
 	return $$self{'quantity2'};
 } # end sub quantity2
@@ -828,6 +835,7 @@ sub quantity3 {
 		if ( $new_qty != $$self{'quantity3'} ) {
 			$$self{'quantity3'} = $new_qty;
 		} # end if
+		delete $$self{'quantity_indexes'};
 	} # end if
 	return $$self{'quantity3'};
 } # end sub quantity2
@@ -1194,7 +1202,7 @@ sub signatures {
 	my ( $self, $params ) = @_;
 	if ( ! exists $$self{'signatures'} ) {
 		my $services = $self->services();
-		if ( ! sets::isin( $self->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines' ] ) ) {
+		if ( ! sets::isin( $self->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines','Calendars' ] ) ) {
 $openprint::log->debug("Project Type: " . $self->Type()->name() );
 			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
 		} # end if

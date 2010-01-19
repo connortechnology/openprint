@@ -1,12 +1,11 @@
 <? eval (
-	$$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
 	$$variable{'DimensionsDisplay'} = 'Finished';
 ) ?>
 <form id="f1" name="f1" method="post" action="/main/order/information.html">
-	<input type="hidden" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
-	<input type="hidden" name="PrintingType" value="<?PrintingType?>" />
-	<input type="hidden" name="TemplateType" value="<?TemplateType?>" />
-	<input type="hidden" name="Status" value="<?Status?>" />
+	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
+	<input type="hidden" id="PrintingType" name="PrintingType" value="<?PrintingType?>" />
+	<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
+	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
@@ -46,8 +45,9 @@
 							<fieldset><legend>Finishing</legend>
 								<div class="content">
 									<ul>
-							<!--#include virtual="/includes/shrinkwrapping.html"-->
-							<!--#include virtual="/includes/bundling.html"-->
+										<!--#include virtual="/includes/scoring.html"-->
+										<!--#include virtual="/includes/shrinkwrapping.html"-->
+										<!--#include virtual="/includes/bundling.html"-->
 									</ul>
 								</div>
 							</fieldset>

@@ -34,6 +34,7 @@ CREATE TABLE Folds (
 	makeready_overs_units	TEXT,
 	run_overs	integer,
 	run_overs_units	TEXT,
+	printing_type	TEXT,
 	PRIMARY KEY (id)
 );
 
