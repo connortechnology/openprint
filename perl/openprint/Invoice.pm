@@ -20,9 +20,11 @@ require openprint::Invoice_Interest;
 my $debug = 1;
 
 use strict;
-use vars qw( %fields %defaults %transforms );
+use vars qw( $table $serial %fields %defaults %transforms );
 
 require sql;
+$table = 'invoices';
+$serial = 'invoices_id_seq';
 
 %fields = (
 	'id'				=>	'id',
@@ -157,16 +159,6 @@ sub find {
 	} # end if
 	return map { new openprint::Invoice( $_->{id}, $_ ); } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $dbh->selectrow_hashref( 'SELECT * FROM Invoices WHERE id=?', {}, $$self{'id'} );
-		if ( (! $data) and $dbh->errstr ) { $log->debug($dbh->errstr ); }
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
 
 sub save {
 	my ( $self, $param ) = @_;
