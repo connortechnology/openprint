@@ -150,3 +150,6 @@ select {
 	margin: 0px;
 	width: 300px;
 }
+.FoldRunSpeed .buttons {
+	width: 80px;
+}
