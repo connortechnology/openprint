@@ -92,6 +92,7 @@ h4 {
 	background-repeat: repeat-x;
 	background-position: top;
 	height: auto;
+	min-height:500px;
 }
 
 #home-image {
@@ -387,8 +388,8 @@ color: #999; /* orange */
 #footer #footer-products {
 	float: left;
 	height: auto;
-	width: 100px;
-	padding-right: 30px;
+	width: 120px;
+	padding-right: 0px;
 }
 
 #footer #footer-logo {
@@ -423,18 +424,26 @@ body {
 }
 
 .port-piece {
-	height: 200px;
+	height: auto;
 	width: 940px;
 	float: left;
-	margin-top: 10px;
+	margin-top: 20px;
 	margin-right: 0px;
-	margin-bottom: 20px;
+	margin-bottom: 0px;
 	margin-left: 0px;
 	padding: 0px;
-
 }
 
 .port-image {
+	margin: 0px;
+	padding: 0px;
+	height: auto;
+	width: auto;
+	float: left;
+}
+
+.port-image a:link {
+	background:none;
 	margin: 0px;
 	padding: 0px;
 	height: auto;

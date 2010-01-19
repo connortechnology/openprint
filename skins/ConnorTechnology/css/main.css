@@ -23,7 +23,7 @@ body {
 #Portfolio ul li {
 	float: none;
 	list-style:none;
-	margin-bottom: 20px;
+	margin-bottom: 0px;
 }
 #Portfolio ul li:after {
 	content: ".";

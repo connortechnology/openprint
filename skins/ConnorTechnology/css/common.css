@@ -74,7 +74,23 @@ margin-left: 4px;
 	margin-right: 4px;
 }
 
+.sitemap {
+	margin: 0px;
+	padding: 0px;
+	width: auto;
+	list-style-position: inside;
+}
 
+.sitemap li {
+	list-style-type: disc;
+	list-style-position: inside;
+}
+
+.sitemap li ul li{
+	margin-left: 10px;
+	font-size: 10px;
+	list-style-position: outside;
+}
 
 
 #header:after {
@@ -328,7 +344,7 @@ tr.totals {
 a {
     text-decoration: none;
 	color: #ff7f00;
-	outline: 0;
+
 }
 
 a:hover {
