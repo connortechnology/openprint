@@ -16,6 +16,7 @@ function load() {
         <div class="leftColumn">
             <p>
                 <label>Company:</label>
+				<input type="text" onKeyUp="filterDDM(this, this.form.company_id);" size="4" />
                 <select id="company_id" name="company_id" size="1" onchange="">
                 <option value=""> All </option>
 				<? echo ( openprint::Company::get_dropdown( $session{'/employee/reports/stock_usage.html?company_id'} ); ) ?>

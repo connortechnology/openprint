@@ -1055,7 +1055,6 @@ sub load_from_signature {
 		$Paper->height( $$specs{'txtSpecificStockHeight'} );
 		$Paper->start_width( $$specs{'txtSpecificStockWidth'} );
 		$Paper->start_height( $$specs{'txtSpecificStockHeight'} );
-		$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
 		$Paper->gsm( $$specs{'txtStockGSM'} );
 		$Paper->type( $$specs{'StockType'} );
 
@@ -1070,9 +1069,9 @@ sub load_from_signature {
 		$Paper->basis_height( $$specs{'basis_height'} );
 		$Paper->basis_mweight( $$specs{'basis_mweight'} );
 		$Paper->score_required( $Paper->calliper() > 0.008 );
-		if ( $$specs{'StockType'} ne 'Roll' ) {
+		#if ( $$specs{'StockType'} ne 'Roll' ) {
 			$Paper->mweight( $$specs{'txtCustomMWeight'} );
-		} # end if
+		#} # end if
 	} else {
 		if ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
@@ -1100,7 +1099,33 @@ $openprint::log->debug("No papers found, looking for paper with no width or heig
 			$openprint::log->warn("More than 1 paper found in load_from_signature");
         } # end if
         if ( ! @Papers ) {
-$openprint::log->debug("No papers found");
+	$openprint::log->error("No papers found");
+			$Paper = new openprint::Paper();
+			$Paper->name( $$specs{'ddmStockBrand'} );
+			$Paper->finish( $$specs{'ddmStockFinish'} );
+			$Paper->colour( $$specs{'ddmStockColour'} );
+			$Paper->weight( $$specs{'ddmStockWeight'} );
+			$Paper->calliper( $$specs{'txtSpecificStockCalliper'} );
+			$Paper->width( $$specs{'hdnSuppliedStockWidth'} );
+			$Paper->height( $$specs{'hdnSuppliedStockHeight'} );
+			$Paper->start_width( $$specs{'hdnSuppliedStockWidth'} );
+			$Paper->start_height( $$specs{'hdnSuppliedStockHeight'} );
+			$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
+			$Paper->gsm( $$specs{'txtStockGSM'} );
+			$Paper->type( $$specs{'StockType'.$qty_index} );
+
+			$Paper->grade( $$specs{'StockGrade'});
+
+			$Paper->Price( $$specs{'CustomStockPrice'} );
+			$Paper->Units( $$specs{'CustomStockPriceUnits'} );
+			$Paper->basis_width( $$specs{'basis_width'} );
+			$Paper->basis_height( $$specs{'basis_height'} );
+			$Paper->basis_mweight( $$specs{'basis_mweight'} );
+			$Paper->score_required( $Paper->calliper() > 0.008 );
+			#if ( $$specs{'StockType'} ne 'Roll' ) {
+				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
+			#} # end if
+			@Papers = ( $Paper );
         } # end if
 		
 		if ( $qty_index ) {
