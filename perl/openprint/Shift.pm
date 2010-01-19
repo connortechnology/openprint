@@ -1,7 +1,6 @@
 package openprint::Shift;
 @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
@@ -49,7 +48,6 @@ sub find_one {
     return $Results[0] if @Results;
 } # end sub find_one
 
-
 sub find {
 	my %params = @_;
 
@@ -93,6 +91,9 @@ sub find {
     } elsif ( $params{'starttime_<'} ) {
         $sql .= ' AND starttime < ?';
         push @values, $params{'starttime_<'};
+    } elsif ( $params{'starttime_>'} ) {
+        $sql .= ' AND starttime > ?';
+        push @values, $params{'starttime_>'};
     } elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
         $sql .= ' AND starttime IS NULL';
     } elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
@@ -181,12 +182,14 @@ sub Schedule {
 sub operator_id {
 	my $self = shift;
 
-	if ( @_ ) {
+	if ( @_ and ( $$self{'operator_id'} != $_[0] ) ) {
 		$$self{'operator_id'} = shift;
-		foreach my $Job ( $self->Schedule() ) {
-			$Job->operator_id( $$self{'operator_id'} );	
-		} # end foreach
-		$self->save();
+		if ( $$self{'id'} ) {
+			foreach my $Job ( $self->Schedule() ) {
+				$Job->operator_id( $$self{'operator_id'} );	
+			} # end foreach
+			$self->save();
+		} # end if
 	} # end if
 	return $$self{'operator_id'};
 } # end sub operator_id
@@ -254,7 +257,7 @@ sub get_lis {
 	if ( $Shift->name() and Date::Calc::check_date( $year, $month, $day ) ) {
 		my $Operator = $Shift->Operator();
 
-		if ( openprint::usergroup::is_user_in( ['PressManager'], $session{'user_id'} ) ) {
+		if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{'user_id'} ) ) {
 			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" onclick="popup_window('_shift_popup.html','shift_id=%d');">%s</span><br class="spacer"/></div>},
 Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
@@ -316,6 +319,20 @@ sub get_ul {
 sub get {
 	return $_[0]->Shift();
 } # end sub get
+
+sub Next {
+	my ( $self ) = @_;
+	my $Next = find_one('starttime_>' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
+	if ( ! $Next ) {
+		my $ES = openprint::Equipment_Shift::find_one(
+				'equipment_id'      =>  $$self{'equipment_id'},
+				'starttime_start'   =>  $self->Shift()->Equipment_Shift()->endtime(),
+				'order'             =>  'starttime',
+				);
+		$Next = $ES->emanantise( $self->endtime_seconds() );
+	} # end if
+	return $Next;
+} # end sub Next
 
 1;
 #__END__

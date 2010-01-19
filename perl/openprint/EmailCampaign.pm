@@ -166,7 +166,7 @@ Users Rep: <?REPNAME?>
 
 __ADMIN_EMAIL__
 
-	$email_template = encode_qp( ssi::variable_substitution( \$email_template, $replacements ) );
+	$email_template = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, $replacements ) ) );
 
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');
@@ -214,7 +214,7 @@ sub send_email {
 	# - The seconds substitution replaces the any tags that were
 	#   inserted by the first replacement
 	# NB. Only encode_qp ONCE
-	$email_template = encode_qp( ssi::variable_substitution( \$email_template, $replacements ) );
+	$email_template = encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, $replacements ) ) );
 
 	# Formulate the body of the message
 	my @body = ('', $email_template, 'text/html', 'quoted-printable');

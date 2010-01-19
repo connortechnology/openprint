@@ -252,6 +252,10 @@ sub signature_calc {
 	} else {
 		$imposition = $imposition->copy();
 	} # end if
+	if ( ! $imposition->imposition() ) {
+		$$specs{'alert'} .= "Unable to load the imposition.  This likely is because printing has not finished calculating.<br/>";
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	if ( 1 ) {
 		# IF it's a W&T, we have to cut in half first, so just do it.
@@ -323,6 +327,7 @@ sub signature_calc {
 			next;
 		} # end if
 		foreach my $I ( @impositions ) {
+			next if ! $I->imposition();
 			next if ( $imposition->imposition() % $I->imposition() );
 			if ( $Equipment->specification('Type') ne 'Press' ) {
 				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$I->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->rows() );
@@ -333,6 +338,10 @@ sub signature_calc {
 
 			if ( $_ = fits_on_equipment( $Equipment, $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
 				$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
+				next;
+			} # end if
+			if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $I->imposition() ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
 				next;
 			} # end if
 

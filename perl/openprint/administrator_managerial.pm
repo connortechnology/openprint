@@ -137,8 +137,9 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, 'User already exists.', "There is already a user with the specified email address.	Please try another.");
 		} # end if
 
-		#$param{'assistant_ids'} = '' if ! exists $param{'assistant_ids'};
-		#$param{'csr_ids'} = '' if ! exists $param{'csr_ids'};
+		# This has to exist, in order to save the no assistants situation
+		$param{'assistant_ids'} = [] if ! exists $param{'assistant_ids'};
+		$param{'csr_ids'} = [] if ! exists $param{'csr_ids'};
 		delete $param{'password'} if ! $param{'password'};
 		my $error = $User->save( \%param );
 

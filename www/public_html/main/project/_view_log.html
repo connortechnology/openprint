@@ -11,6 +11,11 @@
 		@{$$variable{'ProjectLog'}} = sql::execute( $log, $dbh, $_, $openprint::param{'project_id'} );
 	) ?>
 	<? while ( @$variable{'CustomerIndex','UserIndex','When','Description'} = splice @{$$variable{'ProjectLog'}},0,4; ) ?>
+		<? eval ( 
+			if ( $$variable{'Description'} =~ /^Reused from project (\d+)$/ ) {
+				$$variable{'Description'} = "Reused from project <a href=\"/main/project/view.html?ProjectIndex=$1\">$1</a>";
+			} # end if
+		) ?>
 	<tr<?rowclass?>>
 	<td><? echo ( new openprint::Company( $$variable{'CustomerIndex'} )->name(); ) ?></td>
 	<td><? echo ( new openprint::User( $$variable{'UserIndex'} )->name(); ) ?></td>

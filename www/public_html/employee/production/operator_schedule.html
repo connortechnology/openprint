@@ -20,9 +20,9 @@
 	} # end foreach press
 
 	if ( $session{'/employee/production/operator_schedule.html?Presses'} ) {
-		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/operator_schedule.html?Presses'} ] );
+		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/operator_schedule.html?Presses'} ] );
 	} else {
-		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
+		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
 ) ?>
 			</select>
@@ -33,7 +33,7 @@
 			<label>Operator</label>
 			<select multiple="multiple" id="operator_id" name="operator_id" size="4">
 <? echo ( 
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>'E', 'order'=>'lower(strfirstname),lower(strlastname)') ], [ split ';', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); 
+		ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>'E', 'order'=>'lower(firstname),lower(lastname)') ], [ split ';', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); 
 ) ?>
 			</select>
 		</p>

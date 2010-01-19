@@ -1433,6 +1433,7 @@ sub started_on {
 	my ( $self ) = @_;
 	return sql::execute( undef, undef, q{ SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
 } # end sub started_on
+
 sub takeover_on {
 	my ( $self ) = @_;
 	if ( ! $$self{'takeover_on'} ) {
@@ -1567,7 +1568,6 @@ sub Operator {
 	} # end if
     return $$self{'Operator'};
 } # end sub Operator
-
 
 1;
 __END__

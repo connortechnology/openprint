@@ -3964,6 +3964,8 @@ sub press_setup_cost {
 		} else {
 			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
 		} # end if
+	#} else{
+		#$log->debug("No Plate Make Ready for plates on " . $Press->strid() );
 	} # end if
 
 	$Price{'Unit Count'} = $setup_count;

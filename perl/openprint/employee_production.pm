@@ -100,27 +100,16 @@ sub press_schedule {
 		
 
 		# Dumps it in pending
-		sql::insert( $log, $dbh, 'Schedule',
-				'ProjectIndex', $Project->id(),
-				'ServiceIndex', $service_id,
-				'StartTime',    undef,
-				'equipment_id', $param{'press_id'},
-				'RunTime',      join(':', $h, $m, $s ),
-				);
+		my $Job = new openprint::ScheduledJob();
+		$variable{'error'} .= $Job->save({
+				'project_id'	=> $Project->id(),
+				'service_id'	=> [ $service_id ],
+				'starttime'		=> undef,
+				'equipment_id'	=> $param{'press_id'},
+				'runtime'		=> join(':', $h, $m, $s ),
+				});
 
 		%param = ();
-	} elsif ( $param{'btnFunction'} eq 'JumpToDate' ) {
-		my $service_index = $param{'ServiceIndex'};
-		my $date = $param{"ScheduleDate-$service_index"};
-		sql::update( $log, $dbh, 'Schedule', "ServiceIndex=$service_index", 'starttime', $date );
-	} elsif ( $param{'btnFunction'} eq 'SetDueDate' ) {
-		my $service_index = $param{'ServiceIndex'};
-		my $date = $param{"ScheduleDate-$service_index"};
-		my ( $project_index ) = sql::execute( $log, $dbh, q{SELECT ProjectIndex FROM Schedule WHERE ServiceIndex=?}, $service_index );
-		my $Project = new openprint::Project( $project_index );
-		$Project->due_date( $date );
-		$Project->save();
-		$Project->add_to_log( @session{'company_id','user_id'}, "Duedate changed to $date from Print Schedule" );
 	} elsif ( $param{'btnFunction'} eq 'ApproveJob' ) {
 		my $service_index = $param{'ServiceIndex'};
 		my $project_index = $param{'ProjectIndex'};
@@ -140,7 +129,6 @@ sub press_schedule {
 		} # end if
 	} # end if
 	openprint::employee_schedule::add_missing_jobs_to_schedule( $log, $dbh );
-#openprint::employee_schedule::update_late_jobs( $log, $dbh );
 } # end sub press_schedule
 
 sub bindery_overview {
@@ -1021,7 +1009,6 @@ $log->debug("No Shift!");
 	$log->debug("_ul for: $variable{'Shift'}{id} " . $variable{'Shift'}->to_string() );
 } # end sub _ul
 
-
 sub _drop {
 	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 
@@ -1050,6 +1037,7 @@ if ( 0 ) {
 
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 		if ( $Shift->starttime() ) {
 			my @final_order;
@@ -1178,9 +1166,10 @@ sub reorder_jobs {
 			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
 			'order'			=>	'starttime',
 			);
-#foreach my $S ( @Shifts ) {
-#$log->debug("Shifts: " . $S->to_string() );
-#} # end foreach S
+foreach my $S ( @Shifts ) {
+$log->debug("Shifts: " . $S->to_string() );
+last;
+} # end foreach S
 	if ( ! @Shifts ) {
 		# First, grab most recent shift, this will give us the last equipment shift.
 		my $NextES;
@@ -1359,26 +1348,7 @@ sub _li_change {
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		my $Project = new openprint::Project( $$Job{'projectindex'} );
-		$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
-		my ( $starttime, $equipment_id ) = @$Job{'starttime','equipment_id'};
-		$equipment_id = $param{'equipment_id'} if $param{'equipment_id'};
-$log->debug('Shift: ' . $Job->Shift()->ul_id() );
-		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
-
-		if ( ! $starttime ) {
-			( $starttime ) = sql::execute( $log, $dbh, q{SELECT MAX(starttime) FROM Schedule WHERE equipment_id=? AND id != ?}, $equipment_id, $$Job{'id'} );
-		} # end if
-		$starttime = Date::Parse::str2time( $starttime );
-		$starttime = time if $starttime < time;
-
-		$variable{'error'} .= $Job->save({'starttime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime ), 'equipment_id'=>$equipment_id});
-		$Job->Project->add_to_log( @session{'company_id','user_id'}, 'Job bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $starttime ) . ' on ' . $Job->Equipment()->name() );
-		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
-		if ( $Equipment->smartscheduling() ) {
-			reorder_jobs(
-					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
-		} # end if smartscheduling
+		$variable{'error'} .= $Job->bump( $param{'equipment'} );
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		# Have to update all ul's
