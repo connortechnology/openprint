@@ -444,6 +444,7 @@ sub save_Paper {
 			'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef,
 			'type'		=>	$param{'type'.$id},
 			'calliper'	=>	$param{'calliper'.$id},
+			'fsc_code'	=>	$param{'fsc_code'.$id},
 			);
 	my $Paper;
 
