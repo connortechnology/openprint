@@ -97,7 +97,14 @@ if ( $$variable{'HiddenSignatures'} ) {
 				} # end if
 				$html .= $$variable{"price$qty_index"} ."</b><br/>\n";
 			} # end if
-			$html .= openprint::service::summary( @$variable{'ProjectIndex','index'}, $qty_index );
+			my $summary = openprint::service::summary( @$variable{'ProjectIndex','index'}, $qty_index );
+			if ( $$variable{'name'} =~ /(\d+) Signatures/ ) {
+				my $sig_qty = $1;
+				if ( $summary =~ /(.*)\n(.*Stock Qty: )(\d+) (lbs|sheets)$/m ) {
+					$summary = $1."\n".$2.($sig_qty*$3).' '.$4;
+				} # end if
+			} # end if
+			$html .= $summary;
 			$html .= "</td>\n";
 		} # end foreach qty_index
 		return $html;
