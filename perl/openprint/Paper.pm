@@ -293,11 +293,6 @@ sub copy {
 	$$New{'id'} = '';
 	@{$$New{'Prices'}} = $self->prices();
 	@{$$New{'recommendations'}} = $self->recommendations();
-
-   # Add record to audit log - action "Copy Paper".
-# Don't do this.  A copies are created all the time, but never saved. The log should be done in administrator_paper.pm
-   #openprint::logs::insertLogRecord('65', "Original Paper ID: " . $$self{'id'},);
-
 	return $New;
 } # end sub copy
 
