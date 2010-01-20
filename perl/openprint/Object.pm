@@ -42,9 +42,8 @@ sub new {
 			$openprint::Object::cache{$parent}{$id} = $self;
 		} # end if
 	} # end if
-} # end if
 
-return $self;
+	return $self;
 } # end sub new
 
 sub load {
