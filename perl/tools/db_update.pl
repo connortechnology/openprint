@@ -2093,7 +2093,7 @@ if ( ! sets::isin( 'employeenumbers', \@tables ) ) {
 	} # end if
 } # end if
 
-if ( sets::isin( 'tbl_Equipment', \@tables ) ) {
+if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
 	if ( $data ) {
 		if ( ! exists $$data{'location_id'} ) {
