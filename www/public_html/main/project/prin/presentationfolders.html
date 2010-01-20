@@ -1,3 +1,6 @@
+<? eval (
+       $$variable{'SignatureIndex'} = '';
+) ?>
 <script type="text/javascript" src="/javascripts/printing.js?version=1.0"></script>
 <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
 <script type="text/javascript" src="/javascripts/proj/paper.js?version=1.0"></script>
@@ -9,8 +12,8 @@
 <!--#include virtual="/main/project/prin/_templates.html"-->
 <script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js"></script>
 <script type="text/javascript">
-	function calc() {
-		calc_print('f1');
+	function calc( formName, force ) {
+		calc_print( formName, force );
 	}
 </script>
 <script type="text/javascript" src="/javascripts/presentation_folders.js"></script>
