@@ -152,6 +152,29 @@ if ( $data ) {
 	if ( ! exists $$data{'purchasing_total_limit'} ) {
 		$dbh->do(q`alter table Users add purchasing_total_limit	float`);
 	} # end if
+	if ( exists $$data{'usertype'} and ! exists $$data{'type'} ) {
+		$dbh->do(q`alter table Users rename column usertype to type`);
+	} # end if
+	if ( exists $$data{'strcustomgreeting'} ) {
+		if ( exists $$data{'greeting'} ) {
+		$dbh->do(q`alter table Users DROP column strcustomgreeting`);
+		} else {
+		$dbh->do(q`alter table Users rename column strcustomgreeting to greeting`);
+		} # end if
+	}
+	$dbh->do(q{alter table users add howdidyouhearaboutusother text}) if ! exists $$data{'howdidyouhearaboutusother'};
+	if ( ! exists $$data{quote_level} ) {	
+		$dbh->do(q`alter table Users add quote_level integer`);
+		$dbh->do(q`alter table Users add foreign key (quote_level) REFERENCES QuoteLevels (id)`);
+	} # end if
+} # end if
+if ( sets::isin( 'users_index_seq', \@sequences ) ) {
+	$dbh->do('DROP SEQUENCE users_index_seq');
+	if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
+		$dbh->do('CREATE SEQUENCE users_id_seq');
+		$dbh->do("ALTER TABLE Users ALTER id set default nextval('users_id_seq')" );
+	} # end if
+	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 } # end if
 
 my $new_version = 1273;
@@ -168,16 +191,6 @@ if ( $version < $new_version ) {
     sql::insert( undef, undef, 'database_info', 'version', $new_version, 'backup', $backup );
     sql::end_transaction( $dbh, $ac );
     $version = $new_version;
-} # end if
-
-
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
-if ( ! $data ) {
-} else {
-	if ( exists $$data{'lngindex'} ) {
-	print "Updating Equipment...\n";
-		$dbh->do('ALTER TABLE tbl_Equipment rename  column lngindex to id;');
-	} # end if
 } # end if
 
 print "Updating Companies\n";
@@ -1172,16 +1185,6 @@ foreach my $Type ( openprint::ServiceType::find('name'=>'CDBurning') ) {
     $Type->save();
 }
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{'jdf_name'} ) {
-		$dbh->do(q`alter table tbl_equipment add jdf_name text`);
-	} # end if
-	if ( ! exists $$data{'jdf_id'} ) {
-		$dbh->do(q`alter table tbl_equipment add jdf_id text`);
-	} # end if
-} # end if
-
 if ( ! sets::isin( 'stockgroups', \@tables ) ) {
 	my $ac = sql::start_transaction( $dbh );
 	$_ = misc::load_file( $log, q{../openprint/sql/StockGroups.sql});
@@ -1735,50 +1738,9 @@ if ( $data ) {
 	} # end if
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{'deleted'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do(q`alter table Users add deleted boolean`);
-		$dbh->do(q`alter table Users alter deleted set default false`);
-		$dbh->do(q`update Users set deleted=false`);
-		$dbh->do(q`alter table Users alter deleted set not null`);
-		sql::end_transaction( $dbh, $ac );
-	} 
-	if ( ! exists $$data{'wage'} ) {
-		$dbh->do(q`alter table Users add wage float`);
-	} # end if
-	if ( exists $$data{'strfirstname'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do(q`alter table Users rename column strfirstname to firstname`);
-		$dbh->do(q`alter table Users rename column strlastname to lastname`);
-		$dbh->do(q`alter table Users rename column stremail to email`);
-		$dbh->do(q`alter table Users rename column strphone to phone`);
-		$dbh->do(q`alter table Users rename column strfax to fax`);
-		$dbh->do(q`alter table Users rename column strtitle to title`);
-		$dbh->do(q`alter table Users rename column strsalutation to salutation`);
-		$dbh->do(q`alter table Users rename column dtmdateentered to created_on`);
-		$dbh->do(q`alter table Users rename column dtmlastmodified to updated_on`);
-		$dbh->do(q`alter table Users rename column chrtype to type`);
-		sql::end_transaction( $dbh, $ac );
-	}
-	$dbh->do(q{alter table users add howdidyouhearaboutusother text}) if ! exists $$data{'howdidyouhearaboutusother'};
-	if ( ! exists $$data{quote_level} ) {	
-		$dbh->do(q`alter table Users add quote_level integer`);
-		$dbh->do(q`alter table Users add foreign key (quote_level) REFERENCES QuoteLevels (id)`);
-	} # end if
-} # end if
-
 sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment,Paper', 'type','text') if ! $config{'Cached Objects'};
 
 
-if ( sets::isin( 'tbl_equipment', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
-	if ( ! exists $$data{'location_id'} ) {
-		$dbh->do('ALTER TABLE tbl_Equipment ADD location_id INTEGER');
-		$dbh->do('ALTER TABLE tbl_Equipment ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
-	} # end if
-} # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM survey_question_available_answers LIMIT 1', {} );
 if ( $data ) {
@@ -2131,14 +2093,29 @@ if ( ! sets::isin( 'employeenumbers', \@tables ) ) {
 	} # end if
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
-if ( $data ) {
-	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_in TEXT') if ! exists $$data{'cip3_in'};
-	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_out TEXT') if ! exists $$data{'cip3_out'};
-	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_hold TEXT') if ! exists $$data{'cip3_hold'};
-	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_merge TEXT') if ! exists $$data{'cip3_merge'};
-	$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_monitor TEXT') if ! exists $$data{'cip3_monitor'};
-	$dbh->do('ALTER TABLE tbl_Equipment ADD smartscheduling BOOLEAN default false') if ! exists $$data{'smartscheduling'};
+if ( sets::isin( 'tbl_Equipment', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+	if ( $data ) {
+		if ( ! exists $$data{'location_id'} ) {
+			$dbh->do('ALTER TABLE tbl_Equipment ADD location_id INTEGER');
+			$dbh->do('ALTER TABLE tbl_Equipment ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
+		} # end if
+		if ( exists $$data{'lngindex'} ) {
+			$dbh->do('ALTER TABLE tbl_Equipment rename  column lngindex to id;');
+		} # end if
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_in TEXT') if ! exists $$data{'cip3_in'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_out TEXT') if ! exists $$data{'cip3_out'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_hold TEXT') if ! exists $$data{'cip3_hold'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_merge TEXT') if ! exists $$data{'cip3_merge'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_monitor TEXT') if ! exists $$data{'cip3_monitor'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD smartscheduling BOOLEAN default false') if ! exists $$data{'smartscheduling'};
+		if ( ! exists $$data{'jdf_name'} ) {
+			$dbh->do(q`alter table tbl_equipment add jdf_name text`);
+		} # end if
+		if ( ! exists $$data{'jdf_id'} ) {
+			$dbh->do(q`alter table tbl_equipment add jdf_id text`);
+		} # end if
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'schedule', \@tables ) ) {

@@ -990,6 +990,10 @@ sub summary {
 				$summary .= $$printing_specs{'PageQuantity'} .= 'pg ';
 			} # end if
 
+			if ( $self->Type()->name() eq 'PresentationFolders' ) {
+				$summary .= $$printing_specs{'rdbPanels'} . ' Panel ' . $$printing_specs{'PocketSize'} . '&quot; ';
+			} # end if
+
 			if ( $$printing_specs{'txtTotalPageQuantity'} ) {
 				$summary .= sprintf( '%s&quot;x%s&quot; ', 1*$$printing_specs{'txtFinalWidth'},1*$$printing_specs{'txtFinalHeight'});
 				if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
