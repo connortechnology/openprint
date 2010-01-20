@@ -216,7 +216,7 @@ sub get_lis {
 		} # end if
 		
 		$html .= openprint::press_schedule::get_li( $previous_row, $current_row, $ul_id );
-		my $sig_specs = openprint::service::get_specs_ref( new openprint::Project( $$current_row{'project_index'} ),$$current_row{'serviceindex'} );
+		my $sig_specs = openprint::service::get_specs_ref( new openprint::Project( $$current_row{'projectindex'} ),$$current_row{'serviceindex'} );
 		$total_impressions += $$sig_specs{'ImpressionQuantity'};
 		$previous_row = $current_row;
 	} # end for
