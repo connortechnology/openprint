@@ -98,6 +98,11 @@ $openprint::log->debug("Viewing Project $project_index");
 			while ( $services{$id} and @{$services{$id}} ) {
 				my $service_index = shift @{$services{$id}};
 
+				foreach my $q ( 1 .. 3 ) {
+					my $stock_qty = $project{$service_index}{'txtPressSheetQty'.$q};
+					$stock_qty =~ s/\D//g;
+					$$variable{'SignatureStockQty'.$q.$service_index} = $stock_qty;
+				}
 				my $sig_qty = 1;
 
 				if ( $openprint::session{'ShowAllSignatures'} ) {
@@ -106,11 +111,15 @@ $openprint::log->debug("Viewing Project $project_index");
 					for ( my $i = 0; $i < @{$services{$id}}; $i += 1 ) {
 						if ( $statuses{$service_index} eq $statuses{$services{$id}[$i]} and openprint::Estimating::Printing::compare_signatures( $project{$service_index}, $project{$services{$id}[$i]} ) ) {
 							$sig_qty += 1;
-							$project{$service_index}{'txtPrice1'} += $project{$services{$id}[$i]}{'txtPrice1'};
-							$project{$service_index}{'txtPrice2'} += $project{$services{$id}[$i]}{'txtPrice2'};
-							$project{$service_index}{'txtPrice3'} += $project{$services{$id}[$i]}{'txtPrice3'};
+							foreach my $q ( 1 .. 3 ) {
+							$project{$service_index}{'txtPrice'.$q} += $project{$services{$id}[$i]}{'txtPrice'.$q};
+							my $stock_qty = $project{$services{$id}[$i]}{'txtPressSheetQty'.$q};
+							$stock_qty =~ s/\D//g;
+							$$variable{'SignatureStockQty'.$q.$service_index} += $stock_qty;
+							} # end foreach q
 							splice @{$services{$id}}, $i, 1;
 							$i -= 1;
+		
 						} # end if
 					} # end for
 					if ( $sig_qty > 1 ) {

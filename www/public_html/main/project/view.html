@@ -101,7 +101,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 			if ( $$variable{'name'} =~ /(\d+) Signatures/ ) {
 				my $sig_qty = $1;
 				if ( $summary =~ /(.*)\n(.*Stock Qty: )(\d+) (lbs|sheets)$/m ) {
-					$summary = $1."\n".$2.($sig_qty*$3).' '.$4;
+					$summary = $1."\n".$2.$$variable{'SignatureStockQty'.$qty_index.$$variable{'index'}}.' '.$4;
 				} # end if
 			} # end if
 			$html .= $summary;
