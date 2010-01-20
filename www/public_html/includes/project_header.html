@@ -10,7 +10,7 @@
 	  	<? if ( $$variable{'Project'}->docket() ) ?>
 		<p>
 	  		<label>Docket Number:</label>
-	  		<? echo ( $$variable{'Project'}->docket() ) ?>
+	  		<a href="/main/order/history_details.html?OrderID=<? echo ( $$variable{'Project'}->order_id() ) ?>"><? echo ( $$variable{'Project'}->docket() ) ?></a>
 		</p>
 		<p>
 	  		<label>Ordered Quantity:</label>

@@ -1122,8 +1122,11 @@ $openprint::log->debug("No papers found, looking for paper with no width or heig
             delete $params{'width'};
             delete $params{'height'};
             @Papers = find( %params );
-		} elsif ( @Papers > 1 ) {
-			$openprint::log->warn("More than 1 paper found in load_from_signature");
+		#} elsif ( @Papers > 1 ) {
+			#$openprint::log->warn("More than 1 paper found in load_from_signature");
+			#foreach my $P ( @Papers ) {
+				#$openprint::log->warn( $P->id() . ' ' .$P->to_string() );
+			#} # end foreach P
         } # end if
         if ( ! @Papers ) {
 	$openprint::log->error("No papers found");
@@ -1157,17 +1160,18 @@ $openprint::log->debug("No papers found, looking for paper with no width or heig
 		
 		if ( $qty_index ) {
 			my $qty = $$specs{'txtPressSheetQty'.$qty_index};
-#$openprint::log->debug("Looking for $qty");
+$openprint::log->debug("Looking for $qty");
 			$qty =~ s/\D//g;
 			foreach my $P ( @Papers ) {
 #$openprint::log->debug("Looking for $qty < " . $P->minimum_order() );
 				next if $qty < $P->minimum_order();
-#$openprint::log->debug("found for $qty < " . $P->minimum_order() );
+$openprint::log->debug("found for $qty < " . $P->minimum_order() );
 				$Paper = $P;
 				last;
 			} # end foreach
 		} # end if
 		if ( ! $Paper ) {
+$openprint::log->warn("No paper found");
 			$Paper = shift @Papers;
 			$Paper = new openprint::Paper() if ! $Paper;
 		} # end if
