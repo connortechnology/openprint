@@ -2,7 +2,6 @@
 <table class="List">
 	<tr>
 		<th width="60">&nbsp;</th>
-		<th width="100">Type</th>
 		<th>Description</th>
 		<th class="Quantity">Quantity</th>
 		<th class="Weight">Weight</th>
@@ -24,11 +23,8 @@
 		} # end if
 		foreach my $C ( @Contents ) {
 			$html .= '<tr>';
-			$html .= '<td>'.ssi::writeButton( $log, $dbh, 'Del'.$C->id(), 'del.gif', "del_content( \$('f1'), $$C{id} );", '', 'Delete' )."</td>\n";
-			$html .= sprintf('<td><select name="type_id-%1$d" id="type_id-%1$d"><option value=""> select one </option>', $$C{id} );
-			$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @ContentTypes ], $C->type_id() );
-            $html .= '</select></td>';
-			$html .= sprintf(q`<td><textarea class="mce" id="description-%1$d" name="description-%1$d" rows="2" cols="">%2$s</textarea></td>`, $C->id(), $C->description() );
+			$html .= '<td rowspan="2">'.ssi::writeButton( $log, $dbh, 'Del'.$C->id(), 'del.gif', "del_content( \$('f1'), $$C{id} );", '', 'Delete' )."</td>\n";
+			$html .= sprintf(q`<td rowspan="2"><textarea class="mce" id="description-%1$d" name="description-%1$d" rows="2" cols="">%2$s</textarea></td>`, $C->id(), $C->description() );
 			$html .= sprintf(q`<td class="Quantity"><input type="text" id="quantity-%1$d" name="quantity-%1$d" value="%2$s" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form );}" onkeyup="this.value=this.value.replace(/\D/g,'');" /></td>`, $C->id(), $C->quantity() );
 			$html .= sprintf(q`
 			<td class="Weight">
@@ -43,6 +39,7 @@
 				</td>`, $C->id(), $C->cost(), ssi::make_drop_down( [ '/100lb', '/100lb', '/Kg', '/Kg', ,'/1000', '/1000', 'Each', 'Each' ], $$C{'cost_units'} ) );
 			$html .= sprintf(q`<td class="Price"><input type="text" id="total-%1$d" name="total-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>`, $C->id(), $C->total() );
 			$html .= "</tr>\n";
+			$html .= '<tr><td colspan="4" class="alert" id="alert-'.$$C{id}.'"></td></tr>';
 		} # end foreach tag_id
 		return $html;
 	) ?>

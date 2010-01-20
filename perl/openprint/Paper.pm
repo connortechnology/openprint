@@ -293,11 +293,6 @@ sub copy {
 	$$New{'id'} = '';
 	@{$$New{'Prices'}} = $self->prices();
 	@{$$New{'recommendations'}} = $self->recommendations();
-
-   # Add record to audit log - action "Copy Paper".
-# Don't do this.  A copies are created all the time, but never saved. The log should be done in administrator_paper.pm
-   #openprint::logs::insertLogRecord('65', "Original Paper ID: " . $$self{'id'},);
-
 	return $New;
 } # end sub copy
 
@@ -544,11 +539,17 @@ sub group {
     return $$self{'group'};
 } # end sub group
 
+sub Name {
+	return openprint::StockName( $_[0]{'name_id'} );
+}
+
 sub name {
     my ( $self, $name ) = @_;
 
 	if ( defined $name ) {
-		$name =~ s/^\s*(.*)\s*$/$1/;
+		$name =~ s/^\s+//;
+		$name =~ s/\s+$//;
+		$name =~ s/\s\s+$/ /;
 		if ( ! $$self{'custom'} ) {
 			@$self{'name_id','name'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperNames WHERE lower(longname)=?}, lc $name );
 			if ( ! $$self{'name_id'} ) {
@@ -563,11 +564,16 @@ sub name {
     return $$self{'name'};
 } # end sub name
 
+sub Manufacturer {
+	return openprint::Manufacturer( $_[0]{'manufacturer_id'} );
+}
 sub manufacturer {
     my ( $self, $manufacturer ) = @_;
 
     if ( defined $manufacturer ) {
-		$manufacturer =~ s/^\s*(.*)\s*$/$1/;
+		$manufacturer =~ s/^\s+//;
+		$manufacturer =~ s/\s+$//;
+		$manufacturer =~ s/\s\s+$/ /;
 		if ( ! $$self{'custom'} ) {
 			@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE lower(longname)=?}, lc $manufacturer );
 			if ( ! $$self{'manufacturer_id'} ) {
@@ -582,11 +588,16 @@ sub manufacturer {
     return $$self{'manufacturer'};
 } # end sub manufacturer
 
+sub Finish {
+	return openprint::StockFinish( $_[0]{'finish_id'} );
+}
 sub finish {
     my ( $self, $finish ) = @_;
 
     if ( defined $finish ) {
-		$finish =~ s/^\s*(.*)\s*$/$1/;
+		$finish =~ s/^\s+//;
+		$finish =~ s/\s+$//;
+		$finish =~ s/\s\s+$/ /;
 		if ( ! $$self{'custom'} ) {
 			@$self{'finish_id','finish'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperFinishes WHERE lower(longname)=?}, lc $finish );
 			if ( ! $$self{'finish_id'} ) {
@@ -601,11 +612,16 @@ sub finish {
     return $$self{'finish'};
 } # end sub finish
 
+sub Colour {
+	return openprint::StockColour( $_[0]{'colour_id'} );
+}
 sub colour {
     my ( $self, $colour ) = @_;
 
     if ( defined $colour ) {
-		$colour =~ s/^\s*(.*)\s*$/$1/;
+		$colour =~ s/^\s+//;
+		$colour =~ s/\s+$//;
+		$colour =~ s/\s\s+$/ /;
 		if ( ! $$self{'custom'} ) {
 			@$self{'colour_id','colour'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperColours WHERE lower(longname)=?}, lc $colour );
 			if ( ! $$self{'colour_id'} ) {
@@ -620,12 +636,17 @@ sub colour {
     return $$self{'colour'};
 } # end sub colour
 
+sub Weight {
+	return openprint::StockWeight( $_[0]{'weight_id'} );
+}
 sub weight {
     my ( $self, $weight ) = @_;
 
 
     if ( defined $weight ) {
-		$weight =~ s/^\s*(.*)\s*$/$1/;
+		$weight =~ s/^\s+//;
+		$weight =~ s/\s+$//;
+		$weight =~ s/\s\s+$/ /;
 		if ( ! $$self{'custom'} ) {
 			@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperWeights WHERE lower(longname)=?}, lc $weight );
 			if ( ! $$self{'weight_id'} ) {
@@ -644,7 +665,9 @@ sub quality {
     my ( $self, $quality ) = @_;
 
     if ( defined $quality ) {
-		$quality =~ s/^\s*(.*)\s*$/$1/;
+		$quality =~ s/^\s+//;
+		$quality =~ s/\s+$//;
+		$quality =~ s/\s\s+$/ /;
 		if ( ! $$self{'custom'} ) {
 			@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
 			if ( ! $$self{'quality_id'} ) {
@@ -1164,7 +1187,6 @@ sub load_from_signature {
 		$Paper->height( $$specs{'StockHeight'.$qty_index} );
 		$Paper->start_width( $$specs{'txtSpecificStockWidth'} );
 		$Paper->start_height( $$specs{'txtSpecificStockHeight'} );
-		$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
 		$Paper->gsm( $$specs{'txtStockGSM'} );
 		$Paper->type( $$specs{'StockType'} );
 
@@ -1179,14 +1201,16 @@ sub load_from_signature {
 		$Paper->basis_height( $$specs{'basis_height'} );
 		$Paper->basis_mweight( $$specs{'basis_mweight'} );
 		$Paper->score_required( $Paper->calliper() > 0.008 );
-		if ( $$specs{'StockType'} ne 'Roll' ) {
+		#if ( $$specs{'StockType'} ne 'Roll' ) {
 			$Paper->mweight( $$specs{'txtCustomMWeight'} );
-		} # end if
+		#} # end if
 		$Paper->supplied( $$specs{'rdbSuppliedStock'} eq 'Y' ? 1 : 0 );
 	} else {
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
 			$Paper = $Paper->id() ? $Paper : undef;
+		} elsif ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
+			return new openprint::Paper();
 		} # end if
 
 		if ( ! $Paper ) {
@@ -1198,7 +1222,7 @@ sub load_from_signature {
 					'weight'    => $$specs{'ddmStockWeight'},
 					'project_type_id'=> $Project ? $Project->type_id() : undef,
 					'order'		=>	'minimum_order',
-			);
+					);
 			if ( $qty_index ) {
 				$params{'width'} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
 				$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
@@ -1206,19 +1230,49 @@ sub load_from_signature {
 			} # end if
 			my @Papers = find( %params );
 			if ( ! @Papers ) {
-	#$log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
+#$log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
 				delete $params{'width'};
 				delete $params{'height'};
 				@Papers = find( %params );
+			} elsif ( @Papers > 1 ) {
+				$openprint::log->warn("More than 1 paper found in load_from_signature");
 			} # end if
-	#$log->debug("Found " . @Papers );
+#$log->debug("Found " . @Papers );
+			if ( ! @Papers ) {
+				$openprint::log->error("No papers found");
+				$Paper = new openprint::Paper();
+				$Paper->name( $$specs{'ddmStockBrand'} );
+				$Paper->finish( $$specs{'ddmStockFinish'} );
+				$Paper->colour( $$specs{'ddmStockColour'} );
+				$Paper->weight( $$specs{'ddmStockWeight'} );
+				$Paper->calliper( $$specs{'txtSpecificStockCalliper'} );
+				$Paper->width( $$specs{'hdnSuppliedStockWidth'} );
+				$Paper->height( $$specs{'hdnSuppliedStockHeight'} );
+				$Paper->start_width( $$specs{'hdnSuppliedStockWidth'} );
+				$Paper->start_height( $$specs{'hdnSuppliedStockHeight'} );
+				$Paper->doublesided( $$specs{'CustomSheetDoubleSided'} );
+				$Paper->gsm( $$specs{'txtStockGSM'} );
+				$Paper->type( $$specs{'StockType'.$qty_index} );
+
+				$Paper->grade( $$specs{'StockGrade'});
+
+				$Paper->Price( $$specs{'CustomStockPrice'} );
+				$Paper->Units( $$specs{'CustomStockPriceUnits'} );
+				$Paper->basis_width( $$specs{'basis_width'} );
+				$Paper->basis_height( $$specs{'basis_height'} );
+				$Paper->basis_mweight( $$specs{'basis_mweight'} );
+				$Paper->score_required( $Paper->calliper() > 0.008 );
+				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
+				@Papers = ( $Paper );
+			} # end if
+
 			foreach my $P ( @Papers ) {
 				next if $$specs{'StockQuantity'.$qty_index} < $P->minimum_order();
 				$Paper = $P;
 				last;
 			} # end foreach
 			if ( ( ! $Paper ) and @Papers ) {
-	#$log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
+#$log->debug("No paper found matching minimum_order ($$specs{'StockQuantity'.$qty_index})");
 				$Paper = shift @Papers;
 			} # end if
 		} # end if Paper
@@ -1226,13 +1280,13 @@ sub load_from_signature {
 #$log->debug("No paper found");
 			$Paper = new openprint::Paper();
 		} # end if
-		
+
 		if ( $$specs{'rdbSuppliedStock'} eq 'Y' and ! $Paper->supplied() ) {
 			$Paper->supplied(1);
 		} # end if
 	} # end if
 	if ( $qty_index and ( $$specs{'OverrideStockPrice'.$qty_index} eq 'Y' ) ) {
-$openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
+		$openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
 		$$Paper{'Price'} = $$specs{'StockPrice'.$qty_index};
 	} # end if
 
@@ -1247,7 +1301,7 @@ $openprint::log->warn("Override price: " . $$specs{'StockPrice'.$qty_index} );
 		} # end if
 	} # end if
 	return $Paper;
-	
+
 } # end sub load_from_signature
 
 sub grain_direction {
@@ -1256,10 +1310,10 @@ sub grain_direction {
 		$$self{'grain_direction'} = $_[0];
 	} # end if
 	if ( ! $$self{'grain_direction'} ) {
-		# Default to second measurement
+# Default to second measurement
 		$$self{'grain_direction'} = 'height';
 	} # end if
-	
+
 	return $$self{'grain_direction'};
 } # end sub grain_direction
 
@@ -1271,7 +1325,7 @@ sub doublesided {
 	return 1 if ( $$self{'doublesided'} eq 'Y' );
 	return 0 if ( $$self{'doublesided'} eq 'N' );
 	return $$self{'doublesided'};
-	
+
 } # end sub doublesided
 
 sub area {

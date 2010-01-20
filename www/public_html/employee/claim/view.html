@@ -6,7 +6,7 @@
 	my $html = '';
 	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 	if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send Email' ) if $$variable{'Claim'}->filed_on();
+		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send Email' );
 		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?claim_id='.$$variable{'Claim'}->id(), 'Edit' );
 		#$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
 		if ( $$variable{'Claim'}->deleted() ) {
@@ -19,7 +19,7 @@
 ) ?>
 	</p>
 	<!--#include virtual="/includes/error_reporting.html"-->
-	<div class="Claim">
+	<div class="Claim"><div class="View">
 		<div class="Header">
 			<div class="Logo">
 				<table><tr>
@@ -147,11 +147,11 @@
 		<td><? echo ( return openprint::Currency::format( $$variable{'Claim'}->subtotal() ); ) ?></td>
 	</tr>
     <tr class="federaltax"<? echo ( $$variable{'Claim'}->federaltax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="4"><? echo ( $$variable{'Claim'}->Company()->country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?> ( <? echo ( $$variable{'Claim'}->federaltax_rate() ) ?>%)</td>
+        <td colspan="4"><? echo ( $$variable{'Claim'}->Company()->country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?> ( <? echo ( $$variable{'Claim'}->federaltax_rate() ) ?>% )</td>
         <td><? echo ( return openprint::Currency::format( $$variable{'Claim'}->federaltax() ); ) ?></td>
     </tr>
     <tr class="statetax"<? echo ( $$variable{'Claim'}->statetax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="4"><? echo ( $$variable{'Claim'}->Company()->state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?> ( <? echo ( $$variable{'Claim'}->statetax_rate() ) ?>%)</td>
+        <td colspan="4"><? echo ( $$variable{'Claim'}->Company()->state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?> ( <? echo ( $$variable{'Claim'}->statetax_rate() ) ?>% )</td>
         <td><? echo ( return openprint::Currency::format( $$variable{'Claim'}->statetax() ); ) ?></td>
     </tr>
 	<tr class="total">
@@ -169,5 +169,6 @@
 		</div>
 		<br class="spacer"/>
 		<div class="Disclaimer">This is a notification of claim.  If there is disagreement, you are requested to advise the sender in writing, either by e-mail or a letter within 5 business days from the date of this claim advice.  An official invoice will be issued if no objection to this claim is filed.</div>
+		</div>
 	</div><!--Claim-->
 </form>

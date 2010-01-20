@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS User_Notifications;
-DROP TABLE User_Notification_Types;
+DROP TABLE IF EXISTS User_Notification_Types;
 
 CREATE TABLE User_Notification_Types (
 	id SERIAL,

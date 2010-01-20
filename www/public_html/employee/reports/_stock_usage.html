@@ -1,0 +1,156 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<? echo (
+	my $html = '';
+	my @company_ids;
+
+	if ( $session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory','Sales'], $session{'user_id'} ) ) {
+		@company_ids = sql::execute( undef,undef,'SELECT index FROM Company WHERE Index=? OR lngSalesPerson IN ('. join(',', $session{'user_id'}, new openprint::User( $session{'user_id'} )->csr_ids() ) .')', new openprint::User($session{'user_id'})->company_id() );
+    } # end if
+
+	@company_ids = ( $session{'/employee/reports/stock_usage.html?company_id'} ) if $session{'/employee/reports/stock_usage.html?company_id'};
+
+	my @Orders = openprint::Order::find(
+		'status'		=>	[ 'In Production','Picked Up','Shipped','Waiting For Customer Approval','Complete','Waiting For Pickup','Order Submitted','Paid','Pending Deposit','Re-Opened' ],
+		'company_id'	=>	( @company_ids ? \@company_ids : '' ),
+		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00',
+			@session{'/employee/reports/stock_usage.html?ordered_on_start_year','/employee/reports/stock_usage.html?ordered_on_start_month','/employee/reports/stock_usage.html?ordered_on_start_day'} ),
+		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59',
+			@session{'/employee/reports/stock_usage.html?ordered_on_end_year','/employee/reports/stock_usage.html?ordered_on_end_month','/employee/reports/stock_usage.html?ordered_on_end_day'} ),
+);
+	my %totals;
+	my %Stocks;
+	my %projects;
+
+	foreach my $Order ( @Orders ) {
+		foreach my $Project ( $Order->Projects() ) {
+			my $qty_index = $Project->ordered_quantity_index();
+			if ( ! $qty_index ) {
+				$log->error("No Ordered QTY Index in $$Order{id} $$Project{id}!");
+			} # end if
+			foreach my $service_id ( $Project->signatures() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $service_id );
+
+				if ( ! $$sig_specs{'StockType'.$qty_index} ) {
+					if ( $$sig_specs{'StockType'} ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, 'StockType'.$qty_index, $$sig_specs{'StockType'} );
+					} else {
+						$log->error("Unknown stock type: " . $$sig_specs{'StockType'.$qty_index} );
+					} # end if
+				} # end if
+
+				if ( $session{'/employee/reports/stock_usage.html?Type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ';', $session{'/employee/reports/stock_usage.html?Type'} ) ) ) {
+$log->debug("Wrong type ". $$sig_specs{'StockType'.$qty_index} );
+					next;
+} else {
+$log->debug("Write type");
+				}
+
+				if ( $session{'/employee/reports/stock_usage.html?mweight'} ) {
+$log->warn( 'MWeight: ' . $$sig_specs{'txtMWeight'.$qty_index} );
+					if ( ! $$sig_specs{'txtMWeight'.$qty_index} ) {
+						$log->error("No MWeight!");
+						next;
+					} elsif ( ( $$sig_specs{'txtMWeight'.$qty_index} < ( $session{'/employee/reports/stock_usage.html?mweight'}-1) )
+							or ( $$sig_specs{'txtMWeight'.$qty_index} > ( $session{'/employee/reports/stock_usage.html?mweight'}+1 ) ) ) { 
+						next;
+					} # end if
+				} # end if
+
+				my $Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+
+				if ( $session{'/employee/reports/stock_usage.html?width'} and $session{'/employee/reports/stock_usage.html?height'} ) {
+					next if $Stock->area() < $session{'/employee/reports/stock_usage.html?width'} * $session{'/employee/reports/stock_usage.html?height'};
+					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
+						next if $Stock->area() != $session{'/employee/reports/stock_usage.html?width'} * $session{'/employee/reports/stock_usage.html?height'};
+					} # end if
+				} elsif ( $session{'/employee/reports/stock_usage.html?width'} ) {
+					next if $Stock->width() < $session{'/employee/reports/stock_usage.html?width'};
+					if ( ! $session{'/employee/reports/stock_usage.html?OrLarger'} ) {
+						next if $Stock->width() != $session{'/employee/reports/stock_usage.html?width'};
+					} # end if
+				} # end if
+
+				if ( $session{'/employee/reports/stock_usage.html?basis_weight'} ) {
+					if ( ( $Stock->basis_mweight() < ( $session{'/employee/reports/stock_usage.html?basis_weight'}-1) )
+or ( $Stock->basis_mweight() >( $session{'/employee/reports/stock_usage.html?basis_weight'}+1 ) ) ) { 
+						next;
+					} # end if
+				} # end if
+				$Stocks{$Stock->to_string()} = $Stock;
+				if ( $session{'/employee/reports/stock_usage.html?Manufacturer'} ) {
+					if ( $Stock->manufacturer_id() ne $session{'/employee/reports/stock_usage.html?Manufacturer'} ) {
+						$log->debug("Different Manufacturer: $$Stock{'manufacturer_id'} != $session{'/employee/reports/stock_usage.html?Manufacturer'}");
+						next;
+					} # end if
+				} # end if
+				if ( $session{'/employee/reports/stock_usage.html?Name'} ) {
+					my $StockName = new openprint::StockName( $session{'/employee/reports/stock_usage.html?Name'} );
+					if ( lc $Stock->name() ne lc $StockName->shortname() ) {
+						$log->debug("Different Name: $$Stock{'name'} != $$StockName{'shortname'}");
+						next;
+					} # end if
+				} # end if
+				if ( $session{'/employee/reports/stock_usage.html?Finish'} ) {
+					my $StockFinish = new openprint::StockFinish( $session{'/employee/reports/stock_usage.html?Finish'} );
+					if ( lc $Stock->finish() ne lc $StockFinish->shortname() ) {
+$log->debug("Different Finish: $$Stock{'finish'} != $$StockFinish{'shortname'}");
+						next;
+					} # end if
+				} # end if
+				if ( $session{'/employee/reports/stock_usage.html?Weight'} ) {
+					my $StockWeight = new openprint::StockWeight( $session{'/employee/reports/stock_usage.html?Weight'} );
+					if ( lc $Stock->weight() ne lc $StockWeight->shortname() ) {
+$log->debug("Different Weight: $$Stock{'weight'} != $$StockWeight{'shortname'}");
+						next;
+					} # end if
+				} # end if
+				if ( $session{'/employee/reports/stock_usage.html?Colour'} ) {
+					my $StockColour = new openprint::StockColour( $session{'/employee/reports/stock_usage.html?Colour'} );
+					if ( lc $Stock->colour() ne lc $StockColour->shortname() ) {
+$log->debug("Different Colour: $$Stock{'colour'} != $$StockColour{'shortname'}");
+						next;
+					} # end if
+				} # end if
+				my $qty = $$sig_specs{'txtPressSheetQty'.$qty_index};
+$log->debug("Stock QTY$qty_index: $qty");
+				$qty =~ s/\D//g;
+if ( ! $qty ) {
+	$log->error("No Ordered QTY in $$Order{id} $$Project{id}!");
+}
+				$totals{$Stock->to_string()} += $qty;
+				push @{$projects{$Stock->to_string()}}, $Order->id();
+			} # end foreach service_id
+		} # end foreach Project
+	} # end foreach Order
+
+		$html .= '<table class="List sortable">
+	<tr>
+		<th align="left">Stock</th>
+		<th width="120" align="right">Sheets</th>
+		<th width="120" align="right">Weight</th>
+	</tr>';
+		my $rowclass;
+		my $total_sheets;
+		my $total_lbs;
+
+		foreach my $paper_string ( sort keys %totals ) {
+			my $Stock = $Stocks{$paper_string};
+
+			$html .= sprintf('<tr><td title="%4$s">%1$s</td><td align="right">%2$s</td><td align="right">%3$slbs</td></tr>',
+				$paper_string, 
+				$Stock->type() eq 'Sheet' ? Number::Format::format_number($totals{$paper_string}).'sheets' : '',
+				Number::Format::format_number($Stock->type() eq 'Roll' ? $totals{$paper_string} : $totals{$paper_string} * $Stock->sheet_weight() ),
+				join(',', sets::union( @{$projects{$paper_string}} ) ),
+			);
+			$html .= "\n";
+			if ( $Stock->type() eq 'Roll' ) {
+				$total_lbs += $totals{$paper_string};
+			} else {
+				$total_lbs += $totals{$paper_string} * $Stock->sheet_weight();
+				$total_sheets += $totals{$paper_string};
+			} # end if
+		} # end foreach paper_string
+		$html .= '<tr class="totals"><td colspan="1" align="right">Totals:</td><td align="right">'. Number::Format::format_number($total_sheets) .'sheets</td><td align="right">'.Number::Format::format_number($total_lbs).'lbs</td></tr>';
+	return $html;
+) ?>
+</table>

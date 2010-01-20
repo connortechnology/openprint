@@ -462,7 +462,7 @@ return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'funct
 
 sub setup_date_select {
 	my ( $page, $prefix, $start_delta, $end_delta ) = @_;
-	if ( ( ! $session{$page.'?'.$prefix.'_start_year'} ) or ( (time - $session{$page.'?lastupdated'}) > 86400 ) ) {
+    if ( ( ! ( $session{$page.'?'.$prefix.'_start_year'} and $session{$page.'?'.$prefix.'_start_month'} and $session{$page.'?'.$prefix.'_start_day'} ) ) or ( time - $session{'lastupdated'} > 86400 ) ) {
 		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $start_delta );
 		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $end_delta );
 	} else {
@@ -482,6 +482,7 @@ sub date_select {
 		( $year, $month, $day ) = ( '', '', '' );
 	} else {
 		( $year, $month, $day ) = Date::Calc::Localtime( $value ne '' ? Date::Parse::str2time( $value ) : time );
+$log->debug("$year-$month-$day");
 	} # end if
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {

@@ -39,6 +39,16 @@ sub find_one {
     return;
 } # end sub find_one
 
+sub find_one {
+    my @results = find( @_, 'limit', 1 );
+    if ( @results > 1 ) {
+        $openprint::log->error('ProjectType::find_one more than 1 result!');
+    } elsif ( @results ) {
+        return $results[0];
+    } # end if
+    return;
+} # end sub find_one
+
 sub find {
 	my %params = @_;
 	my @values;
@@ -76,8 +86,8 @@ sub save {
 		return $error;
 	} else {
 		$$self{'required_services'} = $$params{'required_services'} if exists $$params{'required_services'};
-		sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
 		if ( $$self{'required_services'} ) {
+			sql::execute( undef, undef, q{DELETE FROM ProjectType_RequiredServices WHERE ProjectType_id=?}, $$self{'id'} );
 			# The union gets rid of duplicates
 			foreach my $servicetype_id ( sets::union( @{$$self{'required_services'}} ) ) {
 				sql::insert( undef, undef, 'ProjectType_RequiredServices', ['ProjectType_id', $$self{'id'}, 'ServiceType_id', $servicetype_id ] );

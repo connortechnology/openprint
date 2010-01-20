@@ -9,6 +9,7 @@ use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
+my $debug = 1;
 $table = 'tbl_Equipment_Specifications';
 $serial = 'tbl_equipment_specifications_id_seq';
 
@@ -31,7 +32,6 @@ $serial = 'tbl_equipment_specifications_id_seq';
 	'max'	=>	undef,
 );
 
-my $debug = 0;
 
 sub find {
 	my %params = @_;
@@ -61,9 +61,9 @@ sub find {
 		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 		if ( ! $data ) {
 			$log->error( "Error loading Equipment Specification ($sql) (@values) :" . $dbh->errstr );
+			return;
 		} elsif ( $debug ) {
-		#$log->debug( 'Number of results: ' . @$data );
-			$log->debug( $sql . join(',',@values) );
+			$log->debug( 'EquipemetnSpecifications::find: ' . $sql . join(',',@values) . " # results: " . @$data );
 		} # end if
 		
 		return map { new openprint::EquipmentSpecification( $_->{id}, $_ ) } @$data;

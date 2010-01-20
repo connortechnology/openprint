@@ -687,7 +687,7 @@ my $master_time = gettimeofday();
 		}
 	} # end foreach
 
-	if ( ($$specs{'ProjectType'} eq 'PresentationFolders') or (($$variable{'Group'} == 1 ) and sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
+	if ( ($Project->Type()->name() eq 'PresentationFolders') or (($$variable{'Group'} == 1 ) and sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
 		if ( $$specs{'rdbPocketSize'} and ( $$specs{'rdbPocketSize'} ne 'Other' ) ) {
 			$$specs{'PocketSize'} = $$specs{'rdbPocketSize'};	
 			$variables{'PocketSize'} = [ sets::union( 'output', @{$variables{'PocketSize'}} ) ];
@@ -696,13 +696,13 @@ my $master_time = gettimeofday();
 		} # end if
 		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'PocketSize'} ) ) {
 			return $$specs{'Status'} = 'uncalculated';
-		} elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
-			$$specs{'alert'} .= 'Please select where you would the pockets.';
-			return $$specs{'Status'} = 'uncalculated';
+        } elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
+            $$specs{'alert'} .= 'Please select where you would like the pockets.';
+            return $$specs{'Status'} = 'uncalculated';
 		} # end if
 	} # end if
 
-	if ( $$specs{'ProjectType'} eq 'Banners' ) {
+	if ( $Project->Type()->name() eq 'Banners' ) {
 		my $width = $$specs{'txtFinalWidth'};
 		$width += $$specs{'PocketSize'};
 		$width += $$specs{'PocketSize'};
@@ -713,7 +713,7 @@ my $master_time = gettimeofday();
 			$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 		} # end if
 $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
-	} elsif ( $$specs{'ProjectType'} eq 'PresentationFolders' ) {
+	} elsif ( $Project->Type()->name() eq 'PresentationFolders' ) {
 		if ( $$specs{'ddmProjectSize'} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
 # auto calc flat dimensions
@@ -932,7 +932,7 @@ $openprint::log->debug("Banners: $width != $$specs{txtWidth}");
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	if ( $$specs{'ProjectType'} eq 'PressSheetCombination' ) {
+	if ( $Project->Type()->name() eq 'PressSheetCombination' ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} # end if
 
@@ -1581,13 +1581,13 @@ $openprint::log->debug('blah'.$Paper->to_string());
 						foreach my $i ( @i ) {
 							my $i2 = $i->copy();
 							$i2->Paper()->width( $i2->used_width() ) if ! $i2->Paper()->width();
-							$Papers{$i2->Paper()->to_string()} = $i2->Paper() if ! $Papers{$i2->Paper()->to_string()};
+							$Papers{$i2->Paper()->to_string()} = $i2->Paper()->clone() if ! $Papers{$i2->Paper()->to_string()};
 							while ( $i2->columns() ) {
 								push @imps, $i2;
 								$i2 = $i2->copy();
 								$i2->columns( $i2->columns()-1 );
 								$i2->Paper()->width( $i2->used_width() );
-								$Papers{$i2->Paper()->to_string()} = $i2->Paper() if ! $Papers{$i2->Paper()->to_string()};
+								$Papers{$i2->Paper()->to_string()} = $i2->Paper()->clone() if ! $Papers{$i2->Paper()->to_string()};
 								openprint::imposition::check_setup( $i2, $project );
 								$i2->columns(0) if $Press->specification('Minimum Sheet Width') and ($i2->paper()->width() < $Press->specification('Minimum Sheet Width'));
 								$i2->columns(0) if $Press->specification('Minimum Roll Width') and ($i2->paper()->width() < $Press->specification('Minimum Roll Width'));
@@ -1617,7 +1617,7 @@ $openprint::log->debug('blah'.$Paper->to_string());
 							last if ! ( 
 									( $P->width() > $$specs{'txtWidth'} and $P->height() > $$specs{'txtHeight'} ) or ( $P->height() > $$specs{'txtHeight'} and $P->width() > $$specs{'txtWidth'} ) );
 							$P->cut();
-							$Papers{$P->to_string()} = $P if ! $Papers{$P->to_string()};
+							$Papers{$P->to_string()} = $P->clone() if ! $Papers{$P->to_string()};
 						} # end while
 					} # end if
 
@@ -1646,7 +1646,7 @@ $openprint::log->debug('blah'.$Paper->to_string());
 						last if ( ! $P->cuttable() );
 						$P = $P->clone();
 						$P->cut();
-						$Papers{$P->to_string()} = $P if ! $Papers{$P->to_string()};
+						$Papers{$P->to_string()} = $P->clone() if ! $Papers{$P->to_string()};
 					} # end while cutting it
 				} # end if Web or Sheet
 
@@ -2611,6 +2611,15 @@ $imp->display();
 				next; # next Impo
 			} # end if
 
+			my @paper_strings = keys %PaperCounts;
+			if ( 1 == @paper_strings and $imp->Paper()->to_string() ne $paper_strings[0] ) {
+$openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->to_string() );
+			} else {
+				foreach my $k ( @paper_strings ) {
+					$openprint::log->debug( $k);
+				} # end 
+			}
+
 			foreach my $paper_string ( keys %PaperCounts ) {
 				my $Paper = $Papers{$paper_string};
 				if ( ! $Paper ) {
@@ -2619,6 +2628,9 @@ $imp->display();
 						$log->error("$paper_string $Papers{$paper_string}");
 					} 
 					next;
+				} elsif ( $paper_string ne $Paper->to_string() ) {
+$openprint::log->error("Different paper in count versus imposition: $paper_string ne " . $Paper->to_string() );
+	
 				} # end if
 
 				if ( $Paper->full_packages() ) {
@@ -3964,6 +3976,8 @@ sub press_setup_cost {
 		} else {
 			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
 		} # end if
+	#} else{
+		#$log->debug("No Plate Make Ready for plates on " . $Press->strid() );
 	} # end if
 
 	$Price{'Unit Count'} = $setup_count;

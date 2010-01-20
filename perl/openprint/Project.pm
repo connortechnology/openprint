@@ -990,6 +990,10 @@ sub summary {
 				$summary .= $$printing_specs{'PageQuantity'} .= 'pg ';
 			} # end if
 
+			if ( $self->Type()->name() eq 'PresentationFolders' ) {
+				$summary .= $$printing_specs{'rdbPanels'} . ' Panel ' . $$printing_specs{'PocketSize'} . '&quot; ';
+			} # end if
+
 			if ( $$printing_specs{'txtTotalPageQuantity'} ) {
 				$summary .= sprintf( '%s&quot;x%s&quot; ', 1*$$printing_specs{'txtFinalWidth'},1*$$printing_specs{'txtFinalHeight'});
 				if ( $$printing_specs{'rdbCover'} eq 'Different' ) {
@@ -1433,6 +1437,7 @@ sub started_on {
 	my ( $self ) = @_;
 	return sql::execute( undef, undef, q{ SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
 } # end sub started_on
+
 sub takeover_on {
 	my ( $self ) = @_;
 	if ( ! $$self{'takeover_on'} ) {
@@ -1567,7 +1572,6 @@ sub Operator {
 	} # end if
     return $$self{'Operator'};
 } # end sub Operator
-
 
 1;
 __END__

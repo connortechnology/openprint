@@ -24,7 +24,7 @@ use vars qw($log $dbh %config);
 *config = \%openprint::config;
 
 my $r;
-$log = logger->new('debug');
+$log = logger->new('warn');
 
 $dbh = sql::open_sql( $log, 
 	'host'		=> $ARGV[0],
@@ -63,7 +63,7 @@ foreach my $session ( @session_ids ) {
 } # end foreach
 $log->warn("Deleted $deleted_session_count sessions");
 
-if ( 0 ) {
+if ( 1 ) {
 # Clean out uncalculated projects
 	my @Projects = openprint::Project::find(
 			'status'=>'uncalculated',
