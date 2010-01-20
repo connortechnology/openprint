@@ -444,6 +444,7 @@ sub save_Paper {
 			'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef,
 			'type'		=>	$param{'type'.$id},
 			'calliper'	=>	$param{'calliper'.$id},
+			'fsc_code'	=>	$param{'fsc_code'.$id},
 			);
 	my $Paper;
 
@@ -501,6 +502,10 @@ sub save_Paper {
 		} # end if
 		if ( ( ! $Paper->gsm() ) and $param{'gsm'.$id} ) {
 			$Paper->gsm( $param{'gsm'.$id} );
+			$changed = 1;
+		} # end if
+		if ( ( ! $Paper->fsc_code() ) and $param{'fsc_code'.$id} ) {
+			$Paper->fsc_code( $param{'fsc_code'.$id} );
 			$changed = 1;
 		} # end if
 		$Paper->save() if $changed;
