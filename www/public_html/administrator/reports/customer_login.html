@@ -87,8 +87,10 @@ Choose report criteria and click show results. You may the download the the resu
 			<label>Active?</label>
 			<input type="radio" id="rdbActiveY" name="rdbActive" value="Y" <? echo ( ssi::checked( $param{'rdbActive'} eq 'Y' ); ) ?> />
 			<label class="radio" for="rdbActiveY">Yes</label>
-			<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( ssi::checked( $param{'rdbActive'} ne 'Y' ); ) ?> />
+			<input type="radio" id="rdbActiveY" name="rdbActive" value="N" <? echo ( ssi::checked( $param{'rdbActive'} eq 'N' ); ) ?> />
 			<label class="radio" for="rdbActiveN">No</label>
+			<input type="radio" id="rdbActive" name="rdbActive" value="" <? echo ( ssi::checked( $param{'rdbActive'} eq '' ); ) ?> />
+			<label class="radio" for="rdbActive">Both</label>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',

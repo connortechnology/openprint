@@ -169,16 +169,16 @@ sub calc_setup_object {
 	if ( my $press_grain = $Press->specification('Grain', $Paper->gsm()) ) {
 		if ( $press_grain eq 'Long' ) {
 			if ( $Paper->grain_direction() ne $Paper->long() ) {
-				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")");
+				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")") if $debug;
 				return;
 			} # en dif
 		} elsif ( $press_grain eq 'Short' ) {
 			if ( $Paper->grain_direction() ne $Paper->short() ) {
-				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Short (".$Paper->short().")");
+				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Short (".$Paper->short().")") if $debug;
 				return;
 			} # en dif
 		} elsif ($press_grain ne $Paper->grain_direction() ) {
-			$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Press($press_grain)");
+			$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if $debug;
 			return;
 		} # end if
 	} # end if

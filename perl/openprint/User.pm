@@ -192,10 +192,10 @@ sub save {
 	} # end if
 
 	if ( exists $$params{'assistant_ids'} ) {
-		$self->assistant_ids( ref $$params{'assistant_ids'} eq 'ARRAY' ? @{$$params{'assistant_ids'}} : $$params{'assistant_ids'} );
+		$self->assistant_ids( $$params{'assistant_ids'} );
 	} # end if
 	if ( exists $$params{'csr_ids'} ) {
-		$self->csr_ids( ref $$params{'csr_ids'} eq 'ARRAY' ? @{$$params{'csr_ids'}} : $$params{'csr_ids'} );
+		$self->csr_ids( $$params{'csr_ids'} );
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 	return;
@@ -411,7 +411,7 @@ sub assistant_ids {
 	if ( @_ ) {
 		my $ac = sql::start_transaction( $dbh );
 		sql::execute( undef, undef, 'DELETE FROM Assistants WHERE csr_id=?', $$self{id} );
-		foreach ( @_ ) {
+		foreach ( ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_ ) {
 			sql::insert( undef, undef, 'Assistants', ['csr_id', $$self{id}, 'assistant_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
@@ -424,7 +424,7 @@ sub csr_ids {
 	if ( @_ ) {
 		my $ac = sql::start_transaction( $dbh );
 		sql::execute( undef, undef, 'DELETE FROM Assistants WHERE assistant_id=?', $$self{id} );
-		foreach ( @_ ) {
+		foreach ( ( @_ == 1 and ref $_[0] eq 'ARRAY' ) ? @{$_[0]} : @_ ) {
 			sql::insert( undef, undef, 'Assistants', ['assistant_id', $$self{id}, 'csr_id', $_] ) if $_;
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
