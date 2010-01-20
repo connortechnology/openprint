@@ -42,9 +42,7 @@ sub new {
 			$openprint::Object::cache{$parent}{$id} = $self;
 		} # end if
 	} # end if
-} # end if
-
-return $self;
+	return $self;
 } # end sub new
 
 sub load {
@@ -57,14 +55,13 @@ sub load {
 		return;
 	} # end if
 
-if ( ! $data ) {
-	$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 	if ( ! $data ) {
-		$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
+		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+		if ( ! $data ) {
+			$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
+		} # end if
 	} # end if
-
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end if
 
 } # end sub load
 

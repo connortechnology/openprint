@@ -375,27 +375,31 @@ if ( $version < 1381 ) {
 	$version = 1381;
 	
 }
-if ( $version < 1456 ) {
-	print "Updating to version 1456\n";
+if ( ! sets::isin( 'skids', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Skids.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} else {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skids LIMIT 1', {} );
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! $data ) {
-        $_ = misc::load_file( $log, q{../openprint/sql/Skids.sql});
-        foreach my $st ( split(';', $_ ) ) {
-            $dbh->do($st);
-        }
-	} else {
-	$dbh->do(q{alter table skids add updated_on timestamp with time zone default NOW()});
-	$dbh->do(q{update skids set updated_on=NOW()});
-	$dbh->do(q{alter table skids add updated_by INTEGER});
-	$dbh->do(q{update skids set updated_by=created_by_id});
-	$dbh->do(q{alter table skids alter updated_by SET NOT NULL});
-	$dbh->do(q{alter table skids ADD FOREIGN KEY (updated_by) REFERENCES Users (id)});
+	if ( $data ) {
+		if ( ! exists $$data{'type'} ) {
+			$dbh->do('alter table skids add type text');
+			$dbh->do('alter table skids add deleted boolean not null default false');
+		} # end if
+		if ( ! exists $$data{'updated_on'} ) {
+			$dbh->do(q{alter table skids add updated_on timestamp with time zone default NOW()});
+			$dbh->do(q{update skids set updated_on=NOW()});
+		} # endif
+		if ( ! exists $$data{'updated_by'} ) {
+			$dbh->do(q{alter table skids add updated_by INTEGER});
+			$dbh->do(q{update skids set updated_by=created_by_id});
+			$dbh->do(q{alter table skids alter updated_by SET NOT NULL});
+			$dbh->do(q{alter table skids ADD FOREIGN KEY (updated_by) REFERENCES Users (id)});
+		} # endif
 	} # end if
-	sql::insert( undef, undef, 'database_info', 'version', 1456, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1456;
 } # end if 1456
+
 if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	$dbh->do(q{alter table tbl_Service_Types rename column strid to name});
 	$dbh->do(q{alter table tbl_Service_Types rename column strname to description});
@@ -622,25 +626,6 @@ if ( $version < 1897 ) {
 	$version = 1897;
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM paper_inventory LIMIT 1', {} );
-if ( ! $data ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Paper_Inventory.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
-} else {
-	$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on}) if exists $$data{'updatetime'};
-	if ( ! exists $$data{'id'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do(q{alter table paper_inventory add id integer});
-		$dbh->do(q{create sequence paperinventory_id_seq});
-		$dbh->do(q{alter table paper_inventory alter id set default nextval('paperinventory_id_seq')});
-		$dbh->do(q{update paper_inventory set id=nextval('paperinventory_id_seq')});
-		$dbh->do(q{alter table paper_inventory alter id set not null});
-		$dbh->do(q{alter table paper_inventory add primary key(id)});
-		sql::end_transaction( $dbh, $ac );
-	} # end if
-} # end if
 if ( $version < 1898 ) {
 	print "Updating to version 1898\n";
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockPurposes LIMIT 1', {} );
@@ -738,8 +723,6 @@ if ( $version < 1901 ) {
 	sql::end_transaction( $dbh, $ac );
 	$version = 1901;
 } # end if
-
-
 
 if ( ! sets::isin( 'folds', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Folds.sql});
@@ -881,7 +864,6 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 		} # end if found
 	}  # end foreach Spec
 }
-
 
 
 my $FoldingService;
@@ -1239,6 +1221,12 @@ if ( ! $data ) {
 	} # end if
 	if ( ! exists $$data{'message'} ) {
 		$dbh->do(q`alter table papers add message text`);
+	} # end if
+	if ( ! exists $$data{'in_stock'} ) {
+		$dbh->do(q`alter table papers add in_stock integer`);
+	} # end if
+	if ( ! exists $$data{'parts'} ) {
+		$dbh->do(q`alter table papers add parts integer`);
 	} # end if
 } # end if
 foreach my $Paper ( openprint::Paper::find() ) {
@@ -1913,27 +1901,34 @@ if ( $data ) {
 		$dbh->do('alter table users add notes text');
 	} # end if
 } # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Skids LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{'type'} ) {
-		$dbh->do('alter table skids add type text');
-		$dbh->do('alter table skids add deleted boolean not null default false');
-	} # end if
-} # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Paper_Inventory LIMIT 1', {} );
-if ( ! $data ) {
+
+if ( ! sets::isin( 'paper_inventory', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Paper_Inventory.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
-	}
+	} # end foreach
 } else {
-	if ( ! exists $$data{'docket'} ) {
-		$dbh->do('alter table paper_inventory add docket integer');
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM paper_inventory LIMIT 1', {} );
+	if ( $data ) {
+		$dbh->do(q{alter table paper_inventory rename column updatetime to updated_on}) if exists $$data{'updatetime'};
+		if ( ! exists $$data{'id'} ) {
+			my $ac = sql::start_transaction( $dbh );
+			$dbh->do(q{alter table paper_inventory add id integer});
+			$dbh->do(q{create sequence paperinventory_id_seq});
+			$dbh->do(q{alter table paper_inventory alter id set default nextval('paperinventory_id_seq')});
+			$dbh->do(q{update paper_inventory set id=nextval('paperinventory_id_seq')});
+			$dbh->do(q{alter table paper_inventory alter id set not null});
+			$dbh->do(q{alter table paper_inventory add primary key(id)});
+			sql::end_transaction( $dbh, $ac );
+		} # end if
+		if ( ! exists $$data{'docket'} ) {
+			$dbh->do('alter table paper_inventory add docket integer');
+		} # end if
 	} # end if
+	#foreach my $PI ( openprint::PaperInventory::find('docket'=>undef) ) {
+		#$PI->save() if $PI->docket();
+	#} # end foreach
 } # end if
-foreach my $PI ( openprint::PaperInventory::find('docket'=>undef) ) {
-	$PI->save() if $PI->docket();
-} # end foreach
 
 if ( ! sets::isin( 'taxes', \@tables ) ) {
 } else {
@@ -1950,7 +1945,10 @@ if ( ! sets::isin( 'taxes', \@tables ) ) {
 		} # end if
 		if ( ! exists $$data{'id'} ) {
 			$dbh->do( 'ALTER TABLE Taxes add id SERIAL' );
-			$dbh->do( 'ALTER TABLE Taxes DROP Constraint taxes_pkey' );
+			( $_ ) = sql::execute( undef, undef, "SELECT EXISTS ( SELECT * FROM information_schema.table_constraints WHERE constraint_name='taxes_pkey' AND table_name='taxes' ) " );
+			if ( $_ ) {
+				$dbh->do( 'ALTER TABLE Taxes DROP Constraint taxes_pkey');
+			} # end if
 			$dbh->do( 'ALTER TABLE Taxes add PRIMARY KEY(id)' );
 		} # end if
 	} # end if
