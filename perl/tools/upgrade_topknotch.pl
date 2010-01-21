@@ -58,9 +58,6 @@ if ( $year ) {
 print "upgrading db ...";
 `./db_update.pl $dst_db topknotch topknotch` or $log->error($!);
 print "done\n";
-print "upgrading signatures...";
-`/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db >> /tmp/db_update.log` or $log->error($!);
-print "done\n";
 print "Add PayPal info...";
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>$dst_db, 'password'=>$dst_db, 'host'=>$ARGV[3]) );
 configuration::init_cache( $log, $dbh );
@@ -92,6 +89,9 @@ $PayPal->save({'name'=>'PayPal','description'=>'PayPal'});
 
 $dbh->do("DELETE FROM Taxes WHERE state != 'ON'");
 
+print "upgrading signatures...";
+`/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db >> /tmp/db_update.log` or $log->error($!);
+print "done\n";
 $dbh->disconnect();
 1;
 __END__

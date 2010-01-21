@@ -54,6 +54,27 @@
 
 <div id="website-masthead">
 	<a class="Logo" href="/"><img src="/images/topknotch.gif" width="220" height="90" border="0" alt="Topknotch Print &amp; Prep" /></a>
+		<div id="CurrencySelection">
+			<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
+				<select name="select_currency_id" onchange="this.form.submit();">
+					<? echo (
+						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
+					) ?>
+				</select>
+			</form>
+		</div>
+	<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+		<div id="CompanySelection">
+			<form name="SelectCompany" action="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>'ddmCompany' } ); ) ?>" method="post">
+				<input name="CompanyFilter" type="text" style="width: auto;" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4"/>
+				<select name="ddmCompany" onchange="if(this.options[this.selectedIndex].value != '') this.form.submit();">
+				<option value="">Select a Company</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'company_id'} );) ?>
+				</select>
+				<input type="hidden" name="btnFunction" value="SelectCompany" />
+			</form>
+		</div>
+	<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 	<ul>
 		<? if ( $session{'user_id'} ) ?>
 		<li><a href="/account/user_profile.html" title="ACCOUNT"><img src="/images/account-icon.gif" alt=""/>ACCOUNT</a></li>

@@ -7,7 +7,7 @@ require openprint::logAction;
 use strict;
 
 my $debug = 1;
-use vars qw( $log $dbh $table $serial %fields %tansforms %defaults );
+use vars qw( $log $dbh $table $serial %fields %tansforms %defaults %types );
 $table = 'log';
 $serial = 'log_id_seq';
 %fields = (
@@ -18,6 +18,14 @@ $serial = 'log_id_seq';
 	'company_id'	=>	'company_id',
 	'date_time'		=>	'date_time',	
 	'action_type'	=>	'action_type',
+	'note'			=>	'note',
+);
+
+%types = (
+2	=> 'Successful Login',
+3	=>	'Logout', 
+78	=>	'Failed Login',
+79	=> '',
 );
 
 sub find {
@@ -107,5 +115,6 @@ sub hostname {
 	} # end if
 	return $$self{'hostname'} ? $$self{'hostname'} : $$self{'ip_address'};
 } # end sub hostname
+
 1;
 __END__
