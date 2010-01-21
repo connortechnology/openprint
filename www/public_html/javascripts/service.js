@@ -1,4 +1,5 @@
 var timeout;
+var block_calc = false;
 
 function body_onLoad() {
 	if ( typeof(selectProjectTemplate) == 'function' ) {
@@ -9,6 +10,7 @@ function body_onLoad() {
 }
 
 function calc( formName, force ) {
+	if ( block_calc ) return;
 	var form = getFormObj( formName );
 	if ( form && form.ServiceType ) {
 		if ( gettingNewPrice && ! force ) {
@@ -28,6 +30,7 @@ function calc( formName, force ) {
 } // end calc()
 
 function cbFillResults( results ) {
+	block_calc = true;
     var form = getFormObj('f1');
 	$('AlertDiv').hide();
 	if ( $('InformationDiv') )
@@ -115,6 +118,7 @@ function cbFillResults( results ) {
 		} // end if
 	} // end for each 
     gettingNewPrice = false;
+	block_calc = false;
 } // end function cbFillResults
 
 function addService( formName, service ) {

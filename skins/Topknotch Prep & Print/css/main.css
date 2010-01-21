@@ -6,32 +6,6 @@ body {
 	min-width: 980px;
 }
 
-#Header {
-	margin: 0px;
-	margin-left: auto;
-	margin-right: auto;
-	padding-top: 2px;
-	padding-bottom: 2px;
-}
-#Header .Content {
-	padding: 5px;
-}
-#Header IMG.Logo {
-	border: none;
-	height: 80px;
-	margin-left: 5px;
-}
-
-#Footer {
-		background-color: maroon;
-		font-weight: bold;
-	margin: 0px;
-margin-top: 10px;
-		color: white;
-	} 
-#Footer a {
-	color: white;
-}
 @media print {
 	.Menu {
 		display: none;
@@ -321,5 +295,5 @@ div.Printing:after {
 
 .Printing .ProjectType a:hover, .Printing .ProjectType a:link:active {
     background: url(/images/btn-printing.png) no-repeat 0 -21px;
-    }
+}
 

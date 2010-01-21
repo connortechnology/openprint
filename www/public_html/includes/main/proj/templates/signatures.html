@@ -1,5 +1,4 @@
 <div class="templates">
-<? eval ( $log->debug("Template: " . $$variable{'rdbTemplateType'.$$variable{'Signature'}} ) ) ?>
     <p>
 		<img src="/images/templates/2PanelFold.gif" alt="2 Panel Fold"/>
 		<input type="radio" id="rdbTemplateType4PageSignatureFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="4PageSignatureFold" onclick="$('PresentationFolderQuestions').hide();" <? echo ( ($$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '4PageSignatureFold' or $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq  '' ) ? 'checked="checked"' : '' ) ?> />
