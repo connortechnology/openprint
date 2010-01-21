@@ -2114,7 +2114,6 @@ if ( ! sets::isin( 'employeenumbers', \@tables ) ) {
 	} # end if
 } # end if
 
-
 if ( ! sets::isin( 'schedule', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Schedule.sql});
 	foreach my $st ( split(';', $_ ) ) {

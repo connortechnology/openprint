@@ -379,6 +379,15 @@ thead th {
 	}
 
 #website-masthead A.Logo {
+	float: left;
+}
+div#CurrencySelection {
+	float: left;
+	margin: 2px;
+}
+div#CompanySelection {
+	float: left;
+	margin: 2px;
 }
 #website-masthead li img {
 	margin-right: 10px;
@@ -390,7 +399,7 @@ thead th {
 	display: inline;
 	padding: 0px;
 	margin: 0px;
-	margin-top: 70px;
+	margin-top: 17px;
 	}
 
 #website-masthead li {

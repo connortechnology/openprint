@@ -90,7 +90,7 @@ sub calc_price {
 
 	if ( $$specs{'rdbSuppliedDie-'.$$sig_specs{'SignatureIndex'}} eq 'Y' ) {
 		# if customer is supplying die, then there is no die cost.
-		$log->debug(" ** Customer is Supplying Die ** ");
+		#$log->debug(" ** Customer is Supplying Die ** ");
 	} else { 
 		if ( $$sig_specs{'rdbTemplateType'} ) {
 # check for a standard die.
@@ -139,6 +139,12 @@ sub calc_price {
 
 	# Why 1.28, overs I assume
 	my $impressions = ceil($$specs{"txtQuantity$qty_index"} / $imposition);
+	
+	if ( my $Overs = $Equipment->Specification('DieCutting Overs') ) {
+		if ( $$Overs{'units'} eq 'Percent' ) {
+			$impressions = int( $impressions * ( 1 + ($$Overs{'value'}/100) ) );
+		} # end if
+	} # end if
 	$Total{'Impressions'} = $impressions;
 
 	if ( $$specs{'OverrideStrippingPrice'} ne 'Y' ) {

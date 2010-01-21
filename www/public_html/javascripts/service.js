@@ -1,4 +1,5 @@
 var timeout;
+var block_calc = false;
 
 function body_onLoad() {
 	if ( typeof(selectProjectTemplate) == 'function' ) {
@@ -9,6 +10,7 @@ function body_onLoad() {
 }
 
 function calc( formName, force ) {
+	if ( block_calc ) return;
 	var form = getFormObj( formName );
 	if ( form && form.ServiceType ) {
 		if ( gettingNewPrice && ! force ) {
@@ -28,6 +30,7 @@ function calc( formName, force ) {
 } // end calc()
 
 function cbFillResults( results ) {
+	block_calc = true;
     var form = getFormObj('f1');
 	$('AlertDiv').hide();
 	if ( $('InformationDiv') )
@@ -70,23 +73,38 @@ function cbFillResults( results ) {
 				ddm_select_by_value( element, value, -1 );
 			} else if ( element.type == 'checkbox' ) {
 				if ( element.value == value ) {
-					element.checked = true;
+					if ( ! element.checked ) {
+						element.checked = true;
+						if ( element.onchange ) element.onchange();
+					} // endif
 				} else {
-					element.checked = false;
+					if ( element.checked ) {
+						element.checked = false;
+						if ( element.onchange ) element.onchange();
+					} // endif
 				} // end if
 			} else if ( element.type == 'radio' ) {
 			} else if ( element.type == 'text' ) {
+				if ( element.value != value ) {
 				if ( ! element.gotFocus )
 					element.value = value;
+					if ( element.onchange ) element.onchange();
+				} // end if
 			} else if ( element.type == 'hidden' ) {
 				element.value = value;
-			} else {
+			} else if ( element.length ) {
 				var elements = element;
 				for ( var j=0; j < elements.length; j += 1 ) {
 					if ( elements[j].value == value ) {
-						elements[j].checked = true;
+						if ( ! elements[j].checked ) {
+							elements[j].checked = true;
+							if ( elements[j].onchange ) { elements[j].onchange(); }
+						} // endif
 					} else {
-						elements[j].checked = false;
+						if ( elements[j].checked ) {
+							elements[j].checked = false;
+							if ( elements[j].onchange ) { elements[j].onchange(); }
+						} // endif
 					} // end if
 				} // end for
 			} // end if
@@ -100,6 +118,7 @@ function cbFillResults( results ) {
 		} // end if
 	} // end for each 
     gettingNewPrice = false;
+	block_calc = false;
 } // end function cbFillResults
 
 function addService( formName, service ) {
