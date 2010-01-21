@@ -60,7 +60,7 @@ if ( $year ) {
 
 } # end if
 
-`chmod +x $lib_path/perl/tools/db_update.pl`;
+`chmod +x $lib_path/tools/db_update.pl`;
 print "upgrading structures 2...";
 `$lib_path/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
 print "upgrading signatures...";
