@@ -2093,7 +2093,7 @@ if ( ! sets::isin( 'employeenumbers', \@tables ) ) {
 	} # end if
 } # end if
 
-if ( sets::isin( 'tbl_Equipment', \@tables ) ) {
+if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
 	if ( $data ) {
 		if ( ! exists $$data{'location_id'} ) {
@@ -2101,7 +2101,7 @@ if ( sets::isin( 'tbl_Equipment', \@tables ) ) {
 			$dbh->do('ALTER TABLE tbl_Equipment ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
 		} # end if
 		if ( exists $$data{'lngindex'} ) {
-			$dbh->do('ALTER TABLE tbl_Equipment rename  column lngindex to id;');
+			$dbh->do('ALTER TABLE tbl_Equipment rename column lngindex to id;');
 		} # end if
 		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_in TEXT') if ! exists $$data{'cip3_in'};
 		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_out TEXT') if ! exists $$data{'cip3_out'};
