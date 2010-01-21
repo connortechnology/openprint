@@ -70,23 +70,38 @@ function cbFillResults( results ) {
 				ddm_select_by_value( element, value, -1 );
 			} else if ( element.type == 'checkbox' ) {
 				if ( element.value == value ) {
-					element.checked = true;
+					if ( ! element.checked ) {
+						element.checked = true;
+						if ( element.onchange ) element.onchange();
+					} // endif
 				} else {
-					element.checked = false;
+					if ( element.checked ) {
+						element.checked = false;
+						if ( element.onchange ) element.onchange();
+					} // endif
 				} // end if
 			} else if ( element.type == 'radio' ) {
 			} else if ( element.type == 'text' ) {
+				if ( element.value != value ) {
 				if ( ! element.gotFocus )
 					element.value = value;
+					if ( element.onchange ) element.onchange();
+				} // end if
 			} else if ( element.type == 'hidden' ) {
 				element.value = value;
-			} else {
+			} else if ( element.length ) {
 				var elements = element;
 				for ( var j=0; j < elements.length; j += 1 ) {
 					if ( elements[j].value == value ) {
-						elements[j].checked = true;
+						if ( ! elements[j].checked ) {
+							elements[j].checked = true;
+							if ( elements[j].onchange ) { elements[j].onchange(); }
+						} // endif
 					} else {
-						elements[j].checked = false;
+						if ( elements[j].checked ) {
+							elements[j].checked = false;
+							if ( elements[j].onchange ) { elements[j].onchange(); }
+						} // endif
 					} // end if
 				} // end for
 			} // end if
