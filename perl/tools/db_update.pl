@@ -167,6 +167,9 @@ if ( $data ) {
 		$dbh->do(q`alter table Users add quote_level integer`);
 		$dbh->do(q`alter table Users add foreign key (quote_level) REFERENCES QuoteLevels (id)`);
 	} # end if
+	if ( ! exists $$data{'notes'} ) {
+		$dbh->do('alter table users add notes text');
+	} # end if
 } # end if
 if ( sets::isin( 'users_index_seq', \@sequences ) ) {
 	$dbh->do('DROP SEQUENCE users_index_seq');
@@ -272,6 +275,31 @@ if ( $data ) {
 	} # end if
 } else {
 	$log->debug( 'No Companies found.' );
+} # end if
+
+if ( sets::isin( 'tbl_equipment', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
+	if ( $data ) {
+		if ( ! exists $$data{'location_id'} ) {
+			$dbh->do('ALTER TABLE tbl_Equipment ADD location_id INTEGER');
+			$dbh->do('ALTER TABLE tbl_Equipment ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
+		} # end if
+		if ( exists $$data{'lngindex'} ) {
+			$dbh->do('ALTER TABLE tbl_Equipment rename  column lngindex to id;');
+		} # end if
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_in TEXT') if ! exists $$data{'cip3_in'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_out TEXT') if ! exists $$data{'cip3_out'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_hold TEXT') if ! exists $$data{'cip3_hold'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_merge TEXT') if ! exists $$data{'cip3_merge'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_monitor TEXT') if ! exists $$data{'cip3_monitor'};
+		$dbh->do('ALTER TABLE tbl_Equipment ADD smartscheduling BOOLEAN default false') if ! exists $$data{'smartscheduling'};
+		if ( ! exists $$data{'jdf_name'} ) {
+			$dbh->do(q`alter table tbl_equipment add jdf_name text`);
+		} # end if
+		if ( ! exists $$data{'jdf_id'} ) {
+			$dbh->do(q`alter table tbl_equipment add jdf_id text`);
+		} # end if
+	} # end if
 } # end if
 
 if ( $version < 1275 ) {
@@ -1194,6 +1222,32 @@ if ( ! sets::isin( 'stockgroups', \@tables ) ) {
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
+$log->debug("ProjectTypes");
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Project_Types LIMIT 1', {} );
+if ( $data ) {
+	if ( exists $$data{'lngindex'} ) {
+		$dbh->do('ALTER TABLE Project_Types rename column lngindex to id');
+		$dbh->do('ALTER TABLE Project_Types rename column strid to name');
+		$dbh->do('ALTER TABLE Project_Types rename column strname to description');
+		$dbh->do('ALTER TABLE Project_Types rename column strdetailedurl to url');
+		$dbh->do('ALTER TABLE Project_Types rename column lngsort to sorting');
+		$dbh->do('CREATE SEQUENCE Project_Types_id_seq');
+		$dbh->do(q`SELECT setval('project_types_id_seq', (SELECT MAX(id) FROM PRoject_Types))` );
+		$dbh->do(q`DROP SEQUENCE IF EXISTS ProjectTypeIndex` );
+	} # end if
+	if ( exists $$data{'strbasicurl'} ) {
+		$dbh->do('ALTER TABLE Project_Types drop strbasicurl');
+	}
+	if ( exists $$data{'strtemplateurl'} ) {
+		$dbh->do('ALTER TABLE Project_Types drop strtemplateurl');
+	}
+} else {
+	$_ = misc::load_file( $log, q{../openprint/sql/Project_Types.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+} # end if
+
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Papers LIMIT 1', {} );
 if ( ! $data ) {
 } else {
@@ -1276,30 +1330,6 @@ if ( sets::isin( 'projecttype_categories', \@tables ) ) {
 	} # end if
 } else {
 	$_ = misc::load_file( $log, q{../openprint/sql/ProjectType_Categories.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	}
-} # end if
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Project_Types LIMIT 1', {} );
-if ( $data ) {
-	if ( exists $$data{'lngindex'} ) {
-		$dbh->do('ALTER TABLE Project_Types rename column lngindex to id');
-		$dbh->do('ALTER TABLE Project_Types rename column strid to name');
-		$dbh->do('ALTER TABLE Project_Types rename column strname to description');
-		$dbh->do('ALTER TABLE Project_Types rename column strdetailedurl to url');
-		$dbh->do('ALTER TABLE Project_Types rename column lngsort to sorting');
-		$dbh->do('CREATE SEQUENCE Project_Types_id_seq');
-		$dbh->do(q`SELECT setval('project_types_id_seq', (SELECT MAX(id) FROM PRoject_Types))` );
-		$dbh->do(q`DROP SEQUENCE IF EXISTS ProjectTypeIndex` );
-	} # end if
-	if ( exists $$data{'strbasicurl'} ) {
-		$dbh->do('ALTER TABLE Project_Types drop strbasicurl');
-	}
-	if ( exists $$data{'strtemplateurl'} ) {
-		$dbh->do('ALTER TABLE Project_Types drop strtemplateurl');
-	}
-} else {
-	$_ = misc::load_file( $log, q{../openprint/sql/Project_Types.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
@@ -1835,34 +1865,24 @@ if ( $data ) {
 	} # end if
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM EmailCampaigns LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'emailcampaigns', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
 } 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM EmailTemplates LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'emailtemplates', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/EmailTemplates.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
 } 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Surveys LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'surveys', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Surveys.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
 } 
-
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM users LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{'notes'} ) {
-		$dbh->do('alter table users add notes text');
-	} # end if
-} # end if
 
 if ( ! sets::isin( 'paper_inventory', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Paper_Inventory.sql});
@@ -1932,7 +1952,8 @@ if ( ! sets::isin( 'invoiced_products', \@tables ) ) {
 		$dbh->do('ALTER TABLE Invoiced_Products add description text');
 	} # end if
 } # end if
-if ( ! sets::isin( 'manifest_content_types', @tables ) ) {
+
+if ( ! sets::isin( 'manifest_content_types', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Manifest_Content_Types.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
@@ -2093,31 +2114,6 @@ if ( ! sets::isin( 'employeenumbers', \@tables ) ) {
 	} # end if
 } # end if
 
-if ( sets::isin( 'tbl_equipment', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMIT 1', {} );
-	if ( $data ) {
-		if ( ! exists $$data{'location_id'} ) {
-			$dbh->do('ALTER TABLE tbl_Equipment ADD location_id INTEGER');
-			$dbh->do('ALTER TABLE tbl_Equipment ADD FOREIGN KEY (location_id) REFERENCES Locations (id)');
-		} # end if
-		if ( exists $$data{'lngindex'} ) {
-			$dbh->do('ALTER TABLE tbl_Equipment rename column lngindex to id;');
-		} # end if
-		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_in TEXT') if ! exists $$data{'cip3_in'};
-		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_out TEXT') if ! exists $$data{'cip3_out'};
-		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_hold TEXT') if ! exists $$data{'cip3_hold'};
-		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_merge TEXT') if ! exists $$data{'cip3_merge'};
-		$dbh->do('ALTER TABLE tbl_Equipment ADD cip3_monitor TEXT') if ! exists $$data{'cip3_monitor'};
-		$dbh->do('ALTER TABLE tbl_Equipment ADD smartscheduling BOOLEAN default false') if ! exists $$data{'smartscheduling'};
-		if ( ! exists $$data{'jdf_name'} ) {
-			$dbh->do(q`alter table tbl_equipment add jdf_name text`);
-		} # end if
-		if ( ! exists $$data{'jdf_id'} ) {
-			$dbh->do(q`alter table tbl_equipment add jdf_id text`);
-		} # end if
-	} # end if
-} # end if
-
 if ( ! sets::isin( 'schedule', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Schedule.sql});
 	foreach my $st ( split(';', $_ ) ) {
@@ -2223,56 +2219,6 @@ if ( ! sets::isin( 'claim_contents', \@tables ) ) {
 	} # end foreach
 } # end if
 
-if ( $version < 1902 ) {
-	print "Updating to version 1902\n";
-	my $ac = sql::start_transaction( $dbh );
-	my @projects;
-	push @projects, openprint::Project::find( 'order'=>'id desc', 'created_on_start'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -10 ) ) );
-
-	foreach my $Project ( @projects ) {
-		my $services = $Project->services();
-		foreach my $sig_id ( $Project->signatures() ) {
-
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-			#if ( ! exists $$sig_specs{'Group'} ) {
-			if ( $$sig_specs{'txtSignatureType'} ) {
-				if ( $$sig_specs{'txtSignatureType'} eq 'Cover Spreads' ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Cover Pages' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '1' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
-			
-				} elsif ( $$sig_specs{'txtSignatureType'} eq 'Interior Spreads' ) {
-					my $p_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-
-				
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'txtSignatureType', 'Interior Pages' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '2' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', $$p_specs{'txtInteriorSpreadQuantity'} * $$sig_specs{'txtSpreadSize'} );
-				} else {
-					# Gate Fold?
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Group', '3' );
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'GroupPageQuantity', '4' );
-				} # end if
-			} # end if
-
-			foreach my $qty_index ( 1 .. 3 ) {
-				if ( $$sig_specs{'chkOverrideSignatureSpreadQuantity'.$qty_index} eq 'Y' and $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
-					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkOverridePageQuantity'.$qty_index, 'Y' );
-					if ( ! $$sig_specs{'PageQuantity'.$qty_index} ) {
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'PageQuantity'.$qty_index, $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} * $$sig_specs{'txtSpreadSize'} );
-					} # end if
-					openprint::service::delete_service_spec( $Project->id(), $sig_id, 'chkOverrideSignatureSpreadQuantity'.$qty_index );
-				} # end if
-				openprint::service::delete_service_spec( $Project->id(), $sig_id, 'txtSignatureSpreadQuantity'.$qty_index );
-		
-			} # end foreach qty_index
-			#} # end if
-		} # end foreach
-	} # end foreach
-	sql::insert( undef, undef, 'database_info', 'version', 1902, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
-	$version = 1902;
-} # end if
 if ( $version < 1907 ) {
 	print "Updating to version 1907\n";
 	my $ac = sql::start_transaction( $dbh );
