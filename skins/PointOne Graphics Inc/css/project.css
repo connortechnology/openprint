@@ -44,13 +44,17 @@ div.ProjectHeader fieldset#Description {
     width: 47%;
 }
 
-
-div.ProjectHeader fieldset p {
+div.ProjectHeader fieldset ul {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+div.ProjectHeader fieldset li {
     text-align: right;
     padding: 0px;
     margin: 0px;
 }
-div.ProjectHeader fieldset p label {
+div.ProjectHeader fieldset li label {
     margin: 0px;
     padding: 0px;
     float: left;
