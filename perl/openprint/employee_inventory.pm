@@ -343,7 +343,7 @@ sub paper_details {
 			$Paper->height( $param{'height'} );
 		} # end if
 		$Paper->mweight( $param{'mweight'} );
-		$Paper->basis_weight( $param{'basis_weight'} ) if exists $param{'basis_weight'};
+		$Paper->basis_mweight( $param{'basis_weight'} ) if exists $param{'basis_weight'};
 		$Paper->basis_width( $param{'basis_width'} ) if exists $param{'basis_width'};
 		$Paper->basis_height( $param{'basis_height'} ) if exists $param{'basis_height'};
 		$Paper->gsm( $param{'gsm'} );
@@ -474,7 +474,7 @@ sub save_Paper {
 			$Paper->height( $param{'height'.$id} );
 		} # end if
 		if ( $weight =~ /^([\d\.]+)lb$/ ) {
-			$Paper->basis_weight( $1 * 2 );
+			$Paper->basis_mweight( $1 * 2 );
 		} # end if
 		$Paper->calliper( $param{'calliper'.$id} );
 		$Paper->mweight( $param{'mweight'.$id} );
@@ -488,8 +488,8 @@ sub save_Paper {
 		$Paper = shift @papers;
 		my $changed = 0;
 # This is so that papers that don't have mweights will get filled in
-		if ( ( ! $Paper->basis_weight() ) and $param{'weight'.$id} ) {
-			$Paper->basis_weight( $param{'weight'.$id} * 2 );
+		if ( ( ! $Paper->basis_mweight() ) and $param{'weight'.$id} ) {
+			$Paper->basis_mweight( $param{'weight'.$id} * 2 );
 			$changed = 1;
 		} # end if
 		if ( ( ! $Paper->calliper() ) and $param{'calliper'.$id} ) {
@@ -743,15 +743,11 @@ sub skid_details {
 			last if ! $qty;
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'DeletePaper' ) {
-		foreach my $skid_id ( @skid_ids ) {
-			my $Skid = new openprint::Skid( $skid_id );
-			foreach my $C ( $Skid->Contents() ) {
-				if ( $C->paper_id() == $param{'paper_id'} ) {
-					$C->delete();
-				} # end if
-			} # end foreach C
-			delete $$Skid{'Contents'};
-		} # end foreach
+		my $C = new openprint::SkidContent($param{'content_id'});
+		my $PI = new openprint::PaperInventory();
+		$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$C->paper_id(), 'comment'=>'Deleted from skid.'});
+		$variable{'error'} .= $C->delete();
+		delete $$Skid{'Contents'};
 	} # end if
 
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
@@ -1252,6 +1248,27 @@ sub manifest {
 					$variable{'error'} .= 'Unable to get Stock.<br/>';
 					next;
 				} # end if
+
+				# If there is a change of paper in the type, then go through each skid and update them, nicluding allocations, and add a log entry so we know that it happened.
+				if ( $Type->paper_id() and ( $Type->paper_id() != $Paper->id() ) ) {
+					$variable{'information'} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
+					foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
+						foreach my $SkidContent ( $C->Skid()->Contents() ) {
+							if ( $SkidContent->paper_id() == $Type->paper_id() ) {
+								$SkidContent->save({'paper_id'=>$Paper->id()});
+								foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
+									$PA->save({'paper_id'=>$Paper->id()});
+								} # end foreach PA
+								my $PI = new openprint::PaperInventory();
+								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								
+							} # end if
+						} # end foreach SkidContent
+					} # end foreach C
+					$Paper->save();
+					$Type->Paper()->save();
+				} # end if
+
 				my %data = (
 					'docket'	=>	$param{'docket-'.$Type->id()},
 					'paper_id'	=>	$Paper->id(),

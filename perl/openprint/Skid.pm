@@ -185,6 +185,7 @@ sub add {
 
 	my $C = $self->Content( $Paper );
 	if ( ! $C ) {
+		delete $$self{'Contents'};
 		$C = new openprint::SkidContent();
 		$C->skid_id( $$self{'id'} );	
 		$C->paper_id( $Paper->id() );
