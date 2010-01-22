@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 use strict;
@@ -3203,9 +3203,8 @@ sub compare_signatures_runstyle {
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
 		foreach my $key ( 'ddmRunStyle', 'ddmPress','txtSignatureSpreadQuantity' ) {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
-				#$openprint::log->debug("Not the same $key $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
+				$openprint::log->debug("Compare_signatures not equal due to $key$q_i $$sig1{$key.$q_i} ne $$sig2{$key.$q_i}") if $debug;
 				return 0;
-
 			} # end if
 		} # end if
 	} # end foreach q_i
@@ -3234,8 +3233,8 @@ sub compare_signatures_runstyle {
 			'rdbAqueousSideTwo',
 			'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','ddmBleedSize',
 			) {
-				if ($$sig1{$key} ne $$sig2{$key} ) {
-#$openprint::log->debug("Not the same $key");
+				if ( $$sig1{$key} ne $$sig2{$key} ) {
+					$openprint::log->debug("Compare_signatures not equal due to $key $$sig1{$key} ne $$sig2{$key}") if $debug;
 					return 0;
 				} # end if
 			} # end foreach
@@ -3252,7 +3251,10 @@ sub compare_signatures {
 			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
 			'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
-		return 0 if $$sig1{$key} ne $$sig2{$key};
+		if ( $$sig1{$key} ne $$sig2{$key} ) {
+$openprint::log->debug("Compare_signatures not equal due to $key $$sig1{$key} ne $$sig2{$key}") if $debug;
+			return 0;
+		} # end if
 	} # end foreach
 
 	return 1;

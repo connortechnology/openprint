@@ -85,9 +85,15 @@ sub find {
     } elsif ( $params{'starttime_start'} ) {
         $sql .= ' AND starttime >= ?';
         push @values, $params{'starttime_start'};
+    } elsif ( $params{'starttime_>='} ) {
+        $sql .= ' AND starttime >= ?';
+        push @values, $params{'starttime_>='};
     } elsif ( $params{'starttime_end'} ) {
         $sql .= ' AND starttime <= ?';
         push @values, $params{'starttime_end'};
+    } elsif ( $params{'starttime_<='} ) {
+        $sql .= ' AND starttime <= ?';
+        push @values, $params{'starttime_<='};
     } elsif ( $params{'starttime_<'} ) {
         $sql .= ' AND starttime < ?';
         push @values, $params{'starttime_<'};
@@ -322,7 +328,8 @@ sub get {
 
 sub Next {
 	my ( $self ) = @_;
-	my $Next = find_one('starttime_>' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
+	my $Next = find_one('starttime_>=' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
+$log->debug( $Next->to_string() );
 	if ( ! $Next ) {
 		my $ES = openprint::Equipment_Shift::find_one(
 				'equipment_id'      =>  $$self{'equipment_id'},

@@ -275,15 +275,21 @@
 						} while ( $NextES and ( $Shift->endtime_seconds() < $tomorrow ) );
 					} # end if
 				} # end if
-if ( @Shifts > 5 ) {
-$log->debug("Shifts: " . @Shifts );
-} else {
-
+				# Remove duplicates
+				for ( my $i = 0; $i < @Shifts; $i += 1 ) {
+					for ( my $j = $i+1; $j < @Shifts; $j += 1 ) {
+						if ( $Shifts[$i]->ul_id() eq $Shifts[$j]->ul_id() ) {
+$log->error("Removing duplicate shift");
+							splice @Shifts, $j, 1;
+							$j -= 1;
+						} # end if
+					} # end for j
+				} # end for
 				foreach my $Shift ( @Shifts ) {	
 					push @{$$variable{'drops'}}, $Shift->ul_id();
 					$html .= $Shift->get_ul( );
 				} # end foreach Shift
-}
+
 				( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
             } # end foreach delta day
 

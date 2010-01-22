@@ -104,20 +104,14 @@ sub set_comment {
 	my $Job = new openprint::ScheduledJob( $schedule_id );
 	openprint::service::insert_service_spec( $log, $dbh, @$Job{'project_id','service_id'}, 'txtEmployeeComments', $comment );
 } # end sub set_comment
+
 sub set_duedate {
-	my ( $r, $log, $dbh, $variable, $service_index, $date ) = @_;
-	my ( $project_index ) = sql::execute( $log, $dbh, q{SELECT ProjectIndex FROM Schedule WHERE ServiceIndex=?}, $service_index );
-	if ( ! $project_index ) {
-		( $project_index ) = sql::execute( $log, $dbh, q{SELECT lngProjectIndex FROM tbl_Project_Contents WHERE lngServiceIndex=?}, $service_index );
-	} # end if
-	if ( $project_index ) {
-		my $Project = new openprint::Project( $project_index );
-		$Project->due_date( $date );
-		$Project->save();
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
-	} else {
-		$log->error("Unable to find Project for service index $service_index on Schedule");
-	}  # end if
+	my ( $r, $log, $dbh, $variable, $schedule_id, $date ) = @_;
+	my $Job = new openprint::ScheduledJob( $schedule_id );
+	my $Project = $Job->Project();
+	$Project->due_date( $date );
+	$Project->save();
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
 } # end sub set_duedate
 
 sub insert {

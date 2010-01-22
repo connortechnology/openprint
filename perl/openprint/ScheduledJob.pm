@@ -39,6 +39,12 @@ $serial = 'schedule_id_seq';
 
 %defaults = (
 );
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 
 sub find {
 	my %params = @_;
@@ -294,19 +300,19 @@ sub get_li {
     my $Equipment = new openprint::Equipment($$self{'equipment_id'});
 
 	my $impressions = 0;
-	my $forms = 0;
+	#my $forms = 0;
 	foreach my $sig_id ( @{$$self{'service_id'}} ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-		if ( ! $$sig_specs{'SignatureQuantity'} ) {
-			$$sig_specs{'SignatureQuantity'} = 1;
-			openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'SignatureQuantity', $$sig_specs{'SignatureQuantity'} );
-		} # end if
+		#if ( ! $$sig_specs{'SignatureQuantity'} ) {
+			#$$sig_specs{'SignatureQuantity'} = 1;
+			#openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'SignatureQuantity', $$sig_specs{'SignatureQuantity'} );
+		#} # end if
 		if ( ! $$sig_specs{'ImpressionQuantity'} ) {
 			$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
 		} # end if
 		$impressions += $$sig_specs{'ImpressionQuantity'};
-		$forms += $$sig_specs{'SignatureQuantity'};
+		#$forms += $$sig_specs{'SignatureQuantity'};
 	} # end foreach sig
 
     my $colour = 'blue';
@@ -346,9 +352,9 @@ sub get_li {
 		$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
         $html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
 
-        $html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $forms, 'form'.($forms > 1 ? 's' : '') );
+        $html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
         $html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps</span>`, $$self{'id'}, $impressions );
-		if ( $Equipment->smartscheduling() ) {
+		if ( $Equipment->smartscheduling() or $$self{'locked'} ) {
 			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
 					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
 					$$self{'locked'} ? 'locked' : 'unlocked',
@@ -375,11 +381,12 @@ sub get_li {
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 			$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
+			$html .= '<span class="Service">nobindery</span>' if $$services{'NoBindery'};
 			$html .= '</span>';
 		}
 	} else {
 		$html .= sprintf( '<div class="Comment">%3$s</div>', ssi::htmlize( $self->comment() ) );
-		$html .= sprintf( '<span class="Forms">%d %s</span>', $forms, $forms > 1 ? ' forms' : ' form' );
+		$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
 		$html .= sprintf( '<span class="Impressions">%d imps</span>', $impressions );
         $html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{'id'},
                 Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
@@ -396,6 +403,7 @@ sub get_li {
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 			$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
+			$html .= '<span class="Service">nobindery</span>' if $$services{'NoBindery'};
 			$html .= '</span>';
 		} # end if smart
 	} # end if
@@ -479,7 +487,7 @@ sub Shift {
         my @Shifts = openprint::Shift::find(
 				'equipment_id'=>$$self{'equipment_id'}, 
 				'endtime_>'=>$$self{'starttime'}, 
-				'starttime_<'=>$$self{'starttime'},'limit'=>1
+				'starttime_<='=>$$self{'starttime'},'limit'=>1
 				);
         if ( ! @Shifts ) {
             @Shifts = openprint::Equipment_Shift::find(
@@ -496,7 +504,13 @@ sub Shift {
                     ) if ! @Shifts;
             $Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
         } else {
-            $Shift = $Shifts[0];
+            $Shift = shift @Shifts;
+			if ( @Shifts ) {
+				$log->warn("Deleting duplicate shifts! " . @Shifts );
+				foreach ( @Shifts ) {
+					$_->delete();
+				} # end foreach
+			} # end if
         } # end if
     } # end if
     return if ! $Shift;
@@ -574,6 +588,17 @@ sub bump {
 		push @final_order, openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
 
 		openprint::employee_production::reorder_jobs( @final_order );
+	} else {
+		my $NextShift = $self->Shift()->Next();
+		my @NextSchedule = $NextShift->Schedule();
+		if ( @NextSchedule ) {
+			my $LastJob = pop @NextSchedule;
+			$self->starttime_seconds($LastJob->endtime_seconds()+1);
+			$self->save();
+		} else {
+			$self->save({'starttime'=>$NextShift->starttime()});
+		} # end if
+		push @{$variable{'changed'}}, $self->Shift()->ul_id();
 	} # end if smartscheduling
 	sql::end_transaction( $dbh, $ac );
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Job bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
