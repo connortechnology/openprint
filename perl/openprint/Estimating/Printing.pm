@@ -2332,7 +2332,7 @@ sub calc_price {
 		} elsif ( $Paper->type() eq 'Roll' ) {
 			if ( $Paper->minimum_order() * $rate > $weight ) {
 				$price{'minimum_order'} = ceil( $Paper->minimum_order() * $rate ) - $weight;
-				$weight = $Paper->minimum_order();
+				$weight += $price{'minimum_order'};
 				$gross_qty = ceil( $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi()) );
 			} # end if
 		} # end if
