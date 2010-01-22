@@ -1534,7 +1534,7 @@ sub breakdown {
 		$breakdown .= " (\$ $$price{'100lb'}/100lb) = \$ $$price{'Paper Price'}<br/>";
 		$$price{'Paper 1000 Price'} = ($$price{'Sheet Price'}*1000/$Imposition->imposition());
 	} elsif ( $Paper->width() ) {
-		$breakdown .= sprintf("\tPaper: \%sx\%s * \%.6flbs/sq inch = \%.6f lbs per sheet (%d gsm)<br/>", $Paper->width(), $Paper->height(), $Paper->wpsi(), $Paper->width() * $Paper->height()* $Paper->wpsi(), $Paper->gsm() );
+		$breakdown .= sprintf("\tPaper: \%sx\%s -> \%sx\%s * \%.6flbs/sq inch = \%.6f lbs per sheet (%d gsm)<br/>", $Paper->start_width(), $Paper->start_height(), $Paper->width(), $Paper->height(), $Paper->wpsi(), $Paper->width() * $Paper->height()* $Paper->wpsi(), $Paper->gsm() );
 		$$price{'Paper 1000 Price'} = (($Paper->mweight()/$Imposition->imposition())/100)*$$price{'100lb'};
 		$breakdown .= sprintf("\tPaper: %.0f lbs * \$%.2f/100lb = \$%.2f<br/>", @$price{'Stock Weight','100lb','Paper Price'});
 		$breakdown .= " minimum order adjustment $$price{'minimum_order'}lbs<br/>" if $$price{'minimum_order'};
@@ -2374,7 +2374,7 @@ sub calc_price {
 		} elsif ( $Paper->type() eq 'Roll' ) {
 			if ( $Paper->minimum_order() * $rate > $weight ) {
 				$price{'minimum_order'} = ceil( $Paper->minimum_order() * $rate ) - $weight;
-				$weight = $Paper->minimum_order();
+				$weight += $price{'minimum_order'};
 				$gross_qty = ceil( $weight/($$Paper{width} * $$Paper{height} * $Paper->wpsi()) );
 			} # end if
 		} # end if
