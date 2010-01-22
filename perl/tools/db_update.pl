@@ -2321,9 +2321,13 @@ $dbh->do('create sequence order_id_seq');
 $dbh->do(q`select setval('order_id_seq', (select max(index) from orders) )`);
 $dbh->do(q`alter table orders alter column index set default nextval('order_id_seq');`);
 }
-sql::update( undef, undef, 'tbl_service_specifications', ['strname=? AND strvalue=?','rdbCardboardBacking','Y'], [ 'strname', 'Backing', 'strvalue', 'Cardboard' ] );
-sql::update( undef, undef, 'tbl_service_specifications', ['strname=? AND strvalue=?','rdbCardboardBacking','N'], [ 'strname', 'Backing', 'strvalue', 'None' ] );
 
+if ( my $PaddingServiceType = openprint::ServiceType::find_one('name'=>'Padding') ) {
+sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
+		$PaddingServiceType->id(), 'rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
+sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
+		$PaddingServiceType->id(), 'rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
+} # end if
 sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
 sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
 

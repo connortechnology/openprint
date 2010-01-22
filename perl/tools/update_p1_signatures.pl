@@ -134,6 +134,14 @@ foreach my $Project ( openprint::Project::find( 'updated_on_start'=> sprintf('%.
 			} # end foreach
 		} # end if
 	} # end foreach service
+	foreach my $service ( 'Padding' ) {
+		if ( $$services{$service} ) {
+			foreach my $ss_id ( @{$$services{$service}} ) {
+				my $specs = openprint::service::get_specs_ref( $Project, $ss_id );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'rdbCardboardBacking', $$specs{'rdbCardboardBacking'} eq 'Y' ? 'Cardboard' : 'None' );
+			} # end foreach ssid
+		} # end if
+	} # end foreach
 	my $summary = $Project->summary();
 
 	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
