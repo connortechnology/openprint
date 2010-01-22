@@ -1,31 +1,31 @@
-<fieldset id="SignatureGroup<?Group?>" <? echo ( ( $$variable{'Group'} == 1 and ( $$variable{'rdbCover'} ne 'Different' and $$variable{'Backing'} ne 'Printed' ) ) ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
-<? if ( $$variable{'SignatureType'.$$variable{'Group'}} eq 'Cover Pages' ) ?>
+<fieldset id="SignatureGroup<?Signature?>" <? echo ( ( $$variable{'Signature'} == 1 and ( $$variable{'rdbCover'} ne 'Different' and $$variable{'Backing'} ne 'Printed' ) ) ? 'style="display:none;"' : '' ) ?> class="SignatureGroup" >
+<? if ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
 	<!--#include virtual="/includes/main/proj/templates/signatures.html" -->
-<? endif ( $$variable{'SignatureType'.$$variable{'Group'}} eq 'Cover Pages' ) ?>
+<? endif ( $$variable{'SignatureType'.$$variable{'Signature'}} eq 'Cover Pages' ) ?>
 
-	<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ? $$variable{'txtServiceDescription'.$$variable{'Group'}} : ( $$variable{'Group'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
+	<legend>Information for <? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ? $$variable{'txtServiceDescription'.$$variable{'Signature'}} : ( $$variable{'Signature'} == 1 ? 'Cover' : 'Other Pages' ) ) ?></legend>
 	<div class="leftColumn">
 		<p>
 			<label># of Pages:</label>
-			<input type="text" name="GroupPageQuantity<?Group?>" value="<? echo ( $$variable{'GroupPageQuantity'.$$variable{'Group'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />
-			<input type="checkbox" id="OverrideGroupPageQuantity<?Group?>" name="OverrideGroupPageQuantity<?Group?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{'OverrideGroupPageQuantity'.$$variable{'Group'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
-			<label class="radio" for="OverrideGroupPageQuantity<?Group?>">Override</label>
+			<input type="text" name="GroupPageQuantity<?Signature?>" value="<? echo ( $$variable{'GroupPageQuantity'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" size="4" />
+			<input type="checkbox" id="OverrideGroupPageQuantity<?Signature?>" name="OverrideGroupPageQuantity<?Signature?>" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( $$variable{'OverrideGroupPageQuantity'.$$variable{'Signature'}} eq 'Y' ? 'checked="checked"' : '' ) ?> />
+			<label class="radio" for="OverrideGroupPageQuantity<?Signature?>">Override</label>
 		</p>
 		<p>
 			<label>Description:</label>
-			<input type="text" name="txtServiceDescription<?Group?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{'Group'}} ) ?>" />
+			<input type="text" name="txtServiceDescription<?Signature?>" value="<? echo ( $$variable{'txtServiceDescription'.$$variable{'Signature'}} ) ?>" />
 		</p>
 		<p>
 			<label>Size:</label>
-			<input type="text" name="txtFinalWidth<?Group?>" value="<? echo ( $$variable{'txtFinalWidth'.$$variable{'Group'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Group?>').checked){calc(this.form.name);}"/>x<input type="text" name="txtFinalHeight<?Group?>" value="<? echo ( $$variable{'txtFinalHeight'.$$variable{'Group'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Group?>').checked){calc(this.form.name);}" />
-			<input type="checkbox" name="chkOverrideDimensions<?Group?>" id="chkOverrideDimensions<?Group?>" value="Y" <? echo ( $$variable{'chkOverrideDimensions'.$$variable{'Group'}} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if(!this.checked)calc(this.form.name);" />
-			<label class="radio" for="chkOverrideDimensions<?Group?>">Override</label>
+			<input type="text" name="txtFinalWidth<?Signature?>" value="<? echo ( $$variable{'txtFinalWidth'.$$variable{'Signature'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Signature?>').checked){calc(this.form.name);}"/>x<input type="text" name="txtFinalHeight<?Signature?>" value="<? echo ( $$variable{'txtFinalHeight'.$$variable{'Signature'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');if(!$('chkOverrideDimensions<?Signature?>').checked){calc(this.form.name);}" />
+			<input type="checkbox" name="chkOverrideDimensions<?Signature?>" id="chkOverrideDimensions<?Signature?>" value="Y" <? echo ( $$variable{'chkOverrideDimensions'.$$variable{'Signature'}} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if(!this.checked)calc(this.form.name);" />
+			<label class="radio" for="chkOverrideDimensions<?Signature?>">Override</label>
 		</p>
 	</div>
 	<div class="rightColumn">
-		<div id="PresentationFolderQuestions<?Group?>" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{'Group'}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+		<div id="PresentationFolderQuestions<?Signature?>" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'.$$variable{'Signature'}}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
 	<? echo (
-		if ( $$variable{'Group'} == 1 ) {
+		if ( $$variable{'Signature'} == 1 ) {
 			my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
 			return variable_substitution( \$html, $variable );
 		} # end if
@@ -34,7 +34,7 @@
 		</div>
 		<p>
 			<label>Signature Type:</label>
-			<select name="txtSignatureType<?Group?>" onchange="calc(this.form.name);">
+			<select name="txtSignatureType<?Signature?>" onchange="calc(this.form.name);">
 <? echo (
 	my @options = (
 		'unknown', 'Please select',
@@ -43,23 +43,23 @@
 		'Gate Folded Pages', 	'Gate Fold Pages',
 		'PerfReplyCard',	'Perforated Reply Card',
 		);
-		return ssi::make_drop_down( \@options, $$variable{'txtSignatureType'.$$variable{'Group'}} );
+		return ssi::make_drop_down( \@options, $$variable{'txtSignatureType'.$$variable{'Signature'}} );
 ) ?>
 			</select>
 		</p>
 		<p>
 			<label>Customer Supplied?</label>
-			<input type="radio" name="pages_supplied<?Group?>" id="pages_supplied<?Group?>Y" value="Y" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Group'}} eq 'Y' ); ) ?> onclick="$('Inks<?Group?>').hide();$('SuppliedFormat<?Group?>').show();$('BleedsColourBars<?Group?>').hide();" />
-			<label class="radio" for="pages_supplied<?Group?>Y">Yes</label>
-			<input type="radio" name="pages_supplied<?Group?>" id="pages_supplied<?Group?>N" value="N" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Group'}} ne 'Y' ); ) ?> onclick="$('Inks<?Group?>').show();$('SuppliedFormat<?Group?>').hide();$('BleedsColourBars<?Group?>').show();" />
-			<label class="radio" for="pages_supplied<?Group?>N">No</label>
+			<input type="radio" name="pages_supplied<?Signature?>" id="pages_supplied<?Signature?>Y" value="Y" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Signature'}} eq 'Y' ); ) ?> onclick="$('Inks<?Signature?>').hide();$('SuppliedFormat<?Signature?>').show();$('BleedsColourBars<?Signature?>').hide();" />
+			<label class="radio" for="pages_supplied<?Signature?>Y">Yes</label>
+			<input type="radio" name="pages_supplied<?Signature?>" id="pages_supplied<?Signature?>N" value="N" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Signature'}} ne 'Y' ); ) ?> onclick="$('Inks<?Signature?>').show();$('SuppliedFormat<?Signature?>').hide();$('BleedsColourBars<?Signature?>').show();" />
+			<label class="radio" for="pages_supplied<?Signature?>N">No</label>
 		</p>
-		<p id="SuppliedFormat<?Group?>" <? echo ( $$variable{'pages_supplied'.$$variable{'Group'}} eq 'Y' ? '' : 'style="display:none;"' ) ?>>
+		<p id="SuppliedFormat<?Signature?>" <? echo ( $$variable{'pages_supplied'.$$variable{'Signature'}} eq 'Y' ? '' : 'style="display:none;"' ) ?>>
 			<label>Supplied Format:</label>
-			<input type="radio" name="supplied_format<?Group?>" id="supplied_format<?Group?>Sheets" value="Sheets" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Group'}} ne 'Folded' ); ) ?> />
-			<label class="radio" for="supplied_format<?Group?>Sheets">Flat Sheets</label>
-			<input type="radio" name="supplied_format<?Group?>" id="supplied_format<?Group?>Folded" value="Folded" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Group'}} eq 'Folded' ); ) ?> />
-			<label class="radio" for="supplied_format<?Group?>Folded">Folded Pages</label>
+			<input type="radio" name="supplied_format<?Signature?>" id="supplied_format<?Signature?>Sheets" value="Sheets" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Signature'}} ne 'Folded' ); ) ?> />
+			<label class="radio" for="supplied_format<?Signature?>Sheets">Flat Sheets</label>
+			<input type="radio" name="supplied_format<?Signature?>" id="supplied_format<?Signature?>Folded" value="Folded" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Signature'}} eq 'Folded' ); ) ?> />
+			<label class="radio" for="supplied_format<?Signature?>Folded">Folded Pages</label>
 		</p>
 	</div>
 	<br class="spacer"/>
@@ -87,7 +87,7 @@
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="<?Columns?>Columns">
-			<input type="text" id="txtQuantity<?QTYIndex?><?Group?>" name="txtQuantity<?QTYIndex?><?Group?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}.$$variable{'Group'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+			<input type="text" id="txtQuantity<?QTYIndex?><?Signature?>" name="txtQuantity<?QTYIndex?><?Signature?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}.$$variable{'Signature'}} ) ?>" size="10" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
 		</span>
 	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>

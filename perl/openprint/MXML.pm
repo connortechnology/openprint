@@ -285,7 +285,7 @@ sub addPage {
 	$Page->setAttribute('Number',$page);
 	$Page->setAttribute('Folio',$page);
 	foreach my $bleed ( 'Left','Right','Top','Bottom' ) {
-		$Page->setAttribute('Bleed'.$bleed, $$sig_specs{'chkBleed'.$bleed} ? Math::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()},'in',$units) : 0 );
+		$Page->setAttribute('Bleed'.$bleed, $$sig_specs{'Bleed'.$bleed} ? Math::Units::convert($$sig_specs{'ddmBleedSize'.$P->ordered_quantity_index()},'in',$units) : 0 );
 	} # end foreach bleed
 	foreach my $colour ( @{$$Colors{$side}} ) {
 		my $InkNode = openprint::JDF::getNode( $doc, 'Ink', 'ID'=>'Ink'.$colour );

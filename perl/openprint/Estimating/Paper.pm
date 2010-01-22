@@ -202,7 +202,8 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				next if ! $$sig_specs{'txtImposition'.$qty_index};
 				# We are doing this because we calculate on the parent sheet, but if the parent sheet is a generic... then it all goes for shit.
-				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index )->Supplied();
+				my $RunPaper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+				my $Paper = $RunPaper->Supplied();
 				my $paper_id = $Paper->to_string();
 				my $stock_index = $indexes{$paper_id};
 				next if $Paper->supplied();
@@ -225,7 +226,7 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 					#$$specs{"txtPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * $totals{$paper_id}[$qty_index] / 100;
 				#} # end if
 #$openprint::log->warn("$qty_index $paper_id $$sig_specs{'txtImposition'.$qty_index} $$Paper{width}x$$Paper{height}" . ' : ' . $Paper->start_sheet_weight() );
-				$$specs{"MPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * ceil( ((1000/$$sig_specs{'txtImposition'.$qty_index})/( $Paper->start_area() /$Paper->area() )) * $Paper->start_sheet_weight() )/ 100;
+				$$specs{"MPrice$qty_index"} += $$specs{"cost-$ss_id-$stock_index-$qty_index"} * ceil( (1000/$$sig_specs{'txtImposition'.$qty_index}) * $RunPaper->sheet_weight() )/ 100;
 			} # end foreach qty_index
 	} # end foreach signature
 

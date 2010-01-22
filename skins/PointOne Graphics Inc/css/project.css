@@ -135,12 +135,15 @@ div.ProjectSummary div.row span.value {
 	float: left;
 	width: 100px;
 }
-div#ProjectView table tr td input {
+div.Project div.View table tr td input {
 	width: 99%;
 }
-div#ProjectView table tr td.price, div#ProjectView table tr th.price {
+div.Project div.View table tr td.price, div.Project div.View table tr th.price {
 	width: 200px;
 	text-align: right;
+}
+div.Project div.View table tr.Prices {
+	border-top: 1px solid #000088;
 }
 
 .InksFront {
