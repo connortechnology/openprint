@@ -194,6 +194,10 @@
 					<input type="text" name="gsm" value="<? echo ( $$variable{'Stock'}->gsm(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );" />
 				</p>
 				<p> 
+					<label>WPSI:</label>
+					<? echo ( $$variable{'Stock'}->wpsi(); ) ?>
+				</p>
+				<p> 
 					<label>Grain Direction:</label>
 					<input type="radio" name="grain_direction" id="grain_directionLong" value="Long" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq $$variable{'Stock'}->long() ); ) ?> />
 					<label class="radio" for="grain_directionLong">Long</label>

@@ -6,7 +6,7 @@
 	<input type="hidden" name="width" value="<? echo ( $$variable{'Stock'}->width() ) ?>" />
 	<input type="hidden" name="height" value="<? echo ( $$variable{'Stock'}->height() ) ?>" />
 	<input type="hidden" name="mweight" value="<? echo ( sprintf('%.3f', $$variable{'Stock'}->mweight() ); ) ?>" />
-	<input type="hidden" name="wpsi" value="<? echo ( sprintf('%.3f', $$variable{'Stock'}->wpsi() ); ) ?>" />
+	<input type="hidden" name="wpsi" value="<? echo ( $$variable{'Stock'}->wpsi(); ) ?>" />
 	<input type="hidden" name="stock_id" value="<? echo ( $param{'stock_id'} ) ?>"/>
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
 	<div class="Pricelist">
@@ -18,9 +18,11 @@
 				<th class="Range">Quantity Range</th>
 				<th class="Cost">Cost CWT</th>
 				<th class="Cost">Cost /M</th>
+				<th class="Cost">Cost /foot</th>
 				<th class="Markup">Mark up</th>
 				<th class="Price">Price CWT</th>
 				<th class="Price">Price /M</th>
+				<th class="Price">Price /foot</th>
 				<th class="Discount">Discount?</th>
 				<th class="buttons">&nbsp;</th>
 			</tr>
@@ -32,9 +34,11 @@
 				</td>
 				<td class="Cost"><input class="text" type="text" name="costcwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
 				<td class="Cost"><input class="text" type="text" name="costperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->costperm() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+				<td class="Cost"><input class="text" type="text" name="costperfoot-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->costperfoot() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
 				<td class="Markup"><input class="text" type="text" name="markup-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Markup() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
 				<td class="Price"><input class="text" type="text" name="pricecwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
 				<td class="Price"><input class="text" type="text" name="priceperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->priceperm() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+				<td class="Price"><input class="text" type="text" name="priceperfoot-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->priceperfoot() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
 				<td class="Discount">
 				<input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='Y'
 				<? echo ( $$variable{'Price'}->Discountable() ne 'N' ? 'checked="checked"' : '' ) ?>
