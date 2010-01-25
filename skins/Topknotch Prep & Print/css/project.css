@@ -266,3 +266,6 @@ div.Project table.List td {
 	font-size: small;
 }
 
+#Versions {
+	display: none;
+}

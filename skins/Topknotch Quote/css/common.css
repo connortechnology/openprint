@@ -382,14 +382,6 @@ div.Popup {
 img {
 border: none;
 }
-div.Service span.ThreeColumns {
-	width: 32%;
-	float: left;
-}
-div.Service span.TwoColumns {
-	width: 50%;
-	float: left;
-}
 h1,h2,h3,h5 {
 	color: maroon;
 	margin-top: 0px;
@@ -403,3 +395,7 @@ label.radio, #Header p label.radio {
 	float: none;
 	margin: 0px;
 }
+img.Override {
+    height: 16px;
+}
+

@@ -62,7 +62,6 @@ sub handler {
 					IDLength    => 8,
 	};
 
-
 	if ( $request->method eq 'POST' ) {
 		my $uploaded = 0;
 		my ($serial) = $request->args() =~ /serial=(\d*)/;
@@ -91,16 +90,25 @@ sub handler {
     } # end foreach
 
 	if ( $r->param('action') eq 'get_progress_and_size' ) {
-		my ($progress,$size,$elapsedtime) = sql::execute( $log, $dbh, q{SELECT size, total, extract( epoch from date_trunc('seconds', NOW()) - date_trunc('seconds', start ) ) FROM Uploads WHERE id=?}, $r->param('serial') );
+		my $data = $dbh->selectrow_hashref(q{SELECT size, total, extract( epoch from date_trunc('seconds', NOW()) - date_trunc('seconds', start ) ) as elapsed FROM Uploads WHERE id=?} , {}, $r->param('serial') );
+		if ( ! $data ) {
+			$log->debug("No uploadin progress for " . $r->param('serial') );
+			$data = {};
+		} else {
+		$log->debug("$data");	
+foreach my $k ( keys %$data ) {
+$log->debug("($k) -> $$data{$k}");
+}
+		}
 
 #<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-		my $output =qq{ 
+		my $output =qq` 
 <response>
-<completedsize>$progress</completedsize>
-<totalsize>$size</totalsize>
-<elapsedtime>$elapsedtime</elapsedtime>
-<serial>}.$r->param('serial').q{</serial></response>};
-		#$log->debug($output);
+<completedsize>$$data{'size'}</completedsize>
+<totalsize>$$data{'total'}</totalsize>
+<elapsedtime>$$data{'elapsed'}</elapsedtime>
+<serial>`.$r->param('serial').q{</serial></response>};
+		$log->debug($output);
 		$request->content_type('text/xml');
 		$r->print( $output );
 	} else {

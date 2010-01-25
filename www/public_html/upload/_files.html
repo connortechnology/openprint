@@ -40,7 +40,7 @@
         foreach my $file ( @filenames ) {
             next if substr($file,0,1) eq '.';
 			if ( -d "$config{'ProjectFilesPath'}$destdir/$file" ) {
-				push @{$$variable{'PROJECT_FILES'}}, "/upload/upload_center.html?docket=$file", $file, '', "Files for docket $file";
+				push @{$$variable{'PROJECT_FILES'}}, "/upload/upload_center.html?docket=$file", $file, '', "Files for docket $file", '';
 			} else {
 				my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev, $size, $atime,$mtime,$ctime,$blksize,$blocks) = stat("$config{'ProjectFilesPath'}/$destdir/$file");
 				if ( $size > 1048576 ) {
@@ -58,7 +58,7 @@
 					( $description ) = sql::execute( $log, $dbh, q{SELECT description FROM project_files WHERE filename=?}, $destdir.$file );
 				} # end if
 				$description = 'No description given' if ! $description;
-				push @{$$variable{'PROJECT_FILES'}}, "/project_files/$company_name/$param{'docket'}/$file", $file, $size, $description;
+				push @{$$variable{'PROJECT_FILES'}}, "/project_files/$company_name/$param{'docket'}/$file", $file, $size, $description, $mtime;
 			} # end if directory or file
         } # end foreach
 	) ?>
@@ -67,8 +67,9 @@
 		<thead>
 			<tr> 
 				<th class="Filename">Filename</th>
-				<th class="Size">Size</th>
-				<th class="Delete"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', Serialize(f1));}", '', 'Delete' ); ) ?></th>
+				<th class="size">Size</th>
+				<th class="mtime">When</th>
+				<th class="delete"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', Serialize(f1));}", '', 'Delete' ); ) ?></th>
 			</tr>
 		</thead>
 		<? if ( ( $param{'docket'} or $param{'project_id'} ) ) ?>
@@ -76,27 +77,30 @@
 		   <td><a href="/upload/upload_center.html"><img src="/images/parent-folder.gif" alt="Parent Folder" border="0" /> ..</a></td>
 		   <td>&nbsp;</td>
 		   <td>&nbsp;</td>
+		   <td>&nbsp;</td>
 		</tr>
 		<? endif ( ( $param{'docket'} or $param{'project_id'} ) ) ?>
 		<? if ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
 		<tr>
-		   <td colspan="3">No files have been uploaded.</td>
+		   <td colspan="4">No files have been uploaded.</td>
 		</tr>
 		<? else ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
-		<? while ( @$variable{'path','filename','size', 'description'} = splice @{$$variable{'PROJECT_FILES'}},0,4; ) ?>
+		<? while ( @$variable{'path','filename','size', 'description','mtime'} = splice @{$$variable{'PROJECT_FILES'}},0,5; ) ?>
 			<tr<?rowclass?>> 
 			<? if ( $$variable{'size'} ne '' ) ?>
 				<td><a href="/getfile.html?<? if (  $param{'docket'} ) ?>docket=<? echo( $param{'docket'} ) ?><? endif (  $param{'docket'} ) ?><? if (  $param{'project_id'} ) ?>&project_id=<? echo( $param{'project_id'} ) ?><? endif (  $param{'project_id'} ) ?>&filename=<?filename?>" title="<?description?>" target="SendFileFrame"><?filename?></a><br/><?description?></td>
-				<td align="right" valign="top"><?size?></td>
+				<td class="size"><?size?></td>
+				<td class="mtime"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, $$variable{'mtime'} ); ) ?></td>
 				<td align="center" valign="top"><input type="checkbox" name="chkFiles" value="<?filename?>"/></td>
 			<? else ( $$variable{'size'} ne '' ) ?>
 				<td><a href="/upload/upload_center.html?docket=<?filename?>" title="<?description?>"><img src="/images/folder.gif" alt="Folder" border="0" /> <?filename?></a><br/><?description?></td>
-				<td align="right" valign="top"><?size?></td>
+				<td class="size"><?size?></td>
+				<td class="mtime">&nbsp;</td>
 				<td align="center" valign="top"></td>
 			<? endif ( $$variable{'size'} ne '' ) ?>
 			</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-		<? endwhile ( @$variable{'path','filename','size', 'description'} = splice @{$$variable{'PROJECT_FILES'}},0,4; ) ?>
+		<? endwhile ( @$variable{'path','filename','size', 'description','mtime'} = splice @{$$variable{'PROJECT_FILES'}},0,5; ) ?>
 <? endif ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
 	</table>
 	<input type="hidden" name="project_id" value="<? echo($param{'project_id'}) ?>"/>

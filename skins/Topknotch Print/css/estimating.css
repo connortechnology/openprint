@@ -117,3 +117,12 @@ p.buttons {
 	width: 100%;
 	text-align: right;
 }
+select#ToCountry {
+	width: 175px;
+}
+select#ddmStockBrand, select#ddmStockBrand0, select#ddmStockBrand1, select#ddmStockBrand2 {
+	width: 175px;
+}
+#Cover fieldset legend, #Interior fieldset legend {
+	display:inline;
+}

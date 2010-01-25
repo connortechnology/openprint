@@ -1,7 +1,7 @@
 <!--#include virtual="/main/order/_project_header.html"-->
-<? if ( ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) ?>
+<? if ( ($config{'OrderMode'} ne 'Simple') or ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) ?>
 <!--#include virtual="/main/order/_shipping_type_select.html"-->
-<? endif ( ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) ?>
+<? endif ( ($config{'OrderMode'} ne 'Simple') or ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) ?>
 <? if ( $config{'OrderMode'} eq 'Simple' ) ?>
 <!--#include virtual="/main/order/_project_details.html"-->
 <? endif ( $config{'OrderMode'} eq 'Simple' ) ?>

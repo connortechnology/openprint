@@ -269,3 +269,6 @@ div.ProjectCreateEdit ul:after {
 .Project table tr.Prices {
     border-top: 1px solid #6A00BE;
 }
+#Versions {
+	display: none;
+}

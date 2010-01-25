@@ -170,12 +170,6 @@ div.Service #Inserts {
 	float: right;
 	width: 49%;
 }
-.VarnishCoverage {
-	float: none;
-}
-.VarnishCoverage input, .VarnishCoverage input[type="text"] {
-	width: 35px;
-}
 div.Service fieldset p span.checkOption label {
 	clear: none;
 	width: auto;

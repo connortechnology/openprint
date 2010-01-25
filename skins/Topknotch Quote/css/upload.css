@@ -28,16 +28,15 @@ td.headercell { font-weight: bold; }
 		#tca3,#dones,#lefts,#totals { width: 34%; }
 		#tca4,#donet,#leftt,#totalt { width: 33%; }
 #FileList { text-align: left; border-collapse: collapse; margin: 2px auto; }
-#FileList td { padding: 2px 14px; }
 /* #filelist tr:hover { background: #e9e9e9; } */
 
 #FileList .size {
 	text-align: right;
-	width: 75px;
+	width: 90px;
 }
 #FileList .delete {
- text-align: right;
-	width: 120px;
+ text-align: center;
+	width: 90px;
 }
 #FileList .mtime {
 	text-align: right;
@@ -244,7 +243,7 @@ div#uploadContainer fieldset p label {
    display: none;
 }
 
-div#uploadContainer table#fileSelectionTable {
+div#uploadContainer table#fileSelection {
 	table-layout: auto;
 	width: 100%; 
 }

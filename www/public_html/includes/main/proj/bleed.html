@@ -6,7 +6,7 @@
 <? else ( $$variable{'Mode'} eq 'Easy' ) ?>
 <p>
 	<label>Bleed:</label>
-	<span class="BleedOption">
+	<span class="BleedOption None">
 		<input type="checkbox" id="BleedNone<?Signature?>" name="BleedNone<?Signature?>" value="None" onclick="if(this.checked){$('BleedLeft<?Signature?>').checked=false;$('BleedRight<?Signature?>').checked=false;$('BleedTop<?Signature?>').checked=false;$('BleedBottom<?Signature?>').checked=false;}else{$('BleedLeft<?Signature?>').checked=true;$('BleedRight<?Signature?>').checked=true;$('BleedTop<?Signature?>').checked=true;$('BleedBottom<?Signature?>').checked=true;};calc(this.form.name);" 
 		<? echo ( ( $$variable{'BleedLeft'.$$variable{'Signature'}} eq 'Left' or $$variable{'BleedRight'.$$variable{'Signature'}} eq 'Right' or $$variable{'BleedTop'.$$variable{'Signature'}} eq 'Top' or $$variable{'BleedBottom'.$$variable{'Signature'}} eq 'Bottom' ) ? '' : 'checked="checked"' ) ?>
 		/> <label class="radio" for="BleedNone<?Signature?>">None</label>

@@ -831,3 +831,7 @@ label.radio, fieldset ul li label.radio, fieldset p label.radio, fieldset .conte
 	width: auto;
 	float: none;
 } 
+img.Override {
+    height: 16px;
+}
+

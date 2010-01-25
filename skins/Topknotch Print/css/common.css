@@ -231,6 +231,10 @@ fieldset ul li label, fieldset p label {
 float: left;
 outline: 0;
 }
+fieldset ul li label.radio {
+	float: none;
+	width: auto;
+}
 p.buttons {
 	float: right;
 }
@@ -276,38 +280,6 @@ fieldset.filters p input[type="text"] {
 	width: auto;
 }
 
-div.Order .Header {
-}
-div.Order .Header:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div.Order .Header {height: 1%;}
-div.Order .Header {display:block;}
-/* End hide from IE-mac */
-div.Order .Header #OrderInformation {
-    float: left;
-    width: 49%;
-}
-div.Order .Header #BillingInformation {
-    float: right;
-    width: 49%;
-}
-div.Order .Header fieldset p {
-    text-align: right;
-}
-div.Order .Header fieldset p label {
-    font-weight: bold;
-    margin-right: 10px;
-    float: left;
-    width: auto;
-    text-align: left;
-}
 div.QuoteInformation div#PreparedBy {
     float: left;
     width: 48%;
@@ -442,9 +414,6 @@ div.Service span.TwoColumns {
 	width: 50%;
 	float: left;
 }
-img.Override {
-	height: 16px;
-}
 label.radio {
     width: auto;
 	display: inline;
@@ -465,4 +434,7 @@ td.Status, th.Status {
 td.Date, th.Date {
 	text-align: right;
 	width: 120px;
+}
+img.Override {
+    height: 16px;
 }

@@ -599,7 +599,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		} # end foreach
 	} # end if Padding
 
-
 # Handle cartons
 	push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' ) if ! $$services{'PlainCartons'};
 	if ( $$specs{'UPSShipping'} eq 'Y' ) {
@@ -619,7 +618,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	} # end if
 
 	push @{$$services{'Turnaround'}}, $Project->add_service( 'Turnaround' ) if ! $$services{'Turnaround'};
-
 
 	if ( $$specs{'ShrinkWrapping'} eq 'Y' ) {
 		if ( ! $$services{'ShrinkWrap'} ) {
@@ -653,7 +651,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	$openprint::log->warn("Before auto");
-	$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'}, ['UPS'] );
+	$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'} );
 	$openprint::log->warn("Aftere auto");
 	# Need to reload this because the auto calculation can add services, and we wouldn't otherwise pick them up
 	my $services = $Project->services();
@@ -677,6 +675,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		$$specs{'txtHoleQty'} = $$drill_specs{'txtHoleQty'};
 	} # end if
 
+	$services = $Project->services();
 	$$specs{'txtPrice1'} = 0;
 	$$specs{'txtUnitPrice1'} = 0;
 # add up the prices
@@ -704,7 +703,7 @@ $log->warn("Have uncalculated service: ");
 # Subtract shipping costs from total
 	if ( $$services{'UPS'} ) {
 		foreach my $service_id ( @{$$services{'UPS'}} ) {
-			my $service_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, 'UPS' );
+			my $service_specs = openprint::service::get_specs_ref( $Project, $service_id );
 			$$specs{'ProductionPrice1'} -= $$service_specs{'txtPrice1'};
 			$$specs{'ShippingPrice1'} += $$service_specs{'txtPrice1'};
 			$$specs{'ServiceTypeDiv'} = $$service_specs{'ServiceTypeDiv'};
@@ -712,7 +711,6 @@ $log->warn("Have uncalculated service: ");
 			$$specs{'alert'} .= $$service_specs{'alert'};
 		} # end foreach service
 	} # end if UPS
-	$log->debug("ServiceTypeDIV: $$specs{'ServiceTypeDiv'}");
 
 	my %printing_types;
 	foreach my $ss_id ( $Project->signatures() ) {
