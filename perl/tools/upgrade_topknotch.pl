@@ -83,9 +83,9 @@ if ( ! exists $config{'MinimumPagesWithoutCounting'} ) {
 	sql::insert( undef, undef, 'configuration', 'name', 'MinimumPagesWithoutCounting','value',100,'description', 'Minimum number of pages per pad before counting is required.', 'category','Miscellaneous Settings' ) if ! $config{'MinimumPagesWithoutCounting'};
 } # end if
 sql::update( undef, undef, 'configuration', ['name=?', 'public_URIs'], [ 'value', $config{'public_URIs'}.',/printing.html,/about.html,/help-centre.html' ] );
-require openprint::PaymentType;
-my $PayPal = new openprint::PaymentType();
-$PayPal->save({'name'=>'PayPal','description'=>'PayPal'});
+#require openprint::PaymentType;
+#my $PayPal = new openprint::PaymentType();
+#$PayPal->save({'name'=>'PayPal','description'=>'PayPal'});
 
 $dbh->do("DELETE FROM Taxes WHERE state != 'ON'");
 

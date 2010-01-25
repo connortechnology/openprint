@@ -24,13 +24,14 @@ require configuration;
 require openprint::login;
 
 use openprint;
-use vars qw( %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*r = \$openprint::r;
 
 sub handler {
 	my $request = shift;
@@ -43,7 +44,6 @@ sub handler {
 	#$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
 	#$r->parse;
 
-	#$log->debug("Database: $sql_server{'database'} Page: " . $r->uri());
 	$dbh = sql::open_sql( $log, 
 			'database'	=> $request->dir_config('db_name'),
 			'driver'	=> $request->dir_config('db_driver'),
@@ -52,7 +52,6 @@ sub handler {
 			'password'	=> $request->dir_config('db_password'),
 			);
 
-	my $r;
     my $cookies = Apache2::Cookie->fetch( $r );
     my $cookie = $$cookies{'_session_id'};
     $cookie = $cookie->value if $cookie;
@@ -189,10 +188,10 @@ sub get_destdir {
 	if ( $session{'company_id'} ) {
 		( $destdir ) = new openprint::Company( $session{company_id} )->name();
 		$destdir = '/'.$destdir.'/';
-		return '' if ! create_dir( $openprint::config{'ProjectFilesPath'}.$destdir );
+		return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
 	} else {
 # This ends up prefixing the file with the company's name
-		$destdir .= $openprint::param{'txtCompanyName'} . '_';
+		$destdir .= $param{'txtCompanyName'} . '_';
 	} # end if
 
 	if ( $param{'docket'} ) {
@@ -215,7 +214,7 @@ sub upload_files {
 		$param{'docket'} = new openprint::Project( $param{'project_id'} )->docket();
 	} elsif ( $param{'docket'} and ! $param{'project_id'} ) {
 		$param{'docket'} =~ s/\D//g;
-		my @Projects = openprint::Project::find('docket'=>$param{'docket'});
+		my @Projects = openprint::Project::find('docket'=>$param{'docket'}) if $param{'docket'};
 		$param{'project_id'} = $Projects[0]->id() if @Projects;
 	} # end if
 
@@ -272,22 +271,22 @@ sub upload_files {
 		} else {
 			$from = $param{'txtEmailAddress'};
 			if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
-				$from = $openprint::config{'OrderingEmail'};
+				$from = $config{'OrderingEmail'};
 			} # end if
 		} # end if
 		if ( $session{'company_id'} ) {
-			( $csr_id ) = sql::execute( $log, $dbh, q{SELECT lngSalesPerson FROM Company WHERE Index=?}, $session{'company_id'} );
+			$csr_id = new openprint::Company( $session{'company_id'} )->salesrep_id();
 		} # end nif
 		if ( $csr_id ) {
 			my $CSR = new openprint::User( $csr_id );
 			$to = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email') ),
 		} else {
-			$to = $openprint::config{'OrderingEmail'};
+			$to = $config{'OrderingEmail'};
 		} # end if
-		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 		my $body = ssi::variable_substitution( \$email_template, $variable );
 		my %mail = (
-						SMTP    => $openprint::config{'Mail Server'},
+						SMTP    => $config{'Mail Server'},
 						FROM    => $from,
 						TO		=> $to,
 						#BCC		=>	'iconnor@penultima.org',
@@ -311,7 +310,7 @@ sub upload_files {
 		} # end if
         $body = ssi::variable_substitution( \$email_template, $variable );
         %mail = (
-                        SMTP    => $openprint::config{'Mail Server'},
+                        SMTP    => $config{'Mail Server'},
                         FROM    => $from,
                         TO      => $to,
                         SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
@@ -341,7 +340,7 @@ sub get_files {
 		if ( $r->param('project_id') ) {
 			$_ = q{SELECT description FROM project_files WHERE project_id=? AND filename =?};
 			( $description ) = sql::execute( $log, $dbh, $_, $r->param('project_id'), $file );
-		} # end if project_index
+		} # end if project_id
 		push @{$$variable{'PROJECT_FILES'}}, "$company_name/$docket", $file, $description;
 	} # end foreach
 	return @{$$variable{'PROJECT_FILES'}};

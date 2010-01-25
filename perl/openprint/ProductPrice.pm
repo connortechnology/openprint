@@ -44,7 +44,7 @@ $serial = 'product_prices_id_seq';
 );
 
 
-my $debug = 1;
+my $debug = 0;
 
 sub find {
 	my %params = @_;

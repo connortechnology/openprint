@@ -1,3 +1,4 @@
+<div class="Payments">
 <? eval ( @{$$variable{'PAYMENTS'}} = openprint::Payment::find('order_id'=>$$variable{'Order'}->id(),'completed'=>1,'order'=>'created_on'); ) ?>
 <? if ( @{$$variable{'PAYMENTS'}} or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
 <? if ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) ?>
@@ -70,3 +71,4 @@
 </fieldset>
 <input type="hidden" name="payment_id" />
 <? endif ( @{$$variable{'PAYMENTS'}} or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
+</div>

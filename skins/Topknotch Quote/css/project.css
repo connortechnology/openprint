@@ -26,7 +26,6 @@ div.ProjectHeader:after {
     clear: both;
     visibility: hidden;
 }
-div.ProjectHeader {display: inline-block;}
 /* Hides from IE-mac \*/
 * html div.ProjectHeader {height: 1%;}
 div.ProjectHeader {display: block;}

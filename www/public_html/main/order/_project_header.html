@@ -13,23 +13,29 @@
 				<ul>
 					<li>
 						<label>Reference:</label>
-						<? if ( ! $$variable{'Project'}->reference() ) ?>
+						<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->reference() ) ?>
 						<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
-						<? else ( ! $$variable{'Project'}->reference() ) ?>
+						<? else ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->reference() ) ?>
 						<? echo ( $$variable{'Project'}->reference(); ) ?>
-						<? endif ( ! $$variable{'Project'}->reference() ) ?>
+						<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->reference() ) ?>
 					</li>
 					<li><label>Project Number:</label><? echo ( $$variable{'Project'}->id() ) ?></li>
 					<li><label>Type:</label><? echo ( $$variable{'Project'}->Type()->name() ) ?></li>
+<? if ( $$variable{'Project'}->ordered_quantity() ) ?>
 					<li><label>Quantity:</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
+<? endif ( $$variable{'Project'}->ordered_quantity() ) ?>
 					<li><label>Created:</label><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></li>
 <? if ( $config{'OrderMode'} ne 'Simple' ) ?>
-		<? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
+		<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ( $$variable{'Project'}->quantity_indexes() > 1 ) ) ?>
 		<!--#include virtual="_quantity_select.html"-->
-		<? endif ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
-		<? if ( ! $$variable{'Project'}->requested_date() ) ?>
+		<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ( $$variable{'Project'}->quantity_indexes() > 1 ) ) ?>
+		<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
 		<!--#include virtual="_required_by.html"-->
-		<? endif ( ! $$variable{'Project'}->requested_date() ) ?>
+		<? else ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
+			<? if ( $$variable{'Project'}->requested_date() ) ?>
+			<li><label>Requested For:</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></li>
+			<? endif ( $$variable{'Project'}->requested_date() ) ?>
+		<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
 <? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
 				</ul>
 			</div>

@@ -27,10 +27,10 @@
 	<div class="error"><?error?></div>
 	<? endif ( $$variable{'error'} ) ?>
 <div class="Registration">
-<p>
-Please complete the form below. (<span class="requiredFieldIndicator">*</span> denotes required information).<br/>
-<br/>
-</p>
+	<p>
+	Please complete the form below. (<span class="requiredFieldIndicator">*</span> denotes required information).<br/>
+	<br/>
+	</p>
 	<form method="post" action="registration.html" name="f1">
 		<div class="BillingInformation">
 		<fieldset><legend>Billing Information</legend>
@@ -154,16 +154,16 @@ Please complete the form below. (<span class="requiredFieldIndicator">*</span> d
 				<li>
 					<label>Salutation: <span class="requiredFieldIndicator">*</span></label>
 					<input type="radio" name="salutation" id="salutationMr" value="Mr."
-					<? echo ( 'checked="checked"' if $param{'salutation'} eq 'Mr.' or ! $param{'salutation'} ) ?> />
+					<? echo ( ssi::checked( $param{'salutation'} eq 'Mr.' or ! $param{'salutation'} ); ) ?> />
 					<label class="radio" for="salutationMr">Mr.</label>
 					<input type="radio" name="salutation" id="salutationMrs" value="Mrs."
-					<? echo ( 'checked="checked"' if $param{'salutation'} eq 'Mrs.' ) ?> />
+					<? echo ( ssi::checked( $param{'salutation'} eq 'Mrs.' ); ) ?> />
 					<label class="radio" for="salutationMrs">Mrs.</label>
 					<input type="radio" name="salutation" id="salutationMs" value="Ms."
-					<? echo ( 'checked="checked"' if $param{'salutation'} eq 'Ms.' ) ?> />
+					<? echo ( ssi::checked( $param{'salutation'} eq 'Ms.' ); ) ?> />
 					<label class="radio" for="salutationMs">Ms.</label>
 					<input type="radio" name="salutation" id="salutationMiss" value="Miss"
-					<? echo ( 'checked="checked"' if $param{'salutation'} eq 'Miss' ) ?> />
+					<? echo ( ssi::checked( $param{'salutation'} eq 'Miss' ); ) ?> />
 					<label class="radio" for="salutationMiss">Miss</label>
 				</li>
 				<li> 

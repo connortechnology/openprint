@@ -1,12 +1,5 @@
 .Docket {
 }
-.Project span {
-	width: 31%;
-	margin-right: 10px;
-	margin-bottom: 5px;
-	float: left;
-	p\osition: relative;
-}
 .Project label {
 	font-weight: bold;
 	float: left;
@@ -18,69 +11,49 @@
 	margin: 0px;
 }
 
-div.ProjectHeader {
+div.Project .Header {
 	border-bottom: 1px solid #194D98;
 	margin: 0px;
 	margin-bottom: 5px;
 }
-div.ProjectHeader:after {
+div.Project .Header:after {
     content: ".";
     display: block;
     height: 0;
     clear: both;
     visibility: hidden;
 }
-div.ProjectHeader {display: inline-block;}
+div.Project .Header {display: inline-block;}
 /* Hides from IE-mac \*/
-* html div.ProjectHeader {height: 1%;}
-div.ProjectHeader {display: block;}
+* html div.Project .Header {height: 1%;}
+div.Project .Header {display: block;}
 /* End hide from IE-mac */
 
-div.ProjectHeader fieldset {
+div.Project .Header fieldset {
 	border-left: none;
 	border-right: none;
 	border-bottom: none;
 	margin-bottom: 0px;
-	padding: 6px;
-	width: 47%;
+	padding: 5px;
 	text-align: left;
 }
-div.ProjectHeader fieldset#ProjectInformation {
+div.Project .Header div#ProjectInformation {
 	float: left;
 	width: 47%;
 }
-div.ProjectHeader fieldset#ContactInformation {
+div.Project .Header div#ContactInformation {
 	float: right;
 	width: 47%;
 }
-div.ProjectHeader fieldset#Reference {
+div.Project .Header div#Reference {
 	float: left;
 	text-align: left;
 	width: 47%;
 }
-div.ProjectHeader fieldset#Description {
+div.Project .Header div#Description {
 	float: right;
 	text-align: left;
 	width: 47%;
-}
-
-
-div.ProjectHeader fieldset p {
-	text-align: right;
-	padding: 0px;
-	margin: 0px;
-}
-div.ProjectHeader fieldset p label {
-	margin: 0px;
-	padding: 0px;
-	float: left;
-	font-weight: bold;
-	text-align: left;
-	width: auto;
-}
-div.ProjectHeader fieldset p label.radio {
-	float: none;
-	margin: 0px;
 }
 
 .ProjectSummary div.row {

@@ -69,3 +69,30 @@ div.OrderHeader fieldset p label {
 div.OrderHeader fieldset#OrderedBy {
 	float: right;
 }
+div.Order #Totals {
+	float: right;
+	width: 250px;
+}
+.Order #Totals ul {
+	list-style: none;
+}
+.Order #Totals ul li {
+	padding-left: 100px;
+	text-align: right;
+}
+.Order #Totals ul li label {
+	margin-left: -100px;
+	width: 95px;
+} 
+
+.Order #Totals ul li#Total {
+	font-weight: bold;
+}
+.Order #AdminOptions {
+	float: left;
+}
+.Order #AdminOptions ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}

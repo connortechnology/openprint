@@ -161,9 +161,9 @@
 	<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Orders'}[0]->created_on() ) ); ) ?></a>
 	<? endif ( @{$$variable{'Orders'}} ) ?>
 </p>
-<? eval ( @{$$variable{'Projects'}} = openprint::Project::find('company_id'=>$$variable{'CustomerIndex'},'order'=>'index DESC'); ) ?>
+<? eval ( @{$$variable{'Projects'}} = openprint::Project::find('company_id'=>$$variable{'CustomerIndex'},'order'=>'id DESC'); ) ?>
 <p><label># of Projects:</label>
-	<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( openprint::Project::find('company_id'=>$$variable{'CustomerIndex'}) ) ?></a>
+	<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{'Projects'}} ) ?></a>
 	<? if ( @{$$variable{'Projects'}} ) ?>
 	Last on:
 	<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Projects'}[0]->created_on() ) ); ) ?></a>

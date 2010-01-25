@@ -1,15 +1,15 @@
 <? echo (
-		return '' if ! $$variable{'QuotedProject'}->include_detailed();
-		return '' if ! sets::isin( $session{'user_type'}, ['A','E'] );
-		my @QuoteLevels = openprint::QuoteLevel::find( 'order'=>'lower(name)' );
-		return '' if ! @QuoteLevels;
+	return '' if ! $$variable{'QuotedProject'}->include_detailed();
+	return '' if ! sets::isin( $session{'user_type'}, ['A','E'] );
+	my @QuoteLevels = openprint::QuoteLevel::find( 'order'=>'lower(name)' );
+	return '' if ! @QuoteLevels;
 
-		my $html = 'Template:'; 
-		$html .= sprintf('<select name="template_%1$d" onchange="new Ajax.Updater( 'QuotedProjectView_%1$d', '_project_template_view.html', {method: 'get', parameters: { quote_id: %2$d, project_id: %1$d, template_id: this.value } } );">%3$s</select>', 
-			$$variable{'QuotedProject'}->id(), $$variable{'Quote'}->id(), 
-			ssi::make_drop_down( [ map { $_->id(), $_->name() } @QuoteLevels ], $$variable{'QuotedProject'}->template_id() ),
-			); 
-		return $html;
+	my $html = 'Template:'; 
+	$html .= sprintf(q`<select name="template_%1$d" onchange="new Ajax.Updater( 'QuotedProjectView_%1$d', '_project_template_view.html', {method: 'get', parameters: { quote_id: %2$d, project_id: %1$d, template_id: this.value } } );">%3$s</select>`, 
+		$$variable{'QuotedProject'}->id(), $$variable{'Quote'}->id(), 
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } @QuoteLevels ], $$variable{'QuotedProject'}->template_id() ),
+		); 
+	return $html;
 ) ?>
 <div id="QuotedProjectView_<? echo ( $$variable{'QuotedProject'}->id() ) ?>" class="ProjectTemplate">
 	<? echo (

@@ -189,20 +189,6 @@ sub Currency {
 	return new openprint::Currency( $$self{'currency_id'} );
 } # end sub CUrrency
 
-sub delete {
-	my $self = shift;
-	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 1 );
-	$$self{'deleted'} = 1;
-	delete $openprint::Object::cache{'openprint::Company'}{$$self{id}};
-} # end sub delete
-
-sub undelete {
-	my $self = shift;
-	sql::update( undef, undef, 'Company', ['index=?', $$self{'id'}], 'deleted', 0 );
-	$$self{'deleted'} = 0;
-	delete $openprint::Object::cache{'openprint::Company'}{$$self{id}};
-} # end sub undelete
-
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
@@ -238,13 +224,13 @@ sub destroy {
 	foreach my $User ( openprint::User::find('company_id'=>$$self{'id'} ) ) {
 		$User->delete();
 	} # end foreach
-	sql::execute( undef, undef, 'DELETE FROM Company WHERE Index=?',$$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{'id'} );
 
 	sql::end_transaction( $dbh, $ac );
 
    # Add record to audit log - action "Delete Company Profile".
-   openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'}");
-} # end sub delete
+   openprint::logs::insertLogRecord('5', "Company ID: $$self{'id'} $$self{name}");
+} # end sub destroy
 
 sub save {
     my ($self, $param) = @_;

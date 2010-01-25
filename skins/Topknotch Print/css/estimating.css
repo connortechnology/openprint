@@ -7,9 +7,7 @@
 	border: 1px solid black;
 	width: 150px;
 }
-.InstantPricing IMG#FoldType {
-	width: 130px;
-	height: 130px;
+.InstantPricing img#FoldType {
 	display: none;
 }
 .InstantPricing select {
@@ -19,35 +17,40 @@
 .InstantPricing #instant_price_section {
 	color: black;
 	font-weight: normal;
-	width: 235px;
+	width: 269px;
 	margin-left: 10px;
 	margin-bottom: 10px;
 }
-
-.InstantPricing p {
-	padding:5px;
-}
-.InstantPricing ul {
-	list-style: none;
-	margin: 0px;
-	padding: 0px;
+.InstantPricing .Questions {
+	padding: 5px;
 }
 
-.InstantPricing ul li {
-	text-align: right;
-	list-style: none;
-	padding:5px;
-}
 .InstantPricing ul li label {
 	width: auto;
 	float: left;
 	color: #000000;
 	font-weight: bold;
+	margin:0px;
 }
 .InstantPricing label.radio {
 	float: none;
 	font-weight: normal;
 }
+
+div#instant_price_section ul {
+    list-style: none;
+    margin: 0px;
+    padding: 0px;
+}
+div#instant_price_section ul li {
+    text-align: right;
+    padding:5px 0px 5px 0px;
+    list-style: none;
+}
+div#instant_price_section .ProjectName input {
+    width: 98%;
+}
+
 
 .InstantPricing h3 {
 	margin: 0px;
@@ -72,10 +75,15 @@
 	font-weight: normal;
 	background-color: #ffffff;
 	padding: 2px;
+   text-align: center;
+}
+.InstantPricing .Prices input,  .InstantPricing #subtotal input {
+	text-align: right;
 }
 
 .InstantPricing fieldset {
 	padding: 0px;
+	margin: 0px;
     border: none;
     width: 100%;
 }
@@ -89,10 +97,6 @@ display: none;
 {
    color: #99000a;
 }
-div.Prices
-{
-   text-align: center;
-}
 #Specials {
 	width: 380px;
 }
@@ -101,4 +105,15 @@ div.Prices
 }
 #reference {
 	width: 95%;
+}
+div#instant_price_section fieldset div.content ul li p {
+    padding: 0px;
+    margin: 0px;
+    width: 100%;
+}
+
+p.buttons {
+	float: none;
+	width: 100%;
+	text-align: right;
 }

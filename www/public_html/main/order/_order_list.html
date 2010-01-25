@@ -1,7 +1,4 @@
 <? eval (
-	require Date::Parse;
-	require Date::Format;
-	require openprint::Order;
 	$param{'/main/order/history.html?lastupdated'} = time;
 	if ( $param{'ddmStartYear'} ) {
 		openprint::store_session( '/main/order/history.html', \%param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
@@ -46,8 +43,8 @@
 			<th align="left" width="75">Order ID</th>
 			<th align="left" width="75">Docket</th>
 			<th align="left">Ordered By</th>
-			<th align="center" width="120">Date</th>
-			<th align="right" width="125">Status</th>
+			<th class="Date">Date</th>
+			<th class="Status">Status</th>
 			<th class="Price">Total</th>
 			<th class="Price">Balance</th>
 		</tr>
@@ -74,8 +71,8 @@
 			<td><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
 			<td><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
 			<td align="left"><? echo ( $$variable{'Order'}->name(); ) ?></td>
-			<td align="right"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></td>
-			<td align="right"><? echo ( $$variable{'Order'}->status(); ) ?></td>
+			<td class="Date"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></td>
+			<td class="Status"><? echo ( $$variable{'Order'}->status(); ) ?></td>
 			<td class="Price"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'total'} ); ) ?></td>
 			<td class="Price"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'balance'} ); ) ?></td>
 		</tr>

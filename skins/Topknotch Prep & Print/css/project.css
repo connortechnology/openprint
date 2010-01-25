@@ -5,45 +5,48 @@ div.Project div.View {
 	margin: 5px;
 }
 
-div.ProjectHeader {
+div.Project .Header {
 	background:#daf3fc;
 	margin: 0px;
 }
-div.ProjectHeader:after {
+div.Project .Header:after {
     content: ".";
     display: block;
     height: 0;
     clear: both;
     visibility: hidden;
 }
-div.ProjectHeader {display: inline-block;}
+div.Project .Header {display: inline-block;}
 /* Hides from IE-mac \*/
-* html div.ProjectHeader {height: 1%;}
-div.ProjectHeader {display: block;}
+* html div.Project .Header {height: 1%;}
+div.Project .Header {display: block;}
 /* End hide from IE-mac */
 
-div.ProjectHeader fieldset {
+div.Project .Header fieldset {
 	border-left: none;
 	border-right: none;
 	border-bottom: none;
 	margin-bottom: 0px;
 	padding: 0px;
 	text-align: left;
+}
+div.Project .Header div#ProjectInformation {
+	float: left;
 	width: 50%;
 }
-div.ProjectHeader fieldset#ProjectInformation {
-	float: left;
-}
-div.ProjectHeader fieldset#ContactInformation {
+div.Project .Header div#ContactInformation {
 	float: right;
+	width: 50%;
 }
-div.ProjectHeader fieldset#Reference {
+div.Project .Header div#Reference {
 	float: left;
 	text-align: left;
+	width: 50%;
 }
-div.ProjectHeader fieldset#Description {
+div.Project .Header div#Description {
 	float: right;
 	text-align: left;
+	width: 50%;
 }
 
 .ProjectSummary div.row {
