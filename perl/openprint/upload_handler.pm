@@ -8,11 +8,10 @@ use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NO
 use Apache2::Log;
 use Apache2::ServerUtil ();
 use Apache2::RequestIO ();
+use Apache2::Cookie;
 use Apache::Session::Postgres;
 
 use Date::Calc qw(Add_Delta_Days);
-use MIME::QuotedPrint;
-use MIME::Base64;
 
 use strict;
 
@@ -24,26 +23,27 @@ require configuration;
 require openprint::login;
 
 use openprint;
-use vars qw( %variable %session %param %config $log $dbh );
+use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *param = \%openprint::param;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
+*r = \$openprint::r;
 
 sub handler {
 	my $request = shift;
+	$r = Apache2::Request->new( $request );
+	$r->content_type(q{text/html; charset=utf-8});
 	$log	= $request->log;
 
 	$request->no_cache(1);
-	#$request->headers_out('Cache-Control', 'no-store, no-cache');
 
-	#my $starttime = time;
-	#$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
+	my $starttime = time;
+	$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
 	#$r->parse;
 
-	#$log->debug("Database: $sql_server{'database'} Page: " . $r->uri());
 	$dbh = sql::open_sql( $log, 
 			'database'	=> $request->dir_config('db_name'),
 			'driver'	=> $request->dir_config('db_driver'),
@@ -52,17 +52,7 @@ sub handler {
 			'password'	=> $request->dir_config('db_password'),
 			);
 
-	my $r;
-    my $cookies = Apache2::Cookie->fetch( $r );
-    my $cookie = $$cookies{'_session_id'};
-    $cookie = $cookie->value if $cookie;
-
-	tie %session, 'Apache::Session::Postgres', $cookie, {
-		Handle      => $dbh,
-					Commit      => 0,
-					IDLength    => 8,
-	};
-
+	openprint::session_init();
 
 	if ( $request->method eq 'POST' ) {
 		my $uploaded = 0;
@@ -92,16 +82,25 @@ sub handler {
     } # end foreach
 
 	if ( $r->param('action') eq 'get_progress_and_size' ) {
-		my ($progress,$size,$elapsedtime) = sql::execute( $log, $dbh, q{SELECT size, total, extract( epoch from date_trunc('seconds', NOW()) - date_trunc('seconds', start ) ) FROM Uploads WHERE id=?}, $r->param('serial') );
+		my $data = $dbh->selectrow_hashref(q{SELECT size, total, extract( epoch from date_trunc('seconds', NOW()) - date_trunc('seconds', start ) ) as elapsed FROM Uploads WHERE id=?} , {}, $r->param('serial') );
+		if ( ! $data ) {
+			$log->debug("No uploadin progress for " . $r->param('serial') );
+			$data = {};
+		} else {
+		$log->debug("$data");	
+foreach my $k ( keys %$data ) {
+$log->debug("($k) -> $$data{$k}");
+}
+		}
 
 #<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-		my $output =qq{ 
+		my $output =qq` 
 <response>
-<completedsize>$progress</completedsize>
-<totalsize>$size</totalsize>
-<elapsedtime>$elapsedtime</elapsedtime>
-<serial>}.$r->param('serial').q{</serial></response>};
-		#$log->debug($output);
+<completedsize>$$data{'size'}</completedsize>
+<totalsize>$$data{'total'}</totalsize>
+<elapsedtime>$$data{'elapsed'}</elapsedtime>
+<serial>`.$r->param('serial').q{</serial></response>};
+		$log->debug($output);
 		$request->content_type('text/xml');
 		$r->print( $output );
 	} else {
@@ -163,7 +162,7 @@ sub handler {
 
 	untie %session;
 	#$dbh->disconnect();# if $dbh->{'thread_id'};
-	#$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
+	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	return Apache2::Const::OK;
 }
 
@@ -189,10 +188,10 @@ sub get_destdir {
 	if ( $session{'company_id'} ) {
 		( $destdir ) = new openprint::Company( $session{company_id} )->name();
 		$destdir = '/'.$destdir.'/';
-		return '' if ! create_dir( $openprint::config{'ProjectFilesPath'}.$destdir );
+		return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
 	} else {
 # This ends up prefixing the file with the company's name
-		$destdir .= $openprint::param{'txtCompanyName'} . '_';
+		$destdir .= $param{'txtCompanyName'} . '_';
 	} # end if
 
 	if ( $param{'docket'} ) {
@@ -215,7 +214,7 @@ sub upload_files {
 		$param{'docket'} = new openprint::Project( $param{'project_id'} )->docket();
 	} elsif ( $param{'docket'} and ! $param{'project_id'} ) {
 		$param{'docket'} =~ s/\D//g;
-		my @Projects = openprint::Project::find('docket'=>$param{'docket'});
+		my @Projects = openprint::Project::find('docket'=>$param{'docket'}) if $param{'docket'};
 		$param{'project_id'} = $Projects[0]->id() if @Projects;
 	} # end if
 
@@ -272,28 +271,28 @@ sub upload_files {
 		} else {
 			$from = $param{'txtEmailAddress'};
 			if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
-				$from = $openprint::config{'OrderingEmail'};
+				$from = $config{'OrderingEmail'};
 			} # end if
 		} # end if
 		if ( $session{'company_id'} ) {
-			( $csr_id ) = sql::execute( $log, $dbh, q{SELECT lngSalesPerson FROM Company WHERE Index=?}, $session{'company_id'} );
+			$csr_id = new openprint::Company( $session{'company_id'} )->salesrep_id();
 		} # end nif
 		if ( $csr_id ) {
 			my $CSR = new openprint::User( $csr_id );
 			$to = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email') ),
 		} else {
-			$to = $openprint::config{'OrderingEmail'};
+			$to = $config{'OrderingEmail'};
 		} # end if
-		my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'}. '/email_template.html' );
+		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 		my $body = ssi::variable_substitution( \$email_template, $variable );
 		my %mail = (
-						SMTP    => $openprint::config{'Mail Server'},
+						SMTP    => $config{'Mail Server'},
 						FROM    => $from,
 						TO		=> $to,
-						#BCC		=>	'iconnor@penultima.org',
+						BCC		=>	'iconnor@penultima.org',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 				   );
-		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
+		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 
 		# Send transcript to uploader
 		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
@@ -311,12 +310,13 @@ sub upload_files {
 		} # end if
         $body = ssi::variable_substitution( \$email_template, $variable );
         %mail = (
-                        SMTP    => $openprint::config{'Mail Server'},
+                        SMTP    => $config{'Mail Server'},
                         FROM    => $from,
                         TO      => $to,
+						BCC		=>	'iconnor@penultima.org',
                         SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
                    );
-        misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
+        misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 
 	} # end if
 } # end sub upload_files
@@ -341,7 +341,7 @@ sub get_files {
 		if ( $r->param('project_id') ) {
 			$_ = q{SELECT description FROM project_files WHERE project_id=? AND filename =?};
 			( $description ) = sql::execute( $log, $dbh, $_, $r->param('project_id'), $file );
-		} # end if project_index
+		} # end if project_id
 		push @{$$variable{'PROJECT_FILES'}}, "$company_name/$docket", $file, $description;
 	} # end foreach
 	return @{$$variable{'PROJECT_FILES'}};

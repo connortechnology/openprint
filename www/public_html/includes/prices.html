@@ -34,11 +34,11 @@
 	<? echo (
 		my $Currency = openprint::Currency::get_current();
 		if ( $Currency ) {
-		return 'All prices listed in ' .$Currency->name .' and are subject to applicable taxes.';
+			return 'All prices listed in ' .$Currency->name .' and are subject to applicable taxes.';
 		} else {
 			return 'Currency not selected.';
 		} # end if
-		) ?>
+	) ?>
 	<ul>
 		<li>
 			<label>Sub Total <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>

@@ -221,6 +221,16 @@ sub delete {
 	return;
 } # end sub delete
 
+sub undelete {
+	my $self = shift;
+    my $type = ref $self;
+    my $table = eval '$'.$type.'::table';
+	my %fields = eval '%'.$type.'::fields';
+	sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{'id'}], 'deleted', 0 );
+	$$self{'deleted'} = 0;
+	delete $openprint::Object::cache{$type}{$$self{id}};
+} # end sub undelete
+
 sub destroy {
 	my ( $self ) = @_;
 	my $type = ref $self;

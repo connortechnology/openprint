@@ -109,6 +109,16 @@ sub priceperm {
 		return sprintf('%.2f', $$self{'Price'} *= $Paper->mweight() / 100 );
 	} # end if
 } # end sub priceperm
+sub costperfoot {
+	my $self = $_[0];
+	my $Paper = $self->Paper();
+	return sprintf('%.2f', $$self{'Cost'} *= ( $Paper->wpsi() * 144 ) /100 );
+}
+sub priceperfoot {
+	my $self = $_[0];
+	my $Paper = $self->Paper();
+	return sprintf('%.2f', $$self{'Price'} *= ( $Paper->wpsi() * 144 ) /100 );
+}
 
 1;
 

@@ -23,6 +23,7 @@
 				<? if ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
 				<!--#include virtual="/includes/main/proj/banner_printing.html"-->
 				<? endif ( $$variable{'ProjectType'}->name() eq 'Banners' ) ?>
+				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), [ 'Banners' ] ) ) ?>
 				<div class="Colours">
 					<fieldset><legend>Colours</legend>
 						<div class="content">
@@ -56,6 +57,9 @@
 						</div>
 					</fieldset>
 				</div>
+				<? else ( ! sets::isin( $$variable{'ProjectType'}->name(), [ 'Banners' ] ) ) ?>
+				<input type="hidden" id="Colours" name="Colours" value="4/0" />
+				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), [ 'Banners' ] ) ) ?>
 				<div class="Stock"><fieldset><legend>Stock</legend>
 					<div class="content">
 						<ul>
@@ -64,12 +68,12 @@
 					</div>
 					</fieldset>
 				</div>
-				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead','Posters','Labels'] ) ) ?>
+				<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead','Posters','Labels','Banners'] ) ) ?>
 				<div class="Finishing"><fieldset>
 					<legend>Finishing</legend>
 					<div class="content">
 						<ul>
-					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['NCR','ScratchPads','RackCards'] ) ) ?>
 					<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['GreetingCards'] ) ) ?>
 							<!--#include virtual="/includes/drilling.html"-->
@@ -83,7 +87,7 @@
 							<!--#include virtual="/includes/padding.html"-->
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
 							<!--#include virtual="/includes/perfing.html"-->
-					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs'] ) ) ?>
+					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
 							<!--#include virtual="/includes/shrinkwrapping.html"-->
 							<!--#include virtual="/includes/bundling.html"-->
@@ -92,7 +96,7 @@
 					</div>
 					</fieldset>
 				</div>
-				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead','Posters','Labels'] ) ) ?>
+				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead','Posters','Labels','Banners'] ) ) ?>
 				<div class="Production">
 					<fieldset><legend>Production</legend>
 						<div class="content">

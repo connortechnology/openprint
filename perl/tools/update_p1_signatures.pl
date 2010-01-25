@@ -33,7 +33,7 @@ sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBl
 sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 
-foreach my $Project ( openprint::Project::find( 'id'=>66604, 'updated_on_start'=> sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), - 30 ) ) ) ) {
+foreach my $Project ( openprint::Project::find( 'order'=>'id desc' ) ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -134,8 +134,18 @@ foreach my $Project ( openprint::Project::find( 'id'=>66604, 'updated_on_start'=
 			} # end foreach
 		} # end if
 	} # end foreach service
+	foreach my $service ( 'Padding' ) {
+		if ( $$services{$service} ) {
+			foreach my $ss_id ( @{$$services{$service}} ) {
+				my $specs = openprint::service::get_specs_ref( $Project, $ss_id );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'rdbCardboardBacking', $$specs{'rdbCardboardBacking'} eq 'Y' ? 'Cardboard' : 'None' );
+			} # end foreach ssid
+		} # end if
+	} # end foreach
 	my $summary = $Project->summary();
 
 	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
 
 } # end foreach Project
+1;
+__END__

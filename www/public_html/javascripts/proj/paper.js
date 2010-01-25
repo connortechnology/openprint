@@ -113,8 +113,7 @@ function rdbSuppliedStock_onchange( element, id ) {
 function ddmStockBrand_onchange( element, id ) {
 	var form = element.form;
 	if ( gettingNewPrice ) {
-		if ( timeout )
-			clearTimeout( timeout );
+		if ( timeout ) clearTimeout( timeout );
 		timeout = setTimeout( 'ddmStockBrand_onchange(document.' + element.form.name + '.elements["' + element.name + '"],"' + id + '");', 1000 );
 		return;
 	} // end if

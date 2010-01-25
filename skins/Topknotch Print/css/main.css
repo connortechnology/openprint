@@ -93,6 +93,10 @@ div.row:after {
 	width: 95px;
 	margin-left: -100px;
 }
+.ProjectHistory fieldset p label.radio {
+	width: auto;
+	margin:0px;
+}
 fieldset.SelectCustomer p {
 	padding-left: 100px;
 }
@@ -282,7 +286,7 @@ width: 17px;
 height: 22px;
 }
 div#main_page {
-	padding-right: 10px;
+	padding: 0px 10px 0px 20px;
 	width: auto;
 }
 div#main_page:after {
@@ -298,9 +302,9 @@ div#main_page:after {
 /* End hide from IE-mac */
 
 div#main_page_content {
-	padding-left: 20px;
-	padding-right: 10px;
-	float: right;
+	margin: 0px;
+	width: 100%;
+	float: left;
 }
 div#main_page_content:after {
 	content: ".";

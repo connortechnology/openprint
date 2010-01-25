@@ -687,7 +687,7 @@ $openprint::log->debug("No presses in used_press_name");
 	} elsif ( $debug ) {
 		$openprint::log->debug("Loading Projects ($sql) (@values) # of results:" . @$data );
 	} # end if
-	return map { new openprint::Project( $_->{index}, $_ ) } @$data;
+	return map { new openprint::Project( $_->{id}, $_ ) } @$data;
 } # end sub find
 
 sub save {

@@ -11,6 +11,6 @@
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
 	</head>
 	<body>
-	<?PageContent?>
+	<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 	</body>
 </html>

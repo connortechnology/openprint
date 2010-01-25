@@ -48,7 +48,7 @@ sub information {
 		$order_id = openprint::order::make_order_from_order( $order_id );
 		return if ! $order_id;
 	} elsif ( $param{'btnFunction'} eq 'ReOpen' ) {
-		delete_unfinished_orders();
+		openprint::order::delete_unfinished_orders();
 		if ( $order_id = $param{'OrderID'} ) {
 			my $Order = new openprint::Order( $order_id );
 			$Order->save({'status'=>'Re-Opened','session_id'=>$session{'_session_id'}});

@@ -379,6 +379,15 @@ thead th {
 	}
 
 #website-masthead A.Logo {
+	float: left;
+}
+div#CurrencySelection {
+	float: left;
+	margin: 2px;
+}
+div#CompanySelection {
+	float: left;
+	margin: 2px;
 }
 #website-masthead li img {
 	margin-right: 10px;
@@ -822,3 +831,7 @@ label.radio, fieldset ul li label.radio, fieldset p label.radio, fieldset .conte
 	width: auto;
 	float: none;
 } 
+img.Override {
+    height: 16px;
+}
+

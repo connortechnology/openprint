@@ -2,10 +2,7 @@
 <h1>PROJECTS</h1>
 <h2>History</h2>
 </div>
-<? if ( $$variable{'error'} ) ?>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
-
+<!--#include virtual="/includes/error_reporting.html"-->
 <script type="text/javascript">
 <!--
 	function delete_confirm(form) {
@@ -40,7 +37,7 @@
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
    <div class="ProjectHistory">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
-			<div style="float: left; width: 48%;">
+			<div class="leftColumn">
 			<p>
 				<label>Project #:</label>
 				<input type="text" name="ProjectID" size="6" onkeydown="if(event.keyCode == 13){load_projects( this.form );}"/>
@@ -90,7 +87,7 @@
 	@$variable{'UpdatedEndYears','UpdatedEndMonths','UpdatedEndDays'} = ssi::get_dates( $log, $dbh, @session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} );
 ) ?>
 			</div>
-			<div style="float: left; width: 50%;">
+			<div class="rightColumn">
 			<p>
 				<label>Creation Date:</label>
 				<span class="DateSelector">

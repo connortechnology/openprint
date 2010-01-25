@@ -27,7 +27,8 @@
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
 				</p>
 			</fieldset>
-   			<fieldset id="UserInformation"><legend>User Information:</legend>
+			<div id="UserInformation">
+   			<fieldset><legend>User Information:</legend>
 				<div class="content">
 					<ul>
    				<li> 
@@ -108,7 +109,9 @@
 				</ul>
 				</div>
    			</fieldset>
-   			<fieldset id="LoginInformation"><legend>Login Information</legend>
+			</div>
+			<div id="LoginInformation">
+   			<fieldset><legend>Login Information</legend>
 				<div class="content">
 					<ul>
 						<li>
@@ -126,6 +129,7 @@
 					</ul>
 				</div>
    			</fieldset>
+			</div>
 		</div><!--UserProfile-->
 		<input type="hidden" name="btnFunction"/>
 	</form>

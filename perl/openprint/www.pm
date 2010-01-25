@@ -14,7 +14,6 @@ use Apache2::RequestIO ();
 use Apache::Session::Postgres;
 use Apache2::Cookie;
 
-
 require openprint::quote;
 require openprint::main_quote;
 
@@ -52,7 +51,6 @@ sub handler {
 	my $request = shift;
 	$r = Apache2::Request->new( $request );
 	$r->content_type(q{text/html; charset=utf-8});
-
 
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);

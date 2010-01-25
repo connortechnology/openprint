@@ -160,6 +160,7 @@ function validate_data(formName) {
 } // end function validate_data
 
 function calc_print( formName, force ) {
+	if ( block_calc ) return;
 
 	var form = getFormObj( formName );
 
@@ -236,6 +237,7 @@ function clear_price_data( form ) {
 // This function does all the extra stuff required for printing
 function cbFillPrintResults( results ) {
 	cbFillResults( results );
+	block_calc = true;
 	var form = getFormObj( 'f1' );
 
 	for ( var i = 1; i <= 3; i += 1 ) {
@@ -260,6 +262,7 @@ function cbFillPrintResults( results ) {
 			} // end if
 		} // end if
 	} // end for
+	block_calc = false;
 
     var addServices = new Array();
     var cancelAddFolding = false;

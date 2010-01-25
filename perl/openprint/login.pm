@@ -59,11 +59,15 @@ sub verify_login {
 
 	if ( ! @Users ) {
 		# user not found.	Let's see if we got the password wrong, or the email wrong.
-		if ( ! ( @Users = openprint::User::find('email'=>$email) ) ) {
-			$$variable{'information'} = "\"$email\" is not a valid account.	Please try again.";
-		} else {
+		if ( @Users = openprint::User::find('email'=>$email) ) {
 			$$variable{'information'} = "The password you entered was not correct.	Please try again.";
 			openprint::logs::insertLogRecord(78,'Invalid Password', $Users[0]->id() );
+		} elsif ( @Users = openprint::User::find('email'=>$email,'deleted'=>1) ) {
+			$$variable{'information'} = "\"$email\" Has been deleted.  Please contact us to have your account re-instated.";
+			openprint::logs::insertLogRecord(78,'Account Deleted', $Users[0]->id() );
+		} else {
+			$$variable{'information'} = "\"$email\" is not a valid account.	Please try again.";
+			openprint::logs::insertLogRecord(78,'Invalid login: '. $email );
 		} # end if
 		$$variable{'error'} = 'Authentication Failed.';
 		return;

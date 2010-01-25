@@ -8,13 +8,15 @@ Docket:<a href="<? echo ( $openprint::config{'InternalSiteURL'} ) ?>/employee/or
 </div>
 <div class="rightColumn">
 	<b>Ordered By:</b><br/>
-	<?txtSalutation?> <?txtFirstName?> <?txtLastName?> <br/>
-	<?txtCompanyName?> <br/>
-	<?txtAddress1?> <br/>
-	<? if ( $$variable{'txtAddress2'} ) ?> <?txtAddress2?> <br/> <? endif ( $$variable{'txtAddress2'} ) ?>
-	<?CCITYPROVCOUNTRY?> <br/>
-	<?txtPostalCode?> <br/>
-	<?txtPhone?> <?txtExtension?> <br/>
-	<?txtFax?> <br/>
-	<?txtEmail?>
+	<? hecho ( join(' ', $$variable{'Order'}->get('salutation','first_name','last_name') ); ) ?>
+	<? hecho ( $$variable{'Order'}->companyname() ) ?> <br/>
+	<? hecho ( $$variable{'Order'}->address1() ) ?> <br/>
+	<? if ( $$variable{'Order'}->address2() ) ?>
+	<? hecho ( $$variable{'Order'}->address2() ) ?><br/>
+	<? endif ( $$variable{'Order'}->address2() ) ?>
+	<? echo ( misc::build_city_prov_country($$variable{'Order'}->get('city','state','country') ); ) ?><br/>
+	<? hecho ( $$variable{'Order'}->postalcode() ) ?> <br/>
+	<? hecho ( $$variable{'Order'}->phone().$$variable{'Order'}->extension() ) ?><br/>
+	<? hecho ( $$variable{'Order'}->fax() ) ?> <br/>
+	<? echo ( $$variable{'Order'}->email() ) ?>
 </div>

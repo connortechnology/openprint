@@ -17,8 +17,20 @@
 		foreach my $category ( 'Prepress','Printing','Bindery','Specialty','Packaging','Shipping','Custom Services','Materials' ) {
 			if ( $category eq 'Printing' ) {
 				if ( $$services{'AdditionalSignature'} ) {
+					my $printing_total = 0;
 					foreach my $service_id ( @{$$services{'AdditionalSignature'}} ) {
-					} # end if
+						my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
+						$printing_total += $$service_specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
+					} # end foreach
+
+					$html .= sprintf('<tr%1$s><td class="service">%2$s</td><td class="description">%3$s</td><td class="price">%4$s%5$s</td></tr>', 
+							$rowclass, 'Printing', '',
+							$Currency->symbol(),
+							Number::Format::format_number($$variable{'Project'}->Currency()->convert_from($printing_total),2,2),
+						);
+						$total += $printing_total;
+						$html .= "\n";
+						$rowclass = $rowclass ? '' : ' class="colRow"';
 				} elsif ( $$services{''} ) {
 					my $service_id = $$services{''}[0];
 					my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );

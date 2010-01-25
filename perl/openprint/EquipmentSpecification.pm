@@ -9,7 +9,7 @@ use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
+my $debug = 0;
 $table = 'tbl_Equipment_Specifications';
 $serial = 'tbl_equipment_specifications_id_seq';
 

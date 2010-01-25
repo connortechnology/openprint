@@ -40,8 +40,17 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 				</select>
 			</p>
 			<p> 
-				<label>State/Province:</label>
-				<select name="state">
+				<label for="state" id="country_state"><? echo (
+					if ( $$variable{'Company'}->country() eq 'US' ) {
+						return 'State:';
+					} elsif ( $$variable{'Company'}->country() eq 'CA' ) {
+						return 'Province:';
+					} else {
+						return 'State/Province:';
+					} # end if
+				) ?>
+				</label>
+				<select id="state" name="state">
 					<option value=""> Select </option>
             <? echo (
                 ssi::make_drop_down( \@states::states, $$variable{'Company'}->state() ).
@@ -54,7 +63,16 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 				<input type="text" name="city" value="<? hecho ( $$variable{'Company'}->city() ) ?>"  />
 			</p>
 			<p> 
-				<label for="postalcode">Zip/Postal Code:</label>
+				<label for="postalcode" id="country_postal"><? echo (
+					   if ( $$variable{'Company'}->country() eq 'US' ) {
+							   return 'Zip Code:';
+					   } elsif ( $$variable{'Company'}->country() eq 'CA' ) {
+							   return 'Postal Code:';
+					   } else {
+							   return 'Zip/Postal Code:';
+					   } # end if
+					) ?>
+					</label>
 				<input type="text" name="postalcode" value="<? hecho ( $$variable{'Company'}->postalcode() ) ?>"  />
 			</p>
 			<p> 
