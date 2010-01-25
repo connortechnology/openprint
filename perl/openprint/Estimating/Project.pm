@@ -72,7 +72,6 @@ sub calc {
 		$log->error( $_ );
 	} # end if
 
-
 	# I don't remember exactly why we need to add cutting so early.
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) and ! $$services{'Cutting'} ) {
 		push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
@@ -142,7 +141,7 @@ sub calc {
 				$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
 			} # end if
 		} # end if
-if ( $ProjectType->name() eq 'PresentationFolders' ) {
+		if ( $ProjectType->name() eq 'PresentationFolders' ) {
 $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPocketRight'} ");
             $$specs{'txtWidth'} = $$specs{'txtFinalWidth'} * 2;
             my $pockets;
@@ -155,7 +154,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
                 $pockets += 1;
             } # end if
             $$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'rdbPocketSize'};
-} # end if
+		} # end if
 	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSheetSize'} ) ) {
 		@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
@@ -171,10 +170,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	if ( ! $$specs{'txtQuantity1'} ) {
-		$$specs{'alert'} .= 'Please enter the quantity.';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
 
 	if ( exists $$specs{'txtTotalPageQuantity'} ) {
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
@@ -406,6 +401,13 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 					$printing_specs{$spec} = $$specs{$spec};
 				} # end if
 			} # end foreach
+		} elsif ( $ProjectType->name() eq 'PresentationFolders' ) {
+			foreach my $spec ( 'PocketSize' ) {
+				if ( $printing_specs{$spec} ne $$specs{$spec} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
+					$printing_specs{$spec} = $$specs{$spec};
+				} # end if
+			} # end foreach
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'rdbTemplateType', $$specs{'FoldType'} );
 		} # end if
@@ -414,6 +416,11 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
 		%printing_specs = %{$sig_specs};
 	} # end if printing
+
+	if ( ! $$specs{'txtQuantity1'} ) {
+		$$specs{'alert'} .= 'Please enter the quantity.';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	if ( $$specs{'Status'} eq 'uncalculated' ) {
 		delete $$specs{'txtPrice1'};

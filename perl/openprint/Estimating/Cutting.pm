@@ -415,14 +415,14 @@ sub signature_calc {
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		@my_equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
 	} else {
-		if ( ! @equipment ) {
-			my @capabilities = ('Y','When Printing','When Folding');
-			if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
-				push @capabilities, 'When Stitching';
-			} # end if
-			@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+		my @capabilities = ('Y','When Printing','When Folding');
+		if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
+			push @capabilities, 'When Stitching';
 		} # end if
-		@my_equipment = @equipment;
+		if ( $Project->Type()->name() eq 'Banners' ) {
+			push @capabilities, 'Banners';
+		} # end if
+		@my_equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -902,6 +902,9 @@ sub display {
 	my @capabilities = ('Y','When Printing','When Folding');
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
+	} # end if
+	if ( $Project->Type()->name() eq 'Banners' ) {
+		push @capabilities, 'Banners';
 	} # end if
 
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');

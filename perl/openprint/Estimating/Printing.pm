@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 my %folding_cache;
@@ -216,6 +216,8 @@ my %variables = (
 		# These two are for when the customer is supplying the pages. The first just says whether the pages are supplied, the second tells us whether they are supplying sheets or folded signatures.
 		'pages_supplied'=>['save'],
 		'supplied_format'=>['save'],
+# Banners
+		'grommets' => ['save'],
 		);
 
 sub variables {
@@ -712,7 +714,12 @@ my $master_time = gettimeofday();
 		} else {
 			$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 		} # end if
-$openprint::log->debug("Banners: $width != $$specs{txtWidth}");
+		if ( $$specs{'txtFinalHeight'} > $$specs{'txtHeight'} ) {
+			$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
+			$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
+		} else {
+			$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
+		} # end if
 	} elsif ( $Project->Type()->name() eq 'PresentationFolders' ) {
 		if ( $$specs{'ddmProjectSize'} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
@@ -1067,9 +1074,9 @@ $openprint::log->debug("SideOne " . @side_one_colours . " Side Two: " . @side_tw
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-#foreach my $P ( @Papers ) {
-#$openprint::log->debug("Initial Papers: " . $P->type() .':' . $P->width() . 'x' . $P->height() );
-#} # end foreach
+foreach my $P ( @Papers ) {
+$openprint::log->debug("Initial Papers: " . $P->type() .':' . $P->width() . 'x' . $P->height() );
+} # end foreach
 # If Stock size is overridden, check the list of stocks to see if the specified on is in the list.  If it isn't, then add duplicates, cut to size
 
 	if (
