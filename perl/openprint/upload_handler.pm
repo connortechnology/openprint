@@ -8,11 +8,10 @@ use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NO
 use Apache2::Log;
 use Apache2::ServerUtil ();
 use Apache2::RequestIO ();
+use Apache2::Cookie;
 use Apache::Session::Postgres;
 
 use Date::Calc qw(Add_Delta_Days);
-use MIME::QuotedPrint;
-use MIME::Base64;
 
 use strict;
 
@@ -35,13 +34,14 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 sub handler {
 	my $request = shift;
+	$r = Apache2::Request->new( $request );
+	$r->content_type(q{text/html; charset=utf-8});
 	$log	= $request->log;
 
 	$request->no_cache(1);
-	#$request->headers_out('Cache-Control', 'no-store, no-cache');
 
-	#my $starttime = time;
-	#$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
+	my $starttime = time;
+	$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
 	#$r->parse;
 
 	$dbh = sql::open_sql( $log, 
@@ -52,15 +52,7 @@ sub handler {
 			'password'	=> $request->dir_config('db_password'),
 			);
 
-    my $cookies = Apache2::Cookie->fetch( $r );
-    my $cookie = $$cookies{'_session_id'};
-    $cookie = $cookie->value if $cookie;
-
-	tie %session, 'Apache::Session::Postgres', $cookie, {
-		Handle      => $dbh,
-					Commit      => 0,
-					IDLength    => 8,
-	};
+	openprint::session_init();
 
 	if ( $request->method eq 'POST' ) {
 		my $uploaded = 0;
@@ -170,7 +162,7 @@ $log->debug("($k) -> $$data{$k}");
 
 	untie %session;
 	#$dbh->disconnect();# if $dbh->{'thread_id'};
-	#$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
+	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	return Apache2::Const::OK;
 }
 
@@ -297,10 +289,10 @@ sub upload_files {
 						SMTP    => $config{'Mail Server'},
 						FROM    => $from,
 						TO		=> $to,
-						#BCC		=>	'iconnor@penultima.org',
+						BCC		=>	'iconnor@penultima.org',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 				   );
-		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
+		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 
 		# Send transcript to uploader
 		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
@@ -321,9 +313,10 @@ sub upload_files {
                         SMTP    => $config{'Mail Server'},
                         FROM    => $from,
                         TO      => $to,
+						BCC		=>	'iconnor@penultima.org',
                         SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
                    );
-        misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
+        misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 
 	} # end if
 } # end sub upload_files

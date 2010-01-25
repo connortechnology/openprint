@@ -35,6 +35,7 @@
 		} else {
 			$log->error("Couldn't open directory ($config{'ProjectFilesPath'}$destdir)");
         } # end if
+		$log->debug("Looking in directory ($config{'ProjectFilesPath'}$destdir)");
 
         @{$$variable{'PROJECT_FILES'}} = ();
         foreach my $file ( @filenames ) {

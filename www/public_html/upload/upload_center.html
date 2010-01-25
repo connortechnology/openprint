@@ -87,10 +87,10 @@ function check_input( form ) {
 		<span style="float:right;">
 		<? echo ( 
 			  my $qry;
-			  if( $openprint::param{'docket'} ) {
-				  $qry = '?docket=' . $openprint::param{'docket'};
-			  } elsif( $openprint::param{'project_id'} ) {
-				  $qry = '?project_id=' . $openprint::param{'project_id'};
+			  if( $param{'docket'} ) {
+				  $qry = '?docket=' . $param{'docket'};
+			  } elsif( $param{'project_id'} ) {
+				  $qry = '?project_id=' . $param{'project_id'};
 			  } # end if
 			ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', "", "/upload/upload_center.html$qry", 'Cancel Upload' );
 		) ?>
@@ -104,10 +104,10 @@ function check_input( form ) {
 		<span style="float:right;">
 		<? echo ( 
 			  my $qry;
-			  if( $openprint::param{'docket'} ) {
-				  $qry = '?docket=' . $openprint::param{'docket'};
-			  } elsif( $openprint::param{'project_id'} ) {
-				  $qry = '?project_id=' . $openprint::param{'project_id'};
+			  if( $param{'docket'} ) {
+				  $qry = '?docket=' . $param{'docket'};
+			  } elsif( $param{'project_id'} ) {
+				  $qry = '?project_id=' . $param{'project_id'};
 			  } # end if
 			  
 			  ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "", "/upload/upload_center.html$qry", 'Upload More Files' ); 

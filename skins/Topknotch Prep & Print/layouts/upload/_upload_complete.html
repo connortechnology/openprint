@@ -12,6 +12,6 @@
 		<script type="text/javascript" src="/javascripts/buttons.js"></script>
 	</head>
 	<body onLoad="try { if (parent.displayUploadResults) { parent.displayUploadResults($(bodyPage)); } } catch (theError){return false; }">
-	<?PageContent?>
+	<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 	</body>
 </html>
