@@ -143,6 +143,9 @@ div.Service fieldset {
     margin: 2px;
     padding: 4px;
 }
+div.Service fieldset p input, div.Service fieldset p select {
+	width: auto;
+}
 .AddToProjectButtons {
     float: right;
 }
