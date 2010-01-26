@@ -187,7 +187,7 @@ ul#menubar li#Setup a {
 	width: 20px;
 	text-align: center;
 }
-.Range  {
+td.Range  {
 	width: auto;
 	text-align: center;
 }
@@ -200,10 +200,9 @@ ul#menubar li#Setup a {
 .Product table.List tr td.Markup input {
 	text-align: right;
 }
-.Product table.List tr td.Range input, table.List tr td.Range input[type="text"] {
-	width: 48%;
+table.List tr td.Range input {
+	width: 45%;
 	text-align: left;
-
 }
 .Units {
 	width: 90px;
