@@ -49,6 +49,13 @@ sub init_cache {
 	%find_cache = ();
 } # end sub init_cache
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
+
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;
@@ -126,6 +133,7 @@ $openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $
 		push @values, $params{'category'};
 	} # end if
 
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
