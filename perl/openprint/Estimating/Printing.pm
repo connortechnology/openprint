@@ -3624,7 +3624,7 @@ sub select_presses {
 			$varnish = 1;
 		} # end if
 	} # end if
-	my @Coatings = map { $_->name() } openprint::Service::find('category'=>'Coatings');
+	my @Coatings = map { $_->name() } openprint::Service::find('category'=>'Coating');
 	my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
 	my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
 
