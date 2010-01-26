@@ -71,7 +71,7 @@ sub variables {
 	'hdnBreakdown1',
 	'hdnBreakdown2',
 	'hdnBreakdown3',
-'alert','Status',
+	'alert','Status',
 );
 sub outputs {
 	return @outputs;
@@ -134,7 +134,7 @@ sub calc {
 		my $GrandTotal = 0;
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			$$specs{'hdnBreakdown'.$qty_index} .= "Signature: $$sig_specs{'txtServiceDescription'},<br/>" if $$sig_specs{'txtServiceDescription'} ne '';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Printed: ' .openprint::service::summary( $Project, $signature_service_index, $qty_index ).'<br/>';
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'alert'} .= 'No imposition was found for printing. Please complete the printing estimation first.<br/>';
@@ -347,7 +347,7 @@ sub signature_calc {
 					last;
 				} # end if
 
-				if ( sets::isin($imp->runstyle(),['Work & Turn','Work & Tumble']) and ($Equipment->specification('WT UVCoating') ne 'Y') ) {
+				if ( (sets::intersection( @front_uv, @back_uv ) != sets::union( @front_uv, @back_uv ) ) and sets::isin($imp->runstyle(),['Work & Turn','Work & Tumble']) and ($Equipment->specification('WT UVCoating') ne 'Y') ) {
 					$breakdown .= 'Does not support WT UV Coating<br/>';
 					if ( $$services{'Cutting'} and ($set_index+1 == @Sets_Of_Impositions) ) {
 						my @new_imps = @$impositions;
@@ -404,12 +404,14 @@ $openprint::log->debug("Types: @types");
 						$ImpositionPrice{'MakeReady'} += $setupPrice;
 						$MakeReadies{$Equipment->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index};
 					} # end if
+					$breakdown .= sprintf('%s MR: $%.2f', $type, $setupPrice );
 
 					my $BlanketCutPrice = 0;
 					if ( $type =~ /Spot/ ) {
-						$BlanketCutPrice += openprint::service::get_price( 'BlanketCut', undef, $Equipment );
+						$BlanketCutPrice = openprint::service::get_price( 'BlanketCut', undef, $Equipment );
+						$breakdown .= sprintf('+ BC: $%.2f', $BlanketCutPrice );
+						$ImpositionPrice{'Blanket'} += $BlanketCutPrice;
 					} # end if type is spot
-					$ImpositionPrice{'Blanket'} += $BlanketCutPrice;
 
 					my %ServicePrice = openprint::service::get_price_object( $type, $run_qty, $Equipment );
 					if ( ! %ServicePrice ) {
@@ -423,6 +425,7 @@ $openprint::log->debug("Types: @types");
 # Div by imposition, but run_qty is already div by impo
 					#$ServicePrice{'Total'} /= $imp->imposition();
 					$ImpositionPrice{'Service'} += $ServicePrice{'Total'};
+					$breakdown .= sprintf('+ Service: $%.2f%s=%.2f', @ServicePrice{'Price','units','Total'} );
 
 					my %MaterialPrice;
 					my $material_name = $type;
@@ -436,23 +439,21 @@ $openprint::log->debug("Types: @types");
 						} elsif ( lc $MaterialPrice{'units'} eq 'per m' ) {
 							$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty / 1000;
 						} else {
-							$breakdown .= 'Unknown units on material: ('. $MaterialPrice{'units'}.')<br/>';
+							$MaterialPrice{'units'} = 'unknown units';
 						} # end if
+						$breakdown .= sprintf('+ Material: $%.2f%s ', @MaterialPrice{'Price','units','Total'} );
 						$ImpositionPrice{'Material'} += $MaterialPrice{'Total'};
 					} # end if
-					my $colour_total = sprintf('%.2f', $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'} + $BlanketCutPrice );
-					$breakdown .= sprintf('%s MR: $%.2f + BC: $%.2f + Service: $%.2f%s=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>', $type,
-						$setupPrice, $BlanketCutPrice, @ServicePrice{'Price','units','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
+					$breakdown .= sprintf(' = $%.2f<br/>', 
+						( $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'} + $BlanketCutPrice ) );
 
-#$openprint::log->debug(" $type : $breakdown ");
-					$ImpositionPrice{'Total'} += misc::sum( @ImpositionPrice{'MakeReady','Service','Material','Blanket'} );
 				} # end foreach type
 				#$totalPrice += $ImpositionPrice{'Total'} + $ImpositionPrice{'Cutting'};
 			} # end foreach imposition
 		
 			next if ! $complete;
-			$breakdown .= "Total: $ImpositionPrice{'Total'} + $ImpositionPrice{'Cutting'}<br/>";
-			$ImpositionPrice{'Total'} += $ImpositionPrice{'Cutting'};
+			$ImpositionPrice{'Total'} += misc::sum( @ImpositionPrice{'MakeReady','Service','Material','Blanket','Cutting'} );
+			$breakdown .= "Total: $ImpositionPrice{'Total'}<br/>";
 
 			if ( $ImpositionPrice{'Total'} < $BestPricePerImposition{'Total'} or ( ! defined $BestPricePerImposition{'Total'} ) ) {
 				%BestPricePerImposition = %ImpositionPrice;
