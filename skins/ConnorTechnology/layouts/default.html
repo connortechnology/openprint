@@ -72,6 +72,28 @@
 									<li><a href="/employee/marketing/surveys.html">Surveys</a></li>
 								</ul>
 							</li>
+<? if ( $session{'user_type'} eq 'A' ) ?>
+			<li id="Pricing" class="off"><a href="#">Pricing</a>
+				<ul>
+					<li><a href="/administrator/services/edit.html">Services</a></li>
+					<li><a href="/administrator/products/edit.html">Products</a></li>
+					<li><a href="/administrator/production/pricelists.html">Pricelists</a></li>
+				</ul>
+			</li>
+			<li id="Managerial" class="off"><a href="#">Managerial</a>
+				<ul>
+					<li><a href="/administrator/managerial/company_profiles.html">Companies</a></li>
+					<li><a href="/administrator/managerial/user_profiles.html">Users</a></li>
+				</ul>
+			</li>
+			<li id="Settings" class="off"><a href="#">Settings</a>
+				<ul>
+					<li><a href="/administrator/managerial/configuration.html">Configuration</a></li>
+					<li><a href="/administrator/managerial/currency.html">Currencies</a></li>
+					<li><a href="/administrator/managerial/taxes.html">Taxes</a></li>
+				</ul>
+			</li>
+<? endif ( $session{'user_type'} eq 'A' ) ?>
 						<? else ( $session{user_id} ) ?>
 							<li id="Login" class="off"><a href="/account/login.html">Login</a></li>
 						<? endif ( $session{user_id} ) ?>
@@ -100,33 +122,6 @@
 				</div><!--menu-->
 			 </div><!--header-->
 		 </div><!--header-holder-->
-<? if ( $session{'user_type'} eq 'A' ) ?>
-	<div id="administrator_menu">
-		<h3>Administrator</h3>
-		<ul class="menu">
-			<li id="Pricing" class="off"><a href="#">Pricing</a>
-				<ul>
-					<li><a href="/administrator/services/edit.html">Services</a></li>
-					<li><a href="/administrator/products/edit.html">Products</a></li>
-					<li><a href="/administrator/production/pricelists.html">Pricelists</a></li>
-				</ul>
-			</li>
-			<li id="Managerial" class="off"><a href="#">Managerial</a>
-				<ul>
-					<li><a href="/administrator/managerial/company_profiles.html">Companies</a></li>
-					<li><a href="/administrator/managerial/user_profiles.html">Users</a></li>
-				</ul>
-			</li>
-			<li id="Settings" class="off"><a href="#">Settings</a>
-				<ul>
-					<li><a href="/administrator/managerial/configuration.html">Configuration</a></li>
-					<li><a href="/administrator/managerial/currency.html">Currencies</a></li>
-					<li><a href="/administrator/managerial/taxes.html">Taxes</a></li>
-				</ul>
-			</li>
-		</ul>
-	</div>
-<? endif ( $session{'user_type'} eq 'A' ) ?>
 	<!--Ind. Page Content is substituted in here -->
 	<div id="content2">
 		<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>

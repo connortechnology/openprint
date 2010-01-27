@@ -158,10 +158,34 @@ margin-left: 4px;
 	clear: both;
 }
 
-
+.Timetrack {
+	float: left;
+	font-size: small;
+}
+.Timetrack .History {
+	width: 100%;
+	float: left;
+}
+.Timetrack .EmployeeName {
+	width: 400px;
+}
+.Timetrack table.List {
+	font-size: x-small;
+}
+.Timetrack table.List td {
+	font-size: x-small;
+}
+.Timetrack table.List th {
+	font-size: x-small;
+}
+.Timetrack table.List td.Rate {
+	width: 300px;
+	text-align: right;
+}
 
 fieldset {
-	border: none;
+border: none;
+	margin: 0px;
 }
 
 fieldset legend {
@@ -298,15 +322,9 @@ table {
 	margin: 0px;
 }
 table.List {
-	width: 100%;
-	padding: 0px;
-	margin: 0px;
-	border-collapse: collapse;
-	border-spacing: 0;
 	border: none;
 	table-layout: fixed;
 	border-bottom: 1px solid #0046a2;
-
 }
 th {
 	color: #000000;
@@ -471,4 +489,20 @@ td.Rate, th.Rate {
 th.EmployeeName {
 	text-align: left;
 	width: 80px;
+}
+#administrator_menu {
+	width: 150px;
+	margin: 0px;
+	border: 1px solid black;
+	float: left;
+}
+#administrator_menu ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+#administrator_menu ul li {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
 }

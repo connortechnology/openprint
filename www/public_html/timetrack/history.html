@@ -15,7 +15,7 @@
 
 		} // end for
 		if ( number_of_deleted_timetracks == 0 ) {
-			alert("To Delete Projects, click the checkbox beside the timetrack.");
+			alert("To Delete Timetracks, click the checkbox beside the timetrack.");
 		} else {
 			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_timetracks + " timetracks from history?\n") ) {
 				form.submit();
@@ -23,14 +23,14 @@
 		} // end if
 	}
 	function load_timetracks( form ) {
-		$('ProjectList').innerHTML = 'Please wait...';
-		new Ajax.Updater('ProjectList','_history.html', {method:'get',parameters:Form.serialize(form)});
+		$('TimetrackList').innerHTML = 'Please wait...';
+		new Ajax.Updater('TimetrackList','_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
 -->
 </script>	 
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/timetrack/history.html">
-   <div class="ProjectHistory">
+   <div class="Timetrack"><div class="History">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 			<div class="leftColumn">
 			<p>
@@ -86,7 +86,8 @@
 			</p>
 		</fieldset>
 	</div>
-		<div id="ProjectList"><!--#include virtual="_history.html"--></div>
+	</div>
+		<div id="TimetrackList"><!--#include virtual="_history.html"--></div>
 	</form>
 <? else ( $session{'user_id'} ) ?>
 	Only logged in customers have a timetrack history.

@@ -1,8 +1,4 @@
 <? eval (
-	require Date::Parse;
-	require Date::Format;
-
-
 	@{$$variable{'Timetracks'}} = ();
 	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = 0;
 	foreach my $Timetrack ( openprint::Timetrack::find( 
@@ -42,7 +38,7 @@
 			<th width="50" align="right">Inv?</th>
 			<th width="50" align="right">Paid?</th>
 			<th align="left">Service</th>
-			<th width="60" align="right" style="text-align: right;">Rate</th>
+			<th class="Rate">Rate</th>
 			<th width="60" align="right" style="text-align: right;">Wage</th>
 			<th width="60" align="right" style="text-align: right;">Billable</th>
 		</tr>
@@ -51,7 +47,7 @@
 			$$variable{'conversion_rate'} = $$variable{'Timetrack'}->Currency()->conversions( $session{'Currency_id'} );
 		) ?>
 		<tr title="<? hecho ( $$variable{'Timetrack'}->description() ) ?>" <?rowclass?> onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
-			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->User()->name(); ) ?></a></td>
+			<td class="EmployeeName"><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->User()->name(); ) ?></a></td>
 			<td><a href="/timetrack/edit.html?timetrack_id=<? echo ( $$variable{'Timetrack'}->id(); ) ?>"><? hecho ( $$variable{'Timetrack'}->Company()->name(); ) ?></a></td>
 			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Timetrack'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Timetrack'}->starting() ) ); ) ?></td>
 			<td align="left"><? echo ( Date::Format::time2str(($$variable{'Timetrack'}->time_associated() ? $config{'DateTimeFormat'} : $config{'DateFormat'}), Date::Parse::str2time( $$variable{'Timetrack'}->ending() ) ); ) ?></td>

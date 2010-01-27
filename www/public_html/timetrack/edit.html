@@ -6,6 +6,7 @@
 		theme : "simple"
 	});
 </script>
+<div class="Timetrack">
 <form name="f1" id="f1" action="history.html" method="post">
 	<input type="hidden" name="referrer_invoice_id" value="<? echo ( $param{'invoice_id'} ) ?>" />
 	<fieldset><legend>Editing timetrack<? echo ( $$variable{'Timetrack'}->id() ? '('.$$variable{'Timetrack'}->id().')' : '' ) ?></legend>
@@ -91,3 +92,4 @@
 	</fieldset>
 	<input type="hidden" name="btnFunction" />
 </form>
+</div>
