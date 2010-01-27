@@ -167,12 +167,6 @@ div.Project .Header .Summary li {
 .Stock {
     width: 100%;
 }
-.VarnishCoverage {
-    float: none;
-}
-.VarnishCoverage input, .VarnishCoverage input[type="text"] {
-    width: 35px;
-}
 div.Service fieldset p input, div.Service fieldset p select {
 	width: auto;
 }

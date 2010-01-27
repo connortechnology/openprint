@@ -402,6 +402,8 @@ sub get_colours {
 		if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side$signature/ ) {
 			next if ! $$specs{"chkColourCoating$index$side$signature"};
 			my $type = $$specs{"ColourCoatingType$index$side$signature"};
+			next if ! $type;
+			next if $$specs{'ColourCoatingColour'.$index.$side.$signature} eq 'None';
 			#$openprint::log->debug("Found Colour $index.$side $signature $type");
 			if ( $type =~ /PMS/ ) {
 				if ( ! $$specs{'ColourCoatingColour'.$index.$side.$signature} ) {
@@ -1185,13 +1187,20 @@ $openprint::log->debug("Initial Papers: " . $P->type() .':' . $P->width() . 'x' 
 		return $$specs{'Status'} = 'calculated';
 	} # end if
 
-	my @possible_presses = sort { $a->strid() <=> $b->strid() } select_presses( $Project, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
+	my %presses = select_presses( $Project, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
+	my @possible_presses;
+	foreach my $press_id ( keys %presses ) {
+		if ( ! $presses{$press_id} ) {
+			push @possible_presses, new openprint::Equipment($press_id);
+		} # end if
+	} # end foreach
 	if ( ! @possible_presses ) {
 		$$specs{'alert'} = 'There were no possible presses. Your project may be too large for us.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} elsif ( $debug ) {
 		$openprint::log->debug( "Presses: " . join(',', map { $_->strid() } @possible_presses ) );
 	} # end if
+	@possible_presses = sort { $a->strid() <=>$b->strid() } @possible_presses;
 
 	my @available_printingtypes;
 	foreach my $Press ( @possible_presses ) {
@@ -1361,9 +1370,14 @@ $log->debug("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) $qty"
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 
-			if ( ! sets::intersection( map{ $_->id() } ( openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index}), @possible_presses ) ) ) {
-#$log->error( $$specs{'ddmPress'.$qty_index} . ' not in ' . join(',', @possible_presses ) );
-				$$specs{'alert'} = 'The press that you have chosen is not appropriate for the project specs.';
+			my $OverridePress = openprint::Equipment::find_one('strid'=>$$specs{'ddmPress'.$qty_index});
+			if (! $OverridePress ) {
+				$$specs{'alert'} = 'Cant find the press that you have chosen.';
+				return $$specs{'Status'} = 'uncalculated';
+			} # end if
+
+			if ( $presses{$OverridePress->id()} ) {
+				$$specs{'alert'} = 'The press that you have chosen is not appropriate for the following reason: ' .$presses{$OverridePress->id()};
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} else {
@@ -3588,8 +3602,7 @@ sub calc_price {
 } # end sub calc_price
 
 sub select_presses {
-# this function should return an list of the possible press for the job
-# by elminating the presses that are not appropriate.
+# this function returns a hash of the presses with their reasons for not being used.
 
 	my ( $Project, $Paper, $specs, $side_one_colours, $side_two_colours ) = @_;
 #$log->debug("**** Start of select_press. Inputs: Project $project_index ****");
@@ -3600,8 +3613,9 @@ sub select_presses {
 # we do not need to do any Perfecting checks because imposition code will create or no create perfecting.
 
 # Inline Perfing & Scoring is done as a sperate run, so it dosn't affect our printing press choice.
+# Same with UV, AQ etc.
 
-	my @good_presses;
+	my %results;
 	my $varnish = 0;
 #$log->debug(" *** CHECKING FOR VANISH *** ");
 	foreach my $colour (@$side_one_colours, @$side_two_colours) {
@@ -3610,88 +3624,93 @@ sub select_presses {
 			$varnish = 1;
 		} # end if
 	} # end if
+	my @Coatings = map { $_->name() } openprint::Service::find('category'=>'Coating');
+	my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
+	my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
 
-	my $project_type = $Project->Type()->name();
-#$log->debug(" ** Current Project Types is: $project_type ** ");
-
-	my @presses = openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y', 'order'=>'strid' );
-	foreach my $Press ( @presses ) {
-		my $press_id = $Press->strid();
+	foreach my $Press ( openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
+		my $press_id = $Press->id();
 
 		if ( $$specs{'ScreenType'} eq 'FM' and $Press->specification('FM Screening Capable') ne 'Y' ) {
-			$openprint::log->debug("Press $press_id can't do FM Screening") if $debug;
+			$results{$press_id} = "Can't do FM Screening";
 			next;
 		} # end if
 
-		if ( $project_type eq 'Envelopes' and $Press->specification('Envelope Capable') ne 'Y' ) {
-			$openprint::log->debug(" ** Press $press_id Failed Envelope Check **");
+		if ( $Project->Type()->name() eq 'Envelopes' and $Press->specification('Envelope Capable') ne 'Y' ) {
+			$results{$press_id} = "Failed Envelope Check";
 			next;
 		} # end if
 
 		if ( $Paper->calliper() > $Press->specification('Maximum Calliper', $Paper->grade() ) ) {
-			$openprint::log->debug(" ** Press $press_id Failed Calliper Check **");
+			$results{$press_id} = "Press $press_id Failed Calliper Check";
 			next;
 		} # end if
 		if ( ( $Paper->type() eq 'Roll' ) and $Press->specification('Minimum Basis Weight') and $Paper->basis_mweight() < $Press->specification('Minimum Basis Weight') ) {
 
-			$openprint::log->debug(" ** Press $press_id Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight') );
+			$results{$press_id} = "Failed Minimum Basis Weight Check **" . $Paper->basis_mweight() . ' < ' . $Press->specification('Minimum Basis Weight');
 			next;
 		} # end if
 
 		if ( $Press->specification('Printing Type') eq 'Digital' ) {
 # Digital only support Process, no PMS, etc...
-			if ( ( scalar @$side_one_colours == 1 ) and ( ! sets::isin( $$side_one_colours[0], ['Black', 'Black Spot Colour'] ) ) ) {
-				$openprint::log->debug("Digital doesn't do non-black: $$side_one_colours[0]");
+			if ( ( scalar @side_one_colours == 1 ) and ( ! sets::isin( $side_one_colours[0], ['Black', 'Black Spot Colour'] ) ) ) {
+				$results{$press_id} = "Digital doesn't do non-black: $side_one_colours[0]";
 				next;
 			} # end if
-			if ( ( scalar @$side_two_colours == 1 ) and ( ! sets::isin( $$side_two_colours[0], ['Black', 'Black Spot Colour'] ) ) ) {
-				$openprint::log->debug("Digital doesn't do non-black: $$side_two_colours[0]");
+			if ( ( scalar @side_two_colours == 1 ) and ( ! sets::isin( $side_two_colours[0], ['Black', 'Black Spot Colour'] ) ) ) {
+				$results{$press_id} = "Digital doesn't do non-black: $side_two_colours[0]";
 				next;
 			} # end if
 
-			if ( scalar @$side_one_colours > 1 and scalar @$side_one_colours < 4 ) {
+			if ( scalar @side_one_colours > 1 and scalar @side_one_colours < 4 ) {
+				$results{$press_id} = "Digital doesn't do non-process";
 				next;
 			} # end if
-			if ( scalar @$side_one_colours > 4 ) {
+			if ( scalar @side_one_colours > 4 ) {
+				$results{$press_id} = "Digital doesn't do non-process";
 				next;
 			} # end if
-			if ( scalar @$side_two_colours > 1 and scalar @$side_two_colours < 4 ) {
+			if ( scalar @side_two_colours > 1 and scalar @side_two_colours < 4 ) {
+				$results{$press_id} = "Digital doesn't do non-process";
 				next;
 			} # end if
-			if ( scalar @$side_two_colours > 4 ) {
+			if ( scalar @side_two_colours > 4 ) {
+				$results{$press_id} = "Digital doesn't do non-process";
 				next;
 			} # end if
-			if ( ( scalar @$side_one_colours == 4 ) and sets::intersection( @$side_one_colours, 'Cyan', 'Magenta', 'Yellow','Black' ) != 4 ) {
+			if ( ( scalar @side_one_colours == 4 ) and sets::intersection( @side_one_colours, 'Cyan', 'Magenta', 'Yellow','Black' ) != 4 ) {
+				$results{$press_id} = "Digital doesn't do non-process";
 				next;
 			} # end if
-			if ( ( scalar @$side_two_colours == 4 ) and sets::intersection( @$side_two_colours, 'Cyan', 'Magenta', 'Yellow','Black' ) != 4 ) {
+			if ( ( scalar @side_two_colours == 4 ) and sets::intersection( @side_two_colours, 'Cyan', 'Magenta', 'Yellow','Black' ) != 4 ) {
+				$results{$press_id} = "Digital doesn't do non-process";
 				next;
 			} # end if
 		} # end if
 
-		if ( ( @$side_one_colours > $Press->specification('Number of Colours') or @$side_two_colours > $Press->specification('Number of Colours') ) and $Press->specification('Multipass', $Paper->gsm()) eq 'N' ) {
-			$openprint::log->debug("Too many colours and no multipass for " . $Press->strid() ) if $debug;
+		if ( ( @side_one_colours > $Press->specification('Number of Colours') or @side_two_colours > $Press->specification('Number of Colours') ) and $Press->specification('Multipass', $Paper->gsm()) eq 'N' ) {
+			$results{$press_id} = "Too many colours and no multipass.";
 			next;
 		} elsif ( $Press->specification('Web Press') eq 'Y' ) {
-			if ( @$side_one_colours > $Press->specification('Number of Colours') ) {
+			if ( @side_one_colours > $Press->specification('Number of Colours') ) {
+				$results{$press_id} = "Too many colours for web.";
 				next;
-			} elsif ( @$side_two_colours > $Press->specification('Number of Colours') ) {
+			} elsif ( @side_two_colours > $Press->specification('Number of Colours') ) {
+				$results{$press_id} = "Too many colours for web.";
 				next;
 			} # end if
 		} # end if
 
 		if ( $varnish ) {
 			if ( $Press->specification('Varnish Capable') ne 'Y' ) {
-				$openprint::log->debug(" ** Press $press_id Failed Varnish Check **");
+				$results{$press_id} = "Failed varnish check.";
 				next;
 			} # end if
 		} # end if
-
-		push @good_presses, $Press;
+		$results{$press_id} = '';
 	} # end while
 
-#$log->debug("**** End of select_press. Selected Presses: @good_presses ****");
-	return @good_presses;
+	return %results;
 } # end sub select_press
 
 sub get_varnish_run_price {
@@ -4228,6 +4247,8 @@ sub summary {
 				next if ! $$specs{"chkColourCoating$index$side"};
 
 				my $type = $$specs{"ColourCoatingType$index$side"};
+				next if ! $type;
+				next if $$specs{"chkColourCoatingColour$index$side"} eq 'None';
 				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
 					$front_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};
 				} elsif ( $type =~ /PMS/i ) {
@@ -4265,6 +4286,8 @@ sub summary {
 				if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
 					next if ! $$specs{"chkColourCoating$index$side"};
 					my $type = $$specs{"ColourCoatingType$index$side"};
+					next if ! $type;
+					next if $$specs{"chkColourCoatingColour$index$side"} eq 'None';
 
 					if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
 #Changes made on june-19-2008

@@ -65,12 +65,16 @@ sub registration {
 	$error .= 'Empty Password.<br/>' if $param{'password'} eq '';
 	$error .= 'Passwords do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
 	if ( ( ! $session{'user_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
-		require Authen::Captcha;
-        my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
-		# Remove spaces, because some people want to put spaces between the characters, etc.
-		$param{'Captcha'} =~ s/\s//g;
-		if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
-			$error .= 'Validation Code incorrect.  Please try again.';
+		if ( ! -e $config{'SkinPath'}.'/images/captcha' ) {
+			$log->error("Needtocreatecaptcha directory!");
+		} else {
+			require Authen::Captcha;
+			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
+			# Remove spaces, because some people want to put spaces between the characters, etc.
+			$param{'Captcha'} =~ s/\s//g;
+			if ( 1 != $Captcha->check_code( @param{'Captcha','MD5SUM'} ) ) {
+				$error .= 'Validation Code incorrect.  Please try again.';
+			} # end if
 		} # end if
 	} # end if
 

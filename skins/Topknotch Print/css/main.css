@@ -410,3 +410,45 @@ outline: 0;
 div#NewDimensions {
 	display: none;
 }
+div.Registration .Information {
+    background-color:#daf3fc;
+}
+div.Registration .Information:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Registration .Information {height: 1%;}
+* div.Registration .Information {display:block;}
+/* End hide from IE-mac */
+div.Registration div.Address {
+    float: right;
+    width: 48%;
+}
+div.Registration div.BillingInformation {
+    float: right;
+    width: 48%;
+}
+
+div.Registration div.Miscellaneous {
+    display: none;
+}
+div.Registration div.Account {
+    float: left;
+    width: 48%;
+}
+div.Registration fieldset ul li {
+	padding-left: 150px;
+}
+div.Registration fieldset ul li label {
+	margin-left: -150px;
+	width: 145px;
+}
+div.Registration fieldset ul li label.radio {
+	margin: 0px;
+	width: auto;
+}
