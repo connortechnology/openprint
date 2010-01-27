@@ -14,9 +14,11 @@
 		<? endif ( $$variable{'uri'} =~ /\/main\/project/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
 		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /\/main\/quote/ ) ?>
 		<? if ( $$variable{'uri'} =~ /\/content\/prin/ ) ?>
                <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
@@ -47,8 +49,6 @@
 				</div>
 			</div>
 			<div id="main_content"><div id="main_content_inner">
-				<? if ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
-				<? else ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 				<div id="left_sidebar">
 					<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 					<div class="shadow_left"><div class="shadow_right">
@@ -64,13 +64,12 @@
 						<input type="hidden" name="currency_code" value="CAD"/>
 						<input type="hidden" name="tax" value="0"/>
 						<input type="hidden" name="bn" value="EZ Donate"/>
-						<input type="image" width="100%" src="/images/paypal.gif" name="submit" alt="paypal image"/>
+						<input type="image" id="paypalimage" src="/images/paypal.gif" name="submit" alt="paypal image"/>
 					</form>
 					<img id="Butterfly" src="/images/Butterfly.png" alt="Butterfly"/>
 					</div></div>
 					<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 				</div>
-				<? endif ( $$variable{'uri'} =~ /\/main\/order/ ) ?>
 				<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 				<div class="shadow_left"><div class="shadow_right">
 				<div id="main_page"><div id="main_page_content">

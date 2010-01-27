@@ -49,12 +49,6 @@ a.button {
 #footer {
 	display: none;
 }
-ul#menubar {
-	display: none;
-}
-ul#menubar li {
-	display: none;
-}
 #header {
 	background: none;
 }
@@ -91,4 +85,10 @@ padding: 0px;
 	position: absolute;
 	top: 0px;
 	right: 0px;
+}
+#administrator_menu {
+	display: none;
+}
+ul.menu {
+	display: none;
 }

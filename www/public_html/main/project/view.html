@@ -77,7 +77,7 @@
 	} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 				if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
+				$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
 				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?project_id=".$$variable{'ProjectIndex'}."', 800 );", '', 'View Log' );
 				} # end if
 				return $html;
@@ -102,7 +102,9 @@
 					return $html;
 				) ?>
 				<th width="90" align="right">Status</th>
+					<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 				<th class="unprintable" width="70" align="right">Changes</th>
+					<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</tr>
 			</thead>
 			<? if ( @{$$variable{'SERVICES'}} ) ?>
@@ -136,8 +138,8 @@
 					return $html;
 				) ?>
 				<td align="right"><?status?></td>
-				<td class="unprintable" align="right">
 					<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
+				<td class="unprintable" align="right">
 		<? if ( new openprint::User($$variable{'user_id'})->email() =~ /iconnor/ ) ?>
 						<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>&amp;calc=<?index?>">Calc</a><br/>
 		<? else ( new openprint::User($$variable{'user_id'})->email() =~ /iconnor/ ) ?>
@@ -146,8 +148,8 @@
 						<? endif ( $$variable{'url'} ne '' ) ?>
 		<? endif ( new openprint::User($$variable{'user_id'})->email() =~ /iconnor/ ) ?>
 						<a href="/main/project/view.html?ProjectIndex=<?ProjectIndex?>&amp;remove=<?index?>">Remove</a>
-					<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 				</td>
+					<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</tr>
 			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq 'class="colRow"' ? '' : 'class="colRow"' ) ?>
 			<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
@@ -162,7 +164,9 @@
 					return $html;
 				) ?>
 				<td align="right">&nbsp;</td>
+					<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 				<td class="unprintable" align="right">&nbsp;</td>
+					<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</tr>
 			<tr> 
 				<td align="left">Total Before Taxes:</td>
@@ -174,7 +178,9 @@
 					return $html;
 				) ?>
 				<td align="right">&nbsp;</td>
+					<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 				<td class="unprintable" align="right">&nbsp;</td>
+					<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 			</tr>
 <? endif ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) ?>
 <? if ( $$variable{'Project'}->Ordered_Product() ) ?>
@@ -182,7 +188,9 @@
             <td align="left">Ordered Price:</td>
             <td align="right"><?CurrencySymbol?>&nbsp;<? echo ( $$variable{'Project'}->Ordered_Product()->price() ) ?></td>
             <td align="right">&nbsp;</td>
+					<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
             <td class="unprintable" align="right">&nbsp;</td>
+					<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
         </tr>
 <? endif ( $$variable{'Project'}->Ordered_Product() ) ?>
 	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
@@ -196,7 +204,9 @@
 	return $html;
 ) ?>
 			<td>&nbsp;</td>
+					<? if ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 			<td class="unprintable"><span style="float:right;"><? echo ( ssi::writeButton($log, $dbh, 'AddToProject', 'addToProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Modify Project';f1.submit();", '', 'Add' ); ) ?></span></td>
+					<? endif ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ?>
 		</tr>
 	<? endif ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 	</table>

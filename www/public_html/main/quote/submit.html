@@ -19,7 +19,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 				</p>
 				<p>
 					<label>Administrator Comments:</label>
-					<textarea name="AdministratorComments" rows="<? echo ( scalar split("\n", $$variable{'AdministratorComments'}) ) ?>" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
+					<textarea name="AdministratorComments" rows="<? echo ( scalar split("\n", $$variable{'AdministratorComments'}) ) ?>" cols="" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
 				</p>
 			</fieldset>
 	<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
@@ -28,21 +28,21 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 	</div>
 	<br class="spacer"/>
 	<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
-</div>
+</div><!--Quote-->
 <? echo (
 	my $html = '';
-	foreach my $Project ( $$variable{'Quote'}->Quoted_Projects() ) {
-		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+		foreach my $Project ( $$variable{'Quote'}->Quoted_Projects() ) {
 			$html .= 'Include detailed project description for the following project:';
-			$html .= sprintf(q`<input type="radio" name="include_description%1$d" id="include_description%1$d1" value="1" %2$s onclick="new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', {method: 'get', parameters: { quote_id: %3$d, project_id: %1$d, include_detailed : this.value } } );"><label class="radio" for="include_description%1$d1">Yes</label>`, $Project->id(), ssi::checked( $Project->included_in_quote() ), $$variable{'Quote'}->id() );
-			$html .= sprintf(q`<input type="radio" name="include_description%1$d" id="include_description%1$d0" value="0" %2$s onclick="new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', {method: 'get', parameters: { quote_id: %3$d, project_id: %1$d, include_detailed : this.value } } );"><label class="radio" for="include_description%1$d0">No</label>`, $Project->id(), ssi::checked( ! $Project->included_in_quote() ) );
+			$html .= sprintf(q`<input type="radio" name="include_description%1$d" id="include_description%1$d1" value="1" %2$s onclick="new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', {method: 'get', parameters: { quote_id: %3$d, project_id: %1$d, include_detailed : this.value } } );"/><label class="radio" for="include_description%1$d1">Yes</label>`, $Project->id(), ssi::checked( $Project->included_in_quote() ), $$variable{'Quote'}->id() );
+			$html .= sprintf(q`<input type="radio" name="include_description%1$d" id="include_description%1$d0" value="0" %2$s onclick="new Ajax.Updater( 'QuotedProject_%1$d', '_project_template.html', {method: 'get', parameters: { quote_id: %3$d, project_id: %1$d, include_detailed : this.value } } );"/><label class="radio" for="include_description%1$d0">No</label>`, $Project->id(), ssi::checked( ! $Project->included_in_quote() ) );
 			$html .= sprintf( '<div id="QuotedProject_%1$d">', $Project->id() );
-				$$variable{'QuotedProject'} = $Project;
-				my $template = ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template.html', $variable );
-				$html .= $template;
+			$$variable{'QuotedProject'} = $Project;
+			my $template = ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/quote/_project_template.html', $variable );
+			$html .= $template;
 			$html .= '</div>';
-		} # end if
-	} # end foreach Project
+		} # end foreach Project
+	} # end if
 	return $html;
 ) ?>
 	<p class="buttons">

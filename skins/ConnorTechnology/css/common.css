@@ -9,6 +9,9 @@ body {
 	font-size: x-small;
 	min-width: 1070px;
 }
+img {
+border: none;
+}
 
 #content3 { 
 width: 75%; 
@@ -70,13 +73,26 @@ margin-left: 4px;
 	padding: 0px;
 	margin-right: 4px;
 }
-#header {
-	height: 94px;
-	background: url(/images/header.png) repeat-x top;
+
+.sitemap {
 	margin: 0px;
 	padding: 0px;
 	width: auto;
+	list-style-position: inside;
 }
+
+.sitemap li {
+	list-style-type: disc;
+	list-style-position: inside;
+}
+
+.sitemap li ul li{
+	margin-left: 10px;
+	font-size: 10px;
+	list-style-position: outside;
+}
+
+
 #header:after {
 	content: ".";
 	display: block;
@@ -103,10 +119,11 @@ margin-left: 4px;
 	margin-right: 36px;
 }
 #content2 {
-	background: url(/images/under-menu.png) repeat-x top;
 	margin: 0px;
 	padding: 0px;
 	padding: 10px;
+	background-repeat: repeat-x;
+	background-position: top;
 }
 #footer {
 	height: 94px;
@@ -141,131 +158,7 @@ margin-left: 4px;
 	clear: both;
 }
 
-ul#menubar {
-	top: 151px;
-	left: 45px;
-	right: 45px;
-	background: url(/images/menu_fill_blue.png) repeat-x top;
-	list-style: none;
-	margin: 0px;
-	padding: 0px;
-	padding-left: 40px;
-	z-index: 6000;
-	min-width: 600px;
-	display: block;
-}
-ul#menubar:after {
-	content: ".";
-	display: block;
-	height: 0;
-    font-size: 0;
-	clear: both;
-	visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html ul#menubar {height: 1%;}
-*     ul#menubar{display:block;}
-/* End hide from IE-mac */
-ul#menubar li {
-	float: left;
-	list-style: none;
-	margin: 0px;
-	display: block;
-	background-color: #9c9c9c;
-	width: 115px;
-padding: 0px;
-padding-left: 1px;
-}
 
-ul#menubar li a {
-	color: white;
-	display: block;
-	width: 107px;
-	padding: 4px;
-	text-decoration: none;
-	background: url(/images/menu_fill_blue.png) repeat-x;
-				font-family: verdana, arial, helvetica, sans-serif;
-				font-size: 1.3em;
-	margin: 0px;
-	overflow: hidden;
-	text-align: center;
-	outline: 0;
-}
-#menubar li.off ul, #menubar li.on ul {
-	/*put the subnavs below and hide them all*/
-	display: none;
-	padding: 0px;
-	margin: 0px;
-	list-style: none;
-	position: absolute;
-}
-
-.orange {
-	color: #ff7f00;
-}
-
-#menubar li.on a {
-	/*change border color for active topic area*/
-color: #ff7f00; /* orange */
-	margin: 0px;
-	padding: 0px;
-	text-decoration: none;
-	text-align: center;
-}
-
-#menubar li ul li {
-	background-color: #ffffff;
-	border: 0;
-	float: none;
-	padding: 0px;
-	padding-top: 1px;
-	width: 116px;
-	margin:0px;
-	margin-left: -1px;
-	list-style: none;
-	text-align: center;
-}
-
-#menubar li.on ul a, #menubar li.off ul a {
-	background: url(/images/menu_fill_blue.png) repeat-x;
-	/*ie doesn't inherit the float*/
-	color: #ffffff;
-	padding: 4px;
-	margin: 0px;
-	width: 108px;
-	text-decoration: none;
-	text-align: center;
-}
-
-
-#menubar li.on ul {
-	/*display the current topic*/
-	display: block;
-	width: 116px;
-	list-style: none;
-	padding: 0px;
-	margin:0px;
-}
-
-#menubar li.off:hover ul, #menubar li.over ul {
-	/*	display the other topics when
- *				their parent is hovered */
-	display: block;
-	z-index: 6000;
-}
-
-#menubar li.off:hover a {
-	color: #ffffff;
-}
-#menubar li.off a:hover {
-	color: #ff7f00;
-}
-#menubar li:hover a {
-	color: #ff7f00;
-}
-#menubar li.over a {
-	color: #ff7f00;
-}
 
 fieldset {
 	border: none;
@@ -451,7 +344,7 @@ tr.totals {
 a {
     text-decoration: none;
 	color: #ff7f00;
-	outline: 0;
+
 }
 
 a:hover {

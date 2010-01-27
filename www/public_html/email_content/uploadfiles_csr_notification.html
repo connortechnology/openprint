@@ -46,7 +46,7 @@ OR:
 	<div class="fieldContainer">
 <? if ( $param{'docket'} ) ?>
 		<p><label>Docket #:</label><? echo ( $param{'docket'} ) ?></p>
-	<? eval ( @{$$variable{'Projects'}} = openprint::Project::find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'index'); ) ?>
+	<? eval ( @{$$variable{'Projects'}} = openprint::Project::find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'id'); ) ?>
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 		<p><label>Project ID:</label><? echo ( $$variable{'Project'}->id() ) ?></p>
 		<p><label>Reference:</label><? echo ( $$variable{'Project'}->reference(); ) ?></p>
@@ -118,15 +118,7 @@ OR:
 			my $filename = $param{'fileUpload'.$index};
 			$filename =~ s/.*[\/\\](.*)/$1/;
 			$filename =~ s/ /_/g;
-			my $size = $r->upload('fileUpload'.$index)->size();
-			if ( $size > 1048576 ) {
-				$size = sprintf( '%.3f MB', $size / 1048576 );
-			} elsif ( $size > 1024 ) {
-				$size = sprintf( '%.3f KB', $size / 1024 );
-			} else {
-				$size .= ' B';
-			} # end if
-
+			my $size = misc::format_bytes( $r->upload('fileUpload'.$index)->size() );
 			$html .= qq~<tr><td nowrap="nowrap">$filename</td><td>$param{'txtDescription'.$index}</td><td align="right">$size</td></tr>~;
 		} # end if
 	} # end foreach

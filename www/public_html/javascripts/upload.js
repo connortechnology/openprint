@@ -79,8 +79,8 @@ function updateProgress() {
 			} // end if
 			var progressPercent = total_upload_size ? Math.ceil((completed_upload_size/total_upload_size)*100) : 0;
 
-			document.getElementById('progressMeterText').innerHTML = progressPercent + '%';
-			document.getElementById('progressMeterBarDone').style.width = parseInt(progressPercent*3.5) + 'px';
+			$('progressMeterText').innerHTML = progressPercent + '%';
+			$('progressMeterBarDone').style.width = parseInt(progressPercent*3.5) + 'px';
 
 
 			var totaltime = progressPercent ? parseInt((elapsedtime * 100) / progressPercent) : 0;
@@ -100,15 +100,15 @@ function updateProgress() {
 				//document.getElementById('dones').innerHTML = completed_upload_size_forprint;
 				//document.getElementById('donef').innerHTML = numfinishedfiles;
 
-				document.getElementById('leftt').innerHTML = remainingtime_forprint;
-				document.getElementById('lefts').innerHTML = remaining_upload_size_forprint;
+				$('leftt').innerHTML = remainingtime_forprint;
+				$('lefts').innerHTML = remaining_upload_size_forprint;
 				//document.getElementById('leftf').innerHTML = numtotalfiles - numfinishedfiles;
 
-				document.getElementById('totalt').innerHTML = totaltime_forprint;
-				document.getElementById('totals').innerHTML = total_upload_size_forprint;
+				$('totalt').innerHTML = totaltime_forprint;
+				$('totals').innerHTML = total_upload_size_forprint;
 				//document.getElementById('totalf').innerHTML = numtotalfiles;
 
-				document.getElementById('transferRate').innerHTML = 'Upload Rate: ' + transfer_rate + '/s';
+				$('transferRate').innerHTML = 'Upload Rate: ' + transfer_rate + '/s';
 			} // end if
 
 			if ( completeFlag ) {

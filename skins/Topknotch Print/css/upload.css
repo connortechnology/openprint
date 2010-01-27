@@ -3,9 +3,9 @@
 #pb a { color: #000; }
 #pb a:hover { color: #aaa; }
 #footer { color: #aaa; margin: 24px auto 4px auto; }
-#filelist a:link { color: #507090; }
-#filelist a:visited { color: #000; }
-#filelist a:hover { color: #c00; }
+#FileList a:link { color: #507090; }
+#FileList a:visited { color: #000; }
+#FileList a:hover { color: #c00; }
 
 #progMeterContainer { width: 700px;
 margin: 15px auto; background: white; border: 1px solid #999; padding: 10px;
@@ -27,10 +27,22 @@ td.headercell { font-weight: bold; }
 		#tca2,#donef,#leftf,#totalf { display: none; }
 		#tca3,#dones,#lefts,#totals { width: 34%; }
 		#tca4,#donet,#leftt,#totalt { width: 33%; }
-#filelist { text-align: left; border-collapse: collapse; margin: 2px auto; }
-#filelist td { padding: 2px 14px; }
+#FileList { text-align: left; border-collapse: collapse; margin: 2px auto; }
+#FileList td { padding: 2px 14px; }
 /* #filelist tr:hover { background: #e9e9e9; } */
-#filelist .size, #filelist .delete { text-align: right; }
+
+#FileList .size {
+	text-align: right;
+	width: 75px;
+}
+#FileList .delete {
+ text-align: right;
+	width: 120px;
+}
+#FileList .mtime {
+	text-align: right;
+	width: 120px;
+}
 
 #setfilecount { margin: 28px 0 12px 0; }
 #theuploadform { }

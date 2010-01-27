@@ -72,28 +72,30 @@ function same_as_billing( on, id ) {
 	<!--#include virtual="/includes/error_reporting.html"-->
 	<form method="post" id="f1" name="f1" action="/main/order/submit.html">
 		<div class="Header">
-			<fieldset>
-				<div class="content">
-					<ul>
-						<li> 
-							<label>Order ID:</label><? echo ( $$variable{'Order'}->id() ) ?>
-						</li>
-						<li> 
-							<label>Purchase Order:</label>
-							<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
-						</li>
-		<? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
-						<li>
-							<label>Company:</label>
-							<span id="CompanyDropDown">
-							<!--#include virtual="_company_dropdown.html"-->
-							</span>
-							<? echo ( ssi::writeButton( $log, $dbh, 'AddFromBelow', 'add_from_below.gif', 'save_company();', '', 'Save Company' ); ) ?>
-						</li>
-		<? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
-					</ul>
-				</div>
-			</fieldset>
+			<div id="Information">
+				<fieldset>
+					<div class="content">
+						<ul>
+							<li> 
+								<label>Order ID:</label><? echo ( $$variable{'Order'}->id() ) ?>
+							</li>
+							<li> 
+								<label>Purchase Order:</label>
+								<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
+							</li>
+			<? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
+							<li>
+								<label>Company:</label>
+								<span id="CompanyDropDown">
+								<!--#include virtual="_company_dropdown.html"-->
+								</span>
+								<? echo ( ssi::writeButton( $log, $dbh, 'AddFromBelow', 'add_from_below.gif', 'save_company();', '', 'Save Company' ); ) ?>
+							</li>
+			<? endif ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
+						</ul>
+					</div>
+				</fieldset>
+			</div>
 			<div id="ContactInformation"><!--#include virtual="_contact_information.html"--></div>
 <? if ( $config{'PaymentOnOrderInformation'} ) ?>
 			<div id="PaymentOptions">

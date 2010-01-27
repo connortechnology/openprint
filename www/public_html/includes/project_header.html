@@ -1,102 +1,111 @@
 <? eval (
 	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} ) if ! $$variable{'Project'};
 ) ?>
-<div class="ProjectHeader">
-	<fieldset id="ProjectInformation"><legend>Project Information</legend>
-		<div class="content">
-			<ul>
-		<li><label>Project #:</label><? echo ( $$variable{'Project'}->id() ) ?></li>
-	  	<? if ( $$variable{'Project'}->docket() ) ?>
-		<li><label>Docket Number:</label><? echo ( $$variable{'Project'}->docket() ) ?></li>
-		<li><label>Ordered Quantity:</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
-	  	<? endif ( $$variable{'Project'}->docket() ) ?>
-   		<li class="<? echo ( $_ = $$variable{'Project'}->status(); $_  =~ s/ //g; return $_; ) ?>">
-			<label>Status:</label>
-			<? echo ( $$variable{'Project'}->status() ) ?>
-		</li>
-	  	<li> 
-			<label>Creation Date:</label>
-	  		<span title="<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></span>
-		</li>
-	  	<li><label>Last Updated:</label>
-	  		<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
-		</li>
-		<? if ( $$variable{'Project'}->docket() ) ?>
-		<? if ( $$variable{'Project'}->shippingtype() ) ?>
-	  	<li> 
-			<label>Shipping Type:</label>
-	  		<span name="shippingTypeValue"><? echo ( $$variable{'Project'}->shippingtype() ) ?></span>
-		</li>
-		<? endif ( $$variable{'Project'}->shippingtype() ) ?>
-	  		<? if ( $$variable{'Project'}->due_date() ) ?>
-		<li>
-				<label>Due Date:</label>
-				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->due_date() ) ); ) ?>
-		</li>
-	  		<? else ( $$variable{'Project'}->due_date() ) ?>
-				<li class="RequiredDate">
-				<label>Requested Date:</label>
-				<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?>
-				</li>
-	  		<? endif ( $$variable{'Project'}->due_date() ) ?>
-		<? if ( $$variable{'Project'}->Operator()->id() ) ?>
-		<li>
-			<label>Prepress Operator:</label>
-			<? echo ( $$variable{'Project'}->Operator()->name() ) ?>
-			<?PrepressOperator?>
-		</li>
-		<? endif ( $$variable{'Project'}->Operator()->id() ) ?>
+<div class="Header">
+	<div id="ProjectInformation">
+		<fieldset><legend>Project Information</legend>
+			<div class="content">
+				<ul>
+					<li><label>Project #:</label><? echo ( $$variable{'Project'}->id() ) ?></li>
+					<? if ( $$variable{'Project'}->docket() ) ?>
+					<li><label>Docket Number:</label><? echo ( $$variable{'Project'}->docket() ) ?></li>
+					<li><label>Ordered Quantity:</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
+					<? endif ( $$variable{'Project'}->docket() ) ?>
+					<li class="<? echo ( $_ = $$variable{'Project'}->status(); $_  =~ s/ //g; return $_; ) ?>">
+						<label>Status:</label>
+						<? echo ( $$variable{'Project'}->status() ) ?>
+					</li>
+					<li> 
+						<label>Creation Date:</label>
+						<span title="<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></span>
+					</li>
+					<li><label>Last Updated:</label>
+						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
+					</li>
+					<? if ( $$variable{'Project'}->docket() ) ?>
+					<? if ( $$variable{'Project'}->shippingtype() ) ?>
+					<li> 
+						<label>Shipping Type:</label>
+						<span name="shippingTypeValue"><? echo ( $$variable{'Project'}->shippingtype() ) ?></span>
+					</li>
+					<? endif ( $$variable{'Project'}->shippingtype() ) ?>
+					<? if ( $$variable{'Project'}->due_date() ) ?>
+					<li>
+							<label>Due Date:</label>
+							<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->due_date() ) ); ) ?>
+					</li>
+					<? else ( $$variable{'Project'}->due_date() ) ?>
+						<? if ( $$variable{'Project'}->requested_date() ) ?>
+						<li class="RequiredDate">
+							<label>Requested Date:</label>
+							<? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?>
+						</li>
+						<? endif ( $$variable{'Project'}->requested_date() ) ?>
+					<? endif ( $$variable{'Project'}->due_date() ) ?>
+					<? if ( $$variable{'Project'}->Operator()->id() ) ?>
+					<li>
+						<label>Prepress Operator:</label>
+						<? echo ( $$variable{'Project'}->Operator()->name() ) ?>
+						<?PrepressOperator?>
+					</li>
+					<? endif ( $$variable{'Project'}->Operator()->id() ) ?>
 
-		<? endif ( $$variable{'Project'}->docket() ) ?>
-		<? if ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
-		<li>
-			<label>Predefined For:</label>
-			<? echo (
-				my $html = '';
-				foreach my $Product ( openprint::Product::find('project_id'=>$$variable{'Project'}->id()) ) {
-					$html .= $Product->name() . '<br/>';
-				} # end foreach Product
-				return $html;
-			) ?>
-		</li>
-		<? endif ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
-		</ul>
-		</div>
-	</fieldset>
-	<fieldset id="ContactInformation"><legend>Contact Information</legend>
-		<div class="content">
-			<ul>
-		<li><label>Company:</label><? echo ( $$variable{'Project'}->Company()->name() ) ?></li>
-		<li><label>Name:</label><? echo ( $$variable{'Project'}->User()->name() ) ?></li>
-		<li><label>Phone:</label><? echo ( $$variable{'Project'}->User()->phone() ) ?></li>
-		<li><label>Email:</label><a href="mailto:<? echo ( $$variable{'Project'}->User()->email() ) ?>"><? echo ( $$variable{'Project'}->User()->email() ) ?></a></li>
-		<? if ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
-		<li>
-			<label>Customer Service Rep:</label>
-			<a href="mailto:<? echo ( $$variable{'Project'}->Company()->CSR()->email() ) ?>"><? echo ( $$variable{'Project'}->Company()->CSR()->name() ) ?></a>
-		</li>
-		<? endif ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
-		</ul>
-		</div>
-	</fieldset>
+					<? endif ( $$variable{'Project'}->docket() ) ?>
+					<? if ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+					<li>
+						<label>Predefined For:</label>
+						<? echo (
+							my $html = '';
+							foreach my $Product ( openprint::Product::find('project_id'=>$$variable{'Project'}->id()) ) {
+								$html .= $Product->name() . '<br/>';
+							} # end foreach Product
+							return $html;
+						) ?>
+					</li>
+					<? endif ( $$variable{'Project'}->predefined() and new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+				</ul>
+			</div>
+		</fieldset>
+	</div>
+	<div id="ContactInformation">
+		<fieldset><legend>Contact Information</legend>
+			<div class="content">
+				<ul>
+					<li><label>Company:</label><? echo ( $$variable{'Project'}->Company()->name() ) ?></li>
+					<li><label>Name:</label><? echo ( $$variable{'Project'}->User()->name() ) ?></li>
+					<li><label>Phone:</label><? echo ( $$variable{'Project'}->User()->phone() ) ?></li>
+					<li><label>Email:</label><a href="mailto:<? echo ( $$variable{'Project'}->User()->email() ) ?>"><? echo ( $$variable{'Project'}->User()->email() ) ?></a></li>
+					<? if ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
+					<li>
+						<label>Customer Service Rep:</label>
+						<a href="mailto:<? echo ( $$variable{'Project'}->Company()->CSR()->email() ) ?>"><? echo ( $$variable{'Project'}->Company()->CSR()->name() ) ?></a>
+					</li>
+					<? endif ( $$variable{'Project'}->Company()->salesrep_id() ) ?>
+				</ul>
+			</div>
+		</fieldset>
+	</div>
 	<br class="spacer"/>
-	<fieldset id="Reference"><legend>Reference:</legend>
-		<div class="content">
-		<? hecho ( $$variable{'Project'}->reference(); ) ?>
-		<? if ( $$variable{'Project'}->comments() ) ?>
-<br/>
-		<p>
-			<label>Additional Comments:</label><? hecho ( $$variable{'Project'}->comments(); ) ?>
-		</p>
-		<? endif ( $$variable{'Project'}->comments() ) ?>
-		</div>
-	</fieldset>
-	<fieldset id="Description"><legend>Description:</legend>
+	<div id="Reference">
+		<fieldset><legend>Reference:</legend>
+			<div class="content">
+			<? hecho ( $$variable{'Project'}->reference(); ) ?>
+			<? if ( $$variable{'Project'}->comments() ) ?>
+	<br/>
+			<p>
+				<label>Additional Comments:</label><? hecho ( $$variable{'Project'}->comments(); ) ?>
+			</p>
+			<? endif ( $$variable{'Project'}->comments() ) ?>
+			</div>
+		</fieldset>
+	</div><div id="Description">
+	<fieldset><legend>Description:</legend>
 		<div class="content">
 		<? echo ( 
 			return $$variable{'Project'}->summary();
 		) ?>
 		</div>
 	</fieldset>
+</div>
 </div>
 <br class="spacer"/>

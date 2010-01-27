@@ -4,7 +4,7 @@
 	$$variable{'OrderStatus'} = $$variable{'Project'}->Order()->status();
 ) ?>
 
-<div id="ProjectView">
+<div class="Project"><div class="View">
 	<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
 	There is no current project. 
 	<? else ( $$variable{'ProjectIndex'} eq '' ) ?>
@@ -66,4 +66,5 @@
 <span class="Currency">All prices in <?CurrencyName?>.&nbsp;</span>
 <br class="spacer"/>
 <? endif ( $$variable{'ProjectIndex'} eq '' ) ?>
+</div>
 </div>

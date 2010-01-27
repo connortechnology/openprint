@@ -504,6 +504,10 @@ sub save_Paper {
 			$Paper->gsm( $param{'gsm'.$id} );
 			$changed = 1;
 		} # end if
+		if ( ( ! $Paper->fsc_code() ) and $param{'fsc_code'.$id} ) {
+			$Paper->fsc_code( $param{'fsc_code'.$id} );
+			$changed = 1;
+		} # end if
 		$Paper->save() if $changed;
 	} else {
 		$variable{'error'} .= 'Duplicate Paper Detected!.<br/>';

@@ -1,6 +1,14 @@
-<p><label># of Grommets per Banner:</label>
-	<input type="text" size="4" name="grommets" id="grommets" value="<?grommets?>" onkeyup="this.value=this.value.replace(/\D/g, '');calc(this.form.name);" />
-</p>
-<p><label>Pole pocket diameter:</label>
-	<input type="text" size="4" name="PocketSize" id="PocketSize" value="<?PocketSize?>" onkeyup="this.value=this.value.replace(/[^\.\d]/g, '');calc(this.form.name);" />
-</p>
+<div id="BannerOptions">
+	<fieldset><legend>Banner Options</legend>
+		<div class="content">
+			<ul>
+				<li><label># of Grommets per Banner:</label>
+					<input type="text" size="4" name="grommets" id="grommets" value="<?grommets?>" onkeyup="this.value=this.value.replace(/\D/g, '');calc(this.form.name);" />
+				</li>
+				<li><label>Pole pocket diameter:</label>
+					<input type="text" size="4" name="PocketSize" id="PocketSize" value="<?PocketSize?>" onkeyup="this.value=this.value.replace(/[^\.\d]/g, '');calc(this.form.name);" />
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+</div>

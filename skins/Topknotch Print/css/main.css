@@ -93,6 +93,10 @@ div.row:after {
 	width: 95px;
 	margin-left: -100px;
 }
+.ProjectHistory fieldset p label.radio {
+	width: auto;
+	margin:0px;
+}
 fieldset.SelectCustomer p {
 	padding-left: 100px;
 }
@@ -282,7 +286,7 @@ width: 17px;
 height: 22px;
 }
 div#main_page {
-	padding-right: 10px;
+	padding: 0px 10px 0px 20px;
 	width: auto;
 }
 div#main_page:after {
@@ -298,9 +302,9 @@ div#main_page:after {
 /* End hide from IE-mac */
 
 div#main_page_content {
-	padding-left: 20px;
-	padding-right: 10px;
-	float: right;
+	margin: 0px;
+	width: 100%;
+	float: left;
 }
 div#main_page_content:after {
 	content: ".";
@@ -405,4 +409,46 @@ outline: 0;
 }
 div#NewDimensions {
 	display: none;
+}
+div.Registration .Information {
+    background-color:#daf3fc;
+}
+div.Registration .Information:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Registration .Information {height: 1%;}
+* div.Registration .Information {display:block;}
+/* End hide from IE-mac */
+div.Registration div.Address {
+    float: right;
+    width: 48%;
+}
+div.Registration div.BillingInformation {
+    float: right;
+    width: 48%;
+}
+
+div.Registration div.Miscellaneous {
+    display: none;
+}
+div.Registration div.Account {
+    float: left;
+    width: 48%;
+}
+div.Registration fieldset ul li {
+	padding-left: 150px;
+}
+div.Registration fieldset ul li label {
+	margin-left: -150px;
+	width: 145px;
+}
+div.Registration fieldset ul li label.radio {
+	margin: 0px;
+	width: auto;
 }

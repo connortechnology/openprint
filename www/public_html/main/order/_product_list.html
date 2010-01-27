@@ -4,7 +4,9 @@
 	foreach my $Product ( @{$$variable{'Products'}} ) {
 		$$variable{'Product'} = $Product;
 		$$variable{'Project'} = $$variable{'Product'}->Project();
+		$html .= '<div class="Project">';
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_product_information.html' );
+		$html .= '</div>';
 	} # end foreach
 	return $html;
 ) ?>

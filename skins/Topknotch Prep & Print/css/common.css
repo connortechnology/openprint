@@ -399,7 +399,7 @@ div#CompanySelection {
 	display: inline;
 	padding: 0px;
 	margin: 0px;
-	margin-top: 17px;
+	margin-top: 70px;
 	}
 
 #website-masthead li {
@@ -831,3 +831,7 @@ label.radio, fieldset ul li label.radio, fieldset p label.radio, fieldset .conte
 	width: auto;
 	float: none;
 } 
+img.Override {
+    height: 16px;
+}
+

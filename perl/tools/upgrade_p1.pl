@@ -60,7 +60,7 @@ if ( $year ) {
 
 } # end if
 
-`chmod +x $lib_path/perl/tools/db_update.pl`;
+`chmod +x $lib_path/tools/db_update.pl`;
 print "upgrading structures 2...";
 `$lib_path/tools/db_update.pl $dst_db point-one point-one > /tmp/db_update.log` or $log->error($!);
 print "upgrading signatures...";
@@ -69,7 +69,7 @@ print "done\n";
 print 'Turning off backups...';
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'point-one', 'password'=>'point-one') );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
-sql::insert( undef, undef, 'database_info', 'version', $version, 'backup', 'false' );
+sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
 print "done\n";
 
 foreach my $Service ( openprint::Service::find('name'=>'Imposition') ) {
@@ -127,4 +127,52 @@ new openprint::ProjectType_Template()->save({
 	'flat_height'		=>	11,
 });
 }
+	sql::insert( undef, undef, 'configuration', 'name', 'ProjectViewDisclaimer','value','All CTP quotes must include a digital proof.
+All prices are subject to the viewing of artwork, film or electronic file.
+Please check specifications for accuracy.
+Due to technical limitations, perfecting orders may be subject to a revision if it is necessary to run sheetwork.
+If administrative changes are required you will be notified prior to production approval.
+This quote is valid for 30 days subject to paper price increase and availability.
+Heavy ink coverage will be billed as an extra unless indicated.
+Quantities of +/- 5% will represent completion of order and will be charged or credited accordingly.
+<br/>
+<br/>
+If you would like to match our press profiles for proofing purposes the ICC profiles can
+be found at:<br/>
+<br/>
+<a href="http://www.idealliance.org/industry_resources/branding_media_and_color/gracol">
+http://www.idealliance.org/industry_resources/branding_media_and_color/gracol</a><br/>
+<a href="http://files.idealliance.org/GRACoL/ICC/2006%20GRACoL%20&%20SWOP%20Profiles.zip">
+http://files.idealliance.org/GRACoL/ICC/2006%20GRACoL%20&%20SWOP%20Profiles.zip</a><br/>'
+,'description', 'Disclaimer to show at bottom of project.', 'category','Miscellaneous Settings' ) if ! $config{'ProjectViewDisclaimer'};
+	sql::insert( undef, undef, 'configuration', 'name', 'OrderViewDisclaimer','value',
+'All CTP quotes must include a digital proof. All prices
+are subject to the viewing of artwork, film or electronic file. Please check
+specifications for accuracy. Pointone will not be responsible for errors
+or omissions. Due to technical limitations, perfecting orders
+may be subject to a revision if it is necessary to run sheetwork. Heavy ink
+coverage will be billed extra unless specified in the estimate. Scoring
+prices are based on folder scores only, die scoring will be an
+additional cost unless specified in the estimate. If administrative
+changes are required you will be notified prior to production approval. This quote
+is valid for 30 days subject to paper price increase and availability.
+Quantities of +/- 5% will represent completion of order and will be charged or credited accordingly.'
+,'description', 'Disclaimer to show at bottom of an order.', 'category','Miscellaneous Settings' ) if ! $config{'OrderViewDisclaimer'};
+	sql::insert( undef, undef, 'configuration', 'name', 'QuoteViewDisclaimer','value',
+'<p>
+Client is responsible to verify all specifications in comparison with original quote request. Size and other
+specifications may have been modified to avoid waste and maintain efficiency. Prices are calculated to the
+best of our ability, if changes are necessary you will be notified.
+</p>
+<p>
+All CTP quotes must include a digital proof. All prices are subject to the viewing of artwork, film or
+electronic file. Please check specifications for accuracy. Pointone will not be responsible for errors or
+omissions. Due to technical limitations, perfecting orders may be subject to a revision if it is necessary to
+run sheetwork. Heavy ink coverage will be billed extra unless specified in the estimate. Scoring prices
+are based on folder scores only, die scoring will be an additional cost unless specified in the estimate. If
+administrative changes are required you will be notified prior to production approval. This quote is valid for
+30 days subject to paper price increase and availability.  Quantities of +/- 5% will represent completion of
+order and will be charged or credited accordingly.
+</p>'
+,'description', 'Disclaimer to show at bottom of a quote.', 'category','Miscellaneous Settings' ) if ! $config{'QuoteViewDisclaimer'};
 $dbh->disconnect();

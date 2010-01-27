@@ -1,12 +1,5 @@
 .Docket {
 }
-.Project span {
-	width: 31%;
-	margin-right: 10px;
-	margin-bottom: 5px;
-	float: left;
-	p\osition: relative;
-}
 .Project label {
 	font-weight: bold;
 	float: left;
@@ -14,25 +7,24 @@
 	margin-right: 5px;
 }
 
-div.ProjectHeader {
+div.Project .Header {
 	border-bottom: 1px solid #cfbb4b;
 	margin: 0px;
 	margin-bottom: 5px;
 }
-div.ProjectHeader:after {
+div.Project .Header:after {
     content: ".";
     display: block;
     height: 0;
     clear: both;
     visibility: hidden;
 }
-div.ProjectHeader {display: inline-block;}
 /* Hides from IE-mac \*/
-* html div.ProjectHeader {height: 1%;}
-div.ProjectHeader {display: block;}
+* html div.Project .Header {height: 1%;}
+div.Project .Header {display: block;}
 /* End hide from IE-mac */
 
-div.ProjectHeader fieldset {
+div.Project .Header fieldset {
 	border-left: none;
 	border-right: none;
 	border-bottom: none;
@@ -40,32 +32,37 @@ div.ProjectHeader fieldset {
 	padding: 6px;
 	text-align: left;
 }
-div.ProjectHeader fieldset#ProjectInformation {
+div.Project .Header div#ProjectInformation {
 	float: left;
 	width: 47%;
 }
-div.ProjectHeader fieldset#ContactInformation {
+div.Project .Header div#ContactInformation {
 	float: right;
 	width: 47%;
 }
-div.ProjectHeader fieldset#Reference {
+div.Project .Header div#Reference {
 	float: left;
 	text-align: left;
 	width: 47%;
 }
-div.ProjectHeader fieldset#Description {
+div.Project .Header div#Description {
 	float: right;
 	text-align: left;
 	width: 47%;
 }
 
-
-div.ProjectHeader fieldset p {
+div.Project .Header fieldset ul {
+	list-style: none;
+	padding: 0px;
+	margin: 0px;
+}
+div.Project .Header fieldset ul li {
+	list-style: none;
 	text-align: right;
 	padding: 0px;
 	margin: 0px;
 }
-div.ProjectHeader fieldset p label {
+div.Project .Header fieldset ul li label {
 	margin: 0px;
 	padding: 0px;
 	float: left;
@@ -119,15 +116,40 @@ div.ProjectHeader fieldset p label {
     float: left;
     width: 50%;
 }
-.VarnishCoverage {
-    float: none;
-}
-.VarnishCoverage input, .VarnishCoverage input[type="text"] {
-    width: 35px;
-}
-.bleedOption {
+.BleedOption {
 	float: left;
-	width: 100px;
+	width: auto;
+}
+span.None {
+	width: 100%;
+}
+/*
+div.Service span {
+	width: 33%;
+	float: left;
+}
+*/
+div.Service span.ThreeColumns {
+	width: 32%;
+	float: left;
+}
+div.Service span.TwoColumns {
+	width: 50%;
+	float: left;
+}
+div.Service fieldset p {
+	padding-left: 130px;
+}
+div.Service fieldset p input {
+	width: auto;
+}
+div.Service fieldset p label {
+	margin-left: -130px;
+	width: 125px;
+}
+div.Service fieldset p label.radio {
+	width: auto;
+	margin: 0px;
 }
 div.Service fieldset p span.checkOption label, div.Service fieldset p label label {
     clear: none;
@@ -155,6 +177,9 @@ span.SpotColour label, span.Coverages label {
     margin: 0px;
     padding: 0px 0px 0px 2px;
 }
+span.SpotColour input, span.Coverages input {
+	width: 20px;
+}
 .checkOption {
 	float: left;
 	width: 30%;
@@ -165,11 +190,11 @@ span.SpotColour label, span.Coverages label {
 }
 .SpecialColour .checkOption {
 	float: left;
-	width: 108px;
+	width: 130px;
 }
 .colourOption {
 	float: left;
-	width: 104px;
+	width: 114px;
 }
 #NotepadPages, p#NotepadPages label {
 	font-weight: bold;
@@ -182,7 +207,7 @@ span.SpotColour label, span.Coverages label {
 	float: left;
 	width: 50%;
 }
-#ProjectView .price {
+.Project .View .price {
 	text-align: right;
 	width: 160px;
 }
@@ -204,3 +229,6 @@ div.ProjectCreateEdit ul:after {
 * html div.ProjectCreateEdit ul {height: 1%;}
 /* End hide from IE-mac */
 
+#Versions {
+	display: none;
+}

@@ -44,13 +44,17 @@ div.ProjectHeader fieldset#Description {
     width: 47%;
 }
 
-
-div.ProjectHeader fieldset p {
+div.ProjectHeader fieldset ul {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+div.ProjectHeader fieldset li {
     text-align: right;
     padding: 0px;
     margin: 0px;
 }
-div.ProjectHeader fieldset p label {
+div.ProjectHeader fieldset li label {
     margin: 0px;
     padding: 0px;
     float: left;
@@ -131,12 +135,15 @@ div.ProjectSummary div.row span.value {
 	float: left;
 	width: 100px;
 }
-div#ProjectView table tr td input {
+div.Project div.View table tr td input {
 	width: 99%;
 }
-div#ProjectView table tr td.price, div#ProjectView table tr th.price {
+div.Project div.View table tr td.price, div.Project div.View table tr th.price {
 	width: 200px;
 	text-align: right;
+}
+div.Project div.View table tr.Prices {
+	border-top: 1px solid #000088;
 }
 
 .InksFront {
@@ -162,12 +169,6 @@ div.Service #GateFoldFit {
 div.Service #Inserts {
 	float: right;
 	width: 49%;
-}
-.VarnishCoverage {
-	float: none;
-}
-.VarnishCoverage input, .VarnishCoverage input[type="text"] {
-	width: 35px;
 }
 div.Service fieldset p span.checkOption label {
 	clear: none;

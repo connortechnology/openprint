@@ -93,9 +93,9 @@ if ( 0 ) {
 				</p>
 				<p>
 					<label>Cover:</label>
-					<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Self' ) ?> />
+					<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Self' ); ) ?> />
 					<label class="radio" for="rdbCoverSelf">Self Cover</label>
-					<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbCover'} eq 'Different' ) ?> />
+					<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Different' ); ) ?> />
 					<label class="radio" for="rdbCoverDifferent">Different Cover</label>
 				</p>
 				</div>
@@ -126,6 +126,7 @@ if ( 0 ) {
 			<div id="SignatureGroups">
 			<? echo (
 				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
+$log->debug("Groups: (" . join(',', @Groups ) . ')' );
 				if ( ! sets::isin( 1, \@Groups ) ) {
 					# Unshift so that cover is always first
 					unshift @Groups, 1;
@@ -158,8 +159,7 @@ if ( 0 ) {
 				} # end if
 				my $html = '';
 				foreach my $Group ( @Groups ) {
-					$$variable{'Group'} = $Group;
-					$$variable{'SignatureIndex'} = $Group;
+					$$variable{'Signature'} = $Group;
 				
 					my $h .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/main/project/prin/_signature.html' );
 					$html .= variable_substitution( \$h, $variable );

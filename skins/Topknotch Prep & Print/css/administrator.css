@@ -153,3 +153,23 @@ select {
 .FoldRunSpeed .buttons {
 	width: 80px;
 }
+ul#logactions {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+ul#logactions:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html ul#logactions {height: 1%;}
+* ul#logactions {display:block;}
+/* End hide from IE-mac */
+ul#logactions li {
+	float: left;
+	width: 175px;
+}

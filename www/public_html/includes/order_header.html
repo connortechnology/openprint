@@ -1,5 +1,6 @@
 <div class="Header">
-	<fieldset id="OrderInformation"><legend>Order Information</legend>
+	<div id="OrderInformation">
+	<fieldset><legend>Order Information</legend>
 		<div class="content"><ul>
 			<li><label>P.O.:</label>&nbsp;<? echo ( $$variable{'Order'}->po() ) ?></li>
 			<li><label>Order ID:</label><? echo ( $$variable{'Order'}->id() ) ?></li>
@@ -14,7 +15,8 @@
 			<li><label>Status:</label><? echo ( $$variable{'Order'}->status() ) ?></li>
 		</ul></div>
 	</fieldset>
-	<fieldset id="BillingInformation"><legend>Billing Information:</legend>
+	</div><div id="BillingInformation">
+	<fieldset><legend>Billing Information:</legend>
 		<div class="content"><ul>
 			<? if ( $$variable{'Order'}->company_name() ) ?>
 			<li><label>Company Name:</label><? echo ( $$variable{'Order'}->company_name() ) ?><br/></li>
@@ -37,4 +39,5 @@
 			<li><label>Email:</label><? echo ( $$variable{'Order'}->email() ) ?><br/></li>
 		</ul></div>
 	</fieldset>
+	</div>
 </div><!--OrderHeader-->

@@ -1,3 +1,4 @@
+<div id="Quote">
 Thank you. Your information has been received.
 <? if ( $$variable{'Quote'}->for_email() ne $$variable{'Quote'}->by_email() ) ?>
 	<? if ( $$variable{'Quote'}->for_firstname() ) ?>
@@ -10,3 +11,4 @@ Thank you. Your information has been received.
 	You will receive a copy of the quote via e-mail shortly.
 	<? endif ( new openprint::User( $session{'user_id'} )->email_quotes_to_myself() ) ?>
 <? endif ( $$variable{'Quote'}->for_email() ne $$variable{'Quote'}->by_email() ) ?>
+</div>

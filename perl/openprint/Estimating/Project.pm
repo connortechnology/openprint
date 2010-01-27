@@ -72,7 +72,6 @@ sub calc {
 		$log->error( $_ );
 	} # end if
 
-
 	# I don't remember exactly why we need to add cutting so early.
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) and ! $$services{'Cutting'} ) {
 		push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
@@ -142,7 +141,7 @@ sub calc {
 				$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
 			} # end if
 		} # end if
-if ( $ProjectType->name() eq 'PresentationFolders' ) {
+		if ( $ProjectType->name() eq 'PresentationFolders' ) {
 $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPocketRight'} ");
             $$specs{'txtWidth'} = $$specs{'txtFinalWidth'} * 2;
             my $pockets;
@@ -155,7 +154,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
                 $pockets += 1;
             } # end if
             $$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'rdbPocketSize'};
-} # end if
+		} # end if
 	} elsif ( ( $ProjectType->name() eq 'Envelopes' ) and ( $$specs{'ddmStockSheetSize'} ) ) {
 		@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
@@ -171,10 +170,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	if ( ! $$specs{'txtQuantity1'} ) {
-		$$specs{'alert'} .= 'Please enter the quantity.';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
 
 	if ( exists $$specs{'txtTotalPageQuantity'} ) {
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
@@ -406,6 +401,13 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 					$printing_specs{$spec} = $$specs{$spec};
 				} # end if
 			} # end foreach
+		} elsif ( $ProjectType->name() eq 'PresentationFolders' ) {
+			foreach my $spec ( 'PocketSize' ) {
+				if ( $printing_specs{$spec} ne $$specs{$spec} ) {
+					openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
+					$printing_specs{$spec} = $$specs{$spec};
+				} # end if
+			} # end foreach
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'rdbTemplateType', $$specs{'FoldType'} );
 		} # end if
@@ -414,6 +416,11 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
 		%printing_specs = %{$sig_specs};
 	} # end if printing
+
+	if ( ! $$specs{'txtQuantity1'} ) {
+		$$specs{'alert'} .= 'Please enter the quantity.';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	if ( $$specs{'Status'} eq 'uncalculated' ) {
 		delete $$specs{'txtPrice1'};
@@ -592,7 +599,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		} # end foreach
 	} # end if Padding
 
-
 # Handle cartons
 	push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' ) if ! $$services{'PlainCartons'};
 	if ( $$specs{'UPSShipping'} eq 'Y' ) {
@@ -612,7 +618,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	} # end if
 
 	push @{$$services{'Turnaround'}}, $Project->add_service( 'Turnaround' ) if ! $$services{'Turnaround'};
-
 
 	if ( $$specs{'ShrinkWrapping'} eq 'Y' ) {
 		if ( ! $$services{'ShrinkWrap'} ) {
@@ -646,7 +651,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	$openprint::log->warn("Before auto");
-	$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'}, ['UPS'] );
+	$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'} );
 	$openprint::log->warn("Aftere auto");
 	# Need to reload this because the auto calculation can add services, and we wouldn't otherwise pick them up
 	my $services = $Project->services();
@@ -670,6 +675,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		$$specs{'txtHoleQty'} = $$drill_specs{'txtHoleQty'};
 	} # end if
 
+	$services = $Project->services();
 	$$specs{'txtPrice1'} = 0;
 	$$specs{'txtUnitPrice1'} = 0;
 # add up the prices
@@ -697,7 +703,7 @@ $log->warn("Have uncalculated service: ");
 # Subtract shipping costs from total
 	if ( $$services{'UPS'} ) {
 		foreach my $service_id ( @{$$services{'UPS'}} ) {
-			my $service_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, 'UPS' );
+			my $service_specs = openprint::service::get_specs_ref( $Project, $service_id );
 			$$specs{'ProductionPrice1'} -= $$service_specs{'txtPrice1'};
 			$$specs{'ShippingPrice1'} += $$service_specs{'txtPrice1'};
 			$$specs{'ServiceTypeDiv'} = $$service_specs{'ServiceTypeDiv'};
@@ -705,7 +711,6 @@ $log->warn("Have uncalculated service: ");
 			$$specs{'alert'} .= $$service_specs{'alert'};
 		} # end foreach service
 	} # end if UPS
-	$log->debug("ServiceTypeDIV: $$specs{'ServiceTypeDiv'}");
 
 	my %printing_types;
 	foreach my $ss_id ( $Project->signatures() ) {

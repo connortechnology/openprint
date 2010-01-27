@@ -529,7 +529,7 @@ sub subtotal {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{'subtotal'} = shift;
-	} elsif ( ! $$self{'subtotal'} ) {
+	} elsif ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'subtotal'} ) {
 		$$self{'subtotal'} = 0;
 		foreach my $Project ( $self->Projects() ) {
 			my $price = $Project->ordered_price();
@@ -559,7 +559,7 @@ sub total {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{'total'} = shift;
-	} elsif ( ! $$self{'total'} ) {
+	} elsif ( sets::isin( $$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'total'} ) {
 		$$self{'total'} = $self->subtotal() + $self->state_tax() + $self->federal_tax() + $self->harmonized_tax();
 	} # end if
 	return $$self{'total'};
@@ -603,6 +603,9 @@ sub send_sales_order {
 
     $order{'OrderID'} = $$self{'id'};
     $order{'Order'} = $self;
+
+	# When an order is made,the Order currency will be the current session Currency.  
+	# All resends should stay in the currency that the order was created in.
     my $Currency = $self->Currency();
     @order{'CurrencyName','CurrencySymbol'} = ($Currency->name(), $Currency->symbol() );
     $order{'Currency'} = $Currency;
@@ -680,7 +683,8 @@ sub send_sales_order {
         my %mail = (
                 SMTP    => $config{'Mail Server'},
 # Only for Amin
-                FROM    => $order{'email'},
+                FROM    => $config{'OrderingEmail'},
+                'Reply-to'    => $$self{'email'},
                 #FROM   => $config{'OrderingEmail'},
                 TO      => join(',',@admin_emails),
                 BCC     =>  'iconnor@penultima.org',
