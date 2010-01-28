@@ -1,7 +1,6 @@
 package openprint::logRecord;
 @ISA = qw( openprint::Object );
 require openprint::Object;
-require Date::Handler;
 require openprint::User;
 require openprint::logAction;
 use strict;

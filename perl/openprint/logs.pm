@@ -4,8 +4,6 @@ use strict;
 
 require sql;
 
-use Date::Handler;
-
 use openprint::logRecord;
 use openprint::pagination;
 

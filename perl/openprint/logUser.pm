@@ -1,7 +1,6 @@
 package openprint::logUser;
 
 use strict;
-use Date::Handler;
 
 sub new
 {

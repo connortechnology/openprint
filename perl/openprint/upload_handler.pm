@@ -34,8 +34,6 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 sub handler {
 	my $request = shift;
-	$r = Apache2::Request->new( $request );
-	$r->content_type(q{text/html; charset=utf-8});
 	$log	= $request->log;
 
 	$request->no_cache(1);
@@ -52,7 +50,20 @@ sub handler {
 			'password'	=> $request->dir_config('db_password'),
 			);
 
-	openprint::session_init();
+    my $r;
+    my $cookies = Apache2::Cookie->fetch( $r );
+    my $cookie = $$cookies{'_session_id'};
+    $cookie = $cookie->value if $cookie;
+
+   if ( ! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+        $log->debug("Error fetching Session: $cookie: $@");
+        if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle        => $dbh, Commit     => 0, IDLength  => 8, };` ) {
+            $log->debug("Error creating Session: ");
+        } # end if
+    } # end if
+    if ( $cookie ne $session{_session_id} ) {
+		$log->debug("$cookie != $session{_session_id}");
+	}
 
 	if ( $request->method eq 'POST' ) {
 		my $uploaded = 0;
