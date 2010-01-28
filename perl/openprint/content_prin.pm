@@ -29,7 +29,11 @@ sub load_simple {
 			} # end foreach
 		} # end if
 	} else {
-		$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
+		if ( $param{'projecttype_id'} ) {
+			$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
+		} elsif ( $param{'ProjectType'} ) {
+			$variable{'ProjectType'} = openprint::ProjectType::find_one( 'name'=>$param{'ProjectType'} );
+		} # end if
 	} # end if
 	if ( ! $variable{'ToCountry'} ) {
 		if ( $session{'company_id'} ) {
