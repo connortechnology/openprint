@@ -28,114 +28,121 @@
 	<? endif ( $$variable{'error'} ) ?>
 <div class="Registration">
 	<p>
-	Please complete the form below. (<span class="requiredFieldIndicator">*</span> denotes required information).<br/>
+	Please complete the form below. (<span class="required"></span> denotes required information).<br/>
 	<br/>
 	</p>
+<? eval (
+%{$$variable{'RequiredFields'}} = map{$_,$_} misc::trim( split(',', $config{'RegistrationRequiredFields'} ) );
+) ?>
+<style>
+	fieldset .content ul {
+	list-style: circle;
+}
+	fieldset .content ul li {
+	list-style: circle;
+	}
+</style>
 	<form method="post" action="registration.html" name="f1">
 		<div class="BillingInformation">
-		<fieldset><legend>Billing Information</legend>
-			<div class="content">
-				<ul>
-			<li> 
-				<label for="company_name">Company/Billing Name: <span class="requiredFieldIndicator">*</span></label>
-				<input type="text" id="company_name" name="company_name" value="<? echo ( ssi::htmlize($param{'company_name'}) ) ?>"  />
-			</li>
-			<li>
-				<label for="address1">Address Line 1: <span class="requiredFieldIndicator">*</span></label>
-				<input type="text" id="address1" name="address1" value="<? echo ( ssi::htmlize($param{'address1'}) ) ?>"  />
-			</li>
-			<li>
-				<label for="address2">Address Line 2:&nbsp;&nbsp;&nbsp;</label>
-				<input type="text" id="address2" name="address2" value="<? echo ( ssi::htmlize($param{'address2'}); ) ?>"  />
-			</li>
-			<li> 
-				<label for="country">Country: <span class="requiredFieldIndicator">*</span></label>
-				<select id="country" name="country" onchange="Country_onchange(this, this.form.ddmStateProvince );">
-				<option value=""> Select </option>
-				<? echo (
-					$$variable{'country'} = $param{'country'} ? $param{'country'} : $session{'Country'};
-					return ssi::return_countries( $$variable{'country'});
-				) ?>					
-				</select>
-			</li>
-			<li> 
-				<label for="state">
-				<? echo (
-					if ( $$variable{'country'} eq 'US' ) {
-						return 'State:';
-					} elsif ( $$variable{'country'} eq 'CA' ) {
-						return 'Province:';
-					} else {
-						return 'State/Province:';
-					} # end if
-				) ?>
-				<span class="requiredFieldIndicator">*</span></label>
-				<select id="state" name="state">
-					<option value=""> Select </option>
-				<? echo (
-					
-					return ssi::return_states( $param{'state'} ).ssi::return_provinces( $param{'state'} );
-				) ?>
-				</select>
-			</li>
-			<li> 
-				<label for="city">City: <span class="requiredFieldIndicator">*</span></label>
-				<input type="text" id="city" name="city" value="<? echo ( ssi::htmlize($param{'city'}); ) ?>"  />
-			</li>
-			<li> 
-				<label for="postalcode">
-					<? echo (
-					   if ( $$variable{'country'} eq 'US' ) {
-							   return 'Zip Code:';
-					   } elsif ( $$variable{'country'} eq 'CA' ) {
-							   return 'Postal Code:';
-					   } else {
-							   return 'Zip/Postal Code:';
-					   } # end if
-					) ?>
-				<span class="requiredFieldIndicator">*</span></label>
-				<input type="text" id="postalcode" name="postalcode" value="<? echo ( ssi::htmlize($param{'postalcode'}); ) ?>"  />
-			</li>
-			<li> 
-				<label for="phone">Phone: <span class="requiredFieldIndicator">*</span></label>
-				<input type="text" id="phone" name="phone" value="<? hecho ( $param{'phone'} ) ?>" />
-			</li>
-			<li> 
-				<label for="fax">Fax:&nbsp;&nbsp;&nbsp;</label>
-				<input type="text" id="fax" name="fax" value="<? hecho ( $param{'fax'} ) ?>" />
-			</li>
-			<li> 
-				<label for="url">Web Site URL:&nbsp;&nbsp;&nbsp;</label>
-				<input type="text" id="url" name="url" value="<? hecho ( $param{'url'} ) ?>"  />
-			</li>
-			</ul>
-			</div>
-		</fieldset>
+			<fieldset><legend>Billing Information</legend>
+				<div class="content">
+					<ul>
+						<li <? echo ( $$variable{'RequiredFields'}{'company_name'} ? 'class="required"' : '' ) ?>> 
+							<label for="company_name">Company/Billing Name:</label>
+							<input type="text" id="company_name" name="company_name" value="<? echo ( ssi::htmlize($param{'company_name'}) ) ?>"  />
+						</li>
+						<li <? echo ( $$variable{'RequiredFields'}{'address1'} ? 'class="required"' : '' ) ?> style="list-style: circle;"> 
+							<label for="address1">Address Line 1:</label>
+							<input type="text" id="address1" name="address1" value="<? echo ( ssi::htmlize($param{'address1'}) ) ?>"  />
+						</li>
+						<li <? echo ( $$variable{'RequiredFields'}{'address2'} ? 'class="required"' : '' ) ?>> 
+							<label for="address2">Address Line 2:</label>
+							<input type="text" id="address2" name="address2" value="<? echo ( ssi::htmlize($param{'address2'}); ) ?>"  />
+						</li>
+						<li <? echo ( $$variable{'RequiredFields'}{'country'} ? 'class="required"' : '' ) ?>> 
+							<label for="country">Country:</label>
+							<select id="country" name="country" onchange="Country_onchange(this, this.form.ddmStateProvince );">
+							<option value=""> Select </option>
+							<? echo (
+								$$variable{'country'} = $param{'country'} ? $param{'country'} : $session{'Country'};
+								return ssi::return_countries( $$variable{'country'});
+							) ?>					
+							</select>
+						</li>
+						<li <? echo ( $$variable{'RequiredFields'}{'state'} ? 'class="required"' : '' ) ?>> 
+							<label for="state"><? echo (
+								if ( $$variable{'country'} eq 'US' ) {
+									return 'State:';
+								} elsif ( $$variable{'country'} eq 'CA' ) {
+									return 'Province:';
+								} else {
+									return 'State/Province:';
+								} # end if
+							) ?></label>
+							<select id="state" name="state">
+								<option value=""> Select </option>
+							<? echo (
+								
+								return ssi::return_states( $param{'state'} ).ssi::return_provinces( $param{'state'} );
+							) ?>
+							</select>
+						</li>
+						<li <? echo ( $$variable{'RequiredFields'}{'city'} ? 'class="required"' : '' ) ?>> 
+							<label for="city">City:</label>
+							<input type="text" id="city" name="city" value="<? echo ( ssi::htmlize($param{'city'}); ) ?>"  />
+						</li>
+						<li <? echo ( $$variable{'RequiredFields'}{'postalcode'} ? 'class="required"' : '' ) ?>> 
+							<label for="postalcode"><? echo (
+								   if ( $$variable{'country'} eq 'US' ) {
+										   return 'Zip Code:';
+								   } elsif ( $$variable{'country'} eq 'CA' ) {
+										   return 'Postal Code:';
+								   } else {
+										   return 'Zip/Postal Code:';
+								   } # end if
+								) ?></label>
+							<input type="text" id="postalcode" name="postalcode" value="<? echo ( ssi::htmlize($param{'postalcode'}); ) ?>"  />
+						</li>
+						<li <? echo ( $$variable{'RequiredFields'}{'phone'} ? 'class="required"' : '' ) ?>> 
+							<label for="phone">Phone:</label>
+							<input type="text" id="phone" name="phone" value="<? hecho ( $param{'phone'} ) ?>" />
+						</li>
+						<li <? echo ( $$variable{'RequiredFields'}{'fax'} ? 'class="required"' : '' ) ?>> 
+							<label for="fax">Fax:</label>
+							<input type="text" id="fax" name="fax" value="<? hecho ( $param{'fax'} ) ?>" />
+						</li>
+						<li <? echo ( $$variable{'RequiredFields'}{'uel'} ? 'class="required"' : '' ) ?>> 
+							<label for="url">Web Site URL:</label>
+							<input type="text" id="url" name="url" value="<? hecho ( $param{'url'} ) ?>"  />
+						</li>
+						</ul>
+				</div>
+			</fieldset>
 		</div>
 		<div class="Miscellaneous">
 		<fieldset>
 			<legend>Miscellaneous Information</legend>
 			<div class="content"><ul>
-			<li> 
-				<label for="businesstype">Business Type:&nbsp;&nbsp;&nbsp;</label>
+			<li <? echo ( $$variable{'RequiredFields'}{'businesstype'} ? 'class="required"' : '' ) ?>> 
+				<label for="businesstype">Business Type:</label>
 				<input type="text" name="businesstype" value="<? echo ( ssi::htmlize($param{'businesstype'}); ) ?>" />
 			</li>
-			<li> 
-				<label>Reason For Purchase:&nbsp;&nbsp;&nbsp;</label>
+			<li <? echo ( $$variable{'RequiredFields'}{'reasonforpurchase'} ? 'class="required"' : '' ) ?>> 
+				<label>Reason For Purchase:</label>
 				<input type="radio" name="reasonforpurchase" id="ReasonForPurchaseEndUser" value="EndUser" <? echo ( 'checked="checked"' if $param{'reasonforpurchase'} eq 'EndUser' or ! $param{'reasonforpurchase'} ) ?>  />
 				<label class="radio" for="ReasonForPurchaseEndUser">End User</label>
 				<input type="radio" name="reasonforpurchase" id="ReasonForPurchaseReseller" value="Reseller" <? echo ( 'checked="checked"' if $param{'reasonforpurchase'} eq 'Reseller' ) ?> />
 				<label class="radio" for="ReasonForPurchaseReseller">Reseller</label> 
 			</li>
-			<li>
-				<label>How did you hear about us?: <span class="requiredFieldIndicator">*</span></label>
+			<li <? echo ( $$variable{'RequiredFields'}{'howdidyouhearaboutus'} ? 'class="required"' : '' ) ?>> 
+				<label>How did you hear about us?:</label>
 				<select name="howdidyouhearaboutus" onchange="if(this.value=='Other' || this.value=='CSR'){show_div('Other');} else {hide_div('Other');}">
 <? echo ( ssi::make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please enter who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{'howdidyouhearaboutus'} ); ) ?>
 				</select>
 				<input id="Other" style="<? echo ( 'visibility: hidden;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($param{'howdidyouhearaboutusother'}); ) ?>" />
 			</li>
-			<li> 
-				<label>Add to our mailing list?&nbsp;&nbsp;&nbsp;</label>
+			<li <? echo ( $$variable{'RequiredFields'}{'mailinglist'} ? 'class="required"' : '' ) ?>> 
+				<label>Add to our mailing list?</label>
 				<input type="radio" id="MailingListY" name="mailinglist" value="Y" 
 				<? echo ( 'checked="checked"' if $param{'mailinglist'} eq 'Y' or ! $param{'mailinglist'} ) ?> />
 				<label class="radio" for="MailingListY">Yes</label>
@@ -151,8 +158,8 @@
 			The following information will be used to create your login.<br />
 <div class="content">
 			<ul>
-				<li>
-					<label>Salutation: <span class="requiredFieldIndicator">*</span></label>
+				<li <? echo ( $$variable{'RequiredFields'}{'salutation'} ? 'class="required"' : '' ) ?>> 
+					<label>Salutation:</label>
 					<input type="radio" name="salutation" id="salutationMr" value="Mr."
 					<? echo ( ssi::checked( $param{'salutation'} eq 'Mr.' or ! $param{'salutation'} ); ) ?> />
 					<label class="radio" for="salutationMr">Mr.</label>
@@ -166,28 +173,28 @@
 					<? echo ( ssi::checked( $param{'salutation'} eq 'Miss' ); ) ?> />
 					<label class="radio" for="salutationMiss">Miss</label>
 				</li>
-				<li> 
-					<label>First Name: <span class="requiredFieldIndicator">*</span></label>
+				<li <? echo ( $$variable{'RequiredFields'}{'firstname'} ? 'class="required"' : '' ) ?>> 
+					<label>First Name:</label>
 					<input type="text" name="firstname" value="<? echo ( ssi::htmlize($param{'firstname'}); ) ?>" />
 				</li>
-				<li> 
-					<label>Last Name: <span class="requiredFieldIndicator">*</span></label>
+				<li <? echo ( $$variable{'RequiredFields'}{'lastname'} ? 'class="required"' : '' ) ?>> 
+					<label>Last Name:</label>
 					<input type="text" name="lastname" value="<? echo ( ssi::htmlize($param{'lastname'}); ) ?>" />
 				</li>
-				<li> 
-					<label>Position: <span class="requiredFieldIndicator">*</span></label>
+				<li <? echo ( $$variable{'RequiredFields'}{'title'} ? 'class="required"' : '' ) ?>> 
+					<label>Position:</label>
 					<input type="text" name="title" value="<? echo ( ssi::htmlize($param{'title'}); ) ?>" />
 				</li>
-				<li> 
-					<label>E-mail: <span class="requiredFieldIndicator">*</span></label>
+				<li <? echo ( $$variable{'RequiredFields'}{'email'} ? 'class="required"' : '' ) ?>> 
+					<label>E-mail:</label>
 					<input type="text" name="email" value="<? echo ( ssi::htmlize($param{'email'}); ) ?>"  />
 				</li>
-				<li> 
-					<label>Password: <span class="requiredFieldIndicator">*</span></label>
+				<li <? echo ( $$variable{'RequiredFields'}{'password'} ? 'class="required"' : '' ) ?>> 
+					<label>Password:</label>
 					<input type="password" name="password" value="<? echo ( ssi::htmlize($param{'password'}); ) ?>"  />
 				</li>
-				<li> 
-					<label>Verify Password: <span class="requiredFieldIndicator">*</span></label>
+				<li <? echo ( $$variable{'RequiredFields'}{'verifypassword'} ? 'class="required"' : '' ) ?>> 
+					<label>Verify Password:</label>
 					<input type="password" name="verifypassword" value="<? echo ( ssi::htmlize($param{'verifypassword'}); ) ?>"  />
 				</li>
 <? echo (
@@ -199,7 +206,8 @@
 			'output_folder' =>  $config{'SkinPath'}.'/images/captcha',
 		);
 		my $md5sum = $Captcha->generate_code( $config{'RegistrationCaptchaLength'} );
-		$html .= '<li><label>Enter the code below: <span class="requiredFieldIndicator">*</span></label><input type="text" name="Captcha" /><br/>';
+		$html .= '<li ' . ( $$variable{'RequiredFields'}{'verifypassword'} ? 'class="required"' : '' ) .'>'; 
+		$html .= '<label>Enter the code below:</label><input type="text" name="Captcha" /><br/>';
 		$html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};
 		$html .= qq{<img src="/images/captcha/$md5sum.png"/></li>};
 	} # end if

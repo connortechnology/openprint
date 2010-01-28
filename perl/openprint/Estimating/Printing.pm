@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 my %folding_cache;
@@ -1422,7 +1422,7 @@ $log->debug("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) $qty"
 			$openprint::log->debug("Trying press " . $Press->strid()) if $debug;
 			if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 				if ( $Press->specification('Printing Type') ne $$specs{'PrintingType'.$qty_index} ) {
-					$openprint::log->error("Press Printing Type (" . $Press->specification('Printing Type') .") is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if $debug;
+					$openprint::log->warn("Press Printing Type (" . $Press->specification('Printing Type') .") is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if $debug;
 					next;
 				} # end if
 			} else {

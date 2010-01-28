@@ -36,9 +36,6 @@ ul#ProjectTypes {
 #Estimate A IMG {
 	border: 1px solid black;
 }
-.Order {
-	padding: 5px;
-}
 .Content {
 	padding: 5px;
 }
@@ -423,32 +420,70 @@ div.Registration .Information:after {
 }
 /* Hides from IE-mac \*/
 * html div.Registration .Information {height: 1%;}
-* div.Registration .Information {display:block;}
+div.Registration .Information {display:block;}
 /* End hide from IE-mac */
 div.Registration div.Address {
     float: right;
-    width: 48%;
+    width: 49%;
 }
 div.Registration div.BillingInformation {
-    float: right;
-    width: 48%;
+    float: left;
+    width: 49%;
+}
+div.Registration div.BillingInformation ul {
+padding: 0px;
+}
+div.Registration div.BillingInformation ul li {
 }
 
 div.Registration div.Miscellaneous {
     display: none;
 }
 div.Registration div.Account {
-    float: left;
-    width: 48%;
+    float: right;
+    width: 49%;
+}
+div.Registration fieldset {
+	width: auto;
+}
+div.Registration fieldset .content ul {
+	margin: 0px;
+	padding:0px;
 }
 div.Registration fieldset ul li {
-	padding-left: 150px;
+	padding-left: 135px;
+	margin: .5em;
 }
+div.Registration fieldset div.content ul li.required {
+}
+.required:before {
+content: "\00BB \0020";
+}
+
 div.Registration fieldset ul li label {
-	margin-left: -150px;
-	width: 145px;
+	width: 130px;
+margin-left: -135px;
 }
 div.Registration fieldset ul li label.radio {
 	margin: 0px;
 	width: auto;
+}
+div.Registration fieldset p.buttons {
+	width: 100%;
+}
+div.Registration input[type="text"], div.Registration input[type="password"] {
+	width:200px;
+	margin: 0px;
+}
+div.Registration select {
+	width:204px;
+	margin: 0px;
+}
+.OrderHistory #JumpTo {
+	width: 30%;
+	float: left;
+}
+.OrderHistory #Filter {
+	width: 70%;
+	float: right;
 }

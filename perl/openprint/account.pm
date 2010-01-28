@@ -44,19 +44,22 @@ sub registration {
 
 	# perform input field validation
 	my $error = '';
-	$error .= 'Missing company name.<br/>' if ! $param{'company_name'};
-	$error .= 'Missing contact first name.<br/>' if ! $param{'firstname'};
-	$error .= 'Missing contact last name.<br/>' if ! $param{'lastname'};
-	$error .= 'Missing Salutation.<br/>' if ! $param{'salutation'};
-	$error .= 'Missing position.<br/>' if ! $param{'title'};
-	$error .= 'Missing address.<br/>' if ! $param{'address1'};
-	$error .= 'Missing city.<br/>' if ! $param{'city'};
-	$error .= 'Missing state/province.<br/>' if ! $param{'state'}; 
-	$error .= 'Missing country.<br/>' if ! $param{'country'};
-	$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
-	$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
-	$error .= 'Missing Phone Number.<br/>' if ! $param{'phone'};
-	if ( exists $param{'howdidyouhearaboutus'} ) {
+	my %required_fields = map{$_,$_} misc::trim( split(',', $config{'RegistrationRequiredFields'} ) );
+	$error .= 'Missing company name.<br/>' if $required_fields{'company_name'} and ! $param{'company_name'};
+	$error .= 'Missing contact first name.<br/>' if $required_fields{'firstname'} and ! $param{'firstname'};
+	$error .= 'Missing contact last name.<br/>' if $required_fields{'lastname'} and ! $param{'lastname'};
+	$error .= 'Missing Salutation.<br/>' if $required_fields{'salutation'} and ! $param{'salutation'};
+	$error .= 'Missing position.<br/>' if $required_fields{'title'} and ! $param{'title'};
+	$error .= 'Missing address.<br/>' if $required_fields{'address1'} and ! $param{'address1'};
+	$error .= 'Missing city.<br/>' if $required_fields{'city'} and ! $param{'city'};
+	$error .= 'Missing state/province.<br/>' if $required_fields{'state'} and ! $param{'state'}; 
+	$error .= 'Missing country.<br/>' if $required_fields{'country'} and ! $param{'country'};
+	if ( $required_fields{'postalcode'} ) {
+		$error .= 'Missing Postal Code.<br/>' if ! $param{'postalcode'};
+		$error .= 'Postal Code too long.<br/>' if length $param{'postalcode'} > 12;
+	} # en dif
+	$error .= 'Missing Phone Number.<br/>' if $required_fields{'phone'} and ! $param{'phone'};
+	if ( $required_fields{'howdidyouhearaboutus'} and exists $param{'howdidyouhearaboutus'} ) {
 		$error .= 'Please tell us how you heard about us.<br/>' if ! $param{'howdidyouhearaboutus'};
 		$error .= 'Please tell us how you heard about us.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $param{'howdidyouhearaboutusother'} );
 	} # end if
