@@ -80,7 +80,11 @@
 			<td colspan="2">&nbsp;</td>
 			<td colspan="5"><? hecho ( my $html = '';
 				foreach my $Project ( $$variable{'Order'}->Projects() ) {
-					$html .= $Project->reference()."\n";
+					if ( $Project->reference() ) {
+						$html .= $Project->reference()."\n";
+					} else {
+						$html .= $Project->summary()."\n";
+					} # end if
 				} # end foreach Project
 				return $html;
 			) ?></td>
