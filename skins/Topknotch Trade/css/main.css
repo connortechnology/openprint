@@ -1,10 +1,17 @@
 div.Order fieldset p label {
 	width: 30%;
 }
-div.OrderHistory fieldset p {
+div.Order .History fieldset ul li {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+div.Order .History fieldset ul li {
+	list-style: none;
+	margin: 0px;
 	padding-left: 100px;
 }
-div.OrderHistory fieldset p label {
+div.Order .History fieldset ul li label {
 	margin-left: -100px;
 	width: 95px;
 }
@@ -83,11 +90,8 @@ img#Butterfly, img#IDEAG7, img#IDEAG7Master {
 #QuickLogin p a.buttonImageOn, #QuickLogin p a.buttonImageOff, #CurrencySelection p a.buttonImageOn, #CurrencySelection p a.buttonImageOff {
     margin: 0px;
 }
-#Specials {
-	text-align: center;
-}
-#Specials h2 {
-	margin-top: 0px;
+.Specials table .Spec {
+	text-align: left;
 }
 img#HomeCollage {
 	float: right;

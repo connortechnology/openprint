@@ -35,21 +35,21 @@
 </script>	 
 <? if ( $session{'user_id'} ) ?>
 <form id="f1" name="f1" method="post" action="/main/project/history.html">
-   <div class="ProjectHistory">
+   <div class="Project"><div class="History">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 			<div class="leftColumn">
 			<p>
 				<label>Project #:</label>
-				<input type="text" name="ProjectID" size="6" onkeydown="if(event.keyCode == 13){load_projects( this.form );}"/>
+				<input type="text" id="ProjectID" name="ProjectID" size="6" onkeydown="if(event.keyCode == 13){load_projects( this.form );}"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_projects( \$('f1') );", '', 'Go' ); ) ?>
 			</p>
 			<p>
 				<label>Reference:</label>
-				<input type="text" name="Reference" onkeyup="load_projects( this.form );" />
+				<input type="text" id="Reference" name="Reference" onkeyup="load_projects( this.form );" />
 			</p>
 			<p>
 				<label>Status:</label>
-				<select name="ddmStatus" onchange="load_projects( this.form );">
+				<select id="ddmStatus" name="ddmStatus" onchange="load_projects( this.form );">
 					<option value="">All</option>
 <? echo ( 
 		$_ = q{SELECT name, name FROM Project_Statuses WHERE name != 'Deleted' ORDER BY sort,lower(name)};
@@ -128,6 +128,7 @@
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 			</div>
 		</fieldset>
+	</div>
 	</div>
 		<div id="ProjectList"><!--#include virtual="_project_list.html"--></div>
 	</form>

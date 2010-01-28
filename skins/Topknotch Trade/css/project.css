@@ -9,6 +9,7 @@
 .Project label.radio {
 	float: none;
 	margin: 0px;
+	width: auto;
 }
 
 div.Project .Header {
@@ -143,6 +144,18 @@ div.Service fieldset {
     margin: 2px;
     padding: 4px;
 }
+div.Service fieldset p {
+	padding-left: 130px;
+}
+div.Service fieldset p label {
+    margin-left: -130px;
+    width: 125px;
+}
+div.Service fieldset p label.radio {
+	margin: 0px;
+	width: auto;
+}
+
 div.Service fieldset p input, div.Service fieldset p select {
 	width: auto;
 }
@@ -204,3 +217,52 @@ div.ProjectCreateEdit ul:after {
 #Versions {
 	display: none;
 }
+.Project .View table .price {
+	text-align: right;
+	width: 160px;
+}
+div.Service div.templates {
+    padding-right: 0px;
+}
+div.Service div.templates:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Service div.templates {height: 1%;}
+* div.Service div.templates {display:block;}
+/* End hide from IE-mac */
+
+div.Service div.templates p {
+    float: left;
+    width: 135px;
+    height: 130px;
+    text-align: center;
+    margin: 0px 5px 10px 5px;
+    padding: 0px;
+}
+
+div.Service div.templates p label {
+    clear: none;
+    float: none;
+    margin: 0px;
+}
+div.Service div.templates p img {
+    clear: both;
+    width: 100px;
+    height: 100px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+div.Service span.ThreeColumns {
+	width: 32%;
+	float: left;
+}
+div.Service span.TwoColumns {
+	width: 50%;
+	float: left;
+}
+
