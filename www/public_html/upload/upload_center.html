@@ -9,7 +9,7 @@ function displayUploadResults(body) {
 	$('uploadResults').innerHTML = body.innerHTML;
 	// Update files list and serial
 	new Ajax.Updater('UploadForm','/upload/_upload_form.html', {method:'get',parameters:document.forms['upload'].serialize()});
-	window.setTimeout("$('UploadCompleteDiv').hide();", 5000);
+	//window.setTimeout("$('UploadCompleteDiv').hide();", 5000);
 	//window.setTimeout("$('UploadForm').show();$('uploadResults').innerHTML='';$('UploadCompleteDiv').hide();", 5000);
 }         
 
@@ -84,7 +84,7 @@ function check_input( form ) {
 			</table>
 		</div>
 		<br/>
-		<span style="float:right;">
+		<p class="buttons">
 		<? echo ( 
 			  my $qry;
 			  if( $param{'docket'} ) {
@@ -94,14 +94,13 @@ function check_input( form ) {
 			  } # end if
 			ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', "", "/upload/upload_center.html$qry", 'Cancel Upload' );
 		) ?>
-		</span>
-		<br class="spacer"/>
+		</p>
 	</div>
 	<div id="PendingCompletion" style="display: none;" align="center">
 	  <p>Please wait while we confirm that your upload was successful.</p>
 	</div>
 	<div id="UploadCompleteDiv" style="display: none;">
-		<span style="float:right;">
+		<p class="buttons">
 		<? echo ( 
 			  my $qry;
 			  if( $param{'docket'} ) {
@@ -112,8 +111,7 @@ function check_input( form ) {
 			  
 			  ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', "", "/upload/upload_center.html$qry", 'Upload More Files' ); 
 		) ?> <? echo ( ssi::writeButton( $log, $dbh, 'Home', 'home.gif', "", "/", 'Home' ); ) ?>
-		</span>
-		<br class="spacer"/>
+		</p>
 	</div>
 	<iframe scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0" style="overflow:visible; width:0; height:0; display:none;" id="UploadFrame" name="UploadFrame" src=""></iframe>
 </div>
