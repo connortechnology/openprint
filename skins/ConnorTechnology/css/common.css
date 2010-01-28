@@ -3,11 +3,13 @@ html {
 }
 body {
 	margin: 0px;
-	padding: 0px;
 	height: 100%;
 	font-family: verdana, arial, helvetica, sans-serif;
 	font-size: x-small;
 	min-width: 1070px;
+	padding: 5px;
+	background-color: #fff;
+	color: #333;
 }
 img {
 border: none;
@@ -103,7 +105,7 @@ margin-left: 4px;
 }
 /* Hides from IE-mac \*/
 * html #header {height: 1%;}
-*     #header{display:block;}
+     #header{display:block;}
 /* End hide from IE-mac */
 
 #header-logo {
@@ -120,7 +122,6 @@ margin-left: 4px;
 }
 #content2 {
 	margin: 0px;
-	padding: 0px;
 	padding: 10px;
 	background-repeat: repeat-x;
 	background-position: top;
@@ -153,10 +154,6 @@ margin-left: 4px;
 	margin: 0px;
 	padding: 0px;
 }
-.spacer {
-	height: 0px;
-	clear: both;
-}
 
 .Timetrack {
 	float: left;
@@ -184,8 +181,9 @@ margin-left: 4px;
 }
 
 fieldset {
-border: none;
+	border: none;
 	margin: 0px;
+	float: left;
 }
 
 fieldset legend {
@@ -195,7 +193,6 @@ fieldset legend {
 }
 fieldset p {
 	padding-left: 100px;
-	display: inline-block;
 	overflow: hidden;
 }
 fieldset p:after {
@@ -209,7 +206,7 @@ fieldset p:after {
 }
 /* Hides from IE-mac \*/
 * html fieldset p {height: 1%;}
-*     fieldset p{display:block;}
+     fieldset p{display:block;}
 /* End hide from IE-mac */
 
 fieldset p label {
@@ -228,12 +225,6 @@ less brown: #663300
 light#CC9900
 lighter: #FFF2AC
 */
-body {
-	margin: 0px;
-	padding: 5px;
-	background-color: #fff;
-	color: #333;
-}
 input, textarea, select, option {
 	background-color: white;
 	color: black;
@@ -392,9 +383,6 @@ fieldset p label.radio {
 	margin: 0px;
 	display: inline;
 }
-fieldset p br {
-	display: none;
-}
 hr {
 	color: #0046A2;
 	background-color: #0046A2;
@@ -489,20 +477,4 @@ td.Rate, th.Rate {
 th.EmployeeName {
 	text-align: left;
 	width: 80px;
-}
-#administrator_menu {
-	width: 150px;
-	margin: 0px;
-	border: 1px solid black;
-	float: left;
-}
-#administrator_menu ul {
-	list-style: none;
-	margin: 0px;
-	padding: 0px;
-}
-#administrator_menu ul li {
-	list-style: none;
-	margin: 0px;
-	padding: 0px;
 }
