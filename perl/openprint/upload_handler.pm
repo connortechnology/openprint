@@ -34,15 +34,12 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 sub handler {
 	my $request = shift;
-	$r = Apache2::Request->new( $request );
-	$r->content_type(q{text/html; charset=utf-8});
 	$log	= $request->log;
 
 	$request->no_cache(1);
 
 	my $starttime = time;
-	$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
-	#$r->parse;
+	#$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
 
 	$dbh = sql::open_sql( $log, 
 			'database'	=> $request->dir_config('db_name'),
@@ -52,7 +49,19 @@ sub handler {
 			'password'	=> $request->dir_config('db_password'),
 			);
 
-	openprint::session_init();
+    my $cookies = Apache2::Cookie->fetch( $r );
+    my $cookie = $$cookies{'_session_id'};
+    $cookie = $cookie->value if $cookie;
+
+   if ( ! eval q`tie %session, 'Apache::Session::Postgres', $cookie, { Handle => $dbh, Commit => 0, IDLength => 8 }` ) {
+        $log->debug("Error fetching Session: $cookie: $@");
+        if ( ! eval q`tie %session, 'Apache::Session::Postgres', undef, { Handle        => $dbh, Commit     => 0, IDLength  => 8, };` ) {
+            $log->debug("Error creating Session: ");
+        } # end if
+    } # end if
+    if ( $cookie ne $session{_session_id} ) {
+		$log->debug("$cookie != $session{_session_id}");
+	}
 
 	if ( $request->method eq 'POST' ) {
 		my $uploaded = 0;
@@ -86,12 +95,12 @@ sub handler {
 		if ( ! $data ) {
 			$log->debug("No uploadin progress for " . $r->param('serial') );
 			$data = {};
-		} else {
-		$log->debug("$data");	
-foreach my $k ( keys %$data ) {
-$log->debug("($k) -> $$data{$k}");
-}
-		}
+		#} else {
+		#$log->debug("$data");	
+#foreach my $k ( keys %$data ) {
+#$log->debug("($k) -> $$data{$k}");
+#}
+		} # end if
 
 #<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 		my $output =qq` 
@@ -100,7 +109,7 @@ $log->debug("($k) -> $$data{$k}");
 <totalsize>$$data{'total'}</totalsize>
 <elapsedtime>$$data{'elapsed'}</elapsedtime>
 <serial>`.$r->param('serial').q{</serial></response>};
-		$log->debug($output);
+		#$log->debug($output);
 		$request->content_type('text/xml');
 		$r->print( $output );
 	} else {
@@ -116,6 +125,7 @@ $log->debug("($k) -> $$data{$k}");
 		} # end if
 		upload_files( $r, $log, $dbh, \%variable );
 		my $page = '/upload/_upload_complete.html';
+		my @page_path = split('/', $page );
 		my $content;
 		if (-e $r->dir_config('SkinPath') . $page) {
 			$page = $r->dir_config('SkinPath') . $page;
@@ -124,7 +134,6 @@ $log->debug("($k) -> $$data{$k}");
 		} # end if
 		my $content = misc::load_file( $log, $page );
         $variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
-		my @page_path = split('/', $page );
         my $filename = pop @page_path;
         my $template;
 
@@ -154,7 +163,8 @@ $log->debug("($k) -> $$data{$k}");
 		} # end while
 
         if ( $template ) {
-            $r->print( ssi::variable_substitution( \$template, \%variable ) );
+			$_ = ssi::variable_substitution( \$template, \%variable );
+            $r->print( $_ );
         } else {
             $r->print( $variable{'PageContent'} );
         } # end if
@@ -162,7 +172,7 @@ $log->debug("($k) -> $$data{$k}");
 
 	untie %session;
 	#$dbh->disconnect();# if $dbh->{'thread_id'};
-	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
+	#$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	return Apache2::Const::OK;
 }
 
