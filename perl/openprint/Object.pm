@@ -228,7 +228,10 @@ sub undelete {
 	my %fields = eval '%'.$type.'::fields';
 	sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{'id'}], 'deleted', 0 );
 	$$self{'deleted'} = 0;
+	my %find_cache = eval '%'.$type.'::find_cache';
+	%find_cache = () if %find_cache;
 	delete $openprint::Object::cache{$type}{$$self{id}};
+	return;
 } # end sub undelete
 
 sub destroy {
@@ -239,17 +242,6 @@ sub destroy {
 	delete $openprint::Object::cache{$type}{$$self{id}};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 } # end sub destroy
-
-sub undelete {
-    my ( $self ) = @_;
-    my $type = ref $self;
-    my $table = eval '$'.$type.'::table';
-	sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 0 );
-	$$self{'deleted'}=0;
-	my %find_cache = eval '%'.$type.'::find_cache';
-	%find_cache = () if %find_cache;
-	return;
-} # end sub undelete
 
 sub Creator {
 	require openprint::User;
