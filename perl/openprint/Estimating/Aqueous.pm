@@ -105,7 +105,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
@@ -245,7 +245,7 @@ sub signature_calc {
 		#} # end if
 	} # end if
 
-	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
@@ -290,7 +290,11 @@ sub signature_calc {
 	#$openprint::log->debug('DOne Cutting :' . @impositions);
 
 	foreach my $Equipment ( @equipment ) {
-		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().',<br/>';
+		$$specs{'hdnBreakdown'.$qty_index} .= 'Equipment: '.$Equipment->strid().' ' . $Equipment->specification('Aqueous Capable') . ' ' . $$sig_specs{'ddmPress'.$qty_index} . ',<br/>';
+		if ( ( $Equipment->specification('Aqueous Capable') eq 'When Printing' ) and ( $$sig_specs{'ddmPress'.$qty_index} ne $Equipment->strid() ) ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Not printing on this press.<br/>';
+			next;
+		} # end if
 		my %minimum = openprint::service::get_price_object( 'AqueousMinimumCharge', undef, $Equipment );
 
 		foreach my $imp ( @impositions ) {
@@ -426,7 +430,7 @@ sub signature_calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 #$openprint::log->debug('Aqueous');
-	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 } # end sub display
 
 # Copies the AQ settings back into the printing service, because that is where we have chosen to store them.

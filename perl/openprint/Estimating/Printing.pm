@@ -3447,6 +3447,7 @@ sub calc_price {
 	} # end if
 	$impressions *= $$project{print_sides} if ($$project{print_sides} == 2) and sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] );
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
+	$$specs{'ddmPress'.$qty_index} = $Press->strid();
 
 	if ( $$project{'HasUVCoating'} ) {
 		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
@@ -3461,6 +3462,7 @@ sub calc_price {
 
 	if ( $$project{'HasAqueous'} ) {
 		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+	#$price{'Aqueous Breakdown'} .= $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{'Status'} eq 'uncalculated' ) {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{'alert'} $$project{'AqueousSpecs'}{alert} " . $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 

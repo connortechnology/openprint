@@ -232,3 +232,41 @@ div.ProjectCreateEdit ul:after {
 #Versions {
 	display: none;
 }
+
+div.Service div.templates {
+    padding-right: 0px;
+}
+div.Service div.templates:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Service div.templates {height: 1%;}
+div.Service div.templates {display:block;}
+/* End hide from IE-mac */
+
+div.Service div.templates p {
+    float: left;
+    width: 135px;
+    height: 130px;
+    text-align: center;
+    margin: 0px 5px 10px 5px;
+    padding: 0px;
+}
+
+div.Service div.templates p label {
+    clear: none;
+    float: none;
+    margin: 0px;
+}
+div.Service div.templates p img {
+    clear: both;
+    width: 100px;
+    height: 100px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
