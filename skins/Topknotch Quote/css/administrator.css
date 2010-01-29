@@ -5,6 +5,10 @@ fieldset p label {
     margin-left: -115px;
     width: 110px;
 }
+fieldset p label.radio {
+	margin: 0px;
+	width: auto;
+}
 fieldset p.buttons {
     margin: 0px;
     padding: 0px;
