@@ -132,4 +132,6 @@ table.List tr td.Range input, table.List tr td.Range input[type="text"] {
     width: 95px;
     text-align: center;
 }
-
+.changed {
+	background-color: yellow;
+}
