@@ -140,7 +140,7 @@ div.Service span.TwoColumns {
 div.Service fieldset p {
 	padding-left: 130px;
 }
-div.Service fieldset p input {
+div.Service fieldset p input, div.Service fieldset p select {
 	width: auto;
 }
 div.Service fieldset p label {

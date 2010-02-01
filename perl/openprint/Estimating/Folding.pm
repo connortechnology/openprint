@@ -166,90 +166,90 @@ sub fold_types {
 } # end sub fold_types
 
 sub signature_needs {
-my ( $Project, $specs, $qty_index ) = @_;
+	my ( $Project, $specs, $qty_index ) = @_;
 
-return 0 if $Project->Type()->name() eq 'Banners';
-my $services = $Project->services();
-if ( $$services{'NoBindery'} ) {
-	return 0;
-} # end if
-if ( ($$specs{'pages_supplied'} eq 'Y') and ($$specs{'supplied_format'} eq 'Folded') ) {
-	return 0;
-} # end if
-
-if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
-	$openprint::log->warn("FOLDING NEEDED got templatetype!") if $debug;
-	return 1;
-} else {
-	$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if $debug;
-} # end if
-
-if ( $$specs{'txtSignatureType'} ) {
-	if ( $$specs{'txtSpreadSize'} == 1 ) {
-		$openprint::log->warn("Folding not needed: spreadsize==1: $$specs{'txtSpreadSize'}");
+	return 0 if $Project->Type()->name() eq 'Banners';
+	my $services = $Project->services();
+	if ( $$services{'NoBindery'} ) {
 		return 0;
 	} # end if
-	if ( $qty_index ) {
-		if ( ( $$specs{'PageQuantity'.$qty_index} == 0 ) or ( $$specs{'PageQuantity'.$qty_index} == 2 ) ) {
-			$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}");
-			return 0;
-		} # end if	
+	if ( $$services{'MetalCoil'} ) {
+		return 0;
+	} # end if
+	if ( $$services{'PlasticCoil'} ) {
+		return 0;
+	} # end if
+	if ( $$services{'Cerlox'} ) {
+		return 0;
+	} # end if
+	if ( $$services{'DoubleLoopWire'} ) {
+		return 0;
+	} # end if
+	if ( $$services{'SaddleStitching'} ) {
+		return 1;
+	} # end if
+	if ( ($$specs{'pages_supplied'} eq 'Y') and ($$specs{'supplied_format'} eq 'Folded') ) {
+		return 0;
+	} # end if
+
+	if ( $fold_types{$$specs{'rdbTemplateType'}} ) {
+		$openprint::log->warn("FOLDING NEEDED got templatetype!") if $debug;
+		return 1;
 	} else {
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			if ( $$specs{'PageQuantity'.$qty_index} == 2 ) {
+		$openprint::log->warn("FOLDING NEEDED $$specs{'rdbTemplateType'} $fold_types{$$specs{'rdbTemplateType'}}!") if $debug;
+	} # end if
+
+	if ( $$specs{'txtSignatureType'} ) {
+		if ( $$specs{'txtSpreadSize'} == 1 ) {
+			$openprint::log->warn("Folding not needed: spreadsize==1: $$specs{'txtSpreadSize'}");
+			return 0;
+		} # end if
+		if ( $qty_index ) {
+			if ( ( $$specs{'PageQuantity'.$qty_index} == 0 ) or ( $$specs{'PageQuantity'.$qty_index} == 2 ) ) {
 				$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}");
 				return 0;
 			} # end if	
-		} # end foreah qty_index
+		} else {
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				if ( $$specs{'PageQuantity'.$qty_index} == 2 ) {
+					$openprint::log->warn("Folding not needed: PageQuantity: $$specs{'PageQuantity'.$qty_index}");
+					return 0;
+				} # end if	
+			} # end foreah qty_index
+		} # end if
+		return 1;
 	} # end if
-	return 1;
-} # end if
 
 # This works for books because sigs don't have a txtFinalWidth, etc.
-if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
-	$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
-	return 1;
-} # end if
+	if ( ($$specs{'txtFinalWidth'} != $$specs{'txtWidth'}) or ($$specs{'txtFinalHeight'} != $$specs{'txtHeight'}) ) {
+		$openprint::log->warn("FOLDING NEEDED dimensions do not match!") if $debug;
+		return 1;
+	} # end if
 
-return 0;
+	return 0;
 } # end sub signature_needs
 
 # A function that is smart enough to return true if the project needs folding, and false if it doesn't.
 sub neccessary {
-my ( $project_index ) = @_;
+	my ( $project_index ) = @_;
 
-my $Project = new openprint::Project( $project_index );
-return 0 if $Project->Type()->name() eq 'Banners';
-my $services = $Project->services( );
+	my $Project = new openprint::Project( $project_index );
+	return 0 if $Project->Type()->name() eq 'Banners';
+	my $services = $Project->services( );
 
-if ( $$services{'NoBindery'} ) {
-	$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
-	return 0;
-} # end if
-if ( $$services{'MetalCoil'} ) {
-	return 0;
-} # end if
-if ( $$services{'PlasticCoil'} ) {
-	return 0;
-} # end if
-if ( $$services{'Cerlox'} ) {
-	return 0;
-} # end if
-if ( $$services{'DoubleLoopWire'} ) {
-	return 0;
-} # end if
-if ( $$services{'SaddleStitching'} ) {
-	return 1;
-} # end if
-
-foreach my $signature_service_index ( $Project->signatures() ) {
-	my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-	if ( signature_needs( $Project, $specs ) ) {
-		return 1;
+	if ( $$services{'NoBindery'} ) {
+		$openprint::log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
+		return 0;
 	} # end if
-} # end foreach
-$openprint::log->debug("FOLDING NOT NEEDED!");
-return 0;	
+
+	foreach my $signature_service_index ( $Project->signatures() ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+		if ( signature_needs( $Project, $specs ) ) {
+			return 1;
+		} # end if
+	} # end foreach
+	$openprint::log->debug("FOLDING NOT NEEDED!");
+	return 0;	
 } # end sub neccessary
 
 # Looks at the imposition, and if the width is too small for the fold, tries to pad the image until it can fold, wasting paper, but sometimes this is desireable.
