@@ -3,12 +3,12 @@
 			<tr>
 				<th>Employee</th>
 				<th>Service</th>
-				<th class="DateTime">Starting</th>
-				<th class="DateTime">Ending</th>
-				<th width="75" class="Interval">Interval</th>
-				<th width="75" class="Rate">Rate</th>	
-				<th width="75" class="Price">Price</th>
-				<th width="10">&nbsp;</th>
+				<th class="DateTime">Start</th>
+				<th class="DateTime">End</th>
+				<th class="Interval">Interval</th>
+				<th class="Rate">Rate</th>	
+				<th class="Price">Price</th>
+				<th class="unprintable" width="10">&nbsp;</th>
 			</tr>
 		<? echo (
 			my $html = '';
@@ -22,9 +22,9 @@
 				$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Timetrack->ending() ) ) );
 				$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 				my $Price = $Timetrack->Price();
-				$html .= sprintf('<td class="Price">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
+				$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
-				$html .= sprintf('<td>%s</td>', ssi::writeButton( $log, $dbh, 'del'.$Timetrack->id(), '', 'del_timetrack('.$Timetrack->id().');', '', '-' ) );
+				$html .= sprintf('<td class="unprintable">%s</td>', ssi::writeButton( $log, $dbh, 'del'.$Timetrack->id(), '', 'del_timetrack('.$Timetrack->id().');', '', '-' ) );
 				$html .= '</tr>';
 				$$variable{'service_total'} += $$Price{'Total'};
 			} # end foreach Timetrack

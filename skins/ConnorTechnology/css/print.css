@@ -83,8 +83,11 @@ padding: 0px;
 }
 .PageTitle {
 	position: absolute;
-	top: 0px;
+	top: 50px;
 	right: 0px;
+}
+#menu, #menubar {
+	display: none;
 }
 #administrator_menu {
 	display: none;

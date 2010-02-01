@@ -43,6 +43,7 @@
 </script>
 <? endif ( $$variable{'Invoice'}->id() ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
+<div class="Invoice"><div class="Edit">
 <form name="f1" id="f1" action="<? echo ( $$variable{'Invoice'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">
 	<input type="hidden" name="btnFunction" />
 	<input type="hidden" name="invoice_id" value="<? echo ( $$variable{'Invoice'}->id() ) ?>" />
@@ -121,16 +122,18 @@
 <div id="InvoicedProducts">
 	<!--#include virtual="_invoiced_products.html"-->
 </div>
+<p class="buttons">
 <? echo ( ssi::writeButton( $log, $dbh, 'NewProduct', 'new_product.gif', q`new Ajax.Updater( 'InvoicedProducts','_invoiced_products.html?action=new', { method: 'get', parameters: $('f1').serialize() } );`, '', 'Add New Product' ); ) ?>
-
+</p>
 </form>
+<!--#include virtual="_totals.html"-->
 <div class="leftColumn">
 	<div id="Interests">
 	<!--#include virtual="_interests.html"-->
 	</div>
 	<fieldset><legend>Payments</legend>
 		<table>
-			<tr><th>ID</th><th align="left">When</th><th>Notes</th><th style="text-align:right;">Amount</th></tr>
+			<tr><th>ID</th><th align="left">When</th><th>Notes</th><th class="Price">Amount</th></tr>
 			<? echo ( 
 				my $html = '';
 				$$variable{'payment_total'} = 0;
@@ -142,65 +145,11 @@
 			) ?>
 			<tr class="totals">
 				<td align="right" colspan="3">Total:</td>
-				<td align="right"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
+				<td class="Price"><? echo ( openprint::Currency::format( $$variable{'payment_total'} ); ) ?></td>
 			</tr>
 		</table>
 	</fieldset>
 </div>
-<div class="rightColumn">
-	<fieldset><legend>Taxes &amp; Totals</legend>
-		<table>
-			<tr>
-				<td align="right">Sub Total:</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
-			</tr>
-			<? if ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
-			<tr>
-				<td align="right">GST:</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
-			</tr>
-			<? endif ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
-			<? if ( $$variable{'Invoice'}->statetax() ne '' ) ?>
-			<tr>
-				<td align="right">PST:</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->statetax() ); ) ?></td>
-			</tr>
-			<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>
-			<tr>
-				<td align="right"><b>Total:</b></td>
-				<td align="right" width="100"><b><span id="Total"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></span></b></td>
-			</tr>
-			<? if ( $$variable{'Invoice'}->interest() ne '' ) ?>
-			<tr>
-				<td align="right"><b>Interest:</b></td>
-				<td align="right" width="100"><b><span id="Interest_Total"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></span></b></td>
-			</tr>
-			<? endif ( $$variable{'Invoice'}->interest() ne '' ) ?>
-			<tr>
-				<td align="right">Amount Paid:</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->paid() ); ) ?></td>
-			</tr>
-			<tr>
-				<td align="right"><b>Amount Owing</b>:</td>
-				<td align="right" width="100"><b><span id="Owing"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></span></b></td>
-			</tr>
-		</table>
-		<span style="float:right;">All amounts in <? echo ( $$variable{'Invoice'}->Currency()->name(); ) ?>.</span>
-	</fieldset>
-</div>
-<br class="spacer">
-<fieldset><legend>Logs</legend>
-	<table>
-		<tr><th>When</th><th>Who</th><th>Description</th></tr>
-		<? echo ( 
-			my $html = '';
-			foreach my $Log ( $$variable{'Invoice'}->Logs() ) {
-				$html .= sprintf('<tr><td>%s</td><td>%s</td><td>%s</td></tr>', 
-					Date::Format::time2str( '%Y-%m-%d %H:%M', Date::Parse::str2time($Log->created_on())),
-					$Log->user_id() ? $Log->User()->name() : 'System', $Log->description() );
-			} # end foreach Log
-			return $html;
-		) ?>
-	</table>
-</fieldset>
+<!--#include virtual="_logs.html"-->
 <? endif ( $$variable{'Invoice'}->id() ) ?>
+</div></div>

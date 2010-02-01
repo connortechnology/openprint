@@ -146,6 +146,15 @@ sub variable_substitution {
 	return do_include( $text, $variable );
 } # end sub variable_substitution
 
+sub html_escape {
+	$_ = shift;
+	$_ =~ s/&/&amp;/mg;
+	$_ =~ s/"/&quot;/mg;
+	$_ =~ s/</&lt;/mg;
+	$_ =~ s/>/&gt;/mg;
+	return $_;
+}
+
 sub htmlize {
 	return if ! @_;
 	if ( @_ == 1 ) {

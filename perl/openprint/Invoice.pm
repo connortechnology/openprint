@@ -348,7 +348,7 @@ sub send {
 
 	my %data;
 	$data{'Invoice'} = $self;
-
+	$data{'uri'} = 'invoice';
 	my $email_template = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
 	my @attachments;
 	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice_body.html' );

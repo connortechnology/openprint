@@ -1,7 +1,4 @@
-<style type="text/css">
-	<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/invoice.css' ); ) ?>
-</style>
-<div id="Invoice">
+<div class="Invoice">
 <div class="PageTitle">
 	<h1>Invoice #<? echo ( $$variable{'Invoice'}->id() ) ?></h1>
 </div>
@@ -39,9 +36,9 @@
 			<tr>
 				<th class="Date">Date</th>
 				<th>Description</th>
-				<th width="75" class="Interval">Interval</th>
-				<th width="75" class="Rate">Rate</th>	
-				<th width="75" class="Price">Price</th>
+				<th class="Interval">Interval</th>
+				<th class="Rate">Rate</th>	
+				<th class="Price">Price</th>
 			</tr>
 			<? echo (
 				my $html = '';
@@ -51,7 +48,7 @@
 				foreach my $Timetrack ( openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 					$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
-					$html .= sprintf('<td class="Service">%s</td>', $Timetrack->Service()->name() );
+					$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
 					$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
 					my $Price = $Timetrack->Price();
 					$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
@@ -66,7 +63,7 @@
 			) ?>
 			<tr class="totals">
 				<td colspan="4" align="right"><b>Totals:</b></td>
-				<td align="right"><b><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></b></td>
+				<td class="Price"><b><? echo ( openprint::Currency::format( $$variable{'service_total'} ); ) ?></b></td>
 			</tr>
 		</table>
 	</fieldset>
@@ -111,49 +108,9 @@
         </table>
     </fieldset>
 </div>
-<div class="Totals">
-	<fieldset><legend>Taxes &amp; Totals</legend>
-		<table>
-			<tr>
-				<td align="right">Sub Total:</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
-			</tr>
-			<? if ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
-			<tr>
-				<td align="right">GST (<? echo ( $$variable{'Invoice'}->federaltaxrate() ) ?>%):</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
-			</tr>
-			<? endif ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
-			<? if ( $$variable{'Invoice'}->statetax() ne '' ) ?>
-			<tr>
-				<td align="right">PST (<? echo ( $$variable{'Invoice'}->statetaxrate() ) ?>%):</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->statetax() ); ) ?></td>
-			</tr>
-			<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>
-			<tr>
-				<td align="right"><b>Total:</b></td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></b></td>
-			</tr>
-			<? if ( $$variable{'Invoice'}->interest() ne '' ) ?>
-			<tr>
-				<td align="right"><b>Interest:</b></td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></b></td>
-			</tr>
-			<? endif ( $$variable{'Invoice'}->interest() ne '' ) ?>
-			<tr>
-				<td align="right">Amount Paid:</td>
-				<td align="right" width="100"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->paid() ); ) ?></td>
-			</tr>
-			<tr>
-				<td align="right"><b>Amount Owing</b>:</td>
-				<td align="right" width="100"><b><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></b></td>
-			</tr>
-		</table>
-		<span style="float:right;">All amounts in <? echo ( $$variable{'Invoice'}->Currency()->name(); ) ?>.</span>
-	</fieldset>
-</div>
-<br class="spacer">
+<!--#include virtual="/invoice/_totals.html"-->
 <? if ( $$variable{'Invoice'}->Payments() ) ?>
+<br class="spacer"/>
 <div class="leftColumn">
 	<fieldset><legend>Payments</legend>
 		<table>
@@ -175,5 +132,4 @@
 	</fieldset>
 </div>
 <? endif ( $$variable{'Invoice'}->Payments() ) ?>
-<br class="spacer"/>
 </div>

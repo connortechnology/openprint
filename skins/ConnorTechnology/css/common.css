@@ -108,6 +108,27 @@ margin-left: 4px;
      #header{display:block;}
 /* End hide from IE-mac */
 
+img#logo1 {
+	float: left;
+	width: 344px;
+	height: 71px;
+	display: block;
+	display: none;
+}
+img#logo2 {
+	float: left;
+	width: 344px;
+	height: 71px;
+	display: block;
+}
+@media print {
+img#logo1 {
+	display: block;
+}
+img#logo2 {
+	display: none;
+}
+}
 #header-logo {
 	float: left;
 	margin: 8px;
@@ -462,11 +483,11 @@ span.DateSelector select, span.DateTimeSelector select {
 span.DateSelector select option {
 }
 td.Date, th.Date {
-	width: 100px;
+	width: 130px;
 	text-align: left;
 }
 td.Price, th.Price {
-	width: 75px;
+	width: 85px;
 	text-align: right;
 }
 td.Rate, th.Rate {

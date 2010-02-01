@@ -25,6 +25,10 @@ table.List {
     table-layout: fixed;
     border-bottom: 1px solid #0046a2;
 }
+table.List p {
+	margin: 0px;
+	padding: 0px;
+}
 th {
     color: #000000;
     border-bottom: 1px solid #0046A2;

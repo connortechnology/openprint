@@ -1,0 +1,43 @@
+<div id="Totals">
+	<fieldset><legend>Taxes &amp; Totals</legend>
+		<div class="content">
+			<ul>
+				<li class="subtotal">
+					<label>Sub Total:</label>
+					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?>
+				</li>
+				<? if ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
+				<li class="gst">
+					<label>GST:</label>
+					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?>
+				</li>
+				<? endif ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
+				<? if ( $$variable{'Invoice'}->statetax() ne '' ) ?>
+				<li class="pst">
+					<label>PST:</label>
+					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->statetax() ); ) ?>
+				</li>
+				<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>
+				<li class="total">
+					<label>Total:</label>
+					<span id="total"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></span>
+				</li>
+				<? if ( $$variable{'Invoice'}->interest() ne '' ) ?>
+				<li class="interest">
+					<label>Interest:</label>
+					<span id="interest"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></span>
+				</li>
+				<? endif ( $$variable{'Invoice'}->interest() ne '' ) ?>
+				<li class="paid">
+					<label>Amount Paid:</label>
+					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->paid() ); ) ?>
+				</li>
+				<li class="owing">
+					<label>Amount Owing:</label>
+					<span id="Owing"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></span>
+				</li>
+			</ul>
+		</div>
+		<span style="float:right;">All amounts in <? echo ( $$variable{'Invoice'}->Currency()->name(); ) ?>.</span>
+	</fieldset>
+</div>
