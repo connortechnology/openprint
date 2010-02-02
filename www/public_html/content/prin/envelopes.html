@@ -2,7 +2,7 @@
 	$$variable{'ProjectTypeName'} = $r->param('ProjectType') if $r->param('ProjectType');
 	$$variable{'DimensionsDisplay'} = 'Finished';
 ) ?>
-<form name="f1" method="post" action="/content/prin/prin_broc.html">
+<form id="f1" name="f1" method="post" action="/content/prin/prin_broc.html">
 	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
 	<div class="InstantPricing">
