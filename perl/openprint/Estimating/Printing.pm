@@ -1460,11 +1460,13 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 			} # end if
 			my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
 			if ( $do_work_turn ) {
+				# Coatings like AQ and Varnish are done in a separate pass.  So we don't count them in this check
+				my @Coatings = map { $_->name() } openprint::Service::find('category'=>'Coating');
 				if ( ! $Papers[0]->doublesided() ) {
-#$openprint::log->debug("No W&T due to doublesided" . $$Papers[0]->name() );
+$openprint::log->debug("No W&T due to doublesided" . $Papers[0]->name() );
 					$do_work_turn = 0;
-				} elsif ( @{$$project{'filtered_colours'}} > $Press->specification('Number of Colours') and $Press->specification('Multipass', $Papers[0]->gsm() ) ne 'Y' ) {
-#$openprint::log->debug("No W&T due to multipass" . $$Papers[0]->gsm() );
+				} elsif ( sets::exclude( \@Coatings, $$project{'filtered_colours'} ) > $Press->specification('Number of Colours') and $Press->specification('Multipass', $Papers[0]->gsm() ) ne 'Y' ) {
+$openprint::log->debug("No W&T due to multipass" . $Papers[0]->gsm() );
 					$do_work_turn = 0;
 				} elsif ( $$specs{'sides_the_same'} eq 'Y' ) {
 					$do_work_turn = 0;
@@ -1745,7 +1747,7 @@ $i->display();
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			if ( $debug ) {
-				$openprint::log->warn('Impositions for '. $Press->strid() . @impositions );
+				$openprint::log->warn('Impositions for '. $Press->strid() . ': ' . @impositions );
 				foreach my $I ( @impositions ) {
 					$I->display();
 				} # end foreach

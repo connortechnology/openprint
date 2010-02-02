@@ -115,7 +115,7 @@ sub calc {
 		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
 			next;
 		} # end if
-		$$specs{'hdnBreakdown'.$qty_index} = sprintf('QTY: %d</br>',$$specs{"txtQuantity$qty_index"} );
+		$$specs{'hdnBreakdown'.$qty_index} = sprintf('QTY: %d<br/>',$$specs{"txtQuantity$qty_index"} );
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
 		if ( $$specs{'txtPressSheetComboItems'} ) {
@@ -239,11 +239,16 @@ sub signature_calc {
 	if ( $$sig_specs{'Versions'} ) {
 		$impressions *= $$sig_specs{'Versions'};
 	} # end if
+$openprint::log->debug("Impressions: $impressions");
+if ( 0 ) {
+	# This just can't be right anymore.
 	if ( sets::isin( $imposition->runstyle(), ['Perfecting','Sheet Work'] ) ) {
 		#if ( ! ( @front_aq and @back_aq ) ) {
 			$impressions = int($impressions/2);
 		#} # end if
 	} # end if
+} # end if
+$openprint::log->debug("Impressions: $impressions");
 
 	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
@@ -255,7 +260,7 @@ sub signature_calc {
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
-			$$specs{'alert'} .= "The specified imposition is not possible.";
+			$$specs{'alert'} .= 'The specified imposition is not possible.<br/>';
 			return %bestPrice;
 		} # end if
 	} # end if
@@ -303,7 +308,7 @@ sub signature_calc {
 			next if ! ( $imp->rows() * $imp->columns() );
 			my $width = $imposition->sheet_width() / ( $imposition->columns()/$imp->columns() );
 			my $height = $imposition->sheet_height() / ( $imposition->rows()/$imp->rows() );
-			$$specs{'hdnBreakdown'.$qty_index} .= $imposition->sheet_width() . 'x'.$imposition->sheet_height().'=>'.$width . 'x' . $height.'<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= $imposition->sheet_width().'x'.$imposition->sheet_height().'=>'.$width.'x'.$height.'<br/>';
 
 			if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Doesn't fit. $_<br/>";
@@ -312,7 +317,8 @@ sub signature_calc {
 
 			my %Price;
 			my $run_qty = $impressions;
-			$run_qty +=  ( $imposition->imposition() / $imp->imposition() ) if $imposition->imposition() != $imp->imposition();
+$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
+			$run_qty += ( $imposition->imposition() / $imp->imposition() ) if $imposition->imposition() != $imp->imposition();
 
 			my @types;
 			if ( sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
