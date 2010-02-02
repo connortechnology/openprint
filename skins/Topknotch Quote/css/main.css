@@ -104,13 +104,13 @@ img#HomeCollage {
 	float: right;
 }
 
-#menubar li#MenuQuotes a, #menubar li#MenuOrders a, #menubar li#MenuProject a {
+.menubar li#MenuQuotes a, .menubar li#MenuOrders a, .menubar li#MenuProject a {
 	width: 95px;
 }
-#menubar li#MenuAboutUs a {
+.menubar li#MenuAboutUs a {
 	width: 60px;
 }
-#menubar li#MenuAccount a {
+.menubar li#MenuAccount a {
 	width: 120px;
 }
 #AlertDiv {
