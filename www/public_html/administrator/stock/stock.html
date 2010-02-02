@@ -219,28 +219,28 @@
 				</p>
 			</div><!--left-->
 			<div class="rightColumn">
-				<p> 
+				<p class="full_packages"> 
 					<label>Order Full Packages:</label>
 					<input type="radio" name="full_packages" id="full_packages1" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->full_packages() ); ) ?> />
 					<label class="radio" for="full_packages1">Yes</label>
 					<input type="radio" name="full_packages" id="full_packages0" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->full_packages() ); ) ?> />
 					<label class="radio" for="full_packages0">No</label>
 				</p>
-				<p>
+				<p class="minimum_order">
 					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>):</label>
-					<input type="text" name="minimum_order" value="<? echo ( $$variable{'Stock'}->minimum_order(); ) ?>"  size="13" style="width: auto;" />
+					<input type="text" id="minimum_order" name="minimum_order" value="<? echo ( $$variable{'Stock'}->minimum_order(); ) ?>" />
 				</p>
-				<p> 
+				<p class="fsc_code"> 
 					<label>FSC Code:</label>
-					<input type="text" name="fsc_code" value="<? echo ( $$variable{'Stock'}->fsc_code(); ) ?>" /> 
+					<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Stock'}->fsc_code(); ) ?>" /> 
 				</p>
-				<p> 
+				<p class="inventory_number"> 
 					<label>Inventory #:</label>
-					<input type="text" name="inventory_number" value="<? echo ( $$variable{'Stock'}->inventory_number(); ) ?>" /> 
+					<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $$variable{'Stock'}->inventory_number(); ) ?>" /> 
 				</p>
-				<p> 
+				<p class="message"> 
 					<label>Message:</label>
-					<textarea name="message" rows="2" cols="" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Stock'}->message(); ) ?></textarea>
+					<textarea id="message" name="message" rows="2" cols="" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Stock'}->message(); ) ?></textarea>
 				</p>
 				<p class="cuttable"> 
 					<label>Can this stock be cut?:</label>

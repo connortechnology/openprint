@@ -41,7 +41,7 @@ div.UserProfile:after {
 }
 /* Hides from IE-mac \*/
 * html div.UserProfile {height: 1%;}
-* div.UserProfile {display:block;}
+div.UserProfile {display:block;}
 /* End hide from IE-mac */
 
 .UserProfile fieldset.filters p {
@@ -107,7 +107,7 @@ div.Registration .Information:after {
 }
 /* Hides from IE-mac \*/
 * html div.Registration .Information {height: 1%;}
-* div.Registration .Information {display:block;}
+div.Registration .Information {display:block;}
 /* End hide from IE-mac */
 div.Registration div.Address {
 	float: right;
@@ -151,7 +151,7 @@ div#Login:after {
 }
 /* Hides from IE-mac \*/
 * html div#Login {height: 1%;}
-* div#Login {display:block;}
+div#Login {display:block;}
 /* End hide from IE-mac */
 
 #Login fieldset.Register {
@@ -203,7 +203,7 @@ div#Login:after {
 }
 /* Hides from IE-mac \*/
 * html .Specials div.Category {height: 1%;}
-* .Specials div.Category {display:block;}
+.Specials div.Category {display:block;}
 /* End hide from IE-mac */
 .Specials div.Category h3 {
 	font-size: 18px;
@@ -244,7 +244,7 @@ div.Printing:after {
 }
 /* Hides from IE-mac \*/
 * html div.Printing {height: 1%;}
-* div.Printing {display:block;}
+div.Printing {display:block;}
 /* End hide from IE-mac */
 .Printing .ProjectType {
 	position: relative;
@@ -278,6 +278,9 @@ div.Printing:after {
     list-style: none;
     }
 
+.Printing .ProjectType a {
+outline: 0;
+}
 .Printing .ProjectType a:link, .Printing .ProjectType a:visited {
     display: block;
     text-decoration: none;

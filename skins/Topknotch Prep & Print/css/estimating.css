@@ -49,7 +49,7 @@ div#instant_price_section .ProjectSpecifications:after {
 }
 /* Hides from IE-mac \*/
 * html div#instant_price_section .ProjectSpecifications {height: 1%;}
-* div#instant_price_section .ProjectSpecifications {display:block;}
+div#instant_price_section .ProjectSpecifications {display:block;}
 /* End hide from IE-mac */
 
 div#instant_price_section .Colours, 
@@ -145,7 +145,7 @@ div#instant_price_section .Prices:after {
 }
 /* Hides from IE-mac \*/
 * html div#instant_price_section .Prices {height: 1%;}
-* div#instant_price_section .Prices {display:block;}
+div#instant_price_section .Prices {display:block;}
 /* End hide from IE-mac */
 div#instant_price_section #subtotal:after {
     content: ".";
@@ -157,7 +157,7 @@ div#instant_price_section #subtotal:after {
 }
 /* Hides from IE-mac \*/
 * html div#instant_price_section #subtotal {height: 1%;}
-* div#instant_price_section #subtotal {display:block;}
+div#instant_price_section #subtotal {display:block;}
 /* End hide from IE-mac */
 div#instant_price_section #UPSOptions {
 }
@@ -191,7 +191,7 @@ div#instant_price_section .Delivery:after {
 }
 /* Hides from IE-mac \*/
 * html div#instant_price_section .Delivery{height: 1%;}
-* div#instant_price_section .Delivery {display:block;}
+div#instant_price_section .Delivery {display:block;}
 /* End hide from IE-mac */
 
 .Delivery fieldset legend {
