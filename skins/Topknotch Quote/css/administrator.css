@@ -133,3 +133,27 @@ table.List tr td.Range input, table.List tr td.Range input[type="text"] {
 .changed {
 	background-color: yellow;
 }
+.Recommendations ul {
+	list-style: none;
+	margin: 0px;
+	padding:0px;
+}
+.Recommendations ul li {
+	list-style: none;
+	margin: 0px;
+	padding:0px;
+	width: 25%;
+	float: left;
+}
+p.full_packages, p.minimum_order, p.fsc_code, p.inventory_number, p.message, p.cuttable, p.parts_div, p.doublesided, p.multipart, p.perfecting, p.scoring, p.diescoring, p.digital, p.bladecleaning, p.taxexempt1, p.taxexempt2 {
+	text-align: right;
+	
+}
+p.full_packages label, p.fsc_code label, p.inventory_number label, p.message label, p.cuttable label, p.parts_div label, p.doublesided label,p.multipart label, p.perfecting label, p.scoring label, p.diescoring label, p.digital label, p.bladecleaning label, p.taxexempt1 label, p.taxexempt2 label {
+	width: 400px;
+	text-align: left;
+}
+p.minimum_order label, p.fsc_code label, p.inventory_number label, p.message label {
+	width: 200px;
+	text-align: left;
+}
