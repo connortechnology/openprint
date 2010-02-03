@@ -1,3 +1,6 @@
 [submodule "skins/ConnorTechnology"]
 	path = skins/ConnorTechnology
 	url = iconnor@penultima.org:/var/lib/git/ConnorTechnology
+[submodule "skins/Topknotch Quote"]
+	path = skins/Topknotch Quote
+	url = iconnor@penultima.org:/var/lib/git/Topknotch Quote/
