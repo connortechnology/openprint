@@ -25,3 +25,6 @@
 [submodule "skins/SimplePrintSolutions"]
 	path = skins/SimplePrintSolutions
 	url = iconnor@penultima.org:/var/lib/git/SimplePrintSolutions
+[submodule "skins/Topknotch Prep & Print"]
+	path = skins/Topknotch Prep & Print
+	url = iconnor@penultima.org:/var/lib/git/Topknotch Prep & Print/
