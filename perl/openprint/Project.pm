@@ -940,14 +940,7 @@ sub summary {
 			} else {
 				$summary .= sprintf( '%s&quot;x%s&quot; ', @specs{'txtFinalWidth','txtFinalHeight'});
 			} # end if
-			$summary .= sprintf('%d%s%s/%d%s%s ',
-					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideOne' ),
-					( $specs{'rdbAqueousSideOne'} and $specs{'rdbAqueousSideOne'} ne 'None' ) ? '+AQ' : '',
-					($specs{'SideOneUVCoatingType'} and $specs{'SideOneUVCoatingType'} ne 'None' ? '+UV' : ''),
-					scalar openprint::Estimating::Printing::get_colours( \%specs, 'SideTwo' ),
-					( $specs{'rdbAqueousSideTwo'} and $specs{'rdbAqueousSideTwo'} ne 'None' ) ? '+AQ' : '',
-					($specs{'SideTwoUVCoatingType'} and $specs{'SideTwoUVCoatingType'} ne 'None' ? '+UV' : ''),
- );
+			$summary .= openprint::Estimating::Printing::get_colour_description( \%specs );
 			if ( $specs{'rdbSuppliedStock'} eq 'Y' ) {
 				$summary .= 'Customer Supplied Stock';
 			} elsif ( $specs{'rdbSpecificStock'} eq 'Y' ) {

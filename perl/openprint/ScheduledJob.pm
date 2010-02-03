@@ -197,7 +197,7 @@ sub comment {
     my $Project = new openprint::Project( $$self{'project_id'} );
 
 	# We check for comments in the services, if we find one, we use it, otherwise we generate from the first.
-	if ( $comment ) {
+	if ( @_ > 1 ) {
 		foreach my $sig_id ( @{$$self{'service_id'}} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'txtEmployeeComments', $comment );
 		} # end foreach sig_id	
@@ -210,42 +210,11 @@ sub comment {
 		} # end foreach sig_id
 	} # end if
 
-	if ( ( ! $comment ) and $$self{'service_id'} ) {
+	#if ( ( ! $comment ) and $$self{'service_id'} and @{$$self{'service_id'}} ) {
+	if ( $$self{'service_id'} and @{$$self{'service_id'}} ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
-		my @side_one = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-		my @side_two = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
-		$comment = sprintf( '%d/%d', scalar @side_one, scalar @side_two );
 
-		my %pms;
-		foreach my $side ( 'SideOne', 'SideTwo' ) {
-			foreach my $index ( 1 .. 8 ) {
-				if ( $$sig_specs{'chkSpecial'.$side.'Colour'.$index} ) {
-					if ( $$sig_specs{'txtSpecial'.$side.'Colour'.$index} ) {
-						$pms{$index} += 1;
-					} # end if
-				} # end if
-			} # end foreach index
-		} # end foreach side
-		if ( keys %pms ) {
-			$comment .= '+' . ( keys %pms ) . ' PMS';
-		} # end if
-
-		if ( $$sig_specs{'rdbAqueousSideOne'} ne 'None' or $$sig_specs{'rdbAqueousSideTwo'} ne 'None' ) {
-			$comment .= '+AQ';
-		} # end if
-		if (
-				$$sig_specs{'chkVarnishSpotGlossSideOne'}
-				or $$sig_specs{'chkVarnishSpotMatteSideOne'}
-				or $$sig_specs{'chkVarnishOverallGlossSideOne'}
-				or $$sig_specs{'chkVarnishOverallMatteSideOne'}
-				or $$sig_specs{'chkVarnishSpotGlossSideTwo'}
-				or $$sig_specs{'chkVarnishSpotMatteSideTwo'}
-				or $$sig_specs{'chkVarnishOverallGlossSideTwo'}
-				or $$sig_specs{'chkVarnishOverallMatteSideTwo'}
-		   ) {
-			$comment .= '+Varnish';
-		} # end if
-
+		$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
 		$comment .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
 
 		my $Equipment = new openprint::Equipment($$self{'equipment_id'});
@@ -254,11 +223,16 @@ sub comment {
 			if ( $$services{'Folding'} ) {
 				my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 				if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
-					$comment .= '(fold inline)';
+					my $Imposition = new openprint::Imposition();
+					$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
+					my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
+					$comment .= "($foldtype inline)";
+				} else {
+					$comment .= '(sheeted)';
 				} # end if
-			} else {
-				$comment .= '(sheeted)';
 			} # end if
+		} else {
+			$comment .= 'This press does not fold';
 		} # end if
 		# Store it.
 		foreach my $sig_id ( @{$$self{'service_id'}} ) {
@@ -368,7 +342,7 @@ sub get_li {
         $html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
         $html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}' );", '', 'C' );
         $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
-        $html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split' } } );", '', 'S' ) if @{$$self{'service_id'}} > 1;
+        $html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", '', 'S' ) if @{$$self{'service_id'}} > 1;
         $html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
 		if ( $self->status() ne 'In Production' ) {
 		$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'start' } } );", '', 'Start' );
