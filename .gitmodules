@@ -4,3 +4,6 @@
 [submodule "skins/Topknotch Quote"]
 	path = skins/Topknotch Quote
 	url = iconnor@penultima.org:/var/lib/git/Topknotch Quote/
+[submodule "skins/Topknotch Print"]
+	path = skins/Topknotch Print
+	url = iconnor@penultima.org:/var/lib/git/Topknotch Print/
