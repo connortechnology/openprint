@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<title><? echo ( $config{'SiteTitle'} ) ?></title>
+		<style type="text/css">
+		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/email.css' ); ) ?>
+		</style>
+		<base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
+	</head>
+	<body>
+		<table width="98%" border="0">
+			<tr> 
+				<td height="60" bgcolor="#000066"><a href="http://www.point-one.com" target="_blank"><img src="/images/email_header.gif" width="600" height="60" border="0" alt="PointOne Graphics - Serious About Printing - www.point-one.com"></a></td>
+			</tr>
+			<tr> 
+				<td align="left" valign="top" style="padding: 5px;">
+					<br/>
+					<?ReplacementText?> <br/> <br/>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

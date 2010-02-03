@@ -1,0 +1,474 @@
+html {
+	height: 100%;
+}
+body {
+	margin: 0px;
+	padding: 0px;
+	height: 100%;
+	font-family: verdana, arial, helvetica, sans-serif;
+	font-size: x-small;
+	min-width: 1070px;
+}
+img {
+border: none;
+}
+
+#content3 { 
+width: 75%; 
+height: 157px;
+float: left; 
+margin-top: 0px; 
+padding-left: 5px; 
+padding-right: 5px; 
+padding-top: 5px; 
+padding-bottom: 5px; 
+} 
+
+#portfolioimage { 
+width: 227px; 
+height: 157px;
+float: left; 
+margin-top: 0px; 
+padding-left: 5px; 
+}
+
+#top {
+	background: url(/images/top.png) repeat-x top;
+	padding: 0px;
+	margin: 0px;
+	min-width: 720px;
+}
+
+#top-left {
+	background: url(/images/top-left.png) no-repeat left;
+	height: 52px;
+	margin: 0px;
+	padding: 0px;
+}
+#top-right {
+	background: url(/images/top-right.png) no-repeat right;
+	height: 52px;
+	margin: 0px;
+	padding: 0px;
+}
+#middle {
+	z-index: 0;
+	width: auto;
+	min-width: 720px;
+	margin: 0px;
+	padding: 0px;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+}
+#left {
+	background: url(/images/left.png) repeat-y left;
+	padding: 0px;
+	margin: 0px;
+	padding-left: 1px;
+margin-left: 4px;
+}
+#right {
+	background: url(/images/right.png) repeat-y right;
+	padding: 0px;
+	margin-right: 4px;
+}
+
+.sitemap {
+	margin: 0px;
+	padding: 0px;
+	width: auto;
+	list-style-position: inside;
+}
+
+.sitemap li {
+	list-style-type: disc;
+	list-style-position: inside;
+}
+
+.sitemap li ul li{
+	margin-left: 10px;
+	font-size: 10px;
+	list-style-position: outside;
+}
+
+
+#header:after {
+	content: ".";
+	display: block;
+	height: 0;
+    font-size: 0;
+	clear: both;
+	visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html #header {height: 1%;}
+*     #header{display:block;}
+/* End hide from IE-mac */
+
+#header-logo {
+	float: left;
+	margin: 8px;
+	margin-left: 20px;
+	border: none;
+}
+
+#content {
+	margin: 0px;
+	margin-left: 35px;
+	margin-right: 36px;
+}
+#content2 {
+	margin: 0px;
+	padding: 0px;
+	padding: 10px;
+	background-repeat: repeat-x;
+	background-position: top;
+}
+#footer {
+	height: 94px;
+	margin: 0px;
+}
+
+#bottom-logo {
+	float: right;
+	margin-right: 15px;
+	margin-top: 15px;
+	border: none;
+}
+#bottom-left {
+	background: url(/images/bottom-left.png) no-repeat left;
+	height: 52px;
+	min-width: 720px;
+}
+#bottom {
+	height: 52px;
+	background: url(/images/bottom.png) repeat-x bottom;
+	margin-left: 52px;
+	margin-right: 52px;
+}
+#bottom-right {
+	background: url(/images/bottom-right.png) no-repeat right;
+	height: 52px;
+	margin: 0px;
+	padding: 0px;
+}
+.spacer {
+	height: 0px;
+	clear: both;
+}
+
+
+
+fieldset {
+	border: none;
+}
+
+fieldset legend {
+	color: #ff7f00;
+	font-size: medium;
+
+}
+fieldset p {
+	padding-left: 100px;
+	display: inline-block;
+	overflow: hidden;
+}
+fieldset p:after {
+	content: ".";
+	display: block;
+	height: 0;
+    font-size: 0;
+	clear: both;
+	visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html fieldset p {height: 1%;}
+*     fieldset p{display:block;}
+/* End hide from IE-mac */
+
+fieldset p label {
+	float: left;
+	margin-left: -100px;
+	width: 95px;
+	text-align: right;
+}
+
+#Login fieldset p br {
+	display: none;
+}
+/*
+dark: #330000
+less brown: #663300
+light#CC9900
+lighter: #FFF2AC
+*/
+body {
+	margin: 0px;
+	padding: 5px;
+	background-color: #fff;
+	color: #333;
+}
+input, textarea, select, option {
+	background-color: white;
+	color: black;
+	font-size: xx-small;
+	outline: 0;
+}
+table.List input {
+	width: 95%;
+}
+.Page {
+	border: 1px solid #330000;
+	background-color: #DFD6B4;
+	padding: 5px;
+	margin: 0px;
+} 
+.PageTitle {
+	float: right;
+    text-align: right;
+}
+.PageTitle h1 {
+    text-align: right;
+	color: #ff7f00;
+    margin: 0px;
+    font-size: large;
+}
+.PageTitle h2 {
+    text-align: right;
+    color: #000088;
+    margin-top: 0px;
+    font-size: medium;
+}
+
+
+
+h1 {
+}
+    pre {
+      background-color: #eee;
+      padding: 10px;
+    }
+
+
+    .fieldWithErrors {
+      padding: 2px;
+      background-color: red;
+      display: table;
+    }
+
+  #ErrorExplanation {
+      width: 400px;
+      border: 2px solid red;
+      padding: 7px;
+      padding-bottom: 12px;
+      margin-bottom: 20px;
+      background-color: #f0f0f0;
+    }
+
+    #ErrorExplanation h2 {
+      text-align: left;
+      font-weight: bold;
+      padding: 5px 5px 5px 15px;
+      margin: -7px;
+      background-color: #c00;
+      color: #fff;
+    }
+
+    #ErrorExplanation p {
+      color: #333;
+      margin-bottom: 0;
+      padding: 5px;
+    }
+                           
+
+.spacer {
+	clear: both;
+	height: 0px;
+	padding: 0px;
+	margin: 0px;
+}
+
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+	width: 100%;
+	padding: 0px;
+	margin: 0px;
+}
+table.List {
+	width: 100%;
+	padding: 0px;
+	margin: 0px;
+	border-collapse: collapse;
+	border-spacing: 0;
+	border: none;
+	table-layout: fixed;
+	border-bottom: 1px solid #0046a2;
+
+}
+th {
+	color: #000000;
+	border-bottom: 1px solid #0046A2;
+	padding: 1px;
+	text-align: left;
+}
+th.money {
+	text-align: right;
+}
+
+td { padding: 1px; 
+	vertical-align: top;
+}
+
+tr.highlightOn {
+	background-color: #FFE3C7;
+}
+tr.highlightOff {
+	background-color: #ffffff;
+}
+
+.DroppableOn {
+	border-color: #8C94BA;
+}
+.DroppableOff {
+	border-color: #000000;
+}
+
+tr.totals {
+	border-top: 1px solid #0046A2;
+}
+
+
+a {
+    text-decoration: none;
+	color: #ff7f00;
+
+}
+
+a:hover {
+	background: none;
+    color: #0046A2;
+}
+
+a:visited, a:active {
+	color: #ff7f00;
+}
+
+p.buttons {
+	text-align: right;
+}
+@media print {
+	p.buttons {
+		display: none;
+	}
+}
+fieldset p.buttons {
+	text-align: left;
+}
+fieldset p label.radio {
+	width: auto;
+	float: none;
+	text-align: left;
+	margin: 0px;
+	display: inline;
+}
+fieldset p br {
+	display: none;
+}
+hr {
+	color: #0046A2;
+	background-color: #0046A2;
+}
+a.buttonImageOff {
+	background: url(/images/menu_fill_blue.png) repeat-x top;
+	color: #ffffff;
+	padding: 3px;
+	margin-left: 5px;
+}
+a.buttonImageOn {
+	background: url(/images/menu_fill_blue.png) repeat-x top;
+	color: #ff7f00;
+	padding: 3px;
+	margin-left: 5px;
+}
+.ContactInfo fieldset {
+}
+.ContactInfo fieldset p {
+	padding-left: 10px;
+	text-align: left;
+}
+.ContactInfo fieldset p br {
+	display: block;
+}
+
+#header-text {
+	float: right; 
+width: 35%; 
+font-size: small; 
+margin-top: 10px; 
+margin-right: 15px; 
+color: #6494D2;
+}
+.colRow {
+    background-color: #e3e4f0;
+}
+.roweven {
+    background-color: #e3e4f0;
+}/* alternating row color in generated tables */
+	br.pagebreak {
+		page-break-after: always;
+	}
+
+table.List p {
+	margin: 0px;
+	padding: 0px;
+}
+
+.fieldWithErrors {
+	padding: 2px;
+	display: table;
+border: 1px solid black;
+margin: 0px;
+clear: none;
+}
+.leftColumn {
+	float: left;
+	width: 49%;
+}
+.rightColumn {
+	float: right;
+	width: 49%;
+}
+span.DateSelector {
+    float: left;
+    width: 275px;
+}
+span.DateTimeSelector {
+    float: left;
+    width: 400px;
+}
+span.DateSelector select, span.DateTimeSelector select {
+    width: auto;
+    max-width: none;
+}
+span.DateSelector select option {
+}
+td.Date, th.Date {
+	width: 100px;
+	text-align: left;
+}
+td.Price, th.Price {
+	width: 75px;
+	text-align: right;
+}
+td.Rate, th.Rate {
+	width: 75px;
+	text-align: right;
+}
+
+th.EmployeeName {
+	text-align: left;
+	width: 80px;
+}

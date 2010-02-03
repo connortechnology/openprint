@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<title><? hecho ( $config{'SiteTitle'} ) ?></title>
+		<style type="text/css">
+		<? echo ( misc::load_file( $log, $config{'SkinPath'} . '/css/email.css' ); ) ?>
+		</style>
+		<base href="<? echo ( $config{'ExternalSiteURL'} ) ?>"/>
+	</head>
+	<body>
+		<table width="98%" border="0">
+			<tr> 
+				<td height="72" id="banner"><a href="<? echo ( $config{'ExternalSiteURL'} ) ?>" target="_blank"><img src="<? echo ( $config{'ExternalSiteURL'} ) ?>/images/logo.gif" width="344" height="72" border="0" alt="<? echo ( $config{'SiteName'} ) ?>"></a></td>
+			</tr>
+			<tr> 
+				<td align="left" valign="top" style="padding: 5px;">
+					<br/>
+					<?ReplacementText?> <br/> <br/>
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

@@ -1,0 +1,122 @@
+tr.Header, td.Header {
+    background-image: url('/images/header.jpg');
+	background-position: right;
+	background-repeat: no-repeat;
+	height: 60px;
+	padding: 0px;
+	margin: 0px;
+}
+
+img#Logo {
+	margin-left: 5px;
+}
+
+body {
+    background-color: #ffffff;
+    font-family: Arial, Helvetica, Sans-Serif;
+    font-size: small;
+    padding: 0px 5px 5px 5px;
+    margin: 0px;
+    max-width: 1024px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    table-layout: fixed;
+    border: none;
+}
+table.List {
+    border-bottom: 1px solid #404040;
+}
+table.List th {
+    border-bottom: 1px solid #404040;
+    background: transparent;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+table.List td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    vertical-align: top;
+}
+table.List tr.totals {
+    border-top: 1px solid #404040;
+}
+table.List input.text {
+    width: 100%;
+}
+
+
+.Title {
+    background-color: #353c91;
+    color: #ffffff;
+}
+.Title a {
+    color: #ffffff;
+}
+
+.title {
+    background-color: #e2e4f0;
+    color: #FFFFFF;
+}
+.small {font-size:11px;}
+a {
+    text-decoration: none;
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+a:link { color: #000000; }
+a:active { color: #000000; }
+a:visited { color: #000000; }
+a:hover { color: #FE0F0B; }
+hr {
+    width: 100%;
+    margin: 1px;
+    padding: 0px;
+    height: 1px;
+    border: 0px;
+    color: #404040;
+    background-color: #404040;
+}
+
+.spacer {
+    clear: both;
+    height: 0px;
+}
+
+.colRow { background-color: #FBEBEB }
+.colRowRed {
+    color: red;
+}/* alternating row color in generated tables */
+
+img {
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+td.Content {
+    padding: 10px;
+}
+fieldset {
+    border-right: none;
+    border-left: none;
+    border-top: 1px solid #404040;
+    border-bottom: none;
+    padding-bottom: 30px;
+}
+fieldset legend {
+    font-weight: bold;
+    color: #EE232B;
+}
+fieldset label {
+}
+span.Currency {
+   display: block;
+    margin-top: 10px;
+    width: 100%;
+    text-align: center;
+}
+

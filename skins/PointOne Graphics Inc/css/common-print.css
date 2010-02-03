@@ -1,0 +1,58 @@
+body {
+	background: none;
+	
+}
+#Content {
+	padding-top: 5px;
+	padding-bottom: 0px;
+	padding-left: 10px;
+	padding-right: 10px;
+	margin: 0px;
+	background: none;
+}
+body #Header {
+	position: relative;
+	background: none;
+	height: auto;
+	width: 100%;
+	height: 65px;
+}
+body #Header #Logo {
+	width: 190px;
+	background: none;
+	color: #000000;
+	float: none;
+	padding: 0px;
+}
+body #Header #Logo a {
+	background: none;
+	color: #000000;
+}
+.PageTitle {
+	margin-top: -65px;
+	width: auto;
+}
+#Menu,.Menu {
+display: none;
+}
+#QuickLogin, #DidYouKnow,#CurrencySelection {
+display: none;
+}
+.unprintable {
+	display: none;
+}
+.error, .warning, .information {
+	display: none;
+}
+
+.filters {
+	display: none;
+}
+
+.colRow {
+	background-color: #dddddd;
+}
+.Service div.templates {
+	display: none;
+}
+

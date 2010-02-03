@@ -1,0 +1,119 @@
+div.QuoteHeader {
+	margin: 0px;
+	padding: 0px;
+    float: left;
+    width: 50%;
+	margin-bottom: 5px;
+}
+div.QuoteHeader fieldset {
+    margin-right: .5em;
+	font-size: 12px;
+	border-top: none;
+}
+div.QuoteHeader fieldset legend {
+	width: 100%;
+   display: block;
+        margin-right: auto;
+        text-align: left;
+}
+
+div.QuoteHeader fieldset p {
+    text-align: left;
+	width: auto;
+	padding: 0px;
+	margin: 0px;
+}
+div.QuoteHeader fieldset p label {
+display: none;
+/*
+    font-weight: bold;
+    margin-right: 10px;
+	margin-left: 0px;
+    float: left;
+    width: auto;
+    text-align: left;
+*/
+}
+
+
+div#Information {
+        width: 100%;
+        padding: 0px;
+}
+div#Information fieldset {
+        margin-top: 0px;
+        margin-bottom: 0px;
+        padding-top: 0px;
+        padding-bottom: 0px;
+}
+div#Information fieldset legend {
+display: none;
+}
+div#Information fieldset p label {
+display: inline;
+    font-weight: bold;
+    margin-right: 10px;
+        margin-left: 0px;
+    width: auto;
+    text-align: right;
+float: none;
+}
+div#Information fieldset p#Status {
+display: none;
+}
+
+
+div.QuoteInformation fieldset {
+	padding: 0px;
+	margin: 0px;
+	font-size: 10px;
+}
+	
+div.QuoteInformation fieldset p {
+	padding-left: 105px;
+}
+div.QuoteInformation fieldset p label {
+	margin-left: -105px;
+	width: 100px;
+}
+	
+div.QuoteInformation fieldset p label.radio {
+	width: auto;
+	margin: 0px;
+	padding: 0px;
+	float: none;
+}
+
+div.QuoteInformation fieldset p input {
+    width: expression( (this.type=="text" || this.type=="password") ?'90%':'auto');
+	margin: 1px;
+}
+div.QuoteInformation fieldset p input[type="text"] {
+    width: 90%;
+}
+div.QuoteInformation fieldset p select {
+    width: 80%;
+}
+div#Quote table {
+	font-size: 10px;
+}
+div#Quote, div.ProjectTemplate {
+	float: left;
+	font-size: 10px;
+	border-top: 1px outset black;
+	border-left: 1px outset black;
+	border-right: 2px outset black;
+	border-bottom: 2px outset black;
+	padding: 5px;
+}
+#SalesRepComments {
+	float: left;
+	width: 49%;
+	border: none;
+}
+#SalesRepComments textarea {
+	width: 100%;
+}
+#SalesRepComments input {
+	width: 99%;
+}

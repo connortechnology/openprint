@@ -1,0 +1,69 @@
+<ul class="unprintable" id="menubar">
+	<li class="off" id="Currency">
+		<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
+			<label>Currency:</label>
+			<select name="select_currency_id" onchange="this.form.submit();">
+				<? echo (
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $session{'Currency_id'} );
+				) ?>
+			</select>
+		</form>
+	</li>
+	<li class="off" id="Support"><a href="#">Support</a>
+		<ul>
+			<li><a href="/support/help_desk.html;NOSSL">Help Desk</a></li>
+<? if ( $session{'user_id'} ) ?>
+			<li><a href="/support/returns.html;NOSSL">Returns</a></li>
+<? endif ( $session{'user_id'} ) ?>
+			<li><a href="/support/FAQ.html;NOSSL">FAQ</a></li>
+		</ul>
+	</li>
+<? if ( $session{'user_id'} ) ?>
+	<li class="off" id="Orders"><a href="#">Orders</a>
+		<ul>
+<? if ( $session{'OrderID'} ) ?>
+			<li><a href="/main/order/information.html;NOSSL">Resume Current</a></li>
+<? endif ( $session{'OrderID'} ) ?>
+			<li><a href="/main/order/history.html;NOSSL">History</a></li>
+		</ul>
+	</li>
+	<li class="off" id="Quotes"><a href="#">Quotes</a>
+		<ul>
+			<li><a href="/main/quote/information.html;NOSSL">Resume Current</a></li>
+			<li><a href="/main/quote/history.html;NOSSL">History</a></li>
+		</ul>
+	</li>
+	<li class="off" id="Projects"><a href="#">Projects</a>
+		<ul>
+			<li><a href="/main/project/create_edit.html;NOSSL">Create New</a></li>
+<? if ( $session{'project_id'} ) ?>
+			<li><a href="/main/project/view.html;NOSSL">Resume Current</a></li>
+<? endif ( $session{'project_id'} ) ?>
+			<li><a href="/main/project/history.html;NOSSL">History</a></li>
+		</ul>
+	</li>
+<? endif ( $session{'user_id'} ) ?>
+	<li class="off" id="Account"><a href="#">Account</a>
+		<ul>
+<? if ( $session{'user_id'} ) ?>
+			<li><a href="/account/company_profile.html">Company Profile</a></li>
+			<li><a href="/account/user_profile.html">User Information</a></li>
+<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			<li><a href="/account/select_company.html">Select Company</a></li>
+<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+			<li><a href="/account/credit_application.html">Credit App</a></li>
+			<li><a href="/account/logout.html">Logout</a></li>
+<? else ( $session{'user_id'} ) ?>
+			<li><a href="/account/login.html">Login</a></li>
+			<li><a href="/account/registration.html">Registration</a></li>
+<? endif ( $session{'user_id'} ) ?>
+		</ul>
+	</li>
+	<li class="off" id="AboutUs"><a href="/about.html">About Us</a>
+		<ul>
+			<li><a href="/about.html">Contact</a></li>
+			<li><a href="/services.html">Services</a></li>
+		</ul>
+	</li>
+	<li class="off" id="Home"><a href="/index.html">Home</a></li>
+</ul>
