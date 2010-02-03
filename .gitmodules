@@ -1,27 +1,12 @@
-[submodule "skins/ConnorTechnology"]
-	path = skins/ConnorTechnology
-	url = iconnor@penultima.org:/var/lib/git/ConnorTechnology
 [submodule "skins/Topknotch Quote"]
 	path = skins/Topknotch Quote
 	url = iconnor@penultima.org:/var/lib/git/Topknotch Quote/
 [submodule "skins/Topknotch Print"]
 	path = skins/Topknotch Print
 	url = iconnor@penultima.org:/var/lib/git/Topknotch Print/
-[submodule "skins/Edgewater"]
-	path = skins/Edgewater
-	url = iconnor@penultima.org:/var/lib/git/Edgewater/
-[submodule "skins/Intelligent Quote"]
-	path = skins/Intelligent Quote
-	url = iconnor@penultima.org:/var/lib/git/Intelligent Quote/
-[submodule "skins/PointOne Graphics Inc"]
-	path = skins/PointOne Graphics Inc
-	url = iconnor@penultima.org:/var/lib/git/PointOne Graphics Inc/
 [submodule "skins/Process Envelope"]
 	path = skins/Process Envelope
 	url = iconnor@penultima.org:/var/lib/git/Process Envelope/
-[submodule "skins/Pseudoboyfriend"]
-	path = skins/Pseudoboyfriend
-	url = iconnor@penultima.org:/var/lib/git/Pseudoboyfriend/
 [submodule "skins/SimplePrintSolutions"]
 	path = skins/SimplePrintSolutions
 	url = iconnor@penultima.org:/var/lib/git/SimplePrintSolutions
@@ -31,6 +16,3 @@
 [submodule "skins/Topknotch Trade"]
 	path = skins/Topknotch Trade
 	url = iconnor@penultima.org:/var/lib/git/Topknotch Trade
-[submodule "skins/West Star Printing"]
-	path = skins/West Star Printing
-	url = iconnor@penultima.org:/var/lib/git/West Star Printing/
