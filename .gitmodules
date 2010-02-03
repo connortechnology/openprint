@@ -13,3 +13,6 @@
 [submodule "skins/Intelligent Quote"]
 	path = skins/Intelligent Quote
 	url = iconnor@penultima.org:/var/lib/git/Intelligent Quote/
+[submodule "skins/PointOne Graphics Inc"]
+	path = skins/PointOne Graphics Inc
+	url = iconnor@penultima.org:/var/lib/git/PointOne Graphics Inc/
