@@ -367,6 +367,9 @@ span.DateSelector {
     float: left;
 	width: 220px;
 }
+span.DateSelector select {
+	width: auto;
+}
 
 div.Popup {
     position:absolute;
@@ -399,3 +402,15 @@ img.Override {
     height: 16px;
 }
 
+table .Price {
+	text-align: right;
+	width: 80px;
+}
+table .Status {
+	text-align: center;
+	width: 120px;
+}
+table .Date {
+	text-align: right;
+	width: 120px;
+}

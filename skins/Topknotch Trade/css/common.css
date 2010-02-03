@@ -252,6 +252,10 @@ fieldset.filters p label {
 	margin-left: -105px;
 	width: 100px;
 }
+fieldset.filters p label.radio {
+	margin: 0px;
+	width: auto;
+}
 fieldset.filters p select {
     width: auto;
 }
@@ -396,14 +400,6 @@ div.Popup {
 img {
 border: none;
 }
-div.Service span.ThreeColumns {
-	width: 32%;
-	float: left;
-}
-div.Service span.TwoColumns {
-	width: 50%;
-	float: left;
-}
 h1,h2,h3,h5 {
 	color:#194D98;
 	margin-top: 0px;
@@ -414,3 +410,8 @@ div#NewDimensions {
 img.Override {
 	height: 16px;
 }
+table .Price {
+	text-align: right;
+	width: 75px;
+}
+

@@ -218,8 +218,7 @@ print "Sent email.\n";
 				}
 			} # end if log file
 		} else {
-			# No input at this time.	Sleep for half a second (or less) and check
-			# again.
+			# No input at this time. Sleep for half a second (or less) and check again.
 			usleep($delay * 1000000);
 		} # End if $line
 	} # end while <input>

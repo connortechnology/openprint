@@ -26,11 +26,11 @@ div.Order fieldset p select {
 div.Order fieldset p textarea {
 	width: 95%;
 }
-div.OrderHeader {
+div.Order .Header {
 	width: 100%;
     margin-bottom: 5px;
 }
-div.OrderHeader:after {
+div.Order .Header:after {
     content: ".";
     display: block;
     height: 0;
@@ -38,10 +38,10 @@ div.OrderHeader:after {
     visibility: hidden;
 }
 /* Hides from IE-mac \*/
-* html div.OrderHeader {height: 1%;}
+* html div.Order .Header {height: 1%;}
 * */* End hide from IE-mac */
 
-div.OrderHeader fieldset {
+div.Order .Header fieldset {
 	border-left: none;
     border-right: none;
     border-bottom: none;
@@ -52,12 +52,18 @@ div.OrderHeader fieldset {
 	float: left;
 }
 
-div.OrderHeader fieldset p {
-	text-align: right;
+div.Order ul {
+	list-style: none;
 	padding: 0px;
 	margin: 0px;
 }
-div.OrderHeader fieldset p label {
+div.Order ul li {
+	list-style: none;
+	text-align: right;
+	padding: 0px;
+	margin: 0px 0px 2px 0px;
+}
+div.Order ul li label {
 	padding: 0px;
 	margin: 0px;
 	float: left;
@@ -74,4 +80,10 @@ div.Order #Projects {
 div.Order .leftColumn, div.Order .rightColumn {
 	min-width: 320px;
 	width: 100%;
+}
+div.Order #Totals {
+	float: right;
+}
+div.Order #AdminOptions {
+	float: left;
 }

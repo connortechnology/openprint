@@ -1,12 +1,23 @@
 div.Order fieldset p label {
 	width: 30%;
 }
-div.OrderHistory fieldset p {
+div.Order div.History fieldset p {
 	padding-left: 100px;
 }
-div.OrderHistory fieldset p label {
+div.Order .History fieldset p label {
 	margin-left: -100px;
 	width: 95px;
+}
+div.Order .History fieldset p input[type="text"], div.Order .History fieldset p select {
+	width: auto;
+}
+div.Order .History fieldset#JumpTo {
+	width: 38%;
+	float: left;
+}
+div.Order .History fieldset#Filter {
+	width: 58%;
+	float: right;
 }
 
 img#Butterfly, img#IDEAG7, img#IDEAG7Master {
@@ -93,13 +104,13 @@ img#HomeCollage {
 	float: right;
 }
 
-#menubar li#MenuQuotes a, #menubar li#MenuOrders a, #menubar li#MenuProject a {
+.menubar li#MenuQuotes a, .menubar li#MenuOrders a, .menubar li#MenuProject a {
 	width: 95px;
 }
-#menubar li#MenuAboutUs a {
+.menubar li#MenuAboutUs a {
 	width: 60px;
 }
-#menubar li#MenuAccount a {
+.menubar li#MenuAccount a {
 	width: 120px;
 }
 #AlertDiv {

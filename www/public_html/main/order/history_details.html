@@ -23,7 +23,7 @@
 				$html .= ssi::writeButton( $log, $dbh, 'Continue', 'continue.gif', '', "information.html?OrderID=$$variable{'OrderID'}", 'Continue' );
 				$html .= ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif',"f1.action='history_details.html';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' ) if $$variable{'ORDER_STATUS'} ne 'Cancelled';
 			} elsif ( sets::isin( $$variable{'Order'}->status(), 'Complete', 'Paid','Pending Deposit','In Production','Cancelled','Waiting For Customer Approval' ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'UploadCenter', 'upload_center.gif', '', '/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Center' ) if $$variable{'Order'}->status() ne 'Cancelled';
+				$html .= ssi::writeButton( $log, $dbh, 'UploadCenter', 'upload_center.gif', '', '/upload/upload_center.html?docket='.$$variable{'Order'}->docket(), 'Upload Files' ) if $$variable{'Order'}->status() ne 'Cancelled';
 				$html .= ssi::writeButton( $log, $dbh, 'reOrder','reOrder.gif',"f1.action='information.html';f1.btnFunction.value='New Order';f1.submit();", '', 'ReOrder' ); 
 				$html .= ssi::writeButton( $log, $dbh, 'Resend','resend.gif','', "/main/order/history_details.html?OrderID=$$variable{'OrderID'}&amp;btnFunction=Resend", 'Resend' ) if $$variable{'Order'}->status() ne 'Cancelled'; 
 				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) or ( $$variable{'Order'}->status() eq 'Pending Deposit' ) ) {

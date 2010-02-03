@@ -13,7 +13,7 @@ function calc( formName, force ) {
 } // end function
 </script>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
 			<!--#include virtual="/includes/main/proj/templates/signature_template_select.html"-->
 			<!--#include virtual="/includes/main/proj/templates/signatures.html"-->

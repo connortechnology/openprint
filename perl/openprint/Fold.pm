@@ -219,11 +219,11 @@ $log->debug("Found spec for $range:" . $x->min_weight() . ' ' . $x->max_weight()
    for ( ; $i < @{$$self{'Specifications'}}; $i += 1 ) {
 	   my $Spec = $$self{'Specifications'}[$i];
 		# Don't need to check for equality, as we do that above
-	   return $Spec if ( !(1*$$Spec{max_weight}) and ! (1*$$Spec{interpolate}) );
+	   return $Spec if ( !(1*$$Spec{max_weight}) and ! $$Spec{interpolate} );
 
-$log->debug("Examining spec for $range:" . $Spec->min_weight() . ' ' . $Spec->max_weight() . ' : ' . $Spec->runspeed() ) if $debug;
+$log->debug("Examining MAX spec for $range:" . $Spec->min_weight() . ' ' . $Spec->max_weight() . ' : ' . $Spec->runspeed() ) if $debug;
 # first step, find one less than the min
-		if ( ( 1*$$Spec{max_weight} > 1*$range ) or ( ! (1*$$Spec{max_weight}) ) ) {
+		if ( ( 1*$$Spec{max_weight} > 1*$range ) or ( $$Spec{max_weight} eq '' ) ) {
 			#$log->debug("Foudn Max at $i " . @{$$self{'Specifications'}} );
 			last;
 		} # end if

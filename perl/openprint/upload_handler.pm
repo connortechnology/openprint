@@ -32,17 +32,16 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 *config = \%openprint::config;
 *r = \$openprint::r;
 
+my $uploaded = 0;
+
 sub handler {
 	my $request = shift;
-	$r = Apache2::Request->new( $request );
-	$r->content_type(q{text/html; charset=utf-8});
 	$log	= $request->log;
 
 	$request->no_cache(1);
 
 	my $starttime = time;
-	$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
-	#$r->parse;
+	#$log->debug( "Beginning of UPLOAD Request: Time (seconds) : $starttime" );
 
 	$dbh = sql::open_sql( $log, 
 			'database'	=> $request->dir_config('db_name'),
@@ -52,46 +51,39 @@ sub handler {
 			'password'	=> $request->dir_config('db_password'),
 			);
 
-	openprint::session_init();
-
 	if ( $request->method eq 'POST' ) {
-		my $uploaded = 0;
+		$uploaded = 0;
 		my ($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
 		my $rsize=$request->headers_in->{'Content-Length'};
 		sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
-		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'company', $company, 'user_id', $session{'user_id'} ] );
+		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'company', $company ] );
 
 		my $upload_hook = sub {
 			my ( $upload, $data, $data_len, $hook_data ) = @_;
+$log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 			$data_len = length $data if ( ! $data_len );
 
 			#my ( $size, $total ) = sql::execute( undef, undef, q{SELECT size, total FROM Uploads WHERE id=?}, $serial );
 			$uploaded += $data_len;	
-
-			sql::update( undef, undef, 'Uploads', ['id=?', $serial], ['size', $uploaded] );
+			sql::update( undef, undef, 'Uploads', ['id=?', $serial], ['size', $uploaded] ) if $data_len;
 		};
 		$r = Apache2::Request->new( $request, UPLOAD_HOOK=>$upload_hook );
 	} else {
 		$r = Apache2::Request->new( $request );
 	} # end if
 
-    foreach my $key ( sort $r->param() ) {
-        $log->debug("Parameter $key is (" . $r->param($key) . ")" );
-        $param{$key} = $r->param($key);
-    } # end foreach
-
 	if ( $r->param('action') eq 'get_progress_and_size' ) {
 		my $data = $dbh->selectrow_hashref(q{SELECT size, total, extract( epoch from date_trunc('seconds', NOW()) - date_trunc('seconds', start ) ) as elapsed FROM Uploads WHERE id=?} , {}, $r->param('serial') );
 		if ( ! $data ) {
 			$log->debug("No uploadin progress for " . $r->param('serial') );
 			$data = {};
-		} else {
-		$log->debug("$data");	
-foreach my $k ( keys %$data ) {
-$log->debug("($k) -> $$data{$k}");
-}
-		}
+		#} else {
+		#$log->debug("$data");	
+#foreach my $k ( keys %$data ) {
+#$log->debug("($k) -> $$data{$k}");
+#}
+		} # end if
 
 #<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 		my $output =qq` 
@@ -100,14 +92,21 @@ $log->debug("($k) -> $$data{$k}");
 <totalsize>$$data{'total'}</totalsize>
 <elapsedtime>$$data{'elapsed'}</elapsedtime>
 <serial>`.$r->param('serial').q{</serial></response>};
-		$log->debug($output);
+		#$log->debug($output);
 		$request->content_type('text/xml');
 		$r->print( $output );
 	} else {
+		foreach my $key ( sort $r->param() ) {
+			$log->debug("Parameter $key is (" . $r->param($key) . ")" );
+			$param{$key} = $r->param($key);
+		} # end foreach
 		configuration::init_cache( $log, $dbh, $r->dir_config() );
+		openprint::session_init();
 		my $serial = $r->param('serial');
 		if ( $serial ) {
-			sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
+			#sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
+			my $rsize=$request->headers_in->{'Content-Length'};
+			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'size', $rsize ] );
 		} else {
 			$log->error("No serial in upload, dumping session");
 			foreach my $k ( keys %session ) {
@@ -116,6 +115,7 @@ $log->debug("($k) -> $$data{$k}");
 		} # end if
 		upload_files( $r, $log, $dbh, \%variable );
 		my $page = '/upload/_upload_complete.html';
+		my @page_path = split('/', $page );
 		my $content;
 		if (-e $r->dir_config('SkinPath') . $page) {
 			$page = $r->dir_config('SkinPath') . $page;
@@ -124,7 +124,6 @@ $log->debug("($k) -> $$data{$k}");
 		} # end if
 		my $content = misc::load_file( $log, $page );
         $variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
-		my @page_path = split('/', $page );
         my $filename = pop @page_path;
         my $template;
 
@@ -154,15 +153,17 @@ $log->debug("($k) -> $$data{$k}");
 		} # end while
 
         if ( $template ) {
-            $r->print( ssi::variable_substitution( \$template, \%variable ) );
+			$_ = ssi::variable_substitution( \$template, \%variable );
+            $r->print( $_ );
         } else {
             $r->print( $variable{'PageContent'} );
         } # end if
 	} # end if
 
 	untie %session;
+	undef %session;
 	#$dbh->disconnect();# if $dbh->{'thread_id'};
-	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
+	#$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	return Apache2::Const::OK;
 }
 
@@ -195,13 +196,14 @@ sub get_destdir {
 	} # end if
 
 	if ( $param{'docket'} ) {
-		$destdir .= '/' . $param{'docket'} . '/';
+		$destdir .= $param{'docket'} . '/';
 		return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
 	} elsif ( $param{'project_id'} ) {
 		my $Project = new openprint::Project( $param{'project_id'} );
-		my $docket = $Project->docket();
-		$destdir .= '/' . $docket . '/';
-		return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
+		if ( my $docket = $Project->docket() ) {
+			$destdir .= $docket . '/';
+			return '' if ! create_dir( $config{'ProjectFilesPath'}.$destdir );
+		} # end if
 	} # end if
 	return $destdir;
 } # end sub get_Destdir
@@ -221,10 +223,11 @@ sub upload_files {
 	my $destdir = get_destdir();
 	if ( ! $destdir ) {
 		$$variable{'error'} .= 'There was an error saving your upload!<br/>';
+$log->error("No destdir");
 		return;
 	} # end if
 	
-	if ( $r->param('btnFunction') eq 'Upload Files' ) {
+	if ( $param{'btnFunction'} eq 'Upload Files' ) {
 
 		foreach my $index ( 1 .. 5 ) {
 			if ( $param{'fileUpload'.$index} ) {
@@ -233,9 +236,10 @@ sub upload_files {
 				$filename =~ s/ /_/g;
 
 				my $upload = $r->upload( 'fileUpload'.$index );
-				if ( ! $upload->link(  "$config{'ProjectFilesPath'}$destdir$filename" ) ) {
+				if ( ! $upload->link( "$config{'ProjectFilesPath'}$destdir$filename" ) ) {
+$log->error("There was an error saving file $param{'fileUpload'.$index}: to $config{'ProjectFilesPath'}$destdir$filename : $!");
 					$$variable{'error'} .= "There was an error saving file $param{'fileUpload'.$index}: $!<br/>";
-					return;
+					next;
 				} else {
 					$$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
@@ -253,7 +257,8 @@ sub upload_files {
 						'upload_id',	$param{'serial'},
 						] );
 			} # end if
-		} # end foreach
+		} # end foreach file
+		
 # Notify CSR, and Customer of upload
 		$$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
 		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html') {

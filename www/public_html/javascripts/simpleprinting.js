@@ -13,7 +13,7 @@ function FoldType_onchange( select ) {
 } // end function
 
 function calc( formName, force ) {
-	var form = getFormObj(formName);
+	var form = $(formName);
 
 	if ( form.txtPrice1 ) {
 		form.txtPrice1.value = '';
@@ -31,7 +31,7 @@ function calc( formName, force ) {
 		} // end if
 	} // end if
 
-	var div = document.getElementById('AlertDiv');
+	var div = $('AlertDiv');
 	if ( ! div ) {
 		alert('No alert div.');
 	} else {

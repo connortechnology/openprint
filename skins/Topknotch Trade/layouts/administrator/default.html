@@ -15,30 +15,11 @@
 		<script type="text/javascript" src="/javascripts/form_utilities.js"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js"></script>
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
-<script type="text/javascript">
+		<script type="text/javascript">
 <!--
-        var startList = function() {
-            if (document.all && document.getElementById) {
-                var navRoot = document.getElementById("menubar");
-                if ( navRoot ) {
-                    for ( var i=0; i<navRoot.childNodes.length; i+= 1 ) {
-                        var node = navRoot.childNodes[i];
-                        if (node.nodeName=="LI") {
-                            node.onmouseover=function() {
-                                this.className+=' over';
-                            }
-                            node.onmouseout=function() {
-                                this.className=this.className.replace(' over', '');
-                            }
-                        } // end if
-                    } // end for
-                } // end if
-            }
-        }
-        window.onload=startList;
+		window.onload=setup_ie_menu;
 -->
-        </script>
-
+		</script>
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div class="Content"> 
@@ -52,7 +33,7 @@
 			<br/>
 			<!--#include virtual="/includes/administrator_menu.html"-->
 		<div class="ContentInner"> 
-			<?PageContent?>
+<? echo ( ssi::variable_substitution( \$$variable{'PageContent'}, $variable ); ) ?>
 			<br class="spacer"/>
 		</div><!--ContentInner-->
 		</div><!--Content-->

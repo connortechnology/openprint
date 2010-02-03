@@ -118,7 +118,7 @@ sub find {
 		push @values, $params{'name'};
 	} # end if
 	if ( exists $params{'postalcode'} ) {
-		$sql .= q{ AND strPostalCode=?};
+		$sql .= q{ AND postalcode=?};
 		push @values, $params{'postalcode'};
 	} # end if
 	if ( $params{'SalesPerson'} ) {

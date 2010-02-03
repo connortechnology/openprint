@@ -29,7 +29,7 @@
 </script>
 <? endif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <div class="Service">
-	<form name="f1" method="post" action="/main/project/view.html">
+	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
@@ -39,10 +39,10 @@
                 <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
 <? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
 
-<? if ( sets::isin( $$variable{'ProjectType'}->name(),['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels','NCR'] ) ) ?>
+<? if ( sets::isin( $$variable{'ProjectType'}->name(),['GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( sets::isin( $$variable{'ProjectType'}->name(),['Greeting Cards','Postcards','Posters','Signs','Banners','Rack Cards','Labels','NCR'] ) ) ?>
+<? endif ( sets::isin( $$variable{'ProjectType'}->name(),['GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR'] ) ) ?>
 <? if ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/banner_printing.html"-->
 <? endif ( sets::isin( $$variable{'ProjectType'}->name(),['Banners'] ) ) ?>
@@ -52,7 +52,6 @@
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectType'}->name() eq 'DoorHangers' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectType'}->name() eq 'Brochures' ) ?>
@@ -60,7 +59,6 @@
 		<!--#include virtual="/includes/main/proj/dimensions_boxes_only.html"-->
 <? endif ( $$variable{'ProjectType'}->name() eq 'Custom' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Flyers' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectType'}->name() eq 'Flyers' ) ?>

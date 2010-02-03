@@ -176,30 +176,7 @@ img#logo2 {
 	padding: 0px;
 }
 
-.Timetrack {
-	float: left;
-	font-size: small;
-}
-.Timetrack .History {
-	width: 100%;
-	float: left;
-}
-.Timetrack .EmployeeName {
-	width: 400px;
-}
-.Timetrack table.List {
-	font-size: x-small;
-}
-.Timetrack table.List td {
-	font-size: x-small;
-}
-.Timetrack table.List th {
-	font-size: x-small;
-}
-.Timetrack table.List td.Rate {
-	width: 300px;
-	text-align: right;
-}
+
 
 fieldset {
 	border: none;
@@ -334,9 +311,15 @@ table {
 	margin: 0px;
 }
 table.List {
+	width: 100%;
+	padding: 0px;
+	margin: 0px;
+	border-collapse: collapse;
+	border-spacing: 0;
 	border: none;
 	table-layout: fixed;
 	border-bottom: 1px solid #0046a2;
+
 }
 th {
 	color: #000000;

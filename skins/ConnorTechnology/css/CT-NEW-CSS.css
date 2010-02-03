@@ -10,6 +10,7 @@ body {
 	font-size: 14px;
 }
 
+
 a:link {
 	color: #4d95d8;
 	text-decoration: none;
@@ -220,6 +221,7 @@ color: #999; /* orange */
 	padding: 0px;
 	text-decoration: none;
 	text-align: left;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
 	font-size: 12px;
 }
 
@@ -337,6 +339,7 @@ color: #999; /* orange */
 	height: auto;
 	margin: 0px;
 	font-size: 12px;
+	font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
 	background-color: #131313;
 	width: 100%;
 	float: left;
@@ -412,6 +415,12 @@ color: #999; /* orange */
 #footer ul li {
 	padding-top: 2px;
 	padding-bottom: 2px;
+}
+body {
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
 }
 
 .port-piece {

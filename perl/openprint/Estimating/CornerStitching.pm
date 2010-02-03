@@ -121,7 +121,7 @@ sub calc {
 
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-			@equipment = ( new openprint::Equipment( 'strid'=> $$specs{"ddmEquipment$qty_index"} ) );
+			@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment$qty_index"} ) );
 		} else {
 			@equipment = @possible_equipment;
 		} # end if
@@ -169,7 +169,7 @@ sub calc {
 			$status = 'uncalculated';
 			$$specs{"ddmEquipment$qty_index"} = '';
 		} else {
-			$$specs{"ddmEquipment$qty_index"} = $bestEquipment->strid();
+			$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
 		} # end if
 
 		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );

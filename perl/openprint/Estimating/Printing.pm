@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 my %folding_cache;
@@ -1422,7 +1422,7 @@ $log->debug("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) $qty"
 			$openprint::log->debug("Trying press " . $Press->strid()) if $debug;
 			if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 				if ( $Press->specification('Printing Type') ne $$specs{'PrintingType'.$qty_index} ) {
-					$openprint::log->error("Press Printing Type (" . $Press->specification('Printing Type') .") is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if $debug;
+					$openprint::log->warn("Press Printing Type (" . $Press->specification('Printing Type') .") is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if $debug;
 					next;
 				} # end if
 			} else {
@@ -1460,11 +1460,13 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 			} # end if
 			my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
 			if ( $do_work_turn ) {
+				# Coatings like AQ and Varnish are done in a separate pass.  So we don't count them in this check
+				my @Coatings = map { $_->name() } openprint::Service::find('category'=>'Coating');
 				if ( ! $Papers[0]->doublesided() ) {
-#$openprint::log->debug("No W&T due to doublesided" . $$Papers[0]->name() );
+$openprint::log->debug("No W&T due to doublesided" . $Papers[0]->name() );
 					$do_work_turn = 0;
-				} elsif ( @{$$project{'filtered_colours'}} > $Press->specification('Number of Colours') and $Press->specification('Multipass', $Papers[0]->gsm() ) ne 'Y' ) {
-#$openprint::log->debug("No W&T due to multipass" . $$Papers[0]->gsm() );
+				} elsif ( sets::exclude( \@Coatings, $$project{'filtered_colours'} ) > $Press->specification('Number of Colours') and $Press->specification('Multipass', $Papers[0]->gsm() ) ne 'Y' ) {
+$openprint::log->debug("No W&T due to multipass" . $Papers[0]->gsm() );
 					$do_work_turn = 0;
 				} elsif ( $$specs{'sides_the_same'} eq 'Y' ) {
 					$do_work_turn = 0;
@@ -1745,7 +1747,7 @@ $i->display();
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			if ( $debug ) {
-				$openprint::log->warn('Impositions for '. $Press->strid() . @impositions );
+				$openprint::log->warn('Impositions for '. $Press->strid() . ': ' . @impositions );
 				foreach my $I ( @impositions ) {
 					$I->display();
 				} # end foreach
@@ -3447,6 +3449,7 @@ sub calc_price {
 	} # end if
 	$impressions *= $$project{print_sides} if ($$project{print_sides} == 2) and sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] );
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
+	$$specs{'ddmPress'.$qty_index} = $Press->strid();
 
 	if ( $$project{'HasUVCoating'} ) {
 		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
@@ -3461,6 +3464,7 @@ sub calc_price {
 
 	if ( $$project{'HasAqueous'} ) {
 		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+	#$price{'Aqueous Breakdown'} .= $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index};
 		if ( $aq_results{'Status'} eq 'uncalculated' ) {
 			$price{'Aqueous Breakdown'} .= "AQ error: $aq_results{'alert'} $$project{'AqueousSpecs'}{alert} " . $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 

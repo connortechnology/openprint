@@ -64,15 +64,11 @@ sub calc {
 
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
-			my $heads = $Equipment->specification('Heads');
-			if ( ! $heads ) {
-				$$specs{'hdnBreakdown'.$qty_index} = 'No numbering heads specified.<br/></fieldset>';
-				next;
-			} # end if
+			my $heads = $Equipment->specification('Numbering Heads');
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Heads: %d<br/>',$heads);
 
-			my $runs = ceil($$specs{'SetsOfNumbers'} / $heads);
-			my $last_run = $$specs{'SetsOfNumbers'} % $heads;
+			my $runs = ceil($$specs{'SetsOfNumbers'} / $heads) if $heads;
+			my $last_run = $heads ? $$specs{'SetsOfNumbers'} % $heads : $$specs{'SetsOfNumbers'};
 			my $total = 0;
 			my $mprice = 0;
 

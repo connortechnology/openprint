@@ -184,6 +184,9 @@ fieldset .content ul li {
 	margin: .5em;
 	text-align: right;
 }
+fieldset .content ul li.required {
+	list-style: circle;
+}
 fieldset .content ul li label {
 	text-align: left;
 }

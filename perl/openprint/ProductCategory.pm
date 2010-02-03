@@ -26,7 +26,7 @@ $table = 'Product_Categories';
 		'projecttype_id'	=>	undef,
 );
 
-my $debug = 1;
+my $debug = 0;
 
 sub find {
 	my %params = @_;
@@ -70,22 +70,6 @@ sub find {
     } # end if
     return map { new openprint::ProductCategory( $_->{id}, $_ ) } @$data;
 } # end sub find
-
-# Returns a copy of the paper object.
-# Will also save the data to db
-sub copy {
-	my $self = shift;
-	my $copy = new openprint::ProductCategory();
-	@$copy{keys %$self} = @$self{keys %$self};
-	$$copy{name} .= 'Copy of ' . $$copy{name};
-	delete $$copy{id};
-	return $copy;
-} # end sub copy
-
-sub delete {
-	my $self = shift;
-	sql::update( undef, undef, 'Product_Categories', ['id=?', $$self{id}], 'deleted', 1 );
-} # end sub delete
 
 sub destroy {
 	my $self = shift;

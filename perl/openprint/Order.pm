@@ -393,8 +393,15 @@ sub Products {
 	return @{$$self{'Products'}};
 } # end sub Products
 
+sub User {
+	return new openprint::User( $_[0]{'user_id'} );
+}
+
 sub name {
 	my $self = shift;
+	if ( ! ( $$self{'first_name'} or $$self{'last_name'} ) ) {
+		return $self->User()->name();
+	} # end if
 	return $$self{'first_name'} . ' ' . $$self{'last_name'};
 } # end sub name
 

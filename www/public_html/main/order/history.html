@@ -10,7 +10,7 @@
 </div>
 <? if ( $session{'user_id'} ) ?>
 <form name="f1" action="history.html" method="post">
-	<div class="OrderHistory">
+	<div class="Order"><div class="History">
 		<fieldset id="JumpTo" class="filters unprintable"><legend>Enter Order ID:</legend>
 			<p>
 				<label for="OrderID">Order ID:</label>
@@ -26,7 +26,7 @@
 		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria:</legend>
 			<p>
 				<label>Ordered by:</label>
-				<select name="ddmOrderedBy" size="1" onchange="load_orders( this.form );">
+				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="load_orders( this.form );">
 					<option value="">Ordered By</option>
 					<? echo ( 
 						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id' => $session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/main/order/history.html?ddmOrderedBy'} );
@@ -60,6 +60,7 @@
 				</span>
 			</p>
 		</fieldset>
+	</div>
 	</div>
 	<hr class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
