@@ -25,18 +25,19 @@
 					payment_id:<? echo ( $$variable{'Payment'}->id() ) ?>,
 					invoice_id: invoice_id
 				},
-				onSuccess: function(transport) {
-					new Ajax.Updater( 'Paid', '_paid.html', {
-						method:'get',
-						parameters: { payment_id:<? echo ( $$variable{'Payment'}->id() ) ?> }
-						} );
-				},
+				onSuccess: load_paid(),
 				onFailure: function(transport) {
 					alert('failure to unpay');
 				}
 			} );
 	} // end function unpay_invoice(invoice_id)
-
+	function load_paid ( ) {
+		new Ajax.Updater( 'Paid', '_paid.html', {
+			method:'get',
+			parameters: { payment_id:<? echo ( $$variable{'Payment'}->id() ) ?> },
+			evalScripts: true,
+		} );
+	} // end function load_paid
 </script>
 <? endif ( $$variable{'Payment'}->id() ) ?>
 <form name="f1" id="f1" action="<? echo ( $$variable{'Payment'}->id() ? 'history.html' : 'edit.html' ) ?>" method="post">

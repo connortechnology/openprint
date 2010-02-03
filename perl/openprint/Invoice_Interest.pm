@@ -6,10 +6,8 @@ use vars qw( %config $log $dbh %session );
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
 
-my $debug = 1;
+my $debug = 0;
 
 use strict;
 use vars qw( $table $serial %fields %defaults %transforms );
@@ -81,6 +79,14 @@ sub find {
 	} elsif ( $params{'updated_on_end'} ) {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
+	} 
+	if ( $params{'updated_on_>'} ) {
+		$sql .= ' AND updated_on > ?';
+		push @values, $params{'updated_on_>'};
+	} 
+	if ( $params{'updated_on_<'} ) {
+		$sql .= ' AND updated_on < ?';
+		push @values, $params{'updated_on_<'};
 	} # end if
 
 	if ( $params{'compounded_on_start'} and $params{'compounded_on_end'} ) {
@@ -92,7 +98,16 @@ sub find {
 	} elsif ( $params{'compounded_on_end'} ) {
 		$sql .= ' AND compounded_on <= ?';
 		push @values, $params{'compounded_on_end'};
-	} elsif ( $params{'compounded_on'} ) {
+	} 
+	if ( $params{'compounded_on_>'} ) {
+		$sql .= ' AND compounded_on > ?';
+		push @values, $params{'compounded_on_>'};
+	} # end if
+	if ( $params{'compounded_on_<'} ) {
+		$sql .= ' AND compounded_on < ?';
+		push @values, $params{'compounded_on_<'};
+	} 
+	if ( $params{'compounded_on'} ) {
 		$sql .= ' AND compounded_on = ?';
 		push @values, $params{'compounded_on'};
 	} # end if
@@ -111,15 +126,14 @@ sub find {
 	return map { new openprint::Invoice_Interest( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub delete {
-	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM Invoice_Interests WHERE id=?}, $$self{'id'} );
-} # end sub delete
-
-sub destroy {
-	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM Invoice_Interests WHERE id=?}, $$self{'id'} );
-} # end sub destroy
+sub save {
+	my ( $self, $data ) = @_;
+	my $ac = sql::start_transaction( $dbh );
+	my $error = $self->SUPER::save( $data );
+	$error .= $self->Invoice()->save({'interest'=>undef});
+	sql::end_transaction( $dbh, $ac );
+	return $error;
+} # end sub save
 
 sub Invoice {
 	return new openprint::Invoice( $_[0]{invoice_id} );

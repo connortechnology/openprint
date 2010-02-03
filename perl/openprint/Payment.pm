@@ -6,8 +6,6 @@ use vars qw( %config $log $dbh %session );
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
 
 my $debug = 1;
 
@@ -175,7 +173,7 @@ sub remaining {
 		$$self{'remaining'} = $_[0];
 	} # end if
 	if ( ! defined $$self{'remaining'} ) {
-		$$self{'remaining'} = $$self{'amount'} - misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoices_payments WHERE payment_id=?', $$self{'id'} ) );
+		$$self{'remaining'} = $$self{'amount'} - misc::sum( map { $_->amount() } openprint::Invoice_Payment::find('payment_id'=>$$self{'id'}) );
 	} # end if
 	return $$self{'remaining'};
 } # end sub remaining

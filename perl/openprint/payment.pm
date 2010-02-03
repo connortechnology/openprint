@@ -13,6 +13,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 require openprint::Payment;
 require openprint::Invoice;
+require openprint::Invoice_Payment;
 
 sub history {
 	ssi::save_params('/payment/history.html',  'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day', 'company_id' );
@@ -189,6 +190,14 @@ $log->debug("Results: $k => $$result{$k}");
 		$log->error("Unknown btnFunction in payment::make : $param{'btnFunction'}");
 	} # end if btnFunction
 } # end sub make
+
+sub _edit_payment {
+	if ( $param{'action'} eq 'update' ) {
+		my $IP = new openprint::Invoice_Payment( $param{'id'} );
+		$IP->save({$param{'field'}=>$param{'value'}}) if $IP->id();
+		return $IP->amount();
+	} # end if
+} # end sub_edit_payment
 
  1;
 __END__

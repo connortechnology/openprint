@@ -6,8 +6,6 @@ use vars qw( %config $log $dbh %session );
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
 
 require openprint::Currency;
 require openprint::Company;
@@ -16,6 +14,7 @@ require openprint::InvoiceLog;
 require openprint::Tax;
 require openprint::Invoiced_Product;
 require openprint::Invoice_Interest;
+require openprint::Invoice_Payment;
 
 my $debug = 1;
 
@@ -214,7 +213,7 @@ sub is_paid {
 } # end sub is_paid
 
 sub owing {
-$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
+#$log->debug("Owing total: " . $_[0]->total() . ' int: ' . $_[0]->interest() . ' paid: ' . $_[0]->paid() );
 	return sprintf('%.2f', $_[0]->total() + $_[0]->interest() - $_[0]->paid() );
 } # end sub owing
 
@@ -230,7 +229,7 @@ sub subtotal {
 	my ( $self ) = @_;
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
-$log->debug("Recalculating subtotal");
+#$log->debug("Recalculating subtotal");
 		$$self{'subtotal'} = 0;
 		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack::find('invoice_id'=>$$self{id});
 		map { $$self{'subtotal'} += $_->total() } openprint::Invoiced_Product::find('invoice_id'=>$$self{id});
@@ -246,7 +245,7 @@ sub total {
 		$$self{'total'} += $self->federaltax();
 		$$self{'total'} += $self->statetax();
 	} # end if
-$log->debug("Invoice_total: sub: " . $self->subtotal() . ' fed: ' . $self->federaltax() . ' prov: ' . $self->statetax() );
+#$log->debug("Invoice_total: sub: " . $self->subtotal() . ' fed: ' . $self->federaltax() . ' prov: ' . $self->statetax() )if $;
 	return sprintf('%.2f', $$self{'total'} );
 } # end sub total
 
@@ -257,7 +256,7 @@ sub interest {
 	} # end if
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'interest'} ) ) {
-		$$self{'interest'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoice_interests WHERE invoice_id=?', $$self{'id'} ) );
+		$$self{'interest'} = misc::sum( map { $_->amount() } openprint::Invoice_Interest::find('invoice_id'=>$$self{'id'}) );
 	} # end if
 	return $$self{'interest'};
 } # end sub interest
@@ -268,7 +267,7 @@ sub paid {
 		$$self{'paid'} = $_[0];
 	} # end if
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'paid'} ) ) {
-		$$self{'paid'} = misc::sum( sql::execute( undef, undef, 'SELECT amount FROM invoices_payments WHERE invoice_id=?', $$self{'id'} ) );
+		$$self{'paid'} = misc::sum( map { $_->amount() } openprint::Invoice_Payment::find('invoice_id'=>$$self{'id'}) );
 	} # end if
 	return $$self{'paid'};
 } # end sub paid
@@ -305,7 +304,8 @@ sub add_Payment {
 	my ( $self, $Payment ) = @_;
 	if ( $Payment->remaining() and $self->owing() ) {
 		my $amount = $Payment->remaining() > $self->owing() ? $self->owing() : $Payment->remaining();	
-		sql::insert( undef, undef, 'invoices_payments', 'payment_id', $Payment->id(), 'invoice_id', $$self{id}, 'amount', $amount );
+		my $IP = new openprint::Invoice_Payment();
+		$IP->save({'payment_id'=>$Payment->id(),'invoice_id'=>$$self{'id'}, 'amount'=>$amount});
 		$Payment->remaining( undef ); # force update
 		$Payment->save();
 		$self->paid( undef );
@@ -316,7 +316,9 @@ sub add_Payment {
 sub del_Payment {
 	my ( $self, $Payment ) = @_;
 
-	sql::execute( undef, undef, 'DELETE FROM invoices_payments WHERE invoice_id=? AND payment_id=?', $$self{id}, $$Payment{'id'} );
+	foreach my $IP ( openprint::Invoice_Payments::find('invoice_id'=>$$self{'id'},'payment_id'=>$$Payment{'id'})) {
+		$IP->delete();
+	} # endforeach$IP
 	$Payment->remaining( undef );
 	$Payment->save();
 	$self->paid( undef );
@@ -353,10 +355,10 @@ sub send {
 	my @attachments;
 	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice_body.html' );
 	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
-	push @attachments, '', encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
+	push @attachments, '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 	$data{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/invoice.html' );
 	$data{'ReplacementText'} = ssi::variable_substitution( \$data{'ReplacementText'}, \%data );
-	push @attachments, 'Invoice '.$$self{'id'}.'.html', encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
+	push @attachments, 'Invoice '.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$email_template, \%data ) ) ), 'text/html', 'quoted-printable';
 
 	#my @recipients = ('iconnor@connortechnology.com');
 	my @recipients = map { sprintf('"%s" <%s>', $_->name(), $_->email() ) } $self->Invoicee()->AccountingContacts();
