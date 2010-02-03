@@ -1,0 +1,3 @@
+[submodule "skins/ConnorTechnology"]
+	path = skins/ConnorTechnology
+	url = iconnor@penultima.org:/var/lib/git/ConnorTechnology
