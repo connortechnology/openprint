@@ -31,3 +31,6 @@
 [submodule "skins/Topknotch Trade"]
 	path = skins/Topknotch Trade
 	url = iconnor@penultima.org:/var/lib/git/Topknotch Trade
+[submodule "skins/West Star Printing"]
+	path = skins/West Star Printing
+	url = iconnor@penultima.org:/var/lib/git/West Star Printing/
