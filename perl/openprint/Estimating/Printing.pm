@@ -2012,7 +2012,7 @@ sub breakdown {
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
 	$breakdown .= sprintf("\tPMS Ink Mix Charge:\t\$%.2f<br/>", $$price{'Ink Mix Charge'} ) if $$price{'Ink Mix Charge'};
 	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
-	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
+	$breakdown .= sprintf('Plate Make Ready: $%.2f%s %dplates = $%.2f<br/>', @$price{'Plate Setup Price','Plate Setup Units','Plate Setup Count', 'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
 	if ( $Press->specification('Charge for setup overs') eq 'N' ) {
 		$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed','Impression Cost','Impression Units','Impression Price'} );
@@ -3345,27 +3345,42 @@ sub calc_price {
 			$press_setup += $_->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $_->{'Plate Total'};
+			$price{'Plate Setup Price'} = $_->{'Plate Price'};
+			$price{'Plate Setup Count'} = $_->{'Plate Count'};
+			$price{'Plate Setup Units'} = $_->{'Plate Units'};
 		} elsif ( @{$$project{'side_one_colours'}} ) {
 			$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
 			$press_setup += $_->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $_->{'Plate Total'};
+			$price{'Plate Setup Price'} = $_->{'Plate Price'};
+			$price{'Plate Setup Count'} = $_->{'Plate Count'};
+			$price{'Plate Setup Units'} = $_->{'Plate Units'};
 		} elsif ( @{$$project{'side_two_colours'}} ) {
 			$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
 			$press_setup += $_->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $_->{'Plate Total'};
+			$price{'Plate Setup Price'} = $_->{'Plate Price'};
+			$price{'Plate Setup Count'} = $_->{'Plate Count'};
+			$price{'Plate Setup Units'} = $_->{'Plate Units'};
 		} # end if
 	} elsif ( sets::isin( $$Imposition{runstyle}, ['Web','Perfecting'] ) ) {
 		$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
 		$price{'Plate Total'} += $_->{'Plate Total'};
+		$price{'Plate Setup Price'} = $_->{'Plate Price'};
+		$price{'Plate Setup Count'} = $_->{'Plate Count'};
+			$price{'Plate Setup Units'} = $_->{'Plate Units'};
 	} else {
 		$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, \@colours, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
 		$press_setup += $_->{'Total'};
 		$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
 		$price{'Plate Total'} += $_->{'Plate Total'};
+		$price{'Plate Setup Price'} = $_->{'Plate Price'};
+		$price{'Plate Setup Count'} = $_->{'Plate Count'};
+			$price{'Plate Setup Units'} = $_->{'Plate Units'};
 	} # end if
 	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Runstyle Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'};
 
@@ -3997,6 +4012,7 @@ sub press_setup_cost {
 		my $plates = $setup_count;
 		$plates *= $plate_runs if $plate_runs;
 		$plates += $plate_change_qty;
+		$Price{'Plate Count'} = $plates;
 		if ( lc $PlateSetupPrice{'units'} eq 'per hour' ) {
 			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
@@ -4006,6 +4022,8 @@ sub press_setup_cost {
 		} else {
 			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");
 		} # end if
+		$Price{'Plate Units'} = $PlateSetupPrice{'units'};
+		$Price{'Plate Price'} = $PlateSetupPrice{'Price'};
 	#} else{
 		#$log->debug("No Plate Make Ready for plates on " . $Press->strid() );
 	} # end if
