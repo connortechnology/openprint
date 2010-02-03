@@ -7,3 +7,6 @@
 [submodule "skins/Topknotch Print"]
 	path = skins/Topknotch Print
 	url = iconnor@penultima.org:/var/lib/git/Topknotch Print/
+[submodule "skins/Edgewater"]
+	path = skins/Edgewater
+	url = iconnor@penultima.org:/var/lib/git/Edgewater/
