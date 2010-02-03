@@ -19,3 +19,6 @@
 [submodule "skins/Process Envelope"]
 	path = skins/Process Envelope
 	url = iconnor@penultima.org:/var/lib/git/Process Envelope/
+[submodule "skins/Pseudoboyfriend"]
+	path = skins/Pseudoboyfriend
+	url = iconnor@penultima.org:/var/lib/git/Pseudoboyfriend/
