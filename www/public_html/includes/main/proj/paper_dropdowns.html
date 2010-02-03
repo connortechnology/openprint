@@ -104,31 +104,34 @@
 				<label>Stock Name:</label>
 				<select name="ddmStockBrand<?Signature?>" size="1" onchange="ddmStockBrand_onchange( this, '<?Signature?>' );">
 				<option value=""> Please select </option>
-
 				<? echo (
-					 ssi::make_drop_down( [ openprint::paper::get_names( $$variable{'ProjectType'}->name(), @$variable{
+						my @options = openprint::paper::get_names( $$variable{'ProjectType'}->name(), @$variable{
 							 'ddmStockBrand'.$$variable{'Signature'},
 							 'ddmStockFinish'.$$variable{'Signature'},
 							 'ddmStockColour'.$$variable{'Signature'},
 							 'ddmStockWeight'.$$variable{'Signature'},
 							 'rdbSuppliedStock'.$$variable{'Signature'},
-							 } ) ], $$variable{'ddmStockBrand'.$$variable{'Signature'}} );
+							 } );
+						$$variable{'ddmStockBrand'.$$variable{'Signature'}} = $options[0] if @options == 2;
+						ssi::make_drop_down( \@options, $$variable{'ddmStockBrand'.$$variable{'Signature'}} );
 				) ?>
 				</select>
 			</p>
 			<p>
 				<label><? echo ( ssi::writeTip( 'Stock Finish' ); ) ?>:</label>
 				<select name="ddmStockFinish<?Signature?>" size="1" onchange="ddmStockFinish_onchange( this, '<?Signature?>' );">
-				<option value=""> Please select </option>
-				<? echo (
-						ssi::make_drop_down( [ openprint::paper::get_finishes( $$variable{'ProjectType'}->name(), @$variable{
+					<option value=""> Please select </option>
+					<? echo (
+							my @options = openprint::paper::get_finishes( $$variable{'ProjectType'}->name(), @$variable{
 								'ddmStockBrand'.$$variable{'Signature'},
 								'ddmStockFinish'.$$variable{'Signature'},
 								'ddmStockColour'.$$variable{'Signature'},
 								'ddmStockWeight'.$$variable{'Signature'},
 								'rdbSuppliedStock'.$$variable{'Signature'},
-								} ) ], $$variable{'ddmStockFinish'.$$variable{'Signature'}} );
-				) ?>
+								} );
+							$$variable{'ddmStockFinish'.$$variable{'Signature'}} = $options[0] if @options == 2;
+							ssi::make_drop_down( \@options, $$variable{'ddmStockFinish'.$$variable{'Signature'}} );
+					) ?>
 				</select>
 			</p>
 			<p>
@@ -136,13 +139,15 @@
 				<select name="ddmStockColour<?Signature?>" size="1" onchange="ddmStockColour_onchange( this, '<?Signature?>' );">
 				<option value=""> Please select </option>
 				<? echo (
-						ssi::make_drop_down( [ openprint::paper::get_colours( $$variable{'ProjectType'}->name(), @$variable{
+						my @options = openprint::paper::get_colours( $$variable{'ProjectType'}->name(), @$variable{
 								'ddmStockBrand'.$$variable{'Signature'},
 								'ddmStockFinish'.$$variable{'Signature'},
 								'ddmStockColour'.$$variable{'Signature'},
 								'ddmStockWeight'.$$variable{'Signature'},
 								'rdbSuppliedStock'.$$variable{'Signature'},
-								} ) ], $$variable{'ddmStockColour'.$$variable{'Signature'}} );
+								} );
+						$$variable{'ddmStockColour'.$$variable{'Signature'}} = $options[0] if @options == 2;
+						ssi::make_drop_down( \@options, $$variable{'ddmStockColour'.$$variable{'Signature'}} );
 						) ?>
 					</select>
 			</p>
@@ -151,13 +156,15 @@
 				<select name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
 				<option value=""> Please select </option>
 				<? echo (
-						ssi::make_drop_down( [ openprint::paper::get_weights( $$variable{'ProjectType'}->name(), @$variable{
+						my @options =openprint::paper::get_weights( $$variable{'ProjectType'}->name(), @$variable{
 								'ddmStockBrand'.$$variable{'Signature'},
 								'ddmStockFinish'.$$variable{'Signature'},
 								'ddmStockColour'.$$variable{'Signature'},
 								'ddmStockWeight'.$$variable{'Signature'},
 								'rdbSuppliedStock'.$$variable{'Signature'},
-								} ) ], $$variable{'ddmStockWeight'.$$variable{'Signature'}} );
+								} );
+						$$variable{'ddmStockWeight'.$$variable{'Signature'}} = $options[0] if @options == 2;
+						ssi::make_drop_down( \@options, $$variable{'ddmStockWeight'.$$variable{'Signature'}} );
 				  ) ?>
 				</select>
 			</p>

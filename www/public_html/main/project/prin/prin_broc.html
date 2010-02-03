@@ -108,11 +108,6 @@
 		<!--#include virtual="/includes/main/proj/dimensions.html" -->
 <? endif ( $$variable{'ProjectType'}->name() eq 'ScratchPads' ) ?>
 
-<? if ( $$variable{'ProjectType'}->name() eq 'Labels' ) ?>
-	<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-	<!--#include virtual="/includes/main/proj/templates/labels.html" -->
-	<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Labels' ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'Tags/Tickets' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/tags_tickets.html" -->

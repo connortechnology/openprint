@@ -109,7 +109,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@all_equipment = openprint::Equipment::find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment::find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	if ( ! @all_equipment ) {
 		$$specs{'alert'} = 'We have no equipment for UV Coating.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
@@ -178,7 +178,8 @@ sub calc {
 				if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 					$$specs{'alert'} = 'The selected equipment can not handle your project.  This may be because the stock is too heavy, or too large.';
 				} else {
-					$$specs{'alert'} = 'No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.';
+					$$specs{'alert'} = $results{'alert'};
+					$$specs{'alert'} .= 'No suitable equipment could be found for your project.  This may be because the stock is too heavy, or too large.' if ! $results{'alert'};
 				} # end if
 			} else {
 				if ( $results{'Equipment'} ) {
@@ -294,6 +295,10 @@ sub signature_calc {
 		return %BestPrice;
 	} # end if
 	$BestPrice{'Status'} = 'uncalculated';
+	if ( $Project->Type()->name() eq 'Labels' ) {
+		@BestPrice{'Status','alert'} = ('uncalculated','We cannot UVCoat labels at this time.');
+		return %BestPrice;
+	} # end if
 
 	my $qty = $$specs{"txtQuantity$qty_index"};
 	if ( $$specs{'txtPressSheetComboItems'} ) {
