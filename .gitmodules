@@ -16,3 +16,6 @@
 [submodule "skins/PointOne Graphics Inc"]
 	path = skins/PointOne Graphics Inc
 	url = iconnor@penultima.org:/var/lib/git/PointOne Graphics Inc/
+[submodule "skins/Process Envelope"]
+	path = skins/Process Envelope
+	url = iconnor@penultima.org:/var/lib/git/Process Envelope/
