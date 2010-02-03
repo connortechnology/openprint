@@ -10,3 +10,6 @@
 [submodule "skins/Edgewater"]
 	path = skins/Edgewater
 	url = iconnor@penultima.org:/var/lib/git/Edgewater/
+[submodule "skins/Intelligent Quote"]
+	path = skins/Intelligent Quote
+	url = iconnor@penultima.org:/var/lib/git/Intelligent Quote/
