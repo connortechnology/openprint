@@ -175,6 +175,8 @@
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
 		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
+	} else {
+$log->debug("No content for " . $$variable{'ProjectType'}->name() );
 	} # end if
 	return '';
 ) ?>

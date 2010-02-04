@@ -99,7 +99,7 @@
 							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->name_id() );
 						) ?>
 					</select>
-					<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="ddm_select_by_index( f1.ddmName, 0 );" />
+					<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmName);}ddm_select_by_index( f1.ddmName, 0 );" />
 				</p>
 				<p>
 					<label for="txtFinish" onclick="$('txtFinish').toggle();$('ddmFinish').toggle();">Finish:</label>
@@ -109,7 +109,7 @@
 							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->finish_id() );
 					) ?>
 					</select>
-					<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.ddmFinish, 0 );" />
+					<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmFinish);}ddm_select_by_index( f1.ddmFinish, 0 );" />
 				</p>
 				<p>
 					<label for="txtColour" onclick="$('txtColour').toggle();$('ddmColour').toggle();">Colour:</label>
@@ -119,7 +119,7 @@
 							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->colour_id() );
 						) ?>
 					</select>
-					<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.ddmColour, 0 );" />
+					<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmColour);}ddm_select_by_index( f1.ddmColour, 0 );" />
 				</p>
 				<p>
 					<label for="txtWeight" onclick="$('txtWeight').toggle();$('ddmWeight').toggle();">Weight:</label>
