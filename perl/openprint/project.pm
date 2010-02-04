@@ -112,10 +112,10 @@ $openprint::log->debug("Viewing Project $project_index");
 						if ( $statuses{$service_index} eq $statuses{$services{$id}[$i]} and openprint::Estimating::Printing::compare_signatures( $project{$service_index}, $project{$services{$id}[$i]} ) ) {
 							$sig_qty += 1;
 							foreach my $q ( 1 .. 3 ) {
-							$project{$service_index}{'txtPrice'.$q} += $project{$services{$id}[$i]}{'txtPrice'.$q};
-							my $stock_qty = $project{$services{$id}[$i]}{'txtPressSheetQty'.$q};
-							$stock_qty =~ s/\D//g;
-							$$variable{'SignatureStockQty'.$q.$service_index} += $stock_qty;
+								$project{$service_index}{'txtPrice'.$q} += $project{$services{$id}[$i]}{'txtPrice'.$q};
+								my $stock_qty = $project{$services{$id}[$i]}{'txtPressSheetQty'.$q};
+								$stock_qty =~ s/\D//g;
+								$$variable{'SignatureStockQty'.$q.$service_index} += $stock_qty;
 							} # end foreach q
 							splice @{$services{$id}}, $i, 1;
 							$i -= 1;
@@ -206,12 +206,12 @@ sub insert_into_log {
 } # end sub insert_into_log
 
 sub get_prepress_operator {
-    my ( $log, $dbh, $project_index ) = @_;
+	my ( $log, $dbh, $project_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-    my %services = $Project->get_services();
-    my $User = new openprint::User( sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, ( $services{'Proofs'} ? $services{'Proofs'}[0] : $services{'FilmStripping'}[0] ) ) );
-    return $User->name();
+	my %services = $Project->get_services();
+	my $User = new openprint::User( sql::execute( $log, $dbh, q{SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, ( $services{'Proofs'} ? $services{'Proofs'}[0] : $services{'FilmStripping'}[0] ) ) );
+	return $User->name();
 } # end sub get_prepressoperator
 
 1;

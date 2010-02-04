@@ -52,7 +52,7 @@
 					<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<? echo ( $$variable{'Quote'}->company_id() ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
 					<td align="left"><? hecho ( $$variable{'Quote'}->Company()->name(); ) ?></td>
 					<td align="left"><? hecho ( $$variable{'Quote'}->for_name(); ) ?></td>
-					<td align="right"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<? echo ( $$variable{'Quote'}->company_id() ) ?>"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
+					<td align="right"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<? echo ( $$variable{'Quote'}->company_id() ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
 					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total1() ) ); ) ?></td>
 					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total2() ) ); ) ?></td>
 					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total3() ) ); ) ?></td>
@@ -94,7 +94,7 @@
 		<tr<?rowclass?>> 
 			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
 			<td align="left"><? echo ( ssi::htmlize($$variable{'Quote'}->for_name()); ) ?></td>
-			<td align="right"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
+			<td align="right"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total1() ) ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total2() ) ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total3() ) ); ) ?></td>
