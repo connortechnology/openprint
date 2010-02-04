@@ -1,6 +1,6 @@
 <? echo (
 	my %parameters;	
-	if ( $session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
+	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
 		$parameters{'SalesPerson'} = $session{'user_id'};
 		$parameters{'or'} = "Index=(SELECT CompanyIndex FROM Users WHERE Index=$session{'user_id'})";
 	} elsif ( $param{'CSR'} ) {
@@ -9,9 +9,10 @@
 	#$parameters{'order'} = 'lower(strname)';
 	my @Companies = openprint::Company::find( %parameters );
 	my %companies = map { int($_->id()), $_->name() } @Companies;
+	@{$$variable{'Orders'}} = ();
 	if ( %companies ) {
-		@{$$variable{'Orders'}} = openprint::Order::find( 
-			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : undef ),
+		foreach my $Order ( openprint::Order::find( 
+			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
 			'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
 			'status' =>	$param{'status'},
@@ -19,16 +20,38 @@
 			'value_end' => $param{'value_end'},
 			'order' => ($param{'order'} ? $param{'order'} : 'Index'),
 			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
-		);
+		) ) {
+			if ( $param{'press_id'} ) {
+				my $Press = new openprint::Equipment( $param{'press_id'} );
+				my $on_press = 0;
+				foreach my $Project ( $Order->Projects() ) {
+					foreach my $sig_id ( $Project->signatures() ) {
+						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+						if ( ! $$sig_specs{'UsePress'} ) {
+							$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
+						} # end if
+						if ( $$sig_specs{'UsePress'} eq $Press->strid() ) {
+							$on_press = 1;
+						} # end if	
+						last if $on_press;
+					} # end foreach sig
+					last if $on_press;
+				} # end foreach Project
+				next if ! $on_press;
+			} # end if
+			push @{$$variable{'Orders'}}, $Order;
+		} # end foreach Order
 	} else {
-		@{$$variable{'Orders'}} = ();
 		return 'There were no companies to filter on.<br/>';
 	} # end if
 	%{$$variable{'Companies'}} = %companies;
 	return '';
 ) ?>
 <? if ( @{$$variable{'Orders'}} ) ?>
-<table class="List">
+<? if ( $param{'press_id'} ) ?>
+The following had one or more signatures that ran on <? echo ( join(': ', new openprint::Equipment( $param{'press_id'} )->get('strid','name') ); ) ?><br/><br/>
+<? endif ( $param{'press_id'} ) ?>
+<table class="List sortable">
 	<tr>
 		<th width="60" align="left">Order #</th>
 		<th width="55" align="left">Docket #</th>
@@ -36,45 +59,42 @@
 		<th align="left">Project References</th>
 		<th width="120" align="left">Date</th>
 		<th width="120" align="left">Status</th>
-		<th width="75" align="right">Total</th>
+		<th class="Price">Total</th>
 	</tr>
-	<? while ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
-	<? if ( exists $$variable{'Companies'}{int($$variable{'Order'}->company_id())} ) ?>
-	<tr<?rowclass?>>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Order'}->company_name() ); ) ?></a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>">
-		<? echo ( 
-			my $html;
-			foreach my $Project ( $$variable{'Order'}->projects() ) {
-			$html .= ssi::htmlize($Project->reference() ). '<br/>';;
-			} # end foreach
-			return $html;
-			) ?>
-		</a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></a></td>
-		<td><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
-		<td align="right"><a href="/employee/order/view.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>">$<? echo ( $$variable{'Order'}->total(); ) ?></a></td>
-	</tr>
-	<? eval ( 
-		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-		$$variable{'Total'} += $$variable{'Order'}->total();
-		$$variable{'Count'} += 1;
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		my $total;
+		foreach my $Order ( @{$$variable{'Orders'}} ) {
+			my $price = $Order->Currency()->convert_from( $Order->total() );
+			$html .= sprintf(q`
+				<tr%1$s>
+					<td><a href="/employee/order/view.html?order_id=%2$d">%2$d</a></td>
+					<td><a href="/employee/order/view.html?order_id=%2$d">%3$d</a></td>
+					<td><a href="/employee/order/view.html?order_id=%2$d">%4$s</a></td>
+					<td><a href="/employee/order/view.html?order_id=%2$d">%5$s</a></td>
+					<td><a href="/employee/order/view.html?order_id=%2$d">%6$s</a></td>
+					<td><a href="/employee/order/view.html?order_id=%2$d">%7$s</a></td>
+					<td class="Price"><a href="/employee/order/view.html?order_id=%2$d">%8$s</a></td>
+				</tr>
+				`, $rowclass, $Order->id(), $Order->docket(), ssi::htmlize($Order->company_name() ), join('<br/>', map { ssi::htmlize($_->reference()) } $Order->Projects() ), 
+			Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Order->created_on() ) ), $Order->status(), openprint::Currency::format( $price ),
+			);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$total += $price;
+		} # end foreach Order
+		$html .= sprintf(q`<tr class="totals">
+			<td align="right">Count:</td>
+			<td>%d</td>
+			<td align="right">Average Value:</td>
+			<td>%s</td>
+			<td colspan="2" align="right">Total:</td>
+			<td class="Price">%s</td>
+		</tr>`, scalar @{$$variable{'Orders'}}, openprint::Currency::format( $total/scalar @{$$variable{'Orders'}} ), openprint::Currency::format( $total ) );
+		return $html;
 	) ?>
-	<? endif ( exists $$variable{'Companies'}{int($$variable{'Order'}->company_id())} ) ?>
-	<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}} ) ?>
-<? if ( $$variable{'Count'} ) ?>
-	<tr class="totals">
-		<td align="right">Count:</td>
-		<td><?Count?></td>
-		<td align="right">Average Value:</td>
-		<td>$<? echo ( sprintf('%.2f', $$variable{'Total'}/$$variable{'Count'} ); ) ?></td>
-		<td colspan="2" align="right">Total:</td>
-		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Total'} ); ) ?></td>
-	</tr>
-<? endif ( $$variable{'Count'} ) ?>
 </table>
+<span class="Currency">All prices shown are in <? echo ( openprint::Currency::get_current()->name() ) ?>.</span>
 <? else ( @{$$variable{'Orders'}} ) ?>
 There were no orders matching your criteria.  Please try again.
 <? endif ( @{$$variable{'Orders'}} ) ?>
