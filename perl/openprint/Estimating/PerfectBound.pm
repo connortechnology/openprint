@@ -389,7 +389,7 @@ sub calc {
 			} # end if
 			my $servicePrice = $$Price{'LastPassServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: last pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-			if ( my $GluePrice = $$Price{'GluePrice'} ) {
+			if ( $$Price{'Glue'} and ( my $GluePrice = $$Price{'GluePrice'} ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $$Price{'Glue'}->description(), @$GluePrice{'Price','units','Total'}, @$specs{'Width','txtCalliper'} );
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'Price'})).'<br/><br/>';
