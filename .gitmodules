@@ -13,3 +13,6 @@
 [submodule "skins/Topknotch Trade"]
 	path = skins/Topknotch Trade
 	url = iconnor@penultima.org:/var/lib/git/Topknotch Trade
+[submodule "skins/Topknotch Prep & Print"]
+	path = skins/Topknotch Prep & Print
+	url = iconnor@penultima.org:/var/lib/git/Topknotch Prep & Print
