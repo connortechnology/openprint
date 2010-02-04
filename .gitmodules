@@ -1,9 +1,3 @@
-[submodule "skins/Topknotch Quote"]
-	path = skins/Topknotch Quote
-	url = iconnor@penultima.org:/var/lib/git/Topknotch Quote/
-[submodule "skins/Topknotch Print"]
-	path = skins/Topknotch Print
-	url = iconnor@penultima.org:/var/lib/git/Topknotch Print/
 [submodule "skins/Process Envelope"]
 	path = skins/Process Envelope
 	url = iconnor@penultima.org:/var/lib/git/Process Envelope/
@@ -12,7 +6,13 @@
 	url = iconnor@penultima.org:/var/lib/git/SimplePrintSolutions
 [submodule "skins/Topknotch Prep & Print"]
 	path = skins/Topknotch Prep & Print
-	url = iconnor@penultima.org:/var/lib/git/Topknotch Prep & Print/
+	url = iconnor@penultima.org:/var/lib/git/Topknotch Prep & Print
+[submodule "skins/Topknotch Print"]
+	path = skins/Topknotch Print
+	url = iconnor@penultima.org:/var/lib/git/Topknotch Print
+[submodule "skins/Topknotch Quote"]
+	path = skins/Topknotch Quote
+	url = iconnor@penultima.org:/var/lib/git/Topknotch Quote
 [submodule "skins/Topknotch Trade"]
 	path = skins/Topknotch Trade
 	url = iconnor@penultima.org:/var/lib/git/Topknotch Trade
