@@ -425,6 +425,7 @@ sub get_price {
 		'RunTime'	=> 0,
 		'Passes'	=> 0,
 		'MPrice'	=> 0,
+		'Waste'		=> 0,	
 		'Imposition' => $$specs{'Imposition'.$qty_index},
 	);
 
@@ -538,6 +539,23 @@ sub get_price {
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 
+	if ( my $Spec = $Equipment->Specification('Make Ready Waste', $neededPockets ) ) {
+		if ( $$Spec{'units'} eq 'Sheets' ) {
+			$price{'Waste'} = $$Spec{'value'};
+			if ( $$Spec{'units'} eq 'Percent' ) {
+				$price{'Waste'} = $qty*($$Spec{'value'}/100);
+			} # end if
+		} # end if
+	} # end if
+	if ( my $Spec = $Equipment->Specification('Run Waste', $neededPockets ) ) {
+		if ( $$Spec{'units'} eq 'Sheets' ) {
+			$price{'Waste'} += $$Spec{'value'};
+			if ( $$Spec{'units'} eq 'Percent' ) {
+				$price{'Waste'} += $qty*($$Spec{'value'}/100);
+			} # end if
+		} # end if
+	} # end if
+
 	$price{'Price'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'} + $price{'GluePrice'}{'Total'};
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
 	return \%price;
@@ -612,10 +630,5 @@ sub runtime {
 	return $runTime;
 } # end sub get_runtime
 
-
 1;
-__END__
-
-1;
-
 __END__

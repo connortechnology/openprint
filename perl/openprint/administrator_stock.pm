@@ -155,7 +155,6 @@ sub stock {
 		$Paper->multipart( $param{'multipart'} );
 		$Paper->perfecting( $param{'perfecting'} );
 		$Paper->score_required( $param{'scoring'} );
-#following line added on june-30-2008
 		$Paper->req_die_scoring( $param{'diescoring'} );
 		$Paper->digital( $param{'digital'} );
 		$Paper->bladecleaning( $param{'bladecleaning'} );
@@ -171,10 +170,9 @@ sub stock {
 		$Paper->full_packages( $param{'full_packages'} );
 		$Paper->message( $param{'message'} );
 
-		my %types = map { $_->name(), $_->id() } openprint::ProjectType::find();
 		@{$$Paper{'recommendations'}} = ();
-		foreach my $type ( keys %types ) {
-			push @{$$Paper{'recommendations'}}, $type if $param{'chkPRF'.$type};
+		foreach my $Type ( openprint::ProjectType::find() ) {
+			push @{$$Paper{'recommendations'}}, $Type->id() if $param{'chkPRF'.$Type->id()};
 		} # end foreach
 
 # Save prices

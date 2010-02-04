@@ -415,11 +415,10 @@ sub save {
     sql::execute( undef, undef, q{DELETE FROM StockGroups WHERE id NOT IN (SELECT DISTINCT group_id FROM Papers)} );
     sql::execute( undef, undef, q{DELETE FROM StockMaterials WHERE id NOT IN (SELECT DISTINCT material_id FROM Papers)} );
 
-    my %types = map { $_->name(), $_->id() } openprint::ProjectType::find();
 	my @recommendations = $self->recommendations();
     sql::execute( undef, undef, q{DELETE FROM Paper_Recommendations WHERE lngPaperIndex=?}, $$self{'id'} );
 	foreach my $rec ( @recommendations ) {
-		sql::insert( undef, undef, 'Paper_Recommendations', 'lngPaperIndex', $$self{'id'},'lngProjectTypeIndex', $types{$rec} );
+		sql::insert( undef, undef, 'Paper_Recommendations', 'lngPaperIndex', $$self{'id'},'lngProjectTypeIndex', $rec );
 	} # end foreach
 
 	foreach my $Price ( $self->prices() ) {
@@ -923,7 +922,7 @@ sub recommendations {
 	if ( @_ ) {
 		@{$$self{'recommendations'}} = @_;
 	} elsif ( ! exists $$self{'recommendations'} ) {
-		@{$$self{'recommendations'}} = sql::execute( undef, undef, q{SELECT name FROM Project_Types WHERE id IN ( SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?)}, $$self{'id'} );
+		@{$$self{'recommendations'}} = sql::execute( undef, undef, q{SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?}, $$self{'id'} );
 	} # end if
 	return @{$$self{'recommendations'}};
 } # end sub recommendations

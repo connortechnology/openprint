@@ -199,10 +199,10 @@
 				</p>
 				<p> 
 					<label>Grain Direction:</label>
-					<input type="radio" name="grain_direction" id="grain_directionLong" value="Long" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq $$variable{'Stock'}->long() ); ) ?> />
-					<label class="radio" for="grain_directionLong">Long</label>
-					<input type="radio" name="grain_direction" id="grain_directionShort" value="Short" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq $$variable{'Stock'}->short() ); ) ?> />
-					<label class="radio" for="grain_directionShort">Short</label>
+					<input type="radio" name="grain_direction" id="grain_directionwidth" value="width" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq 'width' ); ) ?> />
+					<label class="radio" for="grain_directionwidth">Width</label>
+					<input type="radio" name="grain_direction" id="grain_directionheight" value="height" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq 'height' ); ) ?> />
+					<label class="radio" for="grain_directionheight">Height</label>
 				</p>
 				<p> 
 					<label>Customer Supplied:</label>
@@ -339,7 +339,7 @@
 							$ProjectType->id(),
 							URI::Escape::uri_escape($ProjectType->name()),
 							ssi::htmlize($ProjectType->description()),
-							ssi::checked( sets::isin( $ProjectType->name(), [ $$variable{'Stock'}->recommendations() ] ) ),
+							ssi::checked( sets::isin( $ProjectType->id(), [ $$variable{'Stock'}->recommendations() ] ) ),
 							);
 					} # end foreach
 					return $html;
