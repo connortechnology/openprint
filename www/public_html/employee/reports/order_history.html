@@ -61,7 +61,7 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)') ], $param{'press_id'} ); ) ?>
 			</select>
 		</p>
-		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>CSR:</label>
 			<select name="CSR" size="1">
@@ -87,7 +87,7 @@
 				<option value="company">Company</option>
 			</select>
 		</p>
-		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
 		 <p class="buttons">
 			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "AjaxLoadContent('Results','/employee/reports/_order_history_results.html', f1.serialize() );", '', 'Show Results' ); ) ?>
 		 </p>
