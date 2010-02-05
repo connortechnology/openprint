@@ -1,6 +1,3 @@
-[submodule "skins/Process Envelope"]
-	path = skins/Process Envelope
-	url = iconnor@penultima.org:/var/lib/git/Process Envelope/
 [submodule "skins/SimplePrintSolutions"]
 	path = skins/SimplePrintSolutions
 	url = iconnor@penultima.org:/var/lib/git/SimplePrintSolutions
