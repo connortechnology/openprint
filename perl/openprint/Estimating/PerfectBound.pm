@@ -389,7 +389,7 @@ sub calc {
 			} # end if
 			my $servicePrice = $$Price{'LastPassServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: last pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-			if ( my $GluePrice = $$Price{'GluePrice'} ) {
+			if ( $$Price{'Glue'} and ( my $GluePrice = $$Price{'GluePrice'} ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('%1$s Price: $%2$.2f%3$s * %5$.2f * %6$.4f =$%4$.2f<br/>', $$Price{'Glue'}->description(), @$GluePrice{'Price','units','Total'}, @$specs{'Width','txtCalliper'} );
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$Price{'Price'})).'<br/><br/>';
@@ -425,6 +425,7 @@ sub get_price {
 		'RunTime'	=> 0,
 		'Passes'	=> 0,
 		'MPrice'	=> 0,
+		'Waste'		=> 0,	
 		'Imposition' => $$specs{'Imposition'.$qty_index},
 	);
 
@@ -538,6 +539,23 @@ sub get_price {
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
 
+	if ( my $Spec = $Equipment->Specification('Make Ready Waste', $neededPockets ) ) {
+		if ( $$Spec{'units'} eq 'Sheets' ) {
+			$price{'Waste'} = $$Spec{'value'};
+			if ( $$Spec{'units'} eq 'Percent' ) {
+				$price{'Waste'} = $qty*($$Spec{'value'}/100);
+			} # end if
+		} # end if
+	} # end if
+	if ( my $Spec = $Equipment->Specification('Run Waste', $neededPockets ) ) {
+		if ( $$Spec{'units'} eq 'Sheets' ) {
+			$price{'Waste'} += $$Spec{'value'};
+			if ( $$Spec{'units'} eq 'Percent' ) {
+				$price{'Waste'} += $qty*($$Spec{'value'}/100);
+			} # end if
+		} # end if
+	} # end if
+
 	$price{'Price'} = $price{'MakeReady'} + $price{'Service'} + $price{'Insert'} + $price{'GluePrice'}{'Total'};
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition') . 'Discount: ' . $Equipment->specification( 'Imposition Discount', $price{Imposition} ) . ' ' . $price{'Price'} ) if $debug;
 	return \%price;
@@ -612,10 +630,5 @@ sub runtime {
 	return $runTime;
 } # end sub get_runtime
 
-
 1;
-__END__
-
-1;
-
 __END__

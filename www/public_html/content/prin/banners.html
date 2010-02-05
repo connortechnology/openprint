@@ -1,14 +1,16 @@
 <form id="f1" name="f1" method="post" action="">
 	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
-	<input type="hidden" id="PrintingType" name="PrintingType" value="<?PrintingType?>" />
 	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
 	<div class="InstantPricing">
 		<div id="instant_price_section">
 		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 		   <div class="shadow_left"><div class="shadow_right">
                         
-				<div class="Questions">
-					<h3>Instant Pricing</h3>
+				<div class="Questions"><div class="<? echo ( $$variable{'ProjectType'}->name() ) ?>">
+					<!--#include virtual="_project_name.html"-->
+					<div class="ProjectSpecifications">
+						<h1>Project Specifications</h1>
+
 
 					<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
 					<!--#include virtual="/includes/sizes.html"-->
@@ -45,8 +47,12 @@
 		   </div>
 		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
-		<h2><? echo ( $$variable{'ProjectTypeName'} ) ?> printing - full colour</h2>
-		<!--#include virtual="<? echo ( '/content/'.$$variable{'ProjectTypeName'}.'.html' ) ?>" -->
 </div><!--instant_price_section-->
+<? echo ( 
+	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
+		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );
+	} # end if
+	return '';
+) ?>
 	</div><!--InstantPricing-->
 </form>

@@ -147,6 +147,9 @@ sub calc {
 			@Materials = openprint::Material::find('category'=>$ServiceType->name() );
 		} # end if
 $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
+		if ( ! @Materials ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= "There are no materials for " . $ServiceType->name();
+		} # end if
 
 		foreach my $Material ( @Materials ) {
 			my ( $items_by_weight, $items_by_size, $items_per_package );
