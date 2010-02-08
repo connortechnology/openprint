@@ -16,6 +16,8 @@ require openprint::OrderedProduct;
 require openprint::Payment;
 require openprint::Tax;
 
+my $debug = 1;
+
 %fields = (
 	'id'						=> 'index',
 	'session_id'				=>	'strsessionid',
@@ -490,24 +492,24 @@ sub federal_tax {
 
 sub state_tax {
 	my ( $self, $new ) = @_;
-$log->debug("state_tax");
+#$log->debug("state_tax");
 	if ( $new ) {
 		$$self{'state_tax'} = $new;
 	} elsif ( ! defined $$self{'state_tax'} ) {
 		$$self{'state_tax'} = '';
 		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-$log->debug("Not exempt");
+#$log->debug("Not exempt");
 			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
-$log->debug("Taxes: " . @Taxes );
+#$log->debug("Taxes: " . @Taxes );
 			if ( @Taxes == 1 ) {
 				my $tax_rate = $Taxes[0]->statetax_rate();
-$log->debug("State tax rate: $tax_rate");
+#$log->debug("State tax rate: $tax_rate");
 				if ( $tax_rate ) {
 					$$self{'state_tax'} = $self->subtotal() * ( $tax_rate/100 );
 				} # end if tax_rate
 			} # no tax for this state/country
-} else {
-$log->debug("exempt" . $self->Company()->pst_exempt());
+#} else {
+#$log->debug("exempt" . $self->Company()->pst_exempt());
 		} # end if pst_exempt ne 'Y'
 	} # end if ! $$self{'state_tax'};
 	return $$self{'state_tax'};
@@ -540,21 +542,21 @@ sub subtotal {
 		$$self{'subtotal'} = 0;
 		foreach my $Project ( $self->Projects() ) {
 			my $price = $Project->ordered_price();
-$log->debug("subtotal: ordered price: $price");
+#$log->debug("subtotal: ordered price: $price");
 			if ( $Project->currency_id() != $$self{'currency_id'} ) {
 				my $rate = $Project->Currency()->conversions( $$self{'currency_id'} );
 				$price *= $rate;
-$log->debug("subtotal: ordered price converted to: $price");
+#$log->debug("subtotal: ordered price converted to: $price");
 			} # end if
 			$$self{'subtotal'} += $price;
 		} # end foreach Project
 		foreach my $Product ( $self->Products() ) {
 			my $price = $Product->price();
-$log->debug("subtotal: ordered price: $price");
+#$log->debug("subtotal: ordered price: $price");
 			if ( $Product->currency_id() != $$self{'currency_id'} ) {
 				my $rate = $Product->Currency()->conversions( $$self{'currency_id'} );
 				$price *= $rate;
-$log->debug("subtotal: ordered price converted to: $price rate($rate) $$self{'currency_id'} != ".$Product->currency_id());
+#$log->debug("subtotal: ordered price converted to: $price rate($rate) $$self{'currency_id'} != ".$Product->currency_id());
 			} # end if
 			$$self{'subtotal'} += $price;
 		} # end foreach Project
@@ -568,6 +570,7 @@ sub total {
 		$$self{'total'} = shift;
 	} elsif ( sets::isin( $$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'total'} ) {
 		$$self{'total'} = $self->subtotal() + $self->state_tax() + $self->federal_tax() + $self->harmonized_tax();
+$log->debug("Calcingtotal $$self{total}");
 	} # end if
 	return $$self{'total'};
 } # end sub total
