@@ -27,14 +27,14 @@
 		<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ( $$variable{'Project'}->quantity_indexes() > 1 ) ) ?>
 		<!--#include virtual="_quantity_select.html"-->
 		<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ( $$variable{'Project'}->quantity_indexes() > 1 ) ) ?>
+<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
 		<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
 		<!--#include virtual="_required_by.html"-->
 		<? else ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
 			<? if ( $$variable{'Project'}->requested_date() ) ?>
-			<li><label>Requested For:</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></li>
+			<li class="requested_for"><label>Requested For:</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></li>
 			<? endif ( $$variable{'Project'}->requested_date() ) ?>
 		<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
-<? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
 				</ul>
 			</div>
 		</fieldset>
