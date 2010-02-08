@@ -1124,6 +1124,9 @@ sub Company {
 
 sub requested_date {
 	my $self = shift;
+	if ( @_ ) {
+		$$self{'requested_date'} = $_[0];
+	} # end if
 	return $$self{'requested_date'};
 } # end sub requested_date
 
