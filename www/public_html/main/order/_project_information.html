@@ -10,7 +10,18 @@
 	<ul>
 		<li class="SubTotal">
 			<label>Cost:</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Project'}->ordered_price() ) ); ) ?>
+			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Project'}->production_cost() ) ); ) ?>
 		</li>
 	</ul>
 </div>
+<? if ( $$variable{'Project'}->delivery_cost() ) ?>
+<div class="Delivery">
+	<h3>Delivery</h3>
+	<ul>
+		<li class="Cost">
+			<label>Cost:</label>
+			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Project'}->delivery_cost() ) ); ) ?>
+		</li>
+	</ul>
+</div>
+<? endif ( $$variable{'Project'}->delivery_cost() ) ?>

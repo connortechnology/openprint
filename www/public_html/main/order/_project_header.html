@@ -11,7 +11,7 @@
 		<fieldset><legend>Project Information</legend>
 			<div class="content">
 				<ul>
-					<li>
+					<li class="reference">
 						<label>Reference:</label>
 						<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->reference() ) ?>
 						<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
@@ -19,7 +19,7 @@
 						<? echo ( $$variable{'Project'}->reference(); ) ?>
 						<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->reference() ) ?>
 					</li>
-					<li><label>Project Number:</label><? echo ( $$variable{'Project'}->id() ) ?></li>
+					<li class="project_id"><label>Project Number:</label><? echo ( $$variable{'Project'}->id() ) ?></li>
 <? if ( $$variable{'Project'}->ordered_quantity() ) ?>
 					<li><label>Quantity:</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
 <? endif ( $$variable{'Project'}->ordered_quantity() ) ?>

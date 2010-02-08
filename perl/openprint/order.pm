@@ -397,6 +397,7 @@ $log->warn($$specs{'alert'}) if $$specs{'alert'};
 	} # end if
 
 	$Project->reference( $param{"Reference$project_index"} ) if $param{"Reference$project_index"};
+	$Project->price( $Project->ordered_quantity_index(), undef );
 	$Project->save();
 
 } # end foreach save_project_information

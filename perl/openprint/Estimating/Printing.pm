@@ -3140,7 +3140,7 @@ sub calc_price {
 			);
 	$max_impressions = int($max_impressions);
 	$max_impressions = 250000 if ! $max_impressions;
-	my $plate_runs = ceil($impressions/$max_impressions);
+	my $plate_runs = ceil($plate_impressions/$max_impressions);
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
 	my %plate_setup = (
 			'Plate Type', $plate_type,
