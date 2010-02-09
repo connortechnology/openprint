@@ -1490,6 +1490,23 @@ sub _check_for_skid {
 
 } # end sub _check_for_skid
 
+sub prepress_schedule {
+	if ( %param ) {
+		if ( $param{'btnFunction'} eq 'Reset' ) {
+			foreach my $param ( 'Presses' ) {
+				delete $session{'/employee/production/prepress_schedule.html?'.$param};
+			} # end if
+		} else {
+			ssi::save_params( '/employee/production/prepress_schedule.html', ( 'Presses','statuses','scale' ) );
+		} # end if
+	} elsif ( ( time - $session{'/employee/production/prepress_schedule.html?lastupdated'} ) > 24*60*60 ) {
+		foreach my $param ( 'Presses', 'statuses','scale' ) {
+			delete $session{'/employee/production/prepress_schedule.html?'.$param};
+		} # end if
+	} # end if
+	$session{'/employee/production/prepress_schedule.html?lastupdated'} = time;
+} # end sub prepress_schedule
+
 1;
 __END__
 ~	   

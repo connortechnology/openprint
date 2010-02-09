@@ -344,6 +344,19 @@ fieldset.filters {
         display: none;
     }
 }
+fieldset.filters:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html fieldset.filters {height: 1%;}
+fieldset.filters {display: block;}
+/* End hide from IE-mac */
 
 fieldset.filters p {
 	padding-left: 135px;

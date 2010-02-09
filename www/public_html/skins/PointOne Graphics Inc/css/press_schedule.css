@@ -81,10 +81,11 @@ div.row {
 	div.PressColumn li br {
 		clear: both;
 	}
-	div.PressColumn li.yellow {
+	li.yellow, li.scheduled {
 		background-color: #ffff99;
 	}
-	div.PressColumn li.blue {
+	li.blue, li.unscheduled {
+		background-color: #ffffff;
 	}
 	div.PressColumn li.green {
 		background-color: #99ff99;
@@ -96,7 +97,7 @@ div.row {
 		background-color: #FF0000;
 		color: black;
 	}
-	div.PressColumn li.rush {
+	li.rush {
 		border: 2px solid blue;
 	} 
 	.When {
@@ -177,7 +178,11 @@ div.row {
 	.Services .Service {
 		float: left;
 		margin-right: 5px;
+		text-transform: capitalize;
 	}
+	.Services .nobindery {
+		text-transform: uppercase;
+	} 
 	.commands {
 		border-top: 1px solid #000000;
 	}
@@ -247,4 +252,26 @@ span.CSR {
 span.PrepressOperator {
 	font-weight: normal;
 	text-transform: lowercase;
+}
+
+div.presses, div.statuses, div.legend {
+	width: 30%;
+	float: left;
+}
+div.legend p {
+	padding-left: 100px;
+}
+div.legend p label {
+	margin-left: -100px;
+	width: 95px;
+}
+div.legend ul {
+	list-style:none;
+	margin: 0px;
+	padding:0px;
+}
+div.legend li {
+	list-style:none;
+	margin: 0px;
+	padding:0px;
 }
