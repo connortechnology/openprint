@@ -146,13 +146,15 @@
 		my $html;
 		foreach my $status ( @{$$variable{'statuses'}} ) {
 			$html .= '<fieldset><legend>'.$status.'</legend>';
+			my @Projects = openprint::Project::find('status'=>$status, 'order'=>'lngdocketnumber' );
+
 			foreach my $E ( @{$$variable{'Presses'}} ) {
 				$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;"><a href="/employee/production/prepress_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
 			} # end foreach
 			foreach my $E ( @{$$variable{'Presses'}} ) {
 				$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
 				$html .= '<ul>';
-				foreach my $Project ( openprint::Project::find('status'=>$status, 'order'=>'lngdocketnumber' ) ) {
+				foreach my $Project ( @Projects ) {
 					next if ! $Project->docket();
 					my $services = $Project->services();
 
@@ -162,7 +164,7 @@
 					foreach my $sig_id ( $Project->signatures() ) {
 						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 						$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
-						if ( $$sig_specs{'UsePress'} = $E->strid() ) {
+						if ( $$sig_specs{'UsePress'} eq $E->strid() ) {
 							$onpress = 1;
 						} else {
 							next;
@@ -216,9 +218,9 @@
 						$html .= sprintf( '<span class="Forms">%d %s</span>', $forms, $forms > 1 ? ' forms' : ' form' );
 						$html .= sprintf( '<span class="Impressions">%d imps</span>', $impressions );
 					} # end if
-					$html .= '<br/></li>';
+					$html .= '</li>';
 				} # end foreach Project
-				$html .= '</ul>';
+				$html .= '</ul></div>';
 			} # End foreach Press
 			$html .= '</fieldset>';
 		} # end foreach status
