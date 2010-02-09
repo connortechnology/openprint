@@ -210,8 +210,8 @@ sub comment {
 		} # end foreach sig_id
 	} # end if
 
-	#if ( ( ! $comment ) and $$self{'service_id'} and @{$$self{'service_id'}} ) {
-	if ( $$self{'service_id'} and @{$$self{'service_id'}} ) {
+	if ( ( ! $comment ) and $$self{'service_id'} and @{$$self{'service_id'}} ) {
+	#if ( $$self{'service_id'} and @{$$self{'service_id'}} ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
 
 		$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
@@ -232,12 +232,12 @@ sub comment {
 				} # end if
 			} # end if
 		} else {
-			$comment .= 'This press does not fold';
+			#$comment .= 'This press does not fold';
 		} # end if
 		# Store it.
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'txtEmployeeComments', $comment );
-		} # end foreach sig_id	
+		#foreach my $sig_id ( @{$$self{'service_id'}} ) {
+			#openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'txtEmployeeComments', $comment );
+		#} # end foreach sig_id	
 	} # end if has service_ids
 
 	return $comment;
