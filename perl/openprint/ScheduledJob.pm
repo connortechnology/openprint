@@ -215,7 +215,14 @@ sub comment {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
 
 		$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
-		$comment .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
+		#$comment .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
+		my $Stock;
+		if ( my @PA = openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
+			$Stock = $PA[0]->Paper();
+		} else {
+			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() );
+		} # end if
+		$comment .= ' on ' . $Stock->to_string();
 
 		my $Equipment = new openprint::Equipment($$self{'equipment_id'});
 		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
@@ -249,7 +256,7 @@ sub get_li {
 # a 12hour shift ~= 600px, so each hour gets 50px;
 	my $scale = $session{'/employee/production/print_overview.html?scale'};
 	my @Presses = split(';', $session{'/employee/production/print_overview.html?Presses'} );
-	my $min_height = 40 + ( 10 * ( @Presses ? @Presses : 1 ) );
+	my $min_height = 50 + ( 10 * ( @Presses ? @Presses : 1 ) );
 	my $height;
 	if ( ! $scale ) {
 		$height = $min_height;
