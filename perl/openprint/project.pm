@@ -119,6 +119,7 @@ $openprint::log->debug("Viewing Project $project_index");
 							} # end foreach q
 							splice @{$services{$id}}, $i, 1;
 							$i -= 1;
+		
 						} # end if
 					} # end for
 					if ( $sig_qty > 1 ) {
@@ -131,20 +132,18 @@ $openprint::log->debug("Viewing Project $project_index");
 				
 			} # end foreach
 		} else {
-		
-		foreach my $service_index ( @{$services{$id}} ) {
-			if ( $n eq 'Outside Service' ) {
-				push @services, $project{$service_index}{'ServiceName'}, $url, $service_index;
-			} else {
-				push @services, $n, $url, $service_index;
-			} # end if
-		} # end foreach
+			foreach my $service_index ( @{$services{$id}} ) {
+				if ( $n eq 'Outside Service' ) {
+					push @services, $project{$service_index}{'ServiceName'}, $url, $service_index;
+				} else {
+					push @services, $n, $url, $service_index;
+				} # end if
+			} # end foreach
 		} # end if
 	} # end while
 
 	while ( @services ) {
 		my ( $name, $url, $service_index ) = splice @services, 0, 3;
-
 
 		push @{$$variable{'SERVICES'}}, $service_index, $name, $url;
 
@@ -159,7 +158,7 @@ $openprint::log->debug("Viewing Project $project_index");
 		} # end foreach qty_index
 
 		push @{$$variable{'SERVICES'}}, $statuses{$service_index};
-	} # end foreach
+	} # end while ( @services )
 
 	if ( 
 			( $$variable{'Project'}->price1() != $$variable{'Total1'} ) or 
@@ -172,7 +171,7 @@ $openprint::log->debug("Viewing Project $project_index");
 		$$variable{'Project'}->price3( $$variable{'Total3'} );
 		$$variable{'Project'}->save();
 	} # end if
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 		$$variable{"Total$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$variable{"Total$qty_index"}*$conversion_rate );
 		$$variable{"UnitPrice$qty_index"} = sprintf( '%.2f', $$variable{"UnitPrice$qty_index"}*$conversion_rate );
 	} # end foreach

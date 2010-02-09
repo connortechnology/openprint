@@ -60,9 +60,7 @@ div#main_content:after {
 /* End hide from IE-mac */
 
 div#main_content_inner {
-	padding: 0px;
-	padding-right: 20px;
-	padding-left: 186px;
+	padding: 0px 0px 0px 186px;
 	background-color: #fff;
 	display: inline-block;
 	overflow: hidden;
@@ -80,25 +78,10 @@ div#main_content_inner:after {
 /* End hide from IE-mac */
 
 div#left_sidebar {
-	display: inline-block;
 	float: left;
 	margin: 0px;
-	margin-right: 4px;
 	width: 180px;
-	margin-left: -90px;
-}
-html>body #left_sidebar {
 	margin-left: -185px;
-}
-div#left_sidebar_content {
-	background-image: url(/images/shadow_border/left_sidebar_bg.gif);
-	background-repeat: repeat-y;
-	padding-left: 20px;
-}
-div#left_sidebar_inner {
-	text-align: left;
-	width: 150px;
-	margin: 0px auto 0px auto;
 }
 div#content_container {
 	background-color: #fff;
@@ -121,40 +104,35 @@ background-repeat: repeat-x;
 background-color: #fff;
 height: 22px;
 }
-div.shadow_tl
-{
+div.shadow_tl {
 float: left;
 background-image: url(/images/shadow_border/tl.gif);
 background-repeat: no-repeat;
 width: 26px;
 height: 22px;
 }
-div.shadow_tr
-{
+div.shadow_tr {
 float: right;
 background-image: url(/images/shadow_border/tr.gif);
 background-repeat: no-repeat;
 width: 17px;
 height: 22px;
 }
-div.bottom_shadow
-{
+div.bottom_shadow {
 clear: left;
 background-image: url(/images/shadow_border/bottom.gif);
 background-repeat: repeat-x;
 background-color: #fff;
 height: 22px;
 }
-div.shadow_bl
-{
+div.shadow_bl {
 float: left;
 background-image: url(/images/shadow_border/bl.gif);
 background-repeat: no-repeat;
 width: 26px;
 height: 22px;
 }
-div.shadow_br
-{
+div.shadow_br {
 float: right;
 background-image: url(/images/shadow_border/br.gif);
 background-repeat: no-repeat;
@@ -162,46 +140,25 @@ width: 17px;
 height: 22px;
 }
 div#main_page {
-	float: left;
-	width: 100%;
-	background-image: url(/images/shadow_border/main_page_bg-l.png);
-	background-repeat: repeat-y;
-}
-div#main_page:after {
-	content: ".";
-	display: block;
-	height: 0;
-	clear: both;
-	visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div#main_page {height: 1%;}
-/* End hide from IE-mac */
-div#main_page2 {
-	background-image: url(/images/shadow_border/main_page_bg-r.png);
-	background-repeat: repeat-y;
-	background-position: right;
+padding-right: 10px;
+float: left;
 }
 div#main_page_content {
 	padding-left: 20px;
 	padding-right: 10px;
 }
-div#main_page_inner
-{
-background-color: #fff;
-padding: 5px 0px 5px 0px;
-overflow: hidden;
-}
-div#main_page_inner:after {
-content: ".";
-display: block;
-height: 0;
-clear: both;
-visibility: hidden;
+div#main_page_content:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
 }
 /* Hides from IE-mac \*/
-* html div#main_page_inner {height: 1%;}
+* html div#main_page_content {height: 1%;}
+* div#main_page_content {display:block;}
 /* End hide from IE-mac */
+
 div#choose_currencies_top
 {
 font-size: 12px;
@@ -239,18 +196,26 @@ div.InstantPricing .shadow_tr {
 	width: 21px;
 	height: 20px;
 }
-div.InstantPricing .shadow_left {
-background-image: url(/images/instant_pricing/shadow_border/left.gif);
+.shadow_left {
+background-image: url(/images/shadow_border/left.gif);
 background-repeat: repeat-y;
 background-position: left;
-padding-left: 7px;
+padding: 0px 0px 0px 14px;
 }
-div.InstantPricing .shadow_right {
-background-color: #e4d9f2;
-background-image: url(/images/instant_pricing/shadow_border/right.gif);
+div.InstantPricing .shadow_left {
+padding-left: 7px;
+background-image: url(/images/instant_pricing/shadow_border/left.gif);
+}
+.shadow_right {
+background-image: url(/images/shadow_border/right.gif);
 background-repeat: repeat-y;
 background-position: right;
+padding: 0px 4px 0px 0px;
+}
+div.InstantPricing .shadow_right {
 padding-right: 7px;
+background-image: url(/images/instant_pricing/shadow_border/right.gif);
+background-color: #e4d9f2;
 }
 div.InstantPricing .bottom_shadow {
 clear: left;

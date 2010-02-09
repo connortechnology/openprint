@@ -3,9 +3,8 @@
 		$$variable{'ProjectTypeID'} = $$variable{'ProjectTypeName'};
 	} # end if
 ) ?>
-<div class="row">
-	<span class="label">Type:</span>
-	<span class="input">
+<p>
+	<label>Type:</label>
 		<select name="ddmStockBrand<?Signature?>" size="1" onchange="ddmStockBrand_onchange( this, '<?Signature?>' );">
 			<option value=""> Please select one </option>
 				<? echo ( 
@@ -17,10 +16,8 @@
 } ) ], $$variable{'ddmStockBrand'} );
 					) ?>
 		</select>
-	</span>
-</div>
-<div class="row"><span class="label">Finish:</span>
-	<span class="input">
+</p>
+<p><label>Finish:</label>
 		<select name="ddmStockFinish<?Signature?>" size="1" onchange="ddmStockFinish_onchange( this, '<?Signature?>' );">
 			<option value=""> Please select one </option>
 				<? echo ( 
@@ -32,10 +29,8 @@
 } ) ], $$variable{'ddmStockFinish'} );
 					) ?>
 		</select>
-	</span>
-</div>
-<div class="row"><span class="label">Colour:</span>
-	<span class="input">
+</p>
+<p><label>Colour:</label>
 		<select name="ddmStockColour<?Signature?>" size="1" onchange="ddmStockColour_onchange( this, '<?Signature?>' );">
 			<option value=""> Please select one </option>
 				<? echo ( 
@@ -47,20 +42,22 @@
 } ) ], $$variable{'ddmStockColour'} );
 					) ?>
 		</select>
-	</span>
-</div>
-<div class="row"><span class="label">Weight:</span>
-	<span class="input">
-		<select name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
-			<option value=""> Please select one </option>
-				<? echo (
-					ssi::make_drop_down( [ openprint::paper::get_weights( @$variable{'ProjectTypeID',
-							'ddmStockBrand'.$$variable{'Signature'},
-							'ddmStockFinish'.$$variable{'Signature'},
-							'ddmStockColour'.$$variable{'Signature'},
-							'ddmStockWeight'.$$variable{'Signature'},
-} ) ], $$variable{'ddmStockWeight'} );
-					) ?>
-		</select>
-	</span>
-</div>
+</p>
+<p id="StockWeightSelect<?Signature?>">
+<? if ( $$variable{'ProjectTypeID'} ne 'Envelopes' ) ?>
+	<label>Weight:</label>
+	<select name="ddmStockWeight<?Signature?>" size="1" onchange="ddmStockWeight_onchange( this, '<?Signature?>' );">
+		<option value=""> Please select one </option>
+		<? echo (
+			ssi::make_drop_down( [ openprint::paper::get_weights( @$variable{'ProjectTypeID',
+					'ddmStockBrand'.$$variable{'Signature'},
+					'ddmStockFinish'.$$variable{'Signature'},
+					'ddmStockColour'.$$variable{'Signature'},
+					'ddmStockWeight'.$$variable{'Signature'},
+					} ) ], $$variable{'ddmStockWeight'} );
+			) ?>
+	</select>
+<? else ( $$variable{'ProjectTypeID'} ne 'Envelopes' ) ?>
+	<input type="hidden" name="ddmStockWeight<?Signature?>" id="ddmStockWeight<?Signature?>" value="<? echo ( $$variable{'ddmStockWeight'.$$variable{'Signature'}} ) ?>" />
+<? endif ( $$variable{'ProjectTypeID'} ne 'Envelopes' ) ?>
+</p>

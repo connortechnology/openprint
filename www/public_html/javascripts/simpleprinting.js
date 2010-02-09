@@ -1,3 +1,19 @@
+
+var showCalcButtonTimeout = null;
+
+function showCalcButton() {
+	/* Called after 5 seconds of calculation, to restore the calc button and put text in the alert box telling the user to try again. */
+	var alertdiv = $('AlertDiv');
+	if ( alertdiv ) {
+		alertdiv.innerHTML = 'The calculation is taking too long.  Something may have gone wrong.  Please click the Calculate Button again to retry.';
+		alertdiv.show();
+	} // end if
+	add_div('Buttons');
+	remove_div('OrderButton');
+	remove_div('Processing');
+	
+} // end function showCalcButton
+
 function FoldType_onchange( select ) {
 	var foldtype = get_ddm_value( select );
 	var image = document.images['FoldType'];
@@ -17,7 +33,7 @@ function cbFoldType_onchange( results ) {
 	//Dimensions_onchange( select );
 }
 
-function calc( formName ) {
+function calc( formName, force ) {
 	var form = getFormObj(formName);
 
 	if ( form.HoleDrilling && ( get_rdb_value( form.HoleDrilling ) == 'Y' ) ) {
@@ -29,6 +45,10 @@ function calc( formName ) {
 	if ( ! form.txtQuantity1 )
 		return;
 	form.txtQuantity1.value = parseInt(1*form.txtQuantity1.value);
+	if ( form.txtPrice1 ) 
+		form.txtPrice1.value='';
+	if ( form.txtUnitPrice1 ) 
+		form.txtUnitPrice1.value='';
 
 	var div = document.getElementById('AlertDiv');
 
@@ -45,16 +65,26 @@ function calc( formName ) {
 	} // end if
 	div.style.display = 'none';
 
-	if ( gettingNewPrice ) {
-		setTimeout("calc('"+formName+"');", 1000 );
-		return;
-	} // end if
+   if ( gettingNewPrice && ! force ) {
+        // This prevents concurrent price getting
+        if ( timeout )
+            clearTimeout( timeout );
+        timeout = setTimeout("calc('f1');", 1000 );
+        return;
+    } // end if
+    timeout = null;
+
 	jsrsExecute( '/jsrs.htm', cbCalc, 'openprint::print_project::calc', get_variables( formName ) );
+	showCalcButtonTimeout = setTimeout('showCalcButton();', 5000 );
 	remove_div('Buttons');
 	add_div('Processing');
 }
 
 function cbCalc( results ) {
+
+	if ( showCalcButtonTimeout ) 
+		clearTimeout( showCalcButtonTimeout );
+
 	cbFillResults(results);
 	var form = getFormObj('f1');
 	add_div('Buttons');
@@ -83,15 +113,18 @@ function cbCalc( results ) {
 }
 
 
-function Dimensions_onchange( select ) {
-	//var value = get_ddm_value( select );
-	//if ( value == 'Custom' ) {
-	//add_div('CustomDimensions');
-	//} else {
+function Dimensions_onchange( select, signature ) {
+	var value = get_ddm_value( select );
+	if ( value == 'Custom' ) {
+	add_div('CustomDimensions');
+	} else {
 	//remove_div('CustomDimensions');
-	//} // end if
+	} // end if
 	remove_div('OrderButton');
-	calc( select.form.name );
+	// Refreshes Paper
+	///jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(select.form, '', '' ) );
+	rdbSuppliedStock_onchange( select, signature );
+	//calc( select.form.name );
 } // end if
 
 var contentWin;

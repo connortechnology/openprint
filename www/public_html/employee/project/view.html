@@ -229,14 +229,29 @@ function open_window( page ) {
 			} # end if
 			
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-				my @schedule = openprint::press_schedule::find('project_id'=>$$variable{'ProjectIndex'} );
-				if ( ! @schedule ) {
+				my $need_add = 0;
+				my $pending = 0;
+				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
+					my $Job = openprint::ScheduledJob::find_one('project_id'=>$$variable{'ProjectIndex'}, 'service_id'=>$sig_id );
+					if ( ! $Job ) {
+						$need_add = 1;
+					} elsif ( ! $Job->starttime() ) {
+						$pending = 1;
+					} # end if
+				} # end foreach sig_id
+
+				if ( ! $need_add ) {
 					$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule', 'addtopressschedule.gif', "f1.btnFunction.value='AddToPressSchedule';f1.submit();", '', 'Add To Press Schedule' );
+				} else {
+					$html .= ssi::writeButton( $log, $dbh, 'RemoveFromPressSchedule', 'removefrompressschedule.gif', "f1.btnFunction.value='RemoveFromPressSchedule';f1.submit();", '', 'Remove from Press Schedule' );
+				} # end if
+				if ( $pending ) {
+					$html .= ssi::writeButton( $log, $dbh, 'ScheduleJob', 'schedulejob.gif', "f1.btnFunction.value='BumpSchedule';f1.submit();", '', 'Schedule' );
 				} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'CompletePrinting', 'completePrinting.gif', "f1.btnFunction.value='Complete Printing';f1.submit();", '', 'Complete Printing' ) if $$variable{'Project'}->status() eq 'Approved';
 			} # end if
 			if ( $$variable{'ProjectStatus'} eq 'Printed' and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'AddToBinderySchedule', 'addtobinderyschedule.gif', "f1.btnFunction.value='AddToBinderySchedule';f1.submit();", '', 'Add To Bindery Schedule' );
+				$html .= ssi::writeButton( $log, $dbh, 'AddToBinderySchedule', 'addtobinderyschedule.gif', "f1.btnFunction.value='AddToBinderySchedule';f1.submit();", '', 'Add To Bindery Schedule' );
 			} # end if
 			#if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
 			#$html .= ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', "f1.btnFunction.value='Complete';f1.submit();", '', 'Complete' );
@@ -250,7 +265,7 @@ function open_window( page ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
 			} # end if
 			if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='DeleteServices';f1.submit();", '', 'Delete Checked Services' );
+				$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='DeleteServices';f1.submit();", '', 'Delete Checked Services' );
 			} # end if
 
 			return $html;

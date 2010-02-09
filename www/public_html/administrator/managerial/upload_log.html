@@ -36,6 +36,9 @@
 			<th align="left">Company</th>
 			<th align="left">User</th>
 			<th align="left">File</th>
+			<th align="left">Received</th>
+			<th align="left">Size</th>
+			<th align="left">Status</th>
 		</tr>
 			<? echo (
 				if ( %openprint::param ) {
@@ -53,13 +56,15 @@
 				);
 
 				foreach my $Upload ( @Uploads ) {
-					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
 						$rowclass,
 						Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Upload->start() ) ),
 						$Upload->company_id() ? $Upload->Company()->name() : $Upload->company(),
 						$Upload->user_id() ? $Upload->User()->name() : $Upload->user(),
 						join('<br/>',map { $_->filename() } $Upload->Files() ),
-						
+						$Upload->size_text(),
+						$Upload->total_text(),
+						$Upload->finished() ? 'Finished' : 'Incomplete',
 						);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach

@@ -16,8 +16,7 @@
 
 div.ProjectHeader {
 	border-bottom: 1px solid #cfbb4b;
-	margin: 0px;
-	margin-bottom: 5px;
+	margin: 0px 0px 5px 0px;
 }
 div.ProjectHeader:after {
     content: ".";
@@ -26,7 +25,6 @@ div.ProjectHeader:after {
     clear: both;
     visibility: hidden;
 }
-div.ProjectHeader {display: inline-block;}
 /* Hides from IE-mac \*/
 * html div.ProjectHeader {height: 1%;}
 div.ProjectHeader {display: block;}
@@ -102,6 +100,56 @@ div.ProjectHeader fieldset p label {
        float:left;
        p\osition: relative;
 }
+.Service div.templates {
+    padding-right: 0px;
+}
+.Service div.templates:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.templates {height: 1%;}
+*/* End hide from IE-mac */
+
+.Service div.templates p {
+    float: left;
+    width: 165px;
+    height: 180px;
+    text-align: center;
+    margin: 0px 5px 10px 5px;
+    padding: 0px;
+}
+.Service div.templates p label {
+    clear: none;
+    float: none;
+    margin: 0px;
+}
+.Service div.templates p img {
+    clear: both;
+    width: 130px;
+    height: 130px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.templateOption {
+    float: left;
+    width: 165px;
+    height: 180px;
+    text-align: center;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 10px;
+}
+.templateOption img {
+    clear: both;
+    width: 130px;
+    height: 130px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
 
 .InksFront, .Front {
     float: left;
@@ -129,16 +177,28 @@ div.ProjectHeader fieldset p label {
 	float: left;
 	width: 100px;
 }
-div.Service fieldset p span.checkOption label, div.Service fieldset p label label {
+div.Service fieldset {
+    margin: 2px;
+    padding: 4px;
+}
+div.Service fieldset p input, div.Service fieldset p select {
+    width: auto;
+}
+div.Service fieldset p {
+    padding-left: 130px;
+}
+div.Service fieldset p label {
+    width: 120px;
+    margin-left: -125px;
+    text-align: left;
+}
+
+div.Service fieldset p label.radio, div.Service fieldset p span.checkOption label, div.Service fieldset p label label {
     clear: none;
     width: auto;
     float: none;
     margin: 0px;
     padding: 0px;
-}
-div.Service fieldset {
-    margin: 2px;
-    padding: 4px;
 }
 .AddToProjectButtons {
     float: right;
@@ -182,3 +242,21 @@ span.SpotColour label, span.Coverages label {
 	float: left;
 	width: 50%;
 }
+div.ProjectCreateEdit ul {
+    list-style: none;
+}
+div.ProjectCreateEdit li {
+    float: left;
+    width: 200px;
+}
+div.ProjectCreateEdit ul:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.ProjectCreateEdit ul {height: 1%;}
+/* End hide from IE-mac */
+

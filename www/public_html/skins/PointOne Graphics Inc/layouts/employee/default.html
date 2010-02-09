@@ -45,6 +45,10 @@
 		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
 		<meta http-equiv="refresh" content="300">
 		<? endif ( $r->uri() =~ /prepress_overview/ ) ?>
+		<? if ( $r->uri() =~ /prepress_schedule/ ) ?>
+		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
+		<meta http-equiv="refresh" content="300">
+		<? endif ( $r->uri() =~ /prepress_schedule/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
 	</head>
@@ -89,6 +93,7 @@
 								<li><a href="/employee/production/projects.html;NOSSL">&raquo; Projects</a></li>
 								<li><a href="/employee/production/barcode.html;NOSSL">&raquo; Barcode</a></li>
 								<li><a href="/employee/production/prepress_overview.html;NOSSL">&raquo; PrePress Overview</a></li>
+								<li><a href="/employee/production/prepress_schedule.html;NOSSL">&raquo; PrePress Schedule</a></li>
 								<li><a href="/employee/production/print_overview.html;NOSSL">&raquo; Press Schedule</a></li>
 								<li><a href="/employee/production/monthly_schedule.html;NOSSL">&raquo; Schedule Overview</a></li>
 <? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
@@ -125,6 +130,7 @@
 								<li><a href="/employee/reports/stock.html;NOSSL">&raquo; Stock</a></li>
 								<li><a href="/employee/reports/prepress_productivity.html;NOSSL">&raquo; Prepress Productivity</a></li>
 								<? endif ( openprint::usergroup::is_user_in( ['Reporting'], $session{'user_id'} ) ) ?>
+								<li><a href="/employee/reports/stock_usage.html;NOSSL">&raquo; Stock Usage</a></li>
 								<li><a href="/employee/reports/prepress_overview.html;NOSSL">&raquo; Prepress Overview</a></li>
 							</ul>
 						</li>

@@ -10,7 +10,7 @@ use vars qw( $log $dbh $table $serial %fields );
 require openprint::Object;
 require sql;
 
-my $debug = 1;
+my $debug = 0;
 $table = 'Currencies';
 $serial = 'currencyindex_seq';
 %fields = (

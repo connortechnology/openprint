@@ -27,13 +27,11 @@
 						</select>
 					</p>
 					<br/>
-					<!--#include virtual="/includes/aqueous.html"-->
-					<!--#include virtual="/includes/uvcoating.html"-->
 					<div class="row">
 						<label>Stock Information</label><br/>
 						<!--#include virtual="/includes/paper_dropdowns.html"-->
 					</div>
-					<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+					<? if ( ! sets::isin( $$variable{'ProjectTypeName'}, ['InkjetOutputs','Banners','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
 					<div class="row">
 						<label>Fold Type:</label>
 						<span class="input">
@@ -60,7 +58,7 @@
 							</select>
 						</span>
 					</div>
-					<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
+					<? endif ( ! sets::isin( $$variable{'ProjectTypeName'}, ['InkjetOutputs','Banners','BusinessCards', 'Door Hangers', 'ScratchPads', 'Covers','Postcards','Posters','Rack Cards','Greeting Cards'] ) ) ?>
 					<? if ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) ?>
 						<input type="hidden" name="FoldType" value="2PanelFold"/>
 					<? endif ( $$variable{'ProjectTypeName'} eq 'Greeting Cards' ) ?>

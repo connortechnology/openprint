@@ -66,6 +66,7 @@
 		<th style="text-align: left;">Created By</th>
 		<th style="text-align: left;">Authorized/Declined By</th>
 		<th width="100" style="text-align: left;">Manifest</th>
+		<th width="100" style="text-align: left;">Docket</th>
 		<th width="90" style="text-align: right;">Total</th>
 	</tr>
 	<? echo ( 
@@ -92,13 +93,16 @@
 				<td><a href="purchase_order_view.html?po_id=%1$d">%4$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%7$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%8$s</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%9$s</a></td>
 				<td style="text-align: right;">%5$s%6$s</td>
 			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $Currency->symbol(), Number::Format::format_number($total,2,2), 
 				( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ),
-				$PO->manifest_id() );
+				$PO->manifest_id(),
+				join('<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $PO->Contents() ) ] ) ),
+				);
 			$report_total += $total;
 		} # end while
-		$html .= '<tr class="totals"><td colspan="7" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
+		$html .= '<tr class="totals"><td colspan="8" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
 		$html .= sprintf('%s%s', $Currency->symbol(), Number::Format::format_number( $report_total,2,2 ) );
 		$html .= '</td></tr>';
 		return $html;

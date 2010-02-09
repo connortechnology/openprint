@@ -130,6 +130,7 @@ sub get_li {
 	my ( $previous_row, $row, $ul_id ) = @_;
 
 	my $html;
+$log->debug("NEWS: $$row{'news2'}");
 	if ( ! $$row{'projectindex'} ) {
 		$html .= sprintf( '<li id="item_%d" class="%s">Reserved', $$row{'id'}, 'reserved' );
 		$html .= '<span class="Buttons">';
@@ -146,53 +147,7 @@ sub get_li {
 
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $$row{'serviceindex'} );
 	if ( ! $$sig_specs{'txtEmployeeComments'} ) {
-		my @side_one = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-		my @side_two = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
-		my $comments = sprintf( '%d/%d', scalar @side_one, scalar @side_two );
-
-		my %pms;
-		foreach my $side ( 'SideOne', 'SideTwo' ) {
-			foreach my $index ( 1 .. 8 ) {
-				if ( $$sig_specs{'chkSpecial'.$side.'Colour'.$index} ) {
-					if ( $$sig_specs{'txtSpecial'.$side.'Colour'.$index} ) {
-						$pms{$index} += 1;
-					} # end if
-				} # end if
-			} # end foreach index
-		} # end foreach side
-		if ( keys %pms ) {
-			$comments .= '+' . ( keys %pms ) . ' PMS';
-		} # end if
-
-		if ( $$sig_specs{'rdbAqueousSideOne'} ne 'None' or $$sig_specs{'rdbAqueousSideTwo'} ne 'None' ) {
-			$comments .= '+AQ';
-		} # end if
-		if (
-				$$sig_specs{'chkVarnishSpotGlossSideOne'}
-				or $$sig_specs{'chkVarnishSpotMatteSideOne'}
-				or $$sig_specs{'chkVarnishOverallGlossSideOne'}
-				or $$sig_specs{'chkVarnishOverallMatteSideOne'}
-				or $$sig_specs{'chkVarnishSpotGlossSideTwo'}
-				or $$sig_specs{'chkVarnishSpotMatteSideTwo'}
-				or $$sig_specs{'chkVarnishOverallGlossSideTwo'}
-				or $$sig_specs{'chkVarnishOverallMatteSideTwo'}
-			) {
-			$comments .= '+Varnish';
-		} # end if
-
-		$comments .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
-
-		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
-			if ( $$services{'Folding'} ) {
-				my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
-				if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
-					$comments .= '(fold inline)';
-				} # end if
-			} else {
-				$comments .= '(sheeted)';
-			} # end if
-		} # end if
-		openprint::service::insert_service_spec( $log, $dbh, @$row{'projectindex','serviceindex'}, 'txtEmployeeComments', $comments );
+		openprint::service::insert_service_spec( $log, $dbh, @$row{'projectindex','serviceindex'}, 'txtEmployeeComments', openprint::Shift::get_li_comment( $row ) );
 	} # end if
 
 	if ( ! $$sig_specs{'SignatureQuantity'} ) {
@@ -396,16 +351,35 @@ sub add_project_to_press_schedule {
 	my @sigs = $service_id ? ( $service_id ) : $Project->signatures();
 
 	foreach my $s_s_id ( @sigs ) {
-		next if find('project_id'=>$Project->id(), 'service_id'=>$s_s_id );
+		next if openprint::ScheduledJob::find('project_id'=>$Project->id(), 'service_id'=>$s_s_id );
 
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} if ! $$sig_specs{'UsePress'};
 		if ( ! $$sig_specs{'UsePress'} ) {
 			$error .= "No press for signature $$sig_specs{'SignatureIndex'}<br/>";
+			next;
 		} # end if
-		my $runtime = openprint::service::get_runtime( $Project, $s_s_id );
+
+		my @service_ids = ( $s_s_id );
+
+		foreach my $s_id_2 ( @sigs ) {
+			next if $s_id_2 == $s_s_id;
+			my $sig_specs2 = openprint::service::get_specs_ref( $Project, $s_id_2 );
+			if ( openprint::Estimating::Printing::compare_signatures( $sig_specs, $sig_specs2, $Project->ordered_quantity_index() ) ) {
+				push @service_ids, $s_id_2;
+				@sigs = sets::exclude( [ $s_id_2 ], \@sigs );
+			} # end if
+		} # end foreach
+
+		my $runtime = openprint::service::get_runtime( $Project, $s_s_id ) * @service_ids;
 		if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'},'use_in_estimating'=>1) ) {
-			$_ = sql::insert( undef, undef, 'Schedule', ['ProjectIndex', $Project->id(), 'ServiceIndex', $s_s_id, 'Equipment_id', $Equipment[0]->id(),'StartTime', undef, 'RunTime', ($runtime ? "$runtime minutes" : undef ) ] );
+			my $Job = new openprint::ScheduledJob();
+			$_ = $Job->save({
+				'project_id'	=>	$Project->id(),
+				'equipment_id'	=>	$Equipment[0]->id(),
+				'starttime'		=>	undef,
+				'runtime'		=>	($runtime ? "$runtime minutes" : undef )
+			});
 			if ( $_ ) {
 				$error .= 'Error adding to press schedule: ' . $_;
 			} else {
@@ -415,7 +389,7 @@ sub add_project_to_press_schedule {
 		} else {
 			$error .= "Error adding to press schedule: Press not found ($$sig_specs{UsePress}) for signature $$sig_specs{'SignatureIndex'}<br/>";
 		} # end if
-	} # end foreach
+	} # end foreach sig
 	sql::end_transaction( $dbh, $ac );
 	return $error;
 } # end sub add_project_to_press_schedule

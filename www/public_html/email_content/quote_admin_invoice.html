@@ -17,8 +17,8 @@
 <? eval ( $$variable{'rowclass'} = ''; ) ?>
 	<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 	<tr<?rowclass?>> 
-		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/administrator/project/view.html?ProjectIndex=<?project_index?>"><?project_index?></a></td>
-		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/administrator/project/view.html?ProjectIndex=<?project_index?>">
+		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/employee/project/view.html?ProjectIndex=<?project_index?>"><?project_index?></a></td>
+		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/employee/project/view.html?ProjectIndex=<?project_index?>">
 <? echo (
 my $html;
 my $Project = new openprint::Project( $$variable{'project_index'} );
