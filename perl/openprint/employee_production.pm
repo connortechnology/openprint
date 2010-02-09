@@ -1355,7 +1355,7 @@ sub _li_change {
 		$Job->comment( $param{'comment'} );
 		$Job->impressions( $param{'impressions'} );
 		$variable{'error'} .= $Job->save({
-				'starttime'	=>	$param{'starttime_year'} ? $new_starttime : undef,
+				'starttime'	=>	$param{'starttime_year'} ? $new_starttime : $old_starttime,
 				'locked'	=>	$param{'locked'},
 				'runtime'	=>	$param{'runtime'},
 				} );
