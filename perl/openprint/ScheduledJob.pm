@@ -65,16 +65,16 @@ sub find {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
 	} # end if
-    if ( $params{'project_id'} ) {
-        if ( substr($params{'project_id'},0,1) == '!' ) {
-            $sql .= ' AND projectindex != ?';
-            push @values, substr $params{'project_id'}, 1, length $params{'project_id'};
-        } else {
-            $sql .= ' AND projectindex=?';
-            push @values, $params{'project_id'};
-        } # end if
-    } # end if
-    if ( $params{'service_id'} ) {
+	if ( $params{'project_id'} ) {
+		if ( substr($params{'project_id'},0,1) == '!' ) {
+			$sql .= ' AND projectindex != ?';
+			push @values, substr $params{'project_id'}, 1, length $params{'project_id'};
+		} else {
+			$sql .= ' AND projectindex=?';
+			push @values, $params{'project_id'};
+		} # end if
+	} # end if
+	if ( $params{'service_id'} ) {
 		if ( ref $params{'service_id'} eq 'ARRAY' ) {
 			$sql .= ' AND service_id={?}';
 			push @values, $params{'service_id'};
@@ -82,7 +82,7 @@ sub find {
 			$sql .= ' AND ? = ANY(service_id)';
 			push @values, $params{'service_id'};
 		} # end if
-    } # end if
+	} # end if
 
 	if ( $params{'startdate'} ) {
 		$sql .= ' AND date(starttime) = ?';
@@ -92,52 +92,52 @@ sub find {
 		$sql .= ' AND starttime = ?';
 		push @values, $params{'starttime'};
 	} 
-    if ( exists $params{'starttime_null'} ) {
-        $sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
-    } # end if
-    if ( $params{'starttime_<'} ) {
-        $sql .= ' AND starttime < ?';
-        push @values, $params{'starttime_<'};
-    } # end if
-    if ( $params{'starttime_>='} ) {
-        $sql .= ' AND starttime >= ?';
-        push @values, $params{'starttime_>='};
-    } # end if
+	if ( exists $params{'starttime_null'} ) {
+		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
+	} # end if
+	if ( $params{'starttime_<'} ) {
+		$sql .= ' AND starttime < ?';
+		push @values, $params{'starttime_<'};
+	} # end if
+	if ( $params{'starttime_>='} ) {
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime_>='};
+	} # end if
 
-    if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
-        $sql .= ' AND ( starttime BETWEEN ? AND ? )';
-        push @values, @params{'starttime_start','starttime_end'};
-    } elsif ( $params{'starttime_start'} ) {
-        $sql .= ' AND starttime >= ?';
-        push @values, $params{'starttime_start'};
-    } elsif ( $params{'starttime_end'} ) {
-        $sql .= ' AND starttime <= ?';
-        push @values, $params{'starttime_end'};
-    } elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
-        $sql .= ' AND starttime IS NULL';
-    } elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
-        $sql .= ' AND starttime IS NULL';
-    } # end if
-    if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
-        $sql .= ' AND ( endtime BETWEEN ? AND ? )';
-        push @values, @params{'endtime_start','endtime_end'};
-    } elsif ( $params{'endtime_start'} ) {
-        $sql .= ' AND endtime >= ?';
-        push @values, $params{'endtime_start'};
-    } elsif ( $params{'endtime_end'} ) {
-        $sql .= ' AND endtime <= ?';
-        push @values, $params{'endtime_end'};
-    } elsif ( $params{'endtime_<'} ) {
-        $sql .= ' AND endtime < ?';
-        push @values, $params{'endtime_<'};
-    } elsif ( $params{'endtime_>'} ) {
-        $sql .= ' AND endtime > ?';
-        push @values, $params{'endtime_>'};
-    } elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
-        $sql .= ' AND endtime IS NULL';
-    } elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
-        $sql .= ' AND endtime IS NULL';
-    } # end if
+	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
+		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
+		push @values, @params{'starttime_start','starttime_end'};
+	} elsif ( $params{'starttime_start'} ) {
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime_start'};
+	} elsif ( $params{'starttime_end'} ) {
+		$sql .= ' AND starttime <= ?';
+		push @values, $params{'starttime_end'};
+	} elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
+		$sql .= ' AND starttime IS NULL';
+	} elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
+		$sql .= ' AND starttime IS NULL';
+	} # end if
+	if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
+		$sql .= ' AND ( endtime BETWEEN ? AND ? )';
+		push @values, @params{'endtime_start','endtime_end'};
+	} elsif ( $params{'endtime_start'} ) {
+		$sql .= ' AND endtime >= ?';
+		push @values, $params{'endtime_start'};
+	} elsif ( $params{'endtime_end'} ) {
+		$sql .= ' AND endtime <= ?';
+		push @values, $params{'endtime_end'};
+	} elsif ( $params{'endtime_<'} ) {
+		$sql .= ' AND endtime < ?';
+		push @values, $params{'endtime_<'};
+	} elsif ( $params{'endtime_>'} ) {
+		$sql .= ' AND endtime > ?';
+		push @values, $params{'endtime_>'};
+	} elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
+		$sql .= ' AND endtime IS NULL';
+	} elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
+		$sql .= ' AND endtime IS NULL';
+	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
@@ -194,7 +194,7 @@ sub Equipment {
 sub comment {
 	my ( $self, $comment ) = @_;
 
-    my $Project = new openprint::Project( $$self{'project_id'} );
+	my $Project = new openprint::Project( $$self{'project_id'} );
 
 	# We check for comments in the services, if we find one, we use it, otherwise we generate from the first.
 	if ( @_ > 1 ) {
@@ -244,7 +244,7 @@ sub comment {
 } # end sub comment
 
 sub get_li {
-    my ( $self, $ul_id ) = @_;
+	my ( $self, $ul_id ) = @_;
 
 # a 12hour shift ~= 600px, so each hour gets 50px;
 	my $scale = $session{'/employee/production/print_overview.html?scale'};
@@ -258,20 +258,20 @@ sub get_li {
 		$height = $min_height if $height < $min_height;
 	} # end if
 
-    my $html;
-    if ( ! $$self{'project_id'} ) {
-        $html .= sprintf( '<li id="item_%d" class="%s">Reserved', $$self{'id'}, 'reserved' );
-        $html .= '<span class="Buttons">';
-        $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
-        $html .= '</span>';
-        $html .= sprintf( q{<span class="RunTime" onclick="openPopup( 'RunTime', %1$d );"><span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$self{'id'}, split(':',$self->runtime()) );
-        $html .= '</li>';
-        return $html;
-    } # end if
+	my $html;
+	if ( ! $$self{'project_id'} ) {
+		$html .= sprintf( '<li id="item_%d" class="%s">Reserved', $$self{'id'}, 'reserved' );
+		$html .= '<span class="Buttons">';
+		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
+		$html .= '</span>';
+		$html .= sprintf( q{<span class="RunTime" onclick="openPopup( 'RunTime', %1$d );"><span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$self{'id'}, split(':',$self->runtime()) );
+		$html .= '</li>';
+		return $html;
+	} # end if
 
-    my $Project = new openprint::Project( $$self{'project_id'} );
-    my $services = $Project->services();
-    my $Equipment = new openprint::Equipment($$self{'equipment_id'});
+	my $Project = new openprint::Project( $$self{'project_id'} );
+	my $services = $Project->services();
+	my $Equipment = new openprint::Equipment($$self{'equipment_id'});
 
 	my $impressions = 0;
 	#my $forms = 0;
@@ -289,22 +289,22 @@ sub get_li {
 		#$forms += $$sig_specs{'SignatureQuantity'};
 	} # end foreach sig
 
-    my $colour = 'blue';
-    if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
-        $colour = 'green';
-    } elsif ( sets::isin( $Project->status(), ['Printed', 'Complete','Waiting For Pickup', 'Picked Up', 'Shipped'] ) ) {
-        $colour = 'pink';
-    } elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
-        $colour = 'red';
-    } elsif ( 1 < sql::execute( $log, $dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=?}, $$self{'project_id'} ) ) {
-        $colour = 'yellow';
-    } # end if
-    if ( $Project->rush() ) {
-        $colour .= ' rush';
-    } # end if
-    $html .= sprintf( '<li id="item_%d" class="%s" style="height:%spx;">', $$self{'id'}, $colour, $height );
-    $html .= '<div class="Company">';
-    $html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $$self{'project_id'}, $Project->docket() );
+	my $colour = 'blue';
+	if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
+		$colour = 'green';
+	} elsif ( sets::isin( $Project->status(), ['Printed', 'Complete','Waiting For Pickup', 'Picked Up', 'Shipped'] ) ) {
+		$colour = 'pink';
+	} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
+		$colour = 'red';
+	} elsif ( 1 < sql::execute( $log, $dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=?}, $$self{'project_id'} ) ) {
+		$colour = 'yellow';
+	} # end if
+	if ( $Project->rush() ) {
+		$colour .= ' rush';
+	} # end if
+	$html .= sprintf( '<li id="item_%d" class="%s" style="height:%spx;">', $$self{'id'}, $colour, $height );
+	$html .= '<div class="Company">';
+	$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $$self{'project_id'}, $Project->docket() );
 	my $n = $Project->Company()->name();
 	$n =~ s/The //gi;
 	$html .= ssi::htmlize( $n );
@@ -324,10 +324,10 @@ sub get_li {
 
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
 		$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
-        $html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
+		$html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
 
-        $html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
-        $html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps</span>`, $$self{'id'}, $impressions );
+		$html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
+		$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps</span>`, $$self{'id'}, $impressions );
 		if ( $Equipment->smartscheduling() or $$self{'locked'} ) {
 			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
 					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
@@ -337,19 +337,19 @@ sub get_li {
 
 		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">%2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
 
-        $html .= '<span class="Buttons">';
-        $html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-        $html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
-        $html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}' );", '', 'C' );
-        $html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
-        $html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", '', 'S' ) if @{$$self{'service_id'}} > 1;
-        $html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
+		$html .= '<span class="Buttons">';
+		$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
+		$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
+		$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}' );", '', 'C' );
+		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
+		$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", '', 'S' ) if @{$$self{'service_id'}} > 1;
+		$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
 		if ( $self->status() ne 'In Production' ) {
 		$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'start' } } );", '', 'Start' );
 		} else {
 		$html .= ssi::writeButton( $log, $dbh, 'Stop'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'stop' } } );", '', 'Stop' );
 		} # end if
-        $html .= '</span>';
+		$html .= '</span>';
 		if ( $Equipment->smartscheduling() ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
@@ -362,10 +362,10 @@ sub get_li {
 		$html .= sprintf( '<div class="Comment">%3$s</div>', ssi::htmlize( $self->comment() ) );
 		$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
 		$html .= sprintf( '<span class="Impressions">%d imps</span>', $impressions );
-        $html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{'id'},
-                Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
-                );
-        $html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
+		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{'id'},
+				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
+				);
+		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
 		$html .= '<span class="Buttons">';
 		$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
 		if ( $$self{'operator_id'} == $session{'user_id'} ) {
@@ -439,56 +439,63 @@ sub runtime {
 
 sub forms {
 	my ( $self ) = @_;
+	my $forms = 0;
+	foreach my $sig_id ( @{$$self{'service_id'}} ) {
+		my $sig_specs = openprint::service::get_specs_ref( $self->Project(), $sig_id );
+		if ( $$sig_specs{'SignatureQuantity'} ) {
+			$forms += $$sig_specs{'SignatureQuantity'};
+		} # end if
+	} # end foreach
+	$forms = @{$$self{'service_id'}} if $$self{'service_id'} and ! $forms;
 
-	return scalar @{$$self{'service_id'}} if $$self{'service_id'};
-	return 0;
+	return $forms;
 } # end sub forms
 
 sub Shift {
-    my ( $self ) = @_;
-    my $Shift;
+	my ( $self ) = @_;
+	my $Shift;
 
-    if ( ! $$self{'starttime'} ) {
-        $Shift = new openprint::Shift();
-        $Shift->equipment_id( $$self{'equipment_id'} );
-        if ( sets::isin( $self->Project()->status(), ['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
-            $$Shift{'name'} = 'Pending';
-        } else {
-            $$Shift{'name'} = 'Approved';
-        } # end if
-    } else {
-        my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
-        my @Shifts = openprint::Shift::find(
+	if ( ! $$self{'starttime'} ) {
+		$Shift = new openprint::Shift();
+		$Shift->equipment_id( $$self{'equipment_id'} );
+		if ( sets::isin( $self->Project()->status(), ['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
+			$$Shift{'name'} = 'Pending';
+		} else {
+			$$Shift{'name'} = 'Approved';
+		} # end if
+	} else {
+		my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
+		my @Shifts = openprint::Shift::find(
 				'equipment_id'=>$$self{'equipment_id'}, 
 				'endtime_>'=>$$self{'starttime'}, 
 				'starttime_<='=>$$self{'starttime'},'limit'=>1
 				);
-        if ( ! @Shifts ) {
-            @Shifts = openprint::Equipment_Shift::find(
-                    'equipment_id'  =>  $$self{'equipment_id'},
-                    'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-                    'endtime_>'     =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-                    'limit'         =>  1,
-                    );
-            @Shifts = openprint::Equipment_Shift::find(
-                    'equipment_id'  =>  $$self{'equipment_id'},
-                    'starttime_>'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-                    'order'         =>  'starttime',
-                    'limit'         =>  1,
-                    ) if ! @Shifts;
-            $Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
-        } else {
-            $Shift = shift @Shifts;
+		if ( ! @Shifts ) {
+			@Shifts = openprint::Equipment_Shift::find(
+					'equipment_id'  =>  $$self{'equipment_id'},
+					'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+					'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+					'limit'		 =>  1,
+					);
+			@Shifts = openprint::Equipment_Shift::find(
+					'equipment_id'  =>  $$self{'equipment_id'},
+					'starttime_>'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+					'order'		 =>  'starttime',
+					'limit'		 =>  1,
+					) if ! @Shifts;
+			$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
+		} else {
+			$Shift = shift @Shifts;
 			if ( @Shifts ) {
 				$log->warn("Deleting duplicate shifts! " . @Shifts );
 				foreach ( @Shifts ) {
 					$_->delete();
 				} # end foreach
 			} # end if
-        } # end if
-    } # end if
-    return if ! $Shift;
-    return $Shift;
+		} # end if
+	} # end if
+	return if ! $Shift;
+	return $Shift;
 } # end sub Shift
 
 sub start {
