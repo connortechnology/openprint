@@ -1,0 +1,25 @@
+<form name="ShiftForm">
+	<input type="hidden" name="shift_id" value="<? echo ( $param{'shift_id'} ) ?>" />
+	<fieldset><legend>Shift Information</legend>
+		<p>
+			<label>Start Time:</p>
+			<? echo ( return ssi::datetime_select( 'starttime', $$variable{'Shift'}{'starttime'} );) ?>
+		</p>
+		<p>
+			<label>End Time:</p>
+			<? echo ( return ssi::datetime_select( 'endtime', $$variable{'Shift'}{'endtime'} );) ?>
+		</p>
+		<p>
+			<label>Operator:</label>
+			<select id="operator_id" name="operator_id" size="1"><option value="">select one</option>
+			<? echo ( 
+			   ssi::make_drop_down ( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>'E', 'usergroup'=>'Press','order'=>'lower(strfirstname)' ) ], $$variable{'Shift'}->operator_id() );
+			   ) ?>
+			</select>
+		</p>
+	</fieldset>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveShift', 'save.gif', q`new Ajax.Request('_shift_change.json',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'CancelShift', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
+		</p>
+</form>

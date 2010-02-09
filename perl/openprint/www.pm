@@ -345,7 +345,7 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+$log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
 	} elsif ( $first eq 'handheld' ) { # Handheld
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
@@ -487,6 +487,9 @@ $variable{'ServiceIndex'} = $service_index;
 					} elsif ( $filename eq 'collating.html' ) {
 						require openprint::Estimating::Collating;
 						openprint::Estimating::Collating::display( $log, $dbh, \%variable, $project_index, $service_index );
+					} elsif ( $filename eq 'DTaping.html' ) {
+						require openprint::Estimating::DTaping;
+						openprint::Estimating::DTaping::display( $log, $dbh, \%variable, $project_index, $service_index );
 					} # end if
 				} elsif ($third eq 'spec') {
 					if ( $filename eq 'lamination.html' ) {
@@ -529,6 +532,18 @@ $variable{'ServiceIndex'} = $service_index;
 		} # end if main:$second
 
 	} else {
+        $status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
+        return $status if $variable{'Redirect'};
+
+        if ( ! $session{'user_id'} ) {
+            # if not logged in, determine if they are allowed to see this page or not.
+			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+				$variable{'Redirect'} = '/error/error_login.html';
+				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+				return Apache2::Const::OK;
+			} # end if
+		} # end if
+
 		if ( $first ) {
 			my $module = 'openprint::' . $first;
 			$module .= '_'.$second if $second;

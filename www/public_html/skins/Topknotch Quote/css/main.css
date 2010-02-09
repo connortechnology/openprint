@@ -1,176 +1,3 @@
-.Footer {
-	color: #000000;
-	text-decoration: none;
-	font-weight: normal;
-	background-color:#DED9C2;
-}
-.Footer td {
-	font-family: Arial, Helvetica, sans-serif;
-	font-size: 12px;
-}
-
-.spacer {
-	clear: both;
-}
-
-.Service div.templates {
-    padding-right: 0px;
-}
-.Service div.templates:after {
-    content: ".";
-    display: block;
-    height: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div.templates {height: 1%;}
-/* End hide from IE-mac */
-
-.Service div.templates p {
-    float: left;
-    width: 165px;
-    height: 180px;
-    text-align: center;
-    margin: 0px 5px 10px 5px;
-    padding: 0px;
-}
-.Service div.templates p label {
-    clear: none;
-    float: none;
-    margin: 0px;
-}
-.Service div.templates p img {
-    clear: both;
-    width: 130px;
-    height: 130px;
-    margin-left: 10px;
-    margin-right: 10px;
-}
-
-.templateOption {
-	float: left;
-	width: 165px;
-	text-align: center;
-	margin-left: 5px;
-	margin-right: 5px;
-	margin-bottom: 10px;
-}
-.templateOption img {
-	clear: both;
-	width: 130px;
-	height: 130px;
-	margin-left: 10px;
-	margin-right: 10px;
-}
-
-
-.left {
-    position:absolute;
-    width:110px;
-    top:83px;
-    left:0px;
-    z-index: 1
-}
-
-.menu {
-}
-
-div.Service div.row {
-	margin: 0px;
-	margin-bottom: 10px;
-	padding: 0px;
-	padding-left: 10px;
-	padding-right: 330px;
-	padding-bottom: 5px;
-	clear: none;
-	width: auto;
-}
-div.Service div.row:after {
-    content: "."; 
-    display: block; 
-    height: 0; 
-    clear: both; 
-    visibility: hidden;
-}
-
-div.Service div.row {display: inline-block;}
-
-/* Hides from IE-mac \*/
-* html div.Service div.row {height: 1%;}
-div.Service div.row {display: block;}
-/* End hide from IE-mac */
-div.Service div.row span.label {
-	width: auto;
-	text-align: left;
-float: left;
-	margin: 0px;
-	padding: 0px;
-	height: 100%;
-}
-
-div.Service div.row span.value {
-	margin: 0px;
-	padding: 0px;
-	margin-left: 10px;
-	width: 180px;
-	text-align: left;
-	float:left;
-	p\osition: relative;
-	clear: none;
-}
-
-div.Service div.row span.input {
-	width: 320px;
-	margin: 0px;
-	margin-right: -330px;
-	margin-bottom: -25px;
-	text-align: left;
-	float:right;
-	height: 100%;
-	padding: 5px;
-	padding-bottom: 20px;
-}
-div.Service fieldset {
-padding-left: 0px;
-padding-right: 0px;
-}
-div.Service fieldset p {
-    padding-left: 105px;
-margin: 3px 0px 3px 0px;
-}
-div.Service fieldset p label {
-    width: 100px;
-    margin-left: -105px;
-	text-align: left;
-}
-div.Service fieldset p label.radio {
-    width: auto;
-    float: none;
-    margin: 0px;
-}
-div.Service fieldset p select, div.Service fieldset p input {
-    width: auto;
-}
-
-
-div.ProjectCreateEdit ul {
-    list-style: none;
-}
-div.ProjectCreateEdit li {
-    float: left;
-    width: 200px;
-}
-div.ProjectCreateEdit ul:after {
-    content: "."; 
-    display: block; 
-    height: 0; 
-    clear: both; 
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div.ProjectCreateEdit ul {height: 1%;}
-/* End hide from IE-mac */
 div.Order fieldset p label {
 	width: 30%;
 }
@@ -182,76 +9,20 @@ div.OrderHistory fieldset p label {
 	width: 95px;
 }
 
-div#MainBox {
-    display: block;
-    padding: 0px;
-    padding-left: 190px;
-    margin: 5px;
-    width: auto;
-    clear: none;
-	min-width: 590px;
+img#Butterfly, img#IDEAG7, img#IDEAG7Master {
+	margin-top: 10px;
+	width: 130px;
 }
-div#MainBox:after {
-    content: ".";
-    display: block;
-    height: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div#MainBox {height: 1%;}
-/* End hide from IE-mac */
-img#Butterfly {
-	width: 160px;
-	float: left;
-}
-ul#ProjectTypes {
-    p\osition: relative;
-    float: left;
-    width: 182px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 12px;
-    font-style: normal;
-    font-weight: normal;
-    padding: 3px;
-    margin: 0px;
-    margin-left: -190px;
-    list-style: none;
-}
-.ProjectTypes li {
-    margin-left: 0px;
-}
-.ProjectTypes a {
-    color: #000000;
-    text-decoration: none;
-}
-.ProjectTypes a:hover {
-    color: #ff00ff;
-}
+
 #QuickLogin {
     float: left;
     margin: 0px;
     padding: 0px;
     width: 400px;
 }
-#CurrencySelection {
-    float: left;
-    margin: 0px;
-    padding: 0px;
-    width: 470px;
-}
-#QuickLogin fieldset {
-	margin: 0px;
-}
 #QuickLogin p {
     padding: 0px;
     padding-left: 80px;
-    margin: 0px;
-    vertical-align: top;
-}
-#CurrencySelection p {
-    padding: 0px;
-    padding-left: 150px;
     margin: 0px;
     vertical-align: top;
 }
@@ -267,25 +38,249 @@ ul#ProjectTypes {
 	font-size: x-small;
 	font-weight: normal;
 }
+#QuickLogin p label.radio {
+	width: auto;
+	display: inline;
+	float: none;
+	margin: 0px;
+	color: black;
+	font-size: small;
+}
+
+#CurrencySelection {
+    float: left;
+    margin: 0px;
+    padding: 0px;
+    width: 470px;
+}
+
+#CurrencySelection p {
+    padding: 0px;
+    padding-left: 100px;
+    margin: 0px;
+    vertical-align: top;
+}
 #CurrencySelection p label {
-    width: 145px;
-    margin-left: -150px;
+    width: 95px;
+    margin-left: -100px;
     text-align: right;
     float: left;
     overflow: visible;
     padding: 0px;
     vertical-align: top;
-	color: black;
-	font-size: x-small;
-	font-weight: normal;
+    color: black;
+    font-size: small;
+    font-weight: bold;
 }
-#QuickLogin p input, #CurrencySelection p input, #QuickLogin p select, #CurrencySelection p select {
+#QuickLogin p input[type="text"], #QuickLogin p input[type="password"], #CurrencySelection p input, #QuickLogin p select, #CurrencySelection p select {
     margin: 0px;
     width: 65%;
-    padding: 2px;
     vertical-align: top;
+}
+#QuickLogin p select, #CurrencySelection p select {
+    padding: 0px;
 }
 #QuickLogin p a.buttonImageOn, #QuickLogin p a.buttonImageOff, #CurrencySelection p a.buttonImageOn, #CurrencySelection p a.buttonImageOff {
     margin: 0px;
+}
+#Specials {
+	text-align: center;
+}
+#Specials h2 {
+	margin-top: 0px;
+}
+img#HomeCollage {
+	float: right;
+}
+
+#menubar li#MenuQuotes a, #menubar li#MenuOrders a, #menubar li#MenuProject a {
+	width: 95px;
+}
+#menubar li#MenuAboutUs a {
+	width: 60px;
+}
+#menubar li#MenuAccount a {
+	width: 120px;
+}
+#AlertDiv {
+	color: red;
+}
+ul#ProjectTypes {
+	font-size: 12px;
+	font-style: normal;
+	font-weight: normal;
+	padding: 0px;
+	margin: 0px;
+	list-style: none;
+}
+#ProjectTypes li {
+	margin-left: 0px;
+	list-style: none;
+	padding-left: 5px;
+	text-align: left;
+}
+#ProjectTypes li.Category {
+	background-color: maroon;
+	font-weight: bold;
+	color: #fff;
+}
+#ProjectTypes a {
+	color:maroon;
+	text-decoration: none;
+}
+#ProjectTypes a:hover {
+	color:#ff00ff;
+/*
+	text-decoration: underline;
+*/
+}
+div#header_banner {
+	background-repeat: repeat-x;
+	width: 100%;
+	height: 104px;
+	text-align: center;
+	margin: 0px auto 0px auto;
+}
+div#logo {
+	float: left;
+	width: 251px;
+	height: 104px;
+}
+div#contact_information {
+	float: left;
+	text-align: left;
+	margin-right: 15px;
+	margin-top: 15px;
+	color: #7068b3;
+}
+div#currencies {
+	float: left;
+	margin-top: 4px;
+}
+div#nav_icons {
+	float: right;
+	padding-right: 20px;
+}
+div#main_content {
+	width: 100%;
+	padding: 0px;
+	margin: 0px;
+	background-color: #fff;
+}
+div#main_content:after {
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#main_content {height: 1%;}
+* div#main_content {display:block;}
+/* End hide from IE-mac */
+
+div#main_content_inner {
+	padding: 0px 0px 0px 185px;
+	background-color: #fff;
+}
+
+div#left_sidebar {
+	float: left;
+	margin: 0px;
+	margin-right: 0px;
+	width: 180px;
+	margin-left: -185px;
+	padding: 0px;
+	text-align: center;
+}
+div#content_container {
+	background-color: #fff;
+	width: 1000px;
+	overflow: hidden;
+	margin: 0px;
+	margin-left: auto;
+	margin-right: auto;
+}
+div.top_shadow {
+	background-image: url(/images/shadow_border/top.gif);
+	background-repeat: repeat-x;
+	background-color: #fff;
+	height: 22px;
+}
+div.shadow_tl {
+	float: left;
+	background-image: url(/images/shadow_border/tl.gif);
+	background-repeat: no-repeat;
+	width: 26px;
+	height: 22px;
+}
+div.shadow_tr {
+	float: right;
+	background-image: url(/images/shadow_border/tr.gif);
+	background-repeat: no-repeat;
+	width: 17px;
+	height: 22px;
+}
+div.bottom_shadow {
+	clear: left;
+	background-image: url(/images/shadow_border/bottom.gif);
+	background-repeat: repeat-x;
+	background-color: #fff;
+	height: 22px;
+}
+div.shadow_bl {
+	float: left;
+	background-image: url(/images/shadow_border/bl.gif);
+	background-repeat: no-repeat;
+	width: 26px;
+	height: 22px;
+}
+div.shadow_br {
+	float: right;
+	background-image: url(/images/shadow_border/br.gif);
+	background-repeat: no-repeat;
+	width: 17px;
+	height: 22px;
+}
+div.shadow_left {
+	background-image: url(/images/shadow_border/left.gif);
+	background-repeat: repeat-y;
+	background-position: left;
+	padding-left: 14px;
+}
+div.shadow_right {
+	background-image: url(/images/shadow_border/right.gif);
+	background-repeat: repeat-y;
+	background-position: right;
+	padding-right: 5px;
+}
+
+div#main_page {
+	width: 100%;
+	float: left;
+}
+div#main_page_content {
+	padding-left: 20px;
+	padding-right: 10px;
+}
+div#main_page_content:after {
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div#main_page_content {height: 1%;}
+* div#main_page_content {display:block;}
+/* End hide from IE-mac */
+
+div#choose_currencies_top {
+font-size: 12px;
+text-decoration: none;
+color: #7c6aba;
+}
+div#contact_information div {
+line-height: 1.1em;
 }
 

@@ -11,6 +11,11 @@ $serial = 'ProjectType_Categories_id_seq';
 	'name'	=>	'name',
 	'sort'	=>	'sort',
 );
+%transforms = (
+);
+%defaults = (
+	'sort'	=>	undef,
+);
 
 sub find {
 	my %params = @_;
@@ -29,6 +34,7 @@ sub find {
 
 sub project_types {
 	my $self = shift;
-	
-	return openprint::ProjectType::find( 'category_id'=>$$self{'id'} );
+	my %params = @_;	
+	$params{'category_id'} = $$self{'id'};
+	return openprint::ProjectType::find( %params );
 } # end sub project_types
