@@ -334,7 +334,6 @@ sub setup_project {
 		} else {	
 			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $project{'ScoringSpecs'}, $specs );
 		} # end if
-
 	} else {
 		$project{'NeedScoring'} = 0;
 		$project{'NeedFolding'} = 0;
@@ -2027,7 +2026,10 @@ sub breakdown {
 	$breakdown .= sprintf( 'Plates: %d %s * $%.2f per plate = $%.2f<br/>', @$price{'txtPlateQuantity','PlateID','Plate Cost','Plate Price'});
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 
-	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s FoldMakeReady: %d FoldRun: %d Total:%s<br/>', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'FoldingMakeReadyOvers','FoldingRunOvers','Total Overs'} );
+	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+	$breakdown .= ' Scoring: ' . $$stock_qty{'ScoringOvers'} if $$stock_qty{'ScoringOvers'};
+	$breakdown .= ' UV Coating: ' . $$stock_qty{'UVOvers'} if $$stock_qty{'UVOvers'};
+	$breakdown .= ' Total: ' . $$stock_qty{'Total Overs'} . '<br/>';
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
 	$breakdown .= sprintf('Total: $%.2f<br/>', $$price{'Total Cost'} );
@@ -3019,13 +3021,17 @@ sub calc_price {
 		} # end if
 	} # end if
 
+	my %scoring_results;
 	if ( $$project{'HasScoring'} and $$project{'NeedScoring'} ) {
-		my %scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $service_index, $specs, $qty_index, $Imposition );
+foreach my $k ( keys %scoring_results ) {
+$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
+}
 		if ( $scoring_results{'Status'} eq 'uncalculated' ) {
 			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{'alert'} $$project{'ScoringSpecs'}{alert} " . $$project{'ScoringSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} else {
-			$price{'Scoring Breakdown'} .= "Scoring Price: $scoring_results{'Price'}<br/>";
+			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: $%.2f on %s<br/>', $scoring_results{'Price'}, $scoring_results{'Equipment'} ? $scoring_results{'Equipment'}->name() : '' );
 			$price{'Comparison Cost'} += $scoring_results{'Price'};
 			if ( $scoring_results{'Equipment'} and ( $scoring_results{'Equipment'}->id() == $Press->id() ) ) {
 				if ( $scoring_results{'Runspeed'} =~ /(.*)\%/ ) {
@@ -3053,6 +3059,17 @@ sub calc_price {
 			} # end if
 		} # end if
 	} # end if
+	my %uv_results;
+	if ( $$project{'HasUVCoating'} ) {
+		%uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
+		if ( $uv_results{'Status'} eq 'uncalculated' ) {
+			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} elsif ( $uv_results{'Equipment'} ) {
+			$price{'UVCoating Breakdown'} = sprintf('UVCoating Price: $%.2f on %s<br/>', $uv_results{'Total'}, $uv_results{'Equipment'}->name() );
+			$price{'Comparison Cost'} += $uv_results{'Total'};
+		} # end if
+	} # end if UVCoating
 
 	$price{'Run Speed'} = $run_speed;
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
@@ -3102,10 +3119,10 @@ sub calc_price {
 	$price{'Overs Rate'} = $over_rate;
 
 	my $impressions;
-	if ( $Press->specification('Charge for setup overs') ne 'N' ) {
-		$impressions = ceil( $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
+	if ( $Press->specification('Overs') ne 'All' ) {
+		$impressions = ceil( $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) + $scoring_results{'Overs'} + $uv_results{'Overs'} );
 	} else {
-		$impressions = ceil( $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $run_overs );
+		$impressions = ceil( $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $run_overs + $scoring_results{'Overs'} + $uv_results{'Overs'} );
 	} # end if
 
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
@@ -3415,9 +3432,9 @@ sub calc_price {
 	} else {
 		$run_overs = ceil( $base_impressions * $over_rate );
 	} # end if
-	$total_overs += $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'};
+	$total_overs += $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $scoring_results{'Overs'} + $uv_results{'Overs'};
 
-	if ( $Press->specification('Charge for setup overs') ne 'N' ) {
+	if ( $Press->specification('Overs') ne 'All' ) {
 		$total_overs = ceil( $total_overs + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
 	} else {
 		$total_overs = ceil( $total_overs + $run_overs + $setup_overs );
@@ -3449,6 +3466,8 @@ sub calc_price {
 			'FM Overs'					=> $fm_overs,
 			'FoldingMakeReadyOvers'		=> $folding_results{'MakeReadyOvers'},
 			'FoldingRunOvers'			=> $folding_results{'RunOvers'},
+			'ScoringOvers'				=> $scoring_results{'Overs'},
+			'UVOvers'					=> $uv_results{'Overs'},
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
 	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
@@ -3466,16 +3485,6 @@ sub calc_price {
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 	$$specs{'ddmPress'.$qty_index} = $Press->strid();
 
-	if ( $$project{'HasUVCoating'} ) {
-		my %uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
-		if ( $uv_results{'Status'} eq 'uncalculated' ) {
-			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
-			$price{'Comparison Cost'} += 1000000; 
-		} elsif ( $uv_results{'Equipment'} ) {
-			$price{'UVCoating Breakdown'} = sprintf('UVCoating Price: $%.2f on %s<br/>', $uv_results{'Total'}, $uv_results{'Equipment'}->name() );
-			$price{'Comparison Cost'} += $uv_results{'Total'};
-		} # end if
-	} # end if UVCoating
 
 	if ( $$project{'HasAqueous'} ) {
 		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
