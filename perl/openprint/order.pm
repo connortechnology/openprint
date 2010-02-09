@@ -1157,7 +1157,7 @@ sub send_sales_order {
 		SMTP	=> $openprint::config{'Mail Server'},
 		FROM	=> $sales_person_email,
 		TO		=> $order{'txtEmail'},
-		BCC		=>	'iconnor@penultima.org',
+		#BCC		=>	'iconnor@penultima.org',
 		SUBJECT => "Order $order_id",
 );
 	misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries );
@@ -1204,7 +1204,7 @@ sub send_sales_order {
 				FROM	=> $order{'txtEmail'},
 				#FROM	=> $openprint::config{'OrderingEmail'},
 				TO		=> join(',',@admin_emails),
-				BCC		=>	'iconnor@penultima.org',
+				#BCC		=>	'iconnor@penultima.org',
 				SUBJECT => "Order $order_id",
 				);
 		misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries, @project_dockets );
