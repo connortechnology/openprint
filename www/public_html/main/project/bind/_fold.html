@@ -16,7 +16,7 @@
 		<option value="">select fold</option>
 		<? echo ( 
 			my @options;
-			push @options, map { $_, $openprint::Estimating::Folding::fold_types{$_} } sort keys %openprint::Estimating::Folding::fold_types;
+			push @options, map { $_, $openprint::Estimating::Folding::fold_types{$_} } sql::execute( undef, undef, 'SELECT DISTINCT type FROM folds ORDER BY type');
 			return ssi::make_drop_down( \@options, $$variable{"FoldType-$$variable{SignatureIndex}-$$variable{QTYIndex}-$$variable{index}"} );
 		) ?>
 	</select></td>

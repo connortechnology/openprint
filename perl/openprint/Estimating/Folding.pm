@@ -797,7 +797,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 
 				$run_qty += $Fold->makeready_overs_units() eq 'Percent' ? $run_qty * ( $Fold->makeready_overs() /100 ) : $Fold->makeready_overs();
 				$run_qty += $Fold->run_overs_units() eq 'Percent' ? $run_qty * ($Fold->run_overs()/100): $Fold->run_overs();
-$openprint::log->debug("Overs: " . $Fold->makeready_overs() );
+#$openprint::log->debug("Overs: " . $Fold->makeready_overs() );
 
 				#$openprint::log->debug("Pricing $impo_qty $imposition out of fold $fold_type on " . $Equipment->name()) if $debug;
 

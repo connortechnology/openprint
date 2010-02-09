@@ -151,6 +151,7 @@ sub signature_calc {
 	$$specs{"txtPockets$qty_index"} = 0;
 
 	foreach my $I ( @Impositions ) {
+$I->display('In Stitching:') if $debug;
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		if ( $imposition > 1 ) {
@@ -159,17 +160,20 @@ sub signature_calc {
 			($$I{'imposition'} % 2 ) or 
 			($$I{'image_orientation'} eq 'Vertical' and $$I{'rows'} % 2 ) or 
 			($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
-			(sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and $$I{'imposition'}%4) 
+			(sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and ($$I{'imposition'}%4) ) 
 			);
+			$openprint::log->debug(" $$I{'runstyle'} " . ($$I{'imposition'}%4) );
 		} # end if
 	} # end foreach Imposition
+$openprint::log->debug("Imp: $imposition");
 	my $I = $Impositions[0];
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 		if ( $imposition < $$specs{'Imposition'.$qty_index} ) {
-			$$specs{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
-			$$specs{'Status'} = 'uncalculated';
+			$results{'alert'} .= "Can't stitch $$specs{'Imposition'.$qty_index} out";
+			$results{'Status'} = 'uncalculated';
+			return \%results;
 		} # end if
 	} else {
 		$$specs{'Imposition'.$qty_index} = $imposition;
@@ -182,11 +186,11 @@ sub signature_calc {
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
 		if ( ! $$specs{"ddmEquipment$qty_index"} ) {
-			$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
+			$results{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
 		} else {
 			@equipment = openprint::Equipment::find( 'id'=> $$specs{"ddmEquipment$qty_index"} );
 			if ( ! @equipment ) {
-				$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
+				$results{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
 			} # end if
 		} # end if
 	} else {
