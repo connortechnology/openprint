@@ -1347,7 +1347,11 @@ sub _li_change {
 			} elsif ( $param{'runtime'} =~ /(\d+)/ ) {
 				( $h ) = ( $1 );
 			} # end if
-			$param{'runtime'} = sprintf('%.2d:%.2d:%.2d', $h, $m, $s );
+			if ( $h or $m or $s ) {
+				$param{'runtime'} = sprintf('%.2d:%.2d:%.2d', $h, $m, $s );
+			} else {
+				$param{'runtime'} = undef;
+			} # end if
 		} # end if
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		my $old_starttime = $Job->starttime_seconds();
@@ -1355,7 +1359,7 @@ sub _li_change {
 		$Job->comment( $param{'comment'} );
 		$Job->impressions( $param{'impressions'} );
 		$variable{'error'} .= $Job->save({
-				'starttime'	=>	$param{'starttime_year'} ? $new_starttime : $old_starttime,
+				'starttime'	=>	$param{'starttime_year'} ? $new_starttime : $$Job{'starttime'},
 				'locked'	=>	$param{'locked'},
 				'runtime'	=>	$param{'runtime'},
 				} );

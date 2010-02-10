@@ -30,14 +30,17 @@ $serial = 'schedule_id_seq';
 	'service_id'	=>	'service_id',
 	'equipment_id'	=>	'equipment_id',
 	'locked'		=>	'starttime_locked',
+	'speed'			=>	'speed',
 );
 
 %transforms = (
 	'id'			=>	[ 's/\D//g' ],
 	'project_id'	=>	[ 's/\D//g' ],
+	'speed'			=>	[ 's/\D//g' ],
 );
 
 %defaults = (
+	'speed'			=>	undef,
 );
 sub find_one {
 	my %params = @_;
@@ -232,7 +235,7 @@ sub comment {
 				if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
 					my $Imposition = new openprint::Imposition();
 					$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
-					my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
+					my $foldtype = sprintf('%sx%s-%dPage-%sFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
 					$comment .= "($foldtype inline)";
 				} else {
 					$comment .= '(sheeted)';
@@ -334,7 +337,7 @@ sub get_li {
 		$html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
 
 		$html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
-		$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps</span>`, $$self{'id'}, $impressions );
+		$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $impressions, $self->speed() );
 		if ( $Equipment->smartscheduling() or $$self{'locked'} ) {
 			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
 					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
@@ -433,13 +436,14 @@ sub Project {
 sub runtime {
 	my ( $self ) = @_;
 
-	my $minutes = 0;
+	my $seconds = 0;
 	if ( ! $$self{'runtime'} ) {
 		my $Project = $self->Project();
 		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			$minutes += openprint::service::get_runtime( $Project, $sig_id );
+			$seconds += openprint::service::get_runtime( $Project, $sig_id, $self->Equipment(), $self->impressions()/@{$$self{'service_id'}}, $self->speed() );
 		} # end foreach
-		$$self{'runtime'} = Date::Format::time2str( '%H:%M:%S', 60*$minutes );
+		$$self{'runtime'} = misc::seconds2hms( $seconds );
+$log->debug("ScheduledJob::runtime seconds: $seconds => " . $$self{'runtime'} );
 	} # end if
 	return $$self{'runtime'};
 } # end sub runtime
@@ -592,6 +596,20 @@ sub bump {
 	$Project->add_to_log( @session{'company_id','user_id'}, 'Job bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
 	return $error;
 } # end sub bump
+
+sub speed {
+	my $self = shift;
+	if ( @_ ) {
+		$$self{'speed'} = $_[0];
+	} # end if
+	if ( ( ! $$self{'speed'} ) and $$self{'project_id'} ) {
+		my $Project = $self->Project();
+		if ( $Project->ordered_quantity_index() ) {
+			$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] ), $Project->ordered_quantity_index() );
+		} # end if
+	} # en dif
+	return $$self{'speed'};
+} # end sub runspeed
 
 1;
 __END__

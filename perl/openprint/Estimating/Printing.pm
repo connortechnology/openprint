@@ -3261,17 +3261,23 @@ $openprint::log->debug("Compare_signatures not equal due to $key $$sig1{$key} ne
 } # end sub compare_signatures
 
 sub runtime {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $specs, $Equipment, $impressions, $runspeed ) = @_;
 
-    my ( $qty_index ) = $Project->ordered_quantity_index();
+    my $qty_index = $Project->ordered_quantity_index();
 	my %time;
 
-	if ( ! $$specs{'UsePress'} ) {
-		$$specs{'UsePress'} = $$specs{'ddmPress'.$qty_index};
+
+	if ( ! $Equipment ) {
+		$Equipment = openprint::Equipment::find_one( 'strid'=>$$specs{'UsePress'} );
+		if ( ! $$specs{'UsePress'} ) {
+			$$specs{'UsePress'} = $$specs{'ddmPress'.$qty_index};
+		} # end if
+	} # end if
+	if ( ! $Equipment ) {
+		$openprint::log->error("No equipment found for $$specs{'UsePress'}");
+		return %time;
 	} # end if
 
-	my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'UsePress'} );
-	my $Equipment = shift @Equipment;
 	my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
 	my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
 	my @colours;
@@ -3286,21 +3292,60 @@ sub runtime {
 	$time{'Setup'} += 60*$Equipment->specification('Setup Time') if @side_one_colours;
 	$time{'Setup'} += 60*$Equipment->specification('Setup Time') if @side_two_colours;
 	$time{'Setup'} += 60*$Equipment->specification('Wash Up Time Per Colour') * @colours;
+$openprint::log->debug("Runtime for $$Equipment{strid}: Setup: " . $Equipment->specification('Setup Time') . " + " . $Equipment->specification('Wash Up Time Per Colour') .' per colour.' );
 	#$time{'Setup'} += 60*$Equipment->specification('Plate Setup Time') ;
 
-	my $run_speed = $Equipment->specification( 'Press Additional Run Speed',$$specs{'txtSpecificStockCalliper'} );
-	my $std_runspeed = $Equipment->specification('Press Standard Run Speed');
-
-	if ( $std_runspeed ) {
-		if ( $run_speed ) {
-			$time{'Run'} += int( ( 60 * $$specs{'hdnImpressionQuantity'.$qty_index} / $std_runspeed ) * ( $std_runspeed / $run_speed ) );
-		} else {
-			$time{'Run'} += int ( 60 * $$specs{'hdnImpressionQuantity'.$qty_index} / $std_runspeed );
-		} # end if
+	$runspeed = runspeed( $Project, $specs, $qty_index, $Equipment ) if ! $runspeed;
+	$impressions = $$specs{'hdnImpressionQuantity'.$qty_index} if ! $impressions;
+	if ( $runspeed ) {
+		$time{'Run'} += int ( 3600 * $impressions / $runspeed );
 	} # end if
 	$time{'Total'} = $time{'Setup'} + $time{'Run'};
+$openprint::log->debug("Total: $time{'Setup'} + $time{'Run'} = $time{'Total'} => " . misc::seconds2hms( $time{'Total'} ) );
 	return \%time;
 } # end sub runtime
+
+sub runspeed {
+	my ( $Project, $sig_specs, $qty_index, $Equipment ) = @_;
+
+	my $runspeed;
+	if ( ! $Equipment ) {
+		my $equipment_name = $$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$qty_index};
+		if ( ! $equipment_name ) {
+			$openprint::log->error( "No equipmnet in sig for qty $qty_index" );
+			return;
+		} # end if
+		$Equipment = openprint::Equipment::find_one('strid'=>$equipment_name);
+		if ( ! $Equipment ) {
+			$openprint::log->error( "Equipment $equipment_name not found in runspeed" );
+			return;
+		} # end if
+	} # end if
+
+	my $Imposition = new openprint::Imposition();
+	$Imposition->load( $sig_specs, $qty_index );
+
+	if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
+		my $services = $Project->services();
+		if ( $$services{'Folding'} ) {
+			my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+			if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} == $Equipment->id() ) {
+				my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
+				$runspeed = int( $Equipment->specification($foldtype.'RunSpeed', $Imposition->Paper()->gsm() ) );
+$openprint::log->debug("Foudn runspeed for fold $foldtype: $runspeed");
+			} # end if
+		} # end if
+	} # end if
+    if ( ! $runspeed ) {
+        $runspeed = int( $Equipment->specification( 'Press Additional Run Speed', $$sig_specs{'txtSpecificStockCalliper'} ) );
+$openprint::log->debug("Foudn Additional runspeed for $$Equipment{strid}: $runspeed");
+    } # end if
+    if ( ! $runspeed ) {
+        $runspeed = int( $Equipment->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() ) );
+$openprint::log->debug("Foudn Standard runspeed for $$Equipment{strid}: $runspeed");
+    } # end if
+	return $runspeed;
+} # end sub runspeed
 
 sub get_weight {
 	my ( $Project, $specs, $qty_index ) = @_;
