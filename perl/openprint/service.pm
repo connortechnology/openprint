@@ -493,47 +493,17 @@ $log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$serv
 	return \%specs;
 } # end sub internal_calc
 
+# Returns vale in seconds
 sub get_runtime {
-    my ( $Project, $service_index ) = @_;
+    my ( $Project, $service_index, $Equipment, $impressions, $speed ) = @_;
 
     my $qty_index = $Project->ordered_quantity_index();
     my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 
     if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'AdditionalSignature' ) ) {
-		if ( ! $$specs{'UsePress'} ) {
-			$$specs{'UsePress'} = $$specs{'ddmPress'.$qty_index};
-		} # end if
-
-		my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'UsePress'} );
-		return 0 if ! @Equipment;
-		my $Equipment = shift @Equipment;
-		return 0 if ! $Equipment;
-
-        my $run_speed = $Equipment->specification( 'Press Additional Run Speed',$$specs{'txtSpecificStockCalliper'} );
-        my $runtime;
-        my @side_one_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideOne' );
-        my @side_two_colours = openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' );
-        my @colours;
-        if ( sets::isin( $$specs{'ddmRunStyle'.$qty_index}, ['Work & Turn', 'Work & Tumble'] ) ) {
-            @colours = openprint::Estimating::Printing::filter_colours( @side_one_colours, @side_two_colours );
-			$runtime += $Equipment->specification('Setup Time');
-        } else {
-            @colours = ( @side_one_colours, @side_two_colours );
-			$runtime += $Equipment->specification('Setup Time') if @side_one_colours;
-			$runtime += $Equipment->specification('Setup Time') if @side_two_colours;
-        } # end if
-
-        $runtime += $Equipment->specification('Wash Up Time Per Colour') * @colours;
-		my $std_runspeed = $Equipment->specification('Press Standard Run Speed');
-
-        if ( $std_runspeed ) {
-            if ( $run_speed ) {
-                $runtime += int( ( 60 * $$specs{'hdnImpressionQuantity'.$qty_index} / $std_runspeed ) * ( $std_runspeed / $run_speed ) );
-            } else {
-                $runtime += int ( 60 * $$specs{'hdnImpressionQuantity'.$qty_index} / $std_runspeed );
-            } # end if
-        } # end if
-        return $runtime;
+		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
+		return $$time{'Total'} if $time;
+		return 0;
     } elsif ( $$specs{'ServiceType'} eq 'Cutting' ) {
         return openprint::Estimating::Cutting::runtime( $Project->id(), $service_index, $specs, $qty_index );
     } elsif ( $$specs{'ServiceType'} eq 'Folding' ) {

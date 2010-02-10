@@ -138,7 +138,7 @@ div.PressColumn ul li {display: block;}
 		float: left;
 		min-width: 70px;
         border: 1px outset gray;
-        width: 90px;
+        width: 150px;
         text-align: center;
 	}
 	.RunTime {

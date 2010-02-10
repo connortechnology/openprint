@@ -566,6 +566,7 @@ if ( ! $data ) {
 		$dbh->do('UPDATE Schedule SET service_id=ARRAY[serviceindex]');
 		#$dbh->do('ALTER TABLE Schedule DROP serviceindex');
 	} # end if
+	$dbh->do('ALTER TABLE Schedule ADD speed INTEGER') if ! exists $$data{'speed'};
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
 if ( ! $data ) {
