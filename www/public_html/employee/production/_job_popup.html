@@ -5,7 +5,7 @@
 			<label>Comment:</label>
 			<textarea id="comment" name="comment"  rows="5" cols="" ><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
 		</p>
-<? if ( $$variable{'Job'}->Equipment()->smartscheduling() eq 'Y' ) ?>
+<? if ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
 		<p>
 			<label>Locked:</label>
 			<input type="radio" id="locked1" name="locked" value="1" <? echo ( ssi::checked( $$variable{'Job'}{'locked'} ); ) ?> onclick="$('StartTime').show();" />
@@ -22,7 +22,7 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'Today', 't.gif', 'set_today( JobForm.starttime_year, JobForm.starttime_month, JobForm.starttime_day, JobForm.starttime_hour, JobForm.starttime_minute );', '', 'T' ); ) ?>
 			</span>
 		</p>
-<? endif ( $$variable{'Job'}->Equipment()->smartscheduling() eq 'Y' ) ?>
+<? endif ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
 		<p>
 			<label>Impressions:</label>
 			<input type="text" name="impressions" value="<? echo ( $$variable{'Job'}->impressions() ) ?>" />

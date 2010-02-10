@@ -1317,6 +1317,8 @@ sub _li_change {
 		} # end if
 	} elsif ( $param{'action'} eq 'SaveJob' ) {
 
+		my %sql;
+
 		if ( $param{'forms'} != $Job->forms() ) {
 			my @service_ids = @{$$Job{'service_id'}};
 			foreach my $s_id ( @service_ids ) {
@@ -1326,7 +1328,7 @@ sub _li_change {
 
 			if ( $Job->forms() > $param{'forms'} ) {
 				@service_ids = splice @service_ids, 0, $param{'forms'};
-				$Job->save({'service_id'=>\@service_ids});
+				$sql{'service_id'} = \@service_ids;
 			} elsif ( $Job->forms() < $param{'forms'} ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
 				while ( @service_ids < $param{'forms'} ) {
@@ -1334,7 +1336,7 @@ sub _li_change {
 							'txtPrice'.$Job->Project()->ordered_quantity_index()   => 0,
 							} );
 				} # end while	
-				$Job->service_id(\@service_ids);
+				$sql{'service_id'} = \@service_ids;
 			} # end if
 		} # end if
 		if ( $param{'runtime'} ne $Job->runtime() ) {
@@ -1352,19 +1354,26 @@ sub _li_change {
 			} else {
 				$param{'runtime'} = undef;
 			} # end if
+			$sql{'runtime'} = $param{'runtime'};
 		} # end if
-		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
-		my $old_starttime = $Job->starttime_seconds();
-		my $new_starttime = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} );
-		$Job->comment( $param{'comment'} );
-		$Job->impressions( $param{'impressions'} );
-		$variable{'error'} .= $Job->save({
-				'starttime'	=>	$param{'starttime_year'} ? $new_starttime : $$Job{'starttime'},
-				'locked'	=>	$param{'locked'},
-				'runtime'	=>	$param{'runtime'},
-				} );
+		if ( exists $param{'starttime_year'} ) {
+			my $old_starttime = $Job->starttime_seconds();
+			my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );
+			if ( $old_starttime != $new_starttime ) {
+				$sql{'starttime_seconds'} = $new_starttime;
+			} # end if
+		} # end if
+		$sql{'locked'} = $param{'locked'} if exists $param{'locked'} and $param{'locked'} != $$Job{'locked'};
+		$sql{'comment'} = $param{'comment'} if $param{'comment'} ne $Job->comment();
+		$sql{'impressions'} = $param{'impressions'} if $Job->impressions() != $param{'impressions'};
+		$sql{'speed'} = $param{'speed'} if $Job->speed() != $param{'speed'};
 
-		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+		if ( keys %sql ) {
+			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+			$variable{'error'} .= $Job->save(\%sql);
+			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+		} # end if
+
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
