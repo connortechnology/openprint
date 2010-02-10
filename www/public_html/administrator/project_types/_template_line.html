@@ -9,7 +9,7 @@
 <td><input type="text" name="finishedheight%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
 <td><input type="text" name="flatwidth%1$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
 <td><input type="text" name="flatheight%1$d" value="%7$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"/></td>
-`, $Template->get('id','type','description','finished_width','finished_height','flat_width','flat_height') );
+`, $Template->id(), ssi::htmlize( $Template->get('type','description','finished_width','finished_height','flat_width','flat_height') ) );
 
             $html .= '<td>';
             $html .= ssi::writeButton( $log, $dbh, 'C'.$Template->id(), '', qq`new Ajax.Updater( 'T$$Template{id}', '_template_line.html', {
