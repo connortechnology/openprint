@@ -379,6 +379,14 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 				} # end if
 
 				my $run_qty = $qty / $Imposition->imposition();
+				if ( my $Overs = $Equipment->Specification('UVCoating Overs', $run_qty ) ) {
+					if ( $$Overs{'units'} eq 'Sheets' ) {
+						my $overs = $$Overs{'value'};
+						$run_qty += $overs;
+						$ImpositionPrice{'Overs'} += $overs;
+						$breakdown .= 'Overs: ' . $overs . '<br/>';
+					} # endif
+				} # end if
 				my @types;
 				if ( sets::isin( $imp->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
 # need to merge any overalls into spots
@@ -495,6 +503,7 @@ $openprint::log->debug("Types: @types");
 			$BestPrice{'Equipment'} = $Equipment;
 			$BestPrice{'Breakdown'} = 'Equipment: ' . $Equipment->name() . '<br/>' . $BestPricePerImposition{'Breakdown'};
 			$BestPrice{'Status'} = 'calculated';
+			$BestPrice{'Overs'} = $BestPricePerImposition{'Overs'};
 		} # endif
 	} # end foreach equipment
 
