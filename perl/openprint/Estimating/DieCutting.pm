@@ -143,6 +143,8 @@ sub calc_price {
 	if ( my $Overs = $Equipment->Specification('DieCutting Overs') ) {
 		if ( $$Overs{'units'} eq 'Percent' ) {
 			$impressions = int( $impressions * ( 1 + ($$Overs{'value'}/100) ) );
+		} elsif ( $$Overs{'units'} eq 'Sheets' ) {
+			$impressions += $$Overs{'value'};
 		} # end if
 	} # end if
 	$Total{'Impressions'} = $impressions;
