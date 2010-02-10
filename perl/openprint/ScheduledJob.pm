@@ -37,6 +37,7 @@ $serial = 'schedule_id_seq';
 	'id'			=>	[ 's/\D//g' ],
 	'project_id'	=>	[ 's/\D//g' ],
 	'speed'			=>	[ 's/\D//g' ],
+	#'runtime'		=>	[ 's/[^\d:]//g' ],
 );
 
 %defaults = (
@@ -511,9 +512,7 @@ sub Shift {
 
 sub start {
 	my ( $self ) = @_;
-	$self->starttime_seconds( time );
-	$self->locked( 1 );
-	my $e = $self->save();
+	my $e = $self->save({'starttime_seconds'=>time,'locked'=>1});
 	if ( ! $e ) {
 		foreach my $sig_id ( @{$$self{'service_id'}} ) {
 			openprint::service::status( $$self{'project_id'}, $sig_id, 'In Production' );
@@ -524,10 +523,10 @@ sub start {
 
 sub stop {
 	my ( $self ) = @_;
-	$self->locked( 0 );
 $log->debug("Stopping job: starttime $$self{'starttime'} seconds: " . $self->starttime_seconds() . " now: " . time . " elapsed: " . ( time - $self->starttime_seconds() ) );
-	$self->runtime_seconds( $self->runtime_seconds() - ( time - $self->starttime_seconds() ) );
-	my $e = $self->save();
+	my $new_runtime = $self->runtime_seconds() - ( time - $self->starttime_seconds() );
+	$new_runtime = 300 if $new_runtime < 0; # default to 5minutes
+	my $e = $self->save({'runtime_seconds'=>$new_runtime,'locked'=>0});
 	if ( ! $e ) {
 		foreach my $sig_id ( @{$$self{'service_id'}} ) {
 			openprint::service::status( $$self{'project_id'}, $sig_id, 'Ordered' );
@@ -605,7 +604,9 @@ sub speed {
 	if ( ( ! $$self{'speed'} ) and $$self{'project_id'} ) {
 		my $Project = $self->Project();
 		if ( $Project->ordered_quantity_index() ) {
-			$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] ), $Project->ordered_quantity_index() );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] ) if $$self{'service_id'} and @{$$self{'service_id'}};
+			
+			$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, $sig_specs, $Project->ordered_quantity_index(), $self->Equipment() ) if $sig_specs;
 		} # end if
 	} # en dif
 	return $$self{'speed'};
