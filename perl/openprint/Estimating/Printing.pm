@@ -3310,6 +3310,7 @@ sub runspeed {
 
 	my $runspeed;
 	if ( ! $Equipment ) {
+$openprint::log->debug("SIGSPECS $sig_specs, PROJECT: $Project ");
 		my $equipment_name = $$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$qty_index};
 		if ( ! $equipment_name ) {
 			$openprint::log->error( "No equipmnet in sig for qty $qty_index" );

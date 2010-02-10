@@ -1297,13 +1297,13 @@ sub _li_change {
 		foreach my $J ( openprint::ScheduledJob::find('equipment_id'=>$Job->equipment_id()) ) {
 			if ( $J->status() eq 'In Production' ) {
 				$variable{'error'} .= $J->stop();
-				$variable{'alert'} .= 'Stopped previous running job ' . $J->Project()->docket();
+				$variable{'alert'} .= 'Stopped previous running job docket ' . $J->Project()->docket();
 				push @{$variable{'changed'}}, $J->Shift()->ul_id();
 			} # end if
 		} # end foreach
 
-		$variable{'error'} .= $Job->start();
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+		$variable{'error'} .= $Job->start();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
