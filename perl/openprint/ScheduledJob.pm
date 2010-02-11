@@ -482,9 +482,10 @@ sub Shift {
 	} else {
 		my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
 		my @Shifts = openprint::Shift::find(
-				'equipment_id'=>$$self{'equipment_id'}, 
-				'endtime_>'=>$$self{'starttime'}, 
-				'starttime_<='=>$$self{'starttime'},'limit'=>1
+				'equipment_id'	=>	$$self{'equipment_id'}, 
+				'endtime_>'		=>	$$self{'starttime'}, 
+				'starttime_<='	=>	$$self{'starttime'},
+				#'limit'			=>	1,
 				);
 		if ( ! @Shifts ) {
 			@Shifts = openprint::Equipment_Shift::find(
@@ -505,7 +506,8 @@ sub Shift {
 			if ( @Shifts ) {
 				$log->warn("Deleting duplicate shifts! " . @Shifts );
 				foreach ( @Shifts ) {
-					$_->delete();
+					$log->error( $_->to_string() );
+					#$_->delete();
 				} # end foreach
 			} # end if
 		} # end if

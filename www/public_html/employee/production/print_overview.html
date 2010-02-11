@@ -279,9 +279,9 @@
 				for ( my $i = 0; $i < @Shifts; $i += 1 ) {
 					for ( my $j = $i+1; $j < @Shifts; $j += 1 ) {
 						if ( $Shifts[$i]->ul_id() eq $Shifts[$j]->ul_id() ) {
-$log->error("Removing duplicate shift");
-							splice @Shifts, $j, 1;
-							$j -= 1;
+$log->error("Removing duplicate shift" . $Shifts[$i]->to_string() );
+							#splice @Shifts, $j, 1;
+							#$j -= 1;
 						} # end if
 					} # end for j
 				} # end for
