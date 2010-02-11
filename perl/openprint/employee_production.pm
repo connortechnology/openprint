@@ -1160,18 +1160,18 @@ sub reorder_jobs {
 	} # end foreach Job
 
 	my $start_time = time;
-
 	my $row = $order[0];
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
 	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
+$log->debug("Running job,moving up starttime");
 		$start_time = $row->starttime_seconds();
 	} # end if
 
 	# Grab all shifts.  We will only add a shift at the end
 	my @Shifts = openprint::Shift::find(
 			'equipment_id'	=>	$$row{'equipment_id'},
-			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M', $start_time ),
+			'endtime_start'	=>	Date::Format::time2str('%Y-%m-%d %H:%M%z', $start_time ),
 			'order'			=>	'starttime',
 			);
 foreach my $S ( @Shifts ) {
@@ -1262,7 +1262,7 @@ $log->debug("ES: " . $NextES->name() );
 
 		$row->operator_id( $Shift->operator_id() );
 		last if $row->save({
-				'starttime'	=> $start_time ? Date::Format::time2str('%Y-%m-%d %H:%M:%S', $start_time ) : undef,
+				'starttime'	=> $start_time ? Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $start_time ) : undef,
 				'equipment_id'	=>	$$Shift{'equipment_id'},
 				} );
 		if ( ! $start_time ) {
@@ -1436,7 +1436,12 @@ sub _shift_change {
 		'endtime_seconds'		=>	$new_endtime,
 		'operator_id'	=>	$param{'operator_id'},
 	});
-	push @{$variable{'changed'}}, $Shift->ul_id();
+		if ( $Shift->Equipment()->smartscheduling() ) {
+			reorder_jobs(
+					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Shift{'equipment_id'},'order'=>'starttime' ) );
+		} else {
+			push @{$variable{'changed'}}, $Shift->ul_id();
+		} # end if smartscheduling
 } # end sub _shift_change
 
 sub operator_schedule {
