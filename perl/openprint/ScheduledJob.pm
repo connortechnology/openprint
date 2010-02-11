@@ -31,6 +31,9 @@ $serial = 'schedule_id_seq';
 	'equipment_id'	=>	'equipment_id',
 	'locked'		=>	'starttime_locked',
 	'speed'			=>	'speed',
+	'comment'		=>	'comment',
+	'runtime_seconds'	=>	undef,
+	'starttime_seconds'	=>	undef,
 );
 
 %transforms = (
@@ -523,9 +526,9 @@ sub start {
 
 sub stop {
 	my ( $self ) = @_;
-$log->debug("Stopping job: starttime $$self{'starttime'} seconds: " . $self->starttime_seconds() . " now: " . time . " elapsed: " . ( time - $self->starttime_seconds() ) );
 	my $new_runtime = $self->runtime_seconds() - ( time - $self->starttime_seconds() );
 	$new_runtime = 300 if $new_runtime < 0; # default to 5minutes
+$log->debug("Stopping job: new runtime: $new_runtime starttime $$self{'starttime'} seconds: " . $self->starttime_seconds() . " now: " . time . " elapsed: " . ( time - $self->starttime_seconds() ) );
 	my $e = $self->save({'runtime_seconds'=>$new_runtime,'locked'=>0});
 	if ( ! $e ) {
 		foreach my $sig_id ( @{$$self{'service_id'}} ) {
