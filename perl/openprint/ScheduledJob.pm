@@ -34,6 +34,7 @@ $serial = 'schedule_id_seq';
 	'comment'		=>	'comment',
 	'runtime_seconds'	=>	undef,
 	'starttime_seconds'	=>	undef,
+	'impressions'		=>	undef,
 );
 
 %transforms = (

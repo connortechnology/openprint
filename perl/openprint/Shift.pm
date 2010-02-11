@@ -31,6 +31,8 @@ $serial = 'shifts_id_seq';
 	'operator_id'		=>	'operator_id',
 	'shift_id'			=>	'shift_id',
 	'equipment_id'		=>	'equipment_id',
+	'starttime_seconds'	=>	undef,
+	'endtime_seconds'	=>	undef,
 );
 
 %transforms = (
@@ -141,6 +143,9 @@ sub find {
 } # end sub find
 
 sub starttime_seconds {
+	if ( @_ == 2 ) {
+		$_[0]{'starttime'} = Date::Format::time2str( '%y-%m-%d %H:%M:%S', $_[1] );
+	} # end if
 	return Date::Parse::str2time( $_[0]{'starttime'} );
 } # endsub
 
@@ -151,6 +156,9 @@ sub startdate_seconds {
 } # end sub startdate_seconds
 
 sub endtime_seconds {
+	if ( @_ == 2 ) {
+		$_[0]{'endtime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] );
+	} # end if
 	return Date::Parse::str2time( $_[0]{'endtime'} );
 } # endsub
 

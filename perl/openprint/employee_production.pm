@@ -1149,7 +1149,7 @@ sub reorder_jobs {
 
 	foreach my $Job ( @order ) {
 		my $Project = $Job->Project();
-		$log->debug($Job->Project()->docket() . ' ' . $Job->Project()->Company()->name() . ' Due: (' . $Project->due_date().')' );
+		$log->debug($Job->id() .' ' . $Job->Project()->docket() . ' ' . $Job->Project()->Company()->name() . ' Due: (' . $Project->due_date().')' );
 		if ( ! $Project->due_date() ) {
 			$log->debug("Saving project");
 			if ( $_ = $Project->save({'due_date'=>$Project->get_due_date()}) ) {
@@ -1417,9 +1417,23 @@ sub _shift_popup {
 
 sub _shift_change {
 	my $Shift = new openprint::Shift( $param{'shift_id'} );
-	$Shift->save({
-		'starttime'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ),
-		'endtime'		=>	sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'endtime_year','endtime_month','endtime_day','endtime_hour','endtime_minute'} ),
+
+	my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );
+	my $new_endtime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'endtime_year','endtime_month','endtime_day','endtime_hour','endtime_minute'} ) );
+	foreach my $J ( $Shift->Schedule() ) {
+		next if ! $J->locked();
+		if ( $J->starttime_seconds() > $new_starttime ) {
+			$new_starttime = $J->starttime_seconds();
+		} # end if
+		if ( $J->starttime_seconds() > $new_endtime ) {
+			$new_endtime = $J->starttime_seconds();
+		} # end if
+	} # end foreach J
+	
+	push @{$variable{'changed'}}, $Shift->ul_id();
+	$variable{'error'} .= $Shift->save({
+		'starttime_seconds'		=>	$new_starttime,
+		'endtime_seconds'		=>	$new_endtime,
 		'operator_id'	=>	$param{'operator_id'},
 	});
 	push @{$variable{'changed'}}, $Shift->ul_id();
