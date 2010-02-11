@@ -1417,25 +1417,28 @@ sub _shift_popup {
 
 sub _shift_change {
 	my $Shift = new openprint::Shift( $param{'shift_id'} );
-
-	my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );
-	my $new_endtime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'endtime_year','endtime_month','endtime_day','endtime_hour','endtime_minute'} ) );
-	foreach my $J ( $Shift->Schedule() ) {
-		next if ! $J->locked();
-		if ( $J->starttime_seconds() > $new_starttime ) {
-			$new_starttime = $J->starttime_seconds();
-		} # end if
-		if ( $J->starttime_seconds() > $new_endtime ) {
-			$new_endtime = $J->starttime_seconds();
-		} # end if
-	} # end foreach J
+	if ( $param{'action'} eq 'delete' ) {
+		$Shift->delete();
+	} else {
+		my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );
+		my $new_endtime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'endtime_year','endtime_month','endtime_day','endtime_hour','endtime_minute'} ) );
+		foreach my $J ( $Shift->Schedule() ) {
+			next if ! $J->locked();
+			if ( $J->starttime_seconds() > $new_starttime ) {
+				$new_starttime = $J->starttime_seconds();
+			} # end if
+			if ( $J->starttime_seconds() > $new_endtime ) {
+				$new_endtime = $J->starttime_seconds();
+			} # end if
+		} # end foreach J
 	
-	push @{$variable{'changed'}}, $Shift->ul_id();
-	$variable{'error'} .= $Shift->save({
-		'starttime_seconds'		=>	$new_starttime,
-		'endtime_seconds'		=>	$new_endtime,
-		'operator_id'	=>	$param{'operator_id'},
-	});
+		push @{$variable{'changed'}}, $Shift->ul_id();
+		$variable{'error'} .= $Shift->save({
+				'starttime_seconds'		=>	$new_starttime,
+				'endtime_seconds'		=>	$new_endtime,
+				'operator_id'	=>	$param{'operator_id'},
+				});
+	} # end if
 		if ( $Shift->Equipment()->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Shift{'equipment_id'},'order'=>'starttime' ) );
