@@ -640,8 +640,11 @@ $openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
 $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if $debug;
 						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height() );
-						if ( $_ and ( @my_equipment == 1 )) {
+#$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() );
+						if ( $_ ) {
+							if ( @my_equipment == 1 ) {
 							$Breakdown .= "Doesn't fit: $_<br/>";
+							} # end if
 						} else {
 							my $Fold = $Equipment->Fold(
 									'type'				=>	$$sig_specs{'rdbTemplateType'},

@@ -9,8 +9,8 @@ require openprint::Location;
 require sql;
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openrpint::log;
-*dbh = \$openrpint::dbh;
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
@@ -155,7 +155,7 @@ sub fits {
 
 	if ( $self->specification("Maximum$service Sheet Width") and $self->specification("Maximum$service Sheet Length") ) {
 		my $imp = openprint::imposition::fit( $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
-#$log->debug("Impo: $imp{'Imposition'} $imp{'Rows'}x$imp{'Cols'}");
+#$log->debug("Impo: $$imp{'imposition'} $$imp{'rows'}x$$imp{'columns'} on $$self{'strid'}");
 		if ( ! $imp->imposition() ) {
 			return sprintf('Too big %s x %s on %s x %s', $width, $height, $self->specification("Maximum$service Sheet Width"),$self->specification("Maximum$service Sheet Length") );
 		} # end if

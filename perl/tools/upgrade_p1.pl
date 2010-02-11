@@ -147,7 +147,7 @@ be found at:<br/>
 http://www.idealliance.org/industry_resources/branding_media_and_color/gracol</a><br/>
 <a href="http://files.idealliance.org/GRACoL/ICC/2006%20GRACoL%20&%20SWOP%20Profiles.zip">
 http://files.idealliance.org/GRACoL/ICC/2006%20GRACoL%20&%20SWOP%20Profiles.zip</a><br/>'
-,'description', 'Disclaimer to show at bottom of project.', 'category','Miscellaneous Settings' ) if ! $config{'ProjectViewDisclaimer'};
+,'description', 'Disclaimer to show at bottom of project.', 'category','Miscellaneous Settings' ) if ! exists $config{'ProjectViewDisclaimer'};
 	sql::insert( undef, undef, 'configuration', 'name', 'OrderViewDisclaimer','value',
 'All CTP quotes must include a digital proof. All prices
 are subject to the viewing of artwork, film or electronic file. Please check
@@ -160,7 +160,7 @@ additional cost unless specified in the estimate. If administrative
 changes are required you will be notified prior to production approval. This quote
 is valid for 30 days subject to paper price increase and availability.
 Quantities of +/- 5% will represent completion of order and will be charged or credited accordingly.'
-,'description', 'Disclaimer to show at bottom of an order.', 'category','Miscellaneous Settings' ) if ! $config{'OrderViewDisclaimer'};
+,'description', 'Disclaimer to show at bottom of an order.', 'category','Miscellaneous Settings' ) if ! exists $config{'OrderViewDisclaimer'};
 	sql::insert( undef, undef, 'configuration', 'name', 'QuoteViewDisclaimer','value',
 '<p>
 Client is responsible to verify all specifications in comparison with original quote request. Size and other
@@ -177,5 +177,5 @@ administrative changes are required you will be notified prior to production app
 30 days subject to paper price increase and availability.  Quantities of +/- 5% will represent completion of
 order and will be charged or credited accordingly.
 </p>'
-,'description', 'Disclaimer to show at bottom of a quote.', 'category','Miscellaneous Settings' ) if ! $config{'QuoteViewDisclaimer'};
+,'description', 'Disclaimer to show at bottom of a quote.', 'category','Miscellaneous Settings' ) if ! exists $config{'QuoteViewDisclaimer'};
 $dbh->disconnect();

@@ -62,9 +62,12 @@ my @no_outputs = (
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs ) = @_;
 
+#$openprint::log->debug("Scoring::need $$sig_specs{SignatureIndex} : " .$$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"});
 	if ( $specs ) {
-		if ( ( $$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"} eq 'Y' ) and
-				( $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} or $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} ) ) {
+	# This is because for non-books, the specs hash doesn't have the SignatureIndex filledin.
+		my $sig_index = $$sig_specs{"SignatureIndex"} * 1;
+		if ( ( $$specs{"chkOverrideQty-$sig_index"} eq 'Y' ) and
+				( $$specs{"txtVerticalQty-$sig_index"} or $$specs{"txtHorizontalQty-$sig_index"} ) ) {
 			return 1;
 		} # end if
 	} # end if
@@ -200,7 +203,7 @@ sub signature_calc {
 		'Status' => 'calculated',
 		'Breakdown'	=>	'',
 	);
-
+	$$sig_specs{'SignatureIndex'} *= 1;
 	if ( $$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"} ne 'Y' ) {
 		get_scores( $Project, $specs, $sig_specs );
 	} else {
@@ -362,6 +365,13 @@ sub signature_calc {
 			$Results{'Breakdown'} .= "Imposition: $$I{'imposition'}: ";
 
 			my $use_qty = ($qty /$imposition->imposition()) * ( $imposition->imposition() / $I->imposition() );
+			my $Overs = $Equipment->Specification( 'Scoring Overs', $use_qty );
+			if ( $$Overs{'units'} eq 'Sheets' ) {
+				my $overs = $$Overs{'value'} * ( $imposition->imposition() / $I->imposition() );
+				$use_qty += $overs;
+				$Results{'Overs'} = $overs;
+				$Results{'Breakdown'} .= 'Overs: ' . $overs . '<br/>';
+			} # end if
 
 			my $servicePrice;
 			my %servicePrice = openprint::service::get_price_object( 'Scoring', $use_qty, $Equipment );

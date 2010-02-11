@@ -1124,6 +1124,9 @@ sub Company {
 
 sub requested_date {
 	my $self = shift;
+	if ( @_ ) {
+		$$self{'requested_date'} = $_[0];
+	} # end if
 	return $$self{'requested_date'};
 } # end sub requested_date
 
@@ -1169,8 +1172,17 @@ sub prices {
 }
 sub price {
 	my ( $self, $qty_index, $new ) = @_;
-	if ( defined $new ) {
+	if ( @_ == 3 ) {
 		$$self{'price'.$qty_index} = $new;
+	} # end if
+	if ( ! defined $$self{'price'.$qty_index} ) {
+		my $services = $self->services();
+		foreach my $k ( keys %$services ) {
+			foreach ( @{$$services{$k}} ) {
+				my $specs = openprint::service::get_specs_ref( $self, $_ );
+				$$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index} ? $$specs{'txtPrice'.$qty_index} : $$specs{'txtPrice1'};
+			} # end foreach
+		} # end foreach
 	} # end if
 	return sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
 } # end sub price
@@ -1572,6 +1584,40 @@ sub Operator {
 	} # end if
     return $$self{'Operator'};
 } # end sub Operator
+
+sub delivery_cost {
+	my ( $self ) = @_;
+
+	if ( ! exists $$self{'delivery_cost'} ) {
+		my $services = $self->services();
+		foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+			next if ! $$services{$ServiceType->name()};
+			foreach ( @{$$services{$ServiceType->name()}} ) {
+				my $specs = openprint::service::get_specs_ref( $self, $_ );
+				$$self{'delivery_cost'} += $$specs{'txtPrice'.$self->ordered_quantity_index()};	
+			} # end foreach
+		} # end foreach
+	} # end if
+	return $$self{'delivery_cost'};
+} # end sub delivery_cost
+
+sub production_cost {
+	my ( $self ) = @_;
+
+
+	if ( ! exists $$self{'production_cost'} ) {
+		my @Shipping_Services = map { $_->name() } openprint::ServiceType::find('category'=>'Shipping');
+		my $services = $self->services();
+		foreach my $ServiceType ( keys %$services ) {
+			next if sets::isin( $ServiceType, \@Shipping_Services );
+			foreach ( @{$$services{$ServiceType}} ) {
+				my $specs = openprint::service::get_specs_ref( $self, $_ );
+				$$self{'production_cost'} += $$specs{'txtPrice'.$self->ordered_quantity_index()};	
+			} # end foreach
+		} # end foreach
+	} # end if
+	return $$self{'production_cost'};
+} # end sub production_cost
 
 1;
 __END__

@@ -10,10 +10,9 @@
 
 <? echo ( my $html = '';
 	foreach my $key ( 'Roll2SheetCharge','hdnImpressionQuantity','StockQuantity','hdnNetSheetCount','hdnImageOrientation','txtMWeight' ) {
-	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-
-		$html .= sprintf('<input type="hidden" name="%2$s%1$d" value="%3$s" />%4$s', $qty_index, $key, $$variable{$key.$qty_index}, "\n" );
-	} # end foreach qty_index
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= sprintf('<input type="hidden" name="%2$s%1$d" value="%3$s" />%4$s', $qty_index, $key, $$variable{$key.$qty_index}, "\n" );
+		} # end foreach qty_index
 	} # end foreach key
 	return $html;
 ) ?>

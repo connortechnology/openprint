@@ -81,7 +81,7 @@ function same_as_billing( on, id ) {
 							</li>
 							<li> 
 								<label>Purchase Order:</label>
-								<input type="text" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
+								<input type="text" id="txtPurchaseOrder" name="txtPurchaseOrder" value="<?txtPurchaseOrder?>" />
 							</li>
 			<? if ( (! $session{'company_id'}) and sets::isin($session{'user_type'}, ['A','E'] ) ) ?>
 							<li>
@@ -153,14 +153,14 @@ function same_as_billing( on, id ) {
 						my $html;
 						foreach my $Project ( @{$$variable{'Projects'}} ) {
 							$$variable{'Project'} = $Project;
-							$html .= '<div class="Project"><p class="buttons">';
+							$html .= '<div class="Project"><h3 class="project_id">Project '.$Project->id().'</h3><p class="buttons">';
 							if ( ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) {
 								$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' );
 							} # endif
 							if ( $config{'OrderMode'} ne 'Simple' ) {
 								$html .= ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'Project'}->id(), '', '', "/main/project/view.html?ProjectIndex=$$variable{'Project'}{id}", 'Edit Project' );
 							} # endif
-							$html .= '</p>';
+							$html .= '</p><br class="spacer"/>';
 							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' );
 							$html .= '</div>';
 						} # end foreach
