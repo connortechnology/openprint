@@ -1289,12 +1289,12 @@ sub _li_change {
 		$variable{'alert'} .= 'Unable to load job.  It must have been removed from the schedule.';
 		return;
 	} # end if
-	my $Equipment = new openprint::Equipment( $$Job{'equipment_id'} );
+	my $Equipment = $Job->Equipment();
 
 	if ( $param{'action'} eq 'start' ) {
 
-		# Stop any currently running jobs
-		foreach my $J ( openprint::ScheduledJob::find('equipment_id'=>$Job->equipment_id()) ) {
+		# Stop any currently running jobs, which will be the first job on the schedule, right?
+		foreach my $J ( openprint::ScheduledJob::find('equipment_id'=>$Job->equipment_id(),'order'=>'starttime','starttime_null'=>0,'limit'=>1) ) {
 			if ( $J->status() eq 'In Production' ) {
 				$variable{'error'} .= $J->stop();
 				$variable{'alert'} .= 'Stopped previous running job docket ' . $J->Project()->docket();
@@ -1307,13 +1307,17 @@ sub _li_change {
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+		} else {
+			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		} # end if
 	} elsif ( $param{'action'} eq 'stop' ) {
-		$variable{'error'} .= $Job->stop();
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+		$variable{'error'} .= $Job->stop();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+		} else {
+			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		} # end if
 	} elsif ( $param{'action'} eq 'SaveJob' ) {
 
