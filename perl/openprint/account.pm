@@ -30,13 +30,11 @@ sub select_company {
 } # end sub select_company
 
 sub registration {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
 	if ( $param{'btnFunction'} ne 'Register' ) {
-		$openprint::log->debug("Not registering");
+		$log->debug("Not registering");
 		return;
 	} else {
-		$openprint::log->debug("Registering");
+		$log->debug("Registering");
 	} # end if
 
 	# Need to strip out characters that don't work well in filesystems - this is for FTP/Fileserver integration
@@ -82,18 +80,18 @@ sub registration {
 	} # end if
 
 	if ( $error ne '' ) {
-		$$variable{'error'} = $error;
+		$variable{'error'} = $error;
 		return;
 	} # end if
 
 	# enforce unique email addresses.
 	$param{'email'} =~ tr/[A-Z]/[a-z]/;
 	if ( openprint::User::find('email'=>$param{email} ) ) {
-		$$variable{'error'} = $param{'email'} .' is already a user!';
+		$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
 	if ( openprint::User::find('email'=>$param{email},'deleted'=>1 ) ) {
-		$$variable{'error'} = $param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
+		$variable{'error'} = $param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 		return;
 	} # end if
 
@@ -123,11 +121,11 @@ sub registration {
 		$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
 		$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
 		$Company->activation( $config{'NewCustomerAccountActivation'} );
-		if ( sets::isin( new openprint::User($openprint::session{'user_id'})->type(), ['E','A'] ) ) {
-			$Company->salesrep_id( $openprint::session{'user_id'} );
+		if ( sets::isin( new openprint::User($session{'user_id'})->type(), ['E','A'] ) ) {
+			$Company->salesrep_id( $session{'user_id'} );
 		} # end if
 		if ( my $error = $Company->save() ) {
-			$$variable{'error'} .= $error;
+			$variable{'error'} .= $error;
 			return;
 		} # end if
 
@@ -152,8 +150,8 @@ sub registration {
 		$User->change_password( 'N' );
 		$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
 		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
-		$$variable{'error'} .= $User->save();		
-		return if $$variable{'error'};
+		$variable{'error'} .= $User->save();		
+		return if $variable{'error'};
 
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;
@@ -183,13 +181,13 @@ sub registration {
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(ssi::variable_substitution( \$email_template, \%info )), 'text/html', 'quoted-printable' ) );
 		} # end foreach
 
-		if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
+		if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 			# If I'm a salesrep, then only change my company, not the user.
-			$openprint::session{'company_id'} = $Company->id();
+			$session{'company_id'} = $Company->id();
 		} else { 
 			if ( $config{'NewFirstUserAccountActivation'} eq 'Y' and $config{'NewCustomerAccountActivation'} eq 'Y') {
 				# auto log in.
-				@openprint::session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
+				@session{'company_id','user_id','email','user_type'} = ( $Company->id(), $User->id(), $User->email(), 'C' );
 			} # end if
 		} # end if
 	} else {
@@ -205,8 +203,8 @@ sub registration {
 		$User->change_password( 'N' );
 		$User->howdidyouhearaboutus( $param{'howdidyouhearaboutus'} );
 		$User->howdidyouhearaboutusother( $param{'howdidyouhearaboutusother'} );
-		$$variable{'error'} .= $User->save();		
-		return if $$variable{'error'};
+		$variable{'error'} .= $User->save();		
+		return if $variable{'error'};
 
 		$info{'Company'} = $Company;
 		$info{'User'} = $User;
@@ -257,18 +255,18 @@ sub registration {
 
 		if ( $param{'rdbReasonForPurchase'} eq 'Reseller' ) {
 			if ( $Company->reseller() ne 'Y' ) {
-				$$variable{'Redirect'} = '/main/account/reseller_application.html';
+				$variable{'Redirect'} = '/main/account/reseller_application.html';
 			} # end if
 		} # end if
 
-		if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) {
+		if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
 			# If I'm a salesrep, then only change my company, not the user.
-			$openprint::session{'company_id'} = $Company->id();
+			$session{'company_id'} = $Company->id();
 		} else { 
 			if ( $config{'NewNonFirstUserAccountActivation'} eq 'Y' ) {
 				# auto log in.
 				if ( $Company->activation() eq 'Y' ) {
-					@openprint::session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
+					@session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
 				} # end if
 			} # end if
 		} # end if
@@ -278,20 +276,16 @@ sub registration {
 } # end sub registration
 
 sub login_password {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
 	$_ = $config{'customerlogin'};
 	if ($ENV{'HTTP_REFERER'} =~ /$_/) {
-		$$variable{'message'} = "Your account has been activated.	While it is not required, it is recommended you change your password now.";
+		$variable{'message'} = "Your account has been activated.	While it is not required, it is recommended you change your password now.";
 	} else {
-		$$variable{'message'} = "Please enter the required information to change your password.";
+		$variable{'message'} = "Please enter the required information to change your password.";
 	} # end if
 } # login password
 
 sub company_profile {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-	my $Company = $variable{'Company'} = new openprint::Company( $openprint::session{'company_id'} );
+	my $Company = $variable{'Company'} = new openprint::Company( $session{'company_id'} );
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		my $error = '';
@@ -304,21 +298,20 @@ sub company_profile {
 				$error .= 'Invalid start date.<br/>';
 			} # end if
 			if ( $error ne '' ) {
-				$$variable{'error'} = $error;
+				$variable{'error'} = $error;
 				return;
 			} # end if
 	
 			if ( $param{'StartYear'} ) {
-			$param{'established'} = sprintf('%.4d-%.2d-%.2d',@param{'StartYear','StartMonth'}, 1 );
+				$param{'established'} = sprintf('%.4d-%.2d-%.2d',@param{'StartYear','StartMonth'}, 1 );
 			} else {
-			$param{'established'} = undef;
+				$param{'established'} = undef;
 			} # end if
 		} # end if
 		$param{'name'} = $param{'companyname'};
 		$Company->set( \%param );
 		$variable{'error'} .= $Company->save( );
 		$variable{'error'} .= $Company->save_tradereferences( \%param );
-
 	} # end if
 
 	$variable{'Company'} = $Company;
@@ -419,43 +412,41 @@ sub user_profile {
 sub change_password {
 }
 sub change_password_confirmation {
-	my ( $r, $log, $dbh, $variable ) = @_;
+	if ( $param{'txtNewPassword'} ne $param{'txtConfirmPassword'} ) {
+		$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
+		$variable{'Redirect'} = '/main/account/change_password.html';
+		return;
+	} # end if
 
-		if ( $param{'txtNewPassword'} ne $param{'txtConfirmPassword'} ) {
-			$$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
+	if ( $param{'txtNewPassword'} eq '' ) {
+		$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
+		$variable{'Redirect'} = '/main/account/change_password.html';
+		return;
+	} # end if
 
-		if ( $param{'txtNewPassword'} eq '' ) {
-			$$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
+	my $User = new openprint::User( $session{'user_id'} );
 
-		my $User = new openprint::User( $openprint::session{'user_id'} );
+	if ( $param{'txtNewPassword'} eq $User->password() ) {
+		$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
+		$variable{'Redirect'} = '/main/account/change_password.html';
+		return;
+	} # end if
 
-		if ( $param{'txtNewPassword'} eq $User->password() ) {
-			$$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
-		
-		if ( $User->password() eq $param{'txtOldPassword'} ) {
-			$User->password( $param{'txtNewPassword'} );
-			$User->changepassword( 'N' );
-			$$variable{'error'} .= $User->save();
-		} else {
-			$$variable{'error'} = 'You entered the wrong old password.<br/>';
-			$$variable{'Redirect'} = '/main/account/change_password.html';
-			return;
-		} # end if
+	if ( $User->password() eq $param{'txtOldPassword'} ) {
+		$User->password( $param{'txtNewPassword'} );
+		$User->changepassword( 'N' );
+		$variable{'error'} .= $User->save();
+	} else {
+		$variable{'error'} = 'You entered the wrong old password.<br/>';
+		$variable{'Redirect'} = '/main/account/change_password.html';
+		return;
+	} # end if
 } # sub change_password
 
 sub login {
 	if ( $param{'btnFunction'} eq 'Forgotten Password' ) {
 		if ( ! $param{'email'} ) {
-			$openprint::variable{'error'} = 'Please enter the email address of the account to retrieve.';
+			$variable{'error'} = 'Please enter the email address of the account to retrieve.';
 			return;
 		} # end if
 
@@ -560,9 +551,7 @@ sub reseller_application {
 } # sub reseller_application
 
 sub credit_application {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-	my $Company = $$variable{'Company'} = new openprint::Company( $session{'company_id'} );
+	my $Company = $variable{'Company'} = new openprint::Company( $session{'company_id'} );
 
 	if ( $param{'btnFunction'} eq 'Apply' ) {
 		my $error = '';
@@ -587,7 +576,7 @@ sub credit_application {
 
 # process error conditions
 		if ( $error ne '' ) {
-			$$variable{'error'} = $error;
+			$variable{'error'} = $error;
 			return;
 		} # end if
 
@@ -642,7 +631,6 @@ sub credit_application {
 	} # end if Apply
 
 } # sub credit_application
-
 
 1;
 __END__

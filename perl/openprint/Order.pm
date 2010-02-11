@@ -33,8 +33,8 @@ my $debug = 1;
 	'created_on'				=> 'dtmorderdate',
 	'company_name'				=> 'strcompanyname',
 	'salutation'				=> 'strsalutation',
-	'first_name'				=> 'strfirstname',
-	'last_name'					=> 'strlastname',
+	'firstname'				=> 'strfirstname',
+	'lastname'					=> 'strlastname',
 	'address1'					=> 'straddress1',
 	'address2'					=> 'straddress2',
 	'city'						=> 'strcity',
@@ -401,10 +401,10 @@ sub User {
 
 sub name {
 	my $self = shift;
-	if ( ! ( $$self{'first_name'} or $$self{'last_name'} ) ) {
+	if ( ! ( $$self{'firstname'} or $$self{'lastname'} ) ) {
 		return $self->User()->name();
 	} # end if
-	return $$self{'first_name'} . ' ' . $$self{'last_name'};
+	return $$self{'firstname'} . ' ' . $$self{'lastname'};
 } # end sub name
 
 sub balance {
