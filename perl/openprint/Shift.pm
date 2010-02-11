@@ -144,7 +144,7 @@ sub find {
 
 sub starttime_seconds {
 	if ( @_ == 2 ) {
-		$_[0]{'starttime'} = Date::Format::time2str( '%y-%m-%d %H:%M:%S', $_[1] );
+		$_[0]{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] );
 	} # end if
 	return Date::Parse::str2time( $_[0]{'starttime'} );
 } # endsub
