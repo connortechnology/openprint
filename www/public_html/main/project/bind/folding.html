@@ -124,7 +124,7 @@ if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 					$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
 					$$variable{'QTYIndex'} = $qty_index;
 
-					$html .= '<table style="width: auto;"><tr><th width="40">Qty</th><th width="40">Impo</th><th align="left">Type</th><th width="40">Folds</th><th width="40">Angles</th><th>Speed</th></tr>';
+					$html .= '<table style="width: auto;"><tr><th width="30">Qty</th><th width="35">Imp</th><th align="left">Type</th><th width="40">Folds</th><th width="40">Angles</th><th>Speed</th></tr>';
 					my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/project/bind/_fold.html' );
 					foreach my $index ( 1 .. 4 ) {
 						$$variable{'index'} = $index;

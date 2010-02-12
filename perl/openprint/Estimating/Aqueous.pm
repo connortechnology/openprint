@@ -239,7 +239,7 @@ sub signature_calc {
 	if ( $$sig_specs{'Versions'} ) {
 		$impressions *= $$sig_specs{'Versions'};
 	} # end if
-$openprint::log->debug("Impressions: $impressions");
+#$openprint::log->debug("Impressions: $impressions");
 if ( 0 ) {
 	# This just can't be right anymore.
 	if ( sets::isin( $imposition->runstyle(), ['Perfecting','Sheet Work'] ) ) {
@@ -248,7 +248,7 @@ if ( 0 ) {
 		#} # end if
 	} # end if
 } # end if
-$openprint::log->debug("Impressions: $impressions");
+#$openprint::log->debug("Impressions: $impressions");
 
 	@all_equipment = openprint::Equipment::find( 'Specifications' => {'Aqueous Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
@@ -317,7 +317,7 @@ $openprint::log->debug("Impressions: $impressions");
 
 			my %Price;
 			my $run_qty = $impressions;
-$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
+#$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
 			$run_qty += ( $imposition->imposition() / $imp->imposition() ) if $imposition->imposition() != $imp->imposition();
 
 			my @types;
