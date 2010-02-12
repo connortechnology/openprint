@@ -366,11 +366,12 @@ sub send {
 		} # for each Project
 	} # end if
 	
-	my $description = $self->description();
-	$description =~ s/\n\r/ /mg;
-	$description =~ s/\r\n/ /mg;
-	$description =~ s/\n/ /mg;
-	$description =~ s/<br\/>/,/mg;
+	my $description = '';
+#$self->description();
+	#$description =~ s/\n\r/ /mg;
+	#$description =~ s/\r\n/ /mg;
+	#$description =~ s/\n/ /mg;
+	#$description =~ s/<br\/>/,/mg;
 
 	if ( $self->Company()->reseller() eq 'Y' or sets::isin( $openprint::session{'user_type'}, ['A', 'E']) ) {
 
