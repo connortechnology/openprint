@@ -206,10 +206,14 @@
 			'output_folder' =>  $config{'SkinPath'}.'/images/captcha',
 		);
 		my $md5sum = $Captcha->generate_code( $config{'RegistrationCaptchaLength'} );
-		$html .= '<li ' . ( $$variable{'RequiredFields'}{'verifypassword'} ? 'class="required"' : '' ) .'>'; 
-		$html .= '<label>Enter the code below:</label><input type="text" name="Captcha" /><br/>';
-		$html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};
-		$html .= qq{<img src="/images/captcha/$md5sum.png"/></li>};
+		if ( -f $config{'SkinPath'}.'/images/captcha/'.$md5sum.'.png' ) {
+			$html .= '<li ' . ( $$variable{'RequiredFields'}{'verifypassword'} ? 'class="required"' : '' ) .'>'; 
+			$html .= '<label>Enter the code below:</label><input type="text" name="Captcha" /><br/>';
+			$html .= qq{<input type="hidden" name="MD5SUM" value="$md5sum"/>};
+			$html .= qq{<img src="/images/captcha/$md5sum.png"/></li>};
+		} else{
+			$log->error('Unable to create captcha image.');
+		} # end if
 	} # end if
 	return $html;
 ) ?>
