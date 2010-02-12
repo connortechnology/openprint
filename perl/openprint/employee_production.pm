@@ -110,11 +110,20 @@ sub press_schedule {
 
 		%param = ();
 	} elsif ( $param{'btnFunction'} eq 'ApproveJob' ) {
-		my $service_index = $param{'ServiceIndex'};
-		my $project_index = $param{'ProjectIndex'};
-		my $Project = new openprint::Project( $project_index );
-		mark_proofs_approved( $log, $dbh, \%variable, $project_index );
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
+		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+		my $Project = $Job->Project();
+		if ( ! $Project->id() ) {
+			$variable{'error'} .= "Invalid project specified for approve job";
+			return;
+		} # end if
+		my $services = $Project->services();
+		if ( ! ( $$services{'Proofs'} or $$services{'FilmStripping'} ) ) {
+			$log->error("No proofs in project $$Project{id} adding them back");
+			$variable{'error'} .= "no proofs in project.  Adding them back ";
+			push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Proofs' );
+		} # end if
+		mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );
+		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $Project->id(), 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
 		$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from print overview' );
 		$Project->update_status();
 	} elsif ( $param{'btnFunction'} eq 'RemoveJob' ) {
