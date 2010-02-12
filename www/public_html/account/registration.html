@@ -27,21 +27,12 @@
 	<div class="error"><?error?></div>
 	<? endif ( $$variable{'error'} ) ?>
 <div class="Registration">
-	<p>
-	Please complete the form below. (<span class="required"></span> denotes required information).<br/>
-	<br/>
+	<p class="Instructions">
+	Please complete the form below to setup an account with <?SiteTitle?>.<br/>(<span class="required"></span> denotes required information).<br/>
 	</p>
 <? eval (
 %{$$variable{'RequiredFields'}} = map{$_,$_} misc::trim( split(',', $config{'RegistrationRequiredFields'} ) );
 ) ?>
-<style>
-	fieldset .content ul {
-	list-style: circle;
-}
-	fieldset .content ul li {
-	list-style: circle;
-	}
-</style>
 	<form method="post" action="registration.html" name="f1">
 		<div class="BillingInformation">
 			<fieldset><legend>Billing Information</legend>
@@ -51,7 +42,7 @@
 							<label for="company_name">Company/Billing Name:</label>
 							<input type="text" id="company_name" name="company_name" value="<? echo ( ssi::htmlize($param{'company_name'}) ) ?>"  />
 						</li>
-						<li <? echo ( $$variable{'RequiredFields'}{'address1'} ? 'class="required"' : '' ) ?> style="list-style: circle;"> 
+						<li <? echo ( $$variable{'RequiredFields'}{'address1'} ? 'class="required"' : '' ) ?>> 
 							<label for="address1">Address Line 1:</label>
 							<input type="text" id="address1" name="address1" value="<? echo ( ssi::htmlize($param{'address1'}) ) ?>"  />
 						</li>
@@ -125,7 +116,7 @@
 			<div class="content"><ul>
 			<li <? echo ( $$variable{'RequiredFields'}{'businesstype'} ? 'class="required"' : '' ) ?>> 
 				<label for="businesstype">Business Type:</label>
-				<input type="text" name="businesstype" value="<? echo ( ssi::htmlize($param{'businesstype'}); ) ?>" />
+				<input type="text" name="businesstype" id="businesstype" value="<? echo ( ssi::htmlize($param{'businesstype'}); ) ?>" />
 			</li>
 			<li <? echo ( $$variable{'RequiredFields'}{'reasonforpurchase'} ? 'class="required"' : '' ) ?>> 
 				<label>Reason For Purchase:</label>
