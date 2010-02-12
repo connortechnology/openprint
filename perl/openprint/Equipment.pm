@@ -211,9 +211,12 @@ sub Folds {
 	my $self = shift;
 
 	if ( ! $$self{'Folds'} ) {
-		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'pages,page_columns' );
+		%{$$self{'Folds'}} = ();
+		foreach my $F ( openprint::Fold::find( 'Equipment'=>$self, 'order'=>'pages,page_columns' ) ) {
+			push @{$$self{'Folds'}{$F->pages()}}, $F;
+		} # end foreach;
 	} # end if
-	return @{$$self{'Folds'}};
+	return %{$$self{'Folds'}};
 } # end sub Folds
 
 sub Fold {
@@ -221,15 +224,13 @@ sub Fold {
 	my %params = @_;
 	my $params = \%params;
 
-	if ( ! $$self{'Folds'} ) {
-		@{$$self{'Folds'}} = openprint::Fold::find( 'Equipment'=>$self, 'order'=>'lower(name)' );
-	} # end if
+	$self->Folds() if ! $$self{'Folds'};
 #$openprint::log->debug("Param" . ref $params );
 #foreach my $k ( keys %params ) {
 #$openprint::log->debug("Param: $k => $$params{$k}");
 #}
 
-	foreach my $Fold ( @{$$self{'Folds'}} ) {
+	foreach my $Fold ( @{$$self{'Folds'}{$$params{pages}}} ) {
 		if ( $$params{pages} and ($$Fold{pages} != $$params{pages} ) ) {
 			$openprint::log->debug("Wanted Pages: $$params{pages}, have $$Fold{pages}") if $debug;
 			next;
@@ -386,7 +387,7 @@ if ( ! defined $range ) {
 #$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-$openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
+#$openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
 		return;	
 	}
 

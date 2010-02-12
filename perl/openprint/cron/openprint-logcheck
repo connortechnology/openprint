@@ -1,0 +1,3 @@
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ CRON\[[0-9]+\]: \([[:alnum:]-]+\) CMD \(/etc/apache2/lib/perl/openprint/cron/PPF_Monitor.pl --db_host=[[:alnum:]-]+ --db_name=[[:alnum:]-]+ --skin_path=[/ .\\[:alnum:]-]+\)$
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ CRON\[[0-9]+\]: \([[:alnum:]-]+\) CMD \(/etc/apache2/lib/perl/openprint/cron/(No)?MergePPF.pl [/ _.\\[:alnum:]-]+ [/ _.\\[:alnum:]-]+ [[:alnum:]]+ [[:alnum:]]+\)$
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ CRON\[[0-9]+\]: \([[:alnum:]]+\) CMD \(  cd /var/www/testing/perl/tools;/var/www/testing/perl/tools/upgrade_p1.pl [[:alnum:]]+ [[:alnum:]]+ [[:alnum:]]+ [[:digit:]]+\)$
