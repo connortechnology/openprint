@@ -105,15 +105,17 @@ sub hostname {
 	if ( defined $new ) {
 		$$self{'hostname'} = $new;
 	} # end if
-	if ( ! defined $$self{'hostname'} ) {
-		return $$self{'ip_address'} unless $$self{'ip_address'} =~ /\d+\.\d+\.\d+\.\d+/;
-		my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip_address'})),2);
-		if ( @h ) {
-			$self->save({'hostname' => $h[0] } );
-		} # end if
-	} # end if
 	return $$self{'hostname'} ? $$self{'hostname'} : $$self{'ip_address'};
 } # end sub hostname
+
+sub resolve {
+	my ( $self ) = @_;
+	my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip_address'})),2);
+	if ( @h ) {
+		return $h[0];
+	} # end if
+	return;
+} # end sub resolve
 
 1;
 __END__

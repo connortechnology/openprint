@@ -327,11 +327,15 @@ sub setup_project {
 	$project{'HasCutting'} = $$services{'Cutting'} ? $$services{'Cutting'}[0] : 0;
 	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
 	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
+	%{$project{'DieCuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasDieCutting'} )} if $project{'HasDieCutting'};
 
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{'NoBindery'} ) {
 		$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
 		if ( $$services{'DieCutting'} ) {
+			require openprint::Estimating::DieCutting;
+			$project{'NeedDieCutting'} = openprint::Estimating::DieCutting::signature_needs( $Project, $project{'DieCuttingSpecs'}, $specs );
+$log->debug("Need DieCutting: $project{'NeedDieCutting'}");
 			$project{'NeedScoring'} = 0;
 		} else {	
 			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $project{'ScoringSpecs'}, $specs );
@@ -2028,23 +2032,25 @@ sub breakdown {
 
 	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
 	$breakdown .= ' Scoring: ' . $$stock_qty{'ScoringOvers'} if $$stock_qty{'ScoringOvers'};
+	$breakdown .= ' DieCutting: ' . $$stock_qty{'DieCuttingOvers'} if $$stock_qty{'DieCuttingOvers'};
 	$breakdown .= ' UV Coating: ' . $$stock_qty{'UVOvers'} if $$stock_qty{'UVOvers'};
 	$breakdown .= ' Total: ' . $$stock_qty{'Total Overs'} . '<br/>';
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
 	$breakdown .= sprintf('Total: $%.2f<br/>', $$price{'Total Cost'} );
-	$breakdown .= $$price{'Folding Breakdown'};
-	$breakdown .= $$price{'Cutting Breakdown'};
-	$breakdown .= $$price{'Scoring Breakdown'} if $$price{'Scoring Breakdown'};
-	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
 	$breakdown .= $$price{'UVCoating Breakdown'};
 	$breakdown .= $$price{'Aqueous Breakdown'};
+	$breakdown .= $$price{'Cutting Breakdown'};
+	$breakdown .= $$price{'Scoring Breakdown'} if $$price{'Scoring Breakdown'};
+	$breakdown .= $$price{'DieCutting Breakdown'} if $$price{'DieCutting Breakdown'};
+	$breakdown .= $$price{'Folding Breakdown'};
+	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
 	$breakdown .= $$price{'AdditionalSignature Breakdown'};
 	$breakdown .= $$price{'Stitching Breakdown'};
 	$breakdown .= $$price{'SpinePaste Breakdown'};
 	$breakdown .= $$price{'PerfectBound Breakdown'};
 	$breakdown .= $$price{'Paper Breakdown'};
-	$breakdown .= sprintf("Comparison Cost: \%.2f<br/>", $$price{'Comparison Cost'});
+	$breakdown .= sprintf('Comparison Cost: %.2f<br/>', $$price{'Comparison Cost'});
 	return $breakdown;
 } # end sub breakdown
 
@@ -3039,6 +3045,18 @@ sub calc_price {
 		} # end if
 	} # end if
 
+	my %diecutting_results;
+	if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
+		%diecutting_results = openprint::Estimating::DieCutting::signature_calc( $Project, $service_index, $specs, $$project{'DieCuttingSpecs'}, $qty_index, $Imposition );
+		if ( $diecutting_results{'Status'} eq 'uncalculated' ) {
+			$price{'DieCutting Breakdown'} .= "DieCutting error: $diecutting_results{'alert'} $diecutting_results{alert} <br/>";
+			$price{'Comparison Cost'} += 1000000; 
+		} else {
+			$price{'DieCutting Breakdown'} .= sprintf('DieCutting Price: $%.2f on %s<br/>', $diecutting_results{'Price'}{'Total'}, $diecutting_results{'Equipment'} ? $diecutting_results{'Equipment'}->name() : '' );
+			$price{'Comparison Cost'} += $diecutting_results{'Price'}{'Total'};
+		} # end if
+	} # end if
+
 	my %scoring_results;
 	if ( $$project{'HasScoring'} and $$project{'NeedScoring'} ) {
 		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $service_index, $specs, $qty_index, $Imposition );
@@ -3136,11 +3154,11 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 	} # end if
 	$price{'Overs Rate'} = $over_rate;
 
-	my $impressions;
+	my $impressions = $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $scoring_results{'Overs'} + $uv_results{'Overs'} + $diecutting_results{'Overs'};
 	if ( $Press->specification('Overs') ne 'All' ) {
-		$impressions = ceil( $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) + $scoring_results{'Overs'} + $uv_results{'Overs'} );
+		$impressions = ceil( $impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
 	} else {
-		$impressions = ceil( $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $run_overs + $scoring_results{'Overs'} + $uv_results{'Overs'} );
+		$impressions = ceil( $impressions + $setup_overs + $run_overs );
 	} # end if
 
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
@@ -3450,7 +3468,7 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 	} else {
 		$run_overs = ceil( $base_impressions * $over_rate );
 	} # end if
-	$total_overs += $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $scoring_results{'Overs'} + $uv_results{'Overs'};
+	$total_overs += $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $scoring_results{'Overs'} + $uv_results{'Overs'} + $diecutting_results{'Overs'};
 
 	if ( $Press->specification('Overs') ne 'All' ) {
 		$total_overs = ceil( $total_overs + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
@@ -3485,6 +3503,7 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 			'FoldingMakeReadyOvers'		=> $folding_results{'MakeReadyOvers'},
 			'FoldingRunOvers'			=> $folding_results{'RunOvers'},
 			'ScoringOvers'				=> $scoring_results{'Overs'},
+			'DieCuttingOvers'			=> $diecutting_results{'Overs'},
 			'UVOvers'					=> $uv_results{'Overs'},
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;

@@ -458,11 +458,11 @@ $variable{'ServiceIndex'} = $service_index;
 					} elsif ( $filename eq 'ScratchPads.html' ) {
 						$status = openprint::print::publication_pages( $r, $log, $dbh, \%variable );
 					} elsif ( $filename =~ /^_.*\.html$/ ) {
-			eval( 'require openprint::'.join('_', @path ) );
-$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
-			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
-			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+						eval( 'require openprint::'.join('_', @path ) );
+						$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+						my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+						eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+						$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );
 					} else {
 						$status = openprint::print::print_prices( $r, $log, $dbh, $session{_session_id}, \%variable );

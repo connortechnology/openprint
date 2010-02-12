@@ -282,7 +282,7 @@ function open_window( page ) {
 		<? echo ( ssi::writeButton( $log, $dbh, 'Approve', 'approve.gif', "f1.btnFunction.value='Approve';f1.submit();", '', 'Approve New Charges' ); )?>
 		</span>
 		To approve the additional charges, click Approve:<br class="spacer"/>
-		Notifications will be sent to: <? echo ( sprintf('&quot;%s %s&quot; &lt;%s&gt;', new openprint::Order( $$variable{'OrderID'} )->get('first_name','last_name','email') ); ) ?><br/>
+		Notifications will be sent to: <? echo ( sprintf('&quot;%s %s&quot; &lt;%s&gt;', new openprint::Order( $$variable{'OrderID'} )->get('firstname','lastname','email') ); ) ?><br/>
 
 		<span style="float: right;">
 	 	<? echo ( ssi::writeButton( $log, $dbh, 'AdditionalChargeNotify', 'additional.gif', "f1.btnFunction.value='AdditionalChargeNotify';f1.submit();", '', 'Send' );) ?>

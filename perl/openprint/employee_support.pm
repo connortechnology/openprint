@@ -54,7 +54,7 @@ sub helpdesk {
 		 strStateProv, strPostalCode, strCountry, strPhone, strExtension, strEmail, blbQuestion, chrMethod,
 		 ysnReviewed, blbResponse, to_char(dtmRequestDate,'MM/DD/YYYY')
 		 FROM HelpDesk WHERE Id= $index";
-	@$variable{'company_name', 'title', 'first_name', 'last_name', 'address_one', 'address_two',
+	@$variable{'company_name', 'title', 'firstname', 'lastname', 'address_one', 'address_two',
 			'city', 'state', 'postal_code', 'country', 'phone', 'extension', 'email', 'question',
 			'method', 'rdbReviewed', 'response', 'sub_date' } = sql::execute( $log, $dbh, $_);
 

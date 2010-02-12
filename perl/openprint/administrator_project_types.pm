@@ -163,10 +163,10 @@ sub templates {
 			$variable{'error'} .= $Template->save({
 					'type'					=>	$param{"type$$Template{id}"},
 					'description'			=>	$param{"description$$Template{id}"},
-					'dblFinishedWidth' 		=>	$param{"finishedwidth$$Template{id}"},
-					'dblFinishedHeight'		=>	$param{"finishedheight$$Template{id}"},
-					'dblFlatWidth'			=>	$param{"flatwidth$$Template{id}"},
-					'dblFlatHeight'			=>	$param{"flatheight$$Template{id}"},
+					'finished_width' 		=>	$param{"finishedwidth$$Template{id}"},
+					'finished_height'		=>	$param{"finishedheight$$Template{id}"},
+					'flat_width'			=>	$param{"flatwidth$$Template{id}"},
+					'flat_height'			=>	$param{"flatheight$$Template{id}"},
 				} );
       		# Add record to audit log - action "Update Project Template".
          	openprint::logs::insertLogRecord('52', "Project Type ID: $$Template{type} - $$Template{description}" );
@@ -176,10 +176,10 @@ sub templates {
 					'projecttype_id'		=>	$param{'ddmProjectType'},
 					'type'					=>	$param{"typeNew"},
 					'description'			=>	$param{"descriptionNew"},
-					'dblFinishedWidth' 		=>	$param{"finishedwidthNew"},
-					'dblFinishedHeight'		=>	$param{"finishedheightNew"},
-					'dblFlatWidth'			=>	$param{"flatwidthNew"},
-					'dblFlatHeight'			=>	$param{"flatheightNew"},
+					'finished_width' 		=>	$param{"finishedwidthNew"},
+					'finished_height'		=>	$param{"finishedheightNew"},
+					'flat_width'			=>	$param{"flatwidthNew"},
+					'flat_height'			=>	$param{"flatheightNew"},
 				} );
 			# Add record to audit log - action "New Project Template".
 			openprint::logs::insertLogRecord('55', "Project Type ID: $param{typeNew} - $param{descriptionNew}",);
