@@ -177,6 +177,7 @@ if ( sets::isin( 'users_index_seq', \@sequences ) ) {
 	} # end if
 	$dbh->do("ALTER TABLE Users ALTER id set default nextval('users_id_seq')" );
 	$dbh->do('DROP SEQUENCE users_index_seq');
+	$dbh->do(q`SELECT setval('users_id_seq', (SELECT max(id) FROM users))` );
 	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 } # end if
 
