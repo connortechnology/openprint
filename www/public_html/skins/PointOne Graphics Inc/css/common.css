@@ -344,6 +344,7 @@ fieldset.filters {
         display: none;
     }
 }
+@media screen {
 fieldset.filters:after {
     content: ".";
     display: block;
@@ -357,6 +358,7 @@ fieldset.filters:after {
 * html fieldset.filters {height: 1%;}
 fieldset.filters {display: block;}
 /* End hide from IE-mac */
+}
 
 fieldset.filters p {
 	padding-left: 135px;
