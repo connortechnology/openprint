@@ -100,7 +100,7 @@ if ( 1 ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
-			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE project_id=?}, $Project->id() ) ) {
 				#$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if

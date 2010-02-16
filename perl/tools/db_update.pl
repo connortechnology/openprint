@@ -172,11 +172,12 @@ if ( $data ) {
 	} # end if
 } # end if
 if ( sets::isin( 'users_index_seq', \@sequences ) ) {
-	$dbh->do('DROP SEQUENCE users_index_seq');
 	if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
 		$dbh->do('CREATE SEQUENCE users_id_seq');
-		$dbh->do("ALTER TABLE Users ALTER id set default nextval('users_id_seq')" );
 	} # end if
+	$dbh->do("ALTER TABLE Users ALTER id set default nextval('users_id_seq')" );
+	$dbh->do('DROP SEQUENCE users_index_seq');
+	$dbh->do(q`SELECT setval('users_id_seq', (SELECT max(id) FROM users))` );
 	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 } # end if
 
@@ -1095,7 +1096,8 @@ if ( ! exists $$data{'angles'} ) {
 $dbh->do(q`alter table folds add angles integer`);
 } # end if
 foreach my $E ( openprint::Equipment::find() ) {
-	foreach my $Fold ( $E->Folds() ) {
+	my %Folds = $E->Folds();
+	foreach my $Fold ( values %Folds ) {
 		if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
 			$Fold->type( "$1PageFold" );
 			$Fold->save();
