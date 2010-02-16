@@ -44,7 +44,7 @@ my %variables = (
 	'alert'=>['save','output'],'Status'=>['output'],
 	'FromCompany'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
 	'ToCompany'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
-	'ServiceTypeDiv'=>['output'],'PickupTypeDiv'=>['output'],
+	'ServiceTypeDiv'=>['output','save'],'PickupTypeDiv'=>['output','save'],
 	'hdnBreakdown1'=>['output'], 'hdnBreakdown2'=>['output'], 'hdnBreakdown3'=>['output'],
 	'NeedPlainCartons'=>['output'],
 );
