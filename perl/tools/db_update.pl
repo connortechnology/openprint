@@ -1096,7 +1096,8 @@ if ( ! exists $$data{'angles'} ) {
 $dbh->do(q`alter table folds add angles integer`);
 } # end if
 foreach my $E ( openprint::Equipment::find() ) {
-	foreach my $Fold ( $E->Folds() ) {
+	my %Folds = $E->Folds();
+	foreach my $Fold ( values %Folds ) {
 		if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
 			$Fold->type( "$1PageFold" );
 			$Fold->save();
