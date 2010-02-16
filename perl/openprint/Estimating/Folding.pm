@@ -579,7 +579,6 @@ sub signature_calc {
 			} # end if
 		} # end if
 		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
-$openprint::log->debug("PRintingTypes: $pt : " . $$sig_specs{'PrintingType'.$qty_index} );
 			if ( ! sets::isin( $$sig_specs{'PrintingType'.$qty_index}, split(',',$pt ) ) ) {
 				$Breakdown .= 'Wrong printing type.<br/>';
 				next;
