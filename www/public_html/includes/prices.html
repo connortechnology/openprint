@@ -1,7 +1,7 @@
 <div class="Prices">
 	<ul>
 		<li class="unitprice">
-			<label>Price each:</label>
+			<label>Price each <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
 			<input type="text" size="9" id="txtUnitPrice1" name="txtUnitPrice1" readonly="readonly" />
 		</li>
 		<li class="totalprice">

@@ -67,7 +67,7 @@ if ( 1 ) {
 # Clean out uncalculated projects
 	my @Projects = openprint::Project::find(
 			'status'=>'uncalculated',
-			'order'=>'index desc',
+			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			);
@@ -92,7 +92,7 @@ if ( 1 ) {
 
 	@Projects = openprint::Project::find(
 			'status'=>'Unordered',
-			'order'=>'index desc',
+			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			);
@@ -100,7 +100,7 @@ if ( 1 ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Project ( @Projects ) {
-			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE project_id=?}, $Project->id() ) ) {
 				#$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
@@ -241,7 +241,7 @@ if ( 0 ) {
 	} # end foreach
 } # end if 1
 
-if ( $config{'RFID'} ) {
+if ( exists $config{'RFID'} and $config{'RFID'} ) {
 	require openprint::RFIDTag;
 	require openprint::RFIDTagHistory;
 	require openprint::RFIDScannerHistory;
