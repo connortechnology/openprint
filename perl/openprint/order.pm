@@ -982,11 +982,13 @@ sub finalise_order {
 		#	send_invoice( $r, $log, $dbh, $order_id );
 		} # end if
 
-		# Create folder for this docket on the ftp server
-		my $destdir = join('/', $config{'ProjectFilesPath'}, new openprint::Company( $openprint::session{'company_id'} )->name(), $docket_number );
-		if ( ! -e $destdir ) {
-			if ( ! mkdir $destdir ) {
-				$log->error("Cannot create directory for docket files at $destdir: Reason: $!");
+		if ( $config{'Automatic Docket Folder'} eq 'Y' ) {
+			# Create folder for this docket on the ftp server
+			my $destdir = join('/', $config{'ProjectFilesPath'}, new openprint::Company( $openprint::session{'company_id'} )->name(), $docket_number );
+			if ( ! -e $destdir ) {
+				if ( ! mkdir $destdir ) {
+					$log->error("Cannot create directory for docket files at $destdir: Reason: $!");
+				} # end if
 			} # end if
 		} # end if
 	} # end if
