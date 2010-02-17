@@ -225,15 +225,19 @@ sub comment {
 
 		$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
 		#$comment .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
-		my $Stock;
-		if ( my @PA = openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
-			$Stock = $PA[0]->Paper();
+		my $Equipment = $self->Equipment();
+			my $Stock;
+			if ( my @PA = openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
+				$Stock = $PA[0]->Paper();
+			} else {
+				$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() );
+			} # end if
+		if ( $Equipment->smartscheduling() ) {
+			$comment .= ' on ' . $Stock->to_string();
 		} else {
-			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() );
+			$comment .= ' on ' . $Stock->width() . 'x' . $Stock->height();
 		} # end if
-		$comment .= ' on ' . $Stock->to_string();
 
-		my $Equipment = new openprint::Equipment($$self{'equipment_id'});
 		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
 			my $services = $Project->services();
 			if ( $$services{'Folding'} ) {
