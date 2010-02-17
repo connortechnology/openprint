@@ -275,6 +275,12 @@ if ( exists $config{'RFID'} and $config{'RFID'} ) {
 		
 } # end if
 
+# Resolve any unresolved IP's
+foreach my $Host ( openprint::Host::find('hostname'=>undef) ) {
+	$Host->resolve();
+	$Host->save() if $Host->hostname();
+} # end foreach
+
 $dbh->disconnect();
 1;
 __END__

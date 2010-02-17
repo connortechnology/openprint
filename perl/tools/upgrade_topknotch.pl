@@ -66,6 +66,8 @@ $PayPal->save({'name'=>'PayPal','description'=>'PayPal'});
 
 #print "upgrading signatures...";
 #`/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db >> /tmp/db_update.log` or $log->error($!);
+my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
+sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'NOW()', 'backup', 0 );
 print "done\n";
 $dbh->disconnect();
 1;

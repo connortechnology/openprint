@@ -18,6 +18,8 @@ require openprint::service;
 require openprint::Material;
 require openprint::MaterialCategory;
 require openprint::PaperInventory;
+require openprint::Log;
+require openprint::Host;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -2204,10 +2206,6 @@ if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/User_Notifications.sql});
 	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
 } # end if
-if ( ! sets::isin('log',\@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Logs.sql});
-	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
-} # end if
 $dbh->commit();
 
 if ( ! sets::isin( 'claims', \@tables ) ) {
@@ -2365,6 +2363,34 @@ $dbh->do(q{insert into whitelist (ip) values ('68.179.115.210')} );
 $dbh->do(q{insert into whitelist (ip) values ('68.179.115.211')} );
 $dbh->do(q{insert into whitelist (ip) values ('68.179.115.212')} );
 $dbh->do(q{insert into whitelist (ip) values ('208.89.51.122')} );
+} # end if
+if ( ! sets::isin( 'hosts', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/hosts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} 
+if ( ! sets::isin('log',\@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Logs.sql});
+	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
+} else {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Log LIMIT 1', {} );
+	if ( $data ) {
+		if ( ! exists $$data{'host_id'} ) {
+			$dbh->do('ALTER TABLE Log add host_id INTEGER');
+			$dbh->do('ALTER TABLE Log add FOREIGN KEY (host_id) REFERENCES Hosts (id)');
+		} # end if
+	} # end if
+} # end if
+if ( ! openprint::Host::find_one() ) {
+	foreach my $Log ( openprint::logRecord::find('host_id'=>undef) ) {
+		my $Host = openprint::Host::find_one('ip'=>$Log->ip_address());
+		if ( ! $Host ) {
+			$Host = new openprint::Host();
+			$Host->save({'ip'=>$Log->ip_address(),'hostname'=>$Log->hostname()});
+		} # end if
+		$Log->save({'host_id'=>$Host->id()}) if $Host->id();
+	} # end foreach Log
 } # end if
 	$dbh->commit();
 $dbh->disconnect();

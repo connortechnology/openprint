@@ -1,8 +1,9 @@
-package openprint::logRecord;
+package openprint::Log;
 @ISA = qw( openprint::Object );
 require openprint::Object;
 require openprint::User;
 require openprint::logAction;
+require openprint::Host;
 use strict;
 
 my $debug = 1;
@@ -18,6 +19,7 @@ $serial = 'log_id_seq';
 	'date_time'		=>	'date_time',	
 	'action_type'	=>	'action_type',
 	'note'			=>	'note',
+	'host_id'		=>	'host_id',
 );
 
 %types = (
@@ -62,6 +64,14 @@ sub find {
 		$sql .= ' AND ip_address=?';
 		push @values, $params{'ip_address'};
 	} # end if
+	if ( exists $params{'host_id'} ) {
+		if ( ! defined $params{'host_id'} ) {
+			$sql .= ' AND host_id IS NULL';
+		} else {
+			$sql .= ' AND host_id=?';
+			push @values, $params{'host_id'};
+		} # end if
+	} # end if
 	if ( $params{'when_start'} and $params{'when_end'} ) {
 		$sql .= q{ AND (date_time BETWEEN ? AND ?)};
 		push @values, @params{'when_start','when_end'};
@@ -77,12 +87,12 @@ sub find {
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error loading logRecord: ($sql) (@values)");
+		$openprint::log->error("Error loading Log: ($sql) (@values)");
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading logRecord: ($sql) (@values) (".@$data.')');
+		$openprint::log->debug("Loading Log: ($sql) (@values) (".@$data.')');
 	} # end if
-	return map { new openprint::logRecord( $_->{id}, $_ ); } @$data;
+	return map { new openprint::Log( $_->{id}, $_ ); } @$data;
 } # end sub find
 
 sub User {
@@ -108,14 +118,9 @@ sub hostname {
 	return $$self{'hostname'} ? $$self{'hostname'} : $$self{'ip_address'};
 } # end sub hostname
 
-sub resolve {
-	my ( $self ) = @_;
-	my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip_address'})),2);
-	if ( @h ) {
-		return $h[0];
-	} # end if
-	return;
-} # end sub resolve
+sub Host {
+	return new openprint::Host( $_[0]{'host_id'} );
+} # end sub Host
 
 1;
 __END__
