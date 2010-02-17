@@ -13,7 +13,16 @@ $serial = 'hosts_id_seq';
 	'hostname'		=>	'hostname',
 	'mac'	=>	'mac',	
 );
+use openprint ();
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	my %params = @_;
 	my @values;
@@ -43,12 +52,12 @@ sub find {
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error loading Host: ($sql) (@values)");
+		$log->error("Error loading Host: ($sql) (@values)");
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Host: ($sql) (@values) (".@$data.')');
+		$log->debug("Loading Host: ($sql) (@values) (".@$data.')');
 	} # end if
 	return map { new openprint::Host( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -58,6 +67,8 @@ sub resolve {
 	my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip'})),2);
 	if ( @h ) {
 		return $h[0];
+	} elsif ( $debug ) {
+		$log->warn("Unable to reverse DNS $$self{'ip'}");
 	} # end if
 	return;
 } # end sub resolve

@@ -14,6 +14,7 @@ require openprint::Order;
 require openprint::Project;
 require openprint::PaperInventory;
 require openprint::CIP3_PPF;
+require openprint::Host;
 use Date::Calc;
 use Apache::Session::Postgres;
 
@@ -241,7 +242,7 @@ if ( 0 ) {
 	} # end foreach
 } # end if 1
 
-if ( exists $config{'RFID'} and $config{'RFID'} ) {
+if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 	require openprint::RFIDTag;
 	require openprint::RFIDTagHistory;
 	require openprint::RFIDScannerHistory;
@@ -270,9 +271,6 @@ if ( exists $config{'RFID'} and $config{'RFID'} ) {
 		next if $H->skid_id();
 		$H->delete();
 	} # end foreach H
-} else {
-	$log->warn("Not clearing RFID $config{'RFID'}");
-		
 } # end if
 
 # Resolve any unresolved IP's

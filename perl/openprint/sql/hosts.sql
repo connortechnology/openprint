@@ -6,3 +6,4 @@ CREATE TABLE hosts (
 	hostname	text,
 	PRIMARY KEY (id)
 );
+CREATE INDEX hosts_ip_idx on Hosts (ip);

@@ -12,8 +12,6 @@ $table = 'log';
 $serial = 'log_id_seq';
 %fields = (
 	'id'	=>	'id',
-	'ip_address'	=>	'ip_address',
-	'hostname'		=>	'hostname',
 	'user_id'		=>	'user_id',
 	'company_id'	=>	'company_id',
 	'date_time'		=>	'date_time',	
@@ -28,7 +26,16 @@ $serial = 'log_id_seq';
 78	=>	'Failed Login',
 79	=> '',
 );
+use openprint ();
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	my %params = @_;
 	my @values;
@@ -85,12 +92,12 @@ sub find {
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error loading Log: ($sql) (@values)");
+		$log->error("Error loading Log: ($sql) (@values)");
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Log: ($sql) (@values) (".@$data.')');
+		$log->debug("Loading Log: ($sql) (@values) (".@$data.')');
 	} # end if
 	return map { new openprint::Log( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -112,11 +119,23 @@ sub Action {
 
 sub hostname {
 	my ( $self, $new ) = @_;
+	my $Host = $self->Host();
+
 	if ( defined $new ) {
-		$$self{'hostname'} = $new;
+		$Host->save({'hostname'=>$new});
 	} # end if
-	return $$self{'hostname'} ? $$self{'hostname'} : $$self{'ip_address'};
+	return $Host->hostname();
 } # end sub hostname
+
+sub ip_address {
+	my ( $self, $new ) = @_;
+	my $Host = $self->Host();
+
+	if ( defined $new ) {
+		$Host->save({'ip'=>$new});
+	} # end if
+	return $Host->ip();
+} # end sub ip_address
 
 sub Host {
 	return new openprint::Host( $_[0]{'host_id'} );

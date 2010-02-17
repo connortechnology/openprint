@@ -73,7 +73,7 @@
 		</tr>
 			<? echo (
 				my $html = '';
-				@{$$variable{'Results'}} = openprint::logRecord::find(
+				@{$$variable{'Results'}} = openprint::Log::find(
 					'when_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth', $r->uri().'?StartDay'} ),
 					'when_end'		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth', $r->uri().'?EndDay'} ),
 					'company_id'	=>	$param{'company_id'},

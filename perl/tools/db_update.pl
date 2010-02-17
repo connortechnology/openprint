@@ -2383,7 +2383,7 @@ if ( ! sets::isin('log',\@tables ) ) {
 	} # end if
 } # end if
 if ( ! openprint::Host::find_one() ) {
-	foreach my $Log ( openprint::logRecord::find('host_id'=>undef) ) {
+	foreach my $Log ( openprint::Log::find('host_id'=>undef) ) {
 		my $Host = openprint::Host::find_one('ip'=>$Log->ip_address());
 		if ( ! $Host ) {
 			$Host = new openprint::Host();
@@ -2392,6 +2392,11 @@ if ( ! openprint::Host::find_one() ) {
 		$Log->save({'host_id'=>$Host->id()}) if $Host->id();
 	} # end foreach Log
 } # end if
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Log LIMIT 1', {} );
+	if ( $data ) {
+		$dbh->do('ALTER TABLE Log DROP COLUMN ip_address') if ( exists $$data{'ip_address'} );
+		$dbh->do('ALTER TABLE Log DROP COLUMN hostname') if ( exists $$data{'hostname'} );
+	} # end if
 	$dbh->commit();
 $dbh->disconnect();
 print "Finished\n";
