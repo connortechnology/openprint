@@ -1431,29 +1431,60 @@ sub _shift_change {
 	} else {
 		my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );
 		my $new_endtime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'endtime_year','endtime_month','endtime_day','endtime_hour','endtime_minute'} ) );
+
+		if ( $new_starttime > $new_endtime ) {
+			$variable{'error'} .= 'Invalid end time. The end of the shift must occur after the start of the shift.  No changes made.<br/>';
+			return;
+		} # end if
+
 		foreach my $J ( $Shift->Schedule() ) {
 			next if ! $J->locked();
 			if ( $J->starttime_seconds() > $new_starttime ) {
 				$new_starttime = $J->starttime_seconds();
+				$variable{'alert'} .= 'Start time has been adjusted to include docket ' . $J->Project()->docket().'.<br/>';
 			} # end if
 			if ( $J->starttime_seconds() > $new_endtime ) {
 				$new_endtime = $J->starttime_seconds();
+				$variable{'alert'} .= 'Ending time has been adjusted to include docket ' . $J->Project()->docket().'.<br/>';
 			} # end if
 		} # end foreach J
-	
+
+		foreach my $S ( openprint::Shift::find(
+					'starttime_<='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
+					'endtime_>'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ),
+					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime DESC' ) ) {
+			next if $S->id() == $Shift->id();
+			$new_starttime = $S->endtime_seconds();
+			$new_endtime = $new_starttime if $new_starttime > $new_endtime;
+			$variable{'alert'} .= 'Start time has been adjusted to not overlap shift ' . $S->ul_id() . '<br/>';
+			last;
+		} # end foreach
+		foreach my $S ( openprint::Shift::find(
+					'starttime_>='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
+					'starttime_<'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_endtime ),
+					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime' ) ) {
+			next if $S->id() == $Shift->id();
+			$new_endtime = $S->starttime_seconds();
+			$new_starttime = $new_endtime if $new_starttime > $new_endtime;
+			$variable{'alert'} .= 'Ending time has been adjusted to not overlap shift ' . $S->to_string() . '<br/>';
+			last;
+		} # end foreach
+
 		push @{$variable{'changed'}}, $Shift->ul_id();
 		$variable{'error'} .= $Shift->save({
 				'starttime_seconds'		=>	$new_starttime,
 				'endtime_seconds'		=>	$new_endtime,
 				'operator_id'	=>	$param{'operator_id'},
 				});
+
 	} # end if
-		if ( $Shift->Equipment()->smartscheduling() ) {
-			reorder_jobs(
-					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Shift{'equipment_id'},'order'=>'starttime' ) );
-		} else {
-			push @{$variable{'changed'}}, $Shift->ul_id();
-		} # end if smartscheduling
+
+	if ( $Shift->Equipment()->smartscheduling() ) {
+		reorder_jobs(
+				openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Shift{'equipment_id'},'order'=>'starttime' ) );
+	} else {
+		push @{$variable{'changed'}}, $Shift->ul_id();
+	} # end if smartscheduling
 } # end sub _shift_change
 
 sub operator_schedule {
