@@ -1096,8 +1096,7 @@ if ( ! exists $$data{'angles'} ) {
 $dbh->do(q`alter table folds add angles integer`);
 } # end if
 foreach my $E ( openprint::Equipment::find() ) {
-	my %Folds = $E->Folds();
-	foreach my $Fold ( values %Folds ) {
+	foreach my $Fold ( openprint::Fold::find('equipment_id'=>$E->id()) ) {
 		if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
 			$Fold->type( "$1PageFold" );
 			$Fold->save();
@@ -1107,7 +1106,7 @@ foreach my $E ( openprint::Equipment::find() ) {
 sql::end_transaction( $dbh, $ac );
 
 foreach my $E ( openprint::Equipment::find() ) {
-	foreach my $Fold ( $E->Folds() ) {
+	foreach my $Fold ( openprint::Fold::find('equipment_id'=>$E->id()) ) {
 		if ( $Fold->type() =~ /(\d*)PageFold/ ) {
 			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFold"], 'name', "$1PageFold" );
 			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFoldMakeReady"], 'name', "$1PageFoldMakeReady" );
