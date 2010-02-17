@@ -87,26 +87,33 @@ sub find {
     } elsif ( $params{'starttime_start'} ) {
         $sql .= ' AND starttime >= ?';
         push @values, $params{'starttime_start'};
-    } elsif ( $params{'starttime_>='} ) {
-        $sql .= ' AND starttime >= ?';
-        push @values, $params{'starttime_>='};
-    } elsif ( $params{'starttime_end'} ) {
+	} elsif ( $params{'starttime_end'} ) {
         $sql .= ' AND starttime <= ?';
         push @values, $params{'starttime_end'};
-    } elsif ( $params{'starttime_<='} ) {
-        $sql .= ' AND starttime <= ?';
-        push @values, $params{'starttime_<='};
-    } elsif ( $params{'starttime_<'} ) {
-        $sql .= ' AND starttime < ?';
-        push @values, $params{'starttime_<'};
-    } elsif ( $params{'starttime_>'} ) {
-        $sql .= ' AND starttime > ?';
-        push @values, $params{'starttime_>'};
     } elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
         $sql .= ' AND starttime IS NULL';
     } elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
         $sql .= ' AND starttime IS NULL';
     } # end if
+    
+	if ( $params{'starttime_>='} ) {
+        $sql .= ' AND starttime >= ?';
+        push @values, $params{'starttime_>='};
+    } 
+	if ( $params{'starttime_<='} ) {
+        $sql .= ' AND starttime <= ?';
+        push @values, $params{'starttime_<='};
+    } # endif
+
+	if ( $params{'starttime_<'} ) {
+        $sql .= ' AND starttime < ?';
+        push @values, $params{'starttime_<'};
+    } 
+	if ( $params{'starttime_>'} ) {
+        $sql .= ' AND starttime > ?';
+        push @values, $params{'starttime_>'};
+	} # end if
+
     if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
         $sql .= ' AND ( endtime BETWEEN ? AND ? )';
         push @values, @params{'endtime_start','endtime_end'};
@@ -116,16 +123,27 @@ sub find {
     } elsif ( $params{'endtime_end'} ) {
         $sql .= ' AND endtime <= ?';
         push @values, $params{'endtime_end'};
-    } elsif ( $params{'endtime_<'} ) {
-        $sql .= ' AND endtime < ?';
-        push @values, $params{'endtime_<'};
-    } elsif ( $params{'endtime_>'} ) {
-        $sql .= ' AND endtime > ?';
-        push @values, $params{'endtime_>'};
     } elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
         $sql .= ' AND endtime IS NULL';
     } elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
         $sql .= ' AND endtime IS NULL';
+	} # end if
+
+    if ( $params{'endtime_<'} ) {
+        $sql .= ' AND endtime < ?';
+        push @values, $params{'endtime_<'};
+    } 
+    if ( $params{'endtime_<='} ) {
+        $sql .= ' AND endtime <= ?';
+        push @values, $params{'endtime_<='};
+    } 
+	if ( $params{'endtime_>'} ) {
+        $sql .= ' AND endtime > ?';
+        push @values, $params{'endtime_>'};
+    } # end if
+	if ( $params{'endtime_>='} ) {
+        $sql .= ' AND endtime >= ?';
+        push @values, $params{'endtime_>='};
     } # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -246,7 +264,6 @@ sub get_lis {
 		$year += 1900;
 		$month += 1;
 	} # endif
-
 
 	my $html;
 	my $ul_id = $Shift->ul_id();

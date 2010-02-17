@@ -778,8 +778,12 @@ function (value, className) {
 function check_time_starting( form, starting_prefix, ending_prefix ) {
     var start;
     var end;
+	var do_time = 0;
 
-    if ( get_value( form.time_associated ) == 1 ) {
+    if ( get_value( form.time_associated ) == 1 || ( (!form.time_associated) && (form.elements[starting_prefix+'_hour']) ) ) {
+		do_time = 1;
+	} // end if
+	if ( do_time ){
         start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
         end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
     } else {
@@ -791,7 +795,7 @@ function check_time_starting( form, starting_prefix, ending_prefix ) {
         ddm_select_by_value( form.elements[ending_prefix+'_year'], form.elements[starting_prefix+'_year'].value );
         ddm_select_by_value( form.elements[ending_prefix+'_month'], form.elements[starting_prefix+'_month'].value );
         ddm_select_by_value( form.elements[ending_prefix+'_day'], form.elements[starting_prefix+'_day'].value );
-        if ( get_value( form.time_associated ) == 1 ) {
+		if ( do_time ){
             ddm_select_by_value( form.elements[ending_prefix+'_hour'], form.elements[starting_prefix+'_hour'].value );
             ddm_select_by_value( form.elements[ending_prefix+'_minute'], form.elements[starting_prefix+'_minute'].value );
         } // end if
@@ -801,7 +805,12 @@ function check_time_starting( form, starting_prefix, ending_prefix ) {
 function check_time_ending( form, starting_prefix, ending_prefix ) {
     var start;
     var end;
-    if ( get_value( form.time_associated ) == 1 ) {
+	var do_time = 0;
+
+    if ( get_value( form.time_associated ) == 1 || ( (!form.time_associated) && (form.elements[starting_prefix+'_hour']) ) ) {
+		do_time = 1;
+	} // end if
+	if ( do_time ){
         start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
         end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
     } else {
@@ -812,7 +821,7 @@ function check_time_ending( form, starting_prefix, ending_prefix ) {
         ddm_select_by_value( form.elements[starting_prefix+'_year'], form.elements[ending_prefix+'_year'].value );
         ddm_select_by_value( form.elements[starting_prefix+'_month'], form.elements[ending_prefix+'_month'].value );
         ddm_select_by_value( form.elements[starting_prefix+'_day'], form.elements[ending_prefix+'_day'].value );
-        if ( get_value( form.time_associated ) == 1 ) {
+		if ( do_time ) {
             ddm_select_by_value( form.elements[starting_prefix+'_hour'], form.elements[ending_prefix+'_hour'].value );
             ddm_select_by_value( form.elements[starting_prefix+'_minute'], form.elements[ending_prefix+'_minute'].value );
         } // end if
@@ -820,7 +829,12 @@ function check_time_ending( form, starting_prefix, ending_prefix ) {
 } // end function check_time_ending
 
 function update_duration(form, starting_prefix, ending_prefix ) {
-    if ( get_value( form.time_associated ) == 1 ) {
+	var do_time = 0;
+
+    if ( get_value( form.time_associated ) == 1 || ( (!form.time_associated) && (form.elements[starting_prefix+'_hour']) ) ) {
+		do_time = 1;
+	} // end if
+	if ( do_time ) {
         var start = new Date( form.elements[starting_prefix+'_year'].value, form.elements[starting_prefix+'_month'].value, form.elements[starting_prefix+'_day'].value, form.elements[starting_prefix+'_hour'].value, form.elements[starting_prefix+'_minute'].value );
         var end = new Date( form.elements[ending_prefix+'_year'].value, form.elements[ending_prefix+'_month'].value, form.elements[ending_prefix+'_day'].value, form.elements[ending_prefix+'_hour'].value, form.elements[ending_prefix+'_minute'].value );
         var difference = parseInt( ( end - start ) / 1000 );

@@ -5,7 +5,8 @@ $log->debug("Drops: @drops");
 	$r->content_type('text/javascript');
 	my $html = '';
 	$html .= "alert('$variable{error}');" if $variable{'error'};
-	$html .= "alert('$variable{alert}');" if $variable{'alert'};
+	$html .= "Dialog.alert(\"$variable{alert}\", {width:500, height:100, okLabel: 'close', ok:function(win) {return true;}});" if $variable{'alert'};
+	#$html .= "alert('$variable{alert}');" if $variable{'alert'};
 	foreach my $id (sort @drops) {
 		$html .= sprintf(q`new Ajax.Updater( '%1$s', '_ul.html', { method: 'get', parameters: { ul_id: '%1$s' }, evalScripts:true } );`, $id );
 	} # end foreach id
