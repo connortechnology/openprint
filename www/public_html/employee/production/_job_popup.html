@@ -13,7 +13,7 @@
 			<input type="radio" id="locked0" name="locked" value="0" <? echo ( ssi::checked( ! $$variable{'Job'}{'locked'} ); ) ?> onclick="$('StartTime').hide();" />
 			<label class="radio" for="locked0">No</label>
 		</p>
-		<p id="StartTime" <? echo ( $$variable{'Job'}{'locked'} ? '' : 'style="display:none;"' :'' ) ?>>
+		<p id="StartTime" <? echo ( $$variable{'Job'}{'locked'} ? '' : 'style="display:none;"' ) ?>>
 			<label>Start Time:</label>
 			<span class="DateTimeSelector">
 			<? echo ( 
