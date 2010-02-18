@@ -16,7 +16,7 @@ $serial = 'ServiceTypeIndex';
 	'description'		=> 'description',
 	'url'				=> 'strdetailedurl',
 	'type'				=> 'type',
-	'category'			=> 'category',
+	'category_id'		=> 'category_id',
 	'sorting'			=> 'sorting',
 	'create_visible'	=> 'create_visible',
 	'view_visible'		=> 'view_visible',
@@ -68,7 +68,7 @@ sub find {
 	} # end if
 
 	if ( $params{'category'} ) {
-		$sql .= ' AND category=?';
+		$sql .= ' AND category_id=(SELECT id FROM ServiceType_Categories WHERE name=?)';
 		push @values, $params{'category'};
 	} # end if
 	if ( $params{'create_visible'} ) {
