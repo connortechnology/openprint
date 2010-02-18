@@ -115,5 +115,6 @@ sub switch_company {
 
 sub index {
 } # end sub index
+
 1;
 __END__

@@ -465,12 +465,27 @@ if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 } # end if
+if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Service_Types.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	}
+	foreach my $c ( sql::execute( undef, undef, 'SELECT DISTINCT category FROM Service_types' ) ) {
+		sql::insert( undef, undef, 'servicetype_categories', 'name', $c );
+	} # end foreach
+} # end if
+
 if ( sets::isin( 'service_types', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_types LIMIT 1', {} );
 	if ( $data and ! exists $$data{'type'} ) {
 		$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
 	} # end if
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
+	if ( exists $$data{'category'} ) {
+		$dbh->do(q`ALTER TABLE service_types add category_id INTEGER`);
+		$dbh->do('UPDATE service_types set category_id=(select id from servicetype_categories where name=category)');
+		$dbh->do('ALTER TABLE service_types DROP COLUMN category');
+	}# end if
 } else {
 	$_ = misc::load_file( $log, q{../openprint/sql/Service_Types.sql});
 	foreach my $st ( split(';', $_ ) ) {
@@ -886,7 +901,7 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 		my $found = 0;
 		if ( $Spec->name() =~ /^Runspeed Adjustment$/ ) {
 			$found = 1;
-			foreach my $Fold ( $E->Folds() ) {
+			foreach my $Fold ( openprint::Fold::find('equipment_id'=>$E->id()) ) {
 				foreach my $FoldSpec ( $Fold->Specifications() ) {
 					if ( ! ( $FoldSpec->min_weight() or $FoldSpec->max_weight() ) ) {
 						my $FoldSpec2 = $FoldSpec->copy();
@@ -902,7 +917,7 @@ foreach my $E ( openprint::Equipment::find('Specifications'=>{'Folding Capable'=
 			$Spec->delete();
 		} # end if Spec->name
 		if ($found) {
-			foreach my $Fold ( $E->Folds() ) {
+			foreach my $Fold ( openprint::Fold::find('equipment_id'=>$E->id()) ) {
 				foreach my $FoldSpec ( $Fold->Specifications() ) {
 					if ( ! ( $FoldSpec->min_weight() or $FoldSpec->max_weight() ) ) {
 						$FoldSpec->delete();
@@ -2384,12 +2399,15 @@ if ( ! sets::isin('log',\@tables ) ) {
 } # end if
 if ( ! openprint::Host::find_one() ) {
 	foreach my $Log ( openprint::Log::find('host_id'=>undef) ) {
-		my $Host = openprint::Host::find_one('ip'=>$Log->ip_address());
+		my $data = $openprint::dbh->selectrow_hashref( "SELECT * FROM Log WHERE id=$$Log{id}", {} );
+		next if ! $$data{'ip_address'};
+		my $Host = openprint::Host::find_one('ip'=>$$data{'ip_address'});
 		if ( ! $Host ) {
 			$Host = new openprint::Host();
-			$Host->save({'ip'=>$Log->ip_address(),'hostname'=>$Log->hostname()});
+			$Host->save({'ip'=>$$data{'ip_address'},'hostname'=>$$data{'hostname'}});
 		} # end if
 		$Log->save({'host_id'=>$Host->id()}) if $Host->id();
+		die if $dbh->errstr();
 	} # end foreach Log
 } # end if
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Log LIMIT 1', {} );
