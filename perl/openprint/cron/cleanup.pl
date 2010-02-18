@@ -79,7 +79,7 @@ if ( 1 ) {
 				$log->error('WTF! status was supposed to be uncalculated');
 				next;
 			} # end if
-			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE project_id=?}, $Project->id() ) ) {
 				#$log->error('Quoted!' . $Project->id());
 				next;
 			} # end if
