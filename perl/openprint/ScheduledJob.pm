@@ -230,11 +230,15 @@ sub comment {
 			if ( my @PA = openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
 				$Stock = $PA[0]->Paper();
 			} else {
-				$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() );
 			} # end if
 		if ( $Equipment->smartscheduling() ) {
+		if ( $Stock ) {
 			$comment .= ' on ' . $Stock->to_string();
+			} else {
+				$comment .= ' stock not allocated.';
+			} # end if
 		} else {
+			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
 			$comment .= ' on ' . $Stock->width() . 'x' . $Stock->height();
 		} # end if
 
@@ -331,7 +335,11 @@ sub get_li {
 		$html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
 
 		$html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
+		if ( $Equipment->smartscheduling() ) {
 		$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $self->impressions(), $self->speed() );
+		} else {
+		$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps</span>`, $$self{'id'}, $self->impressions() );
+		} # end if
 		if ( $Equipment->smartscheduling() or $$self{'locked'} ) {
 			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
 					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
@@ -359,7 +367,7 @@ sub get_li {
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 			$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
-			$html .= '<span class="Service">nobindery</span>' if $$services{'NoBindery'};
+			$html .= '<span class="Service">no bindery</span>' if $$services{'NoBindery'};
 			$html .= '</span>';
 		}
 	} else {
@@ -381,7 +389,7 @@ sub get_li {
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 			$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
-			$html .= '<span class="Service">nobindery</span>' if $$services{'NoBindery'};
+			$html .= '<span class="Service">no bindery</span>' if $$services{'NoBindery'};
 			$html .= '</span>';
 		} # end if smart
 	} # end if
