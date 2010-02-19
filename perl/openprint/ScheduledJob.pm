@@ -402,10 +402,18 @@ sub operator_id {
 	my ( $self, $operator_id ) = @_;
 
 	if ( defined $operator_id ) {
+		$$self{'operator_id'} = $operator_id;
 		foreach my $sig_id ( @{$$self{'service_id'}} ) {
 			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngProjectIndex=? AND lngServiceIndex=?', $$self{'project_id'}, $sig_id], 'operator_id', $operator_id ? $operator_id : undef );
 		} # end foreach
 	} # end if
+	if ( ! $$self{'operator_id'} ) {
+		foreach my $sig_id ( @{$$self{'service_id'}} ) {
+			@$self{'operator_id'} = sql::execute( undef, undef, 'SELECT operator_id FROM tbl_Project_COntents WHERE lngProjectIndex=? AND lngServiceIndex=?', $$self{'project_id'}, $sig_id );
+			last;
+		} # end foreach
+	} # end if
+	return $$self{'operator_id'};
 } # end sub operator_id
 
 sub impressions {
