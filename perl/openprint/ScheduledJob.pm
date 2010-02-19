@@ -36,6 +36,7 @@ $serial = 'schedule_id_seq';
 	'runtime_seconds'	=>	undef,
 	'starttime_seconds'	=>	undef,
 	'impressions'		=>	undef,
+	'created_on'		=>	'created_on',
 );
 
 %transforms = (
@@ -47,6 +48,7 @@ $serial = 'schedule_id_seq';
 
 %defaults = (
 	'speed'			=>	undef,
+	'created_on'	=>	undef,
 );
 sub find_one {
 	my %params = @_;
