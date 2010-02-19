@@ -11,9 +11,12 @@
 		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(name)') ], $company_id );
 		$html .= '</select>';
 	} # end if
+	my @Users = openprint::User::find('company_id'=>$company_id,'order'=>'lower(firstname),lower(lastname)');
 
-	$html .= '<select name="new_accounting_contact_id" id="new_accounting_contact_id">';
-	$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$company_id,'order'=>'lower(firstname),lower(lastname)') ] );
-	$html .= '</select>';
-	$html .= ssi::writeButton( $log, $dbh, 'AddAccountingContact', 'add.gif', qq`new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { method: 'get', parameters: { company_id: $$variable{Company}{id}, new_accounting_contact_id: \$('new_accounting_contact_id').value, action: 'add' } } );`, '', 'Add' );
+	if ( @Users ) {
+		$html .= '<select name="new_accounting_contact_id" id="new_accounting_contact_id">';
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ] );
+		$html .= '</select>';
+		$html .= ssi::writeButton( $log, $dbh, 'AddAccountingContact', 'add.gif', qq`new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { method: 'get', parameters: { company_id: $$variable{Company}{id}, new_accounting_contact_id: \$('new_accounting_contact_id').value, action: 'add' } } );`, '', 'Add' );
+	} # end if
 ) ?>
