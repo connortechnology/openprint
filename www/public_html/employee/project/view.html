@@ -234,13 +234,14 @@ function open_window( page ) {
 				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
 					my $Job = openprint::ScheduledJob::find_one('project_id'=>$$variable{'ProjectIndex'}, 'service_id'=>$sig_id );
 					if ( ! $Job ) {
+$log->debug("Have no job: $Job");
 						$need_add = 1;
 					} elsif ( ! $Job->starttime() ) {
 						$pending = 1;
 					} # end if
 				} # end foreach sig_id
 
-				if ( ! $need_add ) {
+				if ( $need_add ) {
 					$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule', 'addtopressschedule.gif', "f1.btnFunction.value='AddToPressSchedule';f1.submit();", '', 'Add To Press Schedule' );
 				} else {
 					$html .= ssi::writeButton( $log, $dbh, 'RemoveFromPressSchedule', 'removefrompressschedule.gif', "f1.btnFunction.value='RemoveFromPressSchedule';f1.submit();", '', 'Remove from Press Schedule' );

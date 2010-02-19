@@ -125,9 +125,8 @@
 	<input type="hidden" name="ServiceIndex" />
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
-		<div class="leftColumn" style="width:30%;">
-		<p>
-			<label>Presses:</label>
+		<div class="presses">
+		<ul><li><label>Presses:</label>
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
 	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
@@ -144,11 +143,11 @@
 	return $html;
 ) ?>
 			</select>
-		</p>
+		</li></ul>
 		</div>
-		<div class="rightColumn" style="width: 69%;">
-		<p>
-			<label>Schedule Date Range:</label>
+		<div class="dates">
+		<ul><li>
+			<label>Date Range:</label>
 			<span class="DateSelector">
 				<? echo ( ssi::date_select( 'schedule_start', [ @session{'/employee/production/print_overview.html?schedule_start_year',
 '/employee/production/print_overview.html?schedule_start_month',
@@ -162,8 +161,8 @@
 '/employee/production/print_overview.html?schedule_end_day'} ] ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Today_end', 't.gif', 'set_today( f1.schedule_end_year, f1.schedule_end_month, f1.schedule_end_day );f1.submit();', '', 'T' ); ) ?>
 			</span>
-		</p>
-		<p>
+		</li>
+		<li>
 			<label>Scale:</label>
 			<select id="scale" name="scale" onchange="this.form.submit();">
 				<? echo ( 
@@ -177,7 +176,22 @@
 					return ssi::make_drop_down( \@options, $session{'/employee/production/print_overview.html?scale'} );
 				) ?>
 			</select>
-		</p>
+		</li>
+			</ul>
+		</div>
+		<div class="legend">
+			<ul><li><label>Legend:</label>
+				<ul>
+					<li class="regular">Regular</li>
+					<li class="inprepress">In Prepress</li>
+					<li class="multipress">Has forms on other presses</li>
+					<li class="complete">Is complete</li>
+					<li class="approval">Waiting for client approval</li>
+					<li class="rush">Rush</li>
+				</ul>
+			</li>
+			</ul>
+		</div>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.btnFunction.value='Reset';f1.submit();", '', 'Reset' ); ) ?>
@@ -191,7 +205,6 @@
 			) ?>
 <? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 		</p>
-		</div>
 	</fieldset>
 	<div class="unprintable">
 		Please click on the <b>Docket #</b> to view details.<br/>
@@ -279,7 +292,7 @@
 				for ( my $i = 0; $i < @Shifts; $i += 1 ) {
 					for ( my $j = $i+1; $j < @Shifts; $j += 1 ) {
 						if ( $Shifts[$i]->ul_id() eq $Shifts[$j]->ul_id() ) {
-$log->error("Removing duplicate shift" . $Shifts[$i]->to_string() );
+$log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shifts[$i]->id() .' ' .$Shifts[$j]->id() );
 							#splice @Shifts, $j, 1;
 							#$j -= 1;
 						} # end if
