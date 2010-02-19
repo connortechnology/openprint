@@ -601,14 +601,14 @@ sub skid_details {
 		} # end if
 	} # end foreach
 
+	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
+	$variable{'skid_id'} = $param{'skid_id'};
+	@{$variable{'skid_ids'}} = @skid_ids;
+
 	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) ) {
 		$variable{'error'} .= "Skid $param{'skid_id'} not found!<br/>";
 		return;
 	} # end if
-
-	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
-	$variable{'skid_id'} = $param{'skid_id'};
-	@{$variable{'skid_ids'}} = @skid_ids;
 
 	$variable{'similar'} = 1;
 	my $Skid = new openprint::Skid( $skid_ids[0] );

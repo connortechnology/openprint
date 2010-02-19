@@ -53,6 +53,7 @@ sub find_one {
 	$params{'limit'}=1;
 	my @Results = find(%params);
 	return $Results[0] if @Results;
+	return;
 } # end sub find_one
 
 sub find {
@@ -297,15 +298,15 @@ sub get_li {
 	my $services = $Project->services();
 	my $Equipment = new openprint::Equipment($$self{'equipment_id'});
 
-	my $colour = 'blue';
+	my $colour = '';
 	if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
-		$colour = 'green';
+		$colour = 'inprepress';
 	} elsif ( sets::isin( $Project->status(), ['Printed', 'Complete','Waiting For Pickup', 'Picked Up', 'Shipped'] ) ) {
-		$colour = 'pink';
+		$colour = 'complete';
 	} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
-		$colour = 'red';
+		$colour = 'approval';
 	} elsif ( 1 < sql::execute( $log, $dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=?}, $$self{'project_id'} ) ) {
-		$colour = 'yellow';
+		$colour = 'multipress';
 	} # end if
 	if ( $Project->rush() ) {
 		$colour .= ' rush';

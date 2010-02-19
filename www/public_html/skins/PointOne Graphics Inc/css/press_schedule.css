@@ -78,19 +78,19 @@ div.PressColumn ul li:after {
 div.PressColumn ul li {display: block;}
 /* End hide from IE-mac */
 
-	div.PressColumn li.yellow, li.scheduled {
+	li.multipress, li.scheduled {
 		background-color: #ffff99;
 	}
-	div.PressColumn li.blue, li.unscheduled {
+	li.regular, li.unscheduled {
 		background-color: #ffffff;
 	}
-	div.PressColumn li.green {
+	li.inprepress {
 		background-color: #99ff99;
 	}
-	div.PressColumn li.pink {
+	li.complete {
 		background-color: #FAC6FF;
 	}
-	div.PressColumn li.red {
+	li.approval {
 		background-color: #FF0000;
 		color: black;
 	}
@@ -251,24 +251,69 @@ span.PrepressOperator {
 	text-transform: lowercase;
 }
 
-div.presses, div.statuses, div.legend {
+fieldset.filters ul {
+	list-style:none;
+	margin: 0px;
+	padding:0px;
+}
+fieldset.filters ul:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html fieldset.filters ul {height: 1%;}
+fieldset.filters ul {display: block;}
+
+fieldset.filters ul li {
+	list-style:none;
+	padding: 0px 0px 0px 80px;
+	float: left;
+}
+fieldset.filters ul li label {
+	vertical-align: top;
+	margin: 0px 0px 0px -80px;
+	width: 75px;
+	float: left;
+}
+div.presses {
+	width: 24%;
+	float: left;
+}
+div.statuses, div.legend {
 	width: 30%;
 	float: left;
 }
-div.legend p {
-	padding-left: 100px;
+div.dates {
+	width: 45%;
+	float:left;
 }
-div.legend p label {
-	margin-left: -100px;
-	width: 95px;
+div.presses ul li {
+	padding-left: 70px;
 }
-div.legend ul {
-	list-style:none;
-	margin: 0px;
+div.presses ul li label {
+	margin-left: -70px;
+	width: 65px;
+}
+div.legend ul li {
+	padding-left: 70px;
+}
+div.legend ul li label {
+	margin-left: -70px;
+	width: 65px;
+}
+div.legend ul li ul {
+
+}
+div.legend ul li ul li {
 	padding:0px;
+	width: 100%;
 }
-div.legend li {
-	list-style:none;
+div.legend ul li ul li label {
 	margin: 0px;
-	padding:0px;
+	width: auto;
 }
