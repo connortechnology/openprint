@@ -1067,7 +1067,7 @@ $openprint::log->debug("No spread layout for you!");
 			my $press_index = $Press->id();
 			if ( $$specs{'chkOverridePrintingType'.$qty_index} eq 'Y' ) {
 				if ( $Press->specification('Printing Type') ne $$specs{'PrintingType'.$qty_index} ) {
-					$openprint::log->error('Press Printing Type ('.$Press->specification('Printing Type').') is not the overriden type ' . $$specs{'PrintingType'.$qty_index} ) if $debug;
+					$openprint::log->warn('Press Printing Type ('.$Press->specification('Printing Type').') is not the overriden type ' . $$specs{'PrintingType'.$qty_index} ) if $debug;
 					next;
 				} # end if
 			} else {
