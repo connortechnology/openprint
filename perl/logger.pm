@@ -1,4 +1,5 @@
 package logger;
+use Encode;
 
 sub new {
 	my $self = {};
@@ -51,7 +52,7 @@ sub debug {
     my $self = shift;
 	my $message = shift;
 	if ( $self->{level} eq 'debug' ) {
-		print "[debug] $message\n";
+		print Encode::encode('utf-8',"[debug] $message\n");
 	} # end if
 }
 

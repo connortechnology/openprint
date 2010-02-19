@@ -18,6 +18,8 @@ require openprint::service;
 require openprint::Material;
 require openprint::MaterialCategory;
 require openprint::PaperInventory;
+require openprint::Log;
+require openprint::Host;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -172,11 +174,12 @@ if ( $data ) {
 	} # end if
 } # end if
 if ( sets::isin( 'users_index_seq', \@sequences ) ) {
-	$dbh->do('DROP SEQUENCE users_index_seq');
 	if ( ! sets::isin( 'users_id_seq', \@sequences ) ) {
 		$dbh->do('CREATE SEQUENCE users_id_seq');
-		$dbh->do("ALTER TABLE Users ALTER id set default nextval('users_id_seq')" );
 	} # end if
+	$dbh->do("ALTER TABLE Users ALTER id set default nextval('users_id_seq')" );
+	$dbh->do('DROP SEQUENCE users_index_seq');
+	$dbh->do(q`SELECT setval('users_id_seq', (SELECT max(id) FROM users))` );
 	@sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 } # end if
 
@@ -1095,7 +1098,7 @@ if ( ! exists $$data{'angles'} ) {
 $dbh->do(q`alter table folds add angles integer`);
 } # end if
 foreach my $E ( openprint::Equipment::find() ) {
-	foreach my $Fold ( $E->Folds() ) {
+	foreach my $Fold ( openprint::Fold::find('equipment_id'=>$E->id()) ) {
 		if ( $Fold->type() =~ /(\d*)PageSignatureFold/ ) {
 			$Fold->type( "$1PageFold" );
 			$Fold->save();
@@ -1105,7 +1108,7 @@ foreach my $E ( openprint::Equipment::find() ) {
 sql::end_transaction( $dbh, $ac );
 
 foreach my $E ( openprint::Equipment::find() ) {
-	foreach my $Fold ( $E->Folds() ) {
+	foreach my $Fold ( openprint::Fold::find('equipment_id'=>$E->id()) ) {
 		if ( $Fold->type() =~ /(\d*)PageFold/ ) {
 			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFold"], 'name', "$1PageFold" );
 			sql::update( undef, undef, 'Services', ['name=?', "$1PageSignatureFoldMakeReady"], 'name', "$1PageFoldMakeReady" );
@@ -2203,10 +2206,6 @@ if ( ! sets::isin('user_notifications',\@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/User_Notifications.sql});
 	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
 } # end if
-if ( ! sets::isin('log',\@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Logs.sql});
-	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
-} # end if
 $dbh->commit();
 
 if ( ! sets::isin( 'claims', \@tables ) ) {
@@ -2365,6 +2364,39 @@ $dbh->do(q{insert into whitelist (ip) values ('68.179.115.211')} );
 $dbh->do(q{insert into whitelist (ip) values ('68.179.115.212')} );
 $dbh->do(q{insert into whitelist (ip) values ('208.89.51.122')} );
 } # end if
+if ( ! sets::isin( 'hosts', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/hosts.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} 
+if ( ! sets::isin('log',\@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Logs.sql});
+	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
+} else {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Log LIMIT 1', {} );
+	if ( $data ) {
+		if ( ! exists $$data{'host_id'} ) {
+			$dbh->do('ALTER TABLE Log add host_id INTEGER');
+			$dbh->do('ALTER TABLE Log add FOREIGN KEY (host_id) REFERENCES Hosts (id)');
+		} # end if
+	} # end if
+} # end if
+if ( ! openprint::Host::find_one() ) {
+	foreach my $Log ( openprint::Log::find('host_id'=>undef) ) {
+		my $Host = openprint::Host::find_one('ip'=>$Log->ip_address());
+		if ( ! $Host ) {
+			$Host = new openprint::Host();
+			$Host->save({'ip'=>$Log->ip_address(),'hostname'=>$Log->hostname()});
+		} # end if
+		$Log->save({'host_id'=>$Host->id()}) if $Host->id();
+	} # end foreach Log
+} # end if
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Log LIMIT 1', {} );
+	if ( $data ) {
+		$dbh->do('ALTER TABLE Log DROP COLUMN ip_address') if ( exists $$data{'ip_address'} );
+		$dbh->do('ALTER TABLE Log DROP COLUMN hostname') if ( exists $$data{'hostname'} );
+	} # end if
 	$dbh->commit();
 $dbh->disconnect();
 print "Finished\n";

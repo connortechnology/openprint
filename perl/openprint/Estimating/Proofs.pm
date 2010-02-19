@@ -422,6 +422,9 @@ sub get_proof_specs {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+				next;
+			} # end if
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 
 			if ( $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -532,6 +535,9 @@ sub summary {
 		my %proof_totals;
 		foreach my $ss_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+				next;
+			} # end if
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			foreach my $key ( keys %{$specs} ) {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {

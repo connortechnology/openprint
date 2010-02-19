@@ -69,6 +69,8 @@ $log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserA
 	if ( ( ! $session{'user_id'} ) and ( $config{'UseCaptchaOnRegistration'} eq 'Y' ) ) {
 		if ( ! -e $config{'SkinPath'}.'/images/captcha' ) {
 			$log->error("Needtocreatecaptcha directory!");
+		} elsif ( ! $param{'MD5SUM'} ) {
+			$log->error("No MD5SUM, there must have been a problem creating the png!");
 		} else {
 			require Authen::Captcha;
 			my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
