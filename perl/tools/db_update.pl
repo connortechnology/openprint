@@ -466,13 +466,23 @@ if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 } # end if
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Service_Types.sql});
+	$_ = misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql});
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	}
 	foreach my $c ( sql::execute( undef, undef, 'SELECT DISTINCT category FROM Service_types' ) ) {
 		sql::insert( undef, undef, 'servicetype_categories', 'name', $c );
 	} # end foreach
+} # end if
+if ( ! openprint::ServiceType_Category::find() ) {
+	new openprint::ServiceType_Category()->save({'name'=>'Printing','sorting'=>1});
+	new openprint::ServiceType_Category()->save({'name'=>'Prepress','sorting'=>2});
+	new openprint::ServiceType_Category()->save({'name'=>'Bindery','sorting'=>3});
+	new openprint::ServiceType_Category()->save({'name'=>'Specialty','sorting'=>4});
+	new openprint::ServiceType_Category()->save({'name'=>'Packaging','sorting'=>5});
+	new openprint::ServiceType_Category()->save({'name'=>'Shipping','sorting'=>6});
+	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>7});
+	new openprint::ServiceType_Category()->save({'name'=>'Custom Services','sorting'=>10});
 } # end if
 
 if ( sets::isin( 'service_types', \@tables ) ) {
@@ -1308,11 +1318,6 @@ if ( ! $data ) {
 		$dbh->do(q`alter table papers add parts integer`);
 	} # end if
 } # end if
-foreach my $Paper ( openprint::Paper::find() ) {
-	if ( ! $Paper->wpsi() != $Paper->wpsi(undef) ) {
-		$Paper->save();
-	} # end if
-} # end foreach my Paper
 
 if ( ! sets::isin( 'locations', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Locations.sql});

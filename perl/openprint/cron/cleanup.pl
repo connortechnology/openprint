@@ -279,6 +279,12 @@ foreach my $Host ( openprint::Host::find('hostname'=>undef) ) {
 	$Host->save() if $Host->hostname();
 } # end foreach
 
+# Paper maintenance
+foreach my $Paper ( openprint::Paper::find() ) {
+	if ( ! $Paper->wpsi() != $Paper->wpsi(undef) ) {
+		$Paper->save();
+	} # end if
+} # end foreach my Paper
 $dbh->disconnect();
 1;
 __END__

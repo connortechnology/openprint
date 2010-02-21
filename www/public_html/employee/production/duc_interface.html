@@ -82,7 +82,8 @@
 			my %specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_id, $service_id );
 			if ( $specs{'UsePress'} ne $equipment{$press} ) {
 				# Set press, and update runtime.
-				openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id','user_id'}, $project_id, "Press for signature $specs{'SignatureIndex'} changed from $specs{'UsePress'} to $equipment{$press}" );
+				new openprint::Project( $project_id )->add_to_log(
+				@openprint::session{'company_id','user_id'}, "Press for signature $specs{'SignatureIndex'} changed from $specs{'UsePress'} to $equipment{$press}" );
 				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $equipment{$press} );
 			} # end if
 			
