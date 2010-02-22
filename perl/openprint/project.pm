@@ -20,7 +20,10 @@ sub view {
 			last;
 		} # endif
 	} # end foreach
-	$Project->save() if $save;
+	if ( $save ) {
+	$Project->save();
+	} # end if
+$openprint::log->debug("Saving $save");
 } # end sub view
 
 1;

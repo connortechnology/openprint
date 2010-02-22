@@ -67,9 +67,9 @@
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->Company()->name(); ) ?></a></td>
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? hecho ( $$variable{'Project'}->reference(); ) ?></a></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Project'}->price1()*$$variable{'conversion_rate'} ) if $$variable{'Project'}->price1(); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Project'}->price2()*$$variable{'conversion_rate'} ) if $$variable{'Project'}->price2(); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Project'}->price3()*$$variable{'conversion_rate'} ) if $$variable{'Project'}->price3(); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->price(1)*$$variable{'conversion_rate'} ) ) if $$variable{'Project'}->quantity(1); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->price(2)*$$variable{'conversion_rate'} ) ) if $$variable{'Project'}->quantity(2); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->price(3)*$$variable{'conversion_rate'} ) ) if $$variable{'Project'}->quantity(3); ) ?></td>
 			<td align="right"><? echo ( $$variable{'Project'}->status(); ) ?></td>
 			<td align="right"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></td>
 		</tr>
@@ -108,17 +108,17 @@
 		) ?>
 		<tr<?rowclass?>> 
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
-			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
-			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'Project'}->price1()*$$variable{'conversion_rate'},2,2) ) if $$variable{'Project'}->price1(); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'Project'}->price2()*$$variable{'conversion_rate'},2,2) ) if $$variable{'Project'}->price2(); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%s', $$variable{'Currency'}->symbol(), Number::Format::format_number($$variable{'Project'}->price3()*$$variable{'conversion_rate'},2,2) ) if $$variable{'Project'}->price3(); ) ?></td>
+			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? hecho ( $$variable{'Project'}->reference(); ) ?></a></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->price(1)*$$variable{'conversion_rate'} ) if $$variable{'Project'}->quantity(1); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->price(2)*$$variable{'conversion_rate'} ) if $$variable{'Project'}->quantity(2); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->price3()*$$variable{'conversion_rate'} ) if $$variable{'Project'}->quantity(3); ) ?></td>
 			<td align="right"><? echo ( $$variable{'Project'}->status(); ) ?></td>
 			<td align="right"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></td>
 			<td class="unprintable" align="center"><input type="checkbox" name="chkDelete<? echo ( $$variable{'Project'}->id(); ) ?>" /></td>
 		</tr>
 		<tr<?rowclass?>> 
 			<td>&nbsp;</td>
-			<td colspan="7"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? hecho ( $$variable{'Project'}->reference(); ) ?></a></td>
+			<td colspan="7"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
