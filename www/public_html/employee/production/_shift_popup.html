@@ -3,11 +3,15 @@
 	<fieldset><legend>Shift Information</legend>
 		<p>
 			<label>Start Time:</p>
-			<? echo ( return ssi::datetime_select( 'starttime', $$variable{'Shift'}{'starttime'} );) ?>
+			<? echo ( return ssi::datetime_select( 'starttime', $$variable{'Shift'}{'starttime'}, {'onchange'=>q`check_time_starting(this.form,'starttime','endtime');update_duration(this.form,'starttime','endtime');`} ); ) ?>
 		</p>
 		<p>
 			<label>End Time:</p>
 			<? echo ( return ssi::datetime_select( 'endtime', $$variable{'Shift'}{'endtime'} );) ?>
+		</p>
+		<p><label>Duration:</label>
+			<span id="duration"> </span>
+			<script type="text/javascript">update_duration(document.forms['ShiftForm'],'starttime','endtime');</script>
 		</p>
 		<p>
 			<label>Operator:</label>
@@ -19,6 +23,7 @@
 		</p>
 	</fieldset>
 		<p class="buttons">
+			<? echo ( #ssi::writeButton( $log, $dbh, 'DeleteShift', 'delete.gif', q`new Ajax.Request('_shift_change.json?action=delete',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Delete' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'SaveShift', 'save.gif', q`new Ajax.Request('_shift_change.json',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'CancelShift', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
 		</p>

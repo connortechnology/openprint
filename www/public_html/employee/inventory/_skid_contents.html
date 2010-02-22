@@ -27,7 +27,7 @@
 		$html .= ssi::writeButton( $log, $dbh, "CheckIn$$C{id}", 'checkin.gif', "checkin_window( $paper_id, '$$variable{skid_id}' );", '', 'Check In' );
 		$html .= ssi::writeButton( $log, $dbh, "CheckOut$$C{id}", 'checkout.gif', "checkout_window( $paper_id, '$$variable{skid_id}' );", '', 'Check Out' );
 		$html .= ssi::writeButton( $log, $dbh, "Allocate$$C{id}", 'allocate.gif', "allocate_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Allocate' );
-		$html .= ssi::writeButton( $log, $dbh, "Delete$$C{id}", 'delete.gif', '', sprintf('/employee/inventory/skid_details.html?skid_id=%d&amp;paper_id=%d&amp;btnFunction=DeletePaper', $$variable{Skid}->id(), $paper_id ), 'Delete' );
+		$html .= ssi::writeButton( $log, $dbh, "Delete$$C{id}", 'delete.gif', '', sprintf('/employee/inventory/skid_details.html?skid_id=%d&amp;content_id=%d&amp;btnFunction=DeletePaper', $$variable{Skid}->id(), $C->id() ), 'Delete' );
 		$html .= ssi::writeButton( $log, $dbh, "Select$$C{id}", 'select.gif', "\$('AddPaper').show();new Ajax.Updater({success: 'AddPaper'},'/employee/inventory/_add_paper_show.html?paper_id=$paper_id&amp;skid_id=$$variable{Skid}{id}',{method:'get'} );", '', 'Select' );
 		$html .= '</td>';
 		$html .= '</tr>';

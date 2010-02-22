@@ -21,22 +21,13 @@
 	} // end function delete_confirrm
 	function load_quotes( form ) {
 		$('QuoteList').innerHTML = 'Please wait...';
-		new Ajax.Updater('QuoteList','/main/quote/_quote_list.html', {method:'get',parameters:Form.serialize(form)});
+		new Ajax.Updater('QuoteList','/main/quote/_quote_list.html', {method:'get',parameters:form.serialize(true)});
 	} // end function load_quotes
-
-	function initializeDayDropDowns() {
-	   setDaysDropDown(document.f1.ddmStartYear.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);
-	   setDaysDropDown(document.f1.ddmEndYear.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);
-	}
-	
-	window.onload = initializeDayDropDowns;
 </script>	 
 <? if ( $openprint::session{'user_id'} == 0 ) ?>
 Only logged in customers have a quote history. 
 <? else ( $openprint::session{'user_id'} == 0 ) ?>
-<? if ( $$variable{'error'} ) ?>
-<div class="error"><?error?></div>
-<? endif ( $$variable{'error'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 
 <form name="f1" method="post" action="history.html">
    <div class="QuoteHistory">

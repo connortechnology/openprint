@@ -351,6 +351,10 @@ sub store_user_for_info {
 		@$data{qw/ForCompanyName ForFirstName ForLastName ForTitle ForSalutation ForAddress1 ForAddress2 ForCity ForState ForCountry ForPostalCode ForPhone ForExtension ForFax ForEmail/};
 } # end sub store_for_info
 
+sub description {
+	return join('<br/>', map { $_->reference() } $_[0]->Projects() );
+}
+
 sub send {
 	my $self = shift;
 
@@ -381,6 +385,13 @@ sub send {
 		$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
 		push @project_summaries, sprintf('Project%d.html',$Project->project_id()), encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%variable ))), 'text/html', 'quoted-printable';
 	} # for each Project
+	
+	my $description = '';
+#$self->description();
+	#$description =~ s/\n\r/ /mg;
+	#$description =~ s/\r\n/ /mg;
+	#$description =~ s/\n/ /mg;
+	#$description =~ s/<br\/>/,/mg;
 
 	my $Me = new openprint::User( $session{'user_id'} );
 
@@ -400,7 +411,7 @@ sub send {
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					TO      => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					SUBJECT => sprintf('Quote %d for %s', $$self{id}, $self->for_companyname() ),
+					SUBJECT => sprintf('Quote %d for %s : %s', $$self{id}, $self->for_companyname(), $description ),
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
 		} # end if
@@ -465,7 +476,7 @@ sub send {
 				SMTP    => $openprint::config{'Mail Server'},
 				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
-				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id}",
+				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id} : " .$description,
 				);
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 	} # end if reseller or admin

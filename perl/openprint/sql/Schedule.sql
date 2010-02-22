@@ -11,5 +11,6 @@ CREATE TABLE Schedule (
 	endtime_locked		boolean,
 	RunTime				INTERVAL NOT NULL,
 	runtime_locked		boolean,
+	speed				INTEGER,
 	PRIMARY KEY (id)
 );

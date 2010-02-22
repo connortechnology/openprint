@@ -3,9 +3,10 @@
 	my $html = '';
 	my @company_ids;
 
-	if ( $session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory','Sales'], $session{'user_id'} ) ) {
-		@company_ids = sql::execute( undef,undef,'SELECT index FROM Company WHERE Index=? OR lngSalesPerson IN ('. join(',', $session{'user_id'}, new openprint::User( $session{'user_id'} )->csr_ids() ) .')', new openprint::User($session{'user_id'})->company_id() );
-    } # end if
+	#if ( $session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory','Sales'], $session{'user_id'} ) ) {
+		#@company_ids = sql::execute( undef,undef,'SELECT index FROM Company WHERE Index=? OR lngSalesPerson IN ('. join(',', $session{'user_id'}, new openprint::User( $session{'user_id'} )->csr_ids() ) .')', new openprint::User($session{'user_id'})->company_id() );
+		
+    #} # end if
 
 	@company_ids = ( $session{'/employee/reports/stock_usage.html?company_id'} ) if $session{'/employee/reports/stock_usage.html?company_id'};
 
@@ -112,7 +113,6 @@ $log->debug("Different Colour: $$Stock{'colour'} != $$StockColour{'shortname'}")
 					} # end if
 				} # end if
 				my $qty = $$sig_specs{'txtPressSheetQty'.$qty_index};
-$log->debug("Stock QTY$qty_index: $qty");
 				$qty =~ s/\D//g;
 if ( ! $qty ) {
 	$log->error("No Ordered QTY in $$Order{id} $$Project{id}!");

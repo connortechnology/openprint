@@ -2166,6 +2166,7 @@ if ( ! sets::isin( 'schedule', \@tables ) ) {
 			$dbh->do('ALTER TABLE Schedule ADD starttime_locked boolean');
 		} # end if
 	} # end if
+	$dbh->do('ALTER TABLE Schedule ADD speed INTEGER') if ! exists $$data{'speed'};
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Labels LIMIT 1', {} );
