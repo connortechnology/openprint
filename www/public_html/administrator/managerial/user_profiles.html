@@ -49,7 +49,15 @@ Please select a company or user to obtain login information.<br/>
 		</fieldset>
 		<fieldset>
 			<p id="ButtonsTop"> 
-				<label><? if ( $$variable{'User'}->company_id() ) ?><a href="company_profiles.html?ddmCustomer=<? echo ( $$variable{'User'}->company_id() ) ?>">Link to Company Info.</a><? endif ( $$variable{'User'}->company_id() ) ?>&nbsp;</label>
+				<label>
+					<? if ( $$variable{'User'}->company_id() ) ?>
+						<a href="company_profiles.html?ddmCustomer=<? echo ( $$variable{'User'}->company_id() ) ?>">Link to Company Info.</a>
+					<? else ( $$variable{'User'}->company_id() ) ?>
+					<? if ( $param{'ddmCustomer'} ) ?>
+						<a href="company_profiles.html?ddmCustomer=<? echo ( $param{'ddmCustomer'} ) ?>">Link to Company Info.</a>
+					<? endif ( $param{'ddmCustomer'} ) ?>
+					<? endif ( $$variable{'User'}->company_id() ) ?>
+				</label>
 				
 				<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
 				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>

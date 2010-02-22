@@ -129,7 +129,7 @@
 				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 					$html .= '<td class="unprintable actions">';
 					if ( $Project->Type()->url() ) {
-						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;calc=%2$d">Edit</a><br/>', $Project->id(), $$services{''}[0], $Project->Type()->url() );
+						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $$services{''}[0], $Project->Type()->url() );
 					} # end if
 					$html .= '</td>';
 				} # end nif
@@ -212,10 +212,10 @@
 				$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
 				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 					$html .= '<td class="unprintable actions">';
-					if ( new openprint::User($$variable{'user_id'})->email() =~ /iconnor/ ) {
+					if ( new openprint::User($session{'user_id'})->email() =~ /iconnor/ ) {
 						$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $service_id );
 					} elsif ( $Project->Type()->url() ) {
-						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;calc=%2$d">Edit</a><br/>', $Project->id(), $service_id, $Project->Type()->url() );
+						$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $service_id, $Project->Type()->url() );
 					} # end if
 					$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $service_id );
 					$html .= '</td>';
@@ -258,10 +258,10 @@
 					$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
 					if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 						$html .= '<td class="unprintable actions">';
-						if ( new openprint::User($$variable{'user_id'})->email() =~ /iconnor/ ) {
+						if ( new openprint::User($session{'user_id'})->email() =~ /iconnor/ ) {
 							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;calc=%2$d">Calc</a><br/>', $Project->id(), $service_id );
 						} elsif ( $ServiceType->url() ) {
-							$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;calc=%2$d">Edit</a><br/>', $Project->id(), $service_id, $ServiceType->url() );
+							$html .= sprintf('<a href="/main/project/%3$s?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">Edit</a><br/>', $Project->id(), $service_id, $ServiceType->url() );
 						} # end if
 						$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $service_id );
 						$html .= '</td>';
