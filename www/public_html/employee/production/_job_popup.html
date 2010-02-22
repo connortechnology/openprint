@@ -5,6 +5,7 @@
 			<label>Comment:</label>
 			<textarea id="comment" name="comment"  rows="5" cols="" ><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
 		</p>
+<? if ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
 		<p>
 			<label>Locked:</label>
 			<input type="radio" id="locked1" name="locked" value="1" <? echo ( ssi::checked( $$variable{'Job'}{'locked'} ); ) ?> onclick="$('StartTime').show();" />
@@ -12,14 +13,24 @@
 			<input type="radio" id="locked0" name="locked" value="0" <? echo ( ssi::checked( ! $$variable{'Job'}{'locked'} ); ) ?> onclick="$('StartTime').hide();" />
 			<label class="radio" for="locked0">No</label>
 		</p>
-		<p id="StartTime" <? echo ( $$variable{'Job'}->locked() ? '' : 'style="display:none;"' ) ?>>
+		<p id="StartTime">
 			<label>Start Time:</label>
 			<span class="DateTimeSelector">
 			<? echo ( 
-				return ssi::datetime_select( 'starttime', ( $$variable{'Job'}{'starttime'} ? $$variable{'Job'}{'starttime'} : ''), { 'onchange'=>q`set_rdb_value($('locked'), 1 );` } );
+				my $html = ssi::datetime_select( 'starttime', ( $$variable{'Job'}{'starttime'} ? $$variable{'Job'}{'starttime'} : ''), { 'onchange'=>q`set_rdb_value($('locked'), 1 );` } );
+				$html .= ssi::writeButton( $log, $dbh, 'Today', 't.gif', 'set_today( JobForm.starttime_year, JobForm.starttime_month, JobForm.starttime_day, JobForm.starttime_hour, JobForm.starttime_minute );', '', 'T' ); 
+				return $html;
 			) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Today', 't.gif', 'set_today( JobForm.starttime_year, JobForm.starttime_month, JobForm.starttime_day, JobForm.starttime_hour, JobForm.starttime_minute );', '', 'T' ); ) ?>
 			</span>
+		</p>
+<? endif ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
+		<p>
+			<label>Impressions:</label>
+			<input type="text" name="impressions" value="<? echo ( $$variable{'Job'}->impressions() ) ?>" />
+		</p>
+		<p>
+			<label>Speed:</label>
+			<input type="text" name="speed" value="<? echo ( $$variable{'Job'}->speed() ) ?>" onkeyup="this.value=this.value.replace(/[\D]/g,'');"/>/Hr
 		</p>
 		<p>
 			<label>Runtime:</label>
@@ -28,10 +39,6 @@
 		<p>
 			<label>Forms:</label>
 			<input type="text" name="forms" value="<? echo ( $$variable{'Job'}->forms() ) ?>" onkeyup="this.value=this.value.replace(/\D/g, '');" />
-		</p>
-		<p>
-			<label>Impressions:</label>
-			<input type="text" name="impressions" value="<? echo ( $$variable{'Job'}->impressions() ) ?>" />
 		</p>
 	</fieldset>
 		<p class="buttons">

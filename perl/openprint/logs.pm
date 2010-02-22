@@ -56,24 +56,17 @@ sub insertLogRecord {
 	   $action_type_id = 1;
 	}
 	
-	sql::insert( $openprint::log, $openprint::dbh, 'log', [
-		'action_type', $action_type_id, 
-		'user_id', $user_id, 
-		'company_id',	$company_id,
-		'date_time', 'NOW()', 
-		'ip_address', $ENV{REMOTE_ADDR}, 
-		'url', $ENV{SERVER_NAME} . $ENV{REQUEST_URI}, 
-		'note', $note,
-	] );
+	my $Log = new openprint::Log();
+	$Log->save({
+		'action_type'	=>	$action_type_id, 
+		'user_id'		=>	$user_id, 
+		'company_id'	=>	$company_id,
+		'ip_address'	=>	$ENV{REMOTE_ADDR}, 
+		'url'			=>	$ENV{SERVER_NAME} . $ENV{REQUEST_URI}, 
+		'note'			=>	$note,
+	});
 	
 	return 1;
-}
-
-sub reverse_dns {
-	my $ip = shift;
-	return $ip unless $ip=~/\d+\.\d+\.\d+\.\d+/;
-	my @h = gethostbyaddr(pack('C4',split('\.',$ip)),2);
-	return $h[0];
 }
 
 sub getLog {  

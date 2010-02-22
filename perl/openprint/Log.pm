@@ -18,6 +18,10 @@ $serial = 'log_id_seq';
 	'action_type'	=>	'action_type',
 	'note'			=>	'note',
 	'host_id'		=>	'host_id',
+	'ip_address'	=>	undef,
+);
+%defaults = (
+	'date_time'	=>	'NOW()',
 );
 
 %types = (
@@ -132,7 +136,12 @@ sub ip_address {
 	my $Host = $self->Host();
 
 	if ( defined $new ) {
-		$Host->save({'ip'=>$new});
+		$Host = openprint::Host::find_one( 'ip'=>$new );
+		if ( ! $Host ) {
+			$Host = new openprint::Host();
+			$Host->save({'ip'=>$new});
+		} # end if
+		$$self{'host_id'} = $Host->id();
 	} # end if
 	return $Host->ip();
 } # end sub ip_address

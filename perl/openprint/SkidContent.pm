@@ -87,6 +87,13 @@ sub Paper {
 sub Skid {
 	return new openprint::Skid( $_[0]{'skid_id'} );
 } # end sub Skid
+sub delete {
+	my $self = $_[0];
+	my $error = $self->SUPER::delete();
+	if ( !$error ) {
+		$self->Paper()->save();
+	} # end if
+} # end sub delete
 
 1;
 

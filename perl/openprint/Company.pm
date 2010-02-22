@@ -130,8 +130,8 @@ sub find {
 			} # end if
 			push @values, @{$params{'SalesPerson'}};
 		} else {
-		$sql .= q{ AND lngSalesPerson=?};
-		push @values, $params{'SalesPerson'};
+			$sql .= q{ AND lngSalesPerson=?};
+			push @values, $params{'SalesPerson'};
 		} # end if
 	} # end if
 	if ( $params{'salesrep_id'} ) {

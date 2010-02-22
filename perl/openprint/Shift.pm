@@ -31,6 +31,8 @@ $serial = 'shifts_id_seq';
 	'operator_id'		=>	'operator_id',
 	'shift_id'			=>	'shift_id',
 	'equipment_id'		=>	'equipment_id',
+	'starttime_seconds'	=>	undef,
+	'endtime_seconds'	=>	undef,
 );
 
 %transforms = (
@@ -85,20 +87,33 @@ sub find {
     } elsif ( $params{'starttime_start'} ) {
         $sql .= ' AND starttime >= ?';
         push @values, $params{'starttime_start'};
-    } elsif ( $params{'starttime_end'} ) {
+	} elsif ( $params{'starttime_end'} ) {
         $sql .= ' AND starttime <= ?';
         push @values, $params{'starttime_end'};
-    } elsif ( $params{'starttime_<'} ) {
-        $sql .= ' AND starttime < ?';
-        push @values, $params{'starttime_<'};
-    } elsif ( $params{'starttime_>'} ) {
-        $sql .= ' AND starttime > ?';
-        push @values, $params{'starttime_>'};
     } elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
         $sql .= ' AND starttime IS NULL';
     } elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
         $sql .= ' AND starttime IS NULL';
     } # end if
+    
+	if ( $params{'starttime_>='} ) {
+        $sql .= ' AND starttime >= ?';
+        push @values, $params{'starttime_>='};
+    } 
+	if ( $params{'starttime_<='} ) {
+        $sql .= ' AND starttime <= ?';
+        push @values, $params{'starttime_<='};
+    } # endif
+
+	if ( $params{'starttime_<'} ) {
+        $sql .= ' AND starttime < ?';
+        push @values, $params{'starttime_<'};
+    } 
+	if ( $params{'starttime_>'} ) {
+        $sql .= ' AND starttime > ?';
+        push @values, $params{'starttime_>'};
+	} # end if
+
     if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
         $sql .= ' AND ( endtime BETWEEN ? AND ? )';
         push @values, @params{'endtime_start','endtime_end'};
@@ -108,16 +123,27 @@ sub find {
     } elsif ( $params{'endtime_end'} ) {
         $sql .= ' AND endtime <= ?';
         push @values, $params{'endtime_end'};
-    } elsif ( $params{'endtime_<'} ) {
-        $sql .= ' AND endtime < ?';
-        push @values, $params{'endtime_<'};
-    } elsif ( $params{'endtime_>'} ) {
-        $sql .= ' AND endtime > ?';
-        push @values, $params{'endtime_>'};
     } elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
         $sql .= ' AND endtime IS NULL';
     } elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
         $sql .= ' AND endtime IS NULL';
+	} # end if
+
+    if ( $params{'endtime_<'} ) {
+        $sql .= ' AND endtime < ?';
+        push @values, $params{'endtime_<'};
+    } 
+    if ( $params{'endtime_<='} ) {
+        $sql .= ' AND endtime <= ?';
+        push @values, $params{'endtime_<='};
+    } 
+	if ( $params{'endtime_>'} ) {
+        $sql .= ' AND endtime > ?';
+        push @values, $params{'endtime_>'};
+    } # end if
+	if ( $params{'endtime_>='} ) {
+        $sql .= ' AND endtime >= ?';
+        push @values, $params{'endtime_>='};
     } # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -135,6 +161,9 @@ sub find {
 } # end sub find
 
 sub starttime_seconds {
+	if ( @_ == 2 ) {
+		$_[0]{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] );
+	} # end if
 	return Date::Parse::str2time( $_[0]{'starttime'} );
 } # endsub
 
@@ -145,6 +174,9 @@ sub startdate_seconds {
 } # end sub startdate_seconds
 
 sub endtime_seconds {
+	if ( @_ == 2 ) {
+		$_[0]{'endtime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[1] );
+	} # end if
 	return Date::Parse::str2time( $_[0]{'endtime'} );
 } # endsub
 
@@ -233,7 +265,6 @@ sub get_lis {
 		$month += 1;
 	} # endif
 
-
 	my $html;
 	my $ul_id = $Shift->ul_id();
 
@@ -258,12 +289,14 @@ sub get_lis {
 		my $Operator = $Shift->Operator();
 
 		if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{'user_id'} ) ) {
-			$html = sprintf( q{<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s" onclick="popup_window('_shift_popup.html','shift_id=%d');">%s</span><br class="spacer"/></div>},
+			$html = sprintf( q{<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d');"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s">%s</span><br class="spacer"/></div>},
+
+			$Shift->id(), 
 Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
 			Date::Format::time2str('%H:%M', $Shift->starttime_seconds() ),
 			Date::Format::time2str('%H:%M', $Shift->endtime_seconds() ),
 			$total_impressions, ($Operator->id() ? 'Operator' : 'assign' ), 
-			$Shift->id(), ($Operator->id() ? $Operator->name() : 'assign') ) . $html;
+			($Operator->id() ? $Operator->name() : 'assign') ) . $html;
 		} else {
 			$html = sprintf( '<div class="When"><span style="float: left;">%s %d %.3s %s %s to %s</span><span style="float: right;">%s</span><br class="spacer"/></div>', 
 					Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 
@@ -322,7 +355,8 @@ sub get {
 
 sub Next {
 	my ( $self ) = @_;
-	my $Next = find_one('starttime_>' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
+	my $Next = find_one('starttime_>=' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
+$log->debug( $Next->to_string() );
 	if ( ! $Next ) {
 		my $ES = openprint::Equipment_Shift::find_one(
 				'equipment_id'      =>  $$self{'equipment_id'},

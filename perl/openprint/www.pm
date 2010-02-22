@@ -358,7 +358,7 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+$log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
 
 	} elsif ( $first eq 'content' ) { # main
