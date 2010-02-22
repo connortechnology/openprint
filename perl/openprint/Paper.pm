@@ -1172,7 +1172,7 @@ sub multipart {
 sub load_from_signature {
 	my ( $Project, $specs, $qty_index ) = @_;
 
-	$qty_index = $Project->ordered_quantity_index() if ! $qty_index;
+	#$qty_index = $Project->ordered_quantity_index() if ! $qty_index;
 
 	my $Paper;
 	if ( $$specs{'rdbSpecificStock'} eq 'Y' ) {
@@ -1183,15 +1183,25 @@ sub load_from_signature {
 		$Paper->colour( $$specs{'txtSpecificStockColour'} );
 		$Paper->weight( $$specs{'txtSpecificStockWeight'} );
 		$Paper->calliper( $$specs{'txtSpecificStockCalliper'} );
-		$Paper->width( $$specs{'StockWidth'.$qty_index} );
-		$Paper->height( $$specs{'StockHeight'.$qty_index} );
 		$Paper->start_width( $$specs{'txtSpecificStockWidth'} );
 		$Paper->start_height( $$specs{'txtSpecificStockHeight'} );
+		if ( $qty_index ) {
+			$Paper->width( $$specs{'StockWidth'.$qty_index} );
+			$Paper->height( $$specs{'StockHeight'.$qty_index} );
+		} else {
+			$Paper->width( $$specs{'txtSpecificStockWidth'} );
+			$Paper->height( $$specs{'txtSpecificStockHeight'} );
+		} # end if
 		$Paper->gsm( $$specs{'txtStockGSM'} );
 		$Paper->type( $$specs{'StockType'} );
 
+		$Paper->minimum_order( $$specs{'minimum_order'} );
+		$Paper->sheets_per_package( $$specs{'sheets_per_package'} );
+		$Paper->full_packages( $$specs{'full_packages'} );
 		$Paper->cuttable(1);
-		$Paper->perfecting('N');
+		$Paper->digital(1);
+		$Paper->perfecting($$specs{'perfecting'});
+
 		$Paper->doublesided($$specs{'CustomSheetDoubleSided'});
 		$Paper->grade( $$specs{'StockGrade'});
 

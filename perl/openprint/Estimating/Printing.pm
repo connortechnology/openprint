@@ -126,7 +126,7 @@ my %variables = (
 		'txtUnspecifiedPageQuantity1' => ['output'], 'PageQuantity1' => ['save','output'],
 		'txtUnspecifiedPageQuantity2' => ['output'], 'PageQuantity2' => ['save','output'],
 		'txtUnspecifiedPageQuantity3' => ['output'], 'PageQuantity3' => ['save','output'],
-		'minimum_order'=>['save'],
+		'minimum_order'=>['save'],'sheets_per_package'=>['save'],'full_packages'=>['save'],
 		'chkOverridePageQuantity1' => ['save'], 'chkOverridePageQuantity2' => ['save'], 'chkOverridePageQuantity3' => ['save'],
 		'SpreadRows1' => ['save','output'],'SpreadCols1' => ['save','output'],
 		'SpreadRows2' => ['save','output'],'SpreadCols2' => ['save','output'],
@@ -950,10 +950,8 @@ my $master_time = gettimeofday();
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$specs{'txtWidth','txtHeight'};
 	} # end if
 
-
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
-$openprint::log->debug("SideOne " . @side_one_colours . " Side Two: " . @side_two_colours );
 	my %inkCoverage = get_inkcoverage( $specs );
 	if ( ! ( $$services{'NoPrinting'} or @side_one_colours or @side_two_colours ) ) {
 		$$specs{'alert'} .= 'Please choose the colours to be printed.<br/>';
@@ -1012,26 +1010,19 @@ $openprint::log->debug("SideOne " . @side_one_colours . " Side Two: " . @side_tw
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 		} # end if
-		my $Paper = new openprint::Paper();
 		if ( $$specs{'perfecting'} eq '' ) {
 			$$specs{'perfecting'} = sets::isin( $$specs{'StockGrade'},[4,5] ) ? 'Y' : 'N';
 		} # end if
-		@$Paper{'cuttable','perfecting','calliper','doublesided','gsm','grade','digital'} = ( 1,@$specs{'perfecting','txtSpecificStockCalliper','CustomSheetDoubleSided','txtStockGSM','StockGrade'},1);
-		@$Paper{'width','height','mweight','Price','type','basis_width','basis_height','basis_mweight','minimum_order'} = @$specs{'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','CustomStockPrice','StockType','basis_width','basis_height','basis_mweight','minimum_order'};
-		if ( $$specs{'StockType'} eq 'Roll' ) {
-			delete $$Paper{'height'};
-		} # end if
-		$Paper->score_required( $Paper->calliper() > 0.008 );
+		my $Paper = openprint::Paper::load_from_signature( $Project, $specs );
+$openprint::log->debug( $Paper->to_string() );
 		push @Papers, $Paper;
-		@$Paper{'start_width','start_height'} = @$Paper{'width','height'};
-		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','basis_mweight',
-				'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
+		foreach my $k ( 'txtSpecificStockCalliper', 'txtSpecificStockWidth','txtSpecificStockHeight','txtCustomMWeight','txtCustomStockPrice', 'txtStockGSM','basis_mweight', 'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight' ) {
 			$variables{$k} = [ sets::exclude( ['output'], $variables{$k} ) ];
 		} # end foreach
 		if ( ( ! $$specs{'txtCustomMWeight'} and $Paper->gsm() ) ) {
 			$variables{'txtCustomMWeight'} = [ sets::union( 'output', @{$variables{'txtCustomMWeight'}} ) ];
 			$$specs{'txtCustomMWeight'} = $Paper->mweight();
-		} 
+		} # end if
 		if ( ( ! $$specs{'basis_mweight'} and $Paper->gsm() ) ) {
 			$variables{'basis_mweight'} = [ sets::union( 'output', @{$variables{'basis_mweight'}} ) ];
 			$$specs{'basis_mweight'} = $Paper->basis_mweight();
@@ -1177,7 +1168,7 @@ $openprint::log->debug("Initial Papers: " . $P->type() .':' . $P->width() . 'x' 
 	@Papers = map { $_->clone() } @Papers;
 
 	foreach my $P ( @Papers ) {
-		$openprint::log->debug("Paper: " . $P->to_string() ) if ( $debug or 0 );
+		$openprint::log->debug("Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if ( $debug or 1 );
 		$Papers{$P->to_string()} = $P;
 	} # end foreach
 
@@ -2679,6 +2670,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					} # end if
 				} # end if
 
+$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
 				if ( $Paper->minimum_order() ) {
 					# Assume sheets for sheets, lbs for Rolls
 					if ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) { # Must be a roll
