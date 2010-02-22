@@ -136,6 +136,7 @@ $openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$openprint::log->error( "Error loading Equipment ($sql) (@values) :" . $openprint::dbh->errstr );

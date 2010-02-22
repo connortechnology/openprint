@@ -4120,7 +4120,6 @@ sub compare_signatures_runstyle {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
 				return 0;
-
 			} # end if
 		} # end if
 	} # end foreach q_i
@@ -4182,13 +4181,20 @@ sub compare_signatures {
 } # end sub compare_signatures
 
 sub runtime {
-	my ( $Project, $specs ) = @_;
+	my ( $Project, $specs, $Equipment, $impressions, $runspeed ) = @_;
 
-	my ( $qty_index ) = $Project->ordered_quantity_index();
+    my $qty_index = $Project->ordered_quantity_index();
 	my %time;
 
-	if ( ! $$specs{'UsePress'} ) {
-		$$specs{'UsePress'} = $$specs{'ddmPress'.$qty_index};
+	if ( ! $Equipment ) {
+		$Equipment = openprint::Equipment::find_one( 'strid'=>$$specs{'UsePress'} );
+		if ( ! $$specs{'UsePress'} ) {
+			$$specs{'UsePress'} = $$specs{'ddmPress'.$qty_index};
+		} # end if
+	} # end if
+	if ( ! $Equipment ) {
+		$openprint::log->error("No equipment found for $$specs{'UsePress'}");
+		return %time;
 	} # end if
 
 	my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'UsePress'} );
@@ -4209,19 +4215,58 @@ sub runtime {
 	$time{'Setup'} += 60*$Equipment->specification('Wash Up Time Per Colour') * @colours;
 #$time{'Setup'} += 60*$Equipment->specification('Plate Setup Time') ;
 
-	my $run_speed = $Equipment->specification( 'Press Additional Run Speed',$$specs{'txtSpecificStockCalliper'} );
-	my $std_runspeed = $Equipment->specification('Press Standard Run Speed');
-
-	if ( $std_runspeed ) {
-		if ( $run_speed ) {
-			$time{'Run'} += int( ( 60 * $$specs{'hdnImpressionQuantity'.$qty_index} / $std_runspeed ) * ( $std_runspeed / $run_speed ) );
-		} else {
-			$time{'Run'} += int ( 60 * $$specs{'hdnImpressionQuantity'.$qty_index} / $std_runspeed );
-		} # end if
+	$runspeed = runspeed( $Project, $specs, $qty_index, $Equipment ) if ! $runspeed;
+	$impressions = $$specs{'hdnImpressionQuantity'.$qty_index} if ! $impressions;
+	if ( $runspeed ) {
+		$time{'Run'} += int ( 3600 * $impressions / $runspeed );
 	} # end if
 	$time{'Total'} = $time{'Setup'} + $time{'Run'};
+$openprint::log->debug("Total: $time{'Setup'} + $time{'Run'} = $time{'Total'} => " . misc::seconds2hms( $time{'Total'} ) );
 	return \%time;
 } # end sub runtime
+
+sub runspeed {
+	my ( $Project, $sig_specs, $qty_index, $Equipment ) = @_;
+
+	my $runspeed;
+	if ( ! $Equipment ) {
+$openprint::log->debug("SIGSPECS $sig_specs, PROJECT: $Project ");
+		my $equipment_name = $$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$qty_index};
+		if ( ! $equipment_name ) {
+			$openprint::log->error( "No equipmnet in sig for qty $qty_index" );
+			return;
+		} # end if
+		$Equipment = openprint::Equipment::find_one('strid'=>$equipment_name);
+		if ( ! $Equipment ) {
+			$openprint::log->error( "Equipment $equipment_name not found in runspeed" );
+			return;
+		} # end if
+	} # end if
+
+	my $Imposition = new openprint::Imposition();
+	$Imposition->load( $sig_specs, $qty_index );
+
+	if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
+		my $services = $Project->services();
+		if ( $$services{'Folding'} ) {
+			my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+			if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} == $Equipment->id() ) {
+				my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
+				$runspeed = int( $Equipment->specification($foldtype.'RunSpeed', $Imposition->Paper()->gsm() ) );
+$openprint::log->debug("Foudn runspeed for fold $foldtype: $runspeed");
+			} # end if
+		} # end if
+	} # end if
+    if ( ! $runspeed ) {
+        $runspeed = int( $Equipment->specification( 'Press Additional Run Speed', $$sig_specs{'txtSpecificStockCalliper'} ) );
+$openprint::log->debug("Foudn Additional runspeed for $$Equipment{strid}: $runspeed");
+    } # end if
+    if ( ! $runspeed ) {
+        $runspeed = int( $Equipment->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() ) );
+$openprint::log->debug("Foudn Standard runspeed for $$Equipment{strid}: $runspeed");
+    } # end if
+	return $runspeed;
+} # end sub runspeed
 
 sub get_weight {
 	my ( $Project, $specs, $qty_index ) = @_;
@@ -4449,6 +4494,66 @@ sub save {
 	} # end if
 
 } # end sub save
+
+sub get_colour_description {
+	my ( $specs ) = @_;
+	my $side_one_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideOne'));
+
+	my $side_one_coatings;
+	$side_one_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideOne'} eq 'Gloss';
+	$side_one_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideOne'} eq 'Matte';
+	if ( $$specs{'chkVarnishSpotGlossSideOne'} ) {
+		$side_one_coatings .= '+Varnish (Spot Gloss)';
+		$side_one_colours -= 1;
+	} # end if
+	if ( $$specs{'chkVarnishSpotMatteSideOne'} ) {
+		$side_one_coatings .= '+Varnish (Spot Matte)';
+		$side_one_colours -= 1;
+	} # end if
+	if ( $$specs{'chkVarnishDryTrapSideOne'} ) {
+		$side_one_coatings .= '+Varnish (Dry Trap)';
+	} # end if
+	if ( $$specs{'chkVarnishOverallGlossSideOne'} ) {
+		$side_one_coatings .= '+Varnish (Overall Gloss)';
+		$side_one_colours -= 1;
+	} # end if
+	if ( $$specs{'chkVarnishOverallMatteSideOne'} ) {
+		$side_one_coatings .= '+Varnish (Overall Matte)';
+		$side_one_colours -= 1;
+	} # end if
+	if ( $$specs{'SideOneUVCoatingType'} and ($$specs{'SideOneUVCoatingType'} ne 'None') ) {
+		$side_one_coatings .= '+' . $$specs{'SideOneUVCoatingType'} . 'UV';
+	} # end if
+
+	my $side_two_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideTwo'));
+	my $side_two_coatings;
+	$side_two_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideTwo'} eq 'Gloss';
+	$side_two_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideTwo'} eq 'Matte';
+	if ( $$specs{'chkVarnishSpotGlossSideTwo'} ) {
+		$side_two_coatings .= '+Varnish (Spot Gloss)' ;
+		$side_two_colours -= 1;
+	} # end if
+
+	if ( $$specs{'chkVarnishSpotMatteSideTwo'} ) {
+		$side_two_coatings .= '+Varnish (Spot Matte)';
+		$side_two_colours -= 1;
+	} # end if
+	if ( $$specs{'chkVarnishDryTrapSideTwo'} ) {
+		$side_two_coatings .= '+Varnish (Dry Trap)';;
+   } # end if
+	if ( $$specs{'chkVarnishOverallGlossSideTwo'} ) {
+		$side_two_coatings .= '+Varnish (Overall Gloss)';
+		$side_two_colours -= 1;
+	} # end if
+	if ( $$specs{'chkVarnishOverallMatteSideTwo'} ) {
+		$side_two_coatings .= '+Varnish (Overall Matte)';
+		$side_two_colours -= 1;
+	} # end if
+	if ( $$specs{'SideTwoUVCoatingType'} and $$specs{'SideTwoUVCoatingType'} ne 'None' ) {
+		$side_two_coatings .= '+' . $$specs{'SideTwoUVCoatingType'} . 'UV';
+	} # end if
+	return sprintf('%d%s/%d%s', $side_one_colours, $side_one_coatings, $side_two_colours, $side_two_coatings );
+} # end sub get_colour_description
 
 1;
 

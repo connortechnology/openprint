@@ -60,6 +60,13 @@
 			<input type="text" id="value_start" name="value_start" value="<? echo ( $param{'value_start'}; ) ?>" style="width: auto;"  /> to
 			<input type="text" id="value_end" name="value_end" value="<? echo ( $param{'value_end'}; ) ?>" style="width: auto;"  />
 		</p>
+		<p>
+			<label>Press:</label>
+			<select id="press_id" name="press_id">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->strid() . ': ' . $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)') ], $param{'press_id'} ); ) ?>
+			</select>
+		</p>
 		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>CSR:</label>

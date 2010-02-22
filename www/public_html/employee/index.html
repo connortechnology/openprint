@@ -19,6 +19,12 @@
 		} else if ( form.rfidtag_id.value ) {
 			form.action = '/employee/inventory/rfidtag_details.html';
 			form.submit();
+		} else if ( form.po_id.value ) {
+			form.action = '/employee/inventory/purchase_order.html';
+			form.submit();
+		} else if ( form.manifest_name.value ) {
+			form.action = '/employee/inventory/manifests.html';
+			form.submit();
 		} else {
 			alert( "Please enter or scan the a docket, order or project number!" );
 		} // end if
@@ -66,6 +72,18 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 		<p><label>RFID #</label>
 			<input type="text" name="rfidtag_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go6', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
+		</p>
+	</fieldset>
+	<fieldset>
+		<p><label>PO #</label>
+			<input type="text" name="po_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'GoPO', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
+		</p>
+	</fieldset>
+	<fieldset>
+		<p><label>Manifest #</label>
+			<input type="text" name="manifest_name" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'GoManifest', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
 </form>
