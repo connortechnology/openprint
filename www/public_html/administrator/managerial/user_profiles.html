@@ -358,10 +358,10 @@ Please select a company or user to obtain login information.<br/>
             <th align="left" width="140">Result</th>
         </tr>
 <? echo (
-    require openprint::logRecord;
+    require openprint::Log;
     my $html = '';
 
-    foreach my $Log ( openprint::logRecord::find('user_id'=>$$variable{'User'}->id(),'order'=>'date_time DESC', 'limit'=>10, 'action_type'=>[2,3,78,79] ) ) {
+    foreach my $Log ( openprint::Log::find('user_id'=>$$variable{'User'}->id(),'order'=>'date_time DESC', 'limit'=>10, 'action_type'=>[2,3,78,79] ) ) {
         $html .= sprintf('<tr><td>%s</td><td style="overflow:hidden;" title="%s">%s</td><td>%s</td><td>%s</td></tr>',
             Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Log->date_time() ) ),
             $Log->ip_address(), $Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Company()->name(),$Log->note() );

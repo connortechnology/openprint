@@ -56,13 +56,6 @@ sub destroy {
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
-sub get_project_type {
-	my ( $log, $dbh, $project_index ) = @_;
-	$_ = "SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?";
-	( $_ ) = sql::execute( $log, $dbh, $_, $project_index, 'ProjectType' );
-	return $_;
-} # end sub
-
 sub Type {
 	my $self = shift;
 	if ( @_ ) {
@@ -73,10 +66,13 @@ sub Type {
 } # end sub Type
 
 sub get_project_type_service_index {
-	my ( $log, $dbh, $project_index ) = @_;
-	$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?";
-	( $_ ) = sql::execute( $log, $dbh, $_, $project_index, 'ProjectType' );
-	return $_;
+	my ( $self ) = @_;
+	my $services = $self->services();
+
+	if ( $$services{''} ) {
+		return $$services{''}[0];
+	} # end if
+	return;
 } # end sub
 
 sub JDF_ProductIntent {

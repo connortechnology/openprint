@@ -60,12 +60,11 @@ sub insert_project_type {
 		foreach my $key ( keys %defaults ) {
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $key, $defaults{$key}, 1 );
 		} # end while
-		my @quantities = openprint::project::get_quantities( $log, $dbh, $project_index );
-		foreach my $index ( 1 .. 3 ) {
-			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtQuantity$index", $quantities[$index-1], 1 );
+		my $Project = new openprint::Project( $project_index );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, "txtQuantity$qty_index", $Project->quantity($qty_index), 1 );
 		} # end foreach
 		sql::end_transaction( $dbh,  $ac );
-		my $Project = new openprint::Project( $project_index );
 		delete $$Project{'Services'};
 		delete $$Project{'signatures'};
 		return $service_index;

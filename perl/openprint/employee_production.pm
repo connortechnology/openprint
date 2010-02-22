@@ -233,7 +233,7 @@ sub bindery_overview {
         next if $complete;
 
 #my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $service_indices{''} );
-		my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, openprint::project::get_project_type_service_index( $log, $dbh, $project_index ) );
+		my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $Project->get_project_type_service_index() );
 
 		my @BinderyServices = ();
 		if ( my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery') ) {

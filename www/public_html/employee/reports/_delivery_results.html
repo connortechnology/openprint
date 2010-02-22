@@ -6,7 +6,7 @@
 				my ( $reason ) = sql::execute( $log, $dbh, q{SELECT description FROM Project_Log WHERE project_id=? AND description LIKE 'Reason for lateness: %' ORDER BY dtmtimestamp DESC LIMIT 1}, $index );
 				$reason =~ s/Reason for lateness: (\s*)/$1/;
 				if ( $reason ne $param{$key} ) {
-					openprint::project::insert_into_log( $log, $dbh, @openprint::session{'company_id', 'user_id'}, $index, "Reason for lateness: $param{$key}" );
+					new openprint::Project( $index )->add_to_log( @session{'company_id', 'user_id'}, "Reason for lateness: $param{$key}" );
 				} # end if
 			} # end if
 		} # end foreach

@@ -178,4 +178,6 @@ administrative changes are required you will be notified prior to production app
 order and will be charged or credited accordingly.
 </p>'
 ,'description', 'Disclaimer to show at bottom of a quote.', 'category','Miscellaneous Settings' ) if ! exists $config{'QuoteViewDisclaimer'};
+my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
+sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'NOW()', 'backup', 0 );
 $dbh->disconnect();

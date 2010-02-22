@@ -1,8 +1,9 @@
-package openprint::logRecord;
+package openprint::Log;
 @ISA = qw( openprint::Object );
 require openprint::Object;
 require openprint::User;
 require openprint::logAction;
+require openprint::Host;
 use strict;
 
 my $debug = 1;
@@ -11,13 +12,12 @@ $table = 'log';
 $serial = 'log_id_seq';
 %fields = (
 	'id'	=>	'id',
-	'ip_address'	=>	'ip_address',
-	'hostname'		=>	'hostname',
 	'user_id'		=>	'user_id',
 	'company_id'	=>	'company_id',
 	'date_time'		=>	'date_time',	
 	'action_type'	=>	'action_type',
 	'note'			=>	'note',
+	'host_id'		=>	'host_id',
 );
 
 %types = (
@@ -26,7 +26,16 @@ $serial = 'log_id_seq';
 78	=>	'Failed Login',
 79	=> '',
 );
+use openprint ();
+*log = \$openprint::log;
+*dbh = \$openprint::dbh;
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	my %params = @_;
 	my @values;
@@ -62,6 +71,14 @@ sub find {
 		$sql .= ' AND ip_address=?';
 		push @values, $params{'ip_address'};
 	} # end if
+	if ( exists $params{'host_id'} ) {
+		if ( ! defined $params{'host_id'} ) {
+			$sql .= ' AND host_id IS NULL';
+		} else {
+			$sql .= ' AND host_id=?';
+			push @values, $params{'host_id'};
+		} # end if
+	} # end if
 	if ( $params{'when_start'} and $params{'when_end'} ) {
 		$sql .= q{ AND (date_time BETWEEN ? AND ?)};
 		push @values, @params{'when_start','when_end'};
@@ -75,14 +92,14 @@ sub find {
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->error("Error loading logRecord: ($sql) (@values)");
+		$log->error("Error loading Log: ($sql) (@values)");
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading logRecord: ($sql) (@values) (".@$data.')');
+		$log->debug("Loading Log: ($sql) (@values) (".@$data.')');
 	} # end if
-	return map { new openprint::logRecord( $_->{id}, $_ ); } @$data;
+	return map { new openprint::Log( $_->{id}, $_ ); } @$data;
 } # end sub find
 
 sub User {
@@ -102,20 +119,27 @@ sub Action {
 
 sub hostname {
 	my ( $self, $new ) = @_;
+	my $Host = $self->Host();
+
 	if ( defined $new ) {
-		$$self{'hostname'} = $new;
+		$Host->save({'hostname'=>$new});
 	} # end if
-	return $$self{'hostname'} ? $$self{'hostname'} : $$self{'ip_address'};
+	return $Host->hostname();
 } # end sub hostname
 
-sub resolve {
-	my ( $self ) = @_;
-	my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip_address'})),2);
-	if ( @h ) {
-		return $h[0];
+sub ip_address {
+	my ( $self, $new ) = @_;
+	my $Host = $self->Host();
+
+	if ( defined $new ) {
+		$Host->save({'ip'=>$new});
 	} # end if
-	return;
-} # end sub resolve
+	return $Host->ip();
+} # end sub ip_address
+
+sub Host {
+	return new openprint::Host( $_[0]{'host_id'} );
+} # end sub Host
 
 1;
 __END__
