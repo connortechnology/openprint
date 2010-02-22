@@ -4,11 +4,11 @@ CREATE TABLE Service_Types (
 	id				SERIAL NOT NULL,
 	Name			TEXT,
 	description		TEXT,
-	Category		TEXT,
+	category_id		INTEGER,FOREIGN KEY (category_id) REFERENCES ServiceType_Categories (id),
 	strDetailedURL	TEXT,
-	Create_Visible	CHAR(1) default 'Y',
-	View_Visible	CHAR(1) default 'Y',
-	Sorting			INT4,
+	create_visible	CHAR(1) default 'Y',
+	view_visible	CHAR(1) default 'Y',
+	sorting			INTEGER,
 	type			TEXT,
 	PRIMARY KEY (id)
 );

@@ -42,9 +42,9 @@
 ) ?>
 <? if ( @{$$variable{'PaperTypes'}} > 1 ) ?>
 			<p><label>Format:</label>
-				<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ); ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').show();$('BasisSize<?Signature?>').hide();$('MWeight<?Signature?>').show();$('PricePerM<?Signature?>').show();gsm_to_mweight(this.form,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='sheets';} calc(this.form.name);" />
+				<input type="radio" id="StockType<?Signature?>Sheet" name="StockType<?Signature?>" value="Sheet" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Sheet' ); ) ?> onclick="if ( this.checked ) { $('SpecificStockHeight<?Signature?>').show();$('BasisSize<?Signature?>').hide();$('MWeight<?Signature?>').show();$('PricePerM<?Signature?>').show();gsm_to_mweight(this.form,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='sheets';$('sheets_per_package<?Signature?>').innerHTML='sheets';} calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Sheet">Sheet</label>
-				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ); ) ?> onclick="if ( this.checked ) { f1.elements['txtSpecificStockHeight<?Signature?>'].value='';$('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();$('PricePerM<?Signature?>').hide();gsm_to_mweight(this.form,'<?Signature?>');paper_price_calc(this,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='lbs';}calc(this.form.name);" />
+				<input type="radio" id="StockType<?Signature?>Roll" name="StockType<?Signature?>" value="Roll" <? echo ( ssi::checked( $$variable{'StockType'.$$variable{'Signature'}} eq 'Roll' ); ) ?> onclick="if ( this.checked ) { f1.elements['txtSpecificStockHeight<?Signature?>'].value='';$('SpecificStockHeight<?Signature?>').hide();$('BasisSize<?Signature?>').show();$('MWeight<?Signature?>').hide();$('PricePerM<?Signature?>').hide();gsm_to_mweight(this.form,'<?Signature?>');paper_price_calc(this,'<?Signature?>');$('minimum_order_units<?Signature?>').innerHTML='lbs';$('sheets_per_package<?Signature?>').innerHTML='lbs';}calc(this.form.name);" />
 				<label class="radio" for="StockType<?Signature?>Roll">Roll</label>
 			</p>
 <? else ( @{$$variable{'PaperTypes'}} > 1 ) ?>
@@ -94,8 +94,15 @@
 				</select>
 			</p>
 			<p>
-				<label for="minimum_order<?Signature?>">Minimum Order (<span id="minimum_order_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>):</label>
+				<label for="minimum_order<?Signature?>">Minimum Order:</label>
 				<input type="text" id="minimum_order<?Signature?>" name="minimum_order<?Signature?>" size="9" value="<? echo ( $$variable{'minimum_order'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
+<span id="minimum_order_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
+			</p>
+			<p>
+				<label for="sheets_per_package<?Signature?>">Quantity Per Package:</label>
+				<input type="text" id="sheets_per_package<?Signature?>" name="sheets_per_package<?Signature?>" size="9" value="<? echo ( $$variable{'sheets_per_package'.$$variable{'Signature'}} ) ?>" onkeyup="calc(this.form.name);" />
+ <span id="sheets_per_package_units<?Signature?>"><? echo ( $$variable{'StockType'.$$variable{'Signature'}} ne 'Roll' ? 'sheets' : 'lbs' ) ?></span>
+				<input type="checkbox" id="full_packages" name="full_packages" value="1" <? echo ( ssi::checked( $$variable{'full_packages'} ); )?> onclick="calc(this.form.name);" /> Order full packages
 
 			</p>
 		</div><!-- Specific -->

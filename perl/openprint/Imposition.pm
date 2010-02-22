@@ -195,10 +195,10 @@ sub load {
 	$$self{'image_height'} = $$self{'object_height'} if ! $$self{'image_height'};
 
 	$$self{'imposition'} = $$specs{'txtImposition'.$qty_index};
-	$$self{'columns'} = $$specs{'hdnImpositionColumns'.$qty_index};
-	$$self{'rows'} = $$specs{'hdnImpositionRows'.$qty_index};
-	$$self{'columns'} = $$self{'imposition'} / $$self{'rows'} if $$self{'rows'} and ! $$self{'columns'};
-	$$self{'rows'} = $$self{'imposition'} / $$self{'columns'} if $$self{'columns'} and ! $$self{'rows'};
+	$$self{'start_columns'} = $$self{'columns'} = $$specs{'hdnImpositionColumns'.$qty_index};
+	$$self{'start_rows'} = $$self{'rows'} = $$specs{'hdnImpositionRows'.$qty_index};
+	#$$self{'columns'} = $$self{'imposition'} / $$self{'rows'} if $$self{'rows'} and ! $$self{'columns'};
+	#$$self{'rows'} = $$self{'imposition'} / $$self{'columns'} if $$self{'columns'} and ! $$self{'rows'};
 	$$self{'dutch_rows'} = $$specs{'hdnImpositionDutchRows'.$qty_index};
 	$$self{'dutch_columns'} = $$specs{'hdnImpositionDutchColumns'.$qty_index};
 	$$self{'dutch_orientation'} = $$specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ? 'Horizontal' : 'Vertical';
@@ -359,12 +359,14 @@ sub page_height {
 
 sub sheet_width {
 	my $self = shift;
+	$$self{'start_columns'} = $$self{'columns'} if ! $$self{'start_columns'};
+	$$self{'start_rows'} = $$self{'rows'} if ! $$self{'start_rows'};
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->height( @_ ) if @_;
-		return $self->Paper()->height();
+		return $self->Paper()->height() / ( $$self{'start_columns'} / $$self{'columns'} );
 	} else {
 		$$self{'paper'}->width( @_ ) if @_;
-		return $self->Paper()->width();
+		return $self->Paper()->width() / ( $$self{'start_columns'} / $$self{'columns'} );
 	} # end if
 } # end sub sheet_width
 
@@ -372,13 +374,13 @@ sub sheet_height {
 	my $self = shift;
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->width( @_ ) if @_;
-		return $self->Paper()->width();
+		return $self->Paper()->width() / ( $$self{'start_rows'} / $$self{'rows'} );
 	} else {
 		$$self{'paper'}->height( @_ ) if @_;
 		if ( ! $self->Paper()->height() ) {
-			return $$self{'cut_off'};
+			return $$self{'cut_off'} / ( $$self{'start_rows'} / $$self{'rows'} );
 		} else {
-			return $self->Paper()->height();
+			return $self->Paper()->height() / ( $$self{'start_rows'} / $$self{'rows'} );
 		} # end if
 	} # end if
 } # end sub sheet_height

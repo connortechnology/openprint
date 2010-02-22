@@ -80,7 +80,7 @@ if ( 1 ) {
 				$log->error('WTF! status was supposed to be uncalculated');
 				next;
 			} # end if
-			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE project_id=?}, $Project->id() ) ) {
 				#$log->error('Quoted!' . $Project->id());
 				next;
 			} # end if
@@ -122,7 +122,7 @@ if ( 1 ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 	@Projects = openprint::Project::find(
-			'status'=>'Deleted','order'=>'index desc',
+			'status'=>'Deleted','order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			);
@@ -135,7 +135,7 @@ if ( 1 ) {
 				next;
 			} # end if
 			next if $Project->docket();
-			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE ProjectIndex=?}, $Project->id() ) ) {
+			if ( sql::execute( undef, undef, q{SELECT * FROM tbl_Quote_Details WHERE project_id=?}, $Project->id() ) ) {
 				#$log->debug('Quoted!' . $Project->id());
 				next;
 			} # end if
@@ -279,6 +279,12 @@ foreach my $Host ( openprint::Host::find('hostname'=>undef) ) {
 	$Host->save() if $Host->hostname();
 } # end foreach
 
+# Paper maintenance
+foreach my $Paper ( openprint::Paper::find() ) {
+	if ( ! $Paper->wpsi() != $Paper->wpsi(undef) ) {
+		$Paper->save();
+	} # end if
+} # end foreach my Paper
 $dbh->disconnect();
 1;
 __END__

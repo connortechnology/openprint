@@ -637,12 +637,12 @@ sub signature_calc {
 				} else { # Not the press
 # FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
-$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if $debug;
-						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height() );
-#$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() );
-						if ( $_ ) {
+#$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if $debug;
+						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Imposition->Paper()->calliper() );
+#$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc );
+						if ( $rc ) {
 							if ( @my_equipment == 1 ) {
-							$Breakdown .= "Doesn't fit: $_<br/>";
+								$Breakdown .= "Doesn't fit: $rc<br/>";
 							} # end if
 						} else {
 							my $Fold = $Equipment->Fold(
@@ -671,7 +671,7 @@ $openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if $debug
 						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
 
 # See if it fits
-						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height() );
+						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Imposition->Paper()->calliper() );
 
 						if ( ! $_ )  {
 
@@ -842,7 +842,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 					} # end if
 				} # end if
 
-				$Breakdown .= sprintf( '%s: %dx%dout qty: %d<br/>', $Fold->name(), $impo_qty, $imposition, $run_qty );
+				$Breakdown .= sprintf( '%s: %dx%dout layout: %sx%s qty: %d<br/>', $Fold->name(), $impo_qty, $imposition, $Imposition->get('layout_width', 'layout_height'), $run_qty );
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {

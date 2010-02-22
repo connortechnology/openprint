@@ -32,7 +32,7 @@
 <fieldset><legend>Results</legend>
 	<table class="List">
 		<tr>
-			<th align="left">When</th>
+			<th class="DateTime">When</th>
 			<th align="left">Company</th>
 			<th align="left">User</th>
 			<th align="left">File</th>
@@ -53,9 +53,9 @@
 				);
 
 				foreach my $Upload ( @Uploads ) {
-					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
 						$rowclass,
-						Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Upload->start() ) ),
+						Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Upload->start() ) ),
 						$Upload->company_id() ? $Upload->Company()->name() : $Upload->company(),
 						$Upload->user_id() ? $Upload->User()->name() : $Upload->user(),
 						join('<br/>',map { $_->filename() } $Upload->Files() ),
@@ -66,5 +66,4 @@
 				return $html;
 			) ?>
 		</table>
-	 </div>
 </fieldset>

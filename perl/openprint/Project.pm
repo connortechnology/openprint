@@ -56,13 +56,6 @@ sub destroy {
 	sql::end_transaction( $openprint::dbh, $ac );
 } # end sub delete
 
-sub get_project_type {
-	my ( $log, $dbh, $project_index ) = @_;
-	$_ = "SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?";
-	( $_ ) = sql::execute( $log, $dbh, $_, $project_index, 'ProjectType' );
-	return $_;
-} # end sub
-
 sub Type {
 	my $self = shift;
 	if ( @_ ) {
@@ -73,10 +66,13 @@ sub Type {
 } # end sub Type
 
 sub get_project_type_service_index {
-	my ( $log, $dbh, $project_index ) = @_;
-	$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?";
-	( $_ ) = sql::execute( $log, $dbh, $_, $project_index, 'ProjectType' );
-	return $_;
+	my ( $self ) = @_;
+	my $services = $self->services();
+
+	if ( $$services{''} ) {
+		return $$services{''}[0];
+	} # end if
+	return;
 } # end sub
 
 sub JDF_ProductIntent {
@@ -1184,11 +1180,13 @@ sub price {
 			} # end foreach
 		} # end foreach
 	} # end if
+$openprint::log->debug("Price $qty_index " . $$self{'price'.$qty_index} );
 	return sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
 } # end sub price
 sub unit_price {
 	my ( $self, $qty_index ) = @_;
-	return sprintf( $config{'UnitPriceFormat'}, $$self{'price'.$qty_index}/$$self{'quantity'.$qty_index} );
+#$openprint::log->debug("Unit Price: ".$$self{'price'.$qty_index}."/".$$self{'quantity'.$qty_index}." = " . $$self{'price'.$qty_index}/$$self{'quantity'.$qty_index} );
+	return sprintf( $config{'UnitPriceFormat'}, $self->price($qty_index)/$$self{'quantity'.$qty_index} );
 } # end sub unit_price
 sub m_price {
 	my ( $self, $qty_index ) = @_;
