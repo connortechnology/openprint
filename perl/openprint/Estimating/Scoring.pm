@@ -244,9 +244,9 @@ sub signature_calc {
 		
 		@equipment = openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
 	} # endif
-	foreach my $E ( @equipment ) {
-		$openprint::log->debug( "Equipment: " . $E->strid() );
-	}
+	#foreach my $E ( @equipment ) {
+		#$openprint::log->debug( "Equipment: " . $E->strid() );
+	#}
 
 # Get the impositions to consider
 	if ( ! $imposition ) {
@@ -362,7 +362,7 @@ sub signature_calc {
 			$Results{'Breakdown'} .= '<br/>';
 			my $setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
 			$Results{'Breakdown'} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice);
-			$Results{'Breakdown'} .= "Imposition: $$I{'imposition'}: ";
+			$Results{'Breakdown'} .= "Imposition: $$I{columns}x$$I{rows}=$$I{'imposition'}: ";
 
 			my $use_qty = ($qty /$imposition->imposition()) * ( $imposition->imposition() / $I->imposition() );
 			my $Overs = $Equipment->Specification( 'Scoring Overs', $use_qty );
@@ -378,7 +378,7 @@ sub signature_calc {
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice = $servicePrice{'Price'} * $use_qty / 1000;
-				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice );
+				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $use_qty, $score_qty, $servicePrice );
 			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
 				my $hours = $use_qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
 				$servicePrice = $servicePrice{'Price'} * $hours;
@@ -445,6 +445,8 @@ sub signature_calc {
 					} else {
 						$Results{'Breakdown'} .= "Unknown units set on vertical material price ($vertical_price{'units'})<br/>";
 					} # end if
+				} else {
+					$Results{'Breakdown'} .= "No material found for ScoringWheel<br/>";
 				} # end if
 			} # end if
 

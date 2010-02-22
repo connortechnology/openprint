@@ -62,8 +62,6 @@ sub insertLogRecord {
 		'company_id',	$company_id,
 		'date_time', 'NOW()', 
 		'ip_address', $ENV{REMOTE_ADDR}, 
-		#'hostname', reverse_dns( $ENV{REMOTE_ADDR} ), 
-		'hostname', undef,
 		'url', $ENV{SERVER_NAME} . $ENV{REQUEST_URI}, 
 		'note', $note,
 	] );
