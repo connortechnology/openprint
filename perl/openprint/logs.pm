@@ -4,7 +4,7 @@ use strict;
 
 require sql;
 
-use openprint::logRecord;
+use openprint::Log;
 use openprint::pagination;
 
 use openprint;
@@ -165,7 +165,7 @@ sub getLog {
    @sql_results = sql::execute( $openprint::log, $openprint::dbh, $sql, @action_types, @date_params, @limit_params,);
    
    while(@sql_results) {
-      push @log_records, new openprint::logRecord( shift @sql_results );
+      push @log_records, new openprint::Log( shift @sql_results );
    }
       
    return \@log_records;

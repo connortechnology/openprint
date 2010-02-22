@@ -5,14 +5,14 @@
 			<label>Category:</label>
 			<select name="SearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 				<option value=""> All </option>
-				<? echo ( ssi::make_drop_down( [ sql::execute( undef, undef, q{SELECT DISTINCT category,category FROM Service_Types ORDER BY category} ) ], $openprint::param{'SearchCategory'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType_Category::find('order'=>'sorting,name') ], $param{'SearchCategory'} ); ) ?>
 			</select>
 		</p>
 		<p>
 			<label>Service Type:</label>
 			<select name="ServiceType_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">Select a Service Type</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType::find('category'=>$openprint::param{'SearchCategory'}, 'order'=>'lower(name)') ], $$variable{'ServiceType'}->id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType::find('category_id'=>$param{'SearchCategory'}, 'order'=>'lower(name)') ], $$variable{'ServiceType'}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons"> 
@@ -38,7 +38,10 @@
 		</p>
 		<p> 
 			<label>Category:</label>
-			<input type="text" name="category" value="<? echo ( $$variable{'ServiceType'}->category() ) ?>" /> 
+			<select id="category_id" name="category_id">
+				<option value=""> None </option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType_Category::find('order'=>'sorting,name') ], $$variable{'ServiceType'}->category_id() ); ) ?>
+			</select>
 		</p>
 <? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p> 
@@ -52,16 +55,16 @@
 <? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p>
 			<label>Visible in Project Create:</label>
-			<input type="radio" id="create_visible1" name="create_visible" value="1"  <? echo ( 'checked="checked"' if $$variable{'ServiceType'}->create_visible(); ) ?> />
+			<input type="radio" id="create_visible1" name="create_visible" value="1"  <? echo ( ssi::checked( $$variable{'ServiceType'}->create_visible() ); ) ?> />
 			<label class="radio" for="create_visible1">Yes</label>
-			<input type="radio" id="create_visible0" name="create_visible" value="0" <? echo ( 'checked="checked"' if ! $$variable{'ServiceType'}->create_visible(); ) ?> />
+			<input type="radio" id="create_visible0" name="create_visible" value="0" <? echo ( ssi::checked( ! $$variable{'ServiceType'}->create_visible() ); ) ?> />
 			<label class="radio" for="create_visible0">No</label>
 		</p>
 		<p>
 			<label>Visible in Project View:</label>
-			<input type="radio" id="view_visible1" name="view_visible" value="1"  <? echo ( 'checked="checked"' if $$variable{'ServiceType'}->view_visible() ) ?> />
+			<input type="radio" id="view_visible1" name="view_visible" value="1"  <? echo ( ssi::checked( $$variable{'ServiceType'}->view_visible() ); ) ?> />
 			<label class="radio" for="view_visible1">Yes</label>
-			<input type="radio" id="view_visible0" name="view_visible" value="0" <? echo ( 'checked="checked"' if ! $$variable{'ServiceType'}->view_visible() ) ?> />
+			<input type="radio" id="view_visible0" name="view_visible" value="0" <? echo ( ssi::checked( ! $$variable{'ServiceType'}->view_visible() ); ) ?> />
 			<label class="radio" for="view_visible0">No</label>
 		</p>
 		<p> 

@@ -4,7 +4,7 @@ package openprint::www;
 #use diagnostics;
 
 use strict;
-use Apache2::Request;	# instead of CGI, it's MUCH faster, and does nice things.
+use Apache2::Request;
 use Apache2::RequestRec ();
 use APR::URI;
 use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
@@ -165,7 +165,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			$log->warn("No template!" . $r->content_type());
-			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable );
+			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'};
 			$log->warn($_);
 			$r->print( $_ );
 		} # end if

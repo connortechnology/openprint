@@ -1,6 +1,7 @@
 package openprint::ServiceType;
 @ISA = qw(openprint::Object);
 require openprint::Object;
+require openprint::ServiceType_Category;
 
 use strict;
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
@@ -16,7 +17,7 @@ $serial = 'ServiceTypeIndex';
 	'description'		=> 'description',
 	'url'				=> 'strdetailedurl',
 	'type'				=> 'type',
-	'category'			=> 'category',
+	'category_id'		=> 'category_id',
 	'sorting'			=> 'sorting',
 	'create_visible'	=> 'create_visible',
 	'view_visible'		=> 'view_visible',
@@ -68,8 +69,12 @@ sub find {
 	} # end if
 
 	if ( $params{'category'} ) {
-		$sql .= ' AND category=?';
+		$sql .= ' AND category_id=(SELECT id FROM ServiceType_Categories WHERE name=?)';
 		push @values, $params{'category'};
+	} # end if
+	if ( $params{'category_id'} ) {
+		$sql .= ' AND category_id=?';
+		push @values, $params{'category_id'};
 	} # end if
 	if ( $params{'create_visible'} ) {
 		$sql .= ' AND create_visible=?';
