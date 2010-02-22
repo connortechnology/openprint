@@ -12,7 +12,15 @@ sub view {
 		$openprint::session{'ShowAllSignatures'} = $openprint::param{'ShowAllSignatures'};
 	} # end if
 	$$variable{'ProjectIndex'} = $project_index;
-	$$variable{'Project'} = new openprint::Project( $project_index );
+	my $Project = $$variable{'Project'} = new openprint::Project( $project_index );
+	my $save = 0;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
+			$save = 1;
+			last;
+		} # endif
+	} # end foreach
+	$Project->save() if $save;
 } # end sub view
 
 1;
