@@ -483,6 +483,31 @@ if ( ! openprint::ServiceType_Category::find() ) {
 	new openprint::ServiceType_Category()->save({'name'=>'Shipping','sorting'=>6});
 	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>7});
 	new openprint::ServiceType_Category()->save({'name'=>'Custom Services','sorting'=>10});
+} else {
+	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Printing','sorting'=>undef ) ) {
+		$STC->save({'sorting'=>1});
+	} # end if
+	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Prepress','sorting'=>undef ) ) {
+		$STC->save({'sorting'=>2});
+	} # end if
+	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Bindery','sorting'=>undef ) ) {
+		$STC->save({'sorting'=>3});
+	} # end if
+	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Specialty','sorting'=>undef ) ) {
+		$STC->save({'sorting'=>4});
+	} # end if
+	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Packaging','sorting'=>undef ) ) {
+		$STC->save({'sorting'=>5});
+	} # end if
+	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Shipping','sorting'=>undef ) ) {
+		$STC->save({'sorting'=>6});
+	} # end if
+	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Materials','sorting'=>undef ) ) {
+		$STC->save({'sorting'=>7});
+	} # end if
+	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Custom Services','sorting'=>undef ) ) {
+		$STC->save({'sorting'=>10});
+	} # end if
 } # end if
 
 if ( sets::isin( 'service_types', \@tables ) ) {
