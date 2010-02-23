@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -254,66 +254,66 @@ sub neccessary {
 
 # Looks at the imposition, and if the width is too small for the fold, tries to pad the image until it can fold, wasting paper, but sometimes this is desireable.
 sub impositions {
-my ( $Project, $Imposition, $specs, $sig_specs, $qty_index ) = @_;
+	my ( $Project, $Imposition, $specs, $sig_specs, $qty_index ) = @_;
 
-my @imps = ( $Imposition );
+	my @imps = ( $Imposition );
 
-my $services = $Project->services();
+	my $services = $Project->services();
 
-my $Fold = $Imposition->Equipment()->Fold(
-		'pages'				=>	$Imposition->pages(),
-		'page_columns'		=>	$Imposition->page_columns(),
-		'page_rows'			=>	$Imposition->page_rows(),
-		'page_width'		=>	$Imposition->page_width(),
-		'page_height'		=>	$Imposition->page_height(),
-		'spine_direction'	=>	$$Imposition{'image_orientation'},
-		'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-		'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
-		'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
-		'gsm'				=>	$Imposition->Paper()->gsm(),
-		'imposition'		=>	$$Imposition{'imposition'},
-		'calliper'			=>	$Imposition->Paper()->calliper(),
-		);
-return @imps if $Fold;
+	my $Fold = $Imposition->Equipment()->Fold(
+			'pages'				=>	$Imposition->pages(),
+			'page_columns'		=>	$Imposition->page_columns(),
+			'page_rows'			=>	$Imposition->page_rows(),
+			'page_width'		=>	$Imposition->page_width(),
+			'page_height'		=>	$Imposition->page_height(),
+			'spine_direction'	=>	$$Imposition{'image_orientation'},
+			'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
+			'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
+			'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
+			'gsm'				=>	$Imposition->Paper()->gsm(),
+			'imposition'		=>	$$Imposition{'imposition'},
+			'calliper'			=>	$Imposition->Paper()->calliper(),
+			);
+	return @imps if $Fold;
 
 # Now look it up without the width
-$Fold = $Imposition->Equipment()->Fold(
-		'pages'				=>	$Imposition->pages(),
-		'page_columns'		=>	$Imposition->page_columns(),
-		'page_rows'			=>	$Imposition->page_rows(),
-		'page_height'		=>	$Imposition->page_height(),
-		'spine_direction'	=>	$$Imposition{'image_orientation'},
-		'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
-		'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
-		'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
-		'gsm'				=>	$Imposition->Paper()->gsm(),
-		'imposition'		=>	$$Imposition{'imposition'},
-		'calliper'			=>	$Imposition->Paper()->calliper(),
-		);
-return @imps if ! $Fold;
+	$Fold = $Imposition->Equipment()->Fold(
+			'pages'				=>	$Imposition->pages(),
+			'page_columns'		=>	$Imposition->page_columns(),
+			'page_rows'			=>	$Imposition->page_rows(),
+			'page_height'		=>	$Imposition->page_height(),
+			'spine_direction'	=>	$$Imposition{'image_orientation'},
+			'stitching'			=>	($$services{'SaddleStitching'} or $$services{'LoopStitching'}) ? 1 : 0,
+			'perfectbind'		=>	$$services{'PerfectBound'} ? 1 : 0,
+			'spinepaste'		=>	$$services{'SpinePaste'} ? 1 : 0,
+			'gsm'				=>	$Imposition->Paper()->gsm(),
+			'imposition'		=>	$$Imposition{'imposition'},
+			'calliper'			=>	$Imposition->Paper()->calliper(),
+			);
+	return @imps if ! $Fold;
 
-if ( $Fold->min_width() and $Fold->min_width() > ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) {
-	my $I = $Imposition->copy();
+	if ( $Fold->min_width() and $Fold->min_width() > ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) {
+		my $I = $Imposition->copy();
 
-	if ( $I->image_orientation() eq 'Vertical' ) {
-		my $space = $Fold->min_width() - $I->image_width();
-		$I->cropmark_left(0) if $space >= $I->cropmark_left();
-		$I->cropmark_right(0) if $space >= $I->cropmark_right();
-		$I->gutters(0) if $space >= $I->gutters();
-		$I->image_width( $Fold->min_width() );
-	} else {
-		my $space = $Fold->min_width() - $I->image_height();
-		$I->cropmark_left(0) if $space >= $I->cropmark_left();
-		$I->cropmark_right(0) if $space >= $I->cropmark_right();
-		$I->gutters(0) if $space >= $I->gutters();
-		$I->image_height( $Fold->min_width() );
+		if ( $I->image_orientation() eq 'Vertical' ) {
+			my $space = $Fold->min_width() - $I->image_width();
+			$I->cropmark_left(0) if $space >= $I->cropmark_left();
+			$I->cropmark_right(0) if $space >= $I->cropmark_right();
+			$I->gutters(0) if $space >= $I->gutters();
+			$I->image_width( $Fold->min_width() );
+		} else {
+			my $space = $Fold->min_width() - $I->image_height();
+			$I->cropmark_left(0) if $space >= $I->cropmark_left();
+			$I->cropmark_right(0) if $space >= $I->cropmark_right();
+			$I->gutters(0) if $space >= $I->gutters();
+			$I->image_height( $Fold->min_width() );
+		} # end if
+
+		return @imps if ( $I->Paper()->start_width() and $I->Paper()->start_width() < $I->used_width() );
+		$I->Paper()->width( $I->used_width() ) if ! $I->Paper()->start_width();
+		push @imps, $I;
 	} # end if
-
-	return @imps if ( $I->Paper()->start_width() and $I->Paper()->start_width() < $I->used_width() );
-	$I->Paper()->width( $I->used_width() ) if ! $I->Paper()->start_width();
-	push @imps, $I;
-} # end if
-return @imps;
+	return @imps;
 
 } # end sub impositions
 
@@ -431,12 +431,14 @@ sub signature_calc {
 	if ( $SignatureImposition->runstyle() eq 'Work & Turn' ) {
 		my $i = $SignatureImposition->copy();
 		$i->runstyle('Sheet Work');
+		$i->start_columns( $i->columns() );
 		$i->columns( $i->columns()/2 );
 		$$i{'quantity'} = 2;
 		push @Set_Of_Impositions, $i;
 	} elsif ( $SignatureImposition->runstyle() eq 'Work & Tumble' ) {
 		my $i = $SignatureImposition->copy();
 		$i->runstyle('Sheet Work');
+		$i->start_rows( $i->rows() );
 		$i->rows( $i->rows()/2 );
 		$$i{'quantity'} = 2;
 		push @Set_Of_Impositions, $i;
@@ -579,7 +581,8 @@ sub signature_calc {
 			} # end if
 		} # end if
 		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
-			if ( ! sets::isin( $$sig_specs{'PrintingType'.$qty_index}, split(',',$pt ) ) ) {
+			my $ppt = $Press->specification('Printing Type');
+			if ( $ppt and ! sets::isin( $ppt, split(',',$pt ) ) ) {
 				$Breakdown .= 'Wrong printing type.<br/>';
 				next;
 			} # end if
@@ -620,7 +623,7 @@ sub signature_calc {
 							'gsm'				=>	$Paper->gsm(),
 							'imposition'		=>	$$Imposition{'imposition'},
 							'calliper'			=>	$Paper->calliper(),
-							'printing_type'		=>	$$sig_specs{'PrintingType'.$qty_index},
+							'printing_type'		=>	$Press->specification('Printing Type'),
 							);
 					if ( $Fold ) {
 						$Fold = $Fold->clone();
@@ -650,7 +653,7 @@ sub signature_calc {
 									'gsm'				=>	$Paper->gsm(),
 									'calliper'			=>	$Paper->calliper(),
 									'imposition'		=>	$$Imposition{'imposition'},
-									'printing_type'		=>	$$sig_specs{'PrintingType'.$qty_index},
+									'printing_type'		=>	$Press->specification('Printing Type'),
 									);
 							if ( $Fold ) {
 								$Fold = $Fold->clone();
@@ -668,7 +671,8 @@ sub signature_calc {
 						} # end if
 						$complete = 0;
 					} else { # No template, might be a book
-						$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
+						$Imposition->display('Trying: ') if $debug;
+						#$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
 
 # See if it fits
 						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Imposition->Paper()->calliper() );
@@ -686,7 +690,7 @@ sub signature_calc {
 									'gsm'				=>	$Paper->gsm(),
 									'calliper'			=>	$Paper->calliper(),
 									'imposition'		=>	$$Imposition{'imposition'},
-									'printing_type'		=>	$$sig_specs{'PrintingType'.$qty_index},
+									'printing_type'		=>	$Press->specification('Printing Type'),
 									);
 							if ( $Fold ) {
 								$Fold = $Fold->clone();
@@ -695,8 +699,9 @@ sub signature_calc {
 								push @{$folds{$Fold->pages().'PageFold-'.$Imposition->imposition().'out'}}, $Fold;
 								$openprint::log->debug(sprintf('Found: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(),$Imposition->image_orientation(), $Imposition->imposition()) ) if $debug;
 								next;
-							} else {
-								$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() ) ) if $debug;
+							} elsif( @my_equipment == 1 ) {
+								$Imposition->display('Didnt find:' ) if $debug;
+								$Breakdown .= sprintf('Didnt find: %dx%d %s,%dout<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() );
 							} # end if
 						} elsif ( $debug or ( @my_equipment == 1 ) ) {
 							$Breakdown .= "Doesn't fit $_.<br/>";
