@@ -138,7 +138,7 @@ sub user_profiles {
 			foreach my $U ( @Users ) {
 				$error .= sprintf('<a href="/managerial/user_profiles.html?ddmUser=%d">%s : %s &lt;%s&gt; %s</a><br/>', $U->id(), $U->Company()->name(), $U->name(), $U->email(), $U->deleted() ? 'deleted' : '' );
 			} # end foreach U
-			return misc::error( $log, $dbh, $variable, 'User already exists.', $error);
+			return misc::error( $log, $dbh, \%variable, 'User already exists.', $error);
 		} # end if
 
 		# This has to exist, in order to save the no assistants situation
@@ -149,7 +149,7 @@ sub user_profiles {
 
 		if ( ! $error ) {
 			foreach my $Type ( openprint::PurchaseOrder_ContentType::find() ) {
-				$User->po_limit( $Type->id(), $openprint::param{'po_limit-'.$Type->id()} );
+				$User->po_limit( $Type->id(), $param{'po_limit-'.$Type->id()} );
 			} # end foreach Type
 		} # end if
 
