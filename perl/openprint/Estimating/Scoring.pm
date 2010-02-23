@@ -244,9 +244,9 @@ sub signature_calc {
 		
 		@equipment = openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
 	} # endif
-	foreach my $E ( @equipment ) {
-		$openprint::log->debug( "Equipment: " . $E->strid() );
-	}
+	#foreach my $E ( @equipment ) {
+		#$openprint::log->debug( "Equipment: " . $E->strid() );
+	#}
 
 # Get the impositions to consider
 	if ( ! $imposition ) {
@@ -362,7 +362,7 @@ sub signature_calc {
 			$Results{'Breakdown'} .= '<br/>';
 			my $setupPrice = openprint::service::get_price( 'ScoringMakeReady', $score_qty, $Equipment );
 			$Results{'Breakdown'} .= sprintf( 'MakeReady: for %d scores = $%.2f<br/>', $score_qty, $setupPrice);
-			$Results{'Breakdown'} .= "Imposition: $$I{'imposition'}: ";
+			$Results{'Breakdown'} .= "Imposition: $$I{columns}x$$I{rows}=$$I{'imposition'}: ";
 
 			my $use_qty = ($qty /$imposition->imposition()) * ( $imposition->imposition() / $I->imposition() );
 			my $Overs = $Equipment->Specification( 'Scoring Overs', $use_qty );
@@ -378,7 +378,7 @@ sub signature_calc {
 
 			if ( lc $servicePrice{'units'} eq 'per m' ) {
 				$servicePrice = $servicePrice{'Price'} * $use_qty / 1000;
-				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=%.2f<br/>', @servicePrice{'Price','units'}, $qty, $score_qty, $servicePrice );
+				$Results{'Breakdown'} .= sprintf('Service: $%.2f%s * %d * %d scores=$%.2f<br/>', @servicePrice{'Price','units'}, $use_qty, $score_qty, $servicePrice );
 			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
 				my $hours = $use_qty / $Equipment->specification('PerfScoreRunSpeed') if $Equipment->specification('PerfScoreRunSpeed');
 				$servicePrice = $servicePrice{'Price'} * $hours;
@@ -404,13 +404,13 @@ sub signature_calc {
 					%horizontal_price = $Materials[0]->get_price( $horizontal_rule, $Equipment );
 					if ( sets::isin( lc $horizontal_price{'units'},['per rule','each','per score'] ) ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_rule;
-						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=%3$.2f', @horizontal_price{'Price','units','Total'}, $horizontal_rule );
+						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$d rule=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_rule );
 					} elsif ( lc $horizontal_price{'units'} eq 'per inch' ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_length;
-						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=%3$.2f', @horizontal_price{'Price','units','Total'}, $horizontal_length );
+						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length );
 					} elsif ( $horizontal_price{'units'} eq 'per foot' ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_length/12;
-						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=%3$.2f', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
+						$Results{'Breakdown'} .= sprintf('Rule: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @horizontal_price{'Price','units','Total'}, $horizontal_length/12 );
 					} else {
 						$Results{'Breakdown'} .= "Unknown units set on horizontal material price ($horizontal_price{'units'})<br/>";
 					} # end if
@@ -435,16 +435,18 @@ sub signature_calc {
 					%vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );
 					if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_rule;
-						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f2$%s * %4$d wheels=%3$.2f', @vertical_price{'Price','units','Total'}, $vertical_rule );
+						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$d wheels=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_rule );
 					} elsif ( lc $vertical_price{'units'} eq 'per inch' ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_length;
-						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f2$%s * %4$.2finches=%3$.2f', @vertical_price{'Price','units','Total'}, $vertical_length );
+						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length );
 					} elsif ( $vertical_price{'units'} eq 'per foot' ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_length/12;
-						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f2$%s * %4$.2finches=%3$.2f', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
+						$Results{'Breakdown'} .= sprintf('Wheel: $%1$.2f%2$s * %4$.2finches=$%3$.2f<br/>', @vertical_price{'Price','units','Total'}, $vertical_length/12 );
 					} else {
 						$Results{'Breakdown'} .= "Unknown units set on vertical material price ($vertical_price{'units'})<br/>";
 					} # end if
+				} else {
+					$Results{'Breakdown'} .= "No material found for ScoringWheel<br/>";
 				} # end if
 			} # end if
 
@@ -564,7 +566,7 @@ sub get_specs {
 	push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
 	push @capabilities, 'When Stitching' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 	
-	@{$$variable{'Equipment'}} = map{ $_->id() } openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
+	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );

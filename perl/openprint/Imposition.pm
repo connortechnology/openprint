@@ -372,6 +372,8 @@ sub sheet_width {
 
 sub sheet_height {
 	my $self = shift;
+	$$self{'start_columns'} = $$self{'columns'} if ! $$self{'start_columns'};
+	$$self{'start_rows'} = $$self{'rows'} if ! $$self{'start_rows'};
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->width( @_ ) if @_;
 		return $self->Paper()->width() / ( $$self{'start_rows'} / $$self{'rows'} );
