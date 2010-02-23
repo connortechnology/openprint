@@ -168,7 +168,7 @@
 		</p>
 		<p>
 			<label>Purchase Order:</label>
-			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO', 'go.gif', '', '/employee/inventory/purchase_order_view.html?po_id='.$$variable{'Manifest'}->po_id(), 'Go' ) : '' ) ?>
+			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO', 'go.gif', '', '/employee/inventory/purchase_order_view.html?po_id='.$$variable{'Type'}->po_id(), 'Go' ) : '' ) ?>
 		</p>
 		<div id="PurchaseOrders">
 	<? if ( ! $$variable{'Manifest'}->po_id() ) ?>

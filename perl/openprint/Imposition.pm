@@ -359,6 +359,8 @@ sub page_height {
 
 sub sheet_width {
 	my $self = shift;
+	$$self{'start_columns'} = $$self{'columns'} if ! $$self{'start_columns'};
+	$$self{'start_rows'} = $$self{'rows'} if ! $$self{'start_rows'};
 	if ( $$self{'rotate_sheet'} ) {
 		$$self{'paper'}->height( @_ ) if @_;
 		return $self->Paper()->height() / ( $$self{'start_columns'} / $$self{'columns'} );

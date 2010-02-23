@@ -1,33 +1,33 @@
 <? eval (         
-	if ( $openprint::param{'QuoteID'} ) {
+	if ( $param{'QuoteID'} ) {
 		@{$$variable{'Quotes'}} = openprint::Quote::find( 
-			'company_id'		=> $openprint::session{'company_id'},
-			'id_like'=>$openprint::param{'QuoteID'},
+			'company_id'		=> $session{'company_id'},
+			'id_like'=>$param{'QuoteID'},
 		);
 	} else {
-		if ( %openprint::param ) {
+		if ( %param ) {
 			foreach my $key ( 'QuotedFor', 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay' ) {
-				$openprint::session{'/main/quote/history.html?'.$key} = $openprint::param{$key} if exists $openprint::param{$key};
+				$session{'/main/quote/history.html?'.$key} = $param{$key} if exists $param{$key};
 			} # end foreach
 		} # end if
-		$openprint::session{'/main/quote/history.html?lastupdated'} = time;
+		$session{'/main/quote/history.html?lastupdated'} = time;
 
 		@{$$variable{'Quotes'}} = openprint::Quote::find( 
-			'company_id'		=> $openprint::session{'company_id'},
-			'for_name'			=> $openprint::session{'/main/quote/history.html?QuotedFor'},
-			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'/main/quote/history.html?ddmStartYear','/main/quote/history.html?ddmStartMonth','/main/quote/history.html?ddmStartDay'}),
-			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'/main/quote/history.html?ddmEndYear','/main/quote/history.html?ddmEndMonth','/main/quote/history.html?ddmEndDay'}),
+			'company_id'		=> $session{'company_id'},
+			'for_name'			=> $session{'/main/quote/history.html?QuotedFor'},
+			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/quote/history.html?ddmStartYear','/main/quote/history.html?ddmStartMonth','/main/quote/history.html?ddmStartDay'}),
+			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/quote/history.html?ddmEndYear','/main/quote/history.html?ddmEndMonth','/main/quote/history.html?ddmEndDay'}),
 			'order'				=> 'dtmquotedate DESC',
 			);
 	} # end if
-	$$variable{'Currency'} = new openprint::Currency( $openprint::session{Currency_id} );
+	$$variable{'Currency'} = new openprint::Currency( $session{Currency_id} );
 ) ?>
 <? if ( @{$$variable{'Quotes'}} == 0 ) ?>
 
-	<? 	if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) and $openprint::param{'QuoteID'} ) ?>
+	<? 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
 		<? eval (
 				@{$$variable{'Quotes'}} = openprint::Quote::find( 
-				'id_like'=>$openprint::param{'QuoteID'},
+				'id_like'=>$param{'QuoteID'},
 				);
 		) ?>
 		There were no quotes matching your search criteria for your currently selected Company.<br/>
@@ -46,26 +46,30 @@
 				</tr>
 				<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
 				<? eval ( 
-					$$variable{'conversion_rate'} = $$variable{'Quote'}->Currency()->conversions( $openprint::session{'Currency_id'} );
+					$$variable{'conversion_rate'} = $$variable{'Quote'}->Currency()->conversions( $session{'Currency_id'} );
 				) ?>
 				<tr<?rowclass?>> 
 					<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<? echo ( $$variable{'Quote'}->company_id() ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
 					<td align="left"><? hecho ( $$variable{'Quote'}->Company()->name(); ) ?></td>
 					<td align="left"><? hecho ( $$variable{'Quote'}->for_name(); ) ?></td>
-					<td class="Date"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<? echo ( $$variable{'Quote'}->company_id() ) ?>"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
-					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total1()*$$variable{conversion_rate} ); ) ?></td>
-					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total2()*$$variable{conversion_rate} ); ) ?></td>
-					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total3()*$$variable{conversion_rate} ); ) ?></td>
+					<td class="Date"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<? echo ( $$variable{'Quote'}->company_id() ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
+					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total1() ) ); ) ?></td>
+					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total2() ) ); ) ?></td>
+					<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total3() ) ); ) ?></td>
 					<td class="unprintable" align="center"><input type="checkbox" name="chkDelete" value="<? echo ( $$variable{'Quote'}->id(); ) ?>" /></td>
+				</tr>
+				<tr<?rowclass?>>
+					<td>&nbsp;</td>
+					<td colspan="7"><? echo ( $$variable{'Quote'}->description(); ) ?></td>
 				</tr>
 				<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
 				<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
 			</table>
 		<? endif ( @{$$variable{'Quotes'}} > 0 ) ?>
 		
-	<? else ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) and $openprint::param{'QuoteID'} ) ?>
+	<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
 		There are no quotes which match your search criteria. 
-	<? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) and $openprint::param{'QuoteID'} ) ?>
+	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
 <? else ( @{$$variable{'Quotes'}} == 0 ) ?>
 <form method="post" action="history.html" name="f2">
 	<div class="unprintable">
@@ -85,16 +89,20 @@
 		</tr>
 		<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
 		<? eval ( 
-			$$variable{'conversion_rate'} = $$variable{'Quote'}->Currency()->conversions( $openprint::session{'Currency_id'} );
+			$$variable{'conversion_rate'} = $$variable{'Quote'}->Currency()->conversions( $session{'Currency_id'} );
 		) ?>
 		<tr<?rowclass?>> 
 			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
-			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? hecho ( $$variable{'Quote'}->for_name(); ) ?></a></td>
-			<td class="Date"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total1()*$$variable{conversion_rate} ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total2()*$$variable{conversion_rate} ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->total3()*$$variable{conversion_rate} ); ) ?></td>
+			<td align="left"><? echo ( ssi::htmlize($$variable{'Quote'}->for_name()); ) ?></td>
+			<td class="Date"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total1() ) ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total2() ) ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total3() ) ); ) ?></td>
 			<td class="unprintable" align="center"><input type="checkbox" name="chkDelete" value="<? echo ( $$variable{'Quote'}->id(); ) ?>" /></td>
+		</tr>
+		<tr<?rowclass?>>
+			<td>&nbsp;</td>
+			<td colspan="6"><? echo ( $$variable{'Quote'}->description(); ) ?></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
 		<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>

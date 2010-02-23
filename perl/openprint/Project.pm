@@ -1180,11 +1180,13 @@ sub price {
 			} # end foreach
 		} # end foreach
 	} # end if
+$openprint::log->debug("Price $qty_index " . $$self{'price'.$qty_index} );
 	return sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
 } # end sub price
 sub unit_price {
 	my ( $self, $qty_index ) = @_;
-	return sprintf( $config{'UnitPriceFormat'}, $$self{'price'.$qty_index}/$$self{'quantity'.$qty_index} );
+#$openprint::log->debug("Unit Price: ".$$self{'price'.$qty_index}."/".$$self{'quantity'.$qty_index}." = " . $$self{'price'.$qty_index}/$$self{'quantity'.$qty_index} );
+	return sprintf( $config{'UnitPriceFormat'}, $self->price($qty_index)/$$self{'quantity'.$qty_index} );
 } # end sub unit_price
 sub m_price {
 	my ( $self, $qty_index ) = @_;
