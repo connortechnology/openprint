@@ -1,15 +1,16 @@
 <a name="top"></a>
 <!--#include virtual="/includes/error_reporting.html"-->
-<form name="f1" method="post" action="/administrator/managerial/company_profiles.html">
+<form id="f2" name="f2" method="post" action="/administrator/managerial/company_profiles.html">
+	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters"><legend>Search:</legend>
 		<p>
 			<label>Account #:</label>
 			<input type="text" name="txtSearchAccountNum" size="13" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go','go.gif',"f2.btnFunction.value='Go';fmCheck(f2);",'','Go'); ) ?>
 		</p>
 		<p>
 			<label>Type:</label>
-			<select name="search_type" onchange="f1.btnFunction.value='Go';this.form.submit();">
+			<select name="search_type" onchange="f2.btnFunction.value='Go';this.form.submit();">
 				<? echo ( 
 					my @options = ('All','Suppliers', 'Resellers', 'Customers');
 					return ssi::make_drop_down( [ map { $_, $_ } @options ], $param{'search_type'} );	
@@ -18,15 +19,15 @@
 		</p>
 		<p>
 			<label>Sales Rep:</label>
-			<select name="search_salesrep_id" onchange="f1.btnFunction.value='Go';this.form.submit();">
+			<select name="search_salesrep_id" onchange="f2.btnFunction.value='Go';this.form.submit();">
 				<option value=""> All </option>
 				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } openprint::User::find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ], $param{'search_salesrep_id'} ); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Company:</label>
-			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='Go';this.form.submit();}" size="4" />
-			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f1.submit();}">
+			<input type="text" onkeyup="filterDDM(this, this.form.ddmCustomer);" onkeydown="if(event.keyCode == 13){f2.btnFunction.value='Go';this.form.submit();}" size="4" />
+			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f2.btnFunction.value='Go'; $('ButtonsTop').hide();$('ButtonsBottom').hide();f2.submit();}">
 				<option value=""> select </option>
 				<? echo ( 
 					my %params = (
@@ -49,9 +50,12 @@
 					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( %params ) ], $$variable{'CustomerIndex'} );
 				) ?>
 			</select>
-			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);",'','Go'); ) ?>
+			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f2.btnFunction.value='Go';fmCheck(f2);",'','Go'); ) ?>
 		</p>
 	</fieldset>
+</form>
+<form id="f1" name="f1" action="company_profiles.html" method="post">
+	<input type="hidden" name="company_id" id="company_id" value="<?CustomerIndex?>" />
 	<fieldset id="ButtonsTop">
 		<p> 
 			<label><? if ( $$variable{'CustomerIndex'} ) ?><a href="user_profiles.html?ddmCustomer=<?CustomerIndex?>">Link to Users</a><? endif ( $$variable{'CustomerIndex'} ) ?>&nbsp;</label>

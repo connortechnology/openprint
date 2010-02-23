@@ -315,7 +315,9 @@ sub company_profiles {
 		} # end if 
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 
-		my $customer = new openprint::obj_customer( $log, $dbh, $index );
+		$index = $param{'company_id'};
+		my $customer = new openprint::obj_customer( $log, $dbh, $param{'company_id'} );
+		$Company = new openprint::Company( $param{'company_id'} );
 
 		if ( $Company->id() ) {
 			if ( $Company->activation() and ( $Company->activation() ne $param{'activation'} ) ) {
@@ -419,10 +421,13 @@ sub company_profiles {
 			$customer_credit->set( \%params );
 		} # end if $index
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$Company = new openprint::Company( $param{'company_id'} );
 		$index = $Company->next();
 		$Company->delete();
 		$Company = new openprint::Company( $index );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Undelete' ) {
+		$index = $param{'company_id'};
+		$Company = new openprint::Company( $param{'company_id'} );
 		$Company->undelete();
 	} # end if btnFunction
 
