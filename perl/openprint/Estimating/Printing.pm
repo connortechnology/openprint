@@ -2024,11 +2024,11 @@ sub breakdown {
 	$breakdown .= sprintf( 'Plates: %d %s * $%.2f per plate = $%.2f<br/>', @$price{'txtPlateQuantity','PlateID','Plate Cost','Plate Price'});
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 
-	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
 	$breakdown .= ' Scoring: ' . $$stock_qty{'ScoringOvers'} if $$stock_qty{'ScoringOvers'};
 	$breakdown .= ' DieCutting: ' . $$stock_qty{'DieCuttingOvers'} if $$stock_qty{'DieCuttingOvers'};
 	$breakdown .= ' UV Coating: ' . $$stock_qty{'UVOvers'} if $$stock_qty{'UVOvers'};
-	$breakdown .= ' Total: ' . $$stock_qty{'Total Overs'} . '<br/>';
+	$breakdown .= ') Total: ' . $$stock_qty{'Total Overs'} . '<br/>';
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
 	$breakdown .= sprintf('Total: $%.2f<br/>', $$price{'Total Cost'} );
@@ -3062,7 +3062,7 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{'alert'} $$project{'ScoringSpecs'}{alert} " . $$project{'ScoringSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
 		} else {
-			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: $%.2f on %s<br/>', $scoring_results{'Price'}, $scoring_results{'Equipment'} ? $scoring_results{'Equipment'}->name() : '' );
+			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: %dout $%.2f on %s<br/>', $scoring_results{'Imposition'}->imposition(), $scoring_results{'Price'}, $scoring_results{'Equipment'} ? $scoring_results{'Equipment'}->name() : '' );
 			$price{'Comparison Cost'} += $scoring_results{'Price'};
 			if ( $scoring_results{'Equipment'} and ( $scoring_results{'Equipment'}->id() == $Press->id() ) ) {
 				if ( $scoring_results{'Runspeed'} =~ /(.*)\%/ ) {
@@ -3071,6 +3071,7 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 					$run_speed = $scoring_results{'Runspeed'} if $run_speed > $scoring_results{'Runspeed'};
 				} # end if
 			} # end if
+			$scoring_results{'Overs'} = ceil( $scoring_results{'Overs'} / ( $Imposition->imposition()/$scoring_results{'Imposition'}->imposition() ) ) if $scoring_results{'Imposition'}->imposition();
 		} # end if
 	} # end if
 	if ( $$project{'HasPerforating'} ) {
@@ -3463,7 +3464,8 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 	} else {
 		$run_overs = ceil( $base_impressions * $over_rate );
 	} # end if
-	$total_overs += $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $scoring_results{'Overs'} + $uv_results{'Overs'} + $diecutting_results{'Overs'};
+	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'} );
+	$total_overs += $bindery_overs;
 
 	if ( $Press->specification('Overs') ne 'All' ) {
 		$total_overs = ceil( $total_overs + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
@@ -3486,20 +3488,21 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 	my $weight = ceil( $gross_qty * $Paper->sheet_weight() );
 
 	my %sheet_qty = (
-			'Impressions'				=> $gross_qty, 
-			'Gross Sheet Count'			=> $gross_qty, 
-			'Net Sheet Count'			=> $base_impressions,
-			'Setup Overs'				=> $setup_overs,
-			'Run Overs'					=> $run_overs,
-			'Additional Plate Overs'	=> $additional_overs,
-			'Total Overs'				=> $total_overs,
-			'Weight'					=> $weight,
-			'FM Overs'					=> $fm_overs,
-			'FoldingMakeReadyOvers'		=> $folding_results{'MakeReadyOvers'},
-			'FoldingRunOvers'			=> $folding_results{'RunOvers'},
-			'ScoringOvers'				=> $scoring_results{'Overs'},
-			'DieCuttingOvers'			=> $diecutting_results{'Overs'},
-			'UVOvers'					=> $uv_results{'Overs'},
+			'Impressions'				=>	$gross_qty, 
+			'Gross Sheet Count'			=>	$gross_qty, 
+			'Net Sheet Count'			=>	$base_impressions,
+			'Setup Overs'				=>	$setup_overs,
+			'Run Overs'					=>	$run_overs,
+			'Additional Plate Overs'	=>	$additional_overs,
+			'Total Overs'				=>	$total_overs,
+			'Weight'					=>	$weight,
+			'FM Overs'					=>	$fm_overs,
+			'FoldingMakeReadyOvers'		=>	$folding_results{'MakeReadyOvers'},
+			'FoldingRunOvers'			=>	$folding_results{'RunOvers'},
+			'ScoringOvers'				=>	$scoring_results{'Overs'},
+			'DieCuttingOvers'			=>	$diecutting_results{'Overs'},
+			'UVOvers'					=>	$uv_results{'Overs'},
+			'BinderyOvers'				=>	$bindery_overs,
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
 	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};

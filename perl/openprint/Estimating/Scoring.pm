@@ -367,7 +367,7 @@ sub signature_calc {
 			my $use_qty = ($qty /$imposition->imposition()) * ( $imposition->imposition() / $I->imposition() );
 			my $Overs = $Equipment->Specification( 'Scoring Overs', $use_qty );
 			if ( $$Overs{'units'} eq 'Sheets' ) {
-				my $overs = $$Overs{'value'} * ( $imposition->imposition() / $I->imposition() );
+				my $overs = $$Overs{'value'};
 				$use_qty += $overs;
 				$Results{'Overs'} = $overs;
 				$Results{'Breakdown'} .= 'Overs: ' . $overs . '<br/>';
