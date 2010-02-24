@@ -214,13 +214,15 @@ sub Schedule {
 sub operator_id {
 	my $self = shift;
 
-	if ( @_ and ( $$self{'operator_id'} != $_[0] ) ) {
-		$$self{'operator_id'} = shift;
+	if ( @_ ) {
 		if ( $$self{'id'} ) {
 			foreach my $Job ( $self->Schedule() ) {
-				$Job->operator_id( $$self{'operator_id'} );	
+				$Job->save({'operator_id'=>$_[0]});	
 			} # end foreach
+			if ( $$self{'operator_id'} != $_[0] ) {
+			$$self{'operator_id'} = shift;
 			$self->save();
+			} 
 		} # end if
 	} # end if
 	return $$self{'operator_id'};
