@@ -68,7 +68,6 @@ $serial = 'claims_id_seq';
 %transforms = (
 	'updated_on'	=> [ 's/.*//g' ],
 	'po_id'			=>	[ 's/\D//g' ],
-	'docket'		=>	[ 's/\D//g' ],
 	'supplier_id'	=>	[ 's/\D//g' ],
 	'contact_id'	=>	[ 's/\D//g' ],
 	'currency_id'	=>	[ 's/\D//g' ],
@@ -142,14 +141,10 @@ sub find {
 	} # end if
 	if ( exists $params{'docket'} ) {
 		if ( ref $params{'docket'} eq 'ARRAY' ) {
-			if ( @{$params{'docket'}} ) {
-				$sql .= ' AND docket IN ('. join(',', map {'?'} @{$params{'docket'}} ) . ')';
-				push @values, @{$params{'docket'}};
-			} else {
-				return ();
-			} # end if
+				$sql .= ' AND docket = {?}';
+				push @values, $params{'docket'};
 		} else {
-			$sql .= ' AND docket=?';
+			$sql .= ' AND ? = ANY docket';
 			push @values, $params{'docket'};
 		} # end if
 	} # end if

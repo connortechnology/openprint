@@ -105,6 +105,10 @@
 	) ?>
 				</p>
 			</div>
+			<div class="PertainingTo">
+				<p class="docket"><label>Dockets:</label><? echo ( 
+join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ );} $$variable{'Claim'}->docket() ? @{$$variable{'Claim'}->docket()} : () );) ?></p>
+			</div>
 		</div>
 		<div class="Contents">
 <table id="Contents">

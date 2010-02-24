@@ -13,7 +13,7 @@ CREATE TABLE CLAIMS (
 	cancelled_on		TIMESTAMP WITH TIME ZONE,
 	invoice_id			TEXT,
 	po_id				INTEGER, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
-	docket				INTEGER,
+	docket				INTEGER[],
 	supplier_id			INTEGER, FOREIGN KEY (supplier_id) REFERENCES Company (index),
 	contact_id			INTEGER, FOREIGN KEY (contact_id) REFERENCES Users (index),
 	currency_id			INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),

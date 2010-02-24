@@ -193,6 +193,7 @@ function del_content(form, content_id ) {
 </label>
 					<span id="cancelled_on_span" class="DateSelector" <? echo ( $$variable{'Claim'}->cancelled_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'cancelled_on', $$variable{'Claim'}->cancelled_on() ); ) ?></span>
 				</p>
+				<p><label>Docket:</label><input type="text" name="docket" id="docket" value="<? echo ( join(',',$$variable{'Claim'}->docket()) ) ?>" onkeyup="this.value=this.value.replace(/[^,\d]/g,'');" /></p>
 			</fieldset>
 		</div>
 		<br class="spacer"/>
