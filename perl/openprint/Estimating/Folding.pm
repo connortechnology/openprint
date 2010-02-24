@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 1;
+my $debug = 0;
 
 my @equipment;
 my @stitchers;
@@ -919,7 +919,7 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 					if ( my $Base = $Fold->RunSpeed( 0 ) ) {
 						$Adjustment = $$Base{'runspeed'}/$runspeed;
 						$servicePrice{'Total'} = $servicePrice{'Price'} * ( $run_qty/1000 ) * (1+$Adjustment);
-	$openprint::log->debug("Adjusting: Base: " . $$Base{'runspeed'} . ' actual: ' . $runspeed . ' calculated: ' . $Adjustment );
+	#$openprint::log->debug("Adjusting: Base: " . $$Base{'runspeed'} . ' actual: ' . $runspeed . ' calculated: ' . $Adjustment );
 						$Breakdown .= sprintf('&nbsp;Run: $%.2f%s * %d * %d% runspeed adjustment = $%.2f<br/>', @servicePrice{'Price','units'}, $run_qty, $Adjustment*100, $servicePrice{'Total'} );
 					} else {
 						$servicePrice{'Total'} = $servicePrice{'Price'} * ( $run_qty/1000 ) * $Adjustment;

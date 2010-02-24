@@ -94,6 +94,7 @@ sub view_services {
 				if ( $r->param('NewBook') eq 'Y' ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
+					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
 				} elsif ( $r->param('PrintingService') eq 'Y' or $recalc ) {
 
@@ -570,7 +571,6 @@ $log->debug('add interiorpages');
 		push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' ) if ! $$services{'Folding'};
 		push @{$$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' ) if ! $$services{'Cutting'};
 	} # end if
-	return openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 } # end sub multipage_signatures
 
 sub get_book_type {
