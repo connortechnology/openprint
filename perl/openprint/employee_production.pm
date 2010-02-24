@@ -64,47 +64,51 @@ sub press_schedule {
 			$variable{'error'} .= 'There are no jobs scheduled to reflow.';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Add Docket' ) {
-		my $Project = new openprint::Project();
-		$Project->save();
-		$Project->company_id( $param{'company_id'} );
-		$Project->reference( 'Dummy Docket' );
-		$Project->status( 'Approved' );
-		$Project->design( 'ElectronicFile' );
-		$Project->save();
-		openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
-		my $project_id = $Project->id();
+		my $Job = new openprint::ScheduledJob();
 
-		my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'AdditionalSignature' );
-		$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_id );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', ++$signature_count );
+		if ( $param{'company_id'} ) {
+			my $Project = new openprint::Project();
+			$Project->save();
+			$Project->company_id( $param{'company_id'} );
+			$Project->reference( 'Dummy Docket' );
+			$Project->status( 'Approved' );
+			$Project->design( 'ElectronicFile' );
+			$Project->save();
+			openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
+			my $project_id = $Project->id();
 
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtEmployeeComments', $param{'Comment'} );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureQuantity', $param{'forms'} );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
+			my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'AdditionalSignature' );
+			$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_id );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', ++$signature_count );
 
-		my $Equipment = new openprint::Equipment( $param{'press_id'} );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtEmployeeComments', $param{'Comment'} );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureQuantity', $param{'forms'} );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
 
-		$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'AdditionalSignature' ) );
+			my $Equipment = new openprint::Equipment( $param{'press_id'} );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
 
+			$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'AdditionalSignature' ) );
+			$Job->project_id( $Project->id() );
+			$Job->service_id( [ $service_id ] );
+		} # end if
+
+		if ( $param{'starttime_year'} ) {
+			$Job->starttime( sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute','starttime_second'} ) );
+		} # end if
 		my ( $h, $m, $s ) = split ':', $param{'runtime'};
 		$h =~ s/\D//g;
 		$m =~ s/\D//g;
 		$s =~ s/\D//g;
 		$s = 59 if ( $s > 59 );
 		$m = 59 if ( $m > 59 );
-		
-
-		# Dumps it in pending
-		my $Job = new openprint::ScheduledJob();
 		$variable{'error'} .= $Job->save({
-				'project_id'	=> $Project->id(),
-				'service_id'	=> [ $service_id ],
-				'starttime'		=> undef,
 				'equipment_id'	=> $param{'press_id'},
+				'comment'		=> $param{'comment'},
+				'locked'		=> $param{'locked'},
 				'runtime'		=> join(':', $h, $m, $s ),
 				});
 
@@ -1332,7 +1336,7 @@ sub _li_change {
 
 		my %sql;
 
-		if ( $param{'forms'} != $Job->forms() ) {
+		if ( (exists $param{'forms'}) and ( $param{'forms'} != $Job->forms() ) ) {
 			my @service_ids = @{$$Job{'service_id'}};
 			foreach my $s_id ( @service_ids ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
@@ -1378,8 +1382,8 @@ sub _li_change {
 		} # end if
 		$sql{'locked'} = $param{'locked'} if exists $param{'locked'} and $param{'locked'} != $$Job{'locked'};
 		$sql{'comment'} = $param{'comment'} if $param{'comment'} ne $Job->comment();
-		$sql{'impressions'} = $param{'impressions'} if $Job->impressions() != $param{'impressions'};
-		$sql{'speed'} = $param{'speed'} if $Job->speed() != $param{'speed'};
+		$sql{'impressions'} = $param{'impressions'} if ( exists $param{'impressions'} ) and ( $Job->impressions() != $param{'impressions'} );
+		$sql{'speed'} = $param{'speed'} if ( exists $param{'speed'} ) and ( $Job->speed() != $param{'speed'} );
 
 		if ( keys %sql ) {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
