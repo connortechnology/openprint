@@ -78,6 +78,8 @@ sub view {
 		$Claim->sent_to_accounts_on( $param{'sent_to_accounts'} ? join('-', @param{'sent_to_accounts_on_year','sent_to_accounts_on_month','sent_to_accounts_on_day'} ) : undef );
 		$Claim->invoiced_on( $param{'invoiced'} ? join('-', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} ) : undef );
 		$Claim->cancelled_on( $param{'cancelled'} ? join('-', @param{'cancelled_on_year','cancelled_on_month','cancelled_on_day'} ) : undef );
+		$param{'docket'} =~ s/[^,\d]//g;
+		$param{'docket'} = [ split(',',$param{'docket'}) ];
 
 		$variable{'error'} .= $Claim->save( \%param );
 		if ( ! $variable{'error'} ) {
@@ -99,6 +101,8 @@ sub edit {
 		$Claim->sent_to_accounts_on( $param{'sent_to_accounts'} ? join('-', @param{'sent_to_accounts_on_year','sent_to_accounts_on_month','sent_to_accounts_on_day'} ) : undef );
 		$Claim->invoiced_on( $param{'invoiced'} ? join('-', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} ) : undef );
 		$Claim->cancelled_on( $param{'cancelled'} ? join('-', @param{'cancelled_on_year','cancelled_on_month','cancelled_on_day'} ) : undef );
+		$param{'docket'} =~ s/[^,\d]//g;
+		$param{'docket'} = [ split(',',$param{'docket'}) ];
 
 		$variable{'error'} .= $Claim->save( \%param );
 	} # end if
