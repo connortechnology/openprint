@@ -5,7 +5,7 @@
 <? echo ( 
 	my $html = '';
 	$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
-	if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
+	if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) or sets::isin( $session{'user_id'}, $$variable{'Claim'}->editor_id() ) ) {
 		$html .= ssi::writeButton( $log, $dbh, 'Email', 'email.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send Email' );
 		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?claim_id='.$$variable{'Claim'}->id(), 'Edit' );
 		#$html .= ssi::writeButton( $log, $dbh, 'Copy', 'copy.gif', "f1.action='view.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
@@ -105,7 +105,7 @@
 	) ?>
 				</p>
 			</div>
-			<div class="PertainingTo">
+			<div class="Dockets">
 				<p class="docket"><label>Dockets:</label><? echo ( 
 join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ );} $$variable{'Claim'}->docket() ? @{$$variable{'Claim'}->docket()} : () );) ?></p>
 			</div>

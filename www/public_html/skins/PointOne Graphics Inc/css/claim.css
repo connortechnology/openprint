@@ -207,16 +207,47 @@ div.Claim .Dates {
 	width: 50%;
 	float: right;
 }
-div.Claim .Dates p, div.Claim .Sender p {
-	margin: 0px;
-	padding: 0px;
+div.Claim .Dockets {
+	width: 50%;
+	float: right;
+	margin-top: 5px;
 }
+div.Claim .Dates p, div.Claim .Sender p {
+}
+div.Claim p {
+    padding: 0px 0px 0px 175px;;
+    margin: 0px;
+    overflow: hidden;
+}
+div.Claim p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.Claim p {height: 1%;}
+div.Claim p {display: block;}
+/* End hide from IE-mac */
+div.Claim p label {
+	margin: 0px 0px 0px -175px;
+	width: 170px;
+	float: left;
+}
+div.Claim p label.radio {
+	margin: 0px;
+	width: auto;
+	float: none;
+}
+
 fieldset p {
     margin: 0px;
     margin-top: .4em;
     display: inline-block;
     padding: 0px;
-    padding-left: 170px;
+    padding-left: 210px;
     overflow: hidden;
 }
 
@@ -230,7 +261,7 @@ fieldset p:after {
 }
 /* Hides from IE-mac \*/
 * html fieldset p {height: 1%;}
-* fieldset p {display: block;}
+fieldset p {display: block;}
 /* End hide from IE-mac */
 
 label {
@@ -239,9 +270,9 @@ outline: 0;
 }
 
 fieldset p label {
-    width: 165px;
+    width: 205px;
     text-align: right;
-    margin-left: -170px;
+    margin-left: -210px;
     vertical-align: top;
     float: left;
     overflow: visible;
