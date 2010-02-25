@@ -63,6 +63,7 @@ $serial = 'claims_id_seq';
 	'vendor_fax'		=>	'vendor_fax',
 	'vendor_sms'		=>	'vendor_sms',
 	'vendor_email'		=>	'vendor_email',
+	'editor_id'			=>	'editor_id',
 );
 
 %transforms = (
@@ -92,6 +93,7 @@ $serial = 'claims_id_seq';
 	'statetax'		=>	undef,
 	'statetax_rate'	=>	undef,
 	'deleted'		=>	0,
+	'editor_id'		=>	[],
 );
 
 # Returns a paper object specified by the parameters
