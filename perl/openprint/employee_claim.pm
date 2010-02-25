@@ -158,6 +158,14 @@ sub _select_contact {
 } # end sub _select_contact
 sub _check_for_skid {
 } # end sub _check_for_skid
+sub _editors {
+	$variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
+	if ( $param{'action'} eq 'add' ) {
+		$variable{'error'} = $variable{'Claim'}->save({'editor_id'=>[ sets::union( ( $variable{'Claim'}->editor_id() ? @{$variable{'Claim'}->editor_id()} : () ), $param{'editor_id'} ) ]});
+	} elsif ( $param{'action'} eq 'remove' ) {
+		$variable{'error'} = $variable{'Claim'}->save({'editor_id'=>[ sets::exclude( [$param{'editor_id'}], $variable{'Claim'}->editor_id() ) ]});
+	} # end if
+} # end sub _editors
 
 1;
 __END__
