@@ -2070,12 +2070,12 @@ sub calculate_impositions {
 	} # end if
 	if ( ! $Press ) {
 #$openprint::log->debug("No Press");
-		next;
+		return;
 	} # end if
 	if ( ! @impositions ) {
-		next;
+		return;
 	} # end if
-	if ( $debug or 1 ) {
+	if ( $debug ) {
 		$openprint::log->debug("QTY: $qty_index before " . @impositions );
 		foreach my $imp ( @impositions ) {
 			$imp->display();
@@ -2097,27 +2097,58 @@ sub calculate_impositions {
 		$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 0;
 		@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, \@impositions );
 		$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug or 1;
+	} # end if
 
-		my %imps;
-
-		my %max_impositions;
-		my $max_pages = 0;
-		foreach my $imp ( @impositions ) {
-			$max_pages = $imp->pages() if $imp->pages() > $max_pages;
-			$max_impositions{$imp->pages()} = $imp->imposition() if $imp->imposition() > $max_impositions{$imp->pages()};
-		} # end foreach
-		$max_pages = ceil( $max_pages / 3 );
-		if ( $debug or 0 ) {
-			$openprint::log->debug("Max pages: $max_pages, ");
-			foreach my $p ( keys %max_impositions ) {
-				$openprint::log->debug("Max Impo $p => $max_impositions{$p}out");
-			}# end foreach
+	if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) and ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
+		@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = split('x', $$sig_specs{"ddmStockSheetSize$qty_index"} );
+	}
+	my @dont_do_pages = split(',', $Press->specification('DontDoPages'));
+	my @results;
+	foreach my $imp ( @impositions ) {
+		if ( ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$sig_specs{'txtImposition'.$qty_index} ) ) {
+			$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$sig_specs{'txtImposition'.$qty_index}) if $debug;
+			next;
 		} # end if
-		if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) and ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
-			@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = split('x', $$sig_specs{"ddmStockSheetSize$qty_index"} );
-		}
-		my @dont_do_pages = split(',', $Press->specification('DontDoPages'));
-		foreach my $imp ( @impositions ) {
+
+		if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) {
+			if ( ( $imp->Paper()->width() != $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$sig_specs{"OverrideStockHeight$qty_index"} )) {
+				#$imp->display('Not overriden sheet size!');
+				next;
+			} # end if
+		} elsif ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
+			if ( $imp->Paper()->height() != $$sig_specs{"CutOff$qty_index"} ) {
+				next;
+			} # end if
+		} 
+		if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
+#$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
+			next if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};	
+		} elsif ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
+#$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() );
+			next;
+		} # end if
+
+		if ( ( $imp->runstyle() eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
+			$openprint::log->debug('No Web 4 U');
+			next;
+		} # end if
+
+		if ( $SpreadLayout > 0 ) {
+			my %max_impositions;
+			my $max_pages = 0;
+			if ( $SpreadLayout > 0 ) {
+				foreach my $imp ( @impositions ) {
+					$max_pages = $imp->pages() if $imp->pages() > $max_pages;
+					$max_impositions{$imp->pages()} = $imp->imposition() if $imp->imposition() > $max_impositions{$imp->pages()};
+				} # end foreach
+				$max_pages = ceil( $max_pages / 3 );
+			} # end if
+			if ( $debug or 0 ) {
+				$openprint::log->debug("Max pages: $max_pages, ");
+				foreach my $p ( keys %max_impositions ) {
+					$openprint::log->debug("Max Impo $p => $max_impositions{$p}out");
+				}# end foreach
+			} # end if
 			if ( sets::isin( $imp->pages(), \@dont_do_pages ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
 #$imp->dispay('In dont do pages');
 				next;
@@ -2130,25 +2161,7 @@ sub calculate_impositions {
 				$openprint::log->debug("Doesn't match page quantity override " . $imp->pages() . ' != ' . $$sig_specs{'PageQuantity'.$qty_index}) if $debug;
 				next;
 			} # end if
-		if ( ( $imp->runstyle() eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
-			$openprint::log->debug('No Web 4 U');
-			next;
-		} # end if
-		if ( ( $$sig_specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$sig_specs{'txtImposition'.$qty_index} ) ) {
-			$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$sig_specs{'txtImposition'.$qty_index}) if $debug;
-			next;
-		} # end if
-
-			if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) {
-				if ( ( $imp->Paper()->width() != $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$sig_specs{"OverrideStockHeight$qty_index"} )) {
-#$imp->display('Not overriden sheet size!');
-					next;
-				} # end if
-			} elsif ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
-				if ( $imp->Paper()->height() != $$sig_specs{"CutOff$qty_index"} ) {
-					next;
-				} # end if
-			} elsif (($max_pages >= $imp->pages() ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
+			if (($max_pages >= $imp->pages() ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
 # Only do this if not sheet size overrides
 #$imp->display("Max paeages: $max_pages >= " . $imp->pages() );
 				next;
@@ -2162,22 +2175,21 @@ sub calculate_impositions {
 #$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $imp->Paper()->type() );
 				next;
 			} # end if
-			if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
-#$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
-				next if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};	
-			} elsif ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
-#$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() );
-				next;
-			} # end if
+		} # end if SpreadLayout
+		push @results, $imp;
+	} # end foreach imp
 
-			my $add = 1;
+	my %imps;
+	foreach my $imp ( @results ) {
+
+		my $add = 1;
+		if ( $SpreadLayout > 0 ) {
 			my $stock_qty = $qty/$imp->imposition();
 			if ( $imp->Paper()->type() eq 'Roll' ) {
 # Convert to weight
 				$stock_qty *= $imp->Paper()->area() * $imp->Paper()->wpsi();
 			} # end if
 			$stock_qty += $$PaperCounts{$imp->Paper()->to_string()};
-
 			if ( $imp->runstyle() eq 'Work & Tumble' ) {
 				my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
 				if ( $imps{$str} ) {
@@ -2246,13 +2258,7 @@ sub calculate_impositions {
 				} # end for
 			} # end if $imps{$str}
 			push @{$imps{$str}}, $imp if $add;
-		} # end foreach imp
-		@impositions = map {@{$_}} values %imps;
-		$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after filter:' . @impositions) if $debug;
-	} else { # No SpreadLayout
-		my %imps;
-		foreach my $imp ( @impositions ) {
-			my $add = 1;
+		} else { # No SpreadLayout
 			if ( $imp->runstyle() eq 'Work & Tumble' ) {
 				my $str = sprintf('%d=%dx%d %s %s', @$imp{'imposition','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
 				if ( $imps{$str} ) {
@@ -2330,9 +2336,9 @@ sub calculate_impositions {
 				} # end for
 			} # end if overriden or not or cached
 			push @{$imps{$str}}, $imp if $add;
-		} # end foreach imp
-		@impositions = map {@{$_}} values %imps;
-	} # end if Spreadlayout
+		} # end if ServerLaoutout
+	} # end foreach imp
+	@impositions = map {@{$_}} values %imps;
 
 	$log->debug("Press Impositions after filtering: " . @{$impositions{$Press->id()}} ) if $debug;
 	if ( $$sig_specs{'versions'} > 1 and @impositions < 30 ) {
@@ -2397,7 +2403,6 @@ sub get_project_price {
 			$openprint::log->debug("Wrong type " . $Press->strid() . " : " . $Press->specification('Printing Type') . ': want ' . join(',', @{$$sig_specs{'PrintingTypes'}} ) ) if $debug;
 			next;
 		} # end if
-
 		foreach my $imp ( calculate_impositions( $Project, $P, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project ) ) {
 
 			$$sig_specs{'ddmRunStyle'.$qty_index} = $imp->runstyle();
@@ -2670,7 +2675,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					} # end if
 				} # end if
 
-$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
+#$openprint::log->debug("Pricing Paper: Minimum Order: " . $Paper->minimum_order() );
 				if ( $Paper->minimum_order() ) {
 					# Assume sheets for sheets, lbs for Rolls
 					if ( $Paper->minimum_order() > $PaperCounts{$paper_string} ) { # Must be a roll

@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-my $debug = 1;
+my $debug = 0;
 
 require openprint::project;
 require openprint::Equipment;
@@ -151,7 +151,7 @@ sub signature_calc {
 	$$specs{"txtPockets$qty_index"} = 0;
 
 	foreach my $I ( @Impositions ) {
-$I->display('In Stitching:') if $debug;
+#$I->display('In Stitching:') if $debug;
 		$$specs{"txtPockets$qty_index"} += 1;
 
 		if ( $imposition > 1 ) {
@@ -162,10 +162,10 @@ $I->display('In Stitching:') if $debug;
 			($$I{'image_orientation'} eq 'Horizontal' and $$I{'columns'} % 2 ) or
 			(sets::isin( $$I{'runstyle'}, ['Work & Turn','Work & Tumble'] ) and ($$I{'imposition'}%4) ) 
 			);
-			$openprint::log->debug(" $$I{'runstyle'} " . ($$I{'imposition'}%4) );
+			#$openprint::log->debug(" $$I{'runstyle'} " . ($$I{'imposition'}%4) );
 		} # end if
 	} # end foreach Imposition
-$openprint::log->debug("Imp: $imposition");
+#$openprint::log->debug("Imp: $imposition");
 	my $I = $Impositions[0];
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
