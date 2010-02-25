@@ -116,165 +116,10 @@ sub add {
 
 sub remove {
 	my ( $p_id, $s_id ) = @_;
-	if ( ! $s_id ) {
-		my $Project = new openprint::Project( $p_id );
-		foreach $s_id ( $Project->signatures() ) {
-			sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $p_id, $s_id );
-		} # end foreach
-	} else {
-		sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $p_id, $s_id );
-	} # end if
-}
-
-sub get_li {
-	my ( $previous_row, $row, $ul_id ) = @_;
-
-	my $html;
-$log->debug("NEWS: $$row{'news2'}");
-	if ( ! $$row{'projectindex'} ) {
-		$html .= sprintf( '<li id="item_%d" class="%s">Reserved', $$row{'id'}, 'reserved' );
-		$html .= '<span class="Buttons">';
-		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$row{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$row{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
-		$html .= '</span>';
-		$html .= sprintf( q{<span class="RunTime" onclick="openPopup( 'RunTime', %1$d );"><span id="%1$dRunTime">%2$.2d:%3$.2d</span></span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
-		$html .= '<br/></li>';
-		return $html;
-	} # end if
-
-	my $Project = new openprint::Project( $$row{'projectindex'} );
-	my $services = $Project->services();
-	my $Equipment = new openprint::Equipment($$row{equipment_id});
-
-	my $sig_specs = openprint::service::get_specs_ref( $Project, $$row{'serviceindex'} );
-	if ( ! $$sig_specs{'txtEmployeeComments'} ) {
-		openprint::service::insert_service_spec( $log, $dbh, @$row{'projectindex','serviceindex'}, 'txtEmployeeComments', openprint::Shift::get_li_comment( $row ) );
-	} # end if
-
-	if ( ! $$sig_specs{'SignatureQuantity'} ) {
-		$$sig_specs{'SignatureQuantity'} = $$sig_specs{'txtSignatureQuantity'} ? $$sig_specs{'txtSignatureQuantity'} : 1;
-		openprint::service::insert_service_spec( $log, $dbh, @$row{'projectindex', 'serviceindex'}, 'SignatureQuantity', $$sig_specs{'SignatureQuantity'} );
-	} # end if
-	if ( ! $$sig_specs{'ImpressionQuantity'} ) {
-		$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
-		openprint::service::insert_service_spec( $log, $dbh, @$row{'projectindex', 'serviceindex'}, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
-	} # end if
-	my $colour = 'blue';
-	if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
-		$colour = 'green';
-	} elsif ( sets::isin( $Project->status(), ['Printed', 'Complete','Waiting For Pickup', 'Picked Up', 'Shipped'] ) ) {
-		$colour = 'pink';
-	} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
-		$colour = 'red';
-	} elsif ( 1 < sql::execute( $log, $dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=?}, $$row{'projectindex'} ) ) {
-		$colour = 'yellow';
-	} # end if
-	if ( $Project->rush() ) {
-		$colour .= ' rush';
-	} # end if
-	$html .= sprintf( '<li id="item_%d" class="%s">', $$row{'id'}, $colour );
-	if ( ( ! $previous_row ) or ( $$row{'projectindex'} != $$previous_row{'projectindex'} ) ) {
-		$html .= '<div class="Company">';
-		$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&Docket=%2$d">%2$d</a>', $$row{'projectindex'}, $Project->docket() );
-		my $n = $Project->Company()->name();
-		$n =~ s/The //gi;
-		$html .= ssi::htmlize( $n );
-		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
-		if ( $Project->operator_id() ) {
-			$html .= ' (<span class="PrepressOperator">'.$Project->Operator()->firstname().'</span>)';
-		} # end if
-		$html .= '</div>';
-		$html .= qq`<span class="DueDate" id="JumpToDate$$row{'serviceindex'}">`;
-		if ( ! $Project->due_date() ) {
-			$html .= 'no duedate</span>';
-		} else {
-			my ( $year, $month, $day ) = split('-', $Project->due_date() );
-			if ( $month ) { $html .= '&nbsp;'.substr( Date::Calc::Month_to_Text( $month ),0, 3); } # end if
-				$html .= qq` $day</span>`;
-		} # end if
-
-		if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
-			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$row{'serviceindex'}, $Project->due_date() );
-		} # end if
-	} # end if
-	if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) {
-		$html .= sprintf( q{<div id="%2$dComment" class="Comment" onclick="openPopup( 'Comment', '%1$s', '%2$s' );">%3$s</div>}, @$row{'projectindex','serviceindex'}, $$sig_specs{'txtEmployeeComments'} );
-
-		$html .= sprintf( q{<span class="Forms" id="%2$dForms" onclick="openPopup( 'Forms', '%1$s', '%2$s' );">%3$d %4$s</span>}, @$row{'projectindex','serviceindex'}, $$sig_specs{'SignatureQuantity'}, ($$sig_specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
-		$html .= sprintf( q{<span id="%2$dImpressions" class="Impressions" onclick="openPopup( 'Impressions', %1$s, %2$s );">%3$d imps</span>}, @$row{'projectindex','serviceindex'}, $$sig_specs{'ImpressionQuantity'} );
-
-		$html .= '<span class="Buttons">';
-		$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-		$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$row{'id'}, '', "popup_window('_bump_job.html','id=$$row{id}');", '', 'B' );
-		$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$row{'serviceindex'}, '', "ajax_window('_signature_completion_popup.html?project_id='+$$row{'projectindex'}+'&amp;service_id='+$$row{serviceindex} );", '', 'C' );
-		#$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.ProjectIndex.value=$$row{'projectindex'};f1.ServiceIndex.value=$$row{'serviceindex'};f1.btnFunction.value='CompleteJob';f1.submit();}", '', 'C' );
-		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$row{'id'};f1.btnFunction.value='RemoveJob';f1.submit();}", '', 'D' );
-		$html .= ssi::writeButton( $log, $dbh, 'Split'.$$row{'serviceindex'}, '', "if(confirm('Are you sure?')){split_job($$row{'projectindex'}, $$row{'serviceindex'}, '$ul_id' );}", '', 'S' ) if $$sig_specs{'SignatureQuantity'} > 1;
-		$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$row{'serviceindex'}, '', "popup_window('_stock_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
-		$html .= '</span>';
-if ( $Equipment->smartscheduling() ) {
-		$html .= sprintf( q`<span class="StartTime" onclick="ajax_window( '_starttime_popup.html?id=%1$d' );">Start:<span id=%1$dStartTime">%2$s</span><img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$row{'id'},
-				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) ),
-				$$row{'starttime_locked'} ? 'locked' : 'unlocked',
-				);
-} # end if
-
-		$html .= sprintf( q{<span id="%1$dRunTime" class="RunTime" onclick="openPopup( 'RunTime', %1$d );">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
-if ( $Equipment->smartscheduling() ) {
-		$html .= '<span class="Services">';
-		$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
-		$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
-		$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
-		$html .= '</span>';
-}
-	} else {
-		$html .= sprintf( '<div class="Comment"><a href="/employee/proj/prin/prin_multi.html?ProjectIndex=%1$d&amp;ServiceIndex=%2$d">%3$s</a></div>', @$row{'projectindex','serviceindex'}, ssi::htmlize($$sig_specs{'txtEmployeeComments'}) );
-		$html .= sprintf( '<span class="Forms">%d %s</span>', $$sig_specs{'SignatureQuantity'}, ($$sig_specs{'SignatureQuantity'} > 1 ? ' forms' : ' form') );
-		$html .= sprintf( '<span class="Impressions">%d imps</span>', $$sig_specs{'ImpressionQuantity'} );
-		$html .= '<span class="Buttons">';
-		$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$row{'serviceindex'}, '', "popup_window('_stock_details.html','project_id='+$$row{'projectindex'} );", '', 'P' );
-		$html .= '</span>';
-		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$row{'id'},
-				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$row{'starttime'} ) ),
-				);
-		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$row{'id'}, split(':',$$row{'runtime'}) );
-if ( $Equipment->smartscheduling() ) {
-		$html .= '<span class="Services">';
-		$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
-		$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
-		$html .= '<span class="Service">trim</span>' if $$services{'Cutting'};
-		$html .= '</span>';
-}
-	} # end if
-	$html .= "<br/></li>\n";
-	return $html;
-} # end sub get_li
-
-
-sub get_ul {
-    my ( $start_time_start, $start_time_end, $equipment_id, $Shift, $filters ) = @_;
-
-    my ( $s, $min, $h, $day, $month, $year );
-    if ( $start_time_start ) {
-        ( $s, $min, $h, $day, $month, $year ) = Date::Parse::strptime( $start_time_start );
-    } # endif
-        $year += 1900;
-        $month += 1;
-    my $ul_id = sprintf('%d-%.4d-%.2d-%.2d-%s', $equipment_id, $year, $month, $day, $Shift->name() );
-    my $content = get_lis($ul_id, $start_time_start, $start_time_end, $equipment_id, $Shift, $filters);
-
-	return qq{<ul id="$ul_id" class="shift} . ($content ? '' : ' Empty' ) .'">' . $content. "</ul>\n";
-} # end sub get_ul
-
-sub apply_sort {
-$log->debug("Applying Sort");
-	my $ac = sql::start_transaction( $dbh );
-	my $starttime = $_[0]{starttime};
-	foreach my $row ( @_ ) {
-		sql::update( undef, undef, 'Schedule', ['ProjectIndex=? AND serviceindex=?', @$row{'projectindex','serviceindex'}], 'starttime', $starttime );
-		( $starttime ) = sql::execute( undef, undef, q{SELECT starttime+runtime FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, @$row{'projectindex','serviceindex'} );
+	foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$p_id, ( $s_id ? ('service_id'=>$s_id) : () ) ) ) {
+		$Job->delete();
 	} # end foreach
-	sql::end_transaction( $dbh, $ac );
-} # end sub apply_sort
+} # end sub remove
 
 sub split_job {
 	my ( $project_index, $service_index, $ul_id ) = @_;
@@ -339,7 +184,6 @@ sub split_job {
 	my $Shift = openprint::Shift::get_from_ul_id( $ul_id );
 	return "Div~$ul_id~".$Shift->get_ul();
 } # end sub split_job
-
 
 sub add_project_to_press_schedule {
 	my ( $Project, $service_id ) = @_;

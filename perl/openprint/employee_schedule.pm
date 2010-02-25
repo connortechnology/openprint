@@ -8,12 +8,11 @@ use vars qw( $log $dbh %variable %config );
 *variable = \%openprint::variable;
 *config = \%config;
 
-
 require sql;
 require openprint::Equipment;
 require openprint::service;
-require openprint::press_schedule;
 require openprint::Shift;
+require openprint::ScheduledJob;
 
 use strict;
 
@@ -58,24 +57,28 @@ sub drop_project {
 	my ( $start_time, $end_time, $operator_id ) = ( $Shift->starttime(), $Shift->endtime(), $Shift->operator_id() );
 
 	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule' ) or $log->error( DBI->errstr );
+	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 	while ( @order ) {
 		my $row_id = shift @order;
 		$row_id =~ s/\D//g;
 		next if ! $row_id;
 
-		my @rows = openprint::press_schedule::find('id'=>$row_id);
-		next if ! @rows;
-		my $row = shift @rows;
-		my $Project = new openprint::Project( $$row{'projectindex'} );
-		$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
-		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
+		my $Job = new openprint::ScheduledJob( $row_id );
 
-		if ( $$row{'starttime'} ne $start_time or $$row{'equipment_id'} != $Shift->equipment_id() ) {
-			sql::update( $log, $dbh, 'Schedule', ['id=?', $row_id], 'StartTime', $start_time, 'equipment_id', $Shift->equipment_id() );
+		my %sql;
+		$sql{'operator_id'} = $operator_id if $operator_id != $Job->operator_id();
+		if ( $$Job{'starttime'} ne $start_time or $$Job{'equipment_id'} != $Shift->equipment_id() ) {
+			$sql{'starttime'} = $start_time;
+			$sql{'equipment_id'} = $Shift->equipment_id();
 		} # end if
-		if ( $$row{operator_id} != $operator_id ) {
-			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngprojectindex=? and lngserviceindex=?', @$row{'projectindex','serviceindex'}], 'operator_id', $operator_id );
+
+		if ( keys %sql ) {
+			$Job->save(\%sql);
+			if ( $Job->project_id() ) {
+				my $Project = $Job->Project();
+				$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
+			} # end if
 		} # end if
 
 		# Starttime is empty when moving to pending
@@ -86,32 +89,15 @@ sub drop_project {
     sql::end_transaction( $dbh, $ac );
 } # end sub drop_project
 
-sub set_operator {
-	my ( $r, $log, $dbh, $variable, $period, $operator ) = @_;
-
-	my $Shift = openprint::Shift::get_from_ul_id( $period );
-	$log->debug("Set Operator Shift: " . $Shift->to_string() );
-	$Shift->operator_id( $operator );
-} # end sub set_operator
-
-sub set_impressions {
-	my ( $r, $log, $dbh, $variable, $project_index, $service_index, $impressions ) = @_;
-	openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'ImpressionQuantity', $impressions );
-} # end sub set_impressions
-
-sub set_comment {
-	my ( $r, $log, $dbh, $variable, $schedule_id, $comment ) = @_;
-	my $Job = new openprint::ScheduledJob( $schedule_id );
-	openprint::service::insert_service_spec( $log, $dbh, @$Job{'project_id','service_id'}, 'txtEmployeeComments', $comment );
-} # end sub set_comment
-
 sub set_duedate {
 	my ( $r, $log, $dbh, $variable, $schedule_id, $date ) = @_;
 	my $Job = new openprint::ScheduledJob( $schedule_id );
-	my $Project = $Job->Project();
-	$Project->due_date( $date );
-	$Project->save();
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
+	if ( $$Job{'project_id'} ) {
+		my $Project = $Job->Project();
+		$Project->due_date( $date );
+		$Project->save();
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Duedate changed to $date" );
+	} # end if
 } # end sub set_duedate
 
 sub insert {
