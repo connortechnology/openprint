@@ -37,6 +37,7 @@ $serial = 'schedule_id_seq';
 	'starttime_seconds'	=>	undef,
 	'impressions'		=>	undef,
 	'created_on'		=>	'created_on',
+	'operator_id'		=>	undef,
 );
 
 %transforms = (
