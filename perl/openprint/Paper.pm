@@ -1068,7 +1068,7 @@ sub multipart {
 sub load_from_signature {
 	my ( $Project, $specs, $qty_index ) = @_;
 
-	$qty_index = $Project->ordered_quantity_index() if ! $qty_index;
+	#$qty_index = $Project->ordered_quantity_index() if ! $qty_index;
 
 	my $Paper;
 	if ( $$specs{'rdbSpecificStock'} eq 'Y' ) {
@@ -1153,7 +1153,9 @@ $openprint::log->debug("No papers found, looking for paper with no width or heig
 			$Paper->basis_mweight( $$specs{'basis_mweight'} );
 			$Paper->score_required( $Paper->calliper() > 0.008 );
 			#if ( $$specs{'StockType'} ne 'Roll' ) {
+			if ( $qty_index ) {
 				$Paper->mweight( $$specs{'txtMWeight'.$qty_index} );
+			} # end if
 			#} # end if
 			@Papers = ( $Paper );
         } # end if

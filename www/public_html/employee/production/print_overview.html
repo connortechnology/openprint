@@ -31,31 +31,6 @@
 			new Ajax.Request('_li_change.json', { parameters: { id: id, locked: true } } );
 		};
 	}
-	function level_up( img ) {
-		if ( img.src.match(/level=1/) ) {
-			img.src=img.src.replace(/level=1/,'level=2');
-		} else if ( img.src.match(/level=2/) ) {
-			img.src=img.src.replace(/level=2/,'level=3');
-		} else if ( img.src.match(/level=3/) ) {
-		} 
-
-	} 
-	function level_down( img ) {
-		if ( img.src.match(/level=1/) ) {
-		} else if ( img.src.match(/level=2/) ) {
-			img.src=img.src.replace(/level=2/,'level=1');
-		} else if ( img.src.match(/level=3/) ) {
-			img.src=img.src.replace(/level=3/,'level=2');
-		} 
-	} // end function loadDivs( results )
-	function split_job( pid, sid, shift ) {
-		var div = $( shift );
-		if ( div )
-			div.innerHTML = 'updating...';
-		var code = "require openprint::press_schedule;\n";
-		code += "return openprint::press_schedule::split_job( @specs{'p_id','s_id','shift'} );\n";
-		jsrsExecute( '/jsrs.htm', loadDivs, 'jsrs::execute', new Array( 'code', code, 'p_id', pid, 's_id', sid, 'shift', shift ) );
-	} // end function
 
 	function jump_to_date( date ) {
 		var form = date.params.inputField.form;
@@ -156,10 +131,13 @@
 			&nbsp;to&nbsp;
 			</span>
 			<span class="DateSelector">
-				<? echo ( ssi::date_select( 'schedule_end', [ @session{'/employee/production/print_overview.html?schedule_end_year',
+				<? echo ( 
+					my $html = ssi::date_select( 'schedule_end', [ @session{'/employee/production/print_overview.html?schedule_end_year',
 '/employee/production/print_overview.html?schedule_end_month',
-'/employee/production/print_overview.html?schedule_end_day'} ] ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Today_end', 't.gif', 'set_today( f1.schedule_end_year, f1.schedule_end_month, f1.schedule_end_day );f1.submit();', '', 'T' ); ) ?>
+'/employee/production/print_overview.html?schedule_end_day'} ] );
+					$html .= ssi::writeButton( $log, $dbh, 'Today_end', 't.gif', 'set_today( f1.schedule_end_year, f1.schedule_end_month, f1.schedule_end_day );f1.submit();', '', 'T' );
+					return $html;
+				) ?>
 			</span>
 		</li>
 		<li>

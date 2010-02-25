@@ -1052,7 +1052,7 @@ $log->debug("Order before coalesce: @order");
 			my $previous;
 			foreach my $row_id ( @order ) {
 				my $Job = new openprint::ScheduledJob( $row_id );
-				if ( $previous and ( $previous->project_id() == $Job->project_id() ) ) {
+				if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
 					my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
 					my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
 					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() ) ) {
@@ -1078,57 +1078,58 @@ $log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index(
 $log->debug("Order after coalesce: @order");
 		sql::end_transaction( $dbh, $ac );
 
-	if ( ! $Shift->Equipment()->smartscheduling() ) {
-		return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'ul_id'}, $param{'services'} );
-	} # end if
+		if ( ! $Shift->Equipment()->smartscheduling() ) {
+$log->debug("Old");
+			return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'ul_id'}, $param{'services'} );
+$log->debug("Old2");
+		} else {
+			my $ac = sql::start_transaction( $dbh );
+			$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+			$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
+			if ( $Shift->starttime() ) {
+				my @final_order;
+# Get jobs before the shift, leave them in order.
+				foreach my $row ( openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
+					push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
+				} # end foreach row
 
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+# Get the rest of the jobs on this equipment
+				my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
 
-		if ( $Shift->starttime() ) {
-			my @final_order;
-			# Get jobs before the shift, leave them in order.
-			foreach my $row ( openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
-				push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
-			} # end foreach row
-
-			# Get the rest of the jobs on this equipment
-			my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
-
-			# Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
-			foreach my $row_id ( @order ) {
-				my $found = 0;
-				for ( my $j = 0; $j < @jobs; $j += 1 ) {
-					my $row = $jobs[$j];
-					if ( $$row{'id'} == $row_id ) {
-						push @final_order, $row;
-						splice @jobs, $j, 1;
-						$found = 1;
-						last;
+# Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
+				foreach my $row_id ( @order ) {
+					my $found = 0;
+					for ( my $j = 0; $j < @jobs; $j += 1 ) {
+						my $row = $jobs[$j];
+						if ( $$row{'id'} == $row_id ) {
+							push @final_order, $row;
+							splice @jobs, $j, 1;
+							$found = 1;
+							last;
+						} # end if
+					} # end foreach job
+					if ( ! $found ) {
+# Must be on another press.
+						my $Job = new openprint::ScheduledJob( $row_id );
+						$Job->equipment_id( $Shift->equipment_id() );
+						push @final_order, $Job;
 					} # end if
-				} # end foreach job
-				if ( ! $found ) {
-					# Must be on another press.
+				} # end foreach row_id
+				reorder_jobs( @final_order, @jobs );
+			} else { # has starttime
+# Pending or Approved
+				my $was_scheduled = 0;
+				foreach my $row_id ( @order ) {
 					my $Job = new openprint::ScheduledJob( $row_id );
-					$Job->equipment_id( $Shift->equipment_id() );
-					push @final_order, $Job;
-				} # end if
-			} # end foreach row_id
-			reorder_jobs( @final_order, @jobs );
-		} else { # has starttime
-			# Pending or Approved
-			my $was_scheduled = 0;
-			foreach my $row_id ( @order ) {
-				my $Job = new openprint::ScheduledJob( $row_id );
-				$was_scheduled = 1 if $$Job{'starttime'};
-				$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()}) if $Job->starttime() or ( $Job->equipment_id() != $Shift->equipment_id() );
-			} # end foreach row_id
-			# If it was a formerly scheduled job, then shuffle
-			reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
-		} # end if	has starttime
-		sql::end_transaction( $dbh, $ac );
+					$was_scheduled = 1 if $$Job{'starttime'};
+					$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()}) if $Job->starttime() or ( $Job->equipment_id() != $Shift->equipment_id() );
+				} # end foreach row_id
+# If it was a formerly scheduled job, then shuffle
+				reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
+			} # end if	has starttime
+			sql::end_transaction( $dbh, $ac );
+		} # end if
 
 	} # end if services
 
