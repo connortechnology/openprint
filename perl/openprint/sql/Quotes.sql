@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS Quotes;
 
 CREATE TABLE Quotes (
 	id				SERIAL NOT NULL,
-	strSessionID		varchar(10) NOT NULL,
 	CompanyIndex		INTEGER NOT NULL, FOREIGN KEY (CompanyIndex) REFERENCES Companies (id),
 	UserIndex			INTEGER NOT NULL, FOREIGN KEY (UserIndex) REFERENCES Users (id),
     dblModification1	NUMERIC(20,2),
@@ -20,6 +19,7 @@ CREATE TABLE Quotes (
 	strAdministratorName		TEXT,
 	strCurrencyName		TEXT,
 	strCurrencySymbol	TEXT,
+	currency_id			INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
 	PRIMARY KEY (id)
 );
 

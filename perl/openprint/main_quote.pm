@@ -89,7 +89,6 @@ sub history {
 sub history_details {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-
 	my $quote_id = $param{'quote_id'};
 	$quote_id =~ s/\D//g;
 	$$variable{'Quote'} = new openprint::Quote( $quote_id );
@@ -164,7 +163,14 @@ sub information {
 
 	my $quote_id;
 	if ( $param{'btnFunction'} eq 'New' ) {
-		$quote_id = create_quote();
+		my $Quote = new openprint::Quote();
+		$variable{'error'} .= $Quote->save({
+			'user_id'	=>	$session{'user_id'},
+			'company_id'=>	$session{'company_id'},
+			'status'	=>	'Incomplete',
+			'Currency'	=>	openprint::Currency::get_current(),
+		});
+		$quote_id = $Quote->id();
 	} elsif ( $param{'btnFunction'} eq 'Process Quote' ) {
 		$quote_id = add_project_to_quote( $r, $log, $dbh, $variable );
 	} elsif ( ($param{'btnFunction'} eq 'Process New Quote') and $param{'quote_id'} ) {
@@ -332,6 +338,9 @@ sub _project_template_view {
 	$variable{'Project'} = $variable{'QuotedProject'}->Project();
 	$variable{'ProjectIndex'} = $variable{'Project'}->id();
 } # end sub _project_template
+
+sub _quote_list {
+} # end sub _quote_list
 
 1;
 

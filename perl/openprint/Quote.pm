@@ -160,7 +160,8 @@ sub load {
 } # end sub load
 
 sub save {
-	my $self = shift;
+	my ( $self, $params ) = @_;
+	$self->set( $params );
 	my %sql;
 	foreach my $key ( keys %fields ) {
 		$sql{$fields{$key}} = ( defined $$self{$key} ? $$self{$key} : $defaults{$key} );

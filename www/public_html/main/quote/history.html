@@ -24,9 +24,9 @@
 		new Ajax.Updater('QuoteList','/main/quote/_quote_list.html', {method:'get',parameters:form.serialize(true)});
 	} // end function load_quotes
 </script>	 
-<? if ( $openprint::session{'user_id'} == 0 ) ?>
+<? if ( $session{'user_id'} == 0 ) ?>
 Only logged in customers have a quote history. 
-<? else ( $openprint::session{'user_id'} == 0 ) ?>
+<? else ( $session{'user_id'} == 0 ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
 
 <form name="f1" method="post" action="history.html">
@@ -34,7 +34,7 @@ Only logged in customers have a quote history.
 	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 		<p>
 			<label for="QuoteID">Quote ID:</label>
-			<input type="text" size="10" id="QuoteID" name="QuoteID" value="<? echo ( $openprint::param{'QuoteID'} ) ?>" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
+			<input type="text" size="10" id="QuoteID" name="QuoteID" value="<? echo ( $param{'QuoteID'} ) ?>" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
 		</p>
 		<p>
 			<label for="QuotedFor">Quoted For:</label>
@@ -43,16 +43,16 @@ Only logged in customers have a quote history.
 <? echo (
 	$_ = "SELECT DISTINCT tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName, tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ".
         "FROM tbl_Quotes, tbl_Quote_Users_For ".
-        "WHERE tbl_Quotes.CompanyIndex = $openprint::session{'company_id'} ".
-        " AND tbl_Quotes.strStatus != 'Incomplete' AND tbl_Quote_Users_For.QuoteIndex = tbl_Quotes.Index ".
+        "WHERE tbl_Quotes.CompanyIndex = $session{'company_id'} ".
+        " AND tbl_Quotes.strStatus != 'Incomplete' AND tbl_Quote_Users_For.Quote_Id = tbl_Quotes.Index ".
         " ORDER BY tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ";
-    ssi::fill_drop_down( $log, $dbh, $_, $openprint::session{'/main/quote/history.html?QuotedFor'} );
+    ssi::fill_drop_down( $log, $dbh, $_, $session{'/main/quote/history.html?QuotedFor'} );
 ) ?>
 			</select>
 		</p>
 <? eval (
-	if ( ( ! $openprint::session{'/main/quote/history.html?ddmStartYear'} ) or ( $openprint::session{'/main/quote/history.html?lastupdated'} < time-3600 ) ) {
-		@openprint::session{
+	if ( ( ! $session{'/main/quote/history.html?ddmStartYear'} ) or ( $session{'/main/quote/history.html?lastupdated'} < time-3600 ) ) {
+		@session{
 			'/main/quote/history.html?ddmStartYear',
 			'/main/quote/history.html?ddmStartMonth',
 			'/main/quote/history.html?ddmStartDay',
@@ -63,9 +63,9 @@ Only logged in customers have a quote history.
     } # end if
 
 	@$variable{'StartYears','StartMonths','StartDays','StartDate'} = ssi::get_dates( $log, $dbh,
-		@openprint::session{'/main/quote/history.html?ddmStartYear','/main/quote/history.html?ddmStartMonth','/main/quote/history.html?ddmStartDay'} );
+		@session{'/main/quote/history.html?ddmStartYear','/main/quote/history.html?ddmStartMonth','/main/quote/history.html?ddmStartDay'} );
 	@$variable{'EndYears','EndMonths','EndDays','EndDate'} = ssi::get_dates( $log, $dbh, 
-		@openprint::session{'/main/quote/history.html?ddmEndYear','/main/quote/history.html?ddmEndMonth','/main/quote/history.html?ddmEndDay'} );
+		@session{'/main/quote/history.html?ddmEndYear','/main/quote/history.html?ddmEndMonth','/main/quote/history.html?ddmEndDay'} );
 ) ?>
 
 		<p>
@@ -82,8 +82,15 @@ Only logged in customers have a quote history.
 				<select name="ddmEndYear" onchange="setDaysDropDown(this.value, this.form.ddmEndMonth.value, this.form.ddmEndDay, this.form.ddmEndDay.value);load_quotes( this.form );"><?EndYears?></select>
 			</span>
 		</p>
+		<p class="buttons">
+				<? echo ( join( '',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', '/main/quote/information.html?btnFunction=New', 'Create New' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				); ) ?>
+		</p>
 	</fieldset>
    </div>
 </form>
 <div id="QuoteList"><!--#include virtual="_quote_list.html"--></div>
-<? endif ( $openprint::session{'user_id'} == 0 ) ?>
+<? endif ( $session{'user_id'} == 0 ) ?>

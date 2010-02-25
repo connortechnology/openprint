@@ -2215,7 +2215,23 @@ if ( sets::isin( 'tbl_quotes', \@tables ) ) {
 	$dbh->do('CREATE SEQUENCE quotes_id_seq');
 	$dbh->do("SELECT setval('quotes_id_seq', (select MAX(id) FROM Quotes) )");
 	$dbh->do("ALTER TABLE Quotes alter column id set default nextval('quotes_id_seq')");
+	push @tables, 'quotes';
 } # end if
+
+if ( sets::isin( 'quotes', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM quotes LIMIT 1', {} );
+	if ( $data ) {
+		$dbh->do('ALTER TABLE quotes DROP column strsessionid') if ( exists $$data{'strsessionid'} );
+		if ( ! exists $$data{'currency_id'} ) {
+			$dbh->do('ALTER TABLE quotes add currency_id INTEGER');
+			$dbh->do('ALTER TABLE quotes add FOREIGN KEY (currency_id) REFERENCES Currencies (id)');
+			$dbh->do('UPDATE TABLE Quotes set currency_id = (SELECT id FROM currencies where name=strcurrencyname)');
+		} # end if
+		$dbh->do('ALTER TABLE quotes DROP column strcurrencyname') if ( exists $$data{'strcurrencyname'} );
+		$dbh->do('ALTER TABLE quotes DROP column strcurrencysymbol') if ( exists $$data{'strcurrencysymbol'} );
+	} # end if
+} # end if
+
 $dbh->commit();
 if ( ! sets::isin('articles',\@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Articles.sql});

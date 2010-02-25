@@ -4,7 +4,7 @@
 DROP TABLE IF EXISTS Shifts;
 CREATE TABLE Shifts (
 	id				SERIAL,
-	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (id),
+	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (lngindex),
 	starttime		timestamp with time zone NOT NULL,
 	endtime			timestamp with time zone NOT NULL,
 	operator_id		INTEGER, FOREIGN KEY (operator_id) REFERENCES Users (id),
