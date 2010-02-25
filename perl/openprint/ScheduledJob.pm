@@ -207,7 +207,6 @@ sub Equipment {
 sub comment {
 	my ( $self, $comment ) = @_;
 
-
 	# We check for comments in the services, if we find one, we use it, otherwise we generate from the first.
 	if ( @_ > 1 ) {
 		$$self{'comment'} = $comment;
@@ -228,7 +227,7 @@ sub comment {
 		} # end if
 	} # end if
 
-	if ( ( ! $$self{'comment'} ) and $$self{'service_id'} and @{$$self{'service_id'}} ) {
+	if ( ( ! $$self{'comment'} ) and $$self{'project_id'} and $$self{'service_id'} and @{$$self{'service_id'}} ) {
 		my $Project = new openprint::Project( $$self{'project_id'} );
 	#if ( $$self{'service_id'} and @{$$self{'service_id'}} ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
@@ -236,20 +235,24 @@ sub comment {
 		$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
 		#$comment .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
 		my $Equipment = $self->Equipment();
-			my $Stock;
-			if ( my @PA = openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
-				$Stock = $PA[0]->Paper();
-			} else {
-			} # end if
+		my $Stock;
+		if ( my @PA = openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
+			$Stock = $PA[0]->Paper();
+		} else {
+		} # end if
 		if ( $Equipment->smartscheduling() ) {
-		if ( $Stock ) {
-			$comment .= ' on ' . $Stock->to_string();
+			if ( $Stock ) {
+				$comment .= ' on ' . $Stock->to_string();
 			} else {
 				$comment .= ' stock not allocated.';
 			} # end if
 		} else {
 			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
-			$comment .= ' on ' . $Stock->width() . 'x' . $Stock->height();
+			if ( $Stock->type() eq 'Roll' ) {
+				$comment .= ' on ' . $Stock->width().'&quot; Roll';
+			} else {
+				$comment .= ' on ' . $Stock->width() . 'x' . $Stock->height();
+			} # end if
 		} # end if
 
 		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
@@ -266,12 +269,12 @@ sub comment {
 				} # end if
 			} # end if
 		} else {
-			#$comment .= 'This press does not fold';
+#$comment .= 'This press does not fold';
 		} # end if
-		# Store it.
-		#foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			#openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'txtEmployeeComments', $comment );
-		#} # end foreach sig_id	
+# Store it.
+#foreach my $sig_id ( @{$$self{'service_id'}} ) {
+#openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'txtEmployeeComments', $comment );
+#} # end foreach sig_id	
 		return $comment;
 	} # end if has service_ids
 
@@ -396,7 +399,7 @@ sub get_li {
 		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
-		$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
+			$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
 		} # end if
 		if ( $$self{'operator_id'} == $session{'user_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", '', 'Start' );
@@ -420,15 +423,19 @@ sub operator_id {
 
 	if ( defined $operator_id ) {
 		$$self{'operator_id'} = $operator_id;
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngProjectIndex=? AND lngServiceIndex=?', $$self{'project_id'}, $sig_id], 'operator_id', $operator_id ? $operator_id : undef );
-		} # end foreach
+		if ( $$self{'project_id'} ) {
+			foreach my $sig_id ( @{$$self{'service_id'}} ) {
+				sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngProjectIndex=? AND lngServiceIndex=?', $$self{'project_id'}, $sig_id], 'operator_id', $operator_id ? $operator_id : undef );
+			} # end foreach
+		} # end if
 	} # end if
 	if ( ! $$self{'operator_id'} ) {
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			@$self{'operator_id'} = sql::execute( undef, undef, 'SELECT operator_id FROM tbl_Project_COntents WHERE lngProjectIndex=? AND lngServiceIndex=?', $$self{'project_id'}, $sig_id );
-			last;
-		} # end foreach
+		if ( $$self{'project_id'} ) {
+			foreach my $sig_id ( @{$$self{'service_id'}} ) {
+				@$self{'operator_id'} = sql::execute( undef, undef, 'SELECT operator_id FROM tbl_Project_COntents WHERE lngProjectIndex=? AND lngServiceIndex=?', $$self{'project_id'}, $sig_id );
+				last;
+			} # end foreach
+		} # end if
 	} # end if
 	return $$self{'operator_id'};
 } # end sub operator_id
@@ -436,15 +443,17 @@ sub operator_id {
 sub impressions {
 	my $self = shift;
 
-	my $Project = $self->Project();
 	my $impressions = 0;
 
 	if ( @_ ) {
 		$impressions = shift;
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', int($impressions/@{$$self{'service_id'}}) );
-		} # end foreach sig
-	} else {
+		if ( $$self{'project_id'} ) {
+			foreach my $sig_id ( @{$$self{'service_id'}} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', int($impressions/@{$$self{'service_id'}}) );
+			} # end foreach sig
+		} # end if
+	} elsif ( $$self{'project_id'} ) {
+		my $Project = $self->Project();
 		foreach my $sig_id ( @{$$self{'service_id'}} ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			if ( ! $$sig_specs{'ImpressionQuantity'} ) {
@@ -464,14 +473,15 @@ sub Project {
 sub runtime {
 	my ( $self ) = @_;
 
-	my $seconds = 0;
 	if ( ! $$self{'runtime'} ) {
-		my $Project = $self->Project();
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			$seconds += openprint::service::get_runtime( $Project, $sig_id, $self->Equipment(), $self->impressions()/@{$$self{'service_id'}}, $self->speed() );
-		} # end foreach
+		my $seconds = 0;
+		if ( $$self{'project_id'} ) {
+			my $Project = $self->Project();
+			foreach my $sig_id ( @{$$self{'service_id'}} ) {
+				$seconds += openprint::service::get_runtime( $Project, $sig_id, $self->Equipment(), $self->impressions()/@{$$self{'service_id'}}, $self->speed() );
+			} # end foreach
+		} # end if
 		$$self{'runtime'} = misc::seconds2hms( $seconds );
-$log->debug("ScheduledJob::runtime seconds: $seconds => " . $$self{'runtime'} );
 	} # end if
 	return $$self{'runtime'};
 } # end sub runtime
@@ -479,12 +489,15 @@ $log->debug("ScheduledJob::runtime seconds: $seconds => " . $$self{'runtime'} );
 sub forms {
 	my ( $self ) = @_;
 	my $forms = 0;
-	foreach my $sig_id ( @{$$self{'service_id'}} ) {
-		my $sig_specs = openprint::service::get_specs_ref( $self->Project(), $sig_id );
-		if ( $$sig_specs{'SignatureQuantity'} ) {
-			$forms += $$sig_specs{'SignatureQuantity'};
-		} # end if
-	} # end foreach
+	if ( $$self{'project_id'} ) {
+		my $Project = $self->Project();
+		foreach my $sig_id ( @{$$self{'service_id'}} ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			if ( $$sig_specs{'SignatureQuantity'} ) {
+				$forms += $$sig_specs{'SignatureQuantity'};
+			} # end if
+		} # end foreach
+	} # end if
 	$forms = @{$$self{'service_id'}} if $$self{'service_id'} and ! $forms;
 
 	return $forms;
@@ -543,9 +556,11 @@ sub start {
 	my ( $self ) = @_;
 	my $e = $self->save({'starttime_seconds'=>time,'locked'=>1});
 	if ( ! $e ) {
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			openprint::service::status( $$self{'project_id'}, $sig_id, 'In Production' );
-		} # end foreach sig_id
+		if ( $$self{'project_id'} ) {
+			foreach my $sig_id ( @{$$self{'service_id'}} ) {
+				openprint::service::status( $$self{'project_id'}, $sig_id, 'In Production' );
+			} # end foreach sig_id
+		} # end if
 	} # end if
 	return $e;
 } # end sub start
@@ -557,25 +572,29 @@ sub stop {
 $log->debug("Stopping job: new runtime: $new_runtime starttime $$self{'starttime'} seconds: " . $self->starttime_seconds() . " now: " . time . " elapsed: " . ( time - $self->starttime_seconds() ) );
 	my $e = $self->save({'runtime_seconds'=>$new_runtime,'locked'=>0});
 	if ( ! $e ) {
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			openprint::service::status( $$self{'project_id'}, $sig_id, 'Ordered' );
-		} # end foreach sig_id
+		if ( $$self{'project_id'} ) {
+			foreach my $sig_id ( @{$$self{'service_id'}} ) {
+				openprint::service::status( $$self{'project_id'}, $sig_id, 'Ordered' );
+			} # end foreach sig_id
+		} # end if
 	} # end if
 	return $e;
 } # end sub stop
 
 sub status {
 	my ( $self ) = @_;
+	if ( $$self{'project_id'} ) {
 	foreach my $sig_id ( @{$$self{'service_id'}} ) {
 		return openprint::service::status( $$self{'project_id'}, $sig_id );
 	} # end foreach sig_id
+	} # end if
 } # end sub status
 
 sub bump {
 	my ( $self, $equipment_id ) = @_;
 	push @{$variable{'changed'}}, $self->Shift()->ul_id();
 	my $Project = $self->Project();
-	$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
+	$Project->save({'due_date'=>$Project->get_due_date()}) if $Project->id() and ! $Project->due_date();
 
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
