@@ -2428,7 +2428,7 @@ if ( ! sets::isin('log',\@tables ) ) {
 		} # end if
 	} # end if
 } # end if
-if ( ! openprint::Host::find_one() ) {
+if ( 0 and ! openprint::Host::find_one() ) {
 	foreach my $Log ( openprint::Log::find('host_id'=>undef) ) {
 		my $data = $openprint::dbh->selectrow_hashref( "SELECT * FROM Log WHERE id=$$Log{id}", {} );
 		next if ! $$data{'ip_address'};
