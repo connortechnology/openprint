@@ -2025,6 +2025,7 @@ sub breakdown {
 	$breakdown .= sprintf( 'Blank Plates: %d plates * $%.2f per plate = $%.2f<br/>', @$plate_costs{'Blank Plates','Blank Price'}, $$plate_costs{'Blank Price'} * $$plate_costs{'Blank Plates'}) if defined $$plate_costs{'Blank Plates'};
 
 	$breakdown .= sprintf( 'Overs: Base:%s Setup:%s Run:%s FM:%s Additional Plate:%s Bindery: %d (FoldMakeReady: %d FoldRun: %d', @$stock_qty{'Net Sheet Count','Setup Overs','Run Overs','FM Overs','Additional Plate Overs', 'BinderyOvers', 'FoldingMakeReadyOvers','FoldingRunOvers'} );
+	$breakdown .= ' Cutting: ' . $$stock_qty{'CuttingOvers'} if $$stock_qty{'CuttingOvers'};
 	$breakdown .= ' Scoring: ' . $$stock_qty{'ScoringOvers'} if $$stock_qty{'ScoringOvers'};
 	$breakdown .= ' DieCutting: ' . $$stock_qty{'DieCuttingOvers'} if $$stock_qty{'DieCuttingOvers'};
 	$breakdown .= ' UV Coating: ' . $$stock_qty{'UVOvers'} if $$stock_qty{'UVOvers'};
@@ -3060,9 +3061,9 @@ sub calc_price {
 	my %scoring_results;
 	if ( $$project{'HasScoring'} and $$project{'NeedScoring'} ) {
 		%scoring_results = openprint::Estimating::Scoring::signature_calc( $Project, @$project{'HasScoring','ScoringSpecs'}, $service_index, $specs, $qty_index, $Imposition );
-foreach my $k ( keys %scoring_results ) {
-$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
-}
+#foreach my $k ( keys %scoring_results ) {
+#$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
+#}
 		if ( $scoring_results{'Status'} eq 'uncalculated' ) {
 			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{'alert'} $$project{'ScoringSpecs'}{alert} " . $$project{'ScoringSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
@@ -3107,6 +3108,33 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 			$price{'Comparison Cost'} += $uv_results{'Total'};
 		} # end if
 	} # end if UVCoating
+# Now add in cutting costs to the comparison
+	if ( $$project{'HasCutting'} ) {
+		if ( ($Paper->type() ne 'Roll') and ($Paper->start_width() != $Paper->width() or $Paper->start_height() != $Paper->height() ) ) {
+#my $time = gettimeofday();
+			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
+			$price{'Cutting Breakdown'} .= "Stock Cutting Price: \$$cutting_results{'Price'} $cutting_results{'alert'}<br/>";
+			$price{'Comparison Cost'} += $cutting_results{'Price'};
+#$openprint::log->debug("Elapsed stock cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+		} # end if
+
+#my $time = gettimeofday();
+		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
+foreach my $k ( keys %cutting_results ) {
+$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
+}
+		
+#$openprint::log->debug("Elapsed cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+		if ( $cutting_results{'Status'} eq 'uncalculated' ) {
+			$price{'Cutting Breakdown'} .= "Cutting error: $cutting_results{'alert'}<br/>";
+		} else {
+			$price{'Cutting Breakdown'} .= sprintf('Cutting Price: $%.2f on %s<br/>',$cutting_results{'Price'}, $cutting_results{'Equipment'}->name() );
+#$price{'Cutting Breakdown'} .= $$project{'CuttingSpecs'}{'hdnBreakdown'.$qty_index}.'<br/>';
+			$price{'Comparison Cost'} += $cutting_results{'Price'};
+		} # end if
+		$price{'Cutting Overs'} = $cutting_results{'Overs'};
+
+	} # end if
 
 	$price{'Run Speed'} = $run_speed;
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
@@ -3155,7 +3183,8 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 	} # end if
 	$price{'Overs Rate'} = $over_rate;
 
-	my $impressions = $base_impressions + $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'} + $scoring_results{'Overs'} + $uv_results{'Overs'} + $diecutting_results{'Overs'};
+	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'}, $price{'Cutting Overs'} );
+	my $impressions = $base_impressions + $bindery_overs;
 	if ( $Press->specification('Overs') ne 'All' ) {
 		$impressions = ceil( $impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
 	} else {
@@ -3469,7 +3498,7 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 	} else {
 		$run_overs = ceil( $base_impressions * $over_rate );
 	} # end if
-	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'} );
+	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'}, $price{'Cutting Overs'} );
 	$total_overs += $bindery_overs;
 
 	if ( $Press->specification('Overs') ne 'All' ) {
@@ -3508,6 +3537,7 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 			'DieCuttingOvers'			=>	$diecutting_results{'Overs'},
 			'UVOvers'					=>	$uv_results{'Overs'},
 			'BinderyOvers'				=>	$bindery_overs,
+			'CuttingOvers'				=>	$price{'Cutting Overs'},
 			);
 	$price{'Stock Quantity'} = \%sheet_qty;
 	$price{'Gross Sheet Count'} = $sheet_qty{'Gross Sheet Count'};
@@ -3641,29 +3671,6 @@ $openprint::log->debug("Scoring: $k => $scoring_results{$k}");
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	$price{'Total Cost'} = $run_cost + $setup_cost + $price{'Ink Price'};
 
-# Now add in cutting costs to the comparison
-
-	if ( $$project{'HasCutting'} ) {
-		if ( ($Paper->type() ne 'Roll') and ($Paper->start_width() != $Paper->width() or $Paper->start_height() != $Paper->height() ) ) {
-#my $time = gettimeofday();
-			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
-			$price{'Cutting Breakdown'} .= "Stock Cutting Price: $cutting_results{'Price'} $cutting_results{'alert'}<br/>";
-			$price{'Comparison Cost'} += $cutting_results{'Price'};
-#$openprint::log->debug("Elapsed stock cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
-		} # end if
-
-#my $time = gettimeofday();
-		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
-#$openprint::log->debug("Elapsed cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
-		if ( $cutting_results{'Status'} eq 'uncalculated' ) {
-			$price{'Cutting Breakdown'} .= "Cutting error: $cutting_results{'alert'}<br/>";
-		} else {
-			$price{'Cutting Breakdown'} .= "Cutting Price: $cutting_results{'Price'}<br/>";
-#$price{'Cutting Breakdown'} .= $$project{'CuttingSpecs'}{'hdnBreakdown'.$qty_index}.'<br/>';
-			$price{'Comparison Cost'} += $cutting_results{'Price'};
-		} # end if
-
-	} # end if
 
 	$price{'complete'} = 1;
 	return \%price;

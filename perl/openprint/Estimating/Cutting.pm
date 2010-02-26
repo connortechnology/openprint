@@ -668,6 +668,12 @@ sub signature_calc {
 		my $price;
 		my $sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 		$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
+		if ( my $Spec = $Equipment->Specification('Cutting Overs') ) {
+			if ( $$Spec{'units'} eq 'Sheets' ) {
+				$sheets += $$Spec{'value'};
+			} # end if
+		} # end if
+
 		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
 		$results{'Breakdown'} .= '# of cuts: ' . $cuts . ' => ' .($cuts * $sheets) . '<br/>';
 
@@ -767,6 +773,11 @@ sub signature_calc {
 		$results{'Price'}		= $bestPrice;
 		$results{'MPrice'}		= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
 		$results{'Equipment'}	= $bestEquipment;
+		if ( my $Spec = $bestEquipment->Specification('Cutting Overs') ) {
+			if ( $$Spec{'units'} eq 'Sheets' ) {
+				$results{'Overs'} = $$Spec{'value'};
+			} # end if
+		} # end if
 	return %results;
 } # end sub signature_calc
 
