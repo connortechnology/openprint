@@ -66,11 +66,14 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for illegal user root from ([\._a-zA-Z0-9\-]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: 1 more authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user attack from ([0-9.]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \(100\) exceeded, connection refused$',
 );
 
 my %host_counts;
 my @whitelist = sql::execute( undef, undef, 'SELECT ip FROM whitelist' );
+my $ac = sql::start_transaction( $dbh );
+$dbh->do( 'LOCK TABLE blacklist IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 foreach my $log_file ( @log_files ) {
 	if ( open( FH, "<$log_file" ) ) {
@@ -126,8 +129,9 @@ foreach my $ip ( sort keys %host_counts ) {
 			print $e . "\n";
 		} # end if
 	} # end if
-	print "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}\n";
+	#print "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}\n";
 } # end foreach ip
+sql::end_transaction( $dbh, $ac );
 
 if ( $opts->{'blacklist'} ) {
 	if ( ! open( FH, '>'.$opts->{'blacklist'} ) ) {
