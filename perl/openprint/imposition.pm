@@ -270,9 +270,13 @@ sub calc_setup_object {
 	if ( sets::isin( $$specs{'Binding'}, ['SaddleStitching','LoopStitching'] ) ) {
 		$bindery_gutters = $Press->specification('StitchingGutter');
 		$bindery_bleed = $Press->specification('StitchingBleed');
+		$setup1->bleed_size( $bindery_bleed );
+		$setup2->bleed_size( $bindery_bleed );
 	} elsif ( sets::isin( $$specs{'Binding'}, ['PerfectBound','SpinePaste'] ) ) {
 		$bindery_gutters = $Press->specification('PerfectBindGutter');
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
+		$setup1->bleed_size( $bindery_bleed );
+		$setup2->bleed_size( $bindery_bleed );
 	} # end if
 	my @bleed_locations =  split(',', $$specs{'BleedLocations'} );
 	my $bleed_width  = 2*$bindery_bleed;
