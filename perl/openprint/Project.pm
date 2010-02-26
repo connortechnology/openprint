@@ -47,7 +47,7 @@ sub destroy {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM paper_allocations WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_files WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Order_Contents WHERE lngprojectindex=?}, $$self{'id'} );
-	foreach my $quote_id ( sql::execute( undef, undef, q{SELECT QuoteIndex FROM tbl_Quote_Details WHERE projectindex=?}, $$self{'id'} ) ) {
+	foreach my $quote_id ( sql::execute( undef, undef, q{SELECT quote_id FROM tbl_Quote_Details WHERE project_id=?}, $$self{'id'} ) ) {
 		my $Quote = new openprint::Quote( $quote_id );
 		$Quote->add_log('Deleted Project ' . $$self{'id'} );
 	} # end foreach
