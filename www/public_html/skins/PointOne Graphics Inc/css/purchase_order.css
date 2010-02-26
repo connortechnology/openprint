@@ -39,9 +39,19 @@
 .PO table td input.RollQTY {
 	width: 60px;
 } 
-.PO table td input.StockCost {
-	width: 40px;
-} 
+.PO table td.price {
+text-align: right;
+}
+.PO table td.price input {
+	text-align: right;
+	width: 65px;
+}
+.PO table td.total {
+text-align: right;
+}
+.PO table td.total input {
+	text-align: right;
+}
 .PO table td input.SheetQTY {
 	width: 60px;
 } 
@@ -149,7 +159,7 @@ p:after {
 }
 /* Hides from IE-mac \*/
 * html p {height: 1%;}
-* p {display: block;}
+p {display: block;}
 /* End hide from IE-mac */
 
 label {
