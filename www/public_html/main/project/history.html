@@ -29,7 +29,7 @@
 	}
 	function load_projects( form ) {
 		$('ProjectList').innerHTML = 'Please wait...';
-		new Ajax.Updater('ProjectList','/main/project/_project_list.html', {method:'get',parameters:Form.serialize(form)});
+		new Ajax.Updater('ProjectList','/main/project/_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
 -->
 </script>	 
@@ -64,56 +64,30 @@
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(name)') ], $session{'/main/project/history.html?type_id'} ); ) ?>
 				</select>
 			</p>
-<? eval (
-	if ( ( ! $session{'/main/project/history.html?CreatedStartYear'} ) or ( time - $session{'/main/project/history.html?lastupdated'} > 3600 ) ) {
-		@session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 );
-		@session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} = Date::Calc::Today();
-	} else {
-		@session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} = ssi::fix_date( @session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} );
-		@session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} = ssi::fix_date( @session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} );
-	} # end if
-	if ( ( ! $session{'/main/project/history.html?UpdatedStartYear'} ) or ( time - $session{'/main/project/history.html?lastupdated'} > 3600 ) ) {
-		@session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -14 );
-		@session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} = Date::Calc::Today();
-	} else {
-		@session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} = ssi::fix_date( @session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} );
-		@session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} = ssi::fix_date( @session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} );
-	} # end if
-
-    @$variable{'CreatedStartYears','CreatedStartMonths','CreatedStartDays'} = ssi::get_dates( $log, $dbh, @session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} );
-	@$variable{'CreatedEndYears','CreatedEndMonths','CreatedEndDays'} = ssi::get_dates( $log, $dbh, @session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} );
-
-    @$variable{'UpdatedStartYears','UpdatedStartMonths','UpdatedStartDays'} = ssi::get_dates( $log, $dbh, @session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} );
-	@$variable{'UpdatedEndYears','UpdatedEndMonths','UpdatedEndDays'} = ssi::get_dates( $log, $dbh, @session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} );
-) ?>
 			</div>
 			<div class="rightColumn">
+<? eval (
+	ssi::setup_date_select( '/main/project/history.html', 'created_on', -180, 0 );
+	ssi::setup_date_select( '/main/project/history.html', 'updated_on', -14, 0 );
+) ?>
 			<p>
 				<label>Creation Date:</label>
 				<span class="DateSelector">
-					<select name="CreatedStartDay" onchange="load_projects(this.form);"><?CreatedStartDays?></select>
-					<select name="CreatedStartMonth" onchange="setDaysDropDown(document.f1.CreatedStartYear.value,this.value,document.f1.CreatedStartDay,document.f1.CreatedStartDay.value); load_projects(this.form);"><?CreatedStartMonths?></select>
-					<select name="CreatedStartYear" onchange="setDaysDropDown(this.value,document.f1.CreatedStartMonth.value,document.f1.CreatedStartDay,document.f1.CreatedStartDay.value);load_projects(this.form);"><?CreatedStartYears?></select>
+<? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
 					to 
 				</span>
 				<span class="DateSelector">
-					<select name="CreatedEndDay" onchange="load_projects(this.form);"><?CreatedEndDays?></select>
-					<select name="CreatedEndMonth" onchange="setDaysDropDown(this.form.CreatedEndYear.value,this.value,this.form.CreatedEndDay,this.form.CreatedEndDay.value);load_projects(this.form);"><?CreatedEndMonths?></select>
-					<select name="CreatedEndYear" onchange="setDaysDropDown(this.value,this.form.CreatedEndMonth.value,this.form.CreatedEndDay,this.form.CreatedEndDay.value);load_projects(this.form);"><?CreatedEndYears?></select>
+<? echo ( ssi::date_select_session( '/main/project/history.html', 'created_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
 				</span>
 			</p>
 			<p>
 				<label>Last Updated:</label>
 				<span class="DateSelector">
-					<select name="UpdatedStartDay" onchange="load_projects(this.form);"><?UpdatedStartDays?></select>
-					<select name="UpdatedStartMonth" onchange="setDaysDropDown(this.form.UpdatedStartYear.value,this.value,this.form.UpdatedStartDay,this.form.UpdatedStartDay.value); load_projects(this.form);"><?UpdatedStartMonths?></select>
-					<select name="UpdatedStartYear" onchange="setDaysDropDown(this.value,this.form.UpdatedStartMonth.value,this.form.UpdatedStartDay,this.form.UpdatedStartDay.value);load_projects(this.form);"><?UpdatedStartYears?></select>
+<? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_start', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
 					to 
 				</span>
 				<span class="DateSelector">
-					<select name="UpdatedEndDay" onchange="load_projects(this.form);"><?UpdatedEndDays?></select>
-					<select name="UpdatedEndMonth" onchange="setDaysDropDown(this.form.UpdatedEndYear.value,this.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);load_projects(this.form);"><?UpdatedEndMonths?></select>
-					<select name="UpdatedEndYear" onchange="setDaysDropDown(this.value,this.form.UpdatedEndMonth.value,this.form.UpdatedEndDay,this.form.UpdatedEndDay.value);load_projects(this.form);"><?UpdatedEndYears?></select>
+<? echo ( ssi::date_select_session( '/main/project/history.html', 'updated_on_end', { 'onchange'=>'load_projects(this.form);' } ); ) ?>
 				</span>
 			</p>
 <? if ( $session{'user_type'} eq 'A' ) ?>
@@ -130,7 +104,7 @@
 		</fieldset>
 	</div>
 	</div>
-		<div id="ProjectList"><!--#include virtual="_project_list.html"--></div>
+		<div id="ProjectList"><!--#include virtual="_history.html"--></div>
 	</form>
 <? else ( $session{'user_id'} ) ?>
 	Only logged in customers have a project history.

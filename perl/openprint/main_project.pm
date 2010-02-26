@@ -14,7 +14,7 @@ require openprint::Project;
 require openprint::print_project;
 require openprint::service;
 
-sub sign-off {
+sub sign_off {
     require Authen::Captcha;
     if ( $param{'btnFunction'} eq 'Approve Project' ) {
         my $Captcha = new Authen::Captcha('data_folder' => '/tmp', 'output_folder' => $config{'SkinPath'}.'/images/captcha');
@@ -39,7 +39,35 @@ sub sign-off {
     } # end if
     openprint::project::view( $log, $dbh, \%variable, $param{'ProjectIndex') };
     $variable{'ProjectIndex'} = $param{'ProjectIndex'};
-} # end sub sign-off
+} # end sub sign_off
+
+sub history {
+
+	foreach my $key ( keys %param ) {
+		if ( $key =~ /chkDelete(\d*)/ ) {
+			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, $variable, $1 );
+		} elsif ( $key eq 'btnFunction' and $r->param($key) eq 'Delete Project' ) {
+			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, $variable, $param{'ProjectIndex'} );
+		} # end if
+	} # end foreach
+	ssi::save_params( '/main/project/history.html', 
+			'ddmStatus',
+			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
+			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
+			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
+			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day', 
+			);
+} # end sub history_list 
+
+sub _history {
+	ssi::save_params( '/main/project/history.html', 
+			'ddmStatus',
+			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
+			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
+			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
+			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day', 
+			);
+} # end sub history_list 
 
 1;
 __END__
