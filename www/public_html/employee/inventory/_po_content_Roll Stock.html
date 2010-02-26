@@ -12,7 +12,7 @@
 		<select id="stocktype-%1$d" name="stocktype-%1$d" onchange="set_description('%1$d');">%6$s</select>
 					</td>}, $C->id(), $C->description(), $rows, undef, $name, ssi::make_drop_down( [ '', 'Normal','FSC', 'FSC','PEFC/SFI', 'PEFC/SFI' ], $type ), );
 	$html .= sprintf(q{<td><input type="text" name="docket-%1$d" id="docket-%1$d" value="%2$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { method: 'get', parameters: { docket: this.value, po_id: %3$d} });" onblur="$('similar_pos').innerHTML='';"/></td>}, $C->id(), $C->docket(), $C->po_id() );
-	$html .= sprintf(q{<td><input type="text" class="StockCost" name="price-%1$d" id="price-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}" style="text-align: right;"/>/100lb</td>}, $C->id(), $C->price() );
-	$html .= sprintf(q{<td><input type="text" name="total-%1$d" id="total-%1$d" value="%2$.2f" style="text-align: right;"/></td>}, $C->id(), $C->total() );
+	$html .= sprintf(q{<td class="price"><input type="text" class="StockCost" name="price-%1$d" id="price-%1$d" value="%2$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}" />/100lb</td>}, $C->id(), $C->price() );
+	$html .= sprintf(q{<td class="total"><input type="text" name="total-%1$d" id="total-%1$d" value="%2$.2f" /></td>}, $C->id(), $C->total() );
 	return $html;
 ) ?>
