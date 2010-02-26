@@ -87,6 +87,7 @@ if ( 1 ) {
 			next if $Project->order_id();
 			next if $Project->docket();
 			$Project->delete();
+			last if $dbh->errstr();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} # end if
@@ -118,6 +119,7 @@ if ( 1 ) {
 				next;
 			} # end if
 			$Project->delete();
+			last if $dbh->errstr();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} # end if
@@ -140,6 +142,7 @@ if ( 1 ) {
 				next;
 			} # end if
 			$Project->destroy();
+			last if $dbh->errstr();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} # end if Projects
