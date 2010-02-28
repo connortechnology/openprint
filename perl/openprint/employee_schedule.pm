@@ -64,6 +64,7 @@ sub drop_project {
 		next if ! $row_id;
 
 		my $Job = new openprint::ScheduledJob( $row_id );
+		next if ! $Job->id(); # due to coalescing, a job could be deleted
 
 		my %sql;
 		$sql{'operator_id'} = $operator_id if $operator_id != $Job->operator_id();
@@ -77,7 +78,8 @@ sub drop_project {
 			if ( $Job->project_id() ) {
 				my $Project = $Job->Project();
 				$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
+				my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); return $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled form' . ( @forms == 1 ? ' ' : 's ' ) . join(',',@forms).' to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
 			} # end if
 		} # end if
 
