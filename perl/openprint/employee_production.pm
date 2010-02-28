@@ -57,11 +57,16 @@ sub print_overview {
 sub press_schedule {
 
 	if ( $param{'btnFunction'} eq 'Reflow' ) {
-		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' );
-		if ( @Jobs ) {
-			reorder_jobs( @Jobs );
+		my $Equipment = new openprint::Equipment( $param{'Presses'} );
+		if ( $Equipment->smartscheduling() ) {
+			my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' );
+			if ( @Jobs ) {
+				reorder_jobs( @Jobs );
+			} else {
+				$variable{'error'} .= 'There are no jobs scheduled to reflow.';
+			} # end if
 		} else {
-			$variable{'error'} .= 'There are no jobs scheduled to reflow.';
+			$variable{'error'} .= 'Press does not support auto-scheduling.';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Add Docket' ) {
 		my $Job = new openprint::ScheduledJob();
@@ -83,8 +88,6 @@ sub press_schedule {
 			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
 			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
 			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', ++$signature_count );
-
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtEmployeeComments', $param{'Comment'} );
 			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureQuantity', $param{'forms'} );
 			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
 
@@ -133,8 +136,9 @@ sub press_schedule {
 	} elsif ( $param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $param{'schedule_id'} ) {
 			my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+			my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); return $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
 			if ( ( ! $Job->delete() ) and $$Job{'project_id'} ) {
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, 'Job removed from print schedule.' );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, 'Form'. (@forms != 1 ? 's' : '') . join(',',@forms). ' removed from print schedule.' );
 			} # end if
 		} else {
 			$variable{'error'} .= 'No job given to delete...';
