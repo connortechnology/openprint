@@ -136,7 +136,7 @@ sub press_schedule {
 	} elsif ( $param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $param{'schedule_id'} ) {
 			my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-			my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); return $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
+			my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
 			if ( ( ! $Job->delete() ) and $$Job{'project_id'} ) {
 				$Job->Project()->add_to_log( @session{'company_id','user_id'}, 'Form'. (@forms != 1 ? 's' : '') . join(',',@forms). ' removed from print schedule.' );
 			} # end if
