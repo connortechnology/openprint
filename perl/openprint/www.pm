@@ -416,6 +416,7 @@ $log->debug("logged in");
 		} # end if
 
 		if ( $second eq 'project' ) {
+			require openprint::main_project;
 			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
 				if ( ! $variable{'ServiceIndex'} ) {
 					$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
@@ -531,7 +532,8 @@ $openprint::log->debug("$1");
 			} # end if defined third
 
 			openprint::print_project::create_edit_display( $r, $log, $dbh, \%variable )		if $filename eq 'create_edit.html';
-			openprint::print_project::history_list( $r, $log, $dbh, \%variable )			if $filename eq 'history.html';
+			openprint::main_project::history()			if $filename eq 'history.html';
+			openprint::main_project::_history()			if $filename eq '_history.html';
 			openprint::print::view_services( $r, $log, $dbh, \%variable )					if $filename eq 'view.html';
 			openprint::print_project::view_pdfs( $r, $log, $dbh, \%variable )				if $filename eq 'proj_view_pdf.html';
 			openprint::print_project::summary( $r, $log, $dbh, \%variable )					if $filename eq 'summary.html';
