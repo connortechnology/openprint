@@ -12,8 +12,10 @@
 	<h2>
 <? echo (
 	my $html = '';
-	if ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines','Letterhead', 'Envelopes'] ) ) {
+	if ( sets::isin( $$variable{'ProjectType'}->name() , ['Brochures','Posters','Magazines','Letterhead'] ) ) {
 		$html .= 'Individual Run Specials';
+	} elsif ( sets::isin( $$variable{'ProjectType'}->name() , ['Envelopes'] ) ) {
+		$html .= 'Envelope Specials';
 	} elsif ( sets::isin( $$variable{'ProjectType'}->name() , ['BusinessCards'] ) ) {
 		$html .= 'Specials';
 	} else {
