@@ -126,6 +126,7 @@
 	<span class="<?Columns?>Columns">
 		<select name="ddmBleedSize<?QTYIndex?>" size="1" onchange="calc(this.form.name);" >
 			<option value="" <? echo ( 'selected="selected"' if $$variable{'ddmBleedSize'.$$variable{'QTYIndex'}} == 0 ) ?> >No Bleed</option>
+			<option value="0.25" <? echo ( 'selected="selected"' if $$variable{'ddmBleedSize'.$$variable{'QTYIndex'}} == 0.25 ) ?> >1/4</option>
 			<option value="0.125" <? echo ( 'selected="selected"' if $$variable{'ddmBleedSize'.$$variable{'QTYIndex'}} == 0.125 ) ?> >1/8</option>
 			<option value="0.0625" <? echo ( 'selected="selected"' if $$variable{'ddmBleedSize'.$$variable{'QTYIndex'}} == 0.0625 ) ?> >1/16</option>
 		</select>

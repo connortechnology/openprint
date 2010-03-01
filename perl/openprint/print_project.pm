@@ -275,17 +275,6 @@ sub try_to_delete_project {
 	return $error;
 } # end sub try_to_delete_project
 
-sub history_list {
-	my ( $r, $log, $dbh, $variable ) = @_;
-
-	foreach my $key ( $r->param() ) {
-		if ( $key =~ /chkDelete(\d*)/ ) {
-			$$variable{'error'} .= try_to_delete_project( $log, $dbh, $variable, $1 );
-		} elsif ( $key eq 'btnFunction' and $r->param($key) eq 'Delete Project' ) {
-			$$variable{'error'} .= try_to_delete_project( $log, $dbh, $variable, $r->param('ProjectIndex') );
-		} # end if
-	} # end foreach
-} # end sub history_list 
 
 sub view_pdfs {
 	my ( $r, $log, $dbh, $variable ) = @_;

@@ -905,19 +905,6 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 		ddm_select_by_value( e_min, d.getMinutes() );
 } // end function set_today
 
-Ajax.Autocompleter.extract_value = 
-function (value, className) {
-	var result;
-
-	var elements = 
-		document.getElementsByClassName(className, value);
-	if (elements && elements.length == 1) {
-		result = elements[0].innerHTML.unescapeHTML();
-	}
-
-	return result;
-};
-
 function check_time_starting( form, starting_prefix, ending_prefix ) {
     var start;
     var end;

@@ -14,7 +14,7 @@ use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
-my $debug = 1;
+my $debug = 0;
 my %find_cache;
 %fields = (
 	'id'	=>	'id',
@@ -136,7 +136,6 @@ $openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	$sql .= " OR $params{'or'}" if $params{'or'};
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$openprint::log->error( "Error loading Equipment ($sql) (@values) :" . $openprint::dbh->errstr );
@@ -299,7 +298,7 @@ sub Fold {
 		$openprint::log->debug("Wanted spinedirection: $$params{'spine_direction'}, have $$Fold{'spine_direction'}") if $debug;
 		next if $$Fold{'spine_direction'} and $$params{'spine_direction'} and ($$Fold{'spine_direction'} ne $$params{'spine_direction'} );
 
-		if ( $$Fold{'printing_type'} and ! sets::isin( $$params{'printing_type'}, split(',', $$Fold{'printing_type'}) ) ) {
+		if ( $$params{'printing_type'} and $$Fold{'printing_type'} and ! sets::isin( $$params{'printing_type'}, split(',', $$Fold{'printing_type'}) ) ) {
             $openprint::log->debug("Fold no good due to PrintingType ($$params{'printing_type'}) != " . $$Fold{'printing_type'} ) if $debug;
             next;
         } # end if

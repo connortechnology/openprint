@@ -72,10 +72,6 @@ sub calc {
 		$log->error( $_ );
 	} # end if
 
-	# I don't remember exactly why we need to add cutting so early.
-	if ( openprint::Estimating::Cutting::neccessary( $Project ) and ! $$services{'Cutting'} ) {
-		push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
-	} # end if
 
 	if ( ! $$Project{'id'} ) {
 		$$specs{'alert'} = 'There was an error storing the project..  Please contact us for help.';
@@ -169,7 +165,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		$$specs{'alert'} .= 'No dimensions found for this fold type.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
-
 
 	if ( exists $$specs{'txtTotalPageQuantity'} ) {
 		if ( ! $$specs{'txtTotalPageQuantity'} ) {
@@ -412,6 +407,8 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'rdbTemplateType', $$specs{'FoldType'} );
 		} # end if
 		sql::end_transaction( $dbh, $ac );
+
+		# Although this could calculate the printing, it is here only to further store and validate and auto-ppulate fields
 		my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'Printing' );
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
 		%printing_specs = %{$sig_specs};
@@ -432,6 +429,9 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	$services = $Project->services();
 
 #$log->debug("Adding Required Services");
+	if ( openprint::Estimating::Cutting::neccessary( $Project ) and ! $$services{'Cutting'} ) {
+		push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
+	} # end if
 
 	push @{$$services{'Proofs'}}, $Project->add_service( 'Proofs' ) if ! $$services{'Proofs'};
 	$openprint::log->debug("Proofs: $$specs{'proof_type'}");
@@ -651,6 +651,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	$openprint::log->warn("Before auto");
+	openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $$Project{'id'} );
 	$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'} );
 	$openprint::log->warn("Aftere auto");
 	# Need to reload this because the auto calculation can add services, and we wouldn't otherwise pick them up
