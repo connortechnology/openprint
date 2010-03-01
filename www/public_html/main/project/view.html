@@ -28,6 +28,7 @@
 			Quote&quot; or &quot;Add to Order&quot;. If changes are required, please use 
 			the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
 		</p>
+		<div class="buttons">
 		<div style="float:left;">
 			<? echo ( ssi::writeButton( $log, $dbh, 'ProjectSummary', 'projectSummary.gif', '', '/main/project/summary.html?ProjectIndex='.$$variable{'ProjectIndex'}, 'Summary' ); ) ?>
 			<? if ( ( ! $$variable{'Project'}->order_id() ) or ( sets::isin( $$variable{'Project'}->Order->status(), ['Re-Opened','Incomplete'] ) ) ) ?>
@@ -76,6 +77,7 @@
 				} # end if
 				return $html;
 			) ?>
+		</div>
 		</div>
 		<!--#include virtual="/includes/project_header.html" -->
 		<table class="List" style="table-layout: auto;">
