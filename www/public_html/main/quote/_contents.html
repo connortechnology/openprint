@@ -13,7 +13,7 @@
 	<? eval ( @{$$variable{'Projects'}} = $$variable{'Quote'}->Quoted_Projects(); ) ?>
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 	<tr<?rowclass?>> 
-		<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->Project()->reference()) . ':<br/>' if $$variable{'Project'}->Project()->reference() ) ?><? echo ( $$variable{'Project'}->Project()->summary(); ) ?></a></td>
+		<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->project_id() ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->Project()->reference()) . ':<br/>' if $$variable{'Project'}->Project()->reference() ) ?><? echo ( $$variable{'Project'}->Project()->summary(); ) ?></a></td>
 		<td colspan="5">
 			<table>
 				<? echo (
