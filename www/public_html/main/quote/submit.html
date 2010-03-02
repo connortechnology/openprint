@@ -5,13 +5,13 @@
 Please review the quote below to ensure accuracy.  When ready, click "Submit Quote" to save it and send a copy via email to the addresses listed.<br/>
 <br/>
 <form name="f1" method="post" action="/main/quote/confirmation.html">
-<div id="Quote">
-	<div class="Header">
-		<!--#include virtual="/includes/quote_header.html"-->
-		<!--#include virtual="/includes/quote_information.html"-->
-	</div>
+	<div class="Quote"><div class="Submit">
+		<div class="Header">
+			<!--#include virtual="/includes/quote_header.html"-->
+			<!--#include virtual="/includes/quote_information.html"-->
+		</div>
 		<!--#include virtual="_contents.html"-->
-	<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
+		<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 			<br/>
 			<fieldset id="SalesRepComments">
 				<p><label>Administrator Name:</label>
@@ -22,13 +22,13 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 					<textarea name="AdministratorComments" rows="<? echo ( scalar split("\n", $$variable{'AdministratorComments'}) ) ?>" cols="" onkeyup="textarea_resize(this);"><?AdministratorComments?></textarea>
 				</p>
 			</fieldset>
-	<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
-	<div style="width:49%; float: right;" align="right"><br/><span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
-		Prices are subject to applicable taxes.<br/>
-	</div>
-	<br class="spacer"/>
-	<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
-</div><!--Quote-->
+		<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
+		<div style="width:49%; float: right;" align="right"><br/><span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+			Prices are subject to applicable taxes.<br/>
+		</div>
+		<br class="spacer"/>
+		<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
+	</div></div><!--Quote-->
 <? echo (
 	my $html = '';
 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {

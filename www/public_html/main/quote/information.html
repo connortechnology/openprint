@@ -62,9 +62,11 @@
 	For&quot; fields blank.<br/>
 	<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 <br/>
-<form method="post" id="f1" name="f1" action="submit.html"/>
-	<div class="QuoteInformation"/>
+<div class="Quote">
+	<div class="Information"/>
+		<form method="post" id="f1" name="f1" action="submit.html"/>
 <? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+		<div class="Header">
 		<div id="PreparedBy"/>
 <? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 		<fieldset><legend>Prepared By:</legend>
@@ -264,7 +266,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			</ul></div>
 		</fieldset></div>
 	<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
-	</div><!--QuoteInformation-->
+	</div>
 	<? if ( @{$$variable{'PROJECTS'}} == 0 ) ?>
 			No projects
 	<? else ( @{$$variable{'PROJECTS'}} == 0 ) ?>
@@ -395,4 +397,6 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		</p>
 		<input type="hidden" name="btnFunction"/>
 	</form>
+	</div><!--Information-->
+</div><!--Quote-->
 <? endif ( ! $$variable{'Quote'}->id() ) ?>
