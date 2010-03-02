@@ -4,7 +4,7 @@
 
 	$session{'/main/project/history.html?lastupdated'} = time;
 
-	foreach ( 'ddmStatus','CreatedStartYear','CreatedStartMonth','CreatedStartDay','CreatedEndYear','CreatedEndMonth','CreatedEndDay','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay', 'predefined','type_id' ) {
+	foreach ( 'ddmStatus','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'predefined','type_id' ) {
 		$session{"/main/project/history.html?$_"} = $param{$_} if exists $param{$_};
 	} # end foreach
 	if ( ! $session{'/main/project/history.html?ddmStatus'} ) {
@@ -19,10 +19,10 @@
 		);
 	} else {
 	@{$$variable{'Projects'}} = openprint::Project::find( 
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?CreatedStartYear','/main/project/history.html?CreatedStartMonth','/main/project/history.html?CreatedStartDay'} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?CreatedEndYear','/main/project/history.html?CreatedEndMonth','/main/project/history.html?CreatedEndDay'} ),
-		'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?UpdatedStartYear','/main/project/history.html?UpdatedStartMonth','/main/project/history.html?UpdatedStartDay'} ),
-		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?UpdatedEndYear','/main/project/history.html?UpdatedEndMonth','/main/project/history.html?UpdatedEndDay'} ),
+		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?created_on_start_year','/main/project/history.html?created_on_start_month','/main/project/history.html?created_on_start_day'} ),
+		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?created_on_end_year','/main/project/history.html?created_on_end_month','/main/project/history.html?created_on_end_day'} ),
+		'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?updated_on_start_year','/main/project/history.html?updated_on_start_month','/main/project/history.html?updated_on_start_day'} ),
+		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?updated_on_end_year','/main/project/history.html?updated_on_end_month','/main/project/history.html?updated_on_end_day'} ),
 		'company_id'		=> $session{'company_id'},
 		'status'			=> $session{'/main/project/history.html?ddmStatus'},
 		'type_id'			=> $session{'/main/project/history.html?type_id'},
