@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -279,15 +279,15 @@ sub calc_setup_object {
 		$setup2->bleed_size( $bindery_bleed );
 	} # end if
 	my @bleed_locations =  split(',', $$specs{'BleedLocations'} );
-	my $bleed_width  = 2*$bindery_bleed;
-	my $bleed_height  = 2*$bindery_bleed;
+	my $bleed_width  = 2*$bindery_bleed; # .25
+	my $bleed_height  = 2*$bindery_bleed;#.25
 	if ( sets::isin( 'Right', \@bleed_locations ) ) {
-		$image_width += $$specs{'BleedSize'};
-		$bleed_width -= $$specs{'BleedSize'};
+		$image_width += $$specs{'BleedSize'}; # 17.0625
+		$bleed_width -= $$specs{'BleedSize'}; # .1875
 	} # end if
 	if ( sets::isin( 'Left', \@bleed_locations ) ) {
-		$image_width += $$specs{'BleedSize'};
-		$bleed_width -= $$specs{'BleedSize'};
+		$image_width += $$specs{'BleedSize'}; # 17.125
+		$bleed_width -= $$specs{'BleedSize'}; #0.125
 	} # end if
 	if ( sets::isin( 'Top', \@bleed_locations ) ) {
 		$image_height += $$specs{'BleedSize'};
@@ -306,9 +306,11 @@ sub calc_setup_object {
 	} # end if
 	$setup1->image_width( $image_width + $bleed_width );
 	$setup1->image_height( $image_height );
+$openprint::log->debug("Setup1 $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
 
 	$setup2->image_width( $image_width );
 	$setup2->image_height( $image_height + $bleed_height );
+$openprint::log->debug("Setup2 $bleed_height " . $setup2->image_width() .'x'.$setup2->image_height() );
 
 
 #	Now here is how I understand things to be..
@@ -324,8 +326,8 @@ sub calc_setup_object {
 	if ( sets::isin( 'Left', \@bleed_locations ) ) {
 		$gutters -= $$specs{'BleedSize'};
 	} # end if
-#$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
-#$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
+$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
+$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 
 	$gutters = 0 if $gutters < 0;
 
@@ -338,6 +340,7 @@ sub calc_setup_object {
 	} # end if
 	$setup1->grip( $$specs{'Grip Size'} );
 	$setup2->grip( $$specs{'Grip Size'} );
+$openprint::log->debug("Setup1 after grip $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
 
 	if ( ( ! $grain_direction ) or ( $grain_direction eq $setup1->grain_direction() ) ) {
 
@@ -360,7 +363,7 @@ sub calc_setup_object {
 			$adjusted_paper_height = $paper_height;
 		} elsif ( $$specs{'Cut Off'} ) {
 			$adjusted_paper_height = $$specs{'Cut Off'};
-			$setup1->paper()->height( $$specs{'Cut Off'} );
+			$setup1->Paper()->height( $$specs{'Cut Off'} );
 			$setup1->stock_height( $$specs{'Cut Off'} );
 		} # end if
 
@@ -421,14 +424,14 @@ sub calc_setup_object {
 $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 
 		if ( sets::isin( $run_style, ['Perfecting','Sheet Work','Web'] ) ) {
-			calc_setup( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $image_height  );
-			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
+			calc_setup( $setup1, $setup1->image_width(), $setup1->image_height(), $adjusted_paper_width, $adjusted_paper_height ? $adjusted_paper_height : $setup1->image_height()  );
+			$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
 			fix_height( $setup1, $specs );
 			if ( check_setup( $setup1, $specs ) ) {
-				$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $image_width x $image_height Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
+				$openprint::log->debug(" CHECK 1 $run_style Using Paper $paper_width x $paper_height -> $adjusted_paper_width x $adjusted_paper_height Gutter: $gutters, Image: $$setup1{image_width} x $$setup1{image_height} Imposition: " . $setup1->imposition(). ":".$setup1->columns() . 'x' . $setup1->rows(). " $run_style " . $setup1->layout_width() . 'x' . $setup1->layout_height() ) if $debug;
 				push @results, $setup1;
 				if ( ! ( $grain_direction or (exists $$specs{'SpreadLayout'}) or $$specs{'HasDieCutting'} or $$specs{'HasPerforating'} or $$specs{'HasScoring'} ) ) {
-					push @results, calc_dutch( $setup1, $image_width, $image_height, $adjusted_paper_width, $adjusted_paper_height, $specs );
+					push @results, calc_dutch( $setup1, @$setup1{'image_width','image_height'}, $adjusted_paper_width, $adjusted_paper_height, $specs );
 				} # end if
 				if ( ! $setup1->paper()->width() ) {
 					$setup1->paper()->width( $setup1->used_width() );
