@@ -25,7 +25,7 @@ sub add_missing_jobs_to_schedule {
 	foreach my $project_id ( @missing_jobs ) {
 		my $Project = new openprint::Project( $project_id );
 		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_id, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			if ( ! $$sig_specs{'UsePress'} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $project_id, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 			} # end if
