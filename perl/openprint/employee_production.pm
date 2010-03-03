@@ -1003,6 +1003,7 @@ sub _ul {
 		my @service_ids = @{$$Job{'service_id'}};
 		my $runtime = int ( $Job->runtime_seconds()/@service_ids );
 		$Job->runtime_seconds( $runtime );
+		$Job->impressions( $Job->impressions() / @service_ids );
 		$$Job{'service_id'} = [ shift @service_ids ];
 		$Job->save();
 		my $starttime = $Job->starttime_seconds() + $runtime if $Job->starttime();

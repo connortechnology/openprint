@@ -3292,7 +3292,7 @@ sub runtime {
 	$time{'Setup'} += 60*$Equipment->specification('Setup Time') if @side_one_colours;
 	$time{'Setup'} += 60*$Equipment->specification('Setup Time') if @side_two_colours;
 	$time{'Setup'} += 60*$Equipment->specification('Wash Up Time Per Colour') * @colours;
-$openprint::log->debug("Runtime for $$Equipment{strid}: Setup: " . $Equipment->specification('Setup Time') . " + " . $Equipment->specification('Wash Up Time Per Colour') .' per colour.' );
+#$openprint::log->debug("Runtime for $$Equipment{strid}: Setup: " . $Equipment->specification('Setup Time') . " + " . $Equipment->specification('Wash Up Time Per Colour') .' per colour.' );
 	#$time{'Setup'} += 60*$Equipment->specification('Plate Setup Time') ;
 
 	$runspeed = runspeed( $Project, $specs, $qty_index, $Equipment ) if ! $runspeed;
@@ -3301,7 +3301,7 @@ $openprint::log->debug("Runtime for $$Equipment{strid}: Setup: " . $Equipment->s
 		$time{'Run'} += int ( 3600 * $impressions / $runspeed );
 	} # end if
 	$time{'Total'} = $time{'Setup'} + $time{'Run'};
-$openprint::log->debug("Total: $time{'Setup'} + $time{'Run'} = $time{'Total'} => " . misc::seconds2hms( $time{'Total'} ) );
+#$openprint::log->debug("Total: $time{'Setup'} + $time{'Run'} = $time{'Total'} => " . misc::seconds2hms( $time{'Total'} ) );
 	return \%time;
 } # end sub runtime
 
@@ -3310,7 +3310,7 @@ sub runspeed {
 
 	my $runspeed;
 	if ( ! $Equipment ) {
-$openprint::log->debug("SIGSPECS $sig_specs, PROJECT: $Project ");
+#$openprint::log->debug("SIGSPECS $sig_specs, PROJECT: $Project ");
 		my $equipment_name = $$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$qty_index};
 		if ( ! $equipment_name ) {
 			$openprint::log->error( "No equipmnet in sig for qty $qty_index" );
@@ -3333,17 +3333,17 @@ $openprint::log->debug("SIGSPECS $sig_specs, PROJECT: $Project ");
 			if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} == $Equipment->id() ) {
 				my $foldtype = sprintf('%sx%s-%dPage-%sSignatureFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
 				$runspeed = int( $Equipment->specification($foldtype.'RunSpeed', $Imposition->Paper()->gsm() ) );
-$openprint::log->debug("Foudn runspeed for fold $foldtype: $runspeed");
+#$openprint::log->debug("Foudn runspeed for fold $foldtype: $runspeed");
 			} # end if
 		} # end if
 	} # end if
     if ( ! $runspeed ) {
         $runspeed = int( $Equipment->specification( 'Press Additional Run Speed', $$sig_specs{'txtSpecificStockCalliper'} ) );
-$openprint::log->debug("Foudn Additional runspeed for $$Equipment{strid}: $runspeed");
+#$openprint::log->debug("Foudn Additional runspeed for $$Equipment{strid}: $runspeed");
     } # end if
     if ( ! $runspeed ) {
         $runspeed = int( $Equipment->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() ) );
-$openprint::log->debug("Foudn Standard runspeed for $$Equipment{strid}: $runspeed");
+#$openprint::log->debug("Foudn Standard runspeed for $$Equipment{strid}: $runspeed");
     } # end if
 	return $runspeed;
 } # end sub runspeed

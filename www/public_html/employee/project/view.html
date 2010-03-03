@@ -329,46 +329,10 @@ $log->debug("Have no job: $Job");
 </div>
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
-<fieldset><legend>Allocated</legend>
-	<table class="List">
-		<tr><th align="left">Stock</th><th align="left" width="80">Skid</th><th align="left" width="120">RFIDTAG</th>
-<th align="left" width="120">Location</th>
-<th align="right" width="80">Quantity</th>
-		</tr>
-		<? echo (
-			require openprint::PaperAllocation;
-			my $html = '';
-			my %Allocations;
-			my $rowclass;
-
-			foreach my $Allocation ( openprint::PaperAllocation::find('project_id'=>$$variable{'Project'}->id(), 'order'=>'skid_id,created_on' ) ) {
-				push @{$Allocations{$Allocation->paper_id()}}, $Allocation;
-			} # end foreach Allocation
-			foreach my $paper_id ( keys %Allocations ) {
-				my $Paper = new openprint::Paper( $paper_id );
-				my $total = 0;
-
-				$html .= sprintf('<tr%1$s><td rowspan="%2$d"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>', $rowclass, scalar  @{$Allocations{$paper_id}}, $Paper->id(), $Paper->to_string() );
-				my $Allocation = shift @{$Allocations{$paper_id}};
-				my $Skid = $Allocation->Skid();
-				$total += $Allocation->quantity();
-				$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$s</a></td>', $Skid->id() );
-				$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
-				$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
-
-				foreach my $Allocation ( @{$Allocations{$paper_id}} ) {
-					my $Skid = $Allocation->Skid();
-					$total += $Allocation->quantity();
-					$html .= sprintf('<tr%s>',$rowclass);
-					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $Skid->id() );
-					$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
-					$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
-				} # end foreach
-				$html .= '<tr class="totals"><td colspan="4" align="right">Total:</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';
-			} # end foreach
-			return $html;
-		) ?>
-	</table>
+<fieldset><legend onclick="AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: <? echo ( $$variable{'Project'}->id() ) ?> } );">Allocated</legend>
+<div id="StockAllocations">
+<!--#include virtual="_stock_allocations.html"-->
+</div>
 </fieldset>
 <br/>
 <? if ( $$variable{'Project'}->docket() ) ?>
