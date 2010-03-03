@@ -23,7 +23,7 @@ require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
 
-my $debug = 1;
+my $debug = 0;
 
 $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';

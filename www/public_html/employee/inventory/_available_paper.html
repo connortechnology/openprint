@@ -3,7 +3,7 @@
 		my %sql = (
 			'order_by'=>'lower(manufacturers.shortname),name,finish,colour,weight,width,height', 
 			'in_stock_start'=>1,
-			'type'=>[ split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ]
+			'type'=>[ split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 		);
 		if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
 			$sql{'owner_id !='} = $session{'/employee/inventory/available_paper.html?Owner'};
@@ -41,7 +41,6 @@
 				} # end if
 				push @location_ids, $_;
 			} # end foreach
-			$log->debug("Locations: @location_ids");
 
 			my $total_weight;
 			my $total_rolls;

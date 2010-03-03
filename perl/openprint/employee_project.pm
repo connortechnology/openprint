@@ -865,6 +865,9 @@ sub _production_feedback {
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 	$variable{'service_id'} = $param{'service_id'};
 } # end sub _production_feedback
+sub _stock_allocations {
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+}
 
 
 1;

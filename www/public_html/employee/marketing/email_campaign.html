@@ -7,6 +7,7 @@
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="campaign_id" value="<? echo ( $$variable{'Campaign'}->id(); ) ?>"/>
 	<fieldset>
+		<p><label>ID:</label><? echo ( $$variable{'Campaign'}->id() ) ?></p>
 		<p><label>Name:</label><input type="text" name="name" value="<? echo ( $$variable{'Campaign'}->name() ) ?>" /></p>
 		<p><label>Query:</label><textarea name="query" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->query() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->query() ) ?></textarea></p>
 		<p><label>Email From:</label><input type="text" name="email_from" value="<? hecho ( $$variable{'Campaign'}->email_from() ) ?>"  /></p>

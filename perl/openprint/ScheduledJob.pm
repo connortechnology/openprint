@@ -18,7 +18,7 @@ require Date::Parse;
 require openprint::User;
 require openprint::PaperAllocation;
 
-my $debug = 1;
+my $debug = 0;
 
 $table = 'schedule';
 $serial = 'schedule_id_seq';

@@ -1,0 +1,69 @@
+<table class="List">
+	<tr><th align="left">Stock</th><th align="left" width="80">Skid</th><th align="left" width="120">RFIDTAG</th>
+	<th align="left" width="120">Location</th>
+	<th align="right" width="80">Quantity</th>
+	</tr>
+	<? echo (
+		require openprint::PaperAllocation;
+		my $html = '';
+		my %Allocations;
+		my $rowclass;
+
+		foreach my $Allocation ( openprint::PaperAllocation::find('project_id'=>$$variable{'Project'}->id(), 'order'=>'skid_id,created_on' ) ) {
+			push @{$Allocations{$Allocation->paper_id()}}, $Allocation;
+		} # end foreach Allocation
+
+		foreach my $paper_id ( keys %Allocations ) {
+			my $Paper = new openprint::Paper( $paper_id );
+			my $total = 0;
+			foreach my $Allocation ( @{$Allocations{$paper_id}} ) {
+				$total += $Allocation->quantity();
+			} # end foreach
+
+			if ( @{$Allocations{$paper_id}} == 1 ) {
+				$html .= sprintf('<tr%1$s><td><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>', $rowclass, 
+					1+($param{'allocation_details_'.$paper_id} ? scalar  @{$Allocations{$paper_id}} : 0 ), 
+					$Paper->id(), $Paper->to_string() );
+				my $Allocation = $Allocations{$paper_id}[0];
+				if ( $Allocation->skid_id() ) {
+					my $Skid = $Allocation->Skid();
+					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $Skid->id() );
+					$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
+					$html .= sprintf('<td>%1$s</td>', $Skid->Location()->name() );
+				} else {
+					$html .= '<td colspan="3">&nbsp;</td>';
+				} # end if
+				$html .= sprintf('<td align="right">%1$s%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
+			} else {
+				$html .= sprintf('<tr%1$s><td rowspan="%2$d"><a href="/employee/inventory/paper_details.html?paper_id=%3$d">%4$s</a></td>', $rowclass, 
+					1+($param{'allocation_details_'.$paper_id} ? scalar  @{$Allocations{$paper_id}} : 0 ), 
+					$Paper->id(), $Paper->to_string() );
+				$html .= sprintf('<td>%1$s</td>', @{$Allocations{$paper_id}} . ( $Paper->type() eq 'Roll' ? ' rolls' : ' skids' ) );
+				$html .= '<td colspan="2">';
+				if ( $param{'allocation_details_'.$paper_id} ) {
+					$html .= ssi::writeButton( $log, $dbh, 'allocation_details'.$paper_id, 'details.gif', 
+						sprintf(q`AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 0 } );`, $$variable{'Project'}->id(), $paper_id ),
+						'', 'Hide details' ) . '</td>';
+				} else {
+					$html .= ssi::writeButton( $log, $dbh, 'allocation_details'.$paper_id, 'details.gif', 
+							sprintf(q`AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: '%1$d', allocation_details_%2$d: 1 } );`, $$variable{'Project'}->id(), $paper_id ),
+						'', 'Show details' ) . '</td>';
+				} # end if
+				$html .= sprintf('<td align="right">%1$s%2$s</td></tr>', Number::Format::format_number($total), ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) );
+			} # end if
+
+			if ( $param{'allocation_details_'.$paper_id} ) {
+				foreach my $Allocation ( @{$Allocations{$paper_id}} ) {
+					my $Skid = $Allocation->Skid();
+					$total += $Allocation->quantity();
+					$html .= sprintf('<tr%s>',$rowclass);
+					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $Skid->id() );
+					$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a></td>', $Skid->rfidtag_id() );
+					$html .= sprintf('<td>%1$s</td><td align="right">%2$s%3$s</td></tr>', $Skid->Location()->name(),  Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
+				} # end foreach
+			} # end if
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach
+		return $html;
+	) ?>
+</table>
