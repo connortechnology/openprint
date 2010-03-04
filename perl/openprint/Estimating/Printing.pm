@@ -2110,6 +2110,10 @@ sub calculate_impositions {
 			$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$sig_specs{'txtImposition'.$qty_index}) if $debug;
 			next;
 		} # end if
+		if ( ( $$sig_specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) and ( $imp->runstyle() ne $$sig_specs{'ddmRunStyle'.$qty_index} ) ) {
+			$openprint::log->debug("Doesn't match runstyle override " . $imp->runstyle() . ' != ' . $$sig_specs{'ddmRunStyle'.$qty_index}) if $debug;
+			next;
+		} # end if
 
 		if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) {
 			if ( ( $imp->Paper()->width() != $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$sig_specs{"OverrideStockHeight$qty_index"} )) {
@@ -3120,9 +3124,9 @@ sub calc_price {
 
 #my $time = gettimeofday();
 		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
-foreach my $k ( keys %cutting_results ) {
-$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
-}
+#foreach my $k ( keys %cutting_results ) {
+#$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
+#}
 		
 #$openprint::log->debug("Elapsed cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		if ( $cutting_results{'Status'} eq 'uncalculated' ) {
@@ -3405,6 +3409,9 @@ $openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 		$plate_setup{'Blank Plates'} = $blanks_needed;
 	} # end if
 	$plate_setup{'Plate Count'} = $plate_count;
+
+
+$Imposition->display("Plate Count $plate_count");
 
 #$price{'Press Washes'} += $varnish_price{'Press Washes'};
 	if ( $price{'Press Washes'} ) {

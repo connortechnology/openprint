@@ -43,7 +43,8 @@ fi;
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
 # if that exists
 if [ -d "$2.0" ] ; then \
-	$CP -al "\"$2.0\" \"$2.1\""
+	echo "$CP -al \"$2.0\" \"$2.1\""
+	$CP -al "$2.0 $2.1"
 else
 	echo "Making $2.0"
 	$MKDIR -p "\"$2.0\""
