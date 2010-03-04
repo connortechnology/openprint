@@ -34,20 +34,20 @@ fi ;
 
 # step 2: shift the middle snapshots(s) back by one, if they exist
 if [ -d "$2.2" ] ; then
-	$MV "\"$2.2\" \"$2.3\""
+	$MV "$2.2" "$2.3"
 fi;
 if [ -d "$2.1" ] ; then
-	$MV "\"$2.1\" \"$2.2\""
+	$MV "$2.1" "$2.2"
 fi;
 
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
 # if that exists
 if [ -d "$2.0" ] ; then \
-	echo "$CP -al \"$2.0\" \"$2.1\""
-	$CP -al "$2.0 $2.1"
+	echo "$CP -al $2.0 $2.1"
+	$CP -al "$2.0" "$2.1"
 else
 	echo "Making $2.0"
-	$MKDIR -p "\"$2.0\""
+	$MKDIR -p "$2.0"
 fi;
 
 # step 4: rsync from the system into the latest snapshot (notice that
@@ -58,5 +58,5 @@ echo "$RSYNC \"$1\" \"$2\""
 $RSYNC -a --delete --delete-excluded "$1" "$2.0"
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
-		$TOUCH "\"$2.0\""
+		$TOUCH "$2.0"
 
