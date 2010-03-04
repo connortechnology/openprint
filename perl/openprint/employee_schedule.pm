@@ -38,9 +38,8 @@ sub add_missing_jobs_to_schedule {
 
 sub update_late_jobs {
 	# Make sure that we don't lose any jobs to the past.
-	my @late_jobs = sql::execute( undef, undef, q{SELECT ProjectIndex, ServiceIndex FROM Schedule WHERE date(starttime+runtime) < date(NOW()) ORDER BY Starttime } );
-	while ( my ( $project_index, $service_index ) = splice @late_jobs, 0, 2 ) {
-		sql::update( undef, undef, 'Schedule', ['ProjectIndex=? AND ServiceIndex=?', $project_index, $service_index], 'starttime', 'date(NOW())' );
+	foreach my $Job ( openprint::ScheduledJob::find('endtime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ),'order'=>'starttime' ) ) {
+		$Job->save({'starttime_seconds'=>time});
 	} # end while
 } # end sub update_late_jobs
 
@@ -115,10 +114,19 @@ sub insert {
 	my $ac = sql::start_transaction( $dbh );
 	my ( $start_time ) = sql::execute( $log, $dbh, q{SELECT MAX(StartTime+RunTime) FROM Schedule, tbl_Projects WHERE Index=ProjectIndex AND strStatus='Approved' AND Equipment_ID=?}, $equipment_id );
 	( $start_time ) = sql::execute( $log, $dbh, 'SELECT NOW()' ) if ! $start_time;
-	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ServiceIndex=?}, $service_index );
+	foreach my $Job ( openprint::ScheduledJob::find('service_id'=>$service_index) ) {
+		$Job->delete();
+	} # end foreach Job
 	my $runtime = openprint::service::get_runtime( new openprint::Project( $project_index ), $service_index );
 
-	sql::insert( $log, $dbh, 'Schedule', 'ProjectIndex', $project_index, 'ServiceIndex', $service_index, 'Equipment_id', $equipment_id,'StartTime', $start_time, 'RunTime', "$runtime minutes" );
+	my $Job = new openprint::ScheduledJob();
+	$Job->save({
+			'project_id'		=>	$project_index,
+			'service_id'		=>	[ $service_index ],
+			'equipment_id'		=>	$equipment_id,
+			'starttime'			=>	$start_time,
+			'runtime_seconds'	=>	$runtime,
+			});
 	sql::end_transaction( $dbh, $ac );
 } # end sub insert
 
@@ -126,15 +134,17 @@ sub insert {
 sub remove {
 	my ( $log, $dbh, $project_index, $service_index ) = @_;
 	my $ac = sql::start_transaction( $dbh );
-	my @data = sql::execute( $log, $dbh, q{SELECT DISTINCT Equipment_ID FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $service_index);
-	foreach my $equipment_id ( @data ) {
-		sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=? AND Equipment_ID=?}, $project_index, $service_index, $equipment_id );
+
+	my @equipment_ids = ();
+	foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$project_index, 'service_id'=>$service_index) ) {
+		push @equipment_ids, $Job->equipment_id();
+		$Job->delete();
+	} # end foreach Job
+	foreach my $equipment_id ( sets::union( @equipment_ids ) ) {
 		new openprint::Equipment( $equipment_id )->update_schedule();
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 } # end sub remove
 
-
 1;
-
 __END__
