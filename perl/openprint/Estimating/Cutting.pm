@@ -303,13 +303,6 @@ sub signature_calc_folding_cutting {
 	return %results if ! $$services{'Folding'};
 
 #$openprint::log->debug("Loading Paper from signature in signature_calc_folding_cutting");
-	$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index ) if ! $Paper;
-	if ( ! $I ) {
-		$I = new openprint::Imposition();
-		$I->Paper( $Paper );
-		$I->load( $sig_specs, $qty_index );
-	} # end if
-	return %results if ! $I->imposition();
 	$results{'Status'} = 'uncalculated';
 
 	# Consider Cutting before folding, compare pages on signature verses folds, for example 24->16+8

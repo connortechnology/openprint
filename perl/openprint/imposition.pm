@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 1;
+my $debug = 0;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -305,11 +305,11 @@ sub calc_setup_object {
 	} # end if
 	$setup1->image_width( $image_width + $bleed_width );
 	$setup1->image_height( $image_height );
-$openprint::log->debug("Setup1 $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
+#$openprint::log->debug("Setup1 $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
 
 	$setup2->image_width( $image_width );
 	$setup2->image_height( $image_height + $bleed_height );
-$openprint::log->debug("Setup2 $bleed_height " . $setup2->image_width() .'x'.$setup2->image_height() );
+#$openprint::log->debug("Setup2 $bleed_height " . $setup2->image_width() .'x'.$setup2->image_height() );
 
 
 #	Now here is how I understand things to be..
@@ -325,8 +325,8 @@ $openprint::log->debug("Setup2 $bleed_height " . $setup2->image_width() .'x'.$se
 	if ( sets::isin( 'Left', \@bleed_locations ) ) {
 		$gutters -= $$specs{'BleedSize'};
 	} # end if
-$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
-$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
+#$openprint::log->debug("Gutters: $$specs{'Gutter'}, bindery: $bindery_gutters, minus bleeds: $gutters");
+#$openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 
 	$gutters = 0 if $gutters < 0;
 
@@ -339,7 +339,7 @@ $openprint::log->debug("Bindery Gutters: $gutters <? $bindery_gutters");
 	} # end if
 	$setup1->grip( $$specs{'Grip Size'} );
 	$setup2->grip( $$specs{'Grip Size'} );
-$openprint::log->debug("Setup1 after grip $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
+#$openprint::log->debug("Setup1 after grip $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
 
 	if ( ( ! $grain_direction ) or ( $grain_direction eq $setup1->grain_direction() ) ) {
 

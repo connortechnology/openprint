@@ -60,7 +60,7 @@ my @no_outputs = (
 );
 
 sub signature_needs {
-	my ( $Project, $specs, $sig_specs ) = @_;
+	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
 #$openprint::log->debug("Scoring::need $$sig_specs{SignatureIndex} : " .$$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"});
 	if ( $specs ) {
@@ -78,7 +78,7 @@ sub signature_needs {
 		return 0;
 	} # end if
 	if ( ( $$sig_specs{'txtSignatureType'} eq '' ) or ( $$sig_specs{'txtSignatureType'} eq 'Cover Pages' ) or ( $$sig_specs{'txtSignatureType'} and ( $$sig_specs{'SignatureIndex'} == 1 ) ) ) {
-		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs );
+		$Paper = openprint::Paper::load_from_signature( $Project, $sig_specs ) if ! $Paper;
 #$openprint::log->debug( "Score Required!: " . $Paper->score_required() );
 		if ( $Paper->score_required() ) {
 			return 1;
@@ -145,8 +145,10 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= "No imposition for signature $$sig_specs{'SignatureIndex'}";
 				next;
 			} # end if
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $qty_index );
 
-			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index );
+			my %Price = signature_calc( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition );
 			$status = $Price{'Status'} if $Price{'Status'} eq 'uncalculated';
 			if ( $Price{'Equipment'} ) {
 				$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} = $Price{'Equipment'}->id();
@@ -205,7 +207,7 @@ sub signature_calc {
 	);
 	$$sig_specs{'SignatureIndex'} *= 1;
 	if ( $$specs{"chkOverrideQty-$$sig_specs{'SignatureIndex'}"} ne 'Y' ) {
-		get_scores( $Project, $specs, $sig_specs );
+		get_scores( $Project, $specs, $sig_specs, $imposition->Paper() );
 	} else {
 		$openprint::log->debug('Override Scores');
 	} # end if
@@ -250,6 +252,7 @@ sub signature_calc {
 
 # Get the impositions to consider
 	if ( ! $imposition ) {
+$openprint::log->warn("No imposition in scoring");
 		$imposition = new openprint::Imposition();
 		$imposition->load( $sig_specs, $qty_index );
 	} else {
@@ -479,9 +482,9 @@ sub signature_calc {
 
 # figures ou the number of scores needed. May return 0 if signature doesn't need it.
 sub get_scores {
-	my ( $Project, $specs, $sig_specs ) = @_;
+	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
-	if ( ! signature_needs( $Project, $specs, $sig_specs ) ) {
+	if ( ! signature_needs( $Project, $specs, $sig_specs, $Paper ) ) {
 		# Default to 1 score, because we assume that if we have scoring, then we must want at least 1
 		$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 0;
 		$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
