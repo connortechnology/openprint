@@ -62,14 +62,19 @@ Please select a company or user to obtain login information.<br/>
 				<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
 				<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
 				<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
-				<? echo ( join ('',
-					ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;'),
-					ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;'),
-					ssi::writeButton( $log, $dbh, 'New1','new.gif',"\$('Log').hide();keepCompany(f1);",'','New'),
-					ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-					ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-					ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
-				); ) ?>
+				<? echo ( my $html = '';
+					$html .= ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;');
+					$html .= ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;');
+					$html .= ssi::writeButton( $log, $dbh, 'New1','new.gif',"\$('Log').hide();keepCompany(f1);",'','New');
+					if ( $$variable{'User'}->deleted() ) {
+					$html .= ssi::writeButton( $log, $dbh, 'UnDelete1','undelete.gif',"f1.btnFunction.value='Undelete';f1.submit();",'','Undelete');
+					$html .= ssi::writeButton( $log, $dbh, 'Destroy1','destroy.gif',"f1.btnFunction.value='Destroy';f1.submit();",'','Destroy');
+					} else {
+					$html .= ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');
+					} # end if
+					$html .= ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
+					$html .= ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset');
+				return $html; ) ?>
 			</p>
 		</fieldset>
 		<fieldset><legend>User Information: <? echo ( $$variable{'User'}->id() ) ?></legend>
@@ -91,18 +96,23 @@ Please select a company or user to obtain login information.<br/>
 				<input type="text" onkeyup="filterDDM(this, f1.company_id);" size="4" style="width: auto;" />
 				<select name="company_id">
 					<option value=""> Select </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(name)') ], $$variable{'User'}->company_id() ); ) ?>
+					<? echo ( 
+my @Companies = openprint::Company::find('order'=>'lower(name)');
+if ( $$variable{'User'}->Company()->deleted() ) {
+unshift @Companies, $$variable{'User'}->Company();
+} # end if
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$variable{'User'}->company_id() ); ) ?>
 				</select>
 			</p>
 			<p>
 				<label>Salutation:</label>
-				<input type="radio" id="salutationMr." name="salutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
+				<input type="radio" id="salutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mr.' ); ) ?> />
 				<label class="radio" for="salutationMr.">Mr.</label>
-				<input type="radio" id="salutationMrs." name="salutation" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
+				<input type="radio" id="salutationMrs." name="salutation" value="Mrs." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mrs.' ); ) ?> />
 				<label class="radio" for="salutationMrs.">Mrs.</label>
-				<input type="radio" id="salutationMs." name="salutation" value="Ms." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Ms.' ) ?> />
+				<input type="radio" id="salutationMs." name="salutation" value="Ms." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Ms.' ); ) ?> />
 				<label class="radio" for="salutationMs.">Ms.</label>
-				<input type="radio" id="salutationMiss" name="salutation" value="Miss" <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Miss' ) ?> />
+				<input type="radio" id="salutationMiss" name="salutation" value="Miss" <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Miss' ); ) ?> />
 				<label class="radio" for="salutationMiss">Miss</label>
 			</p>
 			<p> 
@@ -338,14 +348,19 @@ Please select a company or user to obtain login information.<br/>
 	<? if ( $$variable{'EDIT_USER_NUM'} ) ?>
 			<span style="float:right;"><?EDIT_USER_NUM?> of <?NUM_USERS?></span>
 	<? endif ( $$variable{'EDIT_USER_NUM'} ) ?>
-				<? echo ( join ( '', 
-					ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;'),
-					ssi::writeButton( $log, $dbh, 'Next2','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;'),
-					ssi::writeButton( $log, $dbh, 'New2','new.gif',"\$('Log').hide();keepCompany(f1);",'','New'),
-					ssi::writeButton( $log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
-					ssi::writeButton( $log, $dbh, 'Save2','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-					ssi::writeButton( $log, $dbh, 'Reset2','reset.gif','f1.reset();','','Reset'),
-	); ) ?>
+				<? echo ( my $html = '';
+					$html .= ssi::writeButton( $log, $dbh, 'Prev2','prev.gif',"f1.btnFunction.value='&lt;&lt;';fmCheck(f1);",'','&lt;&lt;');
+					$html .= ssi::writeButton( $log, $dbh, 'Next2','next.gif',"f1.btnFunction.value='&gt;&gt;';fmCheck(f1);",'','&gt;&gt;');
+					$html .= ssi::writeButton( $log, $dbh, 'New2','new.gif',"\$('Log').hide();keepCompany(f1);",'','New');
+					if ( $$variable{'User'}->deleted() ) {
+					$html .= ssi::writeButton( $log, $dbh, 'Undelete2','undelete.gif',"f1.btnFunction.value='Undelete';f1.submit();",'','Undelete');
+					$html .= ssi::writeButton( $log, $dbh, 'Destroy2','destroy.gif',"f1.btnFunction.value='Destroy';f1.submit();",'','Destroy');
+					} else {
+					$html .= ssi::writeButton( $log, $dbh, 'Delete2','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete');
+					} # end if
+					$html .= ssi::writeButton( $log, $dbh, 'Save2','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save');
+					$html .= ssi::writeButton( $log, $dbh, 'Reset2','reset.gif','f1.reset();','','Reset');
+	return $html; ) ?>
 		</p>
 		</fieldset>
 		<input type="hidden" name="btnFunction"/>

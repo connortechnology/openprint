@@ -118,6 +118,12 @@ sub user_profiles {
 		$User = $User->Prev( 'type'=>$param{'ddmUserRole'}, 'company_id'=>$param{'ddmCustomer'} );
 	} elsif ($param{'btnFunction'} eq '>>') {
 		$User = $User->Next( 'type'=>$param{'ddmUserRole'}, 'company_id'=>$param{'ddmCustomer'} );
+	} elsif ( $param{'btnFunction'} eq 'Undelete' ) {
+		if ( $_ = $User->undelete() ) {
+			$variable{'error'} .= "Error undeleting user: $_<br/>";
+		} else {
+			$variable{'information'} = 'User undeleted successfully.';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$User->delete();
 		$User = $User->Next( 'type'=>$param{'ddmUserRole'}, 'company_id'=>$param{'ddmCustomer'} );
@@ -224,6 +230,9 @@ sub user_profiles {
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
 	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(firstname),lower(lastname)' );
+	if ( $User->deleted() ) {
+		unshift @Users, $User;
+	} # end if
 
 	if ( ! $User->id() ) {
 		if ( sets::isin( $session{user_id}, map { $_->id() } @Users ) ) {

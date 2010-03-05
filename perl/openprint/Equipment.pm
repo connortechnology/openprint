@@ -14,7 +14,7 @@ use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
-my $debug = 0;
+my $debug = 1;
 my %find_cache;
 %fields = (
 	'id'	=>	'id',
@@ -358,7 +358,7 @@ if ( ! defined $range ) {
 	} # end if
 	return;
 } # end if
-#$openprint::log->debug("Looking for $name : $range") if $debug;
+$openprint::log->debug("Looking for $name : $range") if $debug;
 
 	$range = 1*$range;
 	my $i = 0;
@@ -366,7 +366,7 @@ if ( ! defined $range ) {
 	my $y;
 	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
-	#$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
+	$openprint::log->debug("Examining: (" . $Spec->min() . 	') (' . $Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
 		return $Spec if ( (1*$$Spec{min}) == $range ) or ((1*$$Spec{max}) == $range );
 
 		return $Spec if ( 
@@ -384,10 +384,10 @@ if ( ! defined $range ) {
 		$i -= 1;
 		# back up
 		$x = $$self{'Specifications'}{$name}[$i];
-#$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-#$openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
+$openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
 		return;	
 	}
 
@@ -395,13 +395,13 @@ if ( ! defined $range ) {
 		my $Spec = $$self{'Specifications'}{$name}[$i];
 		return $Spec if ( (1*$$Spec{min}) <= $range ) and ( ( (1*$$Spec{max}) >= $range ) or ! (1*$$Spec{max}) );
 
-	#$openprint::log->debug("Examining: ($range) (" . $Spec->min() . 	') (' . 1*$Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
+	$openprint::log->debug("Examining: ($range) (" . $Spec->min() . 	') (' . 1*$Spec->max() . ') (' . $Spec->value() . ') ('.$Spec->interpolate() ) if $debug;
 		# first step, find one less than the min
 		last if ( ( (1*$$Spec{max}) > $range) or ( ! (1*$$Spec{max}) ) );
 	} # end foreach
 	if ( $i and $i < @{$$self{'Specifications'}{$name}} ) {
 		$y = $$self{'Specifications'}{$name}[$i];
-#$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
 	} else {
 $openprint::log->debug("Equipment::specification Couldn't find maximum for $name") if $debug;
 		return;
@@ -413,10 +413,10 @@ $openprint::log->debug("Equipment::specification Couldn't find maximum for $name
 		my $S = $x->copy();
 		$$S{min} = $$S{max} = $range;
 		$$S{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
-#$openprint::log->debug("Returning " . $$S{value}) if $debug;
+$openprint::log->debug("Returning " . $$S{value}) if $debug;
 		return $S;
 	} # end if
-#$openprint::log->debug("Returning nothing") if $debug;
+$openprint::log->debug("Returning nothing") if $debug;
 	return;
 } # end sub specification
 
