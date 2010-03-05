@@ -95,6 +95,13 @@
    					<input type="radio" id="AdministratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" /> 
    					<label class="radio" for="AdministratorN">No</label>
    				</li>
+   				<li>
+   					<label>Email my quotes to myself?&nbsp;&nbsp;&nbsp;</label>
+   					<input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( ssi::checked( $$variable{'User'}->email_quotes_to_myself() ); ) ?> value="1" />
+   					<label class="radio" for="email_quotes_to_myself1">Yes</label>
+   					<input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( ssi::checked( ! $$variable{'User'}->email_quotes_to_myself() ); ) ?> value="0" />
+   					<label class="radio" for="email_quotes_to_myself0">No</label>
+   				</li>
 <? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
    				<li>

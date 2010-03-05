@@ -1964,7 +1964,7 @@ $i->display();
 		} # end if
 		$$specs{'PaperMessage'.$qty_index} = $Paper->message();
 		$$specs{'NeedCutting'} = openprint::Estimating::Cutting::signature_needs( $Project, $specs );
-$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
+#$openprint::log->debug("Master time after qty: $qty_index" . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 	} # end foreach quantity
 
 	return $$specs{'Status'};
@@ -2110,16 +2110,27 @@ sub calculate_impositions {
 			$openprint::log->debug("Doesn't match imposition override " . $imp->imposition() . ' != ' . $$sig_specs{'txtImposition'.$qty_index}) if $debug;
 			next;
 		} # end if
+		if ( ( $$sig_specs{'chkOverrideRunStyle'.$qty_index} eq 'Y' ) and ( $imp->runstyle() ne $$sig_specs{'ddmRunStyle'.$qty_index} ) ) {
+			$openprint::log->debug("Doesn't match runstyle override " . $imp->runstyle() . ' != ' . $$sig_specs{'ddmRunStyle'.$qty_index}) if $debug;
+			next;
+		} # end if
 
 		if ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) {
-			if ( ( $imp->Paper()->width() != $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$sig_specs{"OverrideStockHeight$qty_index"} )) {
-				#$imp->display('Not overriden sheet size!');
+			if ( 
+					( $imp->Paper()->width() != $$sig_specs{"OverrideStockWidth$qty_index"} ) or 
+					( $$sig_specs{"OverrideStockHeight$qty_index"} and ( $imp->Paper()->height() != $$sig_specs{"OverrideStockHeight$qty_index"} ) )) {
+				#$imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
 				next;
+			} else {
+				$imp->display('Accepted stock! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
 			} # end if
 		} elsif ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
 			if ( $imp->Paper()->height() != $$sig_specs{"CutOff$qty_index"} ) {
 				next;
 			} # end if
+		} else {
+				$imp->display('stock not overriden! ' );
+
 		} 
 		if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
 #$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
@@ -2964,7 +2975,7 @@ sub calc_price {
 	} # end if
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
-    my $speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->paper()->calliper());
+    my $speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
 #$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
     $run_speed = $speed_mod if $speed_mod;
 
@@ -3120,9 +3131,9 @@ sub calc_price {
 
 #my $time = gettimeofday();
 		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
-foreach my $k ( keys %cutting_results ) {
-$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
-}
+#foreach my $k ( keys %cutting_results ) {
+#$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
+#}
 		
 #$openprint::log->debug("Elapsed cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		if ( $cutting_results{'Status'} eq 'uncalculated' ) {
@@ -3405,6 +3416,9 @@ $openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 		$plate_setup{'Blank Plates'} = $blanks_needed;
 	} # end if
 	$plate_setup{'Plate Count'} = $plate_count;
+
+
+#$Imposition->display("Plate Count $plate_count");
 
 #$price{'Press Washes'} += $varnish_price{'Press Washes'};
 	if ( $price{'Press Washes'} ) {

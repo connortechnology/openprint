@@ -12,7 +12,7 @@ use vars qw( $log $dbh %session %config %fields %transforms %defaults );
 require sql;
 require openprint::QuoteLevel;
 
-my $debug = 1;
+my $debug = 0;
 
 
 %fields = (
@@ -159,10 +159,8 @@ sub price {
 	if ( defined $new_value ) {
 		$$self{'price'.$qty_index} = $new_value;
 	} # end if
-$log->debug("QuotedPrice price$qty_index " . $$self{"price$qty_index"});
 	if ( ! (1*$$self{'price'.$qty_index}) ) {
 		$$self{'price'.$qty_index} = sprintf('%.2f', $self->Project()->price($qty_index) * ( 1 + $$self{'markup'}/100 ) );
-$log->debug("QuotedPrice price$qty_index " . $self->Project()->price($qty_index) );
 	} # end if
 	return $$self{'price'.$qty_index};
 } # end sub total

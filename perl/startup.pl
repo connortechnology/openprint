@@ -30,7 +30,7 @@ BEGIN {
 	use JSON;
 	use JSON::XS;
 
-	#use Carp ();
+	use Carp (cluck);
 
 	use sql;
 	use misc;

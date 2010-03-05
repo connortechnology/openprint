@@ -2,6 +2,7 @@ package openprint::Paper;
 @ISA = qw(openprint::Object);
 require openprint::Object;
 use MIME::QuotedPrint;
+use Carp ( cluck );
 
 use strict;
 use openprint ();
@@ -1245,7 +1246,7 @@ sub load_from_signature {
 				delete $params{'height'};
 				@Papers = find( %params );
 			} elsif ( @Papers > 1 ) {
-				$openprint::log->warn("More than 1 paper found in load_from_signature");
+				Carp::cluck("More than 1 paper found in load_from_signature");
 			} # end if
 #$log->debug("Found " . @Papers );
 			if ( ! @Papers ) {
