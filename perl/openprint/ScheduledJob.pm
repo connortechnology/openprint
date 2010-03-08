@@ -178,6 +178,9 @@ sub runtime_seconds {
 sub starttime_seconds {
 	my $self = shift;
 	if ( @_ ) {
+		if ( $_[0] < time ) {
+			$log->error( 'ScheduledJob: startime_seconds < NOW()' );
+		} # end if
 		$$self{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] );
 	} # end if
 	return Date::Parse::str2time( $$self{'starttime'} );
