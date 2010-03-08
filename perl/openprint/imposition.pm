@@ -32,7 +32,7 @@ sub calc_dutch {
 	my ( $setup, $space_width, $space_height, $specs ) = @_;
 #$openprint::log->debug("Trying dutch:") if $debug;
 	my ( $image_width, $image_height );
-	if ( $setup->orientation() eq 'Vertical' ) {
+	if ( $setup->image_orientation() eq 'Vertical' ) {
 		( $image_width, $image_height ) = $setup->get('image_width','image_height');
 	} else {
 		( $image_width, $image_height ) = reverse $setup->get('image_width','image_height');

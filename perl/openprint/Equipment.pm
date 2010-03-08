@@ -14,7 +14,7 @@ use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
-my $debug = 1;
+my $debug = 0;
 my %find_cache;
 %fields = (
 	'id'	=>	'id',

@@ -27,7 +27,7 @@ RSYNC=/usr/bin/rsync;
 
 # step 1: delete the oldest snapshot, if it exists:
 if [ -d "$2.3" ] ; then                     \
-	$RM -rf "\"$2.3\"" ;                            \
+	$RM -rf "$2.3" ;                            \
 else
 	echo "No $2.3 to delete"
 fi ;
@@ -58,5 +58,5 @@ echo "$RSYNC \"$1\" \"$2\""
 $RSYNC -a --delete --delete-excluded "$1" "$2.0"
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
-		$TOUCH "$2.0"
+$TOUCH "$2.0"
 

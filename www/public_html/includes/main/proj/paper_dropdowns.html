@@ -76,6 +76,12 @@
 				<input id="CustomSheetDoubleSided<?Signature?>N" name="CustomSheetDoubleSided<?Signature?>" type="radio" value="N" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'CustomSheetDoubleSided'.$$variable{'Signature'}} eq 'N' ); ) ?> />
 				<label class="radio" for="CustomSheetDoubleSided<?Signature?>N">No</label>
 			</p>
+			<p><label>Cuttable?</label>
+				<input id="cuttable<?Signature?>1" name="cuttable<?Signature?>" type="radio" value="1" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'cuttable'.$$variable{'Signature'}} ne '0' ); ) ?> />
+				<label class="radio" for="cuttable<?Signature?>1">Yes</label>
+				<input id="cuttable<?Signature?>0" name="cuttable<?Signature?>" type="radio" value="0" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'cuttable'.$$variable{'Signature'}} eq '0' ); ) ?> />
+				<label class="radio" for="cuttable<?Signature?>0">No</label>
+			</p>
 			<p><label>Perfecting w/o gutters?</label>
 				<input id="perfecting<?Signature?>Y" name="perfecting<?Signature?>" type="radio" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'perfecting'.$$variable{'Signature'}} eq 'Y' ); ) ?> />
 				<label class="radio" for="perfecting<?Signature?>Y">Yes</label>

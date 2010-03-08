@@ -1199,7 +1199,7 @@ sub load_from_signature {
 		$Paper->minimum_order( $$specs{'minimum_order'} );
 		$Paper->sheets_per_package( $$specs{'sheets_per_package'} );
 		$Paper->full_packages( $$specs{'full_packages'} );
-		$Paper->cuttable(1);
+		$Paper->cuttable( exists $$specs{'cuttable'} ? $$specs{'cuttable'} : 1 );
 		$Paper->digital(1);
 		$Paper->perfecting($$specs{'perfecting'});
 
