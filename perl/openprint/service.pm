@@ -568,6 +568,8 @@ sub summary {
 		return openprint::Estimating::Packaging::summary($Project->id(), $service_id, $specs, $qty_index );
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['SaddleStitching','LoopStitching'] ) ) {
 		return openprint::Estimating::Stitching::summary($Project->id(), $service_id, $specs, $qty_index );
+	} elsif ( sets::isin( $$specs{'ServiceType'}, ['ColourCorrection'] ) ) {
+		return openprint::Estimating::Prepress::summary($Project->id(), $service_id, $specs, $qty_index );
 	} elsif ( $$specs{'ServiceType'} ) {
 		eval('require openprint::Estimating::'.$$specs{'ServiceType'}.';' );
 		$openprint::log->error("ERror requiring openprint::Estimating::$$specs{'ServiceType'}.'::summary: $@)") if $@;

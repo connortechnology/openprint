@@ -161,10 +161,12 @@ sub view {
 					my @Equipment = openprint::Equipment::find('strid'=>$param{"UsePress-$printing_specs{'SignatureIndex'}"} );
 					next if ! @Equipment;
 
-					sql::update( $log, $dbh, 'Schedule', ['ServiceIndex=?', $signature_service_index],
-							'Equipment_id', $Equipment[0]->id(), 
-							'RunTime', "$runtime minutes",
-							);
+					foreach my $Job ( openprint::ScheduledJob( 'service_id'	=> $signature_service_index ) ) {
+						$Job->save({
+								'equipment_id'	=> $Equipment[0]->id(),
+								'runtime'	=> "$runtime minutes",
+								});
+					} # end foreach Job
 				} # end if
 			} # end foreach signature_service_index
 
@@ -733,7 +735,9 @@ sub is_sig_complete {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
-	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $signature_service_index );
+	foreach my $Job ( openprint::ScheduledJob( 'project_id' => $project_index, 'service_id' => $signature_service_index ) ) {
+		$Job->delete();
+	} # end foreach
 
 	return 1;
 } # end sub is_sig_complete
