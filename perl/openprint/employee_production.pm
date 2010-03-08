@@ -743,7 +743,9 @@ sub is_sig_complete {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
-	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $signature_service_index );
+	foreach my $Job ( openprint::ScheduledJob( 'project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+		$Job->delete();
+	} # end foreach Job
 
 	return 1;
 } # end sub is_sig_complete
@@ -927,7 +929,9 @@ sub complete_signature {
 
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
 # Remove from Print Schedule
-	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
+	foreach my $Job ( openprint::ScheduledJob( 'project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+		$Job->delete();
+	} # end foreach Job
 # Update Bindery Schedule
 	sql::update( $log, $dbh, 'Bindery_Schedule', ['ProjectIndex=?', $project_id], 'starttime', 
 			sql::execute( $log, $dbh, q{SELECT NOW() + '2 hours'::interval} )
@@ -946,13 +950,12 @@ sub summary {
 sub monthly_schedule {
 
 	if ( $param{'btnFunction'} eq 'MakeReservation' ) {
-		$variable{'error'} .= sql::insert( undef, undef, 'Schedule',
-				'ProjectIndex', undef,
-				'ServiceIndex', undef,
-				'StartTime',    sprintf('%.4d-%.2d-%.2d', @param{'StartYear','StartMonth','StartDay'}),
-				'equipment_id', $param{'Press'},
-				'RunTime',      sprintf('%.2d:%.2d:%.2d', $param{'hours'}, 0, 0),
-				);
+		my $Job = new openprint::ScheduledJob();
+		$variable{'error'} .= $Job->save( {
+				'starttime'		=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'}),
+				'equipment_id'	=>	$param{'Press'},
+				'runtime'		=>	sprintf('%.2d:%.2d:%.2d', $param{'hours'}, 0, 0),
+				} );
 	} # end if
 } # end sub monthly_schedule
 
