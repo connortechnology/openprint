@@ -181,7 +181,7 @@ sub format {
             -decimal_digits     =>  $precision,
             -int_curr_symbol    =>  $Currency->symbol(),
             );
-    return $Formatter->format_price( $price );
+	return $Formatter->format_price( $price, $precision );
 } # end sub format
 
 1;

@@ -81,7 +81,10 @@
 					</p>
 	<? endif ( $$variable{'Claim'}->invoiced_on() ) ?>
 				</div>
-			</div>
+				<div class="Dockets">
+				<p class="docket"><label>Dockets:</label><? echo ( 
+						join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ );} $$variable{'Claim'}->docket() ? @{$$variable{'Claim'}->docket()} : () );) ?></p>
+				</div>
 		<div class="Contents">	
 	<table id="Contents">
 		<tr>

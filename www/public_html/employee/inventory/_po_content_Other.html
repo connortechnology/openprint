@@ -8,7 +8,7 @@
 	$rows = 1 if ! $rows;
 	$html .= sprintf(q{<td><textarea name="description-%1$d" id="description-%1$d" rows="%3$d" class="mce" onkeyup="textarea_resize(this);if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}">%2$s</textarea></td>}, $C->id(), $C->description(), $rows );
 	$html .= sprintf(q{<td><input type="text" name="docket-%1$d" id="docket-%1$d" value="%2$s" onkeyup="if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}new Ajax.Updater('similar_pos', '_similar_pos.html', { method: 'get', parameters: { docket: this.value, po_id: %3$d} });" onblur="$('similar_pos').innerHTML='';" /></td>}, $C->id(), $C->docket(), $C->po_id() );
-	$html .= sprintf(q{<td><input type="text" name="price-%1$d" id="price-%1$d" value="%2$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}" style="text-align: right;"/></td>}, $C->id(), $C->price() );
-	$html .= sprintf(q{<td><input type="text" name="total-%1$d" id="total-%1$d" value="%2$.2f" style="text-align: right;"/></td>}, $C->id(), $C->total() );
+	$html .= sprintf(q{<td class="price"><input type="text" name="price-%1$d" id="price-%1$d" value="%2$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);update_totals($('f1'));if(this.value!=this.defaultValue){$('line-%1$d').addClassName('changed');}" /></td>}, $C->id(), $C->price() );
+	$html .= sprintf(q{<td class="total"><input type="text" name="total-%1$d" id="total-%1$d" value="%2$.2f" /></td>}, $C->id(), $C->total() );
 	return $html;
 ) ?>

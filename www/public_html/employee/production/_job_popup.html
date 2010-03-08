@@ -24,6 +24,7 @@
 			</span>
 		</p>
 <? endif ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
+<? if ( $$variable{'Job'}->project_id() ) ?>
 		<p>
 			<label>Impressions:</label>
 			<input type="text" name="impressions" value="<? echo ( $$variable{'Job'}->impressions() ) ?>" />
@@ -32,14 +33,17 @@
 			<label>Speed:</label>
 			<input type="text" name="speed" value="<? echo ( $$variable{'Job'}->speed() ) ?>" onkeyup="this.value=this.value.replace(/[\D]/g,'');"/>/Hr
 		</p>
+<? endif ( $$variable{'Job'}->project_id() ) ?>
 		<p>
 			<label>Runtime:</label>
 			<input type="text" name="runtime" value="<? echo ( $$variable{'Job'}->runtime() ) ?>" onkeyup="this.value=this.value.replace(/[^\d:]/g,'');"/>
 		</p>
+<? if ( $$variable{'Job'}->project_id() ) ?>
 		<p>
 			<label>Forms:</label>
 			<input type="text" name="forms" value="<? echo ( $$variable{'Job'}->forms() ) ?>" onkeyup="this.value=this.value.replace(/\D/g, '');" />
 		</p>
+<? endif ( $$variable{'Job'}->project_id() ) ?>
 	</fieldset>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'SaveStartTime', 'save.gif', q`new Ajax.Request('_li_change.json',{parameters:JobForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ); ) ?>

@@ -58,54 +58,61 @@ sub print_overview {
 sub press_schedule {
 
 	if ( $param{'btnFunction'} eq 'Reflow' ) {
-		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' );
-		if ( @Jobs ) {
-			reorder_jobs( @Jobs );
+		my $Equipment = new openprint::Equipment( $param{'Presses'} );
+		if ( $Equipment->smartscheduling() ) {
+			my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' );
+			if ( @Jobs ) {
+				reorder_jobs( @Jobs );
+			} else {
+				$variable{'error'} .= 'There are no jobs scheduled to reflow.';
+			} # end if
 		} else {
-			$variable{'error'} .= 'There are no jobs scheduled to reflow.';
+			$variable{'error'} .= 'Press does not support auto-scheduling.';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Add Docket' ) {
-		my $Project = new openprint::Project();
-		$Project->save();
-		$Project->company_id( $param{'company_id'} );
-		$Project->reference( 'Dummy Docket' );
-		$Project->status( 'Approved' );
-		$Project->design( 'ElectronicFile' );
-		$Project->save();
-		openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
-		my $project_id = $Project->id();
+		my $Job = new openprint::ScheduledJob();
 
-		my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'AdditionalSignature' );
-		$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_id );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', ++$signature_count );
+		if ( $param{'company_id'} ) {
+			my $Project = new openprint::Project();
+			$Project->save();
+			$Project->company_id( $param{'company_id'} );
+			$Project->reference( 'Dummy Docket' );
+			$Project->status( 'Approved' );
+			$Project->design( 'ElectronicFile' );
+			$Project->save();
+			openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
+			my $project_id = $Project->id();
 
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtEmployeeComments', $param{'Comment'} );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureQuantity', $param{'forms'} );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
+			my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'AdditionalSignature' );
+			$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_id );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', ++$signature_count );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureQuantity', $param{'forms'} );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
 
-		my $Equipment = new openprint::Equipment( $param{'press_id'} );
-		openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
+			my $Equipment = new openprint::Equipment( $param{'press_id'} );
+			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
 
-		$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'AdditionalSignature' ) );
+			$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'AdditionalSignature' ) );
+			$Job->project_id( $Project->id() );
+			$Job->service_id( [ $service_id ] );
+		} # end if
 
+		if ( $param{'starttime_year'} ) {
+			$Job->starttime( sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute','starttime_second'} ) );
+		} # end if
 		my ( $h, $m, $s ) = split ':', $param{'runtime'};
 		$h =~ s/\D//g;
 		$m =~ s/\D//g;
 		$s =~ s/\D//g;
 		$s = 59 if ( $s > 59 );
 		$m = 59 if ( $m > 59 );
-		
-
-		# Dumps it in pending
-		my $Job = new openprint::ScheduledJob();
 		$variable{'error'} .= $Job->save({
-				'project_id'	=> $Project->id(),
-				'service_id'	=> [ $service_id ],
-				'starttime'		=> undef,
 				'equipment_id'	=> $param{'press_id'},
+				'comment'		=> $param{'comment'},
+				'locked'		=> $param{'locked'},
 				'runtime'		=> join(':', $h, $m, $s ),
 				});
 
@@ -130,8 +137,9 @@ sub press_schedule {
 	} elsif ( $param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $param{'schedule_id'} ) {
 			my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+			my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
 			if ( ( ! $Job->delete() ) and $$Job{'project_id'} ) {
-				$Job->Project()->add_to_log( @session{'company_id','user_id'}, 'Job removed from print schedule.' );
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, 'Form'. (@forms != 1 ? 's' : '') . join(',',@forms). ' removed from print schedule.' );
 			} # end if
 		} else {
 			$variable{'error'} .= 'No job given to delete...';
@@ -736,7 +744,9 @@ sub is_sig_complete {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
-	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_index, $signature_service_index );
+	foreach my $Job ( openprint::ScheduledJob( 'project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+		$Job->delete();
+	} # end foreach Job
 
 	return 1;
 } # end sub is_sig_complete
@@ -920,7 +930,9 @@ sub complete_signature {
 
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
 # Remove from Print Schedule
-	sql::execute( $log, $dbh, q{DELETE FROM Schedule WHERE ProjectIndex=? AND ServiceIndex=?}, $project_id, $service_id );
+	foreach my $Job ( openprint::ScheduledJob( 'project_id'=>$project_id, 'service_id'=>$service_id ) ) {
+		$Job->delete();
+	} # end foreach Job
 # Update Bindery Schedule
 	sql::update( $log, $dbh, 'Bindery_Schedule', ['ProjectIndex=?', $project_id], 'starttime', 
 			sql::execute( $log, $dbh, q{SELECT NOW() + '2 hours'::interval} )
@@ -939,13 +951,12 @@ sub summary {
 sub monthly_schedule {
 
 	if ( $param{'btnFunction'} eq 'MakeReservation' ) {
-		$variable{'error'} .= sql::insert( undef, undef, 'Schedule',
-				'ProjectIndex', undef,
-				'ServiceIndex', undef,
-				'StartTime',    sprintf('%.4d-%.2d-%.2d', @param{'StartYear','StartMonth','StartDay'}),
-				'equipment_id', $param{'Press'},
-				'RunTime',      sprintf('%.2d:%.2d:%.2d', $param{'hours'}, 0, 0),
-				);
+		my $Job = new openprint::ScheduledJob();
+		$variable{'error'} .= $Job->save( {
+				'starttime'		=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'}),
+				'equipment_id'	=>	$param{'Press'},
+				'runtime'		=>	sprintf('%.2d:%.2d:%.2d', $param{'hours'}, 0, 0),
+				} );
 	} # end if
 } # end sub monthly_schedule
 
@@ -996,6 +1007,7 @@ sub _ul {
 		my @service_ids = @{$$Job{'service_id'}};
 		my $runtime = int ( $Job->runtime_seconds()/@service_ids );
 		$Job->runtime_seconds( $runtime );
+		$Job->impressions( $Job->impressions() / @service_ids );
 		$$Job{'service_id'} = [ shift @service_ids ];
 		$Job->save();
 		my $starttime = $Job->starttime_seconds() + $runtime if $Job->starttime();
@@ -1049,7 +1061,7 @@ $log->debug("Order before coalesce: @order");
 			my $previous;
 			foreach my $row_id ( @order ) {
 				my $Job = new openprint::ScheduledJob( $row_id );
-				if ( $previous and ( $previous->project_id() == $Job->project_id() ) ) {
+				if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
 					my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
 					my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
 					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() ) ) {
@@ -1075,57 +1087,58 @@ $log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index(
 $log->debug("Order after coalesce: @order");
 		sql::end_transaction( $dbh, $ac );
 
-	if ( ! $Shift->Equipment()->smartscheduling() ) {
-		return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'ul_id'}, $param{'services'} );
-	} # end if
+		if ( ! $Shift->Equipment()->smartscheduling() ) {
+$log->debug("Old");
+			return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'ul_id'}, $param{'services'} );
+$log->debug("Old2");
+		} else {
+			my $ac = sql::start_transaction( $dbh );
+			$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+			$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
+			if ( $Shift->starttime() ) {
+				my @final_order;
+# Get jobs before the shift, leave them in order.
+				foreach my $row ( openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
+					push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
+				} # end foreach row
 
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-		$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+# Get the rest of the jobs on this equipment
+				my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
 
-		if ( $Shift->starttime() ) {
-			my @final_order;
-			# Get jobs before the shift, leave them in order.
-			foreach my $row ( openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
-				push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
-			} # end foreach row
-
-			# Get the rest of the jobs on this equipment
-			my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
-
-			# Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
-			foreach my $row_id ( @order ) {
-				my $found = 0;
-				for ( my $j = 0; $j < @jobs; $j += 1 ) {
-					my $row = $jobs[$j];
-					if ( $$row{'id'} == $row_id ) {
-						push @final_order, $row;
-						splice @jobs, $j, 1;
-						$found = 1;
-						last;
+# Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
+				foreach my $row_id ( @order ) {
+					my $found = 0;
+					for ( my $j = 0; $j < @jobs; $j += 1 ) {
+						my $row = $jobs[$j];
+						if ( $$row{'id'} == $row_id ) {
+							push @final_order, $row;
+							splice @jobs, $j, 1;
+							$found = 1;
+							last;
+						} # end if
+					} # end foreach job
+					if ( ! $found ) {
+# Must be on another press.
+						my $Job = new openprint::ScheduledJob( $row_id );
+						$Job->equipment_id( $Shift->equipment_id() );
+						push @final_order, $Job;
 					} # end if
-				} # end foreach job
-				if ( ! $found ) {
-					# Must be on another press.
+				} # end foreach row_id
+				reorder_jobs( @final_order, @jobs );
+			} else { # has starttime
+# Pending or Approved
+				my $was_scheduled = 0;
+				foreach my $row_id ( @order ) {
 					my $Job = new openprint::ScheduledJob( $row_id );
-					$Job->equipment_id( $Shift->equipment_id() );
-					push @final_order, $Job;
-				} # end if
-			} # end foreach row_id
-			reorder_jobs( @final_order, @jobs );
-		} else { # has starttime
-			# Pending or Approved
-			my $was_scheduled = 0;
-			foreach my $row_id ( @order ) {
-				my $Job = new openprint::ScheduledJob( $row_id );
-				$was_scheduled = 1 if $$Job{'starttime'};
-				$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()}) if $Job->starttime() or ( $Job->equipment_id() != $Shift->equipment_id() );
-			} # end foreach row_id
-			# If it was a formerly scheduled job, then shuffle
-			reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
-		} # end if	has starttime
-		sql::end_transaction( $dbh, $ac );
+					$was_scheduled = 1 if $$Job{'starttime'};
+					$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()}) if $Job->starttime() or ( $Job->equipment_id() != $Shift->equipment_id() );
+				} # end foreach row_id
+# If it was a formerly scheduled job, then shuffle
+				reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
+			} # end if	has starttime
+			sql::end_transaction( $dbh, $ac );
+		} # end if
 
 	} # end if services
 
@@ -1330,7 +1343,7 @@ sub _li_change {
 
 		my %sql;
 
-		if ( $param{'forms'} != $Job->forms() ) {
+		if ( (exists $param{'forms'}) and ( $param{'forms'} != $Job->forms() ) ) {
 			my @service_ids = @{$$Job{'service_id'}};
 			foreach my $s_id ( @service_ids ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
@@ -1376,8 +1389,8 @@ sub _li_change {
 		} # end if
 		$sql{'locked'} = $param{'locked'} if exists $param{'locked'} and $param{'locked'} != $$Job{'locked'};
 		$sql{'comment'} = $param{'comment'} if $param{'comment'} ne $Job->comment();
-		$sql{'impressions'} = $param{'impressions'} if $Job->impressions() != $param{'impressions'};
-		$sql{'speed'} = $param{'speed'} if $Job->speed() != $param{'speed'};
+		$sql{'impressions'} = $param{'impressions'} if ( exists $param{'impressions'} ) and ( $Job->impressions() != $param{'impressions'} );
+		$sql{'speed'} = $param{'speed'} if ( exists $param{'speed'} ) and ( $Job->speed() != $param{'speed'} );
 
 		if ( keys %sql ) {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();

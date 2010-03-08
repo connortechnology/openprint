@@ -51,9 +51,11 @@
 			$$variable{"ddmPressCompletionDateMonth-$$variable{'SignatureIndex'}"}?$$variable{"ddmPressCompletionDateMonth-$$variable{'SignatureIndex'}"}:$m,
 			$$variable{"ddmPressCompletionDateDay-$$variable{'SignatureIndex'}"}?$$variable{"ddmPressCompletionDateDay-$$variable{'SignatureIndex'}"}:$d,
 			); ) ?>
+		<span class="DateSelector">
 		<select name="ddmPressCompletionDateMonth-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, this.value, document.f1.elements['ddmPressCompletionDateDay-<?SignatureIndex?>'], document.f1.elements['ddmPressCompletionDateDay-<?SignatureIndex?>'].value);"><?months?></select>
 		<select name="ddmPressCompletionDateDay-<?SignatureIndex?>" size="1" onchange="setDaysDropDown(document.f1.elements['ddmPressCompletionDateYear-<?SignatureIndex?>'].value, document.f1.elements['ddmPressCompletionDateMonth-<?SignatureIndex?>'],this, this.value);"><?days?></select>
 		<select name="ddmPressCompletionDateYear-<?SignatureIndex?>" size="1"><?years?></select>
+		</span>
 	</p>
 <? eval (
 	if ( $$variable{"rdbPressComplete-$$variable{'SignatureIndex'}"} eq '' ) {

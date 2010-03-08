@@ -505,16 +505,12 @@ sub update_schedule {
 		return;
 	} # end if
 
-	$openprint::log->debug("Updating Press Schedule");
-	my ( $start_time ) = sql::execute( undef, undef, q{SELECT NOW()} );
-	$_ = q{SELECT DISTINCT ProjectIndex, ServiceIndex, StartTime FROM Projects, Schedule WHERE Equipment_id=? AND Index=ProjectIndex AND Projects.strStatus='Approved' ORDER BY StartTime};
-	my @data = sql::execute( undef, undef, $_, $$self{id} );
-	while ( my ( $project_index, $service_index, undef ) = splice @data, 0, 3 ) {
-		sql::update( undef, undef, 'Schedule', ['Equipment_id=? AND ProjectIndex=? AND ServiceIndex=?', $$self{id}, $project_index, $service_index],
-				'StartTime', $start_time
-				);
-		( $start_time ) = sql::execute( undef, undef, q{SELECT StartTime+RunTime FROM Schedule WHERE projectindex=? AND ServiceIndex=?}, $project_index, $service_index );
-	} # end while
+    my $starttime_seconds = Date::Parse::str2time( sql::execute( undef, undef, q{SELECT NOW()} ) );
+	my $runtime;
+	foreach my $Job ( openprint::ScheduledJob( 'equipment_id'=>$$self{'id'}, 'order'=>'starttime', 'starttime_null'=>0 ) ) {
+		$Job->save({'starttime_seconds'	=> $starttime_seconds });
+		$runtime = $Job->runtime_seconds();
+	} # end foreach Job
 
 } # end sub update_schedule
 

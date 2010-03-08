@@ -144,8 +144,14 @@ sub add_project_to_order {
 	$order_id = get_unfinished_order( ) if ! $order_id;
 	$order_id = create_order( ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
+	my $Project = new openprint::Project( $project_index );
+	if ( ! $Project->company_id() ) {
+		$Project->company_id( $session{'company_id'} );
+		$Project->save();
+	} elsif ( $Order->company_id() != $Project->company_id() ) {
+		return ( $order_id, 'Project is owned by ' . $Project->Company()->name() . ' but order is owned by ' . $Order->Company()->name() );
+	} # end if
 
-	# make sure project isn't already in the order.
 	my %sql = (
 		'OrderIndex'		=>	$order_id,
 		'lngProjectIndex'	=>	$project_index,
@@ -153,7 +159,6 @@ sub add_project_to_order {
 
 	my $qty_index;
 	my $num_qtys;
-	my $Project = new openprint::Project( $project_index );
 	my @qtys = $Project->quantities();
 	foreach ( 0 .. 2 ) {
 		if ( $qtys[$_] ) {
