@@ -298,31 +298,27 @@ $inkCoverage{$colour} = 100;
 			} # endif
 				
 
-		if ( $Paper->type() eq 'Roll' ) {
-			my $net_impressions = $$variable{'Project'}->ordered_quantity();
-			$net_impressions /= $$sig_specs{'txtImposition'.$$variable{'Project'}->ordered_quantity_index()} if $$sig_specs{'txtImposition'.$$variable{'Project'}->ordered_quantity_index()};
-			$net_impressions *= 2 if (
-					openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) and
-					openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) and
-					sets::isin($$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()},['Sheet Work','Work & Turn','Work & Tumble'] ));
-			$html .= '</td><td class="docketText">';
-			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%dimps<br/>%d lbs F%d<br/>', $net_impressions, $net_impressions * $Paper->width() * $$sig_specs{'CutOff'.$$variable{'Project'}->ordered_quantity_index()} * $Paper->wpsi(), $f );
-			} # end foreach
-			$html .= '</td><td class="docketText">';
-			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%dimps<br/>%s<br/>', $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()}, $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
-			} # end foreach
-		} else {
-			$html .= '</td><td class="docketText">';
-			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%d F%d<br/>', $$sig_specs{'hdnNetSheetCount'.$$variable{'Project'}->ordered_quantity_index()}, $f );
-			} # end foreach
-			$html .= '</td><td class="docketText">';
-			foreach my $f ( $form .. ($form+$signatures-1) ) {
-				$html .= sprintf('%s<br/>', $$sig_specs{'txtPressSheetQty'.$$variable{'Project'}->ordered_quantity_index()} );
-			} # end foreach
+		my $net_sheets = $$variable{'Project'}->ordered_quantity();
+		$net_sheets /= $$sig_specs{'txtImposition'.$$variable{'Project'}->ordered_quantity_index()} if $$sig_specs{'txtImposition'.$$variable{'Project'}->ordered_quantity_index()};
+		my $net_impressions = $net_sheets;
+		my $gross_impressions = $$sig_specs{'hdnImpressionQuantity'.$$variable{'Project'}->ordered_quantity_index()};
+		my $gross_sheets = $gross_impressions;
+		if (
+				openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) and
+				openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) and
+				sets::isin($$sig_specs{'ddmRunStyle'.$$variable{'Project'}->ordered_quantity_index()},['Sheet Work','Work & Turn','Work & Tumble'] )){
+		$net_impressions *= 2 ;
+		$gross_sheets /= 2 ;
 		} # end if
+
+		$html .= '</td><td class="docketText">';
+		foreach my $f ( $form .. ($form+$signatures-1) ) {
+			$html .= sprintf('%d imps<br/>%d sheets<br/>%d lbs F%d<br/>', $net_impressions, $net_sheets, $net_impressions * $Paper->area() * $Paper->wpsi(), $f );
+		} # end foreach
+		$html .= '</td><td class="docketText">';
+		foreach my $f ( $form .. ($form+$signatures-1) ) {
+			$html .= sprintf('%d imps<br/>%d sheets<br/>%d lbs F%d<br/>', $gross_impressions, $gross_sheets, $gross_impressions * $Paper->area() * $Paper->wpsi(), $f );
+		} # end foreach
 		$html .= '</td>';
 		
 		$html .= '<td class="docketText">&nbsp;</td>';
