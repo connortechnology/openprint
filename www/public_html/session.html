@@ -5,3 +5,11 @@
 	}
 	return $html;
 ) ?>
+ENV<br/>
+<? echo ( 
+	my $html;
+	foreach my $k ( sort keys %ENV ) {
+		$html .= "$k = $ENV{$k}<br/>\n";
+	}
+	return $html;
+) ?>
