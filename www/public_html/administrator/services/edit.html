@@ -12,7 +12,7 @@
 			<label>Service:</label>
 			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Service::find('category_id'=>$param{'ddmSearchCategory'},'order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::Service::find('category_id'=>$param{'ddmSearchCategory'},'order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">
@@ -53,13 +53,6 @@
 	</div>
 	<div class="rightColumn">
 	<fieldset><legend>Purchasing Information</legend>
-		<p> 
-			<label>Supplier:</label>
-			<select name="supplier_id">
-				<option value="">Select a supplier</option>
-<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('supplier'=>'Y','order'=>'lower(name)') ], $$variable{'Service'}->supplier_id() ); ) ?>
-			</select>
-		</p>
 		<p> 
 			<label>Federal Tax Exempt?</label>
 			<input type="radio" id="taxexempt1Y" name="taxexempt1" value="Y" <? echo ( 'checked="checked"' if $$variable{'Service'}->taxexempt1() eq 'Y' ) ?> />

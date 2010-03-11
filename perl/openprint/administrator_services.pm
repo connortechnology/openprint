@@ -68,7 +68,8 @@ sub edit {
 									$openprint::param{"cost-$list-$equipment-$index"},
 									$openprint::param{"markup-$list-$equipment-$index"},
 									$openprint::param{"price-$list-$equipment-$index"},
-									$openprint::param{"discount-$list-$equipment-$index"}
+									$openprint::param{"discount-$list-$equipment-$index"},
+									$openprint::param{"supplier_id-$list-$equipment-$index"},
 									);
 							$price_set->addPrice( $price );
 					} else {
@@ -83,7 +84,8 @@ sub edit {
 									$openprint::param{"cost-$list-$equipment-$index"},
 									$openprint::param{"markup-$list-$equipment-$index"},
 									$openprint::param{"price-$list-$equipment-$index"},
-									$openprint::param{"discount-$list-$equipment-$index"}
+									$openprint::param{"discount-$list-$equipment-$index"},
+									$openprint::param{"supplier_id-$list-$equipment-$index"},
 									);
 							$price_set->addPrice( $price );
 						} # end foreach

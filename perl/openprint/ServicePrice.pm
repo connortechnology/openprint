@@ -37,6 +37,7 @@ $serial = 'serviceprices_id_seq';
 	'price'			=>	'price',
 	'discountable'	=>	'discountable',
 	'interpolate'	=>	'interpolate',
+	'supplier_id'	=>	'supplier_id',
 );
 
 %transforms = (
@@ -50,6 +51,7 @@ $serial = 'serviceprices_id_seq';
 	'min'			=>	undef,
 	'max'			=>	undef,
 	'equipment_id'	=>	undef,
+	'supplier_id'	=>	undef,
 	'cost'			=>	0,
 	'markup'		=>	0,
 	'price'			=>	0,
@@ -87,6 +89,10 @@ sub find {
 		} else {
 			$sql .= ' AND equipment_id IS NULL';
 		} # end if
+	} # end if
+	if ( $params{'supplier_id'} ) {
+		$sql .= ' AND supplier_id=?';
+		push @values, $params{'supplier_id'};
 	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};

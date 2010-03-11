@@ -53,15 +53,18 @@ sub no_outputs {
 };
 
 sub neccessary {
-	my ( $log, $dbh, $project_index ) = @_;
+	my ( $Project ) = @_;
 
-	my $Project = new openprint::Project( $project_index );
     my $services = $Project->services();
 
     if ( $$services{'NoBindery'} ) {
-        $log->debug(" ** Project is marked as No bindery, Sews not needed ! ** ");
+        $openprint::log->debug(" ** Project is marked as No bindery, Sews not needed ! ** ");
         return 0;
     } # end if
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+	if ( $$printing_specs{'PocketSize'} ) {
+		return 1;
+	} # end if
 
 	return 0;
 } # end sub neccessary

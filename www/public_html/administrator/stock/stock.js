@@ -140,6 +140,10 @@ function calc_price( element ) {
 				element.form.elements['priceperm-'+index].value = do_decimals( newvalue, 2 );
 			} // end if
 		} // end if
+		if ( element.form.elements['costperfoot-'+index] && element.form.elements['priceperfoot-'+index] ) {
+			var costperfoot = parseFloat( element.form.elements['costperfoot-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+			element.form.elements['priceperfoot-'+index].value = do_decimals( costperfoot * ( 1 + markup/100 ), 2);
+		} // end if
 	} else if ( matches = element.name.match( /pricecwt-(.*)/ ) ) {
 		var index = matches[1];
 

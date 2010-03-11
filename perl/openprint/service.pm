@@ -373,9 +373,16 @@ $openprint::log->debug("Apres Skdis");
 		} # end if
 	} # end if
 
-	if ( openprint::Estimating::Counting::neccessary( $Project ) ) {
-		push @{$$services{'Counting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Counting' ) if ! $$services{'Counting'};
-	} # end if
+	foreach my $service_name ( 'Counting', 'Grommeting', 'Sewing' ) {
+		eval 'require openprint::Estimating::'.$service_name.';';
+		$log->error("Error requiring opepnrint::Estimating::$service_name: $@") if $@;
+		my $neccessary = eval 'openprint::Estimating::'.$service_name.'::neccessary( $Project )';
+		$log->error("Error opepnrint::Estimating::$service_name::neccessary $@") if $@;
+
+		if ( $neccessary ) {
+			push @{$$services{$service_name}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $service_name ) if ! $$services{$service_name};
+		} # end if
+	} # end foreach service_name;
 
 	# Order for these is important.  Stitching must be calc'd before Folding
 	foreach my $type ( 'Folding','SaddleStitching','LoopStitching' ) {
