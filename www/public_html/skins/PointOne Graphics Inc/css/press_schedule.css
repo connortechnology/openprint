@@ -251,6 +251,11 @@ span.PrepressOperator {
 	text-transform: lowercase;
 }
 
+fieldset.filters p.buttons {
+clear:both;
+	padding: 0px;
+margin: 5px 0px 5px 0px;
+}
 fieldset.filters ul {
 	list-style:none;
 	margin: 0px;
@@ -271,13 +276,13 @@ fieldset.filters ul {display: block;}
 
 fieldset.filters ul li {
 	list-style:none;
-	padding: 0px 0px 0px 80px;
+	padding: 0px 0px 0px 85px;
 	float: left;
 }
 fieldset.filters ul li label {
 	vertical-align: top;
-	margin: 0px 0px 0px -80px;
-	width: 75px;
+	margin: 0px 0px 0px -85px;
+	width: 80px;
 	float: left;
 }
 div.presses {
