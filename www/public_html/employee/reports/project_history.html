@@ -92,6 +92,14 @@
 
 			 </select>
 		</p>
+		<p><label>Reprint:</label>
+			<input type="radio" name="reprint" id="reprintY" value="Y" <? echo ( ssi::checked( $param{'reprint'} eq 'Y' ); ) ?> />
+			<label class="radio" for="reprintY">Yes</label>
+			<input type="radio" name="reprint" id="reprintN" value="N" <? echo ( ssi::checked( $param{'reprint'} eq 'N' ); ) ?> />
+			<label class="radio" for="reprintN">No</label>
+			<input type="radio" name="reprint" id="reprint" value="" <? echo ( ssi::checked( $param{'reprint'} eq '' ); ) ?> />
+			<label class="radio" for="reprint">Both</label>
+		</p>
 		<? endif ( $openprint::session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
 
 		 <p class="buttons">

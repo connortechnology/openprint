@@ -1,8 +1,8 @@
 <? eval (
-	$$variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} );
-	$$variable{'Label'} = new openprint::Label( $openprint::param{'id'} );
-	$$variable{'Label'}{'type_id'} = $openprint::param{'type_id'} if ! $$variable{'Label'}{'type_id'};
-	$$variable{'Label'}{'reference'} = $openprint::param{'reference'} if ! $$variable{'Label'}{'reference'};
+	$$variable{'Project'} = new openprint::Project( $param{'project_id'} );
+	$$variable{'Label'} = new openprint::Label( $param{'id'} );
+	$$variable{'Label'}{'type_id'} = $param{'type_id'} if ! $$variable{'Label'}{'type_id'};
+	$$variable{'Label'}{'reference'} = $param{'reference'} if ! $$variable{'Label'}{'reference'};
 	if ( ! $$variable{'Label'}->docket() ) {
 		$$variable{'Label'}->docket( $$variable{'Project'}->docket() );
 	} # end if
@@ -19,8 +19,8 @@
 		<? echo ( join('',
 			ssi::writeButton( $log, $dbh, 'Print','print.gif','window.print();', '', 'Print' ),
 			ssi::writeButton( $log, $dbh, 'Close','close.gif','', 
-$openprint::param{'project_id'} ? 
-'/employee/production/project_view.html?ProjectIndex='.$openprint::param{'project_id'} :
+$param{'project_id'} ? 
+'/employee/production/project_view.html?ProjectIndex='.$param{'project_id'} :
 '/employee/production/projects.html?StartDocket='.$$variable{'Label'}->docket(), 
 'Back' ),
 		); ) ?>

@@ -124,10 +124,12 @@
 		<ul><li>
 			<label>Date Range:</label>
 			<span class="DateSelector">
-				<? echo ( ssi::date_select( 'schedule_start', [ @session{'/employee/production/print_overview.html?schedule_start_year',
+				<? echo ( 
+					my $html = ssi::date_select( 'schedule_start', [ @session{'/employee/production/print_overview.html?schedule_start_year',
 '/employee/production/print_overview.html?schedule_start_month',
-'/employee/production/print_overview.html?schedule_start_day'} ] ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Today_start', 't.gif', 'set_today( f1.schedule_start_year, f1.schedule_start_month, f1.schedule_start_day );f1.submit();', '', 'T' ); ) ?>
+'/employee/production/print_overview.html?schedule_start_day'} ] );
+					$html .= ssi::writeButton( $log, $dbh, 'Today_start', 't.gif', 'set_today( f1.schedule_start_year, f1.schedule_start_month, f1.schedule_start_day );f1.submit();', '', 'T' ); 
+				) ?>
 			&nbsp;to&nbsp;
 			</span>
 			<span class="DateSelector">
