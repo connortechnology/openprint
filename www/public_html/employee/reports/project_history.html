@@ -3,16 +3,6 @@
 		$('Results').innerHTML = 'Please wait...';
 		new Ajax.Updater('Results','/employee/reports/_project_history_results.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f1.DateStartYear.value,document.f1.DateStartMonth.value,document.f1.DateStartDay,document.f1.DateStartDay.value);
-            setDaysDropDown(document.f1.DateEndYear.value,document.f1.DateEndMonth.value,document.f1.DateEndDay,document.f1.DateEndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-
 </script>
 <div class="PageTitle">
 <h1>REPORTS</h1>
@@ -25,7 +15,7 @@
 			<input type="text" onKeyUp="filterDDM(this, f1.company_id);" size="4" />
 			<select name="company_id">
 				<option value="">All</option>
-				<? echo ( openprint::Company::get_dropdown( $openprint::param{'company_id'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $param{'company_id'} ); ) ?>
 			</select>
 		</p>
 		<p>
@@ -34,7 +24,7 @@
 			<? echo (
 					my @options = ( '', 'All', 'Non Employee', 'Non Employee' );
 					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
-					return ssi::make_drop_down( \@options, $openprint::param{'Estimator'} );
+					return ssi::make_drop_down( \@options, $param{'Estimator'} );
 					) ?>
 			 </select>
 		</p>
@@ -43,27 +33,27 @@
 			<select name="status" multiple size="4" >
 			<? echo (
 				my @options = sql::execute( undef, undef, q{SELECT name, name FROM Project_statuses ORDER BY sort, lower(name)} );
-				return ssi::make_select( \@options, $openprint::param{'status'} ? $openprint::param{'status'} : \@options);
+				return ssi::make_select( \@options, $param{'status'} ? $param{'status'} : \@options);
 			 ) ?>
 			 </select>
 		 </p>
 		 <? eval (
-				 if ( ! $openprint::param{'DateStartYear'} ) {
+				 if ( ! $param{'DateStartYear'} ) {
 					 @$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,Date::Calc::Today() ); 
 				 } else {
 					 @$variable{'DateStartYears','DateStartMonths','DateStartDays','DateStart'} = ssi::get_dates( $log, $dbh,
-						 @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} );
+						 @param{'DateStartYear','DateStartMonth','DateStartDay'} );
 				 } # end if
 
-				 if ( ! $openprint::param{'DateEndYear'} ) {
+				 if ( ! $param{'DateEndYear'} ) {
 				 @$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh, Date::Calc::Today() );
 				 } else {
 				 @$variable{'DateEndYears','DateEndMonths','DateEndDays','DateEnd'} = ssi::get_dates( $log, $dbh,
-					 @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} );
+					 @param{'DateEndYear','DateEndMonth','DateEndDay'} );
 				 } # end if
 
-				 @openprint::param{'DateStartYear','DateStartMonth','DateStartDay'} = Date::Calc::Today();
-				 @openprint::param{'DateEndYear','DateEndMonth','DateEndDay'} = Date::Calc::Today();
+				 @param{'DateStartYear','DateStartMonth','DateStartDay'} = Date::Calc::Today();
+				 @param{'DateEndYear','DateEndMonth','DateEndDay'} = Date::Calc::Today();
 				 ) ?>
 		 <p>
 			 <label>Date:</label>
@@ -77,21 +67,22 @@
 		</p>
 		<p>
 			<label>Value:</label>
-			<input type="text" id="value_start" name="value_start" value="<? echo ( $openprint::param{'value_start'}; ) ?>" style="width: auto;"  /> to
-			<input type="text" id="value_end" name="value_end" value="<? echo ( $openprint::param{'value_end'}; ) ?>" style="width: auto;"  />
+			<input type="text" id="value_start" name="value_start" value="<? echo ( $param{'value_start'}; ) ?>" style="width: auto;"  /> to
+			<input type="text" id="value_end" name="value_end" value="<? echo ( $param{'value_end'}; ) ?>" style="width: auto;"  />
 		</p>
-		<? if ( $openprint::session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>CSR:</label>
 			<select name="CSR" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
 					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
-					return ssi::make_drop_down( \@options, $openprint::param{'CSR'} );
+					return ssi::make_drop_down( \@options, $param{'CSR'} );
 					) ?>
 
 			 </select>
 		</p>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 		<p><label>Reprint:</label>
 			<input type="radio" name="reprint" id="reprintY" value="Y" <? echo ( ssi::checked( $param{'reprint'} eq 'Y' ); ) ?> />
 			<label class="radio" for="reprintY">Yes</label>
@@ -100,7 +91,6 @@
 			<input type="radio" name="reprint" id="reprint" value="" <? echo ( ssi::checked( $param{'reprint'} eq '' ); ) ?> />
 			<label class="radio" for="reprint">Both</label>
 		</p>
-		<? endif ( $openprint::session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $openprint::session{'user_id'} ) ) ?>
 
 		 <p class="buttons">
 			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_contents(f1);", '', 'Show Results' ); ) ?>
