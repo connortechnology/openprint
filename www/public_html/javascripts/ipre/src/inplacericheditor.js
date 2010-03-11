@@ -18,6 +18,8 @@ if(typeof tinyMCE == 'undefined')
 tinymce.EditorManager.oldAdd = tinymce.EditorManager.add;
 tinymce.EditorManager.add = function(ed) {
   ed.onInit.add(function(ed) {
+		//alert('No '+ed+ ed.id + ' found');
+	if ( $(ed.id) ) 
     $(ed.id).fire('tinymce:onInit', ed);
   });
   return tinymce.EditorManager.oldAdd(ed);
