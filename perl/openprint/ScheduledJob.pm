@@ -334,8 +334,8 @@ sub get_li {
 		if ( $Project->operator_id() ) {
 			$html .= ' (<span class="PrepressOperator">'.$Project->Operator()->firstname().'</span>)';
 		} # end if
-		if ( $Project->reprint() ) {
-			$html .= ' REPRINT';
+		if ( $Project->reprint() eq 'Y' ) {
+			$html .= ' REPRINT'. $Project->reprint_reason();
 		} # end if
 		$html .= '</div>';
 		$html .= qq`<span class="DueDate" id="JumpToDate$$self{'id'}">`;
