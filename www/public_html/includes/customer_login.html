@@ -1,7 +1,6 @@
 <div id="Login">
 	<form id="LoginForm" name="LoginForm" method="post" action="<?SecureSiteURL?>/account/login.html">
-		<fieldset class="Register">
-			<legend>Registration</legend>
+		<fieldset class="Register"><legend>Registration</legend>
 			<div class="body">
 			Why register?  We require you to have an account to keep an order history, and allow you to check the status of your project through production and shipping.
 			</div>
@@ -9,8 +8,7 @@
 				<? echo ( ssi::writeButton( $log, $dbh, 'Register','register.gif','','/account/registration.html','Register Now'); ) ?>
 			</p>
 		</fieldset>
-		<fieldset class="Login">
-			<legend>Please login:</legend>
+		<fieldset class="Login"><legend>Please login:</legend>
 			<div class="body">
 			Please enter your e-mail address and password.<br/><br/>
 			<p>

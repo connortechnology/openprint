@@ -39,6 +39,9 @@ my @no_outputs = (
 	'txtQuantity1',
 	'chkOverrideScoreQty',
 );
+sub no_outputs {
+	return @no_outputs;
+} # end sub
 
 # creates a new project, first clearing out any previous projects
 sub calc {
@@ -504,15 +507,15 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 	} # end if
 
 	if ( openprint::Estimating::Folding::neccessary( $$Project{'id'} ) ) {
-#$openprint::log->debug('Adding Folding');
+$openprint::log->debug('Adding Folding');
 		push @{$$services{'Folding'}}, $Project->add_service( 'Folding' ) if ! $$services{'Folding'};
 		if ( (exists $$specs{'FoldType'}) and ((! $$specs{'FoldType'} ) or ( $$specs{'FoldType'} eq 'NoFold' )) ) {
 			$$specs{'alert'} .= 'It appears that your project needs folding, but you have not selected the fold type.<br/>';
 			$$specs{'Status'} = 'uncalculated';
 		} # end if
 	} elsif ( $$services{'Folding'} ) {
+$openprint::log->debug('Deleting Folding');
 		foreach ( @{$$services{'Folding'}} ) {
-			$openprint::log->debug('Deleting Folding');
 			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
 		} # end foreach
 		delete $$services{'Folding'};
@@ -624,7 +627,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			push @{$$services{'ShrinkWrap'}}, $Project->add_service( 'ShrinkWrap' );
 		} # end if
 		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'ShrinkWrap'}[0], 'txtItemsPerPackage', $$specs{'txtItemsPerShrinkWrap'} );
-
 	} else {
 		foreach ( @{$$services{'ShrinkWrap'}} ) {
 			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
@@ -636,7 +638,6 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			push @{$$services{'Bundling'}}, $Project->add_service( 'Bundling' );
 		} # end if
 		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Bundling'}[0], 'txtItemsPerPackage', $$specs{'txtItemsPerBundle'} );
-
 	} else {
 		foreach ( @{$$services{'Bundling'}} ) {
 			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
@@ -712,6 +713,8 @@ $log->warn("Have uncalculated service: ");
 			$$specs{'alert'} .= $$service_specs{'alert'};
 		} # end foreach service
 	} # end if UPS
+	$$specs{'ShippingPrice1'} = sprintf( '%.2f', $$specs{'ShippingPrice1'} );
+	$$specs{'ProductionPrice1'} = sprintf( '%.2f', $$specs{'ProductionPrice1'} );
 
 	my %printing_types;
 	foreach my $ss_id ( $Project->signatures() ) {

@@ -5,7 +5,7 @@
 		<label class="radio" for="Aqueous<?Signature?>Gloss">Gloss</label>
 		<input type="radio" id="Aqueous<?Signature?>Matte" name="Aqueous<?Signature?>" value="Matte" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( $$variable{'Aqueous'} eq 'Matte' ); ) ?> />
 		<label class="radio" for="Aqueous<?Signature?>Matte">Matte</label>
-		<input type="radio" id="Aqueous<?Signature?>None" name="Aqueous<?Signature?>" value="None" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( sets::isin( $$variable{'Aqueous'},'', 'None' ) ); ) ?> />
+		<input type="radio" id="Aqueous<?Signature?>None" name="Aqueous<?Signature?>" value="None" onclick="remove_div('OrderButton');calc(this.form.name);" <? echo ( ssi::checked( sets::isin( $$variable{'Aqueous'}, ['', 'None'] ) ); ) ?> />
 		<label class="radio" for="Aqueous<?Signature?>None">None</label>
 	</p>
 </li>

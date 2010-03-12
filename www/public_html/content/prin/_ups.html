@@ -10,8 +10,10 @@
 					<input type="radio" name="UPSShipping" id="UPSShippingY" value="Y" onclick="$('UPSOptions').show();$('ShippingInformation').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'UPSShipping'} eq 'Y' ); ) ?> />
 					<label class="radio" for="UPSShippingY">Delivery</label>
 				</li>
+			</ul>
 		<div id="ShippingInformation" <? echo ( $$variable{'UPSShipping'} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
 			<div id="UPSOptions" <? echo ( $$variable{'UPSShipping'} eq 'Y' ? '' : 'style="display:none;"' ) ?> >
+				<ul>
 					<li class="ToCountry">
 						<label>Country:</label>
 						<select id="ToCountry" name="ToCountry" onchange="Country_onchange(this);calc(this.form.name);">
@@ -47,9 +49,9 @@
 						</span>
 					</li>
 					<li>UPS, the UPS brandmark, and the Colour Brown are trademarks of United Parcel Service of America, Inc. All Rights Reserved</li>
-			</div>
-			</div>
 			</ul>
+			</div>
+			</div>
 		</div><!--ShippingInformation-->
 	</fieldset>
 </div>

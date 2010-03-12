@@ -144,9 +144,9 @@
 							<ul>
 							<!--#include virtual="/includes/drilling.html"-->
 							<!--#include virtual="/includes/bundling.html"-->
-<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
+							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
 							<!--#include virtual="/includes/shrinkwrapping.html"-->
-<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
+							<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['Newsletters'] ) ) ?>
 							</ul>
 						</div>
 						</fieldset>
@@ -162,6 +162,7 @@
 							</div>
 						</fieldset>
 					</div>
+					<!--#include virtual="_ups.html"-->
 					<div id="AlertDiv" style="display:none;"></div>
 					<br class="spacer"/>
 				</div><!--ProjectSpecifications-->
@@ -171,7 +172,6 @@
 			</div></div>
 			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div><!--instant_pricing_section-->
-		<h2><? echo ( $$variable{'ProjectType'}->name() ) ?> printing - full colour</h2>
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {
 		return ssi::include( $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' );

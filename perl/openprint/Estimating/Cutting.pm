@@ -35,7 +35,6 @@ require sql;
 my $debug = 1;
 
 my @equipment;
-my @stitchers;
 
 my @variables = (
         'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -166,14 +165,11 @@ sub signature_calc_stock_cutting {
 	return %results if ($Paper->width() == $Paper->start_width()) and ($Paper->height() == $Paper->start_height() );
 	return %results if ( exists $$sig_specs{'PageQuantity'.$qty_index} and ! $$sig_specs{'PageQuantity'.$qty_index} );
 
-	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @stitchers;
 	my @my_equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 
 	if ( $$specs{"chkOverrideStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		$openprint::log->debug("Overriding Equipment! " . $$specs{"ddmStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		@my_equipment = ( new openprint::Equipment( @$specs{"ddmStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
-	} else {
-		@my_equipment = sets::exclude( \@stitchers, \@my_equipment );
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -328,14 +324,11 @@ sub signature_calc_folding_cutting {
 		$$specs{"txtStockCalliper-$signature_index"} = $Paper->calliper();
 	} # end if
 
-	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @equipment;
-	my @my_equipment;
+	my @my_equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 
 	if ( $$specs{"chkOverrideFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		$log->debug("Overriding Equipment! " . $$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		@my_equipment = ( new openprint::Equipment( @$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
-	} else {
-		@my_equipment = @equipment;
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -462,7 +455,7 @@ sub signature_calc {
 
 	my $folding_imposition = new openprint::Imposition();
 	my $folding_specs;
-	if ( $$services{'Folding'} ) {
+	if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 		$folding_imposition->columns( $$folding_specs{"FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-1"} );
 		$folding_imposition->rows( $$folding_specs{"FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-1"} );
@@ -620,7 +613,7 @@ sub signature_calc {
 			next;
 		} # end if
 		if ( $Equipment->specification('Cutting Capable') eq 'When Folding' ) {
-			if ( ! $$services{'Folding'} ) {
+			if ( ! ( $$services{'Folding'} and @{$$services{'Folding'}} ) ) {
 				$results{'Breakdown'} .= 'Not folding<br/>';
 				next;
 			} # end if
@@ -762,15 +755,15 @@ sub signature_calc {
 		} # end if
 	} # end for each equipment
 
-		$results{'Status'}		= $bestEquipment ? 'calculated' : 'uncalculated';
-		$results{'Price'}		= $bestPrice;
-		$results{'MPrice'}		= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
-		$results{'Equipment'}	= $bestEquipment;
-		if ( my $Spec = $bestEquipment->Specification('Cutting Overs') ) {
-			if ( $$Spec{'units'} eq 'Sheets' ) {
-				$results{'Overs'} = $$Spec{'value'};
-			} # end if
+	$results{'Status'}		= $bestEquipment ? 'calculated' : 'uncalculated';
+	$results{'Price'}		= $bestPrice;
+	$results{'MPrice'}		= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
+	$results{'Equipment'}	= $bestEquipment;
+	if ( my $Spec = $bestEquipment->Specification('Cutting Overs') ) {
+		if ( $$Spec{'units'} eq 'Sheets' ) {
+			$results{'Overs'} = $$Spec{'value'};
 		} # end if
+	} # end if
 	return %results;
 } # end sub signature_calc
 
@@ -785,23 +778,6 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-
-	my @capabilities = ('Y','When Printing','When Folding');
-	if ( $$services{'Folding'} ) {
-		push @capabilities, 'When Folding';
-	} # end if
-	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
-		push @capabilities, 'When Stitching';
-	} # end if
-
-	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
-
-	@stitchers = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
-	if ( ! @equipment ) {
-		$$specs{'alert'} = 'We have no cutting equipment.<br/>';
-		$$specs{'Status'} = 'uncalculated';
-		return;
-	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -827,7 +803,6 @@ sub calc {
 						"txtStockCuts-$signature_index-$qty_index", "chkOverrideCalculatedCuts-$signature_index-$qty_index",
 						"txtAdditionalCuts$signature_index" ) 
 					);
-
 
 			@variables = sets::union( @variables, ( "txtSuppliedStockWidth-$signature_index-$qty_index",
 						"txtSuppliedStockHeight-$signature_index-$qty_index",
@@ -857,7 +832,7 @@ sub calc {
 			} # end if
 
 			# Folding
-if ( $$services{'Folding'} ) {
+if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 			my %results = signature_calc_folding_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
 			$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 			$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
