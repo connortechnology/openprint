@@ -314,7 +314,9 @@ sub view {
 				if ( ! is_sig_complete( $project_index, $signature_service_index ) ) {
 					$complete = 0;
 				} else {
-					sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND serviceindex=?}, $project_index, $signature_service_index );
+					foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+						$Job->delete();
+					} # end foreach
 					if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
 						$Equipment[0]->update_schedule();
 					} # end if
