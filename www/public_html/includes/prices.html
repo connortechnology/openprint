@@ -10,7 +10,7 @@
 		</li>
 		<li id="ShippingPrice">
 			<label>Delivery Cost <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
-			<input type="text" id="ShippingPrice1" name="ShippingPrice1" size="9" readonly="readonly" onfocus="this.blur();" />
+			<input type="text" size="9" id="ShippingPrice1" name="ShippingPrice1" readonly="readonly" />
 		</li>
 		<li class="project_id">
 			<label>Quote #</label>
@@ -19,6 +19,7 @@
 	</ul>
 	Price quoted is an approximate estimate. All orders will be + or - 5%.<br/>
 	If exact quantities are required - please add 5% the required quantity.
+	<br class="spacer"/>
 </div><!--Prices-->
 <p class="buttons">
 <? echo ( 
@@ -31,6 +32,12 @@
 <? echo ( ssi::writeButton( $log, $dbh, 'Calculate', '', "gettingNewPrice=false;calc('f1',1);", '', 'Calculate',{'class'=>'Calculate'}); ) ?>
 </p>
 <div id="subtotal">
+	<ul>
+		<li>
+			<label>Sub Total <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
+			<input type="text" size="9" id="txtPrice1" name="txtPrice1" readonly="readonly" value="<?txtPrice1?>" />
+		</li>
+	</ul>
 	<? echo (
 		my $Currency = openprint::Currency::get_current();
 		if ( $Currency ) {
@@ -39,12 +46,6 @@
 			return 'Currency not selected.';
 		} # end if
 	) ?>
-	<ul>
-		<li>
-			<label>Sub Total <? echo ( openprint::Currency::get_current()->symbol() ) ?></label>
-			<input type="text" size="9" id="txtPrice1" name="txtPrice1" readonly="readonly" value="<?txtPrice1?>" />
-		</li>
-	</ul>
 </div>
 <p class="buttons" id="OrderButton" <? echo ( 'style="display:none;"' if $$variable{'Status'} ne 'Unordered' ) ?> >
 	<? echo ( 

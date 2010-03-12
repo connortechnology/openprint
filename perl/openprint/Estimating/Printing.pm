@@ -69,7 +69,7 @@ my %variables = (
 		'chkMagentaSideOne' => ['save'],
 		'chkYellowSideOne'	=> ['save'],
 		'chkBlackSideOne' 	=> ['save'],
-		'chkProcessColourSideOne' => ['save'],
+		'chkProcessColourSideOne' 		=>	['save'],
 		'CyanSpotSideOneCoverage'		=>	['save'],
 		'MagentaSpotSideOneCoverage'	=>	['save'],
 		'YellowSpotSideOneCoverage'		=>	['save'],
@@ -2128,10 +2128,9 @@ sub calculate_impositions {
 			if ( $imp->Paper()->height() != $$sig_specs{"CutOff$qty_index"} ) {
 				next;
 			} # end if
-		} else {
-				$imp->display('stock not overriden! ' );
-
-		} 
+		#} else {
+				#$imp->display('stock not overriden! ' );
+		}  # end if
 		if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
 #$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
 			next if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};	
@@ -3139,7 +3138,10 @@ sub calc_price {
 		if ( $cutting_results{'Status'} eq 'uncalculated' ) {
 			$price{'Cutting Breakdown'} .= "Cutting error: $cutting_results{'alert'}<br/>";
 		} else {
-			$price{'Cutting Breakdown'} .= sprintf('Cutting Price: $%.2f on %s<br/>',$cutting_results{'Price'}, $cutting_results{'Equipment'}->name() );
+			$price{'Cutting Breakdown'} .= sprintf('Cutting Price: $%.2f',$cutting_results{'Price'} );
+			$price{'Cutting Breakdown'} .= 'on '. $cutting_results{'Equipment'}->name() if $cutting_results{'Equipment'};
+			$price{'Cutting Breakdown'} .= '<br/>';
+
 #$price{'Cutting Breakdown'} .= $$project{'CuttingSpecs'}{'hdnBreakdown'.$qty_index}.'<br/>';
 			$price{'Comparison Cost'} += $cutting_results{'Price'};
 		} # end if

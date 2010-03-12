@@ -736,11 +736,11 @@ sub delete_service {
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( $log, $dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
 	sql::execute( $log, $dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $project_index, $service_index );
+	sql::end_transaction( $dbh, $ac );
 	my $Project = new openprint::Project( $project_index );
 	delete $$Project{'Services'};
 	delete $$Project{'signatures'};
 	delete $$Project{'service_types'};
-	sql::end_transaction( $dbh, $ac );
 	#openprint::logs::insertLogRecord('10', "Service Index: " . $service_index . " for Project Index: " . $project_index,);
 } # end sub delete_service
 

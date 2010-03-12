@@ -15,6 +15,7 @@ sub save {
 		'pricelist_id',		$self->{group}->{list_index},
 		'service_id',		$self->{group}->{product_index},
 		'equipment_id',		$self->{equipment_index},
+		'supplier_id',		$$self{'supplier_id'},
 		'min',				( $self->{min} eq '' ? undef : $self->{min} ),
 		'max',				( $self->{max} eq '' ? undef : $self->{max} ),
 		'units',			( $self->{units} eq '' ? undef : $self->{units} ),
@@ -23,7 +24,6 @@ sub save {
 		'price',			( $self->{Price} eq '' ? undef : $self->{Price} ),
 		'discountable',		( $self->{Discountable} eq '' ? 'Y' : $self->{Discountable} )
 	);
-	openprint::logs::insertLogRecord('29',"Service Index: " . $self->{group}->{product_index});
 } # end sub save
 
 1;

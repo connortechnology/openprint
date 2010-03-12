@@ -32,7 +32,7 @@ sub calc_dutch {
 	my ( $setup, $space_width, $space_height, $specs ) = @_;
 #$openprint::log->debug("Trying dutch:") if $debug;
 	my ( $image_width, $image_height );
-	if ( $setup->orientation() eq 'Vertical' ) {
+	if ( $setup->image_orientation() eq 'Vertical' ) {
 		( $image_width, $image_height ) = $setup->get('image_width','image_height');
 	} else {
 		( $image_width, $image_height ) = reverse $setup->get('image_width','image_height');
@@ -204,6 +204,7 @@ sub calc_setup_object {
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
+$openprint::log->debug("Press: " . $Press->strid() ) if $debug;
 	$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
@@ -367,7 +368,7 @@ sub calc_setup_object {
 		} # end if
 
 		# On the web press, we have no paper dimensions, only the maximagesize, so this effectively sets the printing area to the max image size. Theoretically Max Image Size = Cutoff-Grip anyways
-		if ( ( ! $adjusted_paper_height ) or ( $$specs{'Maximum Image Area Length'} > 0 and $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) {
+		if ( $$specs{'Maximum Image Area Length'} and ( ( ! $adjusted_paper_height ) or ( $adjusted_paper_height > $$specs{'Maximum Image Area Length'} ) ) ) {
 			$adjusted_paper_height = $$specs{'Maximum Image Area Length'};
 			$openprint::log->debug("*** Using Max Image Length1: $adjusted_paper_height ***") if $debug;
 		} else {

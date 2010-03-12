@@ -3,7 +3,8 @@ DROP TABLE Service_Prices;
 CREATE TABLE Service_Prices (
 	pricelist_id	INTEGER NOT NULL, FOREIGN KEY (pricelist_id) REFERENCES Pricelists (Index),
 	service_id		INTEGER NOT NULL, FOREIGN KEY (service_id) REFERENCES tbl_Services (lngIndex),
-	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (Id),
+	equipment_id	INTEGER NOT NULL, FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment (id),
+	supplier_id		INTEGER, FOREIGN KEY (supplier_id) REFERENCES Companies (id),
 	dtmStart		TIMESTAMP,
 	dtmEnd			TIMESTAMP,
 	min			float,

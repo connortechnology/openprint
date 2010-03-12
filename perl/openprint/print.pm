@@ -239,39 +239,7 @@ sub print_prices {
 	@{$$variable{'ddmPressOptions'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strcategory='Printing' AND (UseInEstimating IS true) ORDER BY lower(strName)} );
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
-	#load_template_sizes( $log, $dbh, $$variable{'ProjectTypeID'}, $variable );
 } # end sub print_prices
-
-sub load_template_sizes {
-	my ( $log, $dbh, $project_type, $variable ) = @_;
-    my %templates;
-    my $opt;
-    my $text = q`
-				function option ( text, value ) {
-                    this.text = text;
-                    this.value = value;
-                }
-                var options = new Array();
-                `;
-
-	$_ = q{SELECT dblFinishedWidth, dblFinishedHeight,dblFlatWidth, dblFlatHeight, Description, Type FROM ProjectTemplate WHERE ProjectType_id=(SELECT id FROM Project_Types WHERE name=?) ORDER BY lower(Description)};
-	my @templates = sql::execute( $log, $dbh, $_, $project_type );
-
-	while ( @templates ) {
-		my $value = shift (@templates) * 1 . 'x' . shift (@templates) * 1  . ',' . shift (@templates) * 1 . 'x' . shift (@templates) * 1;	
-		my $desc = shift @templates;
-		my $type = shift @templates;
-        $opt .= "options\['$type'\]\[options\['$type'\].length\] = new Option ('$value','$desc');\n";
-        $templates{$type} = 1;
-    } # end while
-
-    foreach my $key ( keys %templates ) {
-        $text .= "options['$key'] = new Array();\n";
-    } # end foreach
-    #$log->debug("***************** $text $arrays $opt  **************");
-	$$variable{'TemplateSizes'} = $text . $opt;
-} # end sub
-
 
 # all this function does is the special code when coming from a book service
 # it adds all the necceessary signatures, etc.
@@ -600,8 +568,6 @@ sub publication_pages {
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	
-	load_template_sizes ( $log, $dbh, $$variable{'ProjectTypeID'}, $variable );
-
 	$$variable{'rdbGateFoldNo'} = $$variable{'rdbGateFoldYes'} eq '' ? 'checked' : '';
 
 	my $Project = new openprint::Project( $project_index );

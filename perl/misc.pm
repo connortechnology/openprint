@@ -384,6 +384,76 @@ sub seconds2hms {
 	return sprintf('%d:%.2d', $hours, $minutes );
 } # end sub seconds2hms
 
+sub find_entry {
+	my $range = shift;
+
+	if ( ! defined $range ) {
+		if ( @_ ) {
+			return $_[0];
+		} # end if
+		return;
+	} # end if
+	#$openprint::log->debug("Looking for $name : $range") if $debug;
+
+	my $i = 0;
+	my $x;
+	my $y;
+	for ( ; $i < @_; $i += 1 ) {
+		my $Object = $_[$i];
+	#$openprint::log->debug("Examining: (" . $Object->min() . 	') (' . $Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
+		return $Object if ( (1*$$Object{min}) == $range ) or ((1*$$Object{max}) == $range );
+
+		return $Object if ( 
+			(! $$Object{interpolate})
+			and (($$Object{min} eq '') or ($$Object{min} <= $range))
+			and (($$Object{max} eq '') or ($$Object{max} >= $range))
+			);
+
+		# first step, find one less than the min
+		last if 1*$$Object{min} > $range;
+		#last if ( $Object->max() eq '' and ! $Object->interpolate() );
+	} # end if
+	
+	if ( $i and $i <= @_ ) {
+		$i -= 1;
+		# back up
+		$x = $_[$i];
+#$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
+	} else {
+#$openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
+		return;	
+	}
+
+	for ( ; $i < @_; $i += 1 ) {
+		my $Object = $_[$i];
+		return $Object if ( (1*$$Object{min}) <= $range ) and ( ( (1*$$Object{max}) >= $range ) or ! (1*$$Object{max}) );
+
+	#$openprint::log->debug("Examining: ($range) (" . $Object->min() . 	') (' . 1*$Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
+		# first step, find one less than the min
+		last if ( ( (1*$$Object{max}) > $range) or ( ! (1*$$Object{max}) ) );
+	} # end foreach
+	if ( $i and $i < @_ ) {
+		$y = $_[$i];
+#$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+    } else {
+#$openprint::log->debug("Equipment::specification Couldn't find maximum for $name") if $debug;
+        return;
+    } # end if
+
+    if ( $x == $y ) {
+        return $x;
+    } elsif ( $$x{interpolate} ) {
+        my $Object = $x->copy();
+        $$Object{min} = $$Object{max} = $range;
+        $$Object{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
+#$openprint::log->debug("Returning " . $$Object{value}) if $debug;
+        return $Object;
+    } # end if
+#$openprint::log->debug("Returning nothing") if $debug;
+    return;
+} # end sub find_entry
+
 1;
 
 __END__
