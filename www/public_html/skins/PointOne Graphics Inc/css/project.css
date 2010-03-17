@@ -58,6 +58,9 @@ div.ProjectHeader fieldset p label {
     text-align: left;
     width: auto;
 }
+div.ProjectHeader fieldset p label {
+	float: none;
+}
 div.Service div.row {
     margin: 0px;
     margin-bottom: 10px;

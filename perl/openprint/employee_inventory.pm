@@ -1411,10 +1411,11 @@ $log->debug("RFID: $param{'rfidtag_id'}");
 						'skid_id'		=>	$Skid->id(),
 						'manifest_id'	=>	$Manifest->id(),
 						'docket'		=>	$param{'docket'},
-						'quantity'		=>	sprintf('%d', $param{"qty_lbs"}),
+						'quantity'		=>	sprintf('%d', $param{'qty_lbs'}),
 						} );
 				$variable{'C'} = $MC;
 				$variable{'type_id'} = $param{'type_id'};
+				$variable{'Type'} = new openprint::Manifest_Content_Type( $param{'type_id'} );
 			} # end if
 		} # end if
 	} # end if

@@ -367,6 +367,10 @@ fieldset.filters p label {
 	width: 130px;
 	margin-left: -135px;
 }
+fieldset.filters p label.radio {
+	margin: 0px;
+	width: auto;
+}
 fieldset.filters p input {
 	width: auto;
 }
