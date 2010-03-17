@@ -1091,7 +1091,7 @@ sub signatures {
 		my @sigs;
 		my $type = shift;
 		foreach my $s_id ( @{$$self{'signatures'}} ) {
-			my $specs = openprint::service::get_specs_ref( $$self{'id'}, $s_id );
+			my $specs = openprint::service::get_specs_ref( $self, $s_id );
 			push @sigs, $s_id if $$specs{'txtSignatureType'} eq $type;
 		} # end foreach signatures
 		return @sigs;

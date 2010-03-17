@@ -354,15 +354,18 @@ sub status {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+	if ( $$services{''} and @{$$services{''}} and ! $printing_specs ) {
+		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	} # end if
 	if ( ! $printing_specs ) {
-		$printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
-		return if ! $printing_specs;
+		$openprint::log->debug("Estimating::Multopage::status : No printing_specs");
+		return;
 	} # end if
 
     my $total_spreads = $$printing_specs{'txtTotalSpreadQuantity'};
 	my %specified_spreads;
 	foreach my $ssid ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $ssid );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ssid );
 		$specified_spreads{$$sig_specs{'txtSignatureType'}} += $$sig_specs{"txtSignatureSpreadQuantity$qty_index"};
 	} # end foreach
 

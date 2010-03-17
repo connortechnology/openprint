@@ -464,7 +464,7 @@ my $master_time = gettimeofday();
 				$_ = q{SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='txtSignatureType' AND NOT strValue='Cover Spreads'};
 				my @signature_service_indices = sql::execute( $log, $dbh, $_, $project_index );
 				foreach my $signature_service_index ( @signature_service_indices ) {
-					my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 
 					my $calliper1 = $$sig_specs{'txtSignatureSpreadQuantity1'} ? $$sig_specs{'txtSignatureSpreadQuantity1'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
 					my $calliper2 = $$sig_specs{'txtSignatureSpreadQuantity2'} ? $$sig_specs{'txtSignatureSpreadQuantity2'} * $$sig_specs{'txtSpecificStockCalliper'} : $$sig_specs{'txtSpecificStockCalliper'};
@@ -480,13 +480,8 @@ my $master_time = gettimeofday();
 
 				$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'}*2 + $finished_calliper;
 				$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
-				if ( ! $$specs{'txtHeight'} ) {
-					$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
-					$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
-				} else {
-					$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
-				} # end if
-$openprint::log->debug("Cover size calc: $finished_calliper");
+				$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
+				$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
 			} else {
 				$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 				$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
