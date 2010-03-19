@@ -137,7 +137,7 @@
 		my $part = 0;
 		while ( my $service_index = shift @sigs ) {
 			my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_index );
-			my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs );
+			my $Paper = openprint::Paper::load_from_signature( $$variable{'Project'}, $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
 			my $Imposition = new openprint::Imposition();
 			$Imposition->load( $sig_specs, $$variable{'Project'}->ordered_quantity_index() );
 
@@ -313,7 +313,7 @@ $inkCoverage{$colour} = 100;
 
 		$html .= '</td><td class="docketText">';
 		foreach my $f ( $form .. ($form+$signatures-1) ) {
-			$html .= sprintf('%d imps<br/>%d sheets<br/>%d lbs F%d<br/>', $net_impressions, $net_sheets, $net_impressions * $Paper->area() * $Paper->wpsi(), $f );
+			$html .= sprintf('%d sheets', $net_sheets );
 		} # end foreach
 		$html .= '</td><td class="docketText">';
 		foreach my $f ( $form .. ($form+$signatures-1) ) {
