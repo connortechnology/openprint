@@ -70,7 +70,7 @@ sub calc {
 		foreach my $Equipment ( @Equipment ) {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
 			my $heads = $Equipment->specification('Numbering Heads');
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Heads: %d<br/>',$heads);
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Heads: %s<br/>',$heads);
 			my @colours = split(',', $Equipment->specification('Numbering Colours') );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Colours: %s<br/>', join(', ', @colours ) );
 
@@ -79,8 +79,14 @@ sub calc {
 				next;
 			} # end if
 
-			my $runs = ceil($$specs{'SetsOfNumbers'} / $heads) if $heads;
-			my $last_run = $heads ? $$specs{'SetsOfNumbers'} % $heads : $$specs{'SetsOfNumbers'};
+			my $runs;
+			my $last_run;
+			if ( $heads ) {
+				$runs = int($$specs{'SetsOfNumbers'} / $heads);
+				$last_run = $$specs{'SetsOfNumbers'} % $heads;
+			} else {
+				$last_run = $$specs{'SetsOfNumbers'};
+			} # end if
 			my $total = 0;
 			my $mprice = 0;
 
@@ -101,21 +107,25 @@ sub calc {
 				$total += $HeadMakeReady{'Total'};
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object('Numbering'.$$specs{'colour'},$heads, $Equipment ); 
-			%ServicePrice = openprint::service::get_price_object('Numbering',$heads, $Equipment ) if ! %ServicePrice;
-		
-			if ( ! %ServicePrice ) {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
-			} else {
-				$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs * $$specs{'txtQuantity'.$qty_index} / 1000;
-				$total += $ServicePrice{'Total'};
-				$mprice += $ServicePrice{'Price'} * $runs;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: %4$d runs of %5$d numbers : $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs, $heads );
+			my %ServicePrice;
+			if ( $runs ) {
+				%ServicePrice = openprint::service::get_price_object('Numbering'.$$specs{'colour'},$heads, $Equipment ); 
+				%ServicePrice = openprint::service::get_price_object('Numbering',$heads, $Equipment ) if ! %ServicePrice;
+			
+				if ( ! %ServicePrice ) {
+					$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
+				} else {
+					$ServicePrice{'Total'} += $ServicePrice{'Price'} * $runs * $$specs{'txtQuantity'.$qty_index} / 1000;
+					$total += $ServicePrice{'Total'};
+					$mprice += $ServicePrice{'Price'} * $runs;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service Price: %4$d runs of %5$d numbers : $%1$.2f%2$s = $%3$.2f<br/>', @ServicePrice{'Price','units','Total'}, $runs, $heads );
+				} # end if
 			} # end if
 
 			my %LastServicePrice;
 			if ( $last_run ) {
-				%LastServicePrice = openprint::service::get_price_object('Numbering',$last_run, $Equipment );
+				%LastServicePrice = openprint::service::get_price_object('Numbering'.$$specs{'colour'},$last_run, $Equipment );
+				%LastServicePrice = openprint::service::get_price_object('Numbering',$last_run, $Equipment ) if ! %LastServicePrice;
 				if ( ! %LastServicePrice ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 				} else {
