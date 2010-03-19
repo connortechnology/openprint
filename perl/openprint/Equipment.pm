@@ -241,6 +241,10 @@ sub Fold {
 		} else {
 			$openprint::log->debug("Found fold: " . $Fold->name() ) if $debug;
 		} # end if
+		if ( $$params{gsm} and ( ( $Fold->min_gsm() and ($$params{gsm} < $Fold->min_gsm()) ) or ( $Fold->max_gsm() and ($$params{'gsm'} > $Fold->max_gsm()) ) ) ) {
+			$openprint::log->debug("Wanted gsm: $$params{gsm}, have ($$Fold{min_gsm}) ($$Fold{max_gsm})") if $debug;
+			next;
+		} # end if
 
 		#$openprint::log->debug( 'Fold: ' . $Fold->name() );
 		if ( $$params{stitching} and defined $$Fold{stitching} and $$params{stitching} != $$Fold{stitching} ) {

@@ -11,6 +11,7 @@ my $debug = 1;
 
 my %variables = (
 	'SetsOfNumbers' => ['save'],
+	'colour'		=> ['save'],
 	'ddmEquipment1' => ['save','output'], 'ddmEquipment2' => ['save','output'], 'ddmEquipment3' => ['save','output'],
 	'OverridePrice1' => ['save'], 'OverridePrice2' => ['save'], 'OverridePrice3' => ['save'],
 	'Markup1' => ['save'], 'Markup2' => ['save'], 'Markup3' => ['save'],
@@ -45,6 +46,10 @@ sub calc {
 		$$specs{'alert'} = 'Please enter the # of sets of numbers.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+	if ( ! $$specs{'colour'} ) {
+		$$specs{'alert'} = 'Please select the colour of the numbers.';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	my @Equipment = openprint::Equipment::find('Specifications'=>{'Numbering Capable'=>'Y'},'use_in_estimating'=>1);
 	if ( ! @Equipment ) {
@@ -66,6 +71,13 @@ sub calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= '<fieldset><legend>'.$Equipment->name().'</legend>';
 			my $heads = $Equipment->specification('Numbering Heads');
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Heads: %d<br/>',$heads);
+			my @colours = split(',', $Equipment->specification('Numbering Colours') );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Colours: %s<br/>', join(', ', @colours ) );
+
+			if ( @colours and ! sets::isin( $$specs{'colour'}, \@colours ) ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= $$specs{'colour'} . ' not in supported colours.<br/>';
+				next;
+			} # end if
 
 			my $runs = ceil($$specs{'SetsOfNumbers'} / $heads) if $heads;
 			my $last_run = $heads ? $$specs{'SetsOfNumbers'} % $heads : $$specs{'SetsOfNumbers'};
@@ -89,7 +101,9 @@ sub calc {
 				$total += $HeadMakeReady{'Total'};
 			} # end if
 
-			my %ServicePrice = openprint::service::get_price_object('Numbering',$heads, $Equipment ); 
+			my %ServicePrice = openprint::service::get_price_object('Numbering'.$$specs{'colour'},$heads, $Equipment ); 
+			%ServicePrice = openprint::service::get_price_object('Numbering',$heads, $Equipment ) if ! %ServicePrice;
+		
 			if ( ! %ServicePrice ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Service price.<br/>';
 			} else {

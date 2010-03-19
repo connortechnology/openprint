@@ -12,7 +12,6 @@ require openprint::Currency;
 require openprint::User;
 require openprint::logs;
 require openprint::customer;
-require openprint::obj_customer;
 require openprint::address;
 require openprint::Company;
 require openprint::customer_credit;
@@ -325,7 +324,6 @@ sub company_profiles {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 
 		$index = $param{'company_id'};
-		my $customer = new openprint::obj_customer( $log, $dbh, $param{'company_id'} );
 		$Company = new openprint::Company( $param{'company_id'} );
 
 		if ( $Company->id() ) {
@@ -418,9 +416,9 @@ sub company_profiles {
 			foreach my $field ( keys %shipping_fields ) {
 				$params{$shipping_fields{$field}} = $param{$field} if defined $param{$field};
 			} # end foreach
-			$customer->save_shipping( \%params );
+			$Company->save_shipping( \%params );
 
-			openprint::customer::save_tradereferences( $r, $log, $dbh, $index );
+			$Company->save_tradereferences( \%params );
 
 			my $customer_credit = new openprint::customer_credit( $index );
 			my %params;
@@ -445,9 +443,10 @@ sub company_profiles {
 	my $total;
 	my $payments;
 	if ( $index ) {
-		my $customer = new openprint::obj_customer( $log, $dbh, $index );
-		openprint::customer::load_tradereferences( $r, $log, $dbh, $index, $variable );
-		my $shipping_address = $customer->get_shipping_address();
+		foreach ( 1 .. 3 ) {
+			$Company->laod_tradereferences( $_, $variable );
+		} 
+		my $shipping_address = $Company->get_shipping_address();
 		@$variable{ keys %shipping_fields } = ssi::htmlize( $shipping_address->get( @shipping_fields{ keys %shipping_fields } ) );
 		my $customer_credit = new openprint::customer_credit( $index );
 		@$variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );

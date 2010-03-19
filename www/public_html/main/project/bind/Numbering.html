@@ -10,7 +10,20 @@
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 			<p><label>Sets of Numbers:</label>
-				<input type="text" id="SetsOfNumbers" name="SetsOfNumbers" value="<?SetsOfNumbers?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" />
+				<input type="text" id="SetsOfNumbers" name="SetsOfNumbers" value="<?SetsOfNumbers?>" onkeyup="this.value=this.value.replace(/\D/g,'');calc(this.form.name);" />
+			</p>
+			<p><label>Colour:</label>
+				<select name="colour" id="colour" onchange="calc(this.form.name);">
+					<? echo (
+						my @options = (
+							'', 'select',
+							'Black','Black',
+							'Red', 'Red Ink',
+							'Process', '4 Colour Process',
+							);
+						return ssi::make_drop_down( \@options, $$variable{'colour'} );
+					) ?>
+				</select>
 			</p>
 			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
 		</fieldset>

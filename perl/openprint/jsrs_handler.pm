@@ -18,7 +18,6 @@ require misc;
 require configuration;
 require openprint::login;
 
-require openprint::obj_customer;
 require openprint::print;
 require openprint::Estimating::Printing;
 require openprint::print_project;

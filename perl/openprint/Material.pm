@@ -68,7 +68,7 @@ sub prices {
 	return openprint::MaterialPrice::find('material_id'=>$$self{id});
 } # end sub prices
 
-sub specification {
+sub Specification {
 	my ( $self, $name, $range ) = @_;
 
 	if ( ! $$self{'Specifications'} ) {
@@ -86,66 +86,15 @@ sub specification {
 		return;
 	}
 
-	return $$self{'Specifications'}{$name}[0]->value() if ! defined $range;
+	return $$self{'Specifications'}{$name}[0] if ! defined $range;
 #$openprint::log->debug("Looking for $name : $range") if $debug;
 
-	$range = 1*$range;
-	my $i = 0;
-	my $x;
-	my $y;
-	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
-		my $Spec = $$self{'Specifications'}{$name}[$i];
-	#$openprint::log->debug("Examining: ($$Spec{min}) ($$Spec{max}) ($$Spec{value}) ($$Spec{interpolate}") if $debug;
-		return $$Spec{value} if ( 1*$$Spec{min} == $range ) or ( 1*$$Spec{max} == $range );
+	return misc::find_entry( $range, @{$$self{'Specifications'}{$name}} );
+} # end sub Specification
 
-		return $$Spec{value} if (
-				( ! $$Spec{interpolate} )
-				and (($$Spec{min} eq '') or ($$Spec{min} <= $range))
-				and (($$Spec{max} eq '') or ($$Spec{max} >= $range))
-				);
-
-		# first step, find one less than the min
-		last if $$Spec{min} > $range;
-		#last if ( $Spec->max() eq '' and ! $Spec->interpolate() );
-	} # end if
-	
-	if ( $i and $i <= @{$$self{'Specifications'}{$name}} ) {
-		$i -= 1;
-		# back up
-		$x = $$self{'Specifications'}{$name}[$i];
-#$openprint::log->debug("Found spec " . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
-		return if ( ( ! $$x{interpolate} ) and (1*$$x{max}) and ( $$x{max} < $range ) );
-	} else {
-$log->debug("Couldn't find monimum") if $debug;
-		return;	
-	} # end if
-	
-	for ( ; $i < @{$$self{'Specifications'}{$name}}; $i += 1 ) {
-		my $Spec = $$self{'Specifications'}{$name}[$i];
-		
-		return $$Spec{value} if ( ( ! $$Spec{interpolate} ) and ( $$Spec{max} == $range or $$Spec{max} eq '' ));
-
-		# first step, find one less than the min
-		last if $$Spec{max} > $range;
-	} # end foreach
-	if ( $i and $i < @{$$self{'Specifications'}{$name}} ) {
-		# back up
-		$y = $$self{'Specifications'}{$name}[$i];
-$log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
-	} else {
-$log->debug("Couldn't find maximum") if $debug;
-		return;
-	} # end if
-
-	my $value;
-	if ( $x == $y ) {
-		$value = $x->value();
-	} elsif ( $x->interpolate() ) {
-		$value = $x->value() + ($range - $x->min())*($y->value()-$x->value())/($y->min()-$x->min());
-	} # end if
-$log->debug("Returning " . $value);
-
-	return $value;
+sub specification {
+	my $Spec = openprint::Material::Specification( @_ );
+	return $$Spec{'value'} if $Spec;
 } # end sub specification
 
 sub Specifications {
