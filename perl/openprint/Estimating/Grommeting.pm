@@ -84,6 +84,17 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 	} # end foreach
 
 	if ( ! $$specs{'Quantity'} ) {
+		if ( $$services{''} ) {
+			my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+			$$specs{'Quantity'} = $$printing_specs{'grommets'};
+			@outputs = sets::union( @outputs, 'Quantity' );
+			@no_outputs = sets::exclude( ['Quantity'], \@no_outputs );
+		} # end if
+	} else {
+		@no_outputs = sets::union( @no_outputs, 'Quantity' );
+		@outputs = sets::exclude( ['Quantity'], \@outputs );
+	} # end if
+	if ( ! $$specs{'Quantity'} ) {
 		$$specs{'alert'} = 'Please enter the # of grommets per item.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -102,9 +113,9 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 		$$specs{'hdnBreakdown'.$qty_index}  .= 'MinimumCharge: $' . sprintf( '%.2f', $minimumCharge ) . '<br/>';
 
 		my $qty = $$specs{"txtQuantity$qty_index"};
-		my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Grommeting', $qty, undef );
+		my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Grommeting', $qty * $$specs{'Quantity'}, undef );
 		if ( sets::isin( $servicePrice{'units'}, ['', 'Per M', 'Per 1000'] ) ) {
-			$servicePrice{'Total'} = $qty * $servicePrice{'Price'} / 1000;
+			$servicePrice{'Total'} = $qty * $$specs{'Quantity'} * $servicePrice{'Price'} / 1000;
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Service: \$\%.2f \%s = \$\%.2f<br/>", @servicePrice{'Price','units','Total'} );
 		} # end if
 		$price = $makeReadyPrice + $servicePrice{'Total'};
@@ -112,7 +123,7 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 			my %materialPrice = $Materials[0]->get_price( $qty * $$specs{'Quantity'}, undef );
 			if ( %materialPrice ) {
 				$materialPrice{'Total'} = $materialPrice{'Price'} * $$specs{'Quantity'} * $qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Material: \$\%.2f \%s * \%d grommets * \%d = \$\%.2f<br/>", @materialPrice{'Price','units'}, $$specs{'txtArea'}, $qty, $materialPrice{'Total'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Material: \$\%.2f \%s * \%d grommets * \%d = \$\%.2f<br/>", @materialPrice{'Price','units'}, $$specs{'Quantity'}, $qty, $materialPrice{'Total'} );
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Material Price.<br/>';
 			} # end if

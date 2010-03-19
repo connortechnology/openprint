@@ -65,7 +65,7 @@ sub delete {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
-
+	delete $cache{$$self{name}};
 	my $ac = sql::start_transaction( $dbh );
     sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Services WHERE id=?}, $$self{id} );
@@ -106,9 +106,9 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->debug("Error loading Service ($sql) (@values) Reason: " . $openprint::dbh->errstr );
+		$log->debug("Error loading Service ($sql) (@values) Reason: " . $dbh->errstr );
 		return;
 	} # end if
 	return map { new openprint::Service( $_->{id}, $_ ) } @$data;

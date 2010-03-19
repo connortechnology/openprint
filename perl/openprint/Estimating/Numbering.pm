@@ -40,6 +40,7 @@ sub calc {
     my ($log, $dbh, $variable, $pid, $sid, $specs) = @_;
 
 	my $Project = new openprint::Project( $pid );
+	my $services = $Project->services();
 
 	$$specs{'SetsOfNumbers'} =~ s/\D//g;
 	if ( ! $$specs{'SetsOfNumbers'} ) {
@@ -56,6 +57,12 @@ sub calc {
 		$$specs{'alert'} = 'We have no numbering equipment.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
+
+	if ( $Project->signatures() > 1 ) {
+		$$specs{'alert'} .= 'We cannot quote numbering for multi-page items at this time.  Please call us for accurate pricing.<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
 	my $status = 'calculated';
 
@@ -79,13 +86,18 @@ sub calc {
 				next;
 			} # end if
 
+
 			my $runs;
 			my $last_run;
-			if ( $heads ) {
-				$runs = int($$specs{'SetsOfNumbers'} / $heads);
-				$last_run = $$specs{'SetsOfNumbers'} % $heads;
+			if ( $Equipment->strid() eq $$printing_specs{'ddmPress'.$qty_index} ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Numbering while printing.<br/>';
 			} else {
-				$last_run = $$specs{'SetsOfNumbers'};
+				if ( $heads ) {
+					$runs = int($$specs{'SetsOfNumbers'} / $heads);
+					$last_run = $$specs{'SetsOfNumbers'} % $heads;
+				} else {
+					$last_run = $$specs{'SetsOfNumbers'};
+				} # end if
 			} # end if
 			my $total = 0;
 			my $mprice = 0;
