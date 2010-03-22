@@ -655,16 +655,18 @@ sub speed {
 	if ( @_ ) {
 		$$self{'speed'} = $_[0];
 	} # end if
-	if ( ( ! $$self{'speed'} ) and $$self{'project_id'} ) {
-		my $Project = $self->Project();
-		if ( $Project->ordered_quantity_index() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] ) if $$self{'service_id'} and @{$$self{'service_id'}};
-			
-			$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, $sig_specs, $Project->ordered_quantity_index(), $self->Equipment() ) if $sig_specs;
+	if ( ! $$self{'speed'} ) {
+		if ( (!($$self{'speed'} = $self->Equipment()->specification('Default Scheduling Runspeed'))) and $$self{'project_id'} ) {
+			my $Project = $self->Project();
+			if ( $Project->ordered_quantity_index() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] ) if $$self{'service_id'} and @{$$self{'service_id'}};
+
+				$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, $sig_specs, $Project->ordered_quantity_index(), $self->Equipment() ) if $sig_specs;
+			} # end if
 		} # end if
 	} # en dif
 	return $$self{'speed'};
-} # end sub runspeed
+} # end sub speed
 
 1;
 __END__
