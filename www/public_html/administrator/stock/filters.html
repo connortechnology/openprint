@@ -1,0 +1,35 @@
+<script type="text/javascript">
+<!--
+	function load( e ) {
+		new Ajax.Request( '_filters_load.json', { method: 'post', parameters: { type: e.name, id: e.value }, evalScripts: true } );
+	} // end function load(e)
+	function save( type ) {
+		new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
+				type: type, 
+				id: $(type).value, 
+				shortname: $(type+'_shortname').value,
+				longname: $(type+'_longname').value,
+			}, evalScripts: true } );
+	} // end function save(e)
+-->
+</script>
+<? echo ( 
+	my $html = '';
+	foreach my $type ( 'Manufacturer','StockName','StockFinish','StockColour','StockWeight' ) {
+		$html .= sprintf(q`
+			<p>
+				<label>%1$s:</label>
+				<select name="%1$s" id="%1$s" onchange="load(this);">
+					<option value=""> select </option>
+					%2$s
+				</select><br/>
+				<label>Shortname:</label><input type="text" name="%1$s_shortname" id="%1$s_shortname" style="width:75%;"/><br/>
+				<label>Longname:</label><input type="text" name="%1$s_longname" id="%1$s_longname" style="width:75%;"/><br/>
+				%3$s
+			</p>`, $type,
+			ssi::make_drop_down( [ map { $_->id(), $_->shortname() } eval('openprint::'.$type."::find('order'=>'lower(shortname)')") ] ),
+			ssi::writeButton( $log, $dbh, $type.'Save', 'save.gif', "save('$type');", '', 'Save' ),
+			);
+	} # end foreach type
+	return $html;
+) ?>

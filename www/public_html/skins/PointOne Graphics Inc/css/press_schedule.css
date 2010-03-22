@@ -138,8 +138,8 @@ div.PressColumn ul li {display: block;}
 		float: left;
 		min-width: 70px;
         border: 1px outset gray;
-        width: 150px;
         text-align: center;
+		padding: 0px 4px 0px 4px;
 	}
 	.RunTime {
 		float: left;

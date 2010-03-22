@@ -58,7 +58,7 @@ div.ProjectHeader fieldset p label {
     text-align: left;
     width: auto;
 }
-div.ProjectHeader fieldset p label {
+div.ProjectHeader fieldset p label.radio {
 	float: none;
 }
 div.Service div.row {
