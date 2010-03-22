@@ -827,8 +827,6 @@ my $master_time = gettimeofday();
 						$pockets += 1;
 					} # end if
 					$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'} + $$specs{'PocketSize'};
-					$openprint::log->debug("WIdth: $$specs{'txtWidth'} ");
-					$openprint::log->debug("Heightth: $$specs{'txtHeight'} ");
 				} elsif ( $$specs{'txtSpreadSize'} > 1 ) {
 					$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'}*$$specs{'GroupPageQuantity'}/2;
 					$$specs{'txtHeight'} = $$printing_specs{'txtHeight'};
@@ -858,8 +856,8 @@ my $master_time = gettimeofday();
 				} else {
 					$$specs{'txtWidth'} = sprintf('%.3f', ceil($$specs{'txtWidth'}*1000)/1000);
 				} # end if
-				$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
 				$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
+				$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
 			} else {
 				$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 				$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];

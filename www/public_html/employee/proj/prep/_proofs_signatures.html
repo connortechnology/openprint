@@ -26,11 +26,6 @@
 			if ( $param{"UsePress-$sid"} ne $$sig_specs{'UsePress'} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $sid, 'UsePress', $param{"UsePress-$sid"} );
 				if ( my @Equipment = openprint::Equipment::find('strid'=>$param{"UsePress-$sid"}) ) {
-					my $runtime = 1*openprint::service::get_runtime( $Project, $sid );
-					sql::update( $log, $dbh, 'Schedule', ['projectindex=? AND ServiceIndex=?', $Project->id(), $sid],
-						'Equipment_id', $Equipment[0]->id(),
-						'RunTime', "$runtime minutes",
-						);
 					$$variable{'information'} .= qq`Changed press for Signature $$sig_specs{'SignatureIndex'} to $param{"UsePress-$sid"}<br/>`;
 				} else {
 					$$variable{'error'} .= 'Error: invalid press?';

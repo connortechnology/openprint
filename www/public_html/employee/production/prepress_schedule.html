@@ -84,8 +84,8 @@
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters"><legend>Display Criteria</legend>
-		<div class="presses">
-		<p>
+		<div class="presses"><ul>
+		<li>
 			<label>Presses:</label>
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
@@ -103,10 +103,10 @@
 	return $html;
 ) ?>
 			</select>
-		</p>
+		</li></ul>
 		</div>
 		<div class="statuses">
-			<p><label>Status:</label>
+			<ul><li><label>Status:</label>
 <? echo (
 	my @statuses = ( 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval' );
 	my $html = '<select name="statuses" multiple="multiple" size="'. @statuses.'">';
@@ -120,17 +120,17 @@
 	return $html;
 )?>
 				</select>
-			</p>
+			</li></ul>
 		</div>
 		<div class="legend">
-			<p>
+			<ul><li>
 				<label>Legend:</label>
 				<ul>
 					<li class="unscheduled">Unscheduled</li>
 					<li class="scheduled">Scheduled</li>
 					<li class="rush">Rush</li>
 				</ul>
-			</p>
+			</li></ul>
 		</div>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>

@@ -76,13 +76,28 @@
 			<select name="CSR" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
+<<<<<<< HEAD:www/public_html/employee/reports/project_history.html
 					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
+=======
+					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+>>>>>>> 2245def860afcd30499bbe69035ba3aebd16db5a:www/public_html/employee/reports/project_history.html
 					return ssi::make_drop_down( \@options, $param{'CSR'} );
 					) ?>
 
 			 </select>
 		</p>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+<<<<<<< HEAD:www/public_html/employee/reports/project_history.html
+=======
+		<p><label>Reprint:</label>
+			<input type="radio" name="reprint" id="reprintY" value="Y" <? echo ( ssi::checked( $param{'reprint'} eq 'Y' ); ) ?> />
+			<label class="radio" for="reprintY">Yes</label>
+			<input type="radio" name="reprint" id="reprintN" value="N" <? echo ( ssi::checked( $param{'reprint'} eq 'N' ); ) ?> />
+			<label class="radio" for="reprintN">No</label>
+			<input type="radio" name="reprint" id="reprint" value="" <? echo ( ssi::checked( $param{'reprint'} eq '' ); ) ?> />
+			<label class="radio" for="reprint">Both</label>
+		</p>
+>>>>>>> 2245def860afcd30499bbe69035ba3aebd16db5a:www/public_html/employee/reports/project_history.html
 
 		 <p class="buttons">
 			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "load_contents(f1);", '', 'Show Results' ); ) ?>

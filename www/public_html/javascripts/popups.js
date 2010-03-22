@@ -159,7 +159,7 @@ function ajax_window( url, width, height ) {
 		if ( ! width )
 			width = 400;
 		
-		contentWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
+		contentWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
 className:"alphacube", width:width, height:height
 		} );
 		// Set up a windows observer, check ou debug window to get messages

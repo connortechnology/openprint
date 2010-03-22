@@ -1,0 +1,9 @@
+<? echo (
+	$r->content_type('text/javascript');
+	my $Object = eval( "new openprint::$param{type}($param{id});" );
+	my $html;
+	$html .= sprintf(q`$('%s_shortname').value = '%s';`, $param{type}, $Object->shortname() );
+	$html .= sprintf(q`$('%s_longname').value = '%s';`, $param{type}, $Object->longname() );
+	return $html;
+) ?>
+	

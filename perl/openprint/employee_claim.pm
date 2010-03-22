@@ -25,11 +25,11 @@ sub history {
 
 		} # end foreach claim_id
 	} # end if
-	ssi::save_params( '/employee/inventory/claim/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','supplier_id', 'created_by', 'status' ) );
+	ssi::save_params( '/employee/claim/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','supplier_id', 'created_by', 'status' ) );
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/inventory/claim/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','supplier_id', 'created_by', 'status' ) );
+	ssi::save_params( '/employee/claim/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','supplier_id', 'created_by', 'status' ) );
 } # end sub _claims
 
 sub view {

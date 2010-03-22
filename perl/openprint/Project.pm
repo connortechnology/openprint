@@ -623,6 +623,19 @@ sub find {
 			push @values, $params{'status'};
 		} # end if
 	} # end if
+	if ( exists $params{'reprint'} ) {
+		if ( ref $params{'reprint'} eq 'ARRAY' ) {
+			if ( @{$params{'reprint'}} ) {
+				$sql .= q{ AND (reprint IN (} . join(',', map {'?'} @{$params{'reprint'}}). ') )';
+						push @values, @{$params{'reprint'}};
+			} # end if
+		} elsif ( ! defined $params{'reprint'} ) {
+			$sql .= q{ AND (reprint IS NULL)};
+		} else {
+			$sql .= q{ AND (reprint=?)};
+			push @values, $params{'reprint'};
+		} # end if
+	} # end if
 	if ( $params{'used_press_name'} ) {
 		if ( ref $params{'used_press_name'} eq 'ARRAY' ) {
 			if ( @{$params{'used_press_name'}} ) {
@@ -722,6 +735,8 @@ sub save {
 				'predefined',			$$self{'predefined'} ? $$self{'predefined'} : 'N',
 				'rush',					$$self{'rush'},
 				'summary',				$$self{'summary'},
+				'reprint',				$$self{'reprint'},
+				'reprint_reason',		$$self{'reprint_reason'},
 	);
 	if ( ! $$self{'created_on'} ) {
 		push @sql, 'dtmCreationDate','NOW()';
@@ -898,11 +913,12 @@ sub load {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
 	} # endif
-	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush/} =
-		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush/};
+	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason/} =
+		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason/};
 	if ( $$self{'order_id'} ) {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
 	} # end if
+	return;
 } # end sub load
 
 sub type {

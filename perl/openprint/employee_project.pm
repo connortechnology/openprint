@@ -161,7 +161,7 @@ sub view {
 					my @Equipment = openprint::Equipment::find('strid'=>$param{"UsePress-$printing_specs{'SignatureIndex'}"} );
 					next if ! @Equipment;
 
-					foreach my $Job ( openprint::ScheduledJob( 'service_id'	=> $signature_service_index ) ) {
+					foreach my $Job ( openprint::ScheduledJob::find( 'service_id'	=> $signature_service_index ) ) {
 						$Job->save({
 								'equipment_id'	=> $Equipment[0]->id(),
 								'runtime'	=> "$runtime minutes",
@@ -323,7 +323,9 @@ sub view {
 				if ( ! is_sig_complete( $project_index, $signature_service_index ) ) {
 					$complete = 0;
 				} else {
-					sql::execute( undef, undef, q{DELETE FROM Schedule WHERE ProjectIndex=? AND serviceindex=?}, $project_index, $signature_service_index );
+					foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+						$Job->delete();
+					} # end foreach
 					if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
 						$Equipment[0]->update_schedule();
 					} # end if
@@ -374,7 +376,7 @@ sub view {
 	} elsif ( $param{'btnFunction'} eq 'AddToPressSchedule' ) {
 		$variable{'error'} .= openprint::press_schedule::add_project_to_press_schedule( $Project, $param{'ServiceIndex'} );
 	} elsif ( $param{'btnFunction'} eq 'RemoveFromPressSchedule' ) {
-		foreach my $Job ( openprint::ScheduledJob( 'project_id'=>$Project->id() ) ) {
+		foreach my $Job ( openprint::ScheduledJob::find( 'project_id'=>$Project->id() ) ) {
 			$Job->delete();
 		} # end foreach Job
 	} elsif ( $param{'btnFunction'} eq 'Add Service' ) {
@@ -744,7 +746,7 @@ sub is_sig_complete {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
-	foreach my $Job ( openprint::ScheduledJob( 'project_id' => $project_index, 'service_id' => $signature_service_index ) ) {
+	foreach my $Job ( openprint::ScheduledJob::find( 'project_id' => $project_index, 'service_id' => $signature_service_index ) ) {
 		$Job->delete();
 	} # end foreach
 

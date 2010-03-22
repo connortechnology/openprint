@@ -23,7 +23,7 @@
 		</p>
 	</fieldset>
 		<p class="buttons">
-			<? echo ( #ssi::writeButton( $log, $dbh, 'DeleteShift', 'delete.gif', q`new Ajax.Request('_shift_change.json?action=delete',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Delete' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'DeleteShift', 'delete.gif', q`new Ajax.Request('_shift_change.json?action=delete',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Delete' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'SaveShift', 'save.gif', q`new Ajax.Request('_shift_change.json',{parameters:ShiftForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'CancelShift', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
 		</p>

@@ -78,7 +78,7 @@ Please enter the specifications for your proofs. In most cases these are automat
 			<table>
 				<tr>
 					<td align="right"><b>Total Service Price (<?CurrencySymbol?>):</b></td>
-					<td width="105"><?CurrencySymbol?><input name="txtPrice<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+					<td width="110"><?CurrencySymbol?><input name="txtPrice<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
 					<td width="105"><? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin($openprint::session{'user_type'}, ['A','E'] ); ) ?></td>
 				</tr>
 			</table>
