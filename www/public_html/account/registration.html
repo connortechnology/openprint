@@ -1,3 +1,19 @@
+<script type="text/javascript">
+<!--
+function howdidyouhearaboutus_onchange(e) {
+	if ( e.value == 'Other' ) {
+		$('Other').show();
+		$('salesrep_id').hide();
+	} else if ( e.value == 'CSR' ) {
+		$('Other').show();
+		$('salesrep_id').show();
+	} else {
+		$('Other').hide();
+		$('salesrep_id').hide();
+	} // end if
+} // end function howdidyouhearaboutus_onchange(e)
+-->
+</script>
 <div class="PageTitle">
 <h1>ACCOUNT</h1>
 <h2>Registration</h2>
@@ -127,10 +143,15 @@
 			</li>
 			<li <? echo ( $$variable{'RequiredFields'}{'howdidyouhearaboutus'} ? 'class="required"' : '' ) ?>> 
 				<label>How did you hear about us?:</label>
-				<select name="howdidyouhearaboutus" onchange="if(this.value=='Other' || this.value=='CSR'){show_div('Other');} else {hide_div('Other');}">
-<? echo ( ssi::make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please enter who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{'howdidyouhearaboutus'} ); ) ?>
+				<select name="howdidyouhearaboutus" id="howdidyouhearaboutus" onchange="howdidyouhearaboutus_onchange(this);">
+<? echo ( ssi::make_drop_down( [ '', 'select one','CSR','Contacted by CSR - please select who:', 'Internet','Internet','Tradeshow','Tradeshow','Magazine Ad','Magazine Ad','Word of Mouth','Word of Mouth','Other','Other - please enter:' ], $param{'howdidyouhearaboutus'} ); ) ?>
 				</select>
-				<input id="Other" style="<? echo ( 'visibility: hidden;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($param{'howdidyouhearaboutusother'}); ) ?>" />
+				<select name="salesrep_id" id="salesrep_id" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','CSR'] ) ) ?>">
+					<? echo (
+						return ssi::make_drop_down( ['', 'Other - please enter who:', map { $_->id(), $_->name() } openprint::User::find('usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], $param{'salesrep_id'} );
+					) ?>
+				</select>
+				<input id="Other" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($param{'howdidyouhearaboutusother'}); ) ?>" />
 			</li>
 			<li <? echo ( $$variable{'RequiredFields'}{'mailinglist'} ? 'class="required"' : '' ) ?>> 
 				<label>Add to our mailing list?</label>
