@@ -270,6 +270,7 @@ $log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserA
 				# auto log in.
 				if ( $Company->activation() eq 'Y' ) {
 					@session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
+					openprint::logs::insertLogRecord('2','Automatic login after registration.');
 				} # end if
 			} # end if
 		} # end if
