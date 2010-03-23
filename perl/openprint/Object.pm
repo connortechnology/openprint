@@ -206,9 +206,11 @@ sub delete {
 	my %fields = eval '%'.$type.'::fields';
 	if ( exists $fields{'deleted'} ) {
 		sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 1 );
+		return $dbh->errstr if $dbh->errstr;
 		$$self{'deleted'}=1;
 	} else {
 		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+		return $dbh->errstr if $dbh->errstr;
 		delete $openprint::Object::cache{$type}{$$self{id}};
 	} # end if
 	return;

@@ -1203,12 +1203,15 @@ last;
 	if ( ! @Shifts ) {
 		# First, grab most recent shift, this will give us the last equipment shift.
 		my $NextES;
+
+		# This is neccessary, because it happens because we have no shifts in teh array
 		my $PreviousShift = openprint::Shift::find_one( 'equipment_id' => $$row{'equipment_id'}, 'order'=>'starttime DESC' );
 		if ( $PreviousShift ) {
+			# The logic here should be, grab the ES from the last shift, and then get the next ES.  It should not be based on time
 			$NextES = openprint::Equipment_Shift::find_one( 
-					'equipment_id'		=>	$$row{'equipment_id'}, 
-					'starttime_start'	=>	$PreviousShift->Equipment_Shift()->endtime(),
-					'order'				=>	'starttime',
+					'equipment_id'	=>	$$row{'equipment_id'}, 
+					'starttime_>='	=>	$PreviousShift->Equipment_Shift()->endtime(),
+					'order'			=>	'starttime',
 					);
 		} # end if
 		if ( ! $NextES ) {
@@ -1244,7 +1247,7 @@ $log->debug("ES: " . $NextES->name() );
 $log->debug("Runtime: $run_time");
 		my $old_start_time = $start_time - $run_time;
 
-		while ( @fixed_jobs and ($fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
+		while ( @fixed_jobs and ( $fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
 			# Have fixed_jobs.  They do not move.
 			$start_time = $fixed_jobs[0]->endtime_seconds() + 1;
 			shift @fixed_jobs;
@@ -1256,9 +1259,9 @@ $log->debug("Moving on to next shift: " . $Shift->to_string() );
 			if ( ! @Shifts ) {
 $log->debug("Loading next Equipment_shift: " . $Shift->Equipment_Shift()->endtime() );
 				my $NextES = openprint::Equipment_Shift::find_one( 
-						'equipment_id'		=>	$$row{'equipment_id'}, 
-						'starttime_start'	=>	$Shift->Equipment_Shift()->endtime(),
-						'order'				=>	'starttime',
+						'equipment_id'	=>	$$row{'equipment_id'}, 
+						'starttime_>='	=>	$Shift->Equipment_Shift()->endtime(),
+						'order'			=>	'starttime',
 						);
 $log->debug("ES: " . $Shift->Equipment_Shift()->name() );
 $log->debug("ES: " . $NextES->name() );
@@ -1440,7 +1443,7 @@ sub _shift_popup {
 sub _shift_change {
 	my $Shift = new openprint::Shift( $param{'shift_id'} );
 	if ( $param{'action'} eq 'delete' ) {
-		$Shift->delete();
+		$variable{'error'} .= $Shift->delete();
 	} else {
 		my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );
 		my $new_endtime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'endtime_year','endtime_month','endtime_day','endtime_hour','endtime_minute'} ) );
@@ -1485,9 +1488,10 @@ sub _shift_change {
 
 		push @{$variable{'changed'}}, $Shift->ul_id();
 		$variable{'error'} .= $Shift->save({
-				'starttime_seconds'		=>	$new_starttime,
-				'endtime_seconds'		=>	$new_endtime,
-				'operator_id'	=>	$param{'operator_id'},
+				'starttime_seconds'	=>	$new_starttime,
+				'endtime_seconds'	=>	$new_endtime,
+				'operator_id'		=>	$param{'operator_id'},
+				'shift_id'			=>	$param{'equipmentshift_id'},
 				});
 
 	} # end if
