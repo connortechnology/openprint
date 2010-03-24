@@ -84,6 +84,10 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 	} # end foreach
 
 	if ( ! $$specs{'Quantity'} ) {
+		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+		$$specs{'Quantity'} = $$printing_specs{'grommets'};
+	} # end if
+	if ( ! $$specs{'Quantity'} ) {
 		$$specs{'alert'} = 'Please enter the # of grommets per item.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if

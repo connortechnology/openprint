@@ -399,8 +399,8 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 					$printing_specs{$spec} = $$specs{$spec};
 				} # end if
 			} # end foreach
-		} elsif ( $ProjectType->name() eq 'PresentationFolders' ) {
-			foreach my $spec ( 'PocketSize' ) {
+		} elsif ( $ProjectType->name() eq 'Banners' ) {
+			foreach my $spec ( 'PocketSize','grommets' ) {
 				if ( $printing_specs{$spec} ne $$specs{$spec} ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
 					$printing_specs{$spec} = $$specs{$spec};
