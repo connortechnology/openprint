@@ -43,10 +43,10 @@ fi;
 # step 3: make a hard-link-only (except for dirs) copy of the latest snapshot,
 # if that exists
 if [ -d "$2.0" ] ; then \
-	echo "$CP -al $2.0 $2.1"
+	#echo "$CP -al $2.0 $2.1"
 	$CP -al "$2.0" "$2.1"
 else
-	echo "Making $2.0"
+	#echo "Making $2.0"
 	$MKDIR -p "$2.0"
 fi;
 
@@ -54,7 +54,7 @@ fi;
 # rsync behaves like cp --remove-destination by default, so the destination
 # is unlinked first.  If it were not so, this would copy over the other
 # snapshot(s) too!
-echo "$RSYNC \"$1\" \"$2\""
+#echo "$RSYNC \"$1\" \"$2\""
 $RSYNC -a --delete --delete-excluded "$1" "$2.0"
 
 # step 5: update the mtime of hourly.0 to reflect the snapshot time
