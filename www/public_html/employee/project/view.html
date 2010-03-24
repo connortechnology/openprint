@@ -376,6 +376,9 @@ $log->debug("Have no job: $Job");
 			if ( ( $description =~ /^Taken Over/ ) or ( $description =~ /^Marked Proofs/ ) ) {
 				$prepress_start = Date::Parse::str2time( $when );
 			} # end if
+			if ( $description =~ /^Reused from project (\d+)$/ ) {
+				$description = 'Reused from project <a href="/employee/project/view.html?project_id='.$1.'">'.$1.'</a>';
+			} # end if
 			$html .= sprintf( '<tr%1$s><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr>', 
 				$rowclass, new openprint::User( $user_id )->name(), $when, $description );
 			$rowclass = $rowclass ? '' : ' class="colRow"';

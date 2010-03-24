@@ -930,7 +930,7 @@ sub complete_signature {
 
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
 # Remove from Print Schedule
-	foreach my $Job ( openprint::ScheduledJob( 'project_id'=>$project_id, 'service_id'=>$service_id ) ) {
+	foreach my $Job ( openprint::ScheduledJob::find( 'project_id'=>$project_id, 'service_id'=>$service_id ) ) {
 		$Job->delete();
 	} # end foreach Job
 # Update Bindery Schedule

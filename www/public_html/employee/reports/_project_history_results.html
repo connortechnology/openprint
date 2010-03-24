@@ -21,6 +21,7 @@
 	if ( $param{'company_id'} and exists $companies{$param{'company_id'}} ) {
 		$filters{'company_id'} = $param{'company_id'};
 	} # end if
+	$filters{'reprint'} = $param{'reprint'} if $param{'reprint'};
 
 	if ( %companies ) {
 		@{$$variable{'Projects'}} = openprint::Project::find( %filters);

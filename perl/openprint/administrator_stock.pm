@@ -9,8 +9,13 @@ require openprint::Paper;
 require openprint::pricelist;
 require openprint::paper_price;
 require openprint::paper_priceset;
+require openprint::StockName;
+require openprint::StockFinish;
+require openprint::StockColour;
+require openprint::StockWeight;
+require openprint::Manufacturer;
 
-use openprint;
+use openprint ();
 use vars qw( %variable %session %param %config $log $dbh $r );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
@@ -425,7 +430,15 @@ sub usage {
 
 } # end sub usage
 
+sub filters {
+} # end sub filters
+
+sub _filters_load {
+} # end sub _filters_load
+
+sub _filters_save {
+} # end sub _filters_save
+
 1;
 
 __END__
-~       
