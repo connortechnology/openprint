@@ -61,6 +61,7 @@ $log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserA
 	if ( $required_fields{'howdidyouhearaboutus'} and exists $param{'howdidyouhearaboutus'} ) {
 		$error .= 'Please tell us how you heard about us.<br/>' if ! $param{'howdidyouhearaboutus'};
 		$error .= 'Please tell us how you heard about us.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'Other' ) and ( ! $param{'howdidyouhearaboutusother'} );
+		$error .= 'Please tell us which csr referred you.<br/>' if ( $param{'howdidyouhearaboutus'} eq 'CSR' ) and ! ( $param{'howdidyouhearaboutusother'} or $param{'salesrep_id'} );
 	} # end if
 	$error .= 'Missing E-mail Address.<br/>' if ! $param{'email'};
 	$error .= 'Invalid E-mail Address.<br/>' if ! Email::Valid->address( $param{'email'} );
@@ -124,7 +125,7 @@ $log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserA
 		$Company->taxexempt1( $param{'gstnumber'} ? 'Y' : 'N' );
 		$Company->taxexempt2( $param{'pstnumber'} ? 'Y' : 'N' );
 		$Company->activation( $config{'NewCustomerAccountActivation'} );
-		if ( sets::isin( new openprint::User($session{'user_id'})->type(), ['E','A'] ) ) {
+		if ( sets::isin( new openprint::User($session{'user_id'})->type(), ['E','A'] ) and ! $Company->salesrep_id() ) {
 			$Company->salesrep_id( $session{'user_id'} );
 		} # end if
 		if ( my $error = $Company->save() ) {
@@ -270,6 +271,7 @@ $log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserA
 				# auto log in.
 				if ( $Company->activation() eq 'Y' ) {
 					@session{'company_id','user_id','email','user_type'} = ( $cust_id, $User->id(), $User->email(), 'C' );
+					openprint::logs::insertLogRecord('2','Automatic login after registration.');
 				} # end if
 			} # end if
 		} # end if

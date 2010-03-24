@@ -60,8 +60,8 @@ $serial = 'timetracks_id_seq';
 sub find {
 	my %params = @_;
 
-	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
-	return map { new openprint::Timetrack( $_ ) } @{$find_cache{$hash_key}} if $find_cache{$hash_key};
+	#my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
+	#return map { new openprint::Timetrack( $_ ) } @{$find_cache{$hash_key}} if $find_cache{$hash_key};
 
 	my $sql = q{SELECT * FROM Timetracks WHERE 1>0};
 	my @values;
@@ -192,7 +192,7 @@ sub find {
 	} elsif ($debug ) {
 		$openprint::log->debug("openprint::Timetrack::find($sql) (@values)");
 	} # end if
-	@{$find_cache{$hash_key}} = map { $_->{id} } @$data;
+	#@{$find_cache{$hash_key}} = map { $_->{id} } @$data;
 	return map { new openprint::Timetrack( $_->{id}, $_ ); } @$data;
 } # end sub find
 

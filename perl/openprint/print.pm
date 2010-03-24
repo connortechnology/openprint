@@ -650,6 +650,7 @@ sub get_finished_weight {
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 			next if $$sig_specs{'txtSignatureType'} and ! $$sig_specs{'PageQuantity'.$qty_index};
+			next if ! $$sig_specs{'txtImposition'.$qty_index};
 			my $sig_weight = openprint::Estimating::Printing::get_weight( $Project, $sig_specs, $qty_index );
 			if ( ! $sig_weight ) {
 				# unable to get weight for a sig, must recalc printing service

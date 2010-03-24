@@ -178,8 +178,8 @@ sub runtime_seconds {
 sub starttime_seconds {
 	my $self = shift;
 	if ( @_ ) {
-		if ( $_[0] < time ) {
-			$log->error( 'ScheduledJob: startime_seconds < NOW()' );
+		if ( $_[0] < ( time -10 ) ) {
+			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] ) );
 		} # end if
 		$$self{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] );
 	} # end if
@@ -333,6 +333,9 @@ sub get_li {
 		$html .= ' (<span class="CSR">'.$Project->Company()->CSR()->firstname().'</span>)';
 		if ( $Project->operator_id() ) {
 			$html .= ' (<span class="PrepressOperator">'.$Project->Operator()->firstname().'</span>)';
+		} # end if
+		if ( $Project->reprint() eq 'Y' ) {
+			$html .= ' REPRINT'. $Project->reprint_reason();
 		} # end if
 		$html .= '</div>';
 		$html .= qq`<span class="DueDate" id="JumpToDate$$self{'id'}">`;
@@ -652,16 +655,18 @@ sub speed {
 	if ( @_ ) {
 		$$self{'speed'} = $_[0];
 	} # end if
-	if ( ( ! $$self{'speed'} ) and $$self{'project_id'} ) {
-		my $Project = $self->Project();
-		if ( $Project->ordered_quantity_index() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] ) if $$self{'service_id'} and @{$$self{'service_id'}};
-			
-			$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, $sig_specs, $Project->ordered_quantity_index(), $self->Equipment() ) if $sig_specs;
+	if ( ! $$self{'speed'} ) {
+		if ( (!($$self{'speed'} = $self->Equipment()->specification('Default Scheduling Runspeed'))) and $$self{'project_id'} ) {
+			my $Project = $self->Project();
+			if ( $Project->ordered_quantity_index() ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] ) if $$self{'service_id'} and @{$$self{'service_id'}};
+
+				$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, $sig_specs, $Project->ordered_quantity_index(), $self->Equipment() ) if $sig_specs;
+			} # end if
 		} # end if
 	} # en dif
 	return $$self{'speed'};
-} # end sub runspeed
+} # end sub speed
 
 1;
 __END__

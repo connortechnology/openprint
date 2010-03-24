@@ -341,8 +341,12 @@ sub status {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+	if ( $$services{''} and @{$$services{''}} and ! $printing_specs ) {
+		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	} # end if
 	if ( ! $printing_specs ) {
 		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+		$openprint::log->debug("Estimating::Multopage::status : No printing_specs");
 		return if ! $printing_specs;
 	} # end if
 

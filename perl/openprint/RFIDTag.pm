@@ -96,8 +96,8 @@ sub find {
 
 	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$log->debug("Error loading RFIDTag SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
+		$log->error("Error loading RFIDTag SQL($sql)" . DBI->errstr );
+	} elsif ( $debug and ! @$data ) {
 		$log->debug('No RFIDTag loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded RFIDTag ($sql) (@values) records:" . @$data );

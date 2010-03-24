@@ -138,7 +138,7 @@ sub verify_login {
 
 	@session{'company_id','user_id','email','user_type'} = $User->get('company_id','id','email','type');
 	delete $session{'Pricelist_id'};
-	openprint::logs::insertLogRecord('2','Success');
+	openprint::logs::insertLogRecord('2','Successful Login');
 
 	if ( $openprint::param{'rdbRememberMe'} eq 'Y' ) {
 		my $Cookie = Apache2::Cookie->new($r,

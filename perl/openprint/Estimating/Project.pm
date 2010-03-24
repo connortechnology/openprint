@@ -588,7 +588,17 @@ $openprint::log->debug('Deleting Folding');
 	} # end if
 
 	if ( $$specs{'Numbering'} eq 'Y' ) {
-		push @{$$services{'Numbering'}}, $Project->add_service( 'Numbering' ) if ! $$services{'Numbering'};
+		if ( ! $$services{'Numbering'} ) {
+			push @{$$services{'Numbering'}}, $Project->add_service( 'Numbering' );
+			# Load defaults
+			my $numbering_specs = openprint::service::get_specs_ref( $Project, $$services{'Numbering'}[0] );
+			$$specs{'colour'} = $$numbering_specs{'colour'};
+			$$specs{'SetsOfNumbers'} = $$numbering_specs{'SetsOfNumbers'};
+		} # end if
+		foreach my $sid ( @{$$services{'Numbering'}} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'colour', $$specs{'colour'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'SetsOfNumbers', $$specs{'SetsOfNumbers'} );
+		} # end foreach
 	} else {
 		foreach ( @{$$services{'Numbering'}} ) {
 			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );

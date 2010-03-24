@@ -53,11 +53,11 @@
 		<p>
 			<label>Date:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_start', join('-', @session{'/employee/claim/history.html?created_on_start_year','/employee/claim/history.html?created_on_start_month','/employee/claim/history.html?created_on_start_day'} ), {'onchange'=>"load('Results',\$('f1'));"} ); ) ?>
+<? echo ( ssi::date_select( 'created_on_start', [ @session{'/employee/claim/history.html?created_on_start_year','/employee/claim/history.html?created_on_start_month','/employee/claim/history.html?created_on_start_day'} ], {'onchange'=>"load('Results',\$('f1'));"} ); ) ?>
             to
             </span>
             <span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_end', join('-', @session{'/employee/claim/history.html?created_on_end_year','/employee/claim/history.html?created_on_end_month','/employee/claim/history.html?created_on_end_day'} ), {'onchange'=>"load('Results',\$('f1'));"} ); ) ?>
+<? echo ( ssi::date_select( 'created_on_end', [ @session{'/employee/claim/history.html?created_on_end_year','/employee/claim/history.html?created_on_end_month','/employee/claim/history.html?created_on_end_day'} ], {'onchange'=>"load('Results',\$('f1'));"} ); ) ?>
             </span>
 		</p>
 		<p>
