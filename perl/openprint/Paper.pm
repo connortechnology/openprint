@@ -174,9 +174,14 @@ sub find {
 		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
 		push @values, $params{'project_type_id'};
 	} # end if
-	if ( $params{'fsc_code'} ) {
-		$sql .= ' AND fsc_code=?';
-		push @values, $params{'fsc_code'};
+	if ( exists $params{'fsc_code'} ) {
+		if ( $params{'fsc_code'} ) {
+			$sql .= ' AND fsc_code=?';
+			push @values, $params{'fsc_code'};
+		} else {
+			$sql .= ' AND ( fsc_code IS NULL or fsc_code=? )';
+			push @values, $params{'fsc_code'};
+		} # end if
 	} # end if
 	if ( $params{'parts'} ) {
 		$sql .= ' AND parts=?';

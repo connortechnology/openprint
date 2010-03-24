@@ -172,7 +172,7 @@ sub runtime_seconds {
 		$$self{'runtime'} = misc::seconds2hms($_[0]);
 	} # end if
 	
-	return misc::hms2time( $$self{'runtime'} );
+	return misc::hms2time( $self->runtime );
 } # end sub runtime_seconds
 
 sub starttime_seconds {
