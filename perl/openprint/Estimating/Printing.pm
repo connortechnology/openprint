@@ -49,6 +49,7 @@ require openprint::Estimating::Stitching;
 require openprint::Estimating::SpinePaste;
 require openprint::Estimating::UVCoating;
 require openprint::Estimating::Aqueous;
+require openprint::Estimating::Numbering;
 require openprint::Equipment;
 require openprint::Material;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
@@ -320,14 +321,12 @@ sub setup_project {
 	my %special_colours = map { $_->{pmsid}, $_ } @$s;
 	$project{'special_colours'} = \%special_colours;
 
-	$project{'HasFolding'} = $$services{'Folding'} ? $$services{'Folding'}[0] : 0;
-	$project{'HasScoring'} = $$services{'Scoring'} ? $$services{'Scoring'}[0] : 0;
-	$project{'HasPerforating'} = $$services{'Perforating'} ? $$services{'Perforating'}[0] : 0;
-	$project{'HasDieCutting'} = $$services{'DieCutting'} ? $$services{'DieCutting'}[0] : 0;
-	$project{'HasCutting'} = $$services{'Cutting'} ? $$services{'Cutting'}[0] : 0;
-	@$specs{'HasFolding','HasCutting','HasScoring'} = @project{'HasFolding','HasCutting','HasScoring'};
-	%{$project{'ScoringSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasScoring'} )} if $project{'HasScoring'};
-	%{$project{'DieCuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasDieCutting'} )} if $project{'HasDieCutting'};
+	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering' ) {
+		if ( $$services{$service} ) {
+			$$specs{'Has'.$service} = $project{'Has'.$service} = $$services{$service}[0];
+			%{$project{$service.'Specs'}} = %{openprint::service::get_specs_ref( $Project, $$services{$service}[0] )};
+		} # end if	
+	} # end foreach
 
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{'NoBindery'} ) {
@@ -360,11 +359,6 @@ $log->debug("Need DieCutting: $project{'NeedDieCutting'}");
 		} # end if	
 		$project{'HasAqueous'} = $$services{'Aqueous'}[0];
 	} # end if	
-
-
-	%{$project{'FoldingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasFolding'} )} if $project{'HasFolding'};
-	%{$project{'CuttingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasCutting'} )} if $project{'HasCutting'};
-	%{$project{'PerforatingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $project{'HasPerforating'} )} if $project{'HasPerforating'};
 
 	if ( $$services{'SaddleStitching'} ) {
 		%{$project{'StitchingSpecs'}} = %{openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] )};
@@ -2035,6 +2029,7 @@ sub breakdown {
 	$breakdown .= $$price{'Aqueous Breakdown'};
 	$breakdown .= $$price{'Cutting Breakdown'};
 	$breakdown .= $$price{'Scoring Breakdown'} if $$price{'Scoring Breakdown'};
+	$breakdown .= $$price{'Numbering Breakdown'} if $$price{'Numbering Breakdown'};
 	$breakdown .= $$price{'DieCutting Breakdown'} if $$price{'DieCutting Breakdown'};
 	$breakdown .= $$price{'Folding Breakdown'};
 	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
@@ -3063,6 +3058,21 @@ sub calc_price {
 		} else {
 			$price{'DieCutting Breakdown'} .= sprintf('DieCutting Price: $%.2f on %s<br/>', $diecutting_results{'Price'}{'Total'}, $diecutting_results{'Equipment'} ? $diecutting_results{'Equipment'}->name() : '' );
 			$price{'Comparison Cost'} += $diecutting_results{'Price'}{'Total'};
+		} # end if
+	} # end if
+
+	my %numbering_results;
+	if ( $$project{'HasNumbering'} ) {
+		%numbering_results = openprint::Estimating::Numbering::signature_calc( $Project, @$project{'HasNumbering','NumberingSpecs'}, $specs, $qty_index, $Imposition );
+#foreach my $k ( keys %scoring_results ) {
+#$openprint::log->debug("Scoring: $k => $scoring_results{$k}");
+#}
+		if ( $numbering_results{'Status'} eq 'uncalculated' ) {
+			$price{'Numbering Breakdown'} .= "Numbering error: $numbering_results{'alert'} $numbering_results{Breakdown}".'<br/>';
+			$price{'Comparison Cost'} += 1000000; 
+		} else {
+			$price{'Numbering Breakdown'} .= sprintf('Numbering Price: %dout $%.2f on %s<br/>', $numbering_results{'Imposition'}->imposition(), $numbering_results{'Total'}, $numbering_results{'Equipment'} ? $numbering_results{'Equipment'}->name() : '' );
+			$price{'Comparison Cost'} += $numbering_results{'Total'};
 		} # end if
 	} # end if
 

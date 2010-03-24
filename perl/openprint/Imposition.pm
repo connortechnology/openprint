@@ -274,7 +274,7 @@ sub load {
 			$$self{'spreads'} = 1;
 		} # end if
 	} # end if
-
+	return $self;
 } # end sub load
 
 sub save {

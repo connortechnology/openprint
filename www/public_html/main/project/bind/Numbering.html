@@ -25,7 +25,19 @@
 					) ?>
 				</select>
 			</p>
-			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->
+			<? echo (
+				my $html = '';
+				foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
+					$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
+					$html .= '<fieldset><legend>Signature '.$$sig_specs{'SignatureIndex'} . ' ' . $$sig_specs{'txtServiceDescription'}.'</legend>';
+					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/signature_imposition_with_override.html' );
+					$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/proj/signature_equipment.html' );
+					$html .= '</fieldset>';
+				} # end foreach ss_id
+				return $html;
+			) ?>
+			<!--#include virtual="/includes/main/proj/quantities_prices.html"-->
 		</fieldset>
 		<hr/>
 		<!--#include virtual="/includes/main/proj/add_to_project.html"-->
