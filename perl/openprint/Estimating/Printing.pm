@@ -2390,34 +2390,33 @@ sub get_project_price {
 	my %previous_forms_cache;
 	my %best_price;
 	$best_price{'Comparison Cost'} = $best_price if $best_price;
+	my $services = $Project->services();
 
-	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
-		my $Press;
-		if ( ! $P ) {
+	foreach my $Press ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
+		if ( ! $Press ) {
 			if ( $impositions{''} and @{$impositions{''}} ) {
 				$Press = $impositions{''}[0]->Press();
 			} # end if
-		} else {
-			$Press = $P;
+			next if ! $Press;
 		} # end if
-		next if ! $Press;
 
 		# When calculating the get_project_price for remaining sigs, we must make sure that we stay with the same type
 		if ( $$sig_specs{'PrintingTypes'} and @{$$sig_specs{'PrintingTypes'}} and ($$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) and ! sets::isin( $Press->specification('Printing Type'), $$sig_specs{'PrintingTypes'} ) ) {
 			$openprint::log->debug("Wrong type " . $Press->strid() . " : " . $Press->specification('Printing Type') . ': want ' . join(',', @{$$sig_specs{'PrintingTypes'}} ) ) if $debug;
 			next;
 		} # end if
-		foreach my $imp ( calculate_impositions( $Project, $P, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project ) ) {
+		foreach my $imp ( calculate_impositions( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project ) ) {
 
+			$$sig_specs{'txtImposition'.$qty_index} = $imp->imposition();
 			$$sig_specs{'ddmRunStyle'.$qty_index} = $imp->runstyle();
 			$$sig_specs{'ddmPress'.$qty_index} = $Press->strid();
 			$$sig_specs{'PageQuantity'.$qty_index} = $imp->pages();
+
 			my %previous_forms_cache = %$previous_forms_cache;
 			my $hash_key = join(',', $Press->strid(), $imp->runstyle(), $imp->pages(), $imp->imposition() );
 			$$sig_specs{'PreviousForms'.$qty_index} = $previous_forms_cache{$hash_key};
 			$previous_forms_cache{$hash_key} += 1;
 
-			my $services = $Project->services();
 			my %PlateCounts = %$PlateCounts;
 			my %PaperCounts = %$PaperCounts;
 
@@ -2441,6 +2440,7 @@ sub get_project_price {
 				} # end if
 				next; # next Impo
 			} # end if
+
             $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
             $PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
 			$PaperCounts{$imp->Paper()->to_string()} += $$price{'Stock Qty'};
@@ -2450,7 +2450,7 @@ sub get_project_price {
 			my $Paper = $imp->Paper();
 
 			my $upq = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} - $imp->pages();
-			if ( $upq and $imp->pages() ) {
+			if ( ( $upq > 0 ) and $imp->pages() ) {
 				my @signatures = @$signatures;
 				my $s_id = $service_index;
 				my %new_specs;
@@ -2476,28 +2476,18 @@ $openprint::log->debug("Found sig in overrides");
 								last if $s_id != $service_index;
 			
 							} else {
+								# Remove our current sig so we don't keep scanning it
 								splice @signatures, $j, 1;
 								$j -= 1;
 							} # end if
 						} # end foreach
 
-						# If we get here, @signatures has been cleaned out, and no overrides found.
+						# If we get here, @signatures has been run through, and no overrides found.
 						if ( ( $s_id == $service_index ) and @signatures ) {
-							#for ( my $j = 0; $j < @signatures; $j += 1 ) {
-								#if ( $signatures[$j] > $s_id ) {
-									#$s_id = $signatures[$j];
-									#@signatures = splice @signatures, $j, 1;
-									$s_id = shift @signatures;
-									%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
-# These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press.
-									$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
-									$new_specs{'chkOverrideImposition'.$qty_index} = '';
-									$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
-									$new_specs{'chkOverridePress'.$qty_index} = '';
+							$s_id = shift @signatures;
+							%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
+# These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press. Don't need to clear our overides, because we already looked for them above
 $openprint::log->debug("Found sig without  overrides");
-									#last;
-								#} # end if
-							#} # end foreach
 						} # end if
 					} # end if
 # If we didn't get a new s_id, then we are using fake services
@@ -2505,10 +2495,10 @@ $openprint::log->debug("Found sig without  overrides");
 						$s_id = 0 ;
 						%new_specs = %$service_specs;
 # These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press.
-							$new_specs{'chkOverrideImposition'.$qty_index} = '';
-							$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
-							$new_specs{'chkOverridePress'.$qty_index} = '';
-							$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
+						$new_specs{'chkOverrideImposition'.$qty_index} = '';
+						$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
+						$new_specs{'chkOverridePress'.$qty_index} = '';
+						$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
 					} # end if
 
 # Need to update these too.  
