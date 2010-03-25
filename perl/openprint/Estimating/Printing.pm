@@ -2344,7 +2344,7 @@ sub calculate_impositions {
 	} # end foreach imp
 	@impositions = map {@{$_}} values %imps;
 
-	$log->debug("Press Impositions after filtering: " . @{$impositions{$Press->id()}} ) if $debug;
+	$log->debug("Press Impositions after filtering: " . @{$impositions{$Press->id()}} ) if $debug or 1;
 	if ( $$sig_specs{'versions'} > 1 and @impositions < 30 ) {
 		$openprint::log->debug("Calling do_versions, # of imps: " . @impositions ) if $debug;
 		@impositions = openprint::imposition::do_versions( $versions, \@impositions );
@@ -2604,7 +2604,7 @@ $openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $
 					} # end if calc_price or get_project_price
 
 					if ( (! $$sig_price{complete}) or ($additional_price < 0) ) {
-$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, additional price: $additional_price $$sig_price{'Comparison Cost'}");
+#$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, additional price: $additional_price $$sig_price{'Comparison Cost'}");
 #$imp->display();
 						$$price{'complete'} = 0;
 						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';

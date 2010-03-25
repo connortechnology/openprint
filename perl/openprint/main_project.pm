@@ -50,6 +50,13 @@ sub history {
 			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{'ProjectIndex'} );
 		} # end if
 	} # end foreach
+	# Doing it here will set the defaults if neccessary, but then they will get overriden by the saev_params below.  This is neccessary because save_params will update lastupdated.
+	ssi::setup_date_select( '/main/project/history.html', 'created_on', -180, 0 );
+	ssi::setup_date_select( '/main/project/history.html', 'updated_on', -14, 0 );
+    if ( ! $session{'/main/project/history.html?ddmStatus'} ) {
+        $session{'/main/project/history.html?ddmStatus'} = join(';', ( 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ) );
+    } # end if
+
 	ssi::save_params( '/main/project/history.html', 
 			'ddmStatus',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
