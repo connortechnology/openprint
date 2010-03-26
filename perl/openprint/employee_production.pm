@@ -939,7 +939,7 @@ sub complete_signature {
 	sql::update( $log, $dbh, 'Bindery_Schedule', ['ProjectIndex=?', $project_id], 'starttime', 
 			sql::execute( $log, $dbh, q{SELECT NOW() + '2 hours'::interval} )
 			);
-	$Project->add_to_log( @session{'company_id','user_id'}, "Form $$specs{'SignatureIndex'} Completed" );
+	$Project->add_to_log( @session{'company_id','user_id'}, "Form $$specs{'SignatureIndex'} Completed". ( $Service->operator_id() != $session{user_id} ? ' for ' . $Service->Operator()->name() : '' ) );
 	sql::end_transaction( $dbh, $ac );
 } # end sub complete_signature
 
