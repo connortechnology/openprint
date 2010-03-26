@@ -55,6 +55,7 @@ BEGIN {
 	use openprint::paper;
 	use openprint::JDF;
 	use Number::Format;
+	use openprint::Project_Service;
 
 #use MapImage;
 

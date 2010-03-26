@@ -102,6 +102,11 @@ function getSelectionId(input, li) {
 	my $html = '';
 	$html .= ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "\$('buttons').innerHTML='Please wait. Saving...';f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
 	$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "\$('buttons').innerHTML='Please wait. Deleting...';f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+	if ( $$variable{'PurchaseOrder'}->cancelled() eq '1' ) {
+		$html .= ssi::writeButton( $log, $dbh, 'UnCancel', 'uncancel.gif', "\$('buttons').innerHTML='Please wait. Uncancelling...';f1.btnFunction.value='UnCancel';f1.submit();", '', 'Uncancel' );
+	} elsif ( $$variable{'PurchaseOrder'}->cancelled() eq '0' ) {
+		$html .= ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', "\$('buttons').innerHTML='Please wait. Cancelling...';f1.btnFunction.value='Cancel';f1.submit();", '', 'Cancel' );
+	} # end if
 	return $html;
 ) ?>
 	</p>

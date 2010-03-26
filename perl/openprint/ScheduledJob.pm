@@ -498,19 +498,6 @@ sub forms {
 		return scalar @{$$self{'service_id'}};
 	} # end if
 	return 0;
-	my $forms = 0;
-	if ( $$self{'project_id'} ) {
-		my $Project = $self->Project();
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-			if ( $$sig_specs{'SignatureQuantity'} ) {
-				$forms += $$sig_specs{'SignatureQuantity'};
-			} # end if
-		} # end foreach
-	} # end if
-	$forms = @{$$self{'service_id'}} if $$self{'service_id'} and ! $forms;
-
-	return $forms;
 } # end sub forms
 
 sub Shift {

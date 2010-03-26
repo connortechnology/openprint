@@ -25,6 +25,7 @@ require openprint::ProductionFeedback;
 require openprint::Shift;
 require openprint::Equipment_Shift;
 require openprint::ScheduledJob;
+require openprint::Project_Service;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -925,7 +926,9 @@ sub complete_signature {
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_id );
-	my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+	my $Service = $Project->Service( $service_id );
+	$Service->save({'status'=>'Complete'});
+	my $specs = $Service->specs();
 
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
 # Remove from Print Schedule
@@ -1336,11 +1339,6 @@ sub _li_change {
 
 		if ( (exists $param{'forms'}) and ( $param{'forms'} != $Job->forms() ) ) {
 			my @service_ids = @{$$Job{'service_id'}};
-			foreach my $s_id ( @service_ids ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
-				openprint::service::delete_service_spec( $Job->project_id(), $s_id, 'SignatureQuantity' ) if $$sig_specs{'SignatureQuantity'};
-			} # end foreach s_id
-
 			if ( $Job->forms() > $param{'forms'} ) {
 				@service_ids = splice @service_ids, 0, $param{'forms'};
 				$sql{'service_id'} = \@service_ids;

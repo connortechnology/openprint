@@ -21,6 +21,7 @@ require sql;
 require openprint::JDF;
 require openprint::OrderedProduct;
 require openprint::ScheduledJob;
+require openprint::Project_Service;
 
 my $debug = 1;
 
@@ -1375,6 +1376,11 @@ sub Operator {
 	} # end if
     return $$self{'Operator'};
 } # end sub Operator
+
+sub Service {
+	my ( $self, $service_id ) = @_;
+	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'id'=>$service_id} );
+} # end sub Service
 
 1;
 __END__

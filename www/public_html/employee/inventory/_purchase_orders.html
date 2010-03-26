@@ -25,6 +25,7 @@
 		$search{'deleted'} = $session{'/employee/inventory/purchase_orders.html?deleted'} if exists $session{'/employee/inventory/purchase_orders.html?deleted'};
 		$search{'supplier_id'} = $session{'/employee/inventory/purchase_orders.html?supplier_id'} if $session{'/employee/inventory/purchase_orders.html?supplier_id'};
 		$search{'created_by'} = $session{'/employee/inventory/purchase_orders.html?created_by'} if $session{'/employee/inventory/purchase_orders.html?created_by'};
+		$search{'cancelled'} = $session{'/employee/inventory/purchase_orders.html?cancelled'} if $session{'/employee/inventory/purchase_orders.html?cancelled'} ne '';
 
 		@{$$variable{'PurchaseOrders'}} = ();
 		foreach my $PO ( openprint::PurchaseOrder::find( %search ) ) {
@@ -60,7 +61,7 @@
 <? if ( $session{'user_type'} eq 'A' ) ?>
 		<th width="20"><input type="checkbox" onclick="select_all( $('f1'), 'po_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
-		<th width="35">ID</th>
+		<th width="35"style="text-align: left;">ID</th>
 		<th width="110" style="text-align: left;">Date</th>
 		<th style="text-align: left;">Supplier</th>
 		<th style="text-align: left;">Created By</th>
@@ -91,11 +92,12 @@
 				<td><a href="purchase_order_view.html?po_id=%1$d">%2$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%3$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%4$s</a></td>
+				<td><a href="purchase_order_view.html?po_id=%1$d">%6$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%7$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%8$s</a></td>
-				<td><a href="purchase_order_view.html?po_id=%1$d">%9$s</a></td>
-				<td style="text-align: right;">%5$s%6$s</td>
-			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), $Currency->symbol(), Number::Format::format_number($total,2,2), 
+				<td class="Price">%5$s</td>
+			</tr>`, $PO->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PO->created_on())), $PO->Supplier()->name(), $PO->Creator()->name(), 
+				$PO->cancelled() ? 'CANCELLED' : openprint::Currency::format($total), 
 				( ( $PO->authorized() and ! $PO->authorized_by() ) ? 'Authorized' : $PO->Authorized_By()->name() ),
 				$PO->manifest_id(),
 				join('<br/>', sets::exclude( [''], [ sets::union( map { $_->docket() } $PO->Contents() ) ] ) ),
@@ -103,7 +105,7 @@
 			$report_total += $total;
 		} # end while
 		$html .= '<tr class="totals"><td colspan="8" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
-		$html .= sprintf('%s%s', $Currency->symbol(), Number::Format::format_number( $report_total,2,2 ) );
+		$html .= openprint::Currency::format( $report_total );
 		$html .= '</td></tr>';
 		return $html;
 	) ?>

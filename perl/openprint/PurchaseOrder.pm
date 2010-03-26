@@ -77,6 +77,7 @@ $serial = 'Purchaseorders_id_seq';
 	'shipto_sms'		=>	'shipto_sms',
 	'shipto_email'		=>	'shipto_email',
 	'manifest_id'		=>	'manifest_id',
+	'cancelled'			=>	'cancelled',
 );
 
 %transforms = (
@@ -97,6 +98,7 @@ $serial = 'Purchaseorders_id_seq';
 	'statetax'		=>	undef,
 	'statetax_rate'	=>	undef,
 	'manifest_id'	=>	undef,
+	'cancelled'		=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -181,6 +183,19 @@ sub find {
 		$sql .= ' AND authorized_by IS NOT NULL';
 	} elsif ( $params{'authorized'} eq 'N' ) {
 		$sql .= ' AND authorized_by IS NULL';
+	} # end if
+	if ( exists $params{'cancelled'} ) {
+		if ( ref $params{'cancelled'} eq 'ARRAY' ) {
+			if ( @{$params{'cancelled'}} ) {
+				$sql .= ' AND cancelled IN ('. join(',', map {'?'} @{$params{'cancelled'}} ) . ')';
+				push @values, @{$params{'cancelled'}};
+			} else {
+				return ();
+			} # end if
+		} elsif ( $params{'cancelled'} ne '' ) {
+			$sql .= ' AND cancelled=?';
+			push @values, $params{'cancelled'};
+		} # end if
 	} # end if
 	if ( exists $params{'deleted'} ) {
 		if ( ref $params{'deleted'} eq 'ARRAY' ) {

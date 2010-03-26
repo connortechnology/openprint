@@ -29,24 +29,32 @@ sub debug {
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
-	if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
-		return $openprint::Object::cache{$parent}{$id};
-	} # end if
-
 	my $self = {};
 	bless $self, $parent;
 
-	$$self{'log'} = $openprint::log;
-	$$self{'dbh'} = $openprint::dbh;
-	if ( ( $$self{'id'} = $id ) or $data ) {
+	if ( ref $id eq 'HASH' ) {
+		# First off, for now, don't cache figure that out later
+		my @keys = keys %{$id};
+$log->debug("Multi-key Obejct @keys" );
+		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
-	} # end if
-	if ( ! $no_cache ) {
-		if ( $$self{'id'} ) {
-			$openprint::Object::cache{$parent}{$id} = $self;
+	} else {
+		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+			return $openprint::Object::cache{$parent}{$id};
 		} # end if
-	} # end if
 
+
+		$$self{'log'} = $openprint::log;
+		$$self{'dbh'} = $openprint::dbh;
+		if ( ( $$self{'id'} = $id ) or $data ) {
+			$self->load( $data );
+		} # end if
+		if ( ! $no_cache ) {
+			if ( $$self{'id'} ) {
+				$openprint::Object::cache{$parent}{$id} = $self;
+			} # end if
+		} # end if
+	} # end if ref id
 	return $self;
 } # end sub new
 
@@ -55,9 +63,15 @@ sub load {
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
+	my @identified_by = eval '@'.$type.'::identified_by';
 
 	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+		if ( @identified_by ) {
+$log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=' . $$data{$_} } @identified_by ) );
+			$data = $dbh->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+		} else {
+			$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+		} # end if
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $dbh->errstr ) if $dbh->errstr;
 		} # end if
