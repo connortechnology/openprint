@@ -81,22 +81,22 @@ sub press_schedule {
 			$Project->save();
 			openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
 			my $project_id = $Project->id();
+			my @services;
+			foreach my $signature_count ( 1 .. $param{'forms'} ) {
+				my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'AdditionalSignature' );
+				push @services, $service_id;
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', $signature_count );
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
 
-			my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'AdditionalSignature' );
-			$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_id );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', ++$signature_count );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureQuantity', $param{'forms'} );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
+				my $Equipment = new openprint::Equipment( $param{'press_id'} );
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
 
-			my $Equipment = new openprint::Equipment( $param{'press_id'} );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
-
-			$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'AdditionalSignature' ) );
+				$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'AdditionalSignature' ) );
+			} # end foreach
 			$Job->project_id( $Project->id() );
-			$Job->service_id( [ $service_id ] );
+			$Job->service_id( \@services );
 		} # end if
 
 		if ( $param{'starttime_year'} ) {
@@ -1003,21 +1003,7 @@ sub _pending {
 sub _ul {
 	if ( $param{'action'} eq 'split' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		my @service_ids = @{$$Job{'service_id'}};
-		my $runtime = int ( $Job->runtime_seconds()/@service_ids );
-		$Job->runtime_seconds( $runtime );
-		$Job->impressions( $Job->impressions() / @service_ids );
-		$$Job{'service_id'} = [ shift @service_ids ];
-		$Job->save();
-		my $starttime = $Job->starttime_seconds() + $runtime if $Job->starttime();
-
-		foreach my $s_id ( @service_ids ) {
-			my $J2 = $Job->copy();
-			$$J2{'service_id'} = [ $s_id ];
-			$J2->starttime_seconds( $starttime ) if $Job->starttime();
-			$J2->save();
-			$starttime += $runtime if $Job->starttime();
-		} # end foreach	
+		$Job->split();
 		$variable{'Shift'} = $Job->Shift();
 	} # end if
 	if ( $param{'shift_id'} ) {
