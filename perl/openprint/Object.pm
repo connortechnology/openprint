@@ -27,22 +27,28 @@ sub debug {
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
-    if ( (! $no_cache) and $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
-        return $openprint::Object::cache{$parent}{$id};
-    } # end if
-
 	my $self = {};
 	bless $self, $parent;
 
-    if ( ( $$self{'id'} = $id ) or $data ) {
-        $self->load( $data );
-    } # end if
-	if ( ! $no_cache ) {
-		if ( $$self{'id'} ) {
-			$openprint::Object::cache{$parent}{$id} = $self;
+	if ( ref $id eq 'HASH' ) {
+		# First off, for now, don't cache figure that out later
+		my @keys = keys %{$id};
+		@$self{@keys} = @$id{@keys};
+		$self->load( $data );
+	} else {
+		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+			return $openprint::Object::cache{$parent}{$id};
 		} # end if
-	} # end if
 
+		if ( ( $$self{'id'} = $id ) or $data ) {
+			$self->load( $data );
+		} # end if
+		if ( ! $no_cache ) {
+			if ( $$self{'id'} ) {
+				$openprint::Object::cache{$parent}{$id} = $self;
+			} # end if
+		} # end if
+	} # end if ref id
 	return $self;
 } # end sub new
 
@@ -55,11 +61,16 @@ sub load {
 		$log->error( 'NO table for type ' . $type );
 		return;
 	} # end if
+	my @identified_by = eval '@'.$type.'::identified_by';
 
 	if ( ! $data ) {
-		$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+		if ( @identified_by ) {
+			$data = $dbh->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+		} else {
+			$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+		} # end if
 		if ( ! $data ) {
-			$log->error( 'Failure to load ' . $type . " $$self{'id'}: Reason: " . $dbh->errstr );
+			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $dbh->errstr ) if $dbh->errstr;
 		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
@@ -217,9 +228,11 @@ sub delete {
 	my %fields = eval '%'.$type.'::fields';
 	if ( exists $fields{'deleted'} ) {
 		sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 1 );
+		return $dbh->errstr if $dbh->errstr;
 		$$self{'deleted'}=1;
 	} else {
 		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+		return $dbh->errstr if $dbh->errstr;
 		delete $openprint::Object::cache{$type}{$$self{id}};
 	} # end if
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
