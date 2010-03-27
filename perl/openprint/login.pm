@@ -236,13 +236,13 @@ sub change_password {
 
 	if ( $openprint::param{'txtNewPassword'} ne $openprint::param{'txtConfirmPassword'} ) {
 		$$variable{'error'} = 'The new password, and the verification passwords you entered do not match.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$$variable{'Redirect'} = '/account/change_password.html';
 		return;
 	} # end if
 
 	if ( $openprint::param{'txtNewPassword'} eq '' ) {
 		$$variable{'error'} = 'The new password you entered was blank.This is too insecure, and will not be allowed.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$$variable{'Redirect'} = '/account/change_password.html';
 		return;
 	} # end if
 
@@ -250,7 +250,7 @@ sub change_password {
 
 	if ( $openprint::param{'txtNewPassword'} eq $User->password() ) {
 		$$variable{'error'} = 'The new password you entered was the same as your current password. Please try again.</br>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$$variable{'Redirect'} = '/account/change_password.html';
 		return;
 	} # end if
 	
@@ -260,7 +260,7 @@ sub change_password {
 		$User->save();
 	} else {
 		$$variable{'error'} = 'You entered the wrong old password.<br/>';
-		$$variable{'Redirect'} = '/main/account/change_password.html';
+		$$variable{'Redirect'} = '/account/change_password.html';
 		return;
 	} # end if
 } # sub change_password

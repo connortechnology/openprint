@@ -11,7 +11,7 @@
 	<? eval ( delete $session{'Destination'} ) ?>
 	<? endif ( $session{'Destination'} ) ?>
 	<? if ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
-	<!--#include virtual="/main/account/select_company.html"-->
+	<!--#include virtual="/account/select_company.html"-->
 	<? endif ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
 	<div id="lastLogins">
 	<!--#include virtual="/includes/login_log.html"-->

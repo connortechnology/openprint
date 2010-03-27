@@ -1217,7 +1217,7 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 		if ( ! exists $$data{'cancelled'} ) {
 			$dbh->do('ALTER TABLE purchaseorders add cancelled BOOLEAN');
 			$dbh->do('ALTER TABLE purchaseorders alter cancelled set default false');
-			$dbh->do('UPDATE purchaseorder set cancelled=false');
+			$dbh->do('UPDATE purchaseorders set cancelled=false');
 			$dbh->do('ALTER TABLE purchaseorders alter cancelled set not null');
 		} # end if
 		if ( ! exists $$data{'authorized'} ) {
