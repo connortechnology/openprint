@@ -1577,7 +1577,33 @@ sub purchase_order_view {
 			$L->save({
 					'user_id'	=>	$session{'user_id'},
 					'po_id'		=>	$PO->id(),
-					'reason'	=>	'deleted.',
+					'reason'	=>	'deleted.' . $param{'reason'},
+					});
+			delete $param{'po_id'};
+			delete $param{'btnFunction'};
+			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'Cancel' ) {
+		$variable{'error'} .= $PO->save({'cancelled'=>1});
+		if ( ! $variable{'error'} ) {
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					'user_id'	=>	$session{'user_id'},
+					'po_id'		=>	$PO->id(),
+					'reason'	=>	'Cancelled: '. $param{'reason'},
+					});
+			delete $param{'po_id'};
+			delete $param{'btnFunction'};
+			$variable{'Redirect'} = '/employee/inventory/purchase_orders.html';
+		} # end if
+	} elsif ( $param{'btnFunction'} eq 'UnCancel' ) {
+		$variable{'error'} .= $PO->save({'cancelled'=>0});
+		if ( ! $variable{'error'} ) {
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					'user_id'	=>	$session{'user_id'},
+					'po_id'		=>	$PO->id(),
+					'reason'	=>	'Un-Cancelled: '. $param{'reason'},
 					});
 			delete $param{'po_id'};
 			delete $param{'btnFunction'};

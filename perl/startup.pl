@@ -64,6 +64,7 @@ BEGIN {
 	use	openprint::Currency;
 	use Number::Format;
 	use	openprint::Ledger;
+	use openprint::Project_Service;
 
 #use MapImage;
 

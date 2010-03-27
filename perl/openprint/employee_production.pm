@@ -26,6 +26,7 @@ require openprint::ProductionFeedback;
 require openprint::Shift;
 require openprint::Equipment_Shift;
 require openprint::ScheduledJob;
+require openprint::Project_Service;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -82,22 +83,22 @@ sub press_schedule {
 			$Project->save();
 			openprint::print_project::insert_project_type( $r, $log, $dbh, $Project->id(), 'Custom' );
 			my $project_id = $Project->id();
+			my @services;
+			foreach my $signature_count ( 1 .. $param{'forms'} ) {
+				my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'AdditionalSignature' );
+				push @services, $service_id;
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', $signature_count );
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
 
-			my $service_id = openprint::print_project::insert_service( $log, $dbh, $project_id, 'AdditionalSignature' );
-			$_ = q{SELECT MAX(strValue) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-			my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_id );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtSignatureType', 'AdditionalSignature' );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'txtServiceDescription', 'Additional Signature' );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureIndex', ++$signature_count );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'SignatureQuantity', $param{'forms'} );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'ImpressionQuantity', $param{'impressions'} );
+				my $Equipment = new openprint::Equipment( $param{'press_id'} );
+				openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
 
-			my $Equipment = new openprint::Equipment( $param{'press_id'} );
-			openprint::service::insert_service_spec( $log, $dbh, $project_id, $service_id, 'UsePress', $Equipment->strid() );
-
-			$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'AdditionalSignature' ) );
+				$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Service: %s', 'AdditionalSignature' ) );
+			} # end foreach
 			$Job->project_id( $Project->id() );
-			$Job->service_id( [ $service_id ] );
+			$Job->service_id( \@services );
 		} # end if
 
 		if ( $param{'starttime_year'} ) {
@@ -926,7 +927,9 @@ sub complete_signature {
 
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_id );
-	my $specs = openprint::service::get_specs_ref( $Project, $service_id );
+	my $Service = $Project->Service( $service_id );
+	$Service->save({'status'=>'Complete'});
+	my $specs = $Service->specs();
 
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
 # Remove from Print Schedule
@@ -937,7 +940,7 @@ sub complete_signature {
 	sql::update( $log, $dbh, 'Bindery_Schedule', ['ProjectIndex=?', $project_id], 'starttime', 
 			sql::execute( $log, $dbh, q{SELECT NOW() + '2 hours'::interval} )
 			);
-	$Project->add_to_log( @session{'company_id','user_id'}, "Form $$specs{'SignatureIndex'} Completed" );
+	$Project->add_to_log( @session{'company_id','user_id'}, "Form $$specs{'SignatureIndex'} Completed". ( $Service->operator_id() != $session{user_id} ? ' for ' . $Service->Operator()->name() : '' ) );
 	sql::end_transaction( $dbh, $ac );
 } # end sub complete_signature
 
@@ -1004,21 +1007,7 @@ sub _pending {
 sub _ul {
 	if ( $param{'action'} eq 'split' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		my @service_ids = @{$$Job{'service_id'}};
-		my $runtime = int ( $Job->runtime_seconds()/@service_ids );
-		$Job->runtime_seconds( $runtime );
-		$Job->impressions( $Job->impressions() / @service_ids );
-		$$Job{'service_id'} = [ shift @service_ids ];
-		$Job->save();
-		my $starttime = $Job->starttime_seconds() + $runtime if $Job->starttime();
-
-		foreach my $s_id ( @service_ids ) {
-			my $J2 = $Job->copy();
-			$$J2{'service_id'} = [ $s_id ];
-			$J2->starttime_seconds( $starttime ) if $Job->starttime();
-			$J2->save();
-			$starttime += $runtime if $Job->starttime();
-		} # end foreach	
+		$Job->split();
 		$variable{'Shift'} = $Job->Shift();
 	} # end if
 	if ( $param{'shift_id'} ) {
@@ -1204,12 +1193,15 @@ last;
 	if ( ! @Shifts ) {
 		# First, grab most recent shift, this will give us the last equipment shift.
 		my $NextES;
+
+		# This is neccessary, because it happens because we have no shifts in teh array
 		my $PreviousShift = openprint::Shift::find_one( 'equipment_id' => $$row{'equipment_id'}, 'order'=>'starttime DESC' );
 		if ( $PreviousShift ) {
+			# The logic here should be, grab the ES from the last shift, and then get the next ES.  It should not be based on time
 			$NextES = openprint::Equipment_Shift::find_one( 
-					'equipment_id'		=>	$$row{'equipment_id'}, 
-					'starttime_start'	=>	$PreviousShift->Equipment_Shift()->endtime(),
-					'order'				=>	'starttime',
+					'equipment_id'	=>	$$row{'equipment_id'}, 
+					'starttime_>='	=>	$PreviousShift->Equipment_Shift()->endtime(),
+					'order'			=>	'starttime',
 					);
 		} # end if
 		if ( ! $NextES ) {
@@ -1244,7 +1236,7 @@ $log->debug("ES: " . $NextES->name() );
 		my $run_time = $row->runtime_seconds();
 		my $old_start_time = $start_time - $run_time;
 
-		while ( @fixed_jobs and ($fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
+		while ( @fixed_jobs and ( $fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
 			# Have fixed_jobs.  They do not move.
 			$start_time = $fixed_jobs[0]->endtime_seconds() + 1;
 			shift @fixed_jobs;
@@ -1254,9 +1246,9 @@ $log->debug("ES: " . $NextES->name() );
 		while ( ( ! $Shift->operator_id() ) or ( $start_time > $Shift->endtime_seconds() ) ) {
 			if ( ! @Shifts ) {
 				my $NextES = openprint::Equipment_Shift::find_one( 
-						'equipment_id'		=>	$$row{'equipment_id'}, 
-						'starttime_start'	=>	$Shift->Equipment_Shift()->endtime(),
-						'order'				=>	'starttime',
+						'equipment_id'	=>	$$row{'equipment_id'}, 
+						'starttime_>='	=>	$Shift->Equipment_Shift()->endtime(),
+						'order'			=>	'starttime',
 						);
 $log->debug("ES: " . $Shift->Equipment_Shift()->name() );
 $log->debug("ES: " . $NextES->name() );
@@ -1345,11 +1337,6 @@ sub _li_change {
 
 		if ( (exists $param{'forms'}) and ( $param{'forms'} != $Job->forms() ) ) {
 			my @service_ids = @{$$Job{'service_id'}};
-			foreach my $s_id ( @service_ids ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
-				openprint::service::delete_service_spec( $Job->project_id(), $s_id, 'SignatureQuantity' ) if $$sig_specs{'SignatureQuantity'};
-			} # end foreach s_id
-
 			if ( $Job->forms() > $param{'forms'} ) {
 				@service_ids = splice @service_ids, 0, $param{'forms'};
 				$sql{'service_id'} = \@service_ids;
@@ -1438,7 +1425,7 @@ sub _shift_popup {
 sub _shift_change {
 	my $Shift = new openprint::Shift( $param{'shift_id'} );
 	if ( $param{'action'} eq 'delete' ) {
-		$Shift->delete();
+		$variable{'error'} .= $Shift->delete();
 	} else {
 		my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );
 		my $new_endtime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d', @param{'endtime_year','endtime_month','endtime_day','endtime_hour','endtime_minute'} ) );
@@ -1483,9 +1470,10 @@ sub _shift_change {
 
 		push @{$variable{'changed'}}, $Shift->ul_id();
 		$variable{'error'} .= $Shift->save({
-				'starttime_seconds'		=>	$new_starttime,
-				'endtime_seconds'		=>	$new_endtime,
-				'operator_id'	=>	$param{'operator_id'},
+				'starttime_seconds'	=>	$new_starttime,
+				'endtime_seconds'	=>	$new_endtime,
+				'operator_id'		=>	$param{'operator_id'},
+				'shift_id'			=>	$param{'equipmentshift_id'},
 				});
 
 	} # end if

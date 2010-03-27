@@ -88,12 +88,22 @@ sub find {
     } elsif ( $params{'starttime_end'} ) {
         $sql .= ' AND starttime <= ?';
         push @values, $params{'starttime_end'};
-    } elsif ( $params{'starttime_<'} ) {
+    } # end if
+	if ( $params{'starttime_<'} ) {
         $sql .= ' AND starttime < ?';
         push @values, $params{'starttime_<'};
-    } elsif ( $params{'starttime_>'} ) {
+    } 
+	if ( $params{'starttime_>'} ) {
         $sql .= ' AND starttime > ?';
         push @values, $params{'starttime_>'};
+    } 
+	if ( $params{'starttime_<='} ) {
+        $sql .= ' AND starttime <= ?';
+        push @values, $params{'starttime_<='};
+    } 
+	if ( $params{'starttime_>='} ) {
+        $sql .= ' AND starttime >= ?';
+        push @values, $params{'starttime_>='};
     } # end if
 
 	if ( $params{'endtime_end'} ) {

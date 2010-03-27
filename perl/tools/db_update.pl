@@ -1214,6 +1214,12 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 		if ( ! exists $$data{'statetax_charge'} ) {
 			$dbh->do('ALTER TABLE purchaseorders add statetax_charge BOOLEAN');
 		} # end if
+		if ( ! exists $$data{'cancelled'} ) {
+			$dbh->do('ALTER TABLE purchaseorders add cancelled BOOLEAN');
+			$dbh->do('ALTER TABLE purchaseorders alter cancelled set default false');
+			$dbh->do('UPDATE purchaseorder set cancelled=false');
+			$dbh->do('ALTER TABLE purchaseorders alter cancelled set not null');
+		} # end if
 		if ( ! exists $$data{'authorized'} ) {
 			$dbh->do('ALTER TABLE purchaseorders add authorized BOOLEAN');
 			$dbh->do('UPDATE purchaseorder set authorized=true WHERE authorized_on IS NOT NULL');

@@ -101,6 +101,25 @@ sub calc {
 		} # end if
 	} # end foreach
 
+	if ( $$specs{'Numbering'} eq 'Y' ) {
+		if ( ! $$services{'Numbering'} ) {
+			push @{$$services{'Numbering'}}, $Project->add_service( 'Numbering' );
+			# Load defaults
+			my $numbering_specs = openprint::service::get_specs_ref( $Project, $$services{'Numbering'}[0] );
+			$$specs{'colour'} = $$numbering_specs{'colour'} if ! $$specs{'Colour'};
+			$$specs{'SetsOfNumbers'} = $$numbering_specs{'SetsOfNumbers'} if ! $$specs{'SetsOfNumbers'};
+		} # end if
+		foreach my $sid ( @{$$services{'Numbering'}} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'colour', $$specs{'colour'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'SetsOfNumbers', $$specs{'SetsOfNumbers'} );
+		} # end foreach
+	} else {
+		foreach ( @{$$services{'Numbering'}} ) {
+			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+		} # end foreach
+		delete $$services{'Numbering'};
+	} # end if
+
 	if ( ! sets::isin( $$specs{'Dimensions'}, ['', 'Custom'] ) ) {
 		my ( $width, $height, $type ) = $$specs{'Dimensions'} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
 		my @args = ( $$specs{'projecttype_id'}, $width, $height );
@@ -585,25 +604,6 @@ $openprint::log->debug('Deleting Folding');
 			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
 		} # end foreach
 		delete $$services{'Perforating'};
-	} # end if
-
-	if ( $$specs{'Numbering'} eq 'Y' ) {
-		if ( ! $$services{'Numbering'} ) {
-			push @{$$services{'Numbering'}}, $Project->add_service( 'Numbering' );
-			# Load defaults
-			my $numbering_specs = openprint::service::get_specs_ref( $Project, $$services{'Numbering'}[0] );
-			$$specs{'colour'} = $$numbering_specs{'colour'};
-			$$specs{'SetsOfNumbers'} = $$numbering_specs{'SetsOfNumbers'};
-		} # end if
-		foreach my $sid ( @{$$services{'Numbering'}} ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'colour', $$specs{'colour'} );
-			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'SetsOfNumbers', $$specs{'SetsOfNumbers'} );
-		} # end foreach
-	} else {
-		foreach ( @{$$services{'Numbering'}} ) {
-			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
-		} # end foreach
-		delete $$services{'Numbering'};
 	} # end if
 
 	if ( $$services{'Padding'} ) {

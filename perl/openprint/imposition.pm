@@ -204,7 +204,6 @@ sub calc_setup_object {
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
-$openprint::log->debug("Press: " . $Press->strid() ) if $debug;
 	$setup1->colour_bar_size( $$specs{'colour_bar_size'} );
 	$setup1->colour_bar_orientation( $$specs{'Colour Bar Orientation'} );
 
@@ -258,14 +257,12 @@ $openprint::log->debug("Press: " . $Press->strid() ) if $debug;
 	} # end if
 	$setup1->stock_width( $paper_width );
 	$setup1->stock_height( $paper_height );
-
-	#$setup1->grain_direction( $setup1->rotate_sheet() == 0 ? $Paper->grain_direction() : ( $Paper->grain_direction() eq 'width' ? 'height' : 'width' ) );
 	$setup2->stock_width( $paper_width );
 	$setup2->stock_height( $paper_height );
-	#$setup2->grain_direction( $setup2->rotate_sheet() == 0 ? ($Paper->grain_direction() eq 'width' ? 'height' : 'width') : $Paper->grain_direction() );
 
 	my $bindery_gutters = 0;
 	my $bindery_bleed = 0;
+	my $bindery_head = 0;
 
 	if ( sets::isin( $$specs{'Binding'}, ['SaddleStitching','LoopStitching'] ) ) {
 		$bindery_gutters = $Press->specification('StitchingGutter');
@@ -277,7 +274,9 @@ $openprint::log->debug("Press: " . $Press->strid() ) if $debug;
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
 		$setup1->bleed_size( $bindery_bleed );
 		$setup2->bleed_size( $bindery_bleed );
+		$bindery_head = $$specs{'PerfectBindCoverGutter'};
 	} # end if
+$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
 	my @bleed_locations =  split(',', $$specs{'BleedLocations'} );
 	my $bleed_width  = 2*$bindery_bleed; # .25
 	my $bleed_height  = 2*$bindery_bleed;#.25
@@ -290,6 +289,7 @@ $openprint::log->debug("Press: " . $Press->strid() ) if $debug;
 		$bleed_width -= $$specs{'BleedSize'}; #0.125
 	} # end if
 	if ( sets::isin( 'Top', \@bleed_locations ) ) {
+		$bindery_head -= $$specs{'BleedSize'};
 		$image_height += $$specs{'BleedSize'};
 		$bleed_height -= $$specs{'BleedSize'};
 	} # end if
@@ -301,9 +301,14 @@ $openprint::log->debug("Press: " . $Press->strid() ) if $debug;
 	$bleed_height = 0 if $bleed_height < 0;
 #$openprint::log->debug("BleedSize: $$specs{'BleedSize'} bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
-	if ( $$specs{'Binding'} eq 'PerfectBound' ) {
-		$image_height += 2*$$specs{'PerfectBindCoverGutter'};
+	$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
+	if ( $bindery_head < 0 ) {
+		$bindery_head = 0;
+	} else {
+		$image_height += $bindery_head;
 	} # end if
+	$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bleed_height Image height: $image_height");
+
 	$setup1->image_width( $image_width + $bleed_width );
 	$setup1->image_height( $image_height );
 #$openprint::log->debug("Setup1 $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
@@ -331,7 +336,7 @@ $openprint::log->debug("Press: " . $Press->strid() ) if $debug;
 
 	$gutters = 0 if $gutters < 0;
 
-	$$specs{'Grip Size'} = $$specs{'Grip'} - $$specs{'PerfectBindCoverGutter'};
+	$$specs{'Grip Size'} = $$specs{'Grip'} - $bindery_head;
 # doube grip for a perfecting or Work & Tumble.
 	$$specs{'Grip Size'} *= 2 if sets::isin( $run_style, [ 'Work & Tumble', 'Perfecting' ] ); 
 	if ( ( $run_style eq 'Work & Tumble' ) and ( $$specs{'Colour Bar Orientation'} ne 'Length' ) ) {

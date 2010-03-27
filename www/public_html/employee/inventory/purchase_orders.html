@@ -80,6 +80,15 @@
 			<label class="radio" for="deleted0">No</label>
 		</p>
 		<p>
+			<label>Cancelled:</label>
+			<input type="radio" name="cancelled" id="cancelled1" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?cancelled'} eq '1' ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="cancelled1">Yes</label>
+			<input type="radio" name="cancelled" id="cancelled0" value="0" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?cancelled'} eq '0' ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="cancelled0">No</label>
+			<input type="radio" name="cancelled" id="cancelled" value="" <? echo ( ssi::checked( $session{'/employee/inventory/purchase_orders.html?cancelled'} eq '' ) ) ?> onclick="load('Results',$('f1'));" />
+			<label class="radio" for="cancelled">Both</label>
+		</p>
+		<p>
 			<label>Types:</label>
 			<? echo (
 				my $html;
