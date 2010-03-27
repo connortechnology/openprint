@@ -3724,6 +3724,13 @@ sub select_presses {
 			$results{$press_id} = "Can't do FM Screening";
 			next;
 		} # end if
+	
+		if ( $_ = $Press->specification('ProjectTypes') ) {
+			if ( sets::isin( '!'.$Project->Type()->name(), split(',',$_) ) ) {
+				$results{$press_id} = "Press is set to not do " . $Project->Type()->name();
+				next;
+			} # end if
+		} # end if
 
 		if ( $Project->Type()->name() eq 'Envelopes' and $Press->specification('Envelope Capable') ne 'Y' ) {
 			$results{$press_id} = "Failed Envelope Check";
