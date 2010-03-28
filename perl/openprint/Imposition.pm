@@ -95,15 +95,6 @@ sub get {
 	my ( $self, @fields ) = @_;
 	return map { $self->$_ } @fields;
 } # end sub get
-sub to_string {
-	my $self = shift;
-	my $string = sprintf('%dout %dx%d', @$self{'imposition','columns','rows'} );
-	if ( $$self{'dutch_columns'} ) {
-		$string .= sprintf('+%dx%d', @$self{'dutch_columns','dutch_rows'} );
-	} # end if
-	$string .= ' ' . $$self{'image_orientation'};
-	return $string;
-} # end sub to_string
 
 sub set {
 	my $self = shift;
@@ -425,7 +416,10 @@ sub equals {
 }
 
 sub to_string {
-	return sprintf('%s %dx%d+%dx%d=%dout %dx%d=%dp %sx%s %s', $_[0]->Press()->id(), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+	if ( ! $_[0]{'to_string'} ) {
+		$_[0]{'to_string'} = sprintf('%s %dx%d+%dx%d=%dout %dx%d=%dp %sx%s %s', $_[0]->Press()->id(), $_[0]->get('columns','rows','dutch_columns','dutch_rows','imposition','page_columns','page_rows','pages', 'sheet_width','sheet_height', 'image_orientation') );
+	}
+	return $_[0]{'to_string'};
 } # end sub to_string
 
 1;
