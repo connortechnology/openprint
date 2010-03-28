@@ -13,8 +13,8 @@
 			return $html;
 		) ?>
 		<br class="spacer"/>
-		<input type="checkbox" name="chkProcessColourSideOne<?Signature?>" <? echo ( 'checked="checked"' if $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} eq 'ProcessColour' ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideOne<?Signature?>').show() } else { $('ProcessCoveragesSideOne<?Signature?>').hide() } calc(this.form.name);" /> 
-		<? echo ( ssi::writeTip( '4 Colour Process' ); ) ?>
+		<input type="checkbox" id="chkProcessColourSideOne<?Signature?>" name="chkProcessColourSideOne<?Signature?>" <? echo ( ssi::checked( $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} eq 'ProcessColour' ); ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideOne<?Signature?>').show() } else { $('ProcessCoveragesSideOne<?Signature?>').hide() } calc(this.form.name);" /> 
+		<label class="radio" for="chkProcessColourSideOne<?Signature?>"><? echo ( ssi::writeTip( '4 Colour Process' ); ) ?></label>
 		<span id="ProcessCoveragesSideOne<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideOne'.$$variable{'Signature'}} ne 'ProcessColour' ) ?> >
 			<label for="CyanSideOneCoverage<?Signature?>">C</label><input type="text" id="CyanSideOneCoverage<?Signature?>" name="CyanSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'CyanSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
 			<label for="MagentaSideOneCoverage<?Signature?>">M</label><input type="text" id="MagentaSideOneCoverage<?Signature?>" name="MagentaSideOneCoverage<?Signature?>" value="<? echo ( $$variable{'MagentaSideOneCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
@@ -64,8 +64,8 @@ same as front?
 			return $html;
 		) ?>
 		<br class="spacer"/>
-		<input type="checkbox" name="chkProcessColourSideTwo<?Signature?>" <? echo ( ssi::checked( $$variable{'chkProcessColourSideTwo'.$$variable{'Signature'}} eq 'ProcessColour' ); ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideTwo<?Signature?>').show() } else { $('ProcessCoveragesSideTwo<?Signature?>').hide() } calc(this.form.name);" />
-	  <? echo ( ssi::writeTip( '4 Colour Process' ); ) ?>
+		<input type="checkbox" id="chkProcessColourSideTwo<?Signature?>" name="chkProcessColourSideTwo<?Signature?>" <? echo ( ssi::checked( $$variable{'chkProcessColourSideTwo'.$$variable{'Signature'}} eq 'ProcessColour' ); ) ?> value="ProcessColour" onclick="if ( this.checked ) { $('ProcessCoveragesSideTwo<?Signature?>').show() } else { $('ProcessCoveragesSideTwo<?Signature?>').hide() } calc(this.form.name);" />
+	  <label for="chkProcessColourSideTwo<?Signature?>"><? echo ( ssi::writeTip( '4 Colour Process' ); ) ?></label>
 		<span id="ProcessCoveragesSideTwo<?Signature?>" class="Coverages" <? echo ( 'style="display:none;"' if $$variable{'chkProcessColourSideTwo'.$$variable{'Signature'}} ne 'ProcessColour' ) ?> >
 			<label for="CyanSideTwoCoverage<?Signature?>">C</label><input type="text" id="CyanSideTwoCoverage<?Signature?>" name="CyanSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'CyanSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%
 			<label for="MagentaSideTwoCoverage<?Signature?>">M</label><input type="text" id="MagentaSideTwoCoverage<?Signature?>" name="MagentaSideTwoCoverage<?Signature?>" value="<? echo ( $$variable{'MagentaSideTwoCoverage'.$$variable{'Signature'}} ) ?>" onkeyup="this.value=this.value.replace(/\D/,'');calc(this.form.name);" size="3" class="ColourCoverage" />%

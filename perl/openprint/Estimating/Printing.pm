@@ -1755,6 +1755,8 @@ $i->display();
 # FIXME this used to generate the old impo, and add it, but what we really need to do is search through the impos we have, and select the old one, moving it to the front.  This is made more complex for book because they have not been converted here.
 		@{$impositions{''}} = ();
 		if ( $$specs{'ddmPress'.$qty_index} and ($$specs{'chkOverridePress'.$qty_index} ne 'Y') ) {
+			if ( sets::isin( $$specs{'ddmPress'.$qty_index}, map { $_->strid() } @possible_presses ) ) {
+
 			if ( ( my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'ddmPress'.$qty_index} ) ) ) {
 				my $E = $Equipment[0];
 				if ( $impositions{$E->id()} ) {
@@ -1772,6 +1774,7 @@ $i->display();
 						} # end if
 					} # end foreach Imposition
 				} # end if
+			} # end if we have equipment
 			} # end if we have equipment
 		} # end if can preload
 
