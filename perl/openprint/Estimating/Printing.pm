@@ -2398,12 +2398,15 @@ sub get_project_price {
 	$best_price{'Comparison Cost'} = $best_price if $best_price;
 	my $services = $Project->services();
 
-	foreach my $Press ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
-		if ( ! $Press ) {
+	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
+		my $Press;
+		if ( ! $P ) {
 			if ( $impositions{''} and @{$impositions{''}} ) {
 				$Press = $impositions{''}[0]->Press();
 			} # end if
 			next if ! $Press;
+		} else {
+			$Press = $P;
 		} # end if
 
 		# When calculating the get_project_price for remaining sigs, we must make sure that we stay with the same type
