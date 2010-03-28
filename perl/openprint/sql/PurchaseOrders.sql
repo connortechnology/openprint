@@ -52,6 +52,7 @@ CREATE TABLE PurchaseOrders (
 	shipto_sms			text,
 	shipto_email		text,
 	manifest_id			INTEGER, FOREIGN KEY (manifest_id) REFERENCES Manifests (id),
+	cancelled			BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );
 

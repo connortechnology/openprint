@@ -10,14 +10,14 @@
 			var match = dates[i].id.match(re);
 			if ( match.length ) {
 					Calendar.setup({
-					inputField   :  "ScheduleDate-"+match[1],       // id of the input field
-					ifFormat        :   "%Y-%m-%d",      // format of the input field
-					daFormat        :   "%b %d",
-					align           :   "Tl",
-					showsTime       :   false,          // will display a time selector
-					displayArea :   'JumpToDate'+match[1],
-					singleClick :   false,          // double-click mode
-					onClose     :   setduedate
+					inputField	:	"ScheduleDate-"+match[1],		// id of the input field
+					ifFormat		:	"%Y-%m-%d",		// format of the input field
+					daFormat		:	"%b %d",
+					align			:	"Tl",
+					showsTime		:	false,			// will display a time selector
+					displayArea :	'JumpToDate'+match[1],
+					singleClick :	false,			// double-click mode
+					onClose	 :	setduedate
 					});
 			} // end if match
 		} // end for each date id
@@ -79,18 +79,18 @@
 	} # end if
 	if ( ! $session{'/employee/production/print_overview.html?schedule_start_year'} ) {
 		@session{
-                '/employee/production/print_overview.html?schedule_start_year',
-                '/employee/production/print_overview.html?schedule_start_month',
-                '/employee/production/print_overview.html?schedule_start_day'}
+				'/employee/production/print_overview.html?schedule_start_year',
+				'/employee/production/print_overview.html?schedule_start_month',
+				'/employee/production/print_overview.html?schedule_start_day'}
 				= $starttime ? split('-', $starttime ) : Date::Calc::Today();
 	} # end if
 
 	if ( ! $session{'/employee/production/print_overview.html?schedule_end_year'} ) {
 		@session{
-                '/employee/production/print_overview.html?schedule_end_year',
-                '/employee/production/print_overview.html?schedule_end_month',
-                '/employee/production/print_overview.html?schedule_end_day'}
-                = $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
+				'/employee/production/print_overview.html?schedule_end_year',
+				'/employee/production/print_overview.html?schedule_end_month',
+				'/employee/production/print_overview.html?schedule_end_day'}
+				= $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
 	} # end if
 ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
@@ -221,8 +221,8 @@
 		foreach my $E ( @{$$variable{'Presses'}} ) {
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
-                    '/employee/production/print_overview.html?schedule_start_month',
-                    '/employee/production/print_overview.html?schedule_start_day'};
+					'/employee/production/print_overview.html?schedule_start_month',
+					'/employee/production/print_overview.html?schedule_start_day'};
 			my $end = Date::Calc::Delta_Days( 
 				@session{
 				'/employee/production/print_overview.html?schedule_start_year',
@@ -237,7 +237,7 @@
 			foreach ( 1 .. $end ) {
 
 				my @Shifts = openprint::Shift::find( 
-					'equipment_id' 		=>  $E->id(),
+					'equipment_id' 		=>	$E->id(),
 					'starttime_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ),
 					'starttime_end'		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', $year, $month, $day ),
 					'order'				=>	'starttime',
@@ -250,9 +250,9 @@
 							);
 					if ( $PreviousShift ) {
 						$NextES = openprint::Equipment_Shift::find_one(
-								'equipment_id'      =>  $E->id(),
-								'starttime_start'   =>  $PreviousShift->Equipment_Shift()->endtime(),
-								'order'             =>  'starttime',
+								'equipment_id'	=>	$E->id(),
+								'starttime_>='	=>	$PreviousShift->Equipment_Shift()->endtime(),
+								'order'			=>	'starttime',
 								);
 					} # end if
 					if ( ! $NextES ) {
@@ -286,7 +286,7 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 				} # end foreach Shift
 
 				( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-            } # end foreach delta day
+			} # end foreach delta day
 
 			$html .= '</div>';
 		} # end foreach press

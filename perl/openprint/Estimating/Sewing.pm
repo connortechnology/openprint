@@ -83,11 +83,6 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 		delete $$specs{$_};
 	} # end foreach
 
-	if ( ! $$specs{'Quantity'} ) {
-		$$specs{'alert'} = 'Please enter the # of grommets per item.<br/>';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
-
 	my $makeReadyPrice = openprint::service::get_price( $log, $dbh, $variable, 'SewingMakeReady', undef, undef );
 	my $minimumCharge = openprint::service::get_price( $log, $dbh, $variable, 'SewingMinimumCharge', undef, undef );
 
@@ -105,14 +100,14 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 		my %servicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'Sewing', $qty, undef );
 		if ( sets::isin( $servicePrice{'units'}, ['', 'Per M', 'Per 1000'] ) ) {
 			$servicePrice{'Total'} = $qty * $servicePrice{'Price'} / 1000;
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Service: \$\%.2f \%s = \$\%.2f<br/>", @servicePrice{'Price','units','Total'} );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%.2f %s = $%.2f<br/>', @servicePrice{'Price','units','Total'} );
 		} # end if
 		$price = $makeReadyPrice + $servicePrice{'Total'};
-		if ( my @Materials = openprint::Material::find('name'=>'Sews') ) {
+		if ( my @Materials = openprint::Material::find('name'=>'Thread') ) {
 			my %materialPrice = $Materials[0]->get_price( $qty * $$specs{'Quantity'}, undef );
 			if ( %materialPrice ) {
 				$materialPrice{'Total'} = $materialPrice{'Price'} * $$specs{'Quantity'} * $qty;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Material: \$\%.2f \%s * \%d grommets * \%d = \$\%.2f<br/>", @materialPrice{'Price','units'}, $$specs{'txtArea'}, $qty, $materialPrice{'Total'} );
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Material: $%.2f %s * %d * %d = $%.2f<br/>', @materialPrice{'Price','units'}, $$specs{'txtArea'}, $qty, $materialPrice{'Total'} );
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No Material Price.<br/>';
 			} # end if
@@ -138,7 +133,7 @@ sub summary {
 	if ( $qty_index ) {
 		
 	} else {
-		return $$specs{'Quantity'} . ' grommets per item.';
+		return $$specs{'Quantity'} . ' inches.';
 	} # end if
 } # end sub summary
 

@@ -33,6 +33,8 @@ $serial = 'shifts_id_seq';
 	'equipment_id'		=>	'equipment_id',
 	'starttime_seconds'	=>	undef,
 	'endtime_seconds'	=>	undef,
+	'created_on'		=>	'created_on',
+	'updated_on'		=>	'updated_on',
 );
 
 %transforms = (
@@ -41,13 +43,15 @@ $serial = 'shifts_id_seq';
 
 %defaults = (
 	'operator_id'		=>	undef,
+	'created_on'		=>	'NOW()',
+	'updated_on'		=>	'NOW()',
 );
 
 sub find_one {
-    my %params = @_;
-    $params{'limit'} = 1;
-    my @Results = find(%params);
-    return $Results[0] if @Results;
+	my %params = @_;
+	$params{'limit'} = 1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
 } # end sub find_one
 
 sub find {
@@ -81,70 +85,70 @@ sub find {
 		$sql .= ' AND starttime = ?';
 		push @values, $params{'starttime'};
 	} 
-    if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
-        $sql .= ' AND ( starttime BETWEEN ? AND ? )';
-        push @values, @params{'starttime_start','starttime_end'};
-    } elsif ( $params{'starttime_start'} ) {
-        $sql .= ' AND starttime >= ?';
-        push @values, $params{'starttime_start'};
+	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
+		$sql .= ' AND ( starttime BETWEEN ? AND ? )';
+		push @values, @params{'starttime_start','starttime_end'};
+	} elsif ( $params{'starttime_start'} ) {
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime_start'};
 	} elsif ( $params{'starttime_end'} ) {
-        $sql .= ' AND starttime <= ?';
-        push @values, $params{'starttime_end'};
-    } elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
-        $sql .= ' AND starttime IS NULL';
-    } elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
-        $sql .= ' AND starttime IS NULL';
-    } # end if
-    
+		$sql .= ' AND starttime <= ?';
+		push @values, $params{'starttime_end'};
+	} elsif ( exists $params{'starttime_start'} and ! $params{'starttime_start'} ) {
+		$sql .= ' AND starttime IS NULL';
+	} elsif ( exists $params{'starttime_end'} and ! $params{'starttime_end'} ) {
+		$sql .= ' AND starttime IS NULL';
+	} # end if
+	
 	if ( $params{'starttime_>='} ) {
-        $sql .= ' AND starttime >= ?';
-        push @values, $params{'starttime_>='};
-    } 
+		$sql .= ' AND starttime >= ?';
+		push @values, $params{'starttime_>='};
+	} 
 	if ( $params{'starttime_<='} ) {
-        $sql .= ' AND starttime <= ?';
-        push @values, $params{'starttime_<='};
-    } # endif
+		$sql .= ' AND starttime <= ?';
+		push @values, $params{'starttime_<='};
+	} # endif
 
 	if ( $params{'starttime_<'} ) {
-        $sql .= ' AND starttime < ?';
-        push @values, $params{'starttime_<'};
-    } 
+		$sql .= ' AND starttime < ?';
+		push @values, $params{'starttime_<'};
+	} 
 	if ( $params{'starttime_>'} ) {
-        $sql .= ' AND starttime > ?';
-        push @values, $params{'starttime_>'};
+		$sql .= ' AND starttime > ?';
+		push @values, $params{'starttime_>'};
 	} # end if
 
-    if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
-        $sql .= ' AND ( endtime BETWEEN ? AND ? )';
-        push @values, @params{'endtime_start','endtime_end'};
-    } elsif ( $params{'endtime_start'} ) {
-        $sql .= ' AND endtime >= ?';
-        push @values, $params{'endtime_start'};
-    } elsif ( $params{'endtime_end'} ) {
-        $sql .= ' AND endtime <= ?';
-        push @values, $params{'endtime_end'};
-    } elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
-        $sql .= ' AND endtime IS NULL';
-    } elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
-        $sql .= ' AND endtime IS NULL';
+	if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
+		$sql .= ' AND ( endtime BETWEEN ? AND ? )';
+		push @values, @params{'endtime_start','endtime_end'};
+	} elsif ( $params{'endtime_start'} ) {
+		$sql .= ' AND endtime >= ?';
+		push @values, $params{'endtime_start'};
+	} elsif ( $params{'endtime_end'} ) {
+		$sql .= ' AND endtime <= ?';
+		push @values, $params{'endtime_end'};
+	} elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
+		$sql .= ' AND endtime IS NULL';
+	} elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
+		$sql .= ' AND endtime IS NULL';
 	} # end if
 
-    if ( $params{'endtime_<'} ) {
-        $sql .= ' AND endtime < ?';
-        push @values, $params{'endtime_<'};
-    } 
-    if ( $params{'endtime_<='} ) {
-        $sql .= ' AND endtime <= ?';
-        push @values, $params{'endtime_<='};
-    } 
+	if ( $params{'endtime_<'} ) {
+		$sql .= ' AND endtime < ?';
+		push @values, $params{'endtime_<'};
+	} 
+	if ( $params{'endtime_<='} ) {
+		$sql .= ' AND endtime <= ?';
+		push @values, $params{'endtime_<='};
+	} 
 	if ( $params{'endtime_>'} ) {
-        $sql .= ' AND endtime > ?';
-        push @values, $params{'endtime_>'};
-    } # end if
+		$sql .= ' AND endtime > ?';
+		push @values, $params{'endtime_>'};
+	} # end if
 	if ( $params{'endtime_>='} ) {
-        $sql .= ' AND endtime >= ?';
-        push @values, $params{'endtime_>='};
-    } # end if
+		$sql .= ' AND endtime >= ?';
+		push @values, $params{'endtime_>='};
+	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
@@ -187,6 +191,15 @@ sub Operator {
 sub Equipment_Shift {
 	return new openprint::Equipment_Shift( $_[0]{'shift_id'} );
 } # end sub Equipment_Shift
+
+# We have this here so that changing the shift_id will cause reloading of the shift name
+sub shift_id {
+	if ( @_ > 1 ) {
+		$_[0]{'shift_id'} = $_[1];
+		delete $_[0]{'name'};
+	} # end if
+	return $_[0]{'shift_id'};
+} # end sub shift_id
 
 sub name {
 	my ( $self, $new_name ) = @_;
@@ -274,9 +287,6 @@ sub get_lis {
 	my $total_impressions;
 
 	foreach my $Job ( $self->Schedule() ) {
-
-		my $Project = new openprint::Project($$Job{'project_id'});
-
 		if ( $filters ) {
 			if ( $$filters{'Status'} ) {
 				next if ! sets::isin( $Job->Project()->status(), $$filters{'Status'} );
@@ -323,24 +333,24 @@ sub get_from_ul_id {
 	my ( $id ) = @_;
 
 	$id =~ /^ul(\d*)-(\d\d\d\d-\d\d-\d\d)?-?(\w*)$/;
-    my ( $equipment_id, $date, $shift_name ) = ( $1, $2, $3 );
+	my ( $equipment_id, $date, $shift_name ) = ( $1, $2, $3 );
 
-    my $Shift;
-    if ( $shift_name and $date ) {
-		my $date_seconds = Date::Parse::str2time($date);
-        my @Shifts = openprint::Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>$date,'limit'=>1 );
-        if ( ! @Shifts ) {
-            @Shifts = openprint::Equipment_Shift::find('equipment_id'=>$equipment_id, 'name'=>$shift_name );
-            $Shift = $Shifts[0]->emanantise( $date_seconds ) if @Shifts;
-        } else {
-            $Shift = $Shifts[0];
-        } # end if
-        return if ! $Shift;
-    } else {
-        $Shift = new openprint::Shift();
-        $Shift->set({ 'equipment_id'  =>  $equipment_id, });
+	my $Shift;
+	if ( $shift_name and $date ) {
+		$Shift = openprint::Shift::find_one( 'equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>$date );
+if ( 0 ) {
+		if ( ! $Shift ) {
+			if ( my $ES = openprint::Equipment_Shift::find_one('equipment_id'=>$equipment_id, 'name'=>$shift_name ) ) {
+				$Shift = $ES->emanantise( Date::Parse::str2time($date) );
+			} # end if
+		} # end if
+} # end if
+		return if ! $Shift;
+	} else {
+		$Shift = new openprint::Shift();
+		$Shift->set({ 'equipment_id'  =>  $equipment_id, });
 		$Shift->name( $shift_name );
-    } # end if Shift
+	} # end if Shift
 	return $Shift;
 } # end if
 
@@ -361,14 +371,22 @@ sub Next {
 $log->debug( $Next->to_string() );
 	if ( ! $Next ) {
 		my $ES = openprint::Equipment_Shift::find_one(
-				'equipment_id'      =>  $$self{'equipment_id'},
+				'equipment_id'	  =>  $$self{'equipment_id'},
 				'starttime_start'   =>  $self->Shift()->Equipment_Shift()->endtime(),
-				'order'             =>  'starttime',
+				'order'			 =>  'starttime',
 				);
 		$Next = $ES->emanantise( $self->endtime_seconds() );
 	} # end if
 	return $Next;
 } # end sub Next
+
+sub delete {
+	my ( $self ) = @_;
+	if ( ( ! $self->Equipment()->smart_scheduling() ) and $self->Schedule() ) {
+		return 'Cannot delete a shift with jobs in it.  Please move the jobs to another shift first.';	
+	} # end if
+	return $self->SUPER::delete();
+} # end sub delete
 
 1;
 #__END__

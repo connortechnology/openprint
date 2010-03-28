@@ -106,6 +106,7 @@ sub handler {
 	$variable{'uri'} = $page;
 			parse_page( $page );
 			if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
+$openprint::log->debug("Reirect: $variable{'Redirect'}");
 				$page = $variable{'Redirect'};
 				$variable{'Redirect'} = '';
 			} # end if

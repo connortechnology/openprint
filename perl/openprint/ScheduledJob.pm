@@ -172,7 +172,7 @@ sub runtime_seconds {
 		$$self{'runtime'} = misc::seconds2hms($_[0]);
 	} # end if
 	
-	return misc::hms2time( $$self{'runtime'} );
+	return misc::hms2time( $self->runtime );
 } # end sub runtime_seconds
 
 sub starttime_seconds {
@@ -494,19 +494,10 @@ sub runtime {
 
 sub forms {
 	my ( $self ) = @_;
-	my $forms = 0;
-	if ( $$self{'project_id'} ) {
-		my $Project = $self->Project();
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-			if ( $$sig_specs{'SignatureQuantity'} ) {
-				$forms += $$sig_specs{'SignatureQuantity'};
-			} # end if
-		} # end foreach
+	if ( $$self{'service_id'} ) {
+		return scalar @{$$self{'service_id'}};
 	} # end if
-	$forms = @{$$self{'service_id'}} if $$self{'service_id'} and ! $forms;
-
-	return $forms;
+	return 0;
 } # end sub forms
 
 sub Shift {
@@ -667,6 +658,48 @@ sub speed {
 	} # en dif
 	return $$self{'speed'};
 } # end sub speed
+
+sub split {
+	my ( $self ) = @_;
+
+	my $Project = $self->Project();
+	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Splitting forms' );
+    my @service_ids = @{$$self{'service_id'}};
+	if ( @service_ids > 1 ) {
+        my $runtime = int ( $self->runtime_seconds()/@service_ids );
+        $self->runtime_seconds( $runtime );
+        $self->impressions( $self->impressions() / @service_ids );
+        $$self{'service_id'} = [ shift @service_ids ];
+        $self->save();
+        my $starttime = $self->starttime_seconds() + $runtime if $self->starttime();
+
+        foreach my $s_id ( @service_ids ) {
+            my $J2 = $self->copy();
+			$$J2{'service_id'} = [ $s_id ];
+			if ( $self->starttime() ) {
+				$J2->starttime_seconds( $starttime );
+				$starttime += $runtime;
+			} # end if starttime
+            $J2->save();
+        } # end foreach 
+	} elsif ( @service_ids ) { # == 1
+		# If there is only 1 service, then we copy it, dividing al relevant values
+		my $service_index = $service_ids[0];
+		my $old_specs = openprint::service::get_specs_ref( $Project, $service_index );
+		my $qty_index = $Project->ordered_quantity_index();
+
+		my $NewJob = $self->copy();
+		my $new_service_index = $Project->copy_signature( $old_specs, {
+				'txtPrice'.$qty_index   => $$old_specs{"txtPrice$qty_index"}/2,
+				}, openprint::service::status( $Project->id(), $service_index ),
+				);
+		$$NewJob{'service_id'} = [ $new_service_index ];
+		$NewJob->save();
+# Update source service
+		openprint::service::insert_service_spec( $log, $dbh, $Project->id, $service_index, "txtPrice$qty_index", $$old_specs{"txtPrice$qty_index"}/2 );
+
+	} # end if
+} # end sub split
 
 1;
 __END__

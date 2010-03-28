@@ -1,7 +1,7 @@
-<? echo ( join(' ' , $$variable{'User'}->get('salutation','firstname','lastname') ); ) ?> has requested a login and created a new company on <? echo ( $openprint::config{'SiteTitle'} ) ?>.<br/>
+<? echo ( join(' ' , $$variable{'User'}->get('salutation','firstname','lastname') ); ) ?> has requested a login and created a new company on <? echo ( $config{'SiteTitle'} ) ?>.<br/>
 		<br/>
-		Please Click <a href="<? echo ( $openprint::config{ExternalSecureSiteURL} ) ?>/administrator/managerial/user_profiles.html?ddmUser=<?UserIndex?>">here</a> to view/edit the user's profile.<br/>
-		Please Click <a href="<? echo ( $openprint::config{ExternalSecureSiteURL} ) ?>/administrator/managerial/company_profiles.html?ddmCustomer=<?CustomerIndex?>">here</a> to view/edit the company profile.<br/>
+		Please Click <a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/administrator/managerial/user_profiles.html?ddmUser=<?UserIndex?>">here</a> to view/edit the user's profile.<br/>
+		Please Click <a href="<? echo ( $config{ExternalSecureSiteURL} ) ?>/administrator/managerial/company_profiles.html?ddmCustomer=<?CustomerIndex?>">here</a> to view/edit the company profile.<br/>
 		<br>
 		Company:		<? echo ( $$variable{'Company'}->name() ) ?><br/>
 		Address:		<? echo ( $$variable{'Company'}->address1() ) ?><br/>

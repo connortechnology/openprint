@@ -251,7 +251,7 @@ sub check_credit {
 	if ( $config{'EnforceCredit'} eq 'Y' ) {
 		if ( ! $credit->value('DenyDays') ) {
 			if ( $credit->debt() > 0 ) {
-				my $error = 'Because you do not have a credit account, your previous order must be paid in full before another order is placed.	Click <a href="/main/account/credit_application.html">here</a> to apply for a credit account now.';
+				my $error = 'Because you do not have a credit account, your previous order must be paid in full before another order is placed.	Click <a href="/account/credit_application.html">here</a> to apply for a credit account now.';
 				$error .= list_orders( $log, $dbh, $credit->denied_orders() );
 				return misc::error( $log, $dbh, \%variable, 'No Credit', $error );
 			} # end if
@@ -264,7 +264,7 @@ sub check_credit {
 
 # check if the price fits in their credit limit
 			if ( $credit->debt() + $amount > $credit->value('Limit') ) {
-				my $error = 'This order would exceed your remaining credit balance.	Please make a payment before placing another order.	To apply for additional credit click <a href="/main/account/credit_application.html">here</a>.<br/><br/>The following orders are still outstanding:<br/><br/>';
+				my $error = 'This order would exceed your remaining credit balance.	Please make a payment before placing another order.	To apply for additional credit click <a href="/account/credit_application.html">here</a>.<br/><br/>The following orders are still outstanding:<br/><br/>';
 				$error .= list_orders( $log, $dbh, $credit->outstanding_orders() );
 				return misc::error( $log, $dbh, \%variable, 'Credit Exceeded', $error );
 			} # end if

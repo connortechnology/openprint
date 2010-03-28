@@ -64,7 +64,7 @@ tie %session, 'Apache::Session::Postgres', $cookie, {
 };
 
 if ( ! $session{'user_id'} ) {
-	 print "Location: /main/account/login.html\n\n";
+	 print "Location: /account/login.html\n\n";
 } else {
 	 my $sourceDir = $openprint::config{'ProjectFilesPath'} . openprint::upload_handler::get_destdir();
 	 my $filename;

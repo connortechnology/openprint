@@ -1,16 +1,16 @@
 <div class="Press">
 	<p>
 		<label>Press:</label>
-<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 		<select name="UsePress-<?SignatureIndex?>">
 			<option value=""> select </option>
 		<? echo ( 
 			ssi::make_drop_down( [ map { $_->strid(), $_->strid() } openprint::Equipment::find('category'=>'Printing','order'=>'lower(strname)','use_in_scheduling'=>1) ], $$variable{"UsePress-$$variable{SignatureIndex}"} );
 			) ?>
 		</select>
-<? else ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+<? else ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <? echo ( $$variable{"UsePress-$$variable{SignatureIndex}"} ) ?>
-<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $openprint::session{'user_id'} ) ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 	</p>
 	<p>
 		<label>Operator:</label>
@@ -24,13 +24,13 @@
 				} # end if
 			} # end foreach
 			
-			@$variable{'operator_id'} = sql::execute( undef, undef, 'SELECT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?', $$variable{'Project'}->id(), $sig_id );
-			$$variable{'Operator'} = new openprint::User( $$variable{'operator_id'} );
-			if ( openprint::usergroup::is_user_in( ['Scheduling','PressManager'], $openprint::session{'user_id'}) ) {
-				return '<select name="operator_id-'.$$variable{'SignatureIndex'}.'">'. ssi::make_drop_down( [ map {$_->id(), $_->name()} openprint::User::find('usergroups'=>['Press'],'order'=>'lower(strfirstname),lower(strlastname)') ], $$variable{'operator_id'} ).'</select>';
+			my $Service = $$variable{'Project'}->Service( $sig_id );
+			$$variable{'Operator'} = $Service->Operator();
+			if ( openprint::usergroup::is_user_in( ['Scheduling','PressManager'], $session{'user_id'}) ) {
+				return '<select name="operator_id-'.$$variable{'SignatureIndex'}.'">'. ssi::make_drop_down( [ '','select', map {$_->id(), $_->name()} openprint::User::find('usergroups'=>['Press'],'order'=>'lower(strfirstname),lower(strlastname)') ], $Service->operator_id() ).'</select>';
 			} else {
 				my $html = $$variable{'Operator'}->name();
-				if ( $$variable{'operator_id'} and ( $$variable{'operator_id'} != $openprint::session{'user_id'} ) ) {
+				if ( $Service->operator_id() and ( $Service->operator_id() != $session{'user_id'} ) ) {
 					$html .= '<br/>You are not logged in as the assigned operator.';
 				} # end if
 				return $html;
