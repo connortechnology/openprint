@@ -276,7 +276,7 @@ sub calc_setup_object {
 		$setup2->bleed_size( $bindery_bleed );
 		$bindery_head = $$specs{'PerfectBindCoverGutter'};
 	} # end if
-$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
+#$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
 	my @bleed_locations =  split(',', $$specs{'BleedLocations'} );
 	my $bleed_width  = 2*$bindery_bleed; # .25
 	my $bleed_height  = 2*$bindery_bleed;#.25
@@ -301,13 +301,13 @@ $openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bl
 	$bleed_height = 0 if $bleed_height < 0;
 #$openprint::log->debug("BleedSize: $$specs{'BleedSize'} bindery: $bindery_bleed, width: image: $image_width + extra: $bleed_width");
 
-	$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
+	#$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
 	if ( $bindery_head < 0 ) {
 		$bindery_head = 0;
 	} else {
 		$image_height += $bindery_head;
 	} # end if
-	$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bleed_height Image height: $image_height");
+	#$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bleed_height Image height: $image_height");
 
 	$setup1->image_width( $image_width + $bleed_width );
 	$setup1->image_height( $image_height );
