@@ -629,13 +629,14 @@ sub project_summary {
 		my $signature_index = $$sig_specs{'SignatureIndex'};
 		foreach my $key ( keys %{$specs} ) {
 			if ( my ($proof_index, $qty_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
+				next if ! $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"};
 				if ( my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
 					$types{$Service[0]->description()} = 1;
 				} # end if
 			} # end if
 		} # end foreach key
 	} # end foreach signature
-	return ' ' . join(',', keys %types) . ' Proofs<br/>';
+	return ' ' . join(',', keys %types) . '<br/>';
 } # end sub project_summary
 sub get_next_proof_index {
 	my ( $sig_specs ) = @_;

@@ -65,6 +65,9 @@ sub summary {
 	} # end if
 	return sprintf('%d days.',$$specs{'TurnaroundDays'});
 } # end sub summary
-
+sub project_summary {
+	my ( $Project, $service_id, $specs ) = @_;
+	return sprintf(' in %d days.',$$specs{'TurnaroundDays'});
+} # end sub project_summary
 1;
 __END__

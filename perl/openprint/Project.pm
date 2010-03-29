@@ -1021,10 +1021,6 @@ sub summary {
 					$summary .= sprintf('%dpg ', $$printing_specs{'txtTotalPageQuantity'} );
 					$summary .= $$printing_specs{'rdbCover'}.' Cover';
 				} # end if
-	#block remarked as not required now june-25-2008
-	#			if ( ( ! $$services{'NoPrinting'} ) and $specs{'PrintingType'} ) {
-	#				$summary .= ' printed ' . $specs{'PrintingType'} . ' ';
-	#			} # end if
 
 				$summary .= '<br/>';
 				my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' );
@@ -1096,8 +1092,8 @@ sub summary {
 			} # end if book or not
 		} # end if
 
-		foreach my $category ('Paper', 'Options', 'Prepress','Bindery','Packaging','Shipping' ) {
-			foreach my $ServiceType ( openprint::ServiceType::find('category'=>$category) ) {
+		foreach my $Category ( openprint::ServiceType_Category::find('order'=>'sorting') ) {
+			foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$Category->id()) ) {
 				next if ! $$services{$ServiceType->name()};
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
@@ -1116,10 +1112,6 @@ sub summary {
 			} # end foreach ServiceType
 		} # end foreach category
 		$summary =~ s/(.*),$/$1/m;
-		if ( $$services{'Turnaround'} ) {
-			my $specs = openprint::service::get_specs_ref( $self, $$services{'Turnaround'}[0] );
-			$summary .= sprintf(' in %ddays', $$specs{'TurnaroundDays'} );
-		} # end if
 		$$self{'summary'} = $summary;
 	} # end if
 	
