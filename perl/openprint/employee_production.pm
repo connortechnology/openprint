@@ -584,47 +584,6 @@ sub send_proofs_complete_email {
 #} # end if
 } # end sub send_proofs_complete_email
 
-sub send_proofs_approved_email {
-	my ( $project_index, $order_id ) = @_;
-
-# Send email to sales rep
-	my %info;
-	$info{'SecureSiteURL'} = $config{'ExternalSecureSiteURL'};
-	$info{'siteURL'} = $config{'ExternalSiteURL'};
-
-	my $Project = new openprint::Project( $project_index );
-	( my $user_index, @info{'DocketNumber','ProjectReference'} ) = ( $Project->user_id(), $Project->docket(), $Project->reference() );
-	$info{'ProjectIndex'} = $project_index;
-	$info{'OrderID'} = $order_id;
-
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
-
-	my $Order = new openprint::Order( $order_id );
-	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
-
-	my $User = new openprint::User( $session{'user_id'} );
-	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
-
-	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
-
-	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my $sales_person_email = sprintf( "%s %s <%s>", $CSR->firstname(), $CSR->lastname(), $CSR->email() );
-	if ( $sales_person_email ne '  <>' ) {
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_approved-sales_rep.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-		$_ = encode_qp( ssi::variable_substitution( $r, $log, $dbh, \$_, \%info ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-				TO      => $sales_person_email,
-				SUBJECT => "Docket $info{'DocketNumber'} Proofs Approved",
-				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
-	} # end if
-} # end sub send_proofs_approved_email
-
 sub send_duedate_change_notification {
 	my ( $r, $log, $dbh, $variable, $project_index, $order_id ) = @_;
 
@@ -834,7 +793,7 @@ sub barcode {
 		$Project->due_date( $Project->get_due_date() );
 		$Project->save();
 		mark_proofs_approved( $log, $dbh, \%variable, $Project->id(), $service_index, $status );
-		send_proofs_approved_email( $Project->id(), $param{'Order'} );
+		openprint::employee_project::send_proofs_approved_email( $Project->id(), $param{'Order'} );
 	} elsif ( $param{'Action'} == 4 ) { # Unassign Operator
 		my ( $service_index, $old_operator_id ) = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), $services{'Proofs'} ? $services{'Proofs'} : $services{'FilmStripping'} );
 

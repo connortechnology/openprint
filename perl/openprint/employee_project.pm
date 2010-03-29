@@ -655,7 +655,7 @@ sub send_proofs_approved_email {
 	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
 
 	my $Project = new openprint::Project( $project_index );
-	( my $user_index, @info{'DocketNumber','ProjectReference'} ) = ( $Project->user_id(), $Project->docket(), $Project->reference() );
+	@info{'DocketNumber','ProjectReference'} = ( $Project->docket(), $Project->reference() );
 	$info{'ProjectIndex'} = $project_index;
 	$info{'OrderID'} = $order_id;
 
@@ -681,7 +681,7 @@ sub send_proofs_approved_email {
 				SMTP    => $config{'Mail Server'},
 				FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
 				TO      => $sales_person_email,
-				SUBJECT => "Docket $info{'DocketNumber'} Proofs Approved",
+				SUBJECT => "Docket $info{'DocketNumber'} $$Order{'company_name'} - Proofs Approved",
 				);
 		misc::send_email_with_attachment( $log, \%mail, @body );
 	} # end if
