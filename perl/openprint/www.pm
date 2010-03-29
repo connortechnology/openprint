@@ -213,7 +213,6 @@ $openprint::log->debug("Getfile");
 		$r->content_type( "application/octet-stream; name=\"$variable{'Download'}\"" );
 		return;
 	} elsif ( $first eq 'administrator' ) {
-		require openprint::admin_quote;
 		require openprint::admin_colours;
 		require openprint::admin_pricelist;
 

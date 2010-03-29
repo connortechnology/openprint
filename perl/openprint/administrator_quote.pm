@@ -88,15 +88,16 @@ sub view {
 						);
 			} # end if
 		} # end foreach
-		sql::update( $log, $dbh, 'tbl_Quotes', "Index=$quote_id",
-				'strComments',		$r->param('txtComments') . '', 
-				'curTotalSale1',	( $r->param('total1') ne '' ? $r->param('total1') : undef ),
-				'curTotalSale2',	( $r->param('total2') ne '' ? $r->param('total2') : undef ),
-				'curTotalSale3',	( $r->param('total3') ne '' ? $r->param('total3') : undef ),
-				'dblModification1', ( $r->param("txtModification1") ne '' ? $r->param("txtModification1") : undef ),
-				'dblModification2', ( $r->param("txtModification2") ne '' ? $r->param("txtModification2") : undef ),
-				'dblModification3', ( $r->param("txtModification3") ne '' ? $r->param("txtModification3") : undef )
-				);
+		my $Quote = new openprint::Quote( $quote_id );
+		$Quote->save({
+				'administrator_comments'	=>	$openprint::param{'txtComments'},
+				'total1'					=>	$openprint::param{'total1'},
+				'total2'					=>	$openprint::param{'total2'},
+				'total3'					=>	$openprint::param{'total3'},
+				'modification1'				=>	$openprint::param{'txtModification1'},
+				'modification2'				=>	$openprint::param{'txtModification2'},
+				'modification3'				=>	$openprint::param{'txtModification3'},
+				});
 		openprint::quote::send_quote( $r, $log, $dbh, $quote_id, $variable );
 	} # end if
 
@@ -113,8 +114,5 @@ sub view {
 
 } # end sub view
 
-
 1;
-
 __END__
-~       

@@ -263,7 +263,7 @@ sub try_to_delete_project {
 		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br/>";
 		$delete = 0;
 	} # end if
-	$_ = "SELECT tbl_Quotes.Index FROM tbl_Quotes,tbl_Quote_Details WHERE tbl_Quotes.Index=tbl_Quote_Details.QuoteIndex AND ProjectIndex=? AND tbl_Quotes.strStatus != 'Incomplete'";
+	$_ = "SELECT Quotes.id FROM Quotes,tbl_Quote_Details WHERE Quotes.id=tbl_Quote_Details.quote_id AND project_id=? AND Quotes.strStatus != 'Incomplete'";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
 		$error .= "Project $proj_reference is in quote <a href=\"/main/quote/history_details.html?quote_id=$_\">$_</a>.	You must delete the quote before you can delete the project.<br/>";
