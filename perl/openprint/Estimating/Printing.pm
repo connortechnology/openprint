@@ -4552,7 +4552,11 @@ sub save {
 		} # end foreach qty_index
 		$Project->save() if $changed;
 	} # end if
-
+	if ( $$services{'Padding'} ) {
+		foreach my $padding_id ( @{$$services{'Padding'}} ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $padding_id, 'PageQuantity', $$param{'PageQuantity'} );
+		} # end foreach
+	} # end if adding
 } # end sub save
 
 sub get_colour_description {
