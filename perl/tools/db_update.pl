@@ -747,11 +747,11 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM StockPurposes LIMI
 } # end if
 if ( $version < 1899 ) {
 	print "Updating to version 1899\n";
-	$dbh->do(q{alter table skid_contents add primary key (skid_id, paper_id)});
-	my $ac = sql::start_transaction( $dbh );
-	$dbh->do(q{drop index if exists "skid_contents_skid_id_index"});
-	sql::insert( undef, undef, 'database_info', 'version', 1899, 'backup', $backup );
-	sql::end_transaction( $dbh, $ac );
+	#$dbh->do(q{alter table skid_contents add primary key (skid_id, paper_id)});
+	#my $ac = sql::start_transaction( $dbh );
+	#$dbh->do(q{drop index if exists "skid_contents_skid_id_index"});
+	#sql::insert( undef, undef, 'database_info', 'version', 1899, 'backup', $backup );
+	#sql::end_transaction( $dbh, $ac );
 	$version = 1899;
 } # end if
 
@@ -1925,6 +1925,10 @@ if ( $data ) {
 	if ( ! exists $$data{'owner_id'} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
 		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES companies(id)');
+	} # end if
+	if ( ! exists $$data{'supplier_id'} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD supplier_id INTEGER');
+		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (supplier_id) REFERENCES companies(id)');
 	} # end if
 } # end if
 
