@@ -56,11 +56,6 @@ function validate_data (form) {
 	if ( ! form.txtQuantity1.value && ! form.txtQuantity2.value && ! form.txtQuantity3.value ) { 
 		text += "Please enter at least one Quantity for your project.\n";
 	} // end if
-	var reference = form.txtProjectReference.value;
-	var reg = /\S/g;
-	if ( ! reg.exec(reference) ) {
-		text += "Please give your project a reference name.\n";
-	} // end if
 	if ( form.ddmDesign && ! get_value( form.ddmDesign ) ) {
 		text += "Please specify the supplied format.\n";
 	} // end if

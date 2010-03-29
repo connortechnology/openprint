@@ -497,8 +497,6 @@ sub create_edit_process {
 	$openprint::param{'txtQuantity3'} =~ s/\D//g;
 
 	my $error = '';
-	my ( $ref ) = misc::trim( $r->param('txtProjectReference') );
-	$error .= "You must specify a Project Reference.<br/>" if ! $ref =~ /[^\s]/;
 	$error .= "No quantities specified.<br/>" if $r->param('txtQuantity1') eq '' and $r->param('txtQuantity2') eq '' and $r->param('txtQuantity3') eq '';
 	$error .= "Invalid Quantity 1.<br/>" if $r->param('txtQuantity1') and ! int $r->param('txtQuantity1');
 	$error .= "Invalid Quantity 2.<br/>" if $r->param('txtQuantity2') and ! int $r->param('txtQuantity2');
@@ -653,7 +651,7 @@ sub create_edit_process {
 	my $ProjectType = shift @project_types;
 	my $OldProjectType = $Project->Type();
 
-	$Project->reference( $ref );
+	$Project->reference( $r->param('txtProjectReference') );
 	$Project->comments( $r->param('txtComments') );
 	$Project->mode( $r->param('rdbMode') );
 	$Project->design( $r->param('ddmDesign') );

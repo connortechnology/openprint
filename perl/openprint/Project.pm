@@ -704,6 +704,9 @@ sub save {
 	my ( $self, $hash ) = @_;
 
 	@$self{ keys %{$hash} } = @$hash{keys %{$hash} };
+	foreach my $qty_index ( $self->quantity_indexes() ) {
+		$self->price( $qty_index, undef );
+	} # end foreach
 
 	$$self{'currency_id'} = $openprint::session{'Currency_id'} if ! $$self{'currency_id'};
 	$$self{'company_id'} = $openprint::session{'company_id'} if ! $$self{'company_id'};

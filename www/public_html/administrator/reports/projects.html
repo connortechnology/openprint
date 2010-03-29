@@ -7,7 +7,7 @@
 		<p>
 			<label>Project ID:</label>
 			<input type="text" size="10" name="ProjectIndex" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='../project/view.html';f1.submit();", '', 'Go' ); ) ?>	
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.action='/main/project/view.html';f1.submit();", '', 'Go' ); ) ?>	
 		</p>
 		<p>
 			<label>Company:</label>
@@ -30,6 +30,15 @@
 				<option value="">All</option>
 <? echo ( 
     ssi::fill_drop_down( $log, $dbh, 'SELECT name,name FROM Project_statuses ORDER BY sort,name', $param{'ddmStatus'} );
+) ?>
+			</select>
+		</p>
+		<p> 
+			<label>Type:</label>
+			<select name="type_id" size="1">
+				<option value="">All</option>
+<? echo ( 
+    ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(name)') ], $param{'type_id'} );
 ) ?>
 			</select>
 		</p>
@@ -78,9 +87,9 @@ ssi::get_start_end_dates( $log, $dbh, $variable, @param{'ddmStartYear','ddmStart
 		</tr>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 		<tr<?rowclass?>> 
-			<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
-			<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->Company()->name() ) ?></a></td>
-			<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->summary() ) ?></a></td>
+			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->Company()->name() ) ?></a></td>
+			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->summary() ) ?></a></td>
 			<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->created_on() ) ); ) ?></td>
 			<td align="right"><? echo ( $$variable{'Project'}->status() ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->price1() ) ) ?></td>
@@ -89,7 +98,7 @@ ssi::get_start_end_dates( $log, $dbh, $variable, @param{'ddmStartYear','ddmStart
 		</tr>
 		<tr<?rowclass?>> 
 			<td colspan="2">&nbsp;</td>
-			<td colspan="6"><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->reference() ) ?></a></td>
+			<td colspan="6"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->reference() ) ?></a></td>
 		</tr>
 		<? eval ( 
 			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';

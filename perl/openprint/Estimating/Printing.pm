@@ -331,6 +331,10 @@ sub setup_project {
 			%{$project{$service.'Specs'}} = %{openprint::service::get_specs_ref( $Project, $$services{$service}[0] )};
 		} # end if	
 	} # end foreach
+	if ( $$services{'Cutting'} ) {
+		openprint::Estimating::Cutting::signature_calc_load_equipment( $Project );
+		openprint::Estimating::Cutting::signature_calc_stock_cutting_equipment( $Project );
+	} # end if
 
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{'NoBindery'} ) {
@@ -473,7 +477,7 @@ sub get_inkcoverage {
 					$$specs{'ColourCoatingCoverage'.$index.$side.$signature} = $openprint::config{'DefaultInkCoverage'};
 					$$v{'ColourCoatingCoverage'.$index.$side.$signature} = [ sets::union( 'output', @{$$v{'ColourCoatingCoverage'.$index.$side.$signature}} ) ];
 				} # end if
-				$$specs{'ColourCoatingCoverage'.$index.$side.'-'.$signature} =~ s/[^\d\.]//g;
+				$$specs{'ColourCoatingCoverage'.$index.$side.$signature} =~ s/[^\d\.]//g;
 				if ( $type =~ /PMS/ ) {
 					$inkCoverage{$$specs{'ColourCoatingColour'.$index.$side.$signature}} += $$specs{'ColourCoatingCoverage'.$index.$side.$signature};
 				} else {
@@ -484,6 +488,7 @@ sub get_inkcoverage {
 	} # end foreach Side
 	return %inkCoverage;
 } # end sub get_inkcoverage
+
 
 sub get_versions {
 	my ( $specs, $qty_index ) = @_;
@@ -3125,6 +3130,7 @@ sub calc_price {
 	} # end if
 	my %uv_results;
 	if ( $$project{'HasUVCoating'} ) {
+my $time = gettimeofday();
 		%uv_results = openprint::Estimating::UVCoating::signature_calc( $Project, @$project{'HasUVCoating','UVCoatingSpecs'}, $service_index, $specs, $qty_index, $Imposition, {} );
 		if ( $uv_results{'Status'} eq 'uncalculated' ) {
 			$price{'UVCoating Breakdown'} .= "UV error: $uv_results{'alert'} $$project{'UVCoatingSpecs'}{alert} " . $$project{'UVCoatingSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
@@ -3133,24 +3139,25 @@ sub calc_price {
 			$price{'UVCoating Breakdown'} = sprintf('UVCoating Price: $%.2f on %s<br/>', $uv_results{'Total'}, $uv_results{'Equipment'}->name() );
 			$price{'Comparison Cost'} += $uv_results{'Total'};
 		} # end if
+$openprint::log->debug("Elapsed UVCoating time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 	} # end if UVCoating
 # Now add in cutting costs to the comparison
 	if ( $$project{'HasCutting'} ) {
 		if ( ($Paper->type() ne 'Roll') and ($Paper->start_width() != $Paper->width() or $Paper->start_height() != $Paper->height() ) ) {
-#my $time = gettimeofday();
+my $time = gettimeofday();
 			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
 			$price{'Cutting Breakdown'} .= "Stock Cutting Price: \$$cutting_results{'Price'} $cutting_results{'alert'}<br/>";
 			$price{'Comparison Cost'} += $cutting_results{'Price'};
-#$openprint::log->debug("Elapsed stock cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+$openprint::log->debug("Elapsed stock cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		} # end if
 
-#my $time = gettimeofday();
+my $time = gettimeofday();
 		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
 #foreach my $k ( keys %cutting_results ) {
 #$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 #}
 		
-#$openprint::log->debug("Elapsed cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
+$openprint::log->debug("Elapsed cutting time:" . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 		if ( $cutting_results{'Status'} eq 'uncalculated' ) {
 			$price{'Cutting Breakdown'} .= "Cutting error: $cutting_results{'alert'}<br/>";
 		} else {

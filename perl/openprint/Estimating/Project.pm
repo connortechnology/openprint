@@ -609,6 +609,7 @@ $openprint::log->debug('Deleting Folding');
 	if ( $$services{'Padding'} ) {
 		foreach my $service_id ( @{$$services{'Padding'}} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $service_id, 'Backing', $$specs{'Backing'} ) if exists $$specs{'Backing'};
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $service_id, 'PageQuantity', $$specs{'PageQuantity'} ) if exists $$specs{'PageQuantity'};
 		} # end foreach
 	} # end if Padding
 
