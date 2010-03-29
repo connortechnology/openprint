@@ -628,7 +628,10 @@ $openprint::log->debug("calc_from_impos: Stock Weight: $$price{'Stock Weight'}")
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-my $master_time = gettimeofday();
+	# Must clear these
+	%converted_imposition_cache = ();
+	%filtered_imposition_cache = ();
+	my $master_time = gettimeofday();
 #$openprint::log->debug("Starting Printing::calc");
 
 	if ( ! $project_index or ! $service_index ) {
