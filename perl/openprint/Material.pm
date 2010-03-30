@@ -119,7 +119,7 @@ sub find {
 
 	if ( exists $params{'name'} ) {
 		# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
-		if ( ( keys %params ) == 1 ) {
+		if ( ( keys %params ) == 1 or ( ( keys %params ) == 2 and $params{'limit'} ) ) {
 			#if ( ( exists $cache{$params{name}} ) and $cache{$params{name}} ) {
 			if ( ! $cache_init ) {
 				%cache = map { $_->name(), $_->id() } find();
