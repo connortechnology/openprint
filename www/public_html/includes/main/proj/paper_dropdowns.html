@@ -186,7 +186,7 @@
                 <select name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
                     <option value="">Please select one</option>
                     <? echo (
-                        ssi::make_drop_down( [ map { $_,$_ } openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(), @$variable{
+                        ssi::make_drop_down( [ openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(), @$variable{
                                 'ddmStockBrand'.$$variable{'Signature'},
                                 'ddmStockFinish'.$$variable{'Signature'},
                                 'ddmStockColour'.$$variable{'Signature'},
