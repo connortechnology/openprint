@@ -2570,7 +2570,7 @@ $openprint::log->debug("Found sig in overrides");
 
 							$PaperCounts{$Paper->to_string()} += $sigs * $$sig_price{'Stock Qty'};
 							foreach ( 1 .. $sigs ) {
-								push @{$$price{'Impositions'}}, $imp;
+								push @{$$sig_price{'Impositions'}}, $imp;
 								$previous_forms_cache{$hash_key} += 1;
 							} # end foreach
 							$upq = $upq % $imp->pages();
@@ -2581,7 +2581,7 @@ $openprint::log->debug("Found sig in overrides");
 						} else {
 							$last_sig_price = int($$sig_price{'Comparison Cost'});
 							$PaperCounts{$Paper->to_string()} += $$sig_price{'Stock Qty'};
-							push @{$$price{'Impositions'}},$imp;
+							push @{$$sig_price{'Impositions'}},$imp;
 							$upq -= $imp->pages();
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
