@@ -14,7 +14,7 @@
 			my $services = $$variable{'Project'}->services();
 
 			foreach my $ss_id ( $$variable{'Project'}->signatures() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}->id(), $ss_id );
+				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
 				$html .= qq{
 					<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:</legend>
 						<p>

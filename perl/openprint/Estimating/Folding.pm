@@ -608,11 +608,9 @@ sub calc {
 			$$sig_specs{'txtSpreadSize'} = 2 if ! $$sig_specs{'txtSpreadSize'};
 
 			$$sig_specs{'PreviousImposition'} = $previous_imposition;
-$openprint::log->debug("$qty_index SpreadQ: $$sig_specs{SignatureIndex}:" . $$sig_specs{'PageQuantity'.$qty_index} );
 			if ( ( ! exists $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) or $$sig_specs{'txtSignatureSpreadQuantity'.$qty_index} ) {
                 my $Imposition = new openprint::Imposition;
                 $Imposition->load( $sig_specs, $qty_index );
-$openprint::log->debug("$qty_index Imp: $$sig_specs{SignatureIndex}:" . $Imposition->imposition() );
 				next if ! $Imposition->imposition();
 
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition->Paper(), $Imposition );
