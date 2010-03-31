@@ -4073,14 +4073,18 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	my $std_speed = $Press->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() ) ;
+	my $std_speed = $Press->specification('Press Standard Run Speed') ;
 	my $speed_mod;
 
 	if ( ! $run_speed ) {
-		$run_speed = $std_speed;
-		$speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->Paper()->calliper());
-#$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." ($running_price) ($run_price{'units'}) STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
-		$speed_mod = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() ) / $speed_mod if $speed_mod;
+		$run_speed = $Press->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() );
+		if ( $run_speed == $std_speed ) {
+			$speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->Paper()->calliper());
+	#$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." ($running_price) ($run_price{'units'}) STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
+			$speed_mod = $run_speed / $speed_mod if $speed_mod;
+		} else {
+			$speed_mod = $std_speed / $run_speed;
+		} # end if
 	} else {
 		$speed_mod = $std_speed / $run_speed;
 	} # end if
