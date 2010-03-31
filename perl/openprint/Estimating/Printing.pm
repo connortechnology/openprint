@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 my %folding_cache;
@@ -1452,13 +1452,13 @@ $log->debug("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) $qty"
 			if ( ! sets::isin('Perfecting', split(',',$Press->specification('Runstyles') ) ) ) {
 $openprint::log->debug("** This Press Can't Perfect - Missing \'Perfecting Press\' = Y equipment spec ***") if $debug;
 				$do_perfecting = 0;
-			} elsif ( @side_one_colours > ($Press->specification('Number of Colours')/2) or @side_two_colours > ($Press->specification('Number of Colours')/2) ) {
+			} elsif ( @side_one_colours > int($Press->specification('Number of Colours')/2) or @side_two_colours > int($Press->specification('Number of Colours')/2) ) {
 $openprint::log->debug("** This to many colours to  Perfect  ***") if $debug;
 				$do_perfecting = 0;
 			} elsif ( $$project{print_sides} == 1 ) {
 				$do_perfecting = 0;
 $openprint::log->debug("** One sided:  Perfect  ***") if $debug;
-			} elsif ( $$specs{'txtSpecificStockCalliper'} > $Press->specification('Maximum Calliper Perfecting') ) {
+			} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{'txtSpecificStockCalliper'} > $_ ) ) {
 				$do_perfecting = 0;
 $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 			} # end if
