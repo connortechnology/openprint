@@ -1010,6 +1010,7 @@ sub get_price {
 		#$price{'Cost'} *= $$self{'mweight'} / 100000;
 		#$price{'Price'} *= $$self{'mweight'} / 100000;
 	} # end if
+	$price{'100lb Total'} = $price{'100lb Price'} * $qty/100;
 #$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'})/100lb ($price{'100lb Cost'}) ($price{'Price'})") if $debug;
 	return %price;
 
@@ -1045,6 +1046,7 @@ sub minimum_order_weight {
 	if ( $$self{'type'} eq 'Sheet' ) {
 		return $self->minimum_order() * $self->sheet_weight();
 	} # end if
+	return $self->minimum_order();
 } # end sub minimum_order_weight
 
 sub sheets_per_package {

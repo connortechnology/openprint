@@ -1324,7 +1324,7 @@ sub add_signature {
 	openprint::service::status( $self->id(), $print_service_index, $status );
 	if ( ! $sig_index ) {
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-		my ( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );
+		( $sig_index ) = sql::execute( undef, undef, $_, $self->id() );
 		$sig_index += 1;
 	} # end if
 	openprint::service::insert_service_spec( $log, $dbh, $self->id(), $print_service_index, 'SignatureIndex', $sig_index );
