@@ -1024,6 +1024,7 @@ sub cut {
         $$self{'width'} /= 2;
     } # end if
     $$self{'mweight'} /= 2;
+	delete $$self{'to_string'};
 	$$self{'grain_direction'} = undef; # force recalc of gd
 } # end sub cut
 
