@@ -15,7 +15,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
 package openprint::Estimating::Printing;
-my $debug = 1;
+my $debug = 0;
 my $master_time;
 
 use strict;
@@ -1256,7 +1256,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( 0 ) {
+if ( 1 ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
@@ -1318,8 +1318,8 @@ $i->display();
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
-if ( 0 ) {
-$openprint::log->warn('Impositions for '. $Press->strid() );
+if ( 1 ) {
+$openprint::log->warn('Impositions after filter for '. $Press->strid() );
 foreach my $I ( @impositions ) {
 $I->display();
 } # end foreach
@@ -1594,13 +1594,20 @@ sub get_project_price {
 		} # end if
 		if ( $SpreadLayout > 0 ) {
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
-#$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
-#foreach my $imp ( @impositions ) {
-#$imp->display();
-#}
+if ( $debug or 0 ) {
+$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
+foreach my $imp ( @impositions ) {
+$imp->display();
+}
+}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
+if ( $debug or 0) {
+$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
+foreach my $imp ( @impositions ) {
+$imp->display();
+}
+}
 
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions) if $debug;
 
 
 if ( 1 ) {
@@ -1729,23 +1736,26 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 			} # end if
         } # end if
 
-		if ( $debug ) {
-$openprint::log->debug("QTY: $qty_index on " . $P->strid() );
+		if ( $debug or 1 ) {
+$openprint::log->debug("QTY after filter: $qty_index on " . $P->strid() );
 			foreach my $imp ( @impositions ) {
 	$imp->display();
 			} # end foreach
 		} # end if
 		#$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions);
 		foreach my $imp ( @impositions ) {
+	$imp->display();
 
 			if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
-				#$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() ) if $debug;
+				$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() ) if $debug;
 				next;
 			} # end if
 			if ( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
-				next if $imp->grain_direction() ne $$specs{'rdbGrainDirection'.$qty_index};	
+				if ( $imp->grain_direction() ne $$specs{'rdbGrainDirection'.$qty_index} ) {
+					next;
+				} # end if
 			} elsif ( $$specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$specs{'PreviousGrainDirection'} ) ) {
-				#$openprint::log->debug("Not consider imposition cuz it's not the previous grain direction " . $imp->grain_direction() ) if $debug;
+				$openprint::log->debug("Not consider imposition cuz it's not the previous grain direction " . $imp->grain_direction() ) if $debug;
 				next;
 			} # end if
 			if ( ( $imp->runstyle() eq 'Web' ) and $openprint::usergroup::groups_cache{'Web Estimating'} and ! openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
@@ -1753,15 +1763,16 @@ $openprint::log->debug("QTY: $qty_index on " . $P->strid() );
 				next;
 			} # end if
 			if ( ( $$specs{'chkOverrideImposition'.$qty_index} eq 'Y' ) and ( $imp->imposition() != $$specs{'txtImposition'.$qty_index} ) ) {
+				$openprint::log->debug("Doesn't match imposition override " . $imp->pages() . ' != ' . $$specs{'txtImposition'.$qty_index});
 				next;
 			} 
 
 			if ( ( $$specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $imp->pages() != $$specs{'PageQuantity'.$qty_index} ) ) {
-				#$openprint::log->debug("Doesn't match page quantity override " . $imp->pages() . ' != ' . $$specs{'PageQuantity'.$qty_index});
+				$openprint::log->debug("Doesn't match page quantity override " . $imp->pages() . ' != ' . $$specs{'PageQuantity'.$qty_index});
 				next;
 			}
 			if ( $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} and ( $imp->spreads() > $$specs{'txtUnspecifiedSpreadQuantity'.$qty_index} ) ) {
-				#$openprint::log->debug("Unspec");
+				$openprint::log->debug("Unspec");
 				next;
 			} # end if
 			if ( $$specs{'chkOverrideSheetSize'.$qty_index} ) {
@@ -2025,8 +2036,8 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 			} # end if
 
 			if ( ! $$price{complete} ) {
-#$openprint::log->debug("No price complete ");
-#$imp->display();
+$openprint::log->debug("No price complete ");
+$imp->display();
 				next;
 			} # end if
 
@@ -2039,9 +2050,9 @@ $PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Pla
 				#$openprint::log->debug("No good, more expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}") if 1 or $debug;
 			} else {
 				#$imp->display();
-#$openprint::log->debug("Got better: Best: $best_price{'Comparison Cost'} > New: $$price{'Comparison Cost'}" );
+$openprint::log->debug("Got better: Best: $best_price{'Comparison Cost'} > New: $$price{'Comparison Cost'}" );
 				%best_price = %{$price};
-#$imp->display();
+$imp->display();
 #keep track of the best price we have found so far.
 # now that we have the pricing info arrange it in a hash and store it for later.
 				#$best_price{'Imposition'} = $imp;

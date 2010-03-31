@@ -16,6 +16,8 @@
 		$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%2$d">%2$d</a></td>', $C->id(), $C->skid_id() );
 		$html .= sprintf( q{<td><input type="text" id="docket-%3$d-%1$d" size="8" name="docket-%3$d-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/\D/,'');" /></td>}, $C->id(), $C->docket(), $$variable{'type_id'} );
 		$html .= sprintf( q{<td><input type="text" id="qty_lbs-%4$d-%1$s" name="qty_lbs-%4$d-%1$s" value="%2$d" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-%4$d-%1$s') );" /></td><td><input type="text" id="qty_kgs-%4$d-%1$s" name="qty_kgs-%4$d-%1$s" value="%3$.4f" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-%4$d-%1$s') );" /></td>}, $C->id(), $C->quantity(), $C->quantity()/2.2046, $$variable{'type_id'} );
+		$html .= sprintf( '<td class="InStock">%d lbs</td>', $SkidContents[0]->quantity() );
+		$html .= sprintf( '<td class="LastSeen">%s days</td>', $SkidContents[0]->Skid()->last_seen_days() );
 		$html .= '<td>'.$error.'</td>';
 		$html .= '<td>' . ssi::writeButton( $log, $dbh, 'X'.$$C{'id'}, 'x.gif', qq`delete_content('$$C{id}');`, '', 'X' ) . '</td>';
 		$html .= '</tr>';

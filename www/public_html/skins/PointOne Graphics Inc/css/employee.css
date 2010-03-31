@@ -47,6 +47,11 @@ div.PopupWindow fieldset p label {
 	padding: 0px;
 	margin: 0px;
 }
+.Manifest table .InStock, .Manifest table .LastSeen {
+	text-align: right;
+	width: 90px;
+}
+
 .Signature .Previews img {
 	width: 100%;
 }
