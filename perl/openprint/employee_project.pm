@@ -164,7 +164,7 @@ sub view {
 					foreach my $Job ( openprint::ScheduledJob::find( 'service_id'	=> $signature_service_index ) ) {
 						$Job->save({
 								'equipment_id'	=> $Equipment[0]->id(),
-								'runtime'	=> "$runtime minutes",
+								'runtime'		=> "$runtime minutes",
 								});
 					} # end foreach Job
 				} # end if
@@ -282,8 +282,7 @@ sub view {
 					}  # end if
 				} # end if Bindery
 			} elsif ( $service_type ) { # rdbComplete == No
-				sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', 'Ordered' );
-
+				openprint::service::status( $project_index, $service_index, 'Ordered' );
 			} # end if Complete or NOT
 		} # end if FilmStripping, Proofs or other
 
@@ -317,8 +316,8 @@ sub view {
 					foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
 						$Job->delete();
 					} # end foreach
-					if ( my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'}) ) {
-						$Equipment[0]->update_schedule();
+					if ( my $Equipment = openprint::Equipment::find_one('strid'=>$$sig_specs{'UsePress'}) ) {
+						$Equipment->update_schedule();
 					} # end if
 				} # end if
 			} # end foreach signature_service_index
@@ -336,8 +335,8 @@ sub view {
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $param, $param{"$param-$$service_specs{'SignatureIndex'}"} );
 			} # end foreach
 
-			if ( my @Equipment = openprint::Equipment::find( 'strid'=>$$service_specs{'UsePress'} ) ) {
-				$Equipment[0]->update_schedule();
+			if ( my $Equipment = openprint::Equipment::find_one( 'strid'=>$$service_specs{'UsePress'} ) ) {
+				$Equipment->update_schedule();
 			} # end if
 		} else {
 			my @do_not_save = ( 'btnFunction','ProjectIndex','ServiceIndex','order_id', 'duedate_day','duedate_month','duedate_year','Docket' );

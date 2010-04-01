@@ -1643,6 +1643,9 @@ sub purchase_order_view {
 		if ( ! $param{'po_id'} ) {
 			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
 		} # end if
+
+		# Used to get a list of the types in this PO, so we can add automatic notifications
+		my %types;
 		foreach my $k ( keys %param ) {
 			my ( $content_id ) = $k =~ /qty-(.*)/;
 			if ( defined $content_id ) {
@@ -1658,6 +1661,7 @@ sub purchase_order_view {
 						'total'         =>  $param{'total-'.$content_id},
 						'type_id'		=>	$param{'type_id-'.$content_id},
 						});
+				$types{$C->Type()->name()} = 1;
 				if ( $C->docket() ) {
 					foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
 						$P->add_to_log( @session{'company_id','user_id'}, 
@@ -1748,23 +1752,16 @@ $log->debug("PO total: " . $PO->total() . ' Me total: ' . $Me->purchasing_limit(
 				'reason'	=>	$param{'reason'},
 				});
 		} # end if
+		my @notifications = $PO->notifications();
+		my @new_notifications = @notifications;
 		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			my @notifications;
-			foreach my $user_id ( openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) ) {
-				my $found = 0;
-				foreach my $notification_id ( $PO->notifications() ) {
-					if ( $notification_id == $user_id ) {
-						$found = 1;
-						last;
-					} # end if	
-				} # end foreach
-				if ( ! $found ) {
-					push @notifications, $user_id;
-				} # end if
-			} # end foreach
-			if ( @notifications ) {
-				$PO->notifications([$PO->notifications(),@notifications]);
-			} # end if
+			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) );
+		} # end if
+		foreach my $type ( keys %types ) {
+			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'PO ' . $type.' Notifications' ) );
+		} # end foreach
+		if ( scalar @notifications != scalar @new_notifications ) {
+			$PO->notifications(\@new_notifications);
 		} # end if
 	} # end if btnFunction
 
