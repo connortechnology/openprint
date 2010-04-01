@@ -438,7 +438,7 @@ sub view {
 		foreach my $key ( keys %param ) {
 			if ( $key =~ /chkDelete-(\d*)/ ) {
 				my $sid = $1;
-				my $specs = openprint::service::get_specs_ref( $project_index, $sid );
+				my $specs = openprint::service::get_specs_ref( $Project, $sid );
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $sid );
 				openprint::press_schedule::remove( $project_index, $sid );
 				openprint::bindery_schedule::remove( $project_index, $sid );

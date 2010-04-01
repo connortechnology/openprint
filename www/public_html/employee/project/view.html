@@ -31,9 +31,9 @@ function open_window( page ) {
 <form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
 		<tr> 
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<th width="20" class="unprintable">&nbsp;</th>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<th align="left">Service</th>
 			<th width="100" align="right">
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
@@ -48,6 +48,13 @@ function open_window( page ) {
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<td class="unprintable"><input type="checkbox" name="chkDelete-<?index?>" /></td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+			<? if ( $$variable{'name'} eq 'Signature' ) ?>
+			<td class="unprintable"><input type="checkbox" name="chkDelete-<?index?>" /></td>
+			<? else ( $$variable{'name'} eq 'Signature' ) ?>
+			<td class="unprintable">&nbsp;</td>
+			<? endif ( $$variable{'name'} eq 'Signature' ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 			<td>
 <? if ( $$variable{'url'} ne '' ) ?>
 <a href="/employee/proj/<?url?>?OrderID=<?OrderID?>&ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?index?>"><?name?></a>
@@ -68,15 +75,25 @@ function open_window( page ) {
 			<? echo ( sprintf('$%.2f', $$variable{'price'.$$variable{'Project'}->ordered_quantity_index()} ); ) ?>
 			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			</td>
-			<td align="right">&nbsp;<?status?></td>
+			<td align="right">&nbsp;<?status?>
+<? echo ( 
+	if ( $$variable{'name'} eq 'Signature' ) {
+		if ( my $Job = openprint::ScheduledJob::find_one('service_id'=>$$variable{'index'}) ) {
+			return '<br/>Scheduled for: ' . Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Job->starttime() ) );
+		} elsif ( $$variable{'status'} eq 'Ordered' ) {
+			return '<br/>Not scheduled';
+		} # end if
+	} # end if
+) ?>
+			</td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 		<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
 		<tr>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<th class="unprintable">&nbsp;</th>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<th colspan="3"></th>
 		</tr>
 <? echo ( 
@@ -122,7 +139,7 @@ function open_window( page ) {
 
 	if ( keys %totals ) {
 		my $html = '<tr>';
-		if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
+		if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) {
 			$html .= '<td class="unprintable">&nbsp;</td>';
 		} # end if
 		$html .= '<td><b>Stock:</b><br/>';
@@ -162,9 +179,9 @@ function open_window( page ) {
 		</tr>
 		<? endif ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin'], $session{'user_id'} ) ) ?>
 		<tr class="unprintable">
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td>&nbsp;</td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td><input name="txtServiceName" style="width: 100%;" /></td>
 			<td><input name="txtPrice" style="width: 100%;" /></td>
 			<td
@@ -175,15 +192,15 @@ function open_window( page ) {
 		<? endif ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<tr>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<th class="unprintable"></th>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<th colspan="3"></th>
 		</tr>
 		<tr>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td class="unprintable"></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td align="right"><b>Total:</b></td>
 			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ); ) ?></td>
 			<td></td>
@@ -265,7 +282,7 @@ $log->debug("Have no job: $Job");
 			if ( $$variable{'ShippingType'} eq 'Customer Pickup' and $$variable{'ProjectStatus'} ne 'Picked Up' ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
 			} # end if
-			if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) {
+			if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='DeleteServices';f1.submit();", '', 'Delete Checked Services' );
 			} # end if
 
