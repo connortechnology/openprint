@@ -1816,6 +1816,7 @@ $i->display();
 			push @signatures if $_ > $service_index;
 		} # end foreach
 
+		%signature_price_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
 # Only thread qtys 2 and 3
 		if ( $threading and ($qty_index > 1) ) {
@@ -2165,6 +2166,11 @@ sub calculate_impositions {
 				next;
 			} # end if
 
+			if ( $$sig_specs{'PreviousStockType'} and ( $Paper->type() ne $$sig_specs{'PreviousStockType'} ) ) {
+#$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $imp->Paper()->type() );
+				next;
+			} # end if
+
 			if ( $SpreadLayout > 0 ) {
 				my %max_impositions;
 				my $max_pages = 0;
@@ -2203,10 +2209,6 @@ sub calculate_impositions {
 					next;
 				} # end if
 
-				if ( $$sig_specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$sig_specs{'PreviousStockType'} ) ) {
-#$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $imp->Paper()->type() );
-					next;
-				} # end if
 			} # end if SpreadLayout
 			push @results, $imp;
 		} # end foreach imp
@@ -2415,7 +2417,7 @@ sub get_project_price {
 	my %best_price;
 	$best_price{'Comparison Cost'} = $best_price if $best_price;
 
-	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
+	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
 		my $Press;
 		if ( ! $P ) {
 			if ( $impositions{''} and @{$impositions{''}} ) {
@@ -3172,7 +3174,7 @@ sub calc_price {
 			$price{'Cutting Breakdown'} .= "Cutting error: $cutting_results{'alert'}<br/>";
 		} else {
 			$price{'Cutting Breakdown'} .= sprintf('Cutting Price: $%.2f',$cutting_results{'Price'} );
-			$price{'Cutting Breakdown'} .= 'on '. $cutting_results{'Equipment'}->name() if $cutting_results{'Equipment'};
+			$price{'Cutting Breakdown'} .= ' on '. $cutting_results{'Equipment'}->name() if $cutting_results{'Equipment'};
 			$price{'Cutting Breakdown'} .= '<br/>';
 
 #$price{'Cutting Breakdown'} .= $$project{'CuttingSpecs'}{'hdnBreakdown'.$qty_index}.'<br/>';
@@ -3512,9 +3514,9 @@ sub calc_price {
 		$price{'Plate Total'} += $_->{'Plate Total'};
 		$price{'Plate Setup Price'} = $_->{'Plate Price'};
 		$price{'Plate Setup Count'} = $_->{'Plate Count'};
-			$price{'Plate Setup Units'} = $_->{'Plate Units'};
+		$price{'Plate Setup Units'} = $_->{'Plate Units'};
 	} # end if
-	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Runstyle Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'};
+	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'};
 
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
 	if ( $$project{'print_sides'} == 1 ) {
@@ -3693,8 +3695,9 @@ sub calc_price {
 		} # end if pages
 	} # end if Plate Type Conventional
 
-	#my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup',undef,$Press );
-	#$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
+	my %RunStylePrice = openprint::service::get_price_object( $$Imposition{runstyle}.'Setup',undef,$Press );
+	$price{'Runstyle Charge'} += $RunStylePrice{'Price'};
+	$setup_cost += $price{'Runstyle Charge'};
 
 	$price{'Comparison Cost'} += $setup_cost;
 	$price{'Setup Total'} = $setup_cost;
@@ -3758,6 +3761,13 @@ sub select_presses {
 		if ( $$specs{'ScreenType'} eq 'FM' and $Press->specification('FM Screening Capable') ne 'Y' ) {
 			$results{$press_id} = "Can't do FM Screening";
 			next;
+		} # end if
+
+		if ( $_ = $Press->specification('ProjectTypes') ) {
+			if ( sets::isin( '!'.$Project->Type()->name(), split(',',$_) ) ) {
+				$results{$press_id} = "Press is set to not do " . $Project->Type()->name();
+				next;
+			} # end if
 		} # end if
 
 		if ( $Project->Type()->name() eq 'Envelopes' and $Press->specification('Envelope Capable') ne 'Y' ) {
@@ -3973,7 +3983,11 @@ sub get_run_price {
 		$run_price{'units'} = $RunPrice{'units'};
 		$running_price = $RunPrice{'Price'};
 #$openprint::log->debug("Price: $running_price");
-	} elsif ( $Imposition->runstyle() eq 'Perfecting' and ( %RunPrice = openprint::service::get_price_object( $impression_service, $impressions, $Press ) ) ) {
+	} elsif ( $Imposition->runstyle() eq 'Perfecting' ) {
+		$impression_service = 'PerfectingImpression'.$side_one_colours.'/'.$side_two_colours;
+		if ( ! ( %RunPrice = openprint::service::get_price_object( 'PerfectingImpression'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press ) ) ) {
+			%RunPrice = openprint::service::get_price_object( 'PerfectingImpression', $impressions, $Press );
+		} # end if
 		$run_price{'units'} = $RunPrice{'units'};
 		$running_price = $RunPrice{'Price'};
 	} else {
@@ -4027,14 +4041,14 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	my $std_speed = $Press->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() ) ;
+	my $std_speed = $Press->specification('Press Standard Run Speed') ;
 	my $speed_mod;
 
-	if ( ! $run_speed ) {
-		$run_speed = $std_speed;
+	$run_speed = $Press->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() );
+	if ( $run_speed == $std_speed ) {
 		$speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->Paper()->calliper());
 #$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." ($running_price) ($run_price{'units'}) STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
-		$speed_mod = $Press->specification('Press Standard Run Speed', $Imposition->paper()->gsm() ) / $speed_mod if $speed_mod;
+		$speed_mod = $run_speed / $speed_mod if $speed_mod;
 	} else {
 		$speed_mod = $std_speed / $run_speed;
 	} # end if
@@ -4555,6 +4569,12 @@ sub save {
 		} # end foreach qty_index
 		$Project->save() if $changed;
 	} # end if
+
+	if ( $$services{'Padding'} ) {
+		foreach my $padding_id ( @{$$services{'Padding'}} ) {
+			openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $padding_id, 'PageQuantity', $$param{'PageQuantity'} );
+		} # end foreach
+	} # end if adding
 
 } # end sub save
 
