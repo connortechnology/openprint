@@ -12,13 +12,13 @@ Please select a Manifest to view/edit.<br>
 		</p>
 		<p>
 			<label for="po_id">Purchase Order:</label>
-			<input type="text" id="po_id" name="po_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', 'if(f1.po_id.value){f1.submit()};','','Go' ); ) ?>
+			<input type="text" id="po_id" name="po_id" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', q`if(f1.po_id.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );};`,'','Go' ); ) ?>
 		</p>
 		<p>
 			<label for="docket">Docket:</label>
-			<input type="text" id="docket" name="docket" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){f1.submit();}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', 'if(f1.docket.value){f1.submit();}','','Go' ); ) ?>
+			<input type="text" id="docket" name="docket" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', q`if(f1.docket.value){AjaxLoadContent('Results','_manifests.html', $('f1').serialize() );}`,'','Go' ); ) ?>
 		</p>
 	</fieldset>
 </form>
