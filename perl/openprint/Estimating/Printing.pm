@@ -23,6 +23,14 @@ my %folding_cache;
 my %Papers;
 # indexed by press
 my %impositions;
+my $max_recursion_depth = 3;
+my %signature_price_cache;
+my $use_signature_price_cache = 1;
+my %converted_imposition_cache;
+my $use_converted_imposition_cache = 1;
+my %filtered_imposition_cache;
+my $use_filtered_imposition_cache = 1;
+
 
 use strict;
 #use warnings;
@@ -1741,8 +1749,8 @@ $i->display();
 			push @impositions, map {@{$_}} values %imps;
 
 #$openprint::log->debug("After filtering qty: $qty_index, Press: $$Press{strid} " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-			if ( $debug ) {
-				$openprint::log->warn('Impositions for '. $Press->strid() . ': ' . @impositions );
+			if ( $debug or 0 ) {
+				$openprint::log->warn('Impositions after filtering for '. $Press->strid() . ': ' . @impositions );
 				foreach my $I ( @impositions ) {
 					$I->display();
 				} # end foreach
@@ -1799,7 +1807,12 @@ $i->display();
 			$previous_forms_cache{$hash_key} += 1;
 		} # end foreach $index
 
-		my @signatures = sort $Project->signatures({'Group'=>$$specs{'Group'}});
+		# These are passed along for consideration in get_project_price.  Hence they should only occur after the current service, right?
+		my @signatures;
+		foreach ( sort $Project->signatures({'Group'=>$$specs{'Group'}}) ) {
+			push @signatures if $_ > $service_index;
+		} # end foreach
+
 		my @versions = get_versions( $specs, $qty_index );
 # Only thread qtys 2 and 3
 		if ( $threading and ($qty_index > 1) ) {
