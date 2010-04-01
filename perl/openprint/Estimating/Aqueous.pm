@@ -240,9 +240,9 @@ sub signature_calc {
 		$impressions *= $$sig_specs{'Versions'};
 	} # end if
 #$openprint::log->debug("Impressions: $impressions");
-if ( 0 ) {
-	# This just can't be right anymore.
-	if ( sets::isin( $imposition->runstyle(), ['Perfecting','Sheet Work'] ) ) {
+if ( 1 ) {
+	# This just can't be right anymore. Actually it can... if double sided, impressions are doubled...
+	if ( sets::isin( $imposition->runstyle(), ['Perfecting','Sheet Work'] ) and @front_aq and @back_aq ) {
 		#if ( ! ( @front_aq and @back_aq ) ) {
 			$impressions = int($impressions/2);
 		#} # end if
