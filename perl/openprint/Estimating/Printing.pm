@@ -1256,7 +1256,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 					} # end while cutting it
 				} # end if Web or Sheet
 
-if ( 1 ) {
+if ( 0 ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
 foreach my $i ( @imps ) {
 $i->display();
@@ -1318,7 +1318,7 @@ $i->display();
 			}# end foreach Paper
 			push @impositions, map {@{$_}} values %imps;
 
-if ( 1 ) {
+if ( 0 ) {
 $openprint::log->warn('Impositions after filter for '. $Press->strid() );
 foreach my $I ( @impositions ) {
 $I->display();
@@ -1736,7 +1736,7 @@ $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after fol
 			} # end if
         } # end if
 
-		if ( $debug or 1 ) {
+		if ( $debug or 0 ) {
 $openprint::log->debug("QTY after filter: $qty_index on " . $P->strid() );
 			foreach my $imp ( @impositions ) {
 	$imp->display();
@@ -1744,7 +1744,7 @@ $openprint::log->debug("QTY after filter: $qty_index on " . $P->strid() );
 		} # end if
 		#$openprint::log->debug("Number of impositions to consider for " . $Press->strid() . ': ' . scalar @impositions);
 		foreach my $imp ( @impositions ) {
-	$imp->display();
+	#$imp->display();
 
 			if ( $$specs{'PreviousStockType'} and ( $imp->Paper()->type() ne $$specs{'PreviousStockType'} ) ) {
 				$openprint::log->debug("Not consider imposition cuz it's not the previous stock type " . $imp->Paper()->type() ) if $debug;
