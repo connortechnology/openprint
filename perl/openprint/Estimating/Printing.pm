@@ -4126,7 +4126,8 @@ sub press_setup_cost {
 		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{'Total'};
-	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press );
+	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle(), undef, $Press );
+	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
 	if ( %PlateSetupPrice ) {
 		my $plates = $setup_count;
 		$plates *= $plate_runs if $plate_runs;
@@ -4136,7 +4137,7 @@ sub press_setup_cost {
 			my $time = $Press->specification('Plate Setup Time') * $plates / 60;
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $time;
 		} elsif ( lc $PlateSetupPrice{'units'} eq 'per plate' ) {
-			%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', $plates, $Press );
+			%PlateSetupPrice = openprint::service::get_price_object( $PlateSetupPrice{'ServiceName'}, $plates, $Press );
 			$Price{'Plate Total'} = $PlateSetupPrice{'Price'} * $plates;
 		} else {
 			$openprint::log->error("Invalid units in PlateSetupPrice ($PlateSetupPrice{'units'})");

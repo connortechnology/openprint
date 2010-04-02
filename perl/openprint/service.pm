@@ -80,6 +80,7 @@ sub get_price_object {
 
 	my $Pricelist = new openprint::Pricelist( $list_id );
 	$price{'currency_id'} = $$Pricelist{'currency_id'};
+	$price{'ServiceName'} = $service;
 	openprint::Currency::convert( \%price );
 	return %price;
 } # end sub get_price_object
