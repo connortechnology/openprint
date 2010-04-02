@@ -284,7 +284,7 @@ sub get_unspecified_pages {
 } # end sub get_unspecified_pages
 
 sub setup_project {
-	my ( $Project, $service_index, $services, $specs, $side_one_colours, $side_two_colours, $inkCoverage ) = @_;
+	my ( $Project, $service_index, $services, $specs, $side_one_colours, $side_two_colours, $inkCoverage, $Paper ) = @_;
 
 	my %project = (
 			'ComboItems',		$$specs{'txtPressSheetComboItems'},
@@ -350,7 +350,7 @@ sub setup_project {
 $log->debug("Need DieCutting: $project{'NeedDieCutting'}");
 			$project{'NeedScoring'} = 0;
 		} else {	
-			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $project{'ScoringSpecs'}, $specs );
+			$project{'NeedScoring'} = openprint::Estimating::Scoring::signature_needs( $Project, $project{'ScoringSpecs'}, $specs, $Paper );
 		} # end if
 	} else {
 		$project{'NeedScoring'} = 0;
@@ -1181,7 +1181,7 @@ $openprint::log->debug("Initial Papers: " . $P->type() .':' . $P->width() . 'x' 
 		$Papers{$P->to_string()} = $P;
 	} # end foreach
 
-	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage );
+	my $project = setup_project( $Project, $service_index, $services, $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
 
 	if ( $$services{'NoPrinting'} ) {
 		foreach my $k ('txtImposition','ddmRunStyle','hdnImpositionColumns','hdnImpositionRows','hdnImpositionDutchColumns','hdnImpositionDutchRows','StockWidth','StockHeight' ) {
@@ -2986,6 +2986,7 @@ sub calc_price {
 		$base_impressions = ceil($qty / $imposition);
 		$base_impressions *= $$specs{'Versions'} if $$specs{'Versions'};
 		$base_impressions *= $Paper->parts() if $Paper->parts();
+		$base_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	} # end if
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
 	if ( $max_impression_quantity and ($max_impression_quantity < $base_impressions ) ) {
@@ -3247,8 +3248,7 @@ sub calc_price {
 	} # end if
 
 	my $plate_impressions = $impressions;
-	$plate_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Work & Turn','Work & Tumble'] ));
-	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+	#$plate_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Work & Turn','Work & Tumble'] ));
 	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
 		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug;
 		return \%price;
@@ -3602,7 +3602,7 @@ sub calc_price {
 	if ( $Press->specification('Charge for setup overs') eq 'N' ) {
 		$impressions -= $setup_overs;
 	} # end if
-	$impressions *= $$project{print_sides} if ($$project{print_sides} == 2) and sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] );
+	#$impressions *= $$project{print_sides} if ($$project{print_sides} == 2) and sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] );
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 	$$specs{'ddmPress'.$qty_index} = $Press->strid();
 
