@@ -233,9 +233,11 @@ sub signature_calc {
 
 	# Should include overs
 	my $impressions = $$sig_specs{"hdnImpressionQuantity$qty_index"} ? $$sig_specs{"hdnImpressionQuantity$qty_index"} : $$specs{"txtQuantity$qty_index"};
-	if ( $$specs{'txtPressSheetComboItems'} ) {
-		$impressions *= $$specs{'txtPressSheetComboItems'};
-	} # end if
+
+	# Why would it be multiplied by the # of items per sheet? That doesn't make any sense at all.
+	#if ( $$specs{'txtPressSheetComboItems'} ) {
+		#$impressions *= $$specs{'txtPressSheetComboItems'};
+	#} # end if
 	if ( $$sig_specs{'Versions'} ) {
 		$impressions *= $$sig_specs{'Versions'};
 	} # end if
@@ -317,8 +319,9 @@ if ( 1 ) {
 
 			my %Price;
 			my $run_qty = $impressions;
-#$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
+$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
 			$run_qty += ( $imposition->imposition() / $imp->imposition() ) if $imposition->imposition() != $imp->imposition();
+$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
 
 			my @types;
 			if ( sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
@@ -329,7 +332,8 @@ if ( 1 ) {
 					} # end if
 					push @types, $type;
 				} # end foreach
-				$run_qty *= 2;
+				# In W&T, the impression count is total impressions, so both sides already, so no need to multiply
+				#$run_qty *= 2;
 			} else {
 				@types = (@front_aq, @back_aq);
 			} # end if
@@ -393,7 +397,7 @@ if ( 1 ) {
 				$Price{'Material'} += $MaterialPrice{'Total'};
 
 				my $colour_total += $setupPrice + $MaterialPrice{'Total'} + $ServicePrice{'Total'} + $BlanketCutPrice;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + BC: $%.2f + Service: $%.2f%s*%d=%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR: $%.2f + BC: $%.2f + Service: ($%.2f%s*%d)=$%.2f + Material: $%.2f%s = $%.2f ) = $%.2f<br/>',
 					$setupPrice, $BlanketCutPrice, @ServicePrice{'Price','units','Quantity','Total'}, @MaterialPrice{'Price','units','Total'}, $colour_total );
 			} # end foreach type
 			$Price{'Total'} = $Price{'MakeReady'} + $Price{'Service'} + $Price{'Material'} + $Price{'BlanketCut'};
