@@ -2989,24 +2989,79 @@ sub calc_price {
 		} # end 
 	} # end if 
 
-	my $base_sheets;
+	my $net_sheets;
 	if ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) {
-		$base_sheets = $$specs{'OverBase'.$qty_index};
+		$net_sheets = $$specs{'OverBase'.$qty_index};
 	} else {
-		$base_sheets = ceil($qty / $imposition);
-		$base_sheets *= $$specs{'Versions'} if $$specs{'Versions'};
-		$base_sheets *= $Paper->parts() if $Paper->parts();
+		$net_sheets = ceil($qty / $imposition);
+		$net_sheets *= $$specs{'Versions'} if $$specs{'Versions'};
+		$net_sheets *= $Paper->parts() if $Paper->parts();
+	} # end if
+#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
+	my $min_overs = $Press->specification( 'Overs Minimum', scalar @colours );
+	my $overs = 0;
+
+	my $setup_rate;
+	if ( $$project{'print_sides'} == 1 ) {
+		$setup_rate = $Press->specification( 'MakeReady Overs Rate One Side', scalar @colours );
+	} else {
+		$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $$Imposition{'runstyle'}, scalar @colours );
+	} # end if
+	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
+
+	my $setup_overs;
+ 	if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
+		$setup_overs = $$specs{'OverSetup'.$qty_index};
+	} elsif ( $setup_rate ) {
+		$setup_overs = int( $setup_rate * scalar @colours );
+ 	} else {
+		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, scalar @colours );
+		$setup_overs = $Press->specification( 'MakeReady Overs', scalar @colours ) if ! $setup_overs;
+ 	} # end if
+
+	my $run_overs;
+	my $over_rate = 0;
+	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
+		$run_overs = $$specs{'OverRun'.$qty_index};
+	} else {
+		# Should include bindery overs, but not setups, because the setup overs do the same job as the Run Overs
+		$over_rate = $Press->specification( 'Press Run Overs', $net_sheets  );
+		$price{'Overs Rate'} = $over_rate;
+		if ( ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) and ( $_ = $Press->specification( 'Covers Overs Percentage' ) ) ) {
+			$over_rate *= ( 1 + $_ / 100 );
+		} # end if
+		$run_overs = $net_sheets * $over_rate;
 	} # end if
 
-	my $base_impressions = $base_sheets;
-	$base_impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+	my $fm_overs = 0;
+	if ( $$specs{'ScreenType'} eq 'FM' ) {
+		$fm_overs = $Press->specification( 'FM Screening Additional Overs', undef );
+		$setup_overs += $fm_overs;
+	} # end if
+	my $additional_overs = 0;
+	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
+		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
+		my $minimum = $Press->specification('Additional Plate Overs Minimum');
+		$additional_overs = $minimum if $minimum > $additional_overs;
+	} # end if
+	my $overs = $additional_overs;
+	if ( $Press->specification('Overs') ne 'All' ) {
+		$overs += ceil( ($setup_overs > $run_overs) ? $setup_overs : $run_overs );
+	} else {
+		$overs += ceil( $setup_overs + $run_overs );
+	} # end if
+	$overs *= $Paper->parts() if $Paper->parts();
+	$overs = $min_overs if $overs < $min_overs;
+
+	my $impressions = $net_sheets + $overs;
+	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 
 	my $max_impression_quantity = $Press->specification('Maximum Impression Quantity', $$Paper{calliper} );
-	if ( $max_impression_quantity and ($max_impression_quantity < $base_impressions ) ) {
-		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $base_impressions" ) if $debug;
+	if ( $max_impression_quantity and ($max_impression_quantity < $impressions ) ) {
+		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug;
 		return \%price;
 	} # end if
-	$$specs{'hdnImpressionQuantity'.$qty_index} = $base_impressions;
+	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 
 	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
     my $speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
@@ -3196,87 +3251,24 @@ sub calc_price {
 			$price{'Comparison Cost'} += $cutting_results{'Price'};
 		} # end if
 		$price{'Cutting Overs'} = $cutting_results{'Overs'};
-
 	} # end if
 
 	$price{'Run Speed'} = $run_speed;
-#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
-	my $min_overs = $Press->specification( 'Overs Minimum', scalar @colours );
 
-	my $setup_rate;
-	if ( $$project{'print_sides'} == 1 ) {
-		$setup_rate = $Press->specification( 'MakeReady Overs Rate One Side', scalar @colours );
-	} else {
-		$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $$Imposition{'runstyle'}, scalar @colours );
-	} # end if
-	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
-	my $mr_overs;
-	if ( ! $setup_rate ) {
-		$mr_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, scalar @colours );
-		$mr_overs = $Press->specification( 'MakeReady Overs', scalar @colours ) if ! $mr_overs;
-	} # end if
-
-	my $setup_overs;
-	
- 	if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
-		$setup_overs = $$specs{'OverSetup'.$qty_index};
-	} elsif ( $mr_overs ) {
-		$setup_overs = $mr_overs;
- 	} else {
-		$setup_overs = int( $setup_rate * scalar @colours );
- 	} # end if
-
-	my $fm_overs = 0;
-	if ( $$specs{'ScreenType'} eq 'FM' ) {
-		$fm_overs = $Press->specification( 'FM Screening Additional Overs', undef );
-		$setup_overs += $fm_overs;
-	} # end if
-	$setup_overs = $min_overs if $setup_overs < $min_overs;
-
+	# Now we know the bindery overs
 	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'}, $price{'Cutting Overs'} );
 	$bindery_overs *= $Paper->parts() if $Paper->parts();
+	$overs += ( $bindery_overs - $overs ) if $bindery_overs > $overs;
+	$overs = $min_overs if $overs < $min_overs;
 
-	my $sheets = $base_sheets + $bindery_overs;
+	my $gross_sheets = $net_sheets + $overs;
 
-	my $run_overs;
-	my $over_rate = 0;
-	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
-		$run_overs = $$specs{'OverRun'.$qty_index};
-	} else {
-		# Should include bindery overs, but not setups, because the setup overs do the same job as the Run Overs
-		$over_rate = $Press->specification( 'Press Run Overs', $sheets  );
-		$price{'Overs Rate'} = $over_rate;
-		if ( ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) and ( $_ = $Press->specification( 'Covers Overs Percentage' ) ) ) {
-			$over_rate *= ( 1 + $_ / 100 );
-		} # end if
-		$run_overs = $sheets * $over_rate;
-	} # end if
 
-	my $overs;
-	if ( $Press->specification('Overs') ne 'All' ) {
-		$overs = ceil( ($setup_overs > $run_overs) ? $setup_overs : $run_overs );
-	} else {
-		$overs = ceil( $setup_overs + $run_overs );
-	} # end if
-	$overs *= $Paper->parts() if $Paper->parts();
-	$sheets += $overs;
-
-	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
-		my $additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
-		my $minimum = $Press->specification('Additional Plate Overs Minimum');
-		$additional_overs = $minimum if $minimum > $additional_overs;
-		$sheets += $additional_overs;
-	} # end if
-
-	my $impressions = $sheets;
-$openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
+	$impressions = $gross_sheets;
+$openprint::log->debug("Sheets: $gross_sheets Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
-$openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
+$openprint::log->debug("Sheets: $gross_sheets Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
 
-	if ( $max_impression_quantity and ($max_impression_quantity < $impressions) ) {
-		$openprint::log->debug("Next cuz of maximum impression quantity $max_impression_quantity : $impressions" ) if $debug;
-		return \%price;
-	} # end if
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
 		$openprint::log->debug("Next cuz of minimum impression quantity $min_impression_quantity: $impressions" ) if $debug;
@@ -3468,13 +3460,11 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 	if ( $Press->specification( 'Require Blank Plates' ) eq 'Y' ) {
 		$blanks_needed = ($Press->specification('Number of Colours') - @colours) - $$PlateCounts{'Blank'.$plate_id};
 		$plate_setup{'Blank Plates'} = $blanks_needed;
-	} elsif ( ( $Press->specification( 'Require Blank Plates' ) eq 'When Non-Process' ) and $non_process_colours ) {
+	} elsif ( $non_process_colours and ( $Press->specification( 'Require Blank Plates' ) eq 'When Non-Process' ) ) {
 		$blanks_needed = ($Press->specification('Number of Colours') - @colours) - $$PlateCounts{'Blank'.$plate_id};
 		$plate_setup{'Blank Plates'} = $blanks_needed;
 	} # end if
 	$plate_setup{'Plate Count'} = $plate_count;
-
-
 #$Imposition->display("Plate Count $plate_count");
 
 #$price{'Press Washes'} += $varnish_price{'Press Washes'};
@@ -3537,32 +3527,23 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 	} # end if
 	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'};
 
-#Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
+	# Recalculate Overs, etc using Plate Count now
 	if ( $$project{'print_sides'} == 1 ) {
 		$setup_rate = $Press->specification( 'MakeReady Overs Rate One Side', $plate_setup{'Plate Count'} );
 	} else {
 		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$$Imposition{'runstyle'}, $plate_setup{'Plate Count'} );
 	} # end if
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', $plate_setup{'Plate Count'} ) if ! $setup_rate;
-
-	my $mr_overs;
-	if ( ! $setup_rate ) {
-		$mr_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} );
-		$mr_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $mr_overs;
-	} # end if
-
 	if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
 		$setup_overs = $$specs{'OverSetup'.$qty_index};
-	} elsif ( $mr_overs ) {
-		$setup_overs = $mr_overs;
- 	} else {
+	} elsif ( $setup_rate ) {
 		$setup_overs = int( $setup_rate * $plate_setup{'Plate Count'} );
+ 	} else {
+		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} );
+		$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
  	} # end if
-
 	$setup_overs += $fm_overs;
 	$setup_overs *= $Paper->parts() if $Paper->parts();
-
-	my $total_overs = 0;
 
 	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
@@ -3571,34 +3552,30 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 		$run_overs *= $Paper->parts() if $Paper->parts();
 	} # end if
 
-	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'}, $price{'Cutting Overs'} );
-	$bindery_overs *= $Paper->parts() if $Paper->parts();
-	$total_overs += $bindery_overs;
+	my $total_overs = $additional_overs;
 
 	if ( $Press->specification('Overs') ne 'All' ) {
-		$total_overs = ceil( $total_overs + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
+		$total_overs = ceil( ( $setup_overs > $run_overs ) ? $setup_overs : $run_overs );
 	} else {
-		$total_overs = ceil( $total_overs + $run_overs + $setup_overs );
+		$total_overs = ceil( $run_overs + $setup_overs );
 	} # end if
+	$total_overs += $bindery_overs - $total_overs if $bindery_overs > $total_overs;
 
-	my $additional_overs=0;
-	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
-		$additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
-		my $minimum = $Press->specification('Additional Plate Overs Minimum');
-		$additional_overs = $minimum if $minimum > $additional_overs;
-		$total_overs += $additional_overs;
-	} # end if
 	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
-	$total_overs = $min_overs if $total_overs < $min_overs;
 	$total_overs *= $Paper->parts() if $Paper->parts();
+	$total_overs = $min_overs if $total_overs < $min_overs;
 
-	my $gross_qty = $base_sheets + $total_overs;
-	my $weight = ceil( $gross_qty * $Paper->sheet_weight() );
+	my $gross_sheets = $net_sheets + $total_overs;
+	$impressions = $gross_sheets;
+$openprint::log->debug("Sheets: $gross_sheets Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
+	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
+$openprint::log->debug("Sheets: $gross_sheets Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
+	my $weight = ceil( $gross_sheets * $Paper->sheet_weight() );
 
 	my %sheet_qty = (
 			'Impressions'				=>	$impressions, 
-			'Gross Sheet Count'			=>	$gross_qty, 
-			'Net Sheet Count'			=>	$base_sheets,
+			'Gross Sheet Count'			=>	$gross_sheets, 
+			'Net Sheet Count'			=>	$net_sheets,
 			'Setup Overs'				=>	$setup_overs,
 			'Run Overs'					=>	$run_overs,
 			'Additional Plate Overs'	=>	$additional_overs,
@@ -3619,7 +3596,7 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 	$price{'Stock Weight'} = $sheet_qty{'Weight'};
 	$price{'Stock Qty'} = $Paper->type() eq 'Sheet' ? $sheet_qty{'Gross Sheet Count'} : $sheet_qty{'Weight'};
 
-	$$specs{"txtPressSheetQty$qty_index"} = $gross_qty;
+	$$specs{"txtPressSheetQty$qty_index"} = $gross_sheets;
 	if ( $Press->specification('Charge for setup overs') eq 'N' ) {
 		$impressions -= $setup_overs;
 	} # end if
