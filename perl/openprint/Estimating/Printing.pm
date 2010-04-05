@@ -58,6 +58,7 @@ require openprint::Estimating::SpinePaste;
 require openprint::Estimating::UVCoating;
 require openprint::Estimating::Aqueous;
 require openprint::Estimating::Numbering;
+require openprint::Estimating::Proofs;
 require openprint::Equipment;
 require openprint::Material;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
@@ -329,7 +330,7 @@ sub setup_project {
 	my %special_colours = map { $_->{pmsid}, $_ } @$s;
 	$project{'special_colours'} = \%special_colours;
 
-	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering' ) {
+	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering','Proofs' ) {
 		if ( $$services{$service} ) {
 			$$specs{'Has'.$service} = $project{'Has'.$service} = $$services{$service}[0];
 			%{$project{$service.'Specs'}} = %{openprint::service::get_specs_ref( $Project, $$services{$service}[0] )};
@@ -2050,6 +2051,7 @@ sub breakdown {
 	$breakdown .= $$price{'Ink breakdown'};
 	$breakdown .= sprintf('Ink Total: $%.2f<br/>', $$price{'Ink Price'} );
 	$breakdown .= sprintf('Total: $%.2f<br/>', $$price{'Total Cost'} );
+	$breakdown .= $$price{'Proofs Breakdown'};
 	$breakdown .= $$price{'UVCoating Breakdown'};
 	$breakdown .= $$price{'Aqueous Breakdown'};
 	$breakdown .= $$price{'Cutting Breakdown'};
@@ -2467,6 +2469,14 @@ sub get_project_price {
 				} # end if
 				next; # next Impo
 			} # end if
+
+			if ( $$project{'HasProofs'} ) {
+				# Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
+				my %Results = openprint::Estimating::Proofs::signature_calc( $Project, $$project{'ProofsSpecs'}, $service_index, $sig_specs, $qty_index, undef, undef, $Press );
+				$$price{'Comparison Cost'} += $Results{'Total'};
+				$$price{'Proofs Breakdown'} .= $Results{'Breakdown'};
+			} # end if
+
             $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
             $PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
 			$PaperCounts{$imp->Paper()->to_string()} += $$price{'Stock Qty'};
@@ -3222,35 +3232,43 @@ sub calc_price {
 		$setup_overs += $fm_overs;
 	} # end if
 	$setup_overs = $min_overs if $setup_overs < $min_overs;
+
+	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'}, $price{'Cutting Overs'} );
+	$bindery_overs *= $Paper->parts() if $Paper->parts();
+
+	my $sheets = $base_sheets + $bindery_overs;
+
 	my $run_overs;
 	my $over_rate = 0;
-
 	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
 	} else {
-		$over_rate = $Press->specification( 'Press Run Overs', $base_sheets );
+		# Should include bindery overs, but not setups, because the setup overs do the same job as the Run Overs
+		$over_rate = $Press->specification( 'Press Run Overs', $sheets  );
+		$price{'Overs Rate'} = $over_rate;
 		if ( ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) and ( $_ = $Press->specification( 'Covers Overs Percentage' ) ) ) {
 			$over_rate *= ( 1 + $_ / 100 );
 		} # end if
-		$run_overs = $base_sheets * $over_rate;
+		$run_overs = $sheets * $over_rate;
 	} # end if
-	$price{'Overs Rate'} = $over_rate;
 
-	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'}, $price{'Cutting Overs'} );
-	my $impressions = $base_sheets + $bindery_overs;
+	my $overs;
 	if ( $Press->specification('Overs') ne 'All' ) {
-		$impressions = ceil( $impressions + ( $setup_overs > $run_overs ? $setup_overs : $run_overs ) );
+		$overs = ceil( ($setup_overs > $run_overs) ? $setup_overs : $run_overs );
 	} else {
-		$impressions = ceil( $impressions + $setup_overs + $run_overs );
+		$overs = ceil( $setup_overs + $run_overs );
 	} # end if
+	$overs *= $Paper->parts() if $Paper->parts();
+	$sheets += $overs;
 
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
 		my $additional_overs = ( $$specs{'txtPlateChangeQuantity'.$qty_index} * $Press->specification('Additional Plate Overs') );
 		my $minimum = $Press->specification('Additional Plate Overs Minimum');
 		$additional_overs = $minimum if $minimum > $additional_overs;
-		$impressions += $additional_overs;
+		$sheets += $additional_overs;
 	} # end if
 
+	my $impressions = $sheets;
 $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
@@ -3279,11 +3297,7 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 	$max_impressions = 250000 if ! $max_impressions;
 	my $plate_runs = ceil($impressions/$max_impressions);
 	my $plate_id = $plate_size . '-' . $plate_type . 'Plate';
-	my %plate_setup = (
-			'Plate Type', $plate_type,
-			'Plate ID', $plate_id,
-			'Plate Runs', $plate_runs,
-			);
+	my %plate_setup = ( 'Plate Type', $plate_type, 'Plate ID', $plate_id, 'Plate Runs', $plate_runs,);
 	
 	my %mixed_colours = %{$$project{'mixed_colours'}};
 	my %washed_colours = %{$$project{'washed_colours'}};
@@ -3546,15 +3560,19 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
  	} # end if
 
 	$setup_overs += $fm_overs;
+	$setup_overs *= $Paper->parts() if $Paper->parts();
 
 	my $total_overs = 0;
 
 	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
 	} else {
-		$run_overs = ceil( $base_impressions * $over_rate );
+		$run_overs = ceil( $impressions * $over_rate );
+		$run_overs *= $Paper->parts() if $Paper->parts();
 	} # end if
+
 	my $bindery_overs = sets::max( $folding_results{'MakeReadyOvers'} + $folding_results{'RunOvers'}, $scoring_results{'Overs'}, $uv_results{'Overs'}, $diecutting_results{'Overs'}, $price{'Cutting Overs'} );
+	$bindery_overs *= $Paper->parts() if $Paper->parts();
 	$total_overs += $bindery_overs;
 
 	if ( $Press->specification('Overs') ne 'All' ) {
@@ -3562,9 +3580,6 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 	} else {
 		$total_overs = ceil( $total_overs + $run_overs + $setup_overs );
 	} # end if
-	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
-	$total_overs = $min_overs if $total_overs < $min_overs;
-	$total_overs *= $Paper->parts() if $Paper->parts();
 
 	my $additional_overs=0;
 	if ( $$specs{'txtPlateChangeQuantity'.$qty_index} ) {
@@ -3573,6 +3588,9 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 		$additional_overs = $minimum if $minimum > $additional_overs;
 		$total_overs += $additional_overs;
 	} # end if
+	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
+	$total_overs = $min_overs if $total_overs < $min_overs;
+	$total_overs *= $Paper->parts() if $Paper->parts();
 
 	my $gross_qty = $base_sheets + $total_overs;
 	my $weight = ceil( $gross_qty * $Paper->sheet_weight() );
@@ -3608,7 +3626,6 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 	$$specs{'ddmPress'.$qty_index} = $Press->strid();
 
-
 	if ( $$project{'HasAqueous'} ) {
 		my %aq_results = openprint::Estimating::Aqueous::signature_calc( $Project, @$project{'HasAqueous','AqueousSpecs'}, $service_index, $specs, $qty_index, $Imposition );
 	#$price{'Aqueous Breakdown'} .= $$project{'AqueousSpecs'}{'hdnBreakdown'.$qty_index};
@@ -3633,7 +3650,7 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
 		my %ImpositionMakeReady;
-		my $service = 'ImpositionMakeReady'.$Project->Type()->strid();
+		my $service = 'ImpositionMakeReady'.$Project->Type()->name();
 		if ( ! ( %ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press ) ) ) {
 			$service = 'ImpositionMakeReady';
 			%ImpositionMakeReady = openprint::service::get_price_object( $service, undef, $Press );
@@ -3650,7 +3667,7 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 
 		$price{'Imposition Total'} = $price{'Imposition MakeReady'};
 		my %ImpositionCharge;
-		$service = 'Imposition'.$Project->Type()->strid();
+		$service = 'Imposition'.$Project->Type()->name();
 
 		if ( ! (%ImpositionCharge = openprint::service::get_price_object( $service,undef,$Press) ) ) {
 			$service = 'Imposition';
@@ -3724,7 +3741,6 @@ $openprint::log->debug("Impressions: $impressions $$project{print_sides} $$Impos
 	$price{'Comparison Cost'} += $price{'Ink Price'};
 #$openprint::log->debug("Comparison Cost: $price{'Comparison Cost'}");
 	$price{'Total Cost'} = $run_cost + $setup_cost + $price{'Ink Price'};
-
 
 	$price{'complete'} = 1;
 	return \%price;

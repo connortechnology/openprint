@@ -64,7 +64,7 @@ sub history {
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day', 
 			);
-} # end sub history_list 
+} # end sub history
 
 sub _history {
 	ssi::save_params( '/main/project/history.html', 
@@ -74,7 +74,7 @@ sub _history {
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day', 
 			);
-} # end sub history_list 
+} # end sub _history 
 
 1;
 __END__

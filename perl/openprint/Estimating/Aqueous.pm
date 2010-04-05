@@ -319,9 +319,9 @@ if ( 1 ) {
 
 			my %Price;
 			my $run_qty = $impressions;
-$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
+#$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
 			$run_qty += ( $imposition->imposition() / $imp->imposition() ) if $imposition->imposition() != $imp->imposition();
-$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
+#$openprint::log->debug("Run QTY: $run_qty $$imposition{imposition} / $$imp{imposition} ");
 
 			my @types;
 			if ( sets::isin( $imposition->runstyle(), ['Work & Turn', 'Work & Tumble'] ) ) {
