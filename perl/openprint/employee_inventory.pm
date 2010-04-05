@@ -1092,10 +1092,20 @@ sub rfidtags {
 		foreach my $rfidtag_id ( ref $param{'rfidtags'} eq 'ARRAY' ? @{$param{'rfidtags'}} : split(',',$param{'rfidtags'}) ) {
 			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
 			$variable{'error'} .= $RFIDTag->delete();
-
 		} # end foreach rfidtag_id
+	} elsif ( $param{'btnFunction'} eq 'Validate' ) {
+		foreach my $rfidtag_id ( ref $param{'rfidtags'} eq 'ARRAY' ? @{$param{'rfidtags'}} : split(',',$param{'rfidtags'}) ) {
+			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+			$variable{'error'} .= $RFIDTag->save({'valid'=>1});
+		} # end foreach rfidtag_id
+	} else {
+		ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
 	} # end if
 } # end sub rfidtags
+
+sub _rfidtags_results {
+	ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
+} # end sub _rfidtags_results
 
 sub rfidtag_details {
 	if ( $param{'btnFunction'} eq 'Go' ) {
@@ -1915,8 +1925,6 @@ sub _po_notifications {
 sub _manifest_purchase_orders {
 } # end sub _manifest_purchase_orders
 
-sub _rfidtags_results {
-} # end sub _rfidtags_results
 
 sub _rfidtag_log {
     @{$variable{'Entries'}} = openprint::RFIDTagHistory::find( 
