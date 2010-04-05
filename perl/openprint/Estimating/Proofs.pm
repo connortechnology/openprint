@@ -332,7 +332,7 @@ sub insert_press_proof {
 } # end sub insert_press_proof
 
 sub insert_colour_proof {
-	my ( $Project, $service_index, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
+	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
 
 	#$log->debug("*** Inserting Colour Proof *******");
 	my $Equipment = openprint::Equipment::find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} );
