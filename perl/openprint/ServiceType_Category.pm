@@ -28,6 +28,7 @@ sub find_one {
     $params{'limit'} = 1;
     my @Results = find(%params);
     return $Results[0] if @Results;
+	return;
 } # end sub find_one
 
 sub find {
