@@ -3063,8 +3063,15 @@ sub calc_price {
 	} # end if
 	$$specs{'hdnImpressionQuantity'.$qty_index} = $impressions;
 
-	my $run_speed = $Press->specification('Press Standard Run Speed', $Paper->gsm() );
-    my $speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
+	my $std_speed = $Press->Specification('Run Speed' );
+	my $run_speed;
+	if ( $$std_speed{'units'} eq 'Calliper' ) {
+		$run_speed = $Press->specification('Run Speed', $Paper->calliper(), 1 );
+	} else {
+		$run_speed = $Press->specification('Run Speed', $Paper->gsm(), 1 );
+	} # end if
+
+    my $speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper(), 1);
 #$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
     $run_speed = $speed_mod if $speed_mod;
 
@@ -3262,12 +3269,8 @@ sub calc_price {
 	$overs = $min_overs if $overs < $min_overs;
 
 	my $gross_sheets = $net_sheets + $overs;
-
-
 	$impressions = $gross_sheets;
-$openprint::log->debug("Sheets: $gross_sheets Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
-$openprint::log->debug("Sheets: $gross_sheets Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
 
 	my $min_impression_quantity = $Press->specification('Minimum Impression Quantity', $$Paper{calliper} );
 	if ( $min_impression_quantity and ( $min_impression_quantity > $impressions ) ) {
@@ -3567,9 +3570,7 @@ $openprint::log->debug("Sheets: $gross_sheets Impressions: $impressions $$projec
 
 	my $gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
-$openprint::log->debug("Sheets: $gross_sheets Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
-$openprint::log->debug("Sheets: $gross_sheets Impressions: $impressions $$project{print_sides} $$Imposition{runstyle}");
 	my $weight = ceil( $gross_sheets * $Paper->sheet_weight() );
 
 	my %sheet_qty = (
@@ -4036,16 +4037,22 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	my $std_speed = $Press->specification('Press Standard Run Speed') ;
+	my $std_speed = $Press->Specification('Run Speed', 1 );
+	
 	my $speed_mod;
+	if ( $std_speed ) {
+		my $Paper = $Imposition->Paper();
 
-	$run_speed = $Press->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() );
-	if ( $run_speed == $std_speed ) {
-		$speed_mod = $Press->specification('Press Additional Run Speed',$Imposition->Paper()->calliper());
-#$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." ($running_price) ($run_price{'units'}) STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
-		$speed_mod = $run_speed / $speed_mod if $speed_mod;
-	} else {
-		$speed_mod = $std_speed / $run_speed;
+# Only load this if not already specified by some inline bindery service
+		$run_speed = $Press->specification('Run Speed', $$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm(), 1 ) if ! $run_speed;
+		if ( $run_speed == $$std_speed{'value'} ) {
+			$speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
+			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug or 1;
+			$speed_mod = $run_speed / $speed_mod if $speed_mod;
+		} else {
+			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug or 1;
+			$speed_mod = $$std_speed{'value'} / $run_speed;
+		} # end if
 	} # end if
 
 	if ( sets::isin( lc $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {
@@ -4335,7 +4342,7 @@ sub runspeed {
 #$openprint::log->debug("Foudn Additional runspeed for $$Equipment{strid}: $runspeed");
     } # end if
     if ( ! $runspeed ) {
-        $runspeed = int( $Equipment->specification('Press Standard Run Speed', $Imposition->Paper()->gsm() ) );
+        $runspeed = int( $Equipment->specification('Run Speed', $Imposition->Paper()->gsm() ) );
 #$openprint::log->debug("Foudn Standard runspeed for $$Equipment{strid}: $runspeed");
     } # end if
 	return $runspeed;
