@@ -34,7 +34,8 @@ sub history {
 	} elsif ( ! $param{'btnFunction'} ) {
 		ssi::save_params( '/timetrack/history.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','invoiced','paid','employee_id','company_id') );
 	} # end if
-	if ( ( ! $session{'/timetrack/history.html?lastupdated'} ) or ( time - $session{'/timetrack/history.html?lastupdated'} ) < ( 12*60*60 ) ) {
+
+	if ( ( ! $session{'/timetrack/history.html?lastupdated'} ) or ( time - $session{'/timetrack/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
 		ssi::setup_date_select( '/timetrack/history.html', 'starting', -31 );
 	} # end if
 

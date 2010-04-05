@@ -89,7 +89,7 @@ sub Specification {
 	return $$self{'Specifications'}{$name}[0] if ! defined $range;
 #$openprint::log->debug("Looking for $name : $range") if $debug;
 
-	return misc::find_entry( $range, @{$$self{'Specifications'}{$name}} );
+	return misc::find_entry( $range, $$self{'Specifications'}{$name} );
 } # end sub Specification
 
 sub specification {

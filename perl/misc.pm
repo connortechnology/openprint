@@ -385,22 +385,23 @@ sub seconds2hms {
 } # end sub seconds2hms
 
 sub find_entry {
-	my $range = shift;
+	my ( $range, $array, $debug ) = @_;
 
 	if ( ! defined $range ) {
-		if ( @_ ) {
-			return $_[0];
+		if ( @{$array} ) {
+			return $$array[0];
 		} # end if
 		return;
 	} # end if
-	#$openprint::log->debug("Looking for $name : $range") if $debug;
+	my $name = $$array[0]{'name'};
+	$openprint::log->debug("Looking for $name : $range") if $debug;
 
 	my $i = 0;
 	my $x;
 	my $y;
-	for ( ; $i < @_; $i += 1 ) {
-		my $Object = $_[$i];
-	#$openprint::log->debug("Examining: (" . $Object->min() . 	') (' . $Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
+	for ( ; $i < @{$array}; $i += 1 ) {
+		my $Object = $$array[$i];
+	$openprint::log->debug("Examining: (" . $Object->min() . 	') (' . $Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
 		return $Object if ( (1*$$Object{min}) == $range ) or ((1*$$Object{max}) == $range );
 
 		return $Object if ( 
@@ -414,30 +415,30 @@ sub find_entry {
 		#last if ( $Object->max() eq '' and ! $Object->interpolate() );
 	} # end if
 	
-	if ( $i and $i <= @_ ) {
+	if ( $i and $i <= @{$array} ) {
 		$i -= 1;
 		# back up
-		$x = $_[$i];
-#$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+		$x = $$array[$i];
+$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-#$openprint::log->debug("Couldn't find monimum for $name : $range on " . $$self{'name'}) if $debug;
+$openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
 		return;	
 	}
 
-	for ( ; $i < @_; $i += 1 ) {
-		my $Object = $_[$i];
+	for ( ; $i < @{$array}; $i += 1 ) {
+		my $Object = $$array[$i];
 		return $Object if ( (1*$$Object{min}) <= $range ) and ( ( (1*$$Object{max}) >= $range ) or ! (1*$$Object{max}) );
 
-	#$openprint::log->debug("Examining: ($range) (" . $Object->min() . 	') (' . 1*$Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
+	$openprint::log->debug("Examining: ($range) (" . $Object->min() . 	') (' . 1*$Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
 		# first step, find one less than the min
 		last if ( ( (1*$$Object{max}) > $range) or ( ! (1*$$Object{max}) ) );
 	} # end foreach
-	if ( $i and $i < @_ ) {
-		$y = $_[$i];
-#$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+	if ( $i and $i < @{$array} ) {
+		$y = $$array[$i];
+$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
     } else {
-#$openprint::log->debug("Equipment::specification Couldn't find maximum for $name") if $debug;
+$openprint::log->debug("Couldn't find maximum for $name") if $debug;
         return;
     } # end if
 
@@ -447,10 +448,10 @@ sub find_entry {
         my $Object = $x->copy();
         $$Object{min} = $$Object{max} = $range;
         $$Object{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
-#$openprint::log->debug("Returning " . $$Object{value}) if $debug;
+$openprint::log->debug("Returning " . $$Object{value}) if $debug;
         return $Object;
     } # end if
-#$openprint::log->debug("Returning nothing") if $debug;
+$openprint::log->debug("Returning nothing") if $debug;
     return;
 } # end sub find_entry
 

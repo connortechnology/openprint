@@ -337,7 +337,7 @@ sub specification {
 } # end sub specification
 
 sub Specification {
-	my ( $self, $name, $range ) = @_;
+	my ( $self, $name, $range, $debug ) = @_;
 
 	return if ! $$self{'id'};
 
@@ -357,6 +357,7 @@ sub Specification {
 	} # end if
 
 	if ( ! defined $range ) {
+$openprint::log->debug("Looking for $name : $range") if $debug;
 		if ( $$self{'Specifications'}{$name} and @{$$self{'Specifications'}{$name}} ) {
 			return $$self{'Specifications'}{$name}[0];
 		} # end if
@@ -364,7 +365,7 @@ sub Specification {
 	} # end if
 $openprint::log->debug("Looking for $name : $range") if $debug;
 
-	return misc::find_entry( $range, @{$$self{'Specifications'}{$name}} );
+	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
 } # end sub specification
 
 sub copy {
