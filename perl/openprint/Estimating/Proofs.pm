@@ -371,7 +371,7 @@ sub insert_colour_proof {
 } # end sub insert_colour_proof
 
 sub insert_layout_proof {
-	my ( $Project, $service_index, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
+	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
 
 	my $Equipment = openprint::Equipment::find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} );
 	return if ! $Equipment;

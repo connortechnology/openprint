@@ -181,6 +181,8 @@ order and will be charged or credited accordingly.
 	sql::insert( undef, undef, 'configuration', 'name', 'RegistrationRequiredFields','value',
 'company_name,firstname,lastname,email,Captcha,address1,country,state,city,postalcode,phone,password,verifypassword',
 'category','Required Fields', 'description', 'Comma-separated list of fields on the registration page which must be filled in.');
+	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=? AND strunits=?', 'Press Standard Run Speed', 'Calliper' ], 'strname',' Run Speed' );
+	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=? AND strunits=?', 'Press Additional Run Speed', 'Calliper' ], 'strname',' Run Speed' );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'NOW()', 'backup', 0 );
 $dbh->disconnect();
