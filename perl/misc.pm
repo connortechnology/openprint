@@ -422,7 +422,7 @@ sub find_entry {
 $openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
 		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
 	} else {
-$openprint::log->debug("Couldn't find monimum for $name : $range on ") if $debug;
+$openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
 		return;	
 	}
 
