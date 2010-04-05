@@ -136,9 +136,8 @@ sub _specification {
 				$param{'value'} = ssi::unhtmlize( $param{'value'} );
 			} elsif ( $param{'field'} eq 'units' ) {
 			} # end if
-			$$Specification{$param{'field'}} = $param{'value'};
-			$Specification->save();
-			$variable{'PageContent'} = $$Specification{$param{'field'}};
+			$variable{'error'} .= $Specification->save({$param{'field'}=>$param{'value'}});
+			$variable{'PageContent'} = $$Specification{$param{'field'}} ne '' ? $$Specification{$param{'field'}} : '&nbsp;';
 		} else {
 			$$Specification{'interpolate'} = ! $$Specification{'interpolate'};
 			$$Specification{'interpolate'} = 1 * $$Specification{'interpolate'};
