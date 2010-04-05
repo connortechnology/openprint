@@ -4045,7 +4045,9 @@ sub get_run_price {
 
 # Only load this if not already specified by some inline bindery service
 		$run_speed = $Press->specification('Run Speed', $$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm(), 1 ) if ! $run_speed;
-		if ( $run_speed == $$std_speed{'value'} ) {
+		if ( ! $run_speed ) {
+			$openprint::log->error("No run sped!");	
+		} elsif ( $run_speed == $$std_speed{'value'} ) {
 			$speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
 			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug or 1;
 			$speed_mod = $run_speed / $speed_mod if $speed_mod;
