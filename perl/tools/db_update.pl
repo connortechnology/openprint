@@ -796,6 +796,17 @@ if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
 		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 	} # end if
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_Prices LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'owner_id'} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
+		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES Companies(id)');
+	} # end if
+	if ( ! exists $$data{'supplier_id'} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD supplier_id INTEGER');
+		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (supplier_id) REFERENCES Companies(id)');
+	} # end if
+} # end if
 if ( $version < 1901 ) {
 	print "Updating to version 1901\n";
 	my $ac = sql::start_transaction( $dbh );
@@ -1920,17 +1931,6 @@ foreach my $ServiceType ( openprint::ServiceType::find() ) {
 		$ServiceType->save();
 	} # end if
 } # end foreach ServiceType
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_Prices LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{'owner_id'} ) {
-		$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
-		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES companies(id)');
-	} # end if
-	if ( ! exists $$data{'supplier_id'} ) {
-		$dbh->do('ALTER TABLE Service_Prices ADD supplier_id INTEGER');
-		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (supplier_id) REFERENCES companies(id)');
-	} # end if
-} # end if
 
 if ( ! sets::isin( 'emailcampaigns', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
