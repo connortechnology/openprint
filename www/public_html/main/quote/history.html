@@ -21,7 +21,7 @@
 	} // end function delete_confirrm
 	function load_quotes( form ) {
 		$('QuoteList').innerHTML = 'Please wait...';
-		new Ajax.Updater('QuoteList','/main/quote/_quote_list.html', {method:'get',parameters:form.serialize(true)});
+		new Ajax.Updater('QuoteList','/main/quote/_history.html', {method:'get',parameters:form.serialize(true)});
 	} // end function load_quotes
 </script>	 
 <? if ( $session{'user_id'} == 0 ) ?>
@@ -42,44 +42,22 @@ Only logged in customers have a quote history.
 				<option value=""> all </option>
 <? echo (
 	$_ = "SELECT DISTINCT tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName, tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ".
-        "FROM tbl_Quotes, tbl_Quote_Users_For ".
-        "WHERE tbl_Quotes.CompanyIndex = $session{'company_id'} ".
-        " AND tbl_Quotes.strStatus != 'Incomplete' AND tbl_Quote_Users_For.Quote_Id = tbl_Quotes.Index ".
+        "FROM Quotes, tbl_Quote_Users_For ".
+        "WHERE Quotes.CompanyIndex = $session{'company_id'} ".
+        " AND Quotes.strStatus != 'Incomplete' AND tbl_Quote_Users_For.quote_id = Quotes.id ".
         " ORDER BY tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ";
     ssi::fill_drop_down( $log, $dbh, $_, $session{'/main/quote/history.html?QuotedFor'} );
 ) ?>
 			</select>
 		</p>
-<? eval (
-	if ( ( ! $session{'/main/quote/history.html?ddmStartYear'} ) or ( $session{'/main/quote/history.html?lastupdated'} < time-3600 ) ) {
-		@session{
-			'/main/quote/history.html?ddmStartYear',
-			'/main/quote/history.html?ddmStartMonth',
-			'/main/quote/history.html?ddmStartDay',
-			'/main/quote/history.html?ddmEndYear',
-			'/main/quote/history.html?ddmEndMonth',
-			'/main/quote/history.html?ddmEndDay'} = 
-			( Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ), Date::Calc::Today() );
-    } # end if
-
-	@$variable{'StartYears','StartMonths','StartDays','StartDate'} = ssi::get_dates( $log, $dbh,
-		@session{'/main/quote/history.html?ddmStartYear','/main/quote/history.html?ddmStartMonth','/main/quote/history.html?ddmStartDay'} );
-	@$variable{'EndYears','EndMonths','EndDays','EndDate'} = ssi::get_dates( $log, $dbh, 
-		@session{'/main/quote/history.html?ddmEndYear','/main/quote/history.html?ddmEndMonth','/main/quote/history.html?ddmEndDay'} );
-) ?>
-
 		<p>
 			<label for="ddmStartDay">Quote Date:</label>
 			<span class="DateSelector">
-				<select name="ddmStartDay" onchange="load_quotes( this.form );"><?StartDays?></select>
-				<select name="ddmStartMonth" onchange="setDaysDropDown(document.f1.ddmStartYear.value,this.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);load_quotes( this.form );"><?StartMonths?></select>
-				<select name="ddmStartYear" onchange="setDaysDropDown(this.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);load_quotes( this.form );"><?StartYears?></select>
+<? echo ( ssi::date_select_session( '/main/quote/history.html', 'created_on_start', { 'onchange'=>'load_quotes(this.form);' } ); ) ?>
 			to&nbsp;
 			</span>
 			<span class="DateSelector">
-				<select name="ddmEndDay" onchange="load_quotes( this.form );"><?EndDays?></select>
-				<select name="ddmEndMonth" onchange="setDaysDropDown(document.f1.ddmEndYear.value,this.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);load_quotes( this.form );"><?EndMonths?></select>
-				<select name="ddmEndYear" onchange="setDaysDropDown(this.value, this.form.ddmEndMonth.value, this.form.ddmEndDay, this.form.ddmEndDay.value);load_quotes( this.form );"><?EndYears?></select>
+<? echo ( ssi::date_select_session( '/main/quote/history.html', 'created_on_end', { 'onchange'=>'load_quotes(this.form);' } ); ) ?>
 			</span>
 		</p>
 		<p class="buttons">
@@ -92,5 +70,5 @@ Only logged in customers have a quote history.
 	</fieldset>
    </div>
 </form>
-<div id="QuoteList"><!--#include virtual="_quote_list.html"--></div>
+<div id="QuoteList"><!--#include virtual="_history.html"--></div>
 <? endif ( $session{'user_id'} == 0 ) ?>

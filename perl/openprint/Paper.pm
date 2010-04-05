@@ -504,6 +504,8 @@ sub to_string {
 			} # end if
 			$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
+		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
+		$string .= $self->gsm().'gsm ' if $self->gsm();
 		$string .= $self->quality() . ' ' if $self->quality();
 		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
 		$$self{'to_string'} = $string;
@@ -695,6 +697,7 @@ sub width {
     if ( defined $width ) {
         $width =~ s/[^\d\.]//g;
         $$self{'width'} = $width;
+		delete $$self{'to_string'};
     } # end if
     return $$self{'width'};
 } # end if
@@ -703,6 +706,7 @@ sub height {
     if ( defined $height ) {
         $height =~ s/[^\d\.]//g;
         $$self{'height'} = $height;
+		delete $$self{'to_string'};
     } # end if
     return $$self{'height'};
 } # end if
@@ -1007,6 +1011,7 @@ sub get_price {
 		#$price{'Cost'} *= $$self{'mweight'} / 100000;
 		#$price{'Price'} *= $$self{'mweight'} / 100000;
 	} # end if
+	$price{'100lb Total'} = $price{'100lb Price'} * $qty/100;
 #$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'})/100lb ($price{'100lb Cost'}) ($price{'Price'})") if $debug;
 	return %price;
 
@@ -1022,6 +1027,7 @@ sub cut {
         $$self{'width'} /= 2;
     } # end if
     $$self{'mweight'} /= 2;
+	delete $$self{'to_string'};
 	$$self{'grain_direction'} = undef; # force recalc of gd
 } # end sub cut
 
@@ -1036,6 +1042,13 @@ sub minimum_order {
 	return $$self{'minimum_order'} * $factor if $factor;
 	return $$self{'minimum_order'};
 } # end minimum_order 
+sub minimum_order_weight {
+	my $self = $_[0];
+	if ( $$self{'type'} eq 'Sheet' ) {
+		return $self->minimum_order() * $self->sheet_weight();
+	} # end if
+	return $self->minimum_order();
+} # end sub minimum_order_weight
 
 sub sheets_per_package {
 	my $self = shift;

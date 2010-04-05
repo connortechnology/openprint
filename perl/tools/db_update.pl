@@ -1464,6 +1464,7 @@ if ( $data ) {
 } # end if
 
 if ( ! openprint::ServiceType::find('name'=>'Paper') ) {
+	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>7}) if ! openprint::ServiceType_Category::find('name'=>'Materials');
     my $PaperService = new openprint::ServiceType();
     $PaperService->save({'name'=>'Paper',
             'description'=>'Paper',
@@ -2472,6 +2473,23 @@ if ( 0 and ! openprint::Host::find_one() ) {
 		$dbh->do('ALTER TABLE Log DROP COLUMN ip_address') if ( exists $$data{'ip_address'} );
 		$dbh->do('ALTER TABLE Log DROP COLUMN hostname') if ( exists $$data{'hostname'} );
 	} # end if
+	$dbh->commit();
+foreach my $Service ( openprint::Service::find('name'=>'1ColourImpressionPerfecting') ) {
+	$_ = $Service->save({'name'=>'PerfectingImpression1/1'});
+	print $_ if $_;
+} # end foreach Service
+foreach my $Service ( openprint::Service::find('name'=>'2ColourImpressionPerfecting') ) {
+	$_ = $Service->save({'name'=>'PerfectingImpression2/2'});
+	print $_ if $_;
+} # end foreach Service
+foreach my $Service ( openprint::Service::find('name'=>'3ColourImpressionPerfecting') ) {
+	$_ = $Service->save({'name'=>'PerfectingImpression3/3'});
+	print $_ if $_;
+} # end foreach Service
+foreach my $Service ( openprint::Service::find('name'=>'4ColourImpressionPerfecting') ) {
+	$_ = $Service->save({'name'=>'PerfectingImpression4/4'});
+	print $_ if $_;
+} # end foreach Service
 	$dbh->commit();
 $dbh->disconnect();
 print "Finished\n";
