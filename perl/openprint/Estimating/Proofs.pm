@@ -279,8 +279,7 @@ sub insert_proofs {
 	my ( $Project, $service_index, $signature_service_index, $qty_index ) = @_;
 
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-
-#$log->debug(" ***** STAT OF INSERT PROOF DEFAULTS SERVICE: $signature_service_index *******");
+	my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 
 	my $ac = sql::start_transaction( $dbh );
 	delete_proofs( $Project, $service_index, $signature_service_index, $qty_index );
@@ -297,20 +296,20 @@ sub insert_proofs {
 	} # end if Scanning
 
 	if ( sets::isin( $signature_service_index, \@scanning_indices ) ) {
-		insert_scanning_proof( $Project, $signature_service_index, 1, $qty_index );
+		insert_scanning_proof( $Project, $signature_service_index, 1, $qty_index, $specs );
 	} else {
-		insert_colour_proof( $Project, $sig_specs, 1, $qty_index );
-		insert_layout_proof( $Project, $sig_specs, 2, $qty_index );
+		insert_colour_proof( $Project, $sig_specs, 1, $qty_index, $specs );
+		insert_layout_proof( $Project, $sig_specs, 2, $qty_index, $specs );
 	} # end if
 	sql::end_transaction( $dbh, $ac );
 
 } # end sub insert_proofs
 
 sub insert_scanning_proof {
-	my ( $Project, $scanning_service_index, $proof_index, $qty_index ) = @_;
+	my ( $Project, $scanning_service_index, $proof_index, $qty_index, $specs ) = @_;
 
 	my $sig_specs = openprint::service::get_specs_ref( $Project, $scanning_service_index );
-	insert_new_proof( $Project, $proof_index, undef, @$sig_specs{'txtQuantity','txtScanWidthFinal','txtScanHeightFinal'}, 'EpsonProof', $qty_index );
+	insert_new_proof( $specs, $proof_index, undef, @$sig_specs{'txtQuantity','txtScanWidthFinal','txtScanHeightFinal'}, 'EpsonProof', $qty_index );
 } # end sub insert_scanning_proof
 
 sub insert_press_proof {
@@ -395,7 +394,7 @@ sub insert_layout_proof {
 
 	insert_new_proof( $specs, $proof_index, $$sig_specs{'SignatureIndex'}, $quantity, @$sig_specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index}, $default_proof_type, $qty_index );
 
-} # end sub insert_dylux_proof
+} # end sub insert_layout_proof
 
 sub insert_new_proof {
     my ( $specs, $proof_index, $signature_index, $qty, $width, $height, $type, $qty_index ) = @_;
@@ -644,7 +643,6 @@ sub breakupsummary {
 			next if ! $proof_totals{$k};
 			$summary .= '<tr><td align="left">'.$proof_totals{$k}.'&nbsp;&nbsp;&nbsp;</td>'.$k.'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>';
 			$summary .= '<td align="right"><b>'.sprintf('%s%.2f',$Currency->symbol(), $Totprice{$k}).'</b></td></tr>';
-#$openprint::log->debug("TESTING TEXT : ".$Totprice{$k}." |||||| ".$k." ENDING TEXT");
 		} # end foreach
 		return $summary.'</table>';
 	} # end if qty_index

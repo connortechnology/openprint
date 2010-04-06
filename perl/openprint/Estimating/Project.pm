@@ -471,17 +471,17 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 
 			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 1;
-				openprint::Estimating::Proofs::insert_layout_proof( $log, $dbh, $$Project{id}, $$services{'Proofs'}[0], $signature_service_index, 1, 1, $proof_specs );
+				openprint::Estimating::Proofs::insert_layout_proof( $Project, $sig_specs, 1, 1, $proof_specs );
 			} # end if
 			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 2;
-				openprint::Estimating::Proofs::insert_colour_proof( $log, $dbh, $$Project{id}, $$services{'Proofs'}[0], $signature_service_index, 2, 1, $proof_specs );
+				openprint::Estimating::Proofs::insert_colour_proof( $Project, $sig_specs, 2, 1, $proof_specs );
 			} # end if
 #$openprint::log->debug("Adding press proof $openprint::config{'Add Default Press Proof'}");
 			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y' ) {
 #$openprint::log->debug("Adding press proof");
 				push @{$proof_indexes{$signature_index}}, 3;
-				openprint::Estimating::Proofs::insert_press_proof( $log, $dbh, $$Project{id}, $$services{'Proofs'}[0], $signature_service_index, 3, 1, $proof_specs );
+				openprint::Estimating::Proofs::insert_press_proof( $Project, $sig_specs, 3, 1, $proof_specs );
 			} # end if
 			my $proof_index = 0;
 			if ( $$specs{'proof_type'} ) {
