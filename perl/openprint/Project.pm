@@ -1026,76 +1026,33 @@ sub summary {
 				} # end if
 
 				$summary .= '<br/>';
-				my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' );
+			} # end if
+			my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $$self{'id'}, 'Group' );
 
-	#modified block june-24-2008
-				my $lastgroupid = '';
+# I believe the point of this is to stick the Printed Web or Sheetfred into the summary.  Nastily executed.
+# The logic is, each group has to be either all sheetfed, or all web (or digital, etc).  
+			foreach my $group_id ( sort @groups ) {
+				my @sigs = $self->signatures({'Group'=>$group_id});
 
-				foreach my $group_id ( sort @groups ) {
-					foreach my $ss_id ( $self->signatures({'Group'=>$group_id}) ) {
-						my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
-						$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
-	#general::writetofile('Testing ?'.openprint::service::summary(	$$self{'id'}, $ss_id ) );
-	#general::writetofile('Testing ? '. $$self{'id'}.'	'. $ss_id	);
-						next if ( $lastgroupid eq $group_id );
-						foreach my $prn ( keys %$sig_specs ) {
-							if ( $prn =~ /^PrintingType/i ) {
-								if ( $$sig_specs{'Group'} eq $group_id ) {
-									if ( $$sig_specs{$prn} eq 'Web' ) { 
-										$summary .= ', '. 'Printed Web,<br/>';
-									} else {
-										$summary .= ', '. 'Printed Sheetfed,<br/>';
-									} #endif Web
-									last;
-								} #endif group_id
-							} #endif $prn
-						} #end foreach $prn	
-						last;
-					} # end foreach signature
-					$lastgroupid = $group_id;
-				} # end foreach Group
-			} else {
-	# normal printing services
-				foreach my $ss_id ( $self->signatures() ) {
-					my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
-					$summary .= openprint::Estimating::Printing::summary( $self, $ss_id, $sig_specs );
-				} # end foreach signature
-				my $flgfound = '';
-				if ( ! $$services{'NoPrinting'} ) {
-					if ( $$printing_specs{'PrintingType'} ) {
-						$summary .= ' printed ' . $$printing_specs{'PrintingType'};
-						$flgfound = 'found';
-					} elsif ( $$printing_specs{'OverridePrintingType1'} ) {
-						$summary .= ' printed ' . $$printing_specs{'PrintingType1'};
-						$flgfound = 'found';
-					} elsif ( $$printing_specs{'OverridePrintingType2'} ) {
-						$summary .= ' printed ' . $$printing_specs{'PrintingType2'};
-						$flgfound = 'found';
-					} elsif ( $$printing_specs{'OverridePrintingType3'} ) {
-						$summary .= ' printed ' . $$printing_specs{'PrintingType3'};
-						$flgfound = 'found';
-					} # end if
-				} # end if
-
-				if ( $flgfound ne 'found' ) {
-					foreach my $ss_id ( $self->signatures() ) {
-						my $sig_specs = openprint::service::get_specs_ref( $self, $ss_id );
-						foreach my $prn ( keys %$sig_specs ) {
-							if ( $prn =~ /^PrintingType/i ) {
-								if ( $$sig_specs{$prn} eq 'Web' ) { 
-									$summary .= ', '. 'Printed Web, <br/>';
-								} else {
-									$summary .= ', '. 'Printed Sheetfed, <br/>';
-								} #endif Web
-								last;
-							} # end if
-						} # end foreach key
-					} # end foreach sig
-				} # flgfound
-			} # end if book or not
+				my $sig_specs = openprint::service::get_specs_ref( $self, $sigs[0] );
+				$summary .= openprint::Estimating::Printing::summary( $self, $sigs[0], $sig_specs );
+				foreach my $k ( keys %$sig_specs ) {
+					if ( $k =~ /^PrintingType/i ) {
+						if ( $$sig_specs{'Group'} eq $group_id ) {
+							if ( $$sig_specs{$k} eq 'Web' ) { 
+								$summary .= ', '. 'Printed Web,<br/>';
+							} else {
+								$summary .= ', '. 'Printed Sheetfed,<br/>';
+							} #endif Web
+							last;
+						} # end if group_id
+					} # end if $prn
+				} # end foreach $prn	
+			} # end foreach Group
 		} # end if
 
 		foreach my $Category ( openprint::ServiceType_Category::find('order'=>'sorting') ) {
+			next if sets::isin( $Category->name(), [ 'Printing','Coatings' ] );
 			foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$Category->id()) ) {
 				next if ! $$services{$ServiceType->name()};
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
@@ -1192,7 +1149,7 @@ sub price {
 			} # end foreach
 		} # end foreach
 	} # end if
-$openprint::log->debug("Price $qty_index " . $$self{'price'.$qty_index} );
+#$openprint::log->debug("Price $qty_index " . $$self{'price'.$qty_index} );
 	return sprintf( $config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
 } # end sub price
 sub unit_price {
@@ -1245,7 +1202,7 @@ $openprint::log->debug("Project Type: " . $self->Type()->name() );
 			if ( $$params{'type'} ) {
 				next if $$specs{'txtSignatureType'} ne $$params{'type'};
 			} # end if
-			if ( $$params{'Group'} ) {
+			if ( exists $$params{'Group'} ) {
 				next if $$specs{'Group'} != $$params{'Group'};
 			} # end if
 			push @sigs, $s_id;

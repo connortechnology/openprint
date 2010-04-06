@@ -918,14 +918,15 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 
 # In hours
 				my $runspeed = $Fold->runspeed($$Paper{'gsm'});
+				my $runTime; 
 				if ( ! $runspeed ) {
 					$Breakdown .= "No runspeed for $fold_type(".$Fold->name().") on " . $Equipment->name() .'<br/>';
 					last;
 				} else {
-					$Breakdown .= "Runspeed: $run_qty @ $runspeed/HR = " . misc::seconds_to_interval( int( 3600*sprintf( '%.4f', $run_qty / $runspeed ) ) ) . "seconds<br/>";
+					$runTime = sprintf( '%.4f', $run_qty / $runspeed ); # in hours
+					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
 #$openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() );
-				my $runTime = sprintf( '%.4f', $run_qty / $runspeed );
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
 				my %servicePrice = openprint::service::get_price_object( $Fold->type(), $run_qty, $Equipment );

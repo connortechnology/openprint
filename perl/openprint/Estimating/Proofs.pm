@@ -662,6 +662,7 @@ sub project_summary {
 		foreach my $key ( keys %{$specs} ) {
 			if ( my ($proof_index, $qty_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
 				next if ! $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"};
+				next if ! $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
 				if ( my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
 					$types{$Service[0]->description()} = 1;
 				} # end if

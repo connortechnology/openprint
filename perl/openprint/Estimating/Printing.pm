@@ -3066,12 +3066,12 @@ sub calc_price {
 	my $std_speed = $Press->Specification('Run Speed' );
 	my $run_speed;
 	if ( $$std_speed{'units'} eq 'Calliper' ) {
-		$run_speed = $Press->specification('Run Speed', $Paper->calliper(), 1 );
+		$run_speed = $Press->specification('Run Speed', $Paper->calliper() );
 	} else {
-		$run_speed = $Press->specification('Run Speed', $Paper->gsm(), 1 );
+		$run_speed = $Press->specification('Run Speed', $Paper->gsm() );
 	} # end if
 
-    my $speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper(), 1);
+    my $speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper() );
 #$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
     $run_speed = $speed_mod if $speed_mod;
 
@@ -3189,7 +3189,7 @@ sub calc_price {
 		if ( $scoring_results{'Status'} eq 'uncalculated' ) {
 			$price{'Scoring Breakdown'} .= "Scoring error: $scoring_results{'alert'} $$project{'ScoringSpecs'}{alert} " . $$project{'ScoringSpecs'}{'hdnBreakdown'.$qty_index} . '<br/>';
 			$price{'Comparison Cost'} += 1000000; 
-		} else {
+		} elsif ( $scoring_results{'Imposition'} ) {
 			$price{'Scoring Breakdown'} .= sprintf('Scoring Price: %dout $%.2f on %s<br/>', $scoring_results{'Imposition'}->imposition(), $scoring_results{'Price'}, $scoring_results{'Equipment'} ? $scoring_results{'Equipment'}->name() : '' );
 			$price{'Comparison Cost'} += $scoring_results{'Price'};
 			if ( $scoring_results{'Equipment'} and ( $scoring_results{'Equipment'}->id() == $Press->id() ) ) {
@@ -4037,14 +4037,14 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	my $std_speed = $Press->Specification('Run Speed', 1 );
+	my $std_speed = $Press->Specification('Run Speed' );
 	
 	my $speed_mod;
 	if ( $std_speed ) {
 		my $Paper = $Imposition->Paper();
 
 # Only load this if not already specified by some inline bindery service
-		$run_speed = $Press->specification('Run Speed', $$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm(), 1 ) if ! $run_speed;
+		$run_speed = $Press->specification('Run Speed', $$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm() ) if ! $run_speed;
 		if ( ! $run_speed ) {
 			$openprint::log->error("No run sped!");	
 		} elsif ( $run_speed == $$std_speed{'value'} ) {
@@ -4355,7 +4355,7 @@ sub get_weight {
 
 	my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
 	my $sig_weight = $$specs{'txtWidth'} * $$specs{'txtHeight'} * $Paper->wpsi();
-$openprint::log->debug("Get_weight: ($$specs{'txtSignatureSpreadQuantity'.$qty_index} > 0 ? $$specs{'txtSignatureSpreadQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '==='.$Paper->wpsi(undef)."wpsi = $sig_weight * $$specs{'PageQuantity'} = " . $sig_weight * $$specs{'PageQuantity'});
+#$openprint::log->debug("Get_weight: ($$specs{'txtSignatureSpreadQuantity'.$qty_index} > 0 ? $$specs{'txtSignatureSpreadQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '==='.$Paper->wpsi(undef)."wpsi = $sig_weight * $$specs{'PageQuantity'} = " . $sig_weight * $$specs{'PageQuantity'});
 
 	if ( $$specs{'PageQuantity'.$qty_index} ) {
 		$sig_weight *= $$specs{'PageQuantity'.$qty_index}/$$specs{'txtSpreadSize'};
@@ -4367,6 +4367,9 @@ $openprint::log->debug("Get_weight: ($$specs{'txtSignatureSpreadQuantity'.$qty_i
 	} # end if
 	return $sig_weight;
 } # end sub get_weight
+
+sub group_summary {
+} # end sub group_summary
 
 sub summary {
 	my ( $Project, $service_index, $specs, $qty_index ) = @_;
@@ -4404,96 +4407,6 @@ sub summary {
 
 		return $html;
 	} else {
-		my $front_colours = 0;
-		my $front_coatings;
-		my $front_pms = 0;
-		my $front_process = 0;
-		my $back_colours = 0;
-		my $back_coatings;
-		my $coatings = '';
-		my $back_pms = 0;
-		my $back_process = 0;
-
-		my $colorsideone = '';
-		my $colorsidetwo = '';
-		
-		my $side = 'SideOne';
-		foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-			if ( $$specs{'chk'.$colour.$side} ) {
-				$front_colours += 1;
-				if ( $colorsideone ){
-					$colorsideone .= ' ';
-				}
-				$colorsideone .= $colour;
-			} # end if
-		} # end foreach
-
-		if ( $$specs{'chkProcessColour'.$side} ) {
-			$front_colours += 4;
-		} # end if
-
-		foreach my $k ( keys %$specs ) {
-			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-				next if ! $$specs{"chkColourCoating$index$side"};
-
-				my $type = $$specs{"ColourCoatingType$index$side"};
-				next if ! $type;
-				next if $$specs{"chkColourCoatingColour$index$side"} eq 'None';
-				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
-					$front_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};
-				} elsif ( $type =~ /PMS/i ) {
-					$front_pms += 1;
-				} elsif ( $type =~ /Metallic/i ) {
-					$front_coatings .= '+Metallic' if ! ($front_coatings =~ /Metallic/);
-				} else {
-					$front_coatings .= '+'.$$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
-					$front_colours += 1;
-				} # end if
-			} # end if
-		} # end foreach
-		if ( $$specs{'sides_the_same'} eq 'Y' ) {
-			$back_colours = $front_colours;
-			$back_coatings = $front_coatings;
-			$back_pms = $front_pms;
-			$coatings .= ' back the same as front';
-			$colorsidetwo = $colorsideone;
-		} else {
-			$side = 'SideTwo';
-			foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
-				if ( $$specs{'chk'.$colour.$side} ) {
-					$back_colours += 1;
-					if ( $colorsidetwo ){
-						$colorsidetwo .= ' ';
-					}
-	  		    	$colorsidetwo .= $colour;
-				} # end if
-			} # end foreach
-
-			if ( $$specs{'chkProcessColour'.$side} ) {
-				$back_colours += 4;
-			} # end if
-			foreach my $k ( keys %$specs ) {
-				if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
-					next if ! $$specs{"chkColourCoating$index$side"};
-					my $type = $$specs{"ColourCoatingType$index$side"};
-					next if ! $type;
-					next if $$specs{"chkColourCoatingColour$index$side"} eq 'None';
-
-					if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
-#Changes made on june-19-2008
-#						$back_coatings .= '+'.$$specs{"ColourCoatingColour$index$side"};
-						$back_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};
-					} elsif ( $type =~ /PMS/i ) {
-						$back_pms += 1;
-					} elsif ( $type =~ /Metallic/i ) {
-						$back_coatings .= '+Metallic' if ! ($back_coatings =~ /Metallic/);
-					} else {
-						$back_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};		#line added to show other types june-18-2008
-						$back_colours += 1;
-					} # end if
-				} # end if
-			} # end foreach
-		} # end if
 		my $dimensions = '';
 		if ( $$specs{'txtSignatureType'} ) {
 			if ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) {
@@ -4513,22 +4426,10 @@ sub summary {
 			$dimensions .= sprintf( '%s&quot;x%s&quot; ', @$specs{'txtWidth','txtHeight'});
 		} # end if
 
-		my $string;
-		if ( $$services{'NoPrinting'} ) {
-			$string = sprintf( '%s %s', ($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions );
-		} else {
-			$string = sprintf( '%s %s %s%s%s%s/%s%s%s%s %s on %s %s',
-					($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''),
-					$dimensions,
-					($front_colours ? $front_colours : ''),
-					$colorsideone,
-					($front_pms ? '+'.$front_pms.'PMS' : ''),
-					$front_coatings,
-					( $back_colours ? $back_colours : '' ),
-					$colorsidetwo,
-					($back_pms ? '+'.$back_pms.'PMS' : ''),
-					$back_coatings,
-					$coatings,
+		my $string = sprintf( '%s %s', ($$specs{'txtServiceDescription'} ? $$specs{'txtServiceDescription'} . ':' : ''), $dimensions );
+		if ( ! $$services{'NoPrinting'} ) {
+			$string .= sprintf( ' %s on %s %s',
+					get_colour_description( $specs ),
 					$$specs{'rdbSuppliedStock'} eq 'Y' ? '<b>Customer Supplied</b>' : '',
 					$$specs{'rdbSpecificStock'} eq 'Y' ?
 					join(', ', @$specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} ) :
@@ -4536,7 +4437,6 @@ sub summary {
 					,
 					);
 		} # end if
-$openprint::log->debug("Pages supplied: $$specs{'pages_supplied'}  $$specs{'supplied_format'} ");
 		if ( $$specs{'pages_supplied'} eq 'Y' ) {
 			$string .= ' pages supplied by customer as ';
 			if ( $$specs{'supplied_format'} eq 'Sheets' ) {
@@ -4546,7 +4446,6 @@ $openprint::log->debug("Pages supplied: $$specs{'pages_supplied'}  $$specs{'supp
 			} # end if
 		} # end if
 		return $string;
-		
 	} # end if
 } # end sub summary
 
@@ -4555,25 +4454,6 @@ sub save {
 	my ( $p_id, $s_id, $param ) = @_;
 	my $Project = new openprint::Project( $p_id );
 	my $services = $Project->services();
-
-	my $changed = 0;
-
-	if ( 0 ) {
-		foreach my $qty_index ( 1 .. 3 ) {
-			next if ! $Project->quantity( $qty_index );
-
-			if ( $$param{"txtQuantity$qty_index"} != $Project->quantity( $qty_index ) ) {
-				$changed = 1;
-				$Project->quantity( $qty_index, $$param{"txtQuantity$qty_index"} );
-				foreach my $service_name ( keys %{$services} ) {
-					foreach my $service_id ( @{$$services{$service_name}} ) {
-						openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $p_id, $service_id, "txtQuantity$qty_index", $$param{"txtQuantity$qty_index"} );
-					} # end foreach service_id
-				} # end foreach service name
-			} # end if new qty
-		} # end foreach qty_index
-		$Project->save() if $changed;
-	} # end if
 
 	if ( $$services{'Padding'} ) {
 		foreach my $padding_id ( @{$$services{'Padding'}} ) {
@@ -4585,62 +4465,108 @@ sub save {
 
 sub get_colour_description {
 	my ( $specs ) = @_;
-	my $side_one_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideOne'));
+	my $front_colours = 0;
+	my $front_coatings;
+	my $front_pms = 0;
+	my $front_process = 0;
+	my $back_colours = 0;
+	my $back_coatings;
+	my $coatings = '';
+	my $back_pms = 0;
+	my $back_process = 0;
 
-	my $side_one_coatings;
-	$side_one_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideOne'} eq 'Gloss';
-	$side_one_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideOne'} eq 'Matte';
-	if ( $$specs{'chkVarnishSpotGlossSideOne'} ) {
-		$side_one_coatings .= '+Varnish (Spot Gloss)';
-		$side_one_colours -= 1;
-	} # end if
-	if ( $$specs{'chkVarnishSpotMatteSideOne'} ) {
-		$side_one_coatings .= '+Varnish (Spot Matte)';
-		$side_one_colours -= 1;
-	} # end if
-	if ( $$specs{'chkVarnishDryTrapSideOne'} ) {
-		$side_one_coatings .= '+Varnish (Dry Trap)';
-	} # end if
-	if ( $$specs{'chkVarnishOverallGlossSideOne'} ) {
-		$side_one_coatings .= '+Varnish (Overall Gloss)';
-		$side_one_colours -= 1;
-	} # end if
-	if ( $$specs{'chkVarnishOverallMatteSideOne'} ) {
-		$side_one_coatings .= '+Varnish (Overall Matte)';
-		$side_one_colours -= 1;
-	} # end if
-	if ( $$specs{'SideOneUVCoatingType'} and ($$specs{'SideOneUVCoatingType'} ne 'None') ) {
-		$side_one_coatings .= '+' . $$specs{'SideOneUVCoatingType'} . 'UV';
-	} # end if
+	my $colorsideone = '';
+	my $colorsidetwo = '';
 
-	my $side_two_colours = scalar(openprint::Estimating::Printing::get_colours( $specs, 'SideTwo'));
-	my $side_two_coatings;
-	$side_two_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideTwo'} eq 'Gloss';
-	$side_two_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideTwo'} eq 'Matte';
-	if ( $$specs{'chkVarnishSpotGlossSideTwo'} ) {
-		$side_two_coatings .= '+Varnish (Spot Gloss)' ;
-		$side_two_colours -= 1;
+	my $side = 'SideOne';
+	foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+		if ( $$specs{'chk'.$colour.$side} ) {
+			$front_colours += 1;
+			if ( $colorsideone ){
+				$colorsideone .= ' ';
+			}
+			$colorsideone .= $colour;
+		} # end if
+	} # end foreach
+
+	if ( $$specs{'chkProcessColour'.$side} ) {
+		$front_colours += 4;
 	} # end if
 
-	if ( $$specs{'chkVarnishSpotMatteSideTwo'} ) {
-		$side_two_coatings .= '+Varnish (Spot Matte)';
-		$side_two_colours -= 1;
+	foreach my $k ( keys %$specs ) {
+		if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+			next if ! $$specs{"chkColourCoating$index$side"};
+
+			my $type = $$specs{"ColourCoatingType$index$side"};
+			next if ! $type;
+			next if $$specs{"chkColourCoatingColour$index$side"} eq 'None';
+			if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
+				$front_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};
+			} elsif ( $type =~ /PMS/i ) {
+				$front_pms += 1;
+			} elsif ( $type =~ /Metallic/i ) {
+				$front_coatings .= '+Metallic' if ! ($front_coatings =~ /Metallic/);
+			} else {
+				$front_coatings .= '+'.$$specs{"ColourCoatingType$index$side"}; 	#line added to show other types june-18-2008
+					$front_colours += 1;
+			} # end if
+		} # end if
+	} # end foreach
+	if ( $$specs{'sides_the_same'} eq 'Y' ) {
+		$back_colours = $front_colours;
+		$back_coatings = $front_coatings;
+		$back_pms = $front_pms;
+		$coatings .= ' back the same as front';
+		$colorsidetwo = $colorsideone;
+	} else {
+		$side = 'SideTwo';
+		foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+			if ( $$specs{'chk'.$colour.$side} ) {
+				$back_colours += 1;
+				if ( $colorsidetwo ){
+					$colorsidetwo .= ' ';
+				}
+				$colorsidetwo .= $colour;
+			} # end if
+		} # end foreach
+
+		if ( $$specs{'chkProcessColour'.$side} ) {
+			$back_colours += 4;
+		} # end if
+		foreach my $k ( keys %$specs ) {
+			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+				next if ! $$specs{"chkColourCoating$index$side"};
+				my $type = $$specs{"ColourCoatingType$index$side"};
+				next if ! $type;
+				next if $$specs{"chkColourCoatingColour$index$side"} eq 'None';
+
+				if ( $type =~ /Aqueous/ or $type =~ /Varnish/ or $type =~ /UV/ ) {
+#Changes made on june-19-2008
+#						$back_coatings .= '+'.$$specs{"ColourCoatingColour$index$side"};
+					$back_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};
+				} elsif ( $type =~ /PMS/i ) {
+					$back_pms += 1;
+				} elsif ( $type =~ /Metallic/i ) {
+					$back_coatings .= '+Metallic' if ! ($back_coatings =~ /Metallic/);
+				} else {
+					$back_coatings .= '+'.$$specs{"ColourCoatingType$index$side"};		#line added to show other types june-18-2008
+						$back_colours += 1;
+				} # end if
+			} # end if
+		} # end foreach
 	} # end if
-	if ( $$specs{'chkVarnishDryTrapSideTwo'} ) {
-		$side_two_coatings .= '+Varnish (Dry Trap)';;
-   } # end if
-	if ( $$specs{'chkVarnishOverallGlossSideTwo'} ) {
-		$side_two_coatings .= '+Varnish (Overall Gloss)';
-		$side_two_colours -= 1;
-	} # end if
-	if ( $$specs{'chkVarnishOverallMatteSideTwo'} ) {
-		$side_two_coatings .= '+Varnish (Overall Matte)';
-		$side_two_colours -= 1;
-	} # end if
-	if ( $$specs{'SideTwoUVCoatingType'} and $$specs{'SideTwoUVCoatingType'} ne 'None' ) {
-		$side_two_coatings .= '+' . $$specs{'SideTwoUVCoatingType'} . 'UV';
-	} # end if
-	return sprintf('%d%s/%d%s', $side_one_colours, $side_one_coatings, $side_two_colours, $side_two_coatings );
+	return sprintf( '%s%s%s%s/%s%s%s%s %s',
+			($front_colours ? $front_colours : ''),
+			$colorsideone,
+			($front_pms ? '+'.$front_pms.'PMS' : ''),
+			$front_coatings,
+			( $back_colours ? $back_colours : '' ),
+			$colorsidetwo,
+			($back_pms ? '+'.$back_pms.'PMS' : ''),
+			$back_coatings,
+			$coatings,
+			);
+
 } # end sub get_colour_description
 
 1;
