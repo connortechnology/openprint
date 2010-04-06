@@ -113,7 +113,7 @@ sub press_schedule {
 				'equipment_id'	=> $param{'press_id'},
 				'comment'		=> $param{'comment'},
 				'locked'		=> $param{'locked'},
-				'runtime'		=> join(':', $h, $m, $s ),
+				'runtime'		=> $param{'runtime'} ? join(':', $h, $m, $s ) : undef,
 				});
 
 		%param = ();
