@@ -21,6 +21,7 @@ $serial = 'ServiceTypeIndex';
 	'sorting'			=> 'sorting',
 	'create_visible'	=> 'create_visible',
 	'view_visible'		=> 'view_visible',
+	'category'			=>	undef,
 );
 %transforms = (
 );
@@ -130,6 +131,21 @@ sub delete {
 	sql::execute( $log, $dbh, q{DELETE FROM Service_Types WHERE id=?}, $$self{'id'} );
 	sql::end_transaction( $dbh, $ac );
 } # end sub delete
+
+sub category {
+	my ( $self ) = @_;
+	if ( @_ == 2 ) {
+		my $ServiceType_Category = openprint::ServiceType_Category::find_one('name'=>$_[1]);
+		if ( $ServiceType_Category ) {
+			$$self{'category_id'} = $ServiceType_Category->id();
+		} else {
+			$ServiceType_Category = new openprint::ServiceType_Category();
+			$ServiceType_Category->save({'name'=>$_[1]});
+		} # end if
+		$$self{'category_id'} = $ServiceType_Category->id();
+	} # end if
+	return new openprint::ServiceType_Category( $$self{'category_id'} )->name();
+} # end sub category
 
 1;
 __END__

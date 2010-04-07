@@ -1461,10 +1461,12 @@ if ( $data ) {
 	$dbh->do(q`alter table tbl_Quote_Details DROP dblmarkup`) if exists $$data{'dblmarkup'};
 	sql::end_transaction( $dbh, $ac );
 } # end if
-
-if ( ! openprint::ServiceType::find('name'=>'Paper') ) {
-	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>7}) if ! openprint::ServiceType_Category::find('name'=>'Materials');
-    my $PaperService = new openprint::ServiceType();
+$log->debug("Materials");
+new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category::find('name'=>'Materials');
+if ( my $ServiceType = openprint::ServiceType::find_one('name'=>'Paper') ) {
+	$ServiceType->save({'category'=>'Materials'}) if $ServiceType->category() ne 'Materials';
+} else {
+	my $PaperService = new openprint::ServiceType();
     $PaperService->save({'name'=>'Paper',
             'description'=>'Paper',
             'url'=>'Paper.html',
@@ -1583,8 +1585,10 @@ foreach my $S ( openprint::ServiceType::find('name'=>['SaddleStitching','LoopSti
 	} # end if
 } # end foreach
 
-if ( ! openprint::ServiceType::find('name'=>'Aqueous') ) {
-	new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category::find('name'=>'Coatings');
+new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category::find('name'=>'Coatings');
+if ( my $S = openprint::ServiceType::find_one('name'=>'Aqueous') ) {
+	$S->save({'category'=>'Coatings'}) if $S->category() ne 'Coatings';
+} else {
 	print "Adding Aqueous ServiceType\n";
 	my $S = new openprint::ServiceType();
 	$S->save({
@@ -1638,23 +1642,31 @@ if ( ! openprint::Material::find('name'=>'PerforatingWheel') ) {
 foreach my $S ( openprint::Service::find('name'=>'Aqueous') ) {
 	if ( ! openprint::Service::find('name'=>'Aqueous Gloss Overall') ) {
 		print "Converting Service Aqueous\n";
-		$S->name('Aqueous Gloss Overall');
-		$S->description('Aqueous Gloss Overall');
-		$S->category('Coating');
-		$S->save();
+		my $S2 = $S->copy();
+		$S2->name('Aqueous Gloss Overall');
+		$S2->description('Aqueous Gloss Overall');
+		$S2->category('Coating');
+		$S2->save();
 		foreach my $P ( $S->prices() ) {
-			$P->save({'cost'=>$P->cost(),'price'=>$P->price()});
-		}
+			$P = $P->copy();
+			$P->service_id( $S2->id() );
+			$P->units('per 1000 impressions');
+			$P->save();
+		} # end foreach
 	} # end if
 	if ( ! openprint::Service::find('name'=>'Aqueous Gloss Spot') ) {
 		print "Converting Service Aqueous\n";
-		$S->name('Aqueous Gloss Spot');
-		$S->description('Aqueous Gloss Spot');
-		$S->category('Coating');
-		$S->save();
+		my $S2 = $S->copy();
+		$S2->name('Aqueous Gloss Spot');
+		$S2->description('Aqueous Gloss Spot');
+		$S2->category('Coating');
+		$S2->save();
 		foreach my $P ( $S->prices() ) {
-			$P->save({'cost'=>$P->cost(),'price'=>$P->price()});
-		}
+			$P = $P->copy();
+			$P->service_id( $S2->id() );
+			$P->units('per 1000 impressions');
+			$P->save();
+		} # end foreach
 	} # end if
 	if ( ! openprint::Service::find('name'=>'Aqueous Matte Overall') ) {
 		my $S2 = $S->copy();
@@ -1680,6 +1692,7 @@ foreach my $S ( openprint::Service::find('name'=>'Aqueous') ) {
 			$P->save();
 		} # end foreach
 	} # end if
+	$S->delete();
 } # end if
 foreach my $S ( openprint::Service::find('name'=>'AqueousMakeReady') ) {
 	if ( ! openprint::Service::find('name'=>'Aqueous Gloss Overall MakeReady') ) {
