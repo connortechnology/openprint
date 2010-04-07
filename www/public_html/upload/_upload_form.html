@@ -60,16 +60,31 @@
 	} elsif ( $session{'project_id'} ) {
 		$Project = new openprint::Project( $session{'project_id'} );
 	} # end if
-	if ( $Project and ( $Project->status() eq 'Unordered' ) ) {
+	if ( $Project and ( $Project->status() ne 'uncalculated' ) ) {
 		$$variable{'txtQuoteNumber'} = $Project->id();
 		$$variable{'txtQuotedPrice'} = $Project->price1();
 		my $services = $Project->services();
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
-		if ( $sig_specs ) {
-			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
-			$$variable{'Stock'} = $Paper->to_string();
+
+		if ( $$services{''} ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			$$variable{'Size'} = $$sig_specs{'txtFinalWidth'} . '&quot; x ' . $$sig_specs{'txtFinalHeight'}.'&quot; Finished';
 		} # end if
+
+		my @groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
+
+		# I believe the point of this is to stick the Printed Web or Sheetfred into the summary.  Nastily executed.
+		# The logic is, each group has to be either all sheetfed, or all web (or digital, etc).  
+		foreach my $group_id ( sort @groups ) {
+			my @sigs = $Project->signatures({'Group'=>$group_id});
+
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sigs[0] );
+			if ( $sig_specs ) {
+				my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, 1 );
+				$$variable{'Stock'} .= $$sig_specs{'txtSignatureType'} . ': ' if $$sig_specs{'txtSignatureType'};
+				$$variable{'Stock'} .= $Paper->to_string() . "\n";
+			} # end if sig_specs
+		} # end foreach sig_group
+
 		$$variable{'Quantity'} = $Project->quantity1();
 		if ( $$services{'Turnaround'} ) {
 			my $turnaround_specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
