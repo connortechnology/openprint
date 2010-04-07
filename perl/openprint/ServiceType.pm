@@ -21,6 +21,7 @@ $serial = 'ServiceTypeIndex';
 	'sorting'			=> 'sorting',
 	'create_visible'	=> 'create_visible',
 	'view_visible'		=> 'view_visible',
+	'category'			=>	undef,
 );
 %transforms = (
 );
