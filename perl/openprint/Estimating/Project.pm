@@ -119,6 +119,22 @@ sub calc {
 		} # end foreach
 		delete $$services{'Numbering'};
 	} # end if
+	if ( $$specs{'hemmed'} eq 'Y' ) {
+		if ( ! $$services{'Sewing'} ) {
+			push @{$$services{'Sewing'}}, $Project->add_service( 'Sewing' );
+			my $sewing_specs = openprint::service::get_specs_ref( $Project, $$services{'Sewing'}[0] );
+			@$specs{'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom'} = @$sewing_specs{'EdgeLeft','EdgeRight','EdgeTop','EdgeBottom'};
+		} # end if
+		foreach my $sid ( @{$$services{'Sewing'}} ) {
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'EdgeLeft', $$specs{'EdgeLeft'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'EdgeRight', $$specs{'EdgeRight'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'EdgeTop', $$specs{'EdgeTop'} );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $sid, 'EdgeBottom', $$specs{'EdgeBottom'} );
+		} # end foreach
+	} else {
+		map { openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ ); } @{$$services{'Sewing'}};
+		delete $$services{'Sewing'};
+	} # end if
 
 	if ( ! sets::isin( $$specs{'Dimensions'}, ['', 'Custom'] ) ) {
 		my ( $width, $height, $type ) = $$specs{'Dimensions'} =~ /([\d\.]*)x([\d\.]*)(\w*)/;
@@ -419,7 +435,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 				} # end if
 			} # end foreach
 		} elsif ( $ProjectType->name() eq 'Banners' ) {
-			foreach my $spec ( 'PocketSize','grommets','hemmed','pockets' ) {
+			foreach my $spec ( 'PocketSize','grommets','hemmed','pockets','EdgeLeft','EdgeRight','EdgeBottom','EdgeTop' ) {
 				if ( $printing_specs{$spec} ne $$specs{$spec} ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
 					$printing_specs{$spec} = $$specs{$spec};
