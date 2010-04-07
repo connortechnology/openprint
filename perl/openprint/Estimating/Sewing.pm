@@ -62,6 +62,12 @@ sub neccessary {
         return 0;
     } # end if
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+	if ( $$printing_specs{'hemmed'} eq 'Y' ) {
+		return 1;
+	} # end if
+	if ( $$printing_specs{'pockets'} eq 'Y' ) {
+		return 1;
+	} # end if
 	if ( $$printing_specs{'PocketSize'} ) {
 		return 1;
 	} # end if
