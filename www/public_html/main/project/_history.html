@@ -1,9 +1,9 @@
 <? eval (
 	if ( $param{'ProjectID'} ) {
 		@{$$variable{'Projects'}} = openprint::Project::find( 
-		'company_id'		=> $session{'company_id'},
-		'id'				=> $param{'ProjectID'},
-		'order'				=> 'id DESC',
+			'company_id'		=> $session{'company_id'},
+			'id'				=> $param{'ProjectID'},
+			'order'				=> 'id DESC',
 		);
 	} else {
 		@{$$variable{'Projects'}} = openprint::Project::find( 
@@ -35,27 +35,27 @@
             The following are results belonging to other companies:<br/>
 	<table class="List">
 		<thead>
-		<tr> 
-			<th width="70" align="left">Project #</th>
-			<th align="left">Company</th>
-			<th align="left">Description</th>
-			<th width="75" align="right">Price 1</th>
-			<th width="75" align="right">Price 2</th>
-			<th width="75" align="right">Price 3</th>
-			<th width="85" align="right">Status</th>
-			<th width="120" align="right">Created</th>
-		</tr>
+			<tr> 
+				<th width="70" align="left">Project #</th>
+				<th align="left">Company</th>
+				<th align="left">Description</th>
+				<th class="Price">Price 1</th>
+				<th class="Price">Price 2</th>
+				<th class="Price">Price 3</th>
+				<th class="status">Status</th>
+				<th class="Date">Created</th>
+			</tr>
 		</thead>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 		<tr<?rowclass?>> 
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->Company()->name(); ) ?></a></td>
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? hecho ( $$variable{'Project'}->reference(); ) ?></a></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(1) ) ) if $$variable{'Project'}->quantity(1); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(2) ) ) if $$variable{'Project'}->quantity(2); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(3) ) ) if $$variable{'Project'}->quantity(3); ) ?></td>
-			<td align="right"><? echo ( $$variable{'Project'}->status(); ) ?></td>
-			<td align="right"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(1) ) ) if $$variable{'Project'}->quantity(1); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(2) ) ) if $$variable{'Project'}->quantity(2); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(3) ) ) if $$variable{'Project'}->quantity(3); ) ?></td>
+			<td class="status"><? echo ( $$variable{'Project'}->status(); ) ?></td>
+			<td class="Date"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></td>
 		</tr>
 		<tr<?rowclass?>> 
 			<td>&nbsp;</td>
@@ -79,22 +79,22 @@
 		<tr> 
 			<th width="70" align="left">Project #</th>
 			<th align="left">Description</th>
-			<th width="75" align="right">Price 1</th>
-			<th width="75" align="right">Price 2</th>
-			<th width="75" align="right">Price 3</th>
-			<th width="85" align="right">Status</th>
-			<th width="120" align="right">Created</th>
+			<th class="Price">Price 1</th>
+			<th class="Price">Price 2</th>
+			<th class="Price">Price 3</th>
+			<th class="status">Status</th>
+			<th class="Date">Created</th>
 			<th width="30" class="unprintable" align="center"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f1);" /></th>
 		</tr>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 		<tr<?rowclass?>> 
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
 			<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? hecho ( $$variable{'Project'}->reference(); ) ?></a></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(1) ) ) if $$variable{'Project'}->quantity(1); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(2) ) ) if $$variable{'Project'}->quantity(2); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price3() ) ) if $$variable{'Project'}->quantity(3); ) ?></td>
-			<td align="right"><? echo ( $$variable{'Project'}->status(); ) ?></td>
-			<td align="right"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(1) ) ) if $$variable{'Project'}->quantity(1); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price(2) ) ) if $$variable{'Project'}->quantity(2); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price3() ) ) if $$variable{'Project'}->quantity(3); ) ?></td>
+			<td class="status"><? echo ( $$variable{'Project'}->status(); ) ?></td>
+			<td class="Date"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></td>
 			<td class="unprintable" align="center"><input type="checkbox" name="chkDelete<? echo ( $$variable{'Project'}->id(); ) ?>" /></td>
 		</tr>
 		<tr<?rowclass?>> 
