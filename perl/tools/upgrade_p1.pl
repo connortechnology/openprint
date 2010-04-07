@@ -7,6 +7,8 @@ require sql;
 require logger;
 require openprint::Object;
 require configuration;
+require openprint::Service;
+require openprint::Equipment;
 
 use openprint ();
 use vars qw( $log $dbh %config );
