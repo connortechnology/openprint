@@ -1,6 +1,7 @@
 <form id="f1" name="f1" method="post" action="/main/order/information.html">
 	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
+	<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $param{'projecttype_id'} ) ?>
 	<div class="InstantPricing">
 		<div id="instant_price_section">

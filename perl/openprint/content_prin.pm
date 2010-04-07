@@ -34,6 +34,10 @@ sub load_simple {
 		} elsif ( $param{'ProjectType'} ) {
 			$param{'ProjectType'} =~ s/\s//g;
 			$variable{'ProjectType'} = openprint::ProjectType::find_one( 'name'=>$param{'ProjectType'} );
+			if ( ! $variable{'ProjectType'} ) {
+				$variable{'ProjectType'} = new openprint::ProjectType();
+				$variable{'error'} .= "Invalid Project Type: $param{ProjectType}";
+			} # end if
 		} # end if
 	} # end if
 	if ( ! $variable{'ToCountry'} ) {
