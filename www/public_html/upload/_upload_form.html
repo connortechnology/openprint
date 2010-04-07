@@ -116,7 +116,7 @@
 			</p>
 			<p>
 				<label>Stock:</label>
-				<input type="text" id="Stock" name="Stock" value="<?Stock?>" />
+				<textarea id="Stock" name="Stock" rows="1" cols="" onkeyup="textarea_resize(this);"><?Stock?></textarea>
 			</p>
 			<? if ( $$variable{'txtQuoteNumber'} ) ?>
 				<p><label>Summary:</label>
@@ -127,7 +127,7 @@
 			<? endif ( $$variable{'txtQuoteNumber'} ) ?>
 			<p>
 				<label for="txtJobDescription">Description:</label>
-				<textarea name="txtJobDescription" rows="4" onkeyup="textarea_resize(this);"></textarea>
+				<textarea name="txtJobDescription" rows="1" cols="" onkeyup="textarea_resize(this);"></textarea>
 			</p>
 			<p class="proof_type">
 				<label>Proof Required:</label>
