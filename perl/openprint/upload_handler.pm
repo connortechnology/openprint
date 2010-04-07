@@ -322,6 +322,8 @@ $log->error("There was an error saving file $param{'fileUpload'.$index}: to $con
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
+		} else {
+			$variable{'error'} .= 'No files were uploaded.';
 		} # end if files
 
 	} # end if btnfunction eq Upload Files
