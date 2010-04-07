@@ -70,7 +70,7 @@
 				<th class="Filename">Filename</th>
 				<th class="size">Size</th>
 				<th class="mtime">When</th>
-				<th class="delete"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', Serialize(f1));}", '', 'Delete' ); ) ?></th>
+				<th class="delete"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f1);" /></th>
 			</tr>
 		</thead>
 		<? if ( ( $param{'docket'} or $param{'project_id'} ) ) ?>
@@ -92,18 +92,19 @@
 				<td><a href="/getfile.html?<? if (  $param{'docket'} ) ?>docket=<? echo( $param{'docket'} ) ?><? endif (  $param{'docket'} ) ?><? if (  $param{'project_id'} ) ?>&project_id=<? echo( $param{'project_id'} ) ?><? endif (  $param{'project_id'} ) ?>&filename=<?filename?>" title="<?description?>" target="SendFileFrame"><?filename?></a><br/><?description?></td>
 				<td class="size"><?size?></td>
 				<td class="mtime"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, $$variable{'mtime'} ); ) ?></td>
-				<td align="center" valign="top"><input type="checkbox" name="chkFiles" value="<?filename?>"/></td>
+				<td class="delete"><input type="checkbox" name="chkFiles" value="<?filename?>"/></td>
 			<? else ( $$variable{'size'} ne '' ) ?>
 				<td><a href="/upload/upload_center.html?docket=<?filename?>" title="<?description?>"><img src="/images/folder.gif" alt="Folder" border="0" /> <?filename?></a><br/><?description?></td>
 				<td class="size"><?size?></td>
 				<td class="mtime">&nbsp;</td>
-				<td align="center" valign="top"></td>
+				<td class="delete"></td>
 			<? endif ( $$variable{'size'} ne '' ) ?>
 			</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
 		<? endwhile ( @$variable{'path','filename','size', 'description','mtime'} = splice @{$$variable{'PROJECT_FILES'}},0,5; ) ?>
 <? endif ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
 	</table>
+<p class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', Serialize(f1));}", '', 'Delete' ); ) ?></p>
 	<input type="hidden" name="project_id" value="<? echo($param{'project_id'}) ?>"/>
 	<input type="hidden" name="docket" value="<? echo($param{'docket'}) ?>"/>
 	<input type="hidden" name="btnFunction" />

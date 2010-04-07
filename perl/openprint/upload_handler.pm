@@ -86,8 +86,7 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 		} # end if
 
 #<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-		my $output =qq` 
-<response>
+		my $output = qq`<response>
 <completedsize>$$data{'size'}</completedsize>
 <totalsize>$$data{'total'}</totalsize>
 <elapsedtime>$$data{'elapsed'}</elapsedtime>
@@ -104,7 +103,6 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 		openprint::session_init();
 		my $serial = $r->param('serial');
 		if ( $serial ) {
-			#sql::execute( $log, $dbh, q{UPDATE Uploads SET size=total,finished=NOW() WHERE id=?}, $serial );
 			my $rsize=$request->headers_in->{'Content-Length'};
 			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'size', $rsize ] );
 		} else {
@@ -165,7 +163,7 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 	#$dbh->disconnect();# if $dbh->{'thread_id'};
 	#$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	return Apache2::Const::OK;
-}
+} # end sub handler
 
 sub create_dir {
 	my $dir = shift;
@@ -229,8 +227,10 @@ $log->error("No destdir");
 	
 	if ( $param{'btnFunction'} eq 'Upload Files' ) {
 
+		my $files = 0;
 		foreach my $index ( 1 .. 5 ) {
 			if ( $param{'fileUpload'.$index} ) {
+				$files += 1;
 				my $filename = $param{'fileUpload'.$index};
 				$filename =~ s/.*[\/\\](.*)/$1/;
 				$filename =~ s/ /_/g;
@@ -258,72 +258,73 @@ $log->error("There was an error saving file $param{'fileUpload'.$index}: to $con
 						] );
 			} # end if
 		} # end foreach file
-		
+		if ( $files ) {
 # Notify CSR, and Customer of upload
-		$$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
-		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html' );
-		} else {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
-		} # end if
-		$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
-		my $csr_id;
-		my $to;
-		my $from;
-		if ( $session{'user_id'} ) {
-			my $User = new openprint::User( $session{'user_id'} );
-			$from = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
-		} else {
-			$from = $param{'txtEmailAddress'};
-			if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
-				$from = $config{'OrderingEmail'};
+			$$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
+			if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html') {
+				$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html' );
+			} else {
+				$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 			} # end if
-		} # end if
-		if ( $session{'company_id'} ) {
-			$csr_id = new openprint::Company( $session{'company_id'} )->salesrep_id();
-		} # end nif
-		if ( $csr_id ) {
-			my $CSR = new openprint::User( $csr_id );
-			$to = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email') ),
-		} else {
-			$to = $config{'OrderingEmail'};
-		} # end if
-		my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-		my $body = ssi::variable_substitution( \$email_template, $variable );
-		my %mail = (
-						SMTP    => $config{'Mail Server'},
-						FROM    => $from,
-						TO		=> $to,
-						BCC		=>	'iconnor@penultima.org',
-						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-				   );
-		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
+			$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
+			my $csr_id;
+			my $to;
+			my $from;
+			if ( $session{'user_id'} ) {
+				my $User = new openprint::User( $session{'user_id'} );
+				$from = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+			} else {
+				$from = $param{'txtEmailAddress'};
+				if ( ! Email::Valid->address( $param{'txtEmailAddress'} ) ) {
+					$from = $config{'OrderingEmail'};
+				} # end if
+			} # end if
+			if ( $session{'company_id'} ) {
+				$csr_id = new openprint::Company( $session{'company_id'} )->salesrep_id();
+			} # end nif
+			if ( $csr_id ) {
+				my $CSR = new openprint::User( $csr_id );
+				$to = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email') ),
+			} else {
+				$to = $config{'OrderingEmail'};
+			} # end if
+			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+			my $body = ssi::variable_substitution( \$email_template, $variable );
+			my %mail = (
+					SMTP    => $config{'Mail Server'},
+					FROM    => $from,
+					TO		=> $to,
+					BCC		=>	'iconnor@penultima.org',
+					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+					);
+			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 
-		# Send transcript to uploader
-		if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
-		} else {
-			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
-		} # end if
-		$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
-		$from = $to;
-		if ( $session{'user_id'} ) {
-			my $User = new openprint::User( $session{'user_id'} );
-			$to = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
-		} else {
-			$to = $param{'txtEmailAddress'};
-		} # end if
-        $body = ssi::variable_substitution( \$email_template, $variable );
-        %mail = (
-                        SMTP    => $config{'Mail Server'},
-                        FROM    => $from,
-                        TO      => $to,
-						BCC		=>	'iconnor@penultima.org',
-                        SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-                   );
-        misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
+# Send transcript to uploader
+			if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
+				$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
+			} else {
+				$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
+			} # end if
+			$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
+			$from = $to;
+			if ( $session{'user_id'} ) {
+				my $User = new openprint::User( $session{'user_id'} );
+				$to = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+			} else {
+				$to = $param{'txtEmailAddress'};
+			} # end if
+			$body = ssi::variable_substitution( \$email_template, $variable );
+			%mail = (
+					SMTP    => $config{'Mail Server'},
+					FROM    => $from,
+					TO      => $to,
+					BCC		=>	'iconnor@penultima.org',
+					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+					);
+			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
+		} # end if files
 
-	} # end if
+	} # end if btnfunction eq Upload Files
 } # end sub upload_files
 
 sub get_files {
