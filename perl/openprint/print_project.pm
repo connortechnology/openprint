@@ -263,7 +263,7 @@ sub try_to_delete_project {
 		$error .= "Project $proj_reference is in order <a href=\"/main/order/history_details.html?order_id=$_\">$_</a>.	You must delete the order before you can delete the project.<br/>";
 		$delete = 0;
 	} # end if
-	$_ = "SELECT tbl_Quotes.Index FROM tbl_Quotes,tbl_Quote_Details WHERE tbl_Quotes.Index=tbl_Quote_Details.QuoteIndex AND ProjectIndex=? AND tbl_Quotes.strStatus != 'Incomplete'";
+	$_ = "SELECT Quotes.id FROM Quotes,tbl_Quote_Details WHERE Quotes.id=tbl_Quote_Details.quote_id AND project_id=? AND Quotes.strStatus != 'Incomplete'";
 	( $_ ) = sql::execute( $log, $dbh, $_, $project_index );
 	if ( $_ ) {
 		$error .= "Project $proj_reference is in quote <a href=\"/main/quote/history_details.html?quote_id=$_\">$_</a>.	You must delete the quote before you can delete the project.<br/>";
@@ -497,8 +497,6 @@ sub create_edit_process {
 	$openprint::param{'txtQuantity3'} =~ s/\D//g;
 
 	my $error = '';
-	my ( $ref ) = misc::trim( $r->param('txtProjectReference') );
-	$error .= "You must specify a Project Reference.<br/>" if ! $ref =~ /[^\s]/;
 	$error .= "No quantities specified.<br/>" if $r->param('txtQuantity1') eq '' and $r->param('txtQuantity2') eq '' and $r->param('txtQuantity3') eq '';
 	$error .= "Invalid Quantity 1.<br/>" if $r->param('txtQuantity1') and ! int $r->param('txtQuantity1');
 	$error .= "Invalid Quantity 2.<br/>" if $r->param('txtQuantity2') and ! int $r->param('txtQuantity2');
@@ -653,7 +651,7 @@ sub create_edit_process {
 	my $ProjectType = shift @project_types;
 	my $OldProjectType = $Project->Type();
 
-	$Project->reference( $ref );
+	$Project->reference( $r->param('txtProjectReference') );
 	$Project->comments( $r->param('txtComments') );
 	$Project->mode( $r->param('rdbMode') );
 	$Project->design( $r->param('ddmDesign') );

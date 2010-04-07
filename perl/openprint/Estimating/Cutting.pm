@@ -146,6 +146,13 @@ sub neccessary {
 	return 0;
 } # end sub neccessary
 
+my @signature_calc_stock_cutting_equipment;
+sub signature_calc_stock_cutting_equipment {
+	my ( $Project ) = @_;
+	my @signature_calc_stock_cutting_equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	return @signature_calc_stock_cutting_equipment;
+} # end sub signature_calc_stock_cutting
+
 sub signature_calc_stock_cutting {
 	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition ) = @_;
 
@@ -165,11 +172,14 @@ sub signature_calc_stock_cutting {
 	return %results if ($Paper->width() == $Paper->start_width()) and ($Paper->height() == $Paper->start_height() );
 	return %results if ( exists $$sig_specs{'PageQuantity'.$qty_index} and ! $$sig_specs{'PageQuantity'.$qty_index} );
 
-	my @my_equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
-
+	my @my_equipment;
 	if ( $$specs{"chkOverrideStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		$openprint::log->debug("Overriding Equipment! " . $$specs{"ddmStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		@my_equipment = ( new openprint::Equipment( @$specs{"ddmStockCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
+	} elsif ( ! @signature_calc_stock_cutting_equipment ) {
+		@my_equipment = signature_calc_stock_cutting_equipment( $Project );
+	} else {
+		@my_equipment = @signature_calc_stock_cutting_equipment;
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -382,6 +392,20 @@ sub signature_calc_folding_cutting {
 	return %results;
 } # end sub signature_calc_folding_cutting
 
+sub signature_calc_load_equipment {
+	my ( $Project ) = @_;
+	my $services = $Project->services();
+	my @capabilities = ('Y','When Printing','When Folding');
+	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
+		push @capabilities, 'When Stitching';
+	} # end if
+	if ( $Project->Type()->name() eq 'Banners' ) {
+		push @capabilities, 'Banners';
+	} # end if
+	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	return @equipment;
+} # end sub signature_calc_load_equipment
+
 sub signature_calc {
 	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I ) = @_;
 
@@ -397,18 +421,12 @@ sub signature_calc {
 	my $services = $Project->services();
 
 	my @my_equipment;
-
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		@my_equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
+	} elsif ( ! @equipment ) {
+		@my_equipment = signature_calc_load_equipment( $Project );
 	} else {
-		my @capabilities = ('Y','When Printing','When Folding');
-		if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
-			push @capabilities, 'When Stitching';
-		} # end if
-		if ( $Project->Type()->name() eq 'Banners' ) {
-			push @capabilities, 'Banners';
-		} # end if
-		@my_equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+		@my_equipment = @equipment;
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -779,6 +797,9 @@ sub calc {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
+	# This preloads the equipment array which is used in signature_calc
+	signature_calc_load_equipment( $Project );
+
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		next if ! int($$specs{"txtQuantity$qty_index"});
@@ -832,17 +853,17 @@ sub calc {
 			} # end if
 
 			# Folding
-if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-			my %results = signature_calc_folding_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
-			$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
-			$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
-			$price += $results{'Price'};
-			$mprice += $results{'MPrice'};
-			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
-			$$specs{'alert'} .= $results{'alert'};
-			$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
-$openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
-} # end if
+			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
+				my %results = signature_calc_folding_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
+				$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
+				$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
+				$price += $results{'Price'};
+				$mprice += $results{'MPrice'};
+				$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
+				$$specs{'alert'} .= $results{'alert'};
+				$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
+#$openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
+			} # end if
 
 			my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
 			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';

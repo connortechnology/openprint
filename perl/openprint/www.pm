@@ -166,7 +166,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
 			$log->warn("No template!" . $r->content_type());
-			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'};
+			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
 			$log->warn($_);
 			$r->print( $_ );
 		} # end if
@@ -213,7 +213,6 @@ $openprint::log->debug("Getfile");
 		$r->content_type( "application/octet-stream; name=\"$variable{'Download'}\"" );
 		return;
 	} elsif ( $first eq 'administrator' ) {
-		require openprint::admin_quote;
 		require openprint::admin_colours;
 		require openprint::admin_pricelist;
 

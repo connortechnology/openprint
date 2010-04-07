@@ -40,7 +40,7 @@
 			<div class="leftColumn">
 			<p>
 				<label>Project #:</label>
-				<input type="text" id="ProjectID" name="ProjectID" size="6" onkeydown="if(event.keyCode == 13){load_projects( this.form );}"/>
+				<input type="text" id="ProjectID" name="ProjectID" size="6" onkeydown="if(event.keyCode == 13){load_projects( this.form );}" onkeyup="this.value=this.value.replace(/\D/g, '');" />
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_projects( \$('f1') );", '', 'Go' ); ) ?>
 			</p>
 			<p>

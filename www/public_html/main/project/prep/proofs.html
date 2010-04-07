@@ -1,46 +1,45 @@
 <script type="text/javascript" src="/javascripts/service.js"></script>
 <div class="PageTitle">
-<h1>Prepress</h1>
-<h2>Proofs</h2>
+	<h1>Prepress</h1>
+	<h2>Proofs</h2>
 </div>
-<div class="Service">
-Please enter the specifications for your proofs. In most cases these are automatically chosen, but if you would like to modify them, check the override and make your changes.
+<div class="Service"><div class="<?ServiceTypeID?>">
+	Please enter the specifications for your proofs. In most cases these are automatically chosen, but if you would like to modify them, check the override and make your changes.
 	<form name="f1" method="post" action="/main/project/view.html">
-<p><label>Do you require colour proofs?</label>
-<input type="radio" name="RequireColourProofs" id="RequireColourProofsY" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'RequireColourProofs'} eq 'Y' ); ) ?> />
-<label class="radio" for="RequireColourProofsY">Yes</label>
-<input type="radio" name="RequireColourProofs" id="RequireColourProofsN" value="N" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'RequireColourProofs'} eq 'N' ); ) ?> />
- <label class="radio" for="RequireColourProofsN">No</label>
-<input type="radio" name="RequireColourProofs" id="RequireColourProofsA" value="A" onclick="calc(this.form.name);" <? echo ( ssi::checked( ! sets::isin($$variable{'RequireColourProofs'}, ['Y','N'] ) ); ) ?> />
- <label class="radio" for="RequireColourProofsA">Auto</label>
-</p>
+		<p><label>Do you require colour proofs?</label>
+			<input type="radio" name="RequireColourProofs" id="RequireColourProofsY" value="Y" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'RequireColourProofs'} eq 'Y' ); ) ?> />
+			<label class="radio" for="RequireColourProofsY">Yes</label>
+			<input type="radio" name="RequireColourProofs" id="RequireColourProofsN" value="N" onclick="calc(this.form.name);" <? echo ( ssi::checked( $$variable{'RequireColourProofs'} eq 'N' ); ) ?> />
+			 <label class="radio" for="RequireColourProofsN">No</label>
+			<input type="radio" name="RequireColourProofs" id="RequireColourProofsA" value="A" onclick="calc(this.form.name);" <? echo ( ssi::checked( ! sets::isin($$variable{'RequireColourProofs'}, ['Y','N'] ) ); ) ?> />
+			<label class="radio" for="RequireColourProofsA">Auto</label>
+		</p>
 		<!-- The rest is done for each qty -->
 		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
 			<fieldset><legend>The following results are for Quantity <?QTYIndex?> (<? echo ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>)</legend>
 
-			<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures() ) ?>
+			<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures(); ) ?>
 			<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}}; ) ?>
 				<? eval ( 
 					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$variable{'SignatureServiceIndex'} );
-			if ( $$sig_specs{'txtImposition'.$$variable{'QTYIndex'}} ) {
-					$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
-					$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
-					$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), @$variable{'SignatureServiceIndex','QTYIndex'} );
-					$$variable{'Reference'} = $$variable{'Reference'};
-			} else {
-				$$variable{'SignatureIndex'} = '';
-			} # end if
+					if ( $$sig_specs{'txtImposition'.$$variable{'QTYIndex'}} ) {
+							$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
+							$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
+							$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), @$variable{'SignatureServiceIndex','QTYIndex'} );
+					} else {
+						$$variable{'SignatureIndex'} = '';
+					} # end if
 				) ?>
-<? if ( $$variable{'SignatureIndex'} ) ?>
+<? if ( $$variable{'SignatureIndex'} ne '' ) ?>
 			<table>
 				<tr><td valign="top" rowspan="<? echo ( int(@{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}}/6)+2) ?>"><br/><?Reference?></td>
 <th width="40">Qty</th>
 <th width="170">Dimensions</th>
 <th width="105" align="left">Type</th>
 <th width="105">Unit Price (<?CurrencySymbol?>)</th>
-<th width="105">&nbsp;</th>
+<th class="Override">&nbsp;</th>
 </tr>
 	<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}},0,6; ) ?>
 				<tr>
@@ -73,13 +72,13 @@ Please enter the specifications for your proofs. In most cases these are automat
 				</tr>
 			</table>
 			<br/>
-<? endif ( $$variable{'SignatureIndex'} ) ?>
+<? endif ( $$variable{'SignatureIndex'} ne '' ) ?>
 <? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}}; ) ?>
 			<table>
 				<tr>
 					<td align="right"><b>Total Service Price (<?CurrencySymbol?>):</b></td>
 					<td width="110"><?CurrencySymbol?><input name="txtPrice<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
-					<td width="105"><? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin($openprint::session{'user_type'}, ['A','E'] ); ) ?></td>
+					<td class="Override"><? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin($openprint::session{'user_type'}, ['A','E'] ); ) ?></td>
 				</tr>
 			</table>
 			<br class="spacer"/>
@@ -93,4 +92,4 @@ Please enter the specifications for your proofs. In most cases these are automat
 			<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 			<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->
 	</form>
-</div><!--Service-->
+</div></div><!--Service-->

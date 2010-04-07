@@ -22,6 +22,8 @@ CREATE TABLE Folds (
 	max_height		float,
 	min_calliper	float,
 	max_calliper	float,
+	min_gsm			float,
+	max_gsm			float,
 	min_imposition	INTEGER,
 	max_imposition	INTEGER,
 	cutting			boolean,

@@ -1,22 +1,15 @@
 <? eval (         
 	if ( $param{'QuoteID'} ) {
 		@{$$variable{'Quotes'}} = openprint::Quote::find( 
-			'company_id'		=> $session{'company_id'},
-			'id_like'=>$param{'QuoteID'},
+			'company_id'		=>	$session{'company_id'},
+			'id_like'			=>	$param{'QuoteID'},
 		);
 	} else {
-		if ( %param ) {
-			foreach my $key ( 'QuotedFor', 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay' ) {
-				$session{'/main/quote/history.html?'.$key} = $param{$key} if exists $param{$key};
-			} # end foreach
-		} # end if
-		$session{'/main/quote/history.html?lastupdated'} = time;
-
 		@{$$variable{'Quotes'}} = openprint::Quote::find( 
 			'company_id'		=> $session{'company_id'},
 			'for_name'			=> $session{'/main/quote/history.html?QuotedFor'},
-			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/quote/history.html?ddmStartYear','/main/quote/history.html?ddmStartMonth','/main/quote/history.html?ddmStartDay'}),
-			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/quote/history.html?ddmEndYear','/main/quote/history.html?ddmEndMonth','/main/quote/history.html?ddmEndDay'}),
+			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/quote/history.html?created_on_start_year','/main/quote/history.html?created_on_start_month','/main/quote/history.html?created_on_start_day'}),
+			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/quote/history.html?created_on_end_year','/main/quote/history.html?created_on_end_month','/main/quote/history.html?created_on_end_day'}),
 			'order'				=> 'dtmquotedate DESC',
 			);
 	} # end if
@@ -26,9 +19,7 @@
 
 	<? 	if ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'QuoteID'} ) ?>
 		<? eval (
-				@{$$variable{'Quotes'}} = openprint::Quote::find( 
-				'id_like'=>$param{'QuoteID'},
-				);
+				@{$$variable{'Quotes'}} = openprint::Quote::find( 'id_like' => $param{'QuoteID'} );
 		) ?>
 		There were no quotes matching your search criteria for your currently selected Company.<br/>
 		<? if ( @{$$variable{'Quotes'}} > 0 ) ?>

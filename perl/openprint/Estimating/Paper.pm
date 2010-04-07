@@ -169,20 +169,20 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 		if ( $Paper->full_packages() ) {
 			my $sheets_per_package = $Paper->sheets_per_package();
 			if ( $sheets_per_package ) {
-				if ( $Paper->type() eq 'Sheet' ) {
-					foreach my $qty_index ( $Project->quantity_indexes() ) {
+				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					next if ! $totals{$paper_string}{"qty_$qty_index"};
+					if ( $Paper->type() eq 'Sheet' ) {
 						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * ceil( $totals{$paper_string}{"qty_$qty_index"} / $sheets_per_package );
-					} # end foreah qty_index
-				} elsif ( $Paper->type() eq 'Roll' ) {
-					foreach my $qty_index ( $Project->quantity_indexes() ) {
+					} elsif ( $Paper->type() eq 'Roll' ) {
 						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * int($totals{$paper_string}{"qty_$qty_index"}/$sheets_per_package);
-					} # end foreah qty_index
-				} # end if
+					} # end if
+				} # end foreah qty_index
 			} # end if sheets_per_package
 		} # end if full packages
 		if ( $$Paper{'minimum_order'} ) {
 # Assume sheets for sheets, lbs for Rolls
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				next if ! $totals{$paper_string}{"qty_$qty_index"};
 				if ( $$Paper{'minimum_order'} > $totals{$paper_string}{"qty_$qty_index"} ) {
 					$totals{$paper_string}{"qty_$qty_index"} = ceil( $$Paper{'minimum_order'} );
 				} # end if

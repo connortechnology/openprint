@@ -93,11 +93,11 @@ sub neccessary {
 sub signature_needs {
 	my ( $Project, $specs ) = @_;
 
-	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideOne' ) ) {
+	foreach ( get_uv_colours( $specs, 'SideOne' ) ) {
 		return 1 if $_ =~ /UV/;
 	} # end foreach colour
 
-	foreach ( openprint::Estimating::Printing::get_colours( $specs, 'SideTwo' ) ) {
+	foreach ( get_uv_colours( $specs, 'SideTwo' ) ) {
 		return 1 if $_ =~ /UV/;
 	} # end foreach colour
 } # end sub signature_needs
@@ -270,22 +270,47 @@ sub cut_imposition {
 	return ( $i1, $i2 );
 } # end sub cut_imposition
 
+sub get_uv_colours {
+	my ( $specs, $side ) = @_;
+	my @colours;
+	foreach my $k ( keys %$specs ) {
+		if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+			next if ! $$specs{"chkColourCoating$index$side"};
+			my $type = $$specs{"ColourCoatingType$index$side"};
+			if ( $type =~ /UV/ ) {
+				push @colours, $type;
+			} # end if type eq PMS
+		} # end if
+	} # end foreach
+	return @colours;
+} # end sub get_colours
+sub get_uv_inkcoverage {
+	my ( $specs ) = @_;
+
+	my %inkCoverage;
+	foreach my $side ( 'SideOne','SideTwo' ) {
+		foreach my $k ( keys %$specs ) {
+			if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+				next if ! $$specs{"chkColourCoating$index$side"};
+				my $type = $$specs{"ColourCoatingType$index$side"};
+				if ( $type =~ /Overall/ ) {
+# Nothing cuz coverage is 100%
+					$$specs{'ColourCoatingCoverage'.$index.$side} = 100;
+				} # end if
+				$inkCoverage{$type} += $$specs{'ColourCoatingCoverage'.$index.$side};
+			} # end if
+		} # end foreach k
+	} # end foreach Side
+	return %inkCoverage;
+} # end sub get_uv_inkcoverage
+
 sub signature_calc {
     my ( $Project, $service_index, $specs, $signature_service_index, $sig_specs, $qty_index, $Imposition, $MakeReadies ) = @_;
 
 	my %BestPrice;
-	my @front_uv;
-	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) ) {
-		push @front_uv, $_ if $_ =~ /UV/;
-#$openprint::log->debug("Side one colour: $_");
-	} # end foreach colour
-
-	my @back_uv;
-	foreach ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' ) ) {
-		push @back_uv, $_ if $_ =~ /UV/;
-#$openprint::log->debug("Side two colour: $_");
-	} # end foreach colour
-	my %inkCoverage = openprint::Estimating::Printing::get_inkcoverage( $sig_specs );
+	my @front_uv = get_uv_colours( $sig_specs, 'SideOne' );
+	my @back_uv = get_uv_colours( $sig_specs, 'SideTwo' );
+	my %inkCoverage = get_uv_inkcoverage( $sig_specs );
 
 	my @different_types = sets::union( @front_uv, @back_uv );
 
@@ -319,6 +344,7 @@ sub signature_calc {
 	# Start out with the base
 	my @Sets_Of_Impositions = ( [ $Imposition ] );
 	my $services = $Project->services();
+	my $Stock = $Imposition->Paper();
 
 	foreach my $Equipment ( @equipment ) {
 		my %BestPricePerImposition;
@@ -334,7 +360,7 @@ sub signature_calc {
 
 			my %ImpositionPrice;
 			if ( @$impositions > 1 ) {
-				my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $service_index, $sig_specs, {}, $qty_index, $$impositions[0]->Paper(), $$impositions[0] );
+				my %results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, $service_index, $sig_specs, {}, $qty_index, $Stock, $$impositions[0] );
 				$ImpositionPrice{'Cutting'} = $results{'Price'};
 				$breakdown .= sprintf('Stock cutting cost: %.2f<br/>', $results{'Price'} );
 			} # end if
@@ -342,7 +368,7 @@ sub signature_calc {
 			for ( my $imp_index = 0; $imp_index < @$impositions; $imp_index += 1 ) {
 				my $imp = $$impositions[$imp_index];
 
-				$breakdown .= sprintf( '%dx%d+%dx%d=%dout on %sx%s<br/>',$imp->get('columns','rows','dutch_columns','dutch_rows','imposition'), $imp->Paper()->width(), $imp->Paper()->height() );
+				$breakdown .= sprintf( '%dx%d+%dx%d=%dout on %sx%s<br/>',$imp->get('columns','rows','dutch_columns','dutch_rows','imposition'), $Stock->width(), $Stock->height() );
 #$openprint::log->debug('Trying: ' . $breakdown ) if $debug;
 
 				if ( ! ( $imp->rows() * $imp->columns() ) ) {
@@ -364,7 +390,7 @@ $openprint::log->debug('W&T: ' . $breakdown ) if $debug;
 					last;
 				} # end if
 
-				if ( $_ = $Equipment->fits( $imp->Paper()->width(), $imp->Paper()->height(), $imp->Paper()->calliper() ) ) {
+				if ( $_ = $Equipment->fits( $Stock->width(), $Stock->height(), $Stock->calliper() ) ) {
 					$breakdown .= "Doesn't fit. $_<br/>";
 $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 					$complete = 0;
@@ -400,7 +426,7 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 				} else {
 					@types = ( @front_uv, @back_uv );
 				} # end if
-$openprint::log->debug("Types: @types");
+#$openprint::log->debug("Types: @types");
 
 				# Has total price values for all types
 				foreach my $type ( @types ) {
@@ -433,7 +459,7 @@ $openprint::log->debug("Types: @types");
 					if ( lc $ServicePrice{'units'} eq 'per m' ) {
 						$ServicePrice{'Total'} = $ServicePrice{'Price'}*$run_qty/1000;
 					} elsif ( lc $ServicePrice{'units'} eq 'per hour' ) {
-						$ServicePrice{'Total'} = $ServicePrice{'Price'}*$run_qty/$Equipment->specfication('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
+						$ServicePrice{'Total'} = $ServicePrice{'Price'}*$run_qty/$Equipment->specification('UVCoatingRunSpeed') if $Equipment->specification('UVCoatingRunSpeed');
 					} # end if
 # Div by imposition, but run_qty is already div by impo
 					#$ServicePrice{'Total'} /= $imp->imposition();
@@ -531,7 +557,5 @@ sub summary {
 	return '';
 } # end sub summary
 
-
 1;
-
 __END__

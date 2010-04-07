@@ -29,6 +29,7 @@ sub projects {
 	$filters{'csr_id'}	= $param{'ddmEmployees'} if $param{'ddmEmployees'};
 	$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
 	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+	$filters{'type_id'} = $param{'type_id'} if $param{'type_id'};
 
 	@{$variable{'Projects'}} = openprint::Project::find( %filters );
 

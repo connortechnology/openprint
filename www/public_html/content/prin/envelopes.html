@@ -25,13 +25,13 @@
 										<select id="ddmStockSheetSize" name="ddmStockSheetSize" size="1" onchange="ddmStockSheetSize_onchange();">
 										<option value="">Please select one</option>
 										<? echo (
-												my %sizes = openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(),@$variable{
+												my @sizes = openprint::paper::get_sheetsizes( $$variable{'ProjectType'}->name(),@$variable{
 														'ddmStockBrand'.$$variable{'Signature'},
 														'ddmStockFinish'.$$variable{'Signature'},
 														'ddmStockColour'.$$variable{'Signature'},
 														'ddmStockWeight'.$$variable{'Signature'},
 														} );
-												ssi::make_drop_down( [ map { $_,$sizes{$_} } keys %sizes ], $$variable{'ddmStockSheetSize'} );
+												ssi::make_drop_down( \@sizes, $$variable{'ddmStockSheetSize'} );
 												) ?>
 										</select>
 										<input type="hidden" id="txtWidth" name="txtWidth" value="<?txtWidth?>" />

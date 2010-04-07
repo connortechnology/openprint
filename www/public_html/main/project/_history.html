@@ -6,19 +6,18 @@
 		'order'				=> 'id DESC',
 		);
 	} else {
-	@{$$variable{'Projects'}} = openprint::Project::find( 
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?created_on_start_year','/main/project/history.html?created_on_start_month','/main/project/history.html?created_on_start_day'} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?created_on_end_year','/main/project/history.html?created_on_end_month','/main/project/history.html?created_on_end_day'} ),
-		'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?updated_on_start_year','/main/project/history.html?updated_on_start_month','/main/project/history.html?updated_on_start_day'} ),
-		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?updated_on_end_year','/main/project/history.html?updated_on_end_month','/main/project/history.html?updated_on_end_day'} ),
-		'company_id'		=> $session{'company_id'},
-		'status'			=> [ split( ';', $session{'/main/project/history.html?ddmStatus'} ) ],
-		'type_id'			=> $session{'/main/project/history.html?type_id'},
-		'predefined'		=> $session{'/main/project/history.html?predefined'},
-		'reference'				=> $param{'Reference'},
-		'and'				=> ($param{'ProjectID'} ? " AND id LIKE '$param{'ProjectID'}\%'" : undef ),
-		'order'				=> 'id DESC',
-		);
+		@{$$variable{'Projects'}} = openprint::Project::find( 
+			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?created_on_start_year','/main/project/history.html?created_on_start_month','/main/project/history.html?created_on_start_day'} ),
+			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?created_on_end_year','/main/project/history.html?created_on_end_month','/main/project/history.html?created_on_end_day'} ),
+			'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?updated_on_start_year','/main/project/history.html?updated_on_start_month','/main/project/history.html?updated_on_start_day'} ),
+			'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?updated_on_end_year','/main/project/history.html?updated_on_end_month','/main/project/history.html?updated_on_end_day'} ),
+			'company_id'		=> $session{'company_id'},
+			'status'			=> [ split( ';', $session{'/main/project/history.html?ddmStatus'} ) ],
+			'type_id'			=> $session{'/main/project/history.html?type_id'},
+			'predefined'		=> $session{'/main/project/history.html?predefined'},
+			'reference'			=> $param{'Reference'},
+			'order'				=> 'id DESC',
+			);
 	} # end if
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};

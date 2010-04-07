@@ -225,6 +225,7 @@
 				$html .= "</tr>\n";
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end if $$services{'AdditionalSignature'}
+
 		} else {
 			foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
 				next if ! $$services{$ServiceType->name()};

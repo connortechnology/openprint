@@ -741,39 +741,65 @@ sub signature_calc {
 #$openprint::log->debug(qq`Overriden $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} $$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}out $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}`);
 					$found = 0;
 					foreach my $key ( keys %folds ) {
+						# already accounted for
+						next if $folds{$key}[0]{'found'};
 						my ( $fold_type, $imposition ) = $key =~ /(.*)-(\d+)out$/;
+
 						my $qty = 0;
 						foreach (@{$folds{$key}}) {
 							$qty += $_->Imposition()->quantity();
 						} # end foreach
 
 						if ( $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ne $fold_type ) {
-$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ne $fold_type`);
+$openprint::log->debug(qq`Wrong type: $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ne $fold_type`) if $debug;
 							next;
 						} elsif ( $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} != $qty ) {
-$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} != $qty`);
+$openprint::log->debug(qq`Wrong qty: $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} != $qty`) if $debug;
 							next;
 						} elsif ( $$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} != $imposition ) {
-$openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} != $imposition`);
+$openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} != $imposition`) if $debug;
 							next;
 						} # end if
 						$found = 1 ;
+						$folds{$key}[0]{'found'} = 1;
 
 						foreach my $F ( @{$folds{$key}} ) {
 #$openprint::log->debug("Overriding FOlds and Angles $$F{folds} $$F{angles}");
-							#if ( ! ( $F->folds() or $F->angles() ) ) {
-								$F->folds( $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
-								$F->angles( $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
-							#} # end if
+							$F->folds( $$specs{"FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
+							$F->angles( $$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
 						} # end foreach F
 					} # end foreach my $k
 					if ( ! $found ) {
-						$openprint::log->debug("Not found");
-						last;
+						$openprint::log->debug("Not found trying generic");
+						# Replace with a generic one
+						my $key = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'-'.$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'out';
+						my $Fold;
+						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d)+Page/;
+						if ( $Fold = openprint::Fold::find_one( 
+									'imposition'	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+									'type'			=>	$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
+									'equipment_id'	=>	$Equipment->id(),
+									'pages'			=>	$pages,
+									) ) {
+						} else {
+							$Fold = new openprint::Fold();
+							$$Fold{'type'} = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
+						} # end if
+						$$Fold{'Imposition'} = $SignatureImposition->copy();
+						if ( $$Fold{'Imposition'}{'imposition'} != $$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} ) {
+						$$Fold{'Imposition'}->rows(1);
+						$$Fold{'Imposition'}->columns( $$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} );
+						} # end if
+						$$Fold{'Imposition'}{'quantity'} = $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$index"};
+						$$Fold{'found'} = 1;
+			
+						$folds{$key} = [ $Fold ];
 					} # end if ! found
 				} # end foreach index
-				next if ! $found;
-			} # end if
+				foreach my $k ( keys %folds ) {
+					delete $folds{$k} if ! $folds{$k}[0]{'found'};
+				} 
+			} # end if override
 			my $totalTime = $Equipment->specification('Station Make Ready') * 60;
 
 			my $totalPrice;
@@ -892,12 +918,15 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 
 # In hours
 				my $runspeed = $Fold->runspeed($$Paper{'gsm'});
+				my $runTime; 
 				if ( ! $runspeed ) {
 					$Breakdown .= "No runspeed for $fold_type(".$Fold->name().") on " . $Equipment->name() .'<br/>';
 					last;
+				} else {
+					$runTime = sprintf( '%.4f', $run_qty / $runspeed ); # in hours
+					$Breakdown .= sprintf('Runspeed: %d @ %d/HR = %d:%d:%d<br/>', $run_qty, $runspeed, misc::seconds_to_interval( int( 3600*$runTime ) ) );
 				} # end if
 #$openprint::log->debug("Runspeed: $fold_type(".$Fold->name().") : " . $Equipment->name() . ' ' . $Fold->runspeed() .' ' . $Paper->gsm() );
-				my $runTime = sprintf( '%.4f', $run_qty / $runspeed );
 #$Breakdown .= sprintf( '&nbsp;Folds: QTY: %d, %dout Runspeed: %d/Hr = %.2f hours<br/>', $qty, $imposition, $$RunSpeed{runspeed}, $runTime );
 # We are assumin at this point, that all these folds are posible on this equipment, so any errors are soft errors
 				my %servicePrice = openprint::service::get_price_object( $Fold->type(), $run_qty, $Equipment );

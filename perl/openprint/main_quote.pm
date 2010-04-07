@@ -84,7 +84,20 @@ sub history {
 	} elsif ( $param{'btnFunction'} eq 'Delete Quote' ) {
 		$$variable{'error'} .= try_to_delete($param{'quote_id'});	
 	} # end if
-} # end sub quote_history
+    ssi::setup_date_select( '/main/quote/history.html', 'created_on', -30, 0 );
+    ssi::save_params( '/main/quote/history.html',
+            'created_on_start_year', 'created_on_start_month','created_on_start_day',
+            'created_on_end_year', 'created_on_end_month','created_on_end_day',
+			'QuotedFor',
+            );
+} # end sub history
+sub _history {
+    ssi::save_params( '/main/quote/history.html',
+            'created_on_start_year', 'created_on_start_month','created_on_start_day',
+            'created_on_end_year', 'created_on_end_month','created_on_end_day',
+			'QuotedFor',
+            );
+} # end sub _history
 
 sub history_details {
 	my ( $r, $log, $dbh, $variable ) = @_;

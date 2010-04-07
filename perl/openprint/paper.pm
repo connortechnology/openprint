@@ -359,53 +359,56 @@ sub get_sheetsizes {
 		if ( $Paper->type() eq 'Roll' ) {
 			$results{$Paper->width()} = $Paper->width().'"';
 		} else {
-		my ( $width, $height ) = ( $Paper->width(), $Paper->height() );
-# cuts paper until it fits
-		if ( $max_width and $max_height ) {
-			if ( $Paper->cuttable() ) {
-				while (
-						( $width > $max_width or $height > $max_height )
-						and
-						( $width > $max_height or $height > $max_width )
+			my ( $width, $height ) = ( $Paper->width(), $Paper->height() );
+	# cuts paper until it fits
+			if ( $max_width and $max_height ) {
+				if ( $Paper->cuttable() ) {
+					while (
+							( $width > $max_width or $height > $max_height )
+							and
+							( $width > $max_height or $height > $max_width )
+						  ) {
+						$openprint::log->debug("Cut to fit on press: $width x $height") if $debug;
+						if ( $height > $width ) {
+							$height /= 2;
+						} else {
+							$width /= 2;
+						} # end if
+					} # end while
+				} else {
+					next if ( $width > $max_width or $height > $max_height )
+							and
+							( $width > $max_height or $height > $max_width );
+				} # end if
+			} # end if
+
+			if ( $min_width and $min_height ) {
+	# while the paper fits on a press
+				while ( 
+						( ( $width >= $min_width ) and ( $height >= $min_height ) )
+						or ( ( $width >= $min_height ) and ( $height >= $min_width ) )
 					  ) {
-					$openprint::log->debug("Cut to fit on press: $width x $height") if $debug;
+
+					last if $results{$width.'x'.$height};
+					$results{$width.'x'.$height} = sprintf( '%s" x %s"', $width, $height );
+					last if ! $Paper->cuttable();
+
+					$openprint::log->debug("Cut: $width x $height") if $debug;
 					if ( $height > $width ) {
 						$height /= 2;
 					} else {
 						$width /= 2;
 					} # end if
 				} # end while
-			} else {
-				next if ( $width > $max_width or $height > $max_height )
-                        and
-                        ( $width > $max_height or $height > $max_width );
 			} # end if
-		} # end if
-
-		if ( $min_width and $min_height ) {
-# while the paper fits on a press
-			while ( 
-					( $width >= $min_width ) and ( $height >= $min_height ) 
-					or ( $width >= $min_height ) and ( $height >= $min_width ) 
-				  ) {
-
-				last if $results{$width.'x'.$height};
-				$results{$width.'x'.$height} = sprintf('%s" x %s"', $width, $height );
-				last if ! $Paper->cuttable();
-
-				$openprint::log->debug("Cut: $width x $height") if $debug;
-				if ( $height > $width ) {
-					$height /= 2;
-				} else {
-					$width /= 2;
-				} # end if
-			} # end while
-		} # end if
 		} # end if type
 	} # end foreach Paper
-
-	return map { $_, $results{$_} }
-	sort { 
+if ( $debug ) {
+foreach ( keys %results ) {
+$openprint::log->debug("Stocks $_ $results{$_}");
+}
+}
+	return map { $_, $results{$_} } sort { 
 		my ( $w1, $h1 ) = split('x', $a );
 		my ( $w2, $h2 ) = split('x', $b );
 		return -1 if $w1 < $w2;
