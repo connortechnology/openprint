@@ -12,6 +12,10 @@ $serial = 'hosts_id_seq';
 	'ip'	=>	'ip',
 	'hostname'		=>	'hostname',
 	'mac'	=>	'mac',	
+	'block'	=>	'block',
+);
+%defaults = (
+	'block'	=>	0,
 );
 use openprint ();
 *log = \$openprint::log;
