@@ -508,6 +508,7 @@ sub to_string {
 		$string .= $self->gsm().'gsm ' if $self->gsm();
 		$string .= $self->quality() . ' ' if $self->quality();
 		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
+		$string .= 'Minimum: ' . $$self{'minimum_order'} if $$self{'minimum_order'};
 		$$self{'to_string'} = $string;
 	} # end if
 	return $$self{'to_string'};
