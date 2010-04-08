@@ -78,9 +78,6 @@ sub neccessary {
 	if ( $$printing_specs{'pockets'} eq 'Y' ) {
 		return 1;
 	} # end if
-	if ( $$printing_specs{'PocketSize'} ) {
-		return 1;
-	} # end if
 
 	return 0;
 } # end sub neccessary
