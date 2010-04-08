@@ -15,10 +15,20 @@
 					<input type="text" size="4" name="PocketSize" id="PocketSize" value="<?PocketSize?>" onkeyup="this.value=this.value.replace(/[^\.\d]/g, '');calc(this.form.name);" />
 				</li>
 				<li id="hemmed"><label>Will your banner be hemmed?</label>
-					<input type="radio" name="hemmed" id="hemmedY" value="Y" <? echo ( ssi::checked( $$variable{'hemmed'} ne 'N' ); ) ?> onclick="calc(this.form.name);" />
+					<input type="radio" name="hemmed" id="hemmedY" value="Y" <? echo ( ssi::checked( $$variable{'hemmed'} ne 'N' ); ) ?> onclick="$('edges').show();calc(this.form.name);" />
 					<label class="radio" for="hemmedY">Yes</label>
-					<input type="radio" name="hemmed" id="hemmedN" value="N" <? echo ( ssi::checked( $$variable{'hemmed'} eq 'N' ); ) ?> onclick="calc(this.form.name);" />
+					<input type="radio" name="hemmed" id="hemmedN" value="N" <? echo ( ssi::checked( $$variable{'hemmed'} eq 'N' ); ) ?> onclick="$('edges').hide();calc(this.form.name);" />
 					<label class="radio" for="hemmedN">No</label>
+				</li>
+				<li id="edges" <? echo ( $$variable{'hemmed'} ne 'Y' ? 'style="display:none;"' : '' ) ?>><label>Hemmed Edges:</label>
+					<? echo (
+						my $html;
+						foreach my $edge ( 'Left', 'Right','Top', 'Bottom' ) {
+							$html .= sprintf('<input type="checkbox" id="Edge%1$s" name="Edge%1$s" value="%1$s" onclick="calc(this.form.name);" %2$s />
+							<label class="radio" for="Edge%1$s">%1$s</label>', $edge, ssi::checked( $$variable{'Edge'.$edge} eq $edge ) );
+						} # end foreach $edge
+						return $html;
+					) ?>
 				</li>
 			</ul>
 		</div>

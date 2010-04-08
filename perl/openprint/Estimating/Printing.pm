@@ -1814,7 +1814,7 @@ $i->display();
 		# These are passed along for consideration in get_project_price.  Hence they should only occur after the current service, right?
 		my @signatures;
 		foreach ( sort $Project->signatures({'Group'=>$$specs{'Group'}}) ) {
-			push @signatures if $_ > $service_index;
+			push @signatures, $_ if $_ > $service_index;
 		} # end foreach
 
 		%signature_price_cache = ();
@@ -2065,7 +2065,7 @@ sub breakdown {
 	$breakdown .= $$price{'SpinePaste Breakdown'};
 	$breakdown .= $$price{'PerfectBound Breakdown'};
 	$breakdown .= $$price{'Paper Breakdown'};
-	$breakdown .= sprintf('Comparison Cost: %.2f<br/>', $$price{'Comparison Cost'});
+	$breakdown .= sprintf('Comparison Cost: %.2f<br/>', $$price{'Comparison Cost'}) if $$price{'Comparison Cost'} ne '';
 	return $breakdown;
 } # end sub breakdown
 
@@ -2074,24 +2074,21 @@ sub get_imposition_price {
 # impositions is a hash of imps for each press
 
 sub calculate_impositions {
-	my ( $Project, $P, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project ) = @_;
+	my ( $Project, $Press, $sig_specs, $qty_index, $qty, $PaperCounts, $versions, $project ) = @_;
 
 	my @impositions;
-	my $Press;
-	if ( ! $P ) {
+	if ( ! $Press ) {
 		if ( $impositions{''} and @{$impositions{''}} ) {
 #$openprint::log->debug("# of elevated impositions: " . @{$impositions{''}} );
 			@impositions = @{$impositions{''}};
 			$Press = $impositions[0]->Press();
 		} # end if
-	} else {
-#next;
-		$Press = $P;
-		@impositions = @{$impositions{$Press->id()}} if $impositions{$Press->id()};
-	} # end if
-	if ( ! $Press ) {
+		if ( ! $Press ) {
 #$openprint::log->debug("No Press");
-		return;
+			return;
+		} # end if
+	} else {
+		@impositions = @{$impositions{$Press->id()}} if $impositions{$Press->id()};
 	} # end if
 	if ( ! @impositions ) {
 		return;
@@ -2112,6 +2109,7 @@ sub calculate_impositions {
 		$SpreadLayout = ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ? $$sig_specs{'PageQuantity'.$qty_index} : $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$sig_specs{'txtSpreadSize'};
 		$cache_string = join('-', $$Press{id}, $SpreadLayout, @$sig_specs{'PrintingTypes', 'PreviousStockType', 'PreviousGrainDirection'} );
 		if ( $SpreadLayout > 0 ) {
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 0;
 			if ( $use_converted_imposition_cache and ( $_ = $converted_imposition_cache{$cache_string} ) ) {
 				@impositions = map { $_->copy() } @{$_};
 			} else {
@@ -2152,8 +2150,6 @@ sub calculate_impositions {
 				if ( $Paper->height() != $$sig_specs{"CutOff$qty_index"} ) {
 					next;
 				} # end if
-			} else {
-#$imp->display('stock not overriden! ' );
 			}  # end if
 			if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
 #$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
@@ -2176,13 +2172,11 @@ sub calculate_impositions {
 			if ( $SpreadLayout > 0 ) {
 				my %max_impositions;
 				my $max_pages = 0;
-				if ( $SpreadLayout > 0 ) {
-					foreach my $imp ( @impositions ) {
-						$max_pages = $imp->pages() if $imp->pages() > $max_pages;
-						$max_impositions{$imp->pages()} = $imp->imposition() if $imp->imposition() > $max_impositions{$imp->pages()};
-					} # end foreach
-					$max_pages = ceil( $max_pages / 3 );
-				} # end if
+				foreach my $imp ( @impositions ) {
+					$max_pages = $imp->pages() if $imp->pages() > $max_pages;
+					$max_impositions{$imp->pages()} = $imp->imposition() if $imp->imposition() > $max_impositions{$imp->pages()};
+				} # end foreach
+				$max_pages = ceil( $max_pages / 3 );
 				if ( $debug or 0 ) {
 					$openprint::log->debug("Max pages: $max_pages, ");
 					foreach my $p ( keys %max_impositions ) {
@@ -2217,15 +2211,17 @@ sub calculate_impositions {
 
 		my %imps;
 		foreach my $imp ( @results ) {
-			my $Paper = $imp->Paper();
 			my $add = 1;
+			my $Paper = $imp->Paper();
+
 			my $stock_qty = $qty/$imp->imposition();
 			if ( $Paper->type() eq 'Roll' ) {
 # Convert to weight
 				$stock_qty *= $Paper->area() * $Paper->wpsi();
 			} # end if
 			$stock_qty += $$PaperCounts{$Paper->to_string()};
-			my %SmallerPrice = $Paper->get_price($qty/$imp->imposition());
+			my %SmallerPrice = $Paper->get_price($stock_qty > $Paper->minimum_order_weight() ? $stock_qty : $Paper->minimum_order_weight() );
+
 			if ( $SpreadLayout > 0 ) {
 				if ( $imp->runstyle() eq 'Work & Tumble' ) {
 					my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
@@ -2234,7 +2230,7 @@ sub calculate_impositions {
 							my $I = $imps{$str}[$j];
 							my %BiggerPrice = $I->Paper()->get_price($stock_qty);
 							if ( ( $I->Paper()->area() <= $Paper->area() )
-									and ( $I->Paper()->minimum_order() <= $Paper->minimum_order() )
+									and ( $I->Paper()->minimum_order_weight() <= $Paper->minimum_order_weight() )
 									and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 									and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
 							   ) {
@@ -2249,7 +2245,7 @@ sub calculate_impositions {
 							my $I = $imps{$str}[$j];
 							my %BiggerPrice = $I->Paper()->get_price($stock_qty);
 							if ( ( $I->Paper()->area() >= $Paper->area() )
-									and ( $I->Paper()->minimum_order() >= $Paper->minimum_order() )
+									and ( $I->Paper()->minimum_order_weight() >= $Paper->minimum_order_weight() )
 									and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 									and ( $I->Paper()->is_cut() or ! $Paper->is_cut() )
 							   ) {
@@ -2270,20 +2266,32 @@ sub calculate_impositions {
 						} elsif ( ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$sig_specs{"CutOff$qty_index"} ) ) {
 							next;
 						} # end if
-						my %BiggerPrice = $I->Paper()->get_price($stock_qty);
+						my %BiggerPrice = $I->Paper()->get_price($stock_qty> $I->Paper()->minimum_order_weight() ? $stock_qty : $I->Paper()->minimum_order_weight());
 						if ( ( $I->Paper()->area() >= $Paper->area() )
-								and ( $I->Paper()->minimum_order() >= $Paper->minimum_order() )
-								and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
+								and ( $I->Paper()->minimum_order_weight() >= $Paper->minimum_order_weight() )
+								and ( (1*$BiggerPrice{'100lb Total'}) >= (1*$SmallerPrice{'100lb Total'}) )
 								and ( $I->Paper()->is_cut() or ! $Paper->is_cut() )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
-						} elsif ( ( $I->Paper()->area() < $Paper->area() )
-								and ( $I->Paper()->minimum_order() <= $Paper->minimum_order() )
-								and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
+if ( 0 ) {
+                            $openprint::log->debug( "Dropping $BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+                            $I->display();
+                            $imp->display();
+}
+
+						} elsif ( ( $I->Paper()->area() <= $Paper->area() )
+								and ( $I->Paper()->minimum_order_weight() <= $Paper->minimum_order_weight() )
+								and ( (1*$BiggerPrice{'100lb Total'}) <= (1*$SmallerPrice{'100lb Total'}) )
 								and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
 								) {
 							$add = 0;
+if ( 0 ) {
+                            $openprint::log->debug( "Not adding $BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+                            $I->display();
+                            $imp->display();
+}
+
 						} elsif ( 0 ) {
 							$openprint::log->debug( "Not Dropping $BiggerPrice{'100lb'} $SmallerPrice{'100lb'}");
 							$I->display();
@@ -2305,7 +2313,7 @@ sub calculate_impositions {
 							} # end if
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							if ( ( $I->Paper()->area() <= $Paper->area() )
-									and ( $I->Paper()->minimum_order() <= $Paper->minimum_order() )
+									and ( $I->Paper()->minimum_order_weight() <= $Paper->minimum_order_weight() )
 									and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 									and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
 							   ) {
@@ -2325,7 +2333,7 @@ sub calculate_impositions {
 							} # end if
 							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 							if ( ( $I->Paper()->area() >= $Paper->area() )
-									and ( $I->Paper()->minimum_order() >= $Paper->minimum_order() )
+									and ( $I->Paper()->minimum_order_weight() >= $Paper->minimum_order_weight() )
 									and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 									and ( ! ( ( ! $I->Paper()->is_cut() ) and $Paper->is_cut() ) )
 							   ) {
@@ -2347,14 +2355,14 @@ sub calculate_impositions {
 						} # end if
 						my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
 						if ( ( $I->Paper()->area() >= $Paper->area() )
-								and ( $I->Paper()->minimum_order() >= $Paper->minimum_order() )
+								and ( $I->Paper()->minimum_order_weight() >= $Paper->minimum_order_weight() )
 								and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
 								and ( ! ( ( ! $I->Paper()->is_cut() ) and $Paper->is_cut() ) )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 					$j -= 1;
 				} elsif ( ( $I->Paper()->area() < $imp->Paper()->area() )
-						and ( $I->Paper()->minimum_order() <= $Paper->minimum_order() )
+						and ( $I->Paper()->minimum_order_weight() <= $Paper->minimum_order_weight() )
 						and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
 						and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
 						) {
@@ -2372,7 +2380,7 @@ sub calculate_impositions {
 @impositions = map {@{$_}} values %imps;
 } # end if using cache=
 
-$log->debug("Press Impositions after filtering: " . @{$impositions{$Press->id()}} ) if $debug or 1;
+$log->debug("Press Impositions after filtering: " . @{$impositions{$Press->id()}} ) if $debug;
 if ( $$sig_specs{'versions'} > 1 and @impositions < 30 ) {
 	$openprint::log->debug("Calling do_versions, # of imps: " . @impositions ) if $debug;
 	@impositions = openprint::imposition::do_versions( $versions, \@impositions );
@@ -2384,7 +2392,7 @@ if ( $$project{'HasFolding'} and ( $Press->Specification('Folding Capable') eq '
 	$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 } # end if Folding
 
-if ( $debug ) {
+if ( $debug or 1 ) {
 	$openprint::log->debug($$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " Press: " .$Press->strid() . ' # ' . @impositions );
 	foreach my $imp ( @impositions ) {
 		$imp->display();
@@ -2444,6 +2452,7 @@ sub get_project_price {
 			my $hash_key = join(',', $Press->strid(), $imp->runstyle(), $imp->pages(), $imp->imposition() );
 			$$sig_specs{'PreviousForms'.$qty_index} = $previous_forms_cache{$hash_key};
 			$previous_forms_cache{$hash_key} += 1;
+my $recurse = 0;
 
 			my $services = $Project->services();
 			my %PlateCounts = %$PlateCounts;
@@ -2454,7 +2463,7 @@ sub get_project_price {
 #my $time = gettimeofday();
 #$imp->display($recursion_depth . ' Starting');
 			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts );
-#$imp->display("Actually calculating this imp $$price{'Comparison Cost'}") if sets::isin( $imp->imposition(), [2,4] );
+#$imp->display("Actually calculating this imp $$price{'Comparison Cost'}");
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
 			if ( ! $$price{'complete'} ) {
@@ -2464,11 +2473,12 @@ sub get_project_price {
 				next;
 			} # end if
 			if ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
-				if ( $debug ) {
+				if ( $debug or 1) {
 					$imp->display( "Too expensive $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}" );
 				} # end if
 				next; # next Impo
 			} # end if
+			my $Paper = $imp->Paper();
 
 			if ( $$project{'HasProofs'} ) {
 				# Add proof costs.  Proofs only depends on colours, equipment so doesn't need to be part of the rest of calc
@@ -2479,11 +2489,10 @@ sub get_project_price {
 
             $PlateCounts{$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Plate Count'};
             $PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}} += $$price{'Plate Costs'}{'Blank Plates'};
-			$PaperCounts{$imp->Paper()->to_string()} += $$price{'Stock Qty'};
+			$PaperCounts{$Paper->to_string()} += $$price{'Stock Qty'};
 
 			@{$$price{'Impositions'}} = @{$$sig_specs{'Impositions'}} if $$sig_specs{'Impositions'};
 			push @{$$price{'Impositions'}}, $imp;
-			my $Paper = $imp->Paper();
 
 			my $upq = $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} - $imp->pages();
 			if ( $upq and $imp->pages() ) {
@@ -2498,14 +2507,14 @@ sub get_project_price {
 						for ( my $j = 0; $j < @signatures; $j += 1 ) {
 # This code can theortically unsort the sognatures, so we shouldn't really have special cases for when the s_id is greater than the current one.
 							if ( $signatures[$j] != $s_id ) {
+#$openprint::log->debug("Consider sig in overrides $s_id");
 								my $sig_specs2 = openprint::service::get_specs_ref( $Project, $signatures[$j] );
 								foreach my $override ( 'chkOverridePageQuantity','chkOverrideImposition', 'chkOverridePress','chkOverrideRunStyle' ) {
 									if ( $$sig_specs2{$override.$qty_index} eq 'Y' ) {
 										$s_id = $signatures[$j];
 										splice @signatures, $j, 1;
-										#@signatures = splice @signatures, $j, 1;
 										%new_specs = %{$sig_specs2};
-$openprint::log->debug("Found sig in overrides");
+#$openprint::log->debug("Found sig in overrides $override $s_id");
 										last;
 									} # end if
 								} # end foreach override
@@ -2519,26 +2528,16 @@ $openprint::log->debug("Found sig in overrides");
 
 						# If we get here, @signatures has been cleaned out, and no overrides found.
 						if ( ( $s_id == $service_index ) and @signatures ) {
-							#for ( my $j = 0; $j < @signatures; $j += 1 ) {
-								#if ( $signatures[$j] > $s_id ) {
-									#$s_id = $signatures[$j];
-									#@signatures = splice @signatures, $j, 1;
-									$s_id = shift @signatures;
-									%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
-# These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press.
-									$new_specs{'chkOverrideRunStyle'.$qty_index} = '';
-									$new_specs{'chkOverrideImposition'.$qty_index} = '';
-									$new_specs{'chkOverridePageQuantity'.$qty_index} = '';
-									$new_specs{'chkOverridePress'.$qty_index} = '';
-$openprint::log->debug("Found sig without  overrides");
-									#last;
-								#} # end if
-							#} # end foreach
+							$s_id = shift @signatures;
+							%new_specs = %{openprint::service::get_specs_ref( $Project, $s_id )};
+# Not neccessary to empty the overrides, because we went looking for them above, and didn't find them
+							#$openprint::log->debug("Found sig without  overrides $s_id");
 						} # end if
-					} # end if
+					} # end if s_id, meaning dealing with existing sigs
 # If we didn't get a new s_id, then we are using fake services
 					if ( $s_id == $service_index ) {
-						$s_id = 0 ;
+							#$openprint::log->debug("Making fake service");
+						$s_id = 0;
 						%new_specs = %$service_specs;
 # These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press.
 						$new_specs{'chkOverrideImposition'.$qty_index} = '';
@@ -2562,7 +2561,8 @@ $openprint::log->debug("Found sig without  overrides");
 						and ( ($new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($new_specs{'ddmRunStyle'.$qty_index} eq $imp->runstyle()) )
 ) {
 
-						$sig_price = calc_price( $Project, $s_id, $imp, $project, $services, \%new_specs, $qty, $qty_index, \%PlateCounts );
+				  		$sig_price = calc_price( $Project, $s_id, $imp, $project, $services, \%new_specs, $qty, $qty_index, \%PlateCounts );
+$imp->display("additional calc_price this imp $$sig_price{'Comparison Cost'}");
 						$additional_price = $$sig_price{'Comparison Cost'};
 
 						if ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) {
@@ -2570,7 +2570,7 @@ $openprint::log->debug("Found sig without  overrides");
 
 							$additional_price *= $sigs;
 
-							$PaperCounts{$imp->Paper()->to_string()} += $sigs * $$sig_price{'Stock Qty'};
+							$PaperCounts{$Paper->to_string()} += $sigs * $$sig_price{'Stock Qty'};
 							foreach ( 1 .. $sigs ) {
 								push @{$$price{'Impositions'}}, $imp;
 								$previous_forms_cache{$hash_key} += 1;
@@ -2579,8 +2579,9 @@ $openprint::log->debug("Found sig without  overrides");
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Plate Count'};
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $sigs * $$sig_price{'Plate Costs'}{'Blank Plates'};
 						} else {
+							$sigs += 1;
 							$last_sig_price = int($$sig_price{'Comparison Cost'});
-							$PaperCounts{$imp->Paper()->to_string()} += $$sig_price{'Stock Qty'};
+							$PaperCounts{$Paper->to_string()} += $$sig_price{'Stock Qty'};
 							push @{$$price{'Impositions'}},$imp;
 							$upq -= $imp->pages();
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
@@ -2598,7 +2599,7 @@ $openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $
 						} # end if
 
 						$new_specs{'PrintingTypes'} = [ $Press->specification('Printing Type') ];
-						$new_specs{'PreviousStockType'} = $imp->Paper()->type();
+						$new_specs{'PreviousStockType'} = $Paper->type();
 						$new_specs{'PreviousGrainDirection'} = $imp->grain_direction();
 						if ( $$imp{'Folder'} and ( $imp->Press()->id() == $$imp{'Folder'}->id() ) ) {
 							#This is used in Folding to tell it not to mix impositions when inline folded
@@ -2607,22 +2608,22 @@ $openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $
 						$new_specs{'Impositions'} = $$price{'Impositions'};
 
 						if ( $recursion_depth >= 3 ) {
-							if ( $debug ) {
-								$imp->display('Recursion Depth :' . $recursion_depth );
-							} # en dif
+							$imp->display('Recursion Depth :' . $recursion_depth ) if ( $debug or 1);
 							$$sig_price{'complete'} = 0;
 						} else {
+$recurse = 1;
 #$openprint::log->debug("Equipment override: ".$new_specs{'chkOverridePress'.$qty_index} );
 #$openprint::log->debug("Page QUantity override: ".$new_specs{'chkOverridePageQuantity'.$qty_index} );
+#$imp->display("get_projcetcalc_price this imp $best_price{'Comparison Cost'} $$price{'Comparison Cost'}");
 							$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), $recursion_depth + 1 );
 						} # end if
+						$upq = 0;
 
 # get_project_price is recursive so we are done
-						$upq = 0;
 						if ( ( ! $$sig_price{'complete'} ) or ( ! $$sig_price{'Imposition'} ) ) {
 							$$price{'complete'} = $$sig_price{'complete'} = 0;
 							$additional_price = 10000000;
-							#$openprint::log->warn('Couldnt calculate full price');
+							$openprint::log->warn('Couldnt calculate full price');
 						} else {
 							@{$$price{'Impositions'}} = @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
 
@@ -2632,35 +2633,33 @@ $openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 							$additional_price = $$sig_price{'Comparison Cost'};
-							$additional_price -= $$sig_price{'Roll2SheetCharge'};
-							$additional_price -= $$sig_price{'SuppliedPaperPrice'}{'Total'};
-							$additional_price -= $$sig_price{'Stitching Cost'};
-							$additional_price -= $$sig_price{'PerfectBound Cost'};
-							$additional_price -= $$sig_price{'Stock Total'};
+							#$$price{'Paper Breakdown'} = $$sig_price{'Paper Breakdown'};
+							# Will get included in AdditionalSignature Breakdown
+							#$$price{'Stitching Breakdown'} = $$sig_price{'Stitching Breakdown'};
+							#$$price{'PerfectBound Breakdown'} = $$sig_price{'PerfectBound Breakdown'};
+							$$price{'AdditionalSignature Breakdown'} = $$sig_price{'AdditionalSignature Breakdown'};
 						} # end if sig_price complete
 					} # end if calc_price or get_project_price
 
 					if ( (! $$sig_price{complete}) or ($additional_price < 0) ) {
-#$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, additional price: $additional_price $$sig_price{'Comparison Cost'}");
+$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, additional price: $additional_price $$sig_price{'Comparison Cost'}");
 #$imp->display();
 						$$price{'complete'} = 0;
 						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
 						last;
 					} # end if
 
-					$additional_price -= $$sig_price{'Plate Comparison Cost'};
-					$$sig_price{'Stitching Breakdown'} = '';
-					$$sig_price{'PerfectBound Breakdown'} = '';
+					#$additional_price -= $$sig_price{'Plate Comparison Cost'};
+					# Fills in the price for breakdown
 					plate_cost( $sig_price, \%PlateCounts, $$sig_price{'Imposition'} );
 
 					$$price{'Comparison Cost'} += $additional_price;
-					$additional_price += $$sig_price{'Plate Price'};
-					$additional_price += $$sig_price{'Blank Plate Price'};
-					if ( $$sig_price{'AdditionalSignature Breakdown'} ) {
-						$$price{'AdditionalSignature Breakdown'} .= $$sig_price{'AdditionalSignature Breakdown'};
-					} elsif ( $$sig_price{'Imposition'} ) {
-						$$price{'AdditionalSignature Breakdown'} .= sprintf($sigs . ' Additional Sig %dpages %dout %s on %sx%s on %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $$sig_price{'Imposition'}->Paper()->width(), $$sig_price{'Imposition'}->Paper()->height(), $$sig_price{'Imposition'}->Press()->strid(), $additional_price ) . '<br/>';
-						delete $$sig_price{'Paper Breakdown'};
+					#$additional_price += $$sig_price{'Plate Price'};
+					#$additional_price += $$sig_price{'Blank Plate Price'};
+
+					if ( $$sig_price{'Imposition'} ) {
+						$$price{'AdditionalSignature Breakdown'} .= sprintf($sigs . ' Additional Sig %dpages %dout %s on %sx%s on %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $$sig_price{'Imposition'}->Paper()->width(), $$sig_price{'Imposition'}->Paper()->height(), $$sig_price{'Imposition'}->Press()->strid(), $$price{'Comparison Cost'} ) . '<br/>';
+						$$sig_price{'Comparison Cost'} = '';
 						$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
 					} else {
 						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
@@ -2668,6 +2667,8 @@ $openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $
 
 					if ( %best_price and check_price( $best_price{'Comparison Cost'}, $price, $sig_specs, $qty_index, $imp, 'Sig' ) ) {
 #$openprint::log->debug("Worse than best: Best is " . $best_price{'Imposition'}->pages() .': ' . $best_price{'Comparison Cost'} . ' ours: ' . $imp->pages() . ': ' . $$price{'Comparison Cost'} );
+#$best_price{'Imposition'}->display() if $best_price{'Imposition'};
+#$imp->display();
 						$$price{'complete'} = 1;
 						$upq = 0;
 						last;
@@ -2684,16 +2685,18 @@ $imp->display();
 			} # end if
 
 			if ( %best_price and $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'} ) {
+#$openprint::log->debug("BLAH: $best_price{'Comparison Cost'} <= $$price{'Comparison Cost'}");
 				next; # next Impo
 			} # end if
 
+if ( ! $recurse ) {
 			my @paper_strings = keys %PaperCounts;
 			if ( 1 == @paper_strings and $imp->Paper()->to_string() ne $paper_strings[0] ) {
 $openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->to_string() );
 			} else {
-				#foreach my $k ( @paper_strings ) {
-					#$openprint::log->debug( $k);
-				#} # end 
+				foreach my $k ( @paper_strings ) {
+					$openprint::log->debug( "$k => $PaperCounts{$k}" );
+				} # end 
 			}
 
 			foreach my $paper_string ( keys %PaperCounts ) {
@@ -2730,6 +2733,8 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 				$$price{'Stock Total'} += $paper_price{'Total'};
 				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s SPP:%s Minimum: %s %slbs * %.2f/100lbs = $%.2f<br/>', $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : $PaperCounts{$paper_string}.'lbs', $Paper->to_string(), $Paper->sheets_per_package(), $Paper->minimum_order(), $weight, @paper_price{'100lb Price','Total'} );
 			} # end foreach Paper in PaperCounts
+#$openprint::log->debug($$price{'Paper Breakdown'});
+#$openprint::log->debug("Comparison: $$price{'Comparison Cost'}");
 
 			if ( $$sig_specs{'rdbSuppliedStock'} eq 'Y' ) {
 				if ( my %SuppliedPaperPrice = openprint::service::get_price_object( 'Supplied'.$Paper->type(), undef, undef ) ) {
@@ -2745,9 +2750,9 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					$$price{'Total Cost'} += $SuppliedPaperPrice{'Total'};
 				} # end if
 			} elsif ( ! openprint::ServiceType::find('name'=>'Paper') ) {
-			my %paper_price = $Paper->get_price( $$price{'Stock Weight'} );
-			$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
-			@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @paper_price{'100lb Cost', '100lb Price', 'Total'};
+				my %paper_price = $Paper->get_price( $$price{'Stock Weight'} );
+				$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
+				@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @paper_price{'100lb Cost', '100lb Price', 'Total'};
 				$$price{'Total Cost'} += $$price{'Paper Total'};
 			} # end if
 
@@ -2758,15 +2763,18 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 				$$price{'Setup Total'} += $$price{'Roll2SheetCharge'};
 			} # end if
 
+#$openprint::log->debug("After plates: $$price{'Plate Comparison Cost'} $$price{'Comparison Cost'}");
+			# plate cost basically fills in the breakdown with appropriate, discounted data
 			plate_cost( $price, \%PlateCounts, $imp );
+			# This actually adds the plate costs 
 			foreach my $plate_id ( keys %PlateCounts ) {
-				if ( my @materials = openprint::Material::find( 'name'=>$plate_id ) ) {
-					my %plate_price = $materials[0]->get_price( $PlateCounts{$plate_id}, undef );
+				if ( my $Material = openprint::Material::find_one( 'name'=>$plate_id ) ) {
+					my %plate_price = $Material->get_price( $PlateCounts{$plate_id}, undef );
 					$$price{'Plate Comparison Cost'} += $plate_price{'Price'} * $PlateCounts{$plate_id};
 					$$price{'Comparison Cost'} += $plate_price{'Price'} * $PlateCounts{$plate_id};
 				} # end if
 			} # end foreach plate_id
-#$openprint::log->debug("After plates: $$price{'Plate Comparison Cost'} $$price{'Comparison Cost'}") if sets::isin( $imp->imposition(), [2,4] );
+#$openprint::log->debug("After plates: $$price{'Plate Comparison Cost'} $$price{'Comparison Cost'}");
 
 			#if ( ! $upq ) {
 				# The idea is to only calc these on the last sig
@@ -2792,6 +2800,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) Price: $%.2f<br/>', @$results{'Status','alert','Price'} );
 						$$price{'Stitching Cost'} = $$results{'Price'};
 						$$price{'Comparison Cost'} += $$results{'Price'};
+#$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'}");
 					} # end if
 #$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 				} # end if
@@ -2824,6 +2833,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 #$openprint::log->debug( 'PerfectBound Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 				} # end if PerfectBound
 			#} # end if PerfectBound
+} # end if ! recurse
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
 
@@ -2839,8 +2849,8 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 #$imp->display();
 #$openprint::log->debug("Got better: $best_price{'Comparison Cost'} > $$price{'Comparison Cost'}" );
 #if ( %best_price ) {
-#$best_price{'Imposition'}->display();
-#$openprint::log->debug( breakdown( \%best_price, $specs ) );
+#$best_price{'Imposition'}->display() if $best_price{'Imposition'};
+##$openprint::log->debug( breakdown( \%best_price, $specs ) );
 #}
 #$imp->display();
 #$openprint::log->debug( breakdown( $price, $specs ) );
@@ -4044,15 +4054,15 @@ sub get_run_price {
 		my $Paper = $Imposition->Paper();
 
 # Only load this if not already specified by some inline bindery service
-		$run_speed = $Press->specification('Run Speed', $$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm() ) if ! $run_speed;
+		$run_speed = $Press->specification('Run Speed', ($$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm()), 1 ) if ! $run_speed;
 		if ( ! $run_speed ) {
-			$openprint::log->error("No run sped!");	
+			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm() ) );
 		} elsif ( $run_speed == $$std_speed{'value'} ) {
 			$speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
-			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug or 1;
+			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug;
 			$speed_mod = $run_speed / $speed_mod if $speed_mod;
 		} else {
-			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug or 1;
+			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug;
 			$speed_mod = $$std_speed{'value'} / $run_speed;
 		} # end if
 	} # end if
