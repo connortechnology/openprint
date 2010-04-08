@@ -853,17 +853,17 @@ sub calc {
 			} # end if
 
 			# Folding
-if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-			my %results = signature_calc_folding_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
-			$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
-			$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
-			$price += $results{'Price'};
-			$mprice += $results{'MPrice'};
-			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
-			$$specs{'alert'} .= $results{'alert'};
-			$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
-$openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
-} # end if
+			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
+				my %results = signature_calc_folding_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
+				$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
+				$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
+				$price += $results{'Price'};
+				$mprice += $results{'MPrice'};
+				$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';
+				$$specs{'alert'} .= $results{'alert'};
+				$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
+#$openprint::log->warn("Status from sig_calc_folding: $results{'Status'}");
+			} # end if
 
 			my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
 			$$specs{'Status'} = 'uncalculated' if $results{'Status'} eq 'uncalculated';

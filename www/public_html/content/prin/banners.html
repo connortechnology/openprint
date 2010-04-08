@@ -1,47 +1,46 @@
 <form id="f1" name="f1" method="post" action="">
 	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
 	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
+	<!--#include virtual="/includes/error_reporting.html"-->
 	<div class="InstantPricing">
 		<div id="instant_price_section">
-		   <div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
-		   <div class="shadow_left"><div class="shadow_right">
-                        
+			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
+			<div class="shadow_left"><div class="shadow_right">
+						
 				<div class="Questions"><div class="<? echo ( $$variable{'ProjectType'}->name() ) ?>">
 					<!--#include virtual="_project_name.html"-->
 					<div class="ProjectSpecifications">
 						<h1>Project Specifications</h1>
-
-
-					<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
-					<!--#include virtual="/includes/sizes.html"-->
-					<p><label>Colours:</label>
-						<select id="Colours" name="Colours" onchange="calc(this.form.name);">
-							<option value="4/0">4 Colour One Side</option>
-							<option value="4/1">4 Colour/Black</option>
-							<option value="4/4">4 Colour Both Sides</option>
-						</select>
-					</p>
-					<br/>
-					<div class="row">
-						<label>Stock Information</label><br/>
-						<!--#include virtual="/includes/paper_dropdowns.html"-->
-					</div>
-					<!--#include virtual="_proofs.html"-->
-					<!--#include virtual="/includes/drilling.html"-->
-					<!--#include virtual="/includes/scoring.html"-->
-					<!--#include virtual="/includes/perfing.html"-->
-					<!--#include virtual="/includes/turnaround.html"-->
+						<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
+						<!--#include virtual="/includes/sizes.html"-->
+						<p><label>Colours:</label>
+							<select id="Colours" name="Colours" onchange="calc(this.form.name);">
+								<option value="4/0">4 Colour One Side</option>
+								<option value="4/1">4 Colour/Black</option>
+								<option value="4/4">4 Colour Both Sides</option>
+							</select>
+						</p>
+						<br/>
+						<div class="row">
+							<label>Stock Information</label><br/>
+							<!--#include virtual="/includes/paper_dropdowns.html"-->
+						</div>
+						<!--#include virtual="_proofs.html"-->
+						<!--#include virtual="/includes/drilling.html"-->
+						<!--#include virtual="/includes/scoring.html"-->
+						<!--#include virtual="/includes/perfing.html"-->
+						<!--#include virtual="/includes/turnaround.html"-->
+						<br class="spacer"/>
+						<!--#include virtual="/includes/quantity.html"-->
+						<br class="spacer"/>
+						<!--#include virtual="/includes/press_type.html"-->
+						<br class="spacer"/>
+						<!--#include virtual="/includes/prices.html"-->
+					</div><!--Questions-->
 					<br class="spacer"/>
-					<!--#include virtual="/includes/quantity.html"-->
-					<br class="spacer"/>
-					<!--#include virtual="/includes/press_type.html"-->
-					<br class="spacer"/>
-					<!--#include virtual="/includes/prices.html"-->
-				</div><!--Questions-->
-				   <br class="spacer"/>
-			  </div>
-		   </div>
-		   <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
+				</div>
+			</div>
+			<div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 		</div>
 </div><!--instant_price_section-->
 <? echo ( 

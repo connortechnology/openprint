@@ -504,6 +504,7 @@ sub to_string {
 			} # end if
 			$string .= $self->mweight().'M ' if $self->mweight();
 		} # end if
+		$string .= sprintf('%.1fPT ', 1000*$self->calliper()) if $self->calliper();
 		$string .= $self->gsm().'gsm ' if $self->gsm();
 		$string .= $self->quality() . ' ' if $self->quality();
 		$string .= 'FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};

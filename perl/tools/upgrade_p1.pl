@@ -6,7 +6,7 @@ use Date::Calc;
 require sql;
 require logger;
 require openprint::Object;
-require openprint::Paper;
+require configuration;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -27,13 +27,13 @@ if ( $year ) {
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		print "Getting db backup $month-$day-$year\n";
 		if ( $src_host ne 'localhost' ) {
-			`su postgres -c "scp $src_host:/media/Storage/backups/localhost/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
+			`su postgres -c "scp $src_host:/media/Storage/Backups/localhost/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
 		} else {
-			`ln -s /media/Storage/backups/localhost/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2`;
+			`ln -s /media/Storage/Backups/localhost/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2`;
 		} 
 	} # end if
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
-		die "No db dump";
+		die "No db dump /tmp/$src_db-$month-$day-$year.sql.bz2";
 	}
 	print "Dropping db...";
 	`su postgres -c "dropdb $dst_db"`;
@@ -181,6 +181,14 @@ order and will be charged or credited accordingly.
 	sql::insert( undef, undef, 'configuration', 'name', 'RegistrationRequiredFields','value',
 'company_name,firstname,lastname,email,Captcha,address1,country,state,city,postalcode,phone,password,verifypassword',
 'category','Required Fields', 'description', 'Comma-separated list of fields on the registration page which must be filled in.');
+	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Standard Run Speed'], 'strname',' Run Speed' );
+	sql::update( undef, undef, 'tbl_equipment_specifications', [ 'strname=?', 'Press Additional Run Speed' ], 'strname',' Run Speed' );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 1, 'strname','Run Speed', 'dblmin', 0.0031, 'dblmax', 0.0120, 'strvalue', 9000, 'interpolate', 0 );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 4, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0 );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 27, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0 );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 25, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0 );
+	sql::insert( undef, undef, 'tbl_equipment_specifications', 'lngequipmentindex', 30, 'strname','Run Speed', 'dblmin', 0.0029, 'dblmax', 0.0099, 'strvalue', 9000, 'interpolate', 0 );
+	sql::execute( undef, undef, "delete from tbl_equipment_specifications WHERE lngequipmentindex=28 and strname='Press Additional Run Speed'" );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
-sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'NOW()', 'backup', 0 );
+sql::insert(undef, undef, 'database_info', 'version', $version+1, 'updated_on', 'NOW()', 'backup', 0 );
 $dbh->disconnect();

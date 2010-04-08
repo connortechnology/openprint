@@ -474,41 +474,40 @@ if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 		sql::insert( undef, undef, 'servicetype_categories', 'name', $c );
 	} # end foreach
 } # end if
-if ( ! openprint::ServiceType_Category::find() ) {
-	new openprint::ServiceType_Category()->save({'name'=>'Printing','sorting'=>1});
-	new openprint::ServiceType_Category()->save({'name'=>'Prepress','sorting'=>2});
-	new openprint::ServiceType_Category()->save({'name'=>'Bindery','sorting'=>3});
-	new openprint::ServiceType_Category()->save({'name'=>'Specialty','sorting'=>4});
-	new openprint::ServiceType_Category()->save({'name'=>'Packaging','sorting'=>5});
-	new openprint::ServiceType_Category()->save({'name'=>'Shipping','sorting'=>6});
-	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>7});
-	new openprint::ServiceType_Category()->save({'name'=>'Custom Services','sorting'=>10});
-} else {
+	new openprint::ServiceType_Category()->save({'name'=>'Printing','sorting'=>1}) if ! openprint::ServiceType_Category::find('name'=>'Printing');
+	new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category::find('name'=>'Coatings');
+	new openprint::ServiceType_Category()->save({'name'=>'Prepress','sorting'=>3}) if ! openprint::ServiceType_Category::find('name'=>'Prepress');
+	new openprint::ServiceType_Category()->save({'name'=>'Bindery','sorting'=>4}) if ! openprint::ServiceType_Category::find('name'=>'Bindery');
+	new openprint::ServiceType_Category()->save({'name'=>'Specialty','sorting'=>5}) if ! openprint::ServiceType_Category::find('name'=>'Specialty');
+	new openprint::ServiceType_Category()->save({'name'=>'Packaging','sorting'=>6}) if ! openprint::ServiceType_Category::find('name'=>'Packaging');
+	new openprint::ServiceType_Category()->save({'name'=>'Shipping','sorting'=>7}) if ! openprint::ServiceType_Category::find('name'=>'Shipping');
+	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category::find('name'=>'Materials');
+	new openprint::ServiceType_Category()->save({'name'=>'Custom Services','sorting'=>10}) if ! openprint::ServiceType_Category::find('name'=>'Custom Services');
+
 	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Printing','sorting'=>undef ) ) {
-		$STC->save({'sorting'=>1});
+		$STC->save({'sorting'=>1}) if ! $STC->sorting();
 	} # end if
 	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Prepress','sorting'=>undef ) ) {
-		$STC->save({'sorting'=>2});
+		$STC->save({'sorting'=>3}) if ! $STC->sorting();
 	} # end if
 	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Bindery','sorting'=>undef ) ) {
-		$STC->save({'sorting'=>3});
+		$STC->save({'sorting'=>4}) if ! $STC->sorting();
 	} # end if
 	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Specialty','sorting'=>undef ) ) {
-		$STC->save({'sorting'=>4});
+		$STC->save({'sorting'=>5}) if ! $STC->sorting();
 	} # end if
 	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Packaging','sorting'=>undef ) ) {
-		$STC->save({'sorting'=>5});
+		$STC->save({'sorting'=>6}) if ! $STC->sorting();
 	} # end if
 	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Shipping','sorting'=>undef ) ) {
-		$STC->save({'sorting'=>6});
+		$STC->save({'sorting'=>7}) if ! $STC->sorting();
 	} # end if
 	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Materials','sorting'=>undef ) ) {
-		$STC->save({'sorting'=>7});
+		$STC->save({'sorting'=>8}) if ! $STC->sorting();
 	} # end if
 	if ( my $STC = openprint::ServiceType_Category::find_one( 'name'=>'Custom Services','sorting'=>undef ) ) {
-		$STC->save({'sorting'=>10});
+		$STC->save({'sorting'=>10}) if ! $STC->sorting();
 	} # end if
-} # end if
 
 if ( sets::isin( 'service_types', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_types LIMIT 1', {} );
@@ -794,6 +793,17 @@ if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	} # end if
+} # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_Prices LIMIT 1', {} );
+if ( $data ) {
+	if ( ! exists $$data{'owner_id'} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
+		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES Companies(id)');
+	} # end if
+	if ( ! exists $$data{'supplier_id'} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD supplier_id INTEGER');
+		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (supplier_id) REFERENCES Companies(id)');
 	} # end if
 } # end if
 if ( $version < 1901 ) {
@@ -1451,10 +1461,12 @@ if ( $data ) {
 	$dbh->do(q`alter table tbl_Quote_Details DROP dblmarkup`) if exists $$data{'dblmarkup'};
 	sql::end_transaction( $dbh, $ac );
 } # end if
-
-if ( ! openprint::ServiceType::find('name'=>'Paper') ) {
-	new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>7}) if ! openprint::ServiceType_Category::find('name'=>'Materials');
-    my $PaperService = new openprint::ServiceType();
+$log->debug("Materials");
+new openprint::ServiceType_Category()->save({'name'=>'Materials','sorting'=>8}) if ! openprint::ServiceType_Category::find('name'=>'Materials');
+if ( my $ServiceType = openprint::ServiceType::find_one('name'=>'Paper') ) {
+	$ServiceType->save({'category'=>'Materials'}) if $ServiceType->category() ne 'Materials';
+} else {
+	my $PaperService = new openprint::ServiceType();
     $PaperService->save({'name'=>'Paper',
             'description'=>'Paper',
             'url'=>'Paper.html',
@@ -1573,14 +1585,17 @@ foreach my $S ( openprint::ServiceType::find('name'=>['SaddleStitching','LoopSti
 	} # end if
 } # end foreach
 
-if ( ! openprint::ServiceType::find('name'=>'Aqueous') ) {
+new openprint::ServiceType_Category()->save({'name'=>'Coatings','sorting'=>2}) if ! openprint::ServiceType_Category::find('name'=>'Coatings');
+if ( my $S = openprint::ServiceType::find_one('name'=>'Aqueous') ) {
+	$S->save({'category'=>'Coatings'}) if $S->category() ne 'Coatings';
+} else {
 	print "Adding Aqueous ServiceType\n";
 	my $S = new openprint::ServiceType();
 	$S->save({
 		'name'	=>	'Aqueous',
 		'description'	=>	'Aqueous',
 		'type'		=>	'Aqueous',
-		'category'	=>	'Printing',
+		'category'	=>	'Coatings',
 		'url'		=>	'spec/Aqueous.html',
 		'create_visible'	=>	0,
 		'view_visible'		=>	1,
@@ -1627,13 +1642,31 @@ if ( ! openprint::Material::find('name'=>'PerforatingWheel') ) {
 foreach my $S ( openprint::Service::find('name'=>'Aqueous') ) {
 	if ( ! openprint::Service::find('name'=>'Aqueous Gloss Overall') ) {
 		print "Converting Service Aqueous\n";
-		$S->name('Aqueous Gloss Overall');
-		$S->description('Aqueous Gloss Overall');
-		$S->category('Coating');
-		$S->save();
+		my $S2 = $S->copy();
+		$S2->name('Aqueous Gloss Overall');
+		$S2->description('Aqueous Gloss Overall');
+		$S2->category('Coating');
+		$S2->save();
 		foreach my $P ( $S->prices() ) {
-			$P->save({'cost'=>int($P->cost()/2),'price'=>int($P->price()/2)});
-		}
+			$P = $P->copy();
+			$P->service_id( $S2->id() );
+			$P->units('per 1000 impressions');
+			$P->save();
+		} # end foreach
+	} # end if
+	if ( ! openprint::Service::find('name'=>'Aqueous Gloss Spot') ) {
+		print "Converting Service Aqueous\n";
+		my $S2 = $S->copy();
+		$S2->name('Aqueous Gloss Spot');
+		$S2->description('Aqueous Gloss Spot');
+		$S2->category('Coating');
+		$S2->save();
+		foreach my $P ( $S->prices() ) {
+			$P = $P->copy();
+			$P->service_id( $S2->id() );
+			$P->units('per 1000 impressions');
+			$P->save();
+		} # end foreach
 	} # end if
 	if ( ! openprint::Service::find('name'=>'Aqueous Matte Overall') ) {
 		my $S2 = $S->copy();
@@ -1647,6 +1680,19 @@ foreach my $S ( openprint::Service::find('name'=>'Aqueous') ) {
 			$P->save();
 		} # end foreach
 	} # end if
+	if ( ! openprint::Service::find('name'=>'Aqueous Matte Spot') ) {
+		my $S2 = $S->copy();
+		$S2->name('Aqueous Matte Spot');
+		$S2->description('Aqueous Matte Spot');
+		$S2->save();
+		foreach my $P ( $S->prices() ) {
+			$P = $P->copy();
+			$P->service_id( $S2->id() );
+			$P->units('per 1000 impressions');
+			$P->save();
+		} # end foreach
+	} # end if
+	$S->delete();
 } # end if
 foreach my $S ( openprint::Service::find('name'=>'AqueousMakeReady') ) {
 	if ( ! openprint::Service::find('name'=>'Aqueous Gloss Overall MakeReady') ) {
@@ -1921,17 +1967,6 @@ foreach my $ServiceType ( openprint::ServiceType::find() ) {
 		$ServiceType->save();
 	} # end if
 } # end foreach ServiceType
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_Prices LIMIT 1', {} );
-if ( $data ) {
-	if ( ! exists $$data{'owner_id'} ) {
-		$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
-		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES companies(id)');
-	} # end if
-	if ( ! exists $$data{'supplier_id'} ) {
-		$dbh->do('ALTER TABLE Service_Prices ADD supplier_id INTEGER');
-		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (supplier_id) REFERENCES companies(id)');
-	} # end if
-} # end if
 
 if ( ! sets::isin( 'emailcampaigns', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
