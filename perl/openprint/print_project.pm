@@ -576,10 +576,10 @@ sub create_edit_process {
 		if ( ! $Project->quantity2() ) {
 			if ( $Project->quantity1() ) {
 				foreach my $service_id ( @service_ids ) {
-					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
+					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)1$/ and ! $key =~ /Special/ ) {
+						if ( ( ! $key =~ /Special/ ) and ( $key =~ /^(.*)1$/ ) ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -589,7 +589,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)3$/ and ! $key =~ /Special/ ) {
+						if ( ( ! $key =~ /Special/ ) and ( $key =~ /^(.*)3$/ ) ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'2', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -615,7 +615,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)1$/ and ! $key =~ /Special/ ) {
+						if ( ( ! $key =~ /Special/ ) and ( $key =~ /^(.*)1$/ ) ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
 						} # end if
 					} # end foreach
@@ -625,7 +625,7 @@ sub create_edit_process {
 					my $specs = openprint::service::get_specs_ref( $Project->id(), $service_id );
 					foreach my $key ( keys %$specs ) {
 						next if $key =~ /^txtQuantity/;
-						if ( $key =~ /(.*)2$/ and ! $key =~ /Special/ ) {
+						if ( ( ! $key =~ /Special/ ) and ( $key =~ /^(.*)2$/ ) ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service_id, $1.'3', $$specs{$key} );
 						} # end if
 					} # end foreach

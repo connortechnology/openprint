@@ -114,12 +114,13 @@
 ) ?>
 	</ul>
 </fieldset>
+<? eval ( @{$$variable{'SpecialtyServiceTypes'}} = openprint::ServiceType::find('category'=>'Specialty','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
 <? if (	@{$$variable{'SpecialtyServiceTypes'}} ) ?>
 <fieldset><legend>What type of specialty finishing services are required for the project?</legend>
 	<ul>
 <? echo ( 
 	my $html = '';
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Specialty','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
+	foreach my $ServiceType ( @{$$variable{'SpecialtyServiceTypes'}} ) {
 		$html .= sprintf(q`
 			<li>
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
