@@ -3421,7 +3421,16 @@ sub calc_price {
 		my $grade = $Imposition->Paper()->grade();
 		$grade = 4 if ! $grade;
 
-		if ( lc $ink_price{'units'} eq 'per kg' ) {
+		if ( lc $ink_price{'units'} eq 'per cartridge' ) {
+			if ( sets::isin( $real_colour, $$project{'side_one_colours'} ) and sets::isin( $real_colour, $$project{'side_two_colours'} ) ) {
+				$area /= 2;
+			} # end if
+			my $coverage = $InkMaterial->specification('Coverage', $grade);
+			my $qty = sprintf('%.2f', $area/$coverage ) if $coverage;
+			my %ink_price = $InkMaterial->get_price( $qty, $Press );
+			$price{'Ink Price'} += $ink_price{'Price'} * $qty;
+			$price{'Ink breakdown'} .= sprintf(' mileage: %d, %.2f * $%s%s=$%.2f', $coverage,$qty, $ink_price{'Price'},$ink_price{'units'},$ink_price{'Price'} * $qty);
+		} elsif ( lc $ink_price{'units'} eq 'per kg' ) {
 			if ( sets::isin( $real_colour, $$project{'side_one_colours'} ) and sets::isin( $real_colour, $$project{'side_two_colours'} ) ) {
 				$area /= 2;
 			} # end if
