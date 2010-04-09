@@ -1003,33 +1003,33 @@ if ( 0 ) {
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
-			# Coalesce Jobs
+		# Coalesce Jobs
 $log->debug("Order before coalesce: @order");
-			my $previous;
-			foreach my $row_id ( @order ) {
-				my $Job = new openprint::ScheduledJob( $row_id );
-				if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
-					my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
-					my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
-					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() ) ) {
+		my $previous;
+		foreach my $row_id ( @order ) {
+			my $Job = new openprint::ScheduledJob( $row_id );
+			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
+				my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
+				my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
+				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() ) ) {
 $log->debug("Sigs are the same, coalescing ");
-						$_ = $previous->save({
-								'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
-								'service_id'	=>	[ @{$$previous{'service_id'}}, @{$$Job{'service_id'}} ],	
-								});
-						if ( $_ ) {
-							$log->error($_);
-						} else {
-							$Job->delete();
-							@order = sets::exclude( [ $row_id ], \@order );
-						} # end if
+					$_ = $previous->save({
+							'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
+							'service_id'	=>	[ @{$$previous{'service_id'}}, @{$$Job{'service_id'}} ],	
+							});
+					if ( $_ ) {
+						$log->error($_);
+					} else {
+						$Job->delete();
+						@order = sets::exclude( [ $row_id ], \@order );
 					} # end if
-					$previous = undef;
-				} else {
-$log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
-					$previous = $Job;
 				} # end if
-			} # end foreach row
+				$previous = undef;
+			} else {
+$log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
+				$previous = $Job;
+			} # end if
+		} # end foreach row
 
 $log->debug("Order after coalesce: @order");
 		sql::end_transaction( $dbh, $ac );
