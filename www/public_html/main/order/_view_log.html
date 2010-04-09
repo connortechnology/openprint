@@ -7,15 +7,19 @@
 			<th align="left" width="150">When</th>
 			<th align="left">Description</th>
 		</tr>
-		<? eval ( @{$$variable{'OrderLog'}} = sql::execute( undef, undef, 'SELECT company_id, user_id, dtmwhen, description FROM Order_Log WHERE order_id=?', $$variable{'OrderID'} ); ) ?>
-		<? while ( @$variable{'company_id','user_id','When','Description'} = splice @{$$variable{'OrderLog'}},0,4; ) ?>
-		<tr<?rowclass?>>
-			<td><? echo ( new openprint::Company( $$variable{'company_id'} )->name() ) ?></td>
-			<td><? echo ( new openprint::User( $$variable{'user_id'} )->name() ) ?></td>
-			<td><? echo ( Date::Format::time2str( $openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'When'} ) ) ); ) ?></td>
-			<td><?Description?></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-		<? endwhile ( @$variable{'company_id','user_id','When','Description'} = splice @{$$variable{'OrderLog'}},0,4; ) ?>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			@{$$variable{'OrderLog'}} = sql::execute( undef, undef, 'SELECT company_id, user_id, dtmwhen, description FROM Order_Log WHERE order_id=?', $$variable{'OrderID'} );
+			while ( @$variable{'company_id','user_id','When','Description'} = splice @{$$variable{'OrderLog'}},0,4 ) {
+				$html .= sprintf('<tr%1$s><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td></tr>', $rowclass, 
+					new openprint::Company( $$variable{'company_id'} )->name(), new openprint::User( $$variable{'user_id'} )->name(),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'When'} ) ),
+					$$variable{'Description'},
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end while
+			return $html;
+		) ?>
 	</table>
 </fieldset>

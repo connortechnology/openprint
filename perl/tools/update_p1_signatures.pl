@@ -33,13 +33,19 @@ sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBl
 sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 
-foreach my $Project ( openprint::Project::find( 'order'=>'id desc','limit'=>1000 ) ) {
+foreach my $Project ( openprint::Project::find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
 	foreach my $sig_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		if ( $$sig_specs{'SignatureIndex'} eq '' ) {
+			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
+			my ( $sig_index ) = sql::execute( undef, undef, $_, $Project->id() );
+			$sig_index += 1;
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'SignatureIndex', $sig_index );
+		} # end if
 		foreach my $bleed ( 'Left','Right','Top','Bottom' ) {
 			if ( $$sig_specs{'chkBleed'.$bleed} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Bleed'.$bleed, $$sig_specs{'chkBleed'.$bleed} );

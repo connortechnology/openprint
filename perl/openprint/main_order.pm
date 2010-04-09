@@ -528,5 +528,7 @@ sub history_details {
 
 sub _CustomerPickUp {
 } # end sub _CustoemrPickUp
+sub _view_log {
+} # end sub _view_log
 1;
 __END__
