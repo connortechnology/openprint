@@ -150,15 +150,17 @@ sub process_request {
 
 			if ( $Scanner->type() eq 'Mobile' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
-					@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
-					#$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
-					if ( ( ! @last_seen ) or ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
-						$Scanner->location_id( $Tag->location_id(), $Tag->id() );
-						shift @last_seen if @last_seen > $location_cache_size;
-						push @last_seen, $Tag->location_id();
-						$self->log(1, sprintf('%s : %s : updating location of scanner %s to %s', $date, $self->{server}->{peeraddr}, $Scanner->name(), $Scanner->Location()->name() ));
-						if ( $_ = $Scanner->save() ) {
-							$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $_ ));
+					if ( $Tag->valid() ) {
+						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
+						#$self->log(1, sprintf('%s : %s : current: %d new: %d pastlocations %s', $date, $self->{server}->{peeraddr},$Scanner->location_id(), $Tag->location_id(), join(',', @location_ids) ));
+						if ( ( ! @last_seen ) or ! sets::isin( $Tag->location_id(), \@last_seen ) ) {
+							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
+							shift @last_seen if @last_seen > $location_cache_size;
+							push @last_seen, $Tag->location_id();
+							$self->log(1, sprintf('%s : %s : updating location of scanner %s to %s', $date, $self->{server}->{peeraddr}, $Scanner->name(), $Scanner->Location()->name() ));
+							if ( $_ = $Scanner->save() ) {
+								$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $_ ));
+							} # end if
 						} # end if
 					} # end if
 				} elsif ( $Scanner->location_id() != $Tag->location_id() ) {
@@ -186,20 +188,22 @@ sub process_request {
 				} # end if
 			} elsif ( $Scanner->type() eq 'Truck Location' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
+					if ( $Tag->valid() ) {
 #$self->log(1, sprintf('%s : %s : getting histyo', $date, $self->{server}->{peeraddr} ));
-					@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
-					if ( ! sets::isin( $Tag->location_id(), @last_seen ) ) {
-						#$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $self->{server}->{peeraddr}, $Tag->id(), $Tag->Location()->name() ));
-						$Scanner->location_id( $Tag->location_id(), $Tag->id() );
-						shift @last_seen if @last_seen > 7;
-						push @last_seen, $Tag->location_id();
-						my $e = $Scanner->save();
-						$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
-						if ( $Scanner->other() ) {
-							my $Scanner2 = new openprint::RFIDScanner( $Scanner->other() );
-							$Scanner2->location_id( $Tag->location_id(), $Tag->id() );
-							my $e = $Scanner2->save();
-							$self->log(1, sprintf('%s : %s : error saving scanner2 %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
+						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
+						if ( ! sets::isin( $Tag->location_id(), @last_seen ) ) {
+#$self->log(1, sprintf('%s : %s : truck moving to %s : %s', $date, $self->{server}->{peeraddr}, $Tag->id(), $Tag->Location()->name() ));
+							$Scanner->location_id( $Tag->location_id(), $Tag->id() );
+							shift @last_seen if @last_seen > 7;
+							push @last_seen, $Tag->location_id();
+							my $e = $Scanner->save();
+							$self->log(1, sprintf('%s : %s : error saving scanner %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
+							if ( $Scanner->other() ) {
+								my $Scanner2 = new openprint::RFIDScanner( $Scanner->other() );
+								$Scanner2->location_id( $Tag->location_id(), $Tag->id() );
+								my $e = $Scanner2->save();
+								$self->log(1, sprintf('%s : %s : error saving scanner2 %s', $date, $self->{server}->{peeraddr}, $e )) if $e;
+							} # end if
 						} # end if
 					} # end if
 				} elsif ( $Tag->type() eq 'Skid' ) {
