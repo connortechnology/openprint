@@ -1,3 +1,4 @@
+<div class="Overrides">
 <fieldset><legend>Overrides</legend>
 	<p>
 		<label>Stock Format:</label>
@@ -37,3 +38,4 @@ sql::execute( undef, undef, q{SELECT DISTINCT strValue, strValue FROM tbl_Equipm
 </p>
 <? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type'} ) ) ?>
 </fieldset>
+</div>
