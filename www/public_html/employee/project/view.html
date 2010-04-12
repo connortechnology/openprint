@@ -89,7 +89,7 @@ function open_window( page ) {
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 		<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
-		<? if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<th class="unprintable">&nbsp;</th>
@@ -123,8 +123,12 @@ function open_window( page ) {
 			$totals{$Paper->to_string()} += ceil($impressions * $Paper->area() * $Paper->wpsi());
 		} elsif ( $Paper->type() eq 'Sheet' ) {
 			my $sheets = $impressions;
-			$sheets /= ( $Paper->start_area() /$Paper->area() );
-			$sheets = ceil( $sheets );
+			if ( $Paper->start_area() and $Paper->area() ) {
+				$sheets /= ( $Paper->start_area() / $Paper->area() );
+				$sheets = ceil( $sheets );
+			} else {
+				$log->debug("No area in project view: " . $Paper->to_string() );
+			} # end if
 			$totals{$Paper->to_string()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
 			$sheets{$Paper->to_string()} += $sheets;
 		} # end if
@@ -189,7 +193,7 @@ function open_window( page ) {
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddToProject', 'addToProject.gif', "f1.btnFunction.value='Add Service';f1.submit();", '', 'Add Custom Service' ); ) ?>
 			</td>
 		</tr>
-		<? endif ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<tr>
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
