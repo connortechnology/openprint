@@ -339,7 +339,7 @@ sub view {
 				$Equipment->update_schedule();
 			} # end if
 		} else {
-			my @do_not_save = ( 'btnFunction','ProjectIndex','ServiceIndex','order_id', 'duedate_day','duedate_month','duedate_year','Docket','TakeOver' );
+			my @do_not_save = ( 'btnFunction','ProjectIndex','ServiceIndex','order_id', 'duedate_day','duedate_month','duedate_year','Docket','TakeOver', 'OrderID' );
 			foreach my $param ( keys %param ) {
 				next if ( sets::isin_regx( $param, @do_not_save ) );
 				next if $$service_specs{$param} eq $param{$param};
