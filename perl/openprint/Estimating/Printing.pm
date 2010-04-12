@@ -2865,7 +2865,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 #$imp->display();
 #$openprint::log->debug( breakdown( $price, $specs ) );
 				%best_price = %{$price};
-#$imp->display();
+$imp->display();
 #keep track of the best price we have found so far.
 # now that we have the pricing info arrange it in a hash and store it for later.
 #$best_price{'Imposition'} = $imp;

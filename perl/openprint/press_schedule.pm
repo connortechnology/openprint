@@ -117,7 +117,11 @@ sub add {
 sub remove {
 	my ( $p_id, $s_id ) = @_;
 	foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$p_id, ( $s_id ? ('service_id'=>$s_id) : () ) ) ) {
-		$Job->delete();
+		if ( $Job->service_id() > 1 ) {
+			$Job->save({'service_id'=>[ sets::exclude( [ $s_id ], $Job->service_id() ) ]});
+		} else {
+			$Job->delete();
+		} # end if
 	} # end foreach
 } # end sub remove
 

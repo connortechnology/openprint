@@ -26,6 +26,7 @@ $serial = 'rfidtags_id_seq';
 	'type_id'		=>	'type_id',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
+	'valid'			=>	'valid',
 );
 
 %transforms = (
@@ -35,7 +36,8 @@ $serial = 'rfidtags_id_seq';
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 	'location_id'	=>	undef,
-	'type_id'	=>	undef,
+	'type_id'		=>	undef,
+	'valid'			=>	0,
 );
 
 # Returns a paper object specified by the parameters
@@ -59,6 +61,10 @@ sub find {
 		push @values, $params{'type'};
 	} # end if
 	
+	if ( $params{'valid'} ne '' ) {
+		$sql .= ' AND valid=?';
+		push @values, $params{'valid'};
+	} # end if
 	if ( $params{'type_id'} ) {
 		$sql .= ' AND type_id=?';
 		push @values, $params{'type_id'};

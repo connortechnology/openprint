@@ -6,6 +6,8 @@
 		<th align="left" width="90">Docket</th>
 		<th width="90">Quantity (lbs)</th>
 		<th width="90">Quantity (kgs)</th>
+		<th class="InStock">In Stock</th>
+		<th class="LastSeen">Last Seen</th>
 		<th>&nbsp;</th>
 		<th width="40">&nbsp;</th>
 	</tr>
@@ -15,6 +17,8 @@
 		<td><input type="text" id="docket-<?type_id?>-" name="docket-<?type_id?>-" size="8" value="<? echo ( $param{'docket-'.$$variable{'type_id'}} ? $param{'docket-'.$$variable{'type_id'}} : $$variable{'Manifest'}->docket() ) ?>" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form, <?type_id?> );}" /></td>
 		<td><input type="text" id="qty_lbs-<?type_id?>-" name="qty_lbs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/\D/,'');convert_lbs_to_kg( this, $('qty_kgs-<?type_id?>-') );" /></td>
 		<td><input type="text" id="qty_kgs-<?type_id?>-" name="qty_kgs-<?type_id?>-" value="" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');convert_kg_to_lbs( this, $('qty_lbs-<?type_id?>-') );" /></td>
+		<td>&nbsp;</td>
+		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1'), $$variable{type_id} );", '', 'Add' ); ) ?></td>
 	</tr>
@@ -29,7 +33,7 @@ $openprint::log->debug( $C->skid_id() . ': ' . $C->Skid()->rfidtag() );
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$total += $C->quantity();
 		} # end foreach tag_id
-		$html .= sprintf('<tr id="totals-%3$d" class="totals"><td>Totals:</td><td colspan="2" id="skidcount-%3$d">%4$d skids/rolls</td><td id="totallbs-%3$d">%1$dlbs</td><td id="totalkgs-%3$d">%2$.4fkg</td><td colspan="2">&nbsp;</td></tr>', $total, $total/2.2046, $$variable{'type_id'}, scalar @Contents );
+		$html .= sprintf('<tr id="totals-%3$d" class="totals"><td>Totals:</td><td colspan="2" id="skidcount-%3$d">%4$d skids/rolls</td><td id="totallbs-%3$d">%1$dlbs</td><td id="totalkgs-%3$d">%2$.4fkg</td><td colspan="4">&nbsp;</td></tr>', $total, $total/2.2046, $$variable{'type_id'}, scalar @Contents );
 		return $html;
 	) ?>
 </table>

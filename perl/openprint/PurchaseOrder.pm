@@ -273,12 +273,6 @@ sub save {
 		} # end if
     } # end if
 
-	if ( exists $$self{'notifications'} ) {
-		sql::execute( undef, undef, 'DELETE FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
-		foreach ( @{$$self{'notifications'}} ) {
-			sql::insert( undef, undef, 'PurchaseOrder_Notifications', ['po_id', $$self{'id'}, 'user_id', $_ ] );
-		} # end foreach
-	} # end if
 
 	sql::end_transaction( $dbh, $ac );
 	$self->load();
@@ -531,7 +525,12 @@ sub notifications {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
 		@{$$self{'notifications'}} = @{$new};
-		$self->save() if $$self{'id'};
+		if ( $$self{'id'} ) {
+			sql::execute( undef, undef, 'DELETE FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
+			foreach ( @{$$self{'notifications'}} ) {
+				sql::insert( undef, undef, 'PurchaseOrder_Notifications', ['po_id', $$self{'id'}, 'user_id', $_ ] );
+			} # end foreach
+		} # end if
 	} # end if
 	if ( $$self{'id'} and ! exists $$self{'notifications'} ) {
 		@{$$self{'notifications'}} = sql::execute( undef, undef, 'SELECT user_id FROM PurchaseOrder_Notifications WHERE po_id=?', $$self{'id'} );
@@ -570,6 +569,6 @@ sub copy {
 } # end sub copy
 sub Manifest {
 	return new openprint::Manifest( $_[0]{'manifest_id'} );
-}# end sub Manifest
+} # end sub Manifest
 1;
-#__END__
+__END__
