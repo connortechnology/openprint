@@ -1,6 +1,6 @@
 <? eval (
 	@{$$variable{'Timetracks'}} = ();
-	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = 0;
+	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = $$variable{'distance_total'} = 0;
 	foreach my $Timetrack ( openprint::Timetrack::find( 
 		'starting_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_start_day'} ),
 		'starting_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ),
@@ -16,6 +16,7 @@
 		$$variable{'elapsed_total'} += $Timetrack->elapsed();
 		$$variable{'value_total'} += $Timetrack->value();
 		$$variable{'wage_total'} += $Timetrack->wage();
+		$$variable{'distance_total'} += $Timetrack->distance();
 	} # end foreach Timetrack
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
@@ -38,6 +39,7 @@
 			<th width="50" align="right">Inv?</th>
 			<th width="50" align="right">Paid?</th>
 			<th align="left">Service</th>
+			<th class="Distance">Distance</th>
 			<th class="Rate">Rate</th>
 			<th class="Price">Wage</th>
 			<th class="Price">Billable</th>
@@ -55,6 +57,7 @@
 			<td align="center"><? echo ( $$variable{'Timetrack'}->invoiced() ? 'Y' : 'N'; ) ?></td>
 			<td align="center"><? echo ( $$variable{'Timetrack'}->paid() ? 'Y' : 'N'; ) ?></td>
 			<td align="left"><? hecho ( $$variable{'Timetrack'}->Service()->name(); ) ?></td>
+			<td align="right"><? echo ( $$variable{'Timetrack'}->distance(); ) ?>km</td>
 			<td align="right"><? echo ( join('',$$variable{'Timetrack'}->get('rate','units' ) ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Timetrack'}->wage() ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Timetrack'}->value() ); ) ?></td>
@@ -64,7 +67,9 @@
 		<tr class="totals">
 			<td colspan="4" align="right">Totals:</td>
 			<td align="right"><? echo ( misc::seconds_to_pretty_interval( $$variable{'elapsed_total'} ); ) ?></td>
-			<td colspan="4">&nbsp;</td>
+			<td colspan="3">&nbsp;</td>
+			<td align="right"><? echo ( $$variable{'distance_total'} ) ?>km</td>
+			<td colspan="1">&nbsp;</td>
 			<td align="right"><? echo ( openprint::Currency::format($$variable{'wage_total'}); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format($$variable{'value_total'}); ) ?></td>
 		</tr>

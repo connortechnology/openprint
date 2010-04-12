@@ -64,8 +64,8 @@
 			<th class="Price">GST</th>
 			<th class="Price">GST Total</th>
 			<th class="Price">Total</th>
-			<th class="Price">Interest</th>
-			<th class="Price">Owing</th>
+			<th class="Interest Price">Interest</th>
+			<th class="Owing Price">Owing</th>
 		</tr>
 		<? while ( $$variable{'Invoice'} = shift @{$$variable{'Invoices'}}; ) ?>
 		<? eval ( 
@@ -79,8 +79,8 @@
 			<td class="Price"><? echo ( $$variable{'Invoice'}->federaltaxrate(); ) ?>%</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></td>
+			<td class="Interest Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></td>
+			<td class="Owing Price"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></td>
 		</tr>
 		<? endwhile ( $$variable{'Invoice'} = shift @{$$variable{'Invoices'}}; ) ?>
 		<tr class="totals">
@@ -89,8 +89,8 @@
 			<td>&nbsp;</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'federaltax_total'} ); ) ?></td>	
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>	
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?></td>	
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'owing_total'} ); ) ?></td>	
+			<td class="Interest Price"><? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?></td>	
+			<td class="Owing Price"><? echo ( openprint::Currency::format( $$variable{'owing_total'} ); ) ?></td>	
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
