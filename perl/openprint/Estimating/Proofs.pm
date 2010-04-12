@@ -399,8 +399,8 @@ sub insert_layout_proof {
 sub insert_new_proof {
     my ( $specs, $proof_index, $signature_index, $qty, $width, $height, $type, $qty_index ) = @_;
 	$$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} = $qty;
-	$$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} = $width;
-	$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} = $height;
+	$$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} = 1*$width;
+	$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} = 1*$height;
 	$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} = $type;
 	$$specs{"txtProofIndex-$signature_index-$proof_index-$qty_index"} = $proof_index;
 	@output = sets::union( @output,
@@ -432,7 +432,7 @@ sub load_proof_info {
                 "txtProofHeight-$signature_index-$proof_index-$qty_index",
                 "ddmProofType-$signature_index-$proof_index-$qty_index"
                 };
-		push @proof_info, $proof_index, $quantity, $width, $height, $type, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service::find('category'=>'Proofs') ], $type );
+		push @proof_info, $proof_index, $quantity, 1*$width, 1*$height, $type, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service::find('category'=>'Proofs') ], $type );
     } # end foreach
     return @proof_info;
 } # end sub load_proof_info

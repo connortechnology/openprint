@@ -265,13 +265,13 @@ sub auto_calculate {
 	} else {
 		if ( ! $$services{'Folding'} ) {
 			if ( $Project->mode() ne 'Detailed' ) {
-				push @{$$services{'Folding'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Folding' );
+				push @{$$services{'Folding'}}, $Project->add_service( 'Folding' );
 			} # end if
 		} # end if
 	} # end if
 	if ( openprint::Estimating::Paper::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $$services{'Paper'} ) {
-			push @{$$services{'Paper'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Paper' );
+			push @{$$services{'Paper'}}, $Project->add_service( 'Paper' );
 		} # end if
 	} # end if
 $openprint::log->debug("Apres Paper");
@@ -279,7 +279,7 @@ $openprint::log->debug("Apres Paper");
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) ) {
 		if ( ! $$services{'Cutting'} ) {
 			if ( $Project->mode() ne 'Detailed' ) { 
-				push @{$$services{'Cutting'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Cutting' );
+				push @{$$services{'Cutting'}}, $Project->add_service( 'Cutting' );
 			} # end if
 		} # end if
 	} # end if
@@ -287,7 +287,7 @@ $openprint::log->debug("Apres Cutting");
 
 	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $$services{'PerfectBound'} ) {
-			push @{$$services{'PerfectBound'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'PerfectBound' );
+			push @{$$services{'PerfectBound'}}, $Project->add_service( 'PerfectBound' );
 		} # end if
 	} elsif ( $$services{'PerfectBound'} ) {
 		while ( my $si = shift @{$$services{'PerfectBound'}} ) {
@@ -298,31 +298,31 @@ $openprint::log->debug("Apres PF");
 
 	if ( openprint::Estimating::Stitching::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
-			push @{$$services{'SaddleStitching'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'SaddleStitching' );
+			push @{$$services{'SaddleStitching'}}, $Project->add_service( 'SaddleStitching' );
 		} # end if
 	} # end if
 
 	if ( openprint::Estimating::ThreeKnifeTrim::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $$services{'ThreeKnifeTrim'} ) {
-			push @{$$services{'ThreeKnifeTrim'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'ThreeKnifeTrim' );
+			push @{$$services{'ThreeKnifeTrim'}}, $Project->add_service( 'ThreeKnifeTrim' );
 		} # end if
 	} # end if
 
 	if ( openprint::Estimating::Tipping::neccessary( $Project ) ) {
 		if ( ! $$services{'Tipping'} ) {
-			push @{$$services{'Tipping'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Tipping' );
+			push @{$$services{'Tipping'}}, $Project->add_service( 'Tipping' );
 		} # end if
 	} # end if
 
 	if ( openprint::Estimating::Blowing::neccessary( $Project ) ) {
 		if ( ! $$services{'Blowing'} ) {
-			push @{$$services{'Blowing'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Blowing' );
+			push @{$$services{'Blowing'}}, $Project->add_service( 'Blowing' );
 		} # end if
 	} # end if
 
 	if ( openprint::Estimating::Collating::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $$services{'Collating'} ) {
-			push @{$$services{'Collating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Collating' );
+			push @{$$services{'Collating'}}, $Project->add_service( 'Collating' );
 		} # end if
 	} else {
 		if ( ! $$services{'Collating'} ) {
@@ -335,7 +335,7 @@ $openprint::log->debug("Apres Collat");
 
 # Proofs
 	if ( ! ( $$services{'Proofs'} or $$services{'NoPrinting'} ) ) {
-		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Proofs' );
+		push @{$$services{'Proofs'}}, $Project->add_service( 'Proofs' );
 	} # end if
 
 	foreach my $si ( @{$$services{'Proofs'}} ) {
@@ -347,30 +347,30 @@ $openprint::log->debug("Apres porrat");
 
 	if ( ! $$services{'BulkSkids'} ) {
 		if ( openprint::Estimating::Skids::neccessary( $Project, 'BulkSkids' ) ) {
-			push @{$$services{'BulkSkids'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'BulkSkids' );
+			push @{$$services{'BulkSkids'}}, $Project->add_service( 'BulkSkids' );
 		} # end if
 	} # end if
 	if ( ! $$services{'PlainCartons'} ) {
 		if ( openprint::Estimating::Skids::neccessary( $Project, 'PlainCartons' ) ) {
-			push @{$$services{'PlainCartons'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'PlainCartons' );
+			push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' );
 		} # end if
 	} # end if
 $openprint::log->debug("Apres Skdis");
 
 	if ( ! $$services{'PlainCartons'} ) {
 		if ( openprint::Estimating::Skids::neccessary( $Project, 'PlainCartons' ) ) {
-			push @{$$services{'PlainCartons'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'PlainCartons' );
+			push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' );
 		} # end if
 	} # end if
 
 	if ( ! $$services{'Scoring'} ) {
 		if ( openprint::Estimating::Scoring::neccessary( $Project ) ) {
-			push @{$$services{'Scoring'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Scoring' );
+			push @{$$services{'Scoring'}}, $Project->add_service( 'Scoring' );
 		} # end if
 	} # end if
 	if ( ! $$services{'Perforating'} ) {
 		if ( openprint::Estimating::Perforating::neccessary( $Project ) ) {
-			push @{$$services{'Perforating'}}, openprint::print_project::insert_service( $log, $dbh, $project_index, 'Perforating' );
+			push @{$$services{'Perforating'}}, $Project->add_service( 'Perforating' );
 		} # end if
 	} # end if
 
@@ -381,7 +381,7 @@ $openprint::log->debug("Apres Skdis");
 		$log->error("Error opepnrint::Estimating::$service_name::neccessary $@") if $@;
 
 		if ( $neccessary ) {
-			push @{$$services{$service_name}}, openprint::print_project::insert_service( $log, $dbh, $project_index, $service_name ) if ! $$services{$service_name};
+			push @{$$services{$service_name}}, $Project->add_service($service_name) if ! $$services{$service_name};
 		} # end if
 	} # end foreach service_name;
 

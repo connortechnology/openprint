@@ -216,6 +216,6 @@ function calc( formName, force ) {
 	var h = form.serialize(true);
 	h.ServiceType = 'Project';
 	h.callback = 'cbFillResults';
-	h.function = 'create_calc';
+	h.method = 'create_calc';
 	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end function calc(form)

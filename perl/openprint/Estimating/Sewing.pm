@@ -78,9 +78,6 @@ sub neccessary {
 	if ( $$printing_specs{'pockets'} eq 'Y' ) {
 		return 1;
 	} # end if
-	if ( $$printing_specs{'PocketSize'} ) {
-		return 1;
-	} # end if
 
 	return 0;
 } # end sub neccessary
@@ -139,6 +136,9 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 			} elsif ( sets::isin( lc $servicePrice{'units'}, ['per inch'] ) ) {
 				$servicePrice{'Total'} = $qty * $servicePrice{'Price'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%1$.2f%2$s * %4$dinches * %5$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, @$specs{'Quantity','txtQuantity'.$qty_index} );
+			} elsif ( sets::isin( lc $servicePrice{'units'}, ['per foot'] ) ) {
+				$servicePrice{'Total'} = $qty/12 * $servicePrice{'Price'};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Service: $%1$.2f%2$s * %4$.2ffeet * %5$d = $%3$.2f<br/>', @servicePrice{'Price','units','Total'}, $$specs{'Quantity'}/12,$$specs{'txtQuantity'.$qty_index} );
 			} else {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "unknown units for service price $servicePrice{units}<br/>" );
 			} # end if

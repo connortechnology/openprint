@@ -4,10 +4,10 @@
     # Not sure this is a good idea, but it's neccessary for printing... why is it neccessary?
     $openprint::service::specs_cache{$param{ServiceIndex}} = \%param;
     my %specs = %param;
-	$param{'function'} = 'calc' if ! $param{'function'};
+	$param{'method'} = 'calc' if ! $param{'method'};
     eval 'require openprint::Estimating::'.$param{'ServiceType'};
         $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: $@") if $@;
-    eval q/$specs{'Status'} = openprint::Estimating::/.$param{'ServiceType'}.'::'.$param{function}.'( $log, $dbh, $variable, @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
+    eval q/$specs{'Status'} = openprint::Estimating::/.$param{'ServiceType'}.'::'.$param{method}.'( $log, $dbh, $variable, @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
         $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: in eval: $@") if $@;
     my @results = ();
     my @vars = eval( 'openprint::Estimating::'.$param{'ServiceType'}.'::outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
