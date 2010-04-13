@@ -185,6 +185,9 @@ sub signature_needs {
 	if ( $$services{'DoubleLoopWire'} ) {
 		return 0;
 	} # end if
+	if ( $$services{'CornerStitching'} ) {
+		return 0;
+	} # end if
 	if ( $$services{'SaddleStitching'} ) {
 		return 1;
 	} # end if
