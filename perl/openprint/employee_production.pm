@@ -114,7 +114,7 @@ sub press_schedule {
 				'equipment_id'	=> $param{'press_id'},
 				'comment'		=> $param{'comment'},
 				'locked'		=> $param{'locked'},
-				'runtime'		=> join(':', $h, $m, $s ),
+				'runtime'		=> $param{'runtime'} ? join(':', $h, $m, $s ) : undef,
 				});
 
 		%param = ();
@@ -585,47 +585,6 @@ sub send_proofs_complete_email {
 #} # end if
 } # end sub send_proofs_complete_email
 
-sub send_proofs_approved_email {
-	my ( $project_index, $order_id ) = @_;
-
-# Send email to sales rep
-	my %info;
-	$info{'SecureSiteURL'} = $config{'ExternalSecureSiteURL'};
-	$info{'siteURL'} = $config{'ExternalSiteURL'};
-
-	my $Project = new openprint::Project( $project_index );
-	( my $user_index, @info{'DocketNumber','ProjectReference'} ) = ( $Project->user_id(), $Project->docket(), $Project->reference() );
-	$info{'ProjectIndex'} = $project_index;
-	$info{'OrderID'} = $order_id;
-
-	@info{'DueDate'} = Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) );
-
-	my $Order = new openprint::Order( $order_id );
-	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->firstname(), $Order->lastname(), $Order->email() );
-
-	my $User = new openprint::User( $session{'user_id'} );
-	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $User->firstname(), $User->lastname(), $User->email(), $User->extension() );
-
-	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
-
-	my $CSR = new openprint::User( $Order->salesrep_id() );
-	my $sales_person_email = sprintf( "%s %s <%s>", $CSR->firstname(), $CSR->lastname(), $CSR->email() );
-	if ( $sales_person_email ne '  <>' ) {
-		$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/proofs_approved-sales_rep.html' );
-		$info{'ReplacementText'} = ssi::variable_substitution( \$info{'ReplacementText'}, \%info );
-		$_ = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-		$_ = encode_qp( ssi::variable_substitution( \$_, \%info ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( "%s %s <%s>", @info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail'}),
-				TO      => $sales_person_email,
-				SUBJECT => "Docket $info{'DocketNumber'} Proofs Approved",
-				);
-		misc::send_email_with_attachment( $log, \%mail, @body );
-	} # end if
-} # end sub send_proofs_approved_email
-
 sub send_duedate_change_notification {
 	my ( $r, $log, $dbh, $variable, $project_index, $order_id ) = @_;
 
@@ -835,7 +794,7 @@ sub barcode {
 		$Project->due_date( $Project->get_due_date() );
 		$Project->save();
 		mark_proofs_approved( $log, $dbh, \%variable, $Project->id(), $service_index, $status );
-		send_proofs_approved_email( $Project->id(), $param{'Order'} );
+		openprint::employee_project::send_proofs_approved_email( $Project->id(), $param{'Order'} );
 	} elsif ( $param{'Action'} == 4 ) { # Unassign Operator
 		my ( $service_index, $old_operator_id ) = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex=?}, $Project->id(), $services{'Proofs'} ? $services{'Proofs'} : $services{'FilmStripping'} );
 
@@ -1045,33 +1004,33 @@ if ( 0 ) {
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
-			# Coalesce Jobs
+		# Coalesce Jobs
 $log->debug("Order before coalesce: @order");
-			my $previous;
-			foreach my $row_id ( @order ) {
-				my $Job = new openprint::ScheduledJob( $row_id );
-				if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
-					my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
-					my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
-					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() ) ) {
+		my $previous;
+		foreach my $row_id ( @order ) {
+			my $Job = new openprint::ScheduledJob( $row_id );
+			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
+				my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
+				my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
+				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() ) ) {
 $log->debug("Sigs are the same, coalescing ");
-						$_ = $previous->save({
-								'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
-								'service_id'	=>	[ @{$$previous{'service_id'}}, @{$$Job{'service_id'}} ],	
-								});
-						if ( $_ ) {
-							$log->error($_);
-						} else {
-							$Job->delete();
-							@order = sets::exclude( [ $row_id ], \@order );
-						} # end if
+					$_ = $previous->save({
+							'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
+							'service_id'	=>	[ @{$$previous{'service_id'}}, @{$$Job{'service_id'}} ],	
+							});
+					if ( $_ ) {
+						$log->error($_);
+					} else {
+						$Job->delete();
+						@order = sets::exclude( [ $row_id ], \@order );
 					} # end if
-					$previous = undef;
-				} else {
-$log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
-					$previous = $Job;
 				} # end if
-			} # end foreach row
+				$previous = undef;
+			} else {
+$log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
+				$previous = $Job;
+			} # end if
+		} # end foreach row
 
 $log->debug("Order after coalesce: @order");
 		sql::end_transaction( $dbh, $ac );
@@ -1343,9 +1302,10 @@ sub _li_change {
 			} elsif ( $Job->forms() < $param{'forms'} ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
 				while ( @service_ids < $param{'forms'} ) {
+					$Job->Project()->add_to_log(@session{'company_id','user_id'}, "Duplicating form $$sig_specs{SignatureIndex} for press schedule");
 					push @service_ids, $Job->Project()->copy_signature( $sig_specs, { 
 							'txtPrice'.$Job->Project()->ordered_quantity_index()   => 0,
-							} );
+							}, 'Ordered' );
 				} # end while	
 				$sql{'service_id'} = \@service_ids;
 			} # end if
@@ -1390,7 +1350,7 @@ sub _li_change {
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		$variable{'error'} .= $Job->bump( $param{'equipment'} );
+		$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		$variable{'error'} .= $Job->delete();

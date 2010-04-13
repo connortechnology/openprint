@@ -151,6 +151,13 @@ sub add_project_to_order {
 	} elsif ( $Order->company_id() != $Project->company_id() ) {
 		return ( $order_id, 'Project is owned by ' . $Project->Company()->name() . ' but order is owned by ' . $Order->Company()->name() );
 	} # end if
+	if ( $Project->order_id() and ( $Project->order_id() != $order_id ) ) {
+		if ( $Project->Order()->status() eq 'Incomplete' ) {
+			sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, $Project->order_id(), $Project->id() );
+		} else {
+			return ( $order_id, sprintf('Project is already in order <a href="/main/order/history_details.html?OrderID=%1$d">%1$d</a>.', $Project->order_id() ) );
+		} # end if
+	} # end if
 
 	my %sql = (
 		'OrderIndex'		=>	$order_id,
@@ -200,8 +207,8 @@ sub add_project_to_order {
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Order_Contents IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 				
-	# make sure project isn't already in the order.
-	sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, $order_id, $project_index );
+	# make sure project isn't already in any order.
+	sql::execute( $log, $dbh, q{DELETE FROM Order_Contents WHERE lngProjectIndex=?}, $project_index );
 	sql::insert( $log, $dbh, 'Order_Contents', \%sql );
 	sql::end_transaction( $dbh, $ac );
 	

@@ -49,7 +49,7 @@
 			<th align="left" width="60">PO ID</th>
 			<th align="left" width="60">Docket</th>
 			<th align="left" width="120">Vendor</th>
-			<th align="left" width="90">Received On</th>
+			<th class="Date">Received On</th>
 			<th align="left">Contents</th>
 		</tr>
 		<? echo (
@@ -63,7 +63,7 @@
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, join('<br/>', $Manifest->po_ids() ) );
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, join('<br/>', $Manifest->dockets() ) );
 				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%1$s">%2$s</a></td>', $$Manifest{'id'}, $Manifest->Vendor()->name() );
-				$html .= sprintf( '<td><a href="manifest.html?manifest_id=%s">%s</a></td>', $$Manifest{'id'}, Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->received_on()) ) );
+				$html .= sprintf( '<td class="Date"><a href="manifest.html?manifest_id=%s">%s&nbsp;</a></td>', $$Manifest{'id'}, Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Manifest->received_on()) ) );
 
 				$html .= '<td>';
 

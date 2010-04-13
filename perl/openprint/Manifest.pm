@@ -30,15 +30,11 @@ my $debug = 1;
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'received_on'	=>	'received_on',
-	'po_id'			=>	'po_id',
-	'docket'		=>	'docket',
 	'supplier_id'	=>	'supplier_id',
 );
 
 %transforms = (
 	'updated_on'	=> [ 's/.*//g' ],
-	'po_id'			=>	[ 's/\D//g' ],
-	'docket'		=>	[ 's/\D//g' ],
 	'supplier_id'	=>	[ 's/\D//g' ],
 );
 
@@ -46,8 +42,6 @@ my $debug = 1;
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
 	'received_on'	=>	'NOW()',
-	'po_id'			=>	undef,
-	'docket'		=>	undef,
 	'supplier_id'	=>	undef,
 );
 
@@ -83,17 +77,8 @@ sub find {
 		$sql .= " AND name LIKE '%$params{name_like}%'";
 	} # end if
 	if ( exists $params{'po_id'} ) {
-		if ( ref $params{'po_id'} eq 'ARRAY' ) {
-			if ( @{$params{'po_id'}} ) {
-				$sql .= ' AND po_id IN ('. join(',', map {'?'} @{$params{'po_id'}} ) . ')';
-				push @values, @{$params{'po_id'}};
-			} else {
-				return ();
-			} # end if
-		} else {
-			$sql .= ' AND po_id=?';
-			push @values, $params{'po_id'};
-		} # end if
+		$sql .= ' AND ? IN (SELECT po_id FROM Manifest_Content_Types WHERE manifest_id=manifests.id)';
+		push @values, $params{'po_id'};
 	} # end if
 	if ( exists $params{'supplier_id'} ) {
 		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
@@ -109,17 +94,8 @@ sub find {
 		} # end if
 	} # end if
 	if ( exists $params{'docket'} ) {
-		if ( ref $params{'docket'} eq 'ARRAY' ) {
-			if ( @{$params{'docket'}} ) {
-				$sql .= ' AND docket IN ('. join(',', map {'?'} @{$params{'docket'}} ) . ')';
-				push @values, @{$params{'docket'}};
-			} else {
-				return ();
-			} # end if
-		} else {
-			$sql .= ' AND docket=?';
+			$sql .= ' AND ? IN (SELECT docket FROM Manifest_Content_Types WHERE manifest_id=manifests.id)';
 			push @values, $params{'docket'};
-		} # end if
 	} # end if
 
 	if ( $params{'received_on_start'} and $params{'received_on_end'} ) {
@@ -176,6 +152,7 @@ sub delete {
 	foreach my $T ( $self->Types() ) {
 		$T->delete();
 	} # end foreach Type
+    sql::execute( undef, undef, q{DELETE FROM ManifestContent_Types WHERE manifest_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM ManifestContents WHERE manifest_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Manifests WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );

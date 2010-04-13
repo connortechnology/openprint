@@ -38,10 +38,13 @@ $serial = 'timetracks_id_seq';
 	'updated_on'		=> 'updated_on',
 	'deleted'			=> 'deleted',
 	'currency_id'		=>	'currency_id',
+	'travel_associated'	=>	'travel_associated',
+	'distance'			=>	'distance',
 );
 
 %transforms = (
 	'rate'	=>	[ 's/[^\d\.]//g' ],
+	'distance'	=>	[ 's/[^\d\.]//g' ],
 );
 %defaults = (
 	'created_on'	=> 'NOW()',
@@ -55,6 +58,8 @@ $serial = 'timetracks_id_seq';
 	'service_id'	=>	undef,
 	'project_id'	=>	undef,
 	'user_id'		=>	undef,
+	'travel_associated'	=>	0,
+	'distance'		=>	undef,
 );
 
 sub find {

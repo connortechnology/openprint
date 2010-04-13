@@ -29,8 +29,8 @@
 -->
 </script>	 
 <? if ( $session{'user_id'} ) ?>
-<form id="f1" name="f1" method="post" action="/timetrack/history.html">
-   <div class="Timetrack"><div class="History">
+<div class="Timetrack"><div class="History">
+	<form id="f1" name="f1" method="post" action="/timetrack/history.html">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 			<div class="leftColumn">
 			<p>
@@ -85,10 +85,10 @@
 					); ) ?>
 			</p>
 		</fieldset>
-	</div>
-	</div>
 		<div id="TimetrackList"><!--#include virtual="_history.html"--></div>
 	</form>
+	</div>
+</div>
 <? else ( $session{'user_id'} ) ?>
 	Only logged in customers have a timetrack history.
 <? endif ( $session{'user_id'} ) ?>

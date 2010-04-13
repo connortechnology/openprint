@@ -40,6 +40,7 @@
 				'/employee/inventory/rfidtags.html?updated_on_end_month',
 				'/employee/inventory/rfidtags.html?updated_on_end_day'} ) : undef,
 			'type_id'			=> $session{'/employee/inventory/rfidtags.html?Type'} ? $session{'/employee/inventory/rfidtags.html?Type'} : undef,
+			'valid'				=> $session{'/employee/inventory/rfidtags.html?valid'},
 			'order'		=>	'id',
 			) ) {
 			if ( ! $session{'/employee/inventory/rfidtags.html?assigned'} ) {
@@ -66,6 +67,7 @@
 		<tr height="25">
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'rfidtags', this.checked );"/></th>
 			<th align="left" width="200">RFIDTag ID</th>
+			<th align="left" width="10" title="Verified">V</th>
 			<th align="left" width="115">Date Added</th>
 			<th align="left" width="115">Updated On</th>
 			<th align="left" width="100">Location</th>
@@ -79,6 +81,7 @@
 				$html .= "<tr$rowclass height=\"25\">";
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="rfidtags" value="$$RFIDTag{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%1$s">%1$s (%2$x)</a></td>', $$RFIDTag{'id'}, substr($$RFIDTag{'id'},1,15) );
+				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%1$s">%2$s</a></td>', $$RFIDTag{'id'}, $$RFIDTag{'valid'} ? 'Y' : 'N' );
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->created_on()) ) );
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($RFIDTag->updated_on()) ) );
 				$html .= sprintf( '<td><a href="rfidtag_details.html?rfidtag_id=%s">%s</a></td>', $$RFIDTag{'id'}, $RFIDTag->Location()->name() );
@@ -91,11 +94,12 @@
 		) ?>
 	</table>
 	<input type="hidden" name="btnFunction"/>
-	<span style="float: right;">
+	<p class="buttons">
 		<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "RFIDTagResults.btnFunction.value='Validate';RFIDTagResults.submit();", '', 'Validate' ),
 					ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "RFIDTagResults.btnFunction.value='Delete';RFIDTagResults.submit();", '', 'Delete Checked' ),
 			); ) ?>
-	</span>
+	</p>
 </form>
 <? else ( @{$$variable{'RFIDTags'}} ) ?>
 There were no rfidtags matching your search criteria.

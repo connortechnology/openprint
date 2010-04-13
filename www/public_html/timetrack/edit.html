@@ -59,6 +59,16 @@
 			<p><label for="timetrack_rate">Override Rate:</label>
 				<input type="text" name="rate" id="rate" value="<? echo ( $$variable{'Timetrack'}->rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</p>
+			<p>
+				<label>Travel Associated:</label>
+				<input type="radio" name="travel_associated" value="1" id="travel_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Timetrack'}->travel_associated(), [ 1 ] ) ); ) ?> onclick="" />
+				<label class="radio" for="travel_associated1">Yes</label>
+				<input type="radio" name="travel_associated" value="0" id="travel_associated0" <? echo ( ssi::checked( ! $$variable{'Timetrack'}->travel_associated() ); ) ?> onclick="" />
+				<label class="radio" for="travel_associated0">No</label>
+			</p>
+			<p><label for="distance">Distance (km):</label>
+				<input type="text" name="distance" id="distance" value="<? echo ( $$variable{'Timetrack'}->distance() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			</p>
 		</div>
 		<div class="rightColumn">
 			<p>

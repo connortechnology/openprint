@@ -1101,10 +1101,20 @@ sub rfidtags {
 		foreach my $rfidtag_id ( ref $param{'rfidtags'} eq 'ARRAY' ? @{$param{'rfidtags'}} : split(',',$param{'rfidtags'}) ) {
 			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
 			$variable{'error'} .= $RFIDTag->delete();
-
 		} # end foreach rfidtag_id
+	} elsif ( $param{'btnFunction'} eq 'Validate' ) {
+		foreach my $rfidtag_id ( ref $param{'rfidtags'} eq 'ARRAY' ? @{$param{'rfidtags'}} : split(',',$param{'rfidtags'}) ) {
+			my $RFIDTag = new openprint::RFIDTag( $rfidtag_id );
+			$variable{'error'} .= $RFIDTag->save({'valid'=>1});
+		} # end foreach rfidtag_id
+	} else {
+		ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
 	} # end if
 } # end sub rfidtags
+
+sub _rfidtags_results {
+	ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
+} # end sub _rfidtags_results
 
 sub rfidtag_details {
 	if ( $param{'btnFunction'} eq 'Go' ) {
@@ -1653,6 +1663,9 @@ sub purchase_order_view {
 		if ( ! $param{'po_id'} ) {
 			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
 		} # end if
+
+		# Used to get a list of the types in this PO, so we can add automatic notifications
+		my %types;
 		foreach my $k ( keys %param ) {
 			my ( $content_id ) = $k =~ /qty-(.*)/;
 			if ( defined $content_id ) {
@@ -1668,6 +1681,7 @@ sub purchase_order_view {
 						'total'         =>  $param{'total-'.$content_id},
 						'type_id'		=>	$param{'type_id-'.$content_id},
 						});
+				$types{$C->Type()->name()} = 1;
 				if ( $C->docket() ) {
 					foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
 						$P->add_to_log( @session{'company_id','user_id'}, 
@@ -1758,23 +1772,16 @@ $log->debug("PO total: " . $PO->total() . ' Me total: ' . $Me->purchasing_limit(
 				'reason'	=>	$param{'reason'},
 				});
 		} # end if
+		my @notifications = $PO->notifications();
+		my @new_notifications = @notifications;
 		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			my @notifications;
-			foreach my $user_id ( openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) ) {
-				my $found = 0;
-				foreach my $notification_id ( $PO->notifications() ) {
-					if ( $notification_id == $user_id ) {
-						$found = 1;
-						last;
-					} # end if	
-				} # end foreach
-				if ( ! $found ) {
-					push @notifications, $user_id;
-				} # end if
-			} # end foreach
-			if ( @notifications ) {
-				$PO->notifications([$PO->notifications(),@notifications]);
-			} # end if
+			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) );
+		} # end if
+		foreach my $type ( keys %types ) {
+			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'PO ' . $type.' Notifications' ) );
+		} # end foreach
+		if ( scalar @notifications != scalar @new_notifications ) {
+			$PO->notifications(\@new_notifications);
 		} # end if
 	} # end if btnFunction
 
@@ -1928,8 +1935,6 @@ sub _po_notifications {
 sub _manifest_purchase_orders {
 } # end sub _manifest_purchase_orders
 
-sub _rfidtags_results {
-} # end sub _rfidtags_results
 
 sub _rfidtag_log {
     @{$variable{'Entries'}} = openprint::RFIDTagHistory::find( 

@@ -50,6 +50,15 @@ Please select a RFID Tag to view/edit.<br>
 			</span>
 		</p>
 		<p>
+            <label>Valid?</label>
+            <input type="radio" id="valid1" name="valid" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?valid'} eq '0' ); ) ?> />
+            <label class="radio" for="valid1">Yes</label>
+            <input type="radio" id="valid0" name="valid" value="0" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?valid'} eq '1' ); ) ?> />
+            <label class="radio" for="valid0">No</label>
+            <input type="radio" id="valid" name="valid" value="" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?valid'} eq '' ); ) ?> />
+            <label class="radio" for="valid">Both</label>
+		</p>
+		<p>
             <label>Assigned/Unassigned?</label>
             <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( ssi::checked( $session{'/employee/inventory/rfidtags.html?assigned'} ); ) ?> />
             <label class="radio" for="assigned">Assigned</label>
