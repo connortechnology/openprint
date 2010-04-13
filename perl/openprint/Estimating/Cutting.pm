@@ -62,14 +62,14 @@ sub variables {
 			push @v, "ddmStockCutEquipment-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkOverrideStockCutEquipment-$$specs{'SignatureIndex'}-$qty_index";
 			push @v, "chkOverrideCalculatedCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "chkboxVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "txtboxVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "chkboxHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "txtboxHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "chkboxDVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "txtboxDVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "chkboxDHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
-			push @v, "txtboxDHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
+			push @v, "OverrideVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
+			push @v, "txtVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
+			push @v, "OverrideHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
+			push @v, "txtHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
+			push @v, "OverrideDVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
+			push @v, "txtDVerticalCuts-$$specs{'SignatureIndex'}-$qty_index";
+			push @v, "OverrideDHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
+			push @v, "txtDHorizontalCuts-$$specs{'SignatureIndex'}-$qty_index";
 		} # end foreach
 	} # end foreach
 
@@ -469,6 +469,9 @@ sub signature_calc {
 	} elsif ( $$services{'PerfectBound'} ) {
 		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'PerfectBound'}[0] );
 		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
+	} elsif ( $$services{'CornerStitching'} ) {
+		my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'CornerStitching'}[0] );
+		$stitching_imposition = $$stitching_specs{'Imposition'.$qty_index};
 	} # end if
 
 	my $folding_imposition = new openprint::Imposition();
@@ -500,8 +503,10 @@ sub signature_calc {
 		# Regular book signatures will be trimmed by the stitcher, so we only need 1 cut per imposition
 		# but if we are cutting into smaller signatures, then we need more cutting
 #$openprint::log->debug("Sitching $stitching_imposition to $$sig_specs{'txtImposition'.$qty_index}");
-
-		if ( $stitching_imposition and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
+		if ( $I->pages() and ! $$services{'Folding'} ) {
+			# Have to cut the pages out
+			$vertical_cuts += int ( ($I->page_columns()-1)*$I->columns()*2 ) + 2;
+		} elsif ( $stitching_imposition and ( $$I{'image_orientation'} eq 'Horizontal' ) ) {
 			$vertical_cuts += int ($$I{'columns'} / $stitching_imposition)-1;
 		} else {
 			$vertical_cuts += $$I{'columns'}-1;
@@ -534,7 +539,10 @@ sub signature_calc {
 # interior horizontal cuts = $sig_specs{'hdnImpositionRows'}-1 with bleeds
 	my $horizontal_cuts = 0;
 	if ( exists $$sig_specs{'txtSignatureType'} ) {
-		if ( $stitching_imposition and ( $I->image_orientation() eq 'Vertical' ) ) {
+		if ( $I->pages() and ! $$services{'Folding'} ) {
+			# Have to cut the pages out
+			$horizontal_cuts += int( ($I->page_rows()-1)*$I->rows() * 2 ) + 2;
+		} elsif ( $stitching_imposition and ( $I->image_orientation() eq 'Vertical' ) ) {
 			$horizontal_cuts += int ($$I{'rows'} / $stitching_imposition)-1; 
 		} else {
 			$horizontal_cuts += $$I{'rows'}-1;
@@ -590,29 +598,29 @@ sub signature_calc {
 	} # end if exists signaturetype
 
 #following lines add on 16-july-2008
-	if ( $$specs{'chkboxVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
-		$vertical_cuts = $$specs{"txtboxVerticalCuts-$signature_index-$qty_index"};
+	if ( $$specs{'OverrideVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
+		$vertical_cuts = $$specs{"txtVerticalCuts-$signature_index-$qty_index"};
 	} else {
-		$$specs{"txtboxVerticalCuts-$signature_index-$qty_index"} = $vertical_cuts;
+		$$specs{"txtVerticalCuts-$signature_index-$qty_index"} = $vertical_cuts;
 	}
 
 #following lines add on 16-july-2008
-	if ( $$specs{'chkboxHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
-		$horizontal_cuts = $$specs{"txtboxHorizontalCuts-$signature_index-$qty_index"};
+	if ( $$specs{'OverrideHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
+		$horizontal_cuts = $$specs{"txtHorizontalCuts-$signature_index-$qty_index"};
 	} else {
-		$$specs{"txtboxHorizontalCuts-$signature_index-$qty_index"} = $horizontal_cuts;
+		$$specs{"txtHorizontalCuts-$signature_index-$qty_index"} = $horizontal_cuts;
 	}
 
-	if ( $$specs{'chkboxDVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
-		$dutch_vertical_cuts = $$specs{"txtboxDVerticalCuts-$signature_index-$qty_index"};
+	if ( $$specs{'OverrideDVerticalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
+		$dutch_vertical_cuts = $$specs{"txtDVerticalCuts-$signature_index-$qty_index"};
 	} else {
-		$$specs{"txtboxDVerticalCuts-$signature_index-$qty_index"} = $dutch_vertical_cuts;
+		$$specs{"txtDVerticalCuts-$signature_index-$qty_index"} = $dutch_vertical_cuts;
 	}
 
-	if ( $$specs{'chkboxDHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
-		$dutch_horizontal_cuts = $$specs{"txtboxDHorizontalCuts-$signature_index-$qty_index"};
+	if ( $$specs{'OverrideDHorizontalCuts-'.$signature_index.'-'.$qty_index} eq 'Y' ) {
+		$dutch_horizontal_cuts = $$specs{"txtDHorizontalCuts-$signature_index-$qty_index"};
 	} else {
-		$$specs{"txtboxDHorizontalCuts-$signature_index-$qty_index"} = $dutch_horizontal_cuts;
+		$$specs{"txtDHorizontalCuts-$signature_index-$qty_index"} = $dutch_horizontal_cuts;
 	}
 
 	if ( $$specs{'chkOverrideCalculatedCuts-'.$signature_index.'-'.$qty_index} ne 'Y' ) {
@@ -831,14 +839,14 @@ sub calc {
 						"txtSheetSizeHeight-$signature_index-$qty_index",
 						)	);
 #added on 16-july-2008
-			@variables = sets::union( @variables, ( "txtboxVerticalCuts-$signature_index-$qty_index",
-						"chkboxVerticalCuts-$signature_index-$qty_index",
-						"txtboxHorizontalCuts-$signature_index-$qty_index",
-						"chkboxHorizontalCuts-$signature_index-$qty_index",
-						"txtboxDVerticalCuts-$signature_index-$qty_index",
-						"chkboxDVerticalCuts-$signature_index-$qty_index",
-						"txtboxDHorizontalCuts-$signature_index-$qty_index",
-						"chkboxDHorizontalCuts-$signature_index-$qty_index",
+			@variables = sets::union( @variables, ( "txtVerticalCuts-$signature_index-$qty_index",
+						"OverrideVerticalCuts-$signature_index-$qty_index",
+						"txtHorizontalCuts-$signature_index-$qty_index",
+						"OverrideHorizontalCuts-$signature_index-$qty_index",
+						"txtDVerticalCuts-$signature_index-$qty_index",
+						"OverrideDVerticalCuts-$signature_index-$qty_index",
+						"txtDHorizontalCuts-$signature_index-$qty_index",
+						"OverrideDHorizontalCuts-$signature_index-$qty_index",
 						)	);
 
 			if ( ( $$sig_specs{'StockType'.$qty_index} ne 'Roll' ) and ( $$sig_specs{"hdnSuppliedStockWidth$qty_index"} != $$sig_specs{'StockWidth'.$qty_index} or $$sig_specs{"hdnSuppliedStockHeight$qty_index"} != $$sig_specs{'StockHeight'.$qty_index} ) ) {
