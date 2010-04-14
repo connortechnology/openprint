@@ -7,10 +7,18 @@
 		new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
 				type: type, 
 				id: $(type).value, 
+				action: 'Save',
 				shortname: $(type+'_shortname').value,
 				longname: $(type+'_longname').value,
 			}, evalScripts: true } );
 	} // end function save(e)
+	function destroy( type ) {
+		new Ajax.Request( '_filters_save.json', { method: 'post', parameters: { 
+				type: type, 
+				id: $(type).value, 
+				action: 'Delete',
+			}, evalScripts: true } );
+	} // end function delete(e)
 -->
 </script>
 <? echo ( 
@@ -26,9 +34,11 @@
 				<label>Shortname:</label><input type="text" name="%1$s_shortname" id="%1$s_shortname" style="width:75%;"/><br/>
 				<label>Longname:</label><input type="text" name="%1$s_longname" id="%1$s_longname" style="width:75%;"/><br/>
 				%3$s
+				%4$s
 			</p>`, $type,
 			ssi::make_drop_down( [ map { $_->id(), $_->shortname() } eval('openprint::'.$type."::find('order'=>'lower(shortname)')") ] ),
 			ssi::writeButton( $log, $dbh, $type.'Save', 'save.gif', "save('$type');", '', 'Save' ),
+			ssi::writeButton( $log, $dbh, $type.'Delete', 'delete.gif', "destroy('$type');", '', 'Delete' ),
 			);
 	} # end foreach type
 	return $html;

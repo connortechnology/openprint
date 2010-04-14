@@ -1,13 +1,27 @@
 <? echo (
 	$r->content_type('text/javascript');
 	my $Object = eval( "new openprint::$param{type}($param{id});" );
-	$Object->save({
-		'shortname'	=>	$param{'shortname'},
-		'longname'	=>	$param{'longname'},
-		});
+	my $error;
+	if ( $param{'action'} eq 'Save' and $param{'shortname'} ) {
+		$error .= $Object->save({
+			'shortname'	=>	$param{'shortname'},
+			'longname'	=>	$param{'longname'},
+			});
+	} elsif ( $param{'action'} eq 'Delete' ) {
+		$error .= $Object->delete();
+	} # end if
 	my $html;
+	$html .= "alert('$error');" if $error;
 	$html .= sprintf(q`$('%s_shortname').value = '';`, $param{type}, $Object->shortname() );
 	$html .= sprintf(q`$('%s_longname').value = '';`, $param{type}, $Object->longname() );
+
+	my @array = ( '', 'select', map { $_->id(), $_->shortname() } eval("openprint::$param{type}::find('order'=>'shortname');") );
+	$html .= q`
+var ddm = $('`.$param{type}.q`');
+var options = ` . JSON::encode_json( \@array ) . q`;
+clear_ddm(ddm);
+fill_ddm_from_array( ddm, options );
+ddm_select_by_value( ddm, '`.$$Object{id}.q`' );`;
 	return $html;
 ) ?>
 	
