@@ -1329,6 +1329,23 @@ sub _li_change {
 			} # end if
 			$sql{'runtime'} = $param{'runtime'};
 		} # end if
+		if ( $param{'total_runtime'} ne $Job->total_runtime() ) {
+			$param{'total_runtime'} =~ s/[^\d:]//g;
+			my ( $h, $m, $s );
+			if ( $param{'total_runtime'} =~ /(\d+):(\d+):(\d+)/ ) {
+				( $h, $m, $s ) = ( $1, $2, $3 );
+			} elsif ( $param{'total_runtime'} =~ /(\d+):(\d+)/ ) {
+				( $h, $m ) = ( $1, $2 );
+			} elsif ( $param{'total_runtime'} =~ /(\d+)/ ) {
+				( $h ) = ( $1 );
+			} # end if
+			if ( $h or $m or $s ) {
+				$param{'total_runtime'} = sprintf('%.2d:%.2d:%.2d', $h, $m, $s );
+			} else {
+				$param{'total_runtime'} = undef;
+			} # end if
+			$sql{'total_runtime'} = $param{'total_runtime'};
+		} # end if
 		if ( exists $param{'starttime_year'} ) {
 			my $old_starttime = $Job->starttime_seconds();
 			my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );

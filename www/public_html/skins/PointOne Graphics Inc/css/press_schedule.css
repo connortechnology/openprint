@@ -148,6 +148,13 @@ div.PressColumn ul li {display: block;}
         width: 40px;
         text-align: center;
 	}
+	.TotalRunTime {
+		float: left;
+        display: inline;
+        border: 1px outset gray;
+        width: 80px;
+        text-align: center;
+	}
 	.StartTime {
 		float: left;
         display: inline;
