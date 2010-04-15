@@ -368,9 +368,7 @@ sub get_li {
 		} # end if
 
 		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">%2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
-		if ( $Equipment->smartscheduling() or $$self{'locked'} ) {
 		$html .= sprintf( q`<span class="TotalRunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->total_runtime()) );
-		} # end if
 
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
