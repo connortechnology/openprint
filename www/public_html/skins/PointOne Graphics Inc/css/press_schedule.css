@@ -147,6 +147,7 @@ div.PressColumn ul li {display: block;}
         border: 1px outset gray;
         width: 40px;
         text-align: center;
+		display: none;
 	}
 	.TotalRunTime {
 		float: left;
