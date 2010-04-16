@@ -20,11 +20,11 @@ function check_input( form, signature_index ) {
 	$$variable{'Project'} = new openprint::Project( $$variable{'ProjectIndex'} );
 	@$variable{'Docket'} = $$variable{'Project'}->docket();
 ) ?>
-<a href="/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
+<a href="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Return to Project <?ProjectIndex?></a><br/>
 <br/>
 <div class="error"><?ErrorMessage?></div>
 <div style="float: left; width: 49%;"/>
-	<form method="post" name="f1" action="/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
+	<form method="post" name="f1" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?ServiceIndex?>">
 		<fieldset><legend>Production Feedback</legend>
 			<!--#include virtual="/includes/employee/feedback/employee.html"-->
 			<!--#include virtual="/includes/employee/feedback/comments.html"-->
