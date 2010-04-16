@@ -53,7 +53,7 @@
 <? if ( $session{'user_type'} eq 'A' ) ?>
 		<th width="20"><input type="checkbox" onclick="select_all( $('f1'), 'claim_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
-		<th width="35">ID</th>
+		<th class="ID">ID</th>
 		<th class="Date">Date</th>
 		<th class="Company">Vendor</th>
 		<th style="text-align: left;">Created By</th>
@@ -76,7 +76,7 @@
 			my $total = $Claim->Currency()->convert_from( $Claim->total() );
 
 			$html .= sprintf( q`
-				<td><a href="view.html?claim_id=%1$d">%1$d</a></td>
+				<td class="ID"><a href="view.html?claim_id=%1$d">%1$d</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%2$s</a></td>
 				<td class="Company"><a href="view.html?claim_id=%1$d">%3$s</a></td>
 				<td><a href="view.html?claim_id=%1$d">%4$s</a></td>

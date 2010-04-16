@@ -339,3 +339,12 @@ div.Claim .Disclaimer {
 .Claim table td.alert {
 	color: red;
 }
+.Claims table tr td.ID, .Claims table tr th.ID {
+	width: 20px;
+	text-align: left;
+}
+.Claims table tr td.Company, .Claims table tr th.Company {
+	width: 100px;
+	text-align: left;
+	overflow: hidden;
+}

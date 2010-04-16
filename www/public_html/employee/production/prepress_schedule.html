@@ -132,6 +132,25 @@
 				</ul>
 			</li></ul>
 		</div>
+		<div class="dates">
+			<ul><li>
+				<label>Proofs Out:</label>
+				<span class="DateSelector">
+					<? echo ( 
+						my $html = ssi::date_select_session( '/employee/production/prepress_schedule.html', 'proofsout_start' );
+						$html .= ssi::writeButton( $log, $dbh, 'Today_proofsout_start', 't.gif', 'set_today( f1.proofsout_start_year, f1.proofsout_start_month, f1.proofsout_start_day );f1.submit();', '', 'T' ); 
+					) ?>
+				&nbsp;to&nbsp;
+				</span>
+				<span class="DateSelector">
+					<? echo ( 
+						my $html = ssi::date_select_session( '/employee/production/prepress_schedule.html', 'proofsout_end' );
+						$html .= ssi::writeButton( $log, $dbh, 'Today_proofsout_end', 't.gif', 'set_today( f1.proofsout_end_year, f1.proofsout_end_month, f1.proofsout_end_day );f1.submit();', '', 'T' ); 
+						return $html;
+					) ?>
+				</span>
+			</li></ul>
+		</div>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f1.btnFunction.value='Reset';f1.submit();", '', 'Reset' ); ) ?>

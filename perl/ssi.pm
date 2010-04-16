@@ -483,6 +483,11 @@ $log->debug("$year-$month-$day");
 	return $html;
 } # end sub date_select
 
+sub date_select_session {
+	my ( $page, $prefix, $options ) = @_;
+	return date_select( $prefix, [ @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} ], $options );
+} # end sub date_select_session
+
 sub datetime_select {
 	my ( $prefix, $value, $options ) = @_;
 
@@ -558,4 +563,3 @@ sub save_params {
 1;
 
 __END__
-~		 
