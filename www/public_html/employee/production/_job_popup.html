@@ -40,6 +40,10 @@
 		</p>
 <? if ( $$variable{'Job'}->project_id() ) ?>
 		<p>
+			<label>Total Runtime:</label>
+			<input type="text" name="total_runtime" value="<? echo ( $$variable{'Job'}->total_runtime() ) ?>" onkeyup="this.value=this.value.replace(/[^\d:]/g,'');"/>
+		</p>
+		<p>
 			<label>Forms:</label>
 			<input type="text" name="forms" value="<? echo ( $$variable{'Job'}->forms() ) ?>" onkeyup="this.value=this.value.replace(/\D/g, '');" />
 		</p>

@@ -8,7 +8,7 @@
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
 			$Shift->equipment_id( $E->id() );
 			push @{$$variable{'pending_approved_drops'}}, $Shift->ul_id();
-			$html .= $Shift->get_ul( {'Status'=>'Approved'} );
+			$html .= $Shift->get_ul( {'Status'=>['Approved','Shipped','PickedUp']} );
 			$html .= '</div>';
 		} # end foreach press
 	} # end if

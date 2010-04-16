@@ -321,7 +321,7 @@ sub is_printed {
 	
 	my %statuses = sql::execute( undef, undef, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{id} );
 	foreach ( $self->signatures() ) {
-		return 0 if sets::isin( $statuses{$_}, ['Ordered','In Production'] );
+		return 0 if sets::isin( $statuses{$_}, ['Ordered','In Production','uncalculated'] );
 	} # end foreach
 	return 1;
 } # end sub is_printed
@@ -381,6 +381,7 @@ sub update_status {
 				if ( $self->is_printed() ) {
 					$new_status = 'Printed';
 					my $changed = 0;
+
 					if ( $$self{'status'} eq 'In Prepress' ) {
 # Check prepress services and mark complete
 						my @prepress = openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Prepress' );
@@ -428,7 +429,7 @@ sub update_status {
 					if ( $changed ) {
 						return $self->update_status( );
 					} # end if
-				} else {
+				} else { # is printed
 					$new_status = 'In Prepress';
 				} # end if
 			} # end if

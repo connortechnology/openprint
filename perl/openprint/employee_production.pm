@@ -113,7 +113,7 @@ sub press_schedule {
 				'equipment_id'	=> $param{'press_id'},
 				'comment'		=> $param{'comment'},
 				'locked'		=> $param{'locked'},
-				'runtime'		=> join(':', $h, $m, $s ),
+				'runtime'		=> $param{'runtime'} ? join(':', $h, $m, $s ) : undef,
 				});
 
 		%param = ();
@@ -1003,33 +1003,33 @@ if ( 0 ) {
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
-			# Coalesce Jobs
+		# Coalesce Jobs
 $log->debug("Order before coalesce: @order");
-			my $previous;
-			foreach my $row_id ( @order ) {
-				my $Job = new openprint::ScheduledJob( $row_id );
-				if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
-					my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
-					my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
-					if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() ) ) {
+		my $previous;
+		foreach my $row_id ( @order ) {
+			my $Job = new openprint::ScheduledJob( $row_id );
+			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
+				my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
+				my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
+				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() ) ) {
 $log->debug("Sigs are the same, coalescing ");
-						$_ = $previous->save({
-								'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
-								'service_id'	=>	[ @{$$previous{'service_id'}}, @{$$Job{'service_id'}} ],	
-								});
-						if ( $_ ) {
-							$log->error($_);
-						} else {
-							$Job->delete();
-							@order = sets::exclude( [ $row_id ], \@order );
-						} # end if
+					$_ = $previous->save({
+							'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
+							'service_id'	=>	[ @{$$previous{'service_id'}}, @{$$Job{'service_id'}} ],	
+							});
+					if ( $_ ) {
+						$log->error($_);
+					} else {
+						$Job->delete();
+						@order = sets::exclude( [ $row_id ], \@order );
 					} # end if
-					$previous = undef;
-				} else {
-$log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
-					$previous = $Job;
 				} # end if
-			} # end foreach row
+				$previous = undef;
+			} else {
+$log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
+				$previous = $Job;
+			} # end if
+		} # end foreach row
 
 $log->debug("Order after coalesce: @order");
 		sql::end_transaction( $dbh, $ac );
@@ -1329,6 +1329,23 @@ sub _li_change {
 			} # end if
 			$sql{'runtime'} = $param{'runtime'};
 		} # end if
+		if ( $param{'total_runtime'} ne $Job->total_runtime() ) {
+			$param{'total_runtime'} =~ s/[^\d:]//g;
+			my ( $h, $m, $s );
+			if ( $param{'total_runtime'} =~ /(\d+):(\d+):(\d+)/ ) {
+				( $h, $m, $s ) = ( $1, $2, $3 );
+			} elsif ( $param{'total_runtime'} =~ /(\d+):(\d+)/ ) {
+				( $h, $m ) = ( $1, $2 );
+			} elsif ( $param{'total_runtime'} =~ /(\d+)/ ) {
+				( $h ) = ( $1 );
+			} # end if
+			if ( $h or $m or $s ) {
+				$param{'total_runtime'} = sprintf('%.2d:%.2d:%.2d', $h, $m, $s );
+			} else {
+				$param{'total_runtime'} = undef;
+			} # end if
+			$sql{'total_runtime'} = $param{'total_runtime'};
+		} # end if
 		if ( exists $param{'starttime_year'} ) {
 			my $old_starttime = $Job->starttime_seconds();
 			my $new_starttime = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starttime_year','starttime_month','starttime_day','starttime_hour','starttime_minute'} ) );
@@ -1352,7 +1369,7 @@ sub _li_change {
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		$variable{'error'} .= $Job->bump( $param{'equipment'} );
+		$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		$variable{'error'} .= $Job->delete();
