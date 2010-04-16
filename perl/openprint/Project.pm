@@ -660,6 +660,14 @@ $openprint::log->debug("No presses in used_press_name");
 		$sql .= q{ AND due_date <= ?};
 		push @values, $params{'due_date_<='};
 	} # end if
+	if ( $params{'takenover_on_>='} ) {
+		$sql .= q{ AND (SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=index AND description LIKE 'Taken Over by%') >= ?};
+		push @values, $params{'takenover_on_>='};
+	} # end if
+	if ( $params{'takenover_on_<='} ) {
+		$sql .= q{ AND (SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=index AND description LIKE 'Taken Over by%') <= ?};
+		push @values, $params{'takenover_on_<='};
+	} # end if
 	if ( $params{'docket'} ) {
 		$sql .= ' AND lngdocketnumber=?';
 		push @values, $params{'docket'};

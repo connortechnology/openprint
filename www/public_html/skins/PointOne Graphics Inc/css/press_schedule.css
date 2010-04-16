@@ -294,13 +294,32 @@ fieldset.filters ul li label {
 	float: left;
 }
 div.presses {
-	width: 24%;
+	width: 25%;
 	float: left;
 }
-div.statuses, div.legend {
-	width: 30%;
+div.statuses {
+	width: 40%;
 	float: left;
 }
+div.statuses ul li {
+	padding-left: 80px;
+}
+div.statuses ul li label {
+	margin-left: -80px;
+	width: 75px;
+}
+div.dates {
+	width: 70%;
+	float: left;
+}
+div.dates ul li {
+	padding-left: 80px;
+}
+div.dates ul li label {
+	margin-left: -80px;
+	width: 75px;
+}
+
 div.dates {
 	width: 45%;
 	float:left;
@@ -311,6 +330,10 @@ div.presses ul li {
 div.presses ul li label {
 	margin-left: -70px;
 	width: 65px;
+}
+div.legend {
+	width: 30%;
+	float: left;
 }
 div.legend ul li {
 	padding-left: 70px;

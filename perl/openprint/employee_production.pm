@@ -1550,14 +1550,14 @@ sub _check_for_skid {
 sub prepress_schedule {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Presses' ) {
+			foreach my $param ( 'Presses','statuses','takenover_on_start_year','takenover_on_start_month','takenover_on_start_day','takenover_on_end_year','takenover_on_end_month','takenover_on_end_day' ) {
 				delete $session{'/employee/production/prepress_schedule.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/prepress_schedule.html', ( 'Presses','statuses','scale' ) );
+			ssi::save_params( '/employee/production/prepress_schedule.html', ( 'Presses','scale','statuses','takenover_on_start_year','takenover_on_start_month','takenover_on_start_day','takenover_on_end_year','takenover_on_end_month','takenover_on_end_day' ) );
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/prepress_schedule.html?lastupdated'} ) > 24*60*60 ) {
-		foreach my $param ( 'Presses', 'statuses','scale' ) {
+		foreach my $param ( 'Presses', 'statuses','scale','takenover_on_start_year','takenover_on_start_month','takenover_on_start_day','takenover_on_end_year','takenover_on_end_month','takenover_on_end_day' ) {
 			delete $session{'/employee/production/prepress_schedule.html?'.$param};
 		} # end if
 	} # end if
@@ -1566,4 +1566,3 @@ sub prepress_schedule {
 
 1;
 __END__
-~	   

@@ -137,15 +137,15 @@
 				<label>Proofs Out:</label>
 				<span class="DateSelector">
 					<? echo ( 
-						my $html = ssi::date_select_session( '/employee/production/prepress_schedule.html', 'proofsout_start' );
-						$html .= ssi::writeButton( $log, $dbh, 'Today_proofsout_start', 't.gif', 'set_today( f1.proofsout_start_year, f1.proofsout_start_month, f1.proofsout_start_day );f1.submit();', '', 'T' ); 
+						my $html = ssi::date_select_session( '/employee/production/prepress_schedule.html', 'takenover_on_start' );
+						$html .= ssi::writeButton( $log, $dbh, 'Today_takenover_start', 't.gif', 'set_today( f1.takenover_on_start_year, f1.takenover_on_start_month, f1.takenover_on_start_day );f1.submit();', '', 'T' ); 
 					) ?>
 				&nbsp;to&nbsp;
 				</span>
 				<span class="DateSelector">
 					<? echo ( 
-						my $html = ssi::date_select_session( '/employee/production/prepress_schedule.html', 'proofsout_end' );
-						$html .= ssi::writeButton( $log, $dbh, 'Today_proofsout_end', 't.gif', 'set_today( f1.proofsout_end_year, f1.proofsout_end_month, f1.proofsout_end_day );f1.submit();', '', 'T' ); 
+						my $html = ssi::date_select_session( '/employee/production/prepress_schedule.html', 'takenover_on_end' );
+						$html .= ssi::writeButton( $log, $dbh, 'Today_takenover_end', 't.gif', 'set_today( f1.takenover_on_end_year, f1.takenover_on_end_month, f1.takenover_on_end_day );f1.submit();', '', 'T' ); 
 						return $html;
 					) ?>
 				</span>
@@ -165,7 +165,29 @@
 		my $html;
 		foreach my $status ( @{$$variable{'statuses'}} ) {
 			$html .= '<fieldset><legend>'.$status.'</legend>';
-			my @Projects = openprint::Project::find('status'=>$status, 'order'=>'lngdocketnumber' );
+			
+			my %sql = (
+				'status'	=>	$status, 
+				'order'		=>	'lngdocketnumber',
+				);
+
+			$sql{'takenover_on_>='} = sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+				'/employee/production/prepress_schedule.html?takenover_on_start_year',
+				'/employee/production/prepress_schedule.html?takenover_on_start_month',
+				'/employee/production/prepress_schedule.html?takenover_on_start_day'} )
+			if $session{'/employee/production/prepress_schedule.html?takenover_on_start_year'} 
+			and $session{'/employee/production/prepress_schedule.html?takenover_on_start_month'}
+			and $session{'/employee/production/prepress_schedule.html?takenover_on_start_day'};
+$openprint::log->debug("$session{'/employee/production/prepress_schedule.html?takenover_on_start_year'} $session{'/employee/production/prepress_schedule.html?takenover_on_start_month'} $session{'/employee/production/prepress_schedule.html?takenover_on_start_day'}");
+
+			$sql{'takenover_on_<='} = sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+				'/employee/production/prepress_schedule.html?takenover_on_end_year',
+				'/employee/production/prepress_schedule.html?takenover_on_end_month',
+				'/employee/production/prepress_schedule.html?takenover_on_end_day',} )
+				if $session{'/employee/production/prepress_schedule.html?takenover_on_end_year'} 
+			and $session{'/employee/production/prepress_schedule.html?takenover_on_end_month'}
+			and $session{'/employee/production/prepress_schedule.html?takenover_on_end_day'};
+			my @Projects = openprint::Project::find( %sql );
 
 			foreach my $E ( @{$$variable{'Presses'}} ) {
 				$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;"><a href="/employee/production/prepress_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
