@@ -433,11 +433,11 @@ sub update_status {
 				} # end if
 			} # end if
 		} else { # there isn't any ordered services
-			if ( $$self{'shipping_type'} eq 'Customer Pickup' ) {
+			if ( $$self{'shippingtype'} eq 'CustomerPickup' ) {
 				if ( $$self{'status'} ne 'Picked Up' ) {
 					$new_status = 'Waiting For Pickup';
 				} # end if
-			} elsif ( $$self{'shipping_type'} eq 'Delivery' ) {
+			} elsif ( $$self{'shippingtype'} eq 'Delivery' ) {
 				$new_status = 'Shipped';
 			} else {
 				if ( ! sets::isin( $$self{'status'}, [ 'Shipped', 'Picked Up' ] ) ) {
@@ -554,8 +554,15 @@ sub find {
 		$sql .= q{ AND (dtmlastmodified <= ?)};
 		push @values, $params{'updated_on_end'};
 	} # end if
+	if ( $params{'updated_on_>='} ) {
+		$sql .= q{ AND (dtmlastmodified >= ?)};
+		push @values, $params{'updated_on_>='};
+	} # end if
+	if ( $params{'updated_on_<='} ) {
+		$sql .= q{ AND (dtmlastmodified <= ?)};
+		push @values, $params{'updated_on_<='};
+	} # end if
 
-	
 	if ( $params{'ordered_on_start'} and $params{'ordered_on_end'} ) {
 		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) BETWEEN ? AND ?)};
 		push @values, @params{'ordered_on_start','ordered_on_end'};
@@ -631,18 +638,26 @@ $openprint::log->debug("No presses in used_press_name");
     } # end if
 
 	if ( $params{'due_date_start'} and $params{'due_date_end'} ) {
-		$sql .= q{ AND (due_date BETWEEN ? AND ?};
+		$sql .= q{ AND (due_date BETWEEN ? AND ?)};
 		push @values, @params{'due_date_start','due_date_end'};
 		if ( exists $params{'due_date'} and ! $params{'due_date'} ) {
 			$sql .= q{ OR due_date IS NULL};
 		} # end if
 		$sql .= ')';
 	} elsif ( $params{'due_date_start'} ) {
-		$sql .= q{ AND (due_date >= ?};
+		$sql .= q{ AND due_date >= ?};
 		push @values, $params{'due_date_start'};
 	} elsif ( $params{'due_date_end'} ) {
-		$sql .= q{ AND (due_date <= ?};
+		$sql .= q{ AND due_date <= ?};
 		push @values, $params{'due_date_end'};
+	} # end if
+	if ( $params{'due_date_>='} ) {
+		$sql .= q{ AND due_date >= ?};
+		push @values, $params{'due_date_>='};
+	} # end if
+	if ( $params{'due_date_<='} ) {
+		$sql .= q{ AND due_date <= ?};
+		push @values, $params{'due_date_<='};
 	} # end if
 	if ( $params{'docket'} ) {
 		$sql .= ' AND lngdocketnumber=?';
@@ -1151,7 +1166,7 @@ sub status_change {
 		} # end foreach AP
 	} # end if
 	$self->save();
-	$self->Order()->update_status();
+	$self->Order()->update_status() if $self->order_id();
 } # end sub status_change
 
 # Was added when writing the PPF Monnitor, can be used to add a specific signature
