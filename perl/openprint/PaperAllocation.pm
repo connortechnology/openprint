@@ -23,7 +23,7 @@ require openprint::PaperPrice;
 require openprint::logs;
 require openprint::Manufacturer;
 
-my $debug = 0;
+my $debug = 1;
 
 $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
@@ -45,6 +45,12 @@ $serial = 'paper_allocation_id_seq';
 %defaults = (
 	'created_on'	=> 'NOW()',
 );
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 # Returns a paper object specified by the parameters
 sub find {
 	my %params = @_;

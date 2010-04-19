@@ -54,11 +54,11 @@
 		<p>
 			<label>Date:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'starting_start', join('-', @session{'/employee/inventory/purchase_orders.html?starting_start_year','/employee/inventory/purchase_orders.html?starting_start_month','/employee/inventory/purchase_orders.html?starting_start_day'} ), "load('Results',\$('f1'));" ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_start',  { 'onchange'=> "load('Results',\$('f1'));" } ); ) ?>
             to
             </span>
             <span class="DateSelector">
-<? echo ( ssi::date_select( 'starting_end', join('-', @session{'/employee/inventory/purchase_orders.html?starting_end_year','/employee/inventory/purchase_orders.html?starting_end_month','/employee/inventory/purchase_orders.html?starting_end_day'} ), "load('Results',\$('f1'));" ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_end', { 'onchange'=>"load('Results',\$('f1'));" } ); ) ?>
             </span>
 		</p>
 		<p>
