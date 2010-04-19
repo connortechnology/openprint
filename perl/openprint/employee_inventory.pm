@@ -1277,7 +1277,7 @@ sub manifest {
 					} # end foreach C
 					$Paper->save();
 					$Type->Paper()->save();
-				} # end if
+				} # end if different Paper Type
 
 				my %data = (
 					'docket'	=>	$param{'docket-'.$Type->id()},
@@ -1339,20 +1339,21 @@ sub manifest {
 				# Save data for the rest of the contents
 				foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
 					if ( exists $param{"qty_lbs-$$Type{id}-$$C{id}"} ) {
-						$variable{'error'} .= $C->save( {
-								'quantity'		=>	sprintf('%d', $param{"qty_lbs-$$Type{id}-$$C{id}"}),
-								} );
+						$variable{'error'} .= $C->save({ 'quantity'	=> sprintf('%d', $param{"qty_lbs-$$Type{id}-$$C{id}"}) });
 					} # end if
 					$total_qty += $C->quantity();
 					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project ) {
-						my @PAs = openprint::PaperAllocation::find('skid_id'=>$C->skid_id());
-						if ( ! @PAs ) {
+						my $PA = openprint::PaperAllocation::find_one('skid_id'=>$C->skid_id());
+						if ( ! $PA ) {
 							$Paper->allocate( $C->Skid(), $Project->id(), $C->quantity(), $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
 							$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $C->quantity(), ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
-						} elsif ( $PAs[0]->project_id() != $Project->id() ) {
-							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $C->skid_id(), $PAs[0]->project_id(), $PAs[0]->docket() );
+						} elsif ( ! $PA->project_id() ) {
+							$variable{'error'} .= $PA->save({'project_id'=>$Project->id()});
+							$variable{'information'} .= sprintf('Updated allocation %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $C->quantity(), ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
+						} elsif ( $PA->project_id() != $Project->id() ) {
+							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $C->skid_id(), $PA->project_id(), $PA->docket() );
 						} # end if
 					} # end if
 					if ( openprint::PaperInventory::find('skid_id'=>$C->Skid()->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ) {

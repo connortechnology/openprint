@@ -82,9 +82,10 @@ $log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE '
 
 sub save {
 	my ( $self, $data ) = @_;
+	my $type = ref $self;
 if ( $data ) {
 foreach my $k ( keys %$data ) {
-$log->debug("Object::save $k => $$data{$k}");
+$log->debug("$type ::save $k => $$data{$k}");
 }
 } else {
 $log->debug("No data");
@@ -99,7 +100,6 @@ $log->debug("No data");
 #}
 #$debug = 0;
 
-	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
 	my $serial = eval '$'.$type.'::serial';
 	my %fields = eval '%'.$type.'::fields';
