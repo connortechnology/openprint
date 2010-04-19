@@ -444,8 +444,7 @@ sub get_proof_specs {
 	my %services = $Project->get_services();
 
 	my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
-	foreach my $qty_index ( 1 .. 3 ) {
-		next if ! $Project->quantity($qty_index);
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %proof_indexes;
 		foreach my $key ( keys %$specs ) {
 			if ( $key =~ /^txtProofIndex-(\d*)-(\d*)-$qty_index$/ ) {
@@ -464,16 +463,16 @@ sub get_proof_specs {
 				if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
 					push @{$proof_indexes{$signature_index}}, 1;
 					$openprint::log->debug("ADDING Layout Proof to $signature_index") if $debug;
-					insert_layout_proof( $Project, $service_index, $sig_specs, 1, $qty_index, $variable );
+					insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs );
 				} # end if
 				if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y') {
 					push @{$proof_indexes{$signature_index}}, 2;
 					$openprint::log->debug("ADDING Colour Proof to $signature_index") if $debug;
-					insert_colour_proof( $log, $dbh, $project_index, $service_index, $sig_specs, 2, $qty_index, $variable );
+					insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $specs );
 				} # end if
 				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y') {
 					push @{$proof_indexes{$signature_index}}, 3;
-					insert_press_proof( $log, $dbh, $project_index, $service_index, $sig_specs, 3, $qty_index, $variable );
+					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $specs );
 				} # end if
 			} # end if
 

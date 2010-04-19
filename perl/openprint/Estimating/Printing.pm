@@ -4232,11 +4232,11 @@ sub filter_colours {
 } # end sub
 
 sub compare_signatures_runstyle {
-	my ( $sig1, $sig2, $qty_index ) = @_;
+	my ( $sig1, $sig2, $qty_index, $exclude ) = @_;
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
 		foreach my $key ( 'ddmRunStyle', 'ddmPress','PageQuantity','txtImposition','ddmBleedSize' ) {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
-#$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
+$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key.$q_i} $$sig2{$key.$q_i} $$sig1{SignatureIndex} $$sig2{SignatureIndex}");
 				return 0;
 			} # end if
 		} # end if
@@ -4264,6 +4264,7 @@ sub compare_signatures_runstyle {
 			'ColourCoatingType8SideTwo', 'ColourCoatingColour8SideTwo', 'ColourCoatingCoverage8SideTwo',
 			'BleedLeft','BleedRight','BleedTop','BleedBottom',
 			) {
+				next if $exclude and sets::isin( $key, $exclude );
 				if ( $$sig1{$key} ne $$sig2{$key} ) {
 #$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
 					return 0;
@@ -4273,8 +4274,8 @@ sub compare_signatures_runstyle {
 }
 # compares two signature services in terms of their inputs, and returns true if equal, false if not
 sub compare_signatures {
-	my ( $sig1, $sig2, $qty_index ) = @_;
-	return 0 if ! compare_signatures_runstyle( $sig1, $sig2, $qty_index );
+	my ( $sig1, $sig2, $qty_index, $exclude ) = @_;
+	return 0 if ! compare_signatures_runstyle( $sig1, $sig2, $qty_index, $exclude );
 	foreach my $key (
 			'Group',
 			'CustomStockPrice','txtCustomMWeight',
@@ -4283,8 +4284,9 @@ sub compare_signatures {
 			'ddmStockBrand', 'ddmStockFinish', 'ddmStockColour', 'ddmStockWeight',
 			'rdbSuppliedStock','rdbSpecificStock','txtEmployeeComments',
 			) {
+		next if $exclude and sets::isin( $key, $exclude );
 		if ( $$sig1{$key} ne $$sig2{$key} ) {
-#$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
+$openprint::log->debug("Not the same $key $$sig1{ServiceIndex} $$sig2{ServiceIndex} $$sig1{$key} ne $$sig2{$key}");
 			return 0
 		} # end if
 	} # end foreach

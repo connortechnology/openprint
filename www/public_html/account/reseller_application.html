@@ -9,20 +9,17 @@
 </script>
 <a name="top"></a>
 <br/>
-<? if ( $openprint::session{'company_id'} == 0 ) ?>
+<? if ( $session{'company_id'} == 0 ) ?>
 You must register for a login, and be logged in before you can apply to become a reseller.<br>
 <!--#include virtual="/includes/customer_login.html"-->
-<? else ( $openprint::session{'company_id'} == 0 ) ?>
-	<? if ( $openprint::param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
+<? else ( $session{'company_id'} == 0 ) ?>
+	<? if ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
 		Thank you. Your information has been received.<br/>
 		Your reseller application will be reviewed as soon as possible.	You will be notified of changes to the status of your account by email.<br/>
-	<? else ( $openprint::param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
-		<? if ( $$variable{'error'} ) ?>
-		<p class="error"><?error?></p>
-		<? endif ( $$variable{'error'} ) ?>
+	<? else ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
+		<!--#include virtual="/includes/error_reporting.html"-->
 		
-		(<span class="requiredFieldIndicator">*</span> denotes required information )<br/>
-		<br>
+		<p class="required"> denotes required information.</p>
 		<form name="f1" method="post" action="<?SecureSiteURL?>/account/reseller_application.html">
 			<div class="ResellerApplication">
 				<!--#include virtual="/account/_business_information.html"-->
@@ -41,5 +38,5 @@ You must register for a login, and be logged in before you can apply to become a
 			</fieldset>
 			<input type="hidden" name="btnFunction" value="Apply"/>
 		</form>
-	<? endif ( $openprint::param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
-<? endif ( $openprint::session{'company_id'} == 0 ) ?>
+	<? endif ( $param{'btnFunction'} eq 'Apply' and ! $$variable{'error'} ) ?>
+<? endif ( $session{'company_id'} == 0 ) ?>

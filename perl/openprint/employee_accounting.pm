@@ -106,7 +106,6 @@ sub details {
 	openprint::order::get_invoice_to( \%variable, $Order );
 	$variable{'CCITYPROVCOUNTRY'} = misc::build_city_prov_country(@variable{'txtCity','txtStateProvince','txtCountry'} );
 	openprint::order::get_misc( \%variable, $Order );
-	openprint::order::get_projects( $log, $dbh, \%variable, $order_id );
 	$variable{'OrderID'} = $order_id;
 	my $Currency = $Order->Currency();
 	@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );

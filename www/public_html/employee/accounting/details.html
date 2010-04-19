@@ -1,4 +1,5 @@
 <script type="text/javascript">
+<!--
 	function confirm_delete( form, payment_index ) {
 		if ( confirm( "Are you sure you want to delete this payment?" ) ) {
 			form.btnFunction.value = 'Delete';
@@ -6,8 +7,10 @@
 			form.submit();
 		} // end if
 	} // end function confirm_delete()
+-->
 </script>
 <link href="/css/order.css" rel="stylesheet" type="text/css"/>
+<div class="Order">
 <form name="f1" method="post" action="details.html?order_id=<?OrderID?>">
 	<!--#include virtual="/includes/order_header.html" -->
 	<br class="spacer"/>
@@ -21,10 +24,11 @@
 			<th align="right">Qty</th>
 			<th width="75" align="right">Price</th>
 		</tr>
+		<? eval ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 		<tr<?rowclass?>>
-			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
-			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->reference(); ) ?></a></td>
+			<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+			<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->reference(); ) ?></a></td>
 			<td align="left"><? echo ( $$variable{'Project'}->status(); ) ?></td>
 			<td align="center"><? echo ( $$variable{'Project'}->requested_date(); ) ?></td>
 			<td align="center"><? echo ( $$variable{'Project'}->due_date(); ) ?></td>
@@ -102,3 +106,4 @@
 	<input type="hidden" name="PaymentIndex"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
+</div>
