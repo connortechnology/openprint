@@ -2,8 +2,8 @@
 <table class="List">
 	<thead>
 		<tr> 
-			<th align="left">Projects</th>
-			<th width="130" align="right">Weight</th>
+			<th class="projects">Projects</th>
+			<th class="weight">Weight</th>
 			<th class="markup">%</th>
 			<th class="quantity">Qty</th>
 			<th class="price">Price</th>
@@ -13,7 +13,7 @@
 	<? eval ( @{$$variable{'Projects'}} = $$variable{'Quote'}->Quoted_Projects(); ) ?>
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 	<tr<?rowclass?>> 
-		<td><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->project_id() ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->Project()->reference()) . ':<br/>' if $$variable{'Project'}->Project()->reference() ) ?><? echo ( $$variable{'Project'}->Project()->summary(); ) ?></a></td>
+		<td class="projects"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->project_id() ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->Project()->reference()) . ':<br/>' if $$variable{'Project'}->Project()->reference() ) ?><? echo ( $$variable{'Project'}->Project()->summary(); ) ?></a></td>
 		<td colspan="5">
 			<table>
 				<? echo (
@@ -22,7 +22,7 @@
 					my $services = $Project->services();
 
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
-						$html .= '<tr><td width="130" align="right">';
+						$html .= '<tr><td class="weight">';
 						my $weight;
 
 						if ( $$services{'BulkSkids'} ) {
@@ -59,16 +59,16 @@
 <table class="List">
 	<thead>
 		<tr> 
-			<th align="left">Projects</th>
-			<th width="130" align="right">Weight</th>
-			<th width="100" align="right">Qty</th>
-			<th width="100" align="right">Price</th>
+			<th class="projects">Projects</th>
+			<th class="weight">Weight</th>
+			<th class="quantity">Qty</th>
+			<th class="newprice">Price</th>
 		</tr>
 	</thead>
 	<? eval ( @{$$variable{'Projects'}} = $$variable{'Quote'}->Quoted_Projects(); ) ?>
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 	<tr<?rowclass?>> 
-		<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( ssi::htmlize($$variable{'reference'}) . ':<br/>'  if $$variable{'reference'} ) ?><? echo ( new openprint::Project( $$variable{'project_index'} )->summary(); ) ?></a></td>
+		<td class="projects"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( ssi::htmlize($$variable{'reference'}) . ':<br/>'  if $$variable{'reference'} ) ?><? echo ( new openprint::Project( $$variable{'project_index'} )->summary(); ) ?></a></td>
 		<td colspan="3">
 			<table>
 				<? echo (
@@ -77,7 +77,7 @@
 					my $services = $Project->services();
 
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
-						$html .= '<tr><td width="130" align="right">';
+						$html .= '<tr><td class="weight">';
 						my $weight;
 
 						if ( $$services{'BulkSkids'} ) {

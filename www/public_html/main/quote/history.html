@@ -1,4 +1,5 @@
 <script type="text/javascript">
+<!--
 	function delete_confirm(form) {
 		var number_of_deleted_quotes = 0;
 		for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -23,52 +24,53 @@
 		$('QuoteList').innerHTML = 'Please wait...';
 		new Ajax.Updater('QuoteList','/main/quote/_history.html', {method:'get',parameters:form.serialize(true)});
 	} // end function load_quotes
+-->
 </script>	 
 <? if ( $session{'user_id'} == 0 ) ?>
 Only logged in customers have a quote history. 
 <? else ( $session{'user_id'} == 0 ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
-
-<form name="f1" method="post" action="history.html">
-   <div class="QuoteHistory">
-	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
-		<p>
-			<label for="QuoteID">Quote ID:</label>
-			<input type="text" size="10" id="QuoteID" name="QuoteID" value="<? echo ( $param{'QuoteID'} ) ?>" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
-		</p>
-		<p>
-			<label for="QuotedFor">Quoted For:</label>
-			<select name="QuotedFor" size="1" onchange="load_quotes( this.form );">
-				<option value=""> all </option>
-<? echo (
-	$_ = "SELECT DISTINCT tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName, tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ".
-        "FROM Quotes, tbl_Quote_Users_For ".
-        "WHERE Quotes.CompanyIndex = $session{'company_id'} ".
-        " AND Quotes.strStatus != 'Incomplete' AND tbl_Quote_Users_For.quote_id = Quotes.id ".
-        " ORDER BY tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ";
-    ssi::fill_drop_down( $log, $dbh, $_, $session{'/main/quote/history.html?QuotedFor'} );
-) ?>
-			</select>
-		</p>
-		<p>
-			<label for="ddmStartDay">Quote Date:</label>
-			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/main/quote/history.html', 'created_on_start', { 'onchange'=>'load_quotes(this.form);' } ); ) ?>
-			to&nbsp;
-			</span>
-			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/main/quote/history.html', 'created_on_end', { 'onchange'=>'load_quotes(this.form);' } ); ) ?>
-			</span>
-		</p>
-		<p class="buttons">
-				<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
-				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', '/main/quote/information.html?btnFunction=New', 'Create New' ),
-				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
-				); ) ?>
-		</p>
-	</fieldset>
-   </div>
-</form>
+<div class="Quote"><div class="History">
+	<form name="f1" method="post" action="history.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+			<p>
+				<label for="QuoteID">Quote ID:</label>
+				<input type="text" size="10" id="QuoteID" name="QuoteID" value="<? echo ( $param{'QuoteID'} ) ?>" onkeyup="if( this.value.length > 3 ){load_quotes( this.form );}" />
+			</p>
+			<p>
+				<label for="QuotedFor">Quoted For:</label>
+				<select name="QuotedFor" size="1" onchange="load_quotes( this.form );">
+					<option value=""> all </option>
+	<? echo (
+		$_ = "SELECT DISTINCT tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName, tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ".
+			"FROM Quotes, tbl_Quote_Users_For ".
+			"WHERE Quotes.CompanyIndex = $session{'company_id'} ".
+			" AND Quotes.strStatus != 'Incomplete' AND tbl_Quote_Users_For.quote_id = Quotes.id ".
+			" ORDER BY tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ";
+		ssi::fill_drop_down( $log, $dbh, $_, $session{'/main/quote/history.html?QuotedFor'} );
+	) ?>
+				</select>
+			</p>
+			<p>
+				<label for="ddmStartDay">Quote Date:</label>
+				<span class="DateSelector">
+	<? echo ( ssi::date_select_session( '/main/quote/history.html', 'created_on_start', { 'onchange'=>'load_quotes(this.form);' } ); ) ?>
+				to&nbsp;
+				</span>
+				<span class="DateSelector">
+	<? echo ( ssi::date_select_session( '/main/quote/history.html', 'created_on_end', { 'onchange'=>'load_quotes(this.form);' } ); ) ?>
+				</span>
+			</p>
+			<p class="buttons">
+					<? echo ( join( '',
+					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
+					ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', '/main/quote/information.html?btnFunction=New', 'Create New' ),
+					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					); ) ?>
+			</p>
+		</fieldset>
+	</form>
 <div id="QuoteList"><!--#include virtual="_history.html"--></div>
 <? endif ( $session{'user_id'} == 0 ) ?>
+	</div>
+</div>

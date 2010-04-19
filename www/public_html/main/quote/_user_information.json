@@ -3,7 +3,7 @@
 	$r->content_type('text/javascript');
 	my $User = new openprint::User( $param{'user_id'} );
 	my %data = (
-		#'ForSalutation'.	=>	$User->salutation(),
+		#'ForSalutation'	=>	$User->salutation(),
 		'ForFirstName'	=>	$User->firstname(),
 		'ForLastName'	=>	$User->lastname(),
 		'ForEmail'	=>	$User->email(),

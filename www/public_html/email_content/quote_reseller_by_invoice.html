@@ -8,8 +8,8 @@
 <table class="List">
 	<tr> 
 		<th width="60" align="left">ID</th>
-		<th align="left">Description</th>
-		<th width="130" align="right">Weight</th>
+		<th class="description">Description</th>
+		<th class="weight">Weight</th>
 		<th class="markup">MU</th>
 		<th class="quantity">Quantity</th>
 		<th class="price">Price</th>
@@ -18,7 +18,7 @@
 	<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 	<tr<?rowclass?>> 
 		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><?project_index?></a></td>
-		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( 
+		<td class="description"><a href="<? echo ( $config{ExternalSiteURL} ) ?>/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( 
 my $html;
 my $Project = new openprint::Project( $$variable{'project_index'} );
 $html .= ssi::htmlize($Project->reference()) . ':<br/>' if $Project->reference();
@@ -30,7 +30,7 @@ return $html;
 				<? while ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
 				<? if ( $$variable{'qty'} ) ?>
 				<tr>
-					<td width="130" align="right">
+					<td class="weight">
 <? echo (
 	my $Project = new openprint::Project( $$variable{'project_index'} );
 	my $services = $Project->services();

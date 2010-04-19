@@ -9,8 +9,8 @@ function delete_confirm(form) {
 	}
 }
 </script>
-<p class="buttons">
-	<form name="f1" method="post" action="/main/quote/quote_history.html">
+<form name="f1" method="post" action="/main/quote/quote_history.html">
+	<p class="buttons">
 		<input type="hidden" name="btnFunction" value="Delete Quote"/>
 		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id(); ) ?>"/>
 	<? echo ( my $html = '';
@@ -28,8 +28,8 @@ function delete_confirm(form) {
 			} # end if
 			return $html;
 		) ?>
-	</form>
-</p>
+	</p>
+</form>
 <span class="unprintable">
 To save, process a new quote or process an order from this quotation, please click on the appropriate button below.<br/>
 <br/>

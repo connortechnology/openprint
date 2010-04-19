@@ -2,10 +2,9 @@
 <? if ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <li>
 	<label>Quantity:</label>
-	<span style="width: 67%;">
 	<table class="List">
 		<tr> 
-			<th width="20"></td>
+			<th width="20"></th>
 			<th align="right">Quantity</th>
 <!--
 			<th align="right">Unit Price</th>
@@ -25,7 +24,6 @@
 			return $html;
 		) ?>
 	</table>
-	</span>
 </li>
 <? else ( $$variable{'Project'}->quantity_indexes() > 1 ) ?>
 <? echo ( return sprintf('<input type="hidden" name="rdbQuantity%1$d" value="%2$d" />', $$variable{'Project'}->id(), $$$variable{'Project'}->ordered_quantity_index() );) ?>

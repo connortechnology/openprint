@@ -22,12 +22,12 @@
 <fieldset><legend>Contact Information</legend>
 	<div class="content">
 		<ul> 
-			<li>
-				<label>Company Name:<span class="requiredFieldIndicator">*</span></label>
+			<li class="required">
+				<label>Company Name:</label>
 				<input type="text" id="companyname" name="companyname" value="<?companyname?>"/>
 			</li>
 			<li> 
-				<label>Salutation:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<label>Salutation:</label>
 				<input type="radio" id="salutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Mr.' ); ) ?> />
 				<label class="radio" for="salutationMr.">Mr.</label>
 				<input type="radio" id="salutationMrs." name="salutation" value="Mrs." <? echo ( ssi::checked( $$variable{'salutation'} eq 'Mrs.' ); ) ?> />
@@ -39,7 +39,7 @@
 			</li>
 		<? if ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
-				<label>Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<label>Name:</label>
 				<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 					<option value="">Please Select</option>
 		<? echo ( 
@@ -62,21 +62,21 @@
 			</li>
 		<? else ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
 			<li> 
-				<label >First Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<label >First Name:</label>
 				<input type="text" id="firstname" name="firstname" value="<?firstname?>"/>
 			</li>
 			<li> 
-				<label>Last Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<label>Last Name:</label>
 				<input type="text" id="lastname" name="lastname" value="<?lastname?>"/>
 			</li>
 		<? endif ( sets::isin( $session{'user_type'}, [ 'A','E'] ) ) ?>
-			<li> 
-				<label>Address:<span class="requiredFieldIndicator">*</span></label>
+			<li class="required"> 
+				<label>Address:</label>
 				<input type="text" id="address1" name="address1" value="<?address1?>" /><br/>
 				<input type="text" id="address2" name="address2" value="<?address2?>" />
 			</li>
-			<li> 
-				<label>Country:<span class="requiredFieldIndicator">*</span></label>
+			<li class="required"> 
+				<label>Country:</label>
 				<select name="country" onchange="Country_onchange(this, this.form.state);">
 					<option value=""> Select </option>
 					<? echo ( 
@@ -84,7 +84,7 @@
 					) ?> 
 				</select>
 			</li>
-			<li> 
+			<li class="required"> 
 				<label><span id="country_state">
 <? echo (
 if ( $$variable{'country'} eq 'US' ) {
@@ -95,7 +95,7 @@ if ( $$variable{'country'} eq 'US' ) {
     return 'State/Province';
 } # end if
 ) ?>
-:</span><span class="requiredFieldIndicator">*</span></label>
+:</span></label>
 				<select name="state">
 					<option value=""> Select </option>
 					<? echo ( 
@@ -104,11 +104,11 @@ if ( $$variable{'country'} eq 'US' ) {
 					) ?> 
 				</select>
 			</li>
-			<li> 
-				<label>City:<span class="requiredFieldIndicator">*</span></label>
+			<li class="required"> 
+				<label>City:</label>
 				<input type="text" id="city" name="city" value="<?city?>" />
 			</li>
-			<li> 
+			<li class="required"> 
 				<label><span id="country_postal">
                     <? echo (
                        if ( $$variable{'country'} eq 'US' ) {
@@ -119,19 +119,19 @@ if ( $$variable{'country'} eq 'US' ) {
                                return 'Zip/Postal Code:';
                        } # end if
 					) ?>
-					   </span><span class="requiredFieldIndicator">*</span></label>
+					   </span></label>
 				<input type="text" id="postalcode" name="postalcode" value="<?postalcode?>" />
 			</li>
 			<li> 
-				<label>Phone:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<label>Phone:</label>
 				<input type="text" id="phone" name="phone" value="<?phone?>" />
 			</li>
 			<li> 
-				<label>Fax:<span class="requiredFieldIndicator">&nbsp;</span></label>
+				<label>Fax:</label>
 				<input type="text" id="fax" name="fax" value="<?fax?>" />
 			</li>
-			<li> 
-				<label>E-mail:<span class="requiredFieldIndicator">*</span></label>
+			<li class="required"> 
+				<label>E-mail:</label>
 				<input type="text" id="email" name="email" value="<?email?>" />
 			</li>
 			<li class="help">We use your email to send your order confirmation and updates.</li>

@@ -1,4 +1,5 @@
 <script type="text/javascript">
+<!--
 	function company_onchange( e ) {
 		new Ajax.Request( '_company_information.json', { method: 'get', parameters: { company_id: e.value } } );
 	} // end function
@@ -49,124 +50,129 @@
 			form.elements['subTotal'+(i+1)].value = do_decimals( subTotals[i],2 );
 		} // end for
 	} // end function recalculate_quote(form)
+-->
 </script>
 <? if ( ! $$variable{'Quote'}->id() ) ?>
 	There is no current quote.
 	<? echo ( ssi::writeButton( $log, $dbh, 'create', 'create.gif', '', '/main/quote/information.html?btnFunction=New', 'Create New Quote' ); ) ?>
 <? else ( ! $$variable{'Quote'}->id() ) ?>
 
-	<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 	If you would like to send a copy of this quotation to someone on your behalf 
 	please fill in the necessary information below. This quote will be stored in 
 	quote history. If it is for your own personal reference leave the &quot;Prepared 
 	For&quot; fields blank.<br/>
-	<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+	<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 <br/>
 <div class="Quote">
-	<div class="Information"/>
-		<form method="post" id="f1" name="f1" action="submit.html"/>
-<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+	<div class="Information">
+		<form method="post" id="f1" name="f1" action="submit.html">
 		<div class="Header">
-		<div id="PreparedBy"/>
-<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
-		<fieldset><legend>Prepared By:</legend>
-			<div class="content"><ul>
-			<li> 
-				<label><? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>E-mail:</label>
-				<input type="text" name="ByEmail" value="<?ByEmail?>" />
-			</li>
-			<li> 
-				<label>&nbsp;Company Name:</label>
-				<input type="text" name="ByCompanyName" value="<?ByCompanyName?>" />
-			</li>
-			<li> 
-				<label>&nbsp;Salutation:</label>
-				<input type="radio" id="BySalutationMr." name="BySalutation" value="Mr." <? echo ( $$variable{'BySalutation'} eq 'Mr.' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="BySalutationMr."/>Mr.</label>
-				<input type="radio" id="BySalutationMrs." name="BySalutation" value="Mrs" <? echo ( $$variable{'BySalutation'} eq 'Mrs.' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="BySalutationMrs."/>Mrs.</label>
-				<input type="radio" id="BySalutationMs." name="BySalutation" value="Ms." <? echo ( $$variable{'BySalutation'} eq 'Ms.' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="BySalutationMs."/>Ms.</label>
-				<input type="radio" id="BySalutationMiss" name="BySalutation" value="Miss" <? echo ( $$variable{'BySalutation'} eq 'Miss' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="BySalutationMiss"/>Miss</label>
-			</li>
-			<li> 
-				<label><? echo ( sets::isin( 'ByFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '&nbsp;' ) ?>First Name:</label>
-				<input type="text" name="ByFirstName" value="<?ByFirstName?>" />
-			</li>
-			<li> 
-				<label><? echo ( sets::isin( 'ByLastName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '&nbsp;' ) ?>Last Name:</label>
-				<input type="text" name="ByLastName" value="<?ByLastName?>" />
-			</li>
-			<li> 
-				<label>&nbsp;Title:</label>
-				<input type="text" name="ByTitle" value="<?ByTitle?>" />
-			</li>
-			<li> 
-				<label>&nbsp;Address:</label>
-				<input type="text" name="ByAddress1" value="<?ByAddress1?>" />
-			</li>
-			<li> 
-				<label>&nbsp;</label>
-				<input type="text" name="ByAddress2" value="<?ByAddress2?>" />
-			</li>
-			<li> 
-				<label>&nbsp;Country:</label>
-				<select name="ByCountry" onchange="Country_onchange( this, this.form.ByStateProvince );">
-					<option value=""> Select </option>
-					<? echo ( ssi::return_countries($$variable{'ByCountry'}); ) ?>
-				</select>
-			</li>
-			<li> 
-				<label>&nbsp;<span id="ByCountry_state"><? echo (
-if ( $config{'Country'} eq 'US' ) {
-	return 'State';
-} elsif ( $config{'Country'} eq 'CA' ) {
-	return 'Province';
-} else {
-	return 'State/Province';
-} # end if
-) ?>:</span></label>
-				<select name="ByStateProvince">
-					<option value=""> Select </option>
-					<? echo ( ssi::return_states_and_provinces($$variable{'ByStateProvince'}); ) ?>
-				</select>
-			</li>
-			<li> 
-				<label>&nbsp;City:</label>
-				<input type="text" name="ByCity" value="<?ByCity?>" />
-			</li>
-			<li> 
-				<label>&nbsp;<span id="ByCountry_postal"><? echo (
-if ( $config{'Country'} eq 'US' ) {
-	return 'Zip Code';
-} elsif ( $config{'Country'} eq 'CA' ) {
-	return 'Postal Code';
-} else {
-	return 'Zip/Postal Code';
-} # end if
-) ?>:</span></label>
-				<input type="text" name="ByPostalCode" value="<?ByPostalCode?>" />
-			</li>
-			<li> 
-				<label>&nbsp;Phone:</label>
-				<input type="text" name="ByPhone" value="<?ByPhone?>" />
-			</li>
-			<li> 
-				<label>&nbsp;Fax:</label>
-				<input type="text" name="ByFax" value="<?ByFax?>" />
-			</li>
+			<div id="PreparedBy">
+			<fieldset><legend>Prepared By:</legend>
+			<div class="content">
+				<ul>
+					<li<? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+						<label>E-mail:</label>
+						<input type="text" id="ByEmail" name="ByEmail" value="<?ByEmail?>" />
+					</li>
+					<li<? echo ( sets::isin( 'ByCompanyName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+						<label>Company Name:</label>
+						<input type="text" id="ByCompanyName" name="ByCompanyName" value="<?ByCompanyName?>" />
+					</li>
+					<li> 
+						<label>Salutation:</label>
+						<input type="radio" id="BySalutationMr." name="BySalutation" value="Mr." <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Mr.' ); ) ?> />
+						<label class="radio" for="BySalutationMr.">Mr.</label>
+						<input type="radio" id="BySalutationMrs." name="BySalutation" value="Mrs" <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Mrs.' ); ) ?> />
+						<label class="radio" for="BySalutationMrs.">Mrs.</label>
+						<input type="radio" id="BySalutationMs." name="BySalutation" value="Ms." <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Ms.' ); ) ?> />
+						<label class="radio" for="BySalutationMs.">Ms.</label>
+						<input type="radio" id="BySalutationMiss" name="BySalutation" value="Miss" <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Miss' ); ) ?> />
+						<label class="radio" for="BySalutationMiss">Miss</label>
+					</li>
+					<li <? echo ( sets::isin( 'ByFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? 'class="required"' : '' ) ?>> 
+						<label>First Name:</label>
+						<input type="text" id="ByFirstName" name="ByFirstName" value="<?ByFirstName?>" />
+					</li>
+					<li <? echo ( sets::isin( 'ByLastName', split(',', $config{'QuoteRequiredFields'}) ) ? 'class="required"' : '' ) ?>> 
+						<label>Last Name:</label>
+						<input type="text" id="ByLastName" name="ByLastName" value="<?ByLastName?>" />
+					</li>
+					<li> 
+						<label>Title:</label>
+						<input type="text" id="ByTitle" name="ByTitle" value="<?ByTitle?>" />
+					</li>
+					<li> 
+						<label>Address:</label>
+						<input type="text" id="ByAddress1" name="ByAddress1" value="<?ByAddress1?>" />
+					</li>
+					<li> 
+						<label></label>
+						<input type="text" id="ByAddress2" name="ByAddress2" value="<?ByAddress2?>" />
+					</li>
+					<li> 
+						<label>Country:</label>
+						<select id="ByCountry" name="ByCountry" onchange="Country_onchange( this, this.form.ByStateProvince );">
+							<option value=""> Select </option>
+							<? echo ( ssi::return_countries($$variable{'ByCountry'}); ) ?>
+						</select>
+					</li>
+					<li> 
+						<label><span id="ByCountry_state"><? echo (
+		if ( $config{'Country'} eq 'US' ) {
+			return 'State';
+		} elsif ( $config{'Country'} eq 'CA' ) {
+			return 'Province';
+		} else {
+			return 'State/Province';
+		} # end if
+		) ?>:</span></label>
+						<select id="ByStateProvince" name="ByStateProvince">
+							<option value=""> Select </option>
+							<? echo ( ssi::return_states_and_provinces($$variable{'ByStateProvince'}); ) ?>
+						</select>
+					</li>
+					<li> 
+						<label>City:</label>
+						<input type="text" id="ByCity" name="ByCity" value="<?ByCity?>" />
+					</li>
+					<li> 
+						<label><span id="ByCountry_postal"><? echo (
+		if ( $config{'Country'} eq 'US' ) {
+			return 'Zip Code';
+		} elsif ( $config{'Country'} eq 'CA' ) {
+			return 'Postal Code';
+		} else {
+			return 'Zip/Postal Code';
+		} # end if
+		) ?>:</span></label>
+						<input type="text" id="ByPostalCode" name="ByPostalCode" value="<?ByPostalCode?>" />
+					</li>
+					<li> 
+						<label>Phone:</label>
+						<input type="text" id="ByPhone" name="ByPhone" value="<?ByPhone?>" /> x
+						<input type="text" id="ByExtension" name="ByExtension" value="<?ByExtension?>" />
+					</li>
+					<li> 
+						<label>Fax:</label>
+						<input type="text" id="ByFax" name="ByFax" value="<?ByFax?>" />
+					</li>
+				</ul>
+			</div>
 		</fieldset>
-<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
-		</div><div id="PreparedFor"><fieldset><legend>Prepared For:</legend>
+	</div><!--PreparedBy-->
+<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
+		<div id="PreparedFor">
+			<fieldset><legend>Prepared For:</legend>
 			<div class="content"><ul>
-			<li> 
-				<label><? echo ( sets::isin( 'ForEmail', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '' ) ?>E-mail:</label>
+			<li<? echo ( sets::isin( 'ForEmail', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+				<label>E-mail:</label>
 				<input type="text" id="ForEmail" name="ForEmail" value="<?ForEmail?>" />
 			</li>
 <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 			<li> 
-				<label>&nbsp;Company:</label>
+				<label>Company:</label>
 				<input type="text" style="width: auto;" onkeyup="if ( filterDDM(this, this.form.company_id) ) company_onchange($('company_id'));" onkeydown="if(event.keyCode == 13){company_onchange($('company_id'));}" size="4"/>
 				<select id="company_id" name="company_id" onchange="company_onchange(this);">
 					<option value="">select</option>
@@ -174,7 +180,7 @@ if ( $config{'Country'} eq 'US' ) {
 				</select>	
 			</li>
 			<li> 
-				<label>&nbsp;Contact:</label>
+				<label>Contact:</label>
 				<input type="text" style="width: auto;" onkeyup="if(filterDDM(this, this.form.user_id))user_onchange($('user_id'));;" onkeydown="if(event.keyCode == 13){user_onchange($('user_id'));}" size="4"/>
 				<select id="user_id" name="user_id" onchange="user_onchange(this);">
 					<option value="">select</option>
@@ -182,50 +188,50 @@ if ( $config{'Country'} eq 'US' ) {
 				</select>	
 			</li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-			<li> 
-				<label>&nbsp;Company Name:</label>
+			<li<? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+				<label>Company Name:</label>
 				<input type="text" id="ForCompanyName" name="ForCompanyName" value="<?ForCompanyName?>" />
 			</li>
 			<li> 
-				<label>&nbsp;Salutation:</label>
-				<input type="radio" id="ForSalutationMr." name="ForSalutation" value="Mr." <? echo ( $$variable{'ForSalutation'} eq 'Mr.' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="ForSalutationMr."/>Mr.</label>
-				<input type="radio" id="ForSalutationMrs." name="ForSalutation" value="Mrs" <? echo ( $$variable{'ForSalutation'} eq 'Mrs.' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="ForSalutationMrs."/>Mrs.</label>
-				<input type="radio" id="ForSalutationMs." name="ForSalutation" value="Ms." <? echo ( $$variable{'ForSalutation'} eq 'Ms.' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="ForSalutationMs."/>Ms.</label>
-				<input type="radio" id="ForSalutationMiss" name="ForSalutation" value="Miss" <? echo ( $$variable{'ForSalutation'} eq 'Miss' ? 'checked="checked"' : '' ) ?> />
-				<label class="radio" for="ForSalutationMiss"/>Miss</label>
+				<label>Salutation:</label>
+				<input type="radio" id="ForSalutationMr." name="ForSalutation" value="Mr." <? echo ( ssi::checked( $$variable{'ForSalutation'} eq 'Mr.' ); ) ?> />
+				<label class="radio" for="ForSalutationMr.">Mr.</label>
+				<input type="radio" id="ForSalutationMrs." name="ForSalutation" value="Mrs" <? echo ( ssi::checked( $$variable{'ForSalutation'} eq 'Mrs.' ); ) ?> />
+				<label class="radio" for="ForSalutationMrs.">Mrs.</label>
+				<input type="radio" id="ForSalutationMs." name="ForSalutation" value="Ms." <? echo ( ssi::checked( $$variable{'ForSalutation'} eq 'Ms.' ); ) ?> />
+				<label class="radio" for="ForSalutationMs.">Ms.</label>
+				<input type="radio" id="ForSalutationMiss" name="ForSalutation" value="Miss" <? echo ( ssi::checked( $$variable{'ForSalutation'} eq 'Miss' ); ) ?> />
+				<label class="radio" for="ForSalutationMiss">Miss</label>
+			</li>
+			<li<? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+				<label>First Name:</label>
+				<input type="text" id="ForFirstName" name="ForFirstName" value="<?ForFirstName?>" />
+			</li>
+			<li<? echo ( sets::isin( 'ForLastName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+				<label>Last Name:</label>
+				<input type="text" id="ForLastName" name="ForLastName" value="<?ForLastName?>" />
 			</li>
 			<li> 
-				<label><? echo ( sets::isin( 'ForFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '&nbsp;' ) ?>First Name:</label>
-				<input type="text" name="ForFirstName" value="<?ForFirstName?>" />
-			</li>
-			<li> 
-				<label><? echo ( sets::isin( 'ForLastName', split(',', $config{'QuoteRequiredFields'}) ) ? '*' : '&nbsp;' ) ?>Last Name:</label>
-				<input type="text" name="ForLastName" value="<?ForLastName?>" />
-			</li>
-			<li> 
-				<label>&nbsp;Title:</label>
+				<label>Title:</label>
 				<input type="text" id="ForTitle" name="ForTitle" value="<?ForTitle?>" />
 			</li>
 			<li> 
-				<label>&nbsp;Address:</label>
+				<label>Address:</label>
 				<input type="text" id="ForAddress1" name="ForAddress1" value="<?ForAddress1?>" />
 			</li>
 			<li> 
-				<label>&nbsp;</label>
+				<label></label>
 				<input type="text" id="ForAddress2" name="ForAddress2" value="<?ForAddress2?>" />
 			</li>
 			<li> 
-				<label>&nbsp;Country:</label>
+				<label>Country:</label>
 				<select id="ForCountry" name="ForCountry" onchange="Country_onchange( this, this.form.ForStateProvince );">
 					<option value=""> Select </option>
 					<? echo ( ssi::return_countries($$variable{'ForCountry'}); ) ?>
 				</select>
 			</li>
 			<li> 
-				<label>&nbsp;<span id="ForCountry_state"><? echo (
+				<label><span id="ForCountry_state"><? echo (
 if ( $$variable{'ForCountry'} eq 'US' ) {
 	return 'State';
 } elsif ( $$variable{'ForCountry'} eq 'CA' ) {
@@ -234,17 +240,17 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 	return 'State/Province';
 } # end if
 ) ?>:</span></label>
-				<select name="ForStateProvince" >
+				<select id="ForStateProvince" name="ForStateProvince" >
 					<option value=""> Select </option>
 					<? echo ( ssi::return_states_and_provinces($$variable{'ForStateProvince'}); ) ?>
 				</select>
 			</li>
 			<li> 
-				<label>&nbsp;City:</label>
+				<label>City:</label>
 				<input type="text" id="ForCity" name="ForCity" value="<?ForCity?>" />
 			</li>
 			<li> 
-				<label>&nbsp;<span id="ForCountry_postal"><? echo (
+				<label><span id="ForCountry_postal"><? echo (
 if ( $$variable{'ForCountry'} eq 'US' ) {
 	return 'Zip Code';
 } elsif ( $$variable{'ForCountry'} eq 'CA' ) {
@@ -253,27 +259,29 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 	return 'Zip/Postal Code';
 } # end if
 ) ?>:</span></label>
-				<input type="text" name="ForPostalCode" value="<?ForPostalCode?>" />
+				<input type="text" id="ForPostalCode" name="ForPostalCode" value="<?ForPostalCode?>" />
 			</li>
 			<li> 
-				<label>&nbsp;Phone:</label>
-				<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" />
+				<label>Phone:</label>
+				<input type="text" id="ForPhone" name="ForPhone" value="<?ForPhone?>" /> x
+				<input type="text" id="ForExtension" name="ForExtension" value="<?ForExtension?>" />
 			</li>
 			<li> 
-				<label>&nbsp;Fax:</label>
+				<label>Fax:</label>
 				<input type="text" id="ForFax" name="ForFax" value="<?ForFax?>" />
 			</li>
 			</ul></div>
 		</fieldset></div>
-	<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
-	</div>
+	<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
+	</div><!--Header-->
+
 	<? if ( @{$$variable{'PROJECTS'}} == 0 ) ?>
 			No projects
 	<? else ( @{$$variable{'PROJECTS'}} == 0 ) ?>
 		<? if ( new openprint::Company($session{'company_id'})->reseller() eq 'Y' or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 		<table class="List"> 
 			<tr> 
-				<th align="left">Project</th>
+				<th class="projects">Project</th>
 				<th width="90">Markup %</th>
 				<th width="60" align="right">Qty</th>
 				<th width="70" align="right">Price</th>
@@ -286,7 +294,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 				$$variable{'Project'} = new openprint::Project( $$variable{'project_index'} );
 			) ?>
 			<tr<?rowclass?>> 
-				<td rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><span class="reference"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?></span>&nbsp;<? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
+				<td class="projects" rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 				<td align="center"> 
 					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="5" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
 				</td>
@@ -298,7 +306,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
 					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right;" value="<?newprice?>" onkeyup="calc_from_price( f1, this );" />
 				</td>
-				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&remove=<?project_index?>">Remove</a></td>
+				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&amp;remove=<?project_index?>">Remove</a></td>
 			</tr>
 			<? while ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
 			<? if ( $$variable{'qty'} ) ?>
@@ -314,7 +322,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
 					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right; margin: 0px;" value="<?newprice?>"  onkeyup="calc_from_price( f1, this );" />
 				</td>
-				<td align="right">&nbsp;</td>
+				<td align="right"></td>
 			</tr>
 			<? endif ( $$variable{'qty'} ) ?>
 			<? endwhile ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
@@ -322,7 +330,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<? endwhile ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 			<tr> 
 				<td colspan="6" align="right">
-					<br>
+					<br/>
 					<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
 					Prices are subject to applicable taxes.<br/>
 					Prices are calculated to the best of our ability, 
@@ -333,7 +341,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		<? else ( new openprint::Company($session{'company_id'})->reseller() eq 'Y' or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 		<table class="List">
 			<tr> 
-				<th align="left">Project</th>
+				<th class="projects">Project</th>
 				<th width="50" align="right">Qty</th>
 				<th width="150" align="right">Price</th>
 				<th width="100" align="right">Changes</th>
@@ -341,7 +349,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 			<? eval ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
 			<tr<?rowclass?>> 
-				<td><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?>&nbsp;</a></td>
+				<td class="projects"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><?reference?></a></td>
 				<td align="right"><?qty?></td>
 				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> <?stdprice?> </td>
 				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?remove=<?project_index?>">Remove</a></td>
@@ -349,10 +357,10 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<? while ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
 			<? if ( $$variable{'qty'} ) ?>
 			<tr<?rowclass?>> 
-				<td>&nbsp;</td>
+				<td></td>
 				<td align="right"><?qty?></td>
 				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> <?stdprice?> </td>
-				<td align="right">&nbsp;</td>
+				<td align="right"></td>
 			</tr>
 			<? endif ( $$variable{'qty'} ) ?>
 			<? endwhile ( @$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; ) ?>
@@ -362,7 +370,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 				<td colspan="4" height="5"><hr/></td>
 			</tr>
 			<tr> 
-				<td colspan="4" align="right"><br>
+				<td colspan="4" align="right"><br/>
 					<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
 					Prices are subject to applicable taxes.<br/>
 					Prices are calculated to the best of our ability, 
@@ -374,12 +382,12 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<tr> 
 				<td colspan="4"> 
 					<? if ( ! $session{'user_id'} ) ?>
-					<div align="right"><b>Note:</b><br>
+					<div align="right"><b>Note:</b><br/>
 						If you would like to store this quote in history for future reference, 
-						you must be logged in.<br>
+						you must be logged in.<br/>
 						If you are a registered user already and would like to login, click 
-						<a href="/account/login.html"><b>here</b></a>.<br>
-						If you would like to register, click <a href="/account/registration.html"><b>here</b></a>.<br>
+						<a href="/account/login.html"><b>here</b></a>.<br/>
+						If you would like to register, click <a href="/account/registration.html"><b>here</b></a>.<br/>
 						<? endif ( ! $session{'user_id'} ) ?>
 					</div>
 				</td>
