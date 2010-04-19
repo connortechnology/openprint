@@ -34,7 +34,7 @@
 			<input type="text" name="speed" value="<? echo ( $$variable{'Job'}->speed() ) ?>" onkeyup="this.value=this.value.replace(/[\D]/g,'');"/>/Hr
 		</p>
 <? endif ( $$variable{'Job'}->project_id() ) ?>
-		<p>
+		<p class="RunTime">
 			<label>Runtime:</label>
 			<input type="text" name="runtime" value="<? echo ( $$variable{'Job'}->runtime() ) ?>" onkeyup="this.value=this.value.replace(/[^\d:]/g,'');"/>
 		</p>
