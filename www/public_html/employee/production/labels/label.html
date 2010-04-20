@@ -19,7 +19,7 @@
 			ssi::writeButton( $log, $dbh, 'Print','print.gif','window.print();', '', 'Print' ),
 			ssi::writeButton( $log, $dbh, 'Close','close.gif','', 
 $param{'project_id'} ? 
-'/employee/production/project_view.html?ProjectIndex='.$param{'project_id'} :
+'/employee/project/view.html?ProjectIndex='.$param{'project_id'} :
 '/employee/production/projects.html?StartDocket='.$$variable{'Label'}->docket(), 
 'Back' ),
 		); ) ?>

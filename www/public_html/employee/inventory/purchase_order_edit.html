@@ -34,6 +34,7 @@ function calc_price( element ) {
 		} // end if
 		$('total-'+index).value = do_decimals( cost * qty, 2 );
 	} // end if
+	update_totals( element.form );
 } // end function calc_price
 function update_totals( form ) {
 	var subtotal = 0;

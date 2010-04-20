@@ -28,7 +28,6 @@
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/inventory/_manifest_content.html' );
 		my @Contents = $$variable{'Manifest'}->Contents( 'type_id'=>$$variable{'type_id'}, 'order'=>'id');
 		foreach my $C ( @Contents ) {
-$openprint::log->debug( $C->skid_id() . ': ' . $C->Skid()->rfidtag() );
 			$$variable{'C'} = $C;
 			$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
 			$total += $C->quantity();

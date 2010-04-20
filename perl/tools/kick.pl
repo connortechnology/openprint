@@ -51,7 +51,7 @@ foreach my $session ( @session_ids ) {
         $log->debug("Error fetching Session: $session: $@");
         next;
     }
-    if ( $session{'user_id'} == $User->id() ) {
+    if ( $session{'user_id'} and $session{'user_id'} == $User->id() ) {
         untie %session;
 		sql::execute( 0, $dbh, q{DELETE FROM sessions where id=?}, $session );
 		$deleted_session_count += 1;
@@ -59,7 +59,7 @@ foreach my $session ( @session_ids ) {
 		untie %session;
 	} # end if
 } # end foreach
-$log->debug("Deleted $deleted_session_count sessions");
+$log->warn("Deleted $deleted_session_count sessions");
 
 1;
 __END__

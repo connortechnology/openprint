@@ -1,31 +1,34 @@
-<fieldset>
-	<legend>Bank Information:</legend>
-	<p> 
-		<label for="bank_name">Bank Name:</label>
-		<input type="text" name="bank_name" value="<? hecho ( $$variable{'Company'}->bank_name() ) ?>"  />
-	</p>
-	<p> 
-		<label for="bank_branch">Branch #:</label>
-		<input type="text" name="bank_branch" value="<? hecho ( $$variable{'Company'}->bank_branch() ) ?>"  />
-	</p>
-	<p> 
-		<label for="bank_account">Bank Account #:</label>
-		<input type="text" name="bank_account" value="<? hecho ( $$variable{'Company'}->bank_account() ) ?>"  />
-	</p>
-	<p> 
-		<label for="bank_manager">Account Manager:</label>
-		<input type="text" name="bank_manager" value="<? hecho ( $$variable{'Company'}->bank_manager() ) ?>"  />
-	</p>
-	<p> 
-		<label for="bank_phone">Bank Phone:</label>
-		<input type="text" name="bank_phone" value="<? hecho ( $$variable{'Company'}->bank_phone() ) ?>"  />
-	</p>
-	<p> 
-		<label for="bank_fax">Bank Fax:</label>
-		<input type="text" name="bank_fax" value="<? hecho ( $$variable{'Company'}->bank_fax() ) ?>"  />
-	</p>
-	<p> 
-		<label for="bank_email">Bank E-mail:</label>
-		<input type="text" name="bank_email" value="<? hecho ( $$variable{'Company'}->bank_email() ) ?>"  />
-	</p>
-</fieldset>
+<div class="BankInformation">
+	<fieldset><legend>Bank Information:</legend>
+		<ul>
+		<li> 
+			<label for="bank_name">Bank Name:</label>
+			<input type="text" id="bank_name" name="bank_name" value="<? hecho ( $$variable{'Company'}->bank_name() ) ?>" />
+		</li>
+		<li> 
+			<label for="bank_branch">Branch #:</label>
+			<input type="text" id="bank_branch" name="bank_branch" value="<? hecho ( $$variable{'Company'}->bank_branch() ) ?>" />
+		</li>
+		<li> 
+			<label for="bank_account">Bank Account #:</label>
+			<input type="text" id="bank_account" name="bank_account" value="<? hecho ( $$variable{'Company'}->bank_account() ) ?>" />
+		</li>
+		<li> 
+			<label for="bank_manager">Account Manager:</label>
+			<input type="text" id="bank_manager" name="bank_manager" value="<? hecho ( $$variable{'Company'}->bank_manager() ) ?>" />
+		</li>
+		<li> 
+			<label for="bank_phone">Bank Phone:</label>
+			<input type="text" id="bank_phone" name="bank_phone" value="<? hecho ( $$variable{'Company'}->bank_phone() ) ?>" />
+		</li>
+		<li> 
+			<label for="bank_fax">Bank Fax:</label>
+			<input type="text" id="bank_fax" name="bank_fax" value="<? hecho ( $$variable{'Company'}->bank_fax() ) ?>" />
+		</li>
+		<li> 
+			<label for="bank_email">Bank E-mail:</label>
+			<input type="text" id="bank_email" name="bank_email" value="<? hecho ( $$variable{'Company'}->bank_email() ) ?>" />
+		</li>
+		</ul>
+	</fieldset>
+</div>
