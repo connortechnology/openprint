@@ -234,12 +234,14 @@
 
 					$html .= "<tr$rowclass><td>";
 					if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() ) {
-						$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s</a>`, $ServiceType->url(), $Project->id(), $service_id, $ServiceType->description(),
+						$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s</a>`, $ServiceType->url(), $Project->id(), $service_id, 
+							( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),
 							( $$specs{'txtServiceDescription'} ? ' - '.$$specs{'txtServiceDescription'} : '' ),
 							openprint::service::summary( $Project->id(),$service_id ),
 							);
 					} else {
-						$html .= sprintf(q`<b>%4$s</b>%5$s<br/>%6$s`, $ServiceType->url(), $Project->id(), $service_id, $ServiceType->description(),
+						$html .= sprintf(q`<b>%4$s</b>%5$s<br/>%6$s`, $ServiceType->url(), $Project->id(), $service_id,
+							( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),
 							( $$specs{'txtServiceDescription'} ? ' - '.$$specs{'txtServiceDescription'} : '' ),
 							openprint::service::summary( $Project->id(),$service_id ),
 							);
