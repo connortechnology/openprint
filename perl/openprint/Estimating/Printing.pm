@@ -4113,6 +4113,15 @@ sub get_run_price {
 		$run_price{'Price'} = ($run_price{'Cost'} * $impressions)/1000;
 		$run_price{'MPrice'} = $run_price{'Cost'};
 
+	} elsif ( sets::isin( lc $run_price{'units'}, ['per impression'] ) ) {
+		if ( $speed_mod ) {
+			$running_price *= $speed_mod;
+		} # end if
+#$log->warn(" ** FINAL  RUNNING PRICE $running_price **") if $debug or 1;
+		$run_price{'Cost'} = $running_price;
+		$run_price{'Price'} = ($run_price{'Cost'} * $impressions);
+		$run_price{'MPrice'} = $run_price{'Cost'} * 1000;
+
 	} elsif ( lc $run_price{'units'} eq 'per hour' ) {
 		if ( $run_speed ) {
 # In Minutes, not hours
