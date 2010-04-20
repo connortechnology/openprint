@@ -14,108 +14,105 @@ Your company profile can be modified using the fields below. Use the <b>Save</b>
 			</p>
 		</fieldset>
 		<div class="CompanyInformation">
-		<fieldset>
-			<legend>Company Information:</legend>
-			<ul>
-			<li> 
-				<label for="companyname">Company Name:</label>
-				<input type="text" id="companyname" name="companyname" value="<? hecho ( $$variable{'Company'}->name() ) ?>" />
-			</li>
-			<li> 
-				<label for="address1">Address:</label>
-				<input type="text" id="address1" name="address1" value="<? hecho ( $$variable{'Company'}->address1() ) ?>" />
-			</li>
-			<li> 
-				<label for="address2">&nbsp;</label>
-				<input type="text" id="address2" name="address2" value="<? hecho ( $$variable{'Company'}->address2() ) ?>" />
-			</li>
-			<li> 
-				<label>Country:</label>
-				<select id="country" name="country" onchange="Country_onchange( this, this.form.state );">
-					<option value=""> Select </option>
-					<? echo ( ssi::make_drop_down( \@countries::countries, $$variable{'Company'}->country() ); ) ?>
-				</select>
-			</li>
-			<li> 
-				<label for="state" id="country_state"><? echo (
-					if ( $$variable{'Company'}->country() eq 'US' ) {
-						return 'State:';
-					} elsif ( $$variable{'Company'}->country() eq 'CA' ) {
-						return 'Province:';
-					} else {
-						return 'State/Province:';
-					} # end if
-				) ?>
-				</label>
-				<select id="state" name="state">
-					<option value=""> Select </option>
-            <? echo (
-                ssi::make_drop_down( \@states::states, $$variable{'Company'}->state() ).
-                ssi::make_drop_down( \@provinces::provinces, $$variable{'Company'}->state() );
-				) ?>
-				</select>
-			</li>
-			<li> 
-				<label for="city">City:</label>
-				<input type="text" id="city" name="city" value="<? hecho ( $$variable{'Company'}->city() ) ?>" />
-			</li>
-			<li> 
-				<label for="postalcode" id="country_postal"><? echo (
-					   if ( $$variable{'Company'}->country() eq 'US' ) {
-							   return 'Zip Code:';
-					   } elsif ( $$variable{'Company'}->country() eq 'CA' ) {
-							   return 'Postal Code:';
-					   } else {
-							   return 'Zip/Postal Code:';
-					   } # end if
-					) ?>
-					</label>
-				<input type="text" id="postalcode" name="postalcode" value="<? hecho ( $$variable{'Company'}->postalcode() ) ?>" />
-			</li>
-			<li> 
-				<label for="phone">Phone:</label>
-				<input type="text" id="phone" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" />
-			</li>
-			<li> 
-				<label for="fax">Fax:</label>
-				<input type="text" id="fax" name="fax" value="<? hecho ( $$variable{'Company'}->fax() ) ?>" />
-			</li>
-			</ul>
-		</fieldset>
+			<fieldset>
+				<legend>Company Information:</legend>
+				<ul>
+					<li> 
+						<label for="companyname">Company Name:</label>
+						<input type="text" id="companyname" name="companyname" value="<? hecho ( $$variable{'Company'}->name() ) ?>" />
+					</li>
+					<li> 
+						<label for="address1">Address:</label>
+						<input type="text" id="address1" name="address1" value="<? hecho ( $$variable{'Company'}->address1() ) ?>" />
+					</li>
+					<li> 
+						<label for="address2">&nbsp;</label>
+						<input type="text" id="address2" name="address2" value="<? hecho ( $$variable{'Company'}->address2() ) ?>" />
+					</li>
+					<li> 
+						<label>Country:</label>
+						<select id="country" name="country" onchange="Country_onchange( this, this.form.state );">
+							<option value=""> Select </option>
+							<? echo ( ssi::make_drop_down( \@countries::countries, $$variable{'Company'}->country() ); ) ?>
+						</select>
+					</li>
+					<li> 
+						<label for="state" id="country_state"><? echo (
+							if ( $$variable{'Company'}->country() eq 'US' ) {
+								return 'State:';
+							} elsif ( $$variable{'Company'}->country() eq 'CA' ) {
+								return 'Province:';
+							} else {
+								return 'State/Province:';
+							} # end if
+						) ?></label>
+						<select id="state" name="state">
+							<option value=""> Select </option>
+							<? echo (
+								ssi::make_drop_down( \@states::states, $$variable{'Company'}->state() ).
+								ssi::make_drop_down( \@provinces::provinces, $$variable{'Company'}->state() );
+								) ?>
+						</select>
+					</li>
+					<li> 
+						<label for="city">City:</label>
+						<input type="text" id="city" name="city" value="<? hecho ( $$variable{'Company'}->city() ) ?>" />
+					</li>
+					<li> 
+						<label for="postalcode" id="country_postal"><? echo (
+							   if ( $$variable{'Company'}->country() eq 'US' ) {
+									   return 'Zip Code:';
+							   } elsif ( $$variable{'Company'}->country() eq 'CA' ) {
+									   return 'Postal Code:';
+							   } else {
+									   return 'Zip/Postal Code:';
+							   } # end if
+							) ?></label>
+						<input type="text" id="postalcode" name="postalcode" value="<? hecho ( $$variable{'Company'}->postalcode() ) ?>" />
+					</li>
+					<li> 
+						<label for="phone">Phone:</label>
+						<input type="text" id="phone" name="phone" value="<? hecho ( $$variable{'Company'}->phone() ) ?>" />
+					</li>
+					<li> 
+						<label for="fax">Fax:</label>
+						<input type="text" id="fax" name="fax" value="<? hecho ( $$variable{'Company'}->fax() ) ?>" />
+					</li>
+				</ul>
+			</fieldset>
 		</div>
-<!--#include virtual="_business_information.html"-->
+		<!--#include virtual="_business_information.html"-->
 		<div class="CreditInformation">
-		<fieldset>
-			<legend>Credit Information:</legend>
-			<ul>
-			<li>
-				<label>Terms:</label>
-				<? echo ( $$variable{'Company'}->Credit()->get('DenyDays'); ) ?> Days
-			</li>
-			<li>
-				<label>Credit Account Limit:</label>
-				$ <? echo ( $$variable{'Company'}->Credit()->get('Limit'); ) ?>
-			</li>
-			<li>
-				<label>Current Credit Balance:</label>
-				<? echo ( $$variable{'Company'}->Credit()->debt() ) ?>
-			</li>
-			<li>
-				<label>Remaining Credit:</label>
-				<? echo ( $$variable{'Company'}->Credit()->remaining(); ) ?>
-			</li>
-			<li>
-				<label>Required Downpayment:</label>
-				<? echo ( $$variable{'Company'}->Credit()->get('Downpayment') ) ?>
-			</li>
-			</ul>
-		</fieldset>
+			<fieldset><legend>Credit Information:</legend>
+				<ul>
+					<li>
+						<label>Terms:</label>
+						<? echo ( $$variable{'Company'}->Credit()->get('DenyDays'); ) ?> Days
+					</li>
+					<li>
+						<label>Credit Account Limit:</label>
+						$ <? echo ( $$variable{'Company'}->Credit()->get('Limit'); ) ?>
+					</li>
+					<li>
+						<label>Current Credit Balance:</label>
+						<? echo ( $$variable{'Company'}->Credit()->debt() ) ?>
+					</li>
+					<li>
+						<label>Remaining Credit:</label>
+						<? echo ( $$variable{'Company'}->Credit()->remaining(); ) ?>
+					</li>
+					<li>
+						<label>Required Downpayment:</label>
+						<? echo ( $$variable{'Company'}->Credit()->get('Downpayment') ) ?>
+					</li>
+				</ul>
+			</fieldset>
 		</div>
 		<!--#include virtual="/account/_bank_information.html"-->
 		<!--#include virtual="/account/_trade_references.html"-->
 		<div class="Preferences">
 			<fieldset><legend>Preferences</legend>
-<ul>
+			<ul>
 				<li>
 					<label for="currency_id">Preferred Currency:</label>
 					<select id="currency_id" name="currency_id">
