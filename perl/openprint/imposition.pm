@@ -653,10 +653,10 @@ sub get_imposition {
 		push @styles, 'Perfecting' if $do_perfecting;
 	} # end if
 	if ( $$project{'Runstyles'} ) {
-	$openprint::log->debug(" *1* Run Styles to consider: @styles ** $$project{'Runstyles'} $do_perfecting") if $debug;
+	$openprint::log->debug(" *1* Run Styles to consider for $$Press{strid}: @styles ** $$project{'Runstyles'} $do_perfecting") if $debug;
 		@styles = sets::intersection( @styles, misc::trim(split(',', $$project{'Runstyles'} ) ) );
 	} # end if
-	$openprint::log->debug(" *2* Run Styles to consider: @styles **") if $debug;
+	$openprint::log->debug(" *2* Run Styles to consider for $$Press{strid}: @styles **") if $debug;
 
 	return add_imposition( $project, $Paper, $versions, $override_grain_direction, $Press, @styles );
 } # end sub
