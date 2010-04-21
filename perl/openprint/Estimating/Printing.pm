@@ -1679,6 +1679,7 @@ $openprint::log->debug("No W&T due to multipass" . $Papers[0]->gsm() );
 						$Papers{$P->to_string()} = $P->clone() if ! $Papers{$P->to_string()};
 					} # end while cutting it
 				} # end if Web or Sheet
+		
 
 if ( $debug ) {
 $openprint::log->debug("Sorting from paper " . $Paper->to_string() . ' on ' . $Press->strid() );	
@@ -1760,16 +1761,27 @@ $i->display();
 				} # end foreach
 			} # end if
 			if ( ! @impositions ) {
-#$openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
+$openprint::log->debug("No impositions for press " . $Press->strid() . ' ' . $$specs{'ddmPress'.$qty_index} . ' ' . $$specs{'chkOverridePress'.$qty_index} ) if $debug;
 				if ( ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) and ( $Press->strid() eq $$specs{'ddmPress'.$qty_index} ) ) {
-					$$specs{'alert'} .= 'There were no possible impositions.  Your project may be too large for us.<br/>';
+$openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
+					if ( $Press->specification('Printing Type') eq 'Digital' ) {
+						my $digital = 0;
+						foreach my $P (@Papers) {
+							$digital = 1 if $P->digital();
+						} # end foreach P	
+						if ( ! $digital ) {
+							$$specs{'alert'} = 'Paper is not suitable for digital printing.<br/>';
+						} # end if
+					} # end if
+					$$specs{'alert'} .= 'There were no possible impositions.<br/>';
 					return $$specs{'Status'} = 'uncalculated';
 				} # end if
-			} # end if
+			} # end if ! impositions
 
 			$imposition_count += scalar @impositions;
 			$impositions{$Press->id()} = \@impositions;
 		} # end foreach Press
+
 # FIXME this used to generate the old impo, and add it, but what we really need to do is search through the impos we have, and select the old one, moving it to the front.  This is made more complex for book because they have not been converted here.
 		@{$impositions{''}} = ();
 		if ( 0 and $$specs{'ddmPress'.$qty_index} and ($$specs{'chkOverridePress'.$qty_index} ne 'Y') ) {
@@ -4100,6 +4112,15 @@ sub get_run_price {
 		$run_price{'Cost'} = $running_price;
 		$run_price{'Price'} = ($run_price{'Cost'} * $impressions)/1000;
 		$run_price{'MPrice'} = $run_price{'Cost'};
+
+	} elsif ( sets::isin( lc $run_price{'units'}, ['per impression'] ) ) {
+		if ( $speed_mod ) {
+			$running_price *= $speed_mod;
+		} # end if
+#$log->warn(" ** FINAL  RUNNING PRICE $running_price **") if $debug or 1;
+		$run_price{'Cost'} = $running_price;
+		$run_price{'Price'} = ($run_price{'Cost'} * $impressions);
+		$run_price{'MPrice'} = $run_price{'Cost'} * 1000;
 
 	} elsif ( lc $run_price{'units'} eq 'per hour' ) {
 		if ( $run_speed ) {
