@@ -1272,7 +1272,7 @@ sub load_from_signature {
 			} # end if
 #$log->debug("Found " . @Papers );
 			if ( ! @Papers ) {
-				$openprint::log->error("No papers found");
+				$openprint::log->warn("No papers found");
 				$Paper = new openprint::Paper();
 				$Paper->name( $$specs{'ddmStockBrand'} );
 				$Paper->finish( $$specs{'ddmStockFinish'} );

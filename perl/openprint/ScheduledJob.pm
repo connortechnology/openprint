@@ -38,7 +38,6 @@ $serial = 'schedule_id_seq';
 	'impressions'		=>	undef,
 	'created_on'		=>	'created_on',
 	'operator_id'		=>	undef,
-	'total_runtime'	=>	'total_runtime',
 );
 
 %transforms = (
@@ -367,8 +366,7 @@ sub get_li {
 					);
 		} # end if
 
-		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">%2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
-		$html .= sprintf( q`<span class="TotalRunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->total_runtime()) );
+		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
 
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
@@ -702,26 +700,6 @@ sub split {
 
 	} # end if
 } # end sub split
-
-sub total_runtime {
-	my ( $self ) = @_;
-	
-	if ( @_ == 2 ) {
-		$$self{'total_runtime'} = $_[1];
-		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'project_id'}) ) {
-			next if $$Job{id} == $$self{id};
-			$Job->save({'total_runtime'=>$_[1]});
-		} # end foreach Job
-	} # end if
-	if ( ! $$self{'total_runtime'} ) {
-		my $seconds = 0;
-		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'project_id'}) ) {
-			$seconds += $Job->runtime_seconds();
-		} # end foreach Job	
-		$$self{'total_runtime'} = misc::seconds2hms( $seconds );
-	} # end if
-	return $$self{'total_runtime'};
-} # end sub total_runtime
 
 1;
 __END__

@@ -61,7 +61,7 @@ sub find {
 		push @values, $params{'type'};
 	} # end if
 	
-	if ( $params{'valid'} ne '' ) {
+	if ( ( exists $params{'valid'} ) and ( $params{'valid'} ne '' ) ) {
 		$sql .= ' AND valid=?';
 		push @values, $params{'valid'};
 	} # end if
@@ -207,7 +207,7 @@ sub Location {
 sub location_id {
     my ( $self, $new, $scanner_id ) = @_;
     if ( $new ) {
-        if ( $new != $$self{'location_id'} ) {
+        if ( (!defined $$self{'location_id'}) or ( $new != $$self{'location_id'} ) ) {
             sql::insert( undef, undef, 'RFIDTagHistory', {'rfidtag_id'=>$$self{'id'},'location_id'=>$new, 'scanner_id'=>$scanner_id} ) if $$self{'id'};
             $$self{'location_id'} = $new;
         } # end if

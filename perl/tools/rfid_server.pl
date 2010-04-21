@@ -26,7 +26,7 @@ my %CheckedOutSkids;
 my %Scanners;
 
 $sql::timing = 0;
-my $debug = 0;
+my $debug = 1;
 my $location_cache_size = 10;
 
 sub Checkout_Skid {

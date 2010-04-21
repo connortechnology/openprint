@@ -423,6 +423,10 @@ sub copy {
 				'lngEquipmentindex', $$new{id},
 				] );
 	} # end while
+	# Equipment_shifts
+	foreach my $ES ( openprint::Equipment_Shift::find('equipment_id'=>$$self{id}) ) {
+		$ES->copy()->save({'equipment_id'=>$$new{id}});
+	} # end foreach $ES
 	sql::end_transaction( $openprint::dbh, $ac );
 
 	return $new;
