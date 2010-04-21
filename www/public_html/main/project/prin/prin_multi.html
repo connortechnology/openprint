@@ -75,6 +75,7 @@ if ( 0 ) {
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<input type="hidden" name="groups" />
 		<fieldset><legend><?ProjectTypeName?></legend>
+			<div class="ProjectSpecifications">
 			<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 			<!--#include virtual="/includes/main/proj/templates/multipage.html" -->
 			<!--#include virtual="/includes/main/proj/dimensions.html" -->
@@ -84,7 +85,7 @@ if ( 0 ) {
 					<!--#include virtual="/includes/main/proj/screen_type.html"-->
 				</fieldset>
 			</div>
-			<br class="spacer"/>
+			<div class="BookSpecifications">
 			<fieldset><legend>Book Specifications</legend>
 				<div id="PagesCover">
 				<p>
@@ -122,7 +123,8 @@ if ( 0 ) {
 			<? endif ( openprint::ServiceType::find('name'=>'Blowing') ) ?>
 				</div>
 			</fieldset>
-			<br class="spacer"/>
+			</div>
+			</div><!--ProjectSpecifications-->
 			<div id="SignatureGroups">
 			<? echo (
 				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );

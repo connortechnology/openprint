@@ -81,6 +81,7 @@
     } # end if
 ) ?>
 <hr class="spacer"/>
+<div class="Quantities">
 	<p>
 		<label>Quantity:</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
@@ -93,4 +94,5 @@
 			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 	</p>
+</div>
 </fieldset>
