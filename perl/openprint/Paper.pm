@@ -1134,7 +1134,7 @@ $openprint::log->debug("No papers found, looking for paper with no width or heig
 			#} # end foreach P
         } # end if
         if ( ! @Papers ) {
-	$openprint::log->error("No papers found");
+	$openprint::log->warn("No papers found");
 			$Paper = new openprint::Paper();
 			$Paper->name( $$specs{'ddmStockBrand'} );
 			$Paper->finish( $$specs{'ddmStockFinish'} );
