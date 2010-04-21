@@ -325,9 +325,10 @@ sub summary {
     } # end foreach
 
 	if ( $qty_index ) {
-		my $html = '';
+		my @summaries;
 		my $stock_id = 1;
 		foreach my $key ( sort keys %Papers ) {
+			my $html = '';
 			my $Paper = $Papers{$key};
 $openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
 			if ( $$specs{"qty-$stock_id-$qty_index"} ) {
@@ -338,13 +339,12 @@ $openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id
 			} else {
 				$html .= 'none';
 			} # end if
-			$html .= '<br/>';
+			push @summaries, $html;
 			$stock_id += 1;
 		} # end foreach key
-		return $html;
-	} else {
-		return join('<br/>', sort keys %Papers );
+		return \@summaries;
 	} # end if
+	return [ sort keys %Papers ];
 } # end sub summary
 
 sub save {

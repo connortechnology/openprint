@@ -232,18 +232,25 @@
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
 
+					my @summaries;
+					my $summary = openprint::service::summary( $Project->id(),$service_id );
+					if ( ref $summary eq 'ARRAY' ) {
+						@summaries = @{$summary};
+						$summary = shift @summaries;
+					} # end if
+						
 					$html .= "<tr$rowclass><td>";
 					if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() ) {
 						$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s</a>`, $ServiceType->url(), $Project->id(), $service_id, 
 							( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),
 							( $$specs{'txtServiceDescription'} ? ' - '.$$specs{'txtServiceDescription'} : '' ),
-							openprint::service::summary( $Project->id(),$service_id ),
+							$summary,
 							);
 					} else {
 						$html .= sprintf(q`<b>%4$s</b>%5$s<br/>%6$s`, $ServiceType->url(), $Project->id(), $service_id,
 							( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),
 							( $$specs{'txtServiceDescription'} ? ' - '.$$specs{'txtServiceDescription'} : '' ),
-							openprint::service::summary( $Project->id(),$service_id ),
+							$summary,
 							);
 					} # end if
 					$html .= '</td>';
@@ -256,8 +263,13 @@
 							$html .= '<b>'.openprint::Currency::format($$specs{'txtPrice'.$qty_index}).'</b><br/>';
 						} # end if
 						my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
-						$summary =~ s/\n/<br\/>/g;
-						$html .= $summary;
+						if ( ref $summary eq 'ARRAY' ) {
+							$$summary[0] =~ s/\n/<br\/>/g;
+							$html .= $$summary[0];
+						} else {
+							$summary =~ s/\n/<br\/>/g;
+							$html .= $summary;
+						} # end if
 						$html .= '</td>';
 					} # end foreach qty_index
 					$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
@@ -272,6 +284,24 @@
 						$html .= '</td>';
 					} # end if
 					$html .= "</tr>\n";
+					if ( @summaries ) {
+						for ( my $line = 0; $line < @summaries; $line += 1 ) {
+							$html .= "<tr$rowclass><td>";
+							if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() ) {
+								$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d">%4$s</a>`, $ServiceType->url(), $Project->id(), $service_id, $summaries[$line] );
+							} else {
+								$html .= sprintf(q`<br/>%1$s`, $summaries[$line] );
+							} # end if
+							foreach my $qty_index ( $Project->quantity_indexes() ) {
+								$html .= '<td class="price">';
+								my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
+								$$summary[$line] =~ s/\n/<br\/>/g;
+								$html .= $$summary[$line];
+								$html .= '</td>';
+							} # end foreach qty_index
+							$html .= '<td colspan="2">&nbsp;</td></tr>';
+						} # end foreach summary
+					} # end if summaries
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 				} # end foreach service_id
 			} # end foreach ServiceType
