@@ -1088,7 +1088,11 @@ sub summary {
 					} else {
 						$summary .= ' ' . $ServiceType->description();
 						if ( $_ = eval( 'openprint::Estimating::'.$ServiceType->type().'::summary( $self, $service_id, $service_specs );' ) ) {
+							if ( ref $_ eq 'ARRAY' ) {
+							$summary .= ' :'.$$_[0] . '<br/> ';
+							} else {
 							$summary .= ' :'.$_ . '<br/> ';
+							} # end if
 						} else {
 							$summary .= ',';
 						} # end if

@@ -193,29 +193,25 @@
 <? if ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) ?>
 <p>
 	<label>Printing type:</label>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-       <select name="PrintingType<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
-            <? echo (
-				my %printingtypes;
-				foreach my $Press ( openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
-					my $printing_type = $Press->specification('Printing Type');
-					next if ! $printing_type;
-					my $printing_type_name = $Press->specification('Printing Type Name');
-					$printing_type_name = $printing_type if ! $printing_type_name;
-					$printingtypes{$printing_type} = $printing_type_name;
-				}
-				
-				ssi::make_drop_down( [ map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'} );
-            ) ?>
-        </select>
-		<? echo ( ssi::write_override( 'OverridePrintingType'.$$variable{'QTYIndex'}, $$variable{'OverridePrintingType'.$$variable{'QTYIndex'}},"calc('f1');","calc('f1');" ); ) ?>
-</span>
-<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? echo (
+		my %printingtypes;
+		foreach my $Press ( openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
+			my $printing_type = $Press->specification('Printing Type');
+			next if ! $printing_type;
+			my $printing_type_name = $Press->specification('Printing Type Name');
+			$printing_type_name = $printing_type if ! $printing_type_name;
+			$printingtypes{$printing_type} = $printing_type_name;
+		} # end foreach
+		my $html = '';
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= sprintf('<span class="%1$sColumns"><select name="PrintingType%2$d" size="1" onchange="calc(this.form.name);">', $$variable{'Columns'}, $qty_index );
+			$html .= ssi::make_drop_down( [ map { $_, $printingtypes{$_} } sort keys %printingtypes ], $$variable{'PrintingType'.$qty_index} );
+			$html .= '</select>';
+			$html .= ssi::write_override( 'OverridePrintingType'.$qty_index, $$variable{'OverridePrintingType'.$qty_index},"calc('f1');","calc('f1');" );
+			$html .= '</span>';
+		} # end foreach qty_index
+		return $html;
+	) ?>
 	</p>
 <? endif ( 1 < sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } ) ) ?>
 <? endif ( $$variable{'Mode'} eq 'Easy' ) ?>

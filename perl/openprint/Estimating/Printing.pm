@@ -3884,6 +3884,12 @@ sub select_presses {
 				next;
 			} # end if
 		} # end if
+		if ( $_ = $Press->specification('StockNames') ) {
+			if ( ! sets::isin( $Paper->name(), [ split(',',$_) ] ) ) {
+				$results{$press_id} = 'Not suitable for this stock.';
+				next;
+			} # end if
+		} # end if
 		$results{$press_id} = '';
 	} # end while
 

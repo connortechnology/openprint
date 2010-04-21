@@ -2,7 +2,7 @@
 <table class="List">
 	<thead>
 		<tr> 
-			<th class="projects">Projects</th>
+			<th class="description">Projects</th>
 			<th class="weight">Weight</th>
 			<th class="markup">%</th>
 			<th class="quantity">Qty</th>
@@ -13,7 +13,7 @@
 	<? eval ( @{$$variable{'Projects'}} = $$variable{'Quote'}->Quoted_Projects(); ) ?>
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 	<tr<?rowclass?>> 
-		<td class="projects"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->project_id() ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->Project()->reference()) . ':<br/>' if $$variable{'Project'}->Project()->reference() ) ?><? echo ( $$variable{'Project'}->Project()->summary(); ) ?></a></td>
+		<td class="description"><a href="/main/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->project_id() ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->Project()->reference()) . ':<br/>' if $$variable{'Project'}->Project()->reference() ) ?><? echo ( $$variable{'Project'}->Project()->summary(); ) ?></a></td>
 		<td colspan="5">
 			<table>
 				<? echo (
