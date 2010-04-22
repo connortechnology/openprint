@@ -682,6 +682,7 @@ sub add_imposition {
 				next if $i->imposition() != 1;
 				push @impositions, $i;
 			} # end foreach
+			next;
 		} elsif ( ($Paper->type() eq 'Roll') and ($Press->specification('W&TonRoll') eq 'N') and sets::isin( $run_style, ['Work & Turn','Work & Tumble'] ) ) {
 			next;
 		} # end if
