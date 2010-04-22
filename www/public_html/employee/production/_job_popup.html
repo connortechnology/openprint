@@ -3,7 +3,7 @@
 	<fieldset><legend>Job Scheduling Information</legend>
 		<p>
 			<label>Comment:</label>
-			<textarea id="comment" name="comment"  rows="5" cols="" ><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
+			<textarea id="comment" name="comment" rows="" cols="" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Job'}->comment() ) ?></textarea>
 		</p>
 <? if ( $$variable{'Job'}->Equipment()->smartscheduling() ) ?>
 		<p>
@@ -44,6 +44,13 @@
 			<input type="text" name="forms" value="<? echo ( $$variable{'Job'}->forms() ) ?>" onkeyup="this.value=this.value.replace(/\D/g, '');" />
 		</p>
 <? endif ( $$variable{'Job'}->project_id() ) ?>
+		<p>
+			<label>Stock:</label>
+			<input type="radio" id="stock_verified1" name="stock_verified" value="1" <? echo ( ssi::checked( $$variable{'Job'}{'stock_verified'} ); ) ?> />
+			<label class="radio" for="stock_verified1">Yes</label>
+			<input type="radio" id="stock_verified0" name="stock_verified" value="0" <? echo ( ssi::checked( ! $$variable{'Job'}{'stock_verified'} ); ) ?> />
+			<label class="radio" for="stock_verified0">No</label>
+		</p>
 	</fieldset>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'SaveStartTime', 'save.gif', q`new Ajax.Request('_li_change.json',{parameters:JobForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ); ) ?>

@@ -38,6 +38,7 @@ $serial = 'schedule_id_seq';
 	'impressions'		=>	undef,
 	'created_on'		=>	'created_on',
 	'operator_id'		=>	undef,
+	'stock_verified'	=>	'stock_verified',
 );
 
 %transforms = (
@@ -50,6 +51,7 @@ $serial = 'schedule_id_seq';
 %defaults = (
 	'speed'			=>	undef,
 	'created_on'	=>	undef,
+	'stock_verified'	=>	0,
 );
 sub find_one {
 	my %params = @_;
@@ -322,10 +324,13 @@ sub get_li {
 		} # end if
 	} # end if
 
-	$html .= sprintf( '<li id="item_%d" class="%s" style="height:%spx;">', $$self{'id'}, $colour, $height );
+	$html .= sprintf( '<li id="item_%d"%s%s>', $$self{'id'}, 
+			( $colour ? ' class="'.$colour.'"' : '' ), 
+			( $height ? ' style="height:'.$height.'px;"' : '' )
+			);
 
 	if ( $$self{'project_id'} ) {
-		$html .= '<div class="Company">';
+		$html .= '<span class="Company">';
 		$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $$self{'project_id'}, $Project->docket() );
 		my $n = $Project->Company()->name();
 		$n =~ s/The //gi;
@@ -337,7 +342,7 @@ sub get_li {
 		if ( $Project->reprint() eq 'Y' ) {
 			$html .= ' REPRINT'. $Project->reprint_reason();
 		} # end if
-		$html .= '</div>';
+		$html .= '</span>';
 		$html .= qq`<span class="DueDate" id="JumpToDate$$self{'id'}">`;
 		if ( ! $Project->due_date() ) {
 			$html .= 'no duedate</span>';
@@ -352,7 +357,7 @@ sub get_li {
 		$html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
 		if ( $$self{'project_id'} ) {
 			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
-			$html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
+			$html .= sprintf( q`<span class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
 			if ( $Equipment->smartscheduling() ) {
 				$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $self->impressions(), $self->speed() );
 			} else {
@@ -367,6 +372,8 @@ sub get_li {
 		} # end if
 
 		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
+
+		$html .= sprintf( q`<span class="StockVerified" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Stock: %2$s</span>`, $$self{'id'}, $self->stock_verified() ? 'Yes' : 'No' );
 
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
