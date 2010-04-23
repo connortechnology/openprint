@@ -1,28 +1,29 @@
 <? eval (
 		foreach my $key ( 'ddmCustomer','ddmStatus','ddmEmployee','ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','dblTotal1','dblTotal2' ) {
-			$openprint::session{'/employee/accounting/search.html?'.$key} = $openprint::param{$key} if defined $openprint::param{$key};
+			$session{'/employee/accounting/search.html?'.$key} = $openprint::param{$key} if defined $openprint::param{$key};
 		} # end foreach
-		if ( ! $openprint::session{'/employee/accounting/search.html?ddmStatus'} ) {
-			$openprint::session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
+		if ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) {
+			$session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
 		} # end if
 
 	@{$$variable{'Orders'}} = openprint::Order::find(
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{
+		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
 			'/employee/accounting/search.html?ddmStartYear',
 			'/employee/accounting/search.html?ddmStartMonth',
 			'/employee/accounting/search.html?ddmStartDay',
 			} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{
+		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
 			'/employee/accounting/search.html?ddmEndYear',
 			'/employee/accounting/search.html?ddmEndMonth',
 			'/employee/accounting/search.html?ddmEndDay',
 			} ),
-		'status'		=> $openprint::session{'/employee/accounting/search.html?ddmStatus'}, 
-		'company_id'	=> $openprint::session{'/employee/accounting/search.html?ddmCustomer'},
-		'salesrep_id'	=> $openprint::session{'/employee/accounting/search.html?ddmEmployee'},
+		'status'		=> $session{'/employee/accounting/search.html?ddmStatus'}, 
+		'company_id'	=> $session{'/employee/accounting/search.html?ddmCustomer'},
+		'salesrep_id'	=> $session{'/employee/accounting/search.html?ddmEmployee'},
 
-		'value_start'	=> $openprint::session{'/employee/accounting/search.html?dblTotal1'},
-		'value_end'	=> $openprint::session{'/employee/accounting/search.html?dblTotal2'},
+		'value_start'	=> $session{'/employee/accounting/search.html?dblTotal1'},
+		'value_end'	=> $session{'/employee/accounting/search.html?dblTotal2'},
+		'owing_>'	=>	0,
 		'order'		=> 'created_on',
 		);
 

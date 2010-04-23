@@ -125,6 +125,10 @@ sub find {
 		$sql .= ' AND currencyindex=?';
 		push @values, $params{'currency_id'};
 	} # end if
+	if ( exists $params{'owing_>'} ) {
+		$sql .= ' AND ( curtotalsale - (SELECT SUM(curamount) FROM Payments WHERE order_id=Index) ) > ?';
+		push @values, $params{'owing_>'};
+	} # end if
 	if ( exists $params{'order'} ) {
 		if ( $params{'order'} eq 'created_on' ) {
 			$sql .= ' ORDER BY dtmorderdate';

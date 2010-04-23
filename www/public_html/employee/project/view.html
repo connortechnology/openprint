@@ -31,9 +31,9 @@ function open_window( page ) {
 <form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
 	<table class="List">
 		<tr> 
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
+			<? if ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<th width="20" class="unprintable">&nbsp;</th>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
+			<? endif ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<th align="left">Service</th>
 			<th width="100" align="right">
 			<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
@@ -45,16 +45,13 @@ function open_window( page ) {
 		<? while ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
 		<? eval ( $$variable{'rowclass'} = ' class="colRowRed"' if $$variable{'status'} eq 'Waiting For Customer Approval' ) ?>
 		<tr<?rowclass?>> 
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<td class="unprintable"><input type="checkbox" name="chkDelete-<?index?>" /></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
-			<? if ( $$variable{'name'} eq 'Signature' ) ?>
-			<td class="unprintable"><input type="checkbox" name="chkDelete-<?index?>" /></td>
-			<? else ( $$variable{'name'} eq 'Signature' ) ?>
-			<td class="unprintable">&nbsp;</td>
-			<? endif ( $$variable{'name'} eq 'Signature' ) ?>
-			<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
+			<? if ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
+			<td class="unprintable">
+			<? if ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) or ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) and $$variable{'name'} eq 'Signature' ) ) ?>
+<input type="checkbox" name="chkDelete-<?index?>" />
+			<? endif ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) or ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) and $$variable{'name'} eq 'Signature' ) ) ?>
+			</td>
+			<? endif ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td>
 <? if ( $$variable{'url'} ne '' ) ?>
 <a href="/employee/proj/<?url?>?OrderID=<?OrderID?>&ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?index?>"><?name?></a>
