@@ -291,9 +291,8 @@ sub stock {
 			} else {
 				$$self{'stock'} .= ' not allocated.';
 			} # end if
-			if ( ( ! @PA ) and $Project->docket() ) {
-				my @PO = openprint::PurchaseOrder_Content::find('docket'=>$Project->docket());
-				$$self{'stock'} .= '<br/>Ordered on: ' . join(',', map { sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a>' , $_ ); } @PO );
+			if ( ( ! @PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content::find('docket'=>$Project->docket()) ) ) {
+				$$self{'stock'} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
 			} else {
 				$$self{'stock'} .= ' not ordered.';
 			} # end if
