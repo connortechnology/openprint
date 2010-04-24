@@ -1,0 +1,21 @@
+<table>	
+	<tr>
+		<th style="text-align: left;">Email address</th>
+		<th style="text-align: left;">Name</th>
+		<th style="text-align: left;">Forwards</th>
+		<th style="text-align: left;">Active</th>
+	</tr>
+	<? echo (
+		my $html = '';
+		my $mail_dbh = email::db_connect();
+		my @results = sql::execute( undef, $mail_dbh, 'SELECT username,name, active FROM mailbox ORDER BY username' );
+		while ( my ( $username,$name,$active ) = splice @results, 0, 3 ) {
+			$html .= sprintf( '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>', $username, $name, 
+				#join('<br/>', sets::exclude( [ $username ], [ sql::execute( undef, $mail_dbh, 'SELECT goto from alias WHERE address=?', $username ) ] ) ),
+				join('<br/>', sql::execute( undef, $mail_dbh, 'SELECT goto from alias WHERE address=?', $username ) ),
+				( $active ? 'Yes' : 'No' ),
+				);
+		} # end while	
+		return $html;
+	) ?>
+</table>
