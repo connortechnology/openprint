@@ -932,6 +932,11 @@ sub _labels {
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 } # end sub _labels
 
+sub _stock_popup {
+	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+	$variable{'Project'} = $variable{'Job'}->Project();
+} # end sub _stock_popup
+
 sub _stock_details {
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 } # end sub _stock_details
