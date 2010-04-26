@@ -83,3 +83,15 @@ fieldset.Fold p label {
 fieldset.Fold p input {
 	width: auto;
 }
+table tr .Boolean {
+	width: 80px;
+	text-align: left;
+}
+table tr .Name {
+	width: 140px;
+	text-align: left;
+}
+table tr .Email {
+	width: 180px;
+	text-align: left;
+}

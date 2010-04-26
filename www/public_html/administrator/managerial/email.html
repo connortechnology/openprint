@@ -1,35 +1,28 @@
-<form id="f1" name="f1" action="/administrator/managerial/emails.html">
-	<table class="List sortable">	
-		<tr>
-			<th style="width: 20px;"><input type="checkbox" onclick="select_all(this.form, 'emails', this.checked );"/></th>
-			<th style="text-align: left;">Email address</th>
-			<th style="text-align: left;">Name</th>
-			<th style="text-align: left;">Forwards</th>
-			<th style="text-align: left;">Active</th>
-		</tr>
+<form id="f1" name="f1" action="emails.html" method="post">
+	<input type="hidden" name="action" />
+	<fieldset><legend>Information</legend>
+		<div class="content">
+			<ul>
+				<li><label>Email Address:</label>
+					<input type="text" name="id" id="id" value="<? echo ( $$variable{'Email'}->id(); ) ?>" />
+				</li>
+				<li><label>Name:</label>
+					<input type="text" name="name" id="name" value="<? echo ( $$variable{'Email'}->name(); ) ?>" />
+				</li>
+				<li><label>Maildir:</label>
+					<input type="text" name="maildir" id="maildir" value="<? echo ( $$variable{'Email'}->maildir(); ) ?>" />
+				</li>
+				<li><label>Quote:</label>
+					<input type="text" name="quota" id="quota" value="<? echo ( $$variable{'Email'}->quota(); ) ?>" />
+				</li>
+			</ul>
+		</div>
+	</fieldset>
+	<p class="buttons">
 		<? echo (
 			my $html = '';
-			my $mail_dbh = email::db_connect();
-			my @results = sql::execute( undef, $mail_dbh, 'SELECT username,name, active FROM mailbox ORDER BY username' );
-			while ( my ( $username,$name,$active ) = splice @results, 0, 3 ) {
-				$html .= sprintf( '<tr>
-<td><input type="checkbox" name="emails" value="%1$s" /></td>
-<td><a href="email.html?address=%1$s">%1$s</a></td>
-<td><a href="email.html?address=%1$s">%2$s</a></td>
-<td><a href="email.html?address=%1$s">%3$s</a></td>
-<td>%4$s</td>
-</tr>', $username, $name, 
-					join('<br/>', sets::exclude( [ $username ], [ sql::execute( undef, $mail_dbh, 'SELECT goto from alias WHERE address=?', $username ) ] ) ),
-					#join('<br/>', sql::execute( undef, $mail_dbh, 'SELECT goto from alias WHERE address=?', $username ) ),
-					( $active ? 'Yes' : 'No' ),
-					);
-			} # end while	
+			$html .= ssi::writeButton( undef, undef, 'delete', 'delete.gif', "f1.elements['action'].value='Delete';f1.submit();", '', 'Delete' );
 			return $html;
 		) ?>
-	</table>
-	<? echo (
-		my $html = '';
-		$html .= ssi::writeButton( undef, undef, 'Delete', 'delete.gif', 'f1.submit();', '', 'Delete Checked' );
-		return $html;
-	) ?>
+	</p>
 </form>
