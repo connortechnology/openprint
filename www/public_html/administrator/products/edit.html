@@ -1,11 +1,11 @@
 <script type="text/javascript" src="/javascripts/pricing.js"></script>
-<div class="error"><?error?></div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <div class="Product">
 	<form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 		Please select a product to view/edit. 
 		<fieldset class="filters"><legend>Search Information</legend>
 			<p> 
-				<label>Product Category:</label>
+				<label>Category:</label>
 				<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 					<option value="">All</option>
 					<? echo (

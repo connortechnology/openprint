@@ -745,8 +745,8 @@ sub delete_service {
 sub display_reuse_project {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
-	$$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'};
-	$$variable{'Project'} = new openprint::Project( $openprint::param{'ProjectIndex'} )->copy();
+	$$variable{'Project'} = new openprint::Project( $openprint::param{'ProjectIndex'} );
+	$$variable{'ProjectIndex'} = $$variable{'Project'}->id();
 	if ( $$variable{'Project'}->reference() ) {
 		$$variable{'Project'}->reference( 'Copy of ' . $$variable{'Project'}->reference() );
 	} else {
