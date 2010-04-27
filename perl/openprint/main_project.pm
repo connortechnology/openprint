@@ -58,7 +58,7 @@ sub history {
     } # end if
 
 	ssi::save_params( '/main/project/history.html', 
-			'ddmStatus',
+			'ddmStatus', 'type_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
@@ -68,7 +68,7 @@ sub history {
 
 sub _history {
 	ssi::save_params( '/main/project/history.html', 
-			'ddmStatus',
+			'ddmStatus', 'type_id',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 

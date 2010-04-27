@@ -13,7 +13,8 @@ require openprint::FoldSpecification;
 require openprint::logs;
 
 use openprint;
-use vars qw(%variable $log $dbh %config %param );
+use vars qw($r %variable $log $dbh %config %param );
+*r = \$openprint::r;
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -26,8 +27,8 @@ sub import_specs {
 	my %equipment = map { $_->strid(), $_->id() } openprint::Equipment::find();
 
 	my $error = '';
-	if ( $openprint::param{'fileSpecifications'} ) {
-		my $ac = sql::start_transaction( $openprint::dbh );
+	if ( $param{'fileSpecifications'} ) {
+		my $ac = sql::start_transaction( $dbh );
 
 		sql::execute( undef, undef, 'DELETE FROM tbl_Equipment_Specifications' . ( $Equipment->id()?' WHERE lngEquipmentIndex=' . $Equipment->id():''));
 
@@ -64,7 +65,7 @@ sub import_specs {
 			} # end for each
 			last if $error;
 		} # end while
-		sql::end_transaction( $openprint::dbh, $ac );
+		sql::end_transaction( $dbh, $ac );
 	} else {
 		$error .= 'No file given to upload.<br>';
 	} # end if
@@ -73,7 +74,7 @@ sub import_specs {
 } # end sub import_specs
 
 sub export_specs {
-	my ( $r, $log, $dbh, $variable, $Equipment ) = @_;
+	my ( $Equipment ) = @_;
 	my @header = ( 'Equipment ID', 'Field Name','Min', 'Max', 'Units', 'Value','Interpolate' );
 
 	my @data;
@@ -81,35 +82,33 @@ sub export_specs {
 		push @data, $Spec->Equipment()->strid(), $Spec->name(), $Spec->min(), $Spec->max(), $Spec->units(), $Spec->value(), $Spec->interpolate();
 	} # end foreach
 
-	misc::export_csv( $r, $log, $variable, 'equipment_specifications'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
+	misc::export_csv( $r, $log, \%variable, 'equipment_specifications'.($Equipment->id()?'_'.$Equipment->strid():'').'.csv', \@header, \@data );
 	openprint::logs::insertLogRecord('38',);
 } # end sub export_specs
 
 sub edit {
-	my ( $r, $log, $dbh, $variable ) = @_;
+	my $Equipment = new openprint::Equipment( $param{'ddmEquipment'} );
 
-	my $Equipment = new openprint::Equipment( $openprint::param{'ddmEquipment'} );
-
-	if ( $openprint::param{'btnFunction'} eq '>>' ) {
+	if ( $param{'btnFunction'} eq '>>' ) {
 		$Equipment = $Equipment->Next();
-	} elsif ( $openprint::param{'btnFunction'} eq '<<' ) {
+	} elsif ( $param{'btnFunction'} eq '<<' ) {
 		$Equipment = $Equipment->Previous();
-	} elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
+	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$Equipment = $Equipment->copy();
-	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
-		$Equipment->save( \%openprint::param );
-	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
+	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+		$Equipment->save( \%param );
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Equipment->delete();
 		$Equipment = $Equipment->Next();
-	} elsif ( $openprint::param{'btnFunction'} eq 'Import Specifications' ) {
+	} elsif ( $param{'btnFunction'} eq 'Import Specifications' ) {
 		if ( ( my $error = import_specs( $r, $Equipment ) ) ) {
-			return misc::error( $log, $dbh, $variable, 'The following errors occurred:', $error );
+			return misc::error( $log, $dbh, \%variable, 'The following errors occurred:', $error );
 		} # end if
-	} elsif ( $openprint::param{'btnFunction'} eq 'Export Specifications' ) {
-		export_specs( $r, $log, $dbh, $variable, $Equipment );
+	} elsif ( $param{'btnFunction'} eq 'Export Specifications' ) {
+		export_specs( $Equipment );
 	} # end if
 
-	$$variable{'Equipment'} = $Equipment;
+	$variable{'Equipment'} = $Equipment;
 } # end sub equipment_edit
 
 sub _specification {
@@ -149,55 +148,55 @@ sub _specification {
 } # end sub _specification
 
 sub _fold {
-	my $Fold = new openprint::Fold( $openprint::param{'id'} );
-	if ( $openprint::param{'action'} eq 'add' ) {
+	my $Fold = new openprint::Fold( $param{'id'} );
+	if ( $param{'action'} eq 'add' ) {
 		foreach my $k ( 'equipment_id' ) {
-			$$Fold{$k} = $openprint::param{$k};
+			$$Fold{$k} = $param{$k};
 		} # end foreach
 		$Fold->save();
-		$openprint::variable{'Fold'} = $Fold;
-	} elsif ( $openprint::param{'action'} eq 'copy' ) {
+		$variable{'Fold'} = $Fold;
+	} elsif ( $param{'action'} eq 'copy' ) {
 		my $NewFold = $Fold->copy();
-		delete $openprint::param{id};
-		$NewFold->save(\%openprint::param);
+		delete $param{id};
+		$NewFold->save(\%param);
 		foreach my $Spec ( $Fold->Specifications() ) {
 			$Spec = $Spec->copy();
 			$Spec->fold_id( $NewFold->id() );
 			$Spec->save();
 		} # end foreach Spec
-		$openprint::variable{'Fold'} = $NewFold;
-		$openprint::param{'id'} = $NewFold->id();
+		$variable{'Fold'} = $NewFold;
+		$param{'id'} = $NewFold->id();
 		
-	} elsif ( $openprint::param{'action'} eq 'save' ) {
-		$Fold->save(\%openprint::param);
-		$openprint::variable{'Fold'} = $Fold;
-	} elsif ( $openprint::param{'action'} eq 'delete' ) {
+	} elsif ( $param{'action'} eq 'save' ) {
+		$Fold->save(\%param);
+		$variable{'Fold'} = $Fold;
+	} elsif ( $param{'action'} eq 'delete' ) {
 		$Fold->delete();
-		$openprint::variable{'PageContent'} = ' ';
+		$variable{'PageContent'} = ' ';
 	} # end if
 } # end sub _fold
 
 sub _fold_specification {
-	my $FoldSpecification = new openprint::FoldSpecification( $openprint::param{'id'} );
-	if ( $openprint::param{'action'} eq 'add' ) {
+	my $FoldSpecification = new openprint::FoldSpecification( $param{'id'} );
+	if ( $param{'action'} eq 'add' ) {
 		foreach my $k ( 'fold_id' ) {
-			$$FoldSpecification{$k} = $openprint::param{$k};
+			$$FoldSpecification{$k} = $param{$k};
 		} # end foreach
 		$FoldSpecification->save();
-		$openprint::variable{'Specification'} = $FoldSpecification;
-	} elsif ( $openprint::param{'action'} eq 'delete' ) {
+		$variable{'Specification'} = $FoldSpecification;
+	} elsif ( $param{'action'} eq 'delete' ) {
 		$FoldSpecification->delete();
-		$openprint::variable{'PageContent'} = ' ';
-	} elsif ( $openprint::param{'action'} eq 'update' ) {
-		if ( $openprint::param{'field'} ne 'interpolate' ) {
-			$$FoldSpecification{$openprint::param{'field'}} = $openprint::param{'value'};
+		$variable{'PageContent'} = ' ';
+	} elsif ( $param{'action'} eq 'update' ) {
+		if ( $param{'field'} ne 'interpolate' ) {
+			$$FoldSpecification{$param{'field'}} = $param{'value'};
 			$FoldSpecification->save();
-			$openprint::variable{'PageContent'} = $$FoldSpecification{$openprint::param{'field'}};
+			$variable{'PageContent'} = $$FoldSpecification{$param{'field'}};
 		} else {
 			$$FoldSpecification{'interpolate'} = ! $$FoldSpecification{'interpolate'};
 			$$FoldSpecification{'interpolate'} = 1 * $$FoldSpecification{'interpolate'};
 			$FoldSpecification->save();
-			$openprint::variable{'PageContent'} = $$FoldSpecification{'interpolate'} ? 'Yes' : 'No';
+			$variable{'PageContent'} = $$FoldSpecification{'interpolate'} ? 'Yes' : 'No';
 		} # end if
 	} # end if
 } # end sub _fold_specification

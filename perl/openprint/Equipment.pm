@@ -381,18 +381,9 @@ sub copy {
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
-	my @specs = sql::execute( undef, undef, q{SELECT dblMin, dblMax, strUnits, strName, strValue, interpolate FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
-	while ( my ( $min, $max, $units, $name, $value, $interpolate ) = splice @specs, 0, 6 ) {
-		sql::insert( undef, undef, 'tbl_Equipment_Specifications',[
-				'lngEquipmentIndex',	$$new{id},
-				'dblMin',				( $min ne '' ? $min : undef ),
-				'dblMax',				( $max ne '' ? $max : undef ),
-				'strUnits',			 $units,
-				'strName',				$name,
-				'strValue',			 $value,
-				'interpolate',			$interpolate,
-				] );
-	} # end while
+	foreach my $ES ( openprint::EquipmentSpecification::find('equipment_id'=>$$self{'id'} ) ) {
+		$ES->copy()->save({'equipment_id'=>$$new{id}});
+	} # end foreach
 
 # Now do pricing, start with Service Prices
 	my @prices = sql::execute( undef, undef, q{SELECT pricelist_id, service_id, min, max, units, cost, markup, price FROM Service_Prices WHERE equipment_id=?}, $$self{id} );

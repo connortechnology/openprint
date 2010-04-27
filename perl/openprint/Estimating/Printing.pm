@@ -3807,8 +3807,21 @@ sub select_presses {
 		} # end if
 
 		if ( $_ = $Press->specification('ProjectTypes') ) {
-			if ( sets::isin( '!'.$Project->Type()->name(), split(',',$_) ) ) {
+			my ( @allowed, @disallowed );
+
+			foreach my $type ( split(',',$_) ) {
+				if ( $type =~ /^\!(.+)$/ ) {
+					push @disallowed, $1;
+				} else {
+					push @allowed, $type;
+				} # end if
+			} # end foreach type
+			if ( @disallowed and sets::isin( $Project->Type()->name(), \@disallowed ) ) {
 				$results{$press_id} = "Press is set to not do " . $Project->Type()->name();
+				next;
+			} # end if
+			if ( @allowed and ! sets::isin( $Project->Type()->name(), \@allowed ) ) {
+				$results{$press_id} = "Press is not set to do " . $Project->Type()->name();
 				next;
 			} # end if
 		} # end if
