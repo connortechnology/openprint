@@ -101,6 +101,7 @@ sub edit {
         
         openprint::logs::insertLogRecord('27', "Service Index: " . $Service->id() . " - " . $Service->name(),);
 		$Service = $Service->copy();
+		$$Service{'name'} = 'Copy of '.$$Service{'name'};
         
         $$variable{'error'} = $Service->save();
         if ( ! $$variable{'error'} ) {
