@@ -216,6 +216,10 @@ sub signature_calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 			next;
 		} # end if
+		if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $I->Press()->specification('Printing Type') ne 'Digital' ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Not printed digital.<br/>' );
+			next;
+		} # end if
 		if ( $Equipment->specification('Type') eq 'Press' ) {
 			if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
@@ -636,9 +640,12 @@ sub get_price {
 			if ( $servicePrice{'units'} eq 'Per M' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
 				$price{'Service'} += $servicePrice{'Total'};
-			} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
 				$price{'Service'} += $servicePrice{'Total'}
+			} elsif ( lc $servicePrice{'units'} eq 'each' ) {
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty;
+				$price{'Service'} += $servicePrice{'Total'};
 			} else {
 				$openprint::log->debug("Unknown Unit Type: ($servicePrice{'units'}) on $$ServiceType{'name'}");
 			} # end if
