@@ -8,7 +8,7 @@
 	} // end function confirm_delete()
 </script>
 <link href="/css/order.css" rel="stylesheet" type="text/css"/>
-<form name="f1" method="post" action="details.html?order_id=<?OrderID?>">
+<form name="f1" method="post" action="/employee/accounting/details.html?order_id=<?OrderID?>">
 	<!--#include virtual="/includes/order_header.html" -->
 	<br class="spacer"/>
 	<table class="List" style="table-layout: auto;">
@@ -16,20 +16,20 @@
 			<th width="65" align="left">Project #</th>
 			<th align="left">Reference</th>
 			<th align="left">Status</th>
-			<th width="100" align="center">Requested Date</th>
-			<th width="100" align="center">Due Date</th>
+			<th class="Date">Requested Date</th>
+			<th class="Date">Due Date</th>
 			<th align="right">Qty</th>
-			<th width="75" align="right">Price</th>
+			<th class="Price">Price</th>
 		</tr>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 		<tr<?rowclass?>>
 			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
 			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->reference(); ) ?></a></td>
 			<td align="left"><? echo ( $$variable{'Project'}->status(); ) ?></td>
-			<td align="center"><? echo ( $$variable{'Project'}->requested_date(); ) ?></td>
-			<td align="center"><? echo ( $$variable{'Project'}->due_date(); ) ?></td>
+			<td class="Date"><? echo ( $$variable{'Project'}->requested_date(); ) ?></td>
+			<td class="Date"><? echo ( $$variable{'Project'}->due_date(); ) ?></td>
 			<td align="right"><? echo ( $$variable{'Project'}->ordered_quantity(); ) ?></td>
-			<td align="right"><?CurrencySymbol?> <? echo ( $$variable{'Project'}->ordered_price(); ) ?></td>
+			<td class="Price"><?CurrencySymbol?> <? echo ( $$variable{'Project'}->ordered_price(); ) ?></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
 		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
@@ -59,20 +59,20 @@
 	<table class="List">
 		<tr>
 			<th width="50" align="left">Ref #</th>
-			<th width="70" align="center">Date</th>
+			<th class="Date">Date</th>
 			<th width="100" align="left">Type</th>
 			<th align="left">Description</th>
-			<th width="120" align="right">Amount</th>
+			<th class="Price">Amount</th>
 			<th width="50" align="right">&nbsp;</th>
 		</tr>
 		<? if ( $$variable{'PAYMENTS'} ) ?>
 		<? while ( @$variable{'payment_index','date','type','description','amount','currency_id'} = splice @{$$variable{'PAYMENTS'}},0,6; ) ?>
 			<tr class="<?colRow?>"> 
 				<td><?payment_index?></td>
-				<td align="center"><?date?></td>
+				<td class="Date"><?date?></td>
 				<td>&nbsp;<?type?></td>
 				<td>&nbsp;<?description?></td>
-				<td align="right"><? echo ( new openprint::Currency($$variable{'currency_id'})->symbol(); ) ?> <?amount?></td>
+				<td class="Price"><? echo ( openprint::Currency::format($$variable{'amount'}); ) ?></td>
 				<td align="right"><script type="text/javascript">writeButton('Delete<?payment_index?>','',"confirm_delete( document.f1, '<?payment_index?>' );", '', 'Delete' );</script></td>
 			</tr>
 			<? eval ( $$variable{'colRow'} = $$variable{'colRow'} ? '' : 'colRow' ) ?>
@@ -80,8 +80,8 @@
 		<? endif ( $$variable{'PAYMENTS'} ) ?>
 		<tr class="totals">
 			<td colspan="3">Add new payment:</td>
-			<td><input type="text" name="Description" style="width: 100%;"/></td>
-			<td align="right"><?CurrencySymbol?><input type="text" name="Amount" style="width:auto;" size="10"/></td>
+			<td><input type="text" name="Description" /></td>
+			<td align="right"><input type="text" name="Amount" size="10"/></td>
 			<td><? echo (ssi::writeButton($log, $dbh, 'AddPayment', 'add', "f1.btnFunction.value='Save';f1.submit();",'','Add' ); ) ?></td>
 		</tr>
 	</table>

@@ -126,8 +126,8 @@ sub find {
 		push @values, $params{'currency_id'};
 	} # end if
 	if ( exists $params{'owing_>'} ) {
-		$sql .= ' AND ( (SELECT SUM(curamount) FROM Payments WHERE order_id=Index) IS NULL OR (curtotalsale - (SELECT SUM(curamount) FROM Payments WHERE order_id=Index) ) > ?) ';
-		push @values, $params{'owing_>'};
+		$sql .= ' AND ( ((SELECT SUM(curamount) FROM Payments WHERE order_id=Index) IS NULL AND curtotalsale>?) OR (curtotalsale - (SELECT SUM(curamount) FROM Payments WHERE order_id=Index) ) > ?) ';
+		push @values, @params{'owing_>','owing_>'};
 	} # end if
 	if ( exists $params{'order'} ) {
 		if ( $params{'order'} eq 'created_on' ) {
