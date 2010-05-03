@@ -3898,10 +3898,23 @@ sub select_presses {
 			} # end if
 		} # end if
 		if ( $_ = $Press->specification('StockNames') ) {
-			if ( ! sets::isin( $Paper->name(), [ split(',',$_) ] ) ) {
+			my ( @allowed, @disallowed );
+			foreach ( split(',',$_) ) {
+				if ( $_ =~ /^\!/ ) {
+					push @disallowed, $_;
+				} else {
+					push @allowed, $_;
+				} # end if
+			} # end foreach
+	
+			if ( @allowed and ! sets::isin( $Paper->name(), \@allowed ) ) {
 				$results{$press_id} = 'Not suitable for this stock.';
 				next;
 			} # end if
+			if ( @disallowed and sets::isin( $Paper->name(), \@disallowed ) ) {
+                $results{$press_id} = 'Not suitable for this stock.';
+                next;
+            } # end if
 		} # end if
 		$results{$press_id} = '';
 	} # end while
