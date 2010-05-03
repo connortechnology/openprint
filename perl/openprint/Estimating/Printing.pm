@@ -3897,11 +3897,11 @@ sub select_presses {
 				next;
 			} # end if
 		} # end if
-		if ( $_ = $Press->specification('StockNames') ) {
+		if ( my $stocknames = $Press->specification('StockNames') ) {
 			my ( @allowed, @disallowed );
-			foreach ( split(',',$_) ) {
-				if ( $_ =~ /^\!/ ) {
-					push @disallowed, $_;
+			foreach ( split(',',$stocknames) ) {
+				if ( $_ =~ /^\!(.+)$/ ) {
+					push @disallowed, $1;
 				} else {
 					push @allowed, $_;
 				} # end if
