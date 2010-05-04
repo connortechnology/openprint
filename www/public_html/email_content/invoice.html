@@ -29,23 +29,51 @@
 				return $html;
 			) ?>
 		</div>
-		<br class="spacer"/>
 	</fieldset>
 	<fieldset><legend>Services</legend>
-		<table class="List">
+			<? echo (
+				my $html = '';
+				$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
+				$$variable{'service_total'} = 0;
+				my $rowclass = '';
+				my @Timetracks = openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting');
+				if ( @Timetracks > 11 ) {
+					my $count = 0;
+		$html .= '<table class="List">
 			<tr>
 				<th class="Date">Date</th>
 				<th>Description</th>
 				<th class="Interval">Interval</th>
 				<th class="Rate">Rate</th>	
 				<th class="Price">Price</th>
-			</tr>
-			<? echo (
-				my $html = '';
-				$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
-				$$variable{'service_total'} = 0;
-				my $rowclass = '';
-				foreach my $Timetrack ( openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
+			</tr>';
+					while ( my $Timetrack = shift @Timetracks ) {
+						$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
+						$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
+						$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
+						$html .= sprintf('<td class="Interval">%s</td>', misc::seconds_to_pretty_interval( $Timetrack->elapsed() ) ); 
+						my $Price = $Timetrack->Price();
+						$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
+						$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
+						$html .= sprintf(q`</tr><tr %2$s>`, $Timetrack->id(), $rowclass );
+						$html .= '<td>&nbsp;</td><td>'.$Timetrack->description().'</td><td colspan="3">&nbsp;</td>';
+						$html .= '</tr>';
+						$$variable{'service_total'} += $$Price{'Total'};
+						$rowclass = $rowclass ? '' : 'class="colRow"';
+						$count += 1;
+						last if $count == 11;
+					} # end foreach Timetrack
+					$html  .= '</table></fieldset><fieldset><legend>Services Continued</legend>';
+				} # end if
+		$html .= '<table class="List">
+			<tr>
+				<th class="Date">Date</th>
+				<th>Description</th>
+				<th class="Interval">Interval</th>
+				<th class="Rate">Rate</th>	
+				<th class="Price">Price</th>
+			</tr>';
+				while ( my $Timetrack = shift @Timetracks ) {
 					$html .= sprintf( q`<tr %2$s>`, $Timetrack->id(), $rowclass );
 					$html .= sprintf('<td class="Date">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
 					$html .= sprintf('<td class="Service">%s</td>', ssi::html_escape( $Timetrack->Service()->name() ) );
