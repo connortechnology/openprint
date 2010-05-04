@@ -23,7 +23,7 @@
 					if ( $session{'user_type'} ne 'A' ) {
 						$params{'type'} = ['C','E'];
 					} # end if
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( %params ) ], $param{'user_id'} ); ) ?>
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( %params ) ], $$variable{'User'}->id() ); ) ?>
 			</select>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
