@@ -71,6 +71,7 @@
 			<th align="left" width="65">Order ID</th>
 			<th align="left" width="60">Docket</th>
 			<th class="Date">Date</th>
+			<th class="Status">Status</th>
 			<th align="left" width="90">Invoice #</th>
 			<th align="right">P.O. #</th>
 			<th class="Price">Total</th>
@@ -83,11 +84,13 @@
 			my $total_total = 0;
 			my $html;
 			foreach my $Order ( @{$$variable{'UnpaidOrders'}} ) {
+				next if sets::isin( $Order->status(), ['Cancelled','Incomplete','Deleted'] );
 				$html .= sprintf( '
 				<tr%1$s> 
 					<td><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
 					<td><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
 					<td class="Date">%4$s</td>
+					<td class="Status">%9$s</td>
 					<td align="left">&nbsp;%5$s</td>
 					<td align="right">&nbsp;%6$s</td>
 					<td class="Price">%7$s</td>
@@ -98,13 +101,14 @@
 					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ),
 					$Order->invoice_id(), $Order->ponum(), 
 					openprint::Currency::format($Order->total()), openprint::Currency::format( $Order->owing() ),
-		 );
+					$Order->status(),
+					);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 					$balance_total += $Order->owing();
 					$total_total += $Order->total();
 				} # end foreach Order
 				$html .= sprintf('<tr class="totals">
-					<td colspan="5" align="right">Totals:</td>
+					<td colspan="6" align="right">Totals:</td>
 					<td class="Price">%s</td>
 					<td class="Price">%s</td>
 					<td>&nbsp;</td>

@@ -534,6 +534,12 @@ td.Price, th.Price {
 	width: 100px;
 	text-align: right;
 }
+td.Status, th.Status {
+	width: 100px;
+	text-align: right;
+	padding-right: 4px;
+	padding-left: 4px;
+}
 td.Cost, th.Cost {
 	width: 130px;
 	text-align: right;
