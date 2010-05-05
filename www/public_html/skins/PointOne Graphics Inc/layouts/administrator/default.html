@@ -33,6 +33,9 @@
 			</div>
 			<div id="Menu">
 				<ul id="menubar">
+					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+					<li id="MenuEmployee" class="off"><a href="/employee/index.html">EMPLOYEE SIDE</a></li>
+					<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					<li class="off" id="AccountMenu"><a href="#" onclick="toggleMenu($('AccountMenu'), 'off', 'on');return false;">ACCOUNT</a>
 						<ul>
 <? if ( $openprint::session{'user_id'} ) ?>

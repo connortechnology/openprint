@@ -36,6 +36,9 @@
 		<? if ( $$variable{'uri'} =~ /claim/ ) ?>
 		<link href="/css/claim.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /claim/ ) ?>
+		<? if ( $$variable{'uri'} =~ /credit_application/ ) ?>
+		<link href="/css/credit_application.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $$variable{'uri'} =~ /credit_application/ ) ?>
 		<? if ( $$variable{'uri'} =~ /print_overview/ ) ?>
 		<link href="/css/press_schedule.css?version=1.2" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /print_overview/ ) ?>
@@ -78,6 +81,10 @@
 			<div class="Menu">
 					<ul id="menubar">
 						<li class="off"><a href="/employee/index.html">HOME</a></li>
+                        <? if ( $session{'user_type'} eq 'A' ) ?>
+                        <li id="MenuAdministrator" class="off"><a href="/administrator/index.html">ADMIN SIDE</a></li>
+                        <? endif ( $session{'user_type'} eq 'A' ) ?>
+
 						<li id="AccountMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/account/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('AccountMenu'), 'off', 'on');return false;">ACCOUNT</a>
 							<ul>
 <? if ( $session{'user_id'} ) ?>
@@ -142,6 +149,7 @@
 								<li><a href="/employee/accounting/search.html;NOSSL">&raquo; Outstanding</a></li>
 								<li><a href="/employee/accounting/credit.html;NOSSL">&raquo; Customer Credit</a></li>
 								<li><a href="/employee/accounting/stock.html;NOSSL">&raquo; Stock</a></li>
+								<li><a href="/employee/accounting/credit_applications.html;NOSSL">&raquo; Credit Applications</a></li>
 							</ul>
 						</li>
 						<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>

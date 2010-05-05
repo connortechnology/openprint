@@ -1,0 +1,93 @@
+<div class="CreditApplications">
+<form name="f1" method="post">
+	<fieldset class="filters"><legend>Search:</legend>
+	<p>
+		<label>Company:</label>
+			<input type="text" onKeyUp="filterDDM(this, f1.ddmCompany);" size="4" />
+		<select name="ddmCompany">
+			<option value=""> All Companies </option>
+			<? echo ( 
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)' ) ], $param{'ddmCompany'} );
+) ?>
+		</select>
+	</p>
+	<p>
+		<label>Status:</label>
+		<select name="ddmStatus">
+			<option value="" /> All </option>
+			<? echo (
+				ssi::make_drop_down( [ map { $_, $_ } ( 'Approved','Declined','Reviewed','Non-Reviewed' ) ], $$variable{'ddmStatus'} );
+			) ?>
+		</select>
+	</p>
+	<p>
+		<label>Application Date:</label>
+		<span class="DateSelector">
+            <? echo ( 
+                ssi::date_select_session('/employee/accounting/credit_applications.html', 'created_on_start' );
+                ) ?> to
+		</span>
+		<span class="DateSelector">
+            <? echo ( 
+                ssi::date_select_session('/employee/accounting/credit_applications.html', 'created_on_end' );
+                ) ?>
+		</span>
+	</p>
+	<p class="buttons">
+		<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults','showResults.gif', "f1.btnFunction.value='Show Results';f1.submit();", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ),
+); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<hr/>
+<br>
+<? eval (
+    @{$$variable{'CreditApps'}} = ();
+    $_ = "SELECT Id, strSignature, date(dtmCreationDate), (SELECT strName FROM Company WHERE index=company_id), strStatus\n".
+        "FROM CreditApplications\n".
+        "WHERE dtmCreationDate BETWEEN ? AND ?\n";
+    $_ .= "AND strStatus = 'Approved'\n" if $param{'ddmStatus'} eq 'Approved';
+    $_ .= "AND strStatus = 'Declined'\n" if $param{'ddmStatus'} eq 'Declined';
+    $_ .= "AND strStatus != 'Non-Reviewed'\n" if $param{'ddmStatus'} eq 'Reviewed';
+    $_ .= "AND strStatus = 'Non-Reviewed'\n" if $param{'ddmStatus'} eq 'Non-Reviewed';
+    $_ .= "AND company_Id = '".$param{'ddmCompany'}."'\n" if $param{'ddmCompany'};
+#$_ .= "AND lngSupplierIndex = '$session{'company_id'}'";
+    $_ .= "ORDER BY dtmCreationDate, Id";
+    @{$variable{'CreditApps'}} = sql::execute( $log, $dbh, $_, 
+		sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+			'/employee/accounting/credit_applications.html?created_on_start_year',
+			'/employee/accounting/credit_applications.html?created_on_start_month',
+			'/employee/accounting/credit_applications.html?created_on_start_day'} ),
+		sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+'/employee/accounting/credit_applications.html?created_on_end_year',
+'/employee/accounting/credit_applications.html?created_on_end_month',
+'/employee/accounting/credit_applications.html?created_on_end_day'} ),
+	 );
+) ?>
+<? if ( @{$$variable{'CreditApps'}} ) ?>
+<br>
+The following Credit Applications matched your criteria:<br>
+<br>
+<table class="List sortable">
+	<tr>
+		<th class="Company">Company</th>
+		<th width="200" align="left">Submitted By</th>
+		<th class="Date">Date</th>
+		<th width="100" align="right">Status</th>
+	</tr>
+	<? while ( @$variable{'index','signature','date','company','status'} = splice @{$$variable{'CreditApps'}},0,5; ) ?>
+	<tr<?rowclass?>>
+		<td class="Company"><a href="credit_application.html?credit_index=<?index?>">&nbsp;<?company?></a></td>
+		<td align="left"><a href="credit_application.html?credit_index=<?index?>"><?signature?>&nbsp;</a></td>
+		<td class="Date"><a href="credit_application.html?credit_index=<?index?>">&nbsp;<?date?></a></td>
+		<td align="right"><a href="credit_application.html?credit_index=<?index?>">&nbsp;<?status?></a></td>
+	</tr>
+	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
+	<? endwhile ( @$variable{'index','signature','date','company','status'} = splice @{$$variable{'CreditApps'}},0,5; ) ?>
+</table>
+<? else ( @{$$variable{'CreditApps'}} ) ?>
+There are no credit apps matching your criteria.
+<? endif ( @{$$variable{'CreditApps'}} ) ?>
+</div>

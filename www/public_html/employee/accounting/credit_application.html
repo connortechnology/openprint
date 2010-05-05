@@ -1,0 +1,119 @@
+<script language="javascript">
+	function approve( form ) {
+		form.txtTerms.value = form.AccountTermsDesired.value;
+		form.CreditLimit.value = form.AccountLimitDesired.value;
+		form.txtDownpayment.value = '0';
+	} // end function approve( form )
+	function decline( form ) {
+		form.txtTerms.value = '0';
+		form.CreditLimit.value = '0';
+		form.txtDownpayment.value = form.CurrentDownpayment.value;
+	} // end function decline( form )
+	function submit_check( form ) {
+		if ( ! ( form.verdict[0].checked || form.verdict[1].checked ) ) {
+			alert( "You must either approve or decline the credit application." );
+		} else {
+			form.submit();
+		} // end if
+	} // end function submit_check( form )
+</script>
+<? if ( $$variable{'credit_index'} ) ?>
+	<div class="CreditApplication">
+<form name="f1" method="post" action="credit_applications.html">
+	<input type="hidden" name="credit_index" value="<?credit_index?>">
+	<div class="unprintable">
+		<br/>
+		Select whether to approve or decline the credit application, edit as neccessary, and click Submit.<br/>
+		<br/>
+		<div class="Granted">
+			<fieldset>
+			<ul>
+				<li><label>Status</label>
+					<input type="radio" name="verdict" value="Approved" onclick="approve(f1);" <?verdictApproved?> /> Approved
+					<input type="radio" name="verdict" value="Declined" onclick="decline(f1);" <?verdictDeclined?> /> Declined
+				</li>
+				<li><label>Terms:</label>
+				<input type="text" name="txtTerms" value="<?GrantedTerms?>"> Days </li>
+				<li><label>Credit Limit:</label>
+				<input type="text" name="CreditLimit" value="<?GrantedCreditLimit?>" /></li>
+				<li><label>Required Downpayment Amount:</label>
+					<input type="text" name="txtDownpayment" value="<?GrantedDownpayment?>"> %
+				</li>
+				</ul>
+		<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.btnFunction.value='Save';submit_check(f1);", '', 'Save' ); ) ?> 
+		</p>
+				</fieldset>
+			</div>
+			<div class="Requested">
+				<fieldset><legend>Credit Options Requested:</legend>
+					<ul>
+						<li><label>First Order Value:</label> <?FirstOrderValue?></li>
+						<li><label>Annual Purchases:</label> <?AnnualPurchases?></li>
+						<li><label>Accounts Payable Contact:</label> <?AccountsPayableContact?></li>
+						<li><label>Account Limit:</label> <input type="hidden" name="AccountLimitDesired" value="<?AccountLimitDesired?>"/><?AccountLimitDesired?></li>
+						<li><label>Terms:</label>
+						<input type="hidden" name="AccountTermsDesired" value="<?AccountTermsDesired?>"/><?AccountTermsDesired?></li>
+						<li><label>Financial Statement Available?:</label>
+						<? echo ( $variable{'FinancialStatementAvailable'} eq 'Y' ? 'Yes' : 'No' ) ?></li>
+						<li><label>Signed By:</label> <?Signature?></li>
+						<li><label>Submitted On:</label> <?SubmissionDate?></li>
+					</ul>
+				</fieldset>
+			</div>
+			<div class="Current">
+				<fieldset><legend>Current Credit Information:</legend>
+					<ul> 
+						<li><label>Terms:</label><? echo ( $$variable{'txtTerms'} ne '' ? $$variable{'txtTerms'}.'Days' : 'none' ) ?></li>
+						<li><label>Credit Limit:</label><? echo ( 1*$$variable{'CreditLimit'} ) ?></li>
+						<li><label>Required Downpayment Amount:</label><input type="hidden" name="CurrentDownpayment" value="<?txtDownpayment?>"/><? echo ( 1*$$variable{'txtDownpayment'} ) ?>%</li>
+					</ul>
+				</fieldset>
+			</div>
+	</form>
+		<div class="CompanyInformation">
+			<!--#include virtual="/email_content/_company_information.html"-->
+		</div>
+		<div class="OwnershipInformation">
+			<!--#include virtual="/email_content/_business_information.html"-->
+		</div>
+		<div class="TradeReferences">
+			<fieldset><legend>Trade References:</legend>
+				<? eval ( @{$$variable{'indices'}} = ( 1 .. 3 ); ) ?>
+				<? while ( $$variable{'index'} = shift @{$$variable{'indices'}} ) ?>
+				<? eval ( $$variable{'Company'}->load_tradereferences( $$variable{'index'}, $variable ); ) ?>
+				<div class="TradeReference">
+					<ul>
+						<li class="CompanyName">
+							<label for="tradereference<?index?>_companyname">Company Name:</label>
+							<? hecho ( $$variable{'tradereference'.$$variable{index}.'_companyname'} ) ?>
+						</li>
+						<li class="Contact"> 
+							<label for="tradereference<?index?>_contact">Contact:</label>
+							<? hecho ( $$variable{'tradereference'.$$variable{index}.'_contact'} ) ?>
+						</li>
+						<li class="Phone"> 
+							<label for="tradereference<?index?>_phone">Phone:</label>
+							<? hecho ( $$variable{'tradereference'.$$variable{index}.'_phone'} ) ?>
+						</li>
+						<li class="Fax">
+							<label for="tradereference<?index?>_fax">Fax:</label>
+							<? hecho ( $$variable{'tradereference'.$$variable{index}.'_fax'} ) ?>
+						</li>
+						<li class="Email">
+							<label for="tradereference<?index?>_email">E-mail Address:</label>
+							<? hecho ( $$variable{'tradereference'.$$variable{index}.'_email'} ) ?>
+						</li>
+					</ul>
+				</div>
+		<? endwhile ( $$variable{'index'} = shift @{$$variable{'indices'}} ) ?>
+		   </fieldset>
+		</div>
+		<div class="BankInformation">
+			<!--#include virtual="/email_content/_bank_information.html"-->
+		</div>
+	</div>
+	<input type="hidden" name="btnFunction"/>
+<? else ( $$variable{'credit_index'} ) ?>
+	No Credit Application specified.<br/>
+<? endif ( $$variable{'credit_index'} ) ?>
