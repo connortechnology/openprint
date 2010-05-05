@@ -49,7 +49,7 @@
 			<? endif ( $$variable{'AmountPaid'} < $$variable{'Downpayment'} ) ?>
 			<tr> 
 				<td align="right"><b>Amount Owing:</b></td>
-				<td align="right"><?CurrencySymbol?> <?AmountOutstanding?></td>
+				<td align="right"><?CurrencySymbol?> <? echo ( $$variable{'Order'}->owing(); ) ?></td>
 			</tr>
 		</table>
 		<br/>

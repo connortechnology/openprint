@@ -113,6 +113,7 @@ sub details {
 
 	$_ = q{SELECT id, to_char(dtmDate,'MM/DD/YYYY'), strMethod, strDescription, curAmount, currency_id FROM Payments WHERE strSessionID IS NULL AND Order_Id=? ORDER BY dtmDate};
 	@{$variable{'PAYMENTS'}} = sql::execute( $log, $dbh, $_, $order_id );
+	$variable{'Order'} = $Order;
 } # end sub details
 
 sub credit {
@@ -152,23 +153,6 @@ sub credit {
 	} # end if
 
 	if ( $company_index ) {
-		$_ = "SELECT DISTINCT Orders.Index AS OrderIndex, to_char(dtmOrderDate, 'MM/DD/YYYY'), ".
-			"strCompanyName, strPONumber, curTotalSale, ".
-			"(SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index), lngDocketNumber, invoice_id ".
-			"FROM Orders, order_Contents ".
-			"WHERE Orders.Index = Order_Contents.OrderIndex ";
-		$_ .= "AND Orders.strStatus NOT IN ('Cancelled','Incomplete','Deleted')";
-# which customers
-		$_ .= "	AND Orders.CompanyIndex = $company_index";
-		$_ .= " AND (
-(SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) < curTotalSale OR	
-(SELECT SUM(curAmount) FROM Payments WHERE strSessionID IS NULL AND Payments.order_id=Orders.Index) IS NULL ) ";
-		$_ .= "ORDER BY OrderIndex";
-		@{$variable{'UnpaidOrders'}} = sql::execute( $log, $dbh, $_ );
-		for ( my $index = 0; $index < @{$variable{'UnpaidOrders'}}; $index += 8 ) {
-		$variable{'UnpaidOrders'}[$index+5] = sprintf( '%.2f', $variable{'UnpaidOrders'}[$index+4] - $variable{'UnpaidOrders'}[$index+5] );
-		} # end foreach
-
 		my $customer_credit = new openprint::customer_credit( $company_index );
 		@variable{ keys %credit_fields } = ssi::htmlize( $customer_credit->get( @credit_fields{ keys %credit_fields } ) );
 		$variable{'CreditBalance'} = sprintf( '$ %.2f', $customer_credit->debt() );

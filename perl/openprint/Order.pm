@@ -483,5 +483,9 @@ sub send_cancellation_notice {
 	
 } # end sub send_cancellation_notice
 
+sub owing {
+	return $_[0]{'total'} - $_[0]{'paid'};
+}
+
 1;
 __END__
