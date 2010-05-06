@@ -366,5 +366,28 @@ sub taxexempt2 {
 	return $_[0]{pst_exempt};
 }
 
+sub get_shipping_address {
+    my $self = shift;
+
+    my ( $address_index ) = sql::execute( undef,undef, 'SELECT MAX(lngIndex) FROM tbl_Addresses WHERE Company_id=?', $$self{id} );
+    my $Address = new openprint::address( $openprint::log, $openprint::dbh, $address_index, $$self{id} );
+    return $Address;
+} # end sub get_shipping_address
+
+sub save_shipping {
+    my ( $self, $params ) = @_;
+
+    my $address = $self->get_shipping_address();
+    $address->set( $params );
+} # end sub save_shipping
+
+sub load_shipping {
+    my ( $self, @params ) = @_;
+
+    my $address = $self->get_shipping_address();
+    return $address->get( @params );
+} # end sub save_shipping
+
+
 1;
 __END__

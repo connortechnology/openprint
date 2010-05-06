@@ -211,20 +211,10 @@ sub summary {
 		my $html = '';
 
 		if ( $$specs{'FromAddress1'} or $$specs{'FromCity'} or $$specs{'FromStateProvince'} or $$specs{'FromCountry'} ) {
-			$html .= 'From: ' . join("\n", 
-					join(', ', $$specs{'FromCompanyName'} ) ,
-					join(', ', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
-						@$specs{'FromCity','FromStateProvince','FromCountry'},
-						@$specs{'FromPostalCode'} ),
-					) . '<br/>';
+			$html .= 'From: '.from( $specs ).'<br/>';
 		} # end if
 		if ( $$specs{'ToAddress1'} or $$specs{'ToCity'} or $$specs{'ToStateProvince'} or $$specs{'ToCountry'} ) {
-			$html .= 'To: ' . join("\n", 
-					join(', ', $$specs{'ToCompanyName'} ) ,
-					join(', ', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
-						@$specs{'ToCity','ToStateProvince','ToCountry'},
-						@$specs{'ToPostalCode'} ),
-					);
+			$html .= 'To: ' . to($specs).'<br/>';
 		} # end if
 		if ( ! $html ) {
 			return 'unspecified address';
@@ -232,6 +222,25 @@ sub summary {
 		return $html;
 	} # end if
 } # end sub summary
+
+sub from {
+	my ( $specs ) = @_;
+	return join("\n", 
+			join(', ', $$specs{'FromCompanyName'} ) ,
+			join(', ', $$specs{'FromAddress1'} , $$specs{'FromAddress2'},
+				@$specs{'FromCity','FromStateProvince','FromCountry'},
+				@$specs{'FromPostalCode'} ),
+			);
+} # end sub from
+sub to {
+	my ( $specs ) = @_;
+	return join("\n", 
+			join(', ', $$specs{'ToCompanyName'} ) ,
+			join(', ', $$specs{'ToAddress1'} , $$specs{'ToAddress2'},
+				@$specs{'ToCity','ToStateProvince','ToCountry'},
+				@$specs{'ToPostalCode'} ),
+			);
+} # end sub to
 
 1;
 __END__

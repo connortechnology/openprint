@@ -222,7 +222,7 @@ div.CreditApplication .Dockets {
 div.CreditApplication .Dates p, div.CreditApplication .Sender p {
 }
 div.CreditApplication p {
-    padding: 0px 0px 0px 175px;;
+    padding: 0px 0px 0px 0px;;
     margin: 0px;
     overflow: hidden;
 }
@@ -239,7 +239,7 @@ div.CreditApplication p:after {
 div.CreditApplication p {display: block;}
 /* End hide from IE-mac */
 div.CreditApplication p label {
-	margin: 0px 0px 0px -200px;
+	margin: 0px 0px 0px 0px;
 	width: 195px;
 }
 div.CreditApplication p label.radio {
@@ -355,6 +355,11 @@ div.CreditApplication .Disclaimer {
 	margin-left: -250px;
 	width: 245px;
 }
+.CreditApplication ul li label.radio {
+	float: none;
+	margin: 0px;
+	width: auto;
+}
 .CreditApplication .TradeReference li.Phone, .CreditApplication .TradeReference li.Fax, .CreditApplication .TradeReference li.Email {
 	width: 33%;
 	float: left;
@@ -394,3 +399,13 @@ div.CreditApplication .CompanyInformation:before {
 * html div.CreditApplication .CompanyInformation {height: 1%;}
 div.CreditApplication .CompanyInformation {display: block;}
 /* End hide from IE-mac */
+span.input {
+	float: none;
+	width: 100%;
+	border-bottom: 1px solid black;
+	display: inline-block;
+}
+.bank_name, .bank_branch, .bank_account, .account_manager, .bank_phone, .bank_fax, .bank_email {
+	width: 50%;
+	float: left;
+}
