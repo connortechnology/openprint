@@ -326,6 +326,43 @@ fieldset p input[type="text"], fieldset p input[type="password"]  {
 fieldset p input[type="radio"] {
 	margin-top: 3px;
 }
+fieldset ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+fieldset ul:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+	font-size: 0;
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset ul {height: 1%;}
+fieldset ul {display: block;}
+/* End hide from IE-mac */
+fieldset ul li {
+	list-style: none;
+	margin: 0px;
+	padding: 0px 0px 0px 185px;
+}
+
+fieldset ul li label {
+	width: 180px;
+	margin: 0px 0px 0px -185px;
+	float: left;
+	text-align: right;
+}
+fieldset ul li label.radio {
+	width: auto;
+	margin: 0px;
+	float: none;
+}
+fieldset ul li input[type="text"] {
+	width: 60%;
+}
 
 fieldset.filters {
 	margin-left: 0px;

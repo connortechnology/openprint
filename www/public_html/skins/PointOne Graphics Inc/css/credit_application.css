@@ -52,57 +52,15 @@ div.CreditApplication {display: block;}
 	margin: 0px;
 	padding: 0px;
 }
-.CreditApplication table .Cost {
-	width: 150px;
-}
-.CreditApplication table td.Price input {
-	text-align: right;
-}
-.CreditApplication table .RFID {
-	width: 140px;
-	text-align: left;
-}
-.CreditApplication table .Skid {
-	width: 70px;
-	text-align: left;
-}
-.CreditApplication table .Quantity {
-	width: 75px;
-}
-.CreditApplication table td.Quantity {
-	text-align: right;
-}
-.CreditApplication table td.Weight, .CreditApplication table th.Weight {
-	width: 120px;
-}
-.CreditApplication .View table th.Weight {
-	color: #e4ebf4;
-}
-.CreditApplication table td.Weight input[type="text"] {
-	width: 50px;
-} 
-.CreditApplication table td.Cost input[type="text"] {
-	width: 60px;
-	text-align: right;
-} 
-.CreditApplication table td textarea {
-	width: 98%;
-	min-width:0px;
-	margin: 0px;
-	padding: 0px;
-	min-height: 0px;
-}
-
 
 div.CreditApplication div.Header {
 	display: block;
 	position: relative;
-	width: 100%;
-	background-image: url(/images/bluegradient.png);
-	background-repeat: repeat-x;
+	width: 270px;
+	margin: 0px auto 0px auto;
 	vertical-align: top;
-	border-top: 1px solid #3b5e91;
 	padding-top: 5px;
+	text-align: center;
 }
 div.CreditApplication .Header:after {
     content: ".";
@@ -123,7 +81,6 @@ div.CreditApplication div.Header .Logo {
 	color: black;
 	width: 270px;
 	background: none;
-	float: left;
 }
 div.CreditApplication .Header .Logo:after {
     content: ".";
@@ -175,13 +132,14 @@ div.CreditApplication .Header .Logo .GraphicsInc {
 	font-size:24px;
 }
 div.CreditApplication .Header .PageTitle {
-	margin: 0px;
-	float: right;
-	width: 230px;
+	width: 100%;
+margin: 24px 0px 24px 0px;
 }
 div.CreditApplication .Header .PageTitle h1 {
+	float: none;
 	font-size:24px;
 	color: #3b5e91;
+text-align: center;
 } 
 div.CreditApplication #Contents {
 	margin-top: 20px;
@@ -219,77 +177,9 @@ div.CreditApplication .Dockets {
 	float: right;
 	margin-top: 5px;
 }
-div.CreditApplication .Dates p, div.CreditApplication .Sender p {
-}
-div.CreditApplication p {
-    padding: 0px 0px 0px 0px;;
-    margin: 0px;
-    overflow: hidden;
-}
-div.CreditApplication p:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html div.CreditApplication p {height: 1%;}
-div.CreditApplication p {display: block;}
-/* End hide from IE-mac */
-div.CreditApplication p label {
-	margin: 0px 0px 0px 0px;
-	width: 195px;
-}
-div.CreditApplication p label.radio {
-	margin: 0px;
-	width: auto;
-	float: none;
-}
-
-fieldset p {
-    margin: 0px;
-    margin-top: .4em;
-    display: inline-block;
-    padding: 0px;
-    padding-left: 210px;
-    overflow: hidden;
-}
-
-fieldset p:after {
-    content: ".";
-    display: block;
-    height: 0;
-    font-size: 0;
-    clear: both;
-    visibility: hidden;
-}
-/* Hides from IE-mac \*/
-* html fieldset p {height: 1%;}
-fieldset p {display: block;}
-/* End hide from IE-mac */
-
 label {
 	text-transform: uppercase;
-outline: 0;
-}
-
-fieldset p label {
-    width: 205px;
-    text-align: right;
-    margin-left: -210px;
-    vertical-align: top;
-    float: left;
-    overflow: visible;
-}
-
-td p {
-    padding: 0px;
-}
-td p label {
-    width: auto;
-    margin-left: 0px;
+	outline: 0;
 }
 
 p.buttons {
@@ -341,30 +231,30 @@ div.CreditApplication .Disclaimer {
 	font-size: medium;
 }
 .CreditApplication fieldset ul {
-	margin: 0px;
-	padding: 0px;
-	list-style: none;
 }
-.CreditApplication ul li {
-	margin: 0px;
+.CreditApplication fieldset ul li {
 	padding: 3px 0px 3px 250px;
-	list-style: none;
 }
-.CreditApplication ul li label {
-	float: left;
+.CreditApplication fieldset ul li label {
 	margin-left: -250px;
 	width: 245px;
 }
-.CreditApplication ul li label.radio {
+.CreditApplication fieldset ul li label.radio {
 	float: none;
 	margin: 0px;
 	width: auto;
 }
-.CreditApplication .TradeReference li.Phone, .CreditApplication .TradeReference li.Fax, .CreditApplication .TradeReference li.Email {
-	width: 33%;
+.CreditApplication .TradeReferences {
 	float: left;
+	width: 50%;
 }
-div.CreditApplication .TradeReference:after {
+.CreditApplication .BankInformation {
+	float: right;
+	width: 50%;
+}
+.CreditApplication .TradeReference li.Phone, .CreditApplication .TradeReference li.Fax, .CreditApplication .TradeReference li.Email {
+}
+div.CreditApplication .Disclaimer:before {
     content: ".";
     display: block;
     height: 0;
@@ -373,8 +263,8 @@ div.CreditApplication .TradeReference:after {
     visibility: hidden;
 }
 /* Hides from IE-mac \*/
-* html div.CreditApplication .TradeReference {height: 1%;}
-div.CreditApplication .TradeReference {display: block;}
+* html div.CreditApplication .Disclaimer {height: 1%;}
+div.CreditApplication .Disclaimer {display: block;}
 /* End hide from IE-mac */
 .CreditApplication .Requested {
 	float: left;
@@ -385,7 +275,12 @@ div.CreditApplication .TradeReference {display: block;}
 	width: 50%;
 }
 .CreditApplication .CompanyInformation {
-	width: 100%;
+	width: 50%;
+	float: left;
+}
+.CreditApplication .BusinessInformation {
+	width: 50%;
+	float: right;
 }
 div.CreditApplication .CompanyInformation:before {
     content: ".";
@@ -408,4 +303,46 @@ span.input {
 .bank_name, .bank_branch, .bank_account, .account_manager, .bank_phone, .bank_fax, .bank_email {
 	width: 50%;
 	float: left;
+}
+div.Signatures {
+	margin: 10px 0px 10px 0px;
+	font-style: italic;
+}
+div.Signatures fieldset legend {
+	display: none;
+}
+div.Signatures ul li {
+	width: 38%;
+	float: left;
+	font-style: normal;
+	padding: 0px 0px 0px 105px;
+	margin: 5px 0px 5px 0px;
+}
+div.Signatures ul li label {
+	text-align: left;
+	margin: 0px 0px 0px -105px;
+	width: 105px;
+}
+div.Signatures ul li label.radio {
+	width: auto;
+	margin: 0px;
+	float: none;
+}
+div.Signatures ul li.Title, div.Signatures ul li.Date {
+	padding-left: 75px;
+	float: right;
+}
+div.Signatures ul li.Title label, div.Signatures ul li.Date label {
+	width: 70px;
+	margin: 0px 0px 0px -75px;
+	float: left;
+	text-align: right;
+}
+div.Signatures fieldset ul.Signature {
+	margin: 10px 0px 10px 0px;
+}
+
+p.FaxTo {
+	text-align: center;
+	text-transform: uppercase;
 }

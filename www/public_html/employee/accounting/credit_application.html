@@ -21,6 +21,28 @@
 </script>
 <? if ( $$variable{'credit_index'} ) ?>
 	<div class="CreditApplication">
+		<div class="Header">
+            <div class="Logo">
+                <table><tr>
+                <td width="70"><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
+                <td align="left">
+                    <a href="/index.html"><span class="PointOne">PointOne</span><br/><span class="GraphicsInc">GRAPHICS INC</span></a>
+                </td>
+                </tr></table>
+                <table class="HeaderText">
+                    <tr>
+                        <td colspan="2"><? echo ( join(' ', new openprint::User( $session{'user_id'} )->Company()->get('address1','city','state','postalcode') );) ?></td>
+                    </tr>
+                    <tr>
+                        <td>Phone:<? echo ( new openprint::User( $session{'user_id'} )->Company()->phone() ) ?></td>
+                        <td>Fax:<? echo ( new openprint::User( $session{'user_id'} )->Company()->fax() ) ?></td>
+                    </tr>
+                </table>
+            </div><!--Logo-->
+			<div class="PageTitle">
+				<h1>Credit Application</h1>
+			</div>
+		</div><!--Header-->
 		<form id="f1" name="f1" method="post" action="credit_applications.html">
 			<input type="hidden" name="btnFunction"/>
 			<input type="hidden" name="credit_index" value="<?credit_index?>"/>
@@ -33,9 +55,9 @@
 						<ul>
 							<li><label>Status</label>
 								<input type="radio" name="verdict" id="verdictApproved" value="Approved" onclick="approve(f1);" <?verdictApproved?> /> 
-								<label for="verdictApproved">Approved</label>
+								<label class="radio" for="verdictApproved">Approved</label>
 								<input type="radio" name="verdict" id="verdictDeclined" value="Declined" onclick="decline(f1);" <?verdictDeclined?> />
-								<label for="verdictDeclined">Declined</label>
+								<label class="radio" for="verdictDeclined">Declined</label>
 							</li>
 							<li><label>Terms:</label>
 							<input type="text" id="txtTerms" name="txtTerms" value="<?GrantedTerms?>"/> Days </li>
@@ -118,6 +140,27 @@
 		<div class="BankInformation">
 			<!--#include virtual="/email_content/_bank_information.html"-->
 		</div>
+		<div class="Disclaimer">
+		<? echo ( $config{'CreditApplicationDisclaimer'} ) ?>
+		</div>
+		<div class="Signatures">
+			<fieldset><legend>Signatures</legend>
+			<ul class="Signature">
+				<li class="SignedBy"><label>Signed By:</label><span class="input"></span></li>
+				<li class="Title"><label>Title:</label><span class="input"></span></li>
+				<li class="Name"><label>Name In Print:</label><span class="input"></span></li>
+				<li class="Date"><label>Date:</label><span class="input"></span></li>
+			</ul>
+			<ul class="Signature">
+				<li class="SignedBy"><label>Signed By:</label><span class="input"></span></li>
+				<li class="Title"><label>Title:</label><span class="input"></span></li>
+				<li class="Name"><label>Name In Print:</label><span class="input"></span></li>
+				<li class="Date"><label>Date:</label><span class="input"></span></li>
+			</ul>
+			Signature of Owner(s) or Officer(s) is required.  Two Signatories are required for Partnership.
+			</fieldset>
+		</div>
+		<p class="FaxTo">Please fax to: <? echo ( new openprint::Company($config{'Owner'})->fax(); ) ?></p>
 	</div>
 <? else ( $$variable{'credit_index'} ) ?>
 	No Credit Application specified.<br/>

@@ -31,6 +31,12 @@
 		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
 		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
+		<? if ( $r->uri() =~ /\/pageflip/ ) ?>
+<script type="text/javascript" src="/javascripts/pageflip/liquid.js"></script>
+<script type="text/javascript" src="/javascripts/pageflip/swfobject.js"></script>
+<script type="text/javascript" src="/javascripts/pageflip/flippingbook.js"></script>
+<link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
+		<? endif ( $r->uri() =~ /\/pageflip/ ) ?>
 
 		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
