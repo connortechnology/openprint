@@ -1359,11 +1359,6 @@ $log->debug("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) $qty"
 			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 		} # end foreach $index
 
-		$$project{print_sides} = 1;
-		if ( ( @side_two_colours > 0 ) and ( @side_one_colours > 0 ) ) {
-			$$project{print_sides} = 2;
-		} # end if
-
 		my $imposition_count = 0;
 
 		if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
@@ -2039,7 +2034,7 @@ sub breakdown {
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
 	$breakdown .= sprintf("\tPMS Ink Mix Charge:\t\$%.2f<br/>", $$price{'Ink Mix Charge'} ) if $$price{'Ink Mix Charge'};
 	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
-	$breakdown .= sprintf('Plate Make Ready: $%.2f%s %dplates = $%.2f<br/>', @$price{'Plate Setup Price','Plate Setup Units','Plate Setup Count', 'Plate Total'} );
+	$breakdown .= sprintf('Plate Make Ready: $%.2f%s * %dplates * %d runs = $%.2f<br/>', @$price{'Plate Setup Price','Plate Setup Units','Plate Setup Count', 'Plate Runs', 'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
 	if ( $Press->specification('Charge for setup overs') eq 'N' ) {
 		$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed','Impression Cost','Impression Units','Impression Price'} );
@@ -2953,6 +2948,7 @@ sub calc_price {
 
 	my $Paper = $Imposition->Paper();
 	my $Press = $Imposition->Press();
+	$Imposition->sides( $$project{'print_sides'} );
 
 # It's ok to do this, because $$specs is either a copy, or will be reset before being returned
 	$$specs{'SpreadRows'.$qty_index} = $$Imposition{spread_rows};
@@ -3513,6 +3509,7 @@ sub calc_price {
 	$price{'Plate Costs'} = \%plate_setup;
 	$price{'rdbPlates'} = $plate_setup{'Plate Type'};
 	$price{'Plate Total'} = 0;
+	$price{'Plate Runs'} = $plate_setup{'Plate Runs'};
 
 	my $press_setup = 0;
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
@@ -4218,7 +4215,8 @@ sub press_setup_cost {
 		#$Price{'Total'} *= $plate_change_qty if $plate_change_qty;
 	} # end if
 	$Price{'Press Setup'} = $Price{'Total'};
-	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle(), undef, $Press );
+	my %PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle().$Imposition->sides().'Sided', undef, $Press );
+	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady'.$Imposition->runstyle(), undef, $Press ) if ! %PlateSetupPrice;
 	%PlateSetupPrice = openprint::service::get_price_object( 'PlateMakeReady', undef, $Press ) if ! %PlateSetupPrice;
 	if ( %PlateSetupPrice ) {
 		my $plates = $setup_count;
