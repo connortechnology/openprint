@@ -28,6 +28,10 @@ sub find {
 		$sql .= ' AND category=?';
 		push @values, $params{'category'};
 	} # end if
+	if ( $params{'category_id'} ) {
+        $sql .= ' AND category_id=?';
+        push @values, $params{'category_id'};
+    } # end if
 	if ( $params{'create_visible'} ) {
 		$sql .= ' AND create_visible=?';
 		push @values, $params{'create_visible'};
