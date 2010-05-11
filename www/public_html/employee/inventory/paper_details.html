@@ -90,9 +90,9 @@ function calc_from_gsm( form ) {
 		<div class="leftColumn">
 			<p>
 				<label>ID #:</label>
-				<?paper_id?>
+				<a href="/employee/inventory/paper_details.html?paper_id=<?paper_id?>"><?paper_id?></a>
 			</p>
-<? if ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
 			<p>
 				<label for="txtManufacturer" onclick="f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
 				<select id="Manufacturer" name="Manufacturer" size="1">
@@ -196,9 +196,9 @@ function calc_from_gsm( form ) {
 			</p>
 			<p>
 				<label for="Owner">Owner:</label>
-				<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() || $openprint::session{'company_id'} ); ) ?></select>
+				<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $$variable{'Paper'}->owner_id() || $session{'company_id'} ); ) ?></select>
 			</p>
-<? else ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+<? else ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
 <p>
 <label>Description:</label><? echo ( $$variable{'Paper'}->to_string(); ) ?>
 </p>
@@ -230,7 +230,7 @@ function calc_from_gsm( form ) {
 				<label for="Owner">Owner:</label>
 <? echo ( $$variable{'Paper'}->Owner()->name(); ) ?>
 			</p>
-<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) ?>
+<? endif ( openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) ?>
 		</div>
 		<div class="rightColumn">
 			<p>
@@ -261,7 +261,7 @@ function calc_from_gsm( form ) {
 		<div style="float: right;">
 			<? echo (
 					my $html = '';
-					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Inventory'], $openprint::session{'user_id'} ) ) {
+					if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Inventory'], $session{'user_id'} ) ) {
 							$html .= ssi::writeButton( $log, $dbh, 'CheckOutButton', 'checkout.gif', sprintf('checkout_window(%d);',$$variable{'Paper'}->id()), '', 'Check Out' );
 							$html .= ssi::writeButton( $log, $dbh, 'AllocateButton', 'allocate.gif', sprintf('allocate_window(%d);',$$variable{'Paper'}->id()), '', 'Allocate' );
 							$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );

@@ -703,27 +703,34 @@ sub add_inventory {
 
 sub allocate {
     my ( $self, $skid_id, $project_id, $quantity, $units, $reason ) = @_;
-	$units = $self->type() eq 'Roll' ? 'lbs' : 'sheets' if ! $units;
 
-	$skid_id = $skid_id->id() if ref $skid_id eq 'openprint::Skid';
+	my $skids;
+	if ( ref $skid_id eq 'openprint::Skid' ) {
+		$skids = [ $skid_id->id() ];
+	} elsif ( ref $skid_id eq '' ) {
+		$skids = [ $skid_id ];
+	} else {
+		$skids = $skid_id;
+	} # end if
 
 	my $PA;
-	#if ( my @PA = openprint::PaperAllocation::find('project_id'=>$project_id, 'paper_id'=>$$self{'id'} ) ) {
-		#$PA = $PA[0];
-		
-	#} else {
-		$PA = new openprint::PaperAllocation();
-		$PA->save( {
-				'paper_id'		=>	$$self{'id'},
-				'skid_id'		=>	$skid_id,
-				'quantity'		=>	$quantity,
-				'units'			=>	$units,
-				'project_id'	=>	$project_id,
-				'operator_id'	=>	$openprint::session{'user_id'},
-				} );
-	#} # end if
-	openprint::project::insert_into_log( undef, undef, @openprint::session{'company_id','user_id'}, $project_id, qq`Allocated $quantity$units of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string() . ($skid_id?qq{</a> on skid <a href="/employee/inventory/skids.html?skid_id=$skid_id">$skid_id</a>} : '') );
+	$PA = new openprint::PaperAllocation();
+	$PA->save( {
+			'paper_id'		=>	$$self{'id'},
+			'skid_ids'		=>	$skids,
+			'quantity'		=>	$quantity,
+			'units'			=>	$units ? $units : $self->units(),
+			'project_id'	=>	$project_id,
+			'operator_id'	=>	$openprint::session{'user_id'},
+			} );
+	if ( $project_id ) {
+		new openprint::Project( $project_id )->add_to_log( @openprint::session{'company_id','user_id'}, 
+				qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string()
+				);
+	} # end if project_id
+
 	delete $$self{allocated};
+	delete $$self{available};
 	return $PA;
 } # end sub allocate
 
@@ -735,8 +742,15 @@ sub back_ordered {
 } # end sub back_ordered
 
 sub allocated {
-    my ( $self, $project_id ) = @_;
+    my ( $self, $project_id, $new ) = @_;
 	return 0 if ! $$self{'id'};
+	if ( @_ == 3 ) {
+		if ( defined $new ) {
+			$$self{allocated} = $new;
+		} else {
+			delete $$self{allocated};
+		} # end if
+	} # end if
 	if ( $project_id ) {
 		( $_ ) = sql::execute( undef, undef, q{SELECT SUM(Quantity) FROM Paper_Allocations WHERE paper_id=? and project_id=?}, $$self{'id'}, $project_id );
 		return $_;
@@ -762,6 +776,13 @@ sub in_stock {
 
 sub available {
     my $self = shift;
+	if ( @_ ) {
+		if ( defined $_[0] ) {
+		$$self{'available'} = $_[0];
+		} else {
+			delete $$self{'available'};
+		} # end if
+	} # end if
 	return 0 if ! $$self{'id'};
 
 	if ( ! exists $$self{available} ) {

@@ -897,15 +897,12 @@ sub allocate {
 		$variable{'error'} .= 'Paper not specified. No paper allocated.<br/>';
 		return;
 	} # end if
-
 	my $Paper = new openprint::Paper( $paper_id );
-	my $available_qty = $Paper->in_stock() - $Paper->allocated();
-	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-	if ( $available_qty < $quantity ) {
-		$variable{'warning'} .= "Only $available_qty$units are available to be allocated. The paper will be allocated, however the stock must be acquired to satisfy the allocation. Notifications are being sent.<br/>";
-		# Send notifications
-		
+	if ( ! $Paper->id() ) {
+		$variable{'error'} .= 'Invalid stock specified. No stock allocated.<br/>';
+		return;
 	} # end if
+	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
@@ -920,8 +917,6 @@ sub allocate {
 		return;
 	} # end if
 
-	my @allocations = ();
-	my @old_skids = ();
 	my @skid_ids = split(',', $skid_ids );
 	if ( $specific and ! @skid_ids ) {
 		if ( $quantity < 0 ) {
@@ -932,6 +927,8 @@ sub allocate {
 	} # end if
 
 	my $qty = $quantity;
+	my @allocated_skids;
+
 	if ( @skid_ids ) {
 		if ( $qty < 0 ) {
 			foreach my $skid_id ( @skid_ids ) {
@@ -940,10 +937,12 @@ sub allocate {
 				next if ! $allocateable;
 
 				if ( $allocateable < -1*$qty ) {
-					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
+					push @allocated_skids, $skid_id;
+					#push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), -1*$allocateable, $units );
 					$qty += $allocateable;
 				} else {
-					push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
+					push @allocated_skids, $skid_id;
+					#push @allocations, $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
 					$qty = 0;
 				} # end if
 				last if ! $qty;
@@ -953,97 +952,18 @@ sub allocate {
 				my $Skid = new openprint::Skid( $skid_id );
 				my $allocateable = $Skid->allocateable( $Paper );
 				next if ! $allocateable;
-
-				my @a;
-				if ( $allocateable < $qty ) {
-					@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
-					$qty -= $allocateable;
-				} else {
-					if ( $Paper->type() eq 'Roll' ) {
-						# Must allocate whole rolls
-						@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $allocateable, $units );
-					} else {
-						@a = $Paper->allocate( $skid_id, $Projects[0]->id(), $qty, $units );
-					} # end if
-					$qty = 0;
-				} # end if
-				push @allocations, @a;
-				if ( $Skid->last_seen_days() > 30 ) {
-					push @old_skids, @a;
-				} # end if
-				last if ! $qty;
+				push @allocated_skids, $skid_id;
+				$qty -= $allocateable;
+				last if $qty <= 0;
 			} # end foreach
 		} # end if
-	} else {
-		foreach my $PA ($Paper->allocate( undef, $Projects[0]->id(), $qty, $units ) ) {
-			push @allocations, $PA;
-			
-			if ( $PA->skid_id() and $PA->Skid()->last_seen_days() > 30 ) {
-				push @old_skids, $PA;
-			} # end if
-		} # end foreach PA
 	} # end if
+	my $PA = $Paper->allocate( \@allocated_skids, $Projects[0]->id(), $quantity, $units );
 	
-	if ( @allocations ) {
-		stock_allocation_notification( $Projects[0], $Paper, \@allocations, \@old_skids );
-		$variable{'information'} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?ProjectIndex=%d">%d</a><br/>', $quantity, $units, $Projects[0]->id(), $Projects[0]->docket() );
-	} # end if
+	$PA->send_notification();
+	$variable{'information'} .= sprintf('Allocated %d%s to docket <a href="/employee/project/view.html?ProjectIndex=%d">%d</a><br/>', $quantity, $units, $Projects[0]->id(), $Projects[0]->docket() );
 } # end sub allocate
 
-sub stock_allocation_notification {
-	my ( $Project, $Paper, $allocations, $old_skids ) = @_;
-
-	my %info;
-	$info{'Project'} = $Project;
-	$info{'Paper'} = $Paper;
-	$info{'Allocations'} = $allocations;
-	$info{'OldSkids'} = $old_skids;
-
-	my @recipients = openprint::User::find( 'usergroup'=>'InventoryManager' );
-
-    my $offsite = 0;
-	my $nolocation = 0;
-    foreach my $sig_id ( $Project->signatures() ) {
-        my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-        my @Presses;
-        if ( $$sig_specs{'UsePress'} ) {
-            @Presses = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'});
-        } else {
-            @Presses = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()});
-        } # endif
-		if ( @Presses ) {
-			foreach my $PA ( @{$allocations} ) {
-				if ( ! $PA->Skid()->location_id() ) {
-					$nolocation = 1;
-				} elsif ( $PA->Skid()->Location()->Root()->id() != $Presses[0]->Location()->Root()->id() ) {
-					$offsite = 1;
-				} # end if
-			} # end foreach PA
-		} # end if
-    } # end foreach sig
-	$info{'offsite'} = $offsite;
-	$info{'nolocation'} = $nolocation;
-
-	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @$old_skids or ( $Paper->allocated() > $Paper->in_stock() );
-
-	foreach my $User ( @recipients ) {
-		my $From = new openprint::User( $session{'user_id'} );
-		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-
-		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/stock_allocation_notification.html\"-->";
-		$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
-		my @body = ('', $_, 'text/html', 'quoted-printable');
-		my %mail = (
-				SMTP    => $config{'Mail Server'},
-				FROM    => sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-				TO      => sprintf( '"%s" <%s>', $User->name(), $User->email() ),
-				#TO      => 'iconnor@Point-one.com',
-				SUBJECT => 'Stock allocated for docket ' . $Project->docket(),
-				);
-            misc::send_email_with_attachment( $log, \%mail, @body );
-	} # end foreach User
-
-} # end sub stock_allocation_notification
 
 sub send_paper_arrival_notification {
 	my ( $Skid, @papers ) = @_;
@@ -1981,5 +1901,8 @@ sub allocations {
 sub _allocations {
 	ssi::save_params( '/employee/inventory/allocations.html', ( 'Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','stock_age_start_year','stock_age_start_month','stock_age_start_day','stock_age_end_year','stock_age_end_month','stock_age_end_day' ) );
 } # end sub _allocations
+
+sub _deallocate_popup {
+}
 1;
 __END__

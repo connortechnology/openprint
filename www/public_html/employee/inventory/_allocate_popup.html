@@ -41,7 +41,7 @@
 						return $$variable{Paper}->available();
 					} # end if
 ) ?>"/>
-				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
+				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D\-/g,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 				
 			</p>

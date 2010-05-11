@@ -125,3 +125,13 @@ td.Status, th.Status {
 	padding-right: 4px;
 	padding-left: 4px;
 }
+td.Company, th.Company {
+	text-align: left;
+}
+td.User, th.User {
+	text-align: left;
+}
+td.Docket, th.Docket {
+	width: 80px;
+text-align: left;
+}

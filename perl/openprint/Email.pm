@@ -30,9 +30,17 @@ sub send {
 	my ( $self, %params ) = @_;
 
 	my $results;
+	if ( $params{'FROM'} ) {
+		if ( ref $params{'FROM'} eq 'openprint::User' ) {
+			$$self{'from'} = sprintf('"%s" <%s>', $params{'FROM'}->get('name','email') );
+		} else {
+			$$self{'from'} = $params{'FROM'};
+		} # end if
+	} # end if
+
     my %mail = (
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'},
-            FROM    => $params{'FROM'} ? $params{'FROM'} : $$self{'from'},
+            FROM    => $$self{'from'},
             SUBJECT => $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'},
             );
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : @{$$self{'ATTACHMENTS'}};
