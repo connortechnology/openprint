@@ -31,8 +31,8 @@
    			<fieldset><legend>User Information:</legend>
 				<div class="content">
 					<ul>
-   				<li> 
-   					<label>Salutation: <span class="requiredFieldIndicator">*</span></label>
+   				<li class="required"> 
+   					<label>Salutation:</label>
 					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
 					<label class="radio" for="SalutationMr.">Mr.</label>
 					<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
@@ -42,32 +42,32 @@
 					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Miss' ) ?> />
 					<label class="radio" for="SalutationMiss">Miss</label>
    				</li>
-   				<li> 
-   					<label for="firstname">First Name: <span class="requiredFieldIndicator">*</span></label>
+   				<li class="required"> 
+   					<label for="firstname">First Name:</label>
    					<input type="text" id="firstname" name="firstname" value="<? echo ( $$variable{'User'}->firstname() ) ?>" />
    				</li>
-   				<li> 
-   					<label for="lastname">Last Name: <span class="requiredFieldIndicator">*</span></label>
+   				<li class="required"> 
+   					<label for="lastname">Last Name:</label>
    					<input type="text" id="lastname" name="lastname" value="<? echo ( $$variable{'User'}->lastname() ) ?>" />
    				</li>
    				<li> 
-   					<label for="title">Title:&nbsp;&nbsp;&nbsp;</label>
+   					<label for="title">Title:</label>
    					<input type="text" id="title" name="title" value="<? echo ( $$variable{'User'}->title() ) ?>" />
    				</li>
-   				<li> 
-   					<label for="phone">Phone: <span class="requiredFieldIndicator">*</span></label>
+   				<li class="required"> 
+   					<label for="phone">Phone:</label>
    					<input type="text" id="phone" name="phone" value="<? echo ( $$variable{'User'}->phone() ) ?>" />
    				</li>
    				<li>
-   					<label for="mobile">Mobile:&nbsp;&nbsp;&nbsp;</label>
+   					<label for="mobile">Mobile:</label>
    					<input type="text" id="mobile" name="mobile" value="<? echo ( $$variable{'User'}->mobile() ) ?>" />
    				</li>
    				<li>
-   					<label for="fax">Fax:&nbsp;&nbsp;&nbsp;</label>
+   					<label for="fax">Fax:</label>
    					<input type="text" id="fax" name="fax" value="<? echo ( $$variable{'User'}->fax() ) ?>" />
    				</li>
    				<li>
-   					<label>Add to our Mailing List:&nbsp;&nbsp;&nbsp;</label>
+   					<label>Add to our Mailing List:</label>
 					<input type="radio" id="MailingListY" name="mailinglist" <? echo ( ssi::checked( $$variable{'User'}->mailinglist() eq 'Y' ); ) ?> value="Y" />
 					<label class="radio" for="MailingListY">Yes</label>
 					<input type="radio" id="MailingListN" name="mailinglist" <? echo ( ssi::checked( $$variable{'User'}->mailinglist() ne 'Y' ); ) ?> value="N" />
@@ -75,28 +75,28 @@
    				</li>
 			<? if ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
    				<li>
-   					<label>Can login to the web site?&nbsp;&nbsp;&nbsp;</label>
+   					<label>Can login to the web site?</label>
    					<input type="radio" id="web_activeY" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() eq 'Y' ) ?> value="Y" />
    					<label class="radio" for="web_activeY">Yes</label>
    					<input type="radio" id="web_activeN" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() ne 'Y' ) ?> value="N" />
    					<label class="radio" for="web_activeN">No</label>
    				</li>
 				<li>
-					<label>Can login to the FTP site?&nbsp;&nbsp;&nbsp;</label>
+					<label>Can login to the FTP site?</label>
 					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="1" />
 					<label class="radio" for="ftp_active1"/>Yes</label>
 					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( 'checked="checked"' if ! $$variable{'User'}->ftp_active() ) ?> value="0" />
 					<label class="radio" for="ftp_active0"/>No</label>
 				</li>
    				<li>
-   					<label>Company administrator?&nbsp;&nbsp;&nbsp;</label>
+   					<label>Company administrator?</label>
    					<input type="radio" id="AdministratorY" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() eq 'Y' ) ?> value="Y" />
    					<label class="radio" for="AdministratorY">Yes</label>
    					<input type="radio" id="AdministratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" /> 
    					<label class="radio" for="AdministratorN">No</label>
    				</li>
    				<li>
-   					<label>Email my quotes to myself?&nbsp;&nbsp;&nbsp;</label>
+   					<label>Email my quotes to myself?</label>
    					<input type="radio" id="email_quotes_to_myself1" name="email_quotes_to_myself" <? echo ( ssi::checked( $$variable{'User'}->email_quotes_to_myself() ); ) ?> value="1" />
    					<label class="radio" for="email_quotes_to_myself1">Yes</label>
    					<input type="radio" id="email_quotes_to_myself0" name="email_quotes_to_myself" <? echo ( ssi::checked( ! $$variable{'User'}->email_quotes_to_myself() ); ) ?> value="0" />
@@ -105,7 +105,7 @@
 <? eval ( @{$$variable{'QuoteLevels'}} = sql::execute( undef, undef, 'SELECT id,name FROM QuoteLevels Order BY lower(name)' ); ) ?>
 <? if ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
    				<li>
-   					<label>Quote Level:&nbsp;&nbsp;&nbsp;</label>
+   					<label>Quote Level:</label>
 					<select id="quote_level" name="quote_level">
 						<option value="">select</option>
 						<? echo ( ssi::make_drop_down( $$variable{'QuoteLevels'}, $$variable{'User'}->quote_level() ) ) ?>
@@ -121,16 +121,16 @@
    			<fieldset><legend>Login Information</legend>
 				<div class="content">
 					<ul>
-						<li>
-							<label for="email">E-mail Address: <span class="requiredFieldIndicator">*</span></label>
+						<li class="required">
+							<label for="email">E-mail Address:</label>
 							<input type="text" id="email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
 						</li>
-						<li>
-							<label for="password">Password: <span class="requiredFieldIndicator">*</span></label>
+						<li class="required">
+							<label for="password">Password:</label>
 							<input type="password" id="password" name="password" />
 						</li>
-						<li>
-							<label for="verifypassword">Verify Password: <span class="requiredFieldIndicator">*</span></label>
+						<li class="required">
+							<label for="verifypassword">Verify Password:</label>
 							<input type="password" id="verifypassword" name="verifypassword" />
 						</li>
 					</ul>
