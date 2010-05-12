@@ -41,7 +41,7 @@
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCompany);" size="4" style="width: auto;"/>
 			<select name="ddmCompany">
 				<option value="">Select a Customer</option>
-				<? echo ( openprint::COmpany::get_dropdown( $session{'company_id'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
 			</select>
 		</p>
 	</fieldset>
