@@ -397,6 +397,9 @@ $log->debug("Need DieCutting: $project{'NeedDieCutting'}");
 sub get_colours {
 	my ( $specs, $side, $v, $signature ) = @_;
 	my @colours;
+	if ( $$specs{'sides_the_same'} eq 'Y' and $side eq 'SideTwo' ) {
+		$side = 'SideOne';
+	} # end if
 
 	$v = \%variables if ( ! $v );
 	$signature = '' if ! defined $signature;
