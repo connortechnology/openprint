@@ -4662,7 +4662,7 @@ sub get_colour_description {
 sub filter_coatings_from_colours {
 	my @c;
 	foreach my $c ( @{$_[0]} ) {
-		if ( $c =~ /Varnish/i or $c =~ /Aqueous/i ) {
+		if ( !( $c =~ /Varnish/i or $c =~ /Aqueous/i ) ) {
 			push @c, $c;
 		} # end if
 	} # end foreach c
