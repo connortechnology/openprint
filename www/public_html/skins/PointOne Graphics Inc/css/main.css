@@ -241,8 +241,11 @@ div.ProjectCreateEdit fieldset p textarea {
 	
 }
 div.Project div.Reuse div.quantities ul li {
-    width: 150px;
+    width: 100px;
     float: left;
+}
+div.Project div.Reuse div.quantities ul li input[type="text"] {
+	width: 92%;
 }
 
 div.ProjectSummary {
