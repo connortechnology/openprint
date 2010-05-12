@@ -978,22 +978,13 @@ sub send_paper_arrival_notification {
 	@papers = map { new openprint::Paper( $_ ) } keys %{$Skid->paper()} if ! @papers;
 
 	foreach my $Paper ( @papers ) {
-		my $to;
 		$info{'Paper'} = $Paper;
 		my $C = $Skid->Content( $Paper );
 		$info{'Quantity'} = $C ? $C->quantity() : 0;
-		my @data = sql::execute( undef, undef, q{SELECT distinct quantity, project_id FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $Skid->id(), $Paper->id() );
-		while ( @info{'Quantity','project_id'} = splice @data, 0, 2 ) {
-			my $Project = new openprint::Project( $info{'project_id'} );
-			$info{'Docket'} = $Project->docket();
-			my $csr = new openprint::User( $Project->Order()->salesrep_id() );
-			$to .= sprintf('"%s" <%s>', $csr->name(), $csr->email() );
-		} # end while
+		
+		my @To = map { new openprint::User( $_ ); } sets::union( map { $_->Project->Order()->salesrep_id() } openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'paper_id'=>$Paper->id()) );
 
-#$to .= sprintf(',"%s %s" <%s>', ( 'Duc', '', 'duc@point-one.com' ) );
-#$to .= sprintf(',"%s %s" <%s>', ( 'Duc', '', 'iconnor@point-one.com' ) );
-
-		if ( $to ) {
+		if ( @To ) {
 # Send notification to maybe CSR's
 			my $From = new openprint::User( $session{'user_id'} );
 			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
@@ -1004,7 +995,7 @@ sub send_paper_arrival_notification {
 			my %mail = (
 					SMTP	=> $config{'Mail Server'},
 					FROM	=> sprintf( '"%s" <%s>', $From->name(), $From->email() ),
-					TO		=> $to,
+					TO		=> join(',', map { sprintf('"%s" <%s>', $_->name(), $_->email()) } @To ),
 					SUBJECT => 'Paper ' . $Paper->to_string() . ' has arrived',
 					);
 			misc::send_email_with_attachment( $log, \%mail, @body );
@@ -1446,7 +1437,7 @@ sub _skid_allocations {
             $variable{'error'} .= 'Only ' .  $Skid->allocateable() . ' on this skid. No paper allocated.<br/>';
         } else {
             my $Project = shift @Projects;
-            $Paper->allocate( $param{'skid_id'}, $Project->id(), @param{'AllocationQuantity','Units'} );
+            $Paper->allocate( $Skid, $Project->id(), @param{'AllocationQuantity','Units'} );
             $variable{'information'} .= sprintf('Allocated %s%s to docket %d<br/>', @param{'AllocationQuantity','Units'}, $Project->docket() );
         } # end if
     } elsif ( $param{'action'} eq 'delete' ) {

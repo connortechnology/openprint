@@ -839,7 +839,10 @@ sub _stock_checkout {
 					$C->save();
 					#Remove any allocations
 					foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'paper_id'=>$C->paper_id(), 'docket'=>$Project->docket() ) ) {
-						$PA->delete();
+						$PA->save({'skid_ids'=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
+						if ( ! $PA->Skids() ) {
+							$PA->delete();
+						} # end if
 					} # end foreach
 				} # end foreach C
 			} else {
