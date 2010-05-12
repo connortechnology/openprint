@@ -3662,11 +3662,11 @@ $openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 	my %run_price;
 
 	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
-		my @c = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall','Aqueous Matte Spot','Aqueous Matte Overall'], [ @colours ] );
+		my @c = filter_coatings_from_colours( \@colours );
 		%run_price = get_run_price( $impressions, scalar(@c), 0, $Imposition, $Press, $run_speed ); 
 	} else {
-		my @c1 = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall','Aqueous Matte Spot','Aqueous Matte Overall'], $$project{'side_one_colours'} );
-		my @c2 = sets::exclude( ['Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall','Aqueous Matte Spot','Aqueous Matte Overall'], $$project{'side_two_colours'} );
+		my @c1 = filter_coatings_from_colours( $$project{'side_one_colours'} );
+		my @c2 = filter_coatings_from_colours( $$project{'side_two_colours'} );
 		%run_price = get_run_price( $impressions, scalar @c1, scalar @c2, $Imposition, $Press, $run_speed );
 	} # end if
 
@@ -4656,7 +4656,15 @@ sub get_colour_description {
 			);
 
 } # end sub get_colour_description
+sub filter_coatings_from_colours {
+	my @c;
+	foreach my $c ( @{$_[0]} ) {
+		if ( $c =~ /Varnish/i or $c =~ /Aqueous/i ) {
+			push @c, $c;
+		} # end if
+	} # end foreach c
+	return @c;
+} # end sub filter_coatings_from_colours
 
 1;
-
 __END__

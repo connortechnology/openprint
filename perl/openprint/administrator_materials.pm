@@ -98,11 +98,12 @@ $openprint::log->debug("Doing price ( $list $equipment_index $1)");
 		my @prices = $Material->prices();
 
 		my $NewMaterial = $Material->copy();
+		$$NewMaterial{'name'} = 'Copy of ' . $$NewMaterial{'name'};
         
         if ( $_ = $NewMaterial->save() ) {
-			$$variable{'error'} = $_;
+			$$variable{'error'} .= $_;
 		} else {
-			openprint::logs::insertLogRecord('43', "Material Index: " . $$Material{'id'} . " - " . $$Material{'name'},); # Add record to audit log - action "Copy Material".
+			openprint::logs::insertLogRecord('43', "Material Index: " . $$NewMaterial{'id'} . " - " . $$NewMaterial{'name'},); # Add record to audit log - action "Copy Material".
 			foreach my $price ( @prices ) {
 				$$price{'material_id'} = $$NewMaterial{'id'};
 				delete $$price{'id'};
