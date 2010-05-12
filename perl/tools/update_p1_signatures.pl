@@ -33,7 +33,7 @@ sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBl
 sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 
-foreach my $Project ( openprint::Project::find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {
+foreach my $Project ( openprint::Project::find( 'company_id'=>6, 'order'=>'id desc','limit'=>100000 ) ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
