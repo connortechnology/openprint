@@ -149,9 +149,8 @@ sub copy {
 
 	foreach my $C ( $self->Contents() ) {
 		$C->Paper()->add_inventory( $new->id(), $C->quantity() );
-		my @data = sql::execute( undef, undef, q{SELECT project_id, quantity, units FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $C->paper_id() );
-		while ( @data ) {
-			$C->Paper()->allocate( $new->id(), splice @data, 0, 3 );
+		foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id()) ) {
+			$C->Paper()->allocate( $new, $PA->project_id(), $PA->quantity(), $PA->units(), $PA->reason() );
 		} # end while
 	} # end foreach Content
 	return $new;
@@ -308,7 +307,7 @@ sub Contents {
 sub allocation {
 	my ( $self, %options ) = @_;
 	if ( $options{'Paper'} ) {
-		my ( $allocated ) = sql::execute( undef, undef, q{SELECT SUM(quantity) FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $options{'Paper'}->{id} );
+		my $allocated = misc::sum( map { $_->quantity() } openprint::PaperAllocation::find('skid_id'=>$$self{'id'},'paper_id'=>$options{'Paper'}->{id}) );
 		return $allocated;
 	} # end if
 } # end sub allocatiosn
@@ -320,7 +319,7 @@ sub allocateable {
 		$log->error("Unable to find SkidContent for Skid $$self{'id'} for Paper $$Paper{id}");
 		return;
 	} # end if
-	return $C->quantity() - $self->allocation( 'Paper'=>$Paper );
+	return $C->allocateable();
 } # end sub allocateable
 
 # Checkout all paper on the skid
@@ -346,8 +345,8 @@ sub checkout {
 
 	foreach my $C ( @contents ) {
 		if ( ! openprint::PaperInventory::find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
-			my ( $project_id ) = sql::execute( undef, undef, q{SELECT project_id FROM Paper_Allocations WHERE skid_id=? AND paper_id=?}, $$self{'id'}, $C->paper() );
-			my $desc = 'Checked out' . ($project_id ? ' for docket ' . new openprint::Project($project_id)->docket() : '');
+			my $PA = openprint::PaperAllocation->find_one('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id());
+			my $desc = 'Checked out' . ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '');
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
 					'paper_id'  =>  $C->paper_id(),
@@ -387,14 +386,16 @@ sub allocate {
 
 	my $ac = sql::start_transaction();
 	sql::insert( undef, undef, 'Paper_Allocations',
-			'skid_id',		$$self{'id'},
+			'skid_ids',		[ $$self{'id'} ],
 			'paper_id',		$paper_id,
 			'quantity',		1*$quantity,
 			'units',		$units,
 			'project_id',	$project_id ? $project_id : undef,
 			'operator_id',	$variable{'user_id'},
 			);
+	if ( $project_id ) {
 	(new openprint::Project( $project_id ))->add_to_log( @session{'company_id','user_id'}, qq`Allocated $quantity $units on skid <a href="/employee/inventory/skid_details.html?skid_id=$$self{id}">$$self{id}</a>` ) if $project_id;
+	} # end if
 	sql::end_transaction( undef, $ac );
 } # end sub allocate
 

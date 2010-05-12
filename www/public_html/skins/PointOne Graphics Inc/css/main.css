@@ -220,17 +220,31 @@ div.ProjectCreateEdit ul:after {
 * html .ProjectCreateEdit ul  {height: 1%;}
 * .ProjectCreateEdit ul  {display: block;}
 /* End hide from IE-mac */
-div.ProjectCreateEdit li {
-	float: left;
-	width: 200px;
+div.ProjectCreateEdit fieldset ul li {
+    float: left;
+    width: 32%;
+    padding: 0px;
+    text-align: left;
 }
+div.ProjectCreateEdit fieldset ul li label {
+    float: none;
+    margin: 0px;
+    width: auto;
+}
+
 div.ProjectCreateEdit fieldset p label {
-	width: 50%;
+	width: 33%;
+	padding-right: 5px;
 }
 div.ProjectCreateEdit fieldset p textarea {
-	width: 60%;
+	width: 80%;
 	
 }
+div.Project div.Reuse div.quantities ul li {
+    width: 150px;
+    float: left;
+}
+
 div.ProjectSummary {
 }
 

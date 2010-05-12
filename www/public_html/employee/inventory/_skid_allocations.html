@@ -1,28 +1,27 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <table class="List">
 	<tr>
-		<th align="left" width="120">Date</th>
+		<th class="DateTime">When</th>
 		<th align="left">Paper</th>
-		<th align="left" width="120">Docket</th>
-		<th align="right" width="120">Amount</th>
-		<th width="20">&nbsp;</th>
+		<th class="Docket">Docket</th>
+		<th class="StockQuantity">Amount</th>
+		<th width="40">&nbsp;</th>
 	</tr>
 	<? echo (
-		require openprint::PaperAllocation;
 		my $html;
-		my @Allocations = openprint::PaperAllocation::find( 'skid_id'=>$$variable{'skid_id'}, 'order'=>'created_on' );
+		my @Allocations = openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'order'=>'created_on' );
 
 		my $rowclass;
 		foreach my $Allocation ( @Allocations ) {
 			my $Paper = $Allocation->Paper();
-			$html .= sprintf( '<tr%s><td>%s</td><td><a href="/employee/inventory/paper_details.html?paper_id=%d">%s</a></td><td><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td align="right">%d %s</td>',
+			$html .= sprintf( '<tr%s><td class="DateTime">%s</td><td><a href="/employee/inventory/paper_details.html?paper_id=%d">%s</a></td><td class="Docket"><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td class="StockQuantity">%s%s</td>',
 				$rowclass,
 				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Allocation->created_on() ) ),
 				$Paper->id(),
 				$Paper->to_string(),
 				$Allocation->project_id(),
 				$Allocation->Project()->docket(),
-				$Allocation->quantity(),
+				Number::Format::format_number($Allocation->quantity()),
 				$Allocation->units(),
 				);
 			$html .= '<td>';
@@ -36,7 +35,7 @@
 	) ?>
 	<tr class="totals">
 		<td colspan="3" align="right"><b>Totals:</b></td>
-		<td align="right"><?TotalAllocated?> <?Units?></td>
+		<td align="right"><? echo ( Number::Format::format_number($$variable{'TotalAllocated'}).$$variable{'Units'} ) ?></td>
 		<td>&nbsp;</td>
 	</tr>
 </table>

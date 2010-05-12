@@ -110,25 +110,30 @@ sub skids {
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Allocate' ) {
 		if ( $param{'skid_id'} ) {
-			$param{'skid_id'} =~ s/[^\d\-\,]//g;
+			$param{'skid_id'} =~ s/[^\d\,]//g;
 			$param{Project} =~ s/\D//g;
 			$param{Docket} =~ s/\D//g;
-			my @Projects = openprint::Project::find( 'id'=>$param{Project}, 'docket'=>$param{Docket} ) if $param{Project} or $param{Docket};
+			my $Project = openprint::Project->find_one( 'id'=>$param{Project}, 'docket'=>$param{Docket} ) if $param{Project} or $param{Docket};
 
-			if ( ! @Projects ) {
+			if ( ! $Project ) {
 				$variable{'error'} .= 'An invalid Docket or Project # was given. No paper allocated.<br/>';
 				return;
 			} # end if
+			
+			my %stocks;
 			foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
 				$skid_id =~ s/\D//g;
 				next if ! $skid_id;
 				my $Skid = new openprint::Skid( $skid_id );
 				foreach my $C ( $Skid->Contents() ) {
-					$C->Paper()->allocate( $skid_id, $Projects[0]->id(), $C->quantity(), $C->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets' );
+					push @{$stocks{$C->paper_id()}}, $Skid;
 				} # end foreach Paper
 			} # end foreach Skid
+			foreach my $paper_id ( keys %stocks ) {
+				my $PA = new openprint::Paper( $paper_id )->allocate( $stocks{$paper_id}, $Project->id() );
+				$PA->send_notifications();
+			} # end foreach
 		} # end if
-
 	} # end if
 } # end sub skids
 
@@ -1903,6 +1908,8 @@ sub _allocations {
 } # end sub _allocations
 
 sub _deallocate_popup {
+}
+sub _skids_results {
 }
 1;
 __END__

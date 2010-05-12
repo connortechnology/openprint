@@ -312,7 +312,11 @@ function open_window( page ) {
 				foreach my $Allocation ( @{$Allocations{$paper_id}} ) {
 					my $Skid = $Allocation->Skid();
 					$total += $Allocation->quantity();
-					$html .= sprintf( '<tr><td>&nbsp;</td><td>%3$s</td><td>%4$s</td><td>%5$s</td>', $Allocation->paper_id(), $Allocation->Paper()->to_string(), $Skid->id(), $Skid->rfidtag_id(), $Skid->Location()->name() );
+					$html .= sprintf( '<tr><td>&nbsp;</td><td>%3$s</td><td>%4$s</td><td>%5$s</td>', $Allocation->paper_id(), $Allocation->Paper()->to_string(), 
+						join('<br/>', map { $_->id() } $Allocation->Skids() ),
+						join('<br/>', map { $_->rfidtag_id() } $Allocation->Skids() ),
+						join('<br/>', map { $_->Location()->name() } $Allocation->Skids() ),
+						);
 				$html .= sprintf( '<td align="right">%1$s%2$s</td></tr>', Number::Format::format_number($Allocation->quantity()), $Allocation->units() );
 				} # end foreach
 				$html .= '<tr class="totals"><td colspan="4">&nbsp;</td><td align="right">'.Number::Format::format_number($total) . ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) . '</td></tr>';

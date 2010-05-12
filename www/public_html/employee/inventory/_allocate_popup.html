@@ -4,16 +4,27 @@
 		<input type="hidden" name="paper_id" value="<? echo ( $$variable{'Paper'}->id() ) ?>" />
 		<input type="hidden" name="skid_id" value="<? echo ( $param{'skid_id'} ) ?>" />
 		<fieldset><legend>Allocate Paper</legend>
+			<p>
 			<? echo ( 
-			my $html = '';
-			foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
-				my $Skid = new openprint::Skid( $skid_id );
-				if ( my $C = $Skid->Content( $$variable{'Paper'} ) ) {
-					$html .= sprintf('skid %d contains %d%s<br/>', $skid_id, $C->quantity(), $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : ' sheets' ); 
+				my $html = '';
+				$$variable{'available'} = 0;
+				if ( $param{'skid_id'} ) {
+					foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
+						my $Skid = new openprint::Skid( $skid_id );
+						if ( my $C = $Skid->Content( $$variable{'Paper'}) ) {
+							$$variable{'available'} += $C->allocateable();
+							$html .= sprintf('skid %d contains: %s available: %s<br/>', $skid_id, 
+								Number::Format::format_number($C->quantity()).$$variable{'Paper'}->units(), 
+								Number::Format::format_number($C->allocateable()).$$variable{'Paper'}->units(),
+								); 
+						} # end if
+					} # end foreach Skid
+				} else {
+					$$variable{'available'} = $$variable{'Paper'}->available();
 				} # end if
-			} # end foreach	
-			return $html;
+				return $html;
 			) ?>
+			</p>
 			<p>
 				<label>Docket:</label>
 				<input type="text" name="Docket" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D/,'');"/>
@@ -27,20 +38,7 @@
 			<p>
 				<label>Quantity: ( <? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?> )</label>
 				<input type="hidden" name="Units" value="<? echo ( $$variable{Paper}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?>" />
-				<input type="hidden" name="available_quantity" value="<? echo ( 
-					if ( $param{'skid_id'} ) {
-						my $available = 0;
-						foreach my $skid_id ( split(',', $param{'skid_id'} ) ) {
-							my $Skid = new openprint::Skid( $skid_id );
-							if ( my $C = $Skid->Content( $$variable{'Paper'}) ) {
-								$available += ( $C->quantity() - $Skid->allocation('Paper'=>$$variable{'Paper'}) );
-							} # end if
-						} # end foreach Skid
-						return $available;
-					} else {
-						return $$variable{Paper}->available();
-					} # end if
-) ?>"/>
+				<input type="hidden" name="available_quantity" value="<?available?>"/>
 				<input type="text" name="Quantity" value="<?quantity?>" onkeypress="return input_handler( this, event);" onkeyup="this.value=this.value.replace(/\D\-/g,'');"/>
 				<? echo ( ssi::writeButton( $log, $dbh, 'clearAllocateQuantity', 'clear.gif', "allocateform.Project.value='';", '', 'Clear' ); ) ?>
 				

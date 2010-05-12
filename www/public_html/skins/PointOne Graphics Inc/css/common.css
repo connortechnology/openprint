@@ -543,7 +543,7 @@ td.Stock, th.Stock {
 	text-align: right;
 }
 td.StockQuantity, th.StockQuantity {
-	width: 80px;
+	width: 100px;
 	text-align: right;
 }
 td.Quantity, th.Quantity {
