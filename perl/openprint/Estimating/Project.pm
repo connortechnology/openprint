@@ -764,7 +764,6 @@ $log->warn("Have uncalculated service: ");
 } # end sub calc
 
 sub create_calc {
-#my ( $r, $log, $dbh, $variable, %specs ) = @_;
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	return if ! $$specs{'rdbProjectType'};
