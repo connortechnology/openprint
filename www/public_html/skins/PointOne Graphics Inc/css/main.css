@@ -297,3 +297,11 @@ div#AlertDiv {
 	font-weight: bold;
 	color: red;
 }
+div.LoginLog th.When {
+	width: 180px;
+	text-align: left;
+}
+div.LoginLog td.When {
+	text-align: right;
+	padding-right: 8px;
+}
