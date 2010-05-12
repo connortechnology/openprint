@@ -7,11 +7,11 @@
 		<fieldset>
 			<p> 
 				<label>Please provide a reference:</label>
-				<textarea name="reference" rows="3" wrap="virtual" >Copy of <? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
+				<textarea name="reference" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" cols="" wrap="virtual" >Copy of <? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
 			</p>
 			<p>
 				<label>Additional comments or instructions:</label>
-				<textarea name="comments" rows="5" wrap="virtual" ><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
+				<textarea name="comments" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" cols="" wrap="virtual" ><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
 			</p>
 		</fieldset>
 		<div class="quantities">

@@ -559,6 +559,14 @@ sub save_params {
 	} # end foreach
 } # end sub save_params
 
+sub count_lines {
+    if ( $_[0] ) {
+        return scalar split( "\n", $_[0] );
+    } else {
+        return 2;
+    } # end if
+} # end sub count_lines
+
 
 1;
 
