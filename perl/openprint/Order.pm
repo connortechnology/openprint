@@ -56,6 +56,7 @@ my $debug = 1;
 	'invoiced_on'				=>	'invoiced_on',
 	'created_on'				=>	'dtmorderdate',
 	);
+
 sub find {
 	my %params = @_;
 	my @values;
@@ -133,6 +134,10 @@ sub find {
 	if ( $params{'currency_id'} ) {
 		$sql .= ' AND currencyindex=?';
 		push @values, $params{'currency_id'};
+	} # end if
+	if ( exists $params{'owing_>'} ) {
+		$sql .= ' AND ( ((SELECT SUM(curamount) FROM Payments WHERE order_id=Index) IS NULL AND curtotalsale>?) OR (curtotalsale - (SELECT SUM(curamount) FROM Payments WHERE order_id=Index) ) > ?) ';
+		push @values, @params{'owing_>','owing_>'};
 	} # end if
 	if ( exists $params{'order'} ) {
 		if ( $params{'order'} eq 'created_on' ) {
@@ -705,6 +710,9 @@ sub send_sales_order {
 
 } # end sub send_sales_order
 
+sub owing {
+	return $_[0]{'total'} - $_[0]{'paid'};
+}
 
 1;
 __END__
