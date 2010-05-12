@@ -621,5 +621,4 @@ sub count_lines {
 } # end sub count_lines
 
 1;
-
 __END__

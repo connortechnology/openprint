@@ -38,6 +38,8 @@ $serial = 'schedule_id_seq';
 	'impressions'		=>	undef,
 	'created_on'		=>	'created_on',
 	'operator_id'		=>	undef,
+	'stock_verified'	=>	'stock_verified',
+	'stock'				=>	'stock',
 );
 
 %transforms = (
@@ -50,6 +52,7 @@ $serial = 'schedule_id_seq';
 %defaults = (
 	'speed'			=>	undef,
 	'created_on'	=>	undef,
+	'stock_verified'	=>	0,
 );
 sub find_one {
 	my %params = @_;
@@ -236,27 +239,7 @@ sub comment {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
 
 		$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
-		#$comment .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
 		my $Equipment = $self->Equipment();
-		my $Stock;
-		if ( my @PA = openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
-			$Stock = $PA[0]->Paper();
-		} else {
-		} # end if
-		if ( $Equipment->smartscheduling() ) {
-			if ( $Stock ) {
-				$comment .= ' on ' . $Stock->to_string();
-			} else {
-				$comment .= ' stock not allocated.';
-			} # end if
-		} else {
-			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
-			if ( $Stock->type() eq 'Roll' ) {
-				$comment .= ' on ' . $Stock->width().'&quot; Roll';
-			} else {
-				$comment .= ' on ' . $Stock->width() . 'x' . $Stock->height();
-			} # end if
-		} # end if
 
 		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
 			my $services = $Project->services();
@@ -283,6 +266,46 @@ sub comment {
 
 	return $$self{'comment'};
 } # end sub comment
+
+sub stock {
+	my ( $self, $stock ) = @_;
+	if ( @_ == 2 ) {
+		$$self{'stock'} = $stock;
+	} # end if
+	if ( ( ! $$self{'stock'} ) and $$self{'project_id'} ) {
+		$$self{'stock'} = 'Stock: ';
+		my $Equipment = $self->Equipment();
+		my $Project = new openprint::Project( $$self{'project_id'} );
+		my $Stock;
+		my @PA = openprint::PaperAllocation::find('project_id'=>$$self{'project_id'});
+		if ( @PA ) {
+			$Stock = $PA[0]->Paper();
+		} else {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
+			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
+		} # end if
+		if ( $Equipment->smartscheduling() ) {
+			if ( $Stock ) {
+				$$self{'stock'} .= join(' ', ( $Stock->name(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->type() eq 'Roll' ? $Stock->width.'&quot; Roll' : $Stock->width().'x'.$Stock->height() ) );
+				$$self{'stock'} .= ' FSC:' . $$Stock{'fsc_code'} if $$Stock{'fsc_code'};
+			} else {
+				$$self{'stock'} .= ' not allocated.';
+			} # end if
+			if ( ( ! @PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content::find('docket'=>$Project->docket()) ) ) {
+				$$self{'stock'} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
+			} else {
+				$$self{'stock'} .= ' not ordered.';
+			} # end if
+		} else {
+			if ( $Stock->type() eq 'Roll' ) {
+				$$self{'stock'} .= $Stock->width().'&quot; Roll';
+			} else {
+				$$self{'stock'} .= $Stock->width() . 'x' . $Stock->height();
+			} # end if
+		} # end if
+	} # end if
+	return $$self{'stock'};
+} # end sub stock
 
 sub get_li {
 	my ( $self, $ul_id ) = @_;
@@ -322,10 +345,13 @@ sub get_li {
 		} # end if
 	} # end if
 
-	$html .= sprintf( '<li id="item_%d" class="%s" style="height:%spx;">', $$self{'id'}, $colour, $height );
+	$html .= sprintf( '<li id="item_%d"%s%s>', $$self{'id'}, 
+			( $colour ? ' class="'.$colour.'"' : '' ), 
+			( $height ? ' style="height:'.$height.'px;"' : '' )
+			);
 
 	if ( $$self{'project_id'} ) {
-		$html .= '<div class="Company">';
+		$html .= '<span class="Company">';
 		$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $$self{'project_id'}, $Project->docket() );
 		my $n = $Project->Company()->name();
 		$n =~ s/The //gi;
@@ -337,7 +363,7 @@ sub get_li {
 		if ( $Project->reprint() eq 'Y' ) {
 			$html .= ' REPRINT'. $Project->reprint_reason();
 		} # end if
-		$html .= '</div>';
+		$html .= '</span>';
 		$html .= qq`<span class="DueDate" id="JumpToDate$$self{'id'}">`;
 		if ( ! $Project->due_date() ) {
 			$html .= 'no duedate</span>';
@@ -350,9 +376,10 @@ sub get_li {
 
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
 		$html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
+		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->stock() );
 		if ( $$self{'project_id'} ) {
 			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
-			$html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
+			$html .= sprintf( q`<span class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
 			if ( $Equipment->smartscheduling() ) {
 				$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $self->impressions(), $self->speed() );
 			} else {
@@ -367,6 +394,10 @@ sub get_li {
 		} # end if
 
 		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
+
+		if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
+			$html .= sprintf( q`<span class="StockVerified" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Stock: %2$s</span>`, $$self{'id'}, $self->stock_verified() ? 'Yes' : 'No' );
+		} # end if
 
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {

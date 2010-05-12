@@ -25,6 +25,7 @@ require openprint::PurchaseOrder_Content;
 require openprint::PaperInventory;
 require openprint::RFIDTag;
 require openprint::ScheduledJob;
+require openprint::ServiceType_Category;
 
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -491,6 +492,10 @@ sub send_additional_charges_notifications {
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
 	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
 	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
+	my $Project = new openprint::Project( $project_index );
+	$info{'Project'} = $Project;
+
+	openprint::project::get_header( $log, $dbh, \%info, $project_index );
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
@@ -523,7 +528,6 @@ sub send_additional_charges_notifications {
 			SUBJECT => 'Additional Charges required',
 			);
 	misc::send_email_with_attachment( $log, \%mail, @body );
-	my $Project = new openprint::Project( $project_index );
 	$Project->add_to_log( @session{'company_id','user_id'}, "Additional charges notification sent to : $mail{TO}." );
 
 } # End sub send_additional_charges_notifications
@@ -844,7 +848,10 @@ sub _stock_checkout {
 					$C->save();
 					#Remove any allocations
 					foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'paper_id'=>$C->paper_id(), 'docket'=>$Project->docket() ) ) {
-						$PA->delete();
+						$PA->save({'skid_ids'=>[ sets::exclude( [ $Skid->id() ], $PA->skid_ids() ) ] });
+						if ( ! $PA->Skids() ) {
+							$PA->delete();
+						} # end if
 					} # end foreach
 				} # end foreach C
 			} else {

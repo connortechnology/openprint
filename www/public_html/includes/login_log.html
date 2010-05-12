@@ -1,8 +1,9 @@
+<div class="LoginLog">
 <fieldset id="LoginLog"><legend>Last 5 Login Attempts</legend>
 	<table class="List sortable">
 		<thead>
 			<tr>
-				<th class="DateTime">When</th>
+				<th class="When">When</th>
 				<th align="left">From</th>
 				<th align="left" width="120">Result</th>
 			</tr>
@@ -12,7 +13,7 @@
 	my $html = '';
 
 	foreach my $Log ( openprint::Log::find('company_id'=>$session{'company_id'},'user_id'=>$session{user_id},'order'=>'date_time DESC', 'limit'=>5, 'action_type'=>[2,3,78,79] ) ) {
-		$html .= sprintf('<tr><td>%s</td><td style="overflow:hidden;" title="%s">%s</td><td>%s</td></tr>',
+		$html .= sprintf('<tr><td class="When">%s</td><td style="overflow:hidden;" title="%s">%s</td><td>%s</td></tr>',
 			Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
 			$Log->ip_address(), $Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->note() ? $Log->note() : $Log->Action()->name() );
 	} # end foreach
@@ -20,3 +21,4 @@
 ) ?>
 	</table>
 </fieldset>
+</div>

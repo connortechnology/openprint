@@ -9,11 +9,39 @@ The following stock has been allocated for docket <b><? echo ( $$variable{'Proje
 <? if ( $$variable{'offsite'} ) ?>
 <p>Some of the allocated stock is located offsite.  Please be aware of this and arrange for it to be brought onsite in time to be used.</p>
 <? endif ( $$variable{'offsite'} ) ?>
-<? if ( $$variable{'Paper'}->allocated() > $$variable{'in_stock'} ) ?>
-	<p><b>There is more stock allocated than in stock.  More paper must be ordered to satisfy the allocation!</b></p>
-<? endif ( $$variable{'Paper'}->allocated() > $$variable{'in_stock'} ) ?>
 <br/>
 <b><? echo ( $$variable{'Paper'}->to_string(); ) ?></b><br/><br/>
+<? if ( $$variable{'Paper'}->available() < 0 ) ?>
+	<p><b>There is more stock allocated than in inventory.  More paper must be ordered to satisfy the allocation!</b></p>
+<table>
+    <thead>
+        <tr>
+            <th class="Docket">Docket</th><th class="Date">Due On</th><th class="Company">Company</th><th class="CSR">Sales Representative</th><th>Quantity</th></tr>
+        </tr>
+    </thead>
+    <tbody>
+<? echo ( 
+    my $html;
+    foreach my $PA ( openprint::PaperAllocation::find('paper_id'=>$$variable{'Allocation'}->paper_id(), 'order'=>'created_on') ) {
+        $html .= sprintf('<tr>
+                            <td class="Docket"><a href="/employee/project/view.html?project_id=%1$d">%2$d</a></td>
+                            <td class="Date">%3$s</td>
+                            <td class="Company">%4$s</td>
+                            <td class="CSR">%5$s</td>
+                            <td class="Quantity">%6$s</td>
+                            </tr>',
+                $PA->project_id(), $PA->Project()->docket(),
+                $PA->Project()->due_date(),
+                $PA->Project()->Company()->name(),
+                $PA->Project()->Company()->CSR()->name(),
+                Number::Format::format_number($PA->quantity()).$PA->units(),
+            );
+    } # end foreach PA
+    return $html;
+) ?>
+</table>
+
+<? else ( $$variable{'Paper'}->available() < 0 ) ?>
 <table class="List">
 	<tr>
 		<th align="left">Skid #</th><th align="left">RFID #</th><th align="left">Location</th><th align="right">Last Seen</th><th align="right">Quantity</th>
@@ -21,23 +49,25 @@ The following stock has been allocated for docket <b><? echo ( $$variable{'Proje
 <? echo (
 	my $html;
 	my $rowclass = '';
-	my $total = 0;
-	my $units;
-	foreach my $PA ( @{$$variable{'Allocations'}} ) {
-		$html .= sprintf('<tr%s>', $rowclass );
-		$rowclass = $rowclass ? '' : ' class="colRow"';
-		$html .= sprintf('<td>%s</td>', $PA->Skid()->id() );
-		$html .= sprintf('<td>%s</td>', $PA->Skid()->rfidtag_id() );
-		$html .= sprintf('<td>%s</td>', $PA->Skid()->Location()->name() );
-		$html .= sprintf('<td align="right">%s</td>', $PA->skid_id() ? Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $PA->Skid()->updated_on() ) ) : '' );
-		$html .= sprintf('<td align="right">%s%s</td>', $PA->quantity(), $PA->units() );
-		$units = $PA->units();
-		$total += $PA->quantity();
-	} # end foreach Allocation
+	my $units = $$variable{'Allocation'}->units();
+	my @Skids = $$variable{'Allocation'}->Skids();
+	if ( @Skids ) {
+		foreach my $Skid ( @Skids ) {
+			$html .= sprintf('<tr%s>', $rowclass );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+			$html .= sprintf('<td>%s</td>', $Skid->id() );
+			$html .= sprintf('<td>%s</td>', $Skid->rfidtag_id() );
+			$html .= sprintf('<td>%s</td>', $Skid->Location()->name() );
+			$html .= sprintf('<td align="right">%s</td>', Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Skid->updated_on() ) ));
+			my $Content = $Skid->Content($$variable{'Allocation'}->Paper());
+			$html .= sprintf('<td align="right">%s%s</td>', ($Content ? Number::Format::format_number($Content->quantity()) : 'unknown '), $$variable{'Allocation'}->units() );
+		} # end foreach Skid
+	} # end if
 	$html .= '<tr class="totals">';
 	$html .= '<td colspan="4" style="text-align: right;">Total:</td>';
-	$html .= '<td style="text-align: right;">' . $total . $units.'</td>';
+	$html .= '<td style="text-align: right;">' .Number::Format::format_number($$variable{'Allocation'}->quantity()).$units.'</td>';
 	$html .= '</tr>';
 	return $html;
 ) ?>
 </table>
+<? endif ( $$variable{'Paper'}->available() < 0 ) ?>

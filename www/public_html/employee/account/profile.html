@@ -35,6 +35,9 @@
 		<fieldset>
 			<p class="buttons">
 				<? echo ( join('',
+						if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
+							$html .= ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
+						} # end if
 						ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save'),
 						ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset'),
 						); ) ?>

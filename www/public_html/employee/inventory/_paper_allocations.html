@@ -4,6 +4,7 @@
 	my %search;
 	$search{'skid_id'} = $param{'skid_id'} if $param{'skid_id'};
 	$search{'paper_id'} = $param{'paper_id'} if $param{'paper_id'};
+	$search{'order'} = 'created_on';
 	@{$$variable{'Allocations'}} = openprint::PaperAllocation::find(%search);
 ) ?>
 <? if ( $$variable{'Allocations'} and @{$$variable{'Allocations'}} ) ?>
@@ -29,28 +30,26 @@
 
 			my $rowclass;
 			foreach my $PA ( @{$$variable{'Allocations'}} ) {
-				$html .= sprintf( '<tr%1$s><td>%2$s</td>', $rowclass, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time( $PA->created_on() ) ) );
+				$html .= sprintf( '<tr%1$s><td>%2$s</td>', $rowclass, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $PA->created_on() ) ) );
+			
+				my @Skids = $PA->Skids();
+
 				if ( $param{'skid_id'} ) {
 					$html .= sprintf('<td><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $PA->paper_id(), $PA->Paper()->to_string() );
-				} elsif ( $PA->skid_id() ) {
-					$html .= sprintf('<td><a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a></td>', $PA->skid_id() );
+				} elsif ( @Skids ) {
+					$html .= '<td>'.join('<br/>',map{ sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->id() ) } @Skids ).'</td>';
 				} else {
 					$html .= '<td>&nbsp;</td>';
 				} # end if
-				my $Skid = $PA->Skid();
 				if ( $config{'RFID'} eq 'Y' ) {
-					if ( $Skid->rfidtag_id() ) {
-						$html .= sprintf('<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%1$d</a></td>', $Skid->rfidtag_id() );
-					} else {
-						$html .= '<td>&nbsp;</td>';
-					} # end if
+					$html .= '<td>'.join('<br/>',map{ sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$d">%1$d</a>', $_->rfidtag_id() ? $_->rfidtag_id() : '' ); } @Skids ).'</td>';
 				} # end if
-				$html .= sprintf('<td>%1$s</td>', $Skid->Location()->name() );
-				$html .= sprintf('<td><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td align="right">%d%s</td><td align="right">%d%s</td><td>',
+				$html .= '<td>'.join('<br/>',map{ $_->Location()->name() } @Skids ).'</td>';
+				$html .= sprintf('<td><a href="/employee/project/view.html?ProjectIndex=%d">%s</a></td><td align="right">%s%s</td><td align="right">%s%s</td><td>',
 					$PA->project_id(),
 					$PA->Project()->docket() ? $PA->Project()->docket() : 'unknown',
-					$PA->quantity(), $PA->units(),
-					( ( $PA->Skid() and $PA->Skid()->Content( $PA->Paper() ) ) ? $PA->Skid()->Content( $PA->Paper() )->quantity() : 0 ),
+					Number::Format::format_number($PA->quantity()), $PA->units(),
+					Number::Format::format_number($PA->Paper()->available()),
 					$PA->units(),
 					);
 				#$html .= ssi::writeButton( $log, $dbh, 'Delete'.$$PA{id}, 'delete.gif', qq`new Ajax.Updater('Allocations','_paper_allocations.html', { method: 'get', parameters: { allocation_id: '$$PA{id}', action: 'Delete Allocation' } } );`, '', 'Delete' );
@@ -67,7 +66,7 @@
 			<td>&nbsp;</td>
 			<? endif ( $config{'RFID'} eq 'Y' ) ?>
 			<td colspan="4" align="right"><b>Totals:</b></td>
-			<td align="right"><?TotalAllocated?><? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
+			<td align="right"><? echo ( Number::Format::format_number($$variable{'TotalAllocated'}).$$variable{'Paper'}->units(); ) ?></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		</tr>

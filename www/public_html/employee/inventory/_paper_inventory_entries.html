@@ -31,10 +31,10 @@
 						<td><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
 						<td><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
 						<td align="right"><a href="skid_details.html?skid_id=%2$d">%7$s</a></td>
-						<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$d%6$s</a></td><td>', 
+						<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td><td>', 
 						$rowclass, $C->skid_id(), $Skid->Location()->name(), 
 						( $Skid->rfidtag_id() ? sprintf('%d (%2$x)', $Skid->rfidtag_id(),substr($Skid->RFIDTag()->id(),1,15)) : '' ), 
-						$C->quantity(), $C->units, 
+						Number::Format::format_number($C->quantity()), $C->Paper()->units(), 
 						( $last_seen_days ? $last_seen_days . ' days' : 'Today' ),
 						);
 					$html .= ssi::writeButton( $log, $dbh, "label$$C{skid_id}", 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$$C{skid_id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Label' );
@@ -46,7 +46,7 @@
 			) ?>
 			<tr class="totals">
 				<td colspan="4"><b>Totals:</b></td>
-				<td align="right"><?InventoryTotal?><? echo ( $$variable{'Paper'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></td>
+				<td align="right"><? echo ( Number::Format::format_number($$variable{'InventoryTotal'}).$$variable{'Paper'}->units(); ) ?></td>
 				<td>&nbsp;</td>
 			</tr>
 			<tr class="totals unprintable">

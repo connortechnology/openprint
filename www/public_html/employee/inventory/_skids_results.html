@@ -52,8 +52,8 @@
 		<tr>
 			<th class="checkbox"><input type="checkbox" onclick="select_all( this.form, 'skids', this.checked );"/></th>
 			<th align="left" width="75">Skid ID</th>
-			<th align="left" width="115">Date Added</th>
-			<th align="left" width="115">Updated On</th>
+			<th class="DateTime">Date Added</th>
+			<th class="DateTime">Updated On</th>
 			<th align="left" width="115">RFIDTag</th>
 			<th align="left" width="100">Location</th>
 			<th align="left" width="140">Dockets</th>
@@ -85,8 +85,8 @@
                 } # end foreach
                 next if ! $iftype;
 
+				my @Allocations = openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'order'=>'created_on');
 				if ( $session{'/employee/inventory/skids.html?allocated'} ) {
-					my @Allocations = openprint::PaperAllocation::find('skid_id'=>$Skid->id());
 					if ( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) {
 						next if ! @Allocations;
 					} elsif ( $session{'/employee/inventory/skids.html?allocated'} eq 'N' ) {
@@ -105,20 +105,18 @@
 				$html .= "<tr$rowclass>";
 				$html .= qq`<td class="checkbox"><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->created_on()) ), );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Skid->updated_on()) ), );
+				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->created_on()) ), );
+				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->updated_on()) ), );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $$Skid{'rfidtag_id'} );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->Location()->name() );
 
 				$html .= '<td rowspan="2">';
-				my @data = sql::execute( $log, $dbh, q{SELECT project_id, (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), paper_id, quantity FROM Paper_Allocations WHERE skid_id=? ORDER BY created_on}, $$Skid{'id'} );
-				while ( my ( $project_id, $docket, $paper_id, $quantity ) = splice @data, 0, 4 ) {
-					my $Paper = new openprint::Paper( $paper_id );
-					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%d - %d %s</a><br/>',
+				foreach my $PA ( @Allocations ) {
+					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%d - %d%s</a><br/>',
 					$$Skid{'id'},
-					$docket,
-					$quantity,
-					$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
+					$PA->Project()->docket(),
+					$PA->quantity(),
+					$PA->Paper()->units(),	
 					);
 				} # end while
 				$html .= '</td>';	
@@ -134,7 +132,7 @@
 						$Paper->to_string(),
 						new openprint::StockPurpose( $C->purpose_id() )->name(),
 						$C->quantity(),
-						$Paper->type() eq 'Roll' ? 'lbs' : 'sheets',	
+						$Paper->units(),
 					);
 					if ( $Paper->type() eq 'Roll' ) {
 						$total_rolls += 1;
