@@ -216,6 +216,10 @@ sub signature_calc {
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 			next;
 		} # end if
+		if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $I->Press()->specification('Printing Type') ne 'Digital' ) {
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Not printed digital.<br/>' );
+			next;
+		} # end if
 		if ( $Equipment->specification('Type') eq 'Press' ) {
 			if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
@@ -478,6 +482,10 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Spine Too small. Spine: %s, Minimum: %s<br/>', $$specs{'Height'}, $Equipment->specification('Minimum Spine Length') );
 				next;
 			} # end if
+			if ( $Equipment->specification('Stitching Capable') eq 'When Digital' and $$sig_specs{'PrintingType'.$qty_index} ne 'Digital' ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Not printed digital.<br/>' );
+				next;
+			} # end if
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 				if ( $$specs{'txtPockets'.$qty_index} > 1 ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Too many pockets: %d<br/>', $$specs{'txtPockets'.$qty_index} );
@@ -544,7 +552,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
@@ -556,7 +564,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
@@ -632,9 +640,12 @@ sub get_price {
 			if ( $servicePrice{'units'} eq 'Per M' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
 				$price{'Service'} += $servicePrice{'Total'};
-			} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+			} elsif ( lc $servicePrice{'units'} eq 'per hour' ) {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
 				$price{'Service'} += $servicePrice{'Total'}
+			} elsif ( lc $servicePrice{'units'} eq 'each' ) {
+				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty;
+				$price{'Service'} += $servicePrice{'Total'};
 			} else {
 				$openprint::log->debug("Unknown Unit Type: ($servicePrice{'units'}) on $$ServiceType{'name'}");
 			} # end if
@@ -660,6 +671,9 @@ sub get_price {
 		$price{'Service'} += $servicePrice{'Total'};
 	} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
 		$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
+		$price{'Service'} += $servicePrice{'Total'}
+	} elsif ( lc $servicePrice{'units'} eq 'each' ) {
+		$servicePrice{'Total'} = $servicePrice{'Price'} * $qty;
 		$price{'Service'} += $servicePrice{'Total'}
 	} else {
 		$openprint::log->debug("Unknown Unit Type: $servicePrice{'units'} for $$ServiceType{'name'} range($neededPockets) equipment(".$Equipment->strid().")");
