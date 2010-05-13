@@ -67,7 +67,7 @@
 			<th width="50" align="right">&nbsp;</th>
 		</tr>
 <? eval (
-		$_ = q{SELECT id, to_char(dtmDate,'MM/DD/YYYY'), strMethod, strDescription, curAmount, currency_id FROM Payments WHERE strSessionID IS NULL AND Order_Id=? ORDER BY dtmDate};
+		$_ = q{SELECT id, to_char(date,'MM/DD/YYYY'), method, memo, amount, currency_id FROM Payments WHERE strSessionID IS NULL AND order_id=? ORDER BY date};
 		@{$variable{'PAYMENTS'}} = sql::execute( $log, $dbh, $_, $$variable{'Order'}->id() );
 ) ?>
 		<? if ( $$variable{'PAYMENTS'} ) ?>
