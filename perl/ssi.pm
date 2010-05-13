@@ -471,10 +471,11 @@ return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'funct
 
 sub setup_date_select {
 	my ( $page, $prefix, $start_delta, $end_delta ) = @_;
+$openprint::log->debug("Lastupdated: " . Date::Format::time2str($config{'DateTimeFormat'}, $session{$page.'?lastupdated'} ) . ' difference' . ( time - $session{$page.'?lastupdated'}) );
     if ( 
 		( ! ( $session{$page.'?'.$prefix.'_start_year'} and $session{$page.'?'.$prefix.'_start_month'} and $session{$page.'?'.$prefix.'_start_day'} ) ) 
 		or 
-		( (time - $session{'lastupdated'} ) > (60*60) ) # 1 hour
+		( (time - $session{$page.'?lastupdated'} ) > (60*60) ) # 1 hour
 	   ) {
 		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $start_delta );
 		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $end_delta );
@@ -482,7 +483,7 @@ sub setup_date_select {
 		@session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} );
 		@session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} );
 	} # end if
-	$session{$page.'?lastupdated'} = time;
+	# Can't update lastupdated here because we might call it again to load another set of times
 } # end sub setup_date_select
 
 sub date_select {
