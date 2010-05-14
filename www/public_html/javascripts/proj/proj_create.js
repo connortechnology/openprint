@@ -128,6 +128,8 @@ function check_service( chk, service ) {
 
 function service_onclick( element ) {
 	if ( element.value == 'NoBindery' && element.checked ) {
+		if ( element.form.chkServicesPerfectBound ) 
+			element.form.chkServicesPerfectBound.checked = false;
 		if ( element.form.chkServicesSaddleStitching ) 
 			element.form.chkServicesSaddleStitching.checked = false;
 		if ( element.form.chkServicesLoopStitching ) 

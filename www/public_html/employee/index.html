@@ -35,11 +35,13 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 <form name="f1" action="/employee/production/projects.html" method="post">
 	<input type="hidden" name="btnFunction" value="Go"/>
 	<fieldset>
-		<p>
+		<ul>
+		<li>
 			<label>Docket #</label>
 			<input type="text" name="StartDocket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
-		</p>
+		</li>
+		</ul>
 	</fieldset>
 	<fieldset>
 		<p>

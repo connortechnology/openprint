@@ -31,9 +31,9 @@
 </fieldset>
 <? eval ( 
 	@{$$variable{'Modes'}} = ();
-	push @{$$variable{'Modes'}}, 'Easy' if $openprint::config{'EasyMode'};
-	#push @{$$variable{'Modes'}}, 'Simple' if $openprint::config{'SimpleMode'};
-	push @{$$variable{'Modes'}}, 'Detailed' if $openprint::config{'DetailedMode'};
+	push @{$$variable{'Modes'}}, 'Easy' if $config{'EasyMode'};
+	#push @{$$variable{'Modes'}}, 'Simple' if $config{'SimpleMode'};
+	push @{$$variable{'Modes'}}, 'Detailed' if $config{'DetailedMode'};
 ) ?>
 <? if ( @{$$variable{'Modes'}} > 1 ) ?>
 	<fieldset>
@@ -180,53 +180,57 @@
 	if ( openprint::ServiceType::find('name'=>'FilmStripping') ) {
 		push @{$$variable{'design_options'}}, 'FinalFilm', 'Final Film';
 	} # end if
-) ?>	
-<? if ( @{$$variable{'design_options'}} > 2 ) ?>
-	<p id="Design" <? echo ( sets::isin('NoPrinting', $$variable{'SelectedServices'} ) ? 'style="display:none;"' : '' ) ?>><label>If you are providing your own design, please specify the supplied format.</label>
-		<select name="ddmDesign" size="1" onchange="ddmDesign_onChange(f1);">
-<? echo ( ssi::make_drop_down( $$variable{'design_options'}, $$variable{'ddmDesign'} ); ) ?>
-		</select>
-	</p>
-<? else ( @{$$variable{'design_options'}} > 2 ) ?>
-	<input type="hidden" name="ddmDesign" value="ElectronicFile" />
-<? endif ( @{$$variable{'design_options'}} > 2 ) ?>
-	<p> 
-		<label>Please provide a reference:</label>
-		<textarea name="txtProjectReference" rows="1" onkeyup="textarea_resize( this );"><?txtProjectReference?></textarea>
-	</p>
-	<p>
-		<label>Additional comments or instructions:</label>
-		<textarea name="txtComments" rows="1" onkeyup="textarea_resize( this );"><?txtComments?></textarea>
-	</p>
+) ?>
+	<ul>
+	<? if ( @{$$variable{'design_options'}} > 2 ) ?>
+		<li class="design" id="Design" <? echo ( sets::isin('NoPrinting', $$variable{'SelectedServices'} ) ? 'style="display:none;"' : '' ) ?>><label>If you are providing your own design, please specify the supplied format.</label>
+			<select name="ddmDesign" size="1" onchange="ddmDesign_onChange(f1);">
+	<? echo ( ssi::make_drop_down( $$variable{'design_options'}, $$variable{'ddmDesign'} ); ) ?>
+			</select>
+		</li>
+	<? else ( @{$$variable{'design_options'}} > 2 ) ?>
+		<input type="hidden" name="ddmDesign" value="ElectronicFile" />
+	<? endif ( @{$$variable{'design_options'}} > 2 ) ?>
+		<li class="reference"> 
+			<label>Please provide a reference:</label>
+			<textarea id="reference" name="txtProjectReference" rows="1" onkeyup="textarea_resize( this );"><?txtProjectReference?></textarea>
+		</li>
+		<li class="comments">
+			<label>Additional comments or instructions:</label>
+			<textarea id="comments" name="txtComments" rows="1" onkeyup="textarea_resize( this );"><?txtComments?></textarea>
+		</li>
+	</ul>
 </fieldset>
 <? if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ); ) ?>
 <div class="ReprintOptions">
 <fieldset>
 	<legend>Reprint Options</legend>
-	<p>
-		<label>Is this a reprint?</label>
-		<input type="radio" id="reprintY" name="reprint" value="Y" onclick="setReason(this.value,document.getElementById('reprintReasonSection'));" <? echo ( 'checked="checked"' if $$variable{'reprint'} eq 'Y' ) ?> />
-		<label for="reprintY" class="radio">Yes</label>
-		<input type="radio" id="reprintN" name="reprint" value="N" onclick="setReason(this.value,document.getElementById('reprintReasonSection'));" <? echo ( 'checked="checked"' if $$variable{'reprint'} ne 'Y' ) ?> />
-		<label for="reprintN" class="radio">No</label>
-	</p>
-	<p id="reprintReasonSection" style="display: none;">
-		<label>Reason:</label>
-		<select name="reprint_reason">
-			<option value=""> select </option>
-		<? echo ( ssi::make_drop_down( [
-				'Customer','Customer',
-				'Docket','Docket',
-				'Prepress','Prepress',
-				'Printing','Printing',
-				'Bindery','Bindery',
-				'Shipping','Shipping',
-				'Supplier - Service','Supplier - Service',
-				'Supplier - Material', 'Supplier - Material',
-				'Other', 'Other',
-				], $$variable{'reprint_reason'} );) ?>
-		</select>
-	</p>
+	<ul>
+		<li>
+			<label>Is this a reprint?</label>
+			<input type="radio" id="reprintY" name="reprint" value="Y" onclick="setReason(this.value,document.getElementById('reprintReasonSection'));" <? echo ( ssi::checked( $$variable{'reprint'} eq 'Y' ); ) ?> />
+			<label for="reprintY" class="radio">Yes</label>
+			<input type="radio" id="reprintN" name="reprint" value="N" onclick="setReason(this.value,document.getElementById('reprintReasonSection'));" <? echo ( ssi::checked( $$variable{'reprint'} ne 'Y' ); ) ?> />
+			<label for="reprintN" class="radio">No</label>
+		</li>
+		<li id="reprintReasonSection" style="display: none;">
+			<label>Reason:</label>
+			<select name="reprint_reason">
+				<option value=""> select </option>
+			<? echo ( ssi::make_drop_down( [
+					'Customer','Customer',
+					'Docket','Docket',
+					'Prepress','Prepress',
+					'Printing','Printing',
+					'Bindery','Bindery',
+					'Shipping','Shipping',
+					'Supplier - Service','Supplier - Service',
+					'Supplier - Material', 'Supplier - Material',
+					'Other', 'Other',
+					], $$variable{'reprint_reason'} );) ?>
+			</select>
+		</li>
+	</ul>
 </fieldset>
 </div>
 <? endif ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ); ) ?>
