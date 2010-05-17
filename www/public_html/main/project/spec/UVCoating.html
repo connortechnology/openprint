@@ -16,18 +16,10 @@
 				$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
 				#$$variable{'Reference'} = ssi::htmlize( $$variable{'Reference'} );
 				$$variable{'SignatureIndex'} = $$variable{'sig_specs'}{'SignatureIndex'};
-				$$variable{'FrontCoatings'} = $$variable{'BackCoatings'} = '';
-				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
-					next if ! $$variable{'sig_specs'}{"ColourCoatingSideOne$index"};
-					next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} =~ /UV/ );
-					$$variable{'FrontCoatings'} .= $$variable{'sig_specs'}{"ColourCoatingTypeSideOne$index"} . '<br/>';
-				} # end foreach
+				
+				$$variable{'FrontCoatings'} = join('<br/>', openprint::Estimating::UVCoating::get_uv_colours( $$variable{'sig_specs'}, 'SideOne' ) );
 				$$variable{'FrontCoatings'} = 'None' if $$variable{'FrontCoatings'} eq '';
-				foreach my $index ( 1 .. $openprint::config{'SpecialColourQuantity'} ) {
-					next if ! $$variable{'sig_specs'}{"ColourCoatingSideTwo$index"};
-					next if ! ( $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} =~ /UV/ );
-					$$variable{'BackCoatings'} .= $$variable{'sig_specs'}{"ColourCoatingTypeSideTwo$index"} . '<br/>';
-				} # end foreach
+				$$variable{'BackCoatings'} = join('<br/>', openprint::Estimating::UVCoating::get_uv_colours( $$variable{'sig_specs'}, 'SideTwo' ) );
 				$$variable{'BackCoatings'} = 'None' if ! $$variable{'BackCoatings'};
 			) ?>
 			<? if ( $$variable{'FrontCoatings'} ne 'None' or $$variable{'BackCoatings'} ne 'None' ) ?>
