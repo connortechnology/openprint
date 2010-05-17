@@ -1443,7 +1443,7 @@ sub _skid_allocations {
     } elsif ( $param{'action'} eq 'delete' ) {
         my $Allocation = new openprint::PaperAllocation( $param{'allocation_id'} );
 		if ( $Allocation->id() ) {
-			$Allocation->Project()->add_to_log( @session{'company_id','user_id'}, 'Paper Allocation for skid ' . $Allocation->skid_id() . ' deleted.' );
+			$Allocation->Project()->add_to_log( @session{'company_id','user_id'}, 'Paper Allocation for skid ' . $param{'skid_id'} . ' deleted.' );
 			$Allocation->delete();
 		} else {
 			$openprint::log->warn('Non-existent Paper Allocation deleted.');
