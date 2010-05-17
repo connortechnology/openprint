@@ -287,7 +287,19 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			$$specs{'chkProcessColourSideOne2'} = undef;
 			$$specs{'chkProcessColourSideTwo2'} = undef;
 		} # end if
-		@$specs{'ColourCoatingTypeSideOne1-2','ColourCoatingTypeSideTwo1-2'} = @$specs{'Aqueous2','Aqueous2'};
+			my $colourindex = 1;
+			if ( $$specs{'Aqueous2'} and $$specs{'Aqueous2'} ne 'None' ) {
+				$$specs{'chkColourCoating'.$colourindex.'SideOne2'} = 'Y';
+				$$specs{'ColourCoatingType'.$colourindex.'SideOne2'} = "Aqueous $$specs{'Aqueous2'} Overall";
+				$$specs{'chkColourCoating'.$colourindex.'SideTwo2'} = 'Y';
+				$$specs{'ColourCoatingType'.$colourindex.'SideTwo2'} = "Aqueous $$specs{'Aqueous2'} Overall";
+				$colourindex += 1;
+			} else {
+				$$specs{'chkColourCoating'.$colourindex.'SideOne2'} = '';
+				$$specs{'ColourCoatingType'.$colourindex.'SideOne2'} = '';
+				$$specs{'chkColourCoating'.$colourindex.'SideTwo2'} = '';
+				$$specs{'ColourCoatingType'.$colourindex.'SideTwo2'} = '';
+			} # end if
 
 		if ( $$specs{'rdbCover'} eq 'Different' ) {
 			if ( $$specs{'ColoursCover'} eq '4/4' ) {
@@ -306,7 +318,20 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 				$$specs{'chkProcessColourSideOne1'} = 'ProcessColour';
 				$$specs{'chkProcessColourSideTwo1'} = undef;
 			} # end if
-			@$specs{'ColourCoatingTypeSideOne1-1','ColourCoatingTypeSideTwo1-1'} = @$specs{'Aqueous1','Aqueous1'};
+			my $colourindex = 1;
+			if ( $$specs{'Aqueous1'} and $$specs{'Aqueous1'} ne 'None' ) {
+				$$specs{'chkColourCoating'.$colourindex.'SideOne1'} = 'Y';
+				$$specs{'ColourCoatingType'.$colourindex.'SideOne1'} = "Aqueous $$specs{'Aqueous1'} Overall";
+				$$specs{'chkColourCoating'.$colourindex.'SideTwo1'} = 'Y';
+				$$specs{'ColourCoatingType'.$colourindex.'SideTwo1'} = "Aqueous $$specs{'Aqueous1'} Overall";
+				$colourindex += 1;
+			} else {
+				$$specs{'chkColourCoating'.$colourindex.'SideOne1'} = '';
+				$$specs{'ColourCoatingType'.$colourindex.'SideOne1'} = '';
+				$$specs{'chkColourCoating'.$colourindex.'SideTwo1'} = '';
+				$$specs{'ColourCoatingType'.$colourindex.'SideTwo1'} = '';
+			} # end if
+
 		} # end if
 # The adding of signatures will be done automatically by multipage_signatures
 # This will add bindery services, and a printing service
