@@ -1,0 +1,76 @@
+
+.spacer {
+	clear: both;
+}
+
+form {
+	margin: 0px;
+}
+
+body {
+	font-size: 8px;
+}
+
+input {
+	margin: 0px;
+	padding: 0px;
+	border: 1px solid black;
+	font-size: 8px;
+	width: 60%;
+}
+select {
+	margin: 0px;
+	padding: 0px;
+	font-size: 8px;
+	width: 60%;
+}
+option {
+	width: 100%;
+}
+
+div.row {
+}
+div.row span.label {
+	float: left;
+	width: 33%;
+
+}
+div.row span.input {
+	float: left;
+	width: 67%;
+}
+div.row span.buttons {
+	float: left;
+	width: 67%;
+	margin-left: 33%;
+}
+a {
+	font-size: 8px;
+}
+table tr th {
+	font-size: 8px;
+}
+p {
+	text-align: right;
+}
+p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html p {height: 1%;}
+p {display: block;}
+/* Hides from IE-mac \*/
+
+p label {
+	width: 50%;
+	display: inline-block;
+}
+p.location_id select {
+	width: 60%;
+}

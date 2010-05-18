@@ -16,12 +16,13 @@ input {
 	padding: 0px;
 	border: 1px solid black;
 	font-size: 8px;
+	width: 60%;
 }
 select {
 	margin: 0px;
 	padding: 0px;
 	font-size: 8px;
-	width: 100%;
+	width: 60%;
 }
 option {
 	width: 100%;
@@ -49,6 +50,27 @@ a {
 table tr th {
 	font-size: 8px;
 }
+p {
+	text-align: right;
+}
+p:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+
+}
+/* Hides from IE-mac \*/
+* html p {height: 1%;}
+p {display: block;}
+/* Hides from IE-mac \*/
+
 p label {
-	width: 40px;
+	width: 50%;
+	display: inline-block;
+}
+p.location_id select {
+	width: 60%;
 }

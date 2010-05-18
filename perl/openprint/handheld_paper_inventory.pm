@@ -22,6 +22,12 @@ require openprint::employee_inventory;
 sub rfidtag_details {
 	$param{'skid_id'} =~ s/\D//g;
 	$param{'rfidtag_id'} =~ s/\D//g;
+
+	if ( $param{'skid_id'} and ! $param{'rfidtag_id'} ) {
+		my $Skid = new openprint::Skid( $param{'skid_id'} );
+		$param{'rfidtag_id'} = $Skid->rfidtag_id();
+	} # end if
+
 	if ( length $param{'rfidtag_id'} != 15 ) {
 		$variable{'error'} = 'Invalid RFID Tag # ' . $param{'rfidtag_id'} . ' : length 15 != ' . length $param{'rfidtag_id'};
 		return;

@@ -1,5 +1,5 @@
 <? eval (
-	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','notempty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code', 'allocated' ) );
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','notempty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code', 'allocated','contentsY','contentsN' ) );
 
 	if ( ! $session{'/employee/inventory/skids.html?created_on_start_year'} ) {
 		@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} = Date::Calc::Today();
@@ -73,6 +73,12 @@
                 } # end if
                 if ( $session{'/employee/inventory/skids.html?notempty'} ne 'Y' ) {
                     next if ! $empty;
+                } # end if
+				if ( $session{'/employee/inventory/skids.html?contentsY'} ne 'Y' ) {
+                    next if $Skid->Contents();
+                } # end if
+                if ( $session{'/employee/inventory/skids.html?contentsN'} ne 'N' ) {
+                    next if ! $Skid->Contents();
                 } # end if
 				my $iftype = 1;
                 foreach my $C ( $Skid->Contents() ) {

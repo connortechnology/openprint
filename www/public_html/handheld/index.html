@@ -1,18 +1,18 @@
 <? eval (
-	if ( $openprint::param{'action'} eq 'Login' ) {
-		openprint::login::verify_login( $r, $log, $dbh, $openprint::session{_session_id}, $variable, 'E' );
-	} elsif ( $openprint::param{'action'} eq 'Logout' ) {
+	if ( $param{'action'} eq 'Login' ) {
+		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, $variable, 'E' );
+	} elsif ( $param{'action'} eq 'Logout' ) {
 		openprint::login::logout( $log, $dbh, $variable, $$variable{'cookie'}, 'E' );
 	} # end if
 	
 ) ?>
-<? if ( $openprint::session{'user_id'} ) ?>
+<? if ( $session{'user_id'} ) ?>
 	<!--#include virtual="/handheld/paper_inventory/index.html"-->
-<? else ( $openprint::session{'user_id'} ) ?>
+<? else ( $session{'user_id'} ) ?>
 	<? if ( $$variable{'error'} ) ?>
 	<div class="error">
 	<b><?error?></b><?details?>
 	</div>
 	<? endif ( $$variable{'error'} ) ?>
 	<!--#include virtual="/handheld/login.html"-->
-<? endif ( $openprint::session{'user_id'} ) ?>
+<? endif ( $session{'user_id'} ) ?>

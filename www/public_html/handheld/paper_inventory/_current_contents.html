@@ -1,7 +1,7 @@
 <p><label>Current Contents:</label>
-<? if ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+<? if ( ! $$variable{'Skid'}->Contents() ) ?>
 	Skid is empty
-<? else ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+<? else ( ! $$variable{'Skid'}->Contents() ) ?>
 <br/>
 <table class="List">
 	<tr>
@@ -10,18 +10,18 @@
 <? echo ( 
 		require openprint::PaperAllocation;
 		my $html;
-		foreach my $paper_id ( keys %{$$variable{'Skid'}{Paper}} ) {
-			my $Paper = new openprint::Paper( $paper_id );
+		foreach my $C ( $$variable{'Skid'}->Contents() ) {
+			my $Paper = $C->Paper();
 			$html .= '<tr>';
 			$html .= qq`<td><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
 			$html .= $Paper->to_string();
 			$html .= '</a></td>';
 			$html .= '<td align="left">';
-			$html .= sprintf('<input type="text" name="in_stock-%d" value="%d" size="5"/>', $paper_id, $$variable{'Skid'}{Paper}{$paper_id} );
-			$html .= $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
+			$html .= sprintf('<input type="text" name="in_stock-%d" value="%d" size="5"/>', $Paper->id(), $C->quantity() );
+			$html .= $Paper->units();
 			$html .= '</td>';
 			$html .= '<td>';
-			foreach my $Allocation ( openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$paper_id ) ) {
+			foreach my $Allocation ( openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$Paper->id() ) ) {
 				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() )->docket(), $Allocation->quantity(), $Allocation->units() );
 			} # end foreach Allocation
 			$html .= '</td>';
@@ -30,5 +30,5 @@
 		return $html;
 ) ?>
 	</table>
-<? endif ( ! ( $$variable{'Skid'}{Paper} and %{$$variable{'Skid'}{Paper}} ) ) ?>
+<? endif ( ! $$variable{'Skid'}->Contents() ) ?>
 </p>

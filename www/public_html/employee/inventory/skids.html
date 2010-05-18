@@ -77,6 +77,13 @@ Please select a Skid to view/edit.<br>
             <label class="radio" for="notempty">Not Empty</label>
 		</p>
 		<p>
+            <label>Has Contents?</label>
+            <input type="checkbox" id="contentsY" name="contentsY" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contentsY'} eq 'Y' or ! exists $session{'/employee/inventory/skids.html?contentsY'} ); ) ?> />
+            <label class="radio" for="contentsY">Yes</label>
+            <input type="checkbox" id="contentsN" name="contentsN" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contentsN'} eq 'N' ) ?> />
+            <label class="radio" for="contentsN">No</label>
+		</p>
+		<p>
             <label>Allocated?</label>
             <input type="radio" id="allocatedY" name="allocated" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) ) ?> />
             <label class="radio" for="allocatedY">Yes</label>
