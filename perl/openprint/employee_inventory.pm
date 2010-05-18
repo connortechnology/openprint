@@ -52,9 +52,9 @@ sub skids {
 				foreach my $skid_id ( @skid_ids ) {
 					my $Skid = new openprint::Skid( $skid_id );
 					if ( my $e = $Skid->save({'location_id'=>$param{'location_id'}}) ) {
-					$variable{'error'} .= "Skid $$Skid{'id'} has not been moved. Error: $e<br/>";
+						$variable{'error'} .= "Skid $$Skid{'id'} has not been moved. Error: $e<br/>";
 					} else {
-					$variable{'information'} .= "Skid $$Skid{'id'} has been moved to $$Location{name}.<br/>";
+						$variable{'information'} .= "Skid $$Skid{'id'} has been moved to $$Location{name}.<br/>";
 					} # end if
 				} # end foreach
 			} # end if

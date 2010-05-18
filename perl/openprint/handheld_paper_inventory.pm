@@ -29,8 +29,13 @@ sub rfidtag_details {
 	} # end if
 
 	if ( length $param{'rfidtag_id'} != 15 ) {
-		$variable{'error'} = 'Invalid RFID Tag # ' . $param{'rfidtag_id'} . ' : length 15 != ' . length $param{'rfidtag_id'};
-		return;
+		my @RFIDTags = openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'});
+		if ( @RFIDTags != 1 ) {
+			$variable{'error'} = 'Invalid RFID Tag # ' . $param{'rfidtag_id'} . ' : length 15 != ' . length $param{'rfidtag_id'};
+			return;
+		} else {
+			$param{'rfidtag_id'} = $RFIDTags[0]->id();
+		} # endif
 	} # end if
 	@variable{'skid_id','rfidtag_id'} = @param{'skid_id','rfidtag_id'};
 
@@ -66,9 +71,11 @@ sub rfidtag_details {
 			} # end if
 			my $changed = 0;
 			foreach my $C ( $Skid->Contents() ) {
-				my $paper_id = $C->paper_id();
-				if ( $param{"in_stock-$paper_id"} != $C->quantity() ) {
-					$C->save({'quantity'=>$param{"in_stock-$paper_id"}});
+				if ( ( $param{"in_stock-$$C{id}"} != $C->quantity() ) or ( $param{"quality_id-$$C{id}"} != $C->quality_id() ) ) {
+					$variable{'error'} .= $C->save({
+							'quantity'		=>	$param{"in_stock-$$C{id}"},
+							'quality_id'	=>	$param{"quality_id-$$C{id}"},
+							});
 				} # end if
 			} # end foreach paper on skid
 			if ( $param{'verification_code'} ) {
@@ -83,7 +90,6 @@ sub rfidtag_details {
 		} # end if is a Skid
 		$variable{'error'} .= $TAG->save();
 		if ( ! $variable{'error'} ) {
-			$log->debug("Success");
 			$variable{'information'} .= 'TAG saved successfully.';
 			delete $variable{'skid_id'};
 		} else {

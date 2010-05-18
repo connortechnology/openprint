@@ -31,7 +31,7 @@ my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
-		'owner_id','manufacturer_id','quality_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
+		'owner_id','manufacturer_id','name_id','colour_id','finish_id','weight_id','calliper','taxexempt1','taxexempt2',
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
@@ -104,14 +104,6 @@ sub find {
 	if ( $params{'weight'} ) {
 		$sql .= ' AND weight_id=(SELECT id FROM PaperWeights WHERE longname=?)';
 		push @values, $params{'weight'};
-	} # end if
-	if ( $params{'quality_id'} ) {
-		$sql .= ' AND quality_id=?';
-		push @values, $params{'quality_id'};
-	} # end if
-	if ( $params{'quality'} ) {
-		$sql .= ' AND quality_id=(SELECT id FROM PaperQualities WHERE longname=?)';
-		push @values, $params{'quality'};
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
@@ -300,10 +292,10 @@ sub save {
 		sql::insert( undef, undef, 'PaperWeights', 'shortname', $$self{'weight'}, 'longname', $$self{'weight'} );
 		@$self{'weight_id','weight'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperWeights WHERE longname=?}, $$self{'weight'} );
 	} # end if weight_id
-	if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
-		sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
-		@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
-	} # end if quality_id
+	#if ( $$self{'quality'} and ! $$self{'quality_id'} ) {
+		#sql::insert( undef, undef, 'PaperQualities', 'shortname', $$self{'quality'}, 'longname', $$self{'quality'} );
+		#@$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id,longname FROM PaperQualities WHERE longname=?}, $$self{'quality'} );
+	#} # end if quality_id
 	if ( $$self{'manufacturer'} and ! $$self{'manufacturer_id'} ) {
 		sql::insert( undef, undef, 'Manufacturers', 'shortname', $$self{'manufacturer'}, 'longname', $$self{'manufacturer'} );
 		@$self{'manufacturer_id','manufacturer'} = sql::execute( undef, undef, q{SELECT id, longname FROM Manufacturers WHERE longname=?}, $$self{'manufacturer'} );
@@ -427,9 +419,9 @@ sub delete {
     if ( ! sql::execute( undef, undef, q{SELECT DISTINCT weight_id FROM Papers WHERE weight_id=?}, $$self{'weight_id'} ) ) {
         sql::execute( undef, undef, q{DELETE FROM PaperWeights WHERE Id=?}, $$self{'weight_id'} );
     } # end if
-    if ( ! sql::execute( undef, undef, q{SELECT DISTINCT quality_id FROM Papers WHERE quality_id=?}, $$self{'quality_id'} ) ) {
-        sql::execute( undef, undef, q{DELETE FROM PaperQualities WHERE Id=?}, $$self{'quality_id'} );
-    } # end if
+    #if ( ! sql::execute( undef, undef, q{SELECT DISTINCT quality_id FROM Papers WHERE quality_id=?}, $$self{'quality_id'} ) ) {
+        #sql::execute( undef, undef, q{DELETE FROM PaperQualities WHERE Id=?}, $$self{'quality_id'} );
+    #} # end if
     
     # Add record to audit log - action "Delete Paper".
     openprint::logs::insertLogRecord('15', "Paper ID: " . $$self{'id'},);
@@ -439,7 +431,7 @@ sub delete {
 
 sub to_string {
 	my $self = shift;
-	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ), $self->quality() ) );
+	my $string = join(' ', ( $self->manufacturer(), $self->name(), $self->finish(), $self->colour(), $self->weight(), $self->type() eq 'Roll' ? $self->width.'" Roll' : $self->width().'x'.$self->height(), ( $self->mweight() ? $self->mweight().'M' : () ) ) );
 	$string .= ' FSC:' . $$self{'fsc_code'} if $$self{'fsc_code'};
 	return $string;
 }
@@ -551,22 +543,6 @@ sub weight {
     return $$self{'weight'};
 } # end sub weight
 
-sub quality {
-    my ( $self, $quality ) = @_;
-
-    if ( defined $quality ) {
-		$quality =~ s/^\s+//;
-		$quality =~ s/\s+$//;
-		$quality =~ s/\s\s+$/ /;
-        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
-        if ( ! $$self{'quality_id'} ) {
-			$$self{'quality'} = $quality;
-        } # end if
-    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
-        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->longname();
-    } # end if
-    return $$self{'quality'};
-} # end sub quality
 
 sub width {
     my ( $self, $width ) = @_;

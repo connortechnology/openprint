@@ -32,13 +32,17 @@
 		<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 		<p class="skid_id">
 			<label for="skid_id">Skid #:</label>
-			<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
+			<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" size="8" onchange="change_handler(this);" />
 		</p>
 		<p class="verification_code">
-			<label for="verification_code">Verification:</label>
-			<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" />
+			<label for="verification_code">
+			<? echo ( ssi::writeButton( $log, $dbh, 'vpopulate', '', "f2.verification_code.value='".Date::Format::time2str( '%Y%m%d', time )."';", '', 'Verification:' ); ) ?>
+</label>
+			<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" size="8"/>
 		</p>
-		<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
+<? eval ( $$variable{'Skid'} = $$variable{'RFIDTag'}->Skid() ) ?>
+<!--#include virtual="_current_contents.html"-->
+<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 		<p class="location_id">
 			<label for="location_id">Location:</label>
 			<select id="location_id" name="location_id">
@@ -48,10 +52,6 @@
 					) ?>
 			</select>
 		</p>
-<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
-<? eval ( $$variable{'Skid'} = $$variable{'RFIDTag'}->Skid() ) ?>
-<!--#include virtual="_current_contents.html"-->
-<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
 		<div class="rightColumn" id="Map">
 			<!--#include virtual="_map.html"-->
 		</div>

@@ -5,19 +5,19 @@
 <br/>
 <table class="List">
 	<tr>
-		<th align="left">Paper</th><th width="75" align="left">In Stock</th><th>Allocated</th>
+		<th width="75" align="left">In Stock</th><th>Allocated</th><th>Quality</th>
 	</tr>
 <? echo ( 
 		require openprint::PaperAllocation;
 		my $html;
 		foreach my $C ( $$variable{'Skid'}->Contents() ) {
 			my $Paper = $C->Paper();
-			$html .= '<tr>';
-			$html .= qq`<td><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
+			$html .= qq`<tr><td colspan="3"><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
 			$html .= $Paper->to_string();
-			$html .= '</a></td>';
+			$html .= '</a></td></tr>';
+			$html .= '<tr>';
 			$html .= '<td align="left">';
-			$html .= sprintf('<input type="text" name="in_stock-%d" value="%d" size="5"/>', $Paper->id(), $C->quantity() );
+			$html .= sprintf('<input type="text" id="in_stock-%1$d" name="in_stock-%1$d" value="%2$d" size="5"/>', $C->id(), $C->quantity() );
 			$html .= $Paper->units();
 			$html .= '</td>';
 			$html .= '<td>';
@@ -25,6 +25,10 @@
 				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() )->docket(), $Allocation->quantity(), $Allocation->units() );
 			} # end foreach Allocation
 			$html .= '</td>';
+			$html .= sprintf('<td><select id="quality_id-%1$d" name="quality_id-%1$d" size="1">%2$s</select></td>',
+				$C->id(), 
+				ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockQuality::find('order'=>'lower(shortname)') ], $C->quality_id() ),
+);
 			$html .= '</tr>';
 		} # end foreach
 		return $html;
