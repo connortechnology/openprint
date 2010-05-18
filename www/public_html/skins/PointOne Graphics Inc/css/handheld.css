@@ -74,3 +74,73 @@ p label {
 p.location_id select {
 	width: 60%;
 }
+
+
+	a.buttonImageOff {
+		background-color: #EE3E33;
+		padding: 4px 2px 4px 2px;
+		margin: 2px 5px 2px 2px;
+		text-decoration: none;
+		font-family: Arial, Helvetica, Sans-Serif;
+		font-size: small;
+		font-weight: bold;
+		color: white;
+		display: -moz-inline-box;
+		display: inline-block;
+		outline:0;
+	}
+
+	a.buttonImageOn {
+		background-color: #FF5C51;
+		padding: 4px 2px 4px 2px;
+		margin: 2px 5px 2px 2px;
+		text-decoration: none;
+		font-family: Arial, Helvetica, Sans-Serif;
+		font-size: small;
+		font-weight: bold;
+		color: white;
+		display: -moz-inline-box;
+		display: inline-block;
+		outline:0;
+	}
+
+
+a.buttonImageOff .l {
+	display: none;
+}
+a.buttonImageOff .r {
+	display: none;
+}
+a.buttonImageOff .c {
+	font-family: Arial, Helvetica, Sans-Serif;
+	font-weight: normal;
+	font-size: x-small;
+	background: none;
+	display: -moz-inline-box;
+	display: inline-block;
+	float: none;
+	margin: 0px;
+	padding: 3px 10px 4px 10px;
+	color: white;
+}
+
+
+a.buttonImageOn .l {
+	display: none;
+}
+a.buttonImageOn .r {
+	display: none;
+}
+a.buttonImageOn .c {
+	font-family: Arial, Helvetica, Sans-Serif;
+	font-weight: normal;
+	font-size: x-small;
+	background: none;
+	cursor: default;
+	display: -moz-inline-box;
+	display: inline-block;
+	float: none;
+	margin: 0px;
+	padding: 0px;
+	color: white;
+}
