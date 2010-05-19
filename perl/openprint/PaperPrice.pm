@@ -92,32 +92,38 @@ sub Paper {
 sub costperm {
 	my $self = shift;
 	my $Paper = $self->Paper();
-	if ( ! $Paper->mweight() ) {
+	if ( $Paper->wpsi() ) {
 		# ROll papers won't have an mweight
-		return sprintf('%.2f', $$self{'Cost'} *= $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000 );
-	} else {
-		return sprintf('%.2f', $$self{'Cost'} *= $Paper->mweight() / 100 );
+		return sprintf('%.2f', $$self{'Cost'} * $Paper->wpsi() * $Paper->width() * $Paper->height() * 10 );
+	} elsif ( $Paper->mweight() ) {
+		return sprintf('%.2f', $$self{'Cost'} * $Paper->mweight() / 100 );
 	} # end if
 } # end sub costperm
+
 sub priceperm {
 	my $self = shift;
 	my $Paper = $self->Paper();
-	if ( ! $Paper->mweight() ) {
+	if ( $Paper->wpsi() ) {
 		# ROll papers won't have an mweight
-		return sprintf('%.2f', $$self{'Price'} *= $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000 );
-	} else {
-		return sprintf('%.2f', $$self{'Price'} *= $Paper->mweight() / 100 );
+		return sprintf('%.2f', $$self{'Price'} * $Paper->wpsi() * $Paper->width() * $Paper->height() * 10 );
+	} elsif ( $Paper->mweight() ) {
+		return sprintf('%.2f', $$self{'Price'} * $Paper->mweight() / 100 );
 	} # end if
 } # end sub priceperm
 sub costperfoot {
 	my $self = $_[0];
 	my $Paper = $self->Paper();
-	return sprintf('%.2f', $$self{'Cost'} *= ( $Paper->wpsi() * 144 ) /100 );
+$openprint::log->debug(" costperfoot = ( $$self{Cost} / 100 ) * ( ".$Paper->wpsi()." * 144 ) = " . sprintf('%.2f', ($$self{'Cost'}/100 ) * ( $Paper->wpsi() * 144 ) ) );
+	return sprintf('%.2f', ($$self{'Cost'}/100 ) * ( $Paper->wpsi() * 144 ) );
+#var costcwt = ( costperfoot / 144 ) * ( 100 / wpsi );
+#costperfoot/144 = costcwt/(100/wpsi) 
+#costperfott = 144*costcwt*(wpsi/100)
+#costperfoot = (costcwt * 144 * wpsi)/100
 }
 sub priceperfoot {
 	my $self = $_[0];
 	my $Paper = $self->Paper();
-	return sprintf('%.2f', $$self{'Price'} *= ( $Paper->wpsi() * 144 ) /100 );
+	return sprintf('%.2f', $$self{'Price'} * ( $Paper->wpsi() * 144 ) /100 );
 }
 
 1;
