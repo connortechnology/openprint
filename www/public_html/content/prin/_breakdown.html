@@ -152,8 +152,8 @@
 							foreach my $qty_index ( $Project->quantity_indexes() ) {
 								$html .= '<td class="price">';
 								my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );
-								$$summary[$line] =~ s/\n/<br\/>/g;
-								$html .= $$summary[$line];
+								$$summary[$line+1] =~ s/\n/<br\/>/g;
+								$html .= $$summary[$line+1];
 								$html .= '</td>';
 							} # end foreach qty_index
 							$html .= '<td>&nbsp;</td></tr>';
