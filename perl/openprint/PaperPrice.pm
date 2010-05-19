@@ -113,12 +113,7 @@ sub priceperm {
 sub costperfoot {
 	my $self = $_[0];
 	my $Paper = $self->Paper();
-$openprint::log->debug(" costperfoot = ( $$self{Cost} / 100 ) * ( ".$Paper->wpsi()." * 144 ) = " . sprintf('%.2f', ($$self{'Cost'}/100 ) * ( $Paper->wpsi() * 144 ) ) );
 	return sprintf('%.2f', ($$self{'Cost'}/100 ) * ( $Paper->wpsi() * 144 ) );
-#var costcwt = ( costperfoot / 144 ) * ( 100 / wpsi );
-#costperfoot/144 = costcwt/(100/wpsi) 
-#costperfott = 144*costcwt*(wpsi/100)
-#costperfoot = (costcwt * 144 * wpsi)/100
 }
 sub priceperfoot {
 	my $self = $_[0];
