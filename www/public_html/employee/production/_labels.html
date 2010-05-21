@@ -2,7 +2,7 @@
 	<tr><th align="left">Created</th>
 		<th align="left">Type</th>
 		<th align="left">Reference</th>
-		<th>&nbsp;</th>
+		<th style="width:70px;">&nbsp;</th>
 	</tr>
 <? echo ( 
 require openprint::Label;
@@ -15,8 +15,8 @@ foreach my $Label ( @Labels ) {
 		Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($Label->created_on() ) ), 
 		$Label->Type()->name(), $Label->reference(),
 		join('',
-			ssi::writeButton( $log, $dbh, 'delete'.$Label->id(), '',qq`new Ajax.Updater('Labels','_labels.html', { method:'get', parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, '', 'X' ),
-			ssi::writeButton( $log, $dbh, 'copy'.$Label->id(), '',qq`new Ajax.Updater('Labels','_labels.html', { method:'get', parameters:{action:'copy', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, '', 'C' ),
+			ssi::writeButton( $log, $dbh, 'delete'.$Label->id(), '',qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { method:'get', parameters:{action:'delete', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, '', 'X' ),
+			ssi::writeButton( $log, $dbh, 'copy'.$Label->id(), '',qq`new Ajax.Updater('Labels','/employee/production/_labels.html', { method:'get', parameters:{action:'copy', id: $$Label{id}, project_id: $$variable{'Project'}{id} } } );`, '', 'C' ),
 		)
 	 );
 } # end foreach
