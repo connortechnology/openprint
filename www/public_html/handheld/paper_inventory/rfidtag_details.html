@@ -1,39 +1,37 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" action="rfidtag_details.html" method="post">
-	<fieldset>
-		<p>
-			<label for="rfidtag_id">RFID #:</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value ){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="16"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "f1.submit();", '', 'Go' ) ) ?>
-		</p>
-		<p>
-			<label for="skid_id">Skid #:</label>
-			<input type="text" id="skid_id" name="skid_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value ){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="16"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f1.submit();", '', 'Go' ) ) ?>
-		</p>
-	</fieldset>
+	<table>
+		<tr>
+			<td>RFID#</td>
+			<td>Skid#</td>
+			<td></td>
+		</tr><tr>
+			<td><input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value ){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="16" /></td>
+			<td><input type="text" id="skid_id" name="skid_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value ){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="7" /></td>
+			<td><? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f1.submit();", '', 'Go' ) ) ?></td>
+		</tr>
+	</table>
 </form>
 <hr/>
 <? if ( $$variable{'RFIDTag'} ) ?>
 <form id="f2" name="f2" action="rfidtag_details.html" method="post">
 	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
 	<fieldset>
-		<p class="buttons">
+		<table>
+			<tr><td>RFID #</td><td>Skid #</td></tr>
+			<tr>
+			<td><? echo ( $$variable{'RFIDTag'}->id_short() ) ?></td>
+			<td><? echo ( $$variable{'RFIDTag'}->skid_id() ) ?></td>
+			<td>
 			<? echo ( join('',
 						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f2.btnFunction.value='Save';f2.submit();", '', 'Save' ),
 						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f2);', '', 'Clear' ),
 						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
 						); ) ?>
-		</p>
-		<p class="rfidtag_id">
-			<label>Tag #:</label>
-			<? echo ( $$variable{'RFIDTag'}->id() ) ?>
-		</p>
+			</td>
+		</tr>		
+		</table>
 		<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
-		<p class="skid_id">
-			<label for="skid_id">Skid #:</label>
-			<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" size="8" onchange="change_handler(this);" />
-		</p>
 		<p class="verification_code">
 			<label for="verification_code">
 			<? echo ( ssi::writeButton( $log, $dbh, 'vpopulate', '', "f2.verification_code.value='".Date::Format::time2str( '%Y%m%d', time )."';", '', 'Verification:' ); ) ?>

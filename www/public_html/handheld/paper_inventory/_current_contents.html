@@ -1,8 +1,6 @@
-<p><label>Current Contents:</label>
 <? if ( ! $$variable{'Skid'}->Contents() ) ?>
 	Skid is empty
 <? else ( ! $$variable{'Skid'}->Contents() ) ?>
-<br/>
 <table class="List">
 	<tr>
 		<th width="75" align="left">In Stock</th><th>Allocated</th><th>Quality</th>
@@ -13,7 +11,7 @@
 		foreach my $C ( $$variable{'Skid'}->Contents() ) {
 			my $Paper = $C->Paper();
 			$html .= qq`<tr><td colspan="3"><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
-			$html .= $Paper->to_string();
+			$html .= $Paper->Owner()->name() . ' ' . $Paper->to_string();
 			$html .= '</a></td></tr>';
 			$html .= '<tr>';
 			$html .= '<td align="left">';
@@ -30,9 +28,13 @@
 				ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockQuality::find('order'=>'lower(shortname)') ], $C->quality_id() ),
 );
 			$html .= '</tr>';
+			#$html .= '<tr>';
+			#$html .= sprintf('<td colspan="3"><select id="owner_id-%1$d" name="owner_id-%1$d" size="1">%2$s</select></td>',
+					#$C->id(), openprint::Company::get_dropdown( $C->Paper()->owner_id() ) );
+			#$html .= '</tr>';
+	
 		} # end foreach
 		return $html;
 ) ?>
 	</table>
 <? endif ( ! $$variable{'Skid'}->Contents() ) ?>
-</p>

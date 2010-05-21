@@ -92,8 +92,8 @@ p.location_id select {
 
 	a.buttonImageOn {
 		background-color: #FF5C51;
-		padding: 4px 2px 4px 2px;
-		margin: 2px 5px 2px 2px;
+		padding: 3px 2px 3px 2px;
+		margin: 0px 5px 2px 2px;
 		text-decoration: none;
 		font-family: Arial, Helvetica, Sans-Serif;
 		font-size: small;
@@ -120,7 +120,7 @@ a.buttonImageOff .c {
 	display: inline-block;
 	float: none;
 	margin: 0px;
-	padding: 3px 10px 4px 10px;
+	padding: 0px;
 	color: white;
 }
 
