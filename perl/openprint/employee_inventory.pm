@@ -192,7 +192,7 @@ sub inventory_report {
 					$Paper->type(),
 					$Paper->width(),
 					$Paper->height(),
-					$Paper->quality(),
+					$C->quality(),
 					$Paper->mweight(),
 					$Paper->gsm(),
 					$$Skid{'id'},
@@ -337,8 +337,6 @@ sub paper_details {
 		$Paper->colour_id( $param{'Colour'} ) if $param{'Colour'};
 		$Paper->weight( $param{'txtWeight'} ) if $param{'txtWeight'};
 		$Paper->weight_id( $param{'Weight'} ) if $param{'Weight'};
-		$Paper->quality( $param{'txtQuality'} ) if $param{'txtQuality'};
-		$Paper->quality_id( $param{'Quality'} ) if $param{'Quality'};
 		$Paper->type( $param{'type'} );
 		if ( $param{'type'} eq 'Roll' ) {
 			$Paper->width( $param{'width'} );
@@ -369,8 +367,6 @@ sub paper_details {
 					'weight_id' =>	$param{'Weight'},
 					'width'	=> $param{'width'},
 					'height'	=>	$param{'height'},
-					'quality'	=>	$param{'txtQuality'},
-					'quality_id'	=>	$param{'Quality'},
 					);
 			if ( @papers ) {
 				$variable{'error'} .= qq`A paper matching those parameters already exists. Click here to edit it: <a href="paper_details.html?paper_id=$papers[0]{id}">paper $papers[0]{id}</a>`;
@@ -443,8 +439,6 @@ sub save_Paper {
 			'colour'	=>	$param{'txtColour'.$id},
 			'weight_id' =>	$param{'Weight'.$id},
 			'weight'	=>	$weight,
-			'quality_id' => $param{'Quality'.$id},
-			'quality'	=>	$param{'txtQuality'.$id},
 			'width'		=> $param{'width'.$id},
 			'height'	=>	$param{'type'.$id} ne 'Roll' ? $param{'height'.$id} : undef,
 			'type'		=>	$param{'type'.$id},
@@ -467,8 +461,6 @@ sub save_Paper {
 		$Paper->colour_id( $param{'Colour'.$id} ) if $param{'Colour'.$id};
 		$Paper->weight( $weight ) if $weight;
 		$Paper->weight_id( $param{'Weight'.$id} ) if $param{'Weight'.$id};
-		$Paper->quality( $param{'txtQuality'.$id} ) if $param{'txtQuality'.$id};
-		$Paper->quality_id( $param{'Quality'.$id} ) if $param{'Quality'.$id};
 		$Paper->type( $param{'type'.$id} );
 		$Paper->fsc_code( $param{'fsc_code'.$id} );
 		if ( $param{'type'.$id} eq 'Roll' ) {
@@ -525,8 +517,8 @@ sub save_Paper {
 } # end sub save_Paper
 
 sub save_inventory {
-	my ( $Skid, $Paper, $qty, $comment ) = @_;
-	my $delta = $Skid->add( $Paper, $qty );
+	my ( $Skid, $Paper, $qty, $comment, $Quality ) = @_;
+	my $delta = $Skid->add( $Paper, $qty, $Quality );
 	$Paper->add_inventory( $Skid, $delta, $param{'Units'}, $comment );
 #FIXME
 	if ( $delta > 0 ) {
@@ -555,12 +547,23 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 		$variable{'error'} .= $error;
 		return;
 	} # end if
+
+	my $Quality;
+	if ( $param{'txtQuality'} ) {
+		if ( ! ( $Quality = openprint::StockQuality->find_one('name'=>$param{'txtQuality'}) ) ) {
+		} else {
+			$Quality = new openprint::StockQuality();
+			$Quality->save({'shortname'=>$param{'txtQuality'}});
+		} # end if
+	} else {
+		$Quality = new openprint::StockQuality( $param{'Quality'} );
+	} # end if
 	
 	if ( $param{'Name'} or $param{'txtName'} ) {
 		my $Paper = save_Paper();
 
 		if ( $Paper and $Paper->id() ) {
-			save_inventory( $Skid, $Paper, $qty );
+			save_inventory( $Skid, $Paper, $qty, undef, $Quality );
 
 			if ( $param{'Docket'} ) {
 				my @Projects = openprint::Project::find('docket'=>$param{'Docket'} );
@@ -635,6 +638,10 @@ sub skid_details {
 		$param{'skid_id'} = $skid_ids[0];
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		my @quantities = misc::trim( split ',', $param{'Quantity'} );
+		if ( ! @quantities ) {	
+			$variable{'error'} .= 'Please enter the # of skids/rolls to enter.';
+			return;
+		} # end if
 
 		if ( @skid_ids and (@quantities>1) and ( @quantities != @skid_ids ) ) {
 			$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
@@ -675,6 +682,7 @@ sub skid_details {
 			} # end if
 			@{$variable{'Skids'}} = ();
 			foreach my $skid_count ( 1 .. $param{'skid_quantity'} ) {
+$log->debug("Entering skid $skid_count");
 				my $S = new openprint::Skid();
 				$param{'Quantity'} = @quantities > 1 ? $quantities[$skid_count-1] : $quantities[0] if @quantities;
 				save_skid( $S );
@@ -696,7 +704,7 @@ sub skid_details {
 				} # end if verification_code
 			} # end foreach
 			$variable{'information'} .= "Added $param{'skid_quantity'} skids.<br/>";
-		} else {
+		} elsif ( @skid_ids ) {
 			foreach my $skid_id ( @skid_ids ) {
 				$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
 				save_skid( new openprint::Skid( $skid_id ) );
@@ -710,6 +718,9 @@ sub skid_details {
 					});
 				} # end if verification_code
 			} # end foreach
+		} else {
+			$variable{'error'} .= 'Please enter the # of skids/rolls to enter.';
+			return;
 		} # end if
 
 	} elsif ( sets::isin( $param{'btnFunction'}, 'Copy', 'Duplicate' ) ) {

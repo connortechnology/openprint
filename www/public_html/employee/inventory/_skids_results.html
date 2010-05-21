@@ -1,5 +1,5 @@
 <? eval (
-	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','notempty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code', 'allocated','contentsY','contentsN' ) );
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code', 'allocated','contents' ) );
 
 	if ( ! $session{'/employee/inventory/skids.html?created_on_start_year'} ) {
 		@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} = Date::Calc::Today();
@@ -66,19 +66,21 @@
 			my $total_sheets;
 			my $Location = new openprint::Location( $session{'/employee/inventory/skids.html?location_id'} );
 			my @location_ids = map { $_->id() } ( $Location, $Location->get_all_children());
+			my %Allocations = map { $_->id(), 1 } map { $_->Skids() } openprint::PaperAllocation::find();
+
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
 				my $empty = $Skid->empty();
-				if ( $session{'/employee/inventory/skids.html?empty'} ne 'Y' ) {
-                    next if $empty;
-                } # end if
-                if ( $session{'/employee/inventory/skids.html?notempty'} ne 'Y' ) {
+				if ( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ) {
                     next if ! $empty;
                 } # end if
-				if ( $session{'/employee/inventory/skids.html?contentsY'} ne 'Y' ) {
-                    next if $Skid->Contents();
+                if ( $session{'/employee/inventory/skids.html?empty'} eq 'N' ) {
+                    next if $empty;
                 } # end if
-                if ( $session{'/employee/inventory/skids.html?contentsN'} ne 'N' ) {
+				if ( $session{'/employee/inventory/skids.html?contents'} eq 'Y' ) {
                     next if ! $Skid->Contents();
+                } # end if
+                if ( $session{'/employee/inventory/skids.html?contents'} eq 'N' ) {
+                    next if $Skid->Contents();
                 } # end if
 				my $iftype = 1;
                 foreach my $C ( $Skid->Contents() ) {
@@ -89,8 +91,11 @@
                     } # end if
                 } # end foreach
                 next if ! $iftype;
-
-				my @Allocations = openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'order'=>'created_on');
+	
+				my @Allocations;
+				if ( $Allocations{$Skid->id()} ) {
+					@Allocations = openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'order'=>'created_on');
+				} # end if
 				if ( $session{'/employee/inventory/skids.html?allocated'} ) {
 					if ( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) {
 						next if ! @Allocations;
@@ -132,11 +137,12 @@
 			
 				foreach my $C ( $Skid->Contents() ) {
 					my $Paper = $C->Paper();
-					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s - %d %s</a><br/>',
+					$html .= sprintf( '<a href="skid_details.html?skid_id=%d">%s - %d%s %s</a><br/>',
 						$$Skid{'id'},
 						$Paper->to_string(),
 						$C->quantity(),
 						$Paper->units(),
+						$C->quality(),
 					);
 					if ( $Paper->type() eq 'Roll' ) {
 						$total_rolls += 1;

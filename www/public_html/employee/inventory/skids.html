@@ -5,6 +5,12 @@
 	if ( ! exists $session{'/employee/inventory/skids.html?withoutrfid'} ) {
 		$param{'withoutrfid'} = $session{'/employee/inventory/skids.html?withoutrfid'} = 0;
 	} # end if
+	if ( ! exists $session{'/employee/inventory/skids.html?empty'} ) {
+		$session{'/employee/inventory/skids.html?empty'} = 'N';
+	} # end if
+	if ( ! exists $session{'/employee/inventory/skids.html?contents'} ) {
+		$session{'/employee/inventory/skids.html?contents'} = 'Y';
+	} # end if
 ) ?>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
@@ -32,37 +38,31 @@ Please select a Skid to view/edit.<br>
 		</p>
 		<hr/>
 		<? eval (
-			if ( ! $session{'/employee/inventory/skids.html?created_on_start_year'} ) {
-				@session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'} = Date::Calc::Today();
-			} # end if
-			if ( ! $session{'/employee/inventory/skids.html?created_on_end_year'} ) {
-				@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} = Date::Calc::Today();
-			} # end if
-			@$variable{'created_on_start_years','created_on_start_months','created_on_start_days','Start'} = ssi::get_dates( $log, $dbh, 
-				@session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'}
-				);
-			@$variable{'created_on_end_years','created_on_end_months','created_on_end_days','End'} = ssi::get_dates( $log, $dbh, 
-				@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'}
-				);
+			ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start' );
+			ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end' );
 		) ?>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_start', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'} ) ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'created_on_start_today', 't.gif', 'set_today( f2.created_on_start_year, f2.created_on_start_month, f2.created_on_start_day );', '', 'T' ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_end', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} ) ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_end' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'created_on_end_today', 't.gif', 'set_today( f2.created_on_end_year, f2.created_on_end_month, f2.created_on_end_day );', '', 'T' ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Last Updated:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'updated_on_start', $session{'/employee/inventory/skids.html?updated_on_start_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/skids.html?updated_on_start_year','/employee/inventory/skids.html?updated_on_start_month','/employee/inventory/skids.html?updated_on_start_day'} ) : ' ' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'updated_on_start_today', 't.gif', 'set_today( f2.updated_on_start_year, f2.updated_on_start_month, f2.updated_on_start_day );', '', 'T' ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'updated_on_end', $session{'/employee/inventory/skids.html?updated_on_end_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/skids.html?updated_on_end_year','/employee/inventory/skids.html?updated_on_end_month','/employee/inventory/skids.html?updated_on_end_day'} ) : ' ' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_end' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'updated_on_end_today', 't.gif', 'set_today( f2.updated_on_end_year, f2.updated_on_end_month, f2.updated_on_end_day );', '', 'T' ); ) ?>
 			</span>
 		</p>
 		<p>
@@ -70,18 +70,22 @@ Please select a Skid to view/edit.<br>
 			<input type="text" name="fsc_code" size="13" value="<? echo ( $session{'/employee/inventory/skids.html?fsc_code'} ) ?>"  />
 		</p>
 		<p>
-            <label>Empty/Non Empty?</label>
-            <input type="checkbox" id="empty" name="empty" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/skids.html?empty'} eq 'Y' ) ?> />
-            <label class="radio" for="empty">Empty</label>
-            <input type="checkbox" id="notempty" name="notempty" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/skids.html?notempty'} eq 'Y' or ! exists $session{'/employee/inventory/skids.html?notempty'} ) ?> />
-            <label class="radio" for="notempty">Not Empty</label>
+            <label>Empty?</label>
+            <input type="radio" id="emptyY" name="empty" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ); ) ?> />
+            <label class="radio" for="emptyY">Yes</label>
+            <input type="radio" id="emptyN" name="empty" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?empty'} eq 'N' ); ) ?> />
+            <label class="radio" for="notempty">No</label>
+            <input type="radio" id="emptyB" name="empty" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?empty'} eq 'B' ); ) ?> />
+            <label class="radio" for="emptyB">Both</label>
 		</p>
 		<p>
             <label>Has Contents?</label>
-            <input type="checkbox" id="contentsY" name="contentsY" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contentsY'} eq 'Y' or ! exists $session{'/employee/inventory/skids.html?contentsY'} ); ) ?> />
+            <input type="radio" id="contentsY" name="contents" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contents'} eq 'Y' ); ) ?> />
             <label class="radio" for="contentsY">Yes</label>
-            <input type="checkbox" id="contentsN" name="contentsN" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contentsN'} eq 'N' ); ) ?> />
+            <input type="radio" id="contentsN" name="contents" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contents'} eq 'N' ); ) ?> />
             <label class="radio" for="contentsN">No</label>
+            <input type="radio" id="contentsB" name="contents" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contents'} eq 'B' ); ) ?> />
+            <label class="radio" for="contentsB">Both</label>
 		</p>
 		<p>
             <label>Allocated?</label>

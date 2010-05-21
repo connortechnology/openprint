@@ -639,7 +639,7 @@ $openprint::log->debug("No presses in used_press_name");
     } # end if
 
 	if ( $params{'due_date_start'} and $params{'due_date_end'} ) {
-		$sql .= q{ AND (due_date BETWEEN ? AND ?)};
+		$sql .= q{ AND (due_date BETWEEN ? AND ?};
 		push @values, @params{'due_date_start','due_date_end'};
 		if ( exists $params{'due_date'} and ! $params{'due_date'} ) {
 			$sql .= q{ OR due_date IS NULL};

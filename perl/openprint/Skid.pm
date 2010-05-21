@@ -180,14 +180,19 @@ sub to_string {
 } # end sub
 
 sub add {
-	my ( $self, $Paper, $quantity ) = @_;
+	my ( $self, $Paper, $quantity, $quality ) = @_;
+	my $Quality;
+	if ( ref $quality eq 'openprint::StockQuality' ) {
+		$Quality = $quality;
+	} elsif ( ! $quality ) {
+		# Default to new
+		$Quality = openprint::StockQuality->find_one('name'=>'new');
+	} # end if
 
 	my $C = $self->Content( $Paper );
 	if ( ! $C ) {
 		delete $$self{'Contents'};
 		$C = new openprint::SkidContent();
-		$C->skid_id( $$self{'id'} );	
-		$C->paper_id( $Paper->id() );
 	} # end if
 
 	my $old_quantity = $C->quantity();
@@ -204,7 +209,12 @@ sub add {
 		$quantity =~ s/[^\d]//g;
 # Set
 	} # end if
-	$C->save({'quantity'=>$quantity});
+	$C->save({
+			'skid_id' => $$self{'id'},
+			'paper_id'	=>	$Paper->id(),
+			'quality_id'	=>	$Quality->id(),
+			'quantity'=>$quantity,
+			});
 	return $quantity - $old_quantity;
 } # end sub add_inventory
 
