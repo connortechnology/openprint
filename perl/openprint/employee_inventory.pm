@@ -135,6 +135,30 @@ sub skids {
 			} # end foreach
 		} # end if
 	} # end if
+
+    if ( ! exists $session{'/employee/inventory/skids.html?withrfid'} ) {
+        $param{'withrfid'} = $session{'/employee/inventory/skids.html?withrfid'} = 1;
+    } # end if
+    if ( ! exists $session{'/employee/inventory/skids.html?withoutrfid'} ) {
+        $param{'withoutrfid'} = $session{'/employee/inventory/skids.html?withoutrfid'} = 0;
+    } # end if
+    if ( ! exists $session{'/employee/inventory/skids.html?empty'} ) {
+        $session{'/employee/inventory/skids.html?empty'} = 'N';
+    } # end if
+    if ( ! exists $session{'/employee/inventory/skids.html?contents'} ) {
+        $session{'/employee/inventory/skids.html?contents'} = 'Y';
+    } # end if
+	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start' );
+	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end' );
+
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type',
+				'created_on_start_year','created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'updated_on_start_year','updated_on_start_month','updated_on_start_day',
+				'updated_on_end_year','updated_on_end_month','updated_on_end_day',
+				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents' 
+				) );
+ 
 } # end sub skids
 
 sub inventory_report {
@@ -1912,6 +1936,13 @@ sub _allocations {
 sub _deallocate_popup {
 }
 sub _skids_results {
+	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type',
+				'created_on_start_year','created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'updated_on_start_year','updated_on_start_month','updated_on_start_day',
+				'updated_on_end_year','updated_on_end_month','updated_on_end_day',
+				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents' 
+				) );
 }
 1;
 __END__

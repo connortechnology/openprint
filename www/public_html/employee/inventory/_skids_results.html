@@ -1,10 +1,4 @@
 <? eval (
-	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type','created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','Docket','fsc_code','empty','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day','withrfid','withoutrfid','location_id','verification_code', 'allocated','contents' ) );
-
-	if ( ! $session{'/employee/inventory/skids.html?created_on_start_year'} ) {
-		@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} = Date::Calc::Today();
-		@session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'} = Date::Calc::Today();
-	} # end if
 	if ( $session{'/employee/inventory/skids.html?Docket'} ) {
 		@{$$variable{'Skids'}} = openprint::Skid::find( 
 			'allocated_to_docket'	=>	$session{'/employee/inventory/skids.html?Docket'},
@@ -66,7 +60,12 @@
 			my $total_sheets;
 			my $Location = new openprint::Location( $session{'/employee/inventory/skids.html?location_id'} );
 			my @location_ids = map { $_->id() } ( $Location, $Location->get_all_children());
-			my %Allocations = map { $_->id(), 1 } map { $_->Skids() } openprint::PaperAllocation::find();
+			my %Allocations;
+			foreach my $Allocation ( openprint::PaperAllocation::find() ) {
+				foreach my $Skid ( $Allocation->Skids() ) {
+					push @{$Allocations{$Skid->id()}}, $Allocation;
+				} # end 
+			} # end foreach
 
 			foreach my $Skid ( @{$$variable{'Skids'}} ) {
 				my $empty = $Skid->empty();
@@ -94,7 +93,7 @@
 	
 				my @Allocations;
 				if ( $Allocations{$Skid->id()} ) {
-					@Allocations = openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'order'=>'created_on');
+					@Allocations = @{$Allocations{$Skid->id()}};
 				} # end if
 				if ( $session{'/employee/inventory/skids.html?allocated'} ) {
 					if ( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) {

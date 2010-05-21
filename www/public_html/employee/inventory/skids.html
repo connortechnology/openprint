@@ -1,17 +1,3 @@
-<? eval (
-	if ( ! exists $session{'/employee/inventory/skids.html?withrfid'} ) {
-		$param{'withrfid'} = $session{'/employee/inventory/skids.html?withrfid'} = 1;
-	} # end if
-	if ( ! exists $session{'/employee/inventory/skids.html?withoutrfid'} ) {
-		$param{'withoutrfid'} = $session{'/employee/inventory/skids.html?withoutrfid'} = 0;
-	} # end if
-	if ( ! exists $session{'/employee/inventory/skids.html?empty'} ) {
-		$session{'/employee/inventory/skids.html?empty'} = 'N';
-	} # end if
-	if ( ! exists $session{'/employee/inventory/skids.html?contents'} ) {
-		$session{'/employee/inventory/skids.html?contents'} = 'Y';
-	} # end if
-) ?>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
 Please select a Skid to view/edit.<br>
@@ -37,10 +23,6 @@ Please select a Skid to view/edit.<br>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2').serialize() );",'','Go' ); ) ?>
 		</p>
 		<hr/>
-		<? eval (
-			ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start' );
-			ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end' );
-		) ?>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
