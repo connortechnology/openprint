@@ -2,10 +2,10 @@
 	if ( ! exists $session{'/administrator/stock/list.html?Types'} ) {
 		$session{'/administrator/stock/list.html?Types'} = join(';', 'Sheet','Roll' );
 	} # end if
-    if ( ! exists $session{'/administrator/stock/list.html?recommendations'} ) {
-        $session{'/administrator/stock/list.html?recommendations'} = join(';', 1,0 );
-    } # end if
-    $session{'/administrator/stock/list.html?Owner'} = $session{'company_id'} if ! exists $session{'/administrator/stock/list.html?Owner'};
+	if ( ! exists $session{'/administrator/stock/list.html?recommendations'} ) {
+		$session{'/administrator/stock/list.html?recommendations'} = join(';', 1,0 );
+	} # end if
+	$session{'/administrator/stock/list.html?Owner'} = $session{'company_id'} if ! exists $session{'/administrator/stock/list.html?Owner'};
 ) ?>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript" src="/administrator/stock/stock.js"></script>
@@ -21,12 +21,12 @@
 			popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:700} );
 			// Set up a windows observer, check ou debug window to get messages
 			myObserver = {
-	onDestroy: function(eventName, win) {
-				   if (win == popupWin) {
-					   popupWin = null;
-					   Windows.removeObserver(this);
-				   }
-			   }
+				onDestroy: function(eventName, win) {
+					if (win == popupWin) {
+						popupWin = null;
+						Windows.removeObserver(this);
+					}
+				}
 			}
 			Windows.addObserver(myObserver);
 		} // end if
@@ -71,7 +71,7 @@
 			<select id="Group" name="Group" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-                    return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup::find('order'=>'lower(name)') ], $session{'/administrator/stock/list.html?Group'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup::find('order'=>'lower(name)') ], $session{'/administrator/stock/list.html?Group'} );
 					) ?>
 			</select>
 		</p>
@@ -80,7 +80,7 @@
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-                    return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $session{'/administrator/stock/list.html?Manufacturer'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $session{'/administrator/stock/list.html?Manufacturer'} );
 					) ?>
 			</select>
 		</p>
@@ -89,7 +89,7 @@
 			<select name="Name" onchange="Name_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
-                    return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $session{'/administrator/stock/list.html?Name'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $session{'/administrator/stock/list.html?Name'} );
 					) ?>
 			</select>
 		</p>
@@ -106,8 +106,8 @@
 							) ) {
 						$finishes{$Stock->finish()} = $Stock->finish_id();
 					} # end foreach
-                    return ssi::make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], $session{'/administrator/stock/list.html?Finish'} );
-                ) ?>
+					return ssi::make_drop_down( [map { $finishes{$_}, $_ } sort keys %finishes ], $session{'/administrator/stock/list.html?Finish'} );
+				) ?>
 			</select>
 		</p>
 		<p> 
@@ -123,8 +123,8 @@
 							) ) {
 						$colours{$Stock->colour()} = $Stock->colour_id();
 					} # end foreach
-                    return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/stock/list.html?Colour'} );
-                ) ?>
+					return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/stock/list.html?Colour'} );
+				) ?>
 			</select>
 		</p>
 		<p> 
@@ -141,8 +141,8 @@
 							) ) {
 						$colours{$Stock->weight()} = $Stock->weight_id();
 					} # end foreach
-                    return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/stock/list.html?Colour'} );
-                ) ?>
+					return ssi::make_drop_down( [map { $colours{$_}, $_ } sort keys %colours ], $session{'/administrator/stock/list.html?Colour'} );
+				) ?>
 			</select>
 		</p>
 		<p> 
@@ -160,8 +160,8 @@
 							) ) {
 						$materials{$Stock->material()} = $Stock->material_id();
 					} # end foreach
-                    return ssi::make_drop_down( [map { $materials{$_}, $_ } sort keys %materials ], $session{'/administrator/stock/list.html?material_id'} );
-                ) ?>
+					return ssi::make_drop_down( [map { $materials{$_}, $_ } sort keys %materials ], $session{'/administrator/stock/list.html?material_id'} );
+				) ?>
 			</select>
 		</p>
 		</div>
@@ -173,23 +173,23 @@
 			<input type="checkbox" id="TypesRoll" name="Types" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', split(';', $session{'/administrator/stock/list.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesRoll">Roll</label>
 		</p>
-        <p>
-            <label>Recommendations:</label>
-            <input type="checkbox" id="recommendations1" name="recommendations" value="1" <? echo ( ssi::checked( sets::isin( '1', split(';', $session{'/administrator/stock/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
-            <label class="radio" for="recommendations1">Yes</label>
-            <input type="checkbox" id="recommendations0" name="recommendations" value="0" <? echo ( ssi::checked( sets::isin( '0', split(';', $session{'/administrator/stock/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
-            <label class="radio" for="recommendations0">No</label>
-        </p>
 		<p>
-            <label>FSC Code:</label>
-            <input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{'/administrator/stock/list.html?fsc_code'} ) ?>" size="13" style="width: auto;" />
+			<label>Recommendations:</label>
+			<input type="checkbox" id="recommendations1" name="recommendations" value="1" <? echo ( ssi::checked( sets::isin( '1', split(';', $session{'/administrator/stock/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
+			<label class="radio" for="recommendations1">Yes</label>
+			<input type="checkbox" id="recommendations0" name="recommendations" value="0" <? echo ( ssi::checked( sets::isin( '0', split(';', $session{'/administrator/stock/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
+			<label class="radio" for="recommendations0">No</label>
+		</p>
+		<p>
+			<label>FSC Code:</label>
+			<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $session{'/administrator/stock/list.html?fsc_code'} ) ?>" size="13" style="width: auto;" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
-        </p>
+		</p>
 		<p>
-            <label>Inventory Code:</label>
-            <input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $session{'/administrator/stock/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
+			<label>Inventory Code:</label>
+			<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $session{'/administrator/stock/list.html?inventory_number'} ) ?>" size="13" style="width: auto;" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "calc('f1');", '', 'Go' ); ) ?>
-        </p>
+		</p>
 		</div><br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
