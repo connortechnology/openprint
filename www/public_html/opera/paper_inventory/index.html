@@ -1,0 +1,30 @@
+<? eval (
+$$variable{'skid_id'} = $param{'skid_id'} if ! $$variable{'skid_id'};
+$$variable{'rfidtag_id'} = $param{'rfidtag_id'} if ! $$variable{'rfidtag_id'};
+) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
+<form id="jump" name="jump" method="get" action="/employee/inventory/rfidtag_details.html">
+	<fieldset class="filters"><legend>Scan Item</legend>
+		<p>
+			<label for="skid_id">Skid ID #</label>
+			<input type="text" id="skid_id" name="skid_id" size="10" style="width: auto;" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){jump.action='/handheld/paper_inventory/rfidtag_details.html';jump.submit();}"/>
+		</p>
+		<p>
+			<label for="rfidtag_id">RFID ID #</label>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" style="width: auto;" value="<?rfidtag_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){jump.action='/handheld/paper_inventory/rfidtag_details.html';jump.submit();}"/>
+		</p>
+		<p>
+			<label for="debug">debug #</label>
+			<input type="text" id="debug" name="debug" size="10" style="width: auto;" value="" />
+		</p>
+		<br/>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(jump.skid_id.value){jump.action='/handheld/paper_inventory/rfidtag_details.html';jump.submit();} else if ( jump.rfidtag_id.value){jump.action='/handheld/paper_inventory/rfidtag_details.html';jump.submit();}else{jump.skid_id.focus();}",'','Jump' ),
+				ssi::writeButton( $log, $dbh, 'addnew', 'add.gif', '', '/employee/inventory/rfidtag_details.html', 'Add Skid' ),
+			); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction"/>
+</form>
+<script type="text/javascript">document.forms[0].skid_id.focus();</script>

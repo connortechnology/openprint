@@ -148,6 +148,9 @@ sub skids {
     if ( ! exists $session{'/employee/inventory/skids.html?contents'} ) {
         $session{'/employee/inventory/skids.html?contents'} = 'Y';
     } # end if
+    if ( ! exists $session{'/employee/inventory/skids.html?hasmanifest'} ) {
+        $session{'/employee/inventory/skids.html?hasmanifest'} = 'B';
+    } # end if
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start' );
 	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end' );
 
@@ -156,7 +159,7 @@ sub skids {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'updated_on_start_year','updated_on_start_month','updated_on_start_day',
 				'updated_on_end_year','updated_on_end_month','updated_on_end_day',
-				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents' 
+				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents','hasmanifest',
 				) );
  
 } # end sub skids
@@ -1941,7 +1944,8 @@ sub _skids_results {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'updated_on_start_year','updated_on_start_month','updated_on_start_day',
 				'updated_on_end_year','updated_on_end_month','updated_on_end_day',
-				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents' 
+				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents',
+				'hasmanifest',
 				) );
 }
 1;

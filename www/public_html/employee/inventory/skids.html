@@ -70,6 +70,15 @@ Please select a Skid to view/edit.<br>
             <label class="radio" for="contentsB">Both</label>
 		</p>
 		<p>
+            <label>Has Manifest?</label>
+            <input type="radio" id="hasmanifestY" name="hasmanifest" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y' ); ) ?> />
+            <label class="radio" for="hasmanifestY">Yes</label>
+            <input type="radio" id="hasmanifestN" name="hasmanifest" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N' ); ) ?> />
+            <label class="radio" for="hasmanifestN">No</label>
+            <input type="radio" id="hasmanifestB" name="hasmanifest" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?hasmanifest'} eq 'B' ); ) ?> />
+            <label class="radio" for="hasmanifestB">Both</label>
+		</p>
+		<p>
             <label>Allocated?</label>
             <input type="radio" id="allocatedY" name="allocated" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) ) ?> />
             <label class="radio" for="allocatedY">Yes</label>

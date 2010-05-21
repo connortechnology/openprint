@@ -67,6 +67,14 @@ sub find {
 		push @values, $params{'verification_code'};
 	} # end if
 
+	if ( exists $params{'has_manifest_id'} ) {
+		if ( $params{'has_manifest_id'} ) {
+			$sql .= ' AND id IN (SELECT skid_id FROM ManifestContents)';
+		} else {
+			$sql .= ' AND id NOT IN (SELECT skid_id FROM ManifestContents)';
+		} # end if
+	} # end if
+
 	if ( $params{'paper_id'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
 		push @values, $params{'paper_id'};
@@ -494,6 +502,10 @@ sub ManifestContents {
 	my $self = $_[0];
 	return openprint::ManifestContent::find('skid_id'=>$$self{id});
 } # end sub ManifestContents
+
+sub manifest_id {
+	return $_[0]->Manifest()->id();
+} # end sub manifest_id
 
 1;
 __END__

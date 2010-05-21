@@ -10,7 +10,7 @@
 			'order'		=>	'id',
 			);
 	} else {
-	@{$$variable{'Skids'}} = openprint::Skid::find( 
+		my %sql = (
 		'owner_id'	=>	( defined $session{'/employee/inventory/skids.html?Owner'} ? $session{'/employee/inventory/skids.html?Owner'} : undef ),
 		'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
 			'/employee/inventory/skids.html?created_on_start_year',
@@ -36,7 +36,10 @@
 			'/employee/inventory/skids.html?updated_on_end_day'} ) : undef,
 		'fsc_code'				=>	$session{'/employee/inventory/skids.html?fsc_code'},
 		'order'		=>	'id',
-		);
+);
+		$sql{'has_manifest_id'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
+		$sql{'has_manifest_id'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
+	@{$$variable{'Skids'}} = openprint::Skid::find( %sql );
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Skids'}} ) ?>
@@ -116,7 +119,7 @@
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
 				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->created_on()) ), );
 				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->updated_on()) ), );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $$Skid{'rfidtag_id'} );
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->RFIDTag()->id_short() );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->Location()->name() );
 
 				$html .= '<td rowspan="2">';
