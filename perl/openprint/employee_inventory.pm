@@ -159,6 +159,8 @@ sub skids {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'updated_on_start_year','updated_on_start_month','updated_on_start_day',
 				'updated_on_end_year','updated_on_end_month','updated_on_end_day',
+				'last_seen_start_year','last_seen_start_month','last_seen_start_day',
+				'last_seen_end_year','last_seen_end_month','last_seen_end_day',
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents','hasmanifest',
 				) );
  
@@ -636,6 +638,22 @@ sub skid_details {
 		} # end if
 	} # end foreach
 
+	if ( ! @skid_ids ) {
+		if ( $param{'rfidtag_id'} ) {
+			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.$param{'rfidtag_id'}.'%', 'order' => 'id','type'=>'Skid');
+			if ( @RFIDTags == 1 ) {
+				@skid_ids = ( $RFIDTags[0]->skid_id() );
+				$param{'skid_id'} = $skid_ids[0];
+			} # end if
+		} elsif ( $param{'rfidtag_hex'} ) {
+			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
+			if ( @RFIDTags == 1 ) {
+				@skid_ids = ( $RFIDTags[0]->skid_id() );
+				$param{'skid_id'} = $skid_ids[0];
+			} # end if
+		} # end if
+	} # end if
+
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
 	$variable{'skid_id'} = $param{'skid_id'};
 	@{$variable{'skid_ids'}} = @skid_ids;
@@ -882,7 +900,7 @@ sub check_out {
 } # end sub check_out
 
 sub check_in {
-	my ( $skid_id, $paper_id, $quantity, $project_id, $docket, $reason ) = @_;
+	my ( $skid_id, $paper_id, $quantity, $project_id, $docket, $reason, $Quality ) = @_;
 	if ( ! ( $paper_id or $skid_id ) ) {
 		$variable{'error'} .= 'Skid or Paper not specified. No paper checked in.<br/>';
 		return;
@@ -902,6 +920,10 @@ sub check_in {
 			return;
 		} # end if
 	} # end if
+	if ( ! $Quality ) {
+		my $C = $Skid->Content( $Paper );
+		$Quality = $C->Quality();
+	} # end if
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
@@ -920,7 +942,7 @@ sub check_in {
 	} # end if
 
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
-	my $delta = $Skid->add( $Paper, $quantity, $units );
+	my $delta = $Skid->add( $Paper, $quantity, $units, $Quality );
 	if ( ! @Projects ) {
 		$Paper->add_inventory( $Skid, $delta, $units, $description );
 		$variable{'information'} .= "Checked in $quantity$units from unknown docket.<br/>";
@@ -1944,6 +1966,8 @@ sub _skids_results {
 				'created_on_end_year','created_on_end_month','created_on_end_day',
 				'updated_on_start_year','updated_on_start_month','updated_on_start_day',
 				'updated_on_end_year','updated_on_end_month','updated_on_end_day',
+				'last_seen_start_year','last_seen_start_month','last_seen_start_day',
+				'last_seen_end_year','last_seen_end_month','last_seen_end_day',
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents',
 				'hasmanifest',
 				) );

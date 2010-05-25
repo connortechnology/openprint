@@ -39,7 +39,15 @@
 );
 		$sql{'has_manifest_id'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
 		$sql{'has_manifest_id'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
-	@{$$variable{'Skids'}} = openprint::Skid::find( %sql );
+		if ( $session{'/employee/inventory/skids.html?last_seen_start_year'} and $session{'/employee/inventory/skids.html?last_seen_start_month'} and $session{'/employee/inventory/skids.html?last_seen_start_day'} ) {
+			$sql{'last_seen_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00', 
+					@session{'/employee/inventory/skids.html?last_seen_start_year','/employee/inventory/skids.html?last_seen_start_month','/employee/inventory/skids.html?last_seen_start_day'} );
+		} # end if
+		if ( $session{'/employee/inventory/skids.html?last_seen_end_year'} and $session{'/employee/inventory/skids.html?last_seen_end_month'} and $session{'/employee/inventory/skids.html?last_seen_end_day'} ) {
+			$sql{'last_seen_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59', 
+ @session{'/employee/inventory/skids.html?last_seen_end_year','/employee/inventory/skids.html?last_seen_end_month','/employee/inventory/skids.html?last_seen_end_day'} );
+		} # end if
+		@{$$variable{'Skids'}} = openprint::Skid::find( %sql );
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Skids'}} ) ?>
@@ -50,7 +58,8 @@
 			<th align="left" width="75">Skid ID</th>
 			<th class="DateTime">Date Added</th>
 			<th class="DateTime">Updated On</th>
-			<th align="left" width="115">RFIDTag</th>
+			<th class="DateTime">Last Seen</th>
+			<th align="left" width="85">RFIDTag</th>
 			<th align="left" width="100">Location</th>
 			<th align="left" width="140">Dockets</th>
 		</tr>
@@ -119,7 +128,8 @@
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
 				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->created_on()) ), );
 				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->updated_on()) ), );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->RFIDTag()->id_short() );
+				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->RFIDTag()->updated_on()) ), );
+				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d" title="%s">%s</a></td>', $$Skid{'id'}, $Skid->RFIDTag->is_invalid_id(), $Skid->RFIDTag()->id_short() );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->Location()->name() );
 
 				$html .= '<td rowspan="2">';
@@ -135,7 +145,7 @@
 				$html .= '</tr>';
 				$html .= "<tr$rowclass>";
 				
-				$html .= '<td class="checkbox">&nbsp;</td><td colspan="5">';
+				$html .= '<td class="checkbox">&nbsp;</td><td colspan="6">';
 			
 				foreach my $C ( $Skid->Contents() ) {
 					my $Paper = $C->Paper();

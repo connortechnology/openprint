@@ -542,7 +542,7 @@ td.Docket, th.Docket {
 td.Stock, th.Stock {
 	text-align: right;
 }
-td.StockQuantity, th.StockQuantity {
+td.StockQuantity, th.StockQuantity, tr .StockQuality {
 	width: 100px;
 	text-align: right;
 }

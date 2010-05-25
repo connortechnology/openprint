@@ -111,6 +111,16 @@ sub find {
 		$sql .= ' AND updated_on <= ?';
 		push @values, $params{'updated_on_end'};
 	} # end if
+	if ( $params{'last_seen_start'} and $params{'last_seen_end'} ) {
+		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) BETWEEN ? AND ? )';
+		push @values, @params{'last_seen_start','last_seen_end'};
+	} elsif ( $params{'last_seen_start'} ) {
+		$sql .= ' AND (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) >= ?';
+		push @values, $params{'last_seen_start'};
+	} elsif ( $params{'last_seen_end'} ) {
+		$sql .= ' AND (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) <= ?';
+		push @values, $params{'updated_on_end'};
+	} # end if
 	if ( $params{'allocated_to_docket'} ) {
 		$sql .= ' AND id IN ( SELECT skid_id FROM paper_allocations WHERE project_id=(SELECT Index FROM tbl_Projects WHERE lngDocketNumber=?))';
 		push @values, $params{'allocated_to_docket'};
@@ -118,9 +128,6 @@ sub find {
 	if ( $params{'fsc_code'} ) {
 		$sql .= ' AND id IN ( SELECT skid_id FROM skid_contents WHERE paper_id=(SELECT id FROM papers WHERE fsc_code=?))';
 		push @values, $params{'fsc_code'};
-	} # end if
-	if ( $params{'created_on'} ) {
-		$log->debug("Find: Created: $params{'created_on'}");
 	} # end if
 	if ( exists $params{'deleted'} ) {
 		if ( ref $params{'deleted'} eq 'ARRAY' ) {
@@ -196,6 +203,14 @@ sub add {
 		# Default to new
 		$Quality = openprint::StockQuality->find_one('name'=>'new');
 	} # end if
+	if ( ! $Quality ) {
+		$log->error("Must specify quality");
+		return 0;
+	} # end if
+	if ( ! $Paper ) {
+		$log->error("Must specify Stock");
+		return 0;
+	} # end if
 
 	my $C = $self->Content( $Paper );
 	if ( ! $C ) {
@@ -224,7 +239,7 @@ sub add {
 			'quantity'=>$quantity,
 			});
 	return $quantity - $old_quantity;
-} # end sub add_inventory
+} # end sub add
 
 sub remove {
 	my ( $self, $Paper, $quantity ) = @_;

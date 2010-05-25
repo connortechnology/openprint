@@ -17,7 +17,7 @@ require misc;
 require openprint::RFIDTagType;
 require openprint::Location;
 
-my $debug = 0;
+my $debug = 1;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (
@@ -250,6 +250,9 @@ sub id_short {
 
 sub is_invalid_id {
 	my ( $id ) = @_;
+	if ( ref $id eq 'openprint::RFIDTag' ) {
+		$id = $id->id();
+	} # end if
 
 	if ( length $id != 15 ) {
 		return 'Invalid length.  A valid tag should be 15 characters long. This one is ' . length $id;

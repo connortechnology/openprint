@@ -172,7 +172,7 @@ function gsm_to_mweight( form ) {
 <div class="error">Warning: This skid has been deleted.</div>
 <? endif ( $$variable{'Skid'}->deleted() ) ?>
 
-<form name="jump" method="get" action="skid_details.html">
+<form id="jump" name="jump" method="get" action="skid_details.html">
 	<fieldset class="filters"><legend>Choose Skid</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
@@ -182,6 +182,13 @@ function gsm_to_mweight( form ) {
 				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
 				ssi::writeButton( $log, $dbh, 'Next', 'next.gif', q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,'','&gt;&gt;' ),
 			); ) ?>
+		</p>
+		<p>
+			<label for="rfidtag_id">RFID Tag ID #</label>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}"/>
+			Hex:
+			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.skid_id.value='';this.form.rfidtag_id.value='';if(event.keyCode == 13){$('jump').submit( );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('jump').submit();",'','Load' ); ) ?>
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
