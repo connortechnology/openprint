@@ -79,18 +79,18 @@
 						</li>
 						<li id="MenuAccount" class="<? echo ( $r->uri() =~ /main\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">ACCOUNT</a>
 							<ul>
-	<? if ( $openprint::session{'user_id'} ) ?>
+	<? if ( $session{'user_id'} ) ?>
 								<li><a href="/main/account/company_profile.html">&raquo; Company Profile</a></li>
 								<li><a href="/main/account/user_profile.html">&raquo; User Profile</a></li>
-	<? if ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+	<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 								<li><a href="/main/account/select_company.html">&raquo; Select Company</a></li>
 								<li><a href="/main/account/registration.html">&raquo; Registration</a></li>
-	<? endif ( sets::isin( $openprint::session{'user_type'}, ['E','A'] ) ) ?>
+	<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
 								<li><a href="/main/account/logout.html">&raquo; Logout</a></li>
-	<? else ( $openprint::session{'user_id'} ) ?>
+	<? else ( $session{'user_id'} ) ?>
 								<li><a href="/main/account/login.html">&raquo; Login</a></li>
 								<li><a href="/main/account/registration.html">&raquo; Registration</a></li>
-	<? endif ( $openprint::session{'user_id'} ) ?>
+	<? endif ( $session{'user_id'} ) ?>
 								<li><a href="/main/account/credit_application.html">&raquo; Credit Application</a></li>
 								<li><a href="/main/account/reseller_application.html">&raquo; Reseller Application</a></li>
 							</ul>
@@ -122,12 +122,12 @@
 								<li><a href="/support/returns.html;NOSSL">&raquo; Returns</a></li>
 							</ul>
 						</li>
-				<? if ( sets::isin( $openprint::session{user_type}, ['A','E'] ) ) ?>
+				<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 					<li class="off"><a href="#" onclick="bug_report_window();return false;">SEND BUG REPORT</a></li>
-				<? endif ( sets::isin( $openprint::session{user_type}, ['A','E'] ) ) ?>
+				<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 					</ul>
 				</div>
-	<? if ( ! $openprint::session{'user_id'} ) ?>
+	<? if ( ! $session{'user_id'} ) ?>
 				<div id="QuickLogin">
 					<form name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
 						<fieldset><legend>QUICK LOGIN:</legend>
@@ -148,13 +148,13 @@
 						<input type="hidden" name="btnFunction" />
 					</form>
 				</div>
-	<? endif ( ! $openprint::session{'user_id'} ) ?>
+	<? endif ( ! $session{'user_id'} ) ?>
 				<div id="CurrencySelection">
 					Currently selected currency:
 					<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
 						<select name="select_currency_id" onchange="this.form.submit();">
 							<? echo (
-								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $openprint::session{'Currency_id'} );
+								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $session{'Currency_id'} );
 							) ?>
 						</select>
 					</form>
