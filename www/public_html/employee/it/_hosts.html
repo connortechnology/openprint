@@ -1,0 +1,28 @@
+<table class="List sortable">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>IP</th>
+			<th>Mac</th>
+			<th>Blocked</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			foreach my $Host ( openprint::Host::find('order'=>'lower(hostname)') ) {
+				$html .= sprintf('
+					<tr>
+						<td><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
+						<td><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
+						<td><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
+						<td><a href="/employee/it/host.html?host_id=%1$d">%5$s</a></td>
+					</tr>
+					', $Host->id(), $Host->hostname(), $Host->ip(), $Host->mac(), $Host->blocked() );
+			} # end foreach Host
+			return $html;
+		) ?>
+		<tr>
+	
+	</tbody>
+</table>
