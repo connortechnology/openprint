@@ -973,7 +973,8 @@ sub allocate {
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
-	$quantity =~ s/\D//g;
+	$quantity =~ s/[^\d\.]//g;
+	$quantity =~ s/(\d+)\..*/$1/g;
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
 	if ( $docket and ! @Projects ) {
