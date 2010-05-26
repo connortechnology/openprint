@@ -83,6 +83,10 @@ sub find {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
 		push @values, $params{'quantity_>='};
 	} # end if
+	if ( $params{'quality_id'} ) {
+		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quality_id = ?)';
+		push @values, $params{'quality_id'};
+	} # end if
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};

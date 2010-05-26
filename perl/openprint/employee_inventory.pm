@@ -162,6 +162,7 @@ sub skids {
 				'last_seen_start_year','last_seen_start_month','last_seen_start_day',
 				'last_seen_end_year','last_seen_end_month','last_seen_end_day',
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents','hasmanifest',
+				'quality_id',
 				) );
  
 } # end sub skids
@@ -1974,8 +1975,9 @@ sub _skids_results {
 				'last_seen_start_year','last_seen_start_month','last_seen_start_day',
 				'last_seen_end_year','last_seen_end_month','last_seen_end_day',
 				'Docket','fsc_code','empty', 'withrfid','withoutrfid','location_id','verification_code', 'allocated','contents',
-				'hasmanifest',
+				'hasmanifest','quality_id',
 				) );
 }
+
 1;
 __END__

@@ -116,8 +116,15 @@ Please select a Skid to view/edit.<br>
 			<select name="location_id">
 				<? echo ( 
 					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') );
-
 					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?location_id'} );
+				) ?>
+			</select>
+		</p>
+		<p><label>Quality:</label>
+			<select name="quality_id">
+				<? echo ( 
+					my @options = ('','All', map { $_->id(), $_->name() } openprint::StockQuality::find('order'=>'lower(shortname)') );
+					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?quality_id'} );
 				) ?>
 			</select>
 		</p>
