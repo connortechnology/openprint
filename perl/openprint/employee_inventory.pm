@@ -204,6 +204,9 @@ sub inventory_report {
 		foreach my $Skid ( $Paper->skids() ) {
 			my $weight = 0;
 			my $C = $Skid->Content( $Paper );
+			if ( $param{'Quality'} and $C->quality_id() != $param{'Quality'} ) {
+				next;
+			} # end if
 			if ( $Paper->type() eq 'Roll' ) {
 				$weight = $C->quantity();
 			} else {
@@ -344,7 +347,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 } # end sub paper
 
 sub _paper_results {
-	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' ) );
+	ssi::save_params( '/employee/inventory/paper.html', ( 'Manufacturer','Name','Finish','Colour','Weight','Quality', 'Type','StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','fsc_code','width','height','OrLarger','instock','Owner','owner_id_exclude' ) );
 	$session{'/employee/inventory/paper.html?owner_id_exclude'} = $param{'owner_id_exclude'} if exists $param{'Owner'};
 } # end sub _paper_results
 
@@ -970,6 +973,7 @@ sub allocate {
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
+	$quantity =~ s/\D//g;
 	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
 	if ( $docket and ! @Projects ) {

@@ -1,14 +1,4 @@
 <script type="text/javascript">
-	function initializeDayDropDowns() {
-        if ( typeof(setDaysDropDown) == 'function' ) {
-            setDaysDropDown(document.f1.TakeOverStartYear.value,document.f1.TakeOverStartMonth.value,document.f1.TakeOverStartDay,document.f1.TakeOverStartDay.value);
-            setDaysDropDown(document.f1.TakeOverEndYear.value,document.f1.TakeOverEndMonth.value,document.f1.TakeOverEndDay,document.f1.TakeOverEndDay.value);
-        } // end if
-    }
-
-    if ( typeof(initializeDayDropDowns) )
-        window.onload = initializeDayDropDowns;
-
 	function load_projects( form ) {
 		LoadContent('ProjectList','/employee/reports/_prepress_project_list.html', Serialize( form ) );
 	} // end function

@@ -23,8 +23,8 @@
 		</tr>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 		<tr<?rowclass?>>
-			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
-			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->reference(); ) ?></a></td>
+			<td><a href="/employee/production/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+			<td><a href="/employee/production/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->reference(); ) ?></a></td>
 			<td align="left"><? echo ( $$variable{'Project'}->status(); ) ?></td>
 			<td class="Date"><? echo ( $$variable{'Project'}->requested_date(); ) ?></td>
 			<td class="Date"><? echo ( $$variable{'Project'}->due_date(); ) ?></td>
