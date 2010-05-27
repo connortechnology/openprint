@@ -1,6 +1,12 @@
 <? eval ( 
 	$$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} ) if ! $$variable{'Paper'};
 	$$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} ) if ! $$variable{'Skid'};
+	if ( ! $$variable{'Paper'}->id() ) {
+		my @C = $$variable{'Skid'}->Contents();
+		if ( @C == 1 ) {
+			$$variable{'Paper'} = $C[0]->Paper() if $C[0]->paper_id();
+		} # end if
+	} # end if
  ) ?>
 <p>
 	<label for="txtManufacturer" onclick="f1.txtManufacturer.value='';f1.Manufacturer.selectedIndex=0;f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>

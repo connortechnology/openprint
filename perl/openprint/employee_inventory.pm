@@ -660,6 +660,7 @@ sub skid_details {
 
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
 	$variable{'skid_id'} = $param{'skid_id'};
+	$variable{'rfidtag_id'} = $param{'rfidtag_id'};
 	@{$variable{'skid_ids'}} = @skid_ids;
 
 	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) ) {
