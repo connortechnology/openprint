@@ -269,18 +269,23 @@ $log->debug("Have no job: $Job");
 				} # end if
 				$html .= ssi::writeButton( $log, $dbh, 'CompletePrinting', 'completePrinting.gif', "f1.btnFunction.value='Complete Printing';f1.submit();", '', 'Complete Printing' ) if $$variable{'Project'}->status() eq 'Approved';
 			} # end if
-			if ( $$variable{'ProjectStatus'} eq 'Printed' and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
+
+			my @bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'ProjectIndex'}, 'Bindery' );
+
+			if ( $$variable{'ProjectStatus'} eq 'Printed' and @bindery_services and ! ( sql::execute( undef, undef, q{SELECT serviceindex FROM Bindery_Schedule WHERE projectindex=?}, $$variable{'ProjectIndex'} ) ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'AddToBinderySchedule', 'addtobinderyschedule.gif', "f1.btnFunction.value='AddToBinderySchedule';f1.submit();", '', 'Add To Bindery Schedule' );
 			} # end if
 			#if ( openprint::usergroup::is_user_in( ['Scheduling','Accounting'], $session{'user_id'} ) ) {
 			#$html .= ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', "f1.btnFunction.value='Complete';f1.submit();", '', 'Complete' );
 			#} # end if
-			$html .= ssi::writeButton( $log, $dbh, 'CompleteBindery', 'completeBindery.gif', "f1.btnFunction.value='BinderyComplete';f1.submit();", '', 'Complete Bindery' );
-			if ( $$variable{'ShippingType'} eq 'Delivery' and $$variable{'ProjectStatus'} ne 'Shipped' ) {
+			if ( @bindery_services ) {
+				$html .= ssi::writeButton( $log, $dbh, 'CompleteBindery', 'completeBindery.gif', "f1.btnFunction.value='BinderyComplete';f1.submit();", '', 'Complete Bindery' );
+			} # end if
+			if ( $$variable{'ShippingType'} eq 'Delivery' and $$variable{'Project'}->status() ne 'Shipped' ) {
 
 				$html .= ssi::writeButton( $log, $dbh, 'Shipped', 'shipped.gif', "f1.btnFunction.value='Shipped';f1.submit();", '', 'Shipped' );
 			} # end if
-			if ( $$variable{'ShippingType'} eq 'Customer Pickup' and $$variable{'ProjectStatus'} ne 'Picked Up' ) {
+			if ( $$variable{'ShippingType'} eq 'CustomerPickUp' and $$variable{'Project'}->status() ne 'Picked Up' ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
 			} # end if
 			if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) {
