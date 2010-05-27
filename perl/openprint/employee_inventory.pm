@@ -663,7 +663,7 @@ sub skid_details {
 	$variable{'rfidtag_id'} = $param{'rfidtag_id'};
 	@{$variable{'skid_ids'}} = @skid_ids;
 
-	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) ) {
+	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) and $param{'btnFunction'} ne 'Save' ) {
 		$variable{'error'} .= "Skid $param{'skid_id'} not found!<br/>";
 		return;
 	} # end if
@@ -758,7 +758,9 @@ $log->debug("Entering skid $skid_count");
 		} elsif ( @skid_ids ) {
 			foreach my $skid_id ( @skid_ids ) {
 				$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
-				save_skid( new openprint::Skid( $skid_id ) );
+				my $Skid = new openprint::Skid( $skid_id );
+				$Skid->id( $skid_id );
+				save_skid( $Skid );
 				if ( $param{'verification_code'} ) {
 					$param{'verification_code'} =~ s/^[Vv](.*)$/$1/;
 					my $SV = new openprint::Skid_Verification();

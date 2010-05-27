@@ -8,6 +8,7 @@
 		} # end if
 	} # end if
 	$$variable{'C'} = $$variable{'Skid'}->Content($$variable{'Paper'});
+	$$variable{'C'} = new openprint::SkidContent() if ! $$variable{'C'};
  ) ?>
 <p>
 	<label for="txtManufacturer" onclick="f1.txtManufacturer.value='';f1.Manufacturer.selectedIndex=0;f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>

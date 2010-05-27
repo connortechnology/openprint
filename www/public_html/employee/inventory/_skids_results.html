@@ -135,7 +135,7 @@
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
 				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->created_on()) ), );
 				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->updated_on()) ), );
-				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->RFIDTag()->updated_on()) ), );
+				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->rfidtag_id()?Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->RFIDTag()->updated_on()) ) : 'no rfid' );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d" title="%s">%s</a></td>', $$Skid{'id'}, $Skid->RFIDTag->is_invalid_id(), $Skid->RFIDTag()->id_short() );
 				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->Location()->name() );
 
@@ -178,7 +178,7 @@
 			$html .= '<tr class="totals"><td colspan="4">Totals:</td><td>';
 			$html .= Number::Format::format_number($total_skids) . 'skids ' . Number::Format::format_number($total_sheets) . 'sheets<br/>' if $total_skids;
 			$html .= Number::Format::format_number($total_rolls) . 'rolls ' . Number::Format::format_number($total_weight) . 'lbs<br/>' if $total_rolls;
-			$html .= '</td><td></td></tr>';
+			$html .= '</td><td colspan="2">&nbsp;</td></tr>';
 			return $html;
 		) ?>
 	</table>
