@@ -41,7 +41,10 @@ sub _hosts {
 sub host {
 	$variable{'Host'} = new openprint::Host( $param{'host_id'} );
 	if ( $param{'btnFunction'} eq 'Resolve' ) {
-		$variable{'error'} .= $variable{'Host'}->save({'hostname'=> $variable{'Host'}->resolve()});
+		$variable{'error'} .= $variable{'Host'}->save({
+				'hostname'=> $variable{'Host'}->resolve(),
+				'mac'=> $variable{'Host'}->get_mac(),
+				});
 	} # end if
 } # end sub view_host
 
