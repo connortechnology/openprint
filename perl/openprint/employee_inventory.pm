@@ -686,6 +686,7 @@ sub skid_details {
 		@skid_ids = ( (new openprint::Skid( @skid_ids ? $skid_ids[0] : undef ))->next()->id());
 		$param{'skid_id'} = $skid_ids[0];
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+		$session{'/employee/inventory/skid_details.html?verification_code'} = $param{'verification_code'} if $param{'verification_code'};
 		my @quantities = misc::trim( split ',', $param{'Quantity'} );
 		if ( ! @quantities ) {	
 			$variable{'error'} .= 'Please enter the # of skids/rolls to enter.';
@@ -1786,6 +1787,7 @@ sub purchase_order_edit {
 			'shipto_country'	=>	$C->country(),
 			'shipto_postalcode'	=>	$C->postalcode(),
 			'shipto_phone'		=>	$C->phone(),
+			'shipto_mobile'		=>	$U->mobile(),
 			'shipto_fax'		=>	$C->fax(),
 			'shipto_email'		=>	$U->email(),
 			'shipto_sms'		=>	$U->sms(),

@@ -249,7 +249,7 @@ function gsm_to_mweight( form ) {
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
 			</p>
 			<p><label>Verification:</label>
-				<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" />
+				<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" value="<? echo ( $session{'/employee/inventory/skid_details.html?verification_code'}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'vpopulate', '', "f1.verification_code.value='".Date::Format::time2str( '%Y%m%d', time )."';", '', 'Verification:' ); ) ?>
 			</p>
 			<p>
