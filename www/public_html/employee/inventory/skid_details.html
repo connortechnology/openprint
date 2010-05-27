@@ -185,7 +185,7 @@ function gsm_to_mweight( form ) {
 		</p>
 		<p>
 			<label for="rfidtag_id">RFID Tag ID #</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="18" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
 			Hex:
 			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.skid_id.value='';this.form.rfidtag_id.value='';if(event.keyCode == 13){$('jump').submit( );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('jump').submit();",'','Load' ); ) ?>
