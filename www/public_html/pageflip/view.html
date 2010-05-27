@@ -1,6 +1,30 @@
 <script type="text/javascript">
 <!--
 flippingBook.pages = [
+	<? if ( $param{'docket'} ) ?>
+		<? echo (
+			my $html;
+			my @filenames;
+			if ( opendir DIRHANDLE, $config{'PageFlipDir'}.'/LR' ) {
+				@filenames = readdir DIRHANDLE;
+				closedir DIRHANDLE;
+			} else {
+				$log->error( "Cannot open $config{'PageFlipDir'}" );
+			} # end if
+$log->debug("# of files read " . @filenames );
+			my @pages;
+			foreach my $file ( @filenames ) {
+				if ( $file =~ /^$param{'docket'}/ ) {
+					push @pages, $file;
+				} # end if
+			} # end foreach
+$log->debug("Pages found: " . @pages );
+			foreach my $page ( sort @pages ) {
+				$html .= '"/PageFlip/LR/'.$page.'",'."\n";
+			} # end foreach
+			return $html;
+		) ?>
+	<? else ( $param{'docket'} ) ?>
 	"pages/page-001.jpeg",
 	"pages/page-002.jpeg",
 	"pages/page-003.jpeg",
@@ -16,12 +40,11 @@ flippingBook.pages = [
 	"pages/page-013.jpeg",
 	"pages/page-014.jpeg",
 	"pages/page-015.jpeg"
+	<? endif ( $param{'docket'} ) ?>
 ];
 
 
 flippingBook.contents = [
-	[ "Cover", 1 ],
-	[ "Modern", 4 ]
 ];
 
 // define custom book settings here
