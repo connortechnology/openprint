@@ -72,6 +72,10 @@ sub find {
 		$sql .= ' AND id LIKE ?';
 		push @values, $params{id_like};
 	} # end if
+	if ( $params{'short_id'} ) {
+		$sql .= ' AND id = ?';
+		push @values, sprintf('%.15d', $params{'short_id'} );
+	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
 		push @values, @params{'created_on_start','created_on_end'};

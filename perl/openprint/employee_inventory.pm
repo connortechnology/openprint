@@ -644,7 +644,7 @@ sub skid_details {
 
 	if ( ! @skid_ids ) {
 		if ( $param{'rfidtag_id'} ) {
-			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.$param{'rfidtag_id'}.'%', 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				$param{'skid_id'} = $skid_ids[0];

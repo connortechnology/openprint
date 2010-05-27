@@ -18,7 +18,7 @@ require openprint::SkidContent;
 require openprint::Manifest;
 require openprint::ManifestContent;
 
-my $debug = 0;
+my $debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -122,7 +122,7 @@ sub find {
 		$sql .= ' AND (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) >= ?';
 		push @values, $params{'last_seen_start'};
 	} elsif ( $params{'last_seen_end'} ) {
-		$sql .= ' AND (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) <= ?';
+		$sql .= ' AND ( (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) <= ? OR (SELECT updated_on FROM Rfidtags where rfidtags.id=skids.rfidtag_id) IS NULL)';
 		push @values, $params{'updated_on_end'};
 	} # end if
 	if ( $params{'allocated_to_docket'} ) {
