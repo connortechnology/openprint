@@ -416,7 +416,7 @@ sub get_li {
 			$html .= ssi::writeButton( $log, $dbh, 'Stop'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'stop' } } );", '', 'Stop' );
 		} # end if
 		$html .= '</span>';
-		if ( $$self{'project_id'} and $Equipment->smartscheduling() ) {
+		if ( $$self{'project_id'} ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
@@ -442,7 +442,7 @@ sub get_li {
 			$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", '', 'Start' );
 		} # end if
 		$html .= '</span>';
-		if ( $$self{'project_id'} and $Equipment->smartscheduling() ) {
+		if ( $$self{'project_id'} ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
