@@ -42,6 +42,7 @@
 			'/employee/inventory/skids.html?updated_on_end_day'} ) : undef,
 		'fsc_code'				=>	$session{'/employee/inventory/skids.html?fsc_code'},
 		'order'		=>	'id',
+		'type'		=> [ split (',', $session{'/employee/inventory/skids.html?Type'} ) ],
 );
 		$sql{'has_manifest_id'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
 		$sql{'has_manifest_id'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
@@ -54,6 +55,15 @@
  @session{'/employee/inventory/skids.html?last_seen_end_year','/employee/inventory/skids.html?last_seen_end_month','/employee/inventory/skids.html?last_seen_end_day'} );
 		} # end if
 		$sql{'quality_id'} = $session{'/employee/inventory/skids.html?quality_id'} if $session{'/employee/inventory/skids.html?quality_id'};
+
+	if ( $session{'/employee/inventory/skids.html?location_id'} ) {
+		if ( $session{'/employee/inventory/skids.html?location_id'} eq 'None' ) {
+			$sql{'location_id'} = [];
+		} else {
+			my $Location = new openprint::Location( $session{'/employee/inventory/skids.html?location_id'} );
+			$sql{'location_id'} = [ map { $_->id() } ( $Location, $Location->get_all_children()) ];
+		} # end if
+	} # end if
 		@{$$variable{'Skids'}} = openprint::Skid::find( %sql );
 	} # end if
 ) ?>
@@ -77,8 +87,6 @@
 			my $total_skids;
 			my $total_weight;
 			my $total_sheets;
-			my $Location = new openprint::Location( $session{'/employee/inventory/skids.html?location_id'} );
-			my @location_ids = map { $_->id() } ( $Location, $Location->get_all_children());
 			my %Allocations;
 			foreach my $Allocation ( openprint::PaperAllocation::find() ) {
 				foreach my $Skid ( $Allocation->Skids() ) {
@@ -100,15 +108,6 @@
                 if ( $session{'/employee/inventory/skids.html?contents'} eq 'N' ) {
                     next if $Skid->Contents();
                 } # end if
-				my $iftype = 1;
-                foreach my $C ( $Skid->Contents() ) {
-                    my $Paper = $C->Paper();
-                    if ( ! sets::isin( $Paper->type(), split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) {
-                        $iftype = 0;
-                        last;
-                    } # end if
-                } # end foreach
-                next if ! $iftype;
 	
 				my @Allocations;
 				if ( $Allocations{$Skid->id()} ) {
@@ -125,19 +124,21 @@
 				next if $Skid->rfidtag_id() and ! $session{'/employee/inventory/skids.html?withrfid'};
 				next if ( ! $Skid->rfidtag_id() ) and ! $session{'/employee/inventory/skids.html?withoutrfid'};
 
-				if ( $session{'/employee/inventory/skids.html?location_id'} ) {
-					next if $session{'/employee/inventory/skids.html?location_id'} eq 'None' and $Skid->location_id();
-					next if ! sets::isin( $Skid->location_id(), \@location_ids );
-				} # end if
-
-				$html .= "<tr$rowclass>";
-				$html .= qq`<td class="checkbox"><input type="checkbox" name="skids" value="$$Skid{'id'}"/></td>`;
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%d</a></td>', $$Skid{'id'}, $$Skid{'id'}, );
-				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->created_on()) ), );
-				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->updated_on()) ), );
-				$html .= sprintf( '<td class="DateTime"><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->rfidtag_id()?Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->RFIDTag()->updated_on()) ) : 'no rfid' );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d" title="%s">%s</a></td>', $$Skid{'id'}, $Skid->RFIDTag->is_invalid_id(), $Skid->RFIDTag()->id_short() );
-				$html .= sprintf( '<td><a href="skid_details.html?skid_id=%d">%s</a></td>', $$Skid{'id'}, $Skid->Location()->name() );
+				$html .= sprintf('<tr%1$s>
+					<td class="checkbox"><input type="checkbox" name="skids" value="%2$d"/></td>
+				<td><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
+				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
+				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
+				<td class="DateTime"><a href="skid_details.html?skid_id=%2$d">%5$s</a></td>
+				<td><a href="skid_details.html?skid_id=%2$d" title="%6$s">%7$s</a></td>
+				<td><a href="skid_details.html?skid_id=%2$d">%8$s</a></td>
+				', $rowclass, $$Skid{'id'},
+Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->created_on()) ),
+Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->updated_on()) ),
+$Skid->rfidtag_id()?Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Skid->RFIDTag()->updated_on()) ) : 'no rfid',
+$Skid->RFIDTag->is_invalid_id(), $Skid->RFIDTag()->id_short(),
+$Skid->Location()->name(),
+ );
 
 				$html .= '<td rowspan="2">';
 				foreach my $PA ( @Allocations ) {

@@ -45,6 +45,7 @@ $serial = 'skid_id_seq';
 	'updated_on'	=>	'NOW()',
 	'created_on'	=>	'NOW()',
 	'deleted'		=>	0,
+	'type'		=>	undef,
 );
 
 sub find {
@@ -145,6 +146,33 @@ sub find {
 		$sql .= ' AND (deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
+
+	if ( exists $params{'type'} ) {
+		if ( ref $params{'type'} eq 'ARRAY' ) {
+			if ( @{$params{'type'}} ) {
+				$sql .= ' AND type IN (' . join(',', map {'?'} @{$params{'type'}}) . ')';
+				push @values, @{$params{'type'}};
+			} else {
+				$sql .= ' AND type IS NULL';
+			} # en dif
+		} else {
+			$sql .= ' AND type=?';
+			push @values, $params{'type'};
+		} # end if
+	} # end if
+	if ( exists $params{'location_id'} ) {
+		if ( ref $params{'location_id'} eq 'ARRAY' ) {
+			if ( @{$params{'location_id'}} ) {
+				$sql .= ' AND location_id IN (' . join(',', map {'?'} @{$params{'location_id'}}) . ')';
+				push @values, @{$params{'location_id'}};
+			} else {
+				$sql .= ' AND location_id IS NULL';
+			} # en dif
+		} else {
+			$sql .= ' AND location_id=?';
+			push @values, $params{'location_id'};
+		} # end if
+	} # end if
 	
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 
@@ -178,6 +206,8 @@ sub copy {
 sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
+	$self->type() if ! $self->type();
+	$self->location_id();
 	return $self->SUPER::save( $data );
 } # end sub save
 
@@ -295,8 +325,9 @@ sub location_id {
 	if ( $$self{'rfidtag_id'} ) {
 		my $Tag = new openprint::RFIDTag( $$self{'rfidtag_id'} );
 		if ( $new ) {
-			$Tag->location_id( $new );
-			$Tag->save();
+			if ( $new != $Tag->location_id() ) {
+				$Tag->save({'location_id'=>$new});
+			} # end if
 			$$self{'location_id'} = $new;
 		} elsif ( $Tag->location_id() != $$self{'location_id'} ) {
 			$$self{'location_id'} = $Tag->location_id();

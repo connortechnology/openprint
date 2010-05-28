@@ -148,6 +148,10 @@ sub save {
 		} # end if
 	} # end if
 
+	if ( $self->type() eq 'Skid' ) {
+		$self->Skid()->save({location_id=>$$self{'location_id'}});
+	} # end if
+
 	delete $$self{'type'};
 	$$self{'updated_on'} = 'NOW()';
 	
