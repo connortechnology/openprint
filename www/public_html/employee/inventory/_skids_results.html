@@ -42,7 +42,7 @@
 			'/employee/inventory/skids.html?updated_on_end_day'} ) : undef,
 		'fsc_code'				=>	$session{'/employee/inventory/skids.html?fsc_code'},
 		'order'		=>	'id',
-		'type'		=> [ split (',', $session{'/employee/inventory/skids.html?Type'} ) ],
+		'type'		=> [ split (';', $session{'/employee/inventory/skids.html?Type'} ) ],
 );
 		$sql{'has_manifest_id'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
 		$sql{'has_manifest_id'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
