@@ -1,30 +1,15 @@
 <script type="text/javascript">
 <!--
 flippingBook.pages = [
-	<? if ( $param{'docket'} ) ?>
+	<? if ( $$variable{'PageFlip'}->id() ) ?>
 		<? echo (
 			my $html;
-			my @filenames;
-			if ( opendir DIRHANDLE, $config{'PageFlipDir'}.'/LR' ) {
-				@filenames = readdir DIRHANDLE;
-				closedir DIRHANDLE;
-			} else {
-				$log->error( "Cannot open $config{'PageFlipDir'}" );
-			} # end if
-$log->debug("# of files read " . @filenames );
-			my @pages;
-			foreach my $file ( @filenames ) {
-				if ( $file =~ /^$param{'docket'}/ ) {
-					push @pages, $file;
-				} # end if
-			} # end foreach
-$log->debug("Pages found: " . @pages );
-			foreach my $page ( sort @pages ) {
+			foreach my $page ( @{$$variable{'PageFlip'}->page_files()} ) {
 				$html .= '"/PageFlip/LR/'.$page.'",'."\n";
 			} # end foreach
 			return $html;
 		) ?>
-	<? else ( $param{'docket'} ) ?>
+	<? else ( $$variable{'PageFlip'}->id() ) ?>
 	"pages/page-001.jpeg",
 	"pages/page-002.jpeg",
 	"pages/page-003.jpeg",
@@ -40,7 +25,7 @@ $log->debug("Pages found: " . @pages );
 	"pages/page-013.jpeg",
 	"pages/page-014.jpeg",
 	"pages/page-015.jpeg"
-	<? endif ( $param{'docket'} ) ?>
+	<? endif ( $$variable{'PageFlip'}->id() ) ?>
 ];
 
 
@@ -66,6 +51,7 @@ flippingBook.settings.zoomHintEnabled = true;
 flippingBook.create();
 -->
 </script>
+<!--#include virtual="/includes/error_reporting.html"-->
 <div id="fbContainer">
     	<a class="altlink" href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash"><div id="altmsg">Download Adobe Flash Player.</div></a>
     </div>
