@@ -191,10 +191,12 @@ sub find {
 sub copy {
 	my $self = shift;
 	my $new = new openprint::Skid( );
-	@$new{'location_id'} = @$self{'location_id'};
+	@$new{'location_id','type'} = @$self{'location_id','type'};
 	$new->save();
 
 	foreach my $C ( $self->Contents() ) {
+		$C = $C->copy();
+		$C->save({'skid_id'=>$$new{id}});
 		$C->Paper()->add_inventory( $new->id(), $C->quantity() );
 		foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id()) ) {
 			$C->Paper()->allocate( $new, $PA->project_id(), $PA->quantity(), $PA->units(), $PA->reason() );
@@ -288,7 +290,7 @@ sub remove {
 	my $new_quantity = $C->quantity() - $quantity;
 	$new_quantity = 0 if $new_quantity < 0;
 	$C->save({ 'quantity'=>$new_quantity });
-} # end sub add_inventory
+} # end sub remove
 
 sub set_quantity {
 	my ( $self, $Paper, $quantity ) = @_;

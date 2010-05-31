@@ -15,7 +15,7 @@
 		<table class="List">
 			<tr>
 				<th width="80" align="left">Skid</th>
-				<th width="170" align="left">RFIDTag</th>
+				<th width="95" align="left">RFIDTag</th>
 				<th align="left">Location</th>
 				<th width="75" align="right">Last Seen</th>
 				<th width="100" align="right">Quantity</th>
@@ -36,7 +36,7 @@
 						<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td>
 						<td align="right"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td><td>',
 						$rowclass, $C->skid_id(), $Skid->Location()->name(), 
-						( $Skid->rfidtag_id() ? sprintf('%d (%2$x)', $Skid->RFIDTag()->short_id(),substr($Skid->RFIDTag()->id(),1,15)) : '' ), 
+						( $Skid->rfidtag_id() ? sprintf('%d (%2$x)', $Skid->RFIDTag()->id_short(),substr($Skid->RFIDTag()->id(),1,15)) : '' ), 
 						Number::Format::format_number($C->quantity()), $C->Paper()->units(), 
 						( $last_seen_days ? $last_seen_days . ' days' : 'Today' ),
 						$C->quality(),

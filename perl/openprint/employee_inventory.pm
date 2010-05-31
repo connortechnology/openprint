@@ -689,10 +689,6 @@ sub skid_details {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$session{'/employee/inventory/skid_details.html?verification_code'} = $param{'verification_code'} if $param{'verification_code'};
 		my @quantities = misc::trim( split ',', $param{'Quantity'} );
-		if ( ! @quantities ) {	
-			$variable{'error'} .= 'Please enter the # of skids/rolls to enter.';
-			return;
-		} # end if
 
 		if ( @skid_ids and (@quantities>1) and ( @quantities != @skid_ids ) ) {
 			$variable{'error'} .= 'When saving to multiple skids, the # of quantities must match the # of skids.';
@@ -757,10 +753,12 @@ $log->debug("Entering skid $skid_count");
 			$variable{'information'} .= "Added $param{'skid_quantity'} skids.<br/>";
 		} elsif ( @skid_ids ) {
 			foreach my $skid_id ( @skid_ids ) {
-				$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
-				my $Skid = new openprint::Skid( $skid_id );
-				$Skid->id( $skid_id );
-				save_skid( $Skid );
+				if ( $param{'Quantity'} ) {
+					$param{'Quantity'} = @quantities > 1 ? shift @quantities : $quantities[0] if @quantities;
+					my $Skid = new openprint::Skid( $skid_id );
+					$Skid->id( $skid_id );
+					save_skid( $Skid );
+				} # end if
 				if ( $param{'verification_code'} ) {
 					$param{'verification_code'} =~ s/^[Vv](.*)$/$1/;
 					my $SV = new openprint::Skid_Verification();
@@ -777,11 +775,13 @@ $log->debug("Entering skid $skid_count");
 		} # end if
 
 	} elsif ( sets::isin( $param{'btnFunction'}, 'Copy', 'Duplicate' ) ) {
+		my @new_skid_ids;
 		foreach my $skid_id ( @skid_ids ) {
 			my $Skid = new openprint::Skid( $skid_id );
 			$Skid = $Skid->copy();
-			$Skid->save();
+			push @new_skid_ids, $Skid->id() if $Skid->id();
 		} # end foreach
+		@skid_ids = @new_skid_ids;
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		foreach my $skid_id ( @skid_ids ) {
 			my $Skid = new openprint::Skid( $skid_id );
@@ -820,7 +820,7 @@ $log->debug("Entering skid $skid_count");
 	} # end if
 
 	$variable{'Skid'} = new openprint::Skid( @skid_ids ? $skid_ids[0] : undef );
-	$variable{'skid_id'} = $param{'skid_id'};
+	$variable{'skid_id'} = $variable{'Skid'}->id() ? $variable{'Skid'}->id() : $param{'skid_id'};
 	@{$variable{'skid_ids'}} = @skid_ids;
 
 } # end sub skid_details

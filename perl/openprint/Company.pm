@@ -339,6 +339,7 @@ sub Credit {
 } # end sub Credit
 sub get_dropdown {
 	my $selected = shift;
+	my $params = shift;
 
 	my $sql = 'SELECT Index, strName FROM Company WHERE (deleted=false or deleted IS NULL)';
 	my @values;
@@ -346,6 +347,13 @@ sub get_dropdown {
 	if ( $openprint::session{'user_type'} ne 'A' and ! openprint::usergroup::is_user_in( ['Estimating','Prepress','Accounting','Shipping','Inventory'], $openprint::session{'user_id'} ) ) {
 		$sql .= ' AND Index=(SELECT CompanyIndex FROM Users WHERE Index=?) OR lngSalesPerson IN ('. join(',', $openprint::session{'user_id'}, new openprint::User( $openprint::session{'user_id'} )->csr_ids() ) .')';
 		push @values, $openprint::session{'user_id'};
+	} # end if
+	if ( $params ) {
+		if ( $$params{'id'} ) {
+			if ( ref $$params{'id'} eq 'ARRAY' ) {
+				$sql .= ' AND index IN ( '.join(',', @{$$params{'id'}} ).' )';
+			} # en dif
+		} # end if
 	} # end if
 	$sql .= ' ORDER BY lower(strname)';
 

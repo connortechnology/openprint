@@ -130,7 +130,9 @@
     </p>
 	<p>
 		<label for="Owner">Owner:</label>
-		<select id="Owner" name="Owner"><? echo ( openprint::Company::get_dropdown( $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $session{'company_id'} ); ) ?></select>
+		<select id="Owner" name="Owner"><? echo ( 
+			my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM papers' );
+			openprint::Company::get_dropdown( ( $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $session{'company_id'} ), { 'id'=>\@owner_ids } ); ) ?></select>
 	</p>
 	<p>
 		<label for="Quantity">Quantity:</label>
