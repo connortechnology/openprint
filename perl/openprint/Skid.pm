@@ -192,6 +192,7 @@ sub copy {
 	my $self = shift;
 	my $new = new openprint::Skid( );
 	@$new{'location_id','type'} = @$self{'location_id','type'};
+	$$new{'type'} = $self->type();
 	$new->save();
 
 	foreach my $C ( $self->Contents() ) {
@@ -208,7 +209,7 @@ sub copy {
 sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
-	$self->type() if ! $self->type();
+	$self->type() if ! $$self{'type'};
 	$self->location_id();
 	return $self->SUPER::save( $data );
 } # end sub save
@@ -517,7 +518,7 @@ sub type {
 				$$self{'type'} = 'Roll';	
 				last;
 			} else {
-				$$self{'type'} = 'Skid';	
+				$$self{'type'} = 'Sheet';
 				last;
 			} # end if
 		} # end foreach C

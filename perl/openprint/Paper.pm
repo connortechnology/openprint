@@ -674,7 +674,6 @@ sub add_inventory {
 	delete $$self{allocated};
 	# Updates in_stock
 	$self->save();
-
 } # end sub add_inventory
 
 sub allocate {

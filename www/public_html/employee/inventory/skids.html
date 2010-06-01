@@ -107,10 +107,12 @@ Please select a Skid to view/edit.<br>
             <label class="radio" for="notempty">Without RFID</label>
 		</p>
 		<p><label>Type:</label>
-            <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/skids.html?Type'} ) or sets::isin( 'Sheet', split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) ?> />
+            <input type="radio" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?Type'} eq 'Sheet'); ) ?> />
             <label class="radio" for="TypeSheet">Sheet</label>
-            <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/skids.html?Type'} ) or sets::isin( 'Roll', split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) ?> />
+            <input type="radio" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?Type'} eq 'Roll' ); ) ?> />
             <label class="radio" for="TypeRoll">Roll</label>
+            <input type="radio" id="TypeBoth" name="Type" value="All" <? echo ( ssi::checked ( $session{'/employee/inventory/skids.html?Type'} eq 'All' or !$session{'/employee/inventory/skids.html?Type'} ); ) ?> />
+            <label class="radio" for="TypeBoth">Both</label>
         </p>
 		<p><label>Location:</label>
 			<select name="location_id">

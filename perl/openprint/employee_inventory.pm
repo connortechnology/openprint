@@ -170,6 +170,8 @@ sub skids {
 sub inventory_report {
 	my %param = @_;
 	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)');
+
+if ( 0 ) {
 	my @papers = openprint::Paper::find(
 			'owner_id'	=>	( defined $param{'Owner'} ? $param{'Owner'} : '' ),
 			'manufacturer_id'	=>	( defined $param{'Manufacturer'} ? $param{'Manufacturer'} : undef ),
@@ -184,9 +186,9 @@ sub inventory_report {
 			'fsc_code'  =>  $param{'fsc_code'},
 			'order_by'	=> 'owner_id,manufacturer_id,name_id,finish_id,colour_id,weight_id,width,height',
 			);
-	my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
 	my @data;
 	my $total_weight = 0;
+	my $count = 0;
 	foreach my $Paper ( @papers ) {
 		if ( $param{'width'} ) {
 			if ( $param{'OrLarger'} ) {
@@ -214,6 +216,7 @@ sub inventory_report {
 				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $C->quantity();
 			} # end if
 			$total_weight += $weight;
+			$count += 1;
 			push @data,(
 					$$Paper{'id'},
 					new openprint::Company($Paper->owner_id())->name(),
@@ -238,7 +241,51 @@ sub inventory_report {
 		} # end foreach skid
 	} # end foreach
 	#my $date;
-	push @data, ( 'Report generated',$date,undef,undef,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
+	#my $date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+}
+	my @data;
+	my $count = 0;
+	my $total_weight = 0;
+foreach my $Skid ( openprint::Skid::find('quantity_>='=>1,'type'=>'Roll') ) {
+	next if ! $Skid->rfidtag_id();
+	next if ! $Skid->RFIDTag()->id();
+	foreach my $C ( $Skid->Contents() ) {
+		next if ! $C;
+		my $Paper = $C->Paper();
+my $weight = 0;
+			if ( $Paper->type() eq 'Roll' ) {
+				$weight = $C->quantity();
+			} else {
+				$weight += $Paper->wpsi() * $Paper->width() * $Paper->height() * $C->quantity();
+			} # end if
+			$total_weight += $weight;
+			$count += 1;
+			push @data,(
+					$$Paper{'id'},
+					new openprint::Company($Paper->owner_id())->name(),
+					$Paper->manufacturer(),
+					$Paper->name(),
+					$Paper->finish(),
+					$Paper->colour(),
+					$Paper->weight(),
+					$Paper->type(),
+					$Paper->width(),
+					$Paper->height(),
+					$C->quality(),
+					$Paper->mweight(),
+					$Paper->gsm(),
+					$$Skid{'id'},
+					$Skid->RFIDTag()->id_short(),
+					$$Skid{'created_on'},
+					$Skid->Location()->name(),
+					$Paper->type() eq 'Sheet' ? $C->quantity() : '',
+					$weight,
+					);
+	}
+}
+	my $date = '2010-06-01 00:00';
+#Date::Format::time2str('%Y-%m-%d %H:%M', time );
+	push @data, ( 'Report generated',$date,'Count:',$count,undef,undef,undef, undef, undef, undef, undef, undef, undef, undef, undef, undef,undef, 'Total Weight (lbs):', $total_weight );
 	return ( \@header, \@data );
 } # end sub paper_inventory
 
@@ -584,9 +631,8 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 	my $Quality;
 	if ( $param{'txtQuality'} ) {
 		if ( ! ( $Quality = openprint::StockQuality->find_one('name'=>$param{'txtQuality'}) ) ) {
-		} else {
 			$Quality = new openprint::StockQuality();
-			$Quality->save({'shortname'=>$param{'txtQuality'}});
+			$Quality->save({'shortname'=>$param{'txtQuality'},'longname'=>$param{'txtQuality'}});
 		} # end if
 	} else {
 		$Quality = new openprint::StockQuality( $param{'Quality'} );

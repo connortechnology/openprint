@@ -42,7 +42,6 @@
 			'/employee/inventory/skids.html?updated_on_end_day'} ) : undef,
 		'fsc_code'				=>	$session{'/employee/inventory/skids.html?fsc_code'},
 		'order'		=>	'id',
-		'type'		=> [ split (';', $session{'/employee/inventory/skids.html?Type'} ) ],
 );
 		$sql{'has_manifest_id'} = 1 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y';
 		$sql{'has_manifest_id'} = 0 if $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N';
@@ -54,6 +53,9 @@
 			$sql{'last_seen_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59', 
  @session{'/employee/inventory/skids.html?last_seen_end_year','/employee/inventory/skids.html?last_seen_end_month','/employee/inventory/skids.html?last_seen_end_day'} );
 		} # end if
+		if ( $session{'/employee/inventory/skids.html?Type'} ne 'All' ) {
+		$sql{'type'}		= $session{'/employee/inventory/skids.html?Type'};
+		}
 		$sql{'quality_id'} = $session{'/employee/inventory/skids.html?quality_id'} if $session{'/employee/inventory/skids.html?quality_id'};
 
 	if ( $session{'/employee/inventory/skids.html?location_id'} ) {
