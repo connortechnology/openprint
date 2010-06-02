@@ -1,18 +1,16 @@
 <? eval (
-	$$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 	$$variable{'Label'} = new openprint::Label( $param{'id'} );
+	$$variable{'Project'} = $param{'project_id'} ? new openprint::Project( $param{'project_id'} ) : $$variable{'Label'}->Project();
 	$$variable{'Label'}{'type_id'} = $param{'type_id'} if ! $$variable{'Label'}{'type_id'};
 	$$variable{'Label'}{'reference'} = $param{'reference'} if ! $$variable{'Label'}{'reference'};
 	if ( ! $$variable{'Label'}->docket() ) {
 		$$variable{'Label'}->docket( $$variable{'Project'}->docket() );
 	} # end if
 
-	#if ( ! $$variable{'Label'}{'content'} ) {
-		#$$variable{'Label'}{'content'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'.html' );
-	#} # end if
-	$$variable{'Label'}->save() if ! $$variable{'id'};
-	#my $content = $$variable{'Label'}{'content'};
-	$$variable{'Project'}->add_to_log( @openprint::session{'company_id','user_id'}, 'Added Label/Packing Slip' );
+	if ( ! $$variable{'id'} ) {
+		$$variable{'error'} .= $$variable{'Label'}->save();
+		$$variable{'Project'}->add_to_log( @session{'company_id','user_id'}, 'Added Label/Packing Slip' );
+	} # end if
 ) ?>
 <div class="unprintable">
 	<p class="buttons">
