@@ -23,6 +23,7 @@
 
 		'value_start'	=> $session{'/employee/accounting/search.html?dblTotal1'},
 		'value_end'	=> $session{'/employee/accounting/search.html?dblTotal2'},
+		'owing_>'	=>	0,
 		'order'		=> 'created_on',
 		);
 
@@ -37,8 +38,8 @@
 		<th align="left" width="100">Status</th>
 		<th align="right" width="90">Invoice #</th>
 		<th align="right" width="70">P.O. #</th>
-		<th align="right" width="75">Total</th>
-		<th align="right" width="75">Balance</th>
+		<th class="Price">Total</th>
+		<th class="Price">Balance</th>
 	</tr>
 	<? eval (
 		$$variable{'ReportTotal'} = $$variable{'ReportBalance'} = 0;
@@ -52,8 +53,8 @@
 		<td align="left"><? echo ( $$variable{'Order'}->status(); ) ?></td>
 		<td align="right">&nbsp;<? echo ( ssi::htmlize( $$variable{'Order'}->invoice_id() ); ) ?></td>
 		<td align="right">&nbsp;<? echo ( ssi::htmlize( $$variable{'Order'}->ponum() ); ) ?></td>
-		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Order'}->total() ); ) ?></td>
-		<td align="right">$<? echo ( sprintf('%.2f', $$variable{'Order'}->total() - $$variable{'Order'}->paid() ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Order'}->total() ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Order'}->total() - $$variable{'Order'}->paid() ); ) ?></td>
 	</tr>
 	<? eval ( 
 		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
@@ -63,8 +64,8 @@
 	<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
 	<tr class="totals"> 
 		<td colspan="7" align="right"><b>Report Total:</b></td>
-		<td align="right">&nbsp;$<? echo ( sprintf('%.2f', $$variable{'ReportTotal'} ); ) ?></td>
-		<td align="right">&nbsp;$<? echo ( sprintf('%.2f', $$variable{'ReportBalance'} ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 	</tr>
 </table>
 <? else ( @{$$variable{'Orders'}} ) ?>

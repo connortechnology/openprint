@@ -1,6 +1,6 @@
 <fieldset>
 	<legend>Modification History</legend>
-	<table class="List" style="table-layout: auto;">
+	<table class="List sortable" style="table-layout: auto;">
 		<tr>
 			<th align="left">Company</th>
 			<th align="left">User</th>
@@ -10,7 +10,7 @@
 		<? echo ( 
 			my $html;
 			my $rowclass;
-			@{$$variable{'OrderLog'}} = sql::execute( undef, undef, 'SELECT company_id, user_id, dtmwhen, description FROM Order_Log WHERE order_id=?', $$variable{'OrderID'} );
+			@{$$variable{'OrderLog'}} = sql::execute( undef, undef, 'SELECT company_id, user_id, dtmwhen, description FROM Order_Log WHERE order_id=?', $param{'order_id'} );
 			while ( @$variable{'company_id','user_id','When','Description'} = splice @{$$variable{'OrderLog'}},0,4 ) {
 				$html .= sprintf('<tr%1$s><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td></tr>', $rowclass, 
 					new openprint::Company( $$variable{'company_id'} )->name(), new openprint::User( $$variable{'user_id'} )->name(),

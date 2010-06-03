@@ -3,42 +3,46 @@
 </style>
 <a href="mailto:<?OperatorEmail?>"><?OperatorFirstName?> <?OperatorLastName?></a> has added additional charges to the following project. You will need to approve these charges before production will continue.<br/>
 <br/>
-<? eval ( openprint::project::view( $log, $dbh, $variable, @$variable{'ProjectIndex', 'OrderID'} ); ) ?>
 <!--#include virtual="/includes/project_header.html"-->
 <table class="List">
 	<tr> 
 		<th align="left">Services</th>
-		<th width="100" align="right">Price</th>
-		<th width="120" align="right">Status</th>
+		<th class="Status">Status</th>
+		<th class="Price">Price</th>
 	</tr>
-	<? if ( @{$$variable{'SERVICES'}} ) ?>
-	<? while ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
-	<? eval ( $$variable{'rowclass'} = ' class="colRowRed"' if $$variable{'status'} eq 'Waiting For Customer Approval'; ) ?>
-	<tr<?rowclass?>> 
-		<td><?name?></td>
-		<td align="right"><? if ($$variable{"price$$variable{'OrderedQuantityIndex'}"} ne '-') ?><?CurrencySymbol?><? endif ($$variable{"price$$variable{'OrderedQuantityIndex'}"} ne '-') ?>&nbsp;<? echo ( $$variable{"price$$variable{'OrderedQuantityIndex'}"} ) ?></td>
-		<td align="right"><?status?></td>
-	</tr>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-<? endwhile ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
-<? endif ( @{$$variable{'SERVICES'}} ) ?>
-	<tr class="totals"> 
-		<td>Unit Prices:</td>
-		<td width="100" align="right"><?CurrencySymbol?>&nbsp;<? echo ( $$variable{"UnitPrice$$variable{'OrderedQuantityIndex'}"} ) ?></td>
-		<td>&nbsp;</td>
-	</tr>
-	<tr> 
-		<td align="left">Total Before Taxes:</td>
-		<td width="100" align="right"> <?CurrencySymbol?>&nbsp;<? echo ( $$variable{"Total$$variable{'OrderedQuantityIndex'}"} ) ?></td>
-		<td>&nbsp;</td>
-	</tr>
+	<? echo (
+		my $html = '';
+		my $rowclass;
+		my $services = $$variable{'Project'}->services();
+		foreach my $ServiceCategory ( openprint::ServiceType_Category::find('order'=>'sorting,name') ) {
+           foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
+                next if ! $$services{$ServiceType->name()};
+                foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
+					my $status = openprint::service::status( $$variable{'Project'}->id(), $service_id );
+					if ( $status eq 'Waiting For Customer Approval' ) {
+						my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
+
+						$html .= sprintf('
+							<tr%1$s> 
+								<td>%2$s</td>
+								<td class="Status">%4$s</td>
+								<td class="Price">%3$s</td>
+							</tr>', $rowclass, ( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ), openprint::Currency::format( $$specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()} ), 
+						$status );
+						$rowclass = $rowclass ? '' : ' class="colRow"';
+					} # end if
+				} # end foreach service
+			} # end foreach ServiceType
+		} # end foreach ServiceTypeCategory
+		return $html;
+	) ?>
 </table>
-<span>All prices are in <b><?CurrencyName?></b>.</span>
+<span>All prices are in <b><? echo ( $$variable{'Project'}->Currency()->name() ) ?></b>.</span>
 <br/>
 <span style="float: right;">
 	<? echo ( 
-		if ( sets::isin( $$variable{'ProjectStatus'}, 'Proofs Out', 'Waiting for Client Approval' ) ) {
-			return ssi::writeButton( $log, $dbh, 'SignOff', 'signoff.gif', '', qq`sign_off.html?ProjectIndex=$$variable{'ProjectIndex'}`, 'Sign Off' );
+		if ( sets::isin( $$variable{'Project'}->status(), [ 'Proofs Out', 'Waiting for Client Approval' ] ) ) {
+			return ssi::writeButton( $log, $dbh, 'SignOff', 'signoff.gif', '', qq`sign-off.html?ProjectIndex=$$variable{'ProjectIndex'}`, 'Sign Off' );
 		} # end if
 		return;
 	) ?>

@@ -94,6 +94,16 @@ sub delete {
 		$self->Paper()->save();
 	} # end if
 } # end sub delete
+sub allocateable {
+    my ( $self ) = @_;
+    return $self->quantity() - $self->allocation();
+} # end sub allocateable
+sub allocated {
+	my $PA = openprint::PaperAllocation->find_one('paper_id'=>$_[0]{'paper_id'},'skid_id'=>$_[0]{'skid_id'});
+	return $PA->quantity() if $PA;
+	return 0;
+} # end sub allocated
+
 
 1;
 

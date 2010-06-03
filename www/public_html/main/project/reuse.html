@@ -8,11 +8,11 @@
 			<ul>
 				<li> 
 					<label>Please provide a reference:</label>
-					<textarea name="reference" rows="" cols="" wrap="virtual" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
+					<textarea name="reference" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" cols="" wrap="virtual" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
 				</li>
 				<li>
 					<label>Additional comments or instructions:</label>
-					<textarea name="comments" rows="" cols="" wrap="virtual" onkeyup="textarea_resize(this);"><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
+					<textarea name="comments" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->comments() ); ) ?>" cols="" wrap="virtual" onkeyup="textarea_resize(this);"><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
 				</li>
 			</ul>
 		</fieldset>

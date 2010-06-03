@@ -44,9 +44,8 @@
 		foreach my $Allocation ( @Allocations ) {
 			$html .= 'Quantity: ' . $Allocation->quantity() . $Allocation->units().'<br/>';
 			my @Skids;
-			if ( $Allocation->skid_id() ) {
+			if ( @Skids = $Allocation->Skids() ) {
 				$html .= 'The following ' . ( $Allocation->Paper()->type() eq 'Roll' ? ' rolls ' : ' skids ' ) . 'have been allocated:<br/>';
-				@Skids = ( $Allocation->Skid() );
 			} else {
 				$html .= 'The following ' . ( $Allocation->Paper()->type() eq 'Roll' ? ' rolls ' : ' skids ' ) . 'are available to be used:<br/>';
 				@Skids = map { new openprint::Skid( $_ ); } sql::execute( undef, undef, 'SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0 ORDER BY skid_id', $Allocation->paper_id() );

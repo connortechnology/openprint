@@ -135,20 +135,6 @@ $log->debug("No data");
 	return;
 } # end sub save
 
-
-sub AUTOLOAD {
-	my $self = shift;
-	#my $type = ref($self);
-	my $name = $AUTOLOAD;
-	$name =~ s/.*://;
-
-	if ( @_ ) {
-		return $self->{$name} = shift;
-	} else {
-		return $self->{$name};
-	} # end if
-} # end sub AUTOLOAD
-
 sub get {
     my $self = shift;
 	my @results;
@@ -266,5 +252,28 @@ sub Creator {
 	return new openprint::User( $_[0]{'created_by'} );
 } # end sub Creator
 
+sub find_one {
+#$openprint::log->debug("find_one @_ ");
+	my $type = shift;
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = $type->find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
+
+sub AUTOLOAD {
+	my $self = shift;
+	my $type = ref($self);
+	my $name = $AUTOLOAD;
+#if ( $self eq 'supplier' ) {
+#$openprint::log->debug("Autoload $type $name");
+#}
+	$name =~ s/.*://;
+	if ( @_ ) {
+		return $self->{$name} = shift;
+	} else {
+		return $self->{$name};
+	} # end if
+} # end sub AUTOLOAD
 1;
 __END__

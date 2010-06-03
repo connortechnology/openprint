@@ -97,8 +97,9 @@
 								} # end if
 
 							$$variable{'Signature'} = '1';
-							my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
-							my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/uvcoating.html' );
+							my $html;
+							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/aqueous.html' );
+							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/uvcoating.html' );
 							$html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/paper_dropdowns.html' );
 							return variable_substitution( \$html, $variable );
 							) ?>

@@ -392,8 +392,17 @@ if ( 1 ) {
 				if ( lc $MaterialPrice{'units'} eq 'per square inch' ) {
 					my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100);
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty * $area;
+				} elsif ( lc $MaterialPrice{'units'} eq 'per square foot' ) {
+					my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) /144;
+					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $area;
+				} elsif ( lc $MaterialPrice{'units'} eq 'per 1000 square feet' ) {
+					my $area = $imp->object_area() * $run_qty * ($inkCoverage{$type}/100) /144;
+					# area is # of square feet
+					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $area/1000;
 				} elsif ( lc $MaterialPrice{'units'} eq 'per m' ) {
 					$MaterialPrice{'Total'} = $MaterialPrice{'Price'} * $run_qty / 1000;
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ($MaterialPrice{'units'})<br/>";
 				} # end if
 				$Price{'Material'} += $MaterialPrice{'Total'};
 

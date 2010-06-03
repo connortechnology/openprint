@@ -9,17 +9,38 @@ require email;
 
 use vars qw( $table $serial %fields %transforms %defaults $log $dbh %session %config );
 *log = \$openprint::log;
-*dbh = \$openprint::dbh;
 *session = \%openprint::session;
 *config = \%openprint::config;
+
+$table = 'mailbox';
+
+%fields = (
+	'id'		=>	'username',
+	'password'	=>	'password',
+	'name'		=>	'name',
+	'maildir'	=>	'maildir',
+	'quota'		=>	'quota',
+	'domain'	=>	'domain',
+	'created_on'	=>	'created',
+	'updated_on'	=>	'modified',
+	'active'		=>	'active',
+);
 
 sub send {
 	my ( $self, %params ) = @_;
 
 	my $results;
+	if ( $params{'FROM'} ) {
+		if ( ref $params{'FROM'} eq 'openprint::User' ) {
+			$$self{'from'} = sprintf('"%s" <%s>', $params{'FROM'}->get('name','email') );
+		} else {
+			$$self{'from'} = $params{'FROM'};
+		} # end if
+	} # end if
+
     my %mail = (
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'},
-            FROM    => $params{'FROM'} ? $params{'FROM'} : $$self{'from'},
+            FROM    => $$self{'from'},
             SUBJECT => $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'},
             );
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : @{$$self{'ATTACHMENTS'}};
@@ -65,3 +86,26 @@ $log->debug("Email: Recipients @recipients");
 
 } # end sub send
 
+sub find {
+	my %params = @_;
+
+	my $sql = 'SELECT * FROM mailbox WHERE 1>0';
+	my @values;
+
+	if ( $params{'active'} ) {
+		$sql .= ' AND active = ?';
+		push @values, $params{'active'};
+	} # end if
+	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
+	if ( ! $data ) {
+		$log->debug("openprint::Email::find($sql)" . $dbh->errstr);
+	} else {
+		return map { new openprint::Email( $_->{username}, $_ ); } @$data;
+	} # end if
+} # end sub find
+
+sub delete {
+	
+	#sql::execute( undef, $dbh, 'DELETE FROM mailbox WHERE username=?', $_[0]{'id'} );
+} # end sub delete

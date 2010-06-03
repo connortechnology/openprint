@@ -54,7 +54,7 @@
 -->
 </script>
 <div id="FormsPopup" style="display:none;">
-	<form name="f5" onsubmit="return saveForms( f5.schedule_id.value, f5.Forms.value );">
+	<form name="f5" onsubmit="return saveForms( f5.schedule_id.value, f5.Forms.value );" action="">
 		<input type="hidden" name="schedule_id" />
 		<span style="float: left;"> # of Forms: <input type="text" name="Forms"/></span>
 		<span style="float: right;">
@@ -111,9 +111,9 @@
 
 	my $html = '<select name="Presses" multiple="multiple" size="'. @presses.'">';
 	if ( $session{'/employee/production/print_overview.html?Presses'} ) {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/print_overview.html?Presses'} ] );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/print_overview.html?Presses'} ] );
 	} else {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
 	return $html;
 ) ?>
