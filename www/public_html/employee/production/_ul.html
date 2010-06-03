@@ -11,11 +11,7 @@
 ) ?>
 <script type="text/javascript">
 <!--
-	for ( var i = 0; i < drops.length; i += 1 ) {
-		if ( $(drops[i]) ) {
-			Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
-		} // end if
-	} // end foreach id in drops
+	setup_drops();
 	setup_dates();
 -->
 </script>

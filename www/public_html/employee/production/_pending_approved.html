@@ -19,11 +19,7 @@
   // <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'pending_approved_drops'}} ) ) ?>");
 <? if ( $r->uri() =~ /_pending/ ) ?>
-	for ( var i = 0; i < drops.length; i += 1 ) {
-		if ( $(drops[i]) ) {
-			Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
-		} // end if
-	} // end foreach id in drops
+	setup_drops();
 	setup_dates();
 <? endif ( $r->uri() =~ /_pending/ ) ?>
 // ]]>
