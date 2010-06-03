@@ -85,7 +85,8 @@ There is no current project.
 			</td>
 	<? echo ( 
 		my $html = '';
-		my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
+		my @service_ids = split(',', $$variable{'index'} );
+		my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_ids[0] );
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= qq`<td align="right">\n`;
 			if ( $$specs{"txtQuantity$qty_index"} and $$specs{"txtQuantity$qty_index"} != $$variable{"Quantity$qty_index"} ) {
@@ -98,11 +99,11 @@ There is no current project.
 				} # end if
 				$html .= $$variable{"price$qty_index"} ."</b><br/>\n";
 			} # end if
-			my $summary = openprint::service::summary( @$variable{'ProjectIndex','index'}, $qty_index );
+			my $summary = openprint::service::summary( $$variable{'ProjectIndex'}, $service_ids[0], $qty_index );
 			if ( $$variable{'name'} =~ /(\d+) Signatures/ ) {
 				my $sig_qty = $1;
 				if ( $summary =~ /(.*)\n(.*Stock Qty: )(\d+) (lbs|sheets)(.*)$/m ) {
-					$summary = $1."\n".$2.$$variable{'SignatureStockQty'.$qty_index.$$variable{'index'}}.' '.$4.$5;
+					$summary = $1."\n".$2.$$variable{'SignatureStockQty'.$qty_index.$service_ids[0]}.' '.$4.$5;
 				} # end if
 			} # end if
 			$html .= $summary;
