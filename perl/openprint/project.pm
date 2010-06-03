@@ -113,7 +113,7 @@ sub view {
 						if ( $statuses{$service_index} eq $statuses{$services{$id}[$i]} and openprint::Estimating::Printing::compare_signatures( $project{$service_index}, $project{$services{$id}[$i]} ) ) {
 							$sig_qty += 1;
 							foreach my $q ( 1 .. 3 ) {
-								$project{$service_index}{'txtPrice'.$q} += $project{$services{$id}[$i]}{'txtPrice'.$q};
+								#$project{$service_index}{'txtPrice'.$q} += $project{$services{$id}[$i]}{'txtPrice'.$q};
 								my $stock_qty = $project{$services{$id}[$i]}{'txtPressSheetQty'.$q};
 								$stock_qty =~ s/\D//g;
 								$$variable{'SignatureStockQty'.$q.$service_index} += $stock_qty;

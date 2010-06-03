@@ -36,12 +36,13 @@ There is no current project.
 			if ( sets::isin( $$variable{'ProjectStatus'}, 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?project_id='.$$variable{'ProjectIndex'}, 'Upload Files' );
 			} # end if
-$openprint::log->debug("($$variable{'HiddenSignatures'}) ($openprint::session{'ShowAllSignatures'}) (" . $$variable{'Project'}->signatures()  );
-if ( $$variable{'HiddenSignatures'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
-} elsif ( $openprint::session{'ShowAllSignatures'} and $$variable{'Project'}->signatures() > 1 ) {
-			$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
-} # end if
+			if ( $$variable{'HiddenSignatures'} ) {
+				if ( $openprint::session{'ShowAllSignatures'} ) {
+					$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
+				} else {
+					$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
+				} # end if
+			} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
