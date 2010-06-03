@@ -26,6 +26,19 @@ function open_window( page ) {
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $$variable{'Project'}->id() ) ?>
+<div class="buttons">
+<? echo (
+my $html;
+if ( $$variable{'HiddenSignatures'} ) {
+	if ( ! $openprint::session{'ShowAllSignatures'} ) {
+			$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/employee/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
+	} else {
+			$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/employee/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
+} # end if
+} # end if
+	return $html;
+) ?>
+</div>
 <!--#include virtual="/includes/project_header.html" -->
 <br/>
 <form name="f1" method="post" action="/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">
@@ -48,13 +61,25 @@ function open_window( page ) {
 			<? if ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td class="unprintable">
 			<? if ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) or ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) and $$variable{'name'} eq 'Signature' ) ) ?>
-<input type="checkbox" name="chkDelete-<?index?>" />
+<input type="checkbox" name="chkDelete-<?index?>" value="<?index?>" />
 			<? endif ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) or ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) and $$variable{'name'} eq 'Signature' ) ) ?>
 			</td>
 			<? endif ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td>
 <? if ( $$variable{'url'} ne '' ) ?>
-<a href="/employee/proj/<?url?>?OrderID=<?OrderID?>&ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?index?>"><?name?></a>
+<a href="/employee/proj/<?url?>?OrderID=<?OrderID?>&ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?index?>">
+<?name?>
+<? if ( $$variable{'name'} eq 'Signature' ) ?>
+<? echo ( 
+	my @indexes;
+	foreach my $s_id ( split(',', $$variable{'index'} ) ) {
+	my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
+	push @indexes, $$sig_specs{'SignatureIndex'};
+	} # end foreah
+	return ' ' . join(', ', @indexes );
+) ?>
+<? endif ( $$variable{'name'} eq 'Signature' ) ?>
+</a>
 <? else ( $$variable{'url'} ne '' ) ?>
 <?name?>
 <? endif ( $$variable{'url'} ne '' ) ?><br/>
@@ -76,7 +101,13 @@ function open_window( page ) {
 <? echo ( 
 	if ( $$variable{'name'} eq 'Signature' ) {
 		if ( my $Job = openprint::ScheduledJob::find_one('service_id'=>$$variable{'index'}) ) {
-			return '<br/>Scheduled for: ' . Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Job->starttime() ) );
+			my $html;
+			if ( ! $Job->starttime() ) {
+				$html = '<br/>Scheduled in pending';
+			} else {
+				$html = '<br/>Scheduled for ' . Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Job->starttime() ) );
+			} # end if
+			return $html . ' on ' . $Job->Equipment()->strid();
 		} elsif ( $$variable{'status'} eq 'Ordered' ) {
 			return '<br/>Not scheduled';
 		} # end if
@@ -208,9 +239,9 @@ function open_window( page ) {
 		</tr>
 <? if ( $$variable{'Project'}->ordered_price() != $$variable{'Project'}->price($$variable{'Project'}->ordered_quantity_index()) ) ?>
 		<tr>
-			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td class="unprintable"></td>
-			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
+			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td align="right"><b>Originally Ordered Price:</b></td>
 			<td align="right"><? echo ( sprintf('$%.2f', $$variable{'Project'}->ordered_price() ); ) ?></td>
 			<td></td>

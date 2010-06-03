@@ -414,7 +414,8 @@ $log->debug("Dset: $variable{'Destination'}");
 		} elsif ( $second eq 'project' ) {
 			if ( defined $third ) {
 				if ( ! $variable{'ServiceIndex'} ) {
-					$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
+					my @service_ids = split(',', $openprint::param{'ServiceIndex'} );
+					$variable{'ServiceIndex'} = $service_ids[0];
 				} # end if
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};

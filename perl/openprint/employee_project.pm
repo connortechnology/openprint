@@ -437,13 +437,14 @@ sub view {
 	} elsif ( $param{'btnFunction'} eq 'DeleteServices' ) {
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $key ( keys %param ) {
-			if ( $key =~ /chkDelete-(\d*)/ ) {
-				my $sid = $1;
-				my $specs = openprint::service::get_specs_ref( $Project, $sid );
-				openprint::print_project::delete_service( $log, $dbh, $project_index, $sid );
-				openprint::press_schedule::remove( $project_index, $sid );
-				openprint::bindery_schedule::remove( $project_index, $sid );
-				$Project->add_to_log( @session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+			if ( $key =~ /^chkDelete-([,\d]+)$/ ) {
+				foreach my $sid ( split(',', $1 ) ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $sid );
+					openprint::print_project::delete_service( $log, $dbh, $project_index, $sid );
+					openprint::press_schedule::remove( $project_index, $sid );
+					openprint::bindery_schedule::remove( $project_index, $sid );
+					$Project->add_to_log( @session{'company_id','user_id'}, "Deleted service $$specs{'ServiceType'} $$specs{'ServiceName'}." );
+				} # end foreach
 			} # end if
 		} # end foreach
 		$Project->update_status();
