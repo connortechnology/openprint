@@ -272,8 +272,8 @@ sub calc_setup_object {
 	} elsif ( sets::isin( $$specs{'Binding'}, ['PerfectBound','SpinePaste'] ) ) {
 		$bindery_gutters = $Press->specification('PerfectBindGutter');
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
-		$setup1->bleed_size( $bindery_bleed );
-		$setup2->bleed_size( $bindery_bleed );
+		$setup1->bleed_size( $bindery_bleed ) if $bindery_bleed;
+		$setup2->bleed_size( $bindery_bleed ) if $bindery_bleed;
 		$bindery_head = $$specs{'PerfectBindCoverGutter'};
 	} # end if
 #$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");
