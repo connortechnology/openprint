@@ -970,7 +970,7 @@ sub _pending {
 sub _ul {
 	if ( $param{'action'} eq 'split' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		$Job->split();
+		$Job->split( $param{'new_form_count'} );
 		$variable{'Shift'} = $Job->Shift();
 	} # end if
 	if ( $param{'shift_id'} ) {
@@ -1553,6 +1553,10 @@ sub prepress_schedule {
 	} # end if
 	$session{'/employee/production/prepress_schedule.html?lastupdated'} = time;
 } # end sub prepress_schedule
+
+sub _split_popup {
+	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+} # end sub _split_popup
 
 1;
 __END__

@@ -348,6 +348,18 @@ fieldset ul li {
 	margin: 0px;
 	padding: 0px 0px 0px 185px;
 }
+fieldset ul li:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+	font-size: 0;
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset ul li {height: 1%;}
+fieldset ul li {display: block;}
+/* End hide from IE-mac */
 
 fieldset ul li label {
 	width: 180px;
