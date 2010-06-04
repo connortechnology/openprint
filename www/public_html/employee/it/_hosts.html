@@ -1,10 +1,11 @@
 <table class="List sortable">
 	<thead>
 		<tr>
-			<th>Name</th>
-			<th>IP</th>
-			<th>Mac</th>
-			<th>Blocked</th>
+			<th class="name">Name</th>
+			<th class="ip">IP</th>
+			<th class="mac">Mac</th>
+			<th class="blocked">Blocked</th>
+			<th class="description">Description</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -17,8 +18,9 @@
 						<td><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
 						<td><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
 						<td><a href="/employee/it/host.html?host_id=%1$d">%5$s</a></td>
+						<td><a href="/employee/it/host.html?host_id=%1$d">%6$s</a></td>
 					</tr>
-					', $Host->id(), $Host->hostname(), $Host->ip(), $Host->mac(), $Host->blocked() );
+					', $Host->id(), $Host->hostname(), $Host->ip(), $Host->mac(), $Host->blocked(), $Host->description() );
 			} # end foreach Host
 			return $html;
 		) ?>

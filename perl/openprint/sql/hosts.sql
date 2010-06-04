@@ -4,5 +4,8 @@ CREATE TABLE hosts (
 	ip	inet NOT NULL,
 	mac	macaddr,
 	hostname	text,
+	block	boolean not null default false,
+	monitor	boolean not null default false,
+	description text,
 	PRIMARY KEY (id)
 );

@@ -3,6 +3,7 @@
 		return true;
 	} //  end function check_inputs
 </script>
+<div class="Host"><div class="Edit">
 <form id="f1" name="f1" method="post" action="/employee/it/hosts.html">
 	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{'Host'}->id() ) ?>" />
 	<input type="hidden" id="btnFunction" name="btnFunction" />
@@ -35,6 +36,9 @@
 					<input type="radio" name="monitor" id="monitor0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->monitor() ); ) ?>
 					<label class="radio" for="monitor0">No</label>
 				</li>
+				<li><label>Description</label>
+					<textarea id="description" name="description" cols="" rows=""><? echo ( $$variable{'Host'}->description() ) ?></textarea>
+				</li>
 				<li class="buttons">
 					<? echo ( 
 						my $html;
@@ -51,3 +55,4 @@
 			</ul>
 	</fieldset>
 </form>
+</div></div>

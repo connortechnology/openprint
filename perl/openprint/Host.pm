@@ -14,6 +14,7 @@ $serial = 'hosts_id_seq';
 	'hostname'		=>	'hostname',
 	'mac'	=>	'mac',	
 	'block'	=>	'block',
+	'description'	=>	'description',
 );
 %transforms = (
 );

@@ -299,7 +299,7 @@ fieldset p select {
     width: 70%;
 	vertical-align: top;
 }
-fieldset p textarea {
+fieldset p textarea, fieldset ul li textarea {
     width: 70%;
 }
 fieldset p option {
