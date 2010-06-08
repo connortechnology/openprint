@@ -1566,6 +1566,7 @@ sub _skid_allocations {
 		} # end if
     } # end if
     $variable{'skid_id'} = $param{'skid_id'};
+	$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} );
 } # end sub _skid_allocations
 
 
