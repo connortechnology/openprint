@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -651,6 +651,7 @@ sub signature_calc {
 								$Breakdown .= "Doesn't fit: $rc<br/>";
 							} # end if
 						} else {
+							
 							my $Fold = $Equipment->Fold(
 									'type'				=>	$$sig_specs{'rdbTemplateType'},
 									'gsm'				=>	$Paper->gsm(),
@@ -658,6 +659,25 @@ sub signature_calc {
 									'imposition'		=>	$$Imposition{'imposition'},
 									'printing_type'		=>	$Press->specification('Printing Type'),
 									);
+							if ( $Fold ) {
+								# Need to check feed width
+								if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
+									my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+									my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if $debug;
+									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $Fold->folds() ) ) {
+										if ( $$sig_specs{'txtWidth'} >= $max_feed_width ) {
+$openprint::log->debug("Fold no good due to max feed width on width.") if $debug;
+											$Fold = undef;
+										} # end if
+									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $Fold->folds() ) ) {
+										if ( $$sig_specs{'txtHeight'} >= $max_feed_width ) {
+											$Fold = undef;
+$openprint::log->debug("Fold no good due to max feed width on height.") if $debug;
+										} # end if
+									} # end if
+								} # end if has max_feed_width
+							} # end if
 							if ( $Fold ) {
 								$Fold = $Fold->clone();
 								$Fold->Imposition( $Imposition );
@@ -668,8 +688,7 @@ sub signature_calc {
 									type			=>	$$sig_specs{'rdbTemplateType'}<br/>
 									gsm				=>	".$Paper->gsm()."<br/>
 									calliper		=>	".$Paper->calliper()."<br/>
-									imposition		=>	$$Imposition{'imposition'}<br/>
-";
+									imposition		=>	$$Imposition{'imposition'}<br/>";
 							} # end if
 						} # end if
 						$complete = 0;

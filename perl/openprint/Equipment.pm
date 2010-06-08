@@ -261,6 +261,14 @@ sub Fold {
 			next;
 		} # end if
 
+		if ( $$Fold{folds} and $$params{folds} and ($$Fold{folds} != $$params{folds} ) ) {
+			$openprint::log->debug("Wanted folds: $$params{folds}, have $$Fold{folds}") if $debug;
+			next;
+		} # end if
+		if ( $$Fold{angles} and $$params{angles} and ($$Fold{angles} != $$params{angles} ) ) {
+			$openprint::log->debug("Wanted angles: $$params{angles}, have $$Fold{angles}") if $debug;
+			next;
+		} # end if
 		if ( $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} ) ) {
 			$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
 			next;
