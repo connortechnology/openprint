@@ -28,6 +28,8 @@
 			<th width="50">ID</th>
 			<th class="Date">When</th>
 			<th>From</th>
+			<th>Method</th>
+			<th>Transaction ID</th>
 			<th>Memo</th>
 			<th width="75" style="text-align:right;">Amount</th>
 			<th width="75" style="text-align:right;">Remaining</th>
@@ -40,6 +42,8 @@
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( $$variable{'Payment'}->id(); ) ?></a></td>
 			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $$variable{'Payment'}->received_on() ) ); ) ?></a></td>
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->Payor()->name(); ) ?></a></td>
+			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->method(); ) ?></a></td>
+			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->transaction_id(); ) ?></a></td>
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->description(); ) ?></a></td>
 			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Payment'}->amount() ); ) ?></td>
 			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Payment'}->remaining() ); ) ?></td>
