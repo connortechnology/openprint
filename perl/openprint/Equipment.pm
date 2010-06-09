@@ -6,6 +6,7 @@ use openprint ();
 require openprint::EquipmentSpecification;
 require openprint::Fold;
 require openprint::Location;
+require openprint::Equipment_Stock_Setting;
 require sql;
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
@@ -507,6 +508,20 @@ sub Location {
 
 sub Shifts {
 } # end sub
+
+sub Stock_Setting {
+	if ( ! $_[0]{'Stock_Settings'} ) {
+		%{$_[0]{'Stock_Settings'}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{'id'});
+	} # end if
+	return $_[0]{'Stock_Settings'}{$_[1]{'id'}} if exists $_[0]{'Stock_Settings'}{$_[1]{'id'}};
+	return;
+} # end sub Stock_Setting
+sub Stock_Settings {
+	if ( ! $_[0]{'Stock_Settings'} ) {
+		%{$_[0]{'Stock_Settings'}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{'id'});
+	} # end if
+	return values %{$_[0]{'Stock_Settings'}};
+} # end sub Stock_Settings
 
 1;
 __END__

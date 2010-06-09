@@ -200,6 +200,35 @@ sub _fold_specification {
 		} # end if
 	} # end if
 } # end sub _fold_specification
+
+sub _stock_setting_popup {
+	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+} # end sub _stock_settings_popup
+
+sub _stocks {
+	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+	if ( $param{'action'} eq 'add' ) {
+		my $Setting = new openprint::Equipment_Stock_Setting();
+		$variable{'error'} .= $Setting->save(\%param);
+		%param = ();
+	} # end if
+	ssi::save_params('/administrator/equipment/edit.html', 'Group','Manufacturer','Name','Finish','Colour','Weight','Types' );
+} # end sub _stocks
+
+sub _stock_settings {
+	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $Setting = new openprint::Equipment_Stock_Setting( $param{'id'} );
+		$variable{'error'} .= $Setting->delete();
+		%param = ();
+	} elsif ( $param{'action'} eq 'save' ) {
+		foreach my $Setting ( $variable{'Equipment'}->Stock_Settings() ) {
+			$variable{'error'} .= $Setting->save({'grain'=>$param{"grain_$$Setting{id}"}});
+		} # end foreach Setting
+		%param = ();
+	} # end if
+} # end sub _stock_settings
+
 1;
 
 __END__
