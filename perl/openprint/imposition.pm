@@ -165,7 +165,13 @@ sub check_setup {
 sub calc_setup_object {
 	my ( $specs, $image_width, $image_height, $Paper, $run_style, $grain_direction, $Press ) = @_;
 
-	if ( my $press_grain = $Press->specification('Grain', $Paper->gsm()) ) {
+	my $press_grain;
+	if ( my $Stock_Setting = $Press->Stock_Setting( $Paper ) ) {
+		$press_grain = $Stock_Setting->grain();
+	} else {
+		$press_grain = $Press->specification('Grain', $Paper->gsm());
+	} # end if
+	if ( $press_grain and $press_grain ne 'Both' ) {
 		if ( $press_grain eq 'Long' ) {
 			if ( $Paper->grain_direction() ne $Paper->long() ) {
 				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")") if $debug;
@@ -180,7 +186,7 @@ sub calc_setup_object {
 			$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if $debug;
 			return;
 		} # end if
-	} # end if
+	} # end if press_grain
 
 	my $setup1 = new openprint::Imposition();
 	my $setup2 = new openprint::Imposition();
@@ -272,8 +278,8 @@ sub calc_setup_object {
 	} elsif ( sets::isin( $$specs{'Binding'}, ['PerfectBound','SpinePaste'] ) ) {
 		$bindery_gutters = $Press->specification('PerfectBindGutter');
 		$bindery_bleed = $Press->specification('PerfectBindBleed');
-		$setup1->bleed_size( $bindery_bleed );
-		$setup2->bleed_size( $bindery_bleed );
+		$setup1->bleed_size( $bindery_bleed ) if $bindery_bleed;
+		$setup2->bleed_size( $bindery_bleed ) if $bindery_bleed;
 		$bindery_head = $$specs{'PerfectBindCoverGutter'};
 	} # end if
 #$openprint::log->debug("Using perfectbind cover gutter: $bindery_head Bindery bleed: $bindery_bleed");

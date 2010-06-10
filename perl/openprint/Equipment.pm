@@ -6,6 +6,7 @@ use openprint ();
 require openprint::EquipmentSpecification;
 require openprint::Fold;
 require openprint::Location;
+require openprint::Equipment_Stock_Setting;
 require sql;
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
@@ -261,6 +262,14 @@ sub Fold {
 			next;
 		} # end if
 
+		if ( $$Fold{folds} and $$params{folds} and ($$Fold{folds} != $$params{folds} ) ) {
+			$openprint::log->debug("Wanted folds: $$params{folds}, have $$Fold{folds}") if $debug;
+			next;
+		} # end if
+		if ( $$Fold{angles} and $$params{angles} and ($$Fold{angles} != $$params{angles} ) ) {
+			$openprint::log->debug("Wanted angles: $$params{angles}, have $$Fold{angles}") if $debug;
+			next;
+		} # end if
 		if ( $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} ) ) {
 			$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
 			next;
@@ -499,6 +508,20 @@ sub Location {
 
 sub Shifts {
 } # end sub
+
+sub Stock_Setting {
+	if ( ! $_[0]{'Stock_Settings'} ) {
+		%{$_[0]{'Stock_Settings'}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{'id'});
+	} # end if
+	return $_[0]{'Stock_Settings'}{$_[1]{'id'}} if exists $_[0]{'Stock_Settings'}{$_[1]{'id'}};
+	return;
+} # end sub Stock_Setting
+sub Stock_Settings {
+	if ( ! $_[0]{'Stock_Settings'} ) {
+		%{$_[0]{'Stock_Settings'}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{'id'});
+	} # end if
+	return values %{$_[0]{'Stock_Settings'}};
+} # end sub Stock_Settings
 
 1;
 __END__

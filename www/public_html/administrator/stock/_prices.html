@@ -1,7 +1,7 @@
 <form name="Prices" action="">
 	<? eval ( 
 		$$variable{'Stock'} = new openprint::Paper( $param{'stock_id'} );
-		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(Name)');
+		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(name)');
 		) ?>
 	<input type="hidden" name="width" value="<? echo ( $$variable{'Stock'}->width() ) ?>" />
 	<input type="hidden" name="height" value="<? echo ( $$variable{'Stock'}->height() ) ?>" />
@@ -17,12 +17,20 @@
 			<tr> 
 				<th class="Range">Quantity Range</th>
 				<th class="Cost">Cost CWT</th>
+				<? if ( $$variable{'Stock'}->type() ne 'Roll' ) ?>
 				<th class="Cost">Cost /M</th>
+				<? endif ( $$variable{'Stock'}->type() ne 'Roll' ) ?>
+				<? if ( $$variable{'Stock'}->type() eq 'Roll' ) ?>
 				<th class="Cost">Cost /foot</th>
+				<? endif ( $$variable{'Stock'}->type() eq 'Roll' ) ?>
 				<th class="Markup">Mark up</th>
 				<th class="Price">Price CWT</th>
+				<? if ( $$variable{'Stock'}->type() ne 'Roll' ) ?>
 				<th class="Price">Price /M</th>
+				<? endif ( $$variable{'Stock'}->type() ne 'Roll' ) ?>
+				<? if ( $$variable{'Stock'}->type() eq 'Roll' ) ?>
 				<th class="Price">Price /foot</th>
+				<? endif ( $$variable{'Stock'}->type() eq 'Roll' ) ?>
 				<th class="Discount">Discount?</th>
 				<th class="buttons">&nbsp;</th>
 			</tr>
@@ -33,12 +41,20 @@
 					<input class="text" type="text" name="max-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Max() > 0 ? Number::Format::format_number($$variable{'Price'}->Max()) : $$variable{'Price'}->Max() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" />
 				</td>
 				<td class="Cost"><input class="text" type="text" name="costcwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+				<? if ( $$variable{'Stock'}->type() ne 'Roll' ) ?>
 				<td class="Cost"><input class="text" type="text" name="costperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->costperm() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+				<? endif ( $$variable{'Stock'}->type() ne 'Roll' ) ?>
+				<? if ( $$variable{'Stock'}->type() eq 'Roll' ) ?>
 				<td class="Cost"><input class="text" type="text" name="costperfoot-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->costperfoot() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+				<? endif ( $$variable{'Stock'}->type() eq 'Roll' ) ?>
 				<td class="Markup"><input class="text" type="text" name="markup-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Markup() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
 				<td class="Price"><input class="text" type="text" name="pricecwt-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->Price() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+				<? if ( $$variable{'Stock'}->type() ne 'Roll' ) ?>
 				<td class="Price"><input class="text" type="text" name="priceperm-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->priceperm() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+				<? endif ( $$variable{'Stock'}->type() ne 'Roll' ) ?>
+				<? if ( $$variable{'Stock'}->type() eq 'Roll' ) ?>
 				<td class="Price"><input class="text" type="text" name="priceperfoot-<? echo ( $$variable{'Price'}->id() ) ?>" value="<? echo ( $$variable{'Price'}->priceperfoot() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);$('Prices').addClassName('changed');"/></td>
+				<? endif ( $$variable{'Stock'}->type() eq 'Roll' ) ?>
 				<td class="Discount">
 				<input class="radio" type="radio" id="discount-<? echo ( $$variable{'Price'}->id() ) ?>Y" name="discount-<? echo ( $$variable{'Price'}->id() ) ?>" value='Y'
 				<? echo ( $$variable{'Price'}->Discountable() ne 'N' ? 'checked="checked"' : '' ) ?>

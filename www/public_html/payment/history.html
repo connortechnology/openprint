@@ -24,7 +24,7 @@
 	}
 	function load_payments( form ) {
 		$('PaymentList').innerHTML = 'Please wait...';
-		new Ajax.Updater('PaymentList','_history.html', {method:'get',parameters:Form.serialize(form)});
+		new Ajax.Updater('PaymentList','/payment/_history.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
 -->
 </script>	 

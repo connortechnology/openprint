@@ -21,14 +21,20 @@
 		next if ( ! $Stock->recommendations() ) and ! sets::isin( 0, split(';', $session{'/administrator/stock/list.html?recommendations'} ) );
 		push @{$$variable{'Stocks'}}, $Stock;
 	} # end foreach
+	@{$$variable{'Groups'}} = openprint::StockGroup::find();
+	@{$$variable{'InventoryNumbers'}} = sets::union( map { $_->inventory_number() } @{$$variable{'Stocks'}} );
 ) ?>
 <? if ( @{$$variable{'Stocks'}} ) ?>
 	<table class="List sortable" style="table-layout: auto;">
 		<thead>
 			<tr>
 				<th style="text-align:center;" width="20"><input type="checkbox" onclick="select_all(document.f1, 'chkStock', this.checked );"/></th>
+				<? if ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
 				<th align="left">Inventory #</th>
+				<? endif ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
+				<? if ( @{$$variable{'Groups'}} ) ?>
 				<th align="left">Group</th>
+				<? endif ( @{$$variable{'Groups'}} ) ?>
 				<th align="left">Manufacturer</th>
 				<th align="left">Name</th>
 				<th align="left">Finish</th>
@@ -46,8 +52,12 @@
 <? while ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
 	<tr>
 		<td style="text-align:center;"><input type="checkbox" id="chkStock<? echo ( $$variable{'Stock'}{id} ) ?>" name="chkStock" value="<? echo ( $$variable{'Stock'}{'id'} ) ?>"/></td>
+				<? if ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
 		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? hecho ( $$variable{'Stock'}->inventory_number() ) ?></a></td>
+				<? endif ( @{$$variable{'InventoryNumbers'}} > 1 ) ?>
+				<? if ( @{$$variable{'Groups'}} ) ?>
 		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->group() ) ?></a></td>
+				<? endif ( @{$$variable{'Groups'}} ) ?>
 		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->manufacturer() ) ?></a></td>
 		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->name() ) ?></a></td>
 		<td><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->finish() ) ?></a></td>

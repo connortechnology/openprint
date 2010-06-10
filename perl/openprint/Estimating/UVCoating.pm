@@ -33,7 +33,7 @@ use vars qw( $log $dbh %config @outputs );
 # Let's assume that each piece of equipment can do 1 coat at a time
 # This service doesn't store it's own data, other than price.  It gets the info from the printing service.
 #
-my $debug = 0;
+my $debug = 1;
 
 my @variables = (
 	'txtQuantity1','txtQuantity2','txtQuantity3',
@@ -134,7 +134,7 @@ sub calc {
 		my $GrandTotal = 0;
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Printed: ' .openprint::service::summary( $Project, $signature_service_index, $qty_index ).'<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Signature ' . $$sig_specs{'SignatureIndex'} . 'Printed: ' .openprint::service::summary( $Project, $signature_service_index, $qty_index ).'<br/>';
 # If any of the signatures doesn't have an imposition, then we are in an incomplete state.
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
 				$$specs{'alert'} .= 'No imposition was found for printing. Please complete the printing estimation first.<br/>';
@@ -317,6 +317,7 @@ sub signature_calc {
 	#$openprint::log->debug("Signature : $signature_service_index");
 	if ( ! ( @front_uv or @back_uv ) ) {
 		$BestPrice{'Status'} = 'calculated';	
+		$BestPrice{'alert'} .= 'There are no UV Coatings specified.';
 		return %BestPrice;
 	} # end if
 	$BestPrice{'Status'} = 'uncalculated';
@@ -369,7 +370,7 @@ sub signature_calc {
 				my $imp = $$impositions[$imp_index];
 
 				$breakdown .= sprintf( '%dx%d+%dx%d=%dout on %sx%s<br/>',$imp->get('columns','rows','dutch_columns','dutch_rows','imposition'), $Stock->width(), $Stock->height() );
-#$openprint::log->debug('Trying: ' . $breakdown ) if $debug;
+$openprint::log->debug('Trying: ' . $breakdown ) if $debug;
 
 				if ( ! ( $imp->rows() * $imp->columns() ) ) {
 					$openprint::log->error("Invalid Imposition in UVCoating");
@@ -401,6 +402,7 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 							push @Sets_Of_Impositions, \@new_imps;
 						} # end if
 					} # end if
+$BestPrice{'Breakdown'} .= $breakdown;
 					last;
 				} # end if
 
@@ -426,7 +428,7 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 				} else {
 					@types = ( @front_uv, @back_uv );
 				} # end if
-#$openprint::log->debug("Types: @types");
+$openprint::log->debug("Types: @types");
 
 				# Has total price values for all types
 				foreach my $type ( @types ) {
@@ -439,6 +441,9 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 						$setupPrice = openprint::service::get_price( $type.'MakeReady', $qty, $Equipment );
 						$setupPrice = openprint::service::get_price( 'UVCoating'.$type.'MakeReady', $qty, $Equipment ) if ! $setupPrice;
 						$setupPrice = openprint::service::get_price( 'UVCoatingMakeReady', $qty, $Equipment ) if ! $setupPrice;
+if ( ! $setupPrice ) {
+	$openprint::log->debug("No setup price for $type");
+}
 
 						$ImpositionPrice{'MakeReady'} += $setupPrice;
 						$MakeReadies{$Equipment->id()} = $$sig_specs{'StockWidth'.$qty_index} * $$sig_specs{'StockHeight'.$qty_index};
@@ -455,6 +460,9 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 					my %ServicePrice = openprint::service::get_price_object( $type, $run_qty, $Equipment );
 					if ( ! %ServicePrice ) {
 						%ServicePrice = openprint::service::get_price_object( 'UVCoating'.$type, $run_qty, $Equipment );
+					} # end if
+					if ( ! %ServicePrice ) {
+						$openprint::log->debug("No service price for $type");
 					} # end if
 					if ( lc $ServicePrice{'units'} eq 'per m' ) {
 						$ServicePrice{'Total'} = $ServicePrice{'Price'}*$run_qty/1000;
@@ -499,7 +507,10 @@ $openprint::log->debug('DOESNT: ' . $breakdown ) if $debug;
 				$BestPricePerImposition{'Breakdown'} = $breakdown;
 			} # end if
 		} # end foreach set of impositions
-		next if ! defined $BestPricePerImposition{'Total'};
+		if ( ! defined $BestPricePerImposition{'Total'} ) {
+			$openprint::log->debug("Can't calculate price for $$Equipment{name}");
+			next;
+		} # end if
 
 		if ( $$specs{"OverrideMakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 			$BestPricePerImposition{'MakeReady'} = $$specs{"MakeReadyPrice-$$sig_specs{'SignatureIndex'}-$qty_index"};

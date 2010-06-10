@@ -1,0 +1,39 @@
+<? eval (
+	@{$$variable{'Stocks'}} = ();
+	foreach my $Stock ( openprint::Paper::find( 
+			'group_id'		=> $session{'/administrator/equipment/edit.html?Group'},
+			'owner_id'		=> $config{'Owner'},
+			'manufacturer_id'		=> $session{'/administrator/equipment/edit.html?Manufacturer'},
+			'name_id'	=> $session{'/administrator/equipment/edit.html?Name'},
+			'finish_id'	=> $session{'/administrator/equipment/edit.html?Finish'},
+			'colour_id'	=> $session{'/administrator/equipment/edit.html?Colour'},
+			'weight_id'	=> $session{'/administrator/equipment/edit.html?Weight'}, 
+			'material_id'	=> $session{'/administrator/equipment/edit.html?material_id'}, 
+			'type'		=> [ split(';', $session{'/administrator/equipment/edit.html?Types'} ) ],
+			'order'		=> 'name,finish,colour,weight, width, height'
+		) ) {
+		next if ( ! $Stock->recommendations() );
+		next if $$variable{Equipment}->Stock_Setting( $Stock );
+		push @{$$variable{'Stocks'}}, $Stock;
+	} # end foreach
+) ?>
+<? if ( @{$$variable{'Stocks'}} ) ?>
+	<table class="List sortable" style="table-layout: auto;">
+		<thead>
+			<tr>
+				<th align="left">Description</th>
+				<th align="left" width="50">&nbsp;</th>
+			</tr>
+		</thead>
+		<tbody>
+<? while ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
+	<tr>
+		<td><? echo ( $$variable{'Stock'}->to_string() ) ?></td>
+		<td><? echo ( ssi::writeButton($log,$dbh,'add_stock_setting_'.$$variable{'Stock'}->id(), 'add.gif', "new Ajax.Updater('Stocks','_stocks.html', {parameters: {action:'add',equipment_id: $$variable{Equipment}{id}, stock_id: $$variable{Stock}{id}}, onLoading:function(){ \$('Stocks').innerHTML='Loading...'; } });", '', 'Add' ); ) ?></td>
+	</tr>
+<? endwhile ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
+		</tbody>
+	</table>
+<? else ( @{$$variable{'Stocks'}} ) ?>
+There were no matching stocks.
+<? endif ( @{$$variable{'Stocks'}} ) ?>

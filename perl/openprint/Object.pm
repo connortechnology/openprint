@@ -252,6 +252,39 @@ sub Creator {
 	return new openprint::User( $_[0]{'created_by'} );
 } # end sub Creator
 
+sub find {
+    my $type = shift;
+    my $table = eval '$'.$type.'::table';
+    my %fields = eval '%'.$type.'::fields';
+
+    my %params = @_;
+    my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
+    my @values;
+
+    foreach my $k ( keys %params ) {
+        next if sets::isin( $k,[ 'order','limit' ] );
+        if ( ref $params{$k} eq 'ARRAY' ) {
+            $sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+            push @values, @{$params{$k}};
+        } else {
+            $sql .= " AND $fields{$k}=?";
+            push @values, $params{$k};
+        } # end if
+    } # end foreach k
+    $sql .= " ORDER BY $params{'order'}" if $params{'order'};
+    $sql .= " LIMIT $params{'limit'}" if $params{'limit'};
+
+    my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+    if ( ! $data ) {
+        $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
+    } elsif ( ! @$data ) {
+        $openprint::log->debug("No $type ($sql) (@values) " );
+    } elsif ( eval "$type::debug" ) {
+        $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
+    } # end if
+    return map { $type->new( $_->{index}, $_ ) } @$data;
+} # end sub find
+
 sub find_one {
 #$openprint::log->debug("find_one @_ ");
 	my $type = shift;

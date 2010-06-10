@@ -342,7 +342,7 @@ $openprint::log->warn("No imposition in scoring");
 			my $width = $I->layout_width();
 			my $height = $I->layout_height();
 
-			if ( $_ = fits_on_equipment( $Equipment, $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
+			if ( $_ = fits_on_equipment( $Equipment, $width, $height, $$sig_specs{'txtSpecificStockCalliper'}, $sig_specs ) ) {
 				$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
 				next;
 			} # end if
@@ -506,23 +506,25 @@ sub get_scores {
 		} # end if
 	} elsif ( $$sig_specs{'txtSignatureType'} eq 'Gate Folded Pages' ) {
 	} else { # normal printing
+		my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+		my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
 		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'Portrait', 'Landscape' ) ) {
 # needs no folding
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['4PageSignatureFold','2PanelFold','BusCardLandscapeFold','BusCardPortraitFold']) ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '3PanelFold', '3PanelZFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 2;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
+			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '4PanelFold','4PanelZFold', 'AccordianFold', 'AccordianFold4Panel') ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 3;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
+			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '5PanelFold', '5PanelZFold') ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 4;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
+			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '6PanelFold', '6PanelZFold' ) ) {
-			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 5;
-			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
+			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = $width_folds;
+			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = $height_folds;
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'SingleGateFold' ) ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 2;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
@@ -581,7 +583,7 @@ sub summary {
 } # end sub summary
 
 sub fits_on_equipment {
-	my ( $Equipment, $width, $height, $calliper ) = @_;
+	my ( $Equipment, $width, $height, $calliper, $sig_specs ) = @_;
 
 	if ( $Equipment->specification('Minimum Score Size') and ( 1*$width < 1*$Equipment->specification('Minimum Score Size') ) ) {
 		return "Doesn't fit minimum Score Size $width < " . $Equipment->specification('Minimum Score Size');
@@ -603,6 +605,15 @@ sub fits_on_equipment {
 	if ( $Equipment->specification('Maximum Score Calliper') and 1*$calliper > 1*$Equipment->specification('Maximum Score Calliper') ) {
 		return 'Calliper too big';
 	} # end if
+	if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
+		my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+		my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+		if ( $width_folds and $$sig_specs{'txtWidth'} > $max_feed_width ) {
+			return "Width ($$sig_specs{'txtWidth'}) too large for feed width ($max_feed_width).";
+		} elsif ( $height_folds and $$sig_specs{'txtHeight'} > $max_feed_width ) {
+			return "Height ($$sig_specs{'txtHeight'}) too large for feed width ($max_feed_width).";
+		} # end if
+	} # end if	
 	return '';
 } # end sub fits_on_equipment
 

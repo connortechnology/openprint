@@ -1,4 +1,35 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript" src="/javascripts/paper.js"></script>
+<script type="text/javascript">
+<!--
+function filter_onChange( element, id, selected ) {
+    var form = element.form;
+
+	var parameters = new Hash();
+		['Manufacturer','Group','Name','Finish','Colour','Weight'].each(function(name,index){
+			var ddm = form.elements[name+id];
+			if ( ! ddm ) ddm = form.elements['ddm'+name+id];
+			if ( ddm ) {
+				ddm.disabled = true;
+				parameters.set(ddm.name, get_ddm_value( ddm ) );
+			} // end if
+		} // end for each
+	);
+
+	parameters.set('form',form.name);
+	parameters.set('selected',selected);
+	new Ajax.Request( '/administrator/equipment/_stock_filters.json', { method: 'post', parameters: parameters, evalScripts: true } );
+
+} // end function Name_onChange()
+	function calc(formName) {
+		new Ajax.Updater('Stocks','/administrator/equipment/_stocks.html', {method:'get',
+				onLoading:function(){ $('Stocks').innerHTML='Loading...'; },
+				parameters:Form.serialize($(formName))});
+				//evalScripts:true, 
+	}
+
+-->
+</script>
 <form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
 		<p>
@@ -244,3 +275,13 @@ foreach ( openprint::Fold::find('equipment_id'=>$$variable{'Equipment'}->id()) )
 		<div id="Folds"> </div>
 	</fieldset>
 <? endif ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
+<form id="stock_settings_form" name="stock_settings_form">
+	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
+	<fieldset><legend>Specific Stock Settings</legend>
+		<div id="StockSettings"><!--#include virtual="_stock_settings.html"--></div>
+		<p class="buttons">
+			<? echo ( ssi::writeButton( $log, $dbh, 'addstocksetting','add.gif', "popup_window('_stock_setting_popup.html','equipment_id=$$variable{Equipment}{id}', { width: '800px', height: '600px' } );", '', 'Add' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'savestocksetting','save.gif', "new Ajax.Updater('StockSettings','_stock_settings.html?action=save', { parameters: stock_settings_form.serialize() } );", '', 'Save' ); ) ?>
+		</p>
+	</fieldset>
+</form>
