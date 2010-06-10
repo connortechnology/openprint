@@ -301,7 +301,7 @@ sub get_lis {
 		my $Operator = $Shift->Operator();
 
 		if ( openprint::usergroup::is_user_in( ['PressManager','Scheduling'], $session{'user_id'} ) ) {
-			$html = sprintf( q{<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d');"><span style="float: left;">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s">%s</span><br class="spacer"/></div>},
+			$html = sprintf( q{<div class="When" onclick="popup_window('_shift_popup.html','shift_id=%d');"><span class="Interval">%s %d %.3s %s %s to %s</span><span class="TotalImpressions">(%d)</span><span class="%s">%s</span></div>},
 
 			$Shift->id(), 
 Date::Calc::Day_of_Week_Abbreviation( Date::Calc::Day_of_Week($year, $month, $day)), $day, Date::Calc::Month_to_Text( $month ), $Shift->name(), 

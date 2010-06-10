@@ -932,6 +932,11 @@ sub _labels {
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 } # end sub _labels
 
+sub _stock_popup {
+	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+	$variable{'Project'} = $variable{'Job'}->Project();
+} # end sub _stock_popup
+
 sub _stock_details {
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 } # end sub _stock_details
@@ -965,17 +970,24 @@ sub _pending {
 sub _ul {
 	if ( $param{'action'} eq 'split' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		$Job->split();
+		$Job->split( $param{'new_form_count'} );
 		$variable{'Shift'} = $Job->Shift();
 	} # end if
 	if ( $param{'shift_id'} ) {
 		$variable{'Shift'} = new openprint::Shift( $param{'shift_id'} );
 	} elsif ( $param{'ul_id'} ) {
 		$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
+		if ( ! $variable{'Shift'} ) {
+			$variable{'error'} .= "Unable to find shift for $param{'ul_id'}";
+		} # end if
 	} else {
-$log->debug("No Shift!");
+$log->debug("No Shift specified!");
 	} # end if
-	$log->debug("_ul for: $variable{'Shift'}{id} " . $variable{'Shift'}->to_string() );
+	if ( $variable{'Shift'} ) {
+		$log->debug("_ul for: $variable{'Shift'}{id} " . $variable{'Shift'}->to_string() );
+	} else {
+		$variable{'Shift'} = new openprint::Shift();
+	} # en dif
 } # end sub _ul
 
 sub _drop {
@@ -1340,6 +1352,8 @@ sub _li_change {
 		$sql{'comment'} = $param{'comment'} if $param{'comment'} ne $Job->comment();
 		$sql{'impressions'} = $param{'impressions'} if ( exists $param{'impressions'} ) and ( $Job->impressions() != $param{'impressions'} );
 		$sql{'speed'} = $param{'speed'} if ( exists $param{'speed'} ) and ( $Job->speed() != $param{'speed'} );
+		$sql{'stock_verified'} = $param{'stock_verified'} if exists $param{'stock_verified'} and $param{'stock_verified'} != $$Job{'stock_verified'};
+		$sql{'stock'} = $param{'stock'} if exists $param{'stock'} and $param{'stock'} ne $$Job{'stock'};
 
 		if ( keys %sql ) {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
@@ -1546,6 +1560,10 @@ sub prepress_schedule {
 	} # end if
 	$session{'/employee/production/prepress_schedule.html?lastupdated'} = time;
 } # end sub prepress_schedule
+
+sub _split_popup {
+	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+} # end sub _split_popup
 
 1;
 __END__

@@ -23,7 +23,7 @@
 					if ( $session{'user_type'} ne 'A' ) {
 						$params{'type'} = ['C','E'];
 					} # end if
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( %params ) ], $param{'user_id'} ); ) ?>
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( %params ) ], $$variable{'User'}->id() ); ) ?>
 			</select>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
@@ -31,10 +31,15 @@
 	<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 	<fieldset>
 		<p class="buttons">
-			<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save'),
-					ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset'),
-					); ) ?>
+			<? echo ( 
+				my $html;
+				if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save');
+				$html .= ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset');
+				return $html;
+			) ?>
 		</p>
 	</fieldset>
 <p>* denotes required information.<br/></p>

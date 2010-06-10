@@ -4,18 +4,14 @@
 		if ( $$variable{'Shift'}->name() eq 'Pending' ) {
 			$filters = {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval']};
 		} elsif ( $$variable{'Shift'}->name() eq 'Approved' ) {
-			$filters = {'Status'=>['Approved','Shipped','PickedUp']};
+			$filters = {'Status'=>['Approved','Shipped','Picked Up']};
 		} # end if
 		return $$variable{'Shift'}->get_lis($filters);
 	} # end if
 ) ?>
 <script type="text/javascript">
 <!--
-	for ( var i = 0; i < drops.length; i += 1 ) {
-		if ( $(drops[i]) ) {
-			Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
-		} // end if
-	} // end foreach id in drops
+	setup_drops();
 	setup_dates();
 -->
 </script>

@@ -63,3 +63,13 @@ td p label {
     width: auto;
     margin-left: 0px;
 }
+
+table tr .name {
+	text-align: left;
+	width: 160px;
+}
+table tr .ip {
+	text-align: left;
+	width: 80px;
+}
+

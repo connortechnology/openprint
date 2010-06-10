@@ -49,8 +49,8 @@ These charges may need to be approved before production will continue.
 </div>
 
 
-<a href="<? echo ( $r->dir_config('ExternalSiteURL') ) ?>/employee/production/project_view.html?ProjectIndex=<?ProjectIndex?>&OrderID=<?OrderID?>">Click here</a> to view this project on the employee side.<br/>
+<a href="<? echo ( $config{'ExternalSiteURL'} ) ?>/employee/project/view.html?ProjectIndex=<?ProjectIndex?>">Click here</a> to view this project on the employee side.<br/>
 <br/>
 Use the following link to enter the customer side and approve the order.<br/>
-<a href="<? echo ( $r->dir_config('ExternalSiteURL') ) ?>/main/order/history_details.html?order_id=<?OrderID?>"><? echo ( $r->dir_config('ExternalSiteURL'); ) ?>/main/order/history_details.html?order_id=<?OrderID?></a>
+<a href="<? echo ( $config{'ExternalSiteURL'} ) ?>/main/order/history_details.html?order_id=<?OrderID?>"><? echo ( $r->dir_config('ExternalSiteURL'); ) ?>/main/order/history_details.html?order_id=<?OrderID?></a>
 

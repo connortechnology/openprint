@@ -59,13 +59,13 @@ Results for <? echo (
 				} # end if
 ) ?>
 		<tr<?rowclass?>> 
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?index?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?docket?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?duedate?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?status?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?readytime?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?shippedtime?></a></td>
-			<td><a href="/employee/production/project_view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>">
+			<td><a href="/employee/production/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?index?></a></td>
+			<td><a href="/employee/production/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?docket?></a></td>
+			<td><a href="/employee/production/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?duedate?></a></td>
+			<td><a href="/employee/production/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?status?></a></td>
+			<td><a href="/employee/production/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?readytime?></a></td>
+			<td><a href="/employee/production/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>"><?shippedtime?></a></td>
+			<td><a href="/employee/production/project/view.html?OrderID=<?OrderID?>&ProjectIndex=<?index?>">
 			<? echo ( 
 				if ( ! $$variable{'shippedtime'} ) {
 					@$variable{'shippedtime'} = sql::execute( $log, $dbh, q{SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH:MM') FROM Project_Log WHERE project_id=?}, $$variable{'index'} );

@@ -3,10 +3,11 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw( %config %param $dbh );
+use vars qw( %config %param $dbh %variable );
 *config = \%openprint::config;
 *param = \%openprint::param;
 *dbh = \%openprint::dbh;
+*variable = \%openprint::variable;
 
 require sql;
 require ssi;
@@ -20,6 +21,7 @@ require openprint::obj_customer;
 require openprint::address;
 require openprint::Company;
 require openprint::customer_credit;
+require openprint::Email;
 
 sub configuration {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -676,6 +678,25 @@ sub credit_application {
 
 	} # end if
 } # end sub admin_credit_app
+
+sub emails {
+	my $mail_dbh = email::db_connect();
+	$openprint::Email::dbh = $mail_dbh;
+ 
+	if ( $param{'action'} eq 'Delete' ) {
+		foreach my $Email ( openprint::Email::find('id'=>$param{'id'}) ) {
+			$variable{'error'} .= $Email->delete();
+		} # end foreach Email
+	} elsif ( $param{'action'} eq 'Save' ) {
+	} # end if
+} # end sub emails
+
+sub email {
+	my $mail_dbh = email::db_connect();
+	$openprint::Email::dbh = $mail_dbh;
+ 
+	$variable{'Email'} = new openprint::Email( $param{'id'} );
+} # end sub email
 
 1;
 __END__

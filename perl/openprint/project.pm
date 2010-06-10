@@ -62,7 +62,6 @@ sub view {
 	if ( exists $openprint::param{'ShowAllSignatures'} ) {
 		$openprint::session{'ShowAllSignatures'} = $openprint::param{'ShowAllSignatures'};
 	} # end if
-$openprint::log->debug("Viewing Project $project_index");
 	get_header( $log, $dbh, $variable, $project_index );
 
 	my %project;
@@ -107,23 +106,24 @@ $openprint::log->debug("Viewing Project $project_index");
 
 				if ( $openprint::session{'ShowAllSignatures'} ) {
 					push @services, $n, $url, $service_index;
+					$$variable{'HiddenSignatures'} = 1 if @{$services{$id}};
 				} else {
+					my @service_ids = ($service_index);
 					for ( my $i = 0; $i < @{$services{$id}}; $i += 1 ) {
 						if ( $statuses{$service_index} eq $statuses{$services{$id}[$i]} and openprint::Estimating::Printing::compare_signatures( $project{$service_index}, $project{$services{$id}[$i]} ) ) {
 							$sig_qty += 1;
 							foreach my $q ( 1 .. 3 ) {
-								$project{$service_index}{'txtPrice'.$q} += $project{$services{$id}[$i]}{'txtPrice'.$q};
+								#$project{$service_index}{'txtPrice'.$q} += $project{$services{$id}[$i]}{'txtPrice'.$q};
 								my $stock_qty = $project{$services{$id}[$i]}{'txtPressSheetQty'.$q};
 								$stock_qty =~ s/\D//g;
 								$$variable{'SignatureStockQty'.$q.$service_index} += $stock_qty;
 							} # end foreach q
-							splice @{$services{$id}}, $i, 1;
+							push @service_ids, splice @{$services{$id}}, $i, 1;
 							$i -= 1;
-		
 						} # end if
 					} # end for
 					if ( $sig_qty > 1 ) {
-						push @services, $sig_qty . ' ' . $n.'s', $url, $service_index;
+						push @services, $sig_qty . ' ' . $n.'s', $url, join(',',@service_ids);
 						$$variable{'HiddenSignatures'} = 1;
 					} else {
 						push @services, $sig_qty . ' ' . $n, $url, $service_index;
@@ -147,17 +147,23 @@ $openprint::log->debug("Viewing Project $project_index");
 
 		push @{$$variable{'SERVICES'}}, $service_index, $name, $url;
 
+		my @service_ids = split(',', $service_index);
 		foreach my $qty_index ( 1 .. 3 ) {
-			my $price = $project{$service_index}{"txtPrice$qty_index"};
-			if ( $price eq '' and $$variable{"Quantity$qty_index"} ) {
-				$price = $project{$service_index}{'txtPrice1'};
-			} # end if
+			
+			my $price;
+			foreach my $s_id ( @service_ids ) {
+				if ( $project{$s_id}{"txtPrice$qty_index"} eq '' and $$variable{"Quantity$qty_index"} ) {
+					$price += $project{$s_id}{'txtPrice1'};
+				} else {
+					$price +=  $project{$s_id}{"txtPrice$qty_index"};
+				} # end if
+			} # end foreach
 			$$variable{"Total$qty_index"} += $price;
 			$$variable{"UnitPrice$qty_index"} += $price/$$variable{"Quantity$qty_index"} if $$variable{"Quantity$qty_index"};
 			push @{$$variable{'SERVICES'}}, sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * $conversion_rate );
 		} # end foreach qty_index
 
-		push @{$$variable{'SERVICES'}}, $statuses{$service_index};
+		push @{$$variable{'SERVICES'}}, $statuses{$service_ids[0]};
 	} # end while ( @services )
 
 	if ( 

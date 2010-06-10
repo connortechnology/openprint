@@ -4,7 +4,7 @@
 <? else ( ! $$variable{'Skid'}->Contents() ) ?>
 <table class="List">
 	<tr>
-		<th align="left">Paper</th><th width="75" align="right">Quantity</th><th align="right" width="60">Inches</th>
+		<th align="left">Owner</th><th class="StockQuantity">Quantity</th><th class="StockQuality">Quality</th><th align="right" width="60">Inches</th>
 	</tr>
 <? echo ( 
 	my $html;
@@ -15,15 +15,18 @@
 		my $available = 0;
 		foreach my $skid_id ( @{$$variable{'skid_ids'}} ) {
 			my $Skid = new openprint::Skid( $skid_id );
-			$available += ($Skid->content($Paper) - $Skid->allocation('Paper'=>$Paper));
+			$available += $Skid->allocateable($Paper);
 		} # end foreach
 
 		$html .= '<tr>';
-		$html .= sprintf('<td><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
-		$html .= sprintf('<td align="right"><a href="paper_details.html?paper_id=%1$d">%2$d%3$s</a></td>', $Paper->id(), $C->quantity(), $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
-		$html .= sprintf('<td align="right"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (($Paper->type() eq 'Sheet') and $Paper->calliper()) ? sprintf('%.1f', $C->quantity()*$Paper->calliper()) : 'unknown' );
+		$html .= sprintf('<td colspan="4"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
 		$html .= '</tr><tr>';
-		$html .= '<td colspan="3">';
+		$html .= '<td>'.$Paper->Owner()->name().'</td>';
+		$html .= sprintf('<td class="StockQuantity"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), Number::Format::format_number($C->quantity()).$Paper->units() );
+		$html .= sprintf('<td class="StockQuality">%s</td>', $C->quality() );
+		$html .= sprintf('<td align="right"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (($Paper->type() eq 'Sheet') and $Paper->calliper()) ? sprintf('%.1f', Number::Format::format_number($C->quantity()*$Paper->calliper())) : 'unknown' );
+		$html .= '</tr><tr>';
+		$html .= '<td colspan="4">';
 		$html .= ssi::writeButton( $log, $dbh, "CheckIn$$C{id}", 'checkin.gif', "checkin_window( $paper_id, '$$variable{skid_id}' );", '', 'Check In' );
 		$html .= ssi::writeButton( $log, $dbh, "CheckOut$$C{id}", 'checkout.gif', "checkout_window( $paper_id, '$$variable{skid_id}' );", '', 'Check Out' );
 		$html .= ssi::writeButton( $log, $dbh, "Allocate$$C{id}", 'allocate.gif', "allocate_window( $paper_id, '$$variable{skid_id}', $available );", '', 'Allocate' );

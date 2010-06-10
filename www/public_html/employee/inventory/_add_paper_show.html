@@ -1,6 +1,14 @@
 <? eval ( 
 	$$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} ) if ! $$variable{'Paper'};
 	$$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} ) if ! $$variable{'Skid'};
+	if ( ! $$variable{'Paper'}->id() ) {
+		my @C = $$variable{'Skid'}->Contents();
+		if ( @C == 1 ) {
+			$$variable{'Paper'} = $C[0]->Paper() if $C[0]->paper_id();
+		} # end if
+	} # end if
+	$$variable{'C'} = $$variable{'Skid'}->Content($$variable{'Paper'});
+	$$variable{'C'} = new openprint::SkidContent() if ! $$variable{'C'};
  ) ?>
 <p>
 	<label for="txtManufacturer" onclick="f1.txtManufacturer.value='';f1.Manufacturer.selectedIndex=0;f1.Manufacturer.toggle();f1.txtManufacturer.toggle();">Manufacturer:</label>
@@ -78,17 +86,17 @@
 	<select id="Quality" name="Quality" size="1">
 		<option value="">select</option>
 	<? echo (
-		if ( ! ( $$variable{'Paper'}->quality_id() or $param{'Quality'} ) ) {
+		if ( ! ( $$variable{'C'}->quality_id() or $param{'Quality'} ) ) {
 			my @Qualities = openprint::StockQuality::find('shortname'=>'new');
 			if ( @Qualities ) {
-				$$variable{'Paper'}->quality_id( $Qualities[0]->id() );
+				$$variable{'C'}->quality_id( $Qualities[0]->id() );
 			} # end if
 		} # end if
 		my @Qualities = openprint::StockQuality::find('order'=>'lower(shortname)');
 		if ( @Qualities == 1 ) {
 			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $Qualities[0]->id() );
 		} else {
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality'} ? $param{'Quality'} : $$variable{'Paper'}->quality_id() );
+			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Qualities ], $param{'Quality'} ? $param{'Quality'} : $$variable{'C'}->quality_id() );
 		} # end if
 	) ?>
 	</select>
@@ -122,7 +130,9 @@
     </p>
 	<p>
 		<label for="Owner">Owner:</label>
-		<select id="Owner" name="Owner"><? echo ( openprint::Company::get_dropdown( $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $session{'company_id'} ); ) ?></select>
+		<select id="Owner" name="Owner"><? echo ( 
+			my @owner_ids = sql::execute( undef, undef, 'SELECT DISTINCT owner_id FROM papers' );
+			openprint::Company::get_dropdown( ( $$variable{'Paper'}->owner_id() ? $$variable{'Paper'}->owner_id() : $session{'company_id'} ), { 'id'=>\@owner_ids } ); ) ?></select>
 	</p>
 	<p>
 		<label for="Quantity">Quantity:</label>

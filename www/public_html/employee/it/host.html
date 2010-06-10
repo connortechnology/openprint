@@ -1,0 +1,58 @@
+<script type="text/javascript">
+	function check_inputs( form ) {
+		return true;
+	} //  end function check_inputs
+</script>
+<div class="Host"><div class="Edit">
+<form id="f1" name="f1" method="post" action="/employee/it/hosts.html">
+	<input type="hidden" id="host_id" name="host_id" value="<? echo ( $$variable{'Host'}->id() ) ?>" />
+	<input type="hidden" id="btnFunction" name="btnFunction" />
+	<fieldset><legend>Host <? echo ( $$variable{'Host'}->id() ) ?></legend>
+		<div class="content">
+			<ul>
+				<li>
+					<label>Hostname:</label>
+					<input type="text" id="hostname" name="hostname" value="<? echo ( $$variable{'Host'}->hostname() ) ?>" />
+				</li>
+				<li>
+					<label>IP Address:</label>
+					<input type="text" id="ip" name="ip" value="<? echo ( $$variable{'Host'}->ip() ) ?>" />
+				</li>
+				<li>
+					<label>MAC:</label>
+					<input type="text" id="mac" name="mac" value="<? echo ( $$variable{'Host'}->mac() ) ?>" />
+				</li>
+				<li>
+					<label>Blocked:</label>
+					<input type="radio" name="block" id="block1" value="1" <? echo ( ssi::checked( $$variable{'Host'}->block() ); ) ?>
+					<label class="radio" for="block1">Yes</label>
+					<input type="radio" name="block" id="block0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->block() ); ) ?>
+					<label class="radio" for="block0">No</label>
+				</li>
+				<li>
+					<label>Monitor:</label>
+					<input type="radio" name="monitor" id="monitor1" value="1" <? echo ( ssi::checked( $$variable{'Host'}->monitor() ); ) ?>
+					<label class="radio" for="monitor1">Yes</label>
+					<input type="radio" name="monitor" id="monitor0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->monitor() ); ) ?>
+					<label class="radio" for="monitor0">No</label>
+				</li>
+				<li><label>Description</label>
+					<textarea id="description" name="description" cols="" rows=""><? echo ( $$variable{'Host'}->description() ) ?></textarea>
+				</li>
+				<li class="buttons">
+					<? echo ( 
+						my $html;
+						$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "if( check_inputs( f1 ) ){f1.btnFunction.value='Save';f1.submit();}", '', 'Save' );
+						if ( $$variable{'Host'}->id() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ) if $$variable{'Host'}->id();
+						} # end if
+						$html .= ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();', '', 'Reset' );
+						$html .= ssi::writeButton( $log, $dbh, 'resolve', 'resolve.gif', "f1.btnFunction.value='Resolve';f1.action='/employee/it/host.html';f1.submit();", '', 'Resolve' );
+						#$html .= ssi::writeButton( $log, $dbh, 'clear', 'clear.gif', 'clearForm(f1);', '', 'Clear' );
+						return $html;
+					) ?>
+				</li>
+			</ul>
+	</fieldset>
+</form>
+</div></div>

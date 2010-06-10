@@ -17,7 +17,7 @@ require misc;
 require openprint::RFIDTagType;
 require openprint::Location;
 
-my $debug = 0;
+my $debug = 1;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (
@@ -71,6 +71,10 @@ sub find {
 	if ( $params{'id_like'} ) {
 		$sql .= ' AND id LIKE ?';
 		push @values, $params{id_like};
+	} # end if
+	if ( $params{'short_id'} ) {
+		$sql .= ' AND id = ?';
+		push @values, sprintf('%.15d', $params{'short_id'} );
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
@@ -142,6 +146,10 @@ sub save {
 			} # end if
 			$$self{'type'} = $type;
 		} # end if
+	} # end if
+
+	if ( $self->type() eq 'Skid' ) {
+		$self->Skid()->save({location_id=>$$self{'location_id'}});
 	} # end if
 
 	delete $$self{'type'};
@@ -242,12 +250,17 @@ sub Skid {
 sub id_short {
 	my ( $self ) = @_;
 	return '' if ! $$self{'id'};
+	return $$self{'id'} if $self->is_invalid_id();
+
 	my ( $type, $significant ) = $$self{'id'} =~ /^(\d)(\d{14})$/;
 	return 1*$significant;
 } # end sub id_short
 
 sub is_invalid_id {
 	my ( $id ) = @_;
+	if ( ref $id eq 'openprint::RFIDTag' ) {
+		$id = $id->id();
+	} # end if
 
 	if ( length $id != 15 ) {
 		return 'Invalid length.  A valid tag should be 15 characters long. This one is ' . length $id;

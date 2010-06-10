@@ -87,16 +87,16 @@
 					my @side_one_colours = openprint::Estimating::Printing::get_colours( $$variable{'Specs'}, 'SideOne' );
 					my @side_two_colours = openprint::Estimating::Printing::get_colours( $$variable{'Specs'}, 'SideTwo' );
 					$html .= "<tr$$variable{'rowclass'}>";
-					$html .= sprintf( q{<td><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%s</a>&nbsp;</td>}, @$variable{'OrderID','index','ID'} );
-					$html .= sprintf( q{<td><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%s</a></td>}, @$variable{'OrderID','index','date'} );
-					$html .= sprintf( q{<td><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%s</a></td>}, @$variable{'OrderID','index','cust'} );
-					$html .= sprintf( q{<td><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%s" x %s"</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'txtWidth'},$$variable{'Specs'}{'txtHeight'} );
-					$html .= sprintf( q{<td><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%s" x %s"</a></td>}, @$variable{'OrderID','index'}, @$proj_specs{'txtFinalWidth','txtFinalHeight'} );
-					$html .= sprintf( q{<td><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%s</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'ddmRunStyle'.$Project->ordered_quantity_index()} );
-					$html .= sprintf( q{<td><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%s out</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'txtImposition'.$Project->ordered_quantity_index()} );
-					$html .= sprintf( q{<td><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%d/%d</a></td>}, @$variable{'OrderID','index'}, scalar @side_one_colours, scalar @side_two_colours );
-					$html .= sprintf( q{<td><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%s" x %s"</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'StockWidth'.$Project->ordered_quantity_index()},$$variable{'Specs'}{'StockHeight'.$Project->ordered_quantity_index()} );
-					$html .= sprintf( q{<td align="right"><a href="project_view.html?OrderID=%d&ProjectIndex=%d">%s</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'UsePress'} );
+					$html .= sprintf( q{<td><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%s</a>&nbsp;</td>}, @$variable{'OrderID','index','ID'} );
+					$html .= sprintf( q{<td><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%s</a></td>}, @$variable{'OrderID','index','date'} );
+					$html .= sprintf( q{<td><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%s</a></td>}, @$variable{'OrderID','index','cust'} );
+					$html .= sprintf( q{<td><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%s" x %s"</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'txtWidth'},$$variable{'Specs'}{'txtHeight'} );
+					$html .= sprintf( q{<td><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%s" x %s"</a></td>}, @$variable{'OrderID','index'}, @$proj_specs{'txtFinalWidth','txtFinalHeight'} );
+					$html .= sprintf( q{<td><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%s</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'ddmRunStyle'.$Project->ordered_quantity_index()} );
+					$html .= sprintf( q{<td><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%s out</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'txtImposition'.$Project->ordered_quantity_index()} );
+					$html .= sprintf( q{<td><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%d/%d</a></td>}, @$variable{'OrderID','index'}, scalar @side_one_colours, scalar @side_two_colours );
+					$html .= sprintf( q{<td><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%s" x %s"</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'StockWidth'.$Project->ordered_quantity_index()},$$variable{'Specs'}{'StockHeight'.$Project->ordered_quantity_index()} );
+					$html .= sprintf( q{<td align="right"><a href="/employee/project/view.html?OrderID=%d&ProjectIndex=%d">%s</a></td>}, @$variable{'OrderID','index'}, $$variable{'Specs'}{'UsePress'} );
 					$html .= q{</tr>};
 				} # end foreach signature_service_index
 				$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';

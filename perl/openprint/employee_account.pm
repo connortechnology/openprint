@@ -20,7 +20,6 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 
 sub profile {
 
-	$param{'user_id'} = $session{'user_id'} if ! $param{'user_id'};
 	$param{'company_id'} = new openprint::User($session{'user_id'})->company_id() if ! $param{'company_id'};
 
 	my $User = new openprint::User( $param{'user_id'} );
@@ -98,7 +97,11 @@ sub profile {
 			$variable{'information'} = 'Record saved successfully.<br/>';
 		} # end if
 	} # end if
-	$variable{'User'} = $User;
+	if ( ! $param{'user_id'} ) {
+		$variable{'User'} = $User = new openprint::User( $session{'user_id'} );
+	} else {
+		$variable{'User'} = $User;
+	} # end if
 	if ( $config{mail_db_name} and $User->email() =~ /(.*)\@point\-one\.com/ ) {
 		@variable{'VacationState','VacationSubject','VacationMessage'} = email::get_vacation( $User->email() );
 		@{$variable{'Aliases'}} = email::aliases( $User->email() );

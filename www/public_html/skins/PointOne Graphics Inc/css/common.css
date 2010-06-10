@@ -299,7 +299,7 @@ fieldset p select {
     width: 70%;
 	vertical-align: top;
 }
-fieldset p textarea {
+fieldset p textarea, fieldset ul li textarea {
     width: 70%;
 }
 fieldset p option {
@@ -325,6 +325,55 @@ fieldset p input[type="text"], fieldset p input[type="password"]  {
 }
 fieldset p input[type="radio"] {
 	margin-top: 3px;
+}
+fieldset ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+fieldset ul:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+	font-size: 0;
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset ul {height: 1%;}
+fieldset ul {display: block;}
+/* End hide from IE-mac */
+fieldset ul li {
+	list-style: none;
+	margin: 0px;
+	padding: 0px 0px 0px 185px;
+}
+fieldset ul li:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+	font-size: 0;
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html fieldset ul li {height: 1%;}
+fieldset ul li {display: block;}
+/* End hide from IE-mac */
+
+fieldset ul li label {
+	width: 180px;
+	margin: 0px 0px 0px -185px;
+	float: left;
+	text-align: right;
+}
+fieldset ul li label.radio {
+	width: auto;
+	margin: 0px;
+	float: none;
+}
+fieldset ul li input[type="text"] {
+	width: 60%;
 }
 
 fieldset.filters {
@@ -505,8 +554,8 @@ td.Docket, th.Docket {
 td.Stock, th.Stock {
 	text-align: right;
 }
-td.StockQuantity, th.StockQuantity {
-	width: 80px;
+td.StockQuantity, th.StockQuantity, tr .StockQuality {
+	width: 100px;
 	text-align: right;
 }
 td.Quantity, th.Quantity {
@@ -533,6 +582,12 @@ td.checkbox, th.checkbox {
 td.Price, th.Price {
 	width: 100px;
 	text-align: right;
+}
+td.Status, th.Status {
+	width: 100px;
+	text-align: right;
+	padding-right: 4px;
+	padding-left: 4px;
 }
 td.Cost, th.Cost {
 	width: 130px;

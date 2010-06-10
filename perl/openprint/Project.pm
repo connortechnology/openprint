@@ -50,7 +50,7 @@ sub destroy {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_projects WHERE Index=?}, $$self{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
-} # end sub delete
+} # end sub destroy
 
 sub get_project_type {
 	my ( $log, $dbh, $project_index ) = @_;
@@ -639,7 +639,7 @@ $openprint::log->debug("No presses in used_press_name");
     } # end if
 
 	if ( $params{'due_date_start'} and $params{'due_date_end'} ) {
-		$sql .= q{ AND (due_date BETWEEN ? AND ?)};
+		$sql .= q{ AND (due_date BETWEEN ? AND ?};
 		push @values, @params{'due_date_start','due_date_end'};
 		if ( exists $params{'due_date'} and ! $params{'due_date'} ) {
 			$sql .= q{ OR due_date IS NULL};
@@ -886,9 +886,11 @@ sub load {
 		if ( ! $data ) {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
-	} # endif
 	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason/} =
 		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason/};
+	} # endif
+	@$self{qw/id docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id price1 price2 price3 predefined rush reprint reprint_reason/} =
+		@$data{qw/index lngdocketnumber order_id companyindex userindex strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id price1 price2 price3 predefined rush reprint reprint_reason/};
 	return;
 } # end sub load
 
@@ -982,11 +984,11 @@ sub summary {
 			} # end if
 			$summary .= openprint::Estimating::Printing::get_colour_description( \%specs );
 			if ( $specs{'rdbSuppliedStock'} eq 'Y' ) {
-				$summary .= 'Customer Supplied Stock';
+				$summary .= ' Customer Supplied Stock';
 			} elsif ( $specs{'rdbSpecificStock'} eq 'Y' ) {
-				$summary .= sprintf( 'on %s, %s, %s, %s', @specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} );
+				$summary .= sprintf( ' on %s, %s, %s, %s', @specs{'txtSpecificStockBrand','txtSpecificStockFinish','txtSpecificStockColour','txtSpecificStockWeight'} );
 			} else {
-				$summary .= sprintf( 'on %s, %s, %s, %s', @specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} );
+				$summary .= sprintf( ' on %s, %s, %s, %s', @specs{'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight'} );
 			} # end if
 		} # end if
 		if ( $specs{'PrintingType'} ) {
@@ -1071,6 +1073,7 @@ sub ordered_price {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
 	} # end if
 	return $$self{'ordered_price'} if $$self{'ordered_price'};
+$openprint::log->debug("Ordered price: $$self{'ordered_price'}");
 	return $$self{'price'.$self->ordered_quantity_index()};
 } # end sub ordered_price
 
@@ -1086,8 +1089,21 @@ sub prices {
 }
 
 sub price {
-	my ( $self, $index ) = @_;
-	return $$self{'price'.$index};
+	my ( $self, $qty_index, $new ) = @_;
+	if ( $new ) {
+		$$self{'price'.$qty_index} = $new;
+	} # end if
+    if ( ! defined $$self{'price'.$qty_index} ) {
+        my $services = $self->services();
+        foreach my $k ( keys %$services ) {
+            foreach ( @{$$services{$k}} ) {
+                my $specs = openprint::service::get_specs_ref( $self, $_ );
+                $$self{'price'.$qty_index} += $$specs{'txtPrice'.$qty_index} ? $$specs{'txtPrice'.$qty_index} : $$specs{'txtPrice1'};
+            } # end foreach
+        } # end foreach
+		$$self{'price'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$self{'price'.$qty_index} );
+    } # end if
+	return $$self{'price'.$qty_index};
 } # end sub price
 
 sub Price {
@@ -1204,7 +1220,7 @@ sub copy_signature {
 	my $ac = sql::start_transaction( $dbh );
     foreach my $key ( openprint::Estimating::Printing::variables() ) {
 		next if $key eq 'SignatureIndex';
-		if ( $$data{$key} ) {
+		if ( exists $$data{$key} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$data{$key}, ! exists $$new_specs{$key} );
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );

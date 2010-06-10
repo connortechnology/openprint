@@ -1,0 +1,348 @@
+.CreditApplication .DateSelector {
+	float: none;
+}
+
+@media print {
+	.unprintable {
+		display: none;
+	}
+	div.CreditApplication div.Dates {
+		display: none;
+	}
+	body div#Header {
+		display: none;
+	}
+}
+
+div.CreditApplication {
+	background-color: white;
+}
+div.CreditApplication:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.CreditApplication {height: 1%;}
+div.CreditApplication {display: block;}
+/* End hide from IE-mac */
+
+.CreditApplication table {
+	border-top: 1px solid #3b5e91;
+	table-layout: fixed;
+}
+.CreditApplication table td {
+	border: 1px solid #aebdd2;
+	vertical-align: top;
+}
+.CreditApplication table th {
+	border: 1px solid #aebdd2;
+	background-color: #e4ebf4;
+}
+	
+.CreditApplication table tr.total td, .CreditApplication table tr.subtotal td, .CreditApplication table tr.federaltax td, .CreditApplication table tr.statetax td {
+	text-align: right;
+}
+.CreditApplication table td input[type="text"] {
+	width: 93%;
+	min-width:0px;
+	margin: 0px;
+	padding: 0px;
+}
+
+div.CreditApplication div.Header {
+	display: block;
+	position: relative;
+	width: 270px;
+	margin: 0px auto 0px auto;
+	vertical-align: top;
+	padding-top: 5px;
+	text-align: center;
+}
+div.CreditApplication .Header:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .CreditApplication .Header {height: 1%;}
+* .CreditApplication .Header {display: block;}
+/* End hide from IE-mac */
+
+div.CreditApplication div.Header .Logo {
+	margin: 7px;
+	padding: 0px;
+	color: black;
+	width: 270px;
+	background: none;
+}
+div.CreditApplication .Header .Logo:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .CreditApplication .Header  .Logo{height: 1%;}
+* .CreditApplication .Header  .Logo{display: block;}
+/* End hide from IE-mac */
+
+.CreditApplication div.Header .Logo table {
+	text-align: center;
+	margin-left: auto;
+	border: none;
+	border-top: none;
+}
+.CreditApplication .Header .Logo table td {
+	border: none;
+	vertical-align: top;
+	padding: 1px;
+}
+.CreditApplication .Header table.HeaderText {
+}
+.CreditApplication .Header .Logo table.HeaderText td {
+	font-size: 12px;
+}
+
+div.CreditApplication .Header .Logo a {
+	color: black;
+	border: none;
+}
+div.CreditApplication .Header .Logo a img {
+	width: 100%;
+}
+div.CreditApplication .Header .Logo .PointOne {
+	border-bottom: none;
+	font-family: Georgia, Times, serif;
+	padding: 0px;
+	margin: 0px; 
+	font-size: 42px;
+}
+div.CreditApplication .Header .Logo .GraphicsInc {
+	padding: 0px;
+	margin: 0px; 
+	font-size:24px;
+}
+div.CreditApplication .Header .PageTitle {
+	width: 100%;
+margin: 24px 0px 24px 0px;
+}
+div.CreditApplication .Header .PageTitle h1 {
+	float: none;
+	font-size:24px;
+	color: #3b5e91;
+text-align: center;
+} 
+div.CreditApplication #Contents {
+	margin-top: 20px;
+}
+div.CreditApplication .Information {
+	padding: 5px;
+}
+div.CreditApplication .Information:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .CreditApplication .Information {height: 1%;}
+* .CreditApplication .Information {display: block;}
+/* End hide from IE-mac */
+div.CreditApplication .Vendor {
+	width: 50%;
+	float: left;
+}
+div.CreditApplication .Sender {
+	width: 50%;
+	float: right;
+	margin-bottom: 5px;
+}
+div.CreditApplication .Dates {
+	width: 50%;
+	float: right;
+}
+div.CreditApplication .Dockets {
+	width: 50%;
+	float: right;
+	margin-top: 5px;
+}
+label {
+	text-transform: uppercase;
+	outline: 0;
+}
+
+p.buttons {
+text-align: right;
+width: 100%;
+margin: 0px;
+padding: 0px;
+float: none;
+}
+p.buttons:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html p.buttons {height: 1%;}
+p.buttons {display: block;}
+/* End hide from IE-mac */
+fieldset.filters p.buttons {
+	text-align: left;
+}
+div.CreditApplication .Disclaimer {
+	font-weight: bold;
+	font-size: small;
+	padding: 5px;
+}
+.CreditApplication table td.alert {
+	color: red;
+}
+.CreditApplications table tr td.ID, .CreditApplications table tr th.ID {
+	width: 20px;
+	text-align: left;
+}
+.CreditApplications table tr td.Company, .CreditApplications table tr th.Company {
+	width: 100px;
+	text-align: left;
+	overflow: hidden;
+}
+.CreditApplication fieldset {
+	border: none;
+}
+.CreditApplication fieldset legend {
+	width: 100%;
+	background-color: #eeeeee;
+	text-align: center;
+	font-size: medium;
+}
+.CreditApplication fieldset ul {
+}
+.CreditApplication fieldset ul li {
+	padding: 3px 0px 3px 250px;
+}
+.CreditApplication fieldset ul li label {
+	margin-left: -250px;
+	width: 245px;
+}
+.CreditApplication fieldset ul li label.radio {
+	float: none;
+	margin: 0px;
+	width: auto;
+}
+.CreditApplication .TradeReferences {
+	float: left;
+	width: 50%;
+}
+.CreditApplication .BankInformation {
+	float: right;
+	width: 50%;
+}
+.CreditApplication .TradeReference li.Phone, .CreditApplication .TradeReference li.Fax, .CreditApplication .TradeReference li.Email {
+}
+div.CreditApplication .Disclaimer:before {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.CreditApplication .Disclaimer {height: 1%;}
+div.CreditApplication .Disclaimer {display: block;}
+/* End hide from IE-mac */
+.CreditApplication .Requested {
+	float: left;
+	width: 48%;
+}
+.CreditApplication .Current {
+	float: right;
+	width: 50%;
+}
+.CreditApplication .CompanyInformation {
+	width: 50%;
+	float: left;
+}
+.CreditApplication .BusinessInformation {
+	width: 50%;
+	float: right;
+}
+div.CreditApplication .CompanyInformation:before {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html div.CreditApplication .CompanyInformation {height: 1%;}
+div.CreditApplication .CompanyInformation {display: block;}
+/* End hide from IE-mac */
+span.input {
+	float: none;
+	width: 100%;
+	border-bottom: 1px solid black;
+	display: inline-block;
+}
+.bank_name, .bank_branch, .bank_account, .account_manager, .bank_phone, .bank_fax, .bank_email {
+	width: 50%;
+	float: left;
+}
+div.Signatures {
+	margin: 10px 0px 10px 0px;
+	font-style: italic;
+}
+div.Signatures fieldset legend {
+	display: none;
+}
+div.Signatures ul li {
+	width: 38%;
+	float: left;
+	font-style: normal;
+	padding: 0px 0px 0px 105px;
+	margin: 5px 0px 5px 0px;
+}
+div.Signatures ul li label {
+	text-align: left;
+	margin: 0px 0px 0px -105px;
+	width: 105px;
+}
+div.Signatures ul li label.radio {
+	width: auto;
+	margin: 0px;
+	float: none;
+}
+div.Signatures ul li.Title, div.Signatures ul li.Date {
+	padding-left: 75px;
+	float: right;
+}
+div.Signatures ul li.Title label, div.Signatures ul li.Date label {
+	width: 70px;
+	margin: 0px 0px 0px -75px;
+	float: left;
+	text-align: right;
+}
+div.Signatures fieldset ul.Signature {
+	margin: 10px 0px 10px 0px;
+}
+
+p.FaxTo {
+	text-align: center;
+	text-transform: uppercase;
+}

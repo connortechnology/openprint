@@ -65,6 +65,7 @@
 	a.buttonImageOff,  a.buttonImageOn {
 		padding-left: 3px;
 		padding-right: 3px;
+		background-color: blue;
 	}
 }
 

@@ -2,18 +2,19 @@
 <h1>PROJECTS</h1>
 <h2>Reuse Project</h2>
 </div>
-<div class="ProjectCreateEdit">
+<div class="Project"><div class="Reuse">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset>
 			<p> 
 				<label>Please provide a reference:</label>
-				<textarea name="reference" rows="3" wrap="virtual" >Copy of <? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
+				<textarea name="reference" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" cols="" wrap="virtual" >Copy of <? echo ( $$variable{'Project'}->reference(); ) ?></textarea>
 			</p>
 			<p>
 				<label>Additional comments or instructions:</label>
-				<textarea name="comments" rows="5" wrap="virtual" ><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
+				<textarea name="comments" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" cols="" wrap="virtual" ><? echo ( ssi::htmlize( $$variable{'Project'}->comments() ); ) ?></textarea>
 			</p>
 		</fieldset>
+		<div class="quantities">
 		<fieldset>
 			<legend>What quantities would you like to calculate pricing for?</legend>
 			<ul>
@@ -31,7 +32,8 @@
 				</li>
 			</ul>
 		</fieldset>
-		<? if ( $openprint::session{'user_type'} eq 'E' or $openprint::session{'user_type'} eq 'A' ) ?>
+		</div>
+		<? if ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
 	<fieldset>
 			If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from now on will be recorded in their history.
 		<p>
@@ -39,11 +41,11 @@
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCompany);" size="4" style="width: auto;"/>
 			<select name="ddmCompany">
 				<option value="">Select a Customer</option>
-				<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::session{'company_id'} ); ) ?>
+				<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
 			</select>
 		</p>
 	</fieldset>
-		<? endif ( $openprint::session{'user_type'} eq 'E' or $openprint::session{'user_type'} eq 'A' ) ?>
+		<? endif ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
 		Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
 		<p class="buttons">
 			<? echo ( join('',
@@ -54,4 +56,5 @@
 		<input type="hidden" name="ProjectIndex" value="<?ProjectIndex?>"/>
 		<input type="hidden" name="btnFunction" value="Reuse Project"/>
 	</form>
+</div>
 </div>

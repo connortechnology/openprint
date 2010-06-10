@@ -106,10 +106,24 @@ div.PressColumn ul li {display: block;}
 	   margin-right: 1px;
 	   padding: 0px;
 	}
+.When:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .When {height: 1%;}
+.When {display: block;}
 	.When span {
 		padding: 2px;
 		width: auto;
 	}
+	.When .Interval {
+		float: left;
+	} 
 	.docket {
 		float: right;
 		p\osition: relative;
@@ -142,6 +156,13 @@ div.PressColumn ul li {display: block;}
 		padding: 0px 4px 0px 4px;
 	}
 	.RunTime {
+		float: left;
+        display: inline;
+        border: 1px outset gray;
+        width: 85px;
+        text-align: center;
+	}
+	.StockVerified {
 		float: left;
         display: inline;
         border: 1px outset gray;
@@ -183,7 +204,7 @@ div.PressColumn ul li {display: block;}
 	.commands {
 		border-top: 1px solid #000000;
 	}
-	.Comment {
+	.Comment, .Stock {
 		padding-left: 6px;
 		padding-right: 6px;
 		text-align: left;
@@ -268,7 +289,6 @@ fieldset.filters ul:after {
     font-size: 0;
     clear: both;
     visibility: hidden;
-
 }
 /* Hides from IE-mac \*/
 * html fieldset.filters ul {height: 1%;}

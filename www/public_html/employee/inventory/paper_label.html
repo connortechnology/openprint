@@ -1,5 +1,5 @@
 <? eval (
-	$$variable{'Skid'} = new openprint::Skid( $r->param('skid_id') ) if ! $$variable{'Skid'};
+	$$variable{'Skid'} = new openprint::Skid( $param{'skid_id'} ) if ! $$variable{'Skid'};
 ) ?>
 <div style="padding: 7px;">
 	<img style="float:right;" src="/barcode.png?code=I<? echo ( $$variable{'Skid'}{'id'} ) ?>+&amp;NoText=1&amp;Height=40"/>
@@ -29,7 +29,7 @@
 		} else {
 			$html .= $paper_detail;
 		} # end if
-		$html .= '<br/><b>'. $qty . ' '. ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets' ) .'</b><br class="spacer"/>';
+		$html .= '<br/><b>'. $qty . ' '. $Paper->units().'</b><br class="spacer"/>';
 	} # end if
 	return $html;
 ) ?>
@@ -37,11 +37,8 @@
 <? echo (
 	if ( $$variable{'paper_id'} ) {
 		my $html;
-		my @data = sql::execute( $log, $dbh, q{SELECT (SELECT lngDocketNumber FROM tbl_Projects WHERE Index=project_id), quantity FROM Paper_Allocations WHERE paper_id=? AND skid_id=? ORDER BY created_on}, $$variable{'paper_id'}, $$variable{'Skid'}{'id'} );
-		my %totals;
-		while ( @data ) {
-			$totals{shift @data} += shift @data;
-		} # end while
+		my @Allocations = openprint::PaperAllocation::find('paper_id'=>$$variable{'paper_id'}, 'skid_id'=>$$variable{'Skid'}{'id'},'order'=>'created_on');
+		my %totals = map { $_->Project()->docket(), $_->quantity() } @Allocations;
 
 		foreach my $docket ( sort keys %totals ) {
 			$html .= '<div style="padding:0px 7px 0px 7px;">';

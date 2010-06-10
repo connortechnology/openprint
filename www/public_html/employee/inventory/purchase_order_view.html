@@ -88,6 +88,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 					$html .= $$variable{'PurchaseOrder'}->shipto_address2().'<br/>' if $$variable{'PurchaseOrder'}->shipto_address2();
 					$html .= sprintf('%s %s, %s', $$variable{'PurchaseOrder'}->get('shipto_city','shipto_state', 'shipto_postalcode')) . '<br/>';
 					$html .= 'Phone: ' . $$variable{'PurchaseOrder'}->shipto_phone().'<br/>' if $$variable{'PurchaseOrder'}->shipto_phone();
+					$html .= 'Mobile: ' . $$variable{'PurchaseOrder'}->shipto_mobile().'<br/>' if $$variable{'PurchaseOrder'}->shipto_mobile();
 					$html .= 'Fax: ' . $$variable{'PurchaseOrder'}->shipto_fax().'<br/>' if $$variable{'PurchaseOrder'}->shipto_fax();
 					$html .= 'SMS: ' . $$variable{'PurchaseOrder'}->shipto_sms().'<br/>' if $$variable{'PurchaseOrder'}->shipto_sms();
 					$html .= $$variable{'PurchaseOrder'}->shipto_email().'<br/>' if $$variable{'PurchaseOrder'}->shipto_email();

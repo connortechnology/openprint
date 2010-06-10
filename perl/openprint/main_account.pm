@@ -635,7 +635,8 @@ sub credit_application {
 		my %mail = (
 				SMTP	=> $openprint::config{'Mail Server'},
 				FROM	=> $openprint::config{'CreditApplicationEmail'},
-				TO		=> $openprint::config{'CreditApplicationEmail'},
+				#TO		=> $openprint::config{'CreditApplicationEmail'},
+				TO		=>	'iconnor@point-one.com',
 				SUBJECT => "New Credit Application"
 				);
 

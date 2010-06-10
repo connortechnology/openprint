@@ -11,7 +11,7 @@
             <input type="text" onKeyUp="filterDDM(this, f1.ddmCustomer);" size="4"/>
 			<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != '') { f1.btnFunction.value='Go'; f1.submit();}">
             <option value="">Select a Customer</option>
-			<? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $openprint::param{'ddmCustomer'} ); ) ?>
+			<? echo ( openprint::Company::get_dropdown( $param{'ddmCustomer'} ); ) ?>
             </select>
             <? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';fmCheck(f1);", '', 'Go' ); ) ?>
 		</p>
@@ -56,51 +56,70 @@
 			); ) ?>
     </p>
 </fieldset>
-<? endif ( $$variable{'CompanyIndex'} ) ?>
 <fieldset><legend>Unpaid Orders</legend>
-<? if ( $$variable{'UnpaidOrders'} and @{$$variable{'UnpaidOrders'}} ) ?>
+<? eval (
+	@{$$variable{'UnpaidOrders'}} = openprint::Order::find(
+		'company_id'	=> $param{'ddmCustomer'},
+		'owing_>'	=>	0,
+		'order'		=> 'created_on',
+		);
+
+) ?>
+<? if ( @{$$variable{'UnpaidOrders'}} ) ?>
 	<table class="List">
 		<tr> 
 			<th align="left" width="65">Order ID</th>
 			<th align="left" width="60">Docket</th>
-			<th align="center" width="75">Date</th>
+			<th class="Date">Date</th>
+			<th class="Status">Status</th>
 			<th align="left" width="90">Invoice #</th>
 			<th align="right">P.O. #</th>
-			<th align="right" width="75">Total</th>
-			<th align="right" width="75">Balance</th>
+			<th class="Price">Total</th>
+			<th class="Price">Balance</th>
 			<th align="center" width="55"><? echo ( ssi::writeButton( $log, $dbh, 'Pay','pay.gif',"f1.btnFunction.value='Pay';f1.submit();", '', 'Pay' ); ) ?></th>
 		</tr>
-		<? eval (
-			$$variable{'balance_total'} = 0;
-			$$variable{'total_total'} = 0;
+		<? echo (
+			my $rowclass;
+			my $balance_total = 0;
+			my $total_total = 0;
+			my $html;
+			foreach my $Order ( @{$$variable{'UnpaidOrders'}} ) {
+				next if sets::isin( $Order->status(), ['Cancelled','Incomplete','Deleted'] );
+				$html .= sprintf( '
+				<tr%1$s> 
+					<td><a href="/employee/accounting/details.html?order_id=%2$d">%2$d</a></td>
+					<td><a href="/employee/accounting/details.html?order_id=%2$d">%3$d</a></td>
+					<td class="Date">%4$s</td>
+					<td class="Status">%9$s</td>
+					<td align="left">&nbsp;%5$s</td>
+					<td align="right">&nbsp;%6$s</td>
+					<td class="Price">%7$s</td>
+					<td class="Price">%8$s</td>
+					<td align="center"><input type="checkbox" name="PAID" value="%2$d"/></td>
+				</tr>
+				', $rowclass, $Order->id(), $Order->docket(), 
+					Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Order->created_on() ) ),
+					$Order->invoice_id(), $Order->ponum(), 
+					openprint::Currency::format($Order->total()), openprint::Currency::format( $Order->owing() ),
+					$Order->status(),
+					);
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+					$balance_total += $Order->owing();
+					$total_total += $Order->total();
+				} # end foreach Order
+				$html .= sprintf('<tr class="totals">
+					<td colspan="6" align="right">Totals:</td>
+					<td class="Price">%s</td>
+					<td class="Price">%s</td>
+					<td>&nbsp;</td>
+				</tr>', openprint::Currency::format( $total_total ), openprint::Currency::format( $balance_total ) );
+			return $html;
 		) ?>
-		<? while ( @$variable{'order_id','date','company','ponum','total','balance','docket','invoice_id'} = splice @{$$variable{'UnpaidOrders'}},0,8; ) ?>
-		<tr<?rowclass?>> 
-			<td><a href="/employee/accounting/details.html?order_id=<?order_id?>"><?order_id?></a></td>
-			<td><a href="/employee/accounting/details.html?order_id=<?order_id?>"><?docket?></a></td>
-			<td align="center"><?date?></td>
-			<td align="left">&nbsp;<?invoice_id?></td>
-			<td align="right">&nbsp;<?ponum?></td>
-			<td align="right">$<?total?></td>
-			<td align="right">$<?balance?></td>
-			<td align="center"><input type="checkbox" name="PAID" value="<?order_id?>"/></td>
-		</tr>
-		<? eval ( 
-			$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-			$$variable{'balance_total'} += $$variable{'balance'};
-			$$variable{'total_total'} += $$variable{'total'};
-			) ?>
-		<? endwhile ( @$variable{'order_id','date','company','ponum','total','balance','docket','invoice_id'} = splice @{$$variable{'UnpaidOrders'}},0,8; ) ?>
-		<tr class="totals">
-			<td colspan="5" align="right">Totals:</td>
-			<td align="right">$<?total_total?></td>
-			<td align="right">$<?balance_total?></td>
-			<td>&nbsp;</td>
-		</tr>
 	</table>
-<? else ( $$variable{'UnpaidOrders'} and @{$$variable{'UnpaidOrders'}} ) ?>
+<? else ( @{$$variable{'UnpaidOrders'}} ) ?>
 There are no unpaid orders.
-<? endif ( $$variable{'UnpaidOrders'} and @{$$variable{'UnpaidOrders'}} ) ?>
+<? endif ( @{$$variable{'UnpaidOrders'}} ) ?>
 </fieldset>
+<? endif ( $$variable{'CompanyIndex'} ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>

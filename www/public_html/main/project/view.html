@@ -36,12 +36,13 @@ There is no current project.
 			if ( sets::isin( $$variable{'ProjectStatus'}, 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?project_id='.$$variable{'ProjectIndex'}, 'Upload Files' );
 			} # end if
-$openprint::log->debug("($$variable{'HiddenSignatures'}) ($openprint::session{'ShowAllSignatures'}) (" . $$variable{'Project'}->signatures()  );
-if ( $$variable{'HiddenSignatures'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
-} elsif ( $openprint::session{'ShowAllSignatures'} and $$variable{'Project'}->signatures() > 1 ) {
-			$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
-} # end if
+			if ( $$variable{'HiddenSignatures'} ) {
+				if ( $openprint::session{'ShowAllSignatures'} ) {
+					$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
+				} else {
+					$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
+				} # end if
+			} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
@@ -84,7 +85,8 @@ if ( $$variable{'HiddenSignatures'} ) {
 			</td>
 	<? echo ( 
 		my $html = '';
-		my $specs = openprint::service::get_specs_ref( @$variable{'Project','index'} );
+		my @service_ids = split(',', $$variable{'index'} );
+		my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_ids[0] );
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= qq`<td align="right">\n`;
 			if ( $$specs{"txtQuantity$qty_index"} and $$specs{"txtQuantity$qty_index"} != $$variable{"Quantity$qty_index"} ) {
@@ -97,11 +99,11 @@ if ( $$variable{'HiddenSignatures'} ) {
 				} # end if
 				$html .= $$variable{"price$qty_index"} ."</b><br/>\n";
 			} # end if
-			my $summary = openprint::service::summary( @$variable{'ProjectIndex','index'}, $qty_index );
+			my $summary = openprint::service::summary( $$variable{'ProjectIndex'}, $service_ids[0], $qty_index );
 			if ( $$variable{'name'} =~ /(\d+) Signatures/ ) {
 				my $sig_qty = $1;
 				if ( $summary =~ /(.*)\n(.*Stock Qty: )(\d+) (lbs|sheets)(.*)$/m ) {
-					$summary = $1."\n".$2.$$variable{'SignatureStockQty'.$qty_index.$$variable{'index'}}.' '.$4.$5;
+					$summary = $1."\n".$2.$$variable{'SignatureStockQty'.$qty_index.$service_ids[0]}.' '.$4.$5;
 				} # end if
 			} # end if
 			$html .= $summary;

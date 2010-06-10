@@ -149,11 +149,13 @@ sub delete {
 	foreach my $PO ( openprint::PurchaseOrder::find('manifest_id'=>$$self{'name'}) ) {
 		$PO->save({'manifest_id'=>undef});
 	} # end foreach $PO
+	foreach my $C ( $self->Contents() ) {
+		$C->delete();
+	} # end foreach Content
 	foreach my $T ( $self->Types() ) {
 		$T->delete();
 	} # end foreach Type
-    sql::execute( undef, undef, q{DELETE FROM ManifestContent_Types WHERE manifest_id=?}, $$self{'id'} );
-    sql::execute( undef, undef, q{DELETE FROM ManifestContents WHERE manifest_id=?}, $$self{'id'} );
+	
     sql::execute( undef, undef, q{DELETE FROM Manifests WHERE id=?}, $$self{'id'} );
     sql::end_transaction( undef, $ac );
 	return $dbh->errstr() if $dbh->errstr();

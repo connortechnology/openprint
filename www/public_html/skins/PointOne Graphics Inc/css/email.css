@@ -115,3 +115,23 @@ div.rightColumn {
 	float: right;
 	width: 48%;
 }
+td.Price, th.Price {
+	width: 100px;
+	text-align: right;
+}
+td.Status, th.Status {
+	width: 200px;
+	text-align: right;
+	padding-right: 4px;
+	padding-left: 4px;
+}
+td.Company, th.Company {
+	text-align: left;
+}
+td.User, th.User {
+	text-align: left;
+}
+td.Docket, th.Docket {
+	width: 80px;
+text-align: left;
+}

@@ -1,23 +1,4 @@
 <? echo (
-	if ( $openprint::param{'selected_name'} ) {
-		my @locations = openprint::Location::find( 'name' => $openprint::param{'selected_name'} );
-		$$variable{'Selected'} = shift @locations;
-	} elsif ( $openprint::param{'selected_id'} ) {
-		$$variable{'Selected'} = new openprint::Location( $openprint::param{'selected_id'} );
-	} # end if
-	if ( $openprint::param{'location_name'} ) {
-		my @locations = openprint::Location::find( 'name' => $openprint::param{'location_name'} );
-		$$variable{'Location'} = shift @locations;
-	} elsif ( $openprint::param{'location_id'} ) {
-		$$variable{'Location'} = new openprint::Location( $openprint::param{'location_id'} );
-	} else {
-		$$variable{'Location'} = new openprint::Location( 1 );
-	} # end if
-	if ( defined $openprint::param{'parent'} and $$variable{'Location'}->parent() ) {
-		$$variable{'Location'} = $$variable{'Location'}->parent();
-	} # end if
-	$$variable{'MapFile'} = $$variable{'Selected'} ? join('_', $$variable{'Location'}->name(), $$variable{'Selected'}->name() ) : $$variable{'Location'}->name();
-
 	my $html;
 	my @path;
 	my $Parent = $$variable{'Location'};
@@ -48,7 +29,7 @@
 </script>
 <form name="MapForm" id="MapForm">
 	<input type="hidden" name="location_id" value="<? echo ( $$variable{'Location'}{id}; ) ?>" />
-	<img id="MapImage" src="/maps/<?MapFile?>.png" width="320" alt="<? echo ( $$variable{'Location'}->name(); ) ?>." USEMAP="#Map" />
+	<img id="MapImage" src="/images/maps/<?MapFile?>.gif" width="320" alt="<? echo ( $$variable{'Location'}->name(); ) ?>." USEMAP="#Map" />
 	<map name="Map">
 	<? echo (
 		my $html;
@@ -56,11 +37,11 @@
 			$html .= '<area shape="rect" ';
 			if ( $Region->children() ) {
 				$html .= qq`href="/maps/index.html?location_id=$$Region{id}" `;
-			} elsif ( $openprint::param{'skid_id'} ) {
-				$html .= qq`href="/employee/inventory/skid_details.html?skid_id=$openprint::param{'skid_id'}&location_id=$$Region{id}&btnFunction=Save" `;
+			} elsif ( $param{'skid_id'} ) {
+				$html .= qq`href="/employee/inventory/skid_details.html?skid_id=$param{'skid_id'}&location_id=$$Region{id}&btnFunction=Save" `;
 			
 			} # end if
-			$html .= qq`coords="`.$Region->coordinates().q`" ALT="`.$Region->name().qq`" TITLE="`.$Region->name().qq`" onMouseOver="mouseOver('MapImage','/maps/`.$$variable{'Location'}->name() . '_' . $Region->name().q`.png');" onMouseOut="mouseOut('MapImage','/maps/`.$$variable{'MapFile'}.q`.png');"/>`;
+			$html .= qq`coords="`.$Region->coordinates().q`" alt="`.$Region->name().qq`" title="`.$Region->name().qq`" onmouseover="mouseOver('MapImage','/images/maps/`.$$variable{'Location'}->name() . '_' . $Region->name().q`.gif');" onmouseout="mouseOut('MapImage','/images/maps/`.$$variable{'MapFile'}.q`.gif');"/>`;
 		} # end foreach
 		return $html;
 	) ?>

@@ -38,6 +38,8 @@ $serial = 'schedule_id_seq';
 	'impressions'		=>	undef,
 	'created_on'		=>	'created_on',
 	'operator_id'		=>	undef,
+	'stock_verified'	=>	'stock_verified',
+	'stock'				=>	'stock',
 );
 
 %transforms = (
@@ -50,6 +52,7 @@ $serial = 'schedule_id_seq';
 %defaults = (
 	'speed'			=>	undef,
 	'created_on'	=>	undef,
+	'stock_verified'	=>	0,
 );
 sub find_one {
 	my %params = @_;
@@ -236,27 +239,7 @@ sub comment {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
 
 		$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
-		#$comment .= ' on ' . $$sig_specs{'ddmStockSheetSize'.$Project->ordered_quantity_index()};
 		my $Equipment = $self->Equipment();
-		my $Stock;
-		if ( my @PA = openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
-			$Stock = $PA[0]->Paper();
-		} else {
-		} # end if
-		if ( $Equipment->smartscheduling() ) {
-			if ( $Stock ) {
-				$comment .= ' on ' . $Stock->to_string();
-			} else {
-				$comment .= ' stock not allocated.';
-			} # end if
-		} else {
-			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
-			if ( $Stock->type() eq 'Roll' ) {
-				$comment .= ' on ' . $Stock->width().'&quot; Roll';
-			} else {
-				$comment .= ' on ' . $Stock->width() . 'x' . $Stock->height();
-			} # end if
-		} # end if
 
 		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
 			my $services = $Project->services();
@@ -283,6 +266,46 @@ sub comment {
 
 	return $$self{'comment'};
 } # end sub comment
+
+sub stock {
+	my ( $self, $stock ) = @_;
+	if ( @_ == 2 ) {
+		$$self{'stock'} = $stock;
+	} # end if
+	if ( ( ! $$self{'stock'} ) and $$self{'project_id'} ) {
+		$$self{'stock'} = 'Stock: ';
+		my $Equipment = $self->Equipment();
+		my $Project = new openprint::Project( $$self{'project_id'} );
+		my $Stock;
+		my @PA = openprint::PaperAllocation::find('project_id'=>$$self{'project_id'});
+		if ( @PA ) {
+			$Stock = $PA[0]->Paper();
+		} else {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
+			$Stock = openprint::Paper::load_from_signature( $Project, $sig_specs, $Project->ordered_quantity_index() ) if ! $Stock;
+		} # end if
+		if ( $Equipment->smartscheduling() ) {
+			if ( $Stock ) {
+				$$self{'stock'} .= join(' ', ( $Stock->name(), $Stock->finish(), $Stock->colour(), $Stock->weight(), $Stock->type() eq 'Roll' ? $Stock->width.'&quot; Roll' : $Stock->width().'x'.$Stock->height() ) );
+				$$self{'stock'} .= ' FSC:' . $$Stock{'fsc_code'} if $$Stock{'fsc_code'};
+			} else {
+				$$self{'stock'} .= ' not allocated.';
+			} # end if
+			if ( ( ! @PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content::find('docket'=>$Project->docket()) ) ) {
+				$$self{'stock'} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
+			} else {
+				$$self{'stock'} .= ' not ordered.';
+			} # end if
+		} else {
+			if ( $Stock->type() eq 'Roll' ) {
+				$$self{'stock'} .= $Stock->width().'&quot; Roll';
+			} else {
+				$$self{'stock'} .= $Stock->width() . 'x' . $Stock->height();
+			} # end if
+		} # end if
+	} # end if
+	return $$self{'stock'};
+} # end sub stock
 
 sub get_li {
 	my ( $self, $ul_id ) = @_;
@@ -322,10 +345,13 @@ sub get_li {
 		} # end if
 	} # end if
 
-	$html .= sprintf( '<li id="item_%d" class="%s" style="height:%spx;">', $$self{'id'}, $colour, $height );
+	$html .= sprintf( '<li id="item_%d"%s%s>', $$self{'id'}, 
+			( $colour ? ' class="'.$colour.'"' : '' ), 
+			( $height ? ' style="height:'.$height.'px;"' : '' )
+			);
 
 	if ( $$self{'project_id'} ) {
-		$html .= '<div class="Company">';
+		$html .= '<span class="Company">';
 		$html .= sprintf( '<a class="docket" href="/employee/project/view.html?ProjectIndex=%1$d&amp;Docket=%2$d">%2$d</a>', $$self{'project_id'}, $Project->docket() );
 		my $n = $Project->Company()->name();
 		$n =~ s/The //gi;
@@ -337,7 +363,7 @@ sub get_li {
 		if ( $Project->reprint() eq 'Y' ) {
 			$html .= ' REPRINT'. $Project->reprint_reason();
 		} # end if
-		$html .= '</div>';
+		$html .= '</span>';
 		$html .= qq`<span class="DueDate" id="JumpToDate$$self{'id'}">`;
 		if ( ! $Project->due_date() ) {
 			$html .= 'no duedate</span>';
@@ -350,9 +376,10 @@ sub get_li {
 
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
 		$html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
+		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->stock() );
 		if ( $$self{'project_id'} ) {
 			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
-			$html .= sprintf( q`<span id="%1$dForms" class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
+			$html .= sprintf( q`<span class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
 			if ( $Equipment->smartscheduling() ) {
 				$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $self->impressions(), $self->speed() );
 			} else {
@@ -368,6 +395,10 @@ sub get_li {
 
 		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
 
+		if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
+			$html .= sprintf( q`<span class="StockVerified" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Stock: %2$s</span>`, $$self{'id'}, $self->stock_verified() ? 'Yes' : 'No' );
+		} # end if
+
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
@@ -376,7 +407,11 @@ sub get_li {
 		} # end if
 		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
 		if ( $$self{'project_id'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", '', 'S' ) if @{$$self{'service_id'}} > 1;
+			if ( @{$$self{'service_id'}} == 2 ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", '', 'S' );
+			} elsif ( @{$$self{'service_id'}} > 2 ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", '', 'S' );
+			} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{'project_id'} and ( $self->status() ne 'In Production' ) ) ) {
@@ -385,7 +420,7 @@ sub get_li {
 			$html .= ssi::writeButton( $log, $dbh, 'Stop'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'stop' } } );", '', 'Stop' );
 		} # end if
 		$html .= '</span>';
-		if ( $$self{'project_id'} and $Equipment->smartscheduling() ) {
+		if ( $$self{'project_id'} ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
@@ -411,7 +446,7 @@ sub get_li {
 			$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", '', 'Start' );
 		} # end if
 		$html .= '</span>';
-		if ( $$self{'project_id'} and $Equipment->smartscheduling() ) {
+		if ( $$self{'project_id'} ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
@@ -477,7 +512,10 @@ sub Project {
 } # end sub Project
 
 sub runtime {
-	my ( $self ) = @_;
+	my ( $self, $new ) = @_;
+	if ( @_ == 2 ) {
+		$$self{'runtime'} = $new;
+	} # end if
 
 	if ( ! $$self{'runtime'} ) {
 		my $seconds = 0;
@@ -660,28 +698,41 @@ sub speed {
 } # end sub speed
 
 sub split {
-	my ( $self ) = @_;
+	my ( $self, $forms ) = @_;
 
 	my $Project = $self->Project();
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Splitting forms' );
     my @service_ids = @{$$self{'service_id'}};
 	if ( @service_ids > 1 ) {
-        my $runtime = int ( $self->runtime_seconds()/@service_ids );
-        $self->runtime_seconds( $runtime );
-        $self->impressions( $self->impressions() / @service_ids );
-        $$self{'service_id'} = [ shift @service_ids ];
-        $self->save();
-        my $starttime = $self->starttime_seconds() + $runtime if $self->starttime();
-
-        foreach my $s_id ( @service_ids ) {
-            my $J2 = $self->copy();
-			$$J2{'service_id'} = [ $s_id ];
+		if ( $forms ) {
+			my @new_forms = splice @service_ids, @service_ids - $forms, $forms;
+			$self->service_id( \@service_ids );
+			$self->runtime(undef);
+			$self->save();
+			my $J2 = $self->copy();
 			if ( $self->starttime() ) {
-				$J2->starttime_seconds( $starttime );
-				$starttime += $runtime;
-			} # end if starttime
-            $J2->save();
-        } # end foreach 
+				$J2->starttime_seconds( $self->endtime_seconds() + 1);
+			} # end if
+			$J2->service_id(\@new_forms);
+			$J2->runtime(undef);
+			$J2->save();
+		} else {
+			my $runtime = int ( $self->runtime_seconds()/@service_ids );
+			$self->runtime_seconds( $runtime );
+			$self->impressions( $self->impressions() / @service_ids );
+			$$self{'service_id'} = [ shift @service_ids ];
+			$self->save();
+			my $starttime = $self->starttime_seconds() + $runtime if $self->starttime();
+			foreach my $s_id ( @service_ids ) {
+				my $J2 = $self->copy();
+				$$J2{'service_id'} = [ $s_id ];
+				if ( $self->starttime() ) {
+					$J2->starttime_seconds( $starttime );
+					$starttime += $runtime;
+				} # end if starttime
+				$J2->save();
+			} # end foreach 
+		} # end if
 	} elsif ( @service_ids ) { # == 1
 		# If there is only 1 service, then we copy it, dividing al relevant values
 		my $service_index = $service_ids[0];
