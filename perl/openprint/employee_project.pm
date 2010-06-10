@@ -350,7 +350,7 @@ sub view {
 
 		$Project->update_status();
 		$order_id = $Project->order_id() if ! $order_id;
-		openprint::order::update_order_status( $r, $log, $dbh, $order_id );
+		openprint::order::update_order_status( $r, $log, $dbh, $order_id ) if $order_id;
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Shipped' ) {
 		$Project->status_change( undef, undef, 'Shipped' );
