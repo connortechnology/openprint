@@ -1,4 +1,7 @@
 function change_handler( element ) {
+	if ( element.form.elements['debug'] ) {
+		element.form.elements['debug'].value='chang handler ' + element.name;
+	} // end if
 	var commands = new Array();
 
 	// parse through the input splitting it into commands
@@ -24,6 +27,9 @@ function change_handler( element ) {
 	} // end for
 	if ( commands.length )
 		element.value = '';
+	if ( element.form.elements['debug'] ) {
+element.form.elements['debug'].value=commands.length+' commands';
+	} // end if
 
 	while ( commands.length ) {
 

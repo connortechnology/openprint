@@ -72,6 +72,7 @@ $serial = 'Purchaseorders_id_seq';
 	'shipto_state'		=>	'shipto_state',
 	'shipto_postalcode'	=>	'shipto_postalcode',
 	'shipto_phone'		=>	'shipto_phone',
+	'shipto_mobile'		=>	'shipto_mobile',
 	'shipto_fax'		=>	'shipto_fax',
 	'shipto_sms'		=>	'shipto_sms',
 	'shipto_email'		=>	'shipto_email',

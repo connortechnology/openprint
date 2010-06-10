@@ -971,17 +971,24 @@ sub _pending {
 sub _ul {
 	if ( $param{'action'} eq 'split' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		$Job->split();
+		$Job->split( $param{'new_form_count'} );
 		$variable{'Shift'} = $Job->Shift();
 	} # end if
 	if ( $param{'shift_id'} ) {
 		$variable{'Shift'} = new openprint::Shift( $param{'shift_id'} );
 	} elsif ( $param{'ul_id'} ) {
 		$variable{'Shift'} = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
+		if ( ! $variable{'Shift'} ) {
+			$variable{'error'} .= "Unable to find shift for $param{'ul_id'}";
+		} # end if
 	} else {
-$log->debug("No Shift!");
+$log->debug("No Shift specified!");
 	} # end if
-	$log->debug("_ul for: $variable{'Shift'}{id} " . $variable{'Shift'}->to_string() );
+	if ( $variable{'Shift'} ) {
+		$log->debug("_ul for: $variable{'Shift'}{id} " . $variable{'Shift'}->to_string() );
+	} else {
+		$variable{'Shift'} = new openprint::Shift();
+	} # en dif
 } # end sub _ul
 
 sub _drop {
@@ -1551,6 +1558,10 @@ sub prepress_schedule {
 	} # end if
 	$session{'/employee/production/prepress_schedule.html?lastupdated'} = time;
 } # end sub prepress_schedule
+
+sub _split_popup {
+	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+} # end sub _split_popup
 
 1;
 __END__

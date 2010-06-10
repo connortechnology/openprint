@@ -1,0 +1,40 @@
+<? if ( ! $$variable{'Skid'}->Contents() ) ?>
+	Skid is empty
+<? else ( ! $$variable{'Skid'}->Contents() ) ?>
+<table class="List">
+	<tr>
+		<th width="75" align="left">In Stock</th><th>Allocated</th><th>Quality</th>
+	</tr>
+<? echo ( 
+		require openprint::PaperAllocation;
+		my $html;
+		foreach my $C ( $$variable{'Skid'}->Contents() ) {
+			my $Paper = $C->Paper();
+			$html .= qq`<tr><td colspan="3"><a href="paper_details.html?paper_id=$$Paper{'id'}">`;
+			$html .= $Paper->Owner()->name() . ' ' . $Paper->to_string();
+			$html .= '</a></td></tr>';
+			$html .= '<tr>';
+			$html .= '<td align="left">';
+			$html .= sprintf('<input type="text" id="in_stock-%1$d" name="in_stock-%1$d" value="%2$d" size="5"/>', $C->id(), $C->quantity() );
+			$html .= $Paper->units();
+			$html .= '</td>';
+			$html .= '<td>';
+			foreach my $Allocation ( openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$Paper->id() ) ) {
+				$html .= sprintf('%d - %d %s<br/>', new openprint::Project( $Allocation->project_id() )->docket(), $Allocation->quantity(), $Allocation->units() );
+			} # end foreach Allocation
+			$html .= '</td>';
+			$html .= sprintf('<td><select id="quality_id-%1$d" name="quality_id-%1$d" size="1">%2$s</select></td>',
+				$C->id(), 
+				ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockQuality::find('order'=>'lower(shortname)') ], $C->quality_id() ),
+);
+			$html .= '</tr>';
+			#$html .= '<tr>';
+			#$html .= sprintf('<td colspan="3"><select id="owner_id-%1$d" name="owner_id-%1$d" size="1">%2$s</select></td>',
+					#$C->id(), openprint::Company::get_dropdown( $C->Paper()->owner_id() ) );
+			#$html .= '</tr>';
+	
+		} # end foreach
+		return $html;
+) ?>
+	</table>
+<? endif ( ! $$variable{'Skid'}->Contents() ) ?>

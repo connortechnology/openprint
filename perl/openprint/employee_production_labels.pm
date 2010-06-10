@@ -1,7 +1,6 @@
 package openprint::employee_production_labels;
 use strict;
 use Date::Calc qw(Add_Delta_Days Date_to_Days check_date );
-use MIME::QuotedPrint;
 
 use openprint ();
 use vars qw{ $log $dbh %config %variable %param };

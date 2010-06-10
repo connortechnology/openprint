@@ -1,6 +1,7 @@
 package openprint::Host;
 @ISA = qw( openprint::Object );
 require openprint::Object;
+use Net::ARP;
 use strict;
 
 my $debug = 1;
@@ -13,20 +14,19 @@ $serial = 'hosts_id_seq';
 	'hostname'		=>	'hostname',
 	'mac'	=>	'mac',	
 	'block'	=>	'block',
+	'description'	=>	'description',
+);
+%transforms = (
 );
 %defaults = (
 	'block'	=>	0,
+	'mac'	=>	undef,
+	'hostname'	=>	undef,
 );
 use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-sub find_one {
-	my %params = @_;
-	$params{'limit'}=1;
-	my @Results = find(%params);
-	return $Results[0] if @Results;
-} # end sub find_one
 sub find {
 	my %params = @_;
 	my @values;
@@ -74,8 +74,15 @@ sub resolve {
 	} elsif ( $debug ) {
 		$log->warn("Unable to reverse DNS $$self{'ip'}");
 	} # end if
-	return;
+	return undef;
 } # end sub resolve
+
+sub get_mac {
+	my ( $self ) = @_;
+	my $mac = Net::ARP::arp_lookup( 'eth1', $$self{'ip'} );
+$log->debug("Mac: $mac");
+	return $mac;
+} # end sub get_mac
 
 1;
 __END__
