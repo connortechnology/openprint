@@ -23,8 +23,13 @@ function calc_price( element ) {
 	var matches = re.exec( element.name );
 	if ( matches ) {
 		var index = matches[2];
-		var cost = parseFloat( $('price-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-		var qty = parseFloat( $('qty-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+		$('price-'+index).value = $('price-'+index).value.replace(/[^\d\-\.]/g, '' );
+		re =  /^\s*(\+|-)?((\d+(\.\d+)?)|(\.\d+))\s*$/;
+		if ( ! re.test($('price-'+index).value) ) 
+			$('price-'+index).value = $('price-'+index).lastValue;
+		$('qty-'+index).value = $('qty-'+index).value.replace(/[^\d\-\.]/g, '' );
+		var cost = parseFloat( $('price-'+index).value );
+		var qty = parseFloat( $('qty-'+index).value );
 		var type = get_value( $('type-'+index) );
 		if ( type == 'Roll Stock' ) {
 			qty /= 100;
