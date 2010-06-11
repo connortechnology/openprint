@@ -1,0 +1,40 @@
+
+<table>
+	<thead>
+		<tr>
+			<th class="description">Product</th>
+			<th class="quantity">Quantity</th>
+			<th class="cost">Cost</th>
+			<th class="markup">Markup</th>
+			<th class="price">Price</th>
+		</tr>
+		<? echo (
+			my $html;
+			my $rowclass;
+			foreach my $Product ( $$variable{'Quote'}->Products() ) {
+				$html .= sprintf('<tr%1$s>
+									<td class="description">2$s</td>
+									<td class="quantity"><input type="text" id="quantity-%2$d" name="quantity-%2$d" value="%3$d" /></td>
+									<td class="price">%4$.2f</td>
+									<td class="markup"><input type="text" id="markup-%2$d" name="markup-%2$d" value="%5$.2f" /></td>
+									<td class="newprice"><input type="text" id="price-%2$d" name="price-%2$d" value="%6$.2f" /></td>
+									</tr>', $rowclass, $Product->id(), $Product->quantity(), $Product->cost(), $Product->markup(), $Product->price() );
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Product
+			if ( $session{'user_type'} eq 'A' ) {
+				$html .= sprintf('<tr%1$s>
+									<td class="description"><select id="product_id-" name="product_id-">%2$s</select></td>
+									<td class="quantity"><input type="text" id="quantity-" name="quantity-" value="" /></td>
+									<td class="price"><input type="text" id="cost-" name="cost-" value="" /></td>
+									<td class="markup"><input type="text" id="markup-" name="markup-" value="" /></td>
+									<td class="newprice"><input type="text" id="price-" name="price-" value="" /></td>
+									<td>%3$s</td>
+									</tr>', $rowclass, 
+ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product::find('order'=>'lower(name)') ] ),
+ssi::writeButton( $log, $dbh, 'addProduct', 'add.gif', q`New Ajax.Updater('_Products', '_products.html', { parameters: f1.serialize() } );`, '', 'Add' ),
+);
+			} # end if
+			
+			return $html;
+		) ?>
+</table>

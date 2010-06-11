@@ -17,6 +17,7 @@ use vars qw($r %variable $log $dbh %config %session $table $serial %fields %tran
 require sql;
 require openprint::logs;
 require openprint::QuotedProject;
+require openprint::QuotedProduct;
 
 my $debug = 1;
 
@@ -258,6 +259,13 @@ sub Projects {
 	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT project_id FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
 	} # end if
 	return @{$$self{'Projects'}};
+} # end sub projects
+sub Products {
+	my $self = shift;
+	if ( ! exists $$self{'Products'} ) {
+		@{$$self{'Products'}} = openprint::QuotedProduct::find('quote_id'=>$$self{'id'});
+	} # end if
+	return @{$$self{'Products'}};
 } # end sub projects
 
 sub Currency {

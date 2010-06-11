@@ -23,6 +23,7 @@ $serial = 'product_prices_id_seq';
 		'markup'		=>	'markup',
 		'price'			=>	'price',
 		'discountable'	=>	'discountable',
+		'owner_id'		=>	'owner_id',
 		);
 %transforms = (
 	'id'	=>	[ 's/\D//g' ],
@@ -102,6 +103,16 @@ sub Pricelist {
 	} # end if
     return new openprint::Pricelist( $$self{'pricelist_id'} );
 } # end sub Pricelist
+
+sub save {
+	my ( $self, $param ) = @_;
+
+	$$self{'owner_id'} = $openprint::config{'Owner'} if ! $$self{'owner_id'};
+
+	if ( ( my $error = $self->SUPER::save( $param ) ) ) {
+		return $error;
+	} # end if
+} # end sub save
 
 1;
 

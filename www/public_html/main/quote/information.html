@@ -395,6 +395,11 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		</table>
 		<? endif ( new openprint::Company($session{'company_id'})->reseller() eq 'Y' or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 		<? endif ( @{$$variable{'PROJECTS'}} == 0 ) ?>
+		<? if ( openprint::Product::find('limit'=>1) ) ?>
+		<fieldset><legend>Products</legend>
+			<div id="Products"><!--#include virtual="_products.html"--></div>
+		</fieldset>
+		<? endif ( openprint::Product::find('limit'=>1) ) ?>
 		<p class="buttons">
 				<? echo ( 
 					my $html;

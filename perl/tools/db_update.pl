@@ -2525,6 +2525,10 @@ foreach my $Service ( openprint::Service::find('name'=>'4ColourImpressionPerfect
 	$_ = $Service->save({'name'=>'PerfectingImpression4/4'});
 	print $_ if $_;
 } # end foreach Service
+if ( sets::isin('product_id_seq', \@sequences ) ) {
+	$dbh->do('ALTER SEQUENCE product_id_seq RENAME TO products_id_seq');
+}
+
 	$dbh->commit();
 $dbh->disconnect();
 print "Finished\n";

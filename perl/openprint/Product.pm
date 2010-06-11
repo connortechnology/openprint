@@ -13,7 +13,7 @@ use vars qw( $log $dbh $table $serial %fields %defaults %transforms );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'products';
-$serial = 'product_id_seq';
+$serial = 'products_id_seq';
 
 %fields = (
 	'id'			=>	'id',
@@ -26,6 +26,7 @@ $serial = 'product_id_seq';
 	'category_id'	=>	'category_id',
 	'project_id'	=>	'project_id',
 	'deleted'		=>	'deleted',
+	'owner_id'		=>	'owner_id',
 );
 
 %transforms = (
@@ -130,6 +131,7 @@ sub save {
 
 	# Super Save will load at the end, wiping out the specs hash
 	my %new_specs =  %{$$self{'Specifications'}} if $$self{'Specifications'};
+	$$self{'owner_id'} = $openprint::config{'Owner'};
 
 	if ( ( my $error = $self->SUPER::save( $param ) ) ) {
 		return $error;
