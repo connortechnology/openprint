@@ -4483,6 +4483,8 @@ sub summary {
 #$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
 		$html .= sprintf(' with %d plate changes = %d plates', @$specs{'txtPlateChangeQuantity'.$qty_index,'txtPlateQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
 
+if ( 0 ) {
+# Have Stock summary line now
 		if ( $$services{'NoPrinting'} ) {
 			$html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
 		} else {
@@ -4495,6 +4497,7 @@ sub summary {
 				$html .= sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
 			} # end if
 		} # end if
+} # end if
 
 		return $html;
 	} else {
