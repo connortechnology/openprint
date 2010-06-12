@@ -654,6 +654,13 @@ sql::insert(undef,undef,'configuration', [
     'category', 'Miscellaneous Settings',
     'value',undef,
 ] ) if ! exists $config{'DefaultPricelist'};
+sql::insert(undef,undef,'configuration', [
+    'name','AcceptCreditApplications',
+    'type','yes/no',
+    'description','Whether to show links to a credit application page.',
+    'category', 'Miscellaneous Settings',
+    'value',undef,
+] ) if ! exists $config{'AcceptCreditApplications'};
 
 sql::insert(undef,undef,'configuration', [
     'name','PerfectBindCoverGutter',
