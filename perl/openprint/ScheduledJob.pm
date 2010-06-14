@@ -429,10 +429,11 @@ sub get_li {
 			$html .= '</span>';
 		}
 	} else {
-		$html .= sprintf( '<div class="Comment">%3$s</div>', ssi::htmlize( $self->comment() ) );
+		$html .= sprintf( '<div class="Comment">%1$s</div>', $self->comment() );
+		$html .= sprintf( q`<div class="Stock">%1$s</div>`, $self->stock() );
 		if ( $$self{'project_id'} ) {
-		$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
-		$html .= sprintf( '<span class="Impressions">%d imps</span>', $self->impressions() );
+			$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
+			$html .= sprintf( '<span class="Impressions">%d imps</span>', $self->impressions() );
 		} # en dif
 		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{'id'},
 				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
