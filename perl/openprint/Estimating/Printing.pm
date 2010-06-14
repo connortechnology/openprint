@@ -877,6 +877,8 @@ sub calc {
 				$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 				$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 			} # end if
+			$$specs{'txtFinalWidth'} = $$printing_specs{'txtFinalWidth'};
+			$$specs{'txtFinalHeight'} = $$printing_specs{'txtFinalHeight'};
 		} else {
 			if ( $Project->Type()->name() eq 'ScratchPads' ) {
 				$$specs{'txtSpreadSize'} = 1;
