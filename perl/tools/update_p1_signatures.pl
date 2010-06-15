@@ -33,7 +33,7 @@ sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBl
 sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 
-foreach my $Project ( openprint::Project::find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {
+foreach my $Project ( openprint::Project->find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -132,7 +132,7 @@ foreach my $Project ( openprint::Project::find( 'company_id'=>6, 'order'=>'id de
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $$specs{'ddmPackageType'} );
 					if ( $$specs{'ddmPackageType'.$qty_index} =~ /\D/ ) {
-						if ( my $Material = openprint::Material::find_one( 'name'=>$$specs{'ddmPackageType'.$qty_index} ) ) {
+						if ( my $Material = openprint::Material->find_one( 'name'=>$$specs{'ddmPackageType'.$qty_index} ) ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $Material->id() );
 						} # end if
 					} # end if

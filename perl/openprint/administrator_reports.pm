@@ -31,7 +31,7 @@ sub projects {
 	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
 	$filters{'type_id'} = $param{'type_id'} if $param{'type_id'};
 
-	@{$variable{'Projects'}} = openprint::Project::find( %filters );
+	@{$variable{'Projects'}} = openprint::Project->find( %filters );
 
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
 		my @header = ('Project #', 'Docket #', 'Company', 'Reference', 'Summary', 'Creation Date', 'Status', 'Price 1', 'Price 2', 'Price 2', 'Currency');
@@ -68,7 +68,7 @@ sub quotes {
 	$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
 	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
 
-	@{$variable{'Quotes'}} = openprint::Quote::find( %filters );
+	@{$variable{'Quotes'}} = openprint::Quote->find( %filters );
 
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
 		my @header = ( 'Quote ID', 'Created On', 'Prepared By', 'Company', 'Prepared For','Status', 'Total1', 'Total2', 'Total3', 'Currency' );
@@ -92,7 +92,7 @@ sub orders {
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
 		my @header = ('OrderID', 'Docket', 'Order Date', 'Company Name', 'Status', 'Total', 'Currency');
 
-		my @Orders = openprint::Order::find(
+		my @Orders = openprint::Order->find(
 				'company_id'		=> $param{'ddmCustomer'},
 				'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
 				'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),
@@ -272,7 +272,7 @@ sub CustomerServiceReps {
 			$r->param('ddmEndDay') );
 
 
-	@{$$variable{'Employees'}} = map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)', 'usergroup'=>'Sales', 'id'=>$r->param('ddmEmployees'), 'web_active'=>1 );
+	@{$$variable{'Employees'}} = map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)', 'usergroup'=>'Sales', 'id'=>$r->param('ddmEmployees'), 'web_active'=>1 );
 	$$variable{'ddmEmployees'} = ssi::make_drop_down( $$variable{'Employees'}, $r->param('ddmEmployees') );
 
 	my $estimator = $r->param('ddmEstimator');
@@ -321,7 +321,7 @@ sub order_details {
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		if ( openprint::Payment::find('order_id'=>$order_id ) ) {
+		if ( openprint::Payment->find('order_id'=>$order_id ) ) {
 			$$variable{'error'} .= "Order $order_id appears to have payments.  Please delete the payments before deleting the order.";
 		} else {
 			$Order->delete();

@@ -214,7 +214,7 @@ sub upload_files {
 		$param{'docket'} = new openprint::Project( $param{'project_id'} )->docket();
 	} elsif ( $param{'docket'} and ! $param{'project_id'} ) {
 		$param{'docket'} =~ s/\D//g;
-		my @Projects = openprint::Project::find('docket'=>$param{'docket'}) if $param{'docket'};
+		my @Projects = openprint::Project->find('docket'=>$param{'docket'}) if $param{'docket'};
 		$param{'project_id'} = $Projects[0]->id() if @Projects;
 	} # end if
 

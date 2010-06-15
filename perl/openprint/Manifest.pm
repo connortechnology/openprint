@@ -47,6 +47,7 @@ my $debug = 1;
 
 # Returns a paper object specified by the parameters
 sub find {
+	my $self = shift;
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
@@ -146,7 +147,7 @@ sub find {
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
-	foreach my $PO ( openprint::PurchaseOrder::find('manifest_id'=>$$self{'name'}) ) {
+	foreach my $PO ( openprint::PurchaseOrder->find('manifest_id'=>$$self{'name'}) ) {
 		$PO->save({'manifest_id'=>undef});
 	} # end foreach $PO
 	foreach my $T ( $self->Types() ) {
@@ -166,13 +167,13 @@ sub Types {
 	if ( %params ) {
 		if ( $$self{'id'} ) {
 			$params{'manifest_id'} = $$self{'id'};
-			return openprint::Manifest_Content_Type::find(%params);
+			return openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if
 	if ( ! $$self{'Types'} ) {
 		if ( $$self{'id'} ) {
 			$params{'manifest_id'} = $$self{'id'};
-			@{$$self{'Types'}} = openprint::Manifest_Content_Type::find(%params);
+			@{$$self{'Types'}} = openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if
 	return @{$$self{'Types'}} if $$self{'Types'};
@@ -183,12 +184,12 @@ sub Contents {
 	my ( $self, %params ) = @_;
 	if ( %params ) {
 		if ( $$self{'id'} ) {
-			return openprint::ManifestContent::find('manifest_id'=>$$self{id}, %params );
+			return openprint::ManifestContent->find('manifest_id'=>$$self{id}, %params );
 		} # end if
 	} # end if
 	if ( ! $$self{'Contents'} ) {
 		if ( $$self{'id'} ) {
-			@{$$self{'Contents'}} = openprint::ManifestContent::find('manifest_id'=>$$self{id} );
+			@{$$self{'Contents'}} = openprint::ManifestContent->find('manifest_id'=>$$self{id} );
 		} # end if
 	} # end if
 	return @{$$self{'Contents'}} if $$self{'Contents'};

@@ -54,7 +54,7 @@
 		<br class="spacer"/>
 	</fieldset>
 <? eval (
-@{$$variable{'Timetracks'}} = openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting');
+@{$$variable{'Timetracks'}} = openprint::Timetrack->find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting');
 ) ?>
 <? if ( @{$$variable{'Timetracks'}} ) ?>
 	<fieldset><legend>Services</legend>

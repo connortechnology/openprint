@@ -1,11 +1,11 @@
 <? eval (
 	if ( $session{'/employee/inventory/allocations.html?Docket'} ) {
-		@{$$variable{'Allocations'}} = openprint::PaperAllocation::find( 
+		@{$$variable{'Allocations'}} = openprint::PaperAllocation->find( 
 			'docket'	=>	$session{'/employee/inventory/allocations.html?Docket'},
 			'order'		=>	'id',
 			);
 	} else {
-		@{$$variable{'Allocations'}} = openprint::PaperAllocation::find( 
+		@{$$variable{'Allocations'}} = openprint::PaperAllocation->find( 
 			'created_on_start'	=>	$session{'/employee/inventory/allocations.html?created_on_start_year'} ? sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
 				'/employee/inventory/allocations.html?created_on_start_year',
 				'/employee/inventory/allocations.html?created_on_start_month',
@@ -60,7 +60,7 @@
 							$max_age = $age;
 						} # end if
 					} else {
-						foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$A->paper_id(),'quantity_>'=>0) ) {
+						foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$A->paper_id(),'quantity_>'=>0) ) {
 							my $age = time - Date::Parse::str2time( $SkidContent->Skid()->created_on() );
 							if ( $age > $max_age ) {
 								$max_age = $age;

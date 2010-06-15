@@ -46,7 +46,7 @@ sub edit {
 			$_ = <$io>;
 
 			my $csv = Text::CSV_XS->new();
-			my %cache = map { $_->name(), $_->id() } openprint::ProjectType::find();
+			my %cache = map { $_->name(), $_->id() } openprint::ProjectType->find();
 			
 			openprint::logs::insertLogRecord('49', 'Import Project Types: ' );
       	
@@ -75,7 +75,7 @@ sub edit {
 
 	} elsif ( $param{'btnFunction'} eq 'Export' ) {
 	    my @header = ( 'Name', 'Description', 'URL', 'Sort Order');
-	    my @data = map { $_->name(), $_->description(), $_->url(), $_->sorting() } openprint::ProjectType::find('order'=>'sorting');
+	    my @data = map { $_->name(), $_->description(), $_->url(), $_->sorting() } openprint::ProjectType->find('order'=>'sorting');
     	misc::export_csv( $r, $log, \%variable, 'projectTypes.csv', \@header, \@data );
 		# Add record to audit log - action "Export Project Types".
 		openprint::logs::insertLogRecord('40',);
@@ -114,7 +114,7 @@ sub defaults_edit {
 			$_ = <$io>;
 			my $csv = Text::CSV_XS->new();
 			my $ac = sql::start_transaction( $dbh );
-			my %cache = map { $_->strid(), $_->id() } openprint::ProjectType::find();
+			my %cache = map { $_->strid(), $_->id() } openprint::ProjectType->find();
 			sql::execute( $log, $dbh, 'DELETE FROM tbl_ProjectType_Defaults' );
 
 			while ( <$io> ) {
@@ -159,7 +159,7 @@ sub templates {
 
     if ( $param{'btnFunction'} eq 'Save' ) {
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $Template ( openprint::ProjectType_Template::find('projecttype_id'=>$param{'ddmProjectType'}) ) {
+		foreach my $Template ( openprint::ProjectType_Template->find('projecttype_id'=>$param{'ddmProjectType'}) ) {
 			$variable{'error'} .= $Template->save({
 					'type'					=>	$param{"type$$Template{id}"},
 					'description'			=>	$param{"description$$Template{id}"},
@@ -188,7 +188,7 @@ sub templates {
     } elsif ( $param{'btnFunction'} eq 'Import Templates' ) {
         if ( $param{'fileImport'} ) {
 			my $ac = sql::start_transaction( $dbh );
-			my %project_types = map { $_->strid(), $_->id() } openprint::ProjectType::find();
+			my %project_types = map { $_->strid(), $_->id() } openprint::ProjectType->find();
 
 			if ( $param{'ddmProjectType'} ) {
 				sql::execute( $log, $dbh, q{DELETE FROM ProjectTemplate WHERE ProjectType_id=?}, $param{'ddmProjectType'} );

@@ -56,7 +56,7 @@ Please select a Paper to view/edit.<br>
 				<select id="Owner" name="Owner" size="1" onchange="calc('f1');">
 				<option value=""> All </option>
 				<? echo ( 
-					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(name)' ) ], $session{'/employee/inventory/available_paper.html?Owner'} ? $session{'/employee/inventory/available_paper.html?Owner'} : $session{'company_id'} );
+					make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(name)' ) ], $session{'/employee/inventory/available_paper.html?Owner'} ? $session{'/employee/inventory/available_paper.html?Owner'} : $session{'company_id'} );
 				) ?>
 				</select>
 				<input type="checkbox" name="owner_id_exclude" id="owner_id_exclude" value="1" onclick="calc('f1');" <? echo ( ssi::checked( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ); ) ?> />
@@ -103,7 +103,7 @@ Please select a Paper to view/edit.<br>
 					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql) ) {
+					foreach my $Stock ( openprint::Paper->find( %sql) ) {
 						$data{$Stock->manufacturer()} = $Stock->manufacturer_id();
 						$found = 1 if $Stock->manufacturer_id() == $session{'/employee/inventory/available_paper.html?Manufacturer'};
 					} # end foreach
@@ -129,7 +129,7 @@ Please select a Paper to view/edit.<br>
 					} # end if
 					my %names;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( openprint::Paper->find( %sql ) ) {
 						$names{$Stock->name()} = $Stock->name_id();
 						$found = 1 if $Stock->name_id() == $session{'/employee/inventory/available_paper.html?Name'};
 					} # end foreach
@@ -156,7 +156,7 @@ Please select a Paper to view/edit.<br>
 					} # end if
 					my %finishes;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql) ) {
+					foreach my $Stock ( openprint::Paper->find( %sql) ) {
 						$finishes{$Stock->finish()} = $Stock->finish_id();
 						$found = 1 if $Stock->finish_id() == $session{'/employee/inventory/available_paper.html?Finish'};
 					} # end foreach
@@ -184,7 +184,7 @@ Please select a Paper to view/edit.<br>
 					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( openprint::Paper->find( %sql ) ) {
 						$data{$Stock->colour()} = $Stock->colour_id();
 						$found = 1 if $Stock->colour_id() == $session{'/employee/inventory/available_paper.html?Colour'};
 					} # end foreach
@@ -213,7 +213,7 @@ Please select a Paper to view/edit.<br>
 					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( openprint::Paper->find( %sql ) ) {
 						$data{$Stock->weight()} = $Stock->weight_id();
 						$found = 1 if $Stock->weight_id() == $session{'/employee/inventory/available_paper.html?Weight'};
 					} # end foreach
@@ -245,7 +245,7 @@ Please select a Paper to view/edit.<br>
 					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( openprint::Paper->find( %sql ) ) {
 						$data{$Stock->width()} = $Stock->width();
 						$found = 1 if $Stock->width() == $session{'/employee/inventory/available_paper.html?width'};
 					} # end foreach
@@ -272,7 +272,7 @@ Please select a Paper to view/edit.<br>
 					} # end if
 					my %data;
 					my $found = 0;
-					foreach my $Stock ( openprint::Paper::find( %sql ) ) {
+					foreach my $Stock ( openprint::Paper->find( %sql ) ) {
 						$data{$Stock->height()} = $Stock->height();
 						$found = 1 if $Stock->height() == $session{'/employee/inventory/available_paper.html?height'};
 					} # end foreach
@@ -290,11 +290,11 @@ Please select a Paper to view/edit.<br>
 			<label>Location:</label>
 			<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form.name);">
 				<? echo ( 
-					my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') );
+					my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') );
 					$session{'/employee/inventory/available_paper.html?location_id'} = undef if ! sets::isin( $session{'/employee/inventory/available_paper.html?location_id'}, \@options );
 					my @selected = split(';', $session{'/employee/inventory/available_paper.html?location_id'} );
 					if ( ! @selected ) {
-						foreach my $L ( openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ) {
+						foreach my $L ( openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') ) {
 							next if $L->name() eq 'Missing';
 							push @selected, $L->id();
 						} # end foreach $L

@@ -49,7 +49,7 @@ function load() {
                 <option value="">Please select one</option>
             <? echo (
                     my %data;
-                    foreach my $Stock ( openprint::Paper::find(
+                    foreach my $Stock ( openprint::Paper->find(
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
 							'type'=>[split(';', $session{'/employee/reports/stock_usage.html?Type'})],
                             ) ) {
@@ -65,7 +65,7 @@ function load() {
                 <option value="">Please select one</option>
             <? echo ( 
                     my %names;
-                    foreach my $Stock ( openprint::Paper::find(
+                    foreach my $Stock ( openprint::Paper->find(
                             'manufacturer_id'=>$session{'/employee/reports/stock_usage.html?Manufacturer'},
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
                             'type'=>[split(';', $session{'/employee/reports/stock_usage.html?Type'})],
@@ -82,7 +82,7 @@ function load() {
                 <option value="">Please select one</option>
             <? echo (
                     my %finishes;
-                    foreach my $Stock ( openprint::Paper::find(
+                    foreach my $Stock ( openprint::Paper->find(
                             'manufacturer_id'=>$session{'/employee/reports/stock_usage.html?Manufacturer'},
                             'name_id'=>$session{'/employee/reports/stock_usage.html?Name'},
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
@@ -100,7 +100,7 @@ function load() {
                 <option value="">Please select one</option>
             <? echo (
                     my %data;
-                    foreach my $Stock ( openprint::Paper::find(
+                    foreach my $Stock ( openprint::Paper->find(
                             'manufacturer_id'=>$session{'/employee/reports/stock_usage.html?Manufacturer'},
                             'name_id'=>$session{'/employee/reports/stock_usage.html?Name'},
                             'finish_id'=>$session{'/employee/reports/stock_usage.html?Finish'},
@@ -119,7 +119,7 @@ function load() {
                 <option value="">Please select one</option>
             <? echo (
                     my %data;
-                    foreach my $Stock ( openprint::Paper::find(
+                    foreach my $Stock ( openprint::Paper->find(
                             'manufacturer_id'=>$session{'/employee/reports/stock_usage.html?Manufacturer'},
                             'name_id'=>$session{'/employee/reports/stock_usage.html?Name'},
                             'finish_id'=>$session{'/employee/reports/stock_usage.html?Finish'},
@@ -139,7 +139,7 @@ function load() {
                 <option value="">All</option>
             <? echo ( 
                     my %data;
-                    foreach my $Stock ( openprint::Paper::find(
+                    foreach my $Stock ( openprint::Paper->find(
                             'manufacturer_id'=>$session{'/employee/reports/stock_usage.html?Manufacturer'},
                             'name_id'=>$session{'/employee/reports/stock_usage.html?Name'},
                             'finish_id'=>$session{'/employee/reports/stock_usage.html?Finish'},
@@ -157,7 +157,7 @@ function load() {
                 <option value="">All</option>
             <? echo ( 
                 my %data;
-                    foreach my $Stock ( openprint::Paper::find(
+                    foreach my $Stock ( openprint::Paper->find(
                             'owner_id'=>$session{'/employee/reports/stock_usage.html?Owner'},
                             'manufacturer_id'=>$session{'/employee/reports/stock_usage.html?Manufacturer'},
                             'name_id'=>$session{'/employee/reports/stock_usage.html?Name'},

@@ -53,7 +53,7 @@ function open_window( page ) {
 	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
 	my $qty_index = $Project->ordered_quantity_index();
 
-    foreach my $ServiceCategory ( openprint::ServiceType_Category::find('order'=>'sorting,name') ) {
+    foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
         if ( $ServiceCategory->name() eq 'Printing' ) {
             my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			$html .= "<tr$rowclass>";
@@ -111,7 +111,7 @@ function open_window( page ) {
 					$html .= sprintf('<td class="price"><b>%s</b><br/>%s</td>', openprint::Currency::format( $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} )),openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
 					$totals[$qty_index] += $ProjectCurrency->convert_form( $sig_specs{'txtPrice'.$qty_index} );
 					$html .= '<td class="status">'.$statuses{$ss_id};
-					my $Job = openprint::ScheduledJob::find_one('service_id'=>$ss_id);
+					my $Job = openprint::ScheduledJob->find_one('service_id'=>$ss_id);
 					if ( $Job and $Job->starttime() ) {
 						$html .= '<br/>Scheduled for: ' . Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Job->starttime() ) );
 					} elsif ( $statuses{$ss_id} eq 'Ordered' ) {
@@ -136,7 +136,7 @@ function open_window( page ) {
 				$html .= $summary;
 				$html .= '</td>';
                 $html .= '<td class="status">'.$statuses{$service_id};
-				my $Job = openprint::ScheduledJob::find_one('service_id'=>$service_id);
+				my $Job = openprint::ScheduledJob->find_one('service_id'=>$service_id);
 				if ( $Job and $Job->starttime() ) {
 					$html .= '<br/>Scheduled for: ' . Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Job->starttime() ) );
 				} elsif ( $statuses{$service_id} eq 'Ordered' ) {
@@ -148,7 +148,7 @@ function open_window( page ) {
             } # end if $$services{'AdditionalSignature'}
 
         } else {
-            foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
+            foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
                 next if ! $$services{$ServiceType->name()};
                 foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					$rowclass = ' class="colRowRed"' if $statuses{$service_id} eq 'Waiting For Customer Approval';
@@ -262,7 +262,7 @@ function open_window( page ) {
 			<? if ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
 			<td>&nbsp;</td>
 			<? endif ( openprint::usergroup::is_user_in( ['Sales Admin'], $session{'user_id'} ) ) ?>
-			<td colspan="2">Add Service:<select name="NewServiceType" onchange="if(this.options[this.selectedIndex].text == 'Outside Service'){$('CustomService').show();}else{$('CustomService').hide();}"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType::find('order'=>'lower(name)') ] ); ) ?></select>
+			<td colspan="2">Add Service:<select name="NewServiceType" onchange="if(this.options[this.selectedIndex].text == 'Outside Service'){$('CustomService').show();}else{$('CustomService').hide();}"><option value=""> select </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find('order'=>'lower(name)') ] ); ) ?></select>
 			</td>
 			<td 
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddServiceType', 'add.gif', "f1.btnFunction.value='Add Service';f1.submit();", '', 'Add Service' ); ) ?></td>
@@ -341,7 +341,7 @@ function open_window( page ) {
 				my $need_add = 0;
 				my $pending = 0;
 				foreach my $sig_id ( $$variable{'Project'}->signatures() ) {
-					my $Job = openprint::ScheduledJob::find_one('project_id'=>$$variable{'ProjectIndex'}, 'service_id'=>$sig_id );
+					my $Job = openprint::ScheduledJob->find_one('project_id'=>$$variable{'ProjectIndex'}, 'service_id'=>$sig_id );
 					if ( ! $Job ) {
 $log->debug("Have no job: $Job");
 						$need_add = 1;
@@ -352,7 +352,7 @@ $log->debug("Have no job: $Job");
 
 				if ( $need_add ) {
 					$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule', 'addtopressschedule.gif', "f1.btnFunction.value='AddToPressSchedule';f1.submit();", '', 'Add To Press Schedule' );
-				} elsif ( openprint::ScheduledJob::find('project_id'=>$$variable{'ProjectIndex'} ) ) {
+				} elsif ( openprint::ScheduledJob->find('project_id'=>$$variable{'ProjectIndex'} ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'RemoveFromPressSchedule', 'removefrompressschedule.gif', "f1.btnFunction.value='RemoveFromPressSchedule';f1.submit();", '', 'Remove from Press Schedule' );
 				} # end if
 				if ( $pending ) {
@@ -408,7 +408,7 @@ $log->debug("Have no job: $Job");
 <? if ( $$variable{'Project'}->docket() ) ?>
 <div class="leftColumn">
 <? eval (
-	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() );
+	@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() );
 ) ?>
 <? if ( @{$$variable{'PurchaseOrders'}} ) ?>
 <fieldset><legend>Purchase Orders:</legend>

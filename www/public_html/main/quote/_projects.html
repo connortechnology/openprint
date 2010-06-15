@@ -1,3 +1,4 @@
+<? if ( openprint::ProjectType->find() ) ?>
 <? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 <table class="List">
 	<thead>
@@ -109,3 +110,4 @@
 	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 </table>
 <? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? endif ( openprint::ProjectType->find() ) ?>

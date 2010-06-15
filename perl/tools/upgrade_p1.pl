@@ -77,7 +77,7 @@ my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT ver
 sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
 print "done\n";
 
-foreach my $Service ( openprint::Service::find('name'=>'Imposition') ) {
+foreach my $Service ( openprint::Service->find('name'=>'Imposition') ) {
 	foreach my $Price ( $Service->prices() ) {
 		if ( $Price->units() eq 'Per Page' ) {
 			$Price->units('Per Imposition');
@@ -88,7 +88,7 @@ foreach my $Service ( openprint::Service::find('name'=>'Imposition') ) {
 
 if ( 0 ) {
 sql::update( undef, undef, 'Configuration', ['name=?', 'Press Run Overs Rate'], 'name','MakeReady Overs Rate' );
-foreach my $E ( openprint::Equipment::find('strid'=>'Web1') ) {
+foreach my $E ( openprint::Equipment->find('strid'=>'Web1') ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		next if $Spec->name() ne 'Press Run Overs';
 		if ( $Spec->value() != 0.05 ) {

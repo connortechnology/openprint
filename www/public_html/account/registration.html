@@ -148,7 +148,7 @@ function howdidyouhearaboutus_onchange(e) {
 				</select>
 				<select name="salesrep_id" id="salesrep_id" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','CSR'] ) ) ?>">
 					<? echo (
-						return ssi::make_drop_down( ['', 'Other - please enter who:', map { $_->id(), $_->name() } openprint::User::find('usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], $param{'salesrep_id'} );
+						return ssi::make_drop_down( ['', 'Other - please enter who:', map { $_->id(), $_->name() } openprint::User->find('usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], $param{'salesrep_id'} );
 					) ?>
 				</select>
 				<input id="Other" style="<? echo ( 'display:none;' if !$param{howdidyouhearaboutus} or ! sets::isin( $param{howdidyouhearaboutus}, ['','Other','CSR'] ) ) ?>" type="text" name="howdidyouhearaboutusother" value="<? echo ( ssi::htmlize($param{'howdidyouhearaboutusother'}); ) ?>" />

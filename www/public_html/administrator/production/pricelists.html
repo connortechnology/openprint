@@ -8,7 +8,7 @@
 			<select name="ddmPriceList" onChange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
 			<option value="">- Select -</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist::find( 'order' => 'lower(name)' ) ], $param{'ddmPriceList'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist->find( 'order' => 'lower(name)' ) ], $param{'ddmPriceList'} );
 ) ?>
 			</select>
 		</li>
@@ -44,7 +44,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist:
 					<select name="currency_id" id="currency_id">
 						<option value=""> select </option>
 						<? echo ( 
-								return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $$variable{'Pricelist'}->currency_id() );
+								return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find( 'order'=>'lower(name)' ) ], $$variable{'Pricelist'}->currency_id() );
 								) ?>
 					</select>
 				</li>
@@ -54,19 +54,19 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist:
 			<ul>
 				<li> 
 					<label># of Service prices:</label>
-					<? echo ( scalar openprint::ServicePrice::find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
+					<? echo ( scalar openprint::ServicePrice->find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
 				</li>
 				<li> 
 					<label># of Material prices:</label>
-					<? echo ( scalar openprint::MaterialPrice::find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
+					<? echo ( scalar openprint::MaterialPrice->find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
 				</li>
 				<li> 
 					<label># of Paper prices:</label>
-					<? echo ( scalar openprint::PaperPrice::find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
+					<? echo ( scalar openprint::PaperPrice->find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
 				</li>
 				<li> 
 					<label># of Product prices:</label>
-					<? echo ( scalar openprint::ProductPrice::find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
+					<? echo ( scalar openprint::ProductPrice->find('pricelist_id'=>$$variable{'Pricelist'}->id()) ) ?>
 				</li>
 			</ul>
 		</div>

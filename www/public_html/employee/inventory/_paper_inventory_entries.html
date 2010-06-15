@@ -24,7 +24,7 @@
 			<? echo (
 				my $html;
 				my $rowclass;
-				foreach my $C ( openprint::SkidContent::find('paper_id'=>$param{'paper_id'}, 'quantity_>'=>0,'order'=>'skid_id') ) {
+				foreach my $C ( openprint::SkidContent->find('paper_id'=>$param{'paper_id'}, 'quantity_>'=>0,'order'=>'skid_id') ) {
 					my $Skid = $C->Skid();
 					my $last_seen_days = $Skid->last_seen_days();
 					$html .= sprintf('<tr%1$s><td><a href="skid_details.html?skid_id=%2$d">%2$d</a></td>
@@ -54,7 +54,7 @@
 				<td colspan="2">
 					<select id="Location" name="Location">
 						<? echo (
-							my @data = ( '', 'select', map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') );
+							my @data = ( '', 'select', map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') );
 							return ssi::make_drop_down( \@data );
 						) ?>
 					</select>

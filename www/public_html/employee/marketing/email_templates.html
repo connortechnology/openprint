@@ -1,5 +1,5 @@
 <? eval (
-	@{$$variable{'Templates'}} = openprint::EmailTemplate::find('order'=>'lower(name)');
+	@{$$variable{'Templates'}} = openprint::EmailTemplate->find('order'=>'lower(name)');
 ) ?>
 <table class="List">
 	<tr>

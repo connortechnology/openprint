@@ -4,11 +4,11 @@
 		$param{'docket'} =~ s/\D//g;
 		$param{'project_id'} =~ s/\D//g;
 		if ( $param{'docket'} ) {
-			if ( my @Projects = openprint::Project::find('docket'=>$param{'docket'}, 'company_id'=>$session{'company_id'} ) ) {
+			if ( my @Projects = openprint::Project->find('docket'=>$param{'docket'}, 'company_id'=>$session{'company_id'} ) ) {
 				$param{'project_id'} = $Projects[0]->id();
 			} # end if
 		} elsif ( $param{'project_id'} ) {
-			if ( my @Projects = openprint::Project::find('id'=>$param{'project_id'}, 'company_id'=>$session{'company_id'} ) ) {
+			if ( my @Projects = openprint::Project->find('id'=>$param{'project_id'}, 'company_id'=>$session{'company_id'} ) ) {
 				$param{'docket'} = $Projects[0]->id();
 			} # end if
 		} # end if

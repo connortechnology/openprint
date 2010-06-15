@@ -58,7 +58,7 @@ sub taxes {
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $Tax ( openprint::Tax::find() ) {
+		foreach my $Tax ( openprint::Tax->find() ) {
 			$variable{'error'} .= $Tax->save({
 				'federaltax_rate'	=>	$param{'federaltax_rate-'.$Tax->id()},
 				'statetax_rate'		=>	$param{'statetax_rate-'.$Tax->id()},
@@ -93,7 +93,7 @@ sub currency {
 			$Currency->save();
 		} # end if
 
-		foreach my $Currency ( openprint::Currency::find() ) {
+		foreach my $Currency ( openprint::Currency->find() ) {
 			if ( $param{'strName'.$Currency->id()} ) {
 				$Currency->name($param{'strName'.$Currency->id()});
 				$Currency->short($param{'strShort'.$Currency->id()});
@@ -138,7 +138,7 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
 
-		my @Users = openprint::User::find( 'email' => lc $param{'email'} );
+		my @Users = openprint::User->find( 'email' => lc $param{'email'} );
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
@@ -154,7 +154,7 @@ sub user_profiles {
 		my $error = $User->save( \%param );
 
 		if ( ! $error ) {
-			foreach my $Type ( openprint::PurchaseOrder_ContentType::find() ) {
+			foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
 				$User->po_limit( $Type->id(), $param{'po_limit-'.$Type->id()} );
 			} # end foreach Type
 		} # end if
@@ -229,7 +229,7 @@ sub user_profiles {
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
-	my @Users = openprint::User::find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(firstname),lower(lastname)' );
+	my @Users = openprint::User->find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(firstname),lower(lastname)' );
 	if ( $User->deleted() ) {
 		unshift @Users, $User;
 	} # end if
@@ -339,7 +339,7 @@ sub company_profiles {
 
 				$email_template = ssi::variable_substitution( \$email_template, \%info ); 
 
-				my @to = map { sprintf('"%s %s" <%s>', $_->get('firstname','lastname','email')); } openprint::User::find('company_id'=>$index,'web_active'=>'Y');
+				my @to = map { sprintf('"%s %s" <%s>', $_->get('firstname','lastname','email')); } openprint::User->find('company_id'=>$index,'web_active'=>'Y');
 				my %mail = (
 						SMTP	=> $config{'Mail Server'},
 						FROM	=> $config{'AdministratorEmail'},
@@ -353,7 +353,7 @@ sub company_profiles {
 				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 				$info{'Company'} = $Company;
 
-				my @to = openprint::User::find('company_id'=>$index);
+				my @to = openprint::User->find('company_id'=>$index);
 
 				$_ = $param{'rdbReseller'} eq 'Y' ? 'customer_account_reseller.html' : 'customer_account_non_reseller.html';
 				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
@@ -373,7 +373,7 @@ sub company_profiles {
 				my %info;
 				my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 				$info{'Company'} = $Company;
-				my @to = openprint::User::find('company_id'=>$index);
+				my @to = openprint::User->find('company_id'=>$index);
 
 				$_ = $param{'rdbSupplier'} eq 'Y' ? 'customer_account_supplier.html' : 'customer_account_non_supplier.html';
 				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . "/email_content/$_" );
@@ -455,14 +455,14 @@ sub company_profiles {
 		@customers_categories = sql::execute( $log, $dbh, $_, $index );
 		$_ = "SELECT SUM(curTotalSale) FROM Orders WHERE CompanyIndex=? AND strStatus IN ('Pending Deposit','In Production','Paid')";
 		( $total ) = sql::execute( $log, $dbh, $_, $index );
-		( $payments ) = misc::sum( map { $_->amount() } openprint::Payment::find('completed'=>1, 'payor_id'=>$index, 'recipient_id'=>$session{'company_id'} ) );
+		( $payments ) = misc::sum( map { $_->amount() } openprint::Payment->find('completed'=>1, 'payor_id'=>$index, 'recipient_id'=>$session{'company_id'} ) );
 	} # end if
 
 	$variable{'txtPricingLevel'} = sprintf ( "%.0f", $variable{'txtPricingLevel'} ) . "%";
 	$variable{'txtDownpayment'} = sprintf ( "%.0f", $variable{'txtDownpayment'} ) . "%";
 
 	# Get Customer Category Inforamation - get all categories, and highlight the ones this customer is in.
-	my @available_categories = map { $_->id(), $_->name() } openprint::MarketingCategory::find();
+	my @available_categories = map { $_->id(), $_->name() } openprint::MarketingCategory->find();
 	$variable{'selectCustomerCategories'} = ssi::make_drop_down( \@available_categories, \@customers_categories );
 
 	$variable{'CreditBalance'} = '$ '.sprintf( '%.2f', ( $total - $payments ) );
@@ -638,7 +638,7 @@ sub emails {
 	$openprint::Email::dbh = $mail_dbh;
  
 	if ( $param{'action'} eq 'Delete' ) {
-		foreach my $Email ( openprint::Email::find('id'=>$param{'id'}) ) {
+		foreach my $Email ( openprint::Email->find('id'=>$param{'id'}) ) {
 			$variable{'error'} .= $Email->delete();
 		} # end foreach Email
 	} elsif ( $param{'action'} eq 'Save' ) {

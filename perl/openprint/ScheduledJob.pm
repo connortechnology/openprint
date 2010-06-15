@@ -54,15 +54,9 @@ $serial = 'schedule_id_seq';
 	'created_on'	=>	undef,
 	'stock_verified'	=>	0,
 );
-sub find_one {
-	my %params = @_;
-	$params{'limit'}=1;
-	my @Results = find(%params);
-	return $Results[0] if @Results;
-	return;
-} # end sub find_one
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 
 	my @values;
@@ -277,7 +271,7 @@ sub stock {
 		my $Equipment = $self->Equipment();
 		my $Project = new openprint::Project( $$self{'project_id'} );
 		my $Stock;
-		my @PA = openprint::PaperAllocation::find('project_id'=>$$self{'project_id'});
+		my @PA = openprint::PaperAllocation->find('project_id'=>$$self{'project_id'});
 		if ( @PA ) {
 			$Stock = $PA[0]->Paper();
 		} else {
@@ -291,7 +285,7 @@ sub stock {
 			} else {
 				$$self{'stock'} .= ' not allocated.';
 			} # end if
-			if ( ( ! @PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content::find('docket'=>$Project->docket()) ) ) {
+			if ( ( ! @PA ) and $Project->docket() and ( my @PO = openprint::PurchaseOrder_Content->find('docket'=>$Project->docket()) ) ) {
 				$$self{'stock'} .= ' Ordered on PO: ' . join(',', map { sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%1$d</a>' , $_->po_id() ); } @PO );
 			} else {
 				$$self{'stock'} .= ' not ordered.';
@@ -545,20 +539,20 @@ sub Shift {
 		} # end if
 	} else {
 		my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
-		my @Shifts = openprint::Shift::find(
+		my @Shifts = openprint::Shift->find(
 				'equipment_id'	=>	$$self{'equipment_id'}, 
 				'endtime_>'		=>	$$self{'starttime'}, 
 				'starttime_<='	=>	$$self{'starttime'},
 				#'limit'			=>	1,
 				);
 		if ( ! @Shifts ) {
-			@Shifts = openprint::Equipment_Shift::find(
+			@Shifts = openprint::Equipment_Shift->find(
 					'equipment_id'  =>  $$self{'equipment_id'},
 					'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 					'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 					'limit'		 =>  1,
 					);
-			@Shifts = openprint::Equipment_Shift::find(
+			@Shifts = openprint::Equipment_Shift->find(
 					'equipment_id'  =>  $$self{'equipment_id'},
 					'starttime_>'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 					'order'		 =>  'starttime',
@@ -633,7 +627,7 @@ sub bump {
 		$self->save({'equipment_id'=>$equipment_id});
 		# Shuffle the old list
 		if ( $old_equipment_id and new openprint::Equipment( $old_equipment_id )->smartscheduling() ) {
-		openprint::employee_production::reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$old_equipment_id,'starttime_null'=>0,'order'=>'starttime' ))
+		openprint::employee_production::reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$old_equipment_id,'starttime_null'=>0,'order'=>'starttime' ))
 		} # end if
 	} # end if
 
@@ -646,13 +640,13 @@ sub bump {
 		$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
 		push @{$variable{'changed'}}, $self->Shift()->ul_id();
 	} elsif ( $self->Equipment()->smartscheduling() ) {
-		my @final_order = openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_<'=>$self->starttime(),'order'=>'starttime' );
+		my @final_order = openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime_<'=>$self->starttime(),'order'=>'starttime' );
 		foreach my $Job ( $self->Shift()->Schedule() ) {
 			push @final_order, $Job if $$Job{'id'} != $$self{'id'};
 		} # end foreach job in schift
 		push @final_order, $self->Shift()->Next()->Schedule();
 		push @final_order, $self;
-		push @final_order, openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
+		push @final_order, openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
 
 		openprint::employee_production::reorder_jobs( @final_order );
 	} else {

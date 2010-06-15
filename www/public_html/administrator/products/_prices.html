@@ -1,11 +1,11 @@
 <form id="PricesForm" name="PricesForm" method="post" action="prices.html" enctype="multipart/form-data">
 	<? eval ( 
-		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(name)');
+		@{$$variable{'Pricelists'}} = openprint::Pricelist->find('order'=>'lower(name)');
 		$$variable{'Product'} = new openprint::Product( $openprint::param{'product_id'} ) if ! $$variable{'Product'};
 	) ?>
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
 	<fieldset><legend>Prices for Price List: <? echo ( $$variable{'Pricelist'}->name(); ) ?></legend>
-		<? eval ( @{$$variable{'Prices'}} = openprint::ProductPrice::find( 'Product' => $$variable{'Product'}, 'Pricelist' => $$variable{'Pricelist'}, 'order' => 'min' ); ) ?>
+		<? eval ( @{$$variable{'Prices'}} = openprint::ProductPrice->find( 'Product' => $$variable{'Product'}, 'Pricelist' => $$variable{'Pricelist'}, 'order' => 'min' ); ) ?>
 		<div class="Equipment">
 			<table class="List">
 				<tr>

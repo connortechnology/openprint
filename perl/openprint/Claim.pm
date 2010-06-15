@@ -246,12 +246,12 @@ sub Contents {
 	my ( $self, %params ) = @_;
 	if ( %params ) {
 		if ( $$self{'id'} ) {
-			return openprint::Claim_Content::find('claim_id'=>$$self{id}, %params );
+			return openprint::Claim_Content->find('claim_id'=>$$self{id}, %params );
 		} # end if
 	} # end if
 	if ( ! $$self{'Contents'} ) {
 		if ( $$self{'id'} ) {
-			@{$$self{'Contents'}} = openprint::Claim_Content::find('claim_id'=>$$self{id} );
+			@{$$self{'Contents'}} = openprint::Claim_Content->find('claim_id'=>$$self{id} );
 		} # end if
 	} # end if
 	return @{$$self{'Contents'}} if $$self{'Contents'};
@@ -288,7 +288,7 @@ sub federaltax_rate {
 		$$self{'federaltax_rate'} = $new;
 	} # end if
 	if ( ! $$self{'federaltax_rate'} ) {
-		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
+		if ( my ( $Tax ) = openprint::Tax->find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
 			$$self{'federaltax_rate'} = $Tax->federaltax_rate();
 		} # end if
 	} # end if
@@ -330,7 +330,7 @@ sub statetax_rate {
 		$$self{'statetax_rate'} = $new;
 	} # end if
 	if ( ! $$self{'statetax_rate'} ) {
-		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
+		if ( my ( $Tax ) = openprint::Tax->find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
 			$$self{'statetax_rate'} = $Tax->statetax_rate();
 		} # end if
 	} # end if

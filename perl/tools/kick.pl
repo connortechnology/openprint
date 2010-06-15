@@ -35,7 +35,7 @@ if ( ! $ARGV[4] ) {
 	die "Must have an email address to log ogg";
 }
 
-my $User = openprint::User::find_one( 'email'=>lc $ARGV[4] );
+my $User = openprint::User->find_one( 'email'=>lc $ARGV[4] );
 if ( ( ! $User ) or ( ! $User->id() ) ) {
 	die "No user found for $ARGV[4]";
 } # end if

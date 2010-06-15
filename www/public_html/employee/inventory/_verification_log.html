@@ -6,7 +6,7 @@
 	</tr>
 	<? echo (
 		my $html;
-		my @Vs = openprint::Skid_Verification::find('skid_id'=>$openprint::param{'skid_id'},'order'=>'created_on' );
+		my @Vs = openprint::Skid_Verification->find('skid_id'=>$openprint::param{'skid_id'},'order'=>'created_on' );
 		my $rowclass;
 		foreach my $V ( @Vs ) {
 			$html .= sprintf( '<tr%s><td>%s</td><td>%s</td><td>%s</td></tr>',

@@ -1,4 +1,4 @@
-
+<!--#include virtual="/includes/error_reporting.html"-->
 <table>
 	<thead>
 		<tr>
@@ -7,18 +7,24 @@
 			<th class="cost">Cost</th>
 			<th class="markup">Markup</th>
 			<th class="price">Price</th>
+			<th>&nbsp;</th>
 		</tr>
+	</thead>
+	<tbody>
 		<? echo (
 			my $html;
 			my $rowclass;
 			foreach my $Product ( $$variable{'Quote'}->Products() ) {
 				$html .= sprintf('<tr%1$s>
-									<td class="description">2$s</td>
-									<td class="quantity"><input type="text" id="quantity-%2$d" name="quantity-%2$d" value="%3$d" /></td>
-									<td class="price">%4$.2f</td>
-									<td class="markup"><input type="text" id="markup-%2$d" name="markup-%2$d" value="%5$.2f" /></td>
-									<td class="newprice"><input type="text" id="price-%2$d" name="price-%2$d" value="%6$.2f" /></td>
-									</tr>', $rowclass, $Product->id(), $Product->quantity(), $Product->cost(), $Product->markup(), $Product->price() );
+									<td class="description">%3$s</td>
+									<td class="quantity"><input type="text" id="quantity-%2$d" name="quantity-%2$d" value="%4$d" /></td>
+									<td class="price">%5$.2f</td>
+									<td class="markup"><input type="text" id="markup-%2$d" name="markup-%2$d" value="%6$.2f" /></td>
+									<td class="newprice"><input type="text" id="price-%2$d" name="price-%2$d" value="%7$.2f" /></td>
+									<td>%8$s</td>
+									</tr>', $rowclass, $Product->id(), $Product->description(), $Product->quantity(), $Product->cost(), $Product->markup(), $Product->price(),
+									ssi::writeButton( $log, $dbh, 'delProduct'.$Product->id(), 'del.gif', qq`new Ajax.Updater('Products', '_products.html?action=del&amp;product_id=$$Product{id}', { parameters: f1.serialize() } );`, '', 'Del' ),
+);
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Product
 			if ( $session{'user_type'} eq 'A' ) {
@@ -30,11 +36,12 @@
 									<td class="newprice"><input type="text" id="price-" name="price-" value="" /></td>
 									<td>%3$s</td>
 									</tr>', $rowclass, 
-ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product::find('order'=>'lower(name)') ] ),
-ssi::writeButton( $log, $dbh, 'addProduct', 'add.gif', q`New Ajax.Updater('_Products', '_products.html', { parameters: f1.serialize() } );`, '', 'Add' ),
-);
+									ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product->find('order'=>'lower(name)') ] ),
+									ssi::writeButton( $log, $dbh, 'addProduct', 'add.gif', q`new Ajax.Updater('Products', '_products.html?action=add', { parameters: f1.serialize() } );`, '', 'Add' ),
+					);
 			} # end if
 			
 			return $html;
 		) ?>
+	</tbody>
 </table>

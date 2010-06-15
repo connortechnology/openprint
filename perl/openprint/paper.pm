@@ -15,7 +15,7 @@ sub get_paper {
 	my @types = ('Sheet');
 	push @types, 'Roll';
 
-	my @papers = openprint::Paper::find( 
+	my @papers = openprint::Paper->find( 
 			( $specs{'Selected'} eq 'Manufacturer' ? ( 'manufacturer_id'=>$specs{'Manufacturer'} ) : () ),
 			( $specs{'Selected'} eq 'Group' ? ( 'group_id'=>$specs{'Group'} ) : ()  ),
 			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=> $specs{'name_id'} ? $specs{'name_id'} : $specs{'Name'} ) : ()  ),
@@ -27,7 +27,7 @@ sub get_paper {
 			'type'=>\@types,
 				);
 	if ( ! @papers ) {
-		@papers = openprint::Paper::find( 
+		@papers = openprint::Paper->find( 
 			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=> $specs{'name_id'} ? $specs{'name_id'} : $specs{'Name'} ) : ()  ),
 			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
 			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
@@ -74,7 +74,7 @@ sub select_paper {
 	} # end if
 
 	$log->debug("******** START OF select_paper_names, Press: $type $press $flat_width $flat_height*****************");
-	my @papers = openprint::Paper::find( 
+	my @papers = openprint::Paper->find( 
 			( $project_index ? ( 'project_type_id'=>$Project->type_id() ) : (  'project_type_name'=>$type ) ),
 			( $selected eq 'Name' ? ( 'name'=>$name ) : ()  ),
 			( sets::isin( $selected, [ 'Finish','Colour','Weight' ] ) ? ( 'finish'	=> $finish ) : () ),
@@ -86,7 +86,7 @@ sub select_paper {
 			( $flat_height ? ( (sets::isin($type,[ 'Envelopes','NCR']) ? 'height' : 'height_>=')=>$flat_height ) : () ),
 			);
     if ( $selected eq 'Name' and ! @papers ) {
-        @papers = openprint::Paper::find(
+        @papers = openprint::Paper->find(
                 ( $project_index ? ( 'project_type_id'=>$Project->type_id() ) : (  'project_type_name'=>$type ) ),
                 ( $selected eq 'Name' ? ( 'name'=>$name ) : ()  ),
                 'supplied'  =>  [undef,$supplied eq 'Y' ? 1 : 0],
@@ -128,7 +128,7 @@ sub get_names {
 		push @types, 'Roll';
 	} # end if
 
-	my @papers = openprint::Paper::find( 
+	my @papers = openprint::Paper->find( 
 		'project_type_name'=>$type,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 		'type'=>\@types,
@@ -152,7 +152,7 @@ sub get_finishes {
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
-	my @papers = openprint::Paper::find( 
+	my @papers = openprint::Paper->find( 
 		'project_type_name'=>$type,
 		'name'=>$name,
 		'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
@@ -179,18 +179,18 @@ sub get_colours {
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
-	my @papers = openprint::Paper::find( 'project_type_name'=>$type, 'name'=>$name, 'finish'=>$finish, 'weight'=>$weight,
+	my @papers = openprint::Paper->find( 'project_type_name'=>$type, 'name'=>$name, 'finish'=>$finish, 'weight'=>$weight,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 			'type'=>\@types,
 			);
 	if ( ! @papers ) {
-	@papers = openprint::Paper::find( 'project_type_name'=>$type, 'name'=>$name, 'finish'=>$finish,
+	@papers = openprint::Paper->find( 'project_type_name'=>$type, 'name'=>$name, 'finish'=>$finish,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 			'type'=>\@types,
 			);
 	} # end if
 	if ( ! @papers ) {
-	@papers = openprint::Paper::find( 'project_type_name'=>$type, 'name'=>$name, 'type'=>\@types,
+	@papers = openprint::Paper->find( 'project_type_name'=>$type, 'name'=>$name, 'type'=>\@types,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 			);
 	} # end if
@@ -213,14 +213,14 @@ sub get_weights {
 	if ( ( ! $openprint::usergroup::groups_cache{'Web Estimating'} ) or openprint::usergroup::is_user_in( ['Web Estimating'], $openprint::session{'user_id'} ) ) {
 		push @types, 'Roll';
 	} # end if
-	my @papers = openprint::Paper::find( 
+	my @papers = openprint::Paper->find( 
 			'project_type_name'=>$type,
 			'name'=>$name, 'finish'=>$finish, 'colour'=>$colour,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 			'type'=>\@types,
 			);
 	if ( ! @papers ) {
-		@papers = openprint::Paper::find( 
+		@papers = openprint::Paper->find( 
 				'project_type_name'=>$type,
 				'name'=>$name, 'finish'=>$finish,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
@@ -228,7 +228,7 @@ sub get_weights {
 				);
 	} # end if
 	if ( ! @papers ) {
-		@papers = openprint::Paper::find( 
+		@papers = openprint::Paper->find( 
 				'project_type_name'=>$type,
 				'name'=>$name,
 			'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
@@ -322,14 +322,14 @@ sub get_sheetsizes {
 		push @types, 'Roll';
 	} # end if
 	if ( ! @papers ) {
-		@papers = openprint::Paper::find( 'name', $name, 'finish', $finish, 'colour', $colour, 'weight', $weight, 'type'=>\@types,
+		@papers = openprint::Paper->find( 'name', $name, 'finish', $finish, 'colour', $colour, 'weight', $weight, 'type'=>\@types,
 				'project_type_name'	=>	$type,
 				'supplied'	=> [undef,$supplied eq 'Y' ? 1 : 0],
 				);
 	} # end if
 	return if ! @papers;
 
-	my @presses = openprint::Equipment::find( 'category'=>'Printing' );
+	my @presses = openprint::Equipment->find( 'category'=>'Printing' );
 	return if ! @presses;
 
 	my $min_width = -1;

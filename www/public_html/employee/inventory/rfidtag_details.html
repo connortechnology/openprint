@@ -95,7 +95,7 @@
 			<p><label onclick="$('type').toggle();$('type_id').toggle();">Type:</label>
 				<select id="type_id" name="type_id" onchange="$('type').value='';">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDTagType::find('order'=>'lower(name)' ) ], $$variable{'RFIDTag'}->type_id() ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::RFIDTagType->find('order'=>'lower(name)' ) ], $$variable{'RFIDTag'}->type_id() ); ) ?>
 				</select>
 				<input type="text" name="type" id="type" style="display:none;" onkeyup="$('type_id').selectedIndex=0;" />
 			</p>
@@ -104,7 +104,7 @@
 				<label for="skid_id">Skid #:</label>
 				<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
 				<? echo ( 
-					my @Skids = openprint::Skid::find('rfidtag_id'=>$$variable{'RFIDTag'}->id(),'deleted'=>[0,1]);
+					my @Skids = openprint::Skid->find('rfidtag_id'=>$$variable{'RFIDTag'}->id(),'deleted'=>[0,1]);
 					if ( ! @Skids ) {
 						return ssi::writeButton( $log, $dbh, 'SkidAllocate', 'allocate.gif', '', 'rfidtag_details.html?rfidtag_id='.$$variable{'RFIDTag'}->id().q{&btnFunction=AllocateSkid}, 'Allocate' );
 					} elsif ( 1 == @Skids ) {
@@ -126,7 +126,7 @@
 				<select id="location_id" name="location_id">
 					<option value="">select</option>
 					<? echo ( 
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)')], $$variable{'RFIDTag'} ? $$variable{'RFIDTag'}->location_id() : $openprint::param{'location_id'} );
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)')], $$variable{'RFIDTag'} ? $$variable{'RFIDTag'}->location_id() : $openprint::param{'location_id'} );
 						) ?>
 				</select>
 			</p>

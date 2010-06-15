@@ -133,67 +133,10 @@ sub find {
 		$openprint::log->warn("Error loading CARs: ($sql) (@values)" . $openprint::dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$openprint::log->debug("openprint::CAR::find($sql) (@values)");
+		$openprint::log->debug("openprint::CAR->find($sql) (@values)");
 	} # end if
 	return map { new openprint::CAR( $_->{id}, $_ ); } @$data;
 } # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM CAR WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{keys %fields} = @$data{keys %fields};
-} # end sub load
-
-sub delete {
-	my $self = shift;
-	return sql::update( undef, undef, 'CAR', ['id=?', $$self{'id'} ], 'deleted', 1 );
-} # end sub delete
-
-sub destroy {
-	my $self = shift;
-    return sql::execute( undef, undef, q{DELETE FROM CAR WHERE id=?}, $$self{'id'} );
-} # end sub destroy
-
-sub save {
-	my ( $self, $param ) = @_;
-	
-	$self->set( $param ) if $param;
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$k} = $$self{$k};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('car_id_seq')});
-		$sql{'id'} = $$self{id};
-		if ( my $error = sql::insert( undef, undef, 'CAR', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} else {
-		if ( my $error = sql::update( undef, undef, 'CAR', ['id=?', $$self{'id'}], \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} # end if
-	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-	return '';
-} # end sub save
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::CAR();
-	@$new{keys %$self} = @$self{keys %$self};
-	$$new{'id'} = undef;
-	return $new;
-} # end sub
 
 sub Company {
 	return new openprint::Company( $_[0]{'company_id'} );
@@ -202,7 +145,7 @@ sub Company {
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User::find('usergroup'=>'Quality Control Notifications');
+	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
 
 	if ( @Users ) {
 		my $From = new openprint::User( $session{'user_id'} );
@@ -256,7 +199,7 @@ sub send_assignee_notification {
 sub send_reprint_request_notification {
 	my ($self) = @_;
 	my $From = new openprint::User( $session{'user_id'} );
-	foreach my $To ( openprint::User::find('usergroups'=>['Reprint Approvals']) ) {
+	foreach my $To ( openprint::User->find('usergroups'=>['Reprint Approvals']) ) {
 		if ( $To->id() == $session{'user_id'} ) {
 			next;
 		} # end if
@@ -312,7 +255,7 @@ sub send_changed_notification {
     my ($self) = @_;
 
     my $From = new openprint::User( $session{'user_id'} );
-	foreach my $To ( new openprint::User( $$self{'issued_by_id'} ), openprint::User::find('usergroups'=>['Quality Control Notifications']) ) {
+	foreach my $To ( new openprint::User( $$self{'issued_by_id'} ), openprint::User->find('usergroups'=>['Quality Control Notifications']) ) {
 		if ( $To->id() == $session{'user_id'} ) {
 			$log->debug("Not Sending PART2 because I am ME to " . $To->email());
 			next;

@@ -110,7 +110,7 @@ Please select a Skid to view/edit.<br>
 		<p><label>Location:</label>
 			<select name="location_id">
 				<? echo ( 
-					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') );
+					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') );
 
 					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?location_id'} );
 				) ?>

@@ -98,7 +98,7 @@ function calc_from_gsm( form ) {
 				<select id="Manufacturer" name="Manufacturer" size="1">
 					<option value="">select</option>
 				<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->manufacturer_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->manufacturer_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
@@ -108,7 +108,7 @@ function calc_from_gsm( form ) {
 				<select id="Name" name="Name" size="1" onchange="f1.txtName.value='';">
 					<option value="">select</option>
 					<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->name_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->name_id() );
 					) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="ddm_select_by_index( f1.Name, 0 );" />
@@ -118,7 +118,7 @@ function calc_from_gsm( form ) {
 				<select id="Finish" name="Finish" size="1" onchange="f1.txtFinish.value='';">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->finish_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->finish_id() );
 				) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="ddm_select_by_index( f1.Finish, 0 );" />
@@ -128,7 +128,7 @@ function calc_from_gsm( form ) {
 				<select id="Colour" name="Colour" size="1" onchange="f1.txtColour.value='';">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->colour_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->colour_id() );
 					) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="ddm_select_by_index( f1.Colour, 0 );" />
@@ -138,7 +138,7 @@ function calc_from_gsm( form ) {
 				<select id="Weight" name="Weight" size="1" onchange="f1.txtWeight.value='';">
 					<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $$variable{'Paper'}->weight_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight->find('order'=>'lower(shortname)') ], $$variable{'Paper'}->weight_id() );
 						) ?>
 				</select>
 				<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.Weight, 0 );" />
@@ -273,7 +273,7 @@ function calc_from_gsm( form ) {
 		</div>
 	</fieldset>
  <? if ( $$variable{Paper}->id() ) ?>
- <? eval ( @{$$variable{Duplicates}} = openprint::Paper::find(
+ <? eval ( @{$$variable{Duplicates}} = openprint::Paper->find(
 		'owner_id'				=>$$variable{Paper}->owner_id(),
 		'manufacturer_id'		=>$$variable{Paper}->manufacturer_id(),
 		'name_id'				=>$$variable{Paper}->name_id(),

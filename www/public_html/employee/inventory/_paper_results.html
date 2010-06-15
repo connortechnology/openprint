@@ -1,7 +1,7 @@
 <? eval (
 	$session{'/employee/inventory/paper.html?Owner'} = $session{'company_id'} if ! exists $session{'/employee/inventory/paper.html?Owner'};
 	if ( $session{'/employee/inventory/paper.html?Docket'} ) {
-		@{$$variable{'Papers'}} = openprint::Paper::find(
+		@{$$variable{'Papers'}} = openprint::Paper->find(
 			'allocated_to_docket'	=> $session{'/employee/inventory/paper.html?Docket'},
 			'order_by'	=>	'name_id,finish_id,colour_id,weight_id',
 			);
@@ -26,7 +26,7 @@
 		} else {
 			$params{'owner_id'} = $session{'/employee/inventory/paper.html?Owner'};
 		} # end if
-		@{$$variable{'Papers'}} = openprint::Paper::find( %params );
+		@{$$variable{'Papers'}} = openprint::Paper->find( %params );
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>

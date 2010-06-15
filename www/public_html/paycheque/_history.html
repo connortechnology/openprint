@@ -4,7 +4,7 @@
 
 	@{$$variable{'Paycheques'}} = ();
 	$$variable{'Total'} = 0;
-	foreach my $Paycheque ( openprint::Paycheque::find( 
+	foreach my $Paycheque ( openprint::Paycheque->find( 
 		'paid_on_start'	=> sprintf('%.4d-%.2d-%.2d', @session{'/paycheque/history.html?paid_on_start_year','/paycheque/history.html?paid_on_start_month','/paycheque/history.html?paid_on_start_day'} ),
 		'paid_on_end'	=> sprintf('%.4d-%.2d-%.2d', @session{'/paycheque/history.html?paid_on_end_year','/paycheque/history.html?paid_on_end_month','/paycheque/history.html?paid_on_end_day'} ),
 		'employer_id'		=> $session{'/paycheque/history.html?employer_id'},

@@ -21,7 +21,7 @@
 <? echo (
 		$$variable{'price'} = $$variable{'Project'}->ordered_price();
 		my ( $html, $shipping_html );
-		my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
+		my @ShippingServices = openprint::ServiceType->find('category'=>'Shipping');
 		my %services = $$variable{'Project'}->get_services();
 		foreach my $ServiceType ( @ShippingServices ) {
 			if ( $services{$ServiceType->name()} ) {

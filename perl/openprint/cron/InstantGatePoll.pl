@@ -35,7 +35,7 @@ $dbh = sql::open_sql($log,
 
 configuration::init_cache( $log, $dbh );
 
-foreach my $Equipment ( openprint::Equipment::find( 'instantgate_enabled'=>'true' ) ) {
+foreach my $Equipment ( openprint::Equipment->find( 'instantgate_enabled'=>'true' ) ) {
 	next if ! $Equipment->cost_center();
 	my $filename = $config{'InstantGateJobFilesLocalPath'}.'/'.$Equipment->cost_center().'.txt';
 	if ( ! open( FH, "<$filename" ) ) {

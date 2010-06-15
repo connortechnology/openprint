@@ -180,7 +180,7 @@ sub signature_calc {
 	} # end if
 
 	my $error;
-	# THe Equipment::find call gets cached... and the rest is impo-specific... so we can't really cache this.
+	# THe Equipment->find call gets cached... and the rest is impo-specific... so we can't really cache this.
 	my @possible_equipment = get_equipment( $specs, \$error );
 	my @equipment = ();
 
@@ -188,7 +188,7 @@ sub signature_calc {
 		if ( ! $$specs{"ddmEquipment$qty_index"} ) {
 			$results{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
 		} else {
-			@equipment = openprint::Equipment::find( 'id'=> $$specs{"ddmEquipment$qty_index"} );
+			@equipment = openprint::Equipment->find( 'id'=> $$specs{"ddmEquipment$qty_index"} );
 			if ( ! @equipment ) {
 				$results{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
 			} # end if
@@ -454,7 +454,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 			if ( ! $$specs{"ddmEquipment$qty_index"} ) {
 				$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
 			} else {
-				@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
+				@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
 				if ( ! @equipment ) {
 					$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
 				} # end if
@@ -552,7 +552,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
@@ -564,7 +564,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
@@ -761,7 +761,7 @@ sub runtime {
 	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
 
 	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-	my @Equipment = openprint::Equipment::find( 'id' => $$specs{'ddmEquipment'.$qty_index} );
+	my @Equipment = openprint::Equipment->find( 'id' => $$specs{'ddmEquipment'.$qty_index} );
 	return 0 if @Equipment != 1;
 
 	my $Equipment = $Equipment[0];

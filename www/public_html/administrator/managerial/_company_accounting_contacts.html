@@ -1,6 +1,6 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo (
-	my @Users = openprint::User::find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{'Company'}->id() )],'order'=>'lower(firstname),lower(lastname)' );
+	my @Users = openprint::User->find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{'Company'}->id() )],'order'=>'lower(firstname),lower(lastname)' );
 	
 	return @Users ? join('<br/>', map { sprintf('&quot;%s&quot; &lt;%s&gt;', $_->name(), $_->email() ) } @Users ) . '<br/>' : '';
 ) ?>
@@ -9,10 +9,10 @@
 	my $company_id = $param{'accounting_contact_company_id'} ? $param{'accounting_contact_company_id'} : $$variable{'Company'}->id();
 	if ( $session{'user_type'} eq 'A' ) {
 		$html .= qq`<select name="accounting_contact_company_id" id="accounting_contact_company_id" onchange="new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html', { method: 'get', parameters: { company_id: '$$variable{Company}{id}', accounting_contact_company_id: this.value } } );">`;
-		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(name)') ], $company_id );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)') ], $company_id );
 		$html .= '</select>';
 	} # end if
-	my @Users = openprint::User::find('company_id'=>$company_id,'order'=>'lower(firstname),lower(lastname)');
+	my @Users = openprint::User->find('company_id'=>$company_id,'order'=>'lower(firstname),lower(lastname)');
 
 	if ( @Users ) {
 		$html .= '<select name="new_accounting_contact_id" id="new_accounting_contact_id">';

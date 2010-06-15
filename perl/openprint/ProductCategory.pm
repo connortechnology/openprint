@@ -28,54 +28,11 @@ $table = 'Product_Categories';
 
 my $debug = 0;
 
-sub find {
-	my %params = @_;
-	my $sql = 'SELECT * FROM Product_Categories WHERE 1>0';
-	my @values = ();
-
-	if ( $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-		} else {
-		$sql .= ' AND id=?';
-		push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'projecttype_id'} ) {
-		$sql .= ' AND projecttype_id=?';
-		push @values, $params{projecttype_id};
-	} # end if
-	if ( $params{'name'} ) {
-		$sql .= ' AND name=?';
-		push @values, $params{name};
-	} # end if
-	if ( exists $params{'deleted'} ) {
-		if ( $params{'deleted'} ) {
-			$sql .= ' AND (deleted=? OR deleted IS NULL)';
-			push @values, $params{'deleted'};
-		} else {
-			$sql .= ' AND deleted=?';
-			push @values, $params{'deleted'};
-		} # end if
-	} else {
-		$sql .= ' AND (deleted=false OR deleted IS NULL)';
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-    if ( ! $data ) {
-        $openprint::log->error("Error Loading Product Categories: ($sql) (@values): " . $openprint::dbh->errstr );
-        return;
-    } elsif ( $debug ) {
-        $openprint::log->debug("Loading Product Categories: ($sql) (@$data)");
-    } # end if
-    return map { new openprint::ProductCategory( $_->{id}, $_ ) } @$data;
-} # end sub find
-
 sub destroy {
 	my $self = shift;
 	return if ! $$self{'id'};
 	my $ac = sql::start_transaction( $openprint::dbh );
-	foreach my $Product ( openprint::Product::find( 'category_id' => $$self{'id'} ) ) {
+	foreach my $Product ( openprint::Product->find( 'category_id' => $$self{'id'} ) ) {
 		$Product->category_id( '' );
 		$Product->save();
 	} # end foreach
@@ -91,7 +48,7 @@ sub products {
 	my %params = @_;
 	$params{'category_id'} = $$self{'id'};
 
-	return openprint::Product::find( %params );
+	return openprint::Product->find( %params );
 	
 } # end sub products
 

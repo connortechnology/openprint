@@ -140,9 +140,9 @@ $$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{
 
 	my @Equipment;
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
-		@Equipment = openprint::Equipment::find('id'=>$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"},'limit'=>1 );
+		@Equipment = openprint::Equipment->find('id'=>$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"},'limit'=>1 );
 	} else {
-		@Equipment = openprint::Equipment::find( 'Specifications'=>{'Numbering Capable'=>'Y'}, 'use_in_estimating'=>1 );
+		@Equipment = openprint::Equipment->find( 'Specifications'=>{'Numbering Capable'=>'Y'}, 'use_in_estimating'=>1 );
 	} # end if
 	if ( ! @Equipment ) {
 		$Results{'alert'} .= 'We have no numbering equipment.';
@@ -291,8 +291,8 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'Numbering Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
-	#my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'Numbering Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	#my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 

@@ -26,7 +26,7 @@
 			$html .= ssi::writeButton( $log, $dbh, 'Save'.$$variable{'ServiceIndex'},'save.gif', 'f'.$$variable{'ServiceIndex'}.'.submit();', '', 'Save' );
 			$html .= ssi::writeButton( $log, $dbh, 'Reset'.$$variable{'ServiceIndex'},'reset.gif', 'f'.$$variable{'ServiceIndex'}.'.reset();', '', 'Reset' );
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-                if ( ! openprint::ScheduledJob::find('project_id'=>$$variable{'Project'}->id(),'service_id'=>$$variable{'ServiceIndex'} ) ) {
+                if ( ! openprint::ScheduledJob->find('project_id'=>$$variable{'Project'}->id(),'service_id'=>$$variable{'ServiceIndex'} ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule', 'addtopressschedule.gif', sprintf(q`f%1$s.btnFunction.value='AddToPressSchedule';f%1$s.submit();`,$$variable{'ServiceIndex'}), '', 'Add To Press Schedule' );
                 } # end if
             } # end if

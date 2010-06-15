@@ -21,7 +21,7 @@ sub edit {
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'btnFunction'} = '';
-		if ( (! $param{'product_id'}) and openprint::Product::find( 'name' => $param{'name'} ) ) {
+		if ( (! $param{'product_id'}) and openprint::Product->find( 'name' => $param{'name'} ) ) {
 			$variable{'error'} = "A product with name $param{'name'} already exists.  Please choose another name.";
 			return;
 		} # end if
@@ -34,7 +34,7 @@ sub edit {
 # Add record to audit log - action "Copy Product".
 		openprint::logs::insertLogRecord('60', "Original Product ID: " . $param{'product_id'} . " Name: " . $NewProduct->name(),);
 
-		foreach my $Price ( openprint::ProductPrice::find( 'product_id' => $param{'product_id'} ) ) {
+		foreach my $Price ( openprint::ProductPrice->find( 'product_id' => $param{'product_id'} ) ) {
 			$$Price{'product_id'} = $NewProduct->id();
 			$$Price{'id'} = undef;
 			$Price->save();
@@ -60,8 +60,8 @@ sub edit {
 
 			my $csv = Text::CSV_XS->new();
 			my $ac = sql::start_transaction( $dbh );
-			my %categories = map { $_->name(), $_ } openprint::ProductCategory::find();
-			my %products = map { $_->name(), $_ } openprint::Product::find();
+			my %categories = map { $_->name(), $_ } openprint::ProductCategory->find();
+			my %products = map { $_->name(), $_ } openprint::Product->find();
 			
 			while ( <$io> ) {
 				my $status = $csv->parse($_);
@@ -94,7 +94,7 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 	} elsif ( $param{'btnFunction'} eq 'Export Specifications' ) {
 	    my @header = ( 'Product', 'Name','Value');
 	    my @data;
-		foreach my $Product ( openprint::Product::find() ) {
+		foreach my $Product ( openprint::Product->find() ) {
 			my %specs = %{$Product->specifications()};
 			foreach my $k ( keys %specs ) {
 				push @data, $Product->name(), $k, $specs{$k};
@@ -110,7 +110,7 @@ $openprint::log->debug( "Product? $name :" . $products{$name} );
 
 			my $csv = Text::CSV_XS->new();
 			my $ac = sql::start_transaction( $dbh );
-			my %products = map { $_->name(), $_ } openprint::Product::find();
+			my %products = map { $_->name(), $_ } openprint::Product->find();
 			# Clear Specifications
 			foreach my $P ( keys %products ) {
 				$products{$P}{Specifications} = ();
@@ -142,10 +142,10 @@ sub categories {
 sub _prices {
 	my $Product = new openprint::Product( $param{'product_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		foreach my $Pricelist ( openprint::Pricelist::find() ) {
+		foreach my $Pricelist ( openprint::Pricelist->find() ) {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( 'LOCK TABLE Product_Prices IN EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-			foreach my $Price ( openprint::ProductPrice::find( 'Product' => $Product, 'Pricelist' => $Pricelist ) ) {
+			foreach my $Price ( openprint::ProductPrice->find( 'Product' => $Product, 'Pricelist' => $Pricelist ) ) {
 				if ( $param{'chk-'.$Price->id()} ) {
 					$variable{'error'} .= $Price->save({
 							'min'			=>	$param{'min-'.$Price->id()},

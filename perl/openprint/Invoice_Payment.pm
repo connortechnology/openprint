@@ -34,6 +34,7 @@ require openprint::Payment;
 );
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 
 	my $sql = 'SELECT * FROM ' . $table . ' WHERE 1>0';
@@ -95,7 +96,7 @@ sub find {
 		$log->warn("Error loading Invoice_Payment: ($sql) (@values)" . $dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$log->debug("openprint::Invoice_Payment::find($sql) (@values) " . @$data . ' records');
+		$log->debug("openprint::Invoice_Payment->find($sql) (@values) " . @$data . ' records');
 	} # end if
 	return map { new openprint::Invoice_Payment( $_->{id}, $_ ); } @$data;
 } # end sub find

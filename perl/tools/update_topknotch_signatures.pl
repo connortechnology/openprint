@@ -23,7 +23,7 @@ $sql_server{'password'} = 'topknotch';
 $dbh = sql::open_sql( $log, %sql_server );
 
 $openprint::Object::no_cache = 1;
-foreach my $Project ( openprint::Project::find('created_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -31)),'order'=>'index DESC' ) ) {
+foreach my $Project ( openprint::Project->find('created_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days(Date::Calc::Today(), -31)),'order'=>'index DESC' ) ) {
 	my $services = $Project->services();
 	if ( $$services{'UVCoating'} ) {
 		my $varnish_specs = openprint::service::get_specs_ref( $Project, $$services{'UVCoating'}[0] );

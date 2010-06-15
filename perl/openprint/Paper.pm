@@ -51,6 +51,7 @@ sub init_cache {
 
 # Returns a paper object specified by the parameters
 sub find {
+	my $self = shift;
 	my %params = @_;
 
 	my $starttime = gettimeofday() if $debug;
@@ -305,7 +306,7 @@ sub copy {
 sub prices {
 	my $self = shift;
 	if ( ! $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>shift );
+		@{$$self{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>shift );
 	} # end if
 	return @{$$self{'Prices'}};
 } # end sub prices
@@ -770,7 +771,7 @@ sub owner {
     my $self = shift;
 	my $Company;
     if ( @_ and $_[0] ) {
-		my @Companies = openprint::Company::find('name'=>$_[0]);
+		my @Companies = openprint::Company->find('name'=>$_[0]);
 		if ( ! @Companies ) {
 			$Company = new openprint::Company();
 			$Company->name( $_[0] );
@@ -897,7 +898,7 @@ sub in_stock {
 	return 0 if ! $$self{'id'};
 
 	if ( ! exists $$self{in_stock} ) {
-		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			$$self{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
@@ -918,7 +919,7 @@ sub available {
 
 	if ( ! exists $$self{available} ) {
 		$$self{available} = 0;
-		foreach my $SkidContent ( openprint::SkidContent::find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			@$self{available} += int $SkidContent->quantity();
 		} # end foreach SkidContent
@@ -930,7 +931,7 @@ sub available {
 sub skids {
     my $self = shift;
 	return 0 if ! $$self{'id'};
-	return openprint::Skid::find('paper_id'=>$$self{'id'}, 'quantity_>='=>1);
+	return openprint::Skid->find('paper_id'=>$$self{'id'}, 'quantity_>='=>1);
     #return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
@@ -1115,7 +1116,7 @@ sub wpsi {
 
 sub Prices {
 	my $self = shift;
-	return openprint::PaperPrice::find('paper_id'=>$$self{'id'}, @_ );
+	return openprint::PaperPrice->find('paper_id'=>$$self{'id'}, @_ );
 } # end sub Prices
 
 sub JDF_Media {

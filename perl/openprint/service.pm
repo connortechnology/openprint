@@ -46,7 +46,7 @@ sub init_cache {
 sub get_index_by_id {
 	my ( $id ) = @_;
 	if ( ! %cache_index_by_id ) {
-		%cache_index_by_id = map { $_->name(), $_->id() } openprint::Service::find();
+		%cache_index_by_id = map { $_->name(), $_->id() } openprint::Service->find();
 	} # end if
 	return $cache_index_by_id{$id};
 } # end sub get_index_by_id
@@ -55,7 +55,7 @@ sub get_id_by_index {
 	my ( $log, $dbh, $index ) = @_;
 
 	if ( ! %cache_id_by_index ) {
-		%cache_id_by_index = map { $_->id(), $_->name() } openprint::Service::find();
+		%cache_id_by_index = map { $_->id(), $_->name() } openprint::Service->find();
 	} # end if
 
 	return $cache_id_by_index{$index};
@@ -409,7 +409,7 @@ $openprint::log->debug("Apres Skdis");
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
 	} # end while service_type
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 		if ( $$services{$ServiceType->name()} ) {
 			foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $ServiceType->type() );

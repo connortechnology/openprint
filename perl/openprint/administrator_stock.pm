@@ -31,9 +31,9 @@ sub _stocks {
 sub list {
 	my @Papers;
 	if ( $param{'chkStock'} ) {
-		@Papers = openprint::Paper::find( 'id'=>$param{'chkStock'} );
+		@Papers = openprint::Paper->find( 'id'=>$param{'chkStock'} );
 	} elsif ( $param{'stock_ids'} ) {
-		@Papers = openprint::Paper::find( 'id'=> (ref $param{'stock_ids'} eq 'ARRAY' ? $param{'stock_ids'} : [split(',', $param{'stock_ids'} )] ) );
+		@Papers = openprint::Paper->find( 'id'=> (ref $param{'stock_ids'} eq 'ARRAY' ? $param{'stock_ids'} : [split(',', $param{'stock_ids'} )] ) );
 	} # end if
 		
 	if ( $param{'btnFunction'} eq 'Delete' ) {
@@ -176,7 +176,7 @@ sub stock {
 		$Paper->message( $param{'message'} );
 
 		@{$$Paper{'recommendations'}} = ();
-		foreach my $Type ( openprint::ProjectType::find() ) {
+		foreach my $Type ( openprint::ProjectType->find() ) {
 			push @{$$Paper{'recommendations'}}, $Type->id() if $param{'chkPRF'.$Type->id()};
 		} # end foreach
 
@@ -247,7 +247,7 @@ sub import_export {
 		my @header = ( 'ID', 'Owner','Manufacturer','Group','Name', 'Finish', 'Colour', 'Weight', 'MWeight', 'gsm','Calliper', 'Type','Width', 'Height', 'Basis Width','Basis Height', 'Grain Direction','Supplier','DoubleSided?','Cuttable?','Multiple Parts?','Perfecting','Scoring Required?','Blade Cleaning Required?','Grade','Sheets Per Package','Supplied', 'Digital','Full Packages','Minimum Order','Inventory #','Material Type','Message', 'Recommendations');
 		my @data;
 
-		foreach my $Paper ( openprint::Paper::find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
+		foreach my $Paper ( openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
 			push @data, $Paper->id(), $Paper->owner(), $Paper->manufacturer(), $Paper->group(), $Paper->name(), $Paper->finish(), $Paper->colour(), $Paper->weight(), $Paper->mweight(), $Paper->gsm(), $Paper->calliper(), $Paper->type(), $Paper->width(), $Paper->height(), $Paper->basis_width(), $Paper->basis_height(), $Paper->grain_direction(), '', $Paper->doublesided(), $Paper->cuttable(), $Paper->multipart(), $Paper->perfecting(), $Paper->score_required(), $Paper->bladecleaning(), $Paper->grade(), $Paper->sheets_per_package(), $Paper->supplied(), $Paper->digital(), $Paper->full_packages(), $Paper->minimum_order(), $Paper->inventory_number(), $Paper->material(), $Paper->message();
 			push @data, join(',', $Paper->recommendations());
 		} # end foreach
@@ -263,9 +263,9 @@ sub import_export {
 			$_ = <$io>;
 
 			my $ac = sql::start_transaction( $dbh );
-			my %project_types = map { $_->name(), $_->id() } openprint::ProjectType::find();
-			my %owners = map { $_->name(), $_->id() } openprint::Company::find();
-			my %papers = map { $_->id(), $_ } openprint::Paper::find();
+			my %project_types = map { $_->name(), $_->id() } openprint::ProjectType->find();
+			my %owners = map { $_->name(), $_->id() } openprint::Company->find();
+			my %papers = map { $_->id(), $_ } openprint::Paper->find();
 
 			my $csv = Text::CSV_XS->new();
 			while ( <$io> ) {

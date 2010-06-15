@@ -29,56 +29,6 @@ $serial = 'project_types_id_seq';
 	'sorting'		=>	undef,
 );
 
-sub find_one {
-    my @results = find( @_, 'limit', 1 );
-    if ( @results > 1 ) {
-        $openprint::log->error('ProjectType::find_one more than 1 result!');
-    } elsif ( @results ) {
-        return $results[0];
-    } # end if
-    return;
-} # end sub find_one
-
-sub find_one {
-    my @results = find( @_, 'limit', 1 );
-    if ( @results > 1 ) {
-        $openprint::log->error('ProjectType::find_one more than 1 result!');
-    } elsif ( @results ) {
-        return $results[0];
-    } # end if
-    return;
-} # end sub find_one
-
-sub find {
-	my %params = @_;
-	my @values;
-	my $sql = q{SELECT * FROM Project_Types WHERE 1>0};
-	if ( exists $params{'description'} ) {
-		$sql .= ' AND description=?';
-		push @values, $params{'description'};
-	} # end if
-	if ( exists $params{'name'} ) {
-		if ( ref $params{'name'} eq 'ARRAY' ) {
-			$sql .= q{ AND name IN (}.join(',', map {'?'} @{$params{'name'}} ).')';
-			push @values, @{$params{'name'}};
-		} else {
-			$sql .= ' AND name=?';
-			push @values, $params{'name'};
-		} # end if
-	} # end if
-	if ( $params{'category_id'} ) {
-		$sql .= ' AND category_id=?';
-		push @values, $params{'category_id'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->error("Error loading ProjectTypes: ($sql) (@values) Reason: " . $openprint::dbh->errstr() );
-		return;
-	} # end if
-	return map { new openprint::ProjectType( $_->{id}, $_ ); } @$data;
-} # end sub find
-
 sub save {
 	my ( $self, $params ) = @_;
 
@@ -156,7 +106,7 @@ sub delete {
 sub Templates {
 	my ( $self, %params ) = @_;
 	$params{'projecttype_id'} = $$self{'id'};
-	return openprint::ProjectType_Template::find(%params);
+	return openprint::ProjectType_Template->find(%params);
 } # end sub Templates
 
 1;

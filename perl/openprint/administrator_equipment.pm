@@ -24,7 +24,7 @@ use vars qw($r %variable $log $dbh %config %param );
 sub import_specs {
 	my ( $r, $Equipment ) = @_;
 
-	my %equipment = map { $_->strid(), $_->id() } openprint::Equipment::find();
+	my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
 
 	my $error = '';
 	if ( $param{'fileSpecifications'} ) {
@@ -78,7 +78,7 @@ sub export_specs {
 	my @header = ( 'Equipment ID', 'Field Name','Min', 'Max', 'Units', 'Value','Interpolate' );
 
 	my @data;
-	foreach my $Spec ( openprint::EquipmentSpecification::find( 'equipment_id'=>$Equipment->id(), 'order'=>'strName, dblmin' ) ) {
+	foreach my $Spec ( openprint::EquipmentSpecification->find( 'equipment_id'=>$Equipment->id(), 'order'=>'strName, dblmin' ) ) {
 		push @data, $Spec->Equipment()->strid(), $Spec->name(), $Spec->min(), $Spec->max(), $Spec->units(), $Spec->value(), $Spec->interpolate();
 	} # end foreach
 

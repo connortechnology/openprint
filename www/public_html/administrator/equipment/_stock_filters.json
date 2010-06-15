@@ -2,7 +2,7 @@
 	my $debug = 0;
 	$r->content_type('text/javascript');
 
-    my @papers = openprint::Paper::find(
+    my @papers = openprint::Paper->find(
             ( $param{'Selected'} eq 'Manufacturer' ? ( 'manufacturer_id'=>$param{'Manufacturer'} ) : () ),
             ( $param{'Selected'} eq 'Group' ? ( 'group_id'=>$param{'Group'} ) : ()  ),
             ( $param{'Selected'} eq 'Name' ? ( 'name_id'=> $param{'name_id'} ? $param{'name_id'} : $param{'Name'} ) : ()  ),

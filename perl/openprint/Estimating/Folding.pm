@@ -367,7 +367,7 @@ sub signature_calc {
 			push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 			push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
 			push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
-			@my_equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable} );
+			@my_equipment = openprint::Equipment->find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable} );
 		} elsif ( $debug ) {
 			$openprint::log->debug("No sheeter");
 		} # end if
@@ -797,7 +797,7 @@ $openprint::log->debug(qq`Wrong imposition: $$specs{"FoldImposition-$$sig_specs{
 						my $key = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'-'.$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"}.'out';
 						my $Fold;
 						my ( $pages ) = $$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} =~ /(\d)+Page/;
-						if ( $Fold = openprint::Fold::find_one( 
+						if ( $Fold = openprint::Fold->find_one( 
 									'imposition'	=>	$$specs{"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'type'			=>	$$specs{"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$index"},
 									'equipment_id'	=>	$Equipment->id(),
@@ -1234,7 +1234,7 @@ sub display {
 	push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
 	push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
 
-	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
+	my @equipment = openprint::Equipment->find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 } # end sub display
 

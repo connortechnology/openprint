@@ -17,7 +17,7 @@
 			$sql{'colour_id'} = $session{'/employee/inventory/available_paper.html?Colour'} if $session{'/employee/inventory/available_paper.html?Colour'};
 			$sql{'weight_id'} = $session{'/employee/inventory/available_paper.html?Weight'} if $session{'/employee/inventory/available_paper.html?Weight'};
 		} # end if
-		@{$$variable{'Papers'}} = openprint::Paper::find( %sql );
+		@{$$variable{'Papers'}} = openprint::Paper->find( %sql );
 ) ?>
 <? if ( @{$$variable{'Papers'}} ) ?>
 	<table class="List">

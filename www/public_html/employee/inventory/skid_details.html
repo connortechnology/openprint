@@ -249,7 +249,7 @@ function gsm_to_mweight( form ) {
 				<select id="ddmLocation" name="ddmLocation">
 					<option value="">select</option>
 					<? echo ( 
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $$variable{'Skid'} ? $$variable{'Skid'}->location_id() : $r->param('ddmLocation') );
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') ], $$variable{'Skid'} ? $$variable{'Skid'}->location_id() : $r->param('ddmLocation') );
 						) ?>
 				</select>
 				<? echo ( join('',
@@ -263,7 +263,7 @@ function gsm_to_mweight( form ) {
 				<label>Manifest:</label>
 				<? echo (
 					my $html = '';
-					my @ManifestContents = openprint::ManifestContent::find('skid_id'=>$$variable{'Skid'}->id() );
+					my @ManifestContents = openprint::ManifestContent->find('skid_id'=>$$variable{'Skid'}->id() );
 					foreach my $MC ( @ManifestContents ) {
 					$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%2$s</a><br/>', $MC->manifest_id(), $MC->Manifest()->name() );
 					} # end foreach MC

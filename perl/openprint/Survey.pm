@@ -22,31 +22,6 @@ $serial = 'survey_id_seq';
 	'id'		=>	undef,
 );
 
-# Returns a paper object specified by the parameters
-sub find {
-	my %params = @_;
-
-	if ( $params{'id'} ) {
-		return new openprint::Survey( $params{'id'} );
-	} else {
-		my $sql;
-		my @values;
-		$sql = q{SELECT * FROM Surveys WHERE 1>0};
-
-		if ( $params{'name'} ) {
-			$sql .= q{ AND name=?};
-			push @values, $params{'name'};
-		} # end if
-		$sql .= " OR $params{'or'}" if $params{'or'};
-		$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-
-		my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-		$openprint::log->debug("Error loading Surveys: ".DBI->errstr ) if ! $data;
-		return map { new openprint::Survey( $_->{id}, $_ ) } @$data;
-	} # end if
-} # end sub find
-
-
 sub delete {
 	my $self = shift;
 	my $ac = sql::start_transaction();
@@ -75,7 +50,7 @@ sub previous {
 sub Questions {
     my $self = shift;
     if ( ! $$self{Questions} ) {
-        @{$$self{Questions}} = openprint::SurveyQuestion::find('survey_id'=>$$self{id});
+        @{$$self{Questions}} = openprint::SurveyQuestion->find('survey_id'=>$$self{id});
     } # end if
     return @{$$self{Questions}};
 } # end sub questions

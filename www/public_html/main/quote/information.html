@@ -84,7 +84,7 @@
 						<label>Salutation:</label>
 						<input type="radio" id="BySalutationMr." name="BySalutation" value="Mr." <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Mr.' ); ) ?> />
 						<label class="radio" for="BySalutationMr.">Mr.</label>
-						<input type="radio" id="BySalutationMrs." name="BySalutation" value="Mrs" <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Mrs.' ); ) ?> />
+						<input type="radio" id="BySalutationMrs." name="BySalutation" value="Mrs." <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Mrs.' ); ) ?> />
 						<label class="radio" for="BySalutationMrs.">Mrs.</label>
 						<input type="radio" id="BySalutationMs." name="BySalutation" value="Ms." <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Ms.' ); ) ?> />
 						<label class="radio" for="BySalutationMs.">Ms.</label>
@@ -184,7 +184,7 @@
 				<input type="text" style="width: auto;" onkeyup="if(filterDDM(this, this.form.user_id))user_onchange($('user_id'));;" onkeydown="if(event.keyCode == 13){user_onchange($('user_id'));}" size="4"/>
 				<select id="user_id" name="user_id" onchange="user_onchange(this);">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)' ) ], $session{'user_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)' ) ], $session{'user_id'} ); ) ?>
 				</select>	
 			</li>
 <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
@@ -273,21 +273,41 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			</ul></div>
 		</fieldset></div>
 	<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
+		<div id="Information">
+			<fieldset><legend>Information</legend>
+				<div class="content">
+					<ul>
+						<li class="reference"> 
+							<label>Please provide a reference:</label>
+							<textarea id="reference" name="reference" rows="1" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Quote'}->reference() ) ?></textarea>
+						</li>
+						<li class="comments">
+							<label>Additional comments or instructions:</label>
+							<textarea id="comments" name="comments" rows="1" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Quote'}->comments() ) ?></textarea>
+						</li>
+					</ul>
+				</div>
+			</fieldset>
+		</div>
 	</div><!--Header-->
 
+	<? if ( openprint::ProjectType->find_one() ) ?>
 	<? if ( @{$$variable{'PROJECTS'}} == 0 ) ?>
 			No projects
 	<? else ( @{$$variable{'PROJECTS'}} == 0 ) ?>
 		<? if ( new openprint::Company($session{'company_id'})->reseller() eq 'Y' or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 		<table class="List"> 
-			<tr> 
-				<th class="projects">Project</th>
-				<th width="90">Markup %</th>
-				<th width="60" align="right">Qty</th>
-				<th width="70" align="right">Price</th>
-				<th width="115" align="right">New Price</th>
-				<th width="100" align="right">Changes</th>
-			</tr>
+			<thead>
+				<tr> 
+					<th class="projects">Project</th>
+					<th width="90">Markup %</th>
+					<th width="60" align="right">Qty</th>
+					<th width="70" align="right">Price</th>
+					<th width="115" align="right">New Price</th>
+					<th width="100" align="right">Changes</th>
+				</tr>
+			</thead>
+			<tbody>
 			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 			<? eval ( 
 				@$variable{'index','markup','qty','stdprice','newprice'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,5; 
@@ -337,6 +357,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					if changes are necessary you will be notified.
 				</td>
 			</tr>
+			</tbody>
 		</table>
 		<? else ( new openprint::Company($session{'company_id'})->reseller() eq 'Y' or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 		<table class="List">
@@ -395,11 +416,13 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		</table>
 		<? endif ( new openprint::Company($session{'company_id'})->reseller() eq 'Y' or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 		<? endif ( @{$$variable{'PROJECTS'}} == 0 ) ?>
-		<? if ( openprint::Product::find('limit'=>1) ) ?>
+		<? endif ( openprint::ProjectType->find_one() ) ?>
+
+		<? if ( openprint::Product->find_one() ) ?>
 		<fieldset><legend>Products</legend>
 			<div id="Products"><!--#include virtual="_products.html"--></div>
 		</fieldset>
-		<? endif ( openprint::Product::find('limit'=>1) ) ?>
+		<? endif ( openprint::Product->find_one() ) ?>
 		<p class="buttons">
 				<? echo ( 
 					my $html;
@@ -409,6 +432,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					) ?>
 		</p>
 		<input type="hidden" name="btnFunction"/>
+		<input type="hidden" name="quote_id" value="<? echo ( $$variable{'Quote'}->id() ) ?>" />
 	</form>
 	</div><!--Information-->
 </div><!--Quote-->

@@ -26,14 +26,14 @@ sub edit {
 	} elsif ( $openprint::param{'btnFunction'} eq '>>' ) {
 		$Service = $Service->Next( {'category_id'=>$openprint::param{'ddmSearchCategory'}} );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Delete' ) {
-		foreach my $T ( openprint::Timetrack::find('service_id'=>$Service->id() ) ) {
+		foreach my $T ( openprint::Timetrack->find('service_id'=>$Service->id() ) ) {
 			$$variable{'error'} .= sprintf('Service is used in <a href="/timetrack/edit.html?timetrack_id=%1$d">Timetrack %1$d</a><br/>', $T->id() );
 		} # end foreach T
 		$$variable{'error'} .= $Service->delete() if ! $$variable{'error'};
 		$Service = $Service->Next( {'category_id'=>$openprint::param{'ddmSearchCategory'}} ) if ! $$variable{'error'};
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		if ( $openprint::param{'new_category'} ) {
-			if ( my @Categories = openprint::ServiceCategory::find('name'=>$openprint::param{'new_category'} ) ) {
+			if ( my @Categories = openprint::ServiceCategory->find('name'=>$openprint::param{'new_category'} ) ) {
 				$openprint::param{'category_id'} = $Categories[0]->id();
 			} else {
 				my $Category = new openprint::ServiceCategory();
@@ -51,7 +51,7 @@ sub edit {
 		if ( ! $$variable{'error'} ) {
 
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $List ( openprint::Pricelist::find() ) {
+		foreach my $List ( openprint::Pricelist->find() ) {
 			my $list = $List->id();
 			my $price_set = new openprint::service_priceset( $log, $dbh, $list, $Service->id() );
 			foreach my $key ( %openprint::param ) {

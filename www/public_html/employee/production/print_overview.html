@@ -104,7 +104,7 @@
 		<ul><li><label>Presses:</label>
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
-	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
 	} # end foreach press
@@ -236,7 +236,7 @@
 			$end = 100 if $end > 100;
 			foreach ( 1 .. $end ) {
 
-				my @Shifts = openprint::Shift::find( 
+				my @Shifts = openprint::Shift->find( 
 					'equipment_id' 		=>	$E->id(),
 					'starttime_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ),
 					'starttime_end'		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', $year, $month, $day ),
@@ -244,19 +244,19 @@
 					);
 				if ( ! @Shifts ) {
 					my $NextES;
-					my $PreviousShift = openprint::Shift::find_one( 
+					my $PreviousShift = openprint::Shift->find_one( 
 							'equipment_id'	=>	$E->id(), 
 							'order'			=>	'starttime DESC'
 							);
 					if ( $PreviousShift ) {
-						$NextES = openprint::Equipment_Shift::find_one(
+						$NextES = openprint::Equipment_Shift->find_one(
 								'equipment_id'	=>	$E->id(),
 								'starttime_>='	=>	$PreviousShift->Equipment_Shift()->endtime(),
 								'order'			=>	'starttime',
 								);
 					} # end if
 					if ( ! $NextES ) {
-						$NextES = openprint::Equipment_Shift::find_one('equipment_id'=>$E->id(),'order'=>'starttime');
+						$NextES = openprint::Equipment_Shift->find_one('equipment_id'=>$E->id(),'order'=>'starttime');
 					} # end if
 					if ( $NextES ) {
 						# This adds 1, need to add until we hit the next day

@@ -39,7 +39,7 @@ sub edit {
 			$_ = <$io>;
 
 			my $csv = Text::CSV_XS->new();
-			my %categories = map { $_->name(), $_ } openprint::ProductCategory::find();
+			my %categories = map { $_->name(), $_ } openprint::ProductCategory->find();
 
 			my $ac = sql::start_transaction( $dbh );
 			while ( <$io> ) {

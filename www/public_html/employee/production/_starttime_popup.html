@@ -3,7 +3,7 @@
 	<p>
 		<label>Start Time:</p>
 		<? echo ( 
-			my @rows = openprint::press_schedule::find('id'=>$param{'id'});
+			my @rows = openprint::press_schedule->find('id'=>$param{'id'});
 			if ( @rows ) {
 				$$variable{'row'} = $rows[0];
 				return ssi::datetime_select( 'starttime', $rows[0]{'starttime'}, { 'onchange'=>q`set_rdb_value($('locked'), 1 );` } );

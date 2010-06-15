@@ -4,7 +4,7 @@
 <table cellspacing="10">
 <? echo (
 	my $html;
-	my @operators = map { $_->id(), $_->name() } openprint::User::find('type'=>'E','order'=>'lower(strlastname),lower(strfirstname)');
+	my @operators = map { $_->id(), $_->name() } openprint::User->find('type'=>'E','order'=>'lower(strlastname),lower(strfirstname)');
 	while ( @operators ) {
 		$html .= '<tr>';
 		if ( my ( $id, $name ) = splice @operators, 0, 2 ) {

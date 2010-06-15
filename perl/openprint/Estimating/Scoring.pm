@@ -235,7 +235,7 @@ sub signature_calc {
 	$Results{'Status'} = 'uncalculated';
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
-		@equipment = openprint::Equipment::find( 'id'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+		@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 		$openprint::log->debug("Overriding Equipment to: " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 	} else {
 		my @capabilities = 'Y','When Printing';
@@ -244,7 +244,7 @@ sub signature_calc {
 		push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
 		push @capabilities, 'When Stitching' if $stitching_service_index;
 		
-		@equipment = openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
+		@equipment = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
 	} # endif
 	#foreach my $E ( @equipment ) {
 		#$openprint::log->debug( "Equipment: " . $E->strid() );
@@ -403,7 +403,7 @@ $openprint::log->warn("No imposition in scoring");
 			} # end if
 		#$openprint::log->debug("Horizontal: $horizontal_rule");
 			if ( $horizontal_rule ) {
-				if ( my @Materials = openprint::Material::find('name'=>'ScoringRule') ) {
+				if ( my @Materials = openprint::Material->find('name'=>'ScoringRule') ) {
 					%horizontal_price = $Materials[0]->get_price( $horizontal_rule, $Equipment );
 					if ( sets::isin( lc $horizontal_price{'units'},['per rule','each','per score'] ) ) {
 						$horizontal_price{'Total'} = $horizontal_price{'Price'} * $horizontal_rule;
@@ -434,7 +434,7 @@ $openprint::log->warn("No imposition in scoring");
 
 			#$openprint::log->debug("Vertical: $vertical_rule");
 			if ( $vertical_rule ) {
-				if ( my @Materials = openprint::Material::find('name'=>'ScoringWheel') ) {
+				if ( my @Materials = openprint::Material->find('name'=>'ScoringWheel') ) {
 					%vertical_price = $Materials[0]->get_price( $vertical_rule, $Equipment );
 					if ( sets::isin( lc $vertical_price{'units'},['per rule','each'] ) ) {
 						$vertical_price{'Total'} = $vertical_price{'Price'} * $vertical_rule;
@@ -571,7 +571,7 @@ sub get_specs {
 	push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
 	push @capabilities, 'When Stitching' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 	
-	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );

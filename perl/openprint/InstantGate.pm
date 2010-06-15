@@ -83,7 +83,7 @@ sub create_job_file {
 		$sheets =~ s/\D//g;
 		print FH sprintf("Volume\n", $sheets );
 
-		my @schedule = openprint::press_schedule::find('project_id'=>$Project->id(),'service_id'=>$sig_id);
+		my @schedule = openprint::press_schedule->find('project_id'=>$Project->id(),'service_id'=>$sig_id);
 		my $schedule = shift @schedule;
 		
 		my ( $year, $month, $day, $hours, $minutes, $seconds ) = $$schedule{'starttime'} =~ /(\d\d\d\d)-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)/;

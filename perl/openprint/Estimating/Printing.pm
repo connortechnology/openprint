@@ -922,7 +922,7 @@ sub calc {
 			if ( $$specs{'ddmStockSheetSize'} ) {
 				@$specs{'txtWidth','txtHeight'} = split('x', $$specs{'ddmStockSheetSize'} );
 			} else {
-				my @Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+				my @Papers = openprint::Paper->find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
 						'project_type_id'=>$Project->type()->id(),
 						);
 	#$log->debug("# of papers: " . @Papers );
@@ -1062,7 +1062,7 @@ sub calc {
 			$$specs{'alert'} .= 'Please select a stock weight.';
 			return $$specs{'Status'} = 'uncalculated';
 		} # end if
-		@Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
+		@Papers = openprint::Paper->find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
 				'project_type_id'=>$Project->Type()->id(),
 				);
 # Load this here, so that later cloning will copy the prices as well.
@@ -1372,7 +1372,7 @@ $log->warn("There are no quantities!");
 				return $$specs{'Status'} = 'uncalculated';
 			} # end if
 
-			my $OverridePress = openprint::Equipment::find_one('strid'=>$$specs{'ddmPress'.$qty_index});
+			my $OverridePress = openprint::Equipment->find_one('strid'=>$$specs{'ddmPress'.$qty_index});
 			if (! $OverridePress ) {
 				$$specs{'alert'} = 'Cant find the press that you have chosen.';
 				return $$specs{'Status'} = 'uncalculated';
@@ -1466,7 +1466,7 @@ $openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
 			my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
 			if ( $do_work_turn ) {
 				# Coatings like AQ and Varnish are done in a separate pass.  So we don't count them in this check
-				my @Coatings = map { $_->name() } openprint::Service::find('category'=>'Coating');
+				my @Coatings = map { $_->name() } openprint::Service->find('category'=>'Coating');
 				if ( ! $Papers[0]->doublesided() ) {
 $openprint::log->debug("No W&T due to doublesided" . $Papers[0]->name() );
 					$do_work_turn = 0;
@@ -1784,7 +1784,7 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 		@{$impositions{''}} = ();
 		if ( 0 and $$specs{'ddmPress'.$qty_index} and ($$specs{'chkOverridePress'.$qty_index} ne 'Y') ) {
 			if ( sets::isin( $$specs{'ddmPress'.$qty_index}, map { $_->strid() } @possible_presses ) ) {
-			if ( ( my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'ddmPress'.$qty_index} ) ) ) {
+			if ( ( my @Equipment = openprint::Equipment->find( 'strid'=>$$specs{'ddmPress'.$qty_index} ) ) ) {
 				my $E = $Equipment[0];
 				if ( $impositions{$E->id()} ) {
 
@@ -2447,7 +2447,7 @@ sub get_project_price {
 	my %best_price;
 	$best_price{'Comparison Cost'} = $best_price if $best_price;
 
-	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment::find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
+	foreach my $P ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : ('', @$possible_presses) ) {
 		my $Press;
 		if ( ! $P ) {
 			if ( $impositions{''} and @{$impositions{''}} ) {
@@ -2770,7 +2770,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					$$price{'Comparison Cost'} += $SuppliedPaperPrice{'Total'};
 					$$price{'Total Cost'} += $SuppliedPaperPrice{'Total'};
 				} # end if
-			} elsif ( ! openprint::ServiceType::find('name'=>'Paper') ) {
+			} elsif ( ! openprint::ServiceType->find('name'=>'Paper') ) {
 				my %paper_price = $Paper->get_price( $$price{'Stock Weight'} );
 				$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
 				@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @paper_price{'100lb Cost', '100lb Price', 'Total'};
@@ -2788,7 +2788,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 			# plate cost basically fills in the breakdown with appropriate, discounted data
 			# This actually adds the plate costs 
 			foreach my $plate_id ( keys %PlateCounts ) {
-				if ( my $Material = openprint::Material::find_one( 'name'=>$plate_id ) ) {
+				if ( my $Material = openprint::Material->find_one( 'name'=>$plate_id ) ) {
 					my %plate_price = $Material->get_price( $PlateCounts{$plate_id}, undef );
 					$$price{'Plate Comparison Cost'} += $plate_price{'Price'} * $PlateCounts{$plate_id};
 					$$price{'Comparison Cost'} += $plate_price{'Price'} * $PlateCounts{$plate_id};
@@ -2898,7 +2898,7 @@ sub plate_cost {
 	my ( $price, $PlateCounts, $imp ) = @_;
 
 	my %plate_price;
-	if ( my @materials = openprint::Material::find( 'name'=>$$price{'Plate Costs'}{'Plate ID'} ) ) {
+	if ( my @materials = openprint::Material->find( 'name'=>$$price{'Plate Costs'}{'Plate ID'} ) ) {
 		%plate_price = $materials[0]->get_price( $$PlateCounts{$$price{'Plate Costs'}{'Plate ID'}}, undef );
 	} # end if
 	$$price{'txtPlateQuantity'} = $$price{'Plate Costs'}{'Plate Count'};
@@ -2908,7 +2908,7 @@ sub plate_cost {
 	$$price{'PlateID'} = $$price{'Plate Costs'}{'Plate ID'};
 
 	if ( $$price{'Plate Costs'}{'Blank Plates'} ) {
-		if ( my @materials = openprint::Material::find( 'name'=>'Blank'.$$price{'Plate Costs'}{'Plate ID'} ) ) {
+		if ( my @materials = openprint::Material->find( 'name'=>'Blank'.$$price{'Plate Costs'}{'Plate ID'} ) ) {
 			my %blank_plate_price = $materials[0]->get_price( $$PlateCounts{'Blank'.$$price{'Plate Costs'}{'Plate ID'}}, undef );
 			$$price{'Plate Costs'}{'Blank Price'} = $blank_plate_price{'Price'};
 		} # end if
@@ -3429,7 +3429,7 @@ sub calc_price {
 		} # end if
 		if ( ! %ink_price ) {
 #$openprint::log->debug("Getting price for $colour");
-			if ( my @Materials = openprint::Material::find('name'=>$colour) ) {
+			if ( my @Materials = openprint::Material->find('name'=>$colour) ) {
 #$openprint::log->debug("Got price for $colour");
 				$InkMaterial = $Materials[0];
 				%ink_price = $Materials[0]->get_price( undef, $Press );
@@ -3794,11 +3794,11 @@ sub select_presses {
 			$varnish = 1;
 		} # end if
 	} # end if
-	my @Coatings = map { $_->name() } openprint::Service::find('category'=>'Coating');
+	my @Coatings = map { $_->name() } openprint::Service->find('category'=>'Coating');
 	my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
 	my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );
 
-	foreach my $Press ( openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
+	foreach my $Press ( openprint::Equipment->find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
 		my $press_id = $Press->id();
 
 		if ( $$specs{'ScreenType'} eq 'FM' and $Press->specification('FM Screening Capable') ne 'Y' ) {
@@ -3994,12 +3994,12 @@ sub get_varnish_run_price {
 			} # end if
 			$area = $Imposition->layout_area();
 		} # end if
-		if ( my @materials = openprint::Material::find('name'=>$colour) ) {
+		if ( my @materials = openprint::Material->find('name'=>$colour) ) {
 			%price = $materials[0]->get_price( undef, $Press );
 		} # end if
 		if ( ! %price ) {
 			$colour = 'Varnish';
-			if ( my @materials = openprint::Material::find('name'=>$colour) ) {
+			if ( my @materials = openprint::Material->find('name'=>$colour) ) {
 				%price = $materials[0]->get_price( undef, $Press );
 			} # end if
 		} # end if
@@ -4018,7 +4018,7 @@ sub get_varnish_run_price {
 			my $grade = $Imposition->Paper()->grade();
 			$grade = 4 if ! $grade;
 
-			if ( my @Materials = openprint::Material::find('name'=>$colour) ) {
+			if ( my @Materials = openprint::Material->find('name'=>$colour) ) {
 				my $Material = $Materials[0];
 				my $coverage = $Material->specification('Coverage', $grade);
 				my $qty = ceil( $area*$impressions/$coverage ) if $coverage;
@@ -4361,7 +4361,7 @@ sub runtime {
 	my %time;
 
 	if ( ! $Equipment ) {
-		$Equipment = openprint::Equipment::find_one( 'strid'=>$$specs{'UsePress'} );
+		$Equipment = openprint::Equipment->find_one( 'strid'=>$$specs{'UsePress'} );
 		if ( ! $$specs{'UsePress'} ) {
 			$$specs{'UsePress'} = $$specs{'ddmPress'.$qty_index};
 		} # end if
@@ -4371,7 +4371,7 @@ sub runtime {
 		return %time;
 	} # end if
 
-	my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'UsePress'} );
+	my @Equipment = openprint::Equipment->find( 'strid'=>$$specs{'UsePress'} );
 	my $Equipment = shift @Equipment;
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
@@ -4409,7 +4409,7 @@ sub runspeed {
 			$openprint::log->error( "No equipmnet in sig for qty $qty_index" );
 			return;
 		} # end if
-		$Equipment = openprint::Equipment::find_one('strid'=>$equipment_name);
+		$Equipment = openprint::Equipment->find_one('strid'=>$equipment_name);
 		if ( ! $Equipment ) {
 			$openprint::log->error( "Equipment $equipment_name not found in runspeed" );
 			return;

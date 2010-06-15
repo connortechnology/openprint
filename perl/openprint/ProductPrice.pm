@@ -47,45 +47,6 @@ $serial = 'product_prices_id_seq';
 
 my $debug = 0;
 
-sub find {
-	my %params = @_;
-
-	my @values;
-	my $sql = q{SELECT * FROM Product_Prices WHERE 1>0};
-	if ( $params{'id'} ) {
-		$sql .= q{ AND id=?};
-		push @values, $params{'id'};
-	} # end if
-
-	if ( $params{'Product'} ) {
-		$sql .= q{ AND product_id=?};
-		push @values, $params{'Product'}->id();
-	} # end if
-	if ( $params{'product_id'} ) {
-		$sql .= q{ AND product_id=?};
-		push @values, $params{'product_id'};
-	} # end if
-	if ( $params{'Pricelist'} ) {
-		$sql .= q{ AND pricelist_id=?};
-		push @values, $params{'Pricelist'}->id();
-	} # end if
-	if ( $params{'pricelist_id'} ) {
-		$sql .= q{ AND pricelist_id=?};
-		push @values, $params{'pricelist_id'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-
-	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-    if ( ! $data ) {
-        $log->warn("Error loading ProductPrice: ($sql) (@values)" . $dbh->errstr );
-        return;
-    } elsif ($debug ) {
-        $log->debug("openprint::ProductPrice::find($sql) (@values)");
-    } # end if
-    return map { new openprint::ProductPrice( $_->{id}, $_ ); } @$data;
-
-} # end sub find
-
 sub Product {
     my $self = shift;
 	if ( @_ ) {

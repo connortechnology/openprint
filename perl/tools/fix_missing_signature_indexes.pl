@@ -27,7 +27,7 @@ $openprint::Object::no_cache = 1;
 
 $dbh = sql::open_sql( $log, %sql_server );
 
-foreach my $Project ( openprint::Project::find( 'created_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -90 ) ), 'order'=>'index desc' ) ) {
+foreach my $Project ( openprint::Project->find( 'created_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -90 ) ), 'order'=>'index desc' ) ) {
 	foreach my $sig_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		if ( $$sig_specs{'SignatureIndex'} eq '' ) {

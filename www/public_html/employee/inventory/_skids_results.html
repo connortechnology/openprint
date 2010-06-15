@@ -6,17 +6,17 @@
 		@session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'} = Date::Calc::Today();
 	} # end if
 	if ( $session{'/employee/inventory/skids.html?Docket'} ) {
-		@{$$variable{'Skids'}} = openprint::Skid::find( 
+		@{$$variable{'Skids'}} = openprint::Skid->find( 
 			'allocated_to_docket'	=>	$session{'/employee/inventory/skids.html?Docket'},
 			'order'		=>	'id',
 			);
 	} elsif ( $session{'/employee/inventory/skids.html?verification_code'} ) {
-		@{$$variable{'Skids'}} = openprint::Skid::find( 
+		@{$$variable{'Skids'}} = openprint::Skid->find( 
 			'verification_code'	=>	$session{'/employee/inventory/skids.html?verification_code'},
 			'order'		=>	'id',
 			);
 	} else {
-	@{$$variable{'Skids'}} = openprint::Skid::find( 
+	@{$$variable{'Skids'}} = openprint::Skid->find( 
 		'owner_id'	=>	( defined $session{'/employee/inventory/skids.html?Owner'} ? $session{'/employee/inventory/skids.html?Owner'} : undef ),
 		'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
 			'/employee/inventory/skids.html?created_on_start_year',
@@ -85,7 +85,7 @@
                 } # end foreach
                 next if ! $iftype;
 
-				my @Allocations = openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'order'=>'created_on');
+				my @Allocations = openprint::PaperAllocation->find('skid_id'=>$Skid->id(),'order'=>'created_on');
 				if ( $session{'/employee/inventory/skids.html?allocated'} ) {
 					if ( $session{'/employee/inventory/skids.html?allocated'} eq 'Y' ) {
 						next if ! @Allocations;

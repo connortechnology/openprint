@@ -47,7 +47,7 @@ sub calc {
 
 	my $pockets = 1 + $$specs{'Inserts'};
 
-	my @Equipment = openprint::Equipment::find('strid'=>'PolyBagger');
+	my @Equipment = openprint::Equipment->find('strid'=>'PolyBagger');
 	if ( ! @Equipment ) {
 		$$specs{'alert'} .= 'No PolyBagger in equipment list.';
 		return $$specs{'Status'} = 'uncalculated';

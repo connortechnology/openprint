@@ -50,7 +50,7 @@ display: none;
 		<label>Label:</label>
 		<select id="type_id" name="type_id" size="1" onchange="load(this.form);">
 			<option value=""> select </option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::LabelType::find('order'=>'lower(name)') ] ); ) ?>
+			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::LabelType->find('order'=>'lower(name)') ] ); ) ?>
 		</select>
 		<? echo ( ssi::writeButton( $log, $dbh, 'Refresh','refresh.gif', q{load( $('f1') );}, '', 'Refresh' ); ) ?>
 	</p>

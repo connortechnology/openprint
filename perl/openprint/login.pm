@@ -55,14 +55,14 @@ sub verify_login {
 	# doing it this way allows for multiple accounts with the same email address, identified by their password.
 	# however, on user registration, we enforce the uniqueness of email addresses.	Also, the db should have a UNIQUE
 	# attribute on the strEmail field.
-	my @Users = openprint::User::find('email'=>$email, 'password'=>$password);
+	my @Users = openprint::User->find('email'=>$email, 'password'=>$password);
 
 	if ( ! @Users ) {
 		# user not found.	Let's see if we got the password wrong, or the email wrong.
-		if ( @Users = openprint::User::find('email'=>$email) ) {
+		if ( @Users = openprint::User->find('email'=>$email) ) {
 			$$variable{'information'} = "The password you entered was not correct.	Please try again.";
 			openprint::logs::insertLogRecord(78,'Invalid Password', $Users[0]->id() );
-		} elsif ( @Users = openprint::User::find('email'=>$email,'deleted'=>1) ) {
+		} elsif ( @Users = openprint::User->find('email'=>$email,'deleted'=>1) ) {
 			$$variable{'information'} = "\"$email\" Has been deleted.  Please contact us to have your account re-instated.";
 			openprint::logs::insertLogRecord(78,'Account Deleted', $Users[0]->id() );
 		} else {
@@ -192,7 +192,7 @@ sub email_password {
 
 	my $email = lc $openprint::param{'txtEmail2'};
 
-	my @Users = openprint::User::find('email'=>$email);
+	my @Users = openprint::User->find('email'=>$email);
 
 	if ( ! @Users ) {
 		return misc::error( $log, $dbh, $variable, 'Account doesn\'t exist.', 'The account you entered does not exist.' );

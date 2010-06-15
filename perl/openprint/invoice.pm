@@ -66,7 +66,7 @@ sub history {
 
 		my ($subtotal, $federaltax_total, $interest_total, $total, $owing_total );
 
-		foreach my $Invoice ( openprint::Invoice::find( 
+		foreach my $Invoice ( openprint::Invoice->find( 
 					'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ),
 					'created_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'created_on_end_year','created_on_end_month','created_on_end_day'} ),
 					'due_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'due_on_start_year','due_on_start_month','due_on_start_day'} ),
@@ -161,19 +161,19 @@ sub view {
 			my $date_string = sprintf('%4d-%.2d-%.2d', $year, $month, $day);
 
 			# The point is to calculate howmuch has beenpaidby this point
-			foreach my $P ( openprint::Invoice_Payment::find('invoice_id'=>$variable{'Invoice'}->id(), 'received_on_>'=>$last_period, 'received_on_end'=>$date_string )) {
+			foreach my $P ( openprint::Invoice_Payment->find('invoice_id'=>$variable{'Invoice'}->id(), 'received_on_>'=>$last_period, 'received_on_end'=>$date_string )) {
 				$paid += $P->amount();
 			} # end foreach
 $log->debug("Paid: $paid");
 			# Includes tax
 			my $total = $variable{'Invoice'}->total();
-			foreach my $I ( openprint::Invoice_Interest::find('invoice_id'=>$variable{'Invoice'}->id(), 'compounded_on_<'=>$date_string )) {
+			foreach my $I ( openprint::Invoice_Interest->find('invoice_id'=>$variable{'Invoice'}->id(), 'compounded_on_<'=>$date_string )) {
 				$total += $I->amount();
 			} # end foreach InvoiceInterest
 $log->debug("Total: $total");
 
 			if ( $total - $paid > 0 ) {
-				if ( ! openprint::Invoice_Interest::find('invoice_id'=>$variable{'Invoice'}->id(), 'compounded_on'=>$date_string ) ) {
+				if ( ! openprint::Invoice_Interest->find('invoice_id'=>$variable{'Invoice'}->id(), 'compounded_on'=>$date_string ) ) {
 					my $I = new openprint::Invoice_Interest();
 					$_ = $I->save({
 							'invoice_id'=>$variable{'Invoice'}->id(),

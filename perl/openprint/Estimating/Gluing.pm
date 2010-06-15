@@ -151,7 +151,7 @@ $log->debug("GLUING!!!!!!!!!!!!!!!!!!");
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Service: \$\%.2f \%s = \$\%.2f<br/>", @servicePrice{'Price','units','Total'} );
 			} # end if
 			$price = $makeReadyPrice + $servicePrice{'Total'};
-			if ( my @Materials = openprint::Material::find('name'=>'Glue') ) {
+			if ( my @Materials = openprint::Material->find('name'=>'Glue') ) {
 				my %materialPrice = $Materials[0]->get_price( $$specs{"txtArea-$$sig_specs{SignatureIndex}"}, undef );
 				if ( %materialPrice ) {
 					$materialPrice{'Total'} = $materialPrice{'Price'} * $$specs{"txtArea-$$sig_specs{SignatureIndex}"} * $qty;

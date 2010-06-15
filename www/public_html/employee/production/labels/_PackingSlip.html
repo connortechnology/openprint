@@ -49,7 +49,7 @@
 		if ( $$variable{'Project'} ) {
 			$html .= $$variable{'Project'}->reference();
 		} elsif( $$variable{'docket'} ) {	
-			if ( my @Orders = openprint::Order::find('docket'=>$$variable{'docket'}) ) {
+			if ( my @Orders = openprint::Order->find('docket'=>$$variable{'docket'}) ) {
 				foreach my $Project ( $Orders[0]->Projects() ) {
 					$html .= $Project->reference() ."\n";
 				} # end foreach Project

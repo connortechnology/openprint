@@ -27,7 +27,7 @@
 				<select name="ddmEmployee" size="1" onchange="load_projects(this.form);">
 					<option value="">All Employees</option>
 	<? echo (
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(FirstName),lower(lastname)' ) ], $param{'ddmEmployee'} );
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>['E','A'], 'order'=>'lower(FirstName),lower(lastname)' ) ], $param{'ddmEmployee'} );
 	)?>
 				</select>
 		</p>
@@ -36,7 +36,7 @@
 			<select name="ddmPress">
 				<option value="">All Presses</option>
 <? echo (
-	ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $param{'ddmPress'} );
+	ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing', 'order'=>'lower(strid)' ) ], $param{'ddmPress'} );
 ) ?>
 			</select>
 		</p>

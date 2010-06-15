@@ -14,7 +14,7 @@
 				my %Entries;
 				my $rowclass;
 
-				foreach my $PI ( openprint::PaperInventory::find('docket'=>$$variable{'Project'}->docket(), 'order'=>'updated_on' ) ) {
+				foreach my $PI ( openprint::PaperInventory->find('docket'=>$$variable{'Project'}->docket(), 'order'=>'updated_on' ) ) {
 					push @{$Entries{$PI->paper_id()}}, $PI;
 				} # end foreach PI
 				foreach my $paper_id ( keys %Entries ) {

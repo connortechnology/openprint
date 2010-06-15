@@ -86,13 +86,9 @@ $serial = 'companies_id_seq';
 
 my $debug = 0;
 
-sub find_one {
-	my @results = find( @_ );
-	return $results[0] if @results;
-} # end sub find_one
-
 # Returns a paper object specified by the parameters
 sub find {
+	my $self = shift;
 	my %params = @_;
 
 	my $sql;
@@ -198,30 +194,30 @@ sub destroy {
 	sql::execute( undef, undef, 'DELETE FROM Company_Credit WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM CreditApplications WHERE Company_Id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM Companies_in_Marketing_Categories WHERE Company_Id=?', $$self{'id'} );
-	foreach my $Payment ( openprint::Payment::find('recipient_id'=>$$self{id}) ) {
+	foreach my $Payment ( openprint::Payment->find('recipient_id'=>$$self{id}) ) {
 		$Payment->delete();
 	} # end foreach Payment
 	sql::execute( undef, undef, 'DELETE FROM Complaints WHERE company_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM survey_responses WHERE company_id=?', $$self{'id'} );
 	sql::execute( undef, undef, 'DELETE FROM log WHERE company_id=?', $$self{'id'} );
 
-	foreach my $Paper ( openprint::Paper::find('owner_id'=>$$self{'id'} ) ) {
+	foreach my $Paper ( openprint::Paper->find('owner_id'=>$$self{'id'} ) ) {
 		$Paper->delete();
 	} # end foreach
 
-	foreach my $Quote ( openprint::Quote::find('company_id'=>$$self{'id'} ) ) {
+	foreach my $Quote ( openprint::Quote->find('company_id'=>$$self{'id'} ) ) {
 		$Quote->delete();	
 	} # end foreach
-	foreach my $Order ( openprint::Order::find('company_id'=>$$self{'id'} ) ) {
+	foreach my $Order ( openprint::Order->find('company_id'=>$$self{'id'} ) ) {
 		$Order->delete();	
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Order_log WHERE Company_Id=?', $$self{'id'} );
-	foreach my $Project ( openprint::Project::find('company_id'=>$$self{'id'} ) ) {
+	foreach my $Project ( openprint::Project->find('company_id'=>$$self{'id'} ) ) {
 		$Project->delete();	
 		last if $dbh->errstr();
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Project_log WHERE Company_Id=?', $$self{'id'} );
-	foreach my $User ( openprint::User::find('company_id'=>$$self{'id'} ) ) {
+	foreach my $User ( openprint::User->find('company_id'=>$$self{'id'} ) ) {
 		$User->delete();
 	} # end foreach
 	sql::execute( undef, undef, 'DELETE FROM Companies WHERE id=?',$$self{'id'} );
@@ -356,7 +352,7 @@ sub CSR {
 
 sub Users {
 	my $self = shift;
-	return openprint::User::find('company_id'=>$$self{'id'} );
+	return openprint::User->find('company_id'=>$$self{'id'} );
 } # end sub Users
 sub taxexempt1 {
 	return $_[0]{gst_exempt};
@@ -388,7 +384,7 @@ sub start_year {
 sub AccountingContacts {
 	my ( $self ) = @_;
 
-	return openprint::User::find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{'id'} )] );
+	return openprint::User->find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?',$$self{'id'} )] );
 } # end sub AccountingContacts
 
 sub get_shipping_address {

@@ -5,7 +5,7 @@
 			<select name="ddmProjectType" onchange="form.btnFunction.value='';f1.submit();"/>
 				<option value="">select one</option>
 				<? echo ( 
-						ssi::make_drop_down( [ map { $_->id(), ssi::htmlize($_->description()) } openprint::ProjectType::find('order'=>'lower(name)') ], $param{'ddmProjectType'} );
+						ssi::make_drop_down( [ map { $_->id(), ssi::htmlize($_->description()) } openprint::ProjectType->find('order'=>'lower(name)') ], $param{'ddmProjectType'} );
 						) ?>
 			</select>
 		</p>
@@ -42,7 +42,7 @@
 			<select id="category_id" name="category_id">
 				<option value=""> none </option>
 				<? echo (
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectTypeCategory::find('order'=>'lower(name)') ], $$variable{'ProjectType'}->category_id() );
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectTypeCategory->find('order'=>'lower(name)') ], $$variable{'ProjectType'}->category_id() );
 			) ?>
 			</select>
 		</p>
@@ -61,7 +61,7 @@
 			<select multiple="multiple" id="required_services" name="required_services" size="4">
 <? echo (
 		return ssi::make_drop_down(
-			[ map { $_->id(), $_->name() } openprint::ServiceType::find('order'=>'lower(name)') ],
+			[ map { $_->id(), $_->name() } openprint::ServiceType->find('order'=>'lower(name)') ],
 			[ $$variable{'ProjectType'}->required_services() ]
 			);
 ) ?>

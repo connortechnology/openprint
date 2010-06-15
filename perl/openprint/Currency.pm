@@ -38,40 +38,6 @@ sub get {
 	return;
 } # end sub get
 
-sub find {
-	my %params = @_;
-	my $sql = 'SELECT * FROM Currencies WHERE 1>0';
-	my @values;
-	if ( $params{'id'} ) {
-		$sql .= ' AND id=?';
-		push @values, $params{'id'};
-	} # end if
-	if ( $params{'short'} ) {
-		$sql .= ' AND short=?';
-		push @values, $params{'short'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-	$sql .= " LIMIT $params{'limit'}" if ( $params{'limit'} );
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->error("Error loading Currencies: ($sql) (@values)");
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Currencies: ($sql) (@values) " . @$data );
-	} # end if
-	return map { new openprint::Currency( $_->{id}, $_ ) } @$data;
-} # end sub find
-
-sub values {
-	my $self = shift;
-	my @results;
-	foreach ( @_ ) {
-		push @results, $$self{lc $_};
-	} # end foreach
-	return @results;
-} # end sub values
-
 sub conversions {
 	my ( $self, $to ) = @_;
 	return 1 if $$self{id} == $to;
@@ -154,7 +120,7 @@ sub get_current {
 	} # end if
 	if ( ! $openprint::session{'Currency_id'} ) {
 		if ( $openprint::config{'Currency'} ) {
-			my @Currencies = openprint::Currency::find('short'=>$openprint::config{'Currency'});
+			my @Currencies = openprint::Currency->find('short'=>$openprint::config{'Currency'});
 			if ( @Currencies ) {
 				$openprint::session{'Currency_id'} = $Currencies[0]->id();
 			} # end if
@@ -187,4 +153,3 @@ sub format {
 1;
 
 __END__
-

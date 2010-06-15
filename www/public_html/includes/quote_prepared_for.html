@@ -32,9 +32,11 @@
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_fax() ); ) ?>
 	</li>
 	<? endif ( $$variable{'Quote'}->for_fax() ) ?>
+	<? if ( $$variable{'Quote'}->for_email() ) ?>
 	<li><label>Email:</label>
 		<? echo ( ssi::htmlize( $$variable{'Quote'}->for_email() ).'<br/>' if $$variable{'Quote'}->for_email(); ) ?>
 	</li>
+	<? endif ( $$variable{'Quote'}->for_email() ) ?>
 			</ul>
 		</div>
 	</fieldset>

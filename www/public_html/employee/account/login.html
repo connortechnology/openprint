@@ -4,7 +4,7 @@
 
 	<? echo (
 			my $html;
-			foreach my $User ( openprint::User::find( 'type' => ['A','E'] ) ) {
+			foreach my $User ( openprint::User->find( 'type' => ['A','E'] ) ) {
 				$html .= sprintf( qq{	emails_by_id[%d] = '%s';\n}, $User->id(), $User->email() );
 				$html .= sprintf( qq{	ids_by_email['%s'] = %d;\n}, $User->email(), $User->id() );
 			} # end foreach

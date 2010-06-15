@@ -51,6 +51,7 @@ $serial = 'skid_id_seq';
 );
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	my @values;
 
@@ -156,7 +157,7 @@ sub copy {
 
 	foreach my $C ( $self->Contents() ) {
 		$C->Paper()->add_inventory( $new->id(), $C->quantity() );
-		foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id()) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id()) ) {
 			$C->Paper()->allocate( $new, $PA->project_id(), $PA->quantity(), $PA->units(), $PA->reason() );
 		} # end while
 	} # end foreach Content
@@ -306,9 +307,9 @@ sub Contents {
 	if ( @_ ) {
 		my %params = @_;
 		$params{'skid_id'} = $$self{'id'};
-		return openprint::SkidContent::find( %params );
+		return openprint::SkidContent->find( %params );
 	} elsif ( ! $$self{'Contents'} ) {
-		@{$$self{'Contents'}} = openprint::SkidContent::find( 'skid_id'=>$$self{'id'} );
+		@{$$self{'Contents'}} = openprint::SkidContent->find( 'skid_id'=>$$self{'id'} );
 	} # end if
 	return @{$$self{'Contents'}};
 } # end sub contents
@@ -316,7 +317,7 @@ sub Contents {
 sub allocation {
 	my ( $self, %options ) = @_;
 	if ( $options{'Paper'} ) {
-		my $allocated = misc::sum( map { $_->quantity() } openprint::PaperAllocation::find('skid_id'=>$$self{'id'},'paper_id'=>$options{'Paper'}->{id}) );
+		my $allocated = misc::sum( map { $_->quantity() } openprint::PaperAllocation->find('skid_id'=>$$self{'id'},'paper_id'=>$options{'Paper'}->{id}) );
 		return $allocated;
 	} # end if
 } # end sub allocatiosn
@@ -334,9 +335,9 @@ sub allocateable {
 # Checkout all paper on the skid
 sub checkout {
 	my ( $self, $c ) = @_;
-	my @contents = openprint::SkidContent::find('skid_id'=>$$self{id});
+	my @contents = openprint::SkidContent->find('skid_id'=>$$self{id});
 	if ( ! @contents ) {
-		if ( ! openprint::PaperInventory::find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
+		if ( ! openprint::PaperInventory->find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
 			my $PI = new openprint::PaperInventory();
 			my $e = $PI->save({
 					'paper_id'	=>	undef,
@@ -353,7 +354,7 @@ sub checkout {
 	} # end if
 
 	foreach my $C ( @contents ) {
-		if ( ! openprint::PaperInventory::find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
+		if ( ! openprint::PaperInventory->find( 'skid_id'=>$$self{'id'}, 'comment_like'=>'Checked out%' ) ) {
 			my $PA = openprint::PaperAllocation->find_one('skid_id'=>$$self{'id'}, 'paper_id'=>$C->paper_id());
 			my $desc = 'Checked out' . ($PA->project_id() ? ' for docket ' . $PA->Project()->docket() : '');
 			my $PI = new openprint::PaperInventory();
@@ -483,7 +484,7 @@ sub age_days {
 
 sub Manifest {
 	my $self = $_[0];
-	foreach my $MC ( openprint::ManifestContent::find('skid_id'=>$$self{id}) ) {
+	foreach my $MC ( openprint::ManifestContent->find('skid_id'=>$$self{id}) ) {
 		return $MC->Manifest();
 	} # end foreach MC
 	return new openprint::Manifest();
@@ -491,7 +492,7 @@ sub Manifest {
 
 sub ManifestContents {
 	my $self = $_[0];
-	return openprint::ManifestContent::find('skid_id'=>$$self{id});
+	return openprint::ManifestContent->find('skid_id'=>$$self{id});
 } # end sub ManifestContents
 
 1;

@@ -29,7 +29,7 @@ sub edit {
 		$Material = $Material->Next( 'category_id'=>$openprint::param{'ddmSearchCategory'} );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
 		if ( $openprint::param{'new_category'} ) {
-			if ( my @Categories = openprint::MaterialCategory::find('name'=>$openprint::param{'new_category'} ) ) {
+			if ( my @Categories = openprint::MaterialCategory->find('name'=>$openprint::param{'new_category'} ) ) {
 				$openprint::param{'category_id'} = $Categories[0]->id();
 			} else {
 				my $Category = new openprint::MaterialCategory();
@@ -44,7 +44,7 @@ sub edit {
 		} # end if
 		$Material->save( \%openprint::param );
 		my $ac = sql::start_transaction( $dbh );
-		foreach my $List ( openprint::Pricelist::find( 'id'=>$openprint::param{'ddmPriceList'} ) ) {
+		foreach my $List ( openprint::Pricelist->find( 'id'=>$openprint::param{'ddmPriceList'} ) ) {
 			my $list = $List->id();
 			my $price_set = new openprint::material_priceset( $log, $dbh, $list, $Material->id() );
 			foreach my $key ( %openprint::param ) {

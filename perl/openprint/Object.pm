@@ -262,15 +262,82 @@ sub find {
     my @values;
 
     foreach my $k ( keys %params ) {
-        next if sets::isin( $k,[ 'order','limit' ] );
+        next if sets::isin( $k,[ 'order','limit','or' ] );
+		next if ! $fields{$k};
         if ( ref $params{$k} eq 'ARRAY' ) {
             $sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
             push @values, @{$params{$k}};
-        } else {
+        } elsif ( ! defined $params{$k} ) {
+            $sql .= " AND $fields{$k} IS NULL";
+		} else {
             $sql .= " AND $fields{$k}=?";
             push @values, $params{$k};
         } # end if
+		delete $params{$k};
     } # end foreach k
+	if ( %params ) {
+		foreach my $k ( keys %fields ) {
+			if ( exists $params{$k.'_like'} ) {
+				$sql .= " AND $fields{$k} LIKE ?";
+				push @values, $params{$k};
+				delete $params{$k.'_like'};
+			} 
+			if ( exists $params{$k.'_start'} ) {
+				$sql .= " AND $fields{$k} >= ?";
+				push @values, $params{$k};
+				delete $params{$k.'_start'};
+			} 
+			if ( exists $params{$k.'_end'} ) {
+				$sql .= " AND $fields{$k} <= ?";
+				push @values, $params{$k};
+				delete $params{$k.'_end'};
+			} # end if
+			if ( exists $params{$k.'_<'} ) {
+				$sql .= " AND $fields{$k} < ?";
+				push @values, $params{$k};
+				delete $params{$k.'_<'};
+			} # end if
+			if ( exists $params{$k.'_<='} ) {
+				$sql .= " AND $fields{$k} <= ?";
+				push @values, $params{$k};
+				delete $params{$k.'_<='};
+			} # end if
+			if ( exists $params{$k.'_>='} ) {
+				$sql .= " AND $fields{$k} >= ?";
+				push @values, $params{$k};
+				delete $params{$k.'_>='};
+			} # end if
+			if ( exists $params{$k.'_>'} ) {
+				$sql .= " AND $fields{$k} > ?";
+				push @values, $params{$k};
+				delete $params{$k.'_>'};
+			} # end if
+			if ( exists $params{$k.'_lc'} ) {
+				$sql .= " AND lower($fields{$k}) = ?";
+				push @values, lc $params{$k};
+				delete $params{$k.'_lc'};
+			} # end if
+		} # end foreach
+	} # end if
+
+	# Check for Object references
+	if ( %params ) {
+		foreach my $k ( keys %params ) {
+			my $f = (lc $k).'_id';
+			if ( exists $fields{$f} ) {
+				$sql .= " AND $fields{$f} = ?";
+				push @values, $params{$k}->id();
+				delete $params{$k};
+			} # end if
+		} # end foreach
+	} # end if
+
+	if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
+        $sql .= ' AND (deleted=? OR deleted IS NULL)';
+        push @values, 0;
+    } # end if
+
+	$sql .= " OR $params{'or'}" if $params{'or'};
     $sql .= " ORDER BY $params{'order'}" if $params{'order'};
     $sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 
@@ -282,7 +349,7 @@ sub find {
     } elsif ( eval "$type::debug" ) {
         $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
     } # end if
-    return map { $type->new( $_->{index}, $_ ) } @$data;
+    return map { $type->new( $_->{id}, $_ ) } @$data;
 } # end sub find
 
 sub find_one {

@@ -16,49 +16,35 @@ require configuration;
 require openprint::logs;
 require openprint::EmailTemplate;
 
-my @Fields = (
-	'id',
-	'name',
-	'query',
-	'interval',
-	'active',
-	'timestosend',
-	'timeofday',
-	'email_subject',
-	'email_from',
-	'email_text',
-	'attachments',
-	'lastrun',
-	'created_on',
-	'updated_on',
-	'template_id',
+use vars qw( $table $serial %fields %transforms %defaults );
+$table = 'emailcampaigns';
+$serial = 'emailcampaign_id_seq';
+
+%fields = (
+	'id'	=>	'id',
+	'name'	=>	'name',
+	'query'	=>	'query',
+	'interval'	=>	'interval',
+	'active'	=>	'active',
+	'timestosend'	=>	'timestosend',
+	'timeofday'		=>	'timeofday',
+	'email_subject'	=>	'email_subject',
+	'email_from'	=>	'email_from',
+	'email_text'	=>	'email_text',
+	'attachments'	=>	'attachments',
+	'lastrun'		=>	'lastrun',
+	'created_on'	=>	'created_on',
+	'updated_on'	=>	'updated_on',
+	'template_id'	=>	'template_id',
 );
 
-my %Defaults = (
+%defaults = (
 	'lastrun'	=> 'NOW()',
 	'interval'	=> undef,
 	'timeofday'	=> undef,
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 );
-
-sub find {
-	my %params = @_;
-	my $sql = q{SELECT * FROM EmailCampaigns WHERE 1>0};
-	my @values;
-	if ( $params{'active'} ) {
-		$sql .= ' AND active=?';
-		push @values, $params{'active'};
-	} # end if
-	if ( $params{'misc'} ) {
-		$sql .= " AND ($params{'misc'})";
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	$openprint::log->debug("Error EmailCampaign::find ($sql) " . DBI->errstr ) if ! $data;
-	return map { new openprint::EmailCampaign( $_->{id}, $_ ); } @$data;
-	
-} # end sub find
 
 sub delete {
 	my $self = shift;
@@ -70,48 +56,6 @@ sub delete {
 	
 	openprint::logs::insertLogRecord('7', "Campaign ID: " . $self->{'id'} . " Campaign Name: "  . $self->{'name'},);
 } # end sub delete
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::EmailCampaign();
-	@$new{keys %$self} = @$self{keys %$self};	
-	$new->name( 'Copy of ' . $$self{'name'} );
-	delete $$new{id};
-	return $new;
-} # end sub copy
-
-sub save {
-	my ( $self, $hash ) = @_;
-
-	foreach ( @Fields ) {
-		$$self{$_} = $$hash{$_} if $hash and exists $$hash{$_};
-		$$self{$_} = $Defaults{$_} if ! $$self{$_};
-	} # end if
-
-	if ( ! $$self{id} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('EmailCampaign_Id_seq')} );
-		sql::insert( undef, undef, 'EmailCampaigns', map { $_, $self->{$_} } @Fields );
-	} else {
-		sql::update( undef, undef, 'EmailCampaigns', ['id=?',$$self{id}],
-					map { $_, $self->{$_}; } @Fields
-					);
-	} # end if
-	$self->load();
-} # end sub save
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM emailCampaigns WHERE id=?}, {}, $$self{'id'} );
-		if ( ! $data ) {
-			$openprint::log->error( "Failure to load Email Campaign $$self{'id'}: Reason: " . $openprint::dbh->errstr );
-			return;
-		} # end if
-	} # end if
-	foreach my $key ( keys %{$data} ) {
-		$$self{$key} = $$data{$key};
-	} # end foreach
-} # end sub load
 
 sub get_user_detail {
 	my ( $user_id, $replacements) = @_;

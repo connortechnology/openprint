@@ -30,31 +30,6 @@ $serial = 'ProductionFeedback_id_seq';
 	'service_id'	=> [ 's/\D//g' ],
 	'user_id'		=> [ 's/\D//g' ],
 );
-sub find {
-	my %params = @_;
-
-	my $sql = 'SELECT * FROM ProductionFeedback WHERE 1>0';
-	my @values;
-
-	if ( $params{'project_id'} ) {
-		$sql .= ' AND project_id=?';
-		push @values, $params{'project_id'};
-	} # end if
-
-	if ( $params{'service_id'} ) {
-		$sql .= ' AND service_id=?';
-		push @values, $params{'service_id'};
-	} # end if
-
-	$sql .= " ORDER BY $params{order}" if $params{'order'};
-	$sql .= " LIMIT $params{limit}" if $params{'limit'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("openprint::ProductionFeedback::find( $sql)" . $openprint::dbh->errstr);
-	} else {
-		return map { new openprint::ProductionFeedback( $_->{id}, $_ ); } @$data;
-	} # end if
-} # end sub find
 
 sub User {
 	return new openprint::User( $_[0]{'user_id'} );

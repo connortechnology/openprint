@@ -12,7 +12,7 @@
 		<select name="equipment_id">
 			<option value="">Unknown</option>
 			<? echo ( 
-				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)') ], $$variable{'Job'}->equipment_id() );
+				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)') ], $$variable{'Job'}->equipment_id() );
 			) ?>
 		</select>
 	</p>

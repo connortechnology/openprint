@@ -90,11 +90,11 @@ $log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserA
 
 	# enforce unique email addresses.
 	$param{'email'} =~ tr/[A-Z]/[a-z]/;
-	if ( openprint::User::find('email'=>$param{email} ) ) {
+	if ( openprint::User->find('email'=>$param{email} ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user!';
 		return;
 	} # end if
-	if ( openprint::User::find('email'=>$param{email},'deleted'=>1 ) ) {
+	if ( openprint::User->find('email'=>$param{email},'deleted'=>1 ) ) {
 		$variable{'error'} = $param{'email'} .' is already a user, but has been deleted. Please contact us to re-activate your account.';
 		return;
 	} # end if
@@ -217,7 +217,7 @@ $log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserA
 
 		if ( $config{'NewNonFirstUserAccountActivation'} ne 'Y') {
 			# send notifications
-			foreach my $Notification ( openprint::User::find( 'company_id'=>$Company->id(), 'type'=>'Y' ) ) {
+			foreach my $Notification ( openprint::User->find( 'company_id'=>$Company->id(), 'type'=>'Y' ) ) {
 				@info{'AdminSalutation','AdminFirstName','AdminLastName'} = $Notification->get('salutation','firstname','lastname');
 
 				$info{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/not_first_user_login_app_notification_for_company_admin.html' );
@@ -332,7 +332,7 @@ sub user_profile {
 		if ( exists $param{'ddmUser'} ) {
 			$User = new openprint::User( $param{'ddmUser'} );
 		} elsif ( $session{'company_id'} != $Me->company_id() ) {
-			my @Users = openprint::User::find('company_id'=>$session{'company_id'} );
+			my @Users = openprint::User->find('company_id'=>$session{'company_id'} );
 			if ( @Users == 1 ) {
 				$User = $Users[0];
 			} # end if
@@ -368,7 +368,7 @@ sub user_profile {
 			return misc::error( $log, $dbh, \%variable, 'Bad Field', $error );
 		} # end if
 
-		foreach my $U ( openprint::User::find('email'=>lc $param{'email'}) ) {
+		foreach my $U ( openprint::User->find('email'=>lc $param{'email'}) ) {
 			if ( $U->id() != $User->id() ) {
 				return misc::error( $log, $dbh, \%variable, 'User already exists.', $param{'email'} . " is already a user." );
 			} # end if
@@ -456,7 +456,7 @@ sub login {
 		} # end if
 
 		$param{'email'} =~ tr/[A-Z]/[a-z]/;
-		my @Users = openprint::User::find('email'=>$param{'email'} );
+		my @Users = openprint::User->find('email'=>$param{'email'} );
 		if ( ! @Users ) {
 			$variable{'error'} = 'The account you entered does not exist.';
 			return;

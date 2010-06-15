@@ -38,7 +38,7 @@
 			<select name="ddmCurrency" size="1">
 			<option value="">All Currencies</option>
 <? echo ( 
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ], $param{'ddmCurrency'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $param{'ddmCurrency'} );
 ) ?>
 			</select>
 		</p>
@@ -47,7 +47,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::
 			<select name="ddmMarketingCategory" size="1">
 			<option value="">All Categories</option>
 <? echo (
-ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory::find('order'=>'lower(name)') ], $param{'ddmMarketingCategory'} );
+ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], $param{'ddmMarketingCategory'} );
 ) ?>
 			</select>
 		</p>
@@ -56,7 +56,7 @@ ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory
 			<select name="ddmEmployee" size="1">
 				<option value="">All Employees</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)','usergroups'=>['Sales'] ) ] , $param{'ddmEmployee'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)','usergroups'=>['Sales'] ) ] , $param{'ddmEmployee'} );
 ) ?>
 			</select>
 		</p>
@@ -101,11 +101,11 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find
 	</fieldset>
 <? eval ( 
 	if ( $param{'OrderID'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$param{'OrderID'} );
+		@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'OrderID'} );
 	} elsif ( $param{'Docket'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$param{'Docket'} );
+		@{$$variable{'Orders'}} = openprint::Order->find('docket'=>$param{'Docket'} );
 	} else {
-		@{$$variable{'Orders'}} = openprint::Order::find( 
+		@{$$variable{'Orders'}} = openprint::Order->find( 
 			'company_id'		=> $param{'ddmCustomer'},
 			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} ),
 			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} ),

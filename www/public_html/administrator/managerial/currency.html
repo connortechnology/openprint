@@ -7,7 +7,7 @@
 			<th width="50" align="left">Symbol</th>
 			<th align="left">Conversions</th>
 		</tr>
-		<? eval ( @{$$variable{'Currencies'}} = openprint::Currency::find('order'=>'lower(name)'); ) ?>
+		<? eval ( @{$$variable{'Currencies'}} = openprint::Currency->find('order'=>'lower(name)'); ) ?>
 		<? while ( $$variable{'Currency'} = shift @{$$variable{'Currencies'}}; ) ?>
 		<tr<?rowclass?>> 
 			<td valign="top"> 

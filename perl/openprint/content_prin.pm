@@ -33,7 +33,7 @@ sub load_simple {
 			$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
 		} elsif ( $param{'ProjectType'} ) {
 			$param{'ProjectType'} =~ s/\s//g;
-			$variable{'ProjectType'} = openprint::ProjectType::find_one( 'name'=>$param{'ProjectType'} );
+			$variable{'ProjectType'} = openprint::ProjectType->find_one( 'name'=>$param{'ProjectType'} );
 			if ( ! $variable{'ProjectType'} ) {
 				$variable{'ProjectType'} = new openprint::ProjectType();
 				$variable{'error'} .= "Invalid Project Type: $param{ProjectType}";

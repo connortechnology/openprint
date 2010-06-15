@@ -141,7 +141,7 @@ sub skids {
 sub inventory_report {
 	my %param = @_;
 	my @header = ('ID','Owner','Manufacturer','Name','Finish','Colour','Weight','Type','Width','Height','Quality', 'MWeight','GSM','Skid#','RFIDTag #','Date Added','Location', 'In Stock (sheets)','In Stock(lbs)');
-	my @papers = openprint::Paper::find(
+	my @papers = openprint::Paper->find(
 			'owner_id'	=>	( defined $param{'Owner'} ? $param{'Owner'} : '' ),
 			'manufacturer_id'	=>	( defined $param{'Manufacturer'} ? $param{'Manufacturer'} : undef ),
 			'name_id'	=>	( defined $param{'Name'} ? $param{'Name'} : undef ),
@@ -214,7 +214,7 @@ sub paper {
 	if ( $param{'btnFunction'} eq 'Consumption Report' ) {
 		my @header = ('Date','Operator','Owner','Name','Finish','Colour','Weight','Width','Height','Quality', 'MWeight','GSM','Skid#','Amount','Comment');
 		my @data;
-		my @inventory = openprint::PaperInventory::find(
+		my @inventory = openprint::PaperInventory->find(
 				'updated_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ),
 				'updated_on_end'    => sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ),
 				'order'=>'updated_on',
@@ -278,7 +278,7 @@ Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($I->updated_on())
 			$variable{'information'} .= "Paper $$Paper{'id'} has been deleted.";
 		} elsif ( $param{'papers'} ) {
 			my $ac = sql::start_transaction( undef );		
-			my @papers = openprint::Paper::find('id'=>$param{'papers'});
+			my @papers = openprint::Paper->find('id'=>$param{'papers'});
 
 			foreach my $Paper ( @papers ) {
 				$Paper->delete();
@@ -356,7 +356,7 @@ sub paper_details {
 		$Paper->calliper( $param{'txtCalliper'} );
 		$Paper->fsc_code( $param{'fsc_code'} );
 		if ( ! $param{'paper_id'} ) {
-			my @papers = openprint::Paper::find(
+			my @papers = openprint::Paper->find(
 					'owner_id'	=>	$param{'Owner'},
 					'manufacturer'		=>	$param{'txtManufacturer'},
 					'manufacturer_id'	=>	$param{'Manufacturer'},
@@ -391,7 +391,7 @@ sub paper_details {
 	} elsif ( $param{'btnFunction'} eq 'CheckOut' ) {
 		check_out( undef, @param{'paper_id','Quantity','Project','Docket','reason'} );
 	} elsif ( $param{'btnFunction'} eq 'Merge' ) {
-		my @Duplicates = openprint::Paper::find(
+		my @Duplicates = openprint::Paper->find(
 				'manufacturer_id'	=> $Paper->manufacturer_id(),
 				'name_id'			=> $Paper->name_id(),
 				'finish_id'			=> $Paper->finish_id(),
@@ -432,7 +432,7 @@ sub save_Paper {
 		} # end if
 	} # end if
 
-	my @papers = openprint::Paper::find(
+	my @papers = openprint::Paper->find(
 			'owner_id'	=>	$param{'Owner'.$id},
 			'manufacturer_id'	=>	$param{'Manufacturer'.$id},
 			'manufacturer'		=>	$param{'txtManufacturer'.$id},
@@ -564,7 +564,7 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 			save_inventory( $Skid, $Paper, $qty );
 
 			if ( $param{'Docket'} ) {
-				my @Projects = openprint::Project::find('docket'=>$param{'Docket'} );
+				my @Projects = openprint::Project->find('docket'=>$param{'Docket'} );
 
 				if ( ! @Projects ) {
 					$variable{'error'} .= "Docket $param{'Docket'} not found. No paper allocated. CSR not notified.<br/>";
@@ -582,7 +582,7 @@ $openprint::log->debug("RFID: $param{'rfidtag_id'} $$Skid{'rfidtag_id'}");
 			} # end if
 		} # end if Paper
 	} elsif ( $param{'Docket'} ) {
-		my @Projects = openprint::Project::find('docket'=>$param{'Docket'} );
+		my @Projects = openprint::Project->find('docket'=>$param{'Docket'} );
 
 		if ( ! @Projects ) {
 			$variable{'error'} .= "Docket $param{'Docket'} not found. No paper allocated.<br/>";
@@ -611,7 +611,7 @@ sub skid_details {
 	$variable{'skid_id'} = $param{'skid_id'};
 	@{$variable{'skid_ids'}} = @skid_ids;
 
-	if ( $param{'skid_id'} and ! openprint::Skid::find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) ) {
+	if ( $param{'skid_id'} and ! openprint::Skid->find( 'id'=>\@skid_ids, 'deleted'=>[0,1] ) ) {
 		$variable{'error'} .= "Skid $param{'skid_id'} not found!<br/>";
 		return;
 	} # end if
@@ -784,7 +784,7 @@ sub check_out {
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
-	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
+	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
 	my @skids;
 	if ( $skid_id ) {
@@ -875,7 +875,7 @@ sub check_in {
 
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
-	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
+	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
 # Default to add
 	if	( $quantity =~ /^\d/ ) {
@@ -919,10 +919,10 @@ sub allocate {
 	my $units = $Paper->type() eq 'Roll' ? 'lbs' : 'sheets';
 	$project_id =~ s/\D//g;
 	$docket =~ s/\D//g;
-	my @Projects = openprint::Project::find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
+	my @Projects = openprint::Project->find( 'id'=>$project_id, 'docket'=>$docket ) if $project_id or $docket;
 
 	if ( $docket and ! @Projects ) {
-		if ( my @Orders = openprint::Order::find('docket'=>$docket) ) {
+		if ( my @Orders = openprint::Order->find('docket'=>$docket) ) {
 			@Projects = $Orders[0]->Projects();
 		} # end if
 	} # end if
@@ -991,7 +991,7 @@ sub send_paper_arrival_notification {
 		my $C = $Skid->Content( $Paper );
 		$info{'Quantity'} = $C ? $C->quantity() : 0;
 		
-		my @To = map { new openprint::User( $_ ); } sets::union( map { $_->Project->Order()->salesrep_id() } openprint::PaperAllocation::find('skid_id'=>$Skid->id(),'paper_id'=>$Paper->id()) );
+		my @To = map { new openprint::User( $_ ); } sets::union( map { $_->Project->Order()->salesrep_id() } openprint::PaperAllocation->find('skid_id'=>$Skid->id(),'paper_id'=>$Paper->id()) );
 
 		if ( @To ) {
 # Send notification to maybe CSR's
@@ -1037,7 +1037,7 @@ sub rfidtag_details {
 		if ( $param{'rfidtag_id'} =~ /^\s*\((.*)\)\s*$/ ) {
 			$param{'rfidtag_id'} = hex( $1 );
 		} # end if
-		my @Tags = openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'} );
+		my @Tags = openprint::RFIDTag->find('id_like'=>'%'.$param{'rfidtag_id'} );
 		if ( ! @Tags ) {
 			$variable{'error'} .= 'Tag ID not found.';
 		} elsif ( @Tags > 1 ) {
@@ -1113,7 +1113,7 @@ sub _rfidscanner_log {
 	@param{'StartYear','StartMonth','StartDay'} = Date::Calc::Today() if ! $param{'StartYear'};
 	$param{'limit'} = 10 if ! $param{'limit'};
 
-	@{$variable{'Entries'}} = openprint::RFIDScannerHistory::find( 
+	@{$variable{'Entries'}} = openprint::RFIDScannerHistory->find( 
 			'scanner_id'		=>	$param{'rfidscanner_id'},
 			'updated_on_start'  =>  Date::Calc::check_date( @param{'StartYear','StartMonth','StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
 			'updated_on_end'    =>  Date::Calc::check_date( @param{'EndYear','EndMonth','EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ) : undef,
@@ -1121,14 +1121,14 @@ sub _rfidscanner_log {
 			'order'     =>  'updated_on DESC',
 			);
 	if ( ! @{$variable{'Entries'}} ) {
-		my @Entries = openprint::RFIDScannerHistory::find(
+		my @Entries = openprint::RFIDScannerHistory->find(
 				'scanner_id'=>	$param{'rfidscanner_id'},
 				'limit'		=>	1,
 				'order'     =>  'updated_on DESC',
 				);
 		if ( @Entries ) {
 			@param{'StartYear','StartMonth','StartDay'} = $Entries[0]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
-			@{$variable{'Entries'}} = openprint::RFIDScannerHistory::find( 
+			@{$variable{'Entries'}} = openprint::RFIDScannerHistory->find( 
 					'scanner_id'=>$param{'rfidscanner_id'},
 					'updated_on_start'  =>  Date::Calc::check_date( @param{'StartYear','StartMonth','StartDay'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'StartYear','StartMonth','StartDay'} ) : undef,
 					'updated_on_end'    =>  Date::Calc::check_date( @param{'EndYear','EndMonth','EndDay'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'EndYear','EndMonth','EndDay'} ) : undef,
@@ -1153,7 +1153,7 @@ sub manifest {
 		$Manifest->received_on( join('-', @param{'received_on_year','received_on_month','received_on_day'} ) );
 
 		if ( $param{'supplier'} and ! $param{'supplier_id'} ) {
-			my @Companies = openprint::Company::find( 'name'=>$param{'supplier'} );
+			my @Companies = openprint::Company->find( 'name'=>$param{'supplier'} );
 			if ( ! @Companies ) {
 				my $C = new openprint::Company();
 				$C->save({
@@ -1172,12 +1172,12 @@ sub manifest {
 
 		$variable{'error'} .= $Manifest->save( \%param );
 
-		my @Types = openprint::Manifest_Content_Type::find('manifest_id'=>$Manifest->id());
+		my @Types = openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id());
 		if ( ! @Types ) {
 			my $Type = new openprint::Manifest_Content_Type();
 			$variable{'error'} .= $Type->save({'manifest_id'=>$Manifest->id()});
 		} else {
-			foreach my $Type ( openprint::Manifest_Content_Type::find('manifest_id'=>$Manifest->id()) ) {
+			foreach my $Type ( openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id()) ) {
 				my $Paper = save_Paper('-'.$Type->id());
 				if ( ! $Paper ) {
 					$variable{'error'} .= 'Unable to get Stock.<br/>';
@@ -1191,7 +1191,7 @@ sub manifest {
 						foreach my $SkidContent ( $C->Skid()->Contents() ) {
 							if ( $SkidContent->paper_id() == $Type->paper_id() ) {
 								$SkidContent->save({'paper_id'=>$Paper->id()});
-								foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
+								foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
 									$PA->save({'paper_id'=>$Paper->id()});
 								} # end foreach PA
 								my $PI = new openprint::PaperInventory();
@@ -1215,7 +1215,7 @@ sub manifest {
 
 				my $Project;
 				if ( $param{'docket-'.$Type->id()} ) {
-					my @Projects = openprint::Project::find('docket'=>$param{'docket-'.$Type->id()});
+					my @Projects = openprint::Project->find('docket'=>$param{'docket-'.$Type->id()});
 					if ( ! @Projects ) {
 						$variable{'error'} .= 'Docket ' . $param{'docket-'.$Type->id()} . ' not found.  No allocations made.<br/>';
 					} else {
@@ -1270,7 +1270,7 @@ sub manifest {
 					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
 					if ( $Project ) {
-						my $PA = openprint::PaperAllocation::find_one('skid_id'=>$C->skid_id());
+						my $PA = openprint::PaperAllocation->find_one('skid_id'=>$C->skid_id());
 						if ( ! $PA ) {
 							$Paper->allocate( $C->Skid(), $Project->id(), $C->quantity(), $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
 							$variable{'information'} .= sprintf('Allocated %1$d%2$s to docket <a href="/employee/project/view.html?ProjectIndex=%3$d">%4$d</a>.<br/>', $C->quantity(), ($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), $Project->id(), $Project->docket() );
@@ -1281,7 +1281,7 @@ sub manifest {
 							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $C->skid_id(), $PA->project_id(), $PA->docket() );
 						} # end if
 					} # end if
-					if ( openprint::PaperInventory::find('skid_id'=>$C->Skid()->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ) {
+					if ( openprint::PaperInventory->find('skid_id'=>$C->Skid()->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ) {
 						# If the stock has already been checked out, add a subtraction to keep counts in line.
 						save_inventory( $C->Skid(), $Paper, -1*$C->quantity(), 'Automatic checkout after manifest inventory update.' );
 					} # end if
@@ -1396,7 +1396,7 @@ sub inventory_log {
                 $Skid->RFIDTag()->id_short(),
                 $Paper->to_string(),
                 $delta,
-                join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation::find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
+                join(',', map { sprintf('%d%s to %d', $_->quantity(),$_->units(),new openprint::Project( $_->project_id() )->docket() ) } openprint::PaperAllocation->find('skid_id'=>$skid_id,'paper_id'=>$paper_id)),
                 $instock,
                 $Skid->Location()->name(),
                 $comment,
@@ -1419,7 +1419,7 @@ sub _paper_allocations {
 		$param{'skid_id'} =~ s/\D//g;
 		$param{'Docket'} =~ s/\D//g;
 		$param{'AllocationQuantity'} =~ s/[^\d\-]//g;
-		my @Projects = openprint::Project::find( 'docket'=>$param{'Docket'} ) if $param{'Docket'};
+		my @Projects = openprint::Project->find( 'docket'=>$param{'Docket'} ) if $param{'Docket'};
 		if ( ! @Projects ) {
 			$variable{'error'} .= "Docket $param{'Docket'} not found.";
 		} else {
@@ -1437,7 +1437,7 @@ sub _paper_allocations {
 sub _skid_allocations {
     if ( $param{'action'} eq 'Add' ) {
         my $Paper = new openprint::Paper( $param{'paper_id'} );
-        my @Projects = openprint::Project::find( 'id'=>$param{'ProjectID'}, 'docket'=>$param{'Docket'} ) if $param{'ProjectID'} or $param{'Docket'};
+        my @Projects = openprint::Project->find( 'id'=>$param{'ProjectID'}, 'docket'=>$param{'Docket'} ) if $param{'ProjectID'} or $param{'Docket'};
         my $Skid = new openprint::Skid( $param{'skid_id'} );
 
         if ( ! @Projects ) {
@@ -1600,7 +1600,7 @@ sub purchase_order_view {
 						});
 				$types{$C->Type()->name()} = 1;
 				if ( $C->docket() ) {
-					foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
+					foreach my $P ( openprint::Project->find('docket'=>$C->docket()) ) {
 						$P->add_to_log( @session{'company_id','user_id'}, 
 								sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
 									$PO->id(), $C->qty(), $C->units(), $C->description() ) );
@@ -1609,7 +1609,7 @@ sub purchase_order_view {
 			} # end if
 		} # end foreach
 		if ( ! $param{'supplier_id'} ) {
-			my @Companies = openprint::Company::find( 'name'=>$param{'vendor_name'} );
+			my @Companies = openprint::Company->find( 'name'=>$param{'vendor_name'} );
 			if ( ! @Companies ) {
 				my $C = new openprint::Company();
 				$C->save({
@@ -1642,7 +1642,7 @@ sub purchase_order_view {
 			} # end if
 		} # end if
 		if ( ! $param{'contact_id'} ) {
-			my @Users = openprint::User::find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
+			my @Users = openprint::User->find( 'company_id'=>$param{'supplier_id'}, 'email'=> lc $param{'vendor_email'} );
 			if ( ! @Users ) {
 				my $User = new openprint::User();
 				my ( $first, $last ) = $param{'vendor_contact'} =~ /(\S+)\s*(\S*)/;
@@ -1854,7 +1854,7 @@ sub _manifest_purchase_orders {
 
 
 sub _rfidtag_log {
-    @{$variable{'Entries'}} = openprint::RFIDTagHistory::find( 
+    @{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
         'rfidtag_id'	=>	$param{'rfidtag_id'},
         'updated_on_start'  =>  Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
         'updated_on_end'    =>  Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,
@@ -1863,7 +1863,7 @@ sub _rfidtag_log {
         );
 
 	if ( ! @{$variable{'Entries'}} ) {
-		@{$variable{'Entries'}} = openprint::RFIDTagHistory::find( 
+		@{$variable{'Entries'}} = openprint::RFIDTagHistory->find( 
 				'rfidtag_id'	=>	$param{'rfidtag_id'},
 				'updated_on_start'  =>  Date::Calc::check_date( @param{'start_year','start_month','start_day'} ) ? sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'start_year','start_month','start_day'} ) : undef,
 				'updated_on_end'    =>  Date::Calc::check_date( @param{'end_year','end_month','end_day'} ) ?  sprintf('%.4d-%.2d-%.2d 23:59:59', @param{'end_year','end_month','end_day'} ) : undef,

@@ -9,7 +9,7 @@
 			<!--<th width="80">Harmonised (%)</th>-->
 		</tr>
 		<? eval (
-				@{$$variable{'TAXES'}} = openprint::Tax::find('order'=>'lower(state)');
+				@{$$variable{'TAXES'}} = openprint::Tax->find('order'=>'lower(state)');
 				) ?>
 		<? while ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
 		<tr>
