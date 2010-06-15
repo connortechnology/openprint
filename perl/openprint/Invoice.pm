@@ -328,7 +328,7 @@ sub del_Payment {
 
 sub Payments {
 	my ( $self ) = @_;
-	return openprint::Payment->find('invoice_id'=>$$self{'id'} );
+	return openprint::Invoice_Payment->find('invoice_id'=>$$self{'id'} );
 } # end sub Payments
 
 sub Logs {

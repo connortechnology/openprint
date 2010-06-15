@@ -19,7 +19,7 @@ $serial = 'invoice_logs_id_seq';
 
 %fields = (
 	'id'				=>	'id',
-	'invoice_id'		=>	'invoicer_id',
+	'invoice_id'		=>	'invoice_id',
 	'user_id'			=>	'user_id',
 	'created_on'		=>	'created_on',
 	'description'		=>	'description',
@@ -36,6 +36,4 @@ sub User {
 } # end sub User
 
 1;
-
 __END__
-~       

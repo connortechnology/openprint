@@ -12,7 +12,7 @@ use vars qw($serial $table $log $dbh %variable %fields %transforms %defaults );
 require sql;
 require openprint::logs;
 
-$serial = 'Product_Category_Id_seq';
+$serial = 'product_categories_id_seq';
 $table = 'Product_Categories';
 
 %fields = (
