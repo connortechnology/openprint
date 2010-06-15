@@ -41,6 +41,7 @@ sub history {
 		} # end foreach Paycheque
 		misc::export_csv( $r, $log, \%variable, "Paycheques.csv", \@Header, \@Data );
 	} else {
+		ssi:setup_date_select( '/paycheque/history.html', 'paid_on', -31 );
 		ssi::save_params( '/paycheque/history.html', 'paid_on_start_year','paid_on_start_month','paid_on_start_day','paid_on_end_year','paid_on_end_month','paid_on_end_day', 'employer_id','employee_id' );
 	} # end if
 } # end sub history

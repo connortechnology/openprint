@@ -270,51 +270,54 @@ sub find {
         } elsif ( ! defined $params{$k} ) {
             $sql .= " AND $fields{$k} IS NULL";
 		} else {
+$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
             $sql .= " AND $fields{$k}=?";
             push @values, $params{$k};
         } # end if
+$openprint::log->debug("Before delete @values");
 		delete $params{$k};
+$openprint::log->debug("Aftere delete @values");
     } # end foreach k
 	if ( %params ) {
 		foreach my $k ( keys %fields ) {
 			if ( exists $params{$k.'_like'} ) {
 				$sql .= " AND $fields{$k} LIKE ?";
-				push @values, $params{$k};
+				push @values, $params{$k.'_like'};
 				delete $params{$k.'_like'};
 			} 
 			if ( exists $params{$k.'_start'} ) {
 				$sql .= " AND $fields{$k} >= ?";
-				push @values, $params{$k};
+				push @values, $params{$k.'_start'};
 				delete $params{$k.'_start'};
 			} 
 			if ( exists $params{$k.'_end'} ) {
 				$sql .= " AND $fields{$k} <= ?";
-				push @values, $params{$k};
+				push @values, $params{$k.'_end'};
 				delete $params{$k.'_end'};
 			} # end if
 			if ( exists $params{$k.'_<'} ) {
 				$sql .= " AND $fields{$k} < ?";
-				push @values, $params{$k};
+				push @values, $params{$k.'_<'};
 				delete $params{$k.'_<'};
 			} # end if
 			if ( exists $params{$k.'_<='} ) {
 				$sql .= " AND $fields{$k} <= ?";
-				push @values, $params{$k};
+				push @values, $params{$k.'_<='};
 				delete $params{$k.'_<='};
 			} # end if
 			if ( exists $params{$k.'_>='} ) {
 				$sql .= " AND $fields{$k} >= ?";
-				push @values, $params{$k};
+				push @values, $params{$k.'_>='};
 				delete $params{$k.'_>='};
 			} # end if
 			if ( exists $params{$k.'_>'} ) {
 				$sql .= " AND $fields{$k} > ?";
-				push @values, $params{$k};
+				push @values, $params{$k.'_>'};
 				delete $params{$k.'_>'};
 			} # end if
 			if ( exists $params{$k.'_lc'} ) {
 				$sql .= " AND lower($fields{$k}) = ?";
-				push @values, lc $params{$k};
+				push @values, lc $params{$k.'_lc'};
 				delete $params{$k.'_lc'};
 			} # end if
 		} # end foreach
@@ -323,9 +326,11 @@ sub find {
 	# Check for Object references
 	if ( %params ) {
 		foreach my $k ( keys %params ) {
+			next if sets::isin( ref $params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
 			my $f = (lc $k).'_id';
 			if ( exists $fields{$f} ) {
 				$sql .= " AND $fields{$f} = ?";
+$openprint::log->debug("$params{$k}" . ref $params{$k});
 				push @values, $params{$k}->id();
 				delete $params{$k};
 			} # end if

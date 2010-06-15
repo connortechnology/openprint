@@ -85,6 +85,4 @@ sub Type {
 } # end sub Type
 
 1;
-
 __END__
-~       
