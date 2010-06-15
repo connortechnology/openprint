@@ -70,7 +70,38 @@ return $html;
 	</table>
 <? endif ( $$variable{'Quote'}->Projects() ) ?>
 <? if ( $$variable{'Quote'}->Products() ) ?>
-<!--#include virtual="/main/quote/_products_view.html"-->
+<table>
+	<thead>
+		<tr>
+			<th class="description">Product</th>
+			<th class="quantity">Quantity</th>
+			<th class="price">Price</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $subtotal = 0;
+			foreach my $Product ( $$variable{'Quote'}->Products() ) {
+				$html .= sprintf('<tr%1$s>
+									<td class="description">%3$s</td>
+									<td class="quantity">%4$s</td>
+									<td class="newprice">%5$s</td>
+									</tr>', $rowclass, $Product->id(), $Product->description(), 
+									Number::Format::format_number($Product->quantity()), 
+									openprint::Currency::format( $Product->price() ) );
+				$subtotal += $Product->price();
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Product
+		$html .= '<tr class="totals">';
+		$html .= '<td colspan="2" style="text-align: right;">Subtotal:</td><td class="newprice">';
+		$html .= openprint::Currency::format( $subtotal );
+		$html .= '</td></tr>';
+			return $html;
+		) ?>
+	</tbody>
+</table>
 <? endif ( $$variable{'Quote'}->Products() ) ?>
 	<span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span><br/>
 	<? echo ( $config{'QuoteViewDisclaimer'} ) ?>

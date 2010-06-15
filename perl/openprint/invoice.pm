@@ -240,6 +240,13 @@ sub _invoiced_products {
 				'invoice_id'=>$variable{'Invoice'}->id(),
 				'quantity'	=> 1
 				});
+	} elsif ( $param{'action'} eq 'add' ) {
+		my $IP = new openprint::Invoiced_Product( );
+		$variable{'error'} .= $IP->save({
+				'product_id'	=>	$param{'product_id-'},
+				'invoice_id'	=>	$variable{'Invoice'}->id(),
+				'quantity'		=>	$param{'product_quantity_'} ? $param{'product_quantity_'} : 1,
+				});
 	} elsif ( $param{'action'} eq 'remove' ) {
 		my $IP = new openprint::Invoiced_Product( $param{'product_id'} );
 		if ( $IP->id() ) {

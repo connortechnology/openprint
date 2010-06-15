@@ -44,6 +44,7 @@ $serial = 'quotes_id_seq';
 	'Currency'		=>	undef,
 	'reference'		=>	'reference',
 	'comments'		=>	'comments',
+	'deleted'		=>	'deleted',
 	);
 
 %defaults = (
@@ -52,6 +53,7 @@ $serial = 'quotes_id_seq';
 );
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	if ( $params{'id'} ) {
 		return new openprint::Quote( $params{'id'} );
@@ -123,6 +125,18 @@ sub find {
 		if ( $params{'id_like'} ) {
 			$sql .= " AND id::text LIKE '$params{'id_like'}%'";
 		} # end if
+	if ( exists $params{'deleted'} ) {
+		if ( ref $params{'deleted'} eq 'ARRAY' ) {
+			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
+			push @values, @{$params{'deleted'}};
+		} else {
+			$sql .= ' AND deleted=?';
+			push @values, $params{'deleted'};
+		} # end if
+	} else {
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
+	} # end if
 
 		if ( exists $params{'order'} ) {
 			if ( $params{'order'} eq 'created_on' ) {
@@ -199,7 +213,7 @@ sub save {
 	return;
 } # end sub save
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
 	if ( ! $$self{'id'} ) {
@@ -420,7 +434,7 @@ sub send {
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					TO      => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					SUBJECT => sprintf('Quote %d for %s', $$self{id}, $self->for_companyname() ),
+					SUBJECT => sprintf('Quote %d for %s : ', $$self{id}, $self->for_companyname(), $self->reference() ),
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
 		} # end if
@@ -457,12 +471,12 @@ sub send {
 			my %mail = (
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
-					#TO      => sprintf('%s %s <%s>', @$self{'for_firstname','for_lastname','for_email'}),
-					TO      => '"Isaac Connor" <iconnor@connortechnology.com>',
-					SUBJECT => "Quote $$self{id}",
+					TO      => sprintf('%s %s <%s>', @$self{'for_firstname','for_lastname','for_email'}),
+					#TO      => '"Isaac Connor" <iconnor@connortechnology.com>',
+					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
-		} # end if
+		} # end if for someone else
 
 	} else {
 # Not a reseller

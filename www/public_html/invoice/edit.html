@@ -121,9 +121,6 @@
 <div id="InvoicedProducts">
 	<!--#include virtual="_invoiced_products.html"-->
 </div>
-<p class="buttons">
-<? echo ( ssi::writeButton( $log, $dbh, 'NewProduct', 'new_product.gif', q`new Ajax.Updater( 'InvoicedProducts','_invoiced_products.html?action=new', { method: 'get', parameters: $('f1').serialize() } );`, '', 'Add New Product' ); ) ?>
-</p>
 </form>
 <!--#include virtual="_totals.html"-->
 <div class="leftColumn">

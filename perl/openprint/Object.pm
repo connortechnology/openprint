@@ -270,13 +270,13 @@ sub find {
         } elsif ( ! defined $params{$k} ) {
             $sql .= " AND $fields{$k} IS NULL";
 		} else {
-$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
+#$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
             $sql .= " AND $fields{$k}=?";
             push @values, $params{$k};
         } # end if
-$openprint::log->debug("Before delete @values");
+#$openprint::log->debug("Before delete @values");
 		delete $params{$k};
-$openprint::log->debug("Aftere delete @values");
+#$openprint::log->debug("Aftere delete @values");
     } # end foreach k
 	if ( %params ) {
 		foreach my $k ( keys %fields ) {
@@ -330,7 +330,7 @@ $openprint::log->debug("Aftere delete @values");
 			my $f = (lc $k).'_id';
 			if ( exists $fields{$f} ) {
 				$sql .= " AND $fields{$f} = ?";
-$openprint::log->debug("$params{$k}" . ref $params{$k});
+#$openprint::log->debug("$params{$k}" . ref $params{$k});
 				push @values, $params{$k}->id();
 				delete $params{$k};
 			} # end if

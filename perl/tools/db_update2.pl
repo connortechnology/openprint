@@ -52,8 +52,18 @@ if ( sets::isin( 'quotes', \@tables ) ) {
 	if ( $data ) {
 		$dbh->do('ALTER TABLE quotes add reference text') if ! exists $$data{'reference'};
 		$dbh->do('ALTER TABLE quotes add comments text') if ! exists $$data{'comments'};
+		$dbh->do('ALTER TABLE quotes add deleted boolean default false') if ! exists $$data{'deleted'};
 	} # end if
 } # end if
+if ( sets::isin( 'pricelists', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM pricelists LIMIT 1', {} );
+	if ( $data ) {
+		$dbh->do('ALTER TABLE pricelists add deleted boolean default false') if ! exists $$data{'deleted'};
+	} # end if
+} # end if
+
+foreach my $Invoice ( openprint::Invoice::find() ) {
+} # end foreach Invoice
 
 $dbh->commit();
 $dbh->disconnect();

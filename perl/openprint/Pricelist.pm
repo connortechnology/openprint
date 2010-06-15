@@ -24,9 +24,10 @@ $serial = 'pricelists_id_seq';
 	'owner_id'		=>	'owner_id',
 	'currency_id'	=>	'currency_id',
 	'description'	=>	'description',
+	'deleted'		=>	'deleted',
 );
 
-sub delete {
+sub destroy {
 	my $self = shift;
 
 	my @PaperPrices = $self->getPrices('Paper');
