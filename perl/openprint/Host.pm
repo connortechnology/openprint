@@ -5,7 +5,7 @@ use Net::ARP;
 use strict;
 
 my $debug = 1;
-use vars qw( $log $dbh $table $serial %fields %tansforms %defaults %types );
+use vars qw( $log $dbh $table $serial %fields %transforms %defaults %types );
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
