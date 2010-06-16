@@ -360,7 +360,12 @@ $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
-
+	} elsif ( sets::isin( $first , [ 'opera', 'handheld' ] ) ) { # Handheld
+		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
+		if ( $variable{'Redirect'} ) {
+			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+			return Apache2::Const::OK;
+		} # end if
 	} elsif ( $first eq 'content' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
@@ -419,7 +424,8 @@ $log->debug("logged in");
 			require openprint::main_project;
 			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
 				if ( ! $variable{'ServiceIndex'} ) {
-					$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
+					my @service_ids = split(',', $openprint::param{'ServiceIndex'} );
+					$variable{'ServiceIndex'} = $service_ids[0];
 				} # end if
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};

@@ -17,9 +17,11 @@ my $debug = 0;
 	'quantity'		=>	'quantity',
 	'purpose_id'	=>	'purpose_id',
 	'units'			=>	'units',
+	'quality_id'	=>	'quality_id',
 );
 %defaults = (
 	'purpose_id'	=>	undef,
+	'quality_id'	=>	undef,
 );
 %transforms = (
 );
@@ -63,6 +65,22 @@ sub allocated {
 	return 0;
 } # end sub allocated
 
+sub quality {
+    my ( $self, $quality ) = @_;
+
+    if ( defined $quality ) {
+		$quality =~ s/^\s+//;
+		$quality =~ s/\s+$//;
+		$quality =~ s/\s\s+$/ /;
+        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
+        if ( ! $$self{'quality_id'} ) {
+			$$self{'quality'} = $quality;
+        } # end if
+    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
+        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->longname();
+    } # end if
+    return $$self{'quality'};
+} # end sub quality
 
 1;
 

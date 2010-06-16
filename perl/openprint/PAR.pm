@@ -55,6 +55,7 @@ require sql;
 	'created_on'	=> 'NOW()',
 	'updated_on'	=> 'NOW()',
 	'deleted'		=> 0,
+	'area_id'		=>	undef,
 );
 
 sub send_notifications {

@@ -1,0 +1,60 @@
+<script type="text/javascript">
+function load(form) {
+	new Ajax.Updater( 'Results','/employee/it/_hosts.html', { method: 'get', parameters: form.serialize() } );
+} // end function load
+</script>
+<!--#include virtual="/includes/error_reporting.html"-->
+Please select a host to view/edit.<br>
+<form id="f1" name="f1" method="post" action="hosts.html">
+	<fieldset class="filters"><legend>Choose Host</legend>
+		<p>
+			<label for="ip">Host IP</label>
+			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d]/,'');" onkeydown="this.form.hostname.value='';if(event.keyCode == 13){load($('f1'));}"/>
+			Hostname:
+			<input type="text" id="hostname" name="hostname" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load( $('f1') );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('f1').submit();",'','Load' ); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" method="post" action="hosts.html">
+	<fieldset class="filters"><legend>Search Criteria</legend>
+		<p>
+			<label>Date Added:</label>
+			<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_start' ); ) ?>
+			to 
+			</span>
+			<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_end' ); ) ?>
+			</span>
+		</p>
+		<p>
+			<label>Last Updated:</label>
+			<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start' ); ) ?>
+			to 
+			</span>
+			<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end' ); ) ?>
+			</span>
+		</p>
+<!--
+		<p>
+            <label>Assigned/Unassigned?</label>
+            <input type="checkbox" id="assigned" name="assigned" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?assigned'} ); ) ?> />
+            <label class="radio" for="assigned">Assigned</label>
+            <input type="checkbox" id="notassigned" name="notassigned" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?notassigned'} ); ) ?> />
+            <label class="radio" for="notassigned">Unassigned</label>
+		</p>
+-->
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/it/_hosts.html', \$('f2').serialize() );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'host.html', 'Add New Host' ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<script type="text/javascript">document.f1.ip.focus();</script>
+<div id="Results">Choose criteria and click Show Results</div>

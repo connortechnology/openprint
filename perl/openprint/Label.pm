@@ -1,7 +1,6 @@
 package openprint::Label;
 @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
@@ -36,10 +35,7 @@ $table = 'labels';
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-#
-#$openprint::log->debug("Loading label $$self{id}") if $debug;
 		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Labels WHERE id=?}, {}, $$self{'id'} );
-#$openprint::log->debug("Loading label $$self{id} $$data{data}") if $debug;
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 	delete $$self{'data'};
@@ -98,6 +94,10 @@ sub delete {
 sub Order {
 	return openprint::Order->find('docket'=>$_[0]{'docket'});
 } # end sub Order
+
+sub Project {
+	return openprint::Project->find_one('docket'=>$_[0]{'docket'});
+} # end sub Project
 
 sub Type {
 	return new openprint::LabelType( $_[0]{'type_id'} );

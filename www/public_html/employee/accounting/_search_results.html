@@ -54,12 +54,12 @@
 		<td align="right">&nbsp;<? echo ( ssi::htmlize( $$variable{'Order'}->invoice_id() ); ) ?></td>
 		<td align="right">&nbsp;<? echo ( ssi::htmlize( $$variable{'Order'}->ponum() ); ) ?></td>
 		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Order'}->total() ); ) ?></td>
-		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Order'}->total() - $$variable{'Order'}->paid() ); ) ?></td>
+		<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Order'}->owing() ); ) ?></td>
 	</tr>
 	<? eval ( 
 		$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
 		$$variable{'ReportTotal'} += $$variable{'Order'}->total();
-		$$variable{'ReportBalance'} += ($$variable{'Order'}->total() - $$variable{'Order'}->paid());
+		$$variable{'ReportBalance'} += $$variable{'Order'}->owing();
  ) ?>
 	<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
 	<tr class="totals"> 

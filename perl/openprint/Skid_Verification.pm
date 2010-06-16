@@ -17,6 +17,7 @@ my $debug = 1;
 
 $table = 'skid_verifications';
 $serial = 'skid_verifications_id_seq';
+
 %fields = (
 	'id'			=>	'id',
 	'code'			=>	'code',

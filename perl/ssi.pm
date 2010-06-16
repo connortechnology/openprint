@@ -471,7 +471,7 @@ return sprintf(q`<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'funct
 
 sub setup_date_select {
 	my ( $page, $prefix, $start_delta, $end_delta ) = @_;
-$openprint::log->debug("Lastupdated: " . Date::Format::time2str($config{'DateTimeFormat'}, $session{$page.'?lastupdated'} ) . ' difference' . ( time - $session{$page.'?lastupdated'}) );
+#$openprint::log->debug("Lastupdated: " . Date::Format::time2str($config{'DateTimeFormat'}, $session{$page.'?lastupdated'} ) . ' difference' . ( time - $session{$page.'?lastupdated'}) );
     if ( 
 		( ! ( $session{$page.'?'.$prefix.'_start_year'} and $session{$page.'?'.$prefix.'_start_month'} and $session{$page.'?'.$prefix.'_start_day'} ) ) 
 		or 

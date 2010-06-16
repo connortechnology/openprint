@@ -51,10 +51,17 @@
 			my $allocated_lbs;
 			my $allocated_sheets;
 
+			my $Quality = $session{'/employee/inventory/paper.html?Quality'} ? new openprint::StockQuality( $session{'/employee/inventory/paper.html?Quality'}) : undef;
+
 			foreach my $Paper ( @{$$variable{'Papers'}} ) {
 				if ( ! $session{'/employee/inventory/paper.html?Docket'} ) {
-					next if $Paper->in_stock() and $session{'/employee/inventory/paper.html?instock'} eq 'N';
-					next if (!$Paper->in_stock()) and $session{'/employee/inventory/paper.html?instock'} eq 'Y';
+					if ( $session{'/employee/inventory/paper.html?instock'} eq 'N' ) {
+						next if $Paper->in_stock();
+					}  # end if
+					if ( $session{'/employee/inventory/paper.html?instock'} eq 'Y' ) {
+						next if ! $Paper->in_stock();
+						next if $Quality and ! $Paper->in_stock( $Quality );
+					} # end if
 				} # end if
 
 				$html .= sprintf( '<tr class="%1$s %11$s"><td><a href="paper_details.html?paper_id=%2$d">%3$s</a></td><td>%4$.2f</td><td>%5$.2f</td><td align="right">%6$d</td><td align="right">%7$s</td><td align="right">%8$s</td><td align="right">%9$s</td>',
@@ -64,9 +71,9 @@
 					$Paper->mweight(),
 					$Paper->gsm(),
 					$Paper->back_ordered(),
-					Number::Format::format_number($Paper->allocated()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'),
-					Number::Format::format_number($Paper->in_stock()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  in stock
-					Number::Format::format_number($Paper->available()).($Paper->type() eq 'Roll' ? 'lbs' : 'sheets'), #  available
+					Number::Format::format_number($Paper->allocated()).$Paper->units(),
+					Number::Format::format_number($Paper->in_stock($Quality ? $Quality : () )).$Paper->units(), #  in stock
+					Number::Format::format_number($Paper->available()).$Paper->units(), #  available
 					$Paper->available() < 0 ? 'warning' : '',
 					);
 				$html .= '</tr>',

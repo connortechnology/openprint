@@ -6,7 +6,7 @@ package openprint::Project;
 use strict;
 use openprint ();
 
-use vars qw( $log $dbh %config $table $serial );
+use vars qw( $log $dbh %config $table $serial %fields );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -29,6 +29,40 @@ my $debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
+
+%fields = (
+	'id'	=>	'id',
+	'docket'	=>	'lngdocketnumber',
+	'company_id'	=>	'company_id',
+	'user_id'		=>	'user_id',
+	'reference'		=>	'strprojectreference',
+	'comments'		=>	'strcomments',
+	'design'		=>	'strdesign',
+	'created_on'	=>	'dtmcreationdate',
+	'updated_on'	=>	'dtmlastmodified',
+	'quantity1'		=>	'intquantity1',
+	'quantity2'		=>	'intquantity2',
+	'quantity3'		=>	'intquantity3',
+	'status'		=>	'strstatus',
+	'mode'			=>	'strmode',
+	'programs'		=>	'strprograms',
+	'other_programs'	=>	'strotherprograms',
+	'printingtype'	=>	'printingtype',
+	'currency_id'	=>	'currency_id',
+	'type_id'		=>	'type_id',
+	'price1'		=>	'price1',
+	'price2'		=>	'price2',
+	'price3'		=>	'price3',
+	'order_id'		=>	'order_id',
+	'due_date'		=>	'due_date',
+	'externalrefnumber'	=>	'externalrefnumber',
+	'reprint_reason'	=>	'reprint_reason',
+	'reprint'			=>	'reprint',
+	'predefined'		=>	'predefined',
+	'rush'				=>	'rush',
+	'style_id'			=>	'style_id',
+	'summary'			=>	'summary',
+);
 
 sub delete {
 	my $self = shift;
@@ -55,7 +89,7 @@ sub destroy {
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM PressActivities WHERE project_id=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM projects WHERE id=?}, $$self{'id'} );
 	sql::end_transaction( $openprint::dbh, $ac );
-} # end sub delete
+} # end sub destroy
 
 sub Type {
 	my $self = shift;
@@ -667,7 +701,7 @@ $openprint::log->debug("No presses in used_press_name");
 	} # end if
 
 	if ( $params{'due_date_start'} and $params{'due_date_end'} ) {
-		$sql .= q{ AND (due_date BETWEEN ? AND ?)};
+		$sql .= q{ AND (due_date BETWEEN ? AND ?};
 		push @values, @params{'due_date_start','due_date_end'};
 		if ( exists $params{'due_date'} and ! $params{'due_date'} ) {
 			$sql .= q{ OR due_date IS NULL};
@@ -1151,6 +1185,7 @@ sub ordered_quantity_index {
 sub ordered_price {
 	my $self = shift;
 	return $$self{'ordered_price'} if $$self{'ordered_price'};
+$openprint::log->debug("Ordered price: $$self{'ordered_price'}");
 	return $$self{'price'.$self->ordered_quantity_index()};
 } # end sub ordered_price
 
@@ -1326,7 +1361,7 @@ sub copy_signature {
 	my $ac = sql::start_transaction( $dbh );
     foreach my $key ( openprint::Estimating::Printing::variables() ) {
 		next if $key eq 'SignatureIndex';
-		if ( $$data{$key} ) {
+		if ( exists $$data{$key} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$data{$key}, ! exists $$new_specs{$key} );
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );

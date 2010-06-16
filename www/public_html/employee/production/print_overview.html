@@ -3,6 +3,15 @@
 	var dropfunction = function(el){
 		new Ajax.Request( '_drop.json', { method: 'get', parameters: { ul_id: el.id, services: Sortable.serialize(el) }, evalScripts: true } );
 	}
+
+	var drops = new Array();
+	function setup_drops( ) {
+		for ( var i = 0; i < drops.length; i += 1 ) {
+			if ( $(drops[i]) ) {
+				Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
+			} // end if
+		} // end foreach id in drops
+	} // end function setup_drops
 	function setup_dates( ) {
 		var re = /^JumpToDate(\d*)$/;
 		var dates = $$('span.DueDate');
@@ -49,8 +58,6 @@
 		jsrsExecute( '/jsrs.htm', null, 'openprint::employee_schedule::set_duedate', new Array( ar[1], date.params.inputField.value ) );
 		calendar.hide();
 	}
-
-	var drops = new Array();
 -->
 </script>
 <div id="FormsPopup" style="display:none;">
@@ -233,42 +240,47 @@
 				'/employee/production/print_overview.html?schedule_end_day'}
 				) + 1;
 
+			# When it's time to add shifts, we add in sets, until we find an already-implemented shift.
+			my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(),'order'=>'starttime');
+
+			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			foreach ( 1 .. $end ) {
+				my $today = sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day );
+				my $tomorrow = sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, 1 ) );
 
+				# Get the shifts on this day.
 				my @Shifts = openprint::Shift->find( 
 					'equipment_id' 		=>	$E->id(),
-					'starttime_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ),
-					'starttime_end'		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', $year, $month, $day ),
+					'starttime_>='		=>	$today,
+					'starttime_<'		=>	$tomorrow,
 					'order'				=>	'starttime',
 					);
-				if ( ! @Shifts ) {
+				if ( @Equipment_Shifts and ! @Shifts ) {
 					my $NextES;
 					my $PreviousShift = openprint::Shift->find_one( 
 							'equipment_id'	=>	$E->id(), 
+							'starttime_<'	=>	$today,
 							'order'			=>	'starttime DESC'
 							);
 					if ( $PreviousShift ) {
-						$NextES = openprint::Equipment_Shift->find_one(
-								'equipment_id'	=>	$E->id(),
-								'starttime_>='	=>	$PreviousShift->Equipment_Shift()->endtime(),
-								'order'			=>	'starttime',
-								);
+						my $break = @Equipment_Shifts;
+						while ( $Equipment_Shifts[0]->id() != $PreviousShift->shift_id() ) {
+							push @Equipment_Shifts, shift @Equipment_Shifts;
+							$break -= 1;
+							last if ! $break;
+						} # end while
+						if ( $Equipment_Shifts[0]->id() != $PreviousShift->shift_id() ) {
+							$log->error("Shift $$PreviousShift{'shift_id'} does not exist in " . join(',', map { $_->id() } @Equipment_Shifts ) );
+							( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+							next;
+						} # end if
+						push @Equipment_Shifts, shift @Equipment_Shifts;
 					} # end if
-					if ( ! $NextES ) {
-						$NextES = openprint::Equipment_Shift->find_one('equipment_id'=>$E->id(),'order'=>'starttime');
-					} # end if
-					if ( $NextES ) {
-						# This adds 1, need to add until we hit the next day
-						my $today = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d 00:00:00', $year, $month, $day ) );
-						my $tomorrow = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, 1 ) ) );
-						my $Shift;
-						do {
-							$Shift = $NextES->emanantise( $today );
-							push @Shifts, $Shift;
-							$NextES = $NextES->Next();
-						} while ( $NextES and ( $Shift->endtime_seconds() < $tomorrow ) );
-					} # end if
+					foreach my $NextES ( @Equipment_Shifts ) {
+						my $Shift = $NextES->emanantise( Date::Parse::str2time($today) );
+						push @Shifts, $Shift if $Shift->starttime_seconds() < Date::Parse::str2time($tomorrow);
+					} # end foreach
 				} # end if
 				# Remove duplicates
 				for ( my $i = 0; $i < @Shifts; $i += 1 ) {
@@ -304,11 +316,7 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 <script type="text/javascript">
 // <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'drops'}} ) ) ?>");
-	for ( var i = 0; i < drops.length; i += 1 ) {
-		if ( $(drops[i]) ) {
-			Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
-		} // end if
-	} // end foreach id in drops
+	setup_drops();
 	setup_dates();
 // ]]>
 </script>

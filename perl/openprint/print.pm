@@ -224,6 +224,8 @@ sub print_prices {
 
 	my $service_index = $$variable{'ServiceIndex'};
 	$service_index = $openprint::param{'ServiceIndex'} if ! $service_index;
+	my @service_ids = split(',', $service_index);
+	$service_index = $service_ids[0];
 	my $project_index = $$variable{'ProjectIndex'};
 	$project_index = $openprint::param{'ProjectIndex'} if ! $project_index;
 	$project_index = $openprint::session{'project_id'} if ! $project_index;

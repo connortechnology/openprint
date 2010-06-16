@@ -541,6 +541,9 @@ sub get_runtime {
 sub summary {
 	my ( $Project, $service_id, $qty_index ) = @_;
 
+	my @service_ids = split(',', $service_id );
+	$service_id = $service_ids[0];
+
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();
 

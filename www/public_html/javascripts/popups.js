@@ -157,9 +157,12 @@ var popupWin;
 function popup_window( url, parameters, options ) {
 	if ( ! popupWin ) {
 		var width = 400;
-		if ( options &&options.width )
-			width = options.width;
-		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width} );
+		var height = 400;
+		if ( options ) {
+			if ( options.width ) width = options.width;
+			if ( options.height ) height = options.height;
+		} // end if
+		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height} );
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {

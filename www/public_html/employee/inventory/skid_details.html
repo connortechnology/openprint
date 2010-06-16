@@ -1,169 +1,5 @@
 <script type="text/javascript" src="/javascripts/paper.js"></script>
-<script type="text/javascript">
-function convert_lbs_to_kg( from, to ) {
-	var qtys = from.value.split(',');
-	for ( var i=0; i< qtys.length; i+=1 ) {
-		qtys[i] = do_decimals( parseFloat(qtys[i] / 2.2), 2 );
-	} // end for
-	to.value = qtys.join(',');
-}
-function convert_kg_to_lbs( from, to ) {
-	var qtys = from.value.split(',');
-	for ( var i=0; i< qtys.length; i+=1 ) {
-		qtys[i] = parseInt(qtys[i] * 2.2);
-	} // end for
-	to.value = qtys.join(',');
-}
-var allocateWin;
-function allocate_window(paper_id, skid_id, quantity ) {
-	if ( ! allocateWin ) {
-		allocateWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-onDestroy: function(eventName, win) {
-			   if (win == allocateWin) {
-				   allocateWin = null;
-				   Windows.removeObserver(this);
-			   }
-		   }
-		}
-		Windows.addObserver(myObserver);
-	} // end if
-	allocateWin.setHTMLContent('Loading... please wait');
-	allocateWin.showCenter();
-	var url = '/employee/inventory/_allocate_popup.html?paper_id='+paper_id;
-	url += '&skid_id='+skid_id;
-	url += '&quantity='+quantity;
-
-	allocateWin.setAjaxContent(url, null , true);
-} // end function allocate_window
-var checkinWin;
-function checkin_window( paper_id, skid_id, quantity ) {
-	if ( ! checkinWin ) {
-		checkinWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-onDestroy: function(eventName, win) {
-			   if (win == checkinWin) {
-				   checkinWin = null;
-				   Windows.removeObserver(this);
-			   }
-		   }
-		}
-		Windows.addObserver(myObserver);
-	} // end if
-	checkinWin.setHTMLContent('Loading... please wait');
-	checkinWin.showCenter();
-	var url = '/employee/inventory/_check_in_popup.html?paper_id='+paper_id;
-	url += '&skid_id='+skid_id;
-	url += '&quantity='+quantity;
-	checkinWin.setAjaxContent(url, null , true);
-} // end function checkin_window
-var checkoutWin;
-function checkout_window( paper_id, skid_id, quantity ) {
-	if ( ! checkoutWin ) {
-		checkoutWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:400} );
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-onDestroy: function(eventName, win) {
-			   if (win == checkoutWin) {
-				   checkoutWin = null;
-				   Windows.removeObserver(this);
-			   }
-		   }
-		}
-		Windows.addObserver(myObserver);
-	} // end if
-	checkoutWin.setHTMLContent('Loading... please wait');
-	checkoutWin.showCenter();
-	var url = '/employee/inventory/_check_out_popup.html?paper_id='+paper_id;
-	url += '&skid_id='+skid_id;
-	if ( quantity )
-		url += '&quantity='+quantity;
-	checkoutWin.setAjaxContent(url, null , true);
-} // end function checkout_window
-
-function check_inputs(form ) {
-
-	if ( (form.Name && form.txtName) && ! ( form.Name.value || form.txtName.value ) ) {
-		alert('Please select the stock Name');
-		return false;
-	} // end if
-	if ( (form.Finish && form.txtFinish) && ! ( form.Finish.value || form.txtFinish.value ) ) {
-		alert('Please select the stock Finish');
-		return false;
-	} // end if
-	if ( (form.Finish && form.txtColour) && ! ( form.Colour.value || form.txtColour.value ) ) {
-		alert('Please select the stock Colour');
-		return false;
-	} // end if
-	if ( (form.Quality && form.txtQuality) && ! ( form.Quality.value || form.txtQuality.value ) ) {
-		alert('Please select the stock Quality');
-		return false;
-	} // end if
-	if ( form.type && ! get_rdb_value( form.type ) ) {
-		alert('Please select the stock type Roll/Sheet');
-		return false;
-	} // end if
-	if ( ( form.weight && form.calliper) && ! ( form.weight.value || form.calliper.value ) ) {
-		alert('Please enter either the weight or calliper');
-		return false;
-	} // end if
-	if ( form.type && get_rdb_value( form.type ) == 'Roll' ) {
-		if ( ! form.width.value ) {
-			alert('Please enter either the width');
-			return false;
-		} // end if
-	} else {
-		if ( form.width && form.height && ! ( form.width.value && form.height.value ) ) {
-			alert('Please enter either the width and height');
-			return false;
-		} // end if
-	} // end if
-	if ( form.Quantity && ! form.Quantity.value ) {
-		alert('Please enter the quantity of stock');
-		return false;
-	} // end if
-
-	var units;
-    if ( form.Units )
-        units = get_value( form.Units );
-    else if ($('Units'))
-        units = $('Units').innerHTML;
-
-	if ( form.available_quantity && parseInt(form.Quantity.value) > parseInt(form.available_quantity.value) ) {
-		alert( 'You asked for ' + form.Quantity.value + ' but there are only ' + form.available_quantity.value + ' ' + units + ' available' );
-		return false;
-	} // end if
-	return true;
-}
-
-function calc() {
-}
-function mweight_to_gsm( form ) {
-	var mweight = parseFloat(1*form.elements['mweight'].value);
-	var width = parseFloat(1*form.elements['width'].value);
-	var height = parseFloat(1*form.elements['height'].value);
-	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
-	form.elements['gsm'].value = gsm;
-}
-function gsm_to_mweight( form ) {
-	var gsm = parseFloat(1*form.elements['gsm'].value);
-	var width = parseFloat(1*form.elements['width'].value);
-	var height = parseFloat(1*form.elements['height'].value);
-	var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
-	form.elements['mweight'].value = mweight;
-}
-
-</script>
-<style type="text/css">
-	input.text {
-		width: 70%;
-	}
-	select#Manufacturer, select#Owner, select#Name, select#Finish, select#Colour, select#Weight {
-		width: 70%;
-	}
-</style>
+<script type="text/javascript" src="skid_details.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $param{'skid_quantity'} ) ?>
 <? echo ( return ''; ssi::writeButton( $log, $dbh, 'manifest', 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=".join( ',',map {$_->id()} @{$$variable{'Skids'}})."&amp;docket=$param{Docket}&amp;Manifest=1&amp;paper_id=".$$variable{'paper_id'}."', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Print Labels' ); ) ?>
@@ -172,17 +8,28 @@ function gsm_to_mweight( form ) {
 <div class="error">Warning: This skid has been deleted.</div>
 <? endif ( $$variable{'Skid'}->deleted() ) ?>
 
-<form name="jump" method="get" action="skid_details.html">
+<form id="jump" name="jump" method="get" action="skid_details.html">
 	<fieldset class="filters"><legend>Choose Skid</legend>
 		<p>
 			<label for="skid_id">Skid ID #</label>
-			<input type="text" id="skid_id" name="skid_id" size="80" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler( this, event);" />
+			<input type="text" id="skid_id" name="skid_id" size="80" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event);" onkeydown="this.form.rfidtag_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" />
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Go';jump.submit();}",'','Go' ),
 				ssi::writeButton( $log, $dbh, 'Previous', 'previous.gif', q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Previous';jump.submit();}`,'','&lt;&lt;' ),
 				ssi::writeButton( $log, $dbh, 'Next', 'next.gif', q`if(!jump.skid_id.value){jump.skid_id.focus();} else {jump.btnFunction.value='Next';jump.submit();}`,'','&gt;&gt;' ),
 			); ) ?>
 		</p>
+		<p>
+			<label for="rfidtag_id">RFID Tag ID #</label>
+			<input type="text" id="rfidtag_id" name="rfidtag_id" size="18" onkeyup="this.value=this.value.replace(/\s/,'');" onkeypress="return input_handler( this, event);" onkeydown="this.form.skid_id.value='';this.form.rfidtag_hex.value='';if(event.keyCode == 13){$('jump').submit();}" value="<?rfidtag_id?>" />
+			Hex:
+			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.skid_id.value='';this.form.rfidtag_id.value='';if(event.keyCode == 13){$('jump').submit( );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('jump').submit();",'','Load' ); ) ?><br/>
+			<? if ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
+				<? echo ( return join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a> <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->skid_id(), $_->id() ); }  openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'}.'%','type'=>'Skid') ); ) ?>
+			<? endif ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
+		</p>
+		
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
@@ -242,7 +89,8 @@ function gsm_to_mweight( form ) {
 				<? endif ( $$variable{'Skid'}->rfidtag_id() ) ?>
 			</p>
 			<p><label>Verification:</label>
-				<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" />
+				<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" value="<? echo ( $session{'/employee/inventory/skid_details.html?verification_code'} ) ?>" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'vpopulate', '', "f1.verification_code.value='".Date::Format::time2str( '%Y', time )."';", '', 'Verification:' ); ) ?>
 			</p>
 			<p>
 				<label>Location:</label>
@@ -263,9 +111,8 @@ function gsm_to_mweight( form ) {
 				<label>Manifest:</label>
 				<? echo (
 					my $html = '';
-					my @ManifestContents = openprint::ManifestContent->find('skid_id'=>$$variable{'Skid'}->id() );
-					foreach my $MC ( @ManifestContents ) {
-					$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%2$s</a><br/>', $MC->manifest_id(), $MC->Manifest()->name() );
+					foreach my $MC ( openprint::ManifestContent->find('skid_id'=>$$variable{'Skid'}->id() ) ) {
+						$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$s">%2$s</a><br/>', $MC->manifest_id(), $MC->Manifest()->name() );
 					} # end foreach MC
 					return $html;
 				) ?>

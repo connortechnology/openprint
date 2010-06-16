@@ -15,15 +15,17 @@
 		<table class="List">
 			<tr>
 				<th width="80" align="left">Skid</th>
-				<th width="170" align="left">RFIDTag</th>
+				<th width="95" align="left">RFIDTag</th>
 				<th align="left">Location</th>
 				<th width="75" align="right">Last Seen</th>
 				<th width="100" align="right">Quantity</th>
+				<th width="100" align="right">Quality</th>
 				<th width="65">&nbsp;</th>
 			</tr>
 			<? echo (
 				my $html;
 				my $rowclass;
+				$$variable{'skid_count'} = 0;
 				foreach my $C ( openprint::SkidContent->find('paper_id'=>$param{'paper_id'}, 'quantity_>'=>0,'order'=>'skid_id') ) {
 					my $Skid = $C->Skid();
 					my $last_seen_days = $Skid->last_seen_days();
@@ -31,22 +33,27 @@
 						<td><a href="skid_details.html?skid_id=%2$d">%4$s</a></td>
 						<td><a href="skid_details.html?skid_id=%2$d">%3$s</a></td>
 						<td align="right"><a href="skid_details.html?skid_id=%2$d">%7$s</a></td>
-						<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td><td>', 
+						<td align="right"><a href="skid_details.html?skid_id=%2$d">%5$s%6$s</a></td>
+						<td align="right"><a href="skid_details.html?skid_id=%2$d">%8$s</a></td><td>',
 						$rowclass, $C->skid_id(), $Skid->Location()->name(), 
-						( $Skid->rfidtag_id() ? sprintf('%d (%2$x)', $Skid->rfidtag_id(),substr($Skid->RFIDTag()->id(),1,15)) : '' ), 
+						( $Skid->rfidtag_id() ? sprintf('%d (%2$x)', $Skid->RFIDTag()->id_short(),substr($Skid->RFIDTag()->id(),1,15)) : '' ), 
 						Number::Format::format_number($C->quantity()), $C->Paper()->units(), 
 						( $last_seen_days ? $last_seen_days . ' days' : 'Today' ),
+						$C->quality(),
 						);
 					$html .= ssi::writeButton( $log, $dbh, "label$$C{skid_id}", 'label.gif', "open_window('/employee/inventory/paper_label_window.html?skid_id=$$C{skid_id}', 'label', 'toolbar=no,width=400,height=400,location=no,resizeable=no,scrollbars=no,status=no');", '', 'Label' );
 					$html .= q`</td></tr>`;
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 					$$variable{'InventoryTotal'} += $$C{quantity};
+					$$variable{'skid_count'} += 1;
 				} # end foreach SkidContent
 				return $html;
 			) ?>
 			<tr class="totals">
-				<td colspan="4"><b>Totals:</b></td>
+				<td colspan="3"><b>Totals:</b></td>
+				<td align="right"><? echo ( $$variable{'skid_count'}. ' ' . $$variable{'Paper'}->type() . ( $$variable{'skid_count'} == 1 ? '' : 's' ); ) ?></td>
 				<td align="right"><? echo ( Number::Format::format_number($$variable{'InventoryTotal'}).$$variable{'Paper'}->units(); ) ?></td>
+				<td>&nbsp;</td>
 				<td>&nbsp;</td>
 			</tr>
 			<tr class="totals unprintable">
@@ -60,6 +67,7 @@
 					</select>
 				</td>
 				<td><input type="text" id="quantity" name="quantity" size="9"/></td>
+				<td><select id="quality_id" name="quality_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockQuality::find('order'=>'lower(shortname)') ] ); ) ?></select></td>
 				<td><? echo ( ssi::writeButton( $log, $dbh, 'AddInventory', 'add.gif', "LoadContent( 'CurrentInventory', '/employee/inventory/_paper_inventory_entries.html', Serialize( document.forms['f2'] ) );", '', 'Add' ); ) ?></td>
 			</tr>
 		</table>

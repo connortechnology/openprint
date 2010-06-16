@@ -401,7 +401,11 @@ sub get_li {
 		} # end if
 		$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$self{'id'}, '', "if(confirm('Are you sure?')){new Ajax.Request('_li_change.json', {parameters: {schedule_id:$$self{'id'}, action: 'RemoveJob'}, evalScripts: true } )};", '', 'D' );
 		if ( $$self{'project_id'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", '', 'S' ) if @{$$self{'service_id'}} > 1;
+			if ( @{$$self{'service_id'}} == 2 ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { id: '$ul_id', schedule_id: $$self{'id'}, action:'split'}, evalScripts: true } );", '', 'S' );
+			} elsif ( @{$$self{'service_id'}} > 2 ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", '', 'S' );
+			} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{'project_id'} and ( $self->status() ne 'In Production' ) ) ) {
@@ -410,7 +414,7 @@ sub get_li {
 			$html .= ssi::writeButton( $log, $dbh, 'Stop'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'stop' } } );", '', 'Stop' );
 		} # end if
 		$html .= '</span>';
-		if ( $$self{'project_id'} and $Equipment->smartscheduling() ) {
+		if ( $$self{'project_id'} ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
@@ -436,7 +440,7 @@ sub get_li {
 			$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", '', 'Start' );
 		} # end if
 		$html .= '</span>';
-		if ( $$self{'project_id'} and $Equipment->smartscheduling() ) {
+		if ( $$self{'project_id'} ) {
 			$html .= '<span class="Services">';
 			$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 			$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
@@ -502,7 +506,10 @@ sub Project {
 } # end sub Project
 
 sub runtime {
-	my ( $self ) = @_;
+	my ( $self, $new ) = @_;
+	if ( @_ == 2 ) {
+		$$self{'runtime'} = $new;
+	} # end if
 
 	if ( ! $$self{'runtime'} ) {
 		my $seconds = 0;
@@ -685,28 +692,41 @@ sub speed {
 } # end sub speed
 
 sub split {
-	my ( $self ) = @_;
+	my ( $self, $forms ) = @_;
 
 	my $Project = $self->Project();
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Splitting forms' );
     my @service_ids = @{$$self{'service_id'}};
 	if ( @service_ids > 1 ) {
-        my $runtime = int ( $self->runtime_seconds()/@service_ids );
-        $self->runtime_seconds( $runtime );
-        $self->impressions( $self->impressions() / @service_ids );
-        $$self{'service_id'} = [ shift @service_ids ];
-        $self->save();
-        my $starttime = $self->starttime_seconds() + $runtime if $self->starttime();
-
-        foreach my $s_id ( @service_ids ) {
-            my $J2 = $self->copy();
-			$$J2{'service_id'} = [ $s_id ];
+		if ( $forms ) {
+			my @new_forms = splice @service_ids, @service_ids - $forms, $forms;
+			$self->service_id( \@service_ids );
+			$self->runtime(undef);
+			$self->save();
+			my $J2 = $self->copy();
 			if ( $self->starttime() ) {
-				$J2->starttime_seconds( $starttime );
-				$starttime += $runtime;
-			} # end if starttime
-            $J2->save();
-        } # end foreach 
+				$J2->starttime_seconds( $self->endtime_seconds() + 1);
+			} # end if
+			$J2->service_id(\@new_forms);
+			$J2->runtime(undef);
+			$J2->save();
+		} else {
+			my $runtime = int ( $self->runtime_seconds()/@service_ids );
+			$self->runtime_seconds( $runtime );
+			$self->impressions( $self->impressions() / @service_ids );
+			$$self{'service_id'} = [ shift @service_ids ];
+			$self->save();
+			my $starttime = $self->starttime_seconds() + $runtime if $self->starttime();
+			foreach my $s_id ( @service_ids ) {
+				my $J2 = $self->copy();
+				$$J2{'service_id'} = [ $s_id ];
+				if ( $self->starttime() ) {
+					$J2->starttime_seconds( $starttime );
+					$starttime += $runtime;
+				} # end if starttime
+				$J2->save();
+			} # end foreach 
+		} # end if
 	} elsif ( @service_ids ) { # == 1
 		# If there is only 1 service, then we copy it, dividing al relevant values
 		my $service_index = $service_ids[0];
