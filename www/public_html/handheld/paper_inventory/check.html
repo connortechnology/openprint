@@ -35,7 +35,7 @@
 <? echo (
 	my $html;
 	my $rowclass;
-	foreach my $ic ( eprint::InventoryCheck::find( $log, $dbh, 'Order' => 'id' ) ) {
+	foreach my $ic ( eprint::InventoryCheck->find( $log, $dbh, 'Order' => 'id' ) ) {
 		$html .= qq`<tr$rowclass><td><a href="check.html?ic_id=$$ic{'id'}">$$ic{'id'}</a></td><td>`;
 		$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$ic{'created_on'}) );
 		$html .= qq`</td><td>$$ic{'finished_on'}</td></tr>`;

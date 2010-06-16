@@ -22,6 +22,7 @@ $serial= 'papername_id_seq';
 require sql;
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 
 	my $sql = 'SELECT * FROM PaperNames WHERE 1>0';
@@ -38,7 +39,7 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("openprint::StockName::find( $sql)" . $openprint::dbh->errstr);
+		$openprint::log->debug("openprint::StockName->find( $sql)" . $openprint::dbh->errstr);
 	} else {
 		return map { new openprint::StockName( $_->{id}, $_ ); } @$data;
 	} # end if

@@ -1,3 +1,4 @@
+<? if ( openprint::ProjectType->find() ) ?>
 <? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
 <table class="List">
 	<thead>
@@ -49,9 +50,9 @@
 					} # end foreach qty_index
 					return $html
 				) ?>
-				</table>
-			</td>
-		</tr>
+			</table>
+		</td>
+	</tr>
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 </table>
@@ -68,7 +69,7 @@
 	<? eval ( @{$$variable{'Projects'}} = $$variable{'Quote'}->Quoted_Projects(); ) ?>
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 	<tr<?rowclass?>> 
-		<td class="projects"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( ssi::htmlize($$variable{'reference'}) . ':<br/>'  if $$variable{'reference'} ) ?><? echo ( new openprint::Project( $$variable{'project_index'} )->summary(); ) ?></a></td>
+		<td class="projects"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><? echo ( ssi::htmlize($$variable{'reference'}) . ':<br/>'  if $$variable{'reference'} ) ?><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 		<td colspan="3">
 			<table>
 				<? echo (
@@ -104,7 +105,9 @@
 				) ?>
 			</table>
 		</td>
+	</tr>
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}}; ) ?>
 </table>
 <? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? endif ( openprint::ProjectType->find() ) ?>

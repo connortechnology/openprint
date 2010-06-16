@@ -133,10 +133,10 @@ if ( 0 and $inotify and $inotify->watch( $source_path, IN_CREATE ) ) {
 					die 'Error opening db' if ! $dbh;
 
 					configuration::init_cache( $log, $dbh );
-					foreach my $PPF (openprint::CIP3_PPF::find('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
+					foreach my $PPF (openprint::CIP3_PPF->find('docket'=>$docket,'signature'=>$sig,'side'=>$side)) {
 						$PPF->delete();
 					} # end foreach
-					foreach my $Project ( openprint::Project::find('docket'=>$docket) ) {
+					foreach my $Project ( openprint::Project->find('docket'=>$docket) ) {
 						my $services = $Project->services();
 
 						my $found = 0;

@@ -111,7 +111,7 @@
 		<ul><li><label>Presses:</label>
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
-	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
 	} # end foreach press
@@ -241,7 +241,7 @@
 				) + 1;
 
 			# When it's time to add shifts, we add in sets, until we find an already-implemented shift.
-			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
+			my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(),'order'=>'starttime');
 
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
@@ -250,7 +250,7 @@
 				my $tomorrow = sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, 1 ) );
 
 				# Get the shifts on this day.
-				my @Shifts = openprint::Shift::find( 
+				my @Shifts = openprint::Shift->find( 
 					'equipment_id' 		=>	$E->id(),
 					'starttime_>='		=>	$today,
 					'starttime_<'		=>	$tomorrow,
@@ -258,7 +258,7 @@
 					);
 				if ( @Equipment_Shifts and ! @Shifts ) {
 					my $NextES;
-					my $PreviousShift = openprint::Shift::find_one( 
+					my $PreviousShift = openprint::Shift->find_one( 
 							'equipment_id'	=>	$E->id(), 
 							'starttime_<'	=>	$today,
 							'order'			=>	'starttime DESC'

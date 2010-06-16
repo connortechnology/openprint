@@ -10,7 +10,7 @@
 			 'country',
 			 'phone',
 			 'fax'} = $Company->get( 'name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
-		my @Users = openprint::User::find( 
+		my @Users = openprint::User->find( 
 			 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
 			 'order'=>'lower(lastname),lower(firstname)'
 		);
@@ -43,7 +43,7 @@
 				<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 					<option value="">Please Select</option>
 		<? echo ( 
-			my @Users = openprint::User::find( 
+			my @Users = openprint::User->find( 
 				'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
 				'order'=>'lower(LastName),lower(FirstName)'
 			 );

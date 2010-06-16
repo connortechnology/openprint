@@ -14,7 +14,7 @@
 			my $html = '';
 			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 			$$variable{'service_total'} = 0;
-			foreach my $Timetrack ( openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
+			foreach my $Timetrack ( openprint::Timetrack->find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
 				$html .= sprintf( q`<tr title="%s" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`, ssi::htmlize( $Timetrack->description() ) );
 				$html .= sprintf('<td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%3$s</a></td>', $Timetrack->id(), $$variable{'Invoice'}->id(), ssi::htmlize( $Timetrack->Employee()->name() ) );
 				$html .= sprintf('<td class="Service"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%3$s</a></td>', $Timetrack->id(), $$variable{'Invoice'}->id(), ssi::htmlize( $Timetrack->Service()->name() ) );

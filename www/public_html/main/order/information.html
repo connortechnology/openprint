@@ -119,10 +119,10 @@ function same_as_billing( on, id ) {
 							$$variable{'Project'} = $Projects[0];
 						} # end if
 						my $services = $$variable{'Project'}->services();
-						my @ShippingServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+						my @ShippingServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 						
 						my @ShippingServices;
-						foreach my $ST ( openprint::ServiceType::find('category'=>'Shipping') ) {
+						foreach my $ST ( openprint::ServiceType->find('category'=>'Shipping') ) {
 							if ( $$services{$ST->name()} ) {
 								push @ShippingServices, @{$$services{$ST->name()}};
 							} # end if

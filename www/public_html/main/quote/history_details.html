@@ -9,6 +9,7 @@ function delete_confirm(form) {
 	}
 }
 </script>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="/main/quote/quote_history.html">
 	<p class="buttons">
 		<input type="hidden" name="btnFunction" value="Delete Quote"/>
@@ -16,7 +17,7 @@ function delete_confirm(form) {
 	<? echo ( my $html = '';
 			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?quote_id=".$$variable{'Quote'}->id()."', 800 );", '', 'View Log' );
+				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "popup_window('_view_log.html?quote_id=".$$variable{'Quote'}->id()."', '', {width: 800} );", '', 'View Log' );
 			} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'deleteFromHist.gif', "f1.action='/main/quote/history.html';delete_confirm(f1);", '', 'Delete' );
 			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
@@ -39,7 +40,8 @@ To save, process a new quote or process an order from this quotation, please cli
 <!--#include virtual="/includes/quote_header.html" -->
 <!--#include virtual="/includes/quote_information.html" -->
 	</div>
-		<!--#include virtual="_contents.html"-->
+		<!--#include virtual="_projects.html"-->
+		<!--#include virtual="_products_view.html"-->
 <table class="List">
 	<tr>
 		<td>

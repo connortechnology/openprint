@@ -38,45 +38,6 @@ require sql;
 	'Markup' => 0,
 );
 
-sub find {
-	my %params = @_;
-
-	my $sql = q{SELECT * FROM Paper_Prices WHERE 1>0};
-	my @values;
-
-	if ( exists $params{'paper_id'} ) {
-		$sql .= ' AND lngpaperindex=?';
-		push @values, $params{'paper_id'};
-	} # end if
-	if ( exists $params{'Paper'} ) {
-		$sql .= ' AND lngpaperindex=?';
-		push @values, $params{'Paper'}->id();
-	} # end if
-	if ( $params{'pricelist_id'} ) {
-		$sql .= ' AND lngListindex=?';
-		push @values, $params{'pricelist_id'};
-	} elsif ( $params{'Pricelist'} ) {
-		$sql .= ' AND lngListindex=?';
-		push @values, $params{'Pricelist'}->id();
-	} # end if
-	if ( exists $params{'units'} ) {
-		$sql .= ' AND strunits=?';
-		push @values, $params{'units'};
-	} # end if
-	if ( $params{'order'} ) {
-		$sql .= " ORDER BY $params{'order'}";
-	} # end if
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->warn("Error loading PaperPrices: ($sql) (@values)" . $openprint::dbh->errstr );
-		return;
-	} elsif ($debug) {
-		$openprint::log->debug("openprint::PaperPrice::find($sql) (@values) " . @$data );
-	} # end if
-	return map { new openprint::PaperPrice( $_->{id}, $_ ); } @$data;
-} # end sub find
-
 sub delete {
 	my $self = shift;
     sql::execute( undef, undef, q{DELETE FROM Paper_Prices WHERE id=?}, $$self{'id'} );
@@ -122,6 +83,4 @@ sub priceperfoot {
 }
 
 1;
-
 __END__
-~       

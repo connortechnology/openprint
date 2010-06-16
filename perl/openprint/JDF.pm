@@ -343,7 +343,7 @@ $openprint::log->debug("Starting JDF StrippingParams");
 	$BinderySignatureRef->setAttribute('rRef','BIS'.$sig_id );
 	#} # end if
 
-	my @Equipment = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+	my @Equipment = openprint::Equipment->find( 'strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 	my $Equipment = shift @Equipment;
 	if ( $Equipment ) {
 	my $DeviceRef = $SPSheetName->appendChild( $doc->createElement('DeviceRef') );
@@ -492,7 +492,7 @@ sub Layout_Signature {
     $Part->setAttribute('SignatureName', 'Sig#'.$$sig_specs{'SignatureIndex'} );
 	$Part->setAttribute('SheetName',sprintf('Sig#%dSheet#%d', $$sig_specs{'SignatureIndex'}, 1 ) );
 
-    my @Equipment = openprint::Equipment::find( 'strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+    my @Equipment = openprint::Equipment->find( 'strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
     my $Equipment = shift @Equipment;
     my $grip = $Equipment->specification('Grip');
 
@@ -576,7 +576,7 @@ sub JDF_ImpositionIntent {
 	$summary =~ s/<br\/>/ /g;
 	$ImpositionIntent->setAttribute('DescriptiveName', $summary );
 
-	my @Papers = openprint::Paper::find(
+	my @Papers = openprint::Paper->find(
 			'name'      => $$sig_specs{'ddmStockBrand'},
 			'finish'    => $$sig_specs{'ddmStockFinish'},
 			'colour'    => $$sig_specs{'ddmStockColour'},
@@ -872,10 +872,10 @@ $openprint::log->debug("Start JDF_PrintingGreyBox");
 	# Add Press?
 	my $Equipment;
 	if ( $$sig_specs{'UsePress'} ) {
-		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'});
+		my @Equipment = openprint::Equipment->find('strid'=>$$sig_specs{'UsePress'});
 		$Equipment = shift @Equipment if @Equipment;
 	} else {
-		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+		my @Equipment = openprint::Equipment->find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 		$Equipment = shift @Equipment if @Equipment;
 	} # end if
 	if ( $Equipment ) {
@@ -1299,10 +1299,10 @@ sub JDF_PrintingProcess {
 # Add Press?
 	my $Equipment;
 	if ( $$sig_specs{'UsePress'} ) {
-		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'});
+		my @Equipment = openprint::Equipment->find('strid'=>$$sig_specs{'UsePress'});
 		$Equipment = shift @Equipment if @Equipment;
 	} else {
-		my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+		my @Equipment = openprint::Equipment->find('strid'=>$$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 		$Equipment = shift @Equipment if @Equipment;
 	} # end if
 	if ( $Equipment ) {

@@ -2,7 +2,7 @@
 	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Invoices'}} = ();
 	if ( $param{'invoice_id'} ) {
-		foreach my $Invoice ( openprint::Invoice::find( 'id'=>$param{'invoice_id'} ) ) {
+		foreach my $Invoice ( openprint::Invoice->find( 'id'=>$param{'invoice_id'} ) ) {
 			push @{$$variable{'Invoices'}}, $Invoice;
 			$$variable{'subtotal'} += $Invoice->subtotal();
 			$$variable{'federaltax_total'} += $Invoice->federaltax();
@@ -11,7 +11,7 @@
 			$$variable{'owing_total'} += $Invoice->owing();
 		} # end foreach
 	} else {
-		foreach my $Invoice ( openprint::Invoice::find( 
+		foreach my $Invoice ( openprint::Invoice->find( 
 			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ),
 			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ),
 			'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?due_on_start_year','/invoice/history.html?due_on_start_month','/invoice/history.html?due_on_start_day'} ),

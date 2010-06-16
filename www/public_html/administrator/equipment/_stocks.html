@@ -1,6 +1,6 @@
 <? eval (
 	@{$$variable{'Stocks'}} = ();
-	foreach my $Stock ( openprint::Paper::find( 
+	foreach my $Stock ( openprint::Paper->find( 
 			'group_id'		=> $session{'/administrator/equipment/edit.html?Group'},
 			'owner_id'		=> $config{'Owner'},
 			'manufacturer_id'		=> $session{'/administrator/equipment/edit.html?Manufacturer'},

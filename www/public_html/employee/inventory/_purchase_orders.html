@@ -1,17 +1,17 @@
 <? eval (
 	if ( $param{'po_id'} ) {
-		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
 			'id'=>$param{'po_id'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'deleted'=>[1,0],
 			'order' => 'id desc');
 	} elsif ( $param{'docket'} ) {
-		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
 			'docket'=>$param{'docket'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'order' => 'id desc');
 	} elsif ( $param{'manifest_id'} ) {
-		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
 			'manifest_id'=>$param{'manifest_id'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'order' => 'id desc');
@@ -28,7 +28,7 @@
 		$search{'cancelled'} = $session{'/employee/inventory/purchase_orders.html?cancelled'} if $session{'/employee/inventory/purchase_orders.html?cancelled'} ne '';
 
 		@{$$variable{'PurchaseOrders'}} = ();
-		foreach my $PO ( openprint::PurchaseOrder::find( %search ) ) {
+		foreach my $PO ( openprint::PurchaseOrder->find( %search ) ) {
 			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
 			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' and $PO->authorized() ne '0';
 			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'U' and $PO->authorized() ne '';

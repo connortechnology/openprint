@@ -4,7 +4,7 @@
 	<select id="PrintingType" name="PrintingType" onchange="remove_div('OrderButton');calc(this.form.name);">
 		<? echo (
 				my %printingtypes;
-				foreach my $Press ( openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
+				foreach my $Press ( openprint::Equipment->find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
 					my $printing_type = $Press->specification('Printing Type');
 					next if ! $printing_type;
 					my $printing_type_name = $Press->specification('Printing Type Name');

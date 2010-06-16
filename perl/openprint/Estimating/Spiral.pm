@@ -109,7 +109,7 @@ $log->debug("SPIRAL!!!!!!!!!!!!!!!!!!");
 
 			$price = $makeReadyPrice + $PunchingPrice{'Total'} + $CoilingPrice{'Total'};
 
-			if ( my @Materials = openprint::Material::find('name'=>$ServiceType->name()) ) {
+			if ( my @Materials = openprint::Material->find('name'=>$ServiceType->name()) ) {
 				my %MaterialPrice = $Materials[0]->get_price( $$specs{'txtFinishedCalliper'}, undef );
 				if ( $MaterialPrice{'units'} eq 'Project Calliper-Per 36 Inches' ) {
 					$MaterialPrice{'Total'} = ( $MaterialPrice{'Price'} /36 ) * $$specs{'txtMaterialLength'};

@@ -10,7 +10,7 @@
 		<label>Location:</label>
 		<select name="location_id">
 			<? echo ( 
-				my @options = map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)');
+				my @options = map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)');
 				ssi::make_drop_down( \@options );
 			) ?>
 		</select>

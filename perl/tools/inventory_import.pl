@@ -48,7 +48,7 @@ while ( <HANDLE> ) {
 	my $Tag = new openprint::RFIDTag( $rfidtag_id );
 	$Tag->save( {'id'=>$rfidtag_id} ) if ! $Tag->id();
 
-	my @Locations = openprint::Location::find('name'=>$location_part2.$location_part3);
+	my @Locations = openprint::Location->find('name'=>$location_part2.$location_part3);
 	if ( @Locations ) {
 		$Tag->location_id( $Locations[0]->id() );
 		$Tag->save();
@@ -69,7 +69,7 @@ while ( <HANDLE> ) {
 	} # end if
 
 	my $Paper;
-	my @Papers = openprint::Paper::find( 'name'=>$name, 'finish'=>$finish, 'colour'=>$colour, 'weight'=>$weight, 'type'=>$type, 'width'=>$width, 'length'=>$length );
+	my @Papers = openprint::Paper->find( 'name'=>$name, 'finish'=>$finish, 'colour'=>$colour, 'weight'=>$weight, 'type'=>$type, 'width'=>$width, 'length'=>$length );
 	if ( ! @Papers ) {
 		$Paper = new openprint::Paper();
 		$Paper->manufacturer( $manufacturer );

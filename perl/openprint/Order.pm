@@ -3,7 +3,7 @@ package openprint::Order;
 
 use strict;
 use openprint ();
-use vars qw( %session %config %variable $log $dbh %fields);
+use vars qw( %session %config %variable $log $dbh $table $serial %fields %transforms %defaults );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *variable = \%openprint::variable;
@@ -18,6 +18,8 @@ require openprint::Tax;
 
 my $debug = 1;
 
+$table = 'orders';
+$serial = 'orders_id_seq';
 %fields = (
 	'id'						=> 'index',
 	'session_id'				=>	'strsessionid',
@@ -58,6 +60,7 @@ my $debug = 1;
 	);
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	my @values;
 	my $sql = 'SELECT *,(SELECT SUM(amount) FROM Payments WHERE (deleted=false or deleted IS NULL) AND order_id=Index) AS paid FROM Orders WHERE 1>0';
@@ -79,7 +82,7 @@ sub find {
 				$sql .= q{ AND CompanyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
 				push @values, @{$params{'company_id'}};
 			} else {
-				$openprint::log->warn("EMpty company array passed to openprint::Project::find");
+				$openprint::log->warn("EMpty company array passed to openprint::Project->find");
 			} # end if
 		} else {
 			$sql .= q{ AND CompanyIndex=?};
@@ -248,7 +251,7 @@ sub to_string {
 sub approve {
 	my $self = shift;
 # get taxes
-	my @Taxes = openprint::Tax::find('state'=>$self->state() );
+	my @Taxes = openprint::Tax->find('state'=>$self->state() );
 	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
 
 	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
@@ -396,7 +399,7 @@ sub Projects {
 sub Products {
 	my $self = shift;
 	return () if ! $$self{'id'};
-	@{$$self{'Products'}} = openprint::OrderedProduct::find( 'order_id'=>$$self{id} );
+	@{$$self{'Products'}} = openprint::OrderedProduct->find( 'order_id'=>$$self{id} );
 	return @{$$self{'Products'}};
 } # end sub Products
 
@@ -462,7 +465,7 @@ sub send_cancellation_notice {
 	my $Me = new openprint::User( $session{'user_id'} );
 
 	# Send to inventory and scheduling people.
-	foreach my $Recipient ( openprint::User::find('usergroups'=>['Inventory','Scheduling']) ) {
+	foreach my $Recipient ( openprint::User->find('usergroups'=>['Inventory','Scheduling']) ) {
 		next if $Recipient->id() == $session{'user_id'};
 		my %mail = (
 				SMTP	=> $config{'Mail Server'},
@@ -483,7 +486,7 @@ sub federal_tax {
 	} elsif ( ! defined $$self{'federal_tax'} ) {
 		$$self{'federal_tax'} = '';
 		if ( $self->Company()->gst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax::find('country'=>$self->country(),'state'=>$self->state() );
+			my @Taxes = openprint::Tax->find('country'=>$self->country(),'state'=>$self->state() );
 			if ( @Taxes == 1 ) {
 				my $tax_rate = $Taxes[0]->federaltax_rate();
 				if ( $tax_rate ) {
@@ -504,7 +507,7 @@ sub state_tax {
 		$$self{'state_tax'} = '';
 		if ( $self->Company()->pst_exempt() ne 'Y' ) {
 #$log->debug("Not exempt");
-			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
+			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
 #$log->debug("Taxes: " . @Taxes );
 			if ( @Taxes == 1 ) {
 				my $tax_rate = $Taxes[0]->statetax_rate();
@@ -527,7 +530,7 @@ sub harmonized_tax {
 	} elsif ( ! defined $$self{'harmonized_tax'} ) {
 		$$self{'harmonized_tax'} = '';
 		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
+			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
 			if ( @Taxes == 1 ) {
 				my $tax_rate = $Taxes[0]->harmonizedtax_rate();
 				if ( $tax_rate ) {

@@ -23,7 +23,7 @@
 		<p><label>Query:</label><textarea name="query" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->query() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->query() ) ?></textarea></p>
 		<p><label>Email From:</label><input type="text" name="email_from" value="<? hecho ( $$variable{'Campaign'}->email_from() ) ?>"  /></p>
 		<p><label>Email Subject:</label><input type="text" name="email_subject" value="<? echo ( $$variable{'Campaign'}->email_subject() ) ?>"  /></p>
-		<p><label>Template:</label><select name="template_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate::find('order'=>'lower(name)') ], $$variable{'Campaign'}->template_id() ); ) ?></select></p>
+		<p><label>Template:</label><select name="template_id"><option value="">select</option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::EmailTemplate->find('order'=>'lower(name)') ], $$variable{'Campaign'}->template_id() ); ) ?></select></p>
 		<p><label>Email Body:</label><textarea name="email_text" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->email_text() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->email_text() ) ?></textarea></p>
 		<p><label>Attachments:</label><textarea name="attachments" rows="<? echo ( scalar split("\n", $$variable{'Campaign'}->attachments() ) ) ?>" onkeyup="textarea_resize( this );" ><? echo ( $$variable{'Campaign'}->attachments() ) ?></textarea></p>
 		<p><label>Times to send:</label><input type="text" name="timestosend" value="<? echo ( $$variable{'Campaign'}->timestosend() ) ?>"  /></p>

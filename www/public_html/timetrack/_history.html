@@ -1,11 +1,11 @@
 <? eval (
 	@{$$variable{'Timetracks'}} = ();
 	$$variable{'elapsed_total'} = $$variable{'value_total'} = $$variable{'wage_total'} = $$variable{'distance_total'} = 0;
-	foreach my $Timetrack ( openprint::Timetrack::find( 
+	foreach my $Timetrack ( openprint::Timetrack->find( 
 		'starting_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_start_day'} ),
 		'starting_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'} ),
-		'company_id'			=> $session{'/timetrack/history.html?company_id'},
-		'employee_id'			=> $session{'/timetrack/history.html?employee_id'},
+		( $session{'/timetrack/history.html?company_id'} ? ( 'company_id'			=> $session{'/timetrack/history.html?company_id'} ) : () ),
+		( $session{'/timetrack/history.html?employee_id'} ? ( 'employee_id'			=> $session{'/timetrack/history.html?employee_id'} ) : () ),
 		'order'				=> 'starting',
 		) ) {
 		next if $Timetrack->paid() and ! sets::isin( 1, split(';', $session{'/timetrack/history.html?paid'} ) );

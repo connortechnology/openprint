@@ -154,7 +154,7 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 			}
 		}
 		
-		my @Locations = openprint::Location::find('name'=>$selected);
+		my @Locations = openprint::Location->find('name'=>$selected);
 		if ( @Locations and $Locations[0]->parent_id() ) {
 			pop @path;
 			my $path = join('/', @path );

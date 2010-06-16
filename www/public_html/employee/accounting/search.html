@@ -72,7 +72,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 				<option value="">All Employees</option>
 				<? echo (
 				    ssi::make_drop_down( 
-						[ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)' ) ],
+						[ map { $_->id(), $_->name() } openprint::User->find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)' ) ],
 						$session{'/employee/accounting/search.html?ddmEmployee'} ); 
 					) ?>
 			</select>

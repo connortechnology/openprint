@@ -1,11 +1,11 @@
 <? eval (
 	if ( $session{'/employee/inventory/skids.html?Docket'} ) {
-		@{$$variable{'Skids'}} = openprint::Skid::find( 
+		@{$$variable{'Skids'}} = openprint::Skid->find( 
 			'allocated_to_docket'	=>	$session{'/employee/inventory/skids.html?Docket'},
 			'order'		=>	'id',
 			);
 	} elsif ( $session{'/employee/inventory/skids.html?verification_code'} ) {
-		@{$$variable{'Skids'}} = openprint::Skid::find( 
+		@{$$variable{'Skids'}} = openprint::Skid->find( 
 			'verification_code'	=>	$session{'/employee/inventory/skids.html?verification_code'},
 			'order'		=>	'id',
 			);
@@ -67,7 +67,7 @@
 			$sql{'location_id'} = [ map { $_->id() } ( $Location, $Location->get_all_children()) ];
 		} # end if
 	} # end if
-		@{$$variable{'Skids'}} = openprint::Skid::find( %sql );
+		@{$$variable{'Skids'}} = openprint::Skid->find( %sql );
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Skids'}} ) ?>
@@ -91,7 +91,7 @@
 			my $total_weight;
 			my $total_sheets;
 			my %Allocations;
-			foreach my $Allocation ( openprint::PaperAllocation::find() ) {
+			foreach my $Allocation ( openprint::PaperAllocation->find() ) {
 				foreach my $Skid ( $Allocation->Skids() ) {
 					push @{$Allocations{$Skid->id()}}, $Allocation;
 				} # end 

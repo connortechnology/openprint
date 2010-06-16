@@ -5,7 +5,7 @@
 			<select name="category_id" onchange="if(this.options[this.selectedIndex].value != '') fmCheck(f1);">
 				<option value="">Select a Category</option>
 				<? echo (
-					return ssi::make_drop_down( [map { $_->id(), $_->name() } openprint::MarketingCategory::find('order'=>'lower(name)')],
+					return ssi::make_drop_down( [map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)')],
 , $$variable{'Category'}->id() );
 				) ?>
 			</select>
@@ -57,7 +57,7 @@
 					<select name="Company">
 						<option value=""> select one </option>
 					<? echo ( 
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } sets::exclude( [$$variable{'Category'}->companies()], [ openprint::Company::find( 'order' => 'lower(name)' ) ] ) ] );
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } sets::exclude( [$$variable{'Category'}->companies()], [ openprint::Company->find( 'order' => 'lower(name)' ) ] ) ] );
 					) ?>
 					</select>
 					<? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "f1.btnFunction.value='Add'; f1.submit();", '', 'Add' ); ) ?>

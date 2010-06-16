@@ -68,54 +68,6 @@ sub get_unfinished_quote_contents {
 	@{$$variable{'TOTALS'}} = ( '1', sprintf( '%.2f',$subtotal1), '2', sprintf( '%.2f',$subtotal2),'3', sprintf( '%.2f',$subtotal3));
 } # end sub get_unfinished_quote_contents
 
-sub store_quote_info {
-	my ( $r, $log, $dbh, $quote_id, $variable ) = @_;
-	my %by;
-	my %for;
-	foreach my $key ( $r->param() ) {
-		if ( $key =~ /^By/ ) {
-			$by{$key} = $r->param($key);
-		} elsif ( $key =~ /^For/ ) {
-			$for{$key} = $r->param($key);
-		} # end if
-	} # end foreach
-
-	my @required_fields = split(',', $config{'QuoteRequiredFields'} );
-
-	my $error = "";
-	$error .= 'No prepared by first name entered.<br>' if $r->param('ByFirstName') eq '' and sets::isin('ByFirstName', \@required_fields );
-	$error .= 'No prepared by last name entered.<br>' if $r->param('ByLastName') eq '' and sets::isin('ByLastName', \@required_fields );
-	$error .= 'No prepared by email address entered.<br>' if $r->param('ByEmail') eq '' and sets::isin('ByEmail', \@required_fields );
-	if ( $error ne '' ) {
-		return $error;
-	} # end if
-
-	if ( $r->param('ForFirstName') or $r->param('ForLastName') or $r->param('ForEmail') ) {
-		my $error = "";
-#		$error .= 'No prepared for address entered.<br>' if $r->param('ForAddress1') eq '';
-#		$error .= 'No prepared for city entered.<br>' if $r->param('ForCity') eq '';
-#		$error .= 'No prepared for state entered.<br>' if $r->param('ForStateProvince') eq '';
-#		$error .= 'No prepared for postal code entered.<br>' if $r->param('ForPostalCode') eq '';
-#		$error .= 'No prepared for country entered.<br>' if $r->param('ForCountry') eq ''; 
-#		$error .= 'No prepared for phone number entered.<br>' if $r->param('ForPhone') eq '';
-		$error .= 'No prepared for email address entered.<br>' if $r->param('ForEmail') eq '' and sets::isin('ForEmail', \@required_fields );
-		if ( $error ne '' ) {
-			return $error;
-		} # end if
-
-	} else {
-		foreach my $key ( keys %by ) {
-			$key =~ /By(.*)/;
-			$for{'For'.$1} = $by{$key};
-		} # end foreach
-	} # end if
-
-	my $Quote = new openprint::Quote( $quote_id );
-	$Quote->store_user_by_info( \%by );
-	$Quote->store_user_for_info( \%for );
-	return;
-
-} # end sub store_quote_info
 
 
 sub get_user_by_info {

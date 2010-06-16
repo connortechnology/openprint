@@ -26,7 +26,7 @@
 	my $ProjectCurrency = $Project->Currency();
 	my $services = $Project->services();
 	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
-	foreach my $ServiceCategory ( openprint::ServiceType_Category::find('order'=>'sorting,name') ) {
+	foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
 		if ( $ServiceCategory->name() eq 'Printing' ) {
 			my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			$html .= sprintf('<tr%s><td><b>Printing</b><br/>%s</td>', $rowclass,
@@ -106,7 +106,7 @@
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end if $$services{'AdditionalSignature'}
 		} else {
-			foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
+			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
 				next if ! $$services{$ServiceType->name()};
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service_id );

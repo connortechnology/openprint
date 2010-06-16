@@ -144,7 +144,7 @@ sub calc {
 			my $Material = new openprint::Material( $$specs{'ddmPackageType'.$qty_index} );
 			@Materials = ( $Material );
 		} else {
-			@Materials = openprint::Material::find('category'=>$ServiceType->name() );
+			@Materials = openprint::Material->find('category'=>$ServiceType->name() );
 		} # end if
 $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 		if ( ! @Materials ) {

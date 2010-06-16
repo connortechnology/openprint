@@ -148,7 +148,7 @@ $openprint::log->debug("Making order from quote");
 		
 			# WE ARE logged in as someone else
 			if ( $User->company_id() != $session{'company_id'} ) {
-				my @Users = openprint::User::find( 
+				my @Users = openprint::User->find( 
 						'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
 						'order'=>'lower(LastName),lower(FirstName)'
 						);
@@ -195,7 +195,7 @@ sub submit {
 $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{'Price'} );
 			my $Project = $Product->Project();
 			my $services = $Project->services();
-			foreach my $ShippingType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+			foreach my $ShippingType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 				next if ! $$services{$ShippingType->name()};
 				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 					my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
@@ -229,7 +229,7 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 			push @errors, "Please give project $$Project{id} a reference";
 		} # end if
 		my $services = $Project->services();
-		my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 		foreach my $ServiceType ( @ServiceTypes ) {
 			next if ! $$services{$ServiceType->name()};
 			next if sets::isin( $ServiceType->name(), [ 'CustomerPickUp','Turnaround'] );
@@ -299,7 +299,7 @@ sub confirmation {
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		# Commit Project Information
-		my @Taxes = openprint::Tax::find('state'=>$Order->state(),'country'=>$Order->country() );
+		my @Taxes = openprint::Tax->find('state'=>$Order->state(),'country'=>$Order->country() );
 		my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
 
 		my $Company = $Order->Company();

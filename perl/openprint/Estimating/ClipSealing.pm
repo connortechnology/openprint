@@ -30,7 +30,7 @@ sub calc {
 	} # end if
 
 	my $status = 'calculated';
-	my @equipment = openprint::Equipment::find( 'Specifications'=>{'ClipSealing Capable'=>'Y'},'use_in_estimating'=>1);
+	my @equipment = openprint::Equipment->find( 'Specifications'=>{'ClipSealing Capable'=>'Y'},'use_in_estimating'=>1);
 	if ( ! @equipment ) {
 		$$specs{'alert'} = 'We have no clip sealing equipment.<br/>';
 		return 'uncalculated';
@@ -132,8 +132,8 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
-	#my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	#my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 

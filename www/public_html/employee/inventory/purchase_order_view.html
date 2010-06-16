@@ -99,7 +99,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 			<p><label>NOTIFY:</label>
 			<? echo (
 				my $html = '';
-				foreach my $U ( openprint::User::find('id'=>[$$variable{'PurchaseOrder'}->notifications()],'order' => 'lower(strfirstName),lower(strlastname)' ) ) {
+				foreach my $U ( openprint::User->find('id'=>[$$variable{'PurchaseOrder'}->notifications()],'order' => 'lower(strfirstName),lower(strlastname)' ) ) {
 					$html .= sprintf( q{<a href="mailto:%1$s">%2$s &lt;%1$s&gt;</a><br/>}, $U->email(), $U->name() );
 				} # end foreach
 				return $html;

@@ -89,7 +89,7 @@
 			<label>Presses:</label>
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
-	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/prepress_schedule.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/prepress_schedule.html?Presses'} ) ] );
 	} # end foreach press
@@ -187,7 +187,7 @@ $openprint::log->debug("$session{'/employee/production/prepress_schedule.html?ta
 				if $session{'/employee/production/prepress_schedule.html?takenover_on_end_year'} 
 			and $session{'/employee/production/prepress_schedule.html?takenover_on_end_month'}
 			and $session{'/employee/production/prepress_schedule.html?takenover_on_end_day'};
-			my @Projects = openprint::Project::find( %sql );
+			my @Projects = openprint::Project->find( %sql );
 
 			foreach my $E ( @{$$variable{'Presses'}} ) {
 				$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;"><a href="/employee/production/prepress_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
@@ -222,7 +222,7 @@ $openprint::log->debug("$session{'/employee/production/prepress_schedule.html?ta
 					next if ! $onpress;
 
 					my $colour = 'unscheduled';
-					if ( openprint::ScheduledJob::find('project_id'=>$Project->id(), 'starttime_null'=>0 ) ) {
+					if ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'starttime_null'=>0 ) ) {
 						$colour = 'scheduled';
 					} # end if
 					if ( $Project->rush() ) {

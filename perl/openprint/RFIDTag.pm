@@ -40,8 +40,8 @@ $serial = 'rfidtags_id_seq';
 	'valid'			=>	0,
 );
 
-# Returns a paper object specified by the parameters
 sub find {
+	my $self = shift;
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
@@ -230,7 +230,7 @@ sub skid_id {
 		return;
 	} # end if
 	if ( ! $$self{'skid_id'} ) {
-		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
+		my @Skids = openprint::Skid->find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
 		if ( @Skids ) {
 			$$self{'skid_id'} = $Skids[0]->id();
 		} # end if
@@ -245,7 +245,7 @@ sub Skid {
 		return;
 	} # end if
 	if ( ! $$self{'skid_id'} ) {
-		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
+		my @Skids = openprint::Skid->find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
 		if ( @Skids ) {
 			$$self{'skid_id'} = $Skids[0]->id();
 		} # end if

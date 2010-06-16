@@ -305,7 +305,7 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
-	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'},'order'=>'id');
+	return openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Contents
 
 sub send_approval_required_notification {
@@ -318,7 +318,7 @@ sub send_approval_required_notification {
 	$info{'From'} = $Me;
 	$info{'PurchaseOrder'} = $self;
 
-	foreach my $U ( openprint::User::find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$self->total() ) ) {
+	foreach my $U ( openprint::User->find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$self->total() ) ) {
 		next if $U->id() == $Me->id();
 
 		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
@@ -417,7 +417,7 @@ sub federaltax_rate {
 		$$self{'federaltax_rate'} = $new;
 	} # end if
 	if ( ! $$self{'federaltax_rate'} ) {
-		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
+		if ( my ( $Tax ) = openprint::Tax->find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
 			$$self{'federaltax_rate'} = $Tax->federaltax_rate();
 		} # end if
 	} # end if
@@ -460,7 +460,7 @@ sub statetax_rate {
 		$$self{'statetax_rate'} = $new;
 	} # end if
 	if ( ! $$self{'statetax_rate'} ) {
-		if ( my ( $Tax ) = openprint::Tax::find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
+		if ( my ( $Tax ) = openprint::Tax->find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
 			$$self{'statetax_rate'} = $Tax->statetax_rate();
 		} # end if
 	} # end if
@@ -542,7 +542,7 @@ sub notifications {
 sub Logs {
 	my ( $self ) = @_;
 
-	return openprint::PurchaseOrder_Log::find( 'po_id'=>$$self{'id'}, 'order'=>'created_on DESC' );
+	return openprint::PurchaseOrder_Log->find( 'po_id'=>$$self{'id'}, 'order'=>'created_on DESC' );
 } # end sub Logs
 
 sub is_FSC {

@@ -17,7 +17,7 @@
 		my @options = (
 			'PMS', 'PMS Colour',
 		);
-		my @Services = openprint::Service::find('category'=>'Coating','order'=>'lower(name)');
+		my @Services = openprint::Service->find('category'=>'Coating','order'=>'lower(name)');
 		foreach my $index ( 1 .. $$variable{index}-1 ) {
 			for ( my $j = 0; $j < @Services; $j += 1 ) {
 				if ( $$variable{"ColourCoatingType$index$$variable{Side}$$variable{Signature}"} eq $Services[$j]->name() ) {

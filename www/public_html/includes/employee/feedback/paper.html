@@ -26,7 +26,7 @@
 		<option value=""> select </option>
 		<? echo (
 				my %finishes;
-				foreach my $Paper ( openprint::Paper::find( 'name'=>$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
+				foreach my $Paper ( openprint::Paper->find( 'name'=>$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
 						$$variable{"ddmStockBrand"} ) ) {
 					$finishes{$Paper->finish()} = $Paper->finish();
@@ -45,7 +45,7 @@
 		<option value=""> select </option>
 		<? echo (
 				my %colours;
-				foreach my $Paper ( openprint::Paper::find( 'name'=>
+				foreach my $Paper ( openprint::Paper->find( 'name'=>
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
 						$$variable{"ddmStockBrand"},
@@ -70,7 +70,7 @@
 		<option value=""> select </option>
 		<? echo (
 				my %colours;
-				foreach my $Paper ( openprint::Paper::find( 'name'=>
+				foreach my $Paper ( openprint::Paper->find( 'name'=>
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} ?
 						$$variable{"UsedStockBrand-$$variable{'SignatureIndex'}"} :
 						$$variable{"ddmStockBrand"},

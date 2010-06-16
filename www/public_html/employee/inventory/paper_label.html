@@ -34,7 +34,7 @@
 <? echo (
 	if ( $$variable{'paper_id'} ) {
 		my $html;
-		my @Allocations = openprint::PaperAllocation::find('paper_id'=>$$variable{'paper_id'}, 'skid_id'=>$$variable{'Skid'}{'id'},'order'=>'created_on');
+		my @Allocations = openprint::PaperAllocation->find('paper_id'=>$$variable{'paper_id'}, 'skid_id'=>$$variable{'Skid'}{'id'},'order'=>'created_on');
 		my %totals = map { $_->Project()->docket(), $_->quantity() } @Allocations;
 
 				foreach my $docket ( sort keys %totals ) {

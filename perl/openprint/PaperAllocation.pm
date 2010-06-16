@@ -47,14 +47,9 @@ $serial = 'paper_allocation_id_seq';
 %defaults = (
 	'created_on'	=> 'NOW()',
 );
-sub find_one {
-	my %params = @_;
-	$params{'limit'}=1;
-	my @Results = find(%params);
-	return $Results[0] if @Results;
-} # end sub find_one
 # Returns a paper object specified by the parameters
 sub find {
+	my $self = shift;
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
@@ -158,7 +153,7 @@ sub send_notification {
 	my $Paper = $info{'Paper'} = $self->Paper();
 	my @old_skids = @{$info{'OldSkids'}} = $self->old_Skids();
 
-	my @recipients = openprint::User::find( 'usergroup'=>'InventoryManager' );
+	my @recipients = openprint::User->find( 'usergroup'=>'InventoryManager' );
 
     my $offsite = 0;
 	my $nolocation = 0;
@@ -185,7 +180,7 @@ sub send_notification {
 
 	push @recipients, $Project->Company()->CSR() if $offsite or $nolocation or @old_skids;
 	if ( $Paper->available() < 0 ) {
-		my @PAs = openprint::PaperAllocation::find('paper_id'=>$Paper->id());
+		my @PAs = openprint::PaperAllocation->find('paper_id'=>$Paper->id());
 		@recipients = map { new openprint::User( $_ ) } sets::exclude( [ $session{'user_id'} ], [ sets::union( (map { $_->Project()->Company()->salesrep_id() } @PAs), (map{$_->id()}@recipients) ) ] );
 	} # endif
 

@@ -22,7 +22,7 @@
 			<label>Sales Rep:</label>
 			<select name="search_salesrep_id" onchange="f2.btnFunction.value='Go';this.form.submit();">
 				<option value=""> All </option>
-				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } openprint::User::find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ], $param{'search_salesrep_id'} ); ) ?>
+				<? echo ( return ssi::make_drop_down( [ map { $_->id(),$_->name() } openprint::User->find('id'=>[sql::execute( undef, undef, 'SELECT DISTINCT salesrep_id FROM companies')],'deleted'=>[0,1],'order'=>'lower(firstname),lower(lastname)') ], $param{'search_salesrep_id'} ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -43,12 +43,12 @@
 						$params{'supplier'} = 'N';
 						$params{'reseller'} = 'N';
 					} # end if
-					my @Companies = openprint::Company::find( %params );
+					my @Companies = openprint::Company->find( %params );
 					if ( ! sets::isin( $param{'ddmCustomer'}, map { $_->id() } @Companies ) ) {
 						unshift @Companies, new openprint::Company( $param{'ddmCustomer'} );
 					} # end if
 
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( %params ) ], $$variable{'CustomerIndex'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( %params ) ], $$variable{'CustomerIndex'} );
 				) ?>
 			</select>
 			<? echo ( ssi::writeButton($log, $dbh, 'Go2','go.gif',"f2.btnFunction.value='Go';fmCheck(f2);",'','Go'); ) ?>
@@ -110,14 +110,14 @@
 			<label>Price List:</label>
 			<select name="pricelist_id">
 				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist::find('order'=>'lower(name)') ], $$variable{'Company'}->pricelist_id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist->find('order'=>'lower(name)') ], $$variable{'Company'}->pricelist_id() ); ) ?>
 			</select>
 		</p>
 		<p> 
 			<label>Preferred Currency:</label>
 			<select name="currency_id">
 				<option value=""> select </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $$variable{'Company'}->currency_id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find( 'order'=>'lower(name)' ) ], $$variable{'Company'}->currency_id() ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -128,7 +128,7 @@
 			<label>Sales Person:</label>
 			<select name="salesrep_id">
 				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)', 'web_active'=>'Y') ], $$variable{'Company'}->salesrep_id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)', 'web_active'=>'Y') ], $$variable{'Company'}->salesrep_id() ); ) ?>
 			</select>
 		</p>
 	</div>
@@ -159,7 +159,7 @@
 		</p>
 		<? if ( $$variable{'CustomerIndex'} ) ?>
 			<? eval (
-				@{$$variable{'Orders'}} = openprint::Order::find('company_id'=>$$variable{'CustomerIndex'},'order'=>'index DESC');
+				@{$$variable{'Orders'}} = openprint::Order->find('company_id'=>$$variable{'CustomerIndex'},'order'=>'index DESC');
 			) ?>
 			<p><label># of Orders:</label>
 				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{'Orders'}} ) ?></a>
@@ -168,7 +168,7 @@
 				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Orders'}[0]->created_on() ) ); ) ?></a>
 				<? endif ( @{$$variable{'Orders'}} ) ?>
 			</p>
-			<? eval ( @{$$variable{'Projects'}} = openprint::Project::find('company_id'=>$$variable{'CustomerIndex'},'order'=>'id DESC'); ) ?>
+			<? eval ( @{$$variable{'Projects'}} = openprint::Project->find('company_id'=>$$variable{'CustomerIndex'},'order'=>'id DESC'); ) ?>
 			<p><label># of Projects:</label>
 				<a href="/administrator/reports/projects.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{'Projects'}} ) ?></a>
 				<? if ( @{$$variable{'Projects'}} ) ?>

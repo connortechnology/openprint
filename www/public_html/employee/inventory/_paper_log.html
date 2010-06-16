@@ -14,7 +14,7 @@
 	} # end if
 	$param{'limit'} = 10 if ! exists $param{'limit'};
 
-	my @PI = openprint::PaperInventory::find(
+	my @PI = openprint::PaperInventory->find(
 		'paper_id'	=>	$param{'paper_id'},
 		'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
 		'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
@@ -22,11 +22,11 @@
 		'order'				=>	'updated_on',
 	);
 	if ( (! @PI) and ! $param{'ddmStartYear'} ) {
-		@PI = openprint::PaperInventory::find('paper_id'=>$param{'paper_id'}, 'limit'=>1, 'order'=>'updated_on DESC');
+		@PI = openprint::PaperInventory->find('paper_id'=>$param{'paper_id'}, 'limit'=>1, 'order'=>'updated_on DESC');
 		if ( @PI ) {
 			my ( $y, $m, $d ) = $PI[0]->updated_on() =~ /^(\d+)-(\d+)-(\d+)/;
 			@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, $y, $m, $d );
-			@PI = openprint::PaperInventory::find(
+			@PI = openprint::PaperInventory->find(
 				'paper_id'	=>	$param{'paper_id'},
 				'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
 				'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',

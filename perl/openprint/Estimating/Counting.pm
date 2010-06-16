@@ -45,7 +45,7 @@ sub neccessary {
 		return 0;
 	} # end if
 
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Packaging') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Packaging') ) {
 #$openprint::log->debug("Counting neccessary: ServiceType: " . $ServiceType->name());
 		next if ! $$services{$ServiceType->name()};
 		foreach my $s_id ( @{$$services{$ServiceType->name()}} ) {

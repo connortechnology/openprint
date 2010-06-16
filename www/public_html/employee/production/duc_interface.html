@@ -59,8 +59,8 @@
 <? eval ( if ( $r->param('btnFunction') eq 'Schedule' ) {
 		my %schedule;
 		my ( $year, $month, $day ) = Date::Calc::Today();
-		my %equipment = map { $_->id(), $_->strid() } openprint::Equipment::find();
-		my %service_types = map { $_->name(), $_->id() } openprint::ServiceType::find('category'=>'Bindery');
+		my %equipment = map { $_->id(), $_->strid() } openprint::Equipment->find();
+		my %service_types = map { $_->name(), $_->id() } openprint::ServiceType->find('category'=>'Bindery');
 
 		my %days;
 		foreach ( 1 .. 7 ) {

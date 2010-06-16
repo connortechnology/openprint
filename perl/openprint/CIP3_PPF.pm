@@ -105,12 +105,12 @@ sub find {
 	$sql .= " LIMIT $params{limit}" if $params{'limit'};
 	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$log->debug("openprint::CIP3_PPF::find( $sql) @values reason:" . $dbh->errstr);
+		$log->debug("openprint::CIP3_PPF->find( $sql) @values reason:" . $dbh->errstr);
 		return;
 	} # end if
 
 	if ( $debug ) {
-		$log->debug("openprint::CIP3_PPF::find($sql) (@values): #of records:" . @$data );
+		$log->debug("openprint::CIP3_PPF->find($sql) (@values): #of records:" . @$data );
 	} # end if
 	return map { new openprint::CIP3_PPF( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -459,13 +459,13 @@ $log->debug("Saving PPF: " . sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out
 	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ), $data );
 	if ( $error ) {
 		$log->error($error);
-		foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {
+		foreach my $Project ( openprint::Project->find('docket'=>$$self{'docket'}) ) {
 			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Failed to send CIP Files for form $$self{signature} side $$self{side}. Reason: $error" );
 		} # end foreach $Project
 		
 		return $error;
 	} 
-	foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {
+	foreach my $Project ( openprint::Project->find('docket'=>$$self{'docket'}) ) {
 		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "CIP Files released for form $$self{signature} side $$self{side}" );
 	} # end foreach $Project
 	return;

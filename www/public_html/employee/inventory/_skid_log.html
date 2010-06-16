@@ -15,7 +15,7 @@
 		</tr>
 		};
 		my $rowclass;
-		foreach my $PI ( openprint::PaperInventory::find('skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$paper_id, 'order'=>'updated_on' ) ) {
+		foreach my $PI ( openprint::PaperInventory->find('skid_id'=>$$variable{'Skid'}->id(), 'paper_id'=>$paper_id, 'order'=>'updated_on' ) ) {
 			$html .= "<tr$rowclass>";
 			$html .= sprintf( '<td class="DateTime">%s</td>', Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($PI->updated_on) ) );
 			$html .= sprintf( '<td class="User">%s</td>', $PI->User()->name() );

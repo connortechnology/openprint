@@ -5,7 +5,7 @@
 			<label>Project Type:</label>
 			<select id="ddmProjectType" name="ddmProjectType" size="1" onchange="AjaxLoadContent('Templates','_templates.html', this.form.serialize() );">
 				<option value="">select one</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType::find('order'=>'lower(name)') ], $param{'ddmProjectType'} ) ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ], $param{'ddmProjectType'} ) ) ?>
 			</select>
 		</p>
 		<p class="buttons">

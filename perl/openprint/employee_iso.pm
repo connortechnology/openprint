@@ -28,7 +28,7 @@ sub cars {
 				'issued_on_start'   =>  sprintf('%.4d-%.2d-%.2d', @param{'StartYear','StartMonth','StartDay'} ),
 				'issued_on_end' =>  sprintf('%.4d-%.2d-%.2d', @param{ 'EndYear', 'EndMonth', 'EndDay'} ),
 		);
-		foreach my $CAR ( openprint::CAR::find() ) {
+		foreach my $CAR ( openprint::CAR->find() ) {
 			push @data, (
 					new openprint::User($CAR->issued_to_id() )->name(),
 					$CAR->issued_on(),
@@ -91,7 +91,7 @@ sub _car_view_part1 {
 				$param{'issued_to_id'} = $Area->assignee_id();
 			} elsif ( $param{'docket'} ) {
 				# Assign to the CSR for the docket
-				my @Orders = openprint::Order::find('docket'=>$param{'docket'} );
+				my @Orders = openprint::Order->find('docket'=>$param{'docket'} );
 				if ( @Orders ) {
 					$param{'issued_to_id'} = $Orders[0]->salesrep_id();
 				} # end if
@@ -187,7 +187,7 @@ sub pars {
 				'issued_on_start'   =>  sprintf('%.4d-%.2d-%.2d', @param{'StartYear','StartMonth','StartDay'} ),
 				'issued_on_end' =>  sprintf('%.4d-%.2d-%.2d', @param{ 'EndYear', 'EndMonth', 'EndDay'} ),
 		);
-		foreach my $PAR ( openprint::PAR::find(%params) ) {
+		foreach my $PAR ( openprint::PAR->find(%params) ) {
 			push @data, (
 					new openprint::User($PAR->issued_to_id() )->name(),
 					$PAR->issued_on(),

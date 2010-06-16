@@ -61,7 +61,7 @@ die 'Error opening db' if ! $dbh;
 
 configuration::init_cache( $log, $dbh, {'SkinPath'=> $opts->{skin_path}});
 
-my @Equipment = openprint::Equipment::find('cip3_monitor'=>1,'strid'=>$opts->{equipment_name});
+my @Equipment = openprint::Equipment->find('cip3_monitor'=>1,'strid'=>$opts->{equipment_name});
 if ( ! @Equipment ) {
 	die "No equipment found.\n";
 } # end if
@@ -308,7 +308,7 @@ sub store_PPF {
 		$log->error($_) if $_;
 		$PPF->generate_previews(undef,1);
 
-		foreach my $Project ( openprint::Project::find('docket'=>$docket,'limit'=>10) ) {
+		foreach my $Project ( openprint::Project->find('docket'=>$docket,'limit'=>10) ) {
 			my $services = $Project->services();
 
 			my $found = 0;

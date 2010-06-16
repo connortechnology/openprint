@@ -36,7 +36,7 @@
 				$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 				$$variable{'service_total'} = 0;
 				my $rowclass = '';
-				my @Timetracks = openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting');
+				my @Timetracks = openprint::Timetrack->find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting');
 				if ( @Timetracks > 11 ) {
 					my $count = 0;
 		$html .= '<table class="List">

@@ -17,7 +17,7 @@
 			push @location_ids, $_;
 		} # end foreach
 
-		my @Papers = openprint::Paper::find( 
+		my @Papers = openprint::Paper->find( 
 			'owner_id'			=>	$session{'/employee/reports/stock.html?Owner'},
 			'manufacturer_id'	=>	$session{'/employee/reports/stock.html?Manufacturer'},
 			'name_id'			=>	$session{'/employee/reports/stock.html?Name'},

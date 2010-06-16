@@ -4,7 +4,7 @@
 	} # end if
 
 	@{$$variable{'Stocks'}} = ();
-	foreach my $Stock ( openprint::Paper::find( 
+	foreach my $Stock ( openprint::Paper->find( 
 			'group_id'		=> $session{'/administrator/stock/list.html?Group'},
 			'owner_id'		=> $session{'/administrator/stock/list.html?Owner'},
 			'manufacturer_id'		=> $session{'/administrator/stock/list.html?Manufacturer'},
@@ -21,7 +21,7 @@
 		next if ( ! $Stock->recommendations() ) and ! sets::isin( 0, split(';', $session{'/administrator/stock/list.html?recommendations'} ) );
 		push @{$$variable{'Stocks'}}, $Stock;
 	} # end foreach
-	@{$$variable{'Groups'}} = openprint::StockGroup::find();
+	@{$$variable{'Groups'}} = openprint::StockGroup->find();
 	@{$$variable{'InventoryNumbers'}} = sets::union( map { $_->inventory_number() } @{$$variable{'Stocks'}} );
 ) ?>
 <? if ( @{$$variable{'Stocks'}} ) ?>

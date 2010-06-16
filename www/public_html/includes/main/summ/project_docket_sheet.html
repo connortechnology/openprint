@@ -275,23 +275,23 @@ $inkCoverage{$colour} = 100;
 					} # end if
 					my $InkMaterial;
 					if ( sets::isin( $colour, ['Cyan','Magenta','Yellow','Black'] ) ) {
-						if ( my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
+						if ( my @materials = openprint::Material->find('name'=>$colour.'Ink') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} elsif ( sets::isin( $colour, ['Overall Varnish Matte', 'Spot Varnish Matte' ] ) ) {
-						if ( my @materials = openprint::Material::find('name'=>'MatteVarnish') ) {
+						if ( my @materials = openprint::Material->find('name'=>'MatteVarnish') ) {
 						$InkMaterial = $materials[0];
-						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
+						} elsif ( my @materials = openprint::Material->find('name'=>'Varnish') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} elsif ( sets::isin( $colour, ['Overall Varnish Gloss', 'Spot Varnish Gloss' ] ) ) {
-						if ( my @materials = openprint::Material::find('name'=>'GlossVarnish') ) {
+						if ( my @materials = openprint::Material->find('name'=>'GlossVarnish') ) {
 						$InkMaterial = $materials[0];
-						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
+						} elsif ( my @materials = openprint::Material->find('name'=>'Varnish') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} else {
-						if ( my @materials = openprint::Material::find('name'=>'PMSInk') ) {
+						if ( my @materials = openprint::Material->find('name'=>'PMSInk') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} # end if

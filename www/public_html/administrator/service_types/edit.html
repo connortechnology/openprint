@@ -5,14 +5,14 @@
 			<label>Category:</label>
 			<select name="SearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 				<option value=""> All </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType_Category::find('order'=>'sorting,name') ], $param{'SearchCategory'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType_Category->find('order'=>'sorting,name') ], $param{'SearchCategory'} ); ) ?>
 			</select>
 		</p>
 		<p>
 			<label>Service Type:</label>
 			<select name="ServiceType_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">Select a Service Type</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType::find('category_id'=>$param{'SearchCategory'}, 'order'=>'lower(name)') ], $$variable{'ServiceType'}->id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find('category_id'=>$param{'SearchCategory'}, 'order'=>'lower(name)') ], $$variable{'ServiceType'}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons"> 
@@ -40,7 +40,7 @@
 			<label>Category:</label>
 			<select id="category_id" name="category_id">
 				<option value=""> None </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType_Category::find('order'=>'sorting,name') ], $$variable{'ServiceType'}->category_id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceType_Category->find('order'=>'sorting,name') ], $$variable{'ServiceType'}->category_id() ); ) ?>
 			</select>
 		</p>
 <? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>

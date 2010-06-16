@@ -68,6 +68,7 @@ $serial = 'invoices_id_seq';
 );
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 
 	my $sql = q{SELECT * FROM Invoices WHERE 1>0};
@@ -154,7 +155,7 @@ sub find {
 		$log->warn("Error loading Invoices: ($sql) (@values)" . $dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$log->debug("openprint::Invoice::find($sql) (@values)");
+		$log->debug("openprint::Invoice->find($sql) (@values)");
 	} # end if
 	return map { new openprint::Invoice( $_->{id}, $_ ); } @$data;
 } # end sub find
@@ -231,8 +232,8 @@ sub subtotal {
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
 #$log->debug("Recalculating subtotal");
 		$$self{'subtotal'} = 0;
-		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack::find('invoice_id'=>$$self{id});
-		map { $$self{'subtotal'} += $_->total() } openprint::Invoiced_Product::find('invoice_id'=>$$self{id});
+		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack->find('invoice_id'=>$$self{id});
+		map { $$self{'subtotal'} += $_->total() } openprint::Invoiced_Product->find('invoice_id'=>$$self{id});
 	} # end if
 	return sprintf('%.2f', $$self{'subtotal'} );
 } # end sub subtotal
@@ -256,7 +257,7 @@ sub interest {
 	} # end if
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'interest'} ) ) {
-		$$self{'interest'} = misc::sum( map { $_->amount() } openprint::Invoice_Interest::find('invoice_id'=>$$self{'id'}) );
+		$$self{'interest'} = misc::sum( map { $_->amount() } openprint::Invoice_Interest->find('invoice_id'=>$$self{'id'}) );
 	} # end if
 	return $$self{'interest'};
 } # end sub interest
@@ -267,7 +268,7 @@ sub paid {
 		$$self{'paid'} = $_[0];
 	} # end if
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'paid'} ) ) {
-		$$self{'paid'} = misc::sum( map { $_->amount() } openprint::Invoice_Payment::find('invoice_id'=>$$self{'id'}) );
+		$$self{'paid'} = misc::sum( map { $_->amount() } openprint::Invoice_Payment->find('invoice_id'=>$$self{'id'}) );
 	} # end if
 	return $$self{'paid'};
 } # end sub paid
@@ -316,7 +317,7 @@ sub add_Payment {
 sub del_Payment {
 	my ( $self, $Payment ) = @_;
 
-	foreach my $IP ( openprint::Invoice_Payments::find('invoice_id'=>$$self{'id'},'payment_id'=>$$Payment{'id'})) {
+	foreach my $IP ( openprint::Invoice_Payments->find('invoice_id'=>$$self{'id'},'payment_id'=>$$Payment{'id'})) {
 		$IP->delete();
 	} # endforeach$IP
 	$Payment->remaining( undef );
@@ -327,11 +328,11 @@ sub del_Payment {
 
 sub Payments {
 	my ( $self ) = @_;
-	return openprint::Payment::find('invoice_id'=>$$self{'id'} );
+	return openprint::Invoice_Payment->find('invoice_id'=>$$self{'id'} );
 } # end sub Payments
 
 sub Logs {
-	return openprint::InvoiceLog::find('invoice_id'=>$_[0]{id},'order'=>'created_on');
+	return openprint::InvoiceLog->find('invoice_id'=>$_[0]{id},'order'=>'created_on');
 } # end sub Logs
 
 sub add_to_log {
@@ -376,7 +377,7 @@ sub send {
 } # end sub send
 
 sub Products {
-	return openprint::Invoiced_Product::find('invoice_id'=>$_[0]{'id'},'order'=>'id');
+	return openprint::Invoiced_Product->find('invoice_id'=>$_[0]{'id'},'order'=>'id');
 } # end sub Products
 
 sub Interests {
@@ -384,7 +385,7 @@ sub Interests {
 	my %args = @_;
 	$args{'invoice_id'} = $$self{'id'};
 	$args{'order'} = 'compounded_on' if ! $args{'order'};
-	return openprint::Invoice_Interest::find(%args);
+	return openprint::Invoice_Interest->find(%args);
 } # end sub Interests
 
 sub calculate_interests {

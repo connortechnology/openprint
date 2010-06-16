@@ -5,7 +5,7 @@
 	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Expenditures'}} = ();
 	if ( $param{'expenditure_id'} ) {
-		foreach my $Expenditure ( openprint::Expenditure::find( 'id'=>$param{'expenditure_id'} ) ) {
+		foreach my $Expenditure ( openprint::Expenditure->find( 'id'=>$param{'expenditure_id'} ) ) {
 			push @{$$variable{'Expenditures'}}, $Expenditure;
 			$$variable{'subtotal'} += $Expenditure->subtotal();
 			$$variable{'federaltax_total'} += $Expenditure->federaltax();
@@ -14,7 +14,7 @@
 			$$variable{'owing_total'} += $Expenditure->owing();
 		} # end foreach
 	} else {
-		foreach my $Expenditure ( openprint::Expenditure::find( 
+		foreach my $Expenditure ( openprint::Expenditure->find( 
 			'occurred_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenditures.html?occurred_on_start_year','/employee/accounting/expenditures.html?occurred_on_start_month','/employee/accounting/expenditures.html?occurred_on_start_day'} ),
 			'occurred_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenditures.html?occurred_on_end_year','/employee/accounting/expenditures.html?occurred_on_end_month','/employee/accounting/expenditures.html?occurred_on_end_day'} ),
 			'owner_id'		=> $session{'company_id'},

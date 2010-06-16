@@ -5,7 +5,7 @@
 	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Ledgers'}} = ();
 	if ( $param{'ledger_id'} ) {
-		foreach my $Ledger ( openprint::Ledger::find( 'id'=>$param{'ledger_id'} ) ) {
+		foreach my $Ledger ( openprint::Ledger->find( 'id'=>$param{'ledger_id'} ) ) {
 			push @{$$variable{'Ledgers'}}, $Ledger;
 			$$variable{'subtotal'} += $Ledger->subtotal();
 			$$variable{'federaltax_total'} += $Ledger->federaltax();
@@ -14,7 +14,7 @@
 			$$variable{'owing_total'} += $Ledger->owing();
 		} # end foreach
 	} else {
-		foreach my $Ledger ( openprint::Ledger::find( 
+		foreach my $Ledger ( openprint::Ledger->find( 
 			'occurred_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/ledger.html?occurred_on_start_year','/employee/accounting/ledger.html?occurred_on_start_month','/employee/accounting/ledger.html?occurred_on_start_day'} ),
 			'occurred_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/ledger.html?occurred_on_end_year','/employee/accounting/ledger.html?occurred_on_end_month','/employee/accounting/ledger.html?occurred_on_end_day'} ),
 			'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/ledger.html?due_on_start_year','/employee/accounting/ledger.html?due_on_start_month','/employee/accounting/ledger.html?due_on_start_day'} ),

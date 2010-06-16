@@ -569,7 +569,7 @@ sub find {
 				$sql .= q{ AND company_id IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
 				push @values, @{$params{'company_id'}};
 			} else {
-				$openprint::log->warn("EMpty company array passed to openprint::Project::find");
+				$openprint::log->warn("EMpty company array passed to openprint::Project->find");
 			} # end if
 		} elsif ( ! defined $params{'company_id'} ) {
 			$sql .= q{ AND company_id IS NULL};
@@ -1110,9 +1110,9 @@ sub summary {
 			} # end foreach Group
 		} # end if
 
-		foreach my $Category ( openprint::ServiceType_Category::find('order'=>'sorting') ) {
+		foreach my $Category ( openprint::ServiceType_Category->find('order'=>'sorting') ) {
 			next if sets::isin( $Category->name(), [ 'Printing','Coatings' ] );
-			foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$Category->id()) ) {
+			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$Category->id()) ) {
 				next if ! $$services{$ServiceType->name()};
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $service_specs = openprint::service::get_specs_ref( $self, $service_id );
@@ -1290,10 +1290,10 @@ sub status_change {
 		foreach $_ ( $self->signatures() ) {
 			openprint::service::status( $$self{'id'}, $_, 'Complete' );
 		} # end foreach signature
-		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
 			$Job->delete();
 		} # end foreach
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 			$self->add_to_log( $company_id, $user_id, 'Freeing allocated paper: ' . $PA->quantity() . $PA->units() );
 		} # end foreach AP
@@ -1306,24 +1306,24 @@ sub status_change {
 		foreach my $s_id ( openprint::print_project::get_services_in_category( $openprint::log, $openprint::dbh, $$self{'id'}, 'Bindery' ) ) {
 			openprint::service::status( $$self{'id'}, $s_id, 'Complete' );
 		} # end foreach
-		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
 			$Job->delete();
 		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->update_status();
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 		} # end foreach AP
 
 	} elsif ( sets::isin( $new_status, ['Shipped','Picked Up', 'Complete'] ) ) {
 		sql::update( undef, undef, 'tbl_Project_Contents', ["lngProjectIndex=? AND strStatus != ''", $$self{id}], 'strStatus', 'Complete' );
 # Remove jobs from the Schedule when marked complete.
-		foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$$self{'id'}) ) {
+		foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$$self{'id'}) ) {
 			$Job->delete();
 		} # end foreach
 		sql::execute( undef, undef, q{DELETE FROM Bindery_Schedule WHERE ProjectIndex=?}, $$self{'id'} );
 		$self->status($new_status);
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$$self{'id'}) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$$self{'id'}) ) {
 			$PA->delete();
 		} # end foreach AP
 	} # end if
@@ -1381,7 +1381,7 @@ sub get_due_date {
 	foreach my $signature_service_index ( $self->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $self, $signature_service_index );
 # Lookup how many days to add to due date
-		if ( my @Equipment = openprint::Equipment::find( 'strid'=>$$sig_specs{'UsePress'} ) ) {
+		if ( my @Equipment = openprint::Equipment->find( 'strid'=>$$sig_specs{'UsePress'} ) ) {
 			( $_ ) = $Equipment[0]->specification('DueDateDays');
 			if ( $_ > $duedatedays ) {
 				$duedatedays = int $_;
@@ -1416,7 +1416,7 @@ sub get_due_date {
 sub Ordered_Product {
 	my ( $self ) = @_;
 	if ( ! exists $$self{'Ordered_Product'} ) {
-		my @Products = openprint::OrderedProduct::find( 'project_id'=>$$self{'id'} );
+		my @Products = openprint::OrderedProduct->find( 'project_id'=>$$self{'id'} );
 		if ( @Products == 1 ) {
 			$$self{'Ordered_Product'} = $Products[0];
 		} elsif ( @Products ) {
@@ -1432,7 +1432,7 @@ sub add_service {
 
     my $ServiceType;
     if ( ref $type ne 'openprint::ServiceType' ) {
-        if ( my @ServiceTypes = openprint::ServiceType::find('name'=>$type) ) {
+        if ( my @ServiceTypes = openprint::ServiceType->find('name'=>$type) ) {
             $ServiceType = $ServiceTypes[0];
         } else {
             $log->warn("Service $type IS NOT in the system.");
@@ -1611,7 +1611,7 @@ sub delivery_cost {
 
 	if ( ! exists $$self{'delivery_cost'} ) {
 		my $services = $self->services();
-		foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+		foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 			next if ! $$services{$ServiceType->name()};
 			foreach ( @{$$services{$ServiceType->name()}} ) {
 				my $specs = openprint::service::get_specs_ref( $self, $_ );
@@ -1627,7 +1627,7 @@ sub production_cost {
 
 
 	if ( ! exists $$self{'production_cost'} ) {
-		my @Shipping_Services = map { $_->name() } openprint::ServiceType::find('category'=>'Shipping');
+		my @Shipping_Services = map { $_->name() } openprint::ServiceType->find('category'=>'Shipping');
 		my $services = $self->services();
 		foreach my $ServiceType ( keys %$services ) {
 			next if sets::isin( $ServiceType, \@Shipping_Services );

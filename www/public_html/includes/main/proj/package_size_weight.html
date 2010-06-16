@@ -1,5 +1,5 @@
 <? eval (
-	@{$$variable{'PackageTypes'}} = openprint::Material::find('category'=>$$variable{'ServiceTypeID'} );
+	@{$$variable{'PackageTypes'}} = openprint::Material->find('category'=>$$variable{'ServiceTypeID'} );
 ) ?>
 <? if ( @{$$variable{'PackageTypes'}} ) ?>
 <p>

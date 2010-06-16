@@ -89,7 +89,7 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
             <label>Docket #:</label>
             <? echo ( $param{'docket'} ) ?>
         </p>
-<? eval ( @{$$variable{'Projects'}} = openprint::Project::find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'id'); ) ?>
+<? eval ( @{$$variable{'Projects'}} = openprint::Project->find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'id'); ) ?>
 <? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
         <p>
             <label>Project ID:</label>

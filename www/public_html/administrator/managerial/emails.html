@@ -14,10 +14,10 @@
 			my $html = '';
 			my $mail_dbh = email::db_connect();
 			$openprint::Email::dbh = $mail_dbh;
-			my @Emails = openprint::Email::find('order'=>'username');
+			my @Emails = openprint::Email->find('order'=>'username');
 
 			foreach my $Email ( @Emails ) {
-				my $User = openprint::User::find_one('email'=>$Email->id());
+				my $User = openprint::User->find_one('email'=>$Email->id());
 				$html .= sprintf( '<tr>
 <td><input type="checkbox" name="id" value="%1$s" /></td>
 <td class="Email"><a href="email.html?id=%1$s">%1$s</a></td>

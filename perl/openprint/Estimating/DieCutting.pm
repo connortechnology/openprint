@@ -98,12 +98,12 @@ sub calc_price {
 	} else { 
 		if ( $$sig_specs{'rdbTemplateType'} ) {
 # check for a standard die.
-			if ( my @Materials = openprint::Material::find('name'=>$$sig_specs{'rdbTemplateType'}.'Die') ) {
+			if ( my @Materials = openprint::Material->find('name'=>$$sig_specs{'rdbTemplateType'}.'Die') ) {
 				%DiePrice = $Materials[0]->get_price( undef, $Equipment );
 			} # end if
 		} # end if
 		if ( ( ! %DiePrice ) and $$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}} ) {
-			if ( my @Materials = openprint::Material::find('name'=>$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}.'Die') ) {
+			if ( my @Materials = openprint::Material->find('name'=>$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}.'Die') ) {
 				%DiePrice = $Materials[0]->get_price( undef, $Equipment );
 			} # end if
 		} # end if
@@ -114,7 +114,7 @@ sub calc_price {
 			$DiePrice{'Price'} += $BendingPrice{'Total'};
 #$die_price += $bending_price;
 #$log->debug(" ** Adding Bending Cost: $bending_price For $$specs{'txtDieCutBends'} Bends, MakeReady Total: $make_ready ** ");
-			if ( my @Materials = openprint::Material::find('name'=>'DieCuttingDieRule') ) {
+			if ( my @Materials = openprint::Material->find('name'=>'DieCuttingDieRule') ) {
 				my %SteelRulePrice = $Materials[0]->get_price( $$specs{'txtSteelRuleLength-'.$$sig_specs{'SignatureIndex'}}*$imposition, undef );
 				$SteelRulePrice{'Total'} = $SteelRulePrice{'Price'} * $$specs{'txtSteelRuleLength-'.$$sig_specs{'SignatureIndex'}}*$imposition;
 				$DiePrice{'Price'} += $SteelRulePrice{'Total'};
@@ -124,7 +124,7 @@ sub calc_price {
 #
 			if ( $$specs{'txtDieCutPunches'} > 0 ) {
 ##punches are optional
-				if ( my @Materials = openprint::Material::find('name'=>'DieCutPunch'.$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}) ) {
+				if ( my @Materials = openprint::Material->find('name'=>'DieCutPunch'.$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}) ) {
 					my %PunchPrice = $Materials[0]->get_price( $$specs{'txtDieCutPunches-'.$$sig_specs{'SignatureIndex'}}*$imposition, $Equipment );
 					$PunchPrice{'Total'} = $PunchPrice{'Price'} * $$specs{'txtDieCutPunches-'.$$sig_specs{'SignatureIndex'}} * $imposition;
 					$DiePrice{'Price'} += $PunchPrice{'Total'};
@@ -381,7 +381,7 @@ sub signature_calc {
 		$log->debug("Overriding Equipment!");
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
 	} else {
-		@equipment = openprint::Equipment::find( 'use_in_estimating'=>1, 'Specifications'=>{'Die Cutting Capable'=>'Y'} );
+		@equipment = openprint::Equipment->find( 'use_in_estimating'=>1, 'Specifications'=>{'Die Cutting Capable'=>'Y'} );
 	} # end if
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -444,7 +444,7 @@ sub signature_calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;	
 
-	@{$$variable{'Equipment'}} = openprint::Equipment::find('order'=>'lower(strname)', 'use_in_estimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} );
+	@{$$variable{'Equipment'}} = openprint::Equipment->find('order'=>'lower(strname)', 'use_in_estimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} );
 
 	if ( $$variable{'rdbTemplateTypePresentationFolderStandard1Pocket'} ne '' or $$variable{'rdbTemplateTypePresentationFolderStandard2Pocket'} ne '' ) {
 		$$variable{'ShowPresentationFolderDieCutting'} = 'Y';

@@ -165,9 +165,9 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
-			$log->warn("No template!" . $r->content_type());
+			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($_);
+			#$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -326,7 +326,7 @@ $log->debug("User Type: $session{'user_type'}");
 							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 							if ( $$sig_specs{'SignatureIndex'} == $$PPF{'signature'} ) {
 $log->debug("Found sig");
-								my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+								my @Equipment = openprint::Equipment->find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 								if ( @Equipment ) {
 									$Equipment = $Equipment[0];
 									last;
@@ -335,7 +335,7 @@ $log->debug("Found sig");
 						} # end foreach
 						if ( ! $Equipment ) {
 							$log->debug("Looking it up from Schedule");
-							my @rows = openprint::press_schedule::find('project_id'=>$param{'ProjectIndex'},'service_id'=>$param{'ServiceIndex'});
+							my @rows = openprint::press_schedule->find('project_id'=>$param{'ProjectIndex'},'service_id'=>$param{'ServiceIndex'});
 							if ( @rows == 1 ) {
 								$Equipment = new openprint::Equipment( $rows[0]{'equipment_id'} );
 							} 

@@ -5,21 +5,20 @@
 	} elsif ( $$variable{'RFIDScanner'} and $$variable{'RFIDScanner'}->location_id() ) {
 		$$variable{'Selected'} = $$variable{'RFIDScanner'}->Location();
 		$$variable{'Location'} = $$variable{'Selected'}->Parent();
-	} elsif ( $openprint::param{'selected_name'} ) {
-		my @locations = openprint::Location::find( 'name' => $openprint::param{'selected_name'} );
-		$$variable{'Selected'} = shift @locations;
-	} elsif ( $openprint::param{'selected_id'} ) {
-		$$variable{'Selected'} = new openprint::Location( $openprint::param{'selected_id'} );
+	} elsif ( $param{'selected_name'} ) {
+		$$variable{'Selected'} = openprint::Location->find_one( 'name_lc' => $param{'selected_name'} );
+	} elsif ( $param{'selected_id'} ) {
+		$$variable{'Selected'} = new openprint::Location( $param{'selected_id'} );
 		$$variable{'Location'} = $$variable{'Selected'}->Parent();
 	} # end if
 	if ( ! $$variable{'Location'} ) {
-		if ( $openprint::param{'location_id'} ) {
-			$$variable{'Location'} = new openprint::Location( $openprint::param{'location_id'} );
+		if ( $param{'location_id'} ) {
+			$$variable{'Location'} = new openprint::Location( $param{'location_id'} );
 		} else {
 			$$variable{'Location'} = new openprint::Location( 1 );
 		} # end if
 	} # end if
-	#if ( defined $openprint::param{'parent'} and $$variable{'Location'}->parent() ) {
+	#if ( defined $param{'parent'} and $$variable{'Location'}->parent() ) {
 		#$$variable{'Location'} = $$variable{'Location'}->parent();
 	#} # end if
 	$$variable{'MapFile'} = $$variable{'Selected'} ? join('/', $$variable{'Location'}->name(), $$variable{'Selected'}->name() ) : $$variable{'Location'}->name();

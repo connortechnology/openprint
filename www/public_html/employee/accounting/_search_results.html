@@ -6,7 +6,7 @@
 			$session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
 		} # end if
 
-	@{$$variable{'Orders'}} = openprint::Order::find(
+	@{$$variable{'Orders'}} = openprint::Order->find(
 		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
 			'/employee/accounting/search.html?ddmStartYear',
 			'/employee/accounting/search.html?ddmStartMonth',

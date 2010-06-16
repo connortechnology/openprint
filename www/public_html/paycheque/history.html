@@ -43,20 +43,17 @@
 				<label>Employee:</label>
 				<select name="employee_id" id="employee_id" onchange="load_paycheques(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id'=>$openprint::session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/paycheque/history.html?company_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id'=>$openprint::session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/paycheque/history.html?company_id'} ); ) ?>
 				</select>
 			</p>
-<? eval (
-	ssi:setup_date_select( '/paycheque/history.html', 'paid_on', -31 );
-) ?>
 			<p>
 				<label>Received On:</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'paid_on_start', join('-', @session{'/paycheque/history.html?paid_on_start_year','/paycheque/history.html?paid_on_start_month','/paycheque/history.html?paid_on_start_day'} ), 'load_paycheques(this.form);' ); ) ?>
+<? echo ( ssi::date_select_session( '/paycheque/history.html', 'paid_on_start', { 'onchange'=>'load_paycheques(this.form);' } ); ) ?>
 					to 
 				</span>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'paid_on_end', join('-', @session{'/paycheque/history.html?paid_on_end_year','/paycheque/history.html?paid_on_end_month','/paycheque/history.html?paid_on_end_day'} ), 'load_paycheques(this.form);' ); ) ?>
+<? echo ( ssi::date_select_session( '/paycheque/history.html', 'paid_on_end', { 'onchange'=>'load_paycheques(this.form);' } ); ) ?>
 				</span>
 			</p>
 			<br class="spacer"/>

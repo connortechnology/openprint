@@ -54,7 +54,7 @@
 		<br class="spacer"/>
 	</fieldset>
 <? eval (
-@{$$variable{'Timetracks'}} = openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting');
+@{$$variable{'Timetracks'}} = openprint::Timetrack->find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting');
 ) ?>
 <? if ( @{$$variable{'Timetracks'}} ) ?>
 	<fieldset><legend>Services</legend>
@@ -148,7 +148,8 @@
 			<? echo ( 
 				my $html = '';
 				$$variable{'payment_total'} = 0;
-				foreach my $Payment ( $$variable{'Invoice'}->Payments() ) {
+				foreach my $P ( $$variable{'Invoice'}->Payments() ) {
+					my $Payment = $P->Payment();
 					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td style="text-align:right;">%4$s</td></tr>', $Payment->id(), $Payment->received_on(), $Payment->memo(), openprint::Currency::format( $Payment->amount() ) );
 					$$variable{'payment_total'} += $Payment->amount();
 				} # end foreach

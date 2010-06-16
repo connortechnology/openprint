@@ -19,7 +19,7 @@
 			<select name="CSR" size="1" onchange="load_projects(this.form);">
 			<? echo ( 
 				my @options = ( '', 'All' );
-				push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)','usergroup'=>'Sales');
+				push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)','usergroup'=>'Sales');
 				return ssi::make_drop_down( \@options, $param{'CSR'} );
 			 ) ?>
 			

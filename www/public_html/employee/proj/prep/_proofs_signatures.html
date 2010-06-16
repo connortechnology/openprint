@@ -25,7 +25,7 @@
 
 			if ( $param{"UsePress-$sid"} ne $$sig_specs{'UsePress'} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $param{'ProjectIndex'}, $sid, 'UsePress', $param{"UsePress-$sid"} );
-				if ( my @Equipment = openprint::Equipment::find('strid'=>$param{"UsePress-$sid"}) ) {
+				if ( my @Equipment = openprint::Equipment->find('strid'=>$param{"UsePress-$sid"}) ) {
 					$$variable{'information'} .= qq`Changed press for Signature $$sig_specs{'SignatureIndex'} to $param{"UsePress-$sid"}<br/>`;
 				} else {
 					$$variable{'error'} .= 'Error: invalid press?';
@@ -80,7 +80,7 @@
 			openprint::Estimating::Proofs::calc( $log, $dbh, $variable, @param{'ProjectIndex','ServiceIndex'}, \%proof_specs );
 
 			# Now do the abominable thing and add a custom line item for it too...
-			if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
+			if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService') ) {
 				my $ac = sql::start_transaction( $dbh );
 				sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $param{'ProjectIndex'}, 'strStatus', 'Waiting For Customer Approval', 'servicetype_id', $ServiceTypes[0]->id() );
 				$_ = q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?};
@@ -106,7 +106,7 @@
 	<input type="hidden" name="order_id" value="<?OrderID?>"/>
 	<input type="hidden" name="btnFunction" value=""/>
 	<? eval ( 
-		@{$$variable{'Presses'}} = map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+		@{$$variable{'Presses'}} = map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 		openprint::Estimating::Proofs::get_proof_specs( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); 
 
 		@{$$variable{'SignatureIndices'}} = $$variable{'Project'}->signatures();
@@ -160,7 +160,7 @@
 					<td>
 						<select name="ddmProofType-<? echo ( $$variable{'SignatureSpecs'}{'SignatureIndex'} ) ?>">
 						<option value="">Select Type</option>
-						<? echo ( ssi::make_drop_down( [map { $_->name(), $_->description() } openprint::Service::find( 'category'=>'Proofs', 'order'=>'lower(description)' )] ); ) ?>
+						<? echo ( ssi::make_drop_down( [map { $_->name(), $_->description() } openprint::Service->find( 'category'=>'Proofs', 'order'=>'lower(description)' )] ); ) ?>
 						</select>
 					</td>
 					<td>&nbsp;</td>

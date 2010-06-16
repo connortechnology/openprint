@@ -14,7 +14,7 @@
 	Set Conversion to:
 	<select name="to-<? echo ( $$variable{'Currency'}->id(); ) ?>">
 		<option value=""> select </option>
-		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ] ); ) ?>
+		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ] ); ) ?>
 	</select>
 	<input type="text" name="rate-<? echo ( $$variable{'Currency'}->id(); ) ?>" size="5" style="width:auto;" />
 <? echo ( 

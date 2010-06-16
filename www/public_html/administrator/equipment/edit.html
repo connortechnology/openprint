@@ -37,7 +37,7 @@ function filter_onChange( element, id, selected ) {
 			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" />
 				<option value="">Select Equipment</option>
 <? echo (
-    ssi::make_drop_down( [ map { $_->id(), $_->strid() } openprint::Equipment::find( 'order' => 'lower(strID)' ) ], $$variable{'Equipment'}->id() );
+    ssi::make_drop_down( [ map { $_->id(), $_->strid() } openprint::Equipment->find( 'order' => 'lower(strID)' ) ], $$variable{'Equipment'}->id() );
 ) ?>
 			</select>
 		</p>
@@ -153,7 +153,7 @@ function filter_onChange( element, id, selected ) {
 			<label>Location:</label>
 			<select id="location_id" name="location_id">
 				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') ], $$variable{'Equipment'}->location_id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') ], $$variable{'Equipment'}->location_id() ); ) ?>
 			</select>
 		</p>
 		<p>
@@ -264,7 +264,7 @@ function filter_onChange( element, id, selected ) {
 				<option value="all">All</option>
 <? echo ( 
 	my %types;
-foreach ( openprint::Fold::find('equipment_id'=>$$variable{'Equipment'}->id()) ) {
+foreach ( openprint::Fold->find('equipment_id'=>$$variable{'Equipment'}->id()) ) {
 	$types{$_->type()} = $openprint::Estimating::Folding::fold_types{$_->type()};
 }
 	ssi::make_drop_down( [ map { $_, $types{$_} } sort keys %types ] );

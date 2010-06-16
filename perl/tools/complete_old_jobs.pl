@@ -23,10 +23,10 @@ $log = new logger( 'warn' );
 $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 	
-foreach my $Project ( openprint::Project::find( 'status'=>'In Prepress', 'updated_on_<='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ), 'order'=>'index desc' ) ) {
+foreach my $Project ( openprint::Project->find( 'status'=>'In Prepress', 'updated_on_<='=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 ) ), 'order'=>'index desc' ) ) {
 	
 	print $Project->id() . ' ' . $Project->Company()->name() . ' ' . $Project->updated_on() . ' ' . $Project->shippingtype() . "\n";
-	if ( my $Job = openprint::ScheduledJob::find_one('project_id'=>$Project->id()) ) {
+	if ( my $Job = openprint::ScheduledJob->find_one('project_id'=>$Project->id()) ) {
 		if ( $Job->starttime() ) {
 			print "Scheduled, skipping " . $Job->starttime() . "\n";
 			next;

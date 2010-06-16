@@ -48,7 +48,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $pid );
 
-	my @Equipment = openprint::Equipment::find('Specifications'=>{'DTaping Capable'=>'Y'},'use_in_estimating'=>1);
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'DTaping Capable'=>'Y'},'use_in_estimating'=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no dtaping equipment.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -148,7 +148,7 @@ sub calc {
 				} # end foreach side
 
 				# Calculate Material costs
-				my $Material = openprint::Material::find_one('name'=>'DTape');
+				my $Material = openprint::Material->find_one('name'=>'DTape');
 				if ( $Material ) {
 					my %MaterialPrice = $Material->get_price( $length );
 					if ( lc $MaterialPrice{'units'} eq 'per inch' ) {
@@ -218,7 +218,7 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @possible_equipment = openprint::Equipment::find( 'Specifications' => {'DTaping Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'DTaping Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 

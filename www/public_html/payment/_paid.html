@@ -11,7 +11,7 @@
 	<? echo (
 		my $html = '';
 		my $total = 0;
-		foreach my $IP ( openprint::Invoice_Payment::find('payment_id'=>$$variable{'Payment'}->id(), 'order'=>'invoice_id') ) {
+		foreach my $IP ( openprint::Invoice_Payment->find('payment_id'=>$$variable{'Payment'}->id(), 'order'=>'invoice_id') ) {
 			$html .= sprintf( q`<tr title="%s" onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');">`, $IP->Invoice()->external_notes() );
 			$html .= sprintf('<td><a href="/invoice/view.html?invoice_id=%1$d">%1$d</a></td>', $IP->invoice_id() );
 			$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $IP->Invoice()->total() ) );

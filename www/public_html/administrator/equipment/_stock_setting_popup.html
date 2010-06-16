@@ -7,7 +7,7 @@
 	<input type="hidden" name="equipment_id" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
 	<fieldset class="filters"><legend>Search Information</legend>
 		<div class="leftColumn">
-<? if ( @{$$variable{'Groups'}} = openprint::StockGroup::find('order'=>'lower(name)'); ) ?>
+<? if ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)'); ) ?>
 		<p>
 			<label>Group:</label>
 			<select id="Group" name="Group" size="1" onchange="calc(this.form.name);">
@@ -17,13 +17,13 @@
 					) ?>
 			</select>
 		</p>
-<? endif ( @{$$variable{'Groups'}} = openprint::StockGroup::find('order'=>'lower(name)'); ) ?>
+<? endif ( @{$$variable{'Groups'}} = openprint::StockGroup->find('order'=>'lower(name)'); ) ?>
 		<p>
 			<label>Manufacturer:</label>
 			<select id="Manufacturer" name="Manufacturer" size="1" onchange="calc(this.form.name);">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $session{'/administrator/equipment/edit.html?Manufacturer'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer->find('order'=>'lower(shortname)') ], $session{'/administrator/equipment/edit.html?Manufacturer'} );
 					) ?>
 			</select>
 		</p>
@@ -32,7 +32,7 @@
 			<select name="Name" onchange="Name_onChange(this,'');">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $session{'/administrator/equipment/edit.html?Name'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName->find('order'=>'lower(shortname)') ], $session{'/administrator/equipment/edit.html?Name'} );
 					) ?>
 			</select>
 		</p>
@@ -42,7 +42,7 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %finishes;
-					foreach my $Stock ( openprint::Paper::find( 
+					foreach my $Stock ( openprint::Paper->find( 
 							'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
 							'manufacturer_id'=>$session{'/administrator/equipment/edit.html?Manufacturer'},
 							'group_id'=>$session{'/administrator/equipment/edit.html?Group'}
@@ -59,7 +59,7 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %colours;
-					foreach my $Stock ( openprint::Paper::find( 'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
+					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
 							'finish_id'=>$session{'/administrator/equipment/edit.html?Finish'},
 							'manufacturer_id'=>$session{'/administrator/equipment/edit.html?Manufacturer'},
 							'group_id'=>$session{'/administrator/equipment/edit.html?Group'},
@@ -76,7 +76,7 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %colours;
-					foreach my $Stock ( openprint::Paper::find( 'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
+					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
 							'finish_id'=>$session{'/administrator/equipment/edit.html?Finish'},
 							'colour_id'=>$session{'/administrator/equipment/edit.html?Colour'},
 							'manufacturer_id'=>$session{'/administrator/equipment/edit.html?Manufacturer'},
@@ -94,7 +94,7 @@
 				<option value=""> select one </option>
 			<? echo (
 					my %materials;
-					foreach my $Stock ( openprint::Paper::find( 'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
+					foreach my $Stock ( openprint::Paper->find( 'name_id'=>$session{'/administrator/equipment/edit.html?Name'},
 							'finish_id'=>$session{'/administrator/equipment/edit.html?Finish'},
 							'colour_id'=>$session{'/administrator/equipment/edit.html?Colour'},
 							'manufacturer_id'=>$session{'/administrator/equipment/edit.html?Manufacturer'},

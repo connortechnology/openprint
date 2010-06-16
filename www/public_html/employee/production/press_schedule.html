@@ -8,7 +8,7 @@
 	} elsif ( $param{'btnFunction'} eq 'AutoPilotOff' ) {
 		configuration::save_entry( $log, $dbh, 'AutoPilot', 'Off' );
 	} elsif ( $param{'btnFunction'} eq 'Schedule' ) {
-		openprint::press_schedule2::sort_schedule( openprint::press_schedule2::find({'field'=>'id','operator'=>'=','value'=>$param{'id'}}));
+		openprint::press_schedule2::sort_schedule( openprint::press_schedule2->find({'field'=>'id','operator'=>'=','value'=>$param{'id'}}));
 	} # end if
 ) ?>
 <script type="text/javascript" src="/javascripts/popups.js"></script>
@@ -175,7 +175,7 @@ onDestroy: function(eventName, win) {
 		<span style="float: left;">
 			Operator: <select name="Operator" size="1"><option value="">select one</option>
 			<? echo ( 
-			   ssi::make_drop_down ( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>'E', 'usergroup'=>'Press','order'=>'lower(strfirstname)' ) ] );
+			   ssi::make_drop_down ( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>'E', 'usergroup'=>'Press','order'=>'lower(strfirstname)' ) ] );
 			   ) ?>
 			</select>
 		</span>
@@ -216,7 +216,7 @@ onDestroy: function(eventName, win) {
 			<label>Presses:</label>
 				<select name="Presses" multiple size="4">
 <? echo ( 
-	@{$$variable{'Presses'}} = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)', 'id'=>{$param{'Presses'} );
+	@{$$variable{'Presses'}} = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)', 'id'=>{$param{'Presses'} );
 	my @selected_presses;
 	if ( ref $param{'Presses'} eq 'ARRAY' ) {
 		@selected_presses = @{$param{'Presses'}};
@@ -367,7 +367,7 @@ if ( 1 ) {
 <fieldset><legend>Scheduled Jobs</legend>
 <? echo (
 	my $html;
- my @jobs = openprint::press_schedule2::find(
+ my @jobs = openprint::press_schedule2->find(
             {'operator'=>'AND', 'fields'=>[
                 {'operator'=>'OR', 'fields'=>[
                     { 'operator'=>'>=', 'field'=>'starttime', 'value'=>$$variable{'ScheduleStart'} . ' 00:00:00' },
@@ -406,7 +406,7 @@ $html .= '</td>';
 	<ul>
 <? echo (
 	my $html;
-	my @jobs = openprint::press_schedule2::find( 
+	my @jobs = openprint::press_schedule2->find( 
 		{'field'=>'starttime','operator'=>'IS NULL' },
 		{'operator'=>'order', value=>'serviceindex'},
 		);

@@ -10,7 +10,7 @@
 			my $html = '';
 			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 			my @Invoices;
-			foreach my $I ( openprint::Invoice::find(
+			foreach my $I ( openprint::Invoice->find(
 				'invoicer_id'=>$openprint::session{'company_id'},
 				'invoicee_id'=>$$variable{'Payment'}->payor_id(),
 				'order'=>'id',

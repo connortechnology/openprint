@@ -46,7 +46,7 @@
 				require openprint::Upload;
 				my $html = '';
 				my $rowclass;
-				my @Uploads = openprint::Upload::find(
+				my @Uploads = openprint::Upload->find(
 					'started_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'upload_log.html?StartYear','upload_log.html?StartMonth','upload_log.html?StartDay'} ),
 					'started_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'upload_log.html?EndYear','upload_log.html?EndMonth','upload_log.html?EndDay'} ),
 					'order'=>'start DESC',

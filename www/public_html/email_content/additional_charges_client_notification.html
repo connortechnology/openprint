@@ -14,8 +14,8 @@
 		my $html = '';
 		my $rowclass;
 		my $services = $$variable{'Project'}->services();
-		foreach my $ServiceCategory ( openprint::ServiceType_Category::find('order'=>'sorting,name') ) {
-           foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
+		foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
+           foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
                 next if ! $$services{$ServiceType->name()};
                 foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $status = openprint::service::status( $$variable{'Project'}->id(), $service_id );

@@ -6,7 +6,7 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 <? eval (
 	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Invoices'}} = ();
-	foreach my $Invoice ( openprint::Invoice::find( 
+	foreach my $Invoice ( openprint::Invoice->find( 
 		'invoicee_id'		=> $session{'/invoice/history.html?company_id'},
 		'invoicer_id'		=> $session{'company_id'},
 		'order'				=> 'id',
