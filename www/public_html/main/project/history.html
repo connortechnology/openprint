@@ -49,11 +49,10 @@
 			</p>
 			<p>
 				<label>Status:</label>
-				<select id="ddmStatus" name="ddmStatus" onchange="load_projects( this.form );">
-					<option value="">All</option>
+				<select id="ddmStatus" name="ddmStatus" multiple="multiple" size="4" onchange="load_projects( this.form );">
 <? echo ( 
-		$_ = q{SELECT name, name FROM Project_Statuses WHERE name != 'Deleted' ORDER BY sort,lower(name)};
-		ssi::make_drop_down( [sql::execute( $log, $dbh, $_ )], $session{'/main/project/history.html?ddmStatus'} );
+		$_ = q{SELECT name, name FROM Project_Statuses ORDER BY sort,lower(name)};
+		ssi::make_drop_down( [ '', 'All', sql::execute( $log, $dbh, $_ )], [ split(';', $session{'/main/project/history.html?ddmStatus'} ) ] );
 ) ?>
 				</select>
 			</p>

@@ -274,7 +274,6 @@ sub auto_calculate {
 			push @{$$services{'Paper'}}, $Project->add_service( 'Paper' );
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Paper");
 
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) ) {
 		if ( ! $$services{'Cutting'} ) {
@@ -283,7 +282,6 @@ $openprint::log->debug("Apres Paper");
 			} # end if
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Cutting");
 
 	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $$services{'PerfectBound'} ) {
@@ -294,7 +292,6 @@ $openprint::log->debug("Apres Cutting");
 			openprint::print_project::delete_service( $log, $dbh, $project_index, $si );
 		} # end while
 	} # end if
-$openprint::log->debug("Apres PF");
 
 	if ( openprint::Estimating::Stitching::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
@@ -331,7 +328,6 @@ $openprint::log->debug("Apres PF");
 			} # end foreach
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Collat");
 
 # Proofs
 	if ( ! ( $$services{'Proofs'} or $$services{'NoPrinting'} ) ) {
@@ -343,7 +339,6 @@ $openprint::log->debug("Apres Collat");
 			openprint::Estimating::Proofs::insert_proof_defaults( $log, $dbh, $project_index, $si );
 		} # end if
 	} # end foreach
-$openprint::log->debug("Apres porrat");
 
 	if ( ! $$services{'BulkSkids'} ) {
 		if ( openprint::Estimating::Skids::neccessary( $Project, 'BulkSkids' ) ) {
@@ -355,7 +350,6 @@ $openprint::log->debug("Apres porrat");
 			push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' );
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Skdis");
 
 	if ( ! $$services{'PlainCartons'} ) {
 		if ( openprint::Estimating::Skids::neccessary( $Project, 'PlainCartons' ) ) {
