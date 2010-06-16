@@ -329,9 +329,13 @@ sub find {
 			next if sets::isin( ref $params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
 			my $f = (lc $k).'_id';
 			if ( exists $fields{$f} ) {
+				if ( $params{$k}->id() ) {
 				$sql .= " AND $fields{$f} = ?";
 #$openprint::log->debug("$params{$k}" . ref $params{$k});
 				push @values, $params{$k}->id();
+				} else {
+					$sql .= " AND $fields{$f} IS NULL";
+				} # en dif
 				delete $params{$k};
 			} # end if
 		} # end foreach

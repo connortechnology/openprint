@@ -24,6 +24,7 @@ sub history {
 				'description'	=>	$param{'product-description-'.$Product->id()},
 				'price'			=>	$param{'product-price-'.$Product->id()},
 				'quantity'		=>	$param{'product-quantity-'.$Product->id()},
+				'po'			=>	$param{'product-po-'.$Product->id()},
 				});
 		} # end foreach
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
@@ -231,6 +232,7 @@ sub _invoiced_products {
 			'description'	=>	$param{'product-description-'.$Product->id()},
 			'price'			=>	$param{'product-price-'.$Product->id()},
 			'quantity'		=>	$param{'product-quantity-'.$Product->id()},
+			'po'			=>	$param{'product-po-'.$Product->id()},
 			});
 	} # end foreach
 
@@ -243,9 +245,10 @@ sub _invoiced_products {
 	} elsif ( $param{'action'} eq 'add' ) {
 		my $IP = new openprint::Invoiced_Product( );
 		$variable{'error'} .= $IP->save({
-				'product_id'	=>	$param{'product_id-'},
+				'product_id'	=>	$param{'product-id-'},
 				'invoice_id'	=>	$variable{'Invoice'}->id(),
-				'quantity'		=>	$param{'product_quantity_'} ? $param{'product_quantity_'} : 1,
+				'quantity'		=>	$param{'product-quantity-'} ? $param{'product-quantity-'} : 1,
+				'po'			=>	$param{'product-po-'},
 				});
 	} elsif ( $param{'action'} eq 'remove' ) {
 		my $IP = new openprint::Invoiced_Product( $param{'product_id'} );

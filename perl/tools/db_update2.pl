@@ -20,6 +20,7 @@ require openprint::MaterialCategory;
 require openprint::PaperInventory;
 require openprint::Log;
 require openprint::Host;
+require openprint::Invoice;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -61,8 +62,14 @@ if ( sets::isin( 'pricelists', \@tables ) ) {
 		$dbh->do('ALTER TABLE pricelists add deleted boolean default false') if ! exists $$data{'deleted'};
 	} # end if
 } # end if
+if ( sets::isin( 'invoiced_products', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM invoiced_products LIMIT 1', {} );
+	if ( $data ) {
+		$dbh->do('ALTER TABLE invoiced_products add po text') if ! exists $$data{'po'};
+	} # end if
+} # end if
 
-foreach my $Invoice ( openprint::Invoice::find() ) {
+foreach my $Invoice ( openprint::Invoice->find() ) {
 } # end foreach Invoice
 
 $dbh->commit();

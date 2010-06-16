@@ -24,6 +24,7 @@ require sql;
 	'invoice_id'		=>	'invoice_id',
 	'product_id'		=>	'product_id',
 	'description'		=>	'description',
+	'po'				=>	'po',
 );
 
 %transforms = (

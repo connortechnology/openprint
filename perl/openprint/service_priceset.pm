@@ -8,11 +8,10 @@ require openprint::service_price;
 sub save {
 	my $self = shift;
 
-	$_ = "DELETE FROM Service_Prices WHERE service_id='" . $self->{product_index} . "'\n".
-		"AND pricelist_id = '" . $self->{list_index} .  "'\n";
+	$_ = "DELETE FROM Service_Prices WHERE service_id=? AND pricelist_id = ?";
 	$_ .= "AND equipment_id = '".$self->{equipment_index}."'\n" if $self->{equipment_index};
 	$_ .= "AND ($self->{qty} :: numeric >= min OR min IS NULL) AND ($self->{qty} :: numeric <= max OR max IS NULL)" if $self->{qty};
-	sql::execute( $self->{log}, $self->{dbh}, $_ );
+	sql::execute( $self->{log}, $self->{dbh}, $_, $self->{product_index}, $self->{list_index} );
 
 	foreach my $price ( @{$self->{prices}} ) {
 		$price->save();
