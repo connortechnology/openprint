@@ -2,10 +2,6 @@
 	<h1>PROJECTS</h1>
 	<h2>View Project</h2>
 </div>
-<? eval (
-	$$variable{'OrderStatus'} = $$variable{'Project'}->Order()->status();
-) ?>
-
 <script type="text/javascript">
 <!--
 	function open_project_docket() {
@@ -56,7 +52,7 @@
 				if ( $$variable{'Project'}->order_id() and sets::isin( $$variable{'Project'}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'ContinueOrder', 'continueorder.gif', "f1.action='/main/order/information.html?OrderID=".$$variable{'Project'}->order_id()."';f1.btnFunction.value='';f1.submit();", '', 'Continue Order' );
 				} # end if
-				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) and $$variable{'OrderStatus'} ) {
+				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) and $$variable{'Project'}->Order()->status() ) {
 					$html .= ssi::writeButton( $log, $dbh, 'Docket', 'projectDocket.gif', 'open_project_docket();', '', 'Docket' );
 				} # end if
 				if ( sets::isin( $$variable{'Project'}->status(), 'Proofs Out','Approved','Printed','Complete' ) ) {

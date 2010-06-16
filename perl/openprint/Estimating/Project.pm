@@ -88,11 +88,11 @@ sub calc {
 		push @{$$services{''}}, openprint::print_project::insert_project_type( $r, $log, $dbh, $$Project{'id'}, $ProjectType->name() );
 	} # end if
 
-	my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$Project{'id'}, $$services{''}[0] );
-	if ( $printing_specs{'ProjectType'} ne $ProjectType->name() ) {
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	if ( $$printing_specs{'ProjectType'} ne $ProjectType->name() ) {
 		openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $$services{''}[0] );
 		$$services{''}[0] = openprint::print_project::insert_project_type( $r, $log, $dbh, $$Project{'id'}, $ProjectType->name() );
-		%printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $$Project{'id'}, $$services{''}[0] );
+		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	} # end if
 
 	foreach my $servicetype_id ( sql::execute( $log, $dbh, q{SELECT (SELECT name FROM Service_Types WHERE id = servicetype_id ) FROM projecttype_requiredservices WHERE projecttype_id = ?}, $Project->type_id() ) ) {
@@ -255,9 +255,12 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 # It's a multi-page publication
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight','txtTotalPageQuantity','rdbCover','rdbTemplateType','PrintingType' ) {
-			if ( $printing_specs{$spec} ne $$specs{$spec} ) {
+			if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
-				$printing_specs{$spec} = $$specs{$spec};
+				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
+$openprint::log->warn("Hey, insert_service_spec didn't update the hash!");
+				$$printing_specs{$spec} = $$specs{$spec};
+				} # end if
 			} # end if
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
@@ -455,10 +458,20 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		} # end if
 
 		if ( $$specs{'Aqueous'} and $$specs{'Aqueous'} ne 'None' ) {
+			if ( get_colours( $specs, 'SideOne' ) ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', 'Y' );
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', "Aqueous $$specs{'Aqueous'} Overall" );
+			} else {
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', '' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', '' );
+			} 
+			if ( get_colours( $specs, 'SideTwo' ) ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', 'Y' );
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', "Aqueous $$specs{'Aqueous'} Overall" );
+			} else {
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', '' );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', '' );
+			} # end if
 			if ( ! $$services{'Aqueous'} ) {
 				push @{$$services{'Aqueous'}}, $Project->add_service( 'Aqueous' );
 			} # end if
@@ -476,9 +489,12 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight', 'ddmStockBrand','ddmStockFinish','ddmStockColour','ddmStockWeight','txtQuantity1','chkProcessColourSideOne','chkProcessColourSideTwo','chkBlackSideOne','chkBlackSideTwo','PageQuantity' ) {
-			if ( $printing_specs{$spec} ne $$specs{$spec} ) {
+			if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
-				$printing_specs{$spec} = $$specs{$spec};
+				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
+$openprint::log->error("Hey, insert_service_spec didn't update the hash!");
+				$$printing_specs{$spec} = $$specs{$spec};
+}
 			} # end if
 		} # end foreach
 		if ( $$specs{'PrintingType'} ) {
@@ -489,16 +505,22 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		} # end if
 		if ( $ProjectType->name() eq 'PresentationFolders' ) {
 			foreach my $spec ( 'rdbPanels','rdbPocketSize','chkPocketLeft','chkPocketRight','chkPocketCenter' ) {
-				if ( $printing_specs{$spec} ne $$specs{$spec} ) {
+				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
-					$printing_specs{$spec} = $$specs{$spec};
+				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
+$openprint::log->error("Hey, insert_service_spec didn't update the hash!");
+					$$printing_specs{$spec} = $$specs{$spec};
+				} # end if
 				} # end if
 			} # end foreach
 		} elsif ( $ProjectType->name() eq 'Banners' ) {
 			foreach my $spec ( 'PocketSize','grommets','hemmed','pockets','EdgeLeft','EdgeRight','EdgeBottom','EdgeTop' ) {
-				if ( $printing_specs{$spec} ne $$specs{$spec} ) {
+				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 					openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
-					$printing_specs{$spec} = $$specs{$spec};
+				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
+$openprint::log->error("Hey, insert_service_spec didn't update the hash!");
+					$$printing_specs{$spec} = $$specs{$spec};
+				} # end if
 				} # end if
 			} # end foreach
 		} else {
@@ -509,7 +531,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 		# Although this could calculate the printing, it is here only to further store and validate and auto-ppulate fields
 		my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'Printing' );
 		@$specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'} = @$sig_specs{'txtWidth','txtHeight','chkPocketCenter','alert','Status'};
-		%printing_specs = %{$sig_specs};
+		#%printing_specs = %{$sig_specs};
 	} # end if printing
 
 	if ( ! $$specs{'txtQuantity1'} ) {
@@ -898,6 +920,39 @@ sub create_calc {
 	$$specs{'ProjectIndex'} = $Project->id();
 	return $$specs{'Status'} = 'calculated';
 } # end if
+
+# This version JUST does colours, not coatings
+sub get_colours {
+    my ( $specs, $side ) = @_;
+    my @colours;
+    if ( $$specs{'sides_the_same'} eq 'Y' and $side eq 'SideTwo' ) {
+        $side = 'SideOne';
+    } # end if
+
+    foreach my $colour ( 'Cyan','Magenta','Yellow','Black' ) {
+        if ( $$specs{'chk'.$colour.$side} ) {
+            push @colours, "$colour Spot Colour";
+        } # end if
+    } # end foreach
+    if ( $$specs{'chkProcessColour'.$side} ) {
+        push @colours, 'Cyan','Magenta','Yellow','Black';
+    } # end if
+
+    foreach my $k ( keys %$specs ) {
+        if ( my ( $index ) = $k =~ /^chkColourCoating(\d+)$side/ ) {
+            next if ! $$specs{"chkColourCoating$index$side"};
+            my $type = $$specs{"ColourCoatingType$index$side"};
+            next if ! $type;
+            next if $$specs{'ColourCoatingColour'.$index.$side} eq 'None';
+            #$openprint::log->debug("Found Colour $index.$side $signature $type");
+            if ( $type =~ /PMS/ ) {
+                push @colours, $$specs{'ColourCoatingColour'.$index.$side};
+            } # end if type eq PMS
+        } # end if
+    } # end foreach
+    return @colours;
+} # end sub get_colours
+
 
 1;
 

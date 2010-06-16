@@ -709,7 +709,7 @@ sub calc {
 		if ( ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
 	 		$$specs{'OverTotal'.$qty_index} = $$specs{'OverBase'.$qty_index} + $$specs{'OverSetup'.$qty_index} + $$specs{'OverRun'.$qty_index};
 		}
-	} # end foreach
+	} # end foreach qty_index
 
 	if ( ($Project->Type()->name() eq 'PresentationFolders') or (($$variable{'Group'} == 1 ) and sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
 		if ( $$specs{'rdbPocketSize'} and ( $$specs{'rdbPocketSize'} ne 'Other' ) ) {
