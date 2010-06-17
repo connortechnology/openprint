@@ -189,7 +189,9 @@ sub view_services {
 			} # end if
 		} # end if btnFunction defined
 		if ( defined $openprint::param{'remove'} and ( $openprint::param{'remove'} ne '' ) ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $r->param('remove') );
+			foreach my $s_id ( split(',', $openprint::param{'remove'} ) ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $s_id );
+			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
@@ -306,7 +308,7 @@ sub multipage_signatures {
 
 	if ( ! $$param{'txtTotalSpreadQuantity'} ) {
 		$$param{'txtTotalSpreadQuantity'} = $$param{'txtTotalPageQuantity'} / $$param{'txtSpreadSize'};
-		$log->warn("INSANITY: TotalSpreadQuantity Not Specified. Setting to $$param{'txtTotalSpreadQuantity'}");
+		$log->error("INSANITY: TotalSpreadQuantity Not Specified. Setting to $$param{'txtTotalSpreadQuantity'}");
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtTotalSpreadQuantity', $$param{'txtTotalSpreadQuantity'});
 	} # end if
 
