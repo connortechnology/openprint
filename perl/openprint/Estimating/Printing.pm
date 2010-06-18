@@ -2088,7 +2088,7 @@ $log->debug("Press $$Press{strid} Impositions beforefiltering: " . @impositions 
 $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
 					next;
 				} else {
-					$imp->display('Accepted stock! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
+					#$imp->display('Accepted stock! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
 				} # end if
 			} elsif ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
 				if ( $Paper->height() != $$sig_specs{"CutOff$qty_index"} ) {
@@ -2096,10 +2096,10 @@ $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty
 				} # end if
 			}  # end if
 			if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
-$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
+#$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
 				next if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};	
 			} elsif ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
-$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() );
+#$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() ) if $debug;
 				next;
 			} # end if
 
@@ -2109,7 +2109,7 @@ $imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne 
 			} # end if
 
 			if ( $$sig_specs{'PreviousStockType'} and ( $Paper->type() ne $$sig_specs{'PreviousStockType'} ) ) {
-$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $imp->Paper()->type() );
+#$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $imp->Paper()->type() );
 				next;
 			} # end if
 
@@ -2128,11 +2128,11 @@ $imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $imp->
 					}# end foreach
 				} # end if
 				if ( sets::isin( $imp->pages(), \@dont_do_pages ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
-$imp->dispay('In dont do pages');
+#$imp->dispay('In dont do pages');
 					next;
 				} # end if
 				if ( $$sig_specs{'PreviousImposition'} and ( $$sig_specs{'PreviousImposition'} > $imp->imposition() ) ) {
-$imp->display("Previous Imposition");
+#$imp->display("Previous Imposition");
 					next;
 				} # end if
 				if ( ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $imp->pages() != $$sig_specs{'PageQuantity'.$qty_index} ) ) {
@@ -2140,11 +2140,11 @@ $imp->display("Previous Imposition");
 					next;
 				} # end if
 				if (($max_pages >= $imp->pages() ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
-$imp->display("Max paeages: $max_pages >= " . $imp->pages() );
+#$imp->display("Max paeages: $max_pages >= " . $imp->pages() );
 					next;
 				} elsif ($max_impositions{$imp->pages()}/2 > $imp->imposition()) {
 # Only do this if not sheet size overrides
-$imp->dispay('Ma imposition!');
+#$imp->dispay('Ma imposition!');
 					next;
 				} # end if
 
@@ -2637,7 +2637,7 @@ if ( ! $recurse ) {
 			my @paper_strings = keys %PaperCounts;
 			if ( 1 == @paper_strings and $imp->Paper()->to_string() ne $paper_strings[0] ) {
 $openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->to_string() );
-			} else {
+			} elsif ( $debug ) {
 				foreach my $k ( @paper_strings ) {
 					$openprint::log->debug( "$k => $PaperCounts{$k}" );
 				} # end 

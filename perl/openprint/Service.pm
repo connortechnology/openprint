@@ -12,6 +12,8 @@ use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
+my $debug = 1;
+
 $table = 'services';
 $serial = 'services_id_seq';
 
@@ -95,6 +97,10 @@ sub find {
 		$sql .= ' AND name=?';
 		push @values, $params{'name'};
 	} # end if
+	if ( $params{'name_like'} ) {
+		$sql .= ' AND name LIKE ?';
+		push @values, $params{'name_like'};
+	} # end if
 	if ( $params{category_id} ) {
 		$sql .= ' AND category_id=?';
 		push @values, $params{category_id};
@@ -110,6 +116,8 @@ sub find {
 	if ( ! $data ) {
 		$log->debug("Error loading Service ($sql) (@values) Reason: " . $dbh->errstr );
 		return;
+	} elsif ( $debug ) {
+		$log->debug("Loading Service ($sql) (@values) " . @$data );
 	} # end if
 	return map { new openprint::Service( $_->{id}, $_ ) } @$data;
 } # end sub find
