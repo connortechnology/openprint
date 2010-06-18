@@ -16,6 +16,7 @@
 	return $html;
 ) ?>
 <? if ( @{$$variable{'pending_drops'}} ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
 // <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'pending_drops'}} ) ) ?>");
@@ -25,4 +26,5 @@
 <? endif ( $r->uri() =~ /_pending/ ) ?>
 // ]]>
 </script>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <? endif ( @{$$variable{'pending_drops'}} ) ?>

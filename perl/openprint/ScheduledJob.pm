@@ -678,10 +678,10 @@ sub bump {
 	sql::end_transaction( $dbh, $ac );
 	my @forms = map {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );
-		return $$sig_specs{'SignatureIndex'};
-	} @{$self->services()} if $self->services();
+		$$sig_specs{'SignatureIndex'};
+	} @{$self->service_id()} if $self->service_id();
 
-	$Project->add_to_log( @session{'company_id','user_id'}, 'Form ' .join(',',@forms).' bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Form ' .join(',',sort @forms).' bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
 	return $error;
 } # end sub bump
 
