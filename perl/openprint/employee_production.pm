@@ -1311,8 +1311,12 @@ sub _li_change {
 		if ( (exists $param{'forms'}) and ( $param{'forms'} != $Job->forms() ) ) {
 			my @service_ids = @{$$Job{'service_id'}};
 			if ( $Job->forms() > $param{'forms'} ) {
-				@service_ids = splice @service_ids, 0, $param{'forms'};
-				$sql{'service_id'} = \@service_ids;
+				my @new_service_ids = splice @service_ids, 0, $param{'forms'};
+				$sql{'service_id'} = \@new_service_ids;
+				$Job->Project()->add_to_log(@session{'company_id','user_id'}, 'Removed form ' . join(',', sort map {
+					my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ );	
+					$$sig_specs{'SignatureIndex'};
+					} @service_ids ) . ' from press schedule.' );
 			} elsif ( $Job->forms() < $param{'forms'} ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
 				while ( @service_ids < $param{'forms'} ) {
