@@ -733,7 +733,7 @@ sub is_sig_complete {
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Ordered' );
 		return 0;
 	} # end if
-	if ( $session{'user_id'} != $param{"operator_id-$$sig_specs{'SignatureIndex'}"} ) {
+	if ( $param{"operator_id-$$sig_specs{'SignatureIndex'}"} and ( $session{'user_id'} != $param{"operator_id-$$sig_specs{'SignatureIndex'}"} ) ) {
 		$Project->add_to_log( @session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} complete for " . new openprint::User( $param{"operator_id-$$sig_specs{'SignatureIndex'}"} )->name() );
 	} else {
 		$Project->add_to_log( @session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} complete." );
