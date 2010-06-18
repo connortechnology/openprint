@@ -310,9 +310,9 @@ $openprint::log->warn("Hey, insert_service_spec didn't update the hash!");
 		} # end if
 			if ( $$specs{'Aqueous2'} and $$specs{'Aqueous2'} ne 'None' ) {
 				$$specs{'chkColourCoating'.$colourindex.'SideOne2'} = 'Y';
-				$$specs{'ColourCoatingType'.$colourindex.'SideOne2'} = "Aqueous $$specs{'Aqueous2'} Overall";
+				$$specs{'ColourCoatingType'.$colourindex.'SideOne2'} = $$specs{'Aqueous2'};
 				$$specs{'chkColourCoating'.$colourindex.'SideTwo2'} = 'Y';
-				$$specs{'ColourCoatingType'.$colourindex.'SideTwo2'} = "Aqueous $$specs{'Aqueous2'} Overall";
+				$$specs{'ColourCoatingType'.$colourindex.'SideTwo2'} = $$specs{'Aqueous2'};
 				$colourindex += 1;
 			} else {
 				$$specs{'chkColourCoating'.$colourindex.'SideOne2'} = '';
@@ -359,9 +359,9 @@ $openprint::log->warn("Hey, insert_service_spec didn't update the hash!");
 
 			if ( $$specs{'Aqueous1'} and $$specs{'Aqueous1'} ne 'None' ) {
 				$$specs{'chkColourCoating'.$colourindex.'SideOne1'} = 'Y';
-				$$specs{'ColourCoatingType'.$colourindex.'SideOne1'} = "Aqueous $$specs{'Aqueous1'} Overall";
+				$$specs{'ColourCoatingType'.$colourindex.'SideOne1'} = $$specs{'Aqueous1'};
 				$$specs{'chkColourCoating'.$colourindex.'SideTwo1'} = 'Y';
-				$$specs{'ColourCoatingType'.$colourindex.'SideTwo1'} = "Aqueous $$specs{'Aqueous1'} Overall";
+				$$specs{'ColourCoatingType'.$colourindex.'SideTwo1'} = $$specs{'Aqueous1'};
 				$colourindex += 1;
 			} else {
 				$$specs{'chkColourCoating'.$colourindex.'SideOne1'} = '';
@@ -460,14 +460,14 @@ $openprint::log->warn("Hey, insert_service_spec didn't update the hash!");
 		if ( $$specs{'Aqueous'} and $$specs{'Aqueous'} ne 'None' ) {
 			if ( get_colours( $specs, 'SideOne' ) ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', "Aqueous $$specs{'Aqueous'} Overall" );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', $$specs{'Aqueous'} );
 			} else {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', '' );
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', '' );
 			} 
 			if ( get_colours( $specs, 'SideTwo' ) ) {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', "Aqueous $$specs{'Aqueous'} Overall" );
+			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', $$specs{'Aqueous'} );
 			} else {
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', '' );
 			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', '' );
