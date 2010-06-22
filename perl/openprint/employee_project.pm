@@ -482,8 +482,6 @@ sub send_additional_charges_notifications {
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $Operator->firstname(), $Operator->lastname(), $Operator->email(), $Operator->extension() );
 
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
-	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
-	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
 	my $Project = new openprint::Project( $project_index );
 	$info{'Project'} = $Project;
 
