@@ -21,6 +21,7 @@ sub hosts {
 		} # end foreach host_id
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		my $Host = new openprint::Host( $param{'host_id'} );
+		$param{'mac'} = [ map { split( ',', $_ ) } split("\n", $param{'mac'}) ];
 		$variable{'error'} .= $Host->save(\%param);
 		%param = ();
 	} # end if
