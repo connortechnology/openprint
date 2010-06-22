@@ -73,3 +73,15 @@ table tr .ip {
 	width: 80px;
 }
 
+table tr .mac {
+	text-align: left;
+	width: 120px;
+}
+table tr .options {
+	text-align: left;
+	width: 220px;
+}
+table tr .ip {
+	text-align: left;
+	width: 100px;
+}

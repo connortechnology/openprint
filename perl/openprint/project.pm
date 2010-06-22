@@ -39,11 +39,9 @@ sub get_header {
 	$$variable{'CompanyName'} = $Company->name();
 
 	my $User = new openprint::User( $$variable{'user_id'} );
-
 	@$variable{'CreatedByName','CreatedByPhone','CreatedByEmail'} = ( $User->name(), $User->phone(), $User->email() );
 	my $CSR = new openprint::User( $Company->salesrep_id() );
-
-   @$variable{'CSRName','CSREmail','CustomerServiceRep'} = ( $CSR->name(), $CSR->email(), $CSR->name() );
+	@$variable{'CSRName','CSREmail','CustomerServiceRep'} = ( $CSR->name(), $CSR->email(), $CSR->name() );
 
 	if ( $$variable{'order_id'} ) {
 		$_ = q{SELECT intQuantity, intQuantityIndex, to_char(dateRequired, 'MM/DD/YYYY'), ShippingType FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?};
