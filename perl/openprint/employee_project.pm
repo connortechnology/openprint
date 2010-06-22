@@ -13,6 +13,7 @@ require openprint::Equipment;
 require openprint::employee_schedule;
 require openprint::bindery_schedule;
 require openprint::press_schedule;
+require openprint::employee_production;
 
 require sql;
 require openprint::MXML;
