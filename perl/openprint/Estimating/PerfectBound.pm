@@ -123,14 +123,14 @@ sub signature_calc {
 	} # end if
 
 	my $error;
-	# THe Equipment::find call gets cached... and the rest is impo-specific... so we can't really cache this.
+	# THe Equipment->find call gets cached... and the rest is impo-specific... so we can't really cache this.
 	my @possible_equipment = get_equipment( $specs, \$error );
 
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
 $openprint::log->debug("Override PerfectBind to " . $$specs{"ddmEquipment$qty_index"} );
-		@equipment = openprint::Equipment::find( 'id' => $$specs{"ddmEquipment$qty_index"} );
+		@equipment = openprint::Equipment->find( 'id' => $$specs{"ddmEquipment$qty_index"} );
 	} else {
 		@equipment = @possible_equipment;
 	} # end if
@@ -188,7 +188,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
 	$$error .= 'There are no perfect binders in the system.<br/>' if ! @all_equipment;
 
 	foreach my $Equipment ( @all_equipment ) {
@@ -248,7 +248,7 @@ sub calc {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
 	} # end if
 
-	my @Materials = openprint::Material::find('category'=>'PerfectBound Glue');
+	my @Materials = openprint::Material->find('category'=>'PerfectBound Glue');
 	if ( $$specs{'override_glue_id'} eq 'Y' ) {
 	} else {
 		foreach my $ss_id ( $Project->signatures() ) {
@@ -564,7 +564,7 @@ sub get_price {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment::find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 } # end sub display
 
@@ -588,7 +588,7 @@ sub runtime {
 	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
 
 	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-	my @Equipment = openprint::Equipment::find( 'id' => $$specs{'ddmEquipment'.$qty_index} );
+	my @Equipment = openprint::Equipment->find( 'id' => $$specs{'ddmEquipment'.$qty_index} );
 	return 0 if @Equipment != 1;
 
 	my $Equipment = $Equipment[0];

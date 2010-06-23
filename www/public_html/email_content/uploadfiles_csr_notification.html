@@ -46,7 +46,7 @@ OR:
 	<div class="fieldContainer">
 <? if ( $param{'docket'} ) ?>
 		<p><label>Docket #:</label><? echo ( $param{'docket'} ) ?></p>
-	<? eval ( @{$$variable{'Projects'}} = openprint::Project::find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'id'); ) ?>
+	<? eval ( @{$$variable{'Projects'}} = openprint::Project->find('company_id'=>$session{'company_id'}, 'docket'=>$param{'docket'}, 'order'=>'id'); ) ?>
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 		<p><label>Project ID:</label><? echo ( $$variable{'Project'}->id() ) ?></p>
 		<p><label>Reference:</label><? echo ( $$variable{'Project'}->reference(); ) ?></p>

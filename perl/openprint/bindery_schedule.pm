@@ -145,8 +145,8 @@ sub get_lis {
 
 	if ( @schedule ) {
 		if ( my @projects = map { $$_{'projectindex'} } @schedule ) {
-			if ( my @companies = map { $_->company_id() } openprint::Project::find( 'id'=>\@projects ) ) {
-				openprint::Company::find( 'id'=>\@companies );
+			if ( my @companies = map { $_->company_id() } openprint::Project->find( 'id'=>\@projects ) ) {
+				openprint::Company->find( 'id'=>\@companies );
 			} # end if
 		} # end if
 	} # end if
@@ -278,7 +278,7 @@ sub move_up {
 
 	my @results;
 	my %sorting;
-	my %service_types = map { $_->id(), $_->name() } openprint::ServiceType::find();
+	my %service_types = map { $_->id(), $_->name() } openprint::ServiceType->find();
 	foreach my $row ( find( 'project_id'=> $p_id, 'statuses'=>['calculated','uncalculated','Ordered'] ) ) {
 		my $column = get_column($service_types{$$row{'servicetype_id'}} );
 		if ( ! $column ) {

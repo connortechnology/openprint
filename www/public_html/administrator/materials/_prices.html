@@ -1,8 +1,8 @@
 <script type="text/javascript" src="/javascripts/pricing.js"></script>
-<? eval ( @{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(name)'); ) ?>
+<? eval ( @{$$variable{'Pricelists'}} = openprint::Pricelist->find('order'=>'lower(name)'); ) ?>
 <? while( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?> 
 	<fieldset><legend>Pricing for Price List: <? echo ( $$variable{'Pricelist'}->name() ) ?></legend>
-		<? if ( @{$$variable{'Prices'}} = openprint::MaterialPrice::find('Material'=>$$variable{'Material'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
+		<? if ( @{$$variable{'Prices'}} = openprint::MaterialPrice->find('Material'=>$$variable{'Material'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
 
 		<? eval ( @{$$variable{'Equipment_ids'}} = sets::union( map{ $_->equipment_id() } @{$$variable{'Prices'}} ); ) ?>
 		<? while ( @{$$variable{'Equipment_ids'}} ) ?>
@@ -12,7 +12,7 @@
 					<label>Equipment:</label>
 					<select name="ddmEquipment-<? echo ( $$variable{Pricelist}->id() ) ?>-<? echo ( $$variable{Equipment}->id() ) ?>">
 						<option value="">All Equipment</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strID)') ], $$variable{Equipment}->id() ); ) ?>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ], $$variable{Equipment}->id() ); ) ?>
 					</select>
 				</p>
 				<table class="List">
@@ -27,7 +27,7 @@
 					</tr>
 					<? echo (
 						my $html = '';
-						my @Prices = openprint::MaterialPrice::find('Material'=>$$variable{'Material'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{Equipment}, 'order'=>'lngmin,lngmax' );
+						my @Prices = openprint::MaterialPrice->find('Material'=>$$variable{'Material'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{Equipment}, 'order'=>'lngmin,lngmax' );
 						foreach my $Price ( @Prices ) {
 							$html .= '<tr>';
 							$html .= sprintf('<td><input type="checkbox" name="chk-%d-%s-%d" checked="checked" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id() );
@@ -47,13 +47,13 @@
 				</table>
 			</fieldset><!--Equipment-->
 		<? endwhile ( @{$$variable{'Equipment_ids'}} ) ?>
-		<? endif ( @{$$variable{'Prices'}} = openprint::MaterialPrice::find('Material'=>$$variable{'Material'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
+		<? endif ( @{$$variable{'Prices'}} = openprint::MaterialPrice->find('Material'=>$$variable{'Material'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
 		<fieldset class="Equipment"><legend>Add New</legend>
 			<p>
 				<label>Equipment</label>
 				<select name="ddmEquipment-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New">
 					<option value="" selected="selected">All Equipment</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower(strID)') ] ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ] ); ) ?>
 				</select>
 			</p>
 			<table class="List">

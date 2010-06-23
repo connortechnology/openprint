@@ -7,7 +7,7 @@
 		<select name="ddmCompany">
 			<option value=""> All Companies </option>
 			<? echo ( 
-				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)' ) ], $param{'ddmCompany'} );
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(strname)' ) ], $param{'ddmCompany'} );
 ) ?>
 		</select>
 	</p>

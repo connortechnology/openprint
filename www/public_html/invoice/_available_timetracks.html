@@ -14,7 +14,7 @@
 			my $html = '';
 			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 			my @Timetracks;
-			foreach my $T ( openprint::Timetrack::find(
+			foreach my $T ( openprint::Timetrack->find(
 				'owner_id'		=> $session{'company_id'},	
 				'company_id'	=> $variable{'Invoice'}->invoicee_id(),
 				'invoice_id'	=> undef,

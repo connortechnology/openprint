@@ -34,9 +34,14 @@ sub get_pricelist_id {
 
 	if ( (! $list_id) and $openprint::session{'Country'} ) {
 		$list_id = $openprint::config{'Default'.$openprint::session{'Country'}.'Pricelist'};
-	} else {
+	} # end if
+	if ( ! $list_id ) {
+		$list_id = $openprint::config{'DefaultPricelist'};
+	} # end if
+	if ( ! $list_id ) {
 		$openprint::log->debug("No pricelist to be had! Country: $openprint::session{'Country'}" );
 	} # end if
+	
 	$openprint::session{'Pricelist_id'} = $list_id;
 	return $list_id;
 } # end sub get_pricelist_id

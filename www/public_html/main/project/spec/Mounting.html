@@ -7,7 +7,7 @@
 				<label>Mounting material:</label>
 				<select name="MountingType" size="1" onchange="calc(this.form.name);">
 					<option value="">Please select one</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Material::find('category'=>'Mounting Types', 'order'=>'lower(name)') ], $$variable{'MountingType'}); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Material->find('category'=>'Mounting Types', 'order'=>'lower(name)') ], $$variable{'MountingType'}); ) ?>
 				</select>
 			</p>
 		</fieldset>

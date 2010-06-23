@@ -20,7 +20,7 @@ return $html .' for ' . Date::Calc::Month_to_Text($m) . ' ' . $y;
 ) ?>
     </h2>
 <? eval (
-    @{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)','projecttype_id'=>$$variable{'ProjectType'}->id() ) if $$variable{'ProjectType'};
+    @{$$variable{'Categories'}} = openprint::ProductCategory->find( 'order' => 'lower(name)','projecttype_id'=>$$variable{'ProjectType'}->id() ) if $$variable{'ProjectType'};
 ) ?>
 <? while ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
 <h4><? echo ( $$variable{'Category'}->name(); ) ?></h4>

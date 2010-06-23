@@ -37,14 +37,9 @@ sub init_cache {
 	%cache = map { $_->name(), $_->id() } find();
 } # end sub init_cache
 
-sub find_one {
-    my %params = @_;
-    $params{'limit'} = 1;
-    my @Results = find(%params);
-    return $Results[0] if @Results;
-} # end sub find_one
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	my @values;
 	my $sql = q{SELECT * FROM Service_Types WHERE 1>0};
@@ -135,7 +130,7 @@ sub delete {
 sub category {
 	my ( $self ) = @_;
 	if ( @_ == 2 ) {
-		my $ServiceType_Category = openprint::ServiceType_Category::find_one('name'=>$_[1]);
+		my $ServiceType_Category = openprint::ServiceType_Category->find_one('name'=>$_[1]);
 		if ( $ServiceType_Category ) {
 			$$self{'category_id'} = $ServiceType_Category->id();
 		} else {

@@ -47,7 +47,7 @@
 					$total += $$service_specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
 				} # end if
 			} else {
-				foreach my $ServiceType ( openprint::ServiceType::find( 'category' => $category,'order'=>'sorting', 'view_visible'=>1 ) ) {
+				foreach my $ServiceType ( openprint::ServiceType->find( 'category' => $category,'order'=>'sorting', 'view_visible'=>1 ) ) {
 					next if ! $$services{$ServiceType->name()};
 					foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 						my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );

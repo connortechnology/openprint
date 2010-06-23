@@ -16,10 +16,10 @@
 	</tr>
 	<tr>
 		<td colspan="1">Issued To:</td>
-		<td colspan="4"><select name="issued_to_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'PAR'}->issued_to_id() ? $$variable{'PAR'}->issued_to_id() : $session{'user_id'} ); ) ?></select>
+		<td colspan="4"><select name="issued_to_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'PAR'}->issued_to_id() ? $$variable{'PAR'}->issued_to_id() : $session{'user_id'} ); ) ?></select>
 		</td>
 		<td colspan="1">Issued By:</td>
-		<td colspan="4"><select name="issued_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'PAR'}->issued_by_id() ? $$variable{'PAR'}->issued_by_id() : $session{'user_id'} ); ) ?></select></td>
+		<td colspan="4"><select name="issued_by_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'PAR'}->issued_by_id() ? $$variable{'PAR'}->issued_by_id() : $session{'user_id'} ); ) ?></select></td>
 	</tr>
 	<tr>
 		<td colspan="1">Issue Date:</td>
@@ -56,7 +56,7 @@
 			<select name="area_id">
 				<option value="">select</option>
 				<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PAR_Area::find('order'=>'sorting,lower(name)') ], $$variable{'PAR'}->area_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PAR_Area->find('order'=>'sorting,lower(name)') ], $$variable{'PAR'}->area_id() );
 				) ?>
 			</select>
 		</td>
@@ -65,7 +65,7 @@
 	<tr>
 		<td colspan="1">Originator:</td>
 		<td colspan="4">
-<select name="part1_user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'PAR'}->part1_user_id() ? $$variable{'PAR'}->part1_user_id() : $session{'user_id'} ); ) ?></select>
+<select name="part1_user_id"><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'],'order'=>'lower(firstname),lower(lastname)') ], $$variable{'PAR'}->part1_user_id() ? $$variable{'PAR'}->part1_user_id() : $session{'user_id'} ); ) ?></select>
 </td>
 		<td colspan="1">Date:</td>
 		<td colspan="4">

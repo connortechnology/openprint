@@ -16,7 +16,7 @@
 			<p><label>Seal type:</label>
 				<select id="SealType_id" name="SealType_id" onchange="calc(this.form.name);">
 					<option value=""> select </option>
-<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::Material::find( 'category'=>'Clip Seal Types', 'order'=>'lower(name)' ) ], $$variable{'SealType_id'} ); ) ?>
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::Material->find( 'category'=>'Clip Seal Types', 'order'=>'lower(name)' ) ], $$variable{'SealType_id'} ); ) ?>
 				</select>
 			</p>
 			<!--#include virtual="/includes/main/proj/quantities_equipment_prices.html"-->

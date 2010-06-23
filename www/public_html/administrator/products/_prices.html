@@ -1,11 +1,11 @@
 <form id="PricesForm" name="PricesForm" method="post" action="prices.html" enctype="multipart/form-data">
 	<? eval ( 
-		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(name)');
+		@{$$variable{'Pricelists'}} = openprint::Pricelist->find('order'=>'lower(name)');
 		$$variable{'Product'} = new openprint::Product( $openprint::param{'product_id'} ) if ! $$variable{'Product'};
 	) ?>
 	<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}} ) ?>
 	<fieldset><legend>Prices for Price List: <? echo ( $$variable{'Pricelist'}->name(); ) ?></legend>
-		<? eval ( @{$$variable{'Prices'}} = openprint::ProductPrice::find( 'Product' => $$variable{'Product'}, 'Pricelist' => $$variable{'Pricelist'}, 'order' => 'min' ); ) ?>
+		<? eval ( @{$$variable{'Prices'}} = openprint::ProductPrice->find( 'Product' => $$variable{'Product'}, 'Pricelist' => $$variable{'Pricelist'}, 'order' => 'min' ); ) ?>
 		<div class="Equipment">
 			<table class="List">
 				<tr>
@@ -21,8 +21,8 @@
 			<tr> 
 				<td class="Add"><input type="checkbox" id="chk-<? echo ( $$variable{'Price'}->id(); ) ?>" name="chk-<? echo ( $$variable{'Price'}->id(); ) ?>" checked="checked" /></span>
 				<td class="Range"> 
-					<input type="text" name="min-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->min(), 0, 0 ); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.\,]/,'');"/>
-					<input type="text" name="max-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( Number::Format::format_number( $$variable{'Price'}->max(), 0, 0 ); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.\,]/,'');" />
+					<input type="text" name="min-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->min() ne '' ? Number::Format::format_number( $$variable{'Price'}->min(), 0, 0 ) : ''; ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.\,]/,'');"/>
+					<input type="text" name="max-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo ( $$variable{'Price'}->max() ne '' ? Number::Format::format_number( $$variable{'Price'}->max(), 0, 0 ) : ''; ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;this.value=this.value.replace(/[^\d\.\,]/,'');" />
 				</td>
 				<td class="Units"> 
 					<input type="text" name="units-<? echo ( $$variable{'Price'}->id(); ) ?>" value="<? echo (  $$variable{'Price'}->units(); ) ?>" onkeyup="$('chk-<? echo ( $$variable{Price}->id(); ) ?>').checked=true;" />

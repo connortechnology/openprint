@@ -6,18 +6,18 @@
 	$$variable{'Currency'} = openprint::Currency::get_current();
 	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = ( $$variable{'Currency'}->name(),$$variable{'Currency'}->symbol(), $$variable{'Currency'}->short());
 	if ( $param{'OrderID'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('id'=>$param{'OrderID'},'company_id'=>$session{'company_id'}, );
+		@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'OrderID'},'company_id'=>$session{'company_id'}, );
 		if ( sets::isin( $session{'user_type'}, ['A','E'] ) and ! @{$$variable{'Orders'}} ) {
-			@{$$variable{'Orders'}} = openprint::Order::find('id'=>$param{'OrderID'} );
+			@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'OrderID'} );
 		} # end if
 	} elsif ( $param{'Docket'} ) {
-		@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$param{'Docket'},'company_id'=>$session{'company_id'}, );
+		@{$$variable{'Orders'}} = openprint::Order->find('docket'=>$param{'Docket'},'company_id'=>$session{'company_id'}, );
 		if ( sets::isin( $session{'user_type'}, ['A','E'] ) and ! @{$$variable{'Orders'}} ) {
-			@{$$variable{'Orders'}} = openprint::Order::find('docket'=>$param{'Docket'} );
+			@{$$variable{'Orders'}} = openprint::Order->find('docket'=>$param{'Docket'} );
 		} # end if
 	} else {
 
-		@{$$variable{'Orders'}} = openprint::Order::find(
+		@{$$variable{'Orders'}} = openprint::Order->find(
 				'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/order/history.html?ddmStartYear','/main/order/history.html?ddmStartMonth','/main/order/history.html?ddmStartDay'} ),
 				'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/order/history.html?ddmEndYear','/main/order/history.html?ddmEndMonth','/main/order/history.html?ddmEndDay'} ),
 				'company_id'		=>	$session{'company_id'},

@@ -15,7 +15,7 @@
 	$html .= sprintf(q`$('%s_shortname').value = '';`, $param{type}, $Object->shortname() );
 	$html .= sprintf(q`$('%s_longname').value = '';`, $param{type}, $Object->longname() );
 
-	my @array = ( '', 'select', map { $_->id(), $_->shortname() } eval("openprint::$param{type}::find('order'=>'shortname');") );
+	my @array = ( '', 'select', map { $_->id(), $_->shortname() } eval("openprint::$param{type}->find('order'=>'shortname');") );
 	$html .= q`
 var ddm = $('`.$param{type}.q`');
 var options = ` . JSON::encode_json( \@array ) . q`;

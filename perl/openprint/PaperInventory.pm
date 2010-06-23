@@ -54,71 +54,6 @@ $serial = 'paperinventory_id_seq';
 	'updated_on'	=>	'NOW()',
 );
 
-# Returns a paper object specified by the parameters
-sub find {
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	my $sql = 'SELECT * FROM Paper_Inventory WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( exists $params{'skid_id'} ) {
-		$sql .= ' AND skid_id=?';
-		push @values, $params{'skid_id'};
-	} # end if
-	if ( exists $params{'paper_id'} ) {
-		if ( defined $params{'paper_id'} ) {
-		$sql .= ' AND paper_id=?';
-		push @values, $params{'paper_id'};
-		} else {
-		$sql .= ' AND paper_id IS NULL';
-		} # end if
-	} # end if
-	if ( exists $params{'docket'} ) {
-		if ( defined $params{'docket'} ) {
-			$sql .= ' AND docket=?';
-			push @values, $params{'docket'};
-		} else {
-			$sql .= ' AND docket IS NULL';
-		} # end if
-	} # end if
-	if ( exists $params{'comment_like'} ) {
-		$sql .= ' AND comment LIKE ?';
-		push @values, $params{'comment_like'};
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'}
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND ( updated_on >= ?)';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on <= ?)';
-		push @values, $params{'updated_on_end'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("Error loading paper inventory SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$openprint::log->debug('No paper inventory loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded paper inventory ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::PaperInventory( $_->{id}, $_ ) } @$data;
-} # end sub find
-
 sub Paper {
 	return new openprint::Paper( $_[0]{'paper_id'} );
 } # end sub Paper
@@ -146,7 +81,7 @@ sub docket {
 sub Project {
 	my $self = $_[0];
 	return new openprint::Project() if ! $$self{'docket'};
-	my @Projects = openprint::Project::find('docket'=>$$self{'docket'});
+	my @Projects = openprint::Project->find('docket'=>$$self{'docket'});
 	if ( @Projects ) {
 		return $Projects[0];
 	} # end if

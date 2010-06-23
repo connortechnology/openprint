@@ -39,8 +39,8 @@ sub import_export {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Import Colours' ) {
 		if ( $openprint::param{'fileColour'} ) {
 
-			my %services = map { $_->name(), $_->id() } openprint::Service::find();
-			my %materials = map { $_->name(), $_->id() } openprint::Material::find();
+			my %services = map { $_->name(), $_->id() } openprint::Service->find();
+			my %materials = map { $_->name(), $_->id() } openprint::Material->find();
 			# get the upload.
 			my $upload = $r->upload( 'fileColour' );
 			my $io = $upload->io();

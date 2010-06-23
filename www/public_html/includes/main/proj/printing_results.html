@@ -195,7 +195,7 @@
 	<label>Printing type:</label>
 	<? echo (
 		my %printingtypes;
-		foreach my $Press ( openprint::Equipment::find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
+		foreach my $Press ( openprint::Equipment->find( 'category'=>'Printing', 'UseInEstimating'=>'Y' ) ) {
 			my $printing_type = $Press->specification('Printing Type');
 			next if ! $printing_type;
 			my $printing_type_name = $Press->specification('Printing Type Name');

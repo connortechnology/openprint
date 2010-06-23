@@ -1,7 +1,7 @@
 <? echo (
 	return '' if ! $$variable{'QuotedProject'}->include_detailed();
 	return '' if ! sets::isin( $session{'user_type'}, ['A','E'] );
-	my @QuoteLevels = openprint::QuoteLevel::find( 'order'=>'lower(name)' );
+	my @QuoteLevels = openprint::QuoteLevel->find( 'order'=>'lower(name)' );
 	return '' if ! @QuoteLevels;
 
 	my $html = 'Template:'; 

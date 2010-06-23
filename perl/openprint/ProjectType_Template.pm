@@ -43,58 +43,5 @@ $serial = 'projecttemplate_id_seq';
 %defaults = (
 );
 
-my %find_cache;
-sub find_one {
-    my %params = @_;
-    $params{'limit'} = 1;
-    my @Results = find(%params);
-    return $Results[0] if @Results;
-} # end sub find_one
-sub find {
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
-	return map { new openprint::ProjectType_Template( $_ ) } @{$find_cache{$hash_key}} if $find_cache{$hash_key};
-
-#$openprint::log->debug("Hash key: $hash_key");
-	my @values;
-	my $sql = 'SELECT * FROM ' . $table . ' WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( exists $params{'type'} ) {
-		$sql .= ' AND type=?';
-		push @values, $params{'type'};
-	} # end if type
-	if ( exists $params{'projecttype_id'} ) {
-		if ( ref $params{'projecttype_id'} eq 'ARRAY' ) {
-			$sql .= ' AND projecttype_id IN ('. join(',', map {'?'} @{$params{'projecttype_id'}} ) . ')';
-			push @values, @{$params{'projecttype_id'}};
-		} else {
-			$sql .= ' AND projecttype_id=?';
-			push @values, $params{'projecttype_id'};
-		} # end if
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading ProjectType_Templatees SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No ProjectType_Templates loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded ProjectType_Templates ($sql) (@values) records:" . @$data );
-	} # end if
-	@{$find_cache{$hash_key}} = map { $_->{id} } @$data;
-	return map { new openprint::ProjectType_Template( $_->{id}, $_ ) } @$data;
-} # end sub find
-
 1;
 __END__

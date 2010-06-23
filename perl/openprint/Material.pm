@@ -65,14 +65,14 @@ sub delete {
 sub prices {
 	my $self = shift;
 
-	return openprint::MaterialPrice::find('material_id'=>$$self{id});
+	return openprint::MaterialPrice->find('material_id'=>$$self{id});
 } # end sub prices
 
 sub Specification {
 	my ( $self, $name, $range ) = @_;
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::MaterialSpecification::find( 'Material'=>$self, 'order'=>'min' ) ) {
+		foreach my $Spec ( openprint::MaterialSpecification->find( 'Material'=>$self, 'order'=>'min' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
 	} # end if
@@ -89,7 +89,7 @@ sub Specification {
 	return $$self{'Specifications'}{$name}[0] if ! defined $range;
 #$openprint::log->debug("Looking for $name : $range") if $debug;
 
-	return misc::find_entry( $range, $$self{'Specifications'}{$name} );
+	return misc->find_entry( $range, $$self{'Specifications'}{$name} );
 } # end sub Specification
 
 sub specification {
@@ -99,13 +99,13 @@ sub specification {
 
 sub Specifications {
 	my $self = shift;
-	return openprint::MaterialSpecification::find( 'Material'=>$self, 'order'=>'name,min' );
+	return openprint::MaterialSpecification->find( 'Material'=>$self, 'order'=>'name,min' );
 } # end sub Specifications
 
 sub find_one {
 	my @results = find( @_, 'limit', 1 );
 	if ( @results > 1 ) {
-		$openprint::log->error('Material::find_one more than 1 result!');
+		$openprint::log->error('Material->find_one more than 1 result!');
 	} elsif ( @results ) {
 		return $results[0];
 	} # end if
@@ -113,6 +113,7 @@ sub find_one {
 } # end sub find_one
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	my $sql = 'SELECT * FROM Materials WHERE 1>0';
 	my @values;

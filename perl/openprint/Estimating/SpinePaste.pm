@@ -63,7 +63,7 @@ sub signature_calc {
 
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	my @Equipment = openprint::Equipment::find('Specifications'=>{'SpinePaste Capable'=>'Y'},'UseInEstimating'=>'Y');
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'SpinePaste Capable'=>'Y'},'UseInEstimating'=>'Y');
 	my %Results;
 	if ( ! @Equipment ) {
 		$Results{'Status'} = 'uncalculated';
@@ -149,7 +149,7 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @Equipment = openprint::Equipment::find('Specifications'=>{'SpinePaste Capable'=>'Y'});
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'SpinePaste Capable'=>'Y'});
 	if ( ! @Equipment ) {
 		$$specs{'alert'} .= 'We are unable to automatically provide a price for Spine Pasting.  You may enter your own price in the price fields, or contact your CSR for a quote.';
 
@@ -391,7 +391,7 @@ sub display {
     my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-    my @equipment = openprint::Equipment::find( 'Specifications' => {'SpinePaste Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+    my @equipment = openprint::Equipment->find( 'Specifications' => {'SpinePaste Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
     foreach my $qty_index ( $Project->quantity_indexes() ) {
         $$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
     } # end foreach qty_index

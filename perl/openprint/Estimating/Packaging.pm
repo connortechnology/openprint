@@ -118,7 +118,7 @@ sub calc {
 
 		if ( $$specs{'rdbCardboardBacking'} eq 'Y' ) {
 
-			if ( my @Materials = openprint::Material::find('name'=>'CardboardBacking') ) {
+			if ( my @Materials = openprint::Material->find('name'=>'CardboardBacking') ) {
 				my %CardboardPrice = $Materials[0]->get_price( $package_qty, undef );
 				if ( $CardboardPrice{'units'} eq 'Per Square Inch' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'};
@@ -131,7 +131,7 @@ sub calc {
 				$price += $CardboardPrice{'Total'} * $package_qty;
 			} # end if
 		} # end if
-		if ( my @Materials = openprint::Material::find('category'=>$ServiceType->name()) ) {
+		if ( my @Materials = openprint::Material->find('category'=>$ServiceType->name()) ) {
 			if ( ! $$specs{'type_id'} ) {
 				$$specs{'alert'} .= 'Please select the type of ' . $ServiceType->name() . '<br/>';
 				$status = 'uncalculated';

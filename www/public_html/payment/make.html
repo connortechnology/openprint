@@ -10,14 +10,14 @@
 
 	<fieldset>
 		<p><label>Payment Type:</label>
-		<? if ( openprint::PaymentType::find() > 1 ) ?>
+		<? if ( openprint::PaymentType->find() > 1 ) ?>
 		<select id="type_id" name="type_id">
-		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PaymentType::find('order'=>'lower(name)') ], $$variable{'Payment'}->type_id() ); ) ?>
+		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PaymentType->find('order'=>'lower(name)') ], $$variable{'Payment'}->type_id() ); ) ?>
 		</select>
-		<? else ( openprint::PaymentType::find() > 1 ) ?>
-		<input type="hidden" name="type_id" value="<? echo ( openprint::PaymentType::find_one()->id() ) ?>" />
+		<? else ( openprint::PaymentType->find() > 1 ) ?>
+		<input type="hidden" name="type_id" value="<? echo ( openprint::PaymentType->find_one()->id() ) ?>" />
 		<img src="https://fpdbs.paypal.com/dynamicimageweb?cmd=_dynamic-image&buttontype=ecmark" alt="Paypal" style="margin-right:7px;"/><span style="font-size:11px; font-family: Arial, Verdana;">The safer, easier way to pay.</span>
-		<? endif ( openprint::PaymentType::find() > 1 ) ?>
+		<? endif ( openprint::PaymentType->find() > 1 ) ?>
 		</p>
 		<p><label>Amount (<? echo ( return openprint::Currency::get_current()->short(); ) ?>):</label>
 			<input type="text" id="amount" name="amount" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" value="<? echo ( $$variable{'Order'}->balance() ) ?>" />

@@ -165,9 +165,9 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
-			$log->warn("No template!" . $r->content_type());
+			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			$log->warn($_);
+			#$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -326,7 +326,7 @@ $log->debug("User Type: $session{'user_type'}");
 							my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 							if ( $$sig_specs{'SignatureIndex'} == $$PPF{'signature'} ) {
 $log->debug("Found sig");
-								my @Equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
+								my @Equipment = openprint::Equipment->find('strid'=>$$sig_specs{'UsePress'} ? $$sig_specs{'UsePress'} : $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 								if ( @Equipment ) {
 									$Equipment = $Equipment[0];
 									last;
@@ -335,7 +335,7 @@ $log->debug("Found sig");
 						} # end foreach
 						if ( ! $Equipment ) {
 							$log->debug("Looking it up from Schedule");
-							my @rows = openprint::press_schedule::find('project_id'=>$param{'ProjectIndex'},'service_id'=>$param{'ServiceIndex'});
+							my @rows = openprint::press_schedule->find('project_id'=>$param{'ProjectIndex'},'service_id'=>$param{'ServiceIndex'});
 							if ( @rows == 1 ) {
 								$Equipment = new openprint::Equipment( $rows[0]{'equipment_id'} );
 							} 
@@ -360,7 +360,12 @@ $log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
 $log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
-
+	} elsif ( sets::isin( $first , [ 'opera', 'handheld' ] ) ) { # Handheld
+		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
+		if ( $variable{'Redirect'} ) {
+			$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
+			return Apache2::Const::OK;
+		} # end if
 	} elsif ( $first eq 'content' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
@@ -419,7 +424,8 @@ $log->debug("logged in");
 			require openprint::main_project;
 			if ( ( defined $third ) or ( $filename eq 'Paper.html' ) ) {
 				if ( ! $variable{'ServiceIndex'} ) {
-					$variable{'ServiceIndex'} = $openprint::param{'ServiceIndex'};
+					my @service_ids = split(',', $openprint::param{'ServiceIndex'} );
+					$variable{'ServiceIndex'} = $service_ids[0];
 				} # end if
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};

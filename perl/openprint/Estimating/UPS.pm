@@ -128,7 +128,7 @@ $openprint::log->debug("PostalCode: $$specs{'ToPostalCode'}");
 	my $password = $config{'UPSPassword'};
 	my $accessRequest = ups::createAccessRequest( $access_code, $user_id, $password );
 
-	my $Supplier = openprint::Company::find_one('supplier'=>'Y','order'=>'id');
+	my $Supplier = openprint::Company->find_one('supplier'=>'Y','order'=>'id');
 	if ( $Supplier ) {
 		my %shipping_fields = (
 				'ShipperCity'           =>  'City',
@@ -285,7 +285,7 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 			my $cost = $1;
 			my $currency = $2;
 			$log->debug("Currency returned: $currency") if $debug;
-			my @currencies = openprint::Currency::find( 'short' => $currency );
+			my @currencies = openprint::Currency->find( 'short' => $currency );
 			my $UPS_Currency = shift @currencies;
 			my $Project = new openprint::Project( $project_index );
 			my $MY_Currency = $Project->Currency();

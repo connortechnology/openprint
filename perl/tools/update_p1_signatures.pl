@@ -132,7 +132,7 @@ foreach my $Project ( openprint::Project::find( 'order'=>'id desc','limit'=>1000
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $$specs{'ddmPackageType'} );
 					if ( $$specs{'ddmPackageType'.$qty_index} =~ /\D/ ) {
-						if ( my $Material = openprint::Material::find_one( 'name'=>$$specs{'ddmPackageType'.$qty_index} ) ) {
+						if ( my $Material = openprint::Material->find_one( 'name'=>$$specs{'ddmPackageType'.$qty_index} ) ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $Material->id() );
 						} # end if
 					} # end if

@@ -1,7 +1,7 @@
 <h3>Stock information for Docket <? echo ( $$variable{'Project'}->docket() ) ?></h3>
 <div id="StockCheckout"><!--#include virtual="_stock_checkout.html"--></div>
 <? eval (
-	@{$$variable{'PurchaseOrders'}} = $$variable{'Project'}->docket() ? openprint::PurchaseOrder_Content::find( 'docket'=>$$variable{'Project'}->docket() ) : ();
+	@{$$variable{'PurchaseOrders'}} = $$variable{'Project'}->docket() ? openprint::PurchaseOrder_Content->find( 'docket'=>$$variable{'Project'}->docket() ) : ();
 ) ?>
 <? if ( @{$$variable{'PurchaseOrders'}} ) ?>
 <fieldset><legend>Ordered Stock:</legend>
@@ -28,7 +28,7 @@
 	require openprint::PaperAllocation;
 
 	my %paper;
-	my @Allocations = openprint::PaperAllocation::find('project_id'=>$param{'project_id'});
+	my @Allocations = openprint::PaperAllocation->find('project_id'=>$param{'project_id'});
 	foreach my $Allocation ( @Allocations ) {
 		$paper{$Allocation->paper_id()} = 1;
 	} # end foreach Allocation
@@ -39,7 +39,7 @@
 	foreach my $paper_id ( keys %paper ) {
 		my $Paper = new openprint::Paper( $paper_id );
 		$html .= '<b>'.$Paper->to_string().'</b><br/>';
-		@Allocations = openprint::PaperAllocation::find('project_id'=>$param{'project_id'},'paper_id'=>$paper_id);
+		@Allocations = openprint::PaperAllocation->find('project_id'=>$param{'project_id'},'paper_id'=>$paper_id);
 		
 		foreach my $Allocation ( @Allocations ) {
 			$html .= 'Quantity: ' . $Allocation->quantity() . $Allocation->units().'<br/>';

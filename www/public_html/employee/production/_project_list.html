@@ -1,9 +1,9 @@
 <? eval (
 	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
-		@{$$variable{'Projects'}} = openprint::Project::find( 'docket_start' => $param{'StartDocket'}, 'docket_end'=> $param{'EndDocket'},'order'=>'lngdocketnumber' );
+		@{$$variable{'Projects'}} = openprint::Project->find( 'docket_start' => $param{'StartDocket'}, 'docket_end'=> $param{'EndDocket'},'order'=>'lngdocketnumber' );
 
 	} elsif ( $param{'StartDocket'} ) {
-		@{$$variable{'Projects'}} = openprint::Project::find( 'docket' => $param{'StartDocket'} );
+		@{$$variable{'Projects'}} = openprint::Project->find( 'docket' => $param{'StartDocket'} );
 	} else {
 		$$variable{'DueDateStart'} = sprintf('%.4d-%.2d-%.2d', 
 			@session{
@@ -33,7 +33,7 @@
 			if ( $session{'/employee/production/projects.html?ddmCustomer'} ) {
 				$filters{'company_id'} = $session{'/employee/production/projects.html?ddmCustomer'};
 			} # end if
-		@{$$variable{'Projects'}} = openprint::Project::find( %filters );
+		@{$$variable{'Projects'}} = openprint::Project->find( %filters );
 	} # end if
 ) ?>
 <? if ( @{$$variable{'Projects'}} ) ?>

@@ -6,7 +6,7 @@
 			<select name="ddmEmployee" size="1">
 				<option value="Prepress">All Prepress Employees</option>
 				<option value="All" <? echo ( 'selected' if $r->param('ddmEmployee') eq 'All' ) ?>>All Employees</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $r->param('ddmEmployee') ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $r->param('ddmEmployee') ); ) ?>
 			</select>
 	</p>
 	<? eval (
@@ -47,8 +47,8 @@
 		} elsif ( $param{'ddmEmployee'} ne 'All' ) {
 			$params{'id'} = $param{'ddmEmployee'};
 		} # end if
-		@{$$variable{'Results'}} = openprint::User::find( %params );
-		@{$$variable{'Projects'}} = openprint::Project::find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
+		@{$$variable{'Results'}} = openprint::User->find( %params );
+		@{$$variable{'Projects'}} = openprint::Project->find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
  ) ?>
  <? if ( @{$$variable{'Projects'}} ) ?>
 	Total # of Dockets in the time period: <? echo ( @{$$variable{'Projects'}} ) ?>:

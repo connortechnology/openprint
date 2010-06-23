@@ -17,7 +17,7 @@ $log = new logger( 'debug' );
 $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2], 'host'=>$ARGV[3]) );
 	
-my @PIS = openprint::PaperInventory::find();
+my @PIS = openprint::PaperInventory->find();
 foreach my $PI ( @PIS ) {
 	if ( $PI->comment() =~ /Inventory adjusted from manifest <a href="\/employee\/inventory\/manifest.html\?manifest_id=(.+)">.+<\/a>/ ) {
 		$PI->comment( qq`Inventory adjusted from manifest $1` );

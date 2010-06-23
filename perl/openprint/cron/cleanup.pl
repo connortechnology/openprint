@@ -66,7 +66,7 @@ $log->warn("Deleted $deleted_session_count sessions");
 
 if ( 1 ) {
 # Clean out uncalculated projects
-	my @Projects = openprint::Project::find(
+	my @Projects = openprint::Project->find(
 			'status'=>'uncalculated',
 			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
@@ -92,7 +92,7 @@ if ( 1 ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 
-	@Projects = openprint::Project::find(
+	@Projects = openprint::Project->find(
 			'status'=>'Unordered',
 			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
@@ -123,7 +123,7 @@ if ( 1 ) {
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} # end if
-	@Projects = openprint::Project::find(
+	@Projects = openprint::Project->find(
 			'status'=>'Deleted','order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
@@ -148,10 +148,10 @@ if ( 1 ) {
 	} # end if Projects
 } # end if 1
 if ( 1 ) {
-		my @CIPS = openprint::CIP3_PPF::find('data_null'=>0);
+		my @CIPS = openprint::CIP3_PPF->find('data_null'=>0);
 		$log->warn(@CIPS . " cip files to clear the data from" );
 		foreach my $CIP ( @CIPS ) {
-			my @Projects = openprint::Project::find('docket'=>$CIP->docket());
+			my @Projects = openprint::Project->find('docket'=>$CIP->docket());
 			next if @Projects and ! sets::isin( $Projects[0]->status(), ['Complete','Waiting For Pickup','Shipped'] );
 			$_ = $CIP->save({'data'=>undef,'data_length'=>0});
 			$log->error($_) if $_;
@@ -160,13 +160,13 @@ if ( 1 ) {
 
 if ( 1 ) {
 # Clean out unfinished Orders
-	my @Orders = openprint::Order::find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
+	my @Orders = openprint::Order->find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ) );
 	$log->warn('Cleaning out ' . @Orders . ' incomplete orders');
 	foreach my $Order ( @Orders ) {
 		$Order->delete();
 	} # end foreach
 
-	my @Quotes = openprint::Quote::find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
+	my @Quotes = openprint::Quote->find('status'=>'Incomplete','created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) );
 	$log->warn('Cleaning out ' . @Quotes . ' incomplete quotes ');
 	foreach my $Quote ( @Quotes ) {
 		$Quote->delete();
@@ -191,9 +191,9 @@ if ( 0 ) {
 } # end if
 
 if ( 0 ) {
-foreach my $Skid ( openprint::Skid::find() ) {
+foreach my $Skid ( openprint::Skid->find() ) {
 
-	my @Paper_Inventory = openprint::PaperInventory::find(
+	my @Paper_Inventory = openprint::PaperInventory->find(
 			#'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 ) ),
 			#'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Today() ),
 			'skid_id'=>$Skid->id(),
@@ -233,12 +233,12 @@ foreach my $Skid ( openprint::Skid::find() ) {
 
 if ( 0 ) {
 	require openprint::PaperInventory;
-	foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Removed%' ) ) {
+	foreach my $PI ( openprint::PaperInventory->find('comment_like'=>'Removed%' ) ) {
 		$PI->comment() =~ /Removed (.*)/;
 		$PI->comment( "Checked out $1" );
 		$PI->save();
 	} # end foreach
-	foreach my $PI ( openprint::PaperInventory::find('comment_like'=>'Skid checked%' ) ) {
+	foreach my $PI ( openprint::PaperInventory->find('comment_like'=>'Skid checked%' ) ) {
 		$PI->comment() =~ /Skid checked (.*)/;
 		$PI->comment( "Checked $1" );
 		$PI->save();
@@ -249,7 +249,7 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 	require openprint::RFIDTag;
 	require openprint::RFIDTagHistory;
 	require openprint::RFIDScannerHistory;
-	my @Hs = openprint::RFIDScannerHistory::find(
+	my @Hs = openprint::RFIDScannerHistory->find(
 			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
 			'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
@@ -257,7 +257,7 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
-	@Hs = openprint::RFIDTagHistory::find(
+	@Hs = openprint::RFIDTagHistory->find(
 			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
 			'updated_on_start'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
@@ -265,7 +265,7 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
-	my @old_unassigned_tags = openprint::RFIDTag::find(
+	my @old_unassigned_tags = openprint::RFIDTag->find(
 			'updated_on_end'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -60 ) ),
 			'type'			=>	'Skid',
 			);
@@ -277,13 +277,13 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 } # end if
 
 # Resolve any unresolved IP's
-foreach my $Host ( openprint::Host::find('hostname'=>undef) ) {
+foreach my $Host ( openprint::Host->find('hostname'=>undef) ) {
 	$Host->resolve();
 	$Host->save() if $Host->hostname();
 } # end foreach
 
 # Paper maintenance
-foreach my $Paper ( openprint::Paper::find() ) {
+foreach my $Paper ( openprint::Paper->find() ) {
 	if ( ! $Paper->wpsi() != $Paper->wpsi(undef) ) {
 		$Paper->save();
 	} # end if

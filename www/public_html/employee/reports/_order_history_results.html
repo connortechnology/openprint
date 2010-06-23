@@ -7,11 +7,11 @@
 		$parameters{'SalesPerson'} = $param{'CSR'};
 	} # end if
 	#$parameters{'order'} = 'lower(strname)';
-	my @Companies = openprint::Company::find( %parameters );
+	my @Companies = openprint::Company->find( %parameters );
 	my %companies = map { int($_->id()), $_->name() } @Companies;
 	@{$$variable{'Orders'}} = ();
 	if ( %companies ) {
-		foreach my $Order ( openprint::Order::find( 
+		foreach my $Order ( openprint::Order->find( 
 			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
 			'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),

@@ -1,6 +1,6 @@
 <? eval (
 	if ( $openprint::param{'action'} eq 'Submit') {
-		my @papers = eprint::Paper::find(
+		my @papers = eprint::Paper->find(
 			'owner_id'	=>	$r->param('Owner'),
 			'name_id'	=>	$r->param('ddmPaperName'),
 			'name'		=>	$r->param('txtPaperName'),

@@ -1,5 +1,5 @@
 <div class="templates">
-<? eval ( %{$$variable{'ServiceTypes'}} = map { $_->name(), $_->id() } openprint::ServiceType::find(); ) ?>
+<? eval ( %{$$variable{'ServiceTypes'}} = map { $_->name(), $_->id() } openprint::ServiceType->find(); ) ?>
 <? if ( $$variable{'ServiceTypes'}{'SaddleStitching'} ) ?>
 	<p>
 		<img src="/images/templates/SaddleStitching.gif" alt=""/>

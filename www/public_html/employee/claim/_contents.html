@@ -13,7 +13,7 @@
 		my $total = 0;
 		my %stocks;
 		my @Contents = $$variable{'Claim'}->Contents( 'order'=>'id');
-		my @ContentTypes = openprint::Claim_ContentType::find('order'=>'lower(name)');
+		my @ContentTypes = openprint::Claim_ContentType->find('order'=>'lower(name)');
 		if ( $$variable{'Claim'} and $$variable{'Claim'}->id() and ! @Contents ) {
 			# Every Claim should have at least 1 line in it, even if not populated.
 			my $Claim = new openprint::Claim_Content();

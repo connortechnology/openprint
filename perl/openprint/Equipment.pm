@@ -6,6 +6,7 @@ use openprint ();
 require openprint::EquipmentSpecification;
 require openprint::Fold;
 require openprint::Location;
+require openprint::Equipment_Stock_Setting;
 require sql;
 
 use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
@@ -105,7 +106,7 @@ sub find {
 				} # end if
 			} # end foreach
 		} else {
-$openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $params{'Specifications'}  );
+$openprint::log->debug('Specifications not a hash ref in Equipment->find: ' .  $params{'Specifications'}  );
 		} # end if
 	} # end if
 	if ( $params{'UseInEstimating'} ) {
@@ -141,7 +142,7 @@ $openprint::log->debug('Specifications not a hash ref in Equipment::find: ' .  $
 		$openprint::log->error( "Error loading Equipment ($sql) (@values) :" . $openprint::dbh->errstr );
 		return;
 	} elsif ( $debug ) {
-		$openprint::log->debug( "openprint::Equipment::find : SQL($sql) VALUES(". join(',',@values).") # Results: " . @$data );
+		$openprint::log->debug( "openprint::Equipment->find : SQL($sql) VALUES(". join(',',@values).") # Results: " . @$data );
 	} # end if
 	
 	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{id}, $_ ) } @$data;
@@ -212,7 +213,7 @@ sub Folds {
 
 	if ( ! $$self{'Folds'} ) {
 		%{$$self{'Folds'}} = ();
-		foreach my $F ( openprint::Fold::find( 'Equipment'=>$self, 'order'=>'pages,page_columns' ) ) {
+		foreach my $F ( openprint::Fold->find( 'Equipment'=>$self, 'order'=>'pages,page_columns' ) ) {
 			push @{$$self{'Folds'}{$F->pages()}}, $F;
 		} # end foreach;
 	} # end if
@@ -261,6 +262,14 @@ sub Fold {
 			next;
 		} # end if
 
+		if ( $$Fold{folds} and $$params{folds} and ($$Fold{folds} != $$params{folds} ) ) {
+			$openprint::log->debug("Wanted folds: $$params{folds}, have $$Fold{folds}") if $debug;
+			next;
+		} # end if
+		if ( $$Fold{angles} and $$params{angles} and ($$Fold{angles} != $$params{angles} ) ) {
+			$openprint::log->debug("Wanted angles: $$params{angles}, have $$Fold{angles}") if $debug;
+			next;
+		} # end if
 		if ( $$Fold{page_columns} and $$params{page_columns} and ($$Fold{page_columns} != $$params{page_columns} ) ) {
 			$openprint::log->debug("Wanted Page_columns: $$params{page_columns}, have $$Fold{page_columns}") if $debug;
 			next;
@@ -325,7 +334,7 @@ $openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint:
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'strname, dblmin', @_ );
+	return openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'strname, dblmin', @_ );
 } # end sub Specifications
 
 sub specification {
@@ -342,7 +351,7 @@ sub Specification {
 	return if ! $$self{'id'};
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::EquipmentSpecification::find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax' ) ) {
+		foreach my $Spec ( openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
 	} # end if
@@ -365,7 +374,7 @@ $openprint::log->debug("Looking for $name : $range") if $debug;
 	} # end if
 $openprint::log->debug("Looking for $name : $range") if $debug;
 
-	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
+	return misc->find_entry( $range, $$self{'Specifications'}{$name}, $debug );
 } # end sub specification
 
 sub copy {
@@ -381,7 +390,7 @@ sub copy {
 
 	my $ac = sql::start_transaction( $openprint::dbh );
 
-	foreach my $ES ( openprint::EquipmentSpecification::find('equipment_id'=>$$self{'id'} ) ) {
+	foreach my $ES ( openprint::EquipmentSpecification->find('equipment_id'=>$$self{'id'} ) ) {
 		$ES->copy()->save({'equipment_id'=>$$new{id}});
 	} # end foreach
 
@@ -415,7 +424,7 @@ sub copy {
 				] );
 	} # end while
 	# Equipment_shifts
-	foreach my $ES ( openprint::Equipment_Shift::find('equipment_id'=>$$self{id}) ) {
+	foreach my $ES ( openprint::Equipment_Shift->find('equipment_id'=>$$self{id}) ) {
 		$ES->copy()->save({'equipment_id'=>$$new{id}});
 	} # end foreach $ES
 	sql::end_transaction( $openprint::dbh, $ac );
@@ -499,6 +508,20 @@ sub Location {
 
 sub Shifts {
 } # end sub
+
+sub Stock_Setting {
+	if ( ! $_[0]{'Stock_Settings'} ) {
+		%{$_[0]{'Stock_Settings'}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{'id'});
+	} # end if
+	return $_[0]{'Stock_Settings'}{$_[1]{'id'}} if exists $_[0]{'Stock_Settings'}{$_[1]{'id'}};
+	return;
+} # end sub Stock_Setting
+sub Stock_Settings {
+	if ( ! $_[0]{'Stock_Settings'} ) {
+		%{$_[0]{'Stock_Settings'}} = map { $_->stock_id(), $_ } openprint::Equipment_Stock_Setting->find('equipment_id'=>$_[0]{'id'});
+	} # end if
+	return values %{$_[0]{'Stock_Settings'}};
+} # end sub Stock_Settings
 
 1;
 __END__

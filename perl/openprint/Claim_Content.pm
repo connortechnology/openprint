@@ -51,47 +51,6 @@ $serial = 'claim_contents_id_seq';
 	'cost_units'	=>	undef,
 );
 
-# Returns a paper object specified by the parameters
-sub find {
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	my $sql = 'SELECT * FROM Claim_Contents WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'skid_id'} ) {
-		$sql .= ' AND skid_id=?';
-		push @values, $params{'skid_id'};
-	} # end if
-	if ( $params{'claim_id'} ) {
-		$sql .= ' AND claim_id=?';
-		push @values, $params{'claim_id'};
-	} # end if
-	if ( $params{'id_like'} ) {
-		$sql .= " AND id LIKE '%$params{id_like}%'";
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading Claim_Content SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No Claim_Content loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded Claim_Content ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::Claim_Content( $_->{id}, $_ ) } @$data;
-} # end sub find
-
 sub Skid {
 	return new openprint::Skid( $_[0]{skid_id} );
 } # end sub Skid

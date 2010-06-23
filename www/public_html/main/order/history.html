@@ -29,7 +29,7 @@
 				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="load_orders( this.form );">
 					<option value="">Ordered By</option>
 					<? echo ( 
-						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id' => $session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/main/order/history.html?ddmOrderedBy'} );
+						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id' => $session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/main/order/history.html?ddmOrderedBy'} );
 					) ?>
 				</select>
 			</p>

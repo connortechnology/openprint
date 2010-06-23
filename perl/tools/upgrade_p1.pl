@@ -19,20 +19,16 @@ use vars qw( $log $dbh %config );
 
 $log = new logger( 'warn' );
 
-my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
+my ( $src_db, $dst_db, $path ) = @ARGV;
 $src_db = 'point-one' if ! $src_db;
 $dst_db = 'point-one' if ! $dst_db;
 `/etc/init.d/apache2 reload`;
-if ( $year ) {
-	( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 ) if ! $month;
+
+if ( ! $path ) {
+	my ( $year, $month, $day ) = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -1 );
 
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		print "Getting db backup $month-$day-$year\n";
-		if ( $src_host ne 'localhost' ) {
-			`su postgres -c "scp $src_host:/media/Storage/Backups/localhost/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2 "`;
-		} else {
-			`ln -s /media/Storage/Backups/localhost/$src_db/$year-$month-$day.sql.bz2 /tmp/$src_db-$month-$day-$year.sql.bz2`;
-		} 
 	} # end if
 	if ( ! -e "/tmp/$src_db-$month-$day-$year.sql.bz2" ) {
 		die "No db dump /tmp/$src_db-$month-$day-$year.sql.bz2";
@@ -52,14 +48,15 @@ if ( $year ) {
 	`su postgres -c "dropdb $dst_db"`;
 	print "done\n";
 	print "Create db...";
-	`su postgres -c "createdb -E SQL_ASCII $dst_db"`;
+	`su postgres -c "createdb -E UTF8 $dst_db"`;
 	print "done\n";
 	print "Loading db...";
-	if ( $src_host ) {
-		`su postgres -c "ssh $src_host pg_dump -h $src_host point-one | psql $dst_db"`;
-	} else {
-		`su postgres -c "pg_dump $src_db | psql $dst_db"`;
-	} # end if
+	`su postgres -c "bunzip2 < $path | psql $dst_db"`;
+	#if ( $src_host ) {
+		#`su postgres -c "ssh $src_host pg_dump -h $src_host point-one | psql $dst_db"`;
+	#} else {
+		#`su postgres -c "pg_dump $src_db | psql $dst_db"`;
+	#} # end if
 	print "done\n";
 
 } # end if
@@ -77,7 +74,7 @@ my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT ver
 sql::insert( undef, undef, 'database_info', 'version', $version+1, 'backup', 'false' );
 print "done\n";
 
-foreach my $Service ( openprint::Service::find('name'=>'Imposition') ) {
+foreach my $Service ( openprint::Service->find('name'=>'Imposition') ) {
 	foreach my $Price ( $Service->prices() ) {
 		if ( $Price->units() eq 'Per Page' ) {
 			$Price->units('Per Imposition');
@@ -88,7 +85,7 @@ foreach my $Service ( openprint::Service::find('name'=>'Imposition') ) {
 
 if ( 0 ) {
 sql::update( undef, undef, 'Configuration', ['name=?', 'Press Run Overs Rate'], 'name','MakeReady Overs Rate' );
-foreach my $E ( openprint::Equipment::find('strid'=>'Web1') ) {
+foreach my $E ( openprint::Equipment->find('strid'=>'Web1') ) {
 	foreach my $Spec ( $E->Specifications() ) {
 		next if $Spec->name() ne 'Press Run Overs';
 		if ( $Spec->value() != 0.05 ) {

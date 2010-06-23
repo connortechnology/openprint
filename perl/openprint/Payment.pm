@@ -48,104 +48,6 @@ $serial = 'payments_id_seq';
 	'deleted'		=>	0,
 );
 
-sub find {
-	my %params = @_;
-
-	my $sql = q{SELECT * FROM Payments WHERE 1>0};
-	my @values;
-	if ( $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= q{ AND id=?};
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'payor_id'} ) {
-		if ( ref $params{'payor_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND payor_id IN (}.join(',', map {'?'} @{$params{'payor_id'}} ).')';
-			push @values, @{$params{'payor_id'}};
-		} else {
-			$sql .= q{ AND payor_id=?};
-			push @values, $params{'payor_id'};
-		} # end if
-	} # end if
-	if ( $params{'recipient_id'} ) {
-		if ( ref $params{'recipient_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND owner_id IN (}.join(',', map {'?'} @{$params{'recipient_id'}} ).')';
-			push @values, @{$params{'recipient_id'}};
-		} else {
-			$sql .= q{ AND owner_id=?};
-			push @values, $params{'recipient_id'};
-		} # end if
-	} # end if
-	if ( $params{'invoice_id'} ) {
-		$sql .= ' AND id IN ( SELECT payment_id FROM invoices_payments WHERE invoice_id=? )';
-		push @values, $params{'invoice_id'};
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND created_on >= ?';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND created_on <= ?';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{'updated_on_end'};
-	} # end if
-
-	if ( $params{'received_on_start'} and $params{'received_on_end'} ) {
-		$sql .= ' AND ( date BETWEEN ? AND ? )';
-		push @values, @params{'received_on_start','received_on_end'};
-	} elsif ( $params{'received_on_start'} ) {
-		$sql .= ' AND date >= ?';
-		push @values, $params{'received_on_start'};
-	} elsif ( $params{'received_on_end'} ) {
-		$sql .= ' AND date <= ?';
-		push @values, $params{'received_on_end'};
-	} # end if
-
-	if ( $params{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $params{'deleted'};
-	} else {
-		$sql .= ' AND deleted=?';
-		push @values, 0;
-	} # end if
-	if ( $params{'completed'} ) {
-		$sql .= ' AND completed=?';
-		push @values, $params{'completed'};
-	} # end if
-	if ( $params{'order_id'} ) {
-		$sql .= ' AND order_id=?';
-		push @values, $params{'order_id'};
-	} # end if
-
-	if ( $params{'order'} ) {
-		$sql .= " ORDER BY $params{'order'}";
-	} # end if
-
-	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$log->warn("Error loading Payments: ($sql) (@values)" . $dbh->errstr );
-		return;
-	} elsif ($debug ) {
-		$log->debug("openprint::Payment::find($sql) (@values)");
-	} # end if
-	return map { new openprint::Payment( $_->{id}, $_ ); } @$data;
-} # end sub find
-
 sub destroy {
 	my $self = shift;
     sql::execute( undef, undef, q{DELETE FROM ledgers WHERE payment_id=?}, $$self{'id'} );
@@ -173,7 +75,7 @@ sub remaining {
 		$$self{'remaining'} = $_[0];
 	} # end if
 	if ( ! defined $$self{'remaining'} ) {
-		$$self{'remaining'} = $$self{'amount'} - misc::sum( map { $_->amount() } openprint::Invoice_Payment::find('payment_id'=>$$self{'id'}) );
+		$$self{'remaining'} = $$self{'amount'} - misc::sum( map { $_->amount() } openprint::Invoice_Payment->find('payment_id'=>$$self{'id'}) );
 	} # end if
 	return $$self{'remaining'};
 } # end sub remaining
@@ -183,6 +85,4 @@ sub Type {
 } # end sub Type
 
 1;
-
 __END__
-~       

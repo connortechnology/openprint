@@ -16,7 +16,7 @@
 				<input name="bands_per_package" value="<?bands_per_package?>" type="text" onkeyup="calc(this.form.name);" size="4" />
 			</p>
 		<? eval ( 
-			@{$$variable{'Materials'}} = openprint::Material::find('category'=>$$variable{'ServiceType'},'order'=>'lower(name)' );
+			@{$$variable{'Materials'}} = openprint::Material->find('category'=>$$variable{'ServiceType'},'order'=>'lower(name)' );
 		) ?>
 		<? if ( @{$$variable{'Materials'}} ) ?>
 		<p>

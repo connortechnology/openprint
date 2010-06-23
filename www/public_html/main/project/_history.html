@@ -1,12 +1,12 @@
 <? eval (
 	if ( $param{'ProjectID'} ) {
-		@{$$variable{'Projects'}} = openprint::Project::find( 
+		@{$$variable{'Projects'}} = openprint::Project->find( 
 			'company_id'		=> $session{'company_id'},
 			'id'				=> $param{'ProjectID'},
 			'order'				=> 'id DESC',
 		);
 	} else {
-		@{$$variable{'Projects'}} = openprint::Project::find( 
+		@{$$variable{'Projects'}} = openprint::Project->find( 
 			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?created_on_start_year','/main/project/history.html?created_on_start_month','/main/project/history.html?created_on_start_day'} ),
 			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/project/history.html?created_on_end_year','/main/project/history.html?created_on_end_month','/main/project/history.html?created_on_end_day'} ),
 			'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/project/history.html?updated_on_start_year','/main/project/history.html?updated_on_start_month','/main/project/history.html?updated_on_start_day'} ),
@@ -26,7 +26,7 @@
 <? if ( @{$$variable{'Projects'}} == 0 ) ?>
 	<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) and $param{'ProjectID'} ) ?>
         <? eval (
-                @{$$variable{'Projects'}} = openprint::Project::find(
+                @{$$variable{'Projects'}} = openprint::Project->find(
                 'id'=>$param{'ProjectID'},
                 );
         ) ?>

@@ -5,7 +5,7 @@
 ) ?>
 <? if ( $$variable{'ProjectType'} ) ?>
 <? eval (
-    @{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)','projecttype_id'=>$$variable{'ProjectType'}->id() ) if $$variable{'ProjectType'};
+    @{$$variable{'Categories'}} = openprint::ProductCategory->find( 'order' => 'lower(name)','projecttype_id'=>$$variable{'ProjectType'}->id() ) if $$variable{'ProjectType'};
 ) ?>
 <? if ( @{$$variable{'Categories'}} ) ?>
 <div id="Specials" align="center">

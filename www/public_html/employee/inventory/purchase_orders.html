@@ -41,14 +41,14 @@
 			<select name="created_by" onchange="load('Results',$('f1'));">
 				<option value="">None</option>
 				<? echo ( 
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(firstname),lower(lastname)','type'=>['A','E'] ) ], $session{'/employee/inventory/purchase_orders.html?created_by'} ); ) ?>
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname),lower(lastname)','type'=>['A','E'] ) ], $session{'/employee/inventory/purchase_orders.html?created_by'} ); ) ?>
 			</select>
 		</p>
 		<p><label>Vendor:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
 			<select name="supplier_id" onchange="load('Results',$('f1'));">
 				<option value="">All</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/purchase_orders.html?supplier_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/purchase_orders.html?supplier_id'} ); ) ?>
 			</select>
 		</p>
 		<p>
@@ -92,7 +92,7 @@
 			<label>Types:</label>
 			<? echo (
 				my $html;
-				foreach my $Type ( openprint::PurchaseOrder_ContentType::find('order'=>'name') ) {
+				foreach my $Type ( openprint::PurchaseOrder_ContentType->find('order'=>'name') ) {
 					$html .= sprintf('<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="radio_all(this);" /><label class="radio" for="types%1$s">%2$s</label>', $Type->id(), $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(';', $session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! $session{'/employee/inventory/purchase_orders.html?types'} ) );
 				} # end foreach Type
 				$html .= sprintf('<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="radio_all(this);" /><label class="radio" for="types%1$s">%2$s</label>', '', 'None', ssi::checked( ! $session{'/employee/inventory/purchase_orders.html?types'} ) );

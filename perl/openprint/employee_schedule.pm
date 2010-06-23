@@ -29,7 +29,7 @@ sub add_missing_jobs_to_schedule {
 			if ( ! $$sig_specs{'UsePress'} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $project_id, $signature_service_index, 'UsePress', $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()} );
 			} # end if
-			if ( my @equipment = openprint::Equipment::find('strid'=>$$sig_specs{'UsePress'} ) ) {
+			if ( my @equipment = openprint::Equipment->find('strid'=>$$sig_specs{'UsePress'} ) ) {
 				openprint::employee_schedule::insert( $log, $dbh, $project_id, $signature_service_index, $equipment[0]->id() );
 			} # end if
 		} # end foreach signature
@@ -38,7 +38,7 @@ sub add_missing_jobs_to_schedule {
 
 sub update_late_jobs {
 	# Make sure that we don't lose any jobs to the past.
-	foreach my $Job ( openprint::ScheduledJob::find('endtime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ),'order'=>'starttime' ) ) {
+	foreach my $Job ( openprint::ScheduledJob->find('endtime'=>Date::Format::time2str('%Y-%m-%d %H:%M:%S', time ),'order'=>'starttime' ) ) {
 		$Job->save({'starttime_seconds'=>time});
 	} # end while
 } # end sub update_late_jobs
@@ -114,7 +114,7 @@ sub insert {
 	my $ac = sql::start_transaction( $dbh );
 	my ( $start_time ) = sql::execute( $log, $dbh, q{SELECT MAX(StartTime+RunTime) FROM Schedule, Projects WHERE Index=ProjectIndex AND strStatus='Approved' AND Equipment_ID=?}, $equipment_id );
 	( $start_time ) = sql::execute( $log, $dbh, 'SELECT NOW()' ) if ! $start_time;
-	foreach my $Job ( openprint::ScheduledJob::find('service_id'=>$service_index) ) {
+	foreach my $Job ( openprint::ScheduledJob->find('service_id'=>$service_index) ) {
 		$Job->delete();
 	} # end foreach Job
 	my $runtime = openprint::service::get_runtime( new openprint::Project( $project_index ), $service_index );
@@ -136,7 +136,7 @@ sub remove {
 	my $ac = sql::start_transaction( $dbh );
 
 	my @equipment_ids = ();
-	foreach my $Job ( openprint::ScheduledJob::find('project_id'=>$project_index, 'service_id'=>$service_index) ) {
+	foreach my $Job ( openprint::ScheduledJob->find('project_id'=>$project_index, 'service_id'=>$service_index) ) {
 		push @equipment_ids, $Job->equipment_id();
 		$Job->delete();
 	} # end foreach Job

@@ -207,14 +207,14 @@ sub destroy {
 	my $ac = sql::start_transaction( $dbh );
 	sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
 
-	foreach my $Quote ( openprint::Quote::find('user_id'=>$$self{'id'}) ) {
+	foreach my $Quote ( openprint::Quote->find('user_id'=>$$self{'id'}) ) {
 		$Quote->delete();
 	} # end foreach
-	foreach my $Order ( openprint::Order::find('user_id'=>$$self{'id'}) ) {
+	foreach my $Order ( openprint::Order->find('user_id'=>$$self{'id'}) ) {
 		$Order->delete();
 	} # end foreach
 	sql::update( undef, undef, 'order_log', ['user_id=?',$$self{'id'}], 'user_id', undef );
-	foreach my $Project ( openprint::Project::find('user_id'=>$$self{'id'}) ) {
+	foreach my $Project ( openprint::Project->find('user_id'=>$$self{'id'}) ) {
 		$Project->delete();
 	} # end foreach
 	sql::execute( $log, $dbh, 'DELETE FROM users_in_usergroups WHERE user_id=?', $$self{'id'} );
@@ -300,14 +300,8 @@ sub name {
 	} # end if
 } # end sub name
 
-sub find_one {
-	my %params = @_;
-	$params{'limit'}=1;
-	my @Results = find(%params);
-	return $Results[0] if @Results;
-} # end sub find_one
-
 sub find {
+	my $self = shift;
 	my %param = @_;
 	my $sql = q{SELECT * FROM Users WHERE 1>0};
 	my @values;
@@ -436,7 +430,7 @@ sub csr_ids {
 sub Groups {
 	my ( $self ) = @_;
 
-    return openprint::Usergroup::find('user_id'=>$$self{id} );
+    return openprint::Usergroup->find('user_id'=>$$self{id} );
 } # end sub Groups
 sub notifications {
 	my ( $self, $notifications_hash ) = @_;
@@ -468,7 +462,7 @@ sub notification {
 sub purchasing_total {
 	require openprint::PurchaseOrder;
 	my $total = 0;
-	foreach my $PO ( openprint::PurchaseOrder::find('authorized'=>'N') ) {
+	foreach my $PO ( openprint::PurchaseOrder->find('authorized'=>'N') ) {
 		$total += $PO->total();
 	} # end foreach $PO
 } # end sub purchasing_total

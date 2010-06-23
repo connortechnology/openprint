@@ -45,66 +45,13 @@ my $debug = 1;
 $table = 'rfidscanners';
 $serial = 'rfidscanners_id_seq';
 
-# Returns a paper object specified by the parameters
-sub find {
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	my $sql = 'SELECT * FROM RFIDScanners WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{'updated_on_end'};
-	} # end if
-	if ( $params{'name'} ) {
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
-	} # end if
-	if ( exists $params{'ipaddr'} ) {
-		if ( ref $params{'ipaddr'} eq 'ARRAY' ) {
-			$sql .= ' AND ipaddr IN ('. join(',', map {'?'} @{$params{'ipaddr'}} ) . ')';
-			push @values, @{$params{'ipaddr'}};
-		} else {
-			$sql .= ' AND ipaddr=?';
-			push @values, $params{'ipaddr'};
-		} # end if
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("Error loading RFIDScanners SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$openprint::log->debug('No RFIDScanners loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded RFIDScanners ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::RFIDScanner( $_->{id}, $_ ) } @$data;
-} # end sub find
-
 sub delete {
     my $self = shift;
     my $ac = sql::start_transaction( );
-	foreach ( openprint::RFIDScannerHistory::find('scanner_id'=>$$self{'id'}) ) {
+	foreach ( openprint::RFIDScannerHistory->find('scanner_id'=>$$self{'id'}) ) {
 		$_->delete();
 	} # end foreach
-	foreach ( openprint::RFIDTagHistory::find('scanner_id'=>$$self{'id'}) ) {
+	foreach ( openprint::RFIDTagHistory->find('scanner_id'=>$$self{'id'}) ) {
 		$_->delete();
 	} # end foreach
     sql::execute( undef, undef, q{DELETE FROM RFIDScanners WHERE id=?}, $$self{'id'} );

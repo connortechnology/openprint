@@ -104,7 +104,7 @@ sub calc {
 		} # end if
 	} # end if
 
-	my @Materials = openprint::Material::find('category'=>'Padding Glue');
+	my @Materials = openprint::Material->find('category'=>'Padding Glue');
 	if ( $$specs{'override_glue_id'} eq 'Y' ) {
 	} else {
 		my $Paper;
@@ -173,7 +173,7 @@ sub calc {
 		$price += $ServicePrice{'Total'};
 			
 		if ( $$specs{'Backing'} eq 'Cardboard' ) {
-			if ( my @Materials = openprint::Material::find('name'=>'CardboardBacking') ) {
+			if ( my @Materials = openprint::Material->find('name'=>'CardboardBacking') ) {
 				my %CardboardPrice = $Materials[0]->get_price( $qty, undef );
 				if ( $CardboardPrice{'units'} eq 'Per Square Inch' ) {
 					$CardboardPrice{'Total'} = $CardboardPrice{'Price'} * $$printing_specs{'txtFinalWidth'} * $$printing_specs{'txtFinalHeight'} * $$specs{"txtQuantity$qty_index"};
@@ -187,7 +187,7 @@ sub calc {
 			} # end if
 		} # end if
 		if ( $$specs{'rdbDTape'} eq 'Y' ) {
-			if ( my @Materials = openprint::Material::find('name'=>'DTape') ) {
+			if ( my @Materials = openprint::Material->find('name'=>'DTape') ) {
 				my %DTapePrice = $Materials[0]->get_price( $qty, undef );
 				$DTapePrice{'Total'} = $DTapePrice{'Price'} * $$printing_specs{'txtFinalWidth'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('DTape Price: $%1$.2f%2$s = $%3$.2f<br/>', @DTapePrice{'Price','units','Total'} );

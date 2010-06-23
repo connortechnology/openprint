@@ -76,7 +76,7 @@
 					<select id="Group" name="Group" size="1">
 						<option value="">select</option>
 					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup::find('order'=>'lower(name)') ], $$variable{'Stock'}->group_id() );
+							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockGroup->find('order'=>'lower(name)') ], $$variable{'Stock'}->group_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtGroup" name="txtGroup" />
@@ -86,7 +86,7 @@
 					<select id="ddmManufacturer" name="ddmManufacturer" size="1">
 						<option value="">select</option>
 					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->manufacturer_id() );
+							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::Manufacturer->find('order'=>'lower(shortname)') ], $$variable{'Stock'}->manufacturer_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtManufacturer" name="txtManufacturer" />
@@ -96,7 +96,7 @@
 					<select id="ddmName" name="ddmName" size="1" onchange="f1.txtName.value='';">
 						<option value="">select</option>
 						<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->name_id() );
+							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockName->find('order'=>'lower(shortname)') ], $$variable{'Stock'}->name_id() );
 						) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtName" name="txtName" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmName);}ddm_select_by_index( f1.ddmName, 0 );" />
@@ -106,7 +106,7 @@
 					<select id="ddmFinish" name="ddmFinish" size="1" onchange="f1.txtFinish.value='';">
 						<option value="">select</option>
 					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->finish_id() );
+							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockFinish->find('order'=>'lower(shortname)') ], $$variable{'Stock'}->finish_id() );
 					) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtFinish" name="txtFinish" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmFinish);}ddm_select_by_index( f1.ddmFinish, 0 );" />
@@ -116,7 +116,7 @@
 					<select id="ddmColour" name="ddmColour" size="1" onchange="f1.txtColour.value='';">
 						<option value="">select</option>
 						<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->colour_id() );
+							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockColour->find('order'=>'lower(shortname)') ], $$variable{'Stock'}->colour_id() );
 						) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtColour" name="txtColour" onfocus="if(!this.value){this.value=get_ddm_text(f1.ddmColour);}ddm_select_by_index( f1.ddmColour, 0 );" />
@@ -126,7 +126,7 @@
 					<select id="ddmWeight" name="ddmWeight" size="1" onchange="f1.txtWeight.value='';">
 						<option value="">select</option>
 					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->weight_id() );
+							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockWeight->find('order'=>'lower(shortname)') ], $$variable{'Stock'}->weight_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtWeight" name="txtWeight" onfocus="ddm_select_by_index( f1.ddmWeight, 0 );" />
@@ -136,7 +136,7 @@
 					<select id="ddmQuality" name="ddmQuality" size="1">
 						<option value="">select</option>
 					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockQuality::find('order'=>'lower(shortname)') ], $$variable{'Stock'}->quality_id() );
+							return ssi::make_drop_down( [ map { $_->id(), $_->shortname() } openprint::StockQuality->find('order'=>'lower(shortname)') ], $$variable{'Stock'}->quality_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="txtQuality" name="txtQuality" onfocus="ddm_select_by_index( f1.ddmQuality, 0 ) ;" />
@@ -146,7 +146,7 @@
 					<select id="material_id" name="material_id" size="1" onchange="f1.material.value='';">
 						<option value="">select</option>
 					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockMaterial::find('order'=>'lower(name)') ], $$variable{'Stock'}->material_id() );
+							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::StockMaterial->find('order'=>'lower(name)') ], $$variable{'Stock'}->material_id() );
 							) ?>
 					</select>
 					<input style="display: none;" type="text" id="material" name="material" onfocus="ddm_select_by_index( f1.material_id, 0 );" />
@@ -334,7 +334,7 @@
 			<ul>
 				<? echo ( 
 					my $html;
-					foreach my $ProjectType ( openprint::ProjectType::find('order'=>'lower(name)') ) {
+					foreach my $ProjectType ( openprint::ProjectType->find('order'=>'lower(name)') ) {
 						$html .= sprintf('<li><input type="checkbox" id="chkPRF%1$d" name="chkPRF%1$d" %4$s /><label class="radio" for="chkPRF%1$d">%3$s</label></li>',
 							$ProjectType->id(),
 							URI::Escape::uri_escape($ProjectType->name()),

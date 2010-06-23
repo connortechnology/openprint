@@ -21,30 +21,6 @@ $serial = 'paymenttypes_id_seq';
 );
 my $debug = 1;
 
-sub find_one {
-	my @results = find( @_ );
-	return $results[0] if @results;
-} # end sub find_one
-sub find {
-	my %params = @_;
-
-	my $sql = 'SELECT * FROM PaymentTypes WHERE 1>0';
-	my @values;
-
-	if ( $params{'name'} ) {
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$log->debug("openprint::PaymentType::find( $sql)" . $dbh->errstr);
-		return;
-	} elsif ( $debug ) {
-		$log->debug("openprint::PaymentType::find($sql) (@values) : " . @$data );
-	} # end if
-	return map { new openprint::PaymentType( $_->{id}, $_ ); } @$data;
-} # end sub find
 
 1;
 

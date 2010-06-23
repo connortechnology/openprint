@@ -49,7 +49,7 @@ sub get_unfinished_order {
 		return $Order->id() if $Order->id();
 	} # end if
 
-	my @Orders = openprint::Order::find('session_id'=>$session{'_session_id'}, 'status'=>'Re-Opened', 'order'=>'index DESC' );
+	my @Orders = openprint::Order->find('session_id'=>$session{'_session_id'}, 'status'=>'Re-Opened', 'order'=>'index DESC' );
 	foreach my $Order ( @Orders ) {
 		if ( ! $Order->company_id() ) {
 			$log->error("Re-Opened Order has no company for order $$Order{id}!");
@@ -61,7 +61,7 @@ sub get_unfinished_order {
 		} # end if
 	} # foreach
 
-	@Orders = openprint::Order::find('session_id'=>$session{'_session_id'}, 'status'=>'Incomplete', 'order'=>'index DESC' );
+	@Orders = openprint::Order->find('session_id'=>$session{'_session_id'}, 'status'=>'Incomplete', 'order'=>'index DESC' );
 
 	foreach my $Order ( @Orders ) {
 		if ( ! $Order->company_id() ) {
@@ -102,7 +102,7 @@ sub add_product {
 	my $Order = new openprint::Order( $order_id );
 
 	my $Product;
-	if ( my @Products = openprint::OrderedProduct::find( 'order_id'=>$order_id, 'product_id'=>$product_id ) ) {
+	if ( my @Products = openprint::OrderedProduct->find( 'order_id'=>$order_id, 'product_id'=>$product_id ) ) {
 		$Product = shift @Products;
 		# The logic here used to be that we would increase the quantity, but now we are thinking that we will reset the quantity.  Since this would really only happen on a reload anyways.  
 	} else {
@@ -188,7 +188,7 @@ sub add_project_to_order {
 		} # end if
 		$sql{'dateRequired'} = join('-', $year, $month, $day );
 	} # end if
-	my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
+	my @ShippingServices = openprint::ServiceType->find('category'=>'Shipping');
 	if ( @ShippingServices ) {
 		foreach my $ShippingType ( @ShippingServices ) {
 			next if sets::isin( $ShippingType->name(), ['Turnaround'] );
@@ -360,7 +360,7 @@ sub save_project_information {
 
 	# If we are specifying the Shipping Type
 	if ( $param{'ShippingType'.$project_index} ) {
-		my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 		$log->debug("ServiceTypes: " . join(',',map { $_->name() } @ServiceTypes )) if $debug;
 		foreach my $ShippingType ( @ServiceTypes ) {
 
@@ -547,7 +547,7 @@ sub cancel_order {
 		openprint::press_schedule::remove( $Project->id() );
 
 		# Free up any stock allocated to this project
-		foreach my $PA ( openprint::PaperAllocation::find('project_id'=>$Project->id()) ) {
+		foreach my $PA ( openprint::PaperAllocation->find('project_id'=>$Project->id()) ) {
 			$Project->add_to_log( @session{'company_id','user_id'}, qq`De-allocated $$PA{'quantity'}$$PA{'units'} of <a href="/employee/inventory/paper_details.html?paper_id=$$PA{'paper_id'}">` . $PA->Paper()->to_string() . ($PA->skid_id()?qq`</a> on skid <a href="/employee/inventory/skids.html?skid_id=$$PA{skid_id}">$$PA{skid_id}</a>` : '') );
 			$PA->delete();
 		} # end foreach PA

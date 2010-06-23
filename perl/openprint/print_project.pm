@@ -98,7 +98,7 @@ sub create_edit_display {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@{$$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType::find( 'order'=>'sorting, lower(name)' );
+	@{$$variable{'ProjectTypes'}} = map { $_->name(), $_->description() } openprint::ProjectType->find( 'order'=>'sorting, lower(name)' );
 	# Check the appropriate button for project type
 	@$variable{'SelectedProjectType'} = $Project->Type()->name();
 
@@ -293,7 +293,7 @@ sub get_services_in_category {
 
 	if ( $category eq 'Printing' ) {
 #The entire point of this is to sort the signature groups
-		if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+		if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'AdditionalSignature') ) {
 			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','Gate Folded Pages','Cover Pages') ORDER BY lngServiceIndex";
 			my @signatures = sql::execute( $log, $dbh, $_, $project_index );
 			
@@ -647,7 +647,7 @@ sub create_edit_process {
 	# Because we do some low-level crappy stuff, we need to clear the caches, cuz they are stale
 	openprint::service::init_cache();
 
-	my @project_types = openprint::ProjectType::find( 'name' => $openprint::param{'rdbProjectType'} );
+	my @project_types = openprint::ProjectType->find( 'name' => $openprint::param{'rdbProjectType'} );
 	my $ProjectType = shift @project_types;
 	my $OldProjectType = $Project->Type();
 
@@ -683,7 +683,7 @@ sub create_edit_process {
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
 
-	foreach my $ServiceType ( openprint::ServiceType::find( 'create_visible'=>'Y') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find( 'create_visible'=>'Y') ) {
 		if ( $openprint::param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
 			if ( ! $services{$ServiceType->name()} ) {	
 				push @{$services{$ServiceType->name()}}, insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );

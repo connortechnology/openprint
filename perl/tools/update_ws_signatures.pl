@@ -27,7 +27,7 @@ $openprint::Object::no_cache = 1;
 
 $dbh = sql::open_sql( $log, %sql_server );
 
-foreach my $Project ( openprint::Project::find() ) {
+foreach my $Project ( openprint::Project->find() ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};

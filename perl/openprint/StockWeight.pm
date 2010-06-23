@@ -37,7 +37,7 @@ sub find {
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
 	if ( ! $data ) {
-		$openprint::log->debug("openprint::StockWeight::find( $sql)" . $openprint::dbh->errstr);
+		$openprint::log->debug("openprint::StockWeight->find( $sql)" . $openprint::dbh->errstr);
 	} else {
 		return map { new openprint::StockWeight( $_->{id}, $_ ); } @$data;
 	} # end if

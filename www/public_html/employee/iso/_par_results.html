@@ -13,7 +13,7 @@
 		@openprint::session{'/employee/iso/pars.html?StartYear','/employee/iso/pars.html?StartMonth','/employee/iso/pars.html?StartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
 		@openprint::session{'/employee/iso/pars.html?EndYear','/employee/iso/pars.html?EndMonth','/employee/iso/pars.html?EndDay'} = Date::Calc::Today();
 	} # end if
-	@{$$variable{'PARs'}} = openprint::PAR::find( 
+	@{$$variable{'PARs'}} = openprint::PAR->find( 
 		'issued_on_start'	=>	sprintf('%.4d-%.2d-%.2d', @openprint::session{
 			'/employee/iso/pars.html?StartYear',
 			'/employee/iso/pars.html?StartMonth',

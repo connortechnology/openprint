@@ -251,13 +251,150 @@ sub Creator {
 	require openprint::User;
 	return new openprint::User( $_[0]{'created_by'} );
 } # end sub Creator
+sub find {
+	my $type = shift;
+    my $table = eval '$'.$type.'::table';
+	my %fields = eval '%'.$type.'::fields';
+
+	my %params = @_;
+	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
+	my @values;
+
+	foreach my $k ( keys %params ) {
+		next if sets::isin( $k,[ 'order','limit' ] );
+		if ( ref $params{$k} eq 'ARRAY' ) {
+			$sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+			push @values, @{$params{$k}};
+		} else {
+			$sql .= " AND $fields{$k}=?";
+			push @values, $params{$k};
+		} # end if
+	} # end foreach k
+    $sql .= " ORDER BY $params{'order'}" if $params{'order'};
+    $sql .= " LIMIT $params{'limit'}" if $params{'limit'};
+
+    my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+    if ( ! $data ) {
+        $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
+    } elsif ( ! @$data ) {
+        $openprint::log->debug("No $type ($sql) (@values) " );
+    } elsif ( eval "$type::debug" ) {
+        $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
+    } # end if
+    return map { $type->new( $_->{index}, $_ ) } @$data;
+} # end sub find
+
+sub find {
+    my $type = shift;
+    my $table = eval '$'.$type.'::table';
+    my %fields = eval '%'.$type.'::fields';
+
+    my %params = @_;
+    my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
+    my @values;
+
+    foreach my $k ( keys %params ) {
+        next if sets::isin( $k,[ 'order','limit','or' ] );
+		next if ! $fields{$k};
+        if ( ref $params{$k} eq 'ARRAY' ) {
+            $sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+            push @values, @{$params{$k}};
+        } elsif ( ! defined $params{$k} ) {
+            $sql .= " AND $fields{$k} IS NULL";
+		} else {
+$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
+            $sql .= " AND $fields{$k}=?";
+            push @values, $params{$k};
+        } # end if
+$openprint::log->debug("Before delete @values");
+		delete $params{$k};
+$openprint::log->debug("Aftere delete @values");
+    } # end foreach k
+	if ( %params ) {
+		foreach my $k ( keys %fields ) {
+			if ( exists $params{$k.'_like'} ) {
+				$sql .= " AND $fields{$k} LIKE ?";
+				push @values, $params{$k.'_like'};
+				delete $params{$k.'_like'};
+			} 
+			if ( exists $params{$k.'_start'} ) {
+				$sql .= " AND $fields{$k} >= ?";
+				push @values, $params{$k.'_start'};
+				delete $params{$k.'_start'};
+			} 
+			if ( exists $params{$k.'_end'} ) {
+				$sql .= " AND $fields{$k} <= ?";
+				push @values, $params{$k.'_end'};
+				delete $params{$k.'_end'};
+			} # end if
+			if ( exists $params{$k.'_<'} ) {
+				$sql .= " AND $fields{$k} < ?";
+				push @values, $params{$k.'_<'};
+				delete $params{$k.'_<'};
+			} # end if
+			if ( exists $params{$k.'_<='} ) {
+				$sql .= " AND $fields{$k} <= ?";
+				push @values, $params{$k.'_<='};
+				delete $params{$k.'_<='};
+			} # end if
+			if ( exists $params{$k.'_>='} ) {
+				$sql .= " AND $fields{$k} >= ?";
+				push @values, $params{$k.'_>='};
+				delete $params{$k.'_>='};
+			} # end if
+			if ( exists $params{$k.'_>'} ) {
+				$sql .= " AND $fields{$k} > ?";
+				push @values, $params{$k.'_>'};
+				delete $params{$k.'_>'};
+			} # end if
+			if ( exists $params{$k.'_lc'} ) {
+				$sql .= " AND lower($fields{$k}) = ?";
+				push @values, lc $params{$k.'_lc'};
+				delete $params{$k.'_lc'};
+			} # end if
+		} # end foreach
+	} # end if
+
+	# Check for Object references
+	if ( %params ) {
+		foreach my $k ( keys %params ) {
+			next if sets::isin( ref $params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
+			my $f = (lc $k).'_id';
+			if ( exists $fields{$f} ) {
+				$sql .= " AND $fields{$f} = ?";
+$openprint::log->debug("$params{$k}" . ref $params{$k});
+				push @values, $params{$k}->id();
+				delete $params{$k};
+			} # end if
+		} # end foreach
+	} # end if
+
+	if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
+        $sql .= ' AND (deleted=? OR deleted IS NULL)';
+        push @values, 0;
+    } # end if
+
+	$sql .= " OR $params{'or'}" if $params{'or'};
+    $sql .= " ORDER BY $params{'order'}" if $params{'order'};
+    $sql .= " LIMIT $params{'limit'}" if $params{'limit'};
+
+    my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+    if ( ! $data ) {
+        $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
+    } elsif ( ! @$data ) {
+        $openprint::log->debug("No $type ($sql) (@values) " );
+    } elsif ( eval "$type::debug" ) {
+        $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
+    } # end if
+    return map { $type->new( $_->{id}, $_ ) } @$data;
+} # end sub find
 
 sub find_one {
-#$openprint::log->debug("find_one @_ ");
+$openprint::log->debug("find_one @_ ");
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;
-	my @Results = $type->find(%params);
+	my @Results = eval($type.'::find(%params);');
 	return $Results[0] if @Results;
 } # end sub find_one
 

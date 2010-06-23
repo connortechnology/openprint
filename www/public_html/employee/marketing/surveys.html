@@ -6,7 +6,7 @@
 			<select name="survey_id" onchange="f1.submit();">
 				<option value=""> select </option>
 			<? echo ( 
-				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Survey::find( 'order'=>'lower(name)' ) ], $$variable{'Survey'}->id() );
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Survey->find( 'order'=>'lower(name)' ) ], $$variable{'Survey'}->id() );
 			) ?>
 			</select>
 		</p>
@@ -17,7 +17,7 @@
 				<option value=""> All </option>
 				<option value="-1"> No CSR </option>
 			<? echo ( 
-				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(firstName), lower(lastName)','type'=>['E','A'],'id'=>[sql::execute(undef,undef,'select DISTINCT salesrep_id FROM Companies WHERE id IN (SELECT DISTINCT company_id FROM Survey_responses WHERE survey_id=?)', $param{'survey_id'})], 'deleted'=>[1,0] ) ], $param{'CSR'} );
+				ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstName), lower(lastName)','type'=>['E','A'],'id'=>[sql::execute(undef,undef,'select DISTINCT salesrep_id FROM Companies WHERE id IN (SELECT DISTINCT company_id FROM Survey_responses WHERE survey_id=?)', $param{'survey_id'})], 'deleted'=>[1,0] ) ], $param{'CSR'} );
 			) ?>
 			</select>
 		</p>

@@ -12,7 +12,7 @@
 	<? echo (
 		my $html = '';
 		my $rowclass;
-		foreach my $PF ( openprint::ProductionFeedback::find('order'=>'starting_on','project_id'=>$$variable{'Project'}->id(), 'service_id'=>$$variable{'service_id'} ) ) {
+		foreach my $PF ( openprint::ProductionFeedback->find('order'=>'starting_on','project_id'=>$$variable{'Project'}->id(), 'service_id'=>$$variable{'service_id'} ) ) {
 			$html .= sprintf('<tr%1$s><td class="DateTime">%2$s</td><td class="DateTime">%3$s</td><td class="Elapsed">%4$s</td><td class="User">%5$s</td><td>%6$s</td>',
 				$rowclass,
 				Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $PF->starting_on() ) ),

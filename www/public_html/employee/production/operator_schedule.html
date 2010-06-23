@@ -14,7 +14,7 @@
 			<select name="Presses" multiple="multiple" size="4">
 <? echo ( 
 	@{$$variable{'Presses'}} = ();
-	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/operator_schedule.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/operator_schedule.html?Presses'} ) ] );
 	} # end foreach press
@@ -33,7 +33,7 @@
 			<label>Operator</label>
 			<select multiple="multiple" id="operator_id" name="operator_id" size="4">
 <? echo ( 
-		ssi::make_select( [ map { $_->id(), $_->name() } openprint::User::find('type'=>'E', 'order'=>'lower(firstname),lower(lastname)') ], [ split ';', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); 
+		ssi::make_select( [ map { $_->id(), $_->name() } openprint::User->find('type'=>'E', 'order'=>'lower(firstname),lower(lastname)') ], [ split ';', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); 
 ) ?>
 			</select>
 		</p>
@@ -57,7 +57,7 @@
 		foreach my $E ( @{$$variable{'Presses'}} ) {
 			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Presses'}})).'%;"><ul>';
 
-			my @OperatorShifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(), 'order'=>'starttime' );
+			my @OperatorShifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(), 'order'=>'starttime' );
 			foreach my $Shift ( @OperatorShifts ) {	
 				$$variable{'Shift'} = $Shift;
 				$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );

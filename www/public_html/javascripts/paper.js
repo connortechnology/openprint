@@ -141,6 +141,37 @@ function fill_drop_down( results ) {
 
 } // end function fill_drop_down( results ) {
 
+function json_fill_drop_downs( results ) {
+	if ( ! results.get('form') ) results.set('form','f1');
+	var form = $(results.get('form'));
+	results.unset('form');
+
+	var keys = results.keys();
+
+	for ( var index = 0; index < keys.length; index += 1 ) {
+		var key = keys[index];
+		var ddm = form.elements[key];
+		if ( ddm && ( ddm.type == 'select-one' ) ) {
+			var selectedValue = get_ddm_value( ddm );
+			var options = results.get(key);
+			if ( options ) {
+				clear_ddm( ddm );
+				ddm.options[ddm.options.length] = create_option( '', 'Please select one' );
+				for( var opt_index = 0; opt_index < options.length; opt_index += 2 ) {
+					ddm.options[ddm.options.length] = create_option( options[opt_index], options[opt_index+1] );
+				} // end for
+				
+				if ( options.length == 2 ) {
+					ddm_select_by_index( ddm, 1 );
+				} else {
+					ddm_select_by_value( ddm, selectedValue, 0 );
+				} // end if
+			} // end if
+			ddm.disabled = false;
+		} // end if
+	} // end for
+} // end function json_fill_drop_downs
+
 function cbFillDropDowns( results ) {
 	fill_drop_down( results );
 	if ( typeof calc == 'function' ) 

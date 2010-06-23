@@ -6,7 +6,7 @@
 			<select name="ddmEmployee" size="1">
 				<option value="Bindery">All Bindery Employees</option>
 				<option value="All" <? echo ( 'selected' if $r->param('ddmEmployee') eq 'All' ) ?>>All Employees</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $r->param('ddmEmployee') ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $r->param('ddmEmployee') ); ) ?>
 			</select>
 	</p>
 	<? eval (
@@ -39,10 +39,10 @@
 	</p>
 </fieldset>
 <? eval ( 
-	@{$$variable{'Projects'}} = openprint::Project::find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
+	@{$$variable{'Projects'}} = openprint::Project->find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
 	if ( @{$$variable{'Projects'}} ) {
 		
-		%{$$variable{'BinderyServices'}} = map { $_->name(), $_->description() } openprint::ServiceType::find('view_visible'=>1,'category'=>'Bindery');
+		%{$$variable{'BinderyServices'}} = map { $_->name(), $_->description() } openprint::ServiceType->find('view_visible'=>1,'category'=>'Bindery');
 		foreach my $Project ( @{$$variable{'Projects'}} ) {
 			next if sets::isin( $Project->status(), [ 'Incomplete', 'Deleted','Cancelled' ] );
 			my $services = $Project->services();
@@ -93,7 +93,7 @@
 	} elsif ( $param{'ddmEmployee'} ne 'All' ) {
 		$params{'id'} = $param{'ddmEmployee'};
 	} # end if
-	my @Users = openprint::User::find( %params );
+	my @Users = openprint::User->find( %params );
 
 	foreach my $User ( @Users ) {
 		

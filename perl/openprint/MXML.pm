@@ -88,7 +88,7 @@ sub new {
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_id = $signatures[$i];
 		my $sig_specs = openprint::service::get_specs_ref( $P, $sig_id );
-		my @equipment = openprint::Equipment::find('strid'=>$$sig_specs{'ddmPress'.$P->ordered_quantity_index()});
+		my @equipment = openprint::Equipment->find('strid'=>$$sig_specs{'ddmPress'.$P->ordered_quantity_index()});
 		my $Equipment;
 		if ( @equipment ) {
 			$Equipment = shift @equipment;
@@ -239,7 +239,7 @@ sub new {
 
 		if ( $services{$binding} ) {
 			my $binding_specs = openprint::service::get_specs_ref( $P->id(), $services{$binding}[0] );
-			my @equipment = openprint::Equipment::find('strid'=>$$binding_specs{'ddmEquipment'.$P->ordered_quantity_index()});
+			my @equipment = openprint::Equipment->find('strid'=>$$binding_specs{'ddmEquipment'.$P->ordered_quantity_index()});
 			$Binder = shift @equipment;
 		} # end if
 		if ( $Binder ) {

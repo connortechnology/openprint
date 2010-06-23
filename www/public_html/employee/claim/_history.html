@@ -1,17 +1,17 @@
 <? eval (
 	if ( $param{'claim_id'} ) {
-		@{$$variable{'Claims'}} = openprint::Claim::find( 
+		@{$$variable{'Claims'}} = openprint::Claim->find( 
 			'id'=>$param{'claim_id'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'deleted'=>[1,0],
 			'order' => 'id desc');
 	} elsif ( $param{'docket'} ) {
-		@{$$variable{'Claims'}} = openprint::Claim::find( 
+		@{$$variable{'Claims'}} = openprint::Claim->find( 
 			'docket'=>$param{'docket'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'order' => 'id desc');
 	} elsif ( $param{'manifest_id'} ) {
-		@{$$variable{'Claims'}} = openprint::Claim::find( 
+		@{$$variable{'Claims'}} = openprint::Claim->find( 
 			'manifest_id'=>$param{'manifest_id'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'order' => 'id desc');
@@ -26,7 +26,7 @@
 		$search{'created_by'} = $session{'/employee/claim/history.html?created_by'} if $session{'/employee/claim/history.html?created_by'};
 
 		@{$$variable{'Claims'}} = ();
-		foreach my $Claim ( openprint::Claim::find( %search ) ) {
+		foreach my $Claim ( openprint::Claim->find( %search ) ) {
 			next if $session{'/employee/claim/history.html?status'} eq 'Y' and $Claim->status() ne '1';
 			next if $session{'/employee/claim/history.html?status'} eq 'N' and $Claim->status() ne '0';
 			next if $session{'/employee/claim/history.html?status'} eq 'U' and $Claim->status() ne '';

@@ -1,13 +1,10 @@
 <? eval (
-	require Date::Parse;
-	require Date::Format;
-
 	@{$$variable{'Payments'}} = ();
-	foreach my $Payment ( openprint::Payment::find( 
-		'received_on_start'	=> sprintf('%.4d-%.2d-%.2d', @openprint::session{'/payment/history.html?received_on_start_year','/payment/history.html?received_on_start_month','/payment/history.html?received_on_start_day'} ),
-		'received_on_end'	=> sprintf('%.4d-%.2d-%.2d', @openprint::session{'/payment/history.html?received_on_end_year','/payment/history.html?received_on_end_month','/payment/history.html?received_on_end_day'} ),
-		'payor_id'		=> $openprint::session{'/payment/history.html?company_id'},
-		'recipient_id'		=> $openprint::session{'company_id'},
+	foreach my $Payment ( openprint::Payment->find( 
+		'received_on_start'	=> sprintf('%.4d-%.2d-%.2d', @session{'/payment/history.html?received_on_start_year','/payment/history.html?received_on_start_month','/payment/history.html?received_on_start_day'} ),
+		'received_on_end'	=> sprintf('%.4d-%.2d-%.2d', @session{'/payment/history.html?received_on_end_year','/payment/history.html?received_on_end_month','/payment/history.html?received_on_end_day'} ),
+		( $session{'/payment/history.html?company_id'} ? ( 'payor_id'		=> $session{'/payment/history.html?company_id'} ) : () ),
+		'recipient_id'		=> $session{'company_id'},
 		'order'				=> 'id',
 		) ) {
 		push @{$$variable{'Payments'}}, $Payment;
@@ -36,22 +33,22 @@
 		</tr>
 		<? while ( $$variable{'Payment'} = shift @{$$variable{'Payments'}}; ) ?>
 		<? eval ( 
-			$$variable{'conversion_rate'} = $$variable{'Payment'}->Currency()->conversions( $openprint::session{'Currency_id'} );
+			$$variable{'conversion_rate'} = $$variable{'Payment'}->Currency()->conversions( $session{'Currency_id'} );
 		) ?>
 		<tr title="<? echo ( $$variable{'Payment'}->description() ) ?>" <?rowclass?> onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');"> 
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( $$variable{'Payment'}->id(); ) ?></a></td>
-			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( Date::Format::time2str( '%Y-%m-%d', Date::Parse::str2time( $$variable{'Payment'}->received_on() ) ); ) ?></a></td>
+			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Payment'}->received_on() ) ); ) ?></a></td>
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->Payor()->name(); ) ?></a></td>
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->method(); ) ?></a></td>
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->transaction_id(); ) ?></a></td>
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->description(); ) ?></a></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Payment'}->amount() ); ) ?></td>
-			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Payment'}->remaining() ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Payment'}->amount() ); ) ?></td>
+			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Payment'}->remaining() ); ) ?></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Payment'} = shift @{$$variable{'Payments'}}; ) ?>
 	</table>
-	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $openprint::session{'Currency_id'} )->name(); ) ?></span>
+	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
 <span class="unprintable" style="float: right;">
 <? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>

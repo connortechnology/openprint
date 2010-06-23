@@ -25,7 +25,7 @@ $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, %sql_server );
 
 my $ac = sql::start_transaction( $dbh );
-foreach my $FS ( openprint::FoldSpecification::find() ) {
+foreach my $FS ( openprint::FoldSpecification->find() ) {
 	if ( $$FS{'weight_units'} eq 'gsm' ) {
 		$log->debug("Converting $$FS{min_weight} to $$FS{max_weight} gsm to " . openprint::Paper::gsm_to_weight( $$FS{min_weight} ) . ' to ' . openprint::Paper::gsm_to_weight( $$FS{max_weight} ) . 'lbs' );
 		$$FS{min_weight} = openprint::Paper::gsm_to_weight( $$FS{min_weight} );

@@ -28,6 +28,7 @@ $serial = 'materialprices_id_seq';
 );
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	my $sql = 'SELECT * FROM tbl_Material_Prices WHERE 1>0';
 	my @values;

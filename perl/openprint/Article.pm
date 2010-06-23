@@ -54,6 +54,7 @@ $serial = 'articles_id_seq';
 );
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
@@ -109,25 +110,15 @@ sub find {
 		$openprint::log->warn("Error loading Articles: ($sql) (@values)" . $openprint::dbh->errstr );
 		return;
 	} elsif ($debug ) {
-		$openprint::log->debug("openprint::Article::find($sql) (@values)");
+		$openprint::log->debug("openprint::Article->find($sql) (@values)");
 	} # end if
 	return map { new openprint::Article( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM '.$table.' WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User::find('usergroup'=>'Quality Control Notifications');
+	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
 
 	if ( @Users ) {
 		my $From = new openprint::User( $session{'user_id'} );

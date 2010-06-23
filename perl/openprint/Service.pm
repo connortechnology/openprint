@@ -77,10 +77,11 @@ sub delete {
 sub prices {
 	my $self = shift;
 
-	return openprint::ServicePrice::find( 'service_id'=>$$self{id} );
+	return openprint::ServicePrice->find( 'service_id'=>$$self{id} );
 } # end sub prices
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	my $sql = 'SELECT * FROM Services WHERE 1>0';
 	my @values;

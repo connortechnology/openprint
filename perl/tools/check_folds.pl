@@ -25,8 +25,8 @@ $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, %sql_server );
 
 my $ac = sql::start_transaction( $dbh );
-foreach my $Fold ( openprint::Fold::find() ) {
-	foreach my $FS ( openprint::FoldSpecification::find('Fold'=>$Fold) ) {
+foreach my $Fold ( openprint::Fold->find() ) {
+	foreach my $FS ( openprint::FoldSpecification->find('Fold'=>$Fold) ) {
 		if ( $$FS{'interpolate'} and ( $$FS{min_weight} != $$FS{max_weight} ) ) {
 			$log->error( sprintf('Fold %s on %s has invalid interpolate/min_weight/max_weight settings', $Fold->name(), $Fold->Equipment()->name() ) );
 			last;

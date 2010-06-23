@@ -24,7 +24,7 @@
     $$variable{'price'} = $$variable{'Order'}->Currency()->convert_from( $$variable{'Product'}->price() );
 
     my $shipping_html;
-    my @ShippingServices = openprint::ServiceType::find('category'=>'Shipping');
+    my @ShippingServices = openprint::ServiceType->find('category'=>'Shipping');
     $$variable{'Project'} = $$variable{'Product'}->Project();
     my $services = $$variable{'Product'}->Project()->services();
     foreach my $ServiceType ( @ShippingServices ) {

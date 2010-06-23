@@ -21,7 +21,7 @@ $log = new logger( 'warn' );
 $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, ('database'=>$ARGV[0], 'driver'=>'Pg','login'=>$ARGV[1], 'password'=>$ARGV[2]) );
 my %company_names;
-foreach my $C ( openprint::Company::find() ) {
+foreach my $C ( openprint::Company->find() ) {
 	my $unaccented = Text::Unaccent::unac_string('LATIN1', $C->name() );
 	if ( $unaccented ne $C->name() ) {
 $log->error('Unaccenting ' . $C->name() . ' to ' . $unaccented );
@@ -34,15 +34,15 @@ $log->error('Unaccenting ' . $C->name() . ' to ' . $unaccented );
 
 foreach my $name ( sort keys %company_names ) {
 	#next if ! $name;
-	my @dups = openprint::Company::find('name'=>$name,'postalcode'=>$company_names{$name} );
+	my @dups = openprint::Company->find('name'=>$name,'postalcode'=>$company_names{$name} );
 	if ( @dups > 1 ) {
 		$log->error('Duplicate company found: (' . $name . ') ' . @dups . ' dups found' );
 		my $count = 1;
 		foreach my $C ( @dups ) {
-			my @users = openprint::User::find('company_id'=>$C->id());
-			my @projects = openprint::Project::find('company_id'=>$C->id());
-			my @orders = openprint::Order::find('company_id'=>$C->id());
-			my @quotes = openprint::Quote::find('company_id'=>$C->id());
+			my @users = openprint::User->find('company_id'=>$C->id());
+			my @projects = openprint::Project->find('company_id'=>$C->id());
+			my @orders = openprint::Order->find('company_id'=>$C->id());
+			my @quotes = openprint::Quote->find('company_id'=>$C->id());
 			if ( (@projects < 5 ) and (@orders == 0 ) and (@quotes == 0) ) {
 				$log->error('Deleting');
 				$C->delete();

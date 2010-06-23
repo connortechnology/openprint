@@ -16,7 +16,7 @@
 				<label class="radio" for="OverrideSpineWidth">Override</label>
 			</p>
 <? eval ( 
-	@{$$variable{'GlueTypes'}} = openprint::Material::find('category'=>'PerfectBound Glue');
+	@{$$variable{'GlueTypes'}} = openprint::Material->find('category'=>'PerfectBound Glue');
 ) ?>
 <? if ( @{$$variable{'GlueTypes'}} > 1 ) ?>
 		<p>
