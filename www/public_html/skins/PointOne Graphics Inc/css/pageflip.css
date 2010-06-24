@@ -1,5 +1,4 @@
 
-
 #fbFooter {
 	height: 49px;
 	background-color: #000000;
@@ -44,6 +43,80 @@ a.altlink:visited {
 	color: #DDDDDD;
 }
 
-a.altlink:hover{
+a.altlink:hover {
 	color: #FFFFFF;
+}
+
+.PageFlip ul {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+.PageFlip ul li {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+.PageFlip {
+	display: block;
+}
+.PageFlip .Edit {
+	display: block;
+}
+.PageFlip .Pages {
+	float: left;
+	width: 40%;
+}
+.PageFlip #Page {
+	position: absolute;
+	top: 100px;
+	right: 10px;
+	width: 660px;
+	border: 1px solid black;
+}
+.PageFlip #Page img {
+	width: 640px;
+	margin: 10px;
+}
+
+#ClipTop {
+	position: absolute;
+	width: 100%;
+	top: 10px;
+	left: 0px;
+	right: 0px;
+	height: 1px;
+	background-color: black;
+	margin: 0px 2px 0px 2px;
+}
+
+#ClipBottom {
+	position: absolute;
+	width: 100%;
+	bottom: 10px;
+	left: 0px;
+	right: 0px;
+	height: 1px;
+	background-color: black;
+	margin: 0px 2px 0px 2px;
+}
+#ClipLeft {
+	position: absolute;
+	width: 1px;
+	top: 0px;
+	bottom: 0px;
+	left: 10px;
+	height: 100%;
+	background-color: black;
+	margin: 2px 0px 2px 0px;
+}
+#ClipRight {
+	position: absolute;
+	width: 1px;
+	top: 0px;
+	bottom: 0px;
+	right: 10px;
+	height: 100%;
+	background-color: black;
+	margin: 2px 0px 2px 0px;
 }

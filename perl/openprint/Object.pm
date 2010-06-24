@@ -268,7 +268,7 @@ $openprint::log->debug("find_one @_ ");
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;
-	my @Results = eval($type.'::find(%params);');
+	my @Results = eval($type.'->find(%params);');
 	return $Results[0] if @Results;
 } # end sub find_one
 

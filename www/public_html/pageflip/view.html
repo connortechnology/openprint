@@ -4,8 +4,8 @@ flippingBook.pages = [
 	<? if ( $$variable{'PageFlip'}->id() ) ?>
 		<? echo (
 			my $html;
-			foreach my $page ( @{$$variable{'PageFlip'}->page_files()} ) {
-				$html .= '"/PageFlip/LR/'.$page.'",'."\n";
+			foreach my $Page ( $$variable{'PageFlip'}->Pages() ) {
+				$html .= '"/PageFlip/LR/'.$Page->filename().'",'."\n";
 			} # end foreach
 			return $html;
 		) ?>
@@ -52,6 +52,13 @@ flippingBook.create();
 -->
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
+<? if ( ( $$variable{'PageFlip'}->company_id() == $session{'company_id'} ) or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
+<p class="buttons">
+	<? echo ( join('',
+		ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', '/pageflip/edit.html?id='.$$variable{'PageFlip'}->id(), 'Edit' ),
+		); ) ?>
+</p>
+<? endif ( ( $$variable{'PageFlip'}->company_id() == $session{'company_id'} ) or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 <div id="fbContainer">
     	<a class="altlink" href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash"><div id="altmsg">Download Adobe Flash Player.</div></a>
     </div>
