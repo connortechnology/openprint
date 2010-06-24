@@ -1,0 +1,40 @@
+<form id="f1" name="f1" method="post" action="/pageflip/view.html?id=<? echo ( $$variable{'PageFlip'}->id() ) ?>">
+	<input type="hidden" name="command" />
+	<p class="buttons">
+		<? echo ( ssi::writeButton($log, $dbh, 'save', 'save.gif', q`f1.command.value='Save';f1.submit();`, '', 'Save' ); ) ?>
+	<p>
+		<label>Resolution:</label>
+		Source: 
+		<input type="text" name="src_width" id="src_width" value="<? echo ( $$variable{'Page'}->src_width() ) ?>" size="4" />
+		x
+		<input type="text" name="src_height" id="src_height" value="<? echo ( $$variable{'Page'}->src_height() ) ?>" size="4" />
+		Output:
+		<input type="text" name="width" id="width" value="<? echo ( $$variable{'Page'}->width() ) ?>" size="4" onkeyup="update_resolution(this);" />
+		x
+		<input type="text" name="height" id="height" value="<? echo ( $$variable{'Page'}->height() ) ?>" size="4" onkeyup="update_resolution(this);" />
+	</p>
+	<p>
+		<label>Clipping Box:</label>
+		Top: <input type="text" name="clip_top" id="clip_top" value="<? echo ( 1*$$variable{'Page'}->clip_top() ) ?>" size="4" />
+		Left: <input type="text" name="clip_left" id="clip_left" value="<? echo ( 1*$$variable{'Page'}->clip_left() ) ?>" size="4" />
+		x
+		Bottom: <input type="text" name="clip_bottom" id="clip_bottom" value="<? echo ( 1*$$variable{'Page'}->clip_bottom() ) ?>" size="4" />
+		Right: <input type="text" name="clip_right" id="clip_right" value="<? echo ( 1*$$variable{'Page'}->clip_right() ) ?>" size="4" />
+	</p>
+	<div id="Page">
+		<img id="PageImage" src="/PageFlip/LR/<? echo ( $$variable{'Pages'}[0]->filename() ) ?>"/>
+		<div id="ClipBox">
+			<div id="ClipTop"></div>
+			<div id="ClipBottom"></div>
+			<div id="ClipLeft"></div>
+			<div id="ClipRight"></div>
+		</div>
+	</div>
+</form>
+<script type="text/javascript">
+		$('ClipTop').observe( "mousedown", start_drag );
+		$('ClipBottom').observe( "mousedown", start_drag );
+		$('ClipLeft').observe( "mousedown", start_drag );
+		$('ClipRight').observe( "mousedown", start_drag );
+		document.observe( "mouseup", stop_drag );
+</script>

@@ -1,0 +1,86 @@
+<script type="text/javascript">
+	var dragged_element;
+	var delta_x = 0;
+	var delta_y = 0;
+	function start_drag( e ) {
+		var element = Event.element(e);  
+		Event.observe($('Page'), "mousemove", drag, false);  
+		dragged_element = element;
+		delta_x = e.pointerX();
+		delta_y = e.pointerY();
+		e.stop();  
+	}
+	function stop_drag( e ) {
+		Event.stopObserving($('Page'), "mousemove", drag, false);
+		e.stop();
+	}
+	function drag( e ) {
+		var image_layout = $('PageImage').getLayout();
+		if ( dragged_element.id == 'ClipLeft' || dragged_element.id == 'ClipRight' ) {
+			var newx = dragged_element.getLayout().get('left') + ( e.pointerX() - delta_x ) - 1;
+			delta_x = e.pointerX();
+			if ( newx < 0 ) newx = 0;
+			dragged_element.style.left = newx+'px';
+			$('clip_left').value = $('ClipLeft').getLayout().get('left') - ( image_layout.get('left') + image_layout.get('margin-left') );
+			$('clip_right').value = $('ClipRight').getLayout().get('left') - ( image_layout.get('left') + image_layout.get('margin-left') );
+		} else if ( dragged_element.id == 'ClipTop' ) {
+			var newy = dragged_element.getLayout().get('top') + ( e.pointerY() - delta_y ) - 1;
+			delta_y = e.pointerY();
+			if ( newy < 0 ) newy = 0;
+			dragged_element.style.top = newy+'px';
+
+			$('clip_top').value = $('ClipTop').getLayout().get('top') - ( image_layout.get('top') + image_layout.get('margin-top') ) ;
+		} else {
+			var newy = dragged_element.getLayout().get('bottom') - ( e.pointerY() - delta_y ) - 1;
+			delta_y = e.pointerY();
+			if ( newy < 0 ) newy = 0;
+			dragged_element.style.bottom = newy+'px';
+			$('clip_bottom').value = $('ClipBottom').getLayout().get('top') - ( image_layout.get('top') + image_layout.get('margin-top') );
+		} // end if
+		e.stop();  
+	} 
+	function update_resolution( input ) {
+		input.value = input.value.replace(/\D/g, '');
+		var ratio = input.form.src_width.value / input.form.src_height.value;
+		if ( input.id == 'width' ) {
+			input.form.height.value = parseInt(input.value*ratio);
+		} else {
+			input.form.width.value = parseInt(input.value/ratio);
+		} // end if
+		var Image = $('PageImage');
+		var ImageLayout = Image.getLayout();
+
+		$('Page').style.width = ( parseInt(input.form.width.value) + parseInt(ImageLayout.get('margin-left')) + parseInt(ImageLayout.get('margin-right')) ) + 'px';
+		Image.style.width = input.form.width.value + 'px';
+
+	} // end function update_resolution
+</script>
+<div id="PageFlip" class="PageFlip">
+<div id="debug"></div>
+	<div class="Pages">
+		<ul>
+	<? echo (
+		if ( $$variable{'PageFlip'}->Pages() ) {
+			@{$$variable{'Pages'}} = $$variable{'PageFlip'}->Pages();
+			my $html;
+			foreach my $Page ( $$variable{'PageFlip'}->Pages() ) {
+				$html .= sprintf(q`<li onclick="new Ajax.Updater( 'PageView', '_page.html', { parameters: { page_id: %1$d, pageflip_id: %2$d } } );"> Page %3$d %4$s </li>`, 
+					$Page->id(), $Page->pageflip_id(), $Page->page(), $Page->filename() );
+			} # end foreach Page
+			return $html;
+		} else {
+			return 'No pages in book.';
+		} # end if
+	) ?>
+		</ul>
+	</div>
+	<div id="PageView">
+	<? if ( $$variable{'PageFlip'}->Pages() ) ?>
+	<? eval ( 
+		my @pages = $$variable{'PageFlip'}->Pages();
+		$$variable{'Page'} = $pages[0];
+	) ?>
+	<!--#include virtual="_page.html"-->
+	<? endif ( $$variable{'PageFlip'}->Pages() ) ?>
+	</div>
+</div>
