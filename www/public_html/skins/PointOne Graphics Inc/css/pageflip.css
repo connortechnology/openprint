@@ -65,58 +65,62 @@ a.altlink:hover {
 }
 .PageFlip .Pages {
 	float: left;
-	width: 40%;
+	width: 30%;
+	border: 1px solid black;
+}
+.PageFlip img {
+	width: 640px;
+	position: absolute;
+	top: 140px;
+	right: 10px;
+	z-index: 9;
 }
 .PageFlip #Page {
 	position: absolute;
-	top: 100px;
+	top: 140px;
 	right: 10px;
-	width: 660px;
-	border: 1px solid black;
-}
-.PageFlip #Page img {
 	width: 640px;
-	margin: 10px;
+	z-index: 10;
 }
 
-#ClipTop {
+#CropTop {
 	position: absolute;
-	width: 100%;
-	top: 10px;
 	left: 0px;
+	top: 0px;
 	right: 0px;
 	height: 1px;
 	background-color: black;
-	margin: 0px 2px 0px 2px;
+	margin: 0px -10px 0px -10px;
+	z-index: 11;
 }
 
-#ClipBottom {
+#CropBottom {
 	position: absolute;
-	width: 100%;
-	bottom: 10px;
 	left: 0px;
+	bottom: 0px;
 	right: 0px;
 	height: 1px;
 	background-color: black;
-	margin: 0px 2px 0px 2px;
+	margin: 0px -10px 0px -10px;
+	z-index: 11;
 }
-#ClipLeft {
+#CropLeft {
+	position: absolute;
+	width: 1px;
+	top: 0px;
+	left: 0px;
+	bottom: 0px;
+	background-color: black;
+	margin: -10px 0px -10px 0px;
+	z-index: 11;
+}
+#CropRight {
 	position: absolute;
 	width: 1px;
 	top: 0px;
 	bottom: 0px;
-	left: 10px;
-	height: 100%;
+	right: 0px;
 	background-color: black;
-	margin: 2px 0px 2px 0px;
-}
-#ClipRight {
-	position: absolute;
-	width: 1px;
-	top: 0px;
-	bottom: 0px;
-	right: 10px;
-	height: 100%;
-	background-color: black;
-	margin: 2px 0px 2px 0px;
+	margin: -10px 0px -10px 0px;
+	z-index: 11;
 }

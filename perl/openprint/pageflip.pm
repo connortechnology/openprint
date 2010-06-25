@@ -13,7 +13,7 @@ require openprint::PageFlip;
 require openprint::PageFlip_Page;
 
 sub view {
-	$variable{'PageFlip'} = new openprint::PageFlip($param{'id'});
+	$variable{'PageFlip'} = new openprint::PageFlip($param{'pageflip_id'});
 
 	if ( $param{'docket'} ) {
 		my $PageFlip = openprint::PageFlip->find_one('docket'=>$param{'docket'});
@@ -36,7 +36,20 @@ sub view {
 		$variable{'error'} .= get_files( $variable{'PageFlip'} );
 	} # end if
 	if ( $param{'command'} eq 'Save' ) {
-		
+		my $Page = new openprint::PageFlip_Page( $param{'page_id'} );
+		$variable{'error'} .= $Page->save(\%param);
+		$variable{'error'} .= $Page->writeImage();
+		if ( $param{'save_to_all'} ) {
+			foreach my $P ( $variable{'PageFlip'}->Pages() ) {
+				next if $P->id() == $Page->id();
+				next if $P->src_width() != $Page->src_width();
+				next if $P->src_height() != $Page->src_height();
+				next if $P->width() != $Page->width();
+				next if $P->height() != $Page->height();
+				$P->save({'crop_box'=>$Page->crop_box()});
+				$P->writeImage();
+			} # end foreach P
+		} # end if
 	} # end if
 } # end sub view
 
@@ -78,14 +91,12 @@ sub get_files {
 } # end sub get_files
 
 sub edit {
-	$variable{'PageFlip'} = new openprint::PageFlip($param{'id'});
-	foreach my $Page ( $variable{'PageFlip'}->Pages() ) {
-		if ( ! ( $Page->width() and $Page->height() ) ) {
-			my $Image = $Page->getImage();
-			$Page->save({'width'=>$Image->Get('width'), 'height'=>$Image->Get('height') }) if $Image;
-		} # end if
-	} # end foreach Page
+	$variable{'PageFlip'} = new openprint::PageFlip($param{'pageflip_id'});
 } # end sub edit
+
+sub _page {
+	$variable{'Page'} = new openprint::PageFlip_Page($param{'page_id'});
+} # end sub _page
 
 1;
 __END__

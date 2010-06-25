@@ -5,7 +5,10 @@ flippingBook.pages = [
 		<? echo (
 			my $html;
 			foreach my $Page ( $$variable{'PageFlip'}->Pages() ) {
-				$html .= '"/PageFlip/LR/'.$Page->filename().'",'."\n";
+				if ( ! -e $Page->dst_path().$Page->dst_filename() ) {
+					$$variable{'error'} .= $Page->writeImage();
+				} # end if
+				$html .= '"/images/PageFlip/'.$$variable{'PageFlip'}->docket().'/'.$Page->dst_filename().'",'."\n";
 			} # end foreach
 			return $html;
 		) ?>
@@ -55,7 +58,7 @@ flippingBook.create();
 <? if ( ( $$variable{'PageFlip'}->company_id() == $session{'company_id'} ) or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 <p class="buttons">
 	<? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', '/pageflip/edit.html?id='.$$variable{'PageFlip'}->id(), 'Edit' ),
+		ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', '/pageflip/edit.html?pageflip_id='.$$variable{'PageFlip'}->id(), 'Edit' ),
 		); ) ?>
 </p>
 <? endif ( ( $$variable{'PageFlip'}->company_id() == $session{'company_id'} ) or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
