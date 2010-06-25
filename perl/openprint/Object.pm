@@ -83,13 +83,13 @@ $log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE '
 sub save {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
-if ( $data ) {
-foreach my $k ( keys %$data ) {
-$log->debug("$type ::save $k => $$data{$k}");
-}
-} else {
-$log->debug("No data");
-}
+#if ( $data ) {
+#foreach my $k ( keys %$data ) {
+#$log->debug("$type ::save $k => $$data{$k}");
+#}
+#} else {
+#$log->debug("No data");
+#}
 	$self->set( $data ? $data : {} );
 #if ( $data ) {
 #foreach my $k ( keys %$data ) {
@@ -268,7 +268,7 @@ $openprint::log->debug("find_one @_ ");
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;
-	my @Results = eval($type.'::find(%params);');
+	my @Results = eval($type.'->find(%params);');
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -283,6 +283,10 @@ sub AUTOLOAD {
 	if ( @_ ) {
 		return $self->{$name} = shift;
 	} else {
+		my $fields = eval '\%'.$type.'::fields';
+		if ( exists $$fields{lc $name . '_id'} ) {
+			return new("openprint::$name", $$self{lc $name . '_id'});
+		} # end if
 		return $self->{$name};
 	} # end if
 } # end sub AUTOLOAD
