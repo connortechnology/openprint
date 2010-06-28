@@ -60,17 +60,20 @@ sub taxes {
 		my $ac = sql::start_transaction( $dbh );
 		foreach my $Tax ( openprint::Tax->find() ) {
 			$variable{'error'} .= $Tax->save({
-				'federaltax_rate'	=>	$param{'federaltax_rate-'.$Tax->id()},
-				'statetax_rate'		=>	$param{'statetax_rate-'.$Tax->id()},
+				'name'			=>	$param{'name-'.$Tax->id()},
+				'rate'			=>	$param{'rate-'.$Tax->id()},
+				'period_start'	=> ( Date::Calc::check_date( @param{'period_start-'.$$Tax{id}.'_year','period_start-'.$$Tax{id}.'_month','period_start-'.$$Tax{id}.'_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_start-'.$$Tax{id}.'_year','period_start-'.$$Tax{id}.'_month','period_start-'.$$Tax{id}.'_day'} ) : undef ),
+				'period_end'	=> ( Date::Calc::check_date( @param{'period_end-'.$$Tax{id}.'_year','period_end-'.$$Tax{id}.'_month','period_end-'.$$Tax{id}.'_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_end-'.$$Tax{id}.'_year','period_end-'.$$Tax{id}.'_month','period_end-'.$$Tax{id}.'_day'} ) : undef ),
 				});
 		} # end foreach Tax
-		if ( $param{'federaltax_rate-New'} or $param{'statetax_rate-New'} ) {
+		if ( $param{'rate-New'} ) {
 			my $Tax = new openprint::Tax();
 			$variable{'error'} .= $Tax->save({
-				'federaltax_rate'	=>	$param{'federaltax_rate-New'},
-				'statetax_rate'		=>	$param{'statetax_rate-New'},
-				'country'			=>	$param{'country-New'},
-				'state'				=>	$param{'state-New'},
+				'rate'			=>	$param{'rate-New'},
+				'country'		=>	$param{'country-New'},
+				'state'			=>	$param{'state-New'},
+				'period_start'	=> ( Date::Calc::check_date( @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_start-New_year','period_start-New_month','period_start-New_day'} ) : undef ),
+				'period_end'	=> ( Date::Calc::check_date( @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) ? sprintf('%.4d-%.2d-%.2d', @param{'period_end-New_year','period_end-New_month','period_end-New_day'} ) : undef ),
 				});
 		} # end if New Tax
 

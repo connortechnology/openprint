@@ -68,10 +68,45 @@ if ( sets::isin( 'invoiced_products', \@tables ) ) {
 		$dbh->do('ALTER TABLE invoiced_products add po text') if ! exists $$data{'po'};
 	} # end if
 } # end if
+if ( sets::isin( 'hosts', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM hosts LIMIT 1', {} );
+	if ( $data ) {
+		$dbh->do('ALTER TABLE hosts add block boolean') if ! exists $$data{'block'};
+		$dbh->do('ALTER TABLE hosts add monitor boolean') if ! exists $$data{'monitor'};
+	} # end if
+} # end if
 
 foreach my $Invoice ( openprint::Invoice->find() ) {
 } # end foreach Invoice
 
+if ( sets::isin( 'taxes', \@tables ) ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM taxes LIMIT 1', {} );
+	if ( $data ) {
+		if ( ! exists $$data{'name'} ) {
+			$dbh->do('ALTER TABLE taxes add name text');
+		} # end if
+		if ( ! exists $$data{'rate'} ) {
+			$dbh->do('ALTER TABLE taxes add rate float');
+			$dbh->do('UPDATE Taxes set rate=federaltax where federaltax IS NOT NULL');
+			$dbh->do('UPDATE Taxes set rate=statetax where statetax IS NOT NULL');
+		} # end if
+		if ( ! exists $$data{'period_start'} ) {
+			$dbh->do('ALTER TABLE taxes add period_start date');
+		} # end if
+		if ( ! exists $$data{'period_end'} ) {
+			$dbh->do('ALTER TABLE taxes add period_end date');
+		} # end if
+		if ( exists $$data{'federaltax'} ) {
+			$dbh->do('ALTER TABLE taxes DROP column federaltax');
+		}
+		if ( exists $$data{'statetax'} ) {
+			$dbh->do('ALTER TABLE taxes DROP column statetax');
+		}
+		if ( exists $$data{'harmonisedtax'} ) {
+			$dbh->do('ALTER TABLE taxes DROP column harmonisedtax');
+		}
+	} # end if data
+} # end if
 $dbh->commit();
 $dbh->disconnect();
 1;

@@ -19,25 +19,24 @@ $table = 'Taxes';
 $serial = 'taxes_id_seq';
 
 %fields = (
-	'id'				=>	'id',
-	'federaltax_rate'	=>	'federaltax',
-	'statetax_rate'		=>	'statetax',
-	'harmonizedtax_rate'	=>	'harmonizedtax',
-	'state'				=>	'state',
-	'country'			=>	'country',
+	'id'			=>	'id',
+	'rate'			=>	'rate',
+	'state'			=>	'state',
+	'country'		=>	'country',
+	'period_start'	=>	'period_start',
+	'period_end'	=>	'period_end',
+	'name'			=>	'name',
 );
 
 %transforms = (
 	'id'					=>	[ 's/\D//g' ],
-	'federaltax_rate'		=>	[ 's/[^\d\.]//g' ],
-	'statetax_rate'			=>	[ 's/[^\d\.]//g' ],
-	'harmonizedtax_rate'	=>	[ 's/[^\d\.]//g' ],
+	'rate'		=>	[ 's/[^\d\.]//g' ],
 );
 
 %defaults = (
-	'federaltax_rate'		=>	undef,
-	'statetax_rate'			=>	undef,
-	'harmonizedtax_rate'	=>	undef,
+	'rate'		=>	undef,
+	'period_start'	=>	undef,
+	'period_end'	=>	undef,
 );
 
 1;
