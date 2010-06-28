@@ -463,9 +463,9 @@ sub send_cancellation_notice {
 	my %order;
 	$order{'Order'} = $self;
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_cancellation_notice.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$order{'ReplacementText'}, \%order );
+	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%order ) );
+	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	my $Me = new openprint::User( $session{'user_id'} );
