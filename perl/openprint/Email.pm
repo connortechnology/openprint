@@ -39,6 +39,7 @@ sub send {
 	} # end if
 
     my %mail = (
+			BCC		=>	$params{'BCC'},
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'},
             FROM    => $$self{'from'},
             SUBJECT => $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'},

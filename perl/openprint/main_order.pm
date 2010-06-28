@@ -62,7 +62,6 @@ sub information {
 		} # end if OrderID
 	} elsif ( $param{'btnFunction'} eq 'Process Order' ) {
 		if ( $param{'quote_id'} ) {
-$openprint::log->debug("Making order from quote");
 			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{'quote_id'} );
 		} else {
 			my $project_index = $param{'ProjectIndex'};
@@ -150,7 +149,7 @@ $openprint::log->debug("Making order from quote");
 			if ( $User->company_id() != $session{'company_id'} ) {
 				my @Users = openprint::User->find( 
 						'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
-						'order'=>'lower(LastName),lower(FirstName)'
+						'order'=>'lower(lastname),lower(firstname)'
 						);
 				$User = $Users[0] if @Users;
 			} # end if

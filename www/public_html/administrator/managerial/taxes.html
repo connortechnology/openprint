@@ -10,12 +10,12 @@
 			<th class="rate">Rate (%)</th>
 		</tr>
 		<? eval (
-				@{$$variable{'TAXES'}} = openprint::Tax->find('order'=>'lower(state)');
+				@{$$variable{'TAXES'}} = openprint::Tax->find('order'=>'period_start, lower(state)');
 				) ?>
 		<? while ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
 		<tr>
 			<td><input type="checkbox" id="tax_ids<? echo ( $$variable{'Tax'}->id() ) ?>" name="tax_ids" value="<? echo ( $$variable{'Tax'}->id() ) ?>" /></td>
-			<td class="name"><input type="text" id="name-<? echo ( $$variable{'Tax'}->id() ) ?>" name="name-<? echo ($$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->name() ) ?>" /></td>
+			<td class="name"><input type="text" id="name-<? echo ( $$variable{'Tax'}->id() ) ?>" name="name-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->name() ) ?>" /></td>
 			<td class="period">
 				<? echo ( ssi::date_select( 'period_start-'.$$variable{'Tax'}->id(), [ split('-',$$variable{'Tax'}->period_start())] ); ) ?> to 
 				<? echo ( ssi::date_select( 'period_end-'.$$variable{'Tax'}->id(), [ split('-',$$variable{'Tax'}->period_end())] ); ) ?>
@@ -31,16 +31,13 @@
 				} # end if
 				) ?></td>
 			<td class="rate"> 
-				<input type="text" name="rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->federaltax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-			</td>
-			<td> 
-				<input type="text" name="harmonizedtax_rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->harmonizedtax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+				<input type="text" name="rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</td>
 		</tr>
 		<? endwhile ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
 		<tr class="totals">
 			<td>&nbsp;</td>
-			<td class="name"><input type="text" id="name-New" value="" /></td>
+			<td class="name"><input type="text" id="name-New" name="name-New" /></td>
 			<td class="period">
 				<? echo ( ssi::date_select( 'period_start-New',[] ); ) ?> to 
 				<? echo ( ssi::date_select( 'period_end-New',[] ); ) ?>

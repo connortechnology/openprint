@@ -7,7 +7,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %fields %defaults %transforms $no_cache 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
+my $debug = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -251,43 +251,12 @@ sub Creator {
 	require openprint::User;
 	return new openprint::User( $_[0]{'created_by'} );
 } # end sub Creator
-sub find {
-	my $type = shift;
-    my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
-
-	my %params = @_;
-	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
-	my @values;
-
-	foreach my $k ( keys %params ) {
-		next if sets::isin( $k,[ 'order','limit' ] );
-		if ( ref $params{$k} eq 'ARRAY' ) {
-			$sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-			push @values, @{$params{$k}};
-		} else {
-			$sql .= " AND $fields{$k}=?";
-			push @values, $params{$k};
-		} # end if
-	} # end foreach k
-    $sql .= " ORDER BY $params{'order'}" if $params{'order'};
-    $sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-
-    my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-    if ( ! $data ) {
-        $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
-    } elsif ( ! @$data ) {
-        $openprint::log->debug("No $type ($sql) (@values) " );
-    } elsif ( eval "$type::debug" ) {
-        $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
-    } # end if
-    return map { $type->new( $_->{index}, $_ ) } @$data;
-} # end sub find
 
 sub find {
     my $type = shift;
     my $table = eval '$'.$type.'::table';
     my %fields = eval '%'.$type.'::fields';
+	my $debug = eval '$'.$type.'::debug';
 
     my %params = @_;
     my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
@@ -337,10 +306,20 @@ sub find {
 				push @values, $params{$k.'_<='};
 				delete $params{$k.'_<='};
 			} # end if
+			if ( exists $params{$k.'_null_or_<='} ) {
+				$sql .= " AND ( $fields{$k} <= ? OR $fields{$k} IS NULL )";
+				push @values, $params{$k.'_null_or_<='};
+				delete $params{$k.'_null_or_<='};
+			} # end if
 			if ( exists $params{$k.'_>='} ) {
 				$sql .= " AND $fields{$k} >= ?";
 				push @values, $params{$k.'_>='};
 				delete $params{$k.'_>='};
+			} # end if
+			if ( exists $params{$k.'_null_or_>='} ) {
+				$sql .= " AND ( $fields{$k} >= ? OR $fields{$k} IS NULL )";
+				push @values, $params{$k.'_null_or_>='};
+				delete $params{$k.'_null_or_>='};
 			} # end if
 			if ( exists $params{$k.'_>'} ) {
 				$sql .= " AND $fields{$k} > ?";
@@ -351,6 +330,13 @@ sub find {
 				$sql .= " AND lower($fields{$k}) = ?";
 				push @values, lc $params{$k.'_lc'};
 				delete $params{$k.'_lc'};
+			} # end if
+			if ( defined $params{$k.'_null'} ) {
+				if ( $params{$k.'_null'} ) {
+					$sql .= " AND $fields{$k} IS NULL";
+				} else {
+					$sql .= " AND $fields{$k} IS NOT NULL";
+				} # end if
 			} # end if
 		} # end foreach
 	} # end if
@@ -385,20 +371,20 @@ sub find {
     my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
     if ( ! $data ) {
         $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
-    } elsif ( ( ! @$data ) and eval "$type::debug" ) {
+    } elsif ( ( ! @$data ) and $debug ) {
         $openprint::log->debug("No $type ($sql) (@values) " );
-    } elsif ( eval "$type::debug" ) {
+    } elsif ( eval $debug ) {
         $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
     } # end if
-    return map { $type->new( $_->{id}, $_ ) } @$data;
+    return map { $type->new( $_->{$fields{id}}, $_ ) } @$data;
 } # end sub find
 
 sub find_one {
-$openprint::log->debug("find_one @_ ");
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;
-	my @Results = eval($type.'::find(%params);');
+	my @Results = eval($type.'->find(%params);');
+$openprint::log->debug("$type ::find_one @_  # Results; " . @Results);
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -413,6 +399,12 @@ sub AUTOLOAD {
 	if ( @_ ) {
 		return $self->{$name} = shift;
 	} else {
+        my $fields = eval '\%'.$type.'::fields';
+        if ( $fields and exists $$fields{lc $name . '_id'} ) {
+			if ( eval '\%openprint::'.$name.'::fields' ) {
+				return new("openprint::$name", $$self{lc $name . '_id'});
+			} # end if
+        } # end if
 		return $self->{$name};
 	} # end if
 } # end sub AUTOLOAD

@@ -69,6 +69,7 @@ sub taxes {
 		if ( $param{'rate-New'} ) {
 			my $Tax = new openprint::Tax();
 			$variable{'error'} .= $Tax->save({
+				'name'			=>	$param{'name-New'},
 				'rate'			=>	$param{'rate-New'},
 				'country'		=>	$param{'country-New'},
 				'state'			=>	$param{'state-New'},

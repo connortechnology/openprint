@@ -13,6 +13,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 require openprint::Invoice;
 require openprint::Invoice_Interest;
+require openprint::Tax;
 
 sub history {
 

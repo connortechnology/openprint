@@ -1,12 +1,6 @@
 package openprint::InvoiceLog;
 @ISA = qw(openprint::Object);
 
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
 my $debug = 1;
 
 use strict;
@@ -30,10 +24,6 @@ $serial = 'invoice_logs_id_seq';
 %defaults = (
 	'created_on'	=> 'NOW()',
 );
-
-sub User {
-	return new openprint::User( $_[0]->user_id() );
-} # end sub User
 
 1;
 __END__

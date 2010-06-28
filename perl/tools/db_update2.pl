@@ -76,9 +76,6 @@ if ( sets::isin( 'hosts', \@tables ) ) {
 	} # end if
 } # end if
 
-foreach my $Invoice ( openprint::Invoice->find() ) {
-} # end foreach Invoice
-
 if ( sets::isin( 'taxes', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM taxes LIMIT 1', {} );
 	if ( $data ) {
@@ -89,6 +86,7 @@ if ( sets::isin( 'taxes', \@tables ) ) {
 			$dbh->do('ALTER TABLE taxes add rate float');
 			$dbh->do('UPDATE Taxes set rate=federaltax where federaltax IS NOT NULL');
 			$dbh->do('UPDATE Taxes set rate=statetax where statetax IS NOT NULL');
+			$dbh->do('UPDATE Taxes set rate=harmonizedtax where harmonizedtax IS NOT NULL');
 		} # end if
 		if ( ! exists $$data{'period_start'} ) {
 			$dbh->do('ALTER TABLE taxes add period_start date');
@@ -102,12 +100,56 @@ if ( sets::isin( 'taxes', \@tables ) ) {
 		if ( exists $$data{'statetax'} ) {
 			$dbh->do('ALTER TABLE taxes DROP column statetax');
 		}
-		if ( exists $$data{'harmonisedtax'} ) {
-			$dbh->do('ALTER TABLE taxes DROP column harmonisedtax');
+		if ( exists $$data{'harmonizedtax'} ) {
+			$dbh->do('ALTER TABLE taxes DROP column harmonizedtax');
 		}
 	} # end if data
 } # end if
-$dbh->commit();
+if ( ! sets::isin( 'invoice_taxes', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Invoice_Taxes.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
+$dbh->do("UPDATE companies set country='CA' WHERE country='Canada'");
+$dbh->do("UPDATE companies set state='ON' WHERE state='Ontario'");
+$dbh->do("UPDATE taxes set country='CA' WHERE country='Canada'");
+$dbh->do("UPDATE taxes set state='ON' WHERE state='Ontario'");
+if ( ! openprint::Invoice_Tax->find() ) {
+	my $ac = sql::start_transaction( $dbh );
+	foreach my $Invoice ( openprint::Invoice->find() ) {
+		my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM invoices WHERE id=? LIMIT 1', {}, $Invoice->id() );
+		foreach my $Tax ( openprint::Tax->find(
+					'country'			=>	$Invoice->Invoicee()->country(), 
+					'state'				=>	$Invoice->Invoicee()->state(), 
+					'period_start_null_or_<='	=>	$Invoice->created_on(),
+					'period_end_null_or_>='		=>	$Invoice->created_on(),
+			) ) {
+			my $new_amount;
+
+			if ( ( $Tax->name() eq 'GST' ) and ( $new_amount != $$data{'federaltax'} ) ) {
+				$new_amount = $$data{'federaltax'};
+			} elsif ( $Tax->name() eq 'PST' ) {
+				if ( new openprint::Company( $config{'owner'} )->pst_number() and ( $new_amount != $$data{'statetax'} ) ) {
+				$new_amount = $$data{'statetax'};
+				} # end if
+			} else {
+				$new_amount = sprintf('%.2f', $Invoice->subtotal() * ( $Tax->rate()/100 ) );
+			} # end if
+				
+			my $Invoice_Tax = new openprint::Invoice_Tax();
+			$_ = $Invoice_Tax->save({
+				'invoice_id'	=>	$Invoice->id(),
+				'tax_id'		=>	$Tax->id(),
+				'rate'			=>	$Tax->rate(),
+				'amount'		=>	$new_amount,
+			});
+			$log->warn( $_ ) if $_;
+		} # end foreach tax
+	} # end foreach Invoice
+	sql::end_transaction( $dbh, $ac );
+} # end if
 $dbh->disconnect();
 1;
 __END__
