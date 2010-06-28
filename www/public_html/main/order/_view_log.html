@@ -1,18 +1,20 @@
 <fieldset>
 	<legend>Modification History</legend>
 	<table class="List sortable" style="table-layout: auto;">
-		<tr>
-			<th align="left">Company</th>
-			<th align="left">User</th>
-			<th align="left" width="150">When</th>
-			<th align="left">Description</th>
-		</tr>
+		<thead>
+			<tr>
+				<th align="left">Company</th>
+				<th align="left">User</th>
+				<th class="When">When</th>
+				<th align="left">Description</th>
+			</tr>
+		</thead>
 		<? echo ( 
 			my $html;
 			my $rowclass;
 			@{$$variable{'OrderLog'}} = sql::execute( undef, undef, 'SELECT company_id, user_id, dtmwhen, description FROM Order_Log WHERE order_id=?', $param{'order_id'} );
 			while ( @$variable{'company_id','user_id','When','Description'} = splice @{$$variable{'OrderLog'}},0,4 ) {
-				$html .= sprintf('<tr%1$s><td>%2$s</td><td>%3$s</td><td>%4$s</td><td>%5$s</td></tr>', $rowclass, 
+				$html .= sprintf('<tr%1$s><td>%2$s</td><td>%3$s</td><td class="When">%4$s</td><td>%5$s</td></tr>', $rowclass, 
 					new openprint::Company( $$variable{'company_id'} )->name(), new openprint::User( $$variable{'user_id'} )->name(),
 					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'When'} ) ),
 					$$variable{'Description'},

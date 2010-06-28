@@ -1,7 +1,7 @@
 <? eval (
 	foreach my $p ( 'Side','index','Signature' ) {
-		if ( $openprint::param{$p} and ! $$variable{$p} ) {
-			$$variable{$p} = $openprint::param{$p};
+		if ( $param{$p} and ! $$variable{$p} ) {
+			$$variable{$p} = $param{$p};
 		} # end if
 	} # end foreach
 ) ?>

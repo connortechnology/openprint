@@ -385,7 +385,7 @@ sub find {
     my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
     if ( ! $data ) {
         $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
-    } elsif ( ! @$data ) {
+    } elsif ( ( ! @$data ) and eval "$type::debug" ) {
         $openprint::log->debug("No $type ($sql) (@values) " );
     } elsif ( eval "$type::debug" ) {
         $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );

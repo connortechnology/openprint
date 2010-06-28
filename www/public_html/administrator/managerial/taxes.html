@@ -33,6 +33,9 @@
 			<td class="rate"> 
 				<input type="text" name="rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->federaltax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</td>
+			<td> 
+				<input type="text" name="harmonizedtax_rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->harmonizedtax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			</td>
 		</tr>
 		<? endwhile ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
 		<tr class="totals">

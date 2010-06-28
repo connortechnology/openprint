@@ -300,7 +300,7 @@ sub confirmation {
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		# Commit Project Information
 		my @Taxes = openprint::Tax->find('state'=>$Order->state(),'country'=>$Order->country() );
-		my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
+		my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonizedtax_rate','federaltax_rate') if @Taxes;
 
 		my $Company = $Order->Company();
 		my ( $pst_exempt, $gst_exempt ) = ( $Company->pst_exempt(), $Company->gst_exempt() );
@@ -398,8 +398,11 @@ sub confirmation {
 		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
 		$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
 		$Order->federal_tax( $gst_total );
+		$Order->federal_tax_rate();
 		$Order->state_tax( $pst_total );
+		$Order->state_tax_rate();
 		$Order->harmonized_tax( $hst_total );
+		$Order->harmonized_tax_rate();
 		$Order->total( $total );
 		$Order->downpayment( $downpayment );
 		$Order->status( $status );
@@ -449,7 +452,7 @@ sub confirmation {
 	$variable{'OrderID'} = $order_id;
 	$variable{'Order'} = $Order;
 	delete $session{'OrderID'}
-} # end sub finalise_order
+} # end sub confirmation
 
 sub history {
 

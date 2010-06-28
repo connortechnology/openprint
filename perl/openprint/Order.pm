@@ -28,8 +28,11 @@ $serial = 'orders_id_seq';
 	'docket'					=> 'lngdocketnumber',
 	'status'					=> 'strstatus',
 	'federal_tax'				=> 'curfedtax',
+	'federal_tax_rate'			=>	'federal_tax_rate',
 	'state_tax'					=> 'curprovtax',
+	'state_tax_rate'			=> 'state_tax_rate',
 	'harmonized_tax'			=> 'curharmtax',
+	'harmonized_tax_rate'		=> 'harmonized_tax_rate',
 	'total'						=> 'curtotalsale',
 	'downpayment'				=> 'curdownpayment',
 	'created_on'				=> 'dtmorderdate',
@@ -190,6 +193,13 @@ sub save {
 		$$self{$key} = undef if $$self{$key} eq '';
 		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
+
+	if ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
+$openprint::log->debug("Removing tax rates because the order is not complete");
+		delete $sql{'federal_tax_rate'};
+		delete $sql{'state_tax_rate'};
+		delete $sql{'harmonized_tax_rate'};
+	} # end if
 		
 	if ( ! $$self{'id'} ) {
 		if ( $openprint::config{'OrderIDStyle'} eq 'Year' ) {
@@ -252,7 +262,7 @@ sub approve {
 	my $self = shift;
 # get taxes
 	my @Taxes = openprint::Tax->find('state'=>$self->state() );
-	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
+	my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonizedtax_rate','federaltax_rate') if @Taxes;
 
 	$_ = q{SELECT ysnPSTExempt, ysnGSTExempt FROM Company WHERE Index=?};
 	my ( $pst_exempt, $gst_exempt ) = sql::execute( $log, $dbh, $_, $openprint::session{'company_id'} );
@@ -457,9 +467,9 @@ sub send_cancellation_notice {
 	my %order;
 	$order{'Order'} = $self;
 	$order{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/order_cancellation_notice.html' );
-	$order{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$order{'ReplacementText'}, \%order );
+	$order{'ReplacementText'} = ssi::variable_substitution( \$order{'ReplacementText'}, \%order );
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
-	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%order ) );
+	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%order ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 
 	my $Me = new openprint::User( $session{'user_id'} );
@@ -527,7 +537,7 @@ sub harmonized_tax {
 	my ( $self, $new ) = @_;
 	if ( $new ) {
 		$$self{'harmonized_tax'} = $new;
-	} elsif ( ! defined $$self{'harmonized_tax'} ) {
+	} elsif ( ( ! defined $$self{'harmonized_tax'} ) and sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
 		$$self{'harmonized_tax'} = '';
 		if ( $self->Company()->pst_exempt() ne 'Y' ) {
 			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
@@ -541,6 +551,55 @@ sub harmonized_tax {
 	} # end if ! $$self{'harmonized_tax'};
 	return $$self{'harmonized_tax'};
 } # end sub harmonized_tax
+
+sub federal_tax_rate {
+	my $self = $_[0];
+	if ( @_ == 2 ) {
+		$$self{'federal_tax_rate'} = $_[1];
+	} # end if
+	if ( ! defined $$self{'federal_tax_rate'} ) {
+		if ( $self->Company()->gst_exempt() ne 'Y' ) {
+			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
+			if ( @Taxes == 1 ) {
+				$$self{'federal_tax_rate'} = $Taxes[0]->federaltax_rate();
+			} # no tax for this state/country
+		} # end if exempt
+	} # end if
+	return 1*$$self{'federal_tax_rate'};
+} # end sub federal_tax_rate
+
+sub state_tax_rate {
+	my $self = $_[0];
+	if ( @_ == 2 ) {
+		$$self{'state_tax_rate'} = $_[1];
+	} # end if
+	if ( ( ! defined $$self{'state_tax_rate'} ) and sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
+		if ( $self->Company()->pst_exempt() ne 'Y' ) {
+			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
+			if ( @Taxes == 1 ) {
+				$$self{'state_tax_rate'} = $Taxes[0]->statetax_rate();
+			} # no tax for this state/country
+		} # end if exempt
+	} # end if
+	return 1*$$self{'state_tax_rate'};
+} # end sub state_tax_rate
+
+sub harmonized_tax_rate {
+	my $self = $_[0];
+	if ( @_ == 2 ) {
+		$$self{'harmonized_tax_rate'} = $_[1];
+	} # end if
+$openprint::log->debug("harmonized_tax_rate $$self{'harmonized_tax_rate'} status: $$self{'status'}");
+	if ( ( ! defined $$self{'harmonized_tax_rate'} ) and sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
+		if ( $self->Company()->pst_exempt() ne 'Y' ) {
+			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
+			if ( @Taxes == 1 ) {
+				$$self{'harmonized_tax_rate'} = $Taxes[0]->harmonizedtax_rate();
+			} # no tax for this state/country
+		} # end if exempt
+	} # end if
+	return 1*$$self{'harmonized_tax_rate'};
+} # end sub harmonized_tax_rate
 
 sub subtotal {
 	my $self = shift;

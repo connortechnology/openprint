@@ -1,16 +1,16 @@
 <? if ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects() ) ?>
 <table class="List">
 	<thead>
-	<tr>
-		<th width="75" align="left">Project #</th>
-		<th align="left">Reference</th>
-		<th width="125" align="left">Status</th>
-        <th width="120" align="left">Requested Date</th>
-        <th width="120" align="left">Due Date</th>
-		<th width="75" align="left">Qty</th>
-		<th width="75" align="right">Price</th>
-	</tr>
-	<thead>
+		<tr>
+			<th width="75" align="left">Project #</th>
+			<th align="left">Reference</th>
+			<th width="125" align="left">Status</th>
+			<th width="120" align="left">Requested Date</th>
+			<th width="120" align="left">Due Date</th>
+			<th width="75" align="left">Qty</th>
+			<th width="75" align="right">Price</th>
+		</tr>
+	</thead>
 	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 	<tr<?rowclass?>> 
 		<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>

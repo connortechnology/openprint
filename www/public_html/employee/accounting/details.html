@@ -36,23 +36,7 @@
 		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 	</table>
 	<div style="float: right; width: 250px;">
-		<!--#include virtual="/includes/order_totals.html" --> 
-		<table>
-			<tr> 
-				<td width="175" align="right"><b>Amount Paid:</b></td>
-				<td width="75" align="right"><?CurrencySymbol?> <?AmountPaid?></td>
-			</tr>
-			<? if ( $$variable{'AmountPaid'} < $$variable{'Downpayment'} ) ?>
-			<tr> 
-				<td align="right"><b>Deposit Due:</b></td>
-				<td align="right"><?CurrencySymbol?> <?DepositDue?></td>
-			</tr>
-			<? endif ( $$variable{'AmountPaid'} < $$variable{'Downpayment'} ) ?>
-			<tr> 
-				<td align="right"><b>Amount Owing:</b></td>
-				<td align="right"><?CurrencySymbol?> <? echo ( $$variable{'Order'}->owing(); ) ?></td>
-			</tr>
-		</table>
+		<!--#include virtual="/main/order/_totals.html" -->
 		<br/>
 		<span class="Currency">All prices listed in <?CurrencyName?>.</span>
 	</div>
