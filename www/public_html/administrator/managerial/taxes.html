@@ -6,6 +6,7 @@
 			<th align="left">State/Province</th>
 			<th width="80">Federal (%)</th>
 			<th width="80">State (%)</th>
+			<th width="80">Harm (%)</th>
 			<!--<th width="80">Harmonised (%)</th>-->
 		</tr>
 		<? eval (
@@ -30,6 +31,9 @@
 			<td> 
 				<input type="text" name="statetax_rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->statetax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</td>
+			<td> 
+				<input type="text" name="harmonizedtax_rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->harmonizedtax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			</td>
 		</tr>
 		<? endwhile ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
 		<tr class="totals">
@@ -38,6 +42,7 @@
 			<td><input type="text" name="state-New"/></td>
 			<td><input type="text" name="federaltax_rate-New" /></td>
 			<td><input type="text" name="statetax_rate-New" /></td>
+			<td><input type="text" name="harmonizedtax_rate-New" /></td>
 		</tr>
 	</table>
 	<p class="buttons"> 

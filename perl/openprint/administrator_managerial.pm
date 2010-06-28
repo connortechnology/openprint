@@ -62,13 +62,15 @@ sub taxes {
 			$variable{'error'} .= $Tax->save({
 				'federaltax_rate'	=>	$param{'federaltax_rate-'.$Tax->id()},
 				'statetax_rate'		=>	$param{'statetax_rate-'.$Tax->id()},
+				'harmonizedtax_rate'		=>	$param{'harmonizedtax_rate-'.$Tax->id()},
 				});
 		} # end foreach Tax
-		if ( $param{'federaltax_rate-New'} or $param{'statetax_rate-New'} ) {
+		if ( $param{'federaltax_rate-New'} or $param{'statetax_rate-New'} or $param{'harmonizedtax_rate-New'} ) {
 			my $Tax = new openprint::Tax();
 			$variable{'error'} .= $Tax->save({
 				'federaltax_rate'	=>	$param{'federaltax_rate-New'},
 				'statetax_rate'		=>	$param{'statetax_rate-New'},
+				'harmonizedtax_rate'	=>	$param{'harmonizedtax_rate-New'},
 				'country'			=>	$param{'country-New'},
 				'state'				=>	$param{'state-New'},
 				});
