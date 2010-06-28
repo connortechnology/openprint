@@ -398,8 +398,11 @@ sub confirmation {
 		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
 		$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
 		$Order->federal_tax( $gst_total );
+		$Order->federal_tax_rate();
 		$Order->state_tax( $pst_total );
+		$Order->state_tax_rate();
 		$Order->harmonized_tax( $hst_total );
+		$Order->harmonized_tax_rate();
 		$Order->total( $total );
 		$Order->downpayment( $downpayment );
 		$Order->status( $status );

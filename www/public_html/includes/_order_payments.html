@@ -1,23 +1,23 @@
 <div class="Payments">
 <? eval ( @{$$variable{'PAYMENTS'}} = openprint::Payment::find('order_id'=>$$variable{'Order'}->id(),'completed'=>1,'order'=>'created_on'); ) ?>
 <? if ( @{$$variable{'PAYMENTS'}} or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>
-<? if ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) ?>
+<? if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
 <fieldset><legend>Payments</legend>
 	<table class="List">
 		<thead>
-        <tr>
-            <th width="50" align="left">Ref #</th>
-            <th width="100" align="center">Date</th>
-            <th width="100" align="left">Type</th>
-            <th align="left">Description</th>
-            <th width="120" align="right">Amount</th>
-            <th width="120" align="right">&nbsp;</th>
-        </tr>
+			<tr>
+				<th width="50" align="left">Ref #</th>
+				<th width="100" align="center">Date</th>
+				<th width="100" align="left">Type</th>
+				<th align="left">Description</th>
+				<th width="120" align="right">Amount</th>
+				<th width="120" align="right">&nbsp;</th>
+			</tr>
 		</thead>
         <? while ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
             <tr<?rowclass?>>
                 <td><? echo ( $$variable{'Payment'}->id() ) ?></td>
-                <td align="center"><? echo ( Date::Format::time2str( $openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->created_on() ) ) ) ?></td>
+                <td align="center"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->created_on() ) ) ) ?></td>
                 <td>&nbsp;<? echo ( $$variable{'Payment'}->method() ) ?></td>
                 <td>&nbsp;<? echo ( $$variable{'Payment'}->description() ) ?></td>
                 <td align="right"><? echo ( $$variable{'Payment'}->Currency()->symbol(); ) ?> <? echo ( $$variable{'Payment'}->amount() ) ?></td>
@@ -46,7 +46,7 @@
         ) ?>
     </div>
 	</div>
-<? else ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) ?>
+<? else ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
 <fieldset><legend>Payments</legend>
 	<table class="List">
         <tr>
@@ -59,7 +59,7 @@
         <? while ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
             <tr<?rowclass?>>
                 <td><? echo ( $$variable{'Payment'}->id() ) ?></td>
-                <td align="center"><? echo ( Date::Format::time2str( $openprint::config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->created_on() ) ) ) ?></td>
+                <td align="center"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->created_on() ) ) ) ?></td>
                 <td>&nbsp;<? echo ( $$variable{'Payment'}->method() ) ?></td>
                 <td>&nbsp;<? echo ( $$variable{'Payment'}->description() ) ?></td>
                 <td align="right"><? echo ( $$variable{'Payment'}->Currency()->symbol(); ) ?> <? echo ( $$variable{'Payment'}->amount() ) ?></td>
@@ -67,7 +67,7 @@
             <? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
         <? endwhile ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
 	</table>
-<? endif ( ( $openprint::session{user_type} eq 'A' ) or ( $openprint::session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $openprint::session{'user_id'} ) ) ) ?>
+<? endif ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
 </fieldset>
 <input type="hidden" name="payment_id" />
 <? endif ( @{$$variable{'PAYMENTS'}} or ! sets::isin( $$variable{'Order'}->status(), ['Incomplete','Cancelled'] ) ) ?>

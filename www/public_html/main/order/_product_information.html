@@ -8,12 +8,14 @@
 <? endif ( ( $config{'OrderMode'} ne 'Simple' ) and ( $$variable{'Order'}->status() eq 'Incomplete' ) ) ?>
 <? else ( $config{'OrderMode'} eq 'Simple' ) ?>
 <table class="List">
-    <tr>
-        <th align="left">Product</th>
-        <th width="120" align="left">Requested Date</th>
-        <th width="75" align="left">Qty</th>
-        <th width="75" align="right">Price</th>
-    </tr>
+	<thead>
+		<tr>
+			<th align="left">Product</th>
+			<th width="120" align="left">Requested Date</th>
+			<th width="75" align="left">Qty</th>
+			<th width="75" align="right">Price</th>
+		</tr>
+	</thead>
     <? while ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
     <tr<?rowclass?>>
         <td><? echo ( $$variable{'Product'}->Product()->name(); ) ?></td>

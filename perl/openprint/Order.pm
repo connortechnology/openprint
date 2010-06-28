@@ -192,6 +192,7 @@ sub save {
 	} # end foreach
 
 	if ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
+$openprint::log->debug("Removing tax rates because the order is not complete");
 		delete $sql{'federal_tax_rate'};
 		delete $sql{'state_tax_rate'};
 		delete $sql{'harmonized_tax_rate'};
@@ -585,6 +586,7 @@ sub harmonized_tax_rate {
 	if ( @_ == 2 ) {
 		$$self{'harmonized_tax_rate'} = $_[1];
 	} # end if
+$openprint::log->debug("harmonized_tax_rate $$self{'harmonized_tax_rate'} status: $$self{'status'}");
 	if ( ( ! defined $$self{'harmonized_tax_rate'} ) and sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
 		if ( $self->Company()->pst_exempt() ne 'Y' ) {
 			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
