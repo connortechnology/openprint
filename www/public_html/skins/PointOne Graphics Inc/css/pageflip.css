@@ -124,3 +124,14 @@ a.altlink:hover {
 	margin: -10px 0px -10px 0px;
 	z-index: 11;
 }
+table tr .crop, table tr .filename, table tr .page {
+	text-align: left;
+}
+table tr .page {
+	width: 35px;
+}
+table tr .filename {
+}
+table tr .crop {
+	width: 100px;
+}
