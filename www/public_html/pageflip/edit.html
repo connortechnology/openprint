@@ -61,17 +61,22 @@
 <div id="PageFlip" class="PageFlip">
 <div id="debug"></div>
 	<div class="Pages">
-		<table>
+		<table class="List">
 			<tr>
-				<th>Page</th>
-				<th>Filename</th>	
+				<th class="page">Page</th>
+				<th class="filename">Filename</th>	
+				<th class="crop">Crop</th>
 			</tr>
 	<? echo (
 		if ( $$variable{'PageFlip'}->Pages() ) {
 			@{$$variable{'Pages'}} = $$variable{'PageFlip'}->Pages();
 			my $html;
 			foreach my $Page ( $$variable{'PageFlip'}->Pages() ) {
-				$html .= sprintf(q`<tr onclick="new Ajax.Updater( 'PageView', '_page.html', { parameters: { page_id: %1$d, pageflip_id: %2$d } } );" title="%5$sx%6$d -> %7$dx%8$d %9$s"><td>%3$d</td><td>%4$s</td></tr>`, 
+				$html .= sprintf(q`<tr onclick="new Ajax.Updater( 'PageView', '_page.html', { parameters: { page_id: %1$d, pageflip_id: %2$d } } );" title="%5$sx%6$d -> %7$dx%8$d">
+						<td class="page">%3$d</td>
+						<td class="filename">%4$s</td>
+						<td class="crop">%9$s</td>
+					</tr>`, 
 					$Page->id(), $Page->pageflip_id(), $Page->page(), $Page->filename(),
 					$Page->src_width(), $Page->src_height(), $Page->width(), $Page->height(), $Page->crop_box(),
 					
