@@ -64,16 +64,18 @@ sub load {
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	my @identified_by = eval '@'.$type.'::identified_by';
+	my $d = eval '$'.$type.'::dbh';
+	$d = $dbh if ! $d;
 
 	if ( ! $data ) {
 		if ( @identified_by ) {
 $log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=' . $$self{$_} } @identified_by ) );
-			$data = $dbh->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 		} else {
-			$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
-			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $dbh->errstr ) if $dbh->errstr;
+			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
 		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
