@@ -6,6 +6,9 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 <? eval (
 	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
 	@{$$variable{'Invoices'}} = ();
+	my $period_start;
+	my $period_end;
+
 	foreach my $Invoice ( openprint::Invoice->find( 
 		'invoicee_id'		=> $session{'/invoice/history.html?company_id'},
 		'invoicer_id'		=> $session{'company_id'},
@@ -13,10 +16,14 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 		) ) {
 		next if $Invoice->is_paid();
 		next if $Invoice->bad_debt();
+		$period_start = $Invoice->created_on() if ( $Invoice->created_on() < $period_start ) or ! $period_start;
+		$period_end = $Invoice->created_on() if ( $Invoice->created_on() > $period_end );
 
 		push @{$$variable{'Invoices'}}, $Invoice;
 		$$variable{'subtotal'} += $Invoice->subtotal();
-		$$variable{'federaltax_total'} += $Invoice->federaltax();
+		foreach my $Tax ( @{$$variable{'Taxes'}} ) {
+			$$variable{'tax_totals'}{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
+		} # end foreach Tax
 		$$variable{'total'} += $Invoice->total();
 		$$variable{'interest_total'} += $Invoice->interest();
 		$$variable{'owing_total'} += $Invoice->owing();
@@ -25,6 +32,11 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 			$$variable{'3monthwarning'} = 1;
 		} # end if
 	} # end foreach Invoice
+	@{$$variable{'Taxes'}} = openprint::Tax->find(
+		'period_end_null_or_>='	=>sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/invoice/history.html?created_on_start_year','/invoice/history.html?created_on_start_month','/invoice/history.html?created_on_start_day'} ),
+		'period_start_null_or_<='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/invoice/history.html?created_on_end_year','/invoice/history.html?created_on_end_month','/invoice/history.html?created_on_end_day'} ),
+		'order'		=>	'period_start,name',
+	);
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 ) ?>
@@ -35,8 +47,9 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 		<th width="90">Date Issued</th>
 		<th width="90">Due</th>
 		<th width="75" style="text-align:right;">SubTotal</th>
-		<th width="75" style="text-align:right;">GST</th>
-		<th width="75" style="text-align:right;">GST Total</th>
+			<? echo ( 
+				return join('', map { sprintf('<th class="Price">%s (%d%)</th>', $_->name(), $_->rate() ) } @{$$variable{'Taxes'}} );
+			) ?>
 		<th width="75" style="text-align:right;">Total</th>
 		<th width="75" style="text-align:right;">Interest</th>
 		<th width="75" style="text-align:right;">Owing</th>
@@ -51,8 +64,9 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 		<td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->posted_on() ) ); ) ?></td>
 		<td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Invoice'}->due_on() ) ); ) ?></td>
 		<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?></td>
-		<td align="right"><? echo ( $$variable{'Invoice'}->federaltaxrate(); ) ?>%</td>
-		<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?></td>
+			<? echo ( 
+				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'Invoice'}->Tax( $_ )->amount() ) ) } @{$$variable{'Taxes'}} );
+			) ?>
 		<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></td>
 		<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->interest() ); ) ?></td>
 		<td align="right"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->owing() ); ) ?></td>
@@ -61,8 +75,9 @@ Thank you for using <? echo ( new openprint::User( $session{'user_id'} )->Compan
 	<tr class="totals">
 		<td colspan="3">Totals:</td>
 		<td align="right"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
-		<td>&nbsp;</td>
-		<td align="right"><? echo ( openprint::Currency::format( $$variable{'federaltax_total'} ); ) ?></td>	
+			<? echo (
+				return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'tax_totals'}{$_->id()} ) ) } @{$$variable{'Taxes'}} );
+			) ?>
 		<td align="right"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>	
 		<td align="right"><? echo ( openprint::Currency::format( $$variable{'interest_total'} ); ) ?></td>	
 		<td align="right"><? echo ( openprint::Currency::format( $$variable{'owing_total'} ); ) ?></td>	

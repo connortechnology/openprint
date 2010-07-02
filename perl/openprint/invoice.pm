@@ -121,6 +121,7 @@ sub history {
 					FROM    => $config{'AccountingEmail'},
 					TO      => sprintf('"%s" <%s>', $Recipient->name(), $Recipient->email() ),
 					BCC     => sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
+					#TO		=>	sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
 					SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments );
