@@ -26,7 +26,8 @@ sub open_sql {
 	my $dsn = "dbi:$sql_server{'driver'}:dbname=$sql_server{'database'};";
 	$dsn .= "host=$sql_server{'host'}" if $sql_server{'host'};
 	if ( ! ( $new_dbh = DBI->connect( $dsn, $sql_server{'login'}, $sql_server{'password'}, {AutoCommit=>1,pg_enable_utf8 => 1 } ) ) ) {
-		die $log->crit("Unable to connect to database $sql_server{'database'}: " . DBI->errstr );
+		$log->crit("Unable to connect to database $sql_server{'database'}: " . DBI->errstr );
+		return;
 	} # end if
 	#$log->info("Opened connection to $sql_server{'database'}.	Thread ID: " . $dbh->{'thread_id'});
 

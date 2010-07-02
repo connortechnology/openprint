@@ -11,10 +11,10 @@ require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
 
-my $debug = 0;
 
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms %find_cache );
+use vars qw( $debug $table $serial %fields %defaults %transforms %find_cache );
+$debug = 1;
 
 require sql;
 
@@ -136,9 +136,6 @@ sub wage {
 	return $self->User()->wage() * $elapsed / 3600;
 } # end sub  wage
 
-sub User {
-	return new openprint::User( $_[0]{user_id} );
-} # end sub User
 sub Employee {
 	return new openprint::User( $_[0]{user_id} );
 } # end sub Employee

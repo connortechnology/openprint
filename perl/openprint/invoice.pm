@@ -49,9 +49,13 @@ sub history {
 			$variable{'information'} .= 'Invoice unposted.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
-		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
-		$variable{'error'} .= $Invoice->send();
-		$variable{'information'} .= 'Invoice sent.<br/>';
+		my $Invoice = openprint::Invoice->find_one( 'id'=>$param{'invoice_id'} );
+		if ( ! $Invoice ) {
+			$variable{'error'} .= "Invoice $param{'invoice_id'} not found";
+		} else {
+			$variable{'error'} .= $Invoice->send();
+			$variable{'information'} .= 'Invoice sent.<br/>';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		if ( ! ( $variable{'error'} .= $Invoice->delete() ) ) {

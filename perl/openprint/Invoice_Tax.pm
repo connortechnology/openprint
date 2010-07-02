@@ -28,5 +28,17 @@ sub name {
 	return $_[0]->Tax()->name();
 } # end sub name
 
+sub amount {
+	my $self = $_[0];
+	if ( @_ == 2 ) {
+		$$self{'amount'} = $_[1];
+	} # end if
+
+	if ( ! defined $$self{'amount'} ) {
+		$$self{'amount'} = ($$self{'rate'}/100) * $self->Invoice()->subtotal();
+	} # end if
+	return $$self{'amount'};
+} # end sub amount
+
 1;
 __END__

@@ -9,12 +9,16 @@
 	if ( $param{'invoice_id'} ) {
 		foreach my $Invoice ( openprint::Invoice->find( 'id'=>$param{'invoice_id'} ) ) {
 			push @{$$variable{'Invoices'}}, $Invoice;
+$log->debug("Sub");
 			$$variable{'subtotal'} += $Invoice->subtotal();
 			foreach my $Tax ( @{$$variable{'Taxes'}} ) {
 				$$variable{'tax_totals'}{$Tax->id()} += $Invoice->Tax( $Tax )->amount();
 			} # end foreach Tax
+$log->debug("total");
 			$$variable{'total'} += $Invoice->total();
+$log->debug("interest");
 			$$variable{'interest_total'} += $Invoice->interest();
+$log->debug("owing");
 			$$variable{'owing_total'} += $Invoice->owing();
 		} # end foreach
 	} else {

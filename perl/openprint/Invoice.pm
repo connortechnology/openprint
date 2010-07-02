@@ -67,7 +67,14 @@ sub save {
 	# none of these should be set by param
 	$$self{'total'} = $self->total();
 
-	return $self->SUPER::save( $param );
+	my $rc = $self->SUPER::save( $param );
+	if ( ! $rc and $$self{'posted_on'} ) {
+		foreach my $T ( $self->Taxes() ) {
+			$rc .= $T->save();
+		} # end foreach
+	} else {
+		return $rc;
+	} # end if
 } # end sub save
 
 sub is_paid {
@@ -93,6 +100,10 @@ sub Invoicer {
 
 sub subtotal {
 	my ( $self ) = @_;
+	if ( ! $$self{'id'} ) {
+		$log->error('Invoice:subtotal no id!');
+		return;
+	} # end if
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
 #$log->debug("Recalculating subtotal");
@@ -112,7 +123,6 @@ sub total {
 			$$self{'total'} += $Tax->amount();
 		} # end foreach Tax
 	} # end if
-#$log->debug("Invoice_total: sub: " . $self->subtotal() . ' fed: ' . $self->federaltax() . ' prov: ' . $self->statetax() )if $;
 	return sprintf('%.2f', $$self{'total'} );
 } # end sub total
 
@@ -202,11 +212,12 @@ sub send {
 	my $Email = new openprint::Email();
 	my $results = $Email->send(
 		'BCC'			=>	sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
-		'TO'			=>	$self->Invoicee()->AccountingContacts(),
+		'TO'			=>	[$self->Invoicee()->AccountingContacts()],
 		'FROM'			=>	$config{'AccountingEmail'},
-		'ATTACHMENTS'	=>	@attachments,
+		'ATTACHMENTS'	=>	\@attachments,
 		'SUBJECT'		=>	sprintf('Your Invoice (%1$d) is now available.', $$self{id} ),
 	);
+$openprint::log->debug("Email results: $results");
 	$self->add_to_log( $results );
 	return $results;
 } # end sub send
@@ -228,7 +239,27 @@ sub calculate_interests {
 } # end sub calculate_interests
 
 sub Taxes {
-	return openprint::Invoice_Tax->find('invoice_id'=>$_[0]{'id'});
+	my ( $self ) = @_;
+	if ( ! $$self{'Taxes'} ) {
+		@{$$self{'Taxes'}} = openprint::Invoice_Tax->find('invoice_id'=>$$self{'id'});
+	} # end if
+	if ( ! @{$$self{'Taxes'}} ) {
+		foreach my $Tax ( openprint::Tax->find(
+					'period_start_null_or_<='	=>	$$self{'created_on'},
+					'period_end_null_or_>='		=>	$$self{'created_on'},
+					'country'	=>	$self->Invoicee()->country(),
+					'state'		=>	$self->Invoicee()->state()),
+				) {
+			my $T = new openprint::Invoice_Tax();
+			$T->save({
+				'invoice_id'=>	$$self{'id'},
+				'tax_id'	=>	$$Tax{'id'},
+				'rate'		=>	$$Tax{'rate'},
+			});
+			push @{$$self{'Taxes'}}, $T;
+		} # end foreach Tax
+	} # end if
+	return @{$$self{'Taxes'}};
 } # end sub Taxes
 
 sub Tax {
