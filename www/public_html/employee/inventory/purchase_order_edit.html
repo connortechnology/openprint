@@ -259,6 +259,19 @@ function getSelectionId(input, li) {
 		<td colspan="7" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
+               <? echo ( 
+                    my $html;
+                    foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
+                        $html .= sprintf('<tr class="tax"><td colspan="7" class="totals">%2$s (%3$d%)
+							<input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" />:</td><td class="Price">%4$s<span id="tax-%1$d">%5$.2f</span></td></tr>', $Tax->id(),
+                            $Tax->name(), $Tax->rate(), $$variable{'PurchaseOrder'}->Currency()->symbol(), $Tax->amount(),
+							ssi::checked( $Tax->charge() ),
+                            );
+                    } # end foreach Tax
+                    return $html;
+                ) ?>
+
+<!--
 	<tr>
 		<td colspan="7" class="totals">
 			<? echo ( $$variable{'PurchaseOrder'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?>
@@ -273,6 +286,7 @@ function getSelectionId(input, li) {
 		</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="statetax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
 	</tr>
+-->
 	<tr>
 		<td colspan="7" class="totals">TOTAL</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->total() ); ) ?></td>
