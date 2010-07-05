@@ -150,14 +150,15 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 		<td colspan="4">SUBTOTAL</td>
 		<td><? echo ( return openprint::Currency::format( $$variable{'Claim'}->subtotal() ); ) ?></td>
 	</tr>
-    <tr class="federaltax"<? echo ( $$variable{'Claim'}->federaltax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="4"><? echo ( $$variable{'Claim'}->Company()->country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?> ( <? echo ( $$variable{'Claim'}->federaltax_rate() ) ?>% )</td>
-        <td><? echo ( return openprint::Currency::format( $$variable{'Claim'}->federaltax() ); ) ?></td>
-    </tr>
-    <tr class="statetax"<? echo ( $$variable{'Claim'}->statetax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="4"><? echo ( $$variable{'Claim'}->Company()->state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?> ( <? echo ( $$variable{'Claim'}->statetax_rate() ) ?>% )</td>
-        <td><? echo ( return openprint::Currency::format( $$variable{'Claim'}->statetax() ); ) ?></td>
-    </tr>
+	<? echo ( 
+			my $html;
+			foreach my $Tax ( $$variable{'Claim'}->Taxes() ) {
+				$html .= sprintf('<tr class="tax"><td colspan="4" class="totals">%s (%d%):</td><td class="Price">%s</td></tr>',
+					$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+					);
+			} # end foreach Tax
+			return $html;
+		) ?>
 	<tr class="total">
 		<td colspan="4">TOTAL</td>
 		<td><? echo ( return openprint::Currency::format( $$variable{'Claim'}->total() ); ) ?></td>

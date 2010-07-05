@@ -7,6 +7,8 @@ require logger;
 require openprint::Object;
 require openprint::PurchaseOrder;
 require openprint::PurchaseOrder_Tax;
+require openprint::Claim;
+require openprint::Claim_Tax;
 require openprint::Tax;
 
 use openprint ();
@@ -45,6 +47,27 @@ foreach my $PO ( openprint::PurchaseOrder::find('created_on_end'=>'2010-06-30') 
 		});
 	} # end if
 } # end foreach PO
+foreach my $Claim ( openprint::Claim::find('created_on_end'=>'2010-06-30') ) {
+	if ( ! openprint::Claim_Tax->find('claim_id'=>$Claim->id() ) ) {
+		my $GST = new openprint::Claim_Tax();
+		$GST->save({
+			'claim_id'	=>	$Claim->id(),
+			'rate'				=>	5,
+			'amount'			=>	$Claim->federaltax(),
+			'charge'			=>	$Claim->federaltax_charge(),
+			'tax_id'			=>	$GST_Tax->id(),
+		});
+
+		my $PST = new openprint::Claim_Tax();
+		$PST->save({
+			'claim_id'	=>	$Claim->id(),
+			'rate'				=>	8,
+			'amount'			=>	$Claim->statetax(),
+			'charge'			=>	$Claim->statetax_charge(),
+			'tax_id'			=>	$PST_Tax->id(),
+		});
+	} # end if
+} # end foreach Claim
 $dbh->disconnect();
 1;
 __END__
