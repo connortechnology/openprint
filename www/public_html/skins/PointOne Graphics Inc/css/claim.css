@@ -36,7 +36,7 @@
 	background-color: #e4ebf4;
 }
 	
-.Claim table tr.total td, .Claim table tr.subtotal td, .Claim table tr.federaltax td, .Claim table tr.statetax td {
+.Claim table tr.total td, .Claim table tr.subtotal td, .Claim table tr.tax td {
 	text-align: right;
 }
 .Claim table td input[type="text"] {

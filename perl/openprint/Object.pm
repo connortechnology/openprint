@@ -181,8 +181,8 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 
 			my %defaults = eval('%'.$type.'::defaults');
 
-			if ( ( (! defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
-				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
+			if ( ( ( ! defined $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
+				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug or 1;
 				$$self{$field} = $defaults{$field};
 			} # end if
 		} # end if
@@ -377,8 +377,10 @@ sub AUTOLOAD {
 		return $self->{$name} = shift;
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
-		if ( exists $$fields{lc $name . '_id'} ) {
-			return new("openprint::$name", $$self{lc $name . '_id'});
+		if ( $fields and exists $$fields{lc $name . '_id'} ) {
+			if ( eval '\%openprint::'.$name.'::fields' ) {
+				return new("openprint::$name", $$self{lc $name . '_id'});
+			} # end if
 		} # end if
 		return $self->{$name};
 	} # end if
