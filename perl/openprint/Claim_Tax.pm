@@ -1,4 +1,4 @@
-package openprint::PurchaseOrder_Tax;
+package openprint::Claim_Tax;
 @ISA = qw(openprint::Object);
 
 use strict;
@@ -8,12 +8,12 @@ require sql;
 
 $debug = 1;
 
-$table = 'purchaseorder_taxes';
-$serial = 'purchaseorder_taxes_id_seq';
+$table = 'claim_taxes';
+$serial = 'claim_taxes_id_seq';
 
 %fields = (
 	'id'			=>	'id',
-	'purchaseorder_id'	=>	'purchaseorder_id',
+	'claim_id'		=>	'claim_id',
 	'tax_id'		=>	'tax_id',
 	'rate'			=>	'rate',
 	'amount'		=>	'amount',
@@ -39,25 +39,26 @@ sub amount {
 
 	if ( ! defined $$self{'amount'} ) {
 		if ( $$self{'charge'} ) {
-			$$self{'amount'} = ($$self{'rate'}/100) * $self->PurchaseOrder()->subtotal();
+			$$self{'amount'} = ($$self{'rate'}/100) * $self->Claim()->subtotal();
 		} # end if
 	} # end if
 	return $$self{'amount'};
 } # end sub amount
+
 sub charge {
 	my $self = $_[0];
 	if ( @_ == 2 ) {
 		$$self{'charge'} = $_[1];
 	} # end if
 
-	if ( $self->PurchaseOrder()->company_id() and ! defined $$self{'charge'} ) {
+	if ( $self->Claim()->company_id() and ! defined $$self{'charge'} ) {
 		if ( sets::isin( $self->name(), ['GST','HST'] ) ) {
-			if ( $self->PurchaseOrder()->Company()->taxexempt1() eq 'Y' ) {
+			if ( $self->Claim()->Company()->taxexempt1() eq 'Y' ) {
 				$$self{'charge'} = 0;
 			} # end if
 			$$self{'charge'} = 1;
 		} elsif ( sets::isin( $self->name(), ['PST'] ) ) {
-			if ( $self->PurchaseOrder()->Company()->taxexempt2() eq 'Y' ) {
+			if ( $self->Claim()->Company()->taxexempt2() eq 'Y' ) {
 				$$self{'charge'} = 0;
 			} # end if
 			$$self{'charge'} = 1;
