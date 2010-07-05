@@ -1774,7 +1774,10 @@ sub purchase_order_view {
 			$param{'delivered_on'} = undef;
 		} # end if
 		foreach my $Tax ( $PO->Taxes() ) {
-			$Tax->save({'charge'=>$param{'tax_charge-'.$Tax->id()}});
+			# Order is important here.
+			$Tax->charge($param{'tax_charge-'.$Tax->id()});
+			$Tax->amount(undef);
+			$Tax->save();
 		} # end foreach
 		$variable{'error'} .= $PO->save( \%param );
 		if ( ! $PO->authorized() ) {
