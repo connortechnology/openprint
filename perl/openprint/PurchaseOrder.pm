@@ -43,12 +43,6 @@ $serial = 'Purchaseorders_id_seq';
 	'delivered_on_switch'		=>	'delivered_on_switch',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
-	'federaltax'		=>	'federaltax',
-	'federaltax_rate'	=>	'federaltax_rate',
-	'federaltax_charge'	=>	'federaltax_charge',
-	'statetax'			=>	'statetax',
-	'statetax_rate'		=>	'statetax_rate',
-	'statetax_charge'	=>	'statetax_charge',
 	'deleted'			=>	'deleted',
 	'supplier_id'		=>	'supplier_id',
 	'shipping_method'	=>	'shipping_method',
@@ -95,10 +89,6 @@ $serial = 'Purchaseorders_id_seq';
 	'tax'			=>	0,
 	'total'			=>	0,
 	'subtotal'		=>	0,
-	'federaltax'	=>	undef,
-	'federaltax_rate'	=>	undef,
-	'statetax'		=>	undef,
-	'statetax_rate'	=>	undef,
 	'manifest_id'	=>	undef,
 	'cancelled'		=>	0,
 );
@@ -470,7 +460,7 @@ sub subtotal {
 sub total {
 	my ( $self ) = @_;
 	if ( ! $$self{'total'} ) {
-		$$self{'total'} = $$self{'subtotal'};
+		$$self{'total'} = $self->subtotal();
         foreach my $Tax ( $self->Taxes() ) {
             $$self{'total'} += $Tax->amount();
         } # end foreach Tax
@@ -574,9 +564,9 @@ sub Taxes {
                 ) {
             my $T = new openprint::PurchaseOrder_Tax();
             $T->save({
-                'purchaseorder_id'=>  $$self{'id'},
-                'tax_id'    =>  $$Tax{'id'},
-                'rate'      =>  $$Tax{'rate'},
+                'purchaseorder_id'	=>  $$self{'id'},
+                'tax_id'    		=>  $$Tax{'id'},
+                'rate'      		=>  $$Tax{'rate'},
             });
             push @{$$self{'Taxes'}}, $T;
         } # end foreach Tax
