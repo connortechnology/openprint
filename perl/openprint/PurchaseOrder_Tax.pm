@@ -44,6 +44,7 @@ sub amount {
 	} # end if
 	return $$self{'amount'};
 } # end sub amount
+
 sub charge {
 	my $self = $_[0];
 	if ( @_ == 2 ) {
