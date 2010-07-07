@@ -176,7 +176,7 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 
 			my %defaults = eval('%'.$type . '::defaults');
 
-			if ( ( (! defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
+			if ( ( ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 				$$self{$field} = $defaults{$field};
 			} else {
@@ -373,7 +373,7 @@ sub find {
         $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
     } elsif ( ( ! @$data ) and $debug ) {
         $openprint::log->debug("No $type ($sql) (@values) " );
-    } elsif ( eval $debug ) {
+    } elsif ( $debug ) {
         $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
     } # end if
     return map { $type->new( $_->{$fields{id}}, $_ ) } @$data;
