@@ -24,11 +24,9 @@ use vars qw( $log $dbh %config );
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 
-require openprint::project;
 require openprint::Equipment;
 require openprint::service;
 require openprint::Service;
-require openprint::print;
 
 require sql;
 

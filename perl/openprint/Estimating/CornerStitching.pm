@@ -17,7 +17,6 @@
 package openprint::Estimating::CornerStitching;
 use strict;
 
-require openprint::project;
 require openprint::Equipment;
 require openprint::service;
 

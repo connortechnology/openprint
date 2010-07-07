@@ -75,6 +75,20 @@ if ( sets::isin( 'hosts', \@tables ) ) {
 		$dbh->do('ALTER TABLE hosts add monitor boolean') if ! exists $$data{'monitor'};
 	} # end if
 } # end if
+my $data = 0;
+if ( sets::isin( 'emailcampaigns', \@tables ) ) {
+	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM emailcampaigns LIMIT 1', {} );
+} # end if
+
+if ( $data ) {
+	$dbh->do('ALTER TABLE hosts add block boolean') if ! exists $$data{'block'};
+	$dbh->do('ALTER TABLE hosts add monitor boolean') if ! exists $$data{'monitor'};
+} else {
+	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
 
 if ( sets::isin( 'taxes', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM taxes LIMIT 1', {} );

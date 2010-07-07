@@ -70,7 +70,7 @@ sub history {
 		my @Header = ('ID','Due On','Company','SubTotal','GST Rate', 'GST','Total','Interest','Owing');
 		my @Data;
 
-		my ($subtotal, $federaltax_total, $interest_total, $total, $owing_total );
+		my ($subtotal, $interest_total, $total, $owing_total );
 
 		foreach my $Invoice ( openprint::Invoice->find( 
 					'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ),
@@ -97,13 +97,12 @@ sub history {
             } # end if
 
 			$subtotal += $Invoice->subtotal();
-			$federaltax_total += $Invoice->federaltax();
 			$total += $Invoice->total();
 			$interest_total += $Invoice->interest();
 			$owing_total += $Invoice->owing();
-			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), $Invoice->federaltaxrate(), $Invoice->federaltax(), $Invoice->total(), $Invoice->interest(), $Invoice->owing();
+			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), $Invoice->total(), $Invoice->interest(), $Invoice->owing();
 		} # end foreach Invoice
-		push @Data, 'Totals:', '', '', $subtotal, '', $federaltax_total, $total, $interest_total, $owing_total;
+		push @Data, 'Totals:', '', '', $subtotal, '', $total, $interest_total, $owing_total;
 
 		misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
 	} elsif ( $param{'btnFunction'} eq 'Account Statement' ) {

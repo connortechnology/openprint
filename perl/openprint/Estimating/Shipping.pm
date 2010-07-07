@@ -18,7 +18,6 @@ package openprint::Estimating::Shipping;
 use strict;
 use POSIX qw{ ceil };
 
-require openprint::project;
 require openprint::obj_customer;
 
 require sql;
