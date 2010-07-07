@@ -4,7 +4,6 @@ use strict;
 
 require openprint::Equipment;
 require openprint::pricing;
-require openprint::project;
 
 require openprint::Estimating::Cutting;
 require openprint::Estimating::Counting;

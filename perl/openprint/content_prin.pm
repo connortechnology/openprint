@@ -1,7 +1,7 @@
 package openprint::content_prin;
 
 use strict;
-require openprint::project;
+require openprint::main_project;
 require openprint::ProjectType;
 use openprint ();
 use vars qw( $log $dbh %variable %param %session );

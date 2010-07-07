@@ -7,7 +7,7 @@ use openprint ();
 
 require openprint::Project;
 require openprint::order;
-require openprint::project;
+require openprint::main_project;
 require openprint::service;
 require openprint::Equipment;
 require openprint::employee_schedule;

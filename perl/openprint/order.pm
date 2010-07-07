@@ -20,7 +20,6 @@ my $debug = 1;
 
 require sql;
 require openprint::Currency;
-require openprint::project;
 require openprint::print_project;
 require openprint::service;
 require openprint::Order;

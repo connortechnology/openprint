@@ -2,10 +2,8 @@ package openprint::administrator_project_types;
 
 use strict;
 
-require openprint::project;
 require openprint::ProjectTypeCategory;
 require openprint::ProjectType;
-require openprint::Object;
 require sql;
 require misc;
 require openprint::logs;
