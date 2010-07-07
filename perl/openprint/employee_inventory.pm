@@ -247,7 +247,7 @@ if ( 0 ) {
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
-foreach my $Skid ( openprint::Skid::find('quantity_>='=>1,'type'=>'Roll') ) {
+foreach my $Skid ( openprint::Skid->find('quantity_>='=>1,'type'=>'Roll') ) {
 	next if ! $Skid->rfidtag_id();
 	next if ! $Skid->RFIDTag()->id();
 	foreach my $C ( $Skid->Contents() ) {
@@ -691,13 +691,13 @@ sub skid_details {
 
 	if ( ! @skid_ids ) {
 		if ( $param{'rfidtag_id'} ) {
-			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} elsif ( $param{'rfidtag_hex'} ) {
-			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				$param{'skid_id'} = $skid_ids[0];

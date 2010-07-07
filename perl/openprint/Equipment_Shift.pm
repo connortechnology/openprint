@@ -169,7 +169,7 @@ $log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $
 
 
 	my $Shift;
-	if ( $Shift = openprint::Shift::find_one(
+	if ( $Shift = openprint::Shift->find_one(
 				'equipment_id'	=>	$$self{'equipment_id'},
 				'shift_id'		=>	$$self{'id'},
 				'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ),

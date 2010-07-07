@@ -15,14 +15,12 @@ use strict;
 
 sub index {
    if ( $param{'selected_name'} ) {
-        my @locations = openprint::Location::find( 'name' => $param{'selected_name'} );
-        $variable{'Selected'} = shift @locations;
+        $variable{'Selected'} = openprint::Location->find_one( 'name' => $param{'selected_name'} );
     } elsif ( $param{'selected_id'} ) {
         $variable{'Selected'} = new openprint::Location( $param{'selected_id'} );
     } # end if
     if ( $param{'location_name'} ) {
-        my @locations = openprint::Location::find( 'name' => $param{'location_name'} );
-        $variable{'Location'} = shift @locations;
+        $variable{'Location'} = openprint::Location->find_one( 'name' => $param{'location_name'} );
     } elsif ( $param{'location_id'} ) {
         $variable{'Location'} = new openprint::Location( $param{'location_id'} );
     } else {
@@ -33,7 +31,7 @@ sub index {
     } # end if
     $variable{'MapFile'} = $variable{'Selected'} ? join('_', $variable{'Location'}->name(), $variable{'Selected'}->name() ) : $variable{'Location'}->name();
 
-} # end sub view_host
+} # end sub index
 
 1;
 __END__

@@ -559,7 +559,7 @@ sub federal_tax_rate {
 	} # end if
 	if ( ! defined $$self{'federal_tax_rate'} ) {
 		if ( $self->Company()->gst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
+			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
 			if ( @Taxes == 1 ) {
 				$$self{'federal_tax_rate'} = $Taxes[0]->federaltax_rate();
 			} # no tax for this state/country
@@ -575,7 +575,7 @@ sub state_tax_rate {
 	} # end if
 	if ( ( ! defined $$self{'state_tax_rate'} ) and sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
 		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
+			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
 			if ( @Taxes == 1 ) {
 				$$self{'state_tax_rate'} = $Taxes[0]->statetax_rate();
 			} # no tax for this state/country
@@ -592,7 +592,7 @@ sub harmonized_tax_rate {
 $openprint::log->debug("harmonized_tax_rate $$self{'harmonized_tax_rate'} status: $$self{'status'}");
 	if ( ( ! defined $$self{'harmonized_tax_rate'} ) and sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
 		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax::find('country'=>$self->country(), 'state'=>$self->state() );
+			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
 			if ( @Taxes == 1 ) {
 				$$self{'harmonized_tax_rate'} = $Taxes[0]->harmonizedtax_rate();
 			} # no tax for this state/country

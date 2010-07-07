@@ -1,6 +1,6 @@
 <? eval (
 	if ( $openprint::param{'action'} eq 'Submit') {
-		my @papers = eprint::Paper::find(
+		my @papers = openprint::Paper->find(
 			'owner_id'	=>	$r->param('Owner'),
 			'name_id'	=>	$r->param('ddmPaperName'),
 			'name'		=>	$r->param('txtPaperName'),
@@ -15,7 +15,7 @@
 			);
 		my $Paper;
 		if ( 0 == @papers ) {
-			$Paper = new eprint::Paper( );	
+			$Paper = new openprint::Paper( );	
 			$Paper->owner_id( $r->param('Owner') );
 			$Paper->name( $r->param('txtPaperName') ) if $r->param('txtPaperName');
 			$Paper->name_id( $r->param('ddmPaperName') ) if $r->param('ddmPaperName');
@@ -39,7 +39,7 @@
 			$Paper = shift @papers;
 		} # end if
 		$Paper->add_inventory( $r->param('Quantity'), $r->param('Location'), $variable );
-		my $Skid = new eprint::Skid( );
+		my $Skid = new openprint::Skid( );
 		$Skid->add( $Paper, $r->param('Quantity') );
 		$Skid->save();
 		$Skid->print_label();
@@ -123,7 +123,7 @@
 			<input type="text" id="PaperWidth" name="PaperWidth" size="6" />&nbsp;x&nbsp;<input type="text" id="PaperHeight" name="PaperHeight" size="6" />
 		</p><p>
 			<label for="Owner">Owner:</label>
-			<select id="Owner" name="Owner"><? echo ( eprint::obj_customer::get_customer_dropdown( $log, $dbh, $variable, $$variable{'cust_id'} ); ) ?></select>
+			<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $variable, $$variable{'cust_id'} ); ) ?></select>
 		</p><p>
 			<label for="Quantity">Quantity:</label>
 			<input type="text" id="Quantity" name="Quantity" size="10" />
