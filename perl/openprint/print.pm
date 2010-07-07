@@ -3,6 +3,7 @@ package openprint::print;
 use strict;
 
 require sql;
+require openprint::main_project;
 require openprint::print_project;
 require openprint::service;
 require openprint::Currency;
@@ -189,7 +190,9 @@ sub view_services {
 			} # end if
 		} # end if btnFunction defined
 		if ( defined $openprint::param{'remove'} and ( $openprint::param{'remove'} ne '' ) ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $r->param('remove') );
+			foreach my $s_id ( split(',', $openprint::param{'remove'} ) ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $s_id );
+			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
@@ -201,7 +204,7 @@ sub view_services {
 		} # end if 
 		if ( ! $$variable{'Redirect'} ) {
 			$Project->update_status();
-			openprint::project::view( $log, $dbh, $variable, $project_index );
+			openprint::main_project::view( $project_index );
 		} # end if
 	} # end if
 

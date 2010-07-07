@@ -9,19 +9,24 @@ use vars qw( $log $dbh $table $serial %fields %transforms %defaults %types );
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'ip'	=>	'ip',
+	'id'			=>	'id',
+	'ip'			=>	'ip',
 	'hostname'		=>	'hostname',
-	'mac'	=>	'mac',	
-	'block'	=>	'block',
+	'mac'			=>	'mac',	
+	'block'			=>	'block',
+	'monitor'		=>	'monitor',
 	'description'	=>	'description',
+	'dhcp'			=>	'dhcp',
 );
 %transforms = (
 );
 %defaults = (
-	'block'	=>	0,
-	'mac'	=>	undef,
+	'block'		=>	0,
+	'monitor'	=>	0,
+	'mac'		=>	undef,
 	'hostname'	=>	undef,
+	'ip'		=>	undef,
+	'dhcp'		=>	0,
 );
 use openprint ();
 *log = \$openprint::log;

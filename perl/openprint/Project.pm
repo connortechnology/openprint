@@ -1568,7 +1568,7 @@ sub ordered_to_printed_seconds {
 sub first_scheduled {
 	my ( $self ) = @_;
 	if ( ! exists $$self{'first_scheduled'} ) {
-		@$self{'first_scheduled'} = sql::execute( undef, undef, q`SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=? AND (description LIKE 'Scheduled%' OR description LIKE 'Job bumped%')`, $$self{'id'} );
+		@$self{'first_scheduled'} = sql::execute( undef, undef, q`SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=? AND (description LIKE 'Scheduled%' OR description LIKE '%bumped%' )`, $$self{'id'} );
 	} # end if
 	return $$self{'first_scheduled'};
 } # end sub first_scheduled
@@ -1579,7 +1579,7 @@ sub first_scheduled_seconds {
 sub last_scheduled {
 	my ( $self ) = @_;
 	if ( ! exists $$self{'last_scheduled'} ) {
-		@$self{'last_scheduled'} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND (description LIKE 'Scheduled%' OR description LIKE 'Job bumped%')`, $$self{'id'} );
+		@$self{'last_scheduled'} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND (description LIKE 'Scheduled%' OR description LIKE '%bumped%')`, $$self{'id'} );
 	} # end if
 	return $$self{'last_scheduled'};
 } # end sub last_schedule

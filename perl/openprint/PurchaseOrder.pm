@@ -19,6 +19,7 @@ require openprint::User;
 require openprint::Tax;
 require openprint::PurchaseOrder_Content;
 require openprint::PurchaseOrder_Log;
+require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 
@@ -231,61 +232,24 @@ sub find {
 } # end sub find
 
 sub save {
-	my ( $self, $hash ) = @_;
+	my ( $self, $param ) = @_;
 
-	if ( $hash ) {
-		$self->set( $hash );
-	} # end if
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$k} = $$self{$k};
-	} # end foreach
-	delete $sql{'created_on'};
-	$sql{'subtotal'} = 0;
-	foreach my $C ( $self->Contents() ) {
-		$sql{'subtotal'} += $C->total();
-	} # end foreach
-	delete $$self{'federaltax'};
-	delete $$self{'statetax'};
-	$sql{'federaltax'} = $self->federaltax();
-	$sql{'statetax'} = $self->statetax();
-	$sql{'total'} = $sql{'subtotal'};
-	if ( ! $sql{'currency_id'} ) {
+	# force recalculation
+	$self->subtotal(undef);
+	$self->total(undef);
+	if ( ! $$self{'currency_id'} ) {
 		my $Currency = openprint::Currency::get_current();
-		$sql{'currency_id'} = $Currency->id();
+		$$self{'currency_id'} = $Currency->id();
 	} # end if
+	my $error = $self->SUPER::save( $param );
 
-	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('PurchaseOrders_id_seq')} );
-		$sql{'id'} = $$self{'id'};
+	# Taxes
+	foreach my $T ( $self->Taxes() ) {
+		$error .= $T->save();
+	} # end foreach
 
-		if ( my $error = sql::insert( undef, undef, 'PurchaseOrders', \%sql ) ) {
-			$$self{'id'} = undef;
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-
-    } else {
-		if ( my $error = sql::update( undef, undef, 'PurchaseOrders', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-    } # end if
-
-
-	sql::end_transaction( $dbh, $ac );
-	$self->load();
-	return;
+	return $error;
 } # end sub save
-
-sub destroy {
-    my $self = shift;
-    my $ac = sql::start_transaction( );
-    sql::execute( undef, undef, q{DELETE FROM PurchaseOrders WHERE id=?}, $$self{'id'} );
-    sql::end_transaction( undef, $ac );
-} # end sub delete
 
 sub Currency {
 	my ( $self ) = @_;
@@ -294,6 +258,7 @@ sub Currency {
 	} # end if
 	return new openprint::Currency( $_[0]{currency_id} );
 } # end sub Currency
+
 sub Supplier {
 	return new openprint::Company( $_[0]{supplier_id} );
 } # end sub Supplier
@@ -399,100 +364,30 @@ sub send_to_vendor {
 
 } # end sub send_to_vendor
 
-sub federaltax {
-	my ( $self, $new ) = @_;
-
-	if ( defined $new ) {
-		$$self{'federaltax'} = $new;
+sub subtotal {
+	my $self = $_[0];
+	if ( @_ == 2 ) {
+		$$self{'subtotal'} = $_[1];
+	}
+	if ( ! defined $$self{'subtotal'} ) {
+		$$self{'subtotal'} = 0;
+		foreach my $C ( $self->Contents() ) {
+			$$self{'subtotal'} += $C->total();
+		} # end foreach
 	} # end if
-	if ( ( ! $$self{'federaltax'} ) and $self->federaltax_charge() ) {
-		$$self{'federaltax'} = $self->subtotal() * ( $self->federaltax_rate()/100 );
-	} # end if
-	return $$self{'federaltax'};
-} # end sub federaltax
-
-sub federaltax_rate {
-	my ( $self, $new ) = @_;
-	if ( defined $new ) {
-		$$self{'federaltax_rate'} = $new;
-	} # end if
-	if ( ! $$self{'federaltax_rate'} ) {
-		if ( my ( $Tax ) = openprint::Tax->find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
-			$$self{'federaltax_rate'} = $Tax->federaltax_rate();
-		} # end if
-	} # end if
-	return $$self{'federaltax_rate'};
-} # end sub federaltax_rate
-
-sub federaltax_charge {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'federaltax_charge'} = $_[0];
-	} # end if
-	if ( ! defined $$self{'federaltax_charge'} ) {
-		if ( $self->Company()->taxexempt1() eq 'Y' ) {
-			$$self{'federaltax_charge'} = 0;
-		} # end if
-# This is true, but can't expect people to type it in
-#if ( ! $self->Vendor()->gst_number() ) {
-#   return 0;
-#} # end if
-		$$self{'federaltax_charge'} = 1;
-	} # end if
-	return $$self{'federaltax_charge'};
-} # end sub federaltax_charge
-
-sub statetax {
-	my ( $self, $new ) = @_;
-
-	if ( defined $new ) {
-		$$self{'statetax'} = $new;
-	} # end if
-	if ( ( ! $$self{'statetax'} ) and $self->statetax_charge() ) {
-		$$self{'statetax'} = $self->subtotal() * ( $self->statetax_rate()/100 );
-	} # end if
-	return $$self{'statetax'};
-} # end sub statetax
-
-sub statetax_rate {
-	my ( $self, $new ) = @_;
-	if ( defined $new ) {
-		$$self{'statetax_rate'} = $new;
-	} # end if
-	if ( ! $$self{'statetax_rate'} ) {
-		if ( my ( $Tax ) = openprint::Tax->find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
-			$$self{'statetax_rate'} = $Tax->statetax_rate();
-		} # end if
-	} # end if
-	return $$self{'statetax_rate'};
-} # end sub statetax_rate
-
-sub statetax_charge {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'statetax_charge'} = $_[0];
-	} # end if
-	if ( ! defined $$self{'statetax_charge'} ) {
-		if ( $self->Company()->taxexempt2() eq 'Y' ) {
-			return 0;
-		} # end if
-# This is true, but can't expect people to type it in
-#if ( ! $self->Vendor()->pst_number() ) {
-#   return 0;
-#} # end if
-		$$self{'statetax_charge'} = 1;
-	} # end if
-	return $$self{'statetax_charge'};
-} # end sub statetax_charge
+	return $$self{'subtotal'};
+} # end sub subtotal
 
 sub total {
 	my ( $self ) = @_;
-	return $$self{'subtotal'} + $self->federaltax() + $self->statetax();
+	if ( ! $$self{'total'} ) {
+		$$self{'total'} = $self->subtotal();
+        foreach my $Tax ( $self->Taxes() ) {
+            $$self{'total'} += $Tax->amount();
+        } # end foreach Tax
+	} # end if
+	return $$self{'total'};
 } # end sub total
-
-sub Company {
-	return new openprint::Company( $_[0]{'company_id'} );
-} # end sub Company
 
 sub authorize {
 	my ( $self ) = @_;
@@ -571,5 +466,38 @@ sub copy {
 sub Manifest {
 	return new openprint::Manifest( $_[0]{'manifest_id'} );
 } # end sub Manifest
+
+sub Taxes {
+    my ( $self ) = @_;
+    if ( ! $$self{'Taxes'} ) {
+        @{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
+    } # end if
+    if ( ! @{$$self{'Taxes'}} ) {
+        foreach my $Tax ( openprint::Tax->find(
+                    'period_start_null_or_<='   =>  $$self{'created_on'},
+                    'period_end_null_or_>='     =>  $$self{'created_on'},
+                    'country'   =>  $self->Company()->country(),
+                    'state'     =>  $self->Company()->state()),
+                ) {
+            my $T = new openprint::PurchaseOrder_Tax();
+            $T->save({
+                'purchaseorder_id'=>  $$self{'id'},
+                'tax_id'    =>  $$Tax{'id'},
+                'rate'      =>  $$Tax{'rate'},
+            });
+            push @{$$self{'Taxes'}}, $T;
+        } # end foreach Tax
+    } # end if
+    return @{$$self{'Taxes'}};
+} # end sub Taxes
+
+sub Tax {
+    my $result = openprint::PurchaseOrder_Tax->find_one('purchaseorder_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() );
+    if ( ! $result ) {
+        return new openprint::PurchaseOrder_Tax();
+    } # end if
+    return $result;
+} # end sub Tax
+
 1;
 __END__

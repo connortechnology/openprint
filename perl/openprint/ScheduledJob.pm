@@ -423,10 +423,11 @@ sub get_li {
 			$html .= '</span>';
 		}
 	} else {
-		$html .= sprintf( '<div class="Comment">%3$s</div>', ssi::htmlize( $self->comment() ) );
+		$html .= sprintf( '<div class="Comment">%1$s</div>', $self->comment() );
+		$html .= sprintf( q`<div class="Stock">%1$s</div>`, $self->stock() );
 		if ( $$self{'project_id'} ) {
-		$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
-		$html .= sprintf( '<span class="Impressions">%d imps</span>', $self->impressions() );
+			$html .= sprintf( '<span class="Forms">%d %s</span>', $self->forms(), $self->forms() > 1 ? ' forms' : ' form' );
+			$html .= sprintf( '<span class="Impressions">%d imps</span>', $self->impressions() );
 		} # en dif
 		$html .= sprintf( q`<span class="StartTime">Start:%2$s</span>`, $$self{'id'},
 				Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
@@ -669,7 +670,12 @@ sub bump {
 		push @{$variable{'changed'}}, $self->Shift()->ul_id();
 	} # end if smartscheduling
 	sql::end_transaction( $dbh, $ac );
-	$Project->add_to_log( @session{'company_id','user_id'}, 'Job bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
+	my @forms = map {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $_ );
+		$$sig_specs{'SignatureIndex'};
+	} @{$self->service_id()} if $self->service_id();
+
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Form ' .join(',',sort @forms).' bumped to next shift: '.Date::Format::time2str($config{'DateTimeFormat'}, $self->starttime_seconds() ) . ' on ' . $self->Equipment()->name() );
 	return $error;
 } # end sub bump
 

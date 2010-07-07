@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session %fields %transforms %defaults $table $serial );
+use vars qw(%variable $log $dbh %config %session $debug %fields %transforms %defaults $table $serial );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -19,9 +19,10 @@ require openprint::Claim_Content;
 require openprint::PurchaseOrder;
 require openprint::Company;
 require openprint::Currency;
+require openprint::Claim_Tax;
 
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'claims';
 $serial = 'claims_id_seq';
@@ -43,12 +44,6 @@ $serial = 'claims_id_seq';
 	'currency_id'	=>	'currency_id',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
-	'federaltax'		=>	'federaltax',
-	'federaltax_rate'	=>	'federaltax_rate',
-	'federaltax_charge'	=>	'federaltax_charge',
-	'statetax'			=>	'statetax',
-	'statetax_rate'		=>	'statetax_rate',
-	'statetax_charge'	=>	'statetax_charge',
 	'deleted'			=>	'deleted',
 	'reason'			=>	'reason',
 	'vendor_contact'	=>	'vendor_contact',
@@ -88,18 +83,13 @@ $serial = 'claims_id_seq';
 	'currency_id'	=>	undef,
 	'total'			=>	0,
 	'subtotal'		=>	0,
-	'federaltax'	=>	undef,
-	'federaltax_rate'	=>	undef,
-	'statetax'		=>	undef,
-	'statetax_rate'	=>	undef,
 	'deleted'		=>	0,
 	'editor_id'		=>	[],
 );
 
-# Returns a paper object specified by the parameters
 sub find {
+	my $self = shift;
 	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
 	my @values;
 	my $sql = 'SELECT * FROM Claims WHERE 1>0';
 
@@ -215,11 +205,7 @@ sub find {
 sub save {
 	my ( $self, $hash ) = @_;
 	delete $$self{'subtotal'};
-	delete $$self{'federaltax'};
-	delete $$self{'statetax'};
 	$$hash{'subtotal'} = $self->subtotal();
-	$$hash{'federaltax'} = $self->federaltax();
-	$$hash{'statetax'} = $self->statetax();
 	$$hash{'total'} = $self->total();
 	if ( ! $$hash{'currency_id'} ) {
 		my $Currency = openprint::Currency::get_current();
@@ -233,6 +219,7 @@ sub save {
 sub destroy {
     my $self = shift;
     my $ac = sql::start_transaction( );
+    sql::execute( undef, undef, q{DELETE FROM Claim_Taxes WHERE claim_id=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Claim_Contents WHERE claim_id=?}, $$self{'id'} );
 	return $dbh->errstr() if $dbh->errstr();
     sql::execute( undef, undef, q{DELETE FROM Claims WHERE id=?}, $$self{'id'} );
@@ -270,88 +257,6 @@ sub Creator {
 	return new openprint::User( $_[0]{created_by} );
 } # end sub Creator
 
-sub federaltax {
-	my ( $self, $new ) = @_;
-
-	if ( defined $new ) {
-		$$self{'federaltax'} = $new;
-	} # end if
-	if ( ( ! $$self{'federaltax'} ) and $self->federaltax_charge() ) {
-		$$self{'federaltax'} = $self->subtotal() * ( $self->federaltax_rate()/100 );
-	} # end if
-	return $$self{'federaltax'};
-} # end sub federaltax
-
-sub federaltax_rate {
-	my ( $self, $new ) = @_;
-	if ( defined $new ) {
-		$$self{'federaltax_rate'} = $new;
-	} # end if
-	if ( ! $$self{'federaltax_rate'} ) {
-		if ( my ( $Tax ) = openprint::Tax->find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
-			$$self{'federaltax_rate'} = $Tax->federaltax_rate();
-		} # end if
-	} # end if
-	return $$self{'federaltax_rate'};
-} # end sub federaltax_rate
-
-sub federaltax_charge {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'federaltax_charge'} = $_[0];
-	} # end if
-	if ( $$self{'company_id'} and ! defined $$self{'federaltax_charge'} ) {
-		if ( $self->Company()->taxexempt1() eq 'Y' ) {
-			$$self{'federaltax_charge'} = 0;
-		} # end if
-# This is true, but can't expect people to type it in
-#if ( ! $self->Vendor()->gst_number() ) {
-#   return 0;
-#} # end if
-		$$self{'federaltax_charge'} = 1;
-	} # end if
-	return $$self{'federaltax_charge'};
-} # end sub federaltax_charge
-sub statetax {
-	my ( $self, $new ) = @_;
-
-	if ( defined $new ) {
-		$$self{'statetax'} = $new;
-	} # end if
-	if ( ( ! $$self{'statetax'} ) and $self->statetax_charge() ) {
-		$$self{'statetax'} = $self->subtotal() * ( $self->statetax_rate()/100 );
-	} # end if
-	return $$self{'statetax'};
-} # end sub statetax
-
-sub statetax_rate {
-	my ( $self, $new ) = @_;
-	if ( defined $new ) {
-		$$self{'statetax_rate'} = $new;
-	} # end if
-	if ( ! $$self{'statetax_rate'} ) {
-		if ( my ( $Tax ) = openprint::Tax->find( 'state'=>$self->Company()->state(), 'country'=>$self->Company()->country() ) ) {
-			$$self{'statetax_rate'} = $Tax->statetax_rate();
-		} # end if
-	} # end if
-	return $$self{'statetax_rate'};
-} # end sub statetax_rate
-
-sub statetax_charge {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'statetax_charge'} = $_[0];
-	} # end if
-	if ( $$self{'company_id'} and ! defined $$self{'statetax_charge'} ) {
-		if ( $self->Company()->taxexempt2() eq 'Y' ) {
-			$$self{'statetax_charge'} = 0;
-		} else {
-			$$self{'statetax_charge'} = 1;
-		} # end if
-	} # end if
-	return $$self{'statetax_charge'};
-} # end sub statetax_charge
-
 sub subtotal {
 	my ( $self, $new ) = @_;
 	
@@ -370,9 +275,6 @@ sub total {
 	return $self->subtotal() + $self->federaltax() + $self->statetax();
 } # end sub total
 
-sub Company {
-	return new openprint::Company( $_[0]{'company_id'} );
-} # end sub Company
 sub Contact {
 	return new openprint::User( $_[0]{'contact_id'} );
 } # end sub Contact
@@ -406,6 +308,38 @@ sub send {
 			);
 	return $results;
 } # end sub send
+
+sub Taxes {
+    my ( $self ) = @_;
+    if ( ! $$self{'Taxes'} ) {
+        @{$$self{'Taxes'}} = openprint::Claim_Tax->find('claim_id'=>$$self{'id'});
+    } # end if
+    if ( ! @{$$self{'Taxes'}} ) {
+        foreach my $Tax ( openprint::Tax->find(
+                    'period_start_null_or_<='   =>  $$self{'created_on'},
+                    'period_end_null_or_>='     =>  $$self{'created_on'},
+                    'country'   =>  $self->Company()->country(),
+                    'state'     =>  $self->Company()->state()),
+                ) {
+            my $T = new openprint::Claim_Tax();
+            $T->save({
+                'claim_id'=>  $$self{'id'},
+                'tax_id'    =>  $$Tax{'id'},
+                'rate'      =>  $$Tax{'rate'},
+            });
+            push @{$$self{'Taxes'}}, $T;
+        } # end foreach Tax
+    } # end if
+    return @{$$self{'Taxes'}};
+} # end sub Taxes
+
+sub Tax {
+    my $result = openprint::Claim_Tax->find_one('claim_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() );
+    if ( ! $result ) {
+        return new openprint::Claim_Tax();
+    } # end if
+    return $result;
+} # end sub Tax
 
 1;
 __END__

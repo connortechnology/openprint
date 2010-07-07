@@ -12,7 +12,7 @@ use vars qw( $log $dbh %variable %param %session );
 *session = \%openprint::session;
 
 sub _breakdown {
-	openprint::project::view( $log, $dbh, \%variable, $param{'project_id'} ) if $param{'project_id'};
+	openprint::main_project::view( $param{'project_id'} ) if $param{'project_id'};
 }
 
 sub load_simple {

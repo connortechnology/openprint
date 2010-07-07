@@ -62,15 +62,22 @@ sub load {
 		return;
 	} # end if
 	my @identified_by = eval '@'.$type.'::identified_by';
+	my $d = eval '$'.$type.'::dbh';
+	$d = $dbh if ! $d;
 
 	if ( ! $data ) {
 		if ( @identified_by ) {
+<<<<<<< HEAD
 			$data = $dbh->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+=======
+$log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=' . $$self{$_} } @identified_by ) );
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+>>>>>>> 87a13e3bbf75e7c67913f3929a822c01650418c1
 		} else {
-			$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
-			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $dbh->errstr ) if $dbh->errstr;
+			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
 		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
@@ -80,13 +87,13 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
-if ( $data ) {
-foreach my $k ( keys %$data ) {
-$log->debug("$type ::save $k => $$data{$k}");
-}
-} else {
-$log->debug("No data");
-}
+#if ( $data ) {
+#foreach my $k ( keys %$data ) {
+#$log->debug("$type ::save $k => $$data{$k}");
+#}
+#} else {
+#$log->debug("No data");
+#}
 	$self->set( $data ? $data : {} );
 #if ( $data ) {
 #foreach my $k ( keys %$data ) {
@@ -136,13 +143,13 @@ $log->debug("No data");
 } # end sub save
 
 sub get {
-    my $self = shift;
+	my $self = shift;
 	my @results;
 	foreach ( @_ ) {
 		push @results, $self->$_();
 	} # end foreach
 
-    return @results;
+	return @results;
 } # end sub get
 
 sub set {
@@ -208,9 +215,9 @@ sub clone {
 } # end sub clone
 
 sub delete {
-    my ( $self ) = @_;
-    my $type = ref $self;
-    my $table = eval '$'.$type.'::table';
+	my ( $self ) = @_;
+	my $type = ref $self;
+	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	if ( exists $fields{'deleted'} ) {
 		sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 1 );
@@ -227,8 +234,8 @@ sub delete {
 
 sub undelete {
 	my $self = shift;
-    my $type = ref $self;
-    my $table = eval '$'.$type.'::table';
+	my $type = ref $self;
+	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{'id'}], 'deleted', 0 );
 	$$self{'deleted'} = 0;
@@ -253,32 +260,32 @@ sub Creator {
 } # end sub Creator
 
 sub find {
-    my $type = shift;
-    my $table = eval '$'.$type.'::table';
-    my %fields = eval '%'.$type.'::fields';
+	my $type = shift;
+	my $table = eval '$'.$type.'::table';
+	my %fields = eval '%'.$type.'::fields';
 	my $debug = eval '$'.$type.'::debug';
 
-    my %params = @_;
-    my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
-    my @values;
+	my %params = @_;
+	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
+	my @values;
 
-    foreach my $k ( keys %params ) {
-        next if sets::isin( $k,[ 'order','limit','or' ] );
+	foreach my $k ( keys %params ) {
+		next if sets::isin( $k,[ 'order','limit','or' ] );
 		next if ! $fields{$k};
-        if ( ref $params{$k} eq 'ARRAY' ) {
-            $sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-            push @values, @{$params{$k}};
-        } elsif ( ! defined $params{$k} ) {
-            $sql .= " AND $fields{$k} IS NULL";
+		if ( ref $params{$k} eq 'ARRAY' ) {
+			$sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+			push @values, @{$params{$k}};
+		} elsif ( ! defined $params{$k} ) {
+			$sql .= " AND $fields{$k} IS NULL";
 		} else {
 #$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
-            $sql .= " AND $fields{$k}=?";
-            push @values, $params{$k};
-        } # end if
+			$sql .= " AND $fields{$k}=?";
+			push @values, $params{$k};
+		} # end if
 #$openprint::log->debug("Before delete @values");
 		delete $params{$k};
 #$openprint::log->debug("Aftere delete @values");
-    } # end foreach k
+	} # end foreach k
 	if ( %params ) {
 		foreach my $k ( keys %fields ) {
 			if ( exists $params{$k.'_like'} ) {
@@ -360,23 +367,23 @@ sub find {
 	} # end if
 
 	if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
-        $sql .= ' AND (deleted=? OR deleted IS NULL)';
-        push @values, 0;
-    } # end if
+		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @values, 0;
+	} # end if
 
 	$sql .= " OR $params{'or'}" if $params{'or'};
-    $sql .= " ORDER BY $params{'order'}" if $params{'order'};
-    $sql .= " LIMIT $params{'limit'}" if $params{'limit'};
+	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
+	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 
-    my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-    if ( ! $data ) {
-        $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
-    } elsif ( ( ! @$data ) and $debug ) {
-        $openprint::log->debug("No $type ($sql) (@values) " );
-    } elsif ( $debug ) {
-        $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
-    } # end if
-    return map { $type->new( $_->{$fields{id}}, $_ ) } @$data;
+	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+	if ( ! $data ) {
+		$openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
+	} elsif ( ( ! @$data ) and $debug ) {
+		$openprint::log->debug("No $type ($sql) (@values) " );
+	} elsif ( $debug ) {
+		$openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
+	} # end if
+	return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
 } # end sub find
 
 sub find_one {
@@ -384,7 +391,7 @@ sub find_one {
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = eval($type.'->find(%params);');
-$openprint::log->debug("$type ::find_one @_  # Results; " . @Results);
+$openprint::log->debug("$type ::find_one @_	# Results; " . @Results);
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -399,12 +406,12 @@ sub AUTOLOAD {
 	if ( @_ ) {
 		return $self->{$name} = shift;
 	} else {
-        my $fields = eval '\%'.$type.'::fields';
-        if ( $fields and exists $$fields{lc $name . '_id'} ) {
+		my $fields = eval '\%'.$type.'::fields';
+		if ( $fields and exists $$fields{lc $name . '_id'} ) {
 			if ( eval '\%openprint::'.$name.'::fields' ) {
 				return new("openprint::$name", $$self{lc $name . '_id'});
 			} # end if
-        } # end if
+		} # end if
 		return $self->{$name};
 	} # end if
 } # end sub AUTOLOAD

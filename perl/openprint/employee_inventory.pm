@@ -1772,10 +1772,13 @@ sub purchase_order_view {
 		} else {
 			$param{'delivered_on'} = undef;
 		} # end if
-		$param{'federaltax_charge'} = $param{'federaltax_charge'} ? 1 : 0;
-		$param{'statetax_charge'} = $param{'statetax_charge'} ? 1 : 0;
+		foreach my $Tax ( $PO->Taxes() ) {
+			# Order is important here.
+			$Tax->charge($param{'tax_charge-'.$Tax->id()});
+			$Tax->amount(undef);
+			$Tax->save();
+		} # end foreach
 		$variable{'error'} .= $PO->save( \%param );
-$log->debug("PO total: " . $PO->total() . ' Me total: ' . $Me->purchasing_limit() );
 		if ( ! $PO->authorized() ) {
 			if ( $PO->total() < $Me->purchasing_limit() ) {
 				$variable{'error'} .= $PO->save({

@@ -17,6 +17,7 @@ require openprint::Company;
 require openprint::customer_credit;
 require openprint::Tax;
 require openprint::Email;
+require openprint::Email_Account;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -642,7 +643,7 @@ sub emails {
 	$openprint::Email::dbh = $mail_dbh;
  
 	if ( $param{'action'} eq 'Delete' ) {
-		foreach my $Email ( openprint::Email->find('id'=>$param{'id'}) ) {
+		foreach my $Email ( openprint::Email_Account->find('id'=>$param{'id'}) ) {
 			$variable{'error'} .= $Email->delete();
 		} # end foreach Email
 	} elsif ( $param{'action'} eq 'Save' ) {
@@ -651,9 +652,10 @@ sub emails {
 
 sub email {
 	my $mail_dbh = email::db_connect();
-	$openprint::Email::dbh = $mail_dbh;
- 
-	$variable{'Email'} = new openprint::Email( $param{'id'} );
+	if ( $mail_dbh ) {
+		$openprint::Email_Account::dbh = $mail_dbh;
+		$variable{'Email'} = new openprint::Email_Account( $param{'id'} );
+	} # end if
 } # end sub email
 
 1;

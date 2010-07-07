@@ -197,15 +197,15 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		<td colspan="5" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
-    <tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?> ( <? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ) ?>%)</td>
-        <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
-    </tr>
-    <tr<? echo ( $$variable{'PurchaseOrder'}->statetax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?></td>
-        <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
-    </tr>
-
+                <? echo ( 
+                    my $html;
+                    foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
+                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="Price">%s</td></tr>',
+                            $Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+                            );
+                    } # end foreach Tax
+                    return $html;
+                ) ?>
 	<tr>
 		<td colspan="5" class="totals">TOTAL</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>

@@ -30,7 +30,7 @@ return $html;
 			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::LabelType->find('order'=>'lower(name)') ] ); ) ?>
 			</select>
 		</td>
-		<td><input type="text" name="reference"/></td>	
+		<td><input type="text" name="reference" id="reference" /></td>	
 		<td>
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddLabel', 'add.gif', q`if(!get_ddm_value(document.LabelForm.type_id)){alert('Please select the label type.');} else {LabelForm.submit();};`, '', 'Add' ); ) ?>
 		</td>

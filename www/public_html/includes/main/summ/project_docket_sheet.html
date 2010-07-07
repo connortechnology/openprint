@@ -242,18 +242,7 @@
 			} # end if
 			$html .= '</td><td class="docketText">';
 
-			foreach my $side ( 'SideOne','SideTwo' ) {
-				my @colours = openprint::Estimating::Printing::get_colours( $sig_specs, $side );
-				$html .= scalar @colours;
-				$html .= '+AQ (Gloss)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Gloss' );
-				$html .= '+AQ (Matte)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Matte' );
-				$html .= '+Varnish (Spot Gloss)' if ( $$sig_specs{'chkVarnishSpotGloss'.$side} );
-				$html .= '+Varnish (Spot Matte)' if ( $$sig_specs{'chkVarnishSpotMatte'.$side} );
-				$html .= '+Varnish (Dry Trap)' if ( $$sig_specs{'chkVarnishDryTrap'.$side} );
-				$html .= '+Varnish (Overall Gloss)' if ( $$sig_specs{'chkVarnishOverallGloss'.$side} );
-				$html .= '+Varnish (Overall Matte)' if ( $$sig_specs{'chkVarnishOverallMatte'.$side} );
-				$html .= '/' if $side eq 'SideOne'; 
-			} # end foreach side;
+			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs );
 
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				$html .= '<br/><table>';

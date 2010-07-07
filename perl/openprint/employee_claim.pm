@@ -24,6 +24,7 @@ sub history {
 			$variable{'error'} .= $Claim->delete();
 
 		} # end foreach claim_id
+		%param = ();
 	} # end if
 	ssi::save_params( '/employee/claim/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','supplier_id', 'created_by', 'status' ) );
 } # end sub history
@@ -46,7 +47,7 @@ sub view {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $Claim->id() ) {
 			$Claim->id( $param{'claim_id'} );
-			$variable{'error'} .= $Claim->save();
+			$variable{'error'} .= $Claim->save({'supplier_id'=>$param{'supplier_id'}});
 		} # end if
 		foreach my $C ( $Claim->Contents() ) {
 			if ( ! $param{"rfidtag_id-$$C{id}"} ) { $param{"rfidtag_id-$$C{id}"} = undef; };
@@ -74,6 +75,12 @@ sub view {
 					'description'	=>	$param{"description-$$C{id}"},
 					} );
 		} # end foreach Contents
+		foreach my $Tax ( $Claim->Taxes() ) {
+			# Order is important here.
+			$Tax->charge($param{'tax_charge-'.$Tax->id()});
+			$Tax->amount(undef);
+			$Tax->save();
+		} # end foreach Tax
 		$Claim->filed_on( $param{'filed'} ? join('-', @param{'filed_on_year','filed_on_month','filed_on_day'} ) : undef );
 		$Claim->sent_to_accounts_on( $param{'sent_to_accounts'} ? join('-', @param{'sent_to_accounts_on_year','sent_to_accounts_on_month','sent_to_accounts_on_day'} ) : undef );
 		$Claim->invoiced_on( $param{'invoiced'} ? join('-', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} ) : undef );

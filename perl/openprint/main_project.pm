@@ -37,7 +37,7 @@ sub sign_off {
             $variable{'Redirect'} = '/main/project/sign_off.html';
         } # end if
     } # end if
-    openprint::project::view( $log, $dbh, \%variable, $param{'ProjectIndex'} );
+    openprint::main_project::view( $param{'ProjectIndex'} );
     $variable{'ProjectIndex'} = $param{'ProjectIndex'};
 } # end sub sign_off
 
@@ -75,6 +75,27 @@ sub _history {
 			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day', 
 			);
 } # end sub _history 
+
+sub view {
+	my ( $project_index ) = @_;
+
+	if ( exists $param{'ShowAllSignatures'} ) {
+		$session{'ShowAllSignatures'} = $param{'ShowAllSignatures'};
+	} # end if
+	$variable{'ProjectIndex'} = $project_index;
+	my $Project = $variable{'Project'} = new openprint::Project( $project_index );
+	my $save = 0;
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
+			$save = 1;
+			last;
+		} # endif
+	} # end foreach
+	if ( $save ) {
+		$Project->save();
+	} # end if
+$openprint::log->debug("Saving $save");
+} # end sub view
 
 1;
 __END__
