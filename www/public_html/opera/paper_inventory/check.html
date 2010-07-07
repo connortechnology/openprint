@@ -1,12 +1,12 @@
 <? eval (
-	require eprint::InventoryCheck;
+	require openprint::InventoryCheck;
 	if ( $r->param('action') eq 'Start' ) {
-		my $ic = new eprint::InventoryCheck( $log, $dbh );
+		my $ic = new openprint::InventoryCheck( $log, $dbh );
 		$ic->save();
 		$$variable{'ic_id'} = $$ic{'id'};	
 	} elsif ( $r->param('Submit') eq 'Submit' ) {
 		$$variable{'ic_id'} = $r->param('ic_id');
-		my $ic = new eprint::InventoryCheck( $log, $dbh, $r->param('ic_id') );
+		my $ic = new openprint::InventoryCheck( $log, $dbh, $r->param('ic_id') );
 		$ic->add( $r->param('Control'), $r->param('Quantity'), $r->param('Location') );
 	} else {
 		$$variable{'ic_id'} = $r->param('ic_id');
@@ -35,7 +35,7 @@
 <? echo (
 	my $html;
 	my $rowclass;
-	foreach my $ic ( eprint::InventoryCheck::find( $log, $dbh, 'Order' => 'id' ) ) {
+	foreach my $ic ( openprint::InventoryCheck->find( $log, $dbh, 'Order' => 'id' ) ) {
 		$html .= qq`<tr$rowclass><td><a href="check.html?ic_id=$$ic{'id'}">$$ic{'id'}</a></td><td>`;
 		$html .= Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($$ic{'created_on'}) );
 		$html .= qq`</td><td>$$ic{'finished_on'}</td></tr>`;

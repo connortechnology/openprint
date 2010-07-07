@@ -5,7 +5,7 @@
 		<label class="radio" for="Aqueous<?Signature?>None">None</label><br/>
 <? echo (
 	my $html = '';
-	my @Services = openprint::Service::find('category'=>'Coating','order'=>'lower(name)', 'name_like'=>'Aqueous%' );
+	my @Services = openprint::Service->find('category'=>'Coating','order'=>'lower(name)', 'name_like'=>'Aqueous%' );
 	foreach my $Service ( @Services ) {
 		my $description = $Service->description();
 		$description =~ s/\s*Aqueous\s*//g;

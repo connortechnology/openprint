@@ -153,5 +153,18 @@ foreach my $Project ( openprint::Project->find( 'company_id'=>6, 'order'=>'id de
 	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
 
 } # end foreach Project
+my $Type = openprint::ProjectType->find_one('name'=>'Multipage');
+if ( $Type ) {
+	foreach my $Project ( openprint::Project->find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {
+		# Skip multipage projects
+		next if $Project->type_id() == $Type->id();
+		my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+		my $new_signature = $Project->copy_signature( $print_specs, openprint::service::status( $Project, $$services{''}[0] ) );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
+		} # end foreach
+	} # end foreach Project
+} # end if Type
+	
 1;
 __END__

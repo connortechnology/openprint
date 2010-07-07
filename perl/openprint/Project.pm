@@ -522,6 +522,7 @@ sub update_status {
 } # end sub update_project_status
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	my $sql = q{SELECT * FROM Projects WHERE 1>0};
 	my @values;

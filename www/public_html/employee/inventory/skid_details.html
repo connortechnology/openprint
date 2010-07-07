@@ -26,7 +26,7 @@
 			<input type="text" id="rfidtag_hex" name="rfidtag_hex" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.skid_id.value='';this.form.rfidtag_id.value='';if(event.keyCode == 13){$('jump').submit( );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('jump').submit();",'','Load' ); ) ?><br/>
 			<? if ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
-				<? echo ( return join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a> <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->skid_id(), $_->id() ); }  openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'}.'%','type'=>'Skid') ); ) ?>
+				<? echo ( return join('<br/>', map { sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%2$s">%2$s</a> <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a>', $_->skid_id(), $_->id() ); }  openprint::RFIDTag->find('id_like'=>'%'.$param{'rfidtag_id'}.'%','type'=>'Skid') ); ) ?>
 			<? endif ( ! $$variable{'Skid'}->id() and $param{'rfidtag_id'} ) ?>
 		</p>
 		
