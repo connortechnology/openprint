@@ -1774,8 +1774,8 @@ sub purchase_order_view {
 			$param{'delivered_on'} = undef;
 		} # end if
 		foreach my $Tax ( $PO->Taxes() ) {
-			# Order is important here.
-			$Tax->charge($param{'tax_charge-'.$Tax->id()});
+			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
+			$Tax->charge(1*$param{'tax_charge-'.$Tax->id()});
 			$Tax->amount(undef);
 			$Tax->save();
 		} # end foreach

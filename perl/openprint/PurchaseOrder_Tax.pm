@@ -53,12 +53,12 @@ sub charge {
 
 	if ( $self->PurchaseOrder()->company_id() and ! defined $$self{'charge'} ) {
 		if ( sets::isin( $self->name(), ['GST','HST'] ) ) {
-			if ( $self->PurchaseOrder()->Company()->taxexempt1() eq 'Y' ) {
+			if ( $self->PurchaseOrder()->Supplier()->taxexempt1() eq 'Y' ) {
 				$$self{'charge'} = 0;
 			} # end if
 			$$self{'charge'} = 1;
 		} elsif ( sets::isin( $self->name(), ['PST'] ) ) {
-			if ( $self->PurchaseOrder()->Company()->taxexempt2() eq 'Y' ) {
+			if ( $self->PurchaseOrder()->Supplier()->taxexempt2() eq 'Y' ) {
 				$$self{'charge'} = 0;
 			} # end if
 			$$self{'charge'} = 1;
