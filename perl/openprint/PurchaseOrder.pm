@@ -229,6 +229,9 @@ sub save {
 
 	# force recalculation
 	$self->subtotal(undef);
+	foreach my $Tax ( $self->Taxes() ) {
+		$Tax->amount(undef);
+	} # end foreach Tax
 	$self->total(undef);
 	if ( ! $$self{'currency_id'} ) {
 		my $Currency = openprint::Currency::get_current();
@@ -459,6 +462,9 @@ sub subtotal {
 
 sub total {
 	my ( $self ) = @_;
+	if ( @_ == 2 ) {
+		$$self{'total'} = $_[1];
+	} # end if
 	if ( ! $$self{'total'} ) {
 		$$self{'total'} = $self->subtotal();
         foreach my $Tax ( $self->Taxes() ) {
