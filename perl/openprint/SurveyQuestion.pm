@@ -1,7 +1,6 @@
 package openprint::SurveyQuestion;
 @ISA = qw( openprint::Object );
 use strict;
-use openprint ();
 
 require sql;
 require openprint::SurveyQuestionAvailableAnswer;
@@ -10,7 +9,7 @@ use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'survey_questions';
 $serial = 'survey_questions_id_seq';
 
-my %fields = (
+%fields = (
 	'id'			=>	'id',
 	'text'			=>	'text',
 	'type'			=>	'type',
@@ -19,15 +18,8 @@ my %fields = (
 );
 
 sub AvailableAnswers {
-	my ( $self ) = @_;
-	return openprint::SurveyQuestionAvailableAnswer->find('question_id'=>$$self{'id'});
+	return openprint::SurveyQuestionAvailableAnswer->find('question_id'=>$_[0]{'id'});
 } # end sub AvailableAnswers
 
-sub delete {
-	my $self = shift;
-	my $ac = sql::start_transaction();
-	sql::execute( undef, undef, q{DELETE FROM Survey_Questions WHERE id=?}, $$self{id} );
-	sql::end_transaction( $ac );
-} # end sub delete
 1;
 __END__

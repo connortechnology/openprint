@@ -1,12 +1,8 @@
 package openprint::InvoiceLog;
 @ISA = qw(openprint::Object);
 
-my $debug = 1;
-
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
-
-require sql;
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 $table = 'invoice_logs';
 $serial = 'invoice_logs_id_seq';

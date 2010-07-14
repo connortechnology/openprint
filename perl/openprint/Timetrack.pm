@@ -1,11 +1,7 @@
 package openprint::Timetrack;
 @ISA = qw(openprint::Object);
 
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use openprint ();
 
 require openprint::Currency;
 require openprint::Company;
@@ -13,7 +9,7 @@ require openprint::Service;
 
 
 use strict;
-use vars qw( $debug $table $serial %fields %defaults %transforms %find_cache );
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 $debug = 1;
 
 require sql;
@@ -61,18 +57,6 @@ $serial = 'timetracks_id_seq';
 	'travel_associated'	=>	0,
 	'distance'		=>	undef,
 );
-
-sub Currency {
-	return new openprint::Currency( $_[0]{currency_id} );
-} # end sub Currency
-
-sub Company {
-	return new openprint::Company( $_[0]{company_id} );
-} # end sub Company
-
-sub Service {
-	return new openprint::Service( $_[0]{service_id} );
-} # end sub Service
 
 sub elapsed {
 	my ( $self ) = @_;
@@ -146,12 +130,6 @@ sub paid {
 sub invoiced {
 	return $_[0]->invoice_id() ? 1 : 0;
 } # end sub invoiced
-
-sub save {
-	%find_cache = ();
-	my $self = shift;
-	return $self->SUPER::save(@_);
-}
 
 sub copy {
 	my $New = $_[0]->SUPER::copy();

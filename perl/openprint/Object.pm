@@ -258,6 +258,7 @@ sub find {
 	my $type = shift;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
+	my %find_fields = eval '%'.$type.'::find_fields';
 	my $debug = eval '$'.$type.'::debug';
 
 	my %params = @_;
@@ -281,8 +282,9 @@ sub find {
 		delete $params{$k};
 #$openprint::log->debug("Aftere delete @values");
 	} # end foreach k
+
 	if ( %params ) {
-		foreach my $k ( keys %fields ) {
+		foreach my $k ( keys %find_fields, keys %fields ) {
 			if ( exists $params{$k.'_like'} ) {
 				$sql .= " AND $fields{$k} LIKE ?";
 				push @values, $params{$k.'_like'};
@@ -386,7 +388,6 @@ sub find_one {
 	my %params = @_;
 	$params{'limit'}=1;
 	my @Results = eval($type.'->find(%params);');
-$openprint::log->debug("$type ::find_one @_	# Results; " . @Results);
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -402,12 +403,17 @@ sub AUTOLOAD {
 		return $self->{$name} = shift;
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
-		if ( $fields and exists $$fields{lc $name . '_id'} ) {
-			if ( eval '\%openprint::'.$name.'::fields' ) {
-				return new("openprint::$name", $$self{lc $name . '_id'});
+#$openprint::log->debug("Autoload $self $type $name $field $$fields{$field} ($$self{$field}) " );
+		if ( $fields ) {
+			my $field = (lc $name) . '_id';
+			if ( exists $$fields{$field} ) {
+				if ( eval '\%openprint::'.$name.'::fields' ) {
+					return new("openprint::$name", $$self{$field});
+				} # end if
 			} # end if
 		} # end if
-		return $self->{$name};
+#$openprint::log->debug("NO Autoload $type $name $field $$fields{$field}" );
+		return $$self{$name};
 	} # end if
 } # end sub AUTOLOAD
 1;

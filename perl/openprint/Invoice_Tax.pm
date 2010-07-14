@@ -34,10 +34,10 @@ sub amount {
 		$$self{'amount'} = $_[1];
 	} # end if
 
-	if ( ! defined $$self{'amount'} ) {
+	if ( $$self{'invoice_id'} and ! defined $$self{'amount'} ) {
 		$$self{'amount'} = ($$self{'rate'}/100) * $self->Invoice()->subtotal();
 	} # end if
-	return $$self{'amount'};
+	return sprintf('%.2f', $$self{'amount'} );
 } # end sub amount
 
 1;

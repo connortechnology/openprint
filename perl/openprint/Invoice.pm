@@ -1,5 +1,6 @@
 package openprint::Invoice;
 @ISA = qw(openprint::Object);
+#use Carp qw(cluck);
 
 use vars qw( %config $log $dbh %session );
 *session = \%openprint::session;
@@ -100,22 +101,33 @@ sub Invoicer {
 
 sub subtotal {
 	my ( $self ) = @_;
+
 	if ( ! $$self{'id'} ) {
-		$log->error('Invoice:subtotal no id!');
+		$log->error('Invoice:subtotal no id! ref:' . (ref $self) . ' self:' . $self);
+#cluck('Invoice:subtotal no id! ref:' . (ref $self) . ' self:' . $self);
 		return;
 	} # end if
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'subtotal'} ) ) {
 #$log->debug("Recalculating subtotal");
 		$$self{'subtotal'} = 0;
-		map { $$self{'subtotal'} += $_->value() } openprint::Timetrack->find('invoice_id'=>$$self{id});
-		map { $$self{'subtotal'} += $_->total() } openprint::Invoiced_Product->find('invoice_id'=>$$self{id});
+		foreach my $T ( openprint::Timetrack->find('invoice_id'=>$$self{id}) ) {
+			$$self{'subtotal'} += $T->value();
+		} # end foreach
+		foreach my $P ( openprint::Invoiced_Product->find('invoice_id'=>$$self{id}) ) {
+			$$self{'subtotal'} += $P->total();
+		}# end foreach P
 	} # end if
 	return sprintf('%.2f', $$self{'subtotal'} );
 } # end sub subtotal
 
 sub total {
 	my ( $self ) = @_;
+
+	if ( ! $$self{'id'} ) {
+		$log->error('Invoice:total no id! ref:' . (ref $self) . ' self:' . $self);
+		return;
+	} # end if
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'total'} ) ) {
 		$$self{'total'} = $self->subtotal();
@@ -127,9 +139,9 @@ sub total {
 } # end sub total
 
 sub interest {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'interest'} = shift;
+	my ( $self ) = @_;
+	if ( @_ == 2 ) {
+		$$self{'interest'} = $_[1];
 	} # end if
 
 	if ( (!$$self{'posted'}) or ( ! defined $$self{'interest'} ) ) {
@@ -271,5 +283,4 @@ sub Tax {
 } # end sub Tax
 
 1;
-
 __END__

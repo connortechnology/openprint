@@ -1,21 +1,19 @@
 package openprint::Invoice_Interest;
 @ISA = qw(openprint::Object);
 
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
+require sql;
+
+use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
-
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 $table = 'invoice_interests';
 $serial = 'invoice_interests_id_seq';
 
-require sql;
+$debug = 0;
 
 %fields = (
 	'id'				=>	'id',
@@ -45,11 +43,5 @@ sub save {
 	return $error;
 } # end sub save
 
-sub Invoice {
-	return new openprint::Invoice( $_[0]{invoice_id} );
-} # end sub Order
-
 1;
-
 __END__
-~       
