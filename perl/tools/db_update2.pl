@@ -21,6 +21,8 @@ require openprint::PaperInventory;
 require openprint::Log;
 require openprint::Host;
 require openprint::Invoice;
+require openprint::Order;
+require openprint::Order_Tax;
 
 use openprint ();
 use vars qw( $log $dbh %config );
@@ -89,6 +91,17 @@ if ( $data ) {
 		$dbh->do($st);
 	} # end foreach
 } # end if
+
+my $data = 0;
+if ( sets::isin( 'ordered_products', \@tables ) ) {
+	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM ordered_products LIMIT 1', {} );
+} # end if
+if ( $data ) {
+	$dbh->do('ALTER TABLE Ordered_products drop column gst') if ( exists $$data{'gst'} );
+	$dbh->do('ALTER TABLE Ordered_products drop column pst') if ( exists $$data{'pst'} );
+	$dbh->do('ALTER TABLE Ordered_products drop column hst') if ( exists $$data{'hst'} );
+}
+
 
 if ( sets::isin( 'taxes', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM taxes LIMIT 1', {} );
@@ -164,6 +177,92 @@ if ( ! openprint::Invoice_Tax->find() ) {
 	} # end foreach Invoice
 	sql::end_transaction( $dbh, $ac );
 } # end if
+
+if ( ! sets::isin('order_taxes', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Order_Taxes.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
+if ( ! openprint::Order_Tax->find() ) {
+	my $ac = sql::start_transaction( $dbh );
+	foreach my $Order ( openprint::Order->find() ) {
+		my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Orders WHERE id=? LIMIT 1', {}, $Order->id() );
+		foreach my $Tax ( openprint::Tax->find(
+					'country'			=>	$Order->country(), 
+					'state'				=>	$Order->state(), 
+					'period_start_null_or_<='	=>	$Order->created_on(),
+					'period_end_null_or_>='		=>	$Order->created_on(),
+			) ) {
+			my $new_amount;
+
+			if ( ( $Tax->name() eq 'GST' ) and ( $new_amount != $$data{'curfedtax'} ) ) {
+				$new_amount = $$data{'curfedtax'};
+			} elsif ( $Tax->name() eq 'PST' ) {
+				if ( new openprint::Company( $config{'owner'} )->pst_number() and ( $new_amount != $$data{'curprovtax'} ) ) {
+				$new_amount = $$data{'curprovtax'};
+				} # end if
+			} else {
+				$new_amount = sprintf('%.2f', $Order->subtotal() * ( $Tax->rate()/100 ) );
+			} # end if
+				
+			my $Order_Tax = new openprint::Order_Tax();
+			$_ = $Order_Tax->save({
+				'order_id'	=>	$Order->id(),
+				'tax_id'		=>	$Tax->id(),
+				'rate'			=>	$Tax->rate(),
+				'amount'		=>	$new_amount,
+			});
+			$log->warn( $_ ) if $_;
+		} # end foreach tax
+	} # end foreachOrder 
+	sql::end_transaction( $dbh, $ac );
+} # end if
+my $data = 0;
+if ( sets::isin( 'orders', \@tables ) ) {
+	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM orders LIMIT 1', {} );
+} # end if
+if ( $data ) {
+	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
+	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
+	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
+	$dbh->do('UPDATE ORders set owing=curtotalsale-paid');
+}
+if ( sets::isin('purchaseorders', \@tables ) ) {
+	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
+	if ( $data ) {
+		if ( ! exists $$data{'manifest_id'} ) {
+			$dbh->do('ALTER TABLE purchaseorders add manifest_id integer');
+			$dbh->do('ALTER TABLE purchaseorders add FOREIGN KEY (manifest_id) REFERENCES Manifests (id)');
+		} # end if
+		$dbh->do('ALTER TABLE purchaseorders add authorized boolean default false') if ! exists $$data{'authorized'};
+		$dbh->do('ALTER TABLE purchaseorders add cancelled boolean default false') if ! exists $$data{'cancelled'};
+		$dbh->do('ALTER TABLE purchaseorders add vendor_contact text') if ! exists $$data{'vendor_contact'};
+		$dbh->do('ALTER TABLE purchaseorders add vendor_sms text') if ! exists $$data{'vendor_sms'};
+		$dbh->do('ALTER TABLE purchaseorders add shipto_contact text') if ! exists $$data{'shipto_contact'};
+		$dbh->do('ALTER TABLE purchaseorders add shipto_mobile text') if ! exists $$data{'shipto_mobile'};
+		$dbh->do('ALTER TABLE purchaseorders add shipto_sms text') if ! exists $$data{'shipto_sms'};
+		$dbh->do('ALTER TABLE purchaseorders add delivered_on_switch text') if ! exists $$data{'delivered_on_switch'};
+	} # end if
+} else {
+	$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrders.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+if ( ! sets::isin('purchaseorder_taxes', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Taxes.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
+
+if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Other') ) {
+	my $PO_CT = new openprint::PurchaseOrder_ContentType();
+	$PO_CT->save({'name'=>'Other'});
+} # end if
+	
 $dbh->disconnect();
 1;
 __END__

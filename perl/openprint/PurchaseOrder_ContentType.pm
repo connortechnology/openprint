@@ -9,7 +9,7 @@ use vars qw( $table $serial %fields %transforms %defaults );
 my $debug = 1;
 
 $table = 'PurchaseOrder_ContentTypes';
-$serial = 'PurchaseOrder_ContentTypes_id';
+$serial = 'PurchaseOrder_ContentTypes_id_seq';
 %fields = (
 	'id'		=>	'id',
 	'name'		=>	'name',

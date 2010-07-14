@@ -22,9 +22,6 @@ $table = 'ordered_products';
 	'price'			=> 'price',
 	'shipping_type'	=> 'shipping_type',
 	'requested_for'	=> 'requested_for',
-	'gst'			=> 'gst',
-	'hst'			=> 'hst',
-	'pst'			=> 'pst',
 );
 
 sub delete {

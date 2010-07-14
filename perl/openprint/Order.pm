@@ -13,6 +13,7 @@ use vars qw( %session %config %variable $log $dbh $table $serial %fields %transf
 require sql;
 require openprint::logs;
 require openprint::OrderedProduct;
+require openprint::Order_Tax;
 require openprint::Payment;
 require openprint::Tax;
 
@@ -52,6 +53,7 @@ $serial = 'orders_id_seq';
 	'email'						=> 'stremail',
 	'alsonotify'				=> 'stralsonotify',	
 	'paid'						=> 'paid',
+	'owing'						=>	'owing',
 	'currency_id'				=> 'currencyindex',
 	'po'						=> 'strponumber',
 	'administrator_name'		=> 'stradministratorname',
@@ -62,124 +64,6 @@ $serial = 'orders_id_seq';
 	'created_on'				=>	'dtmorderdate',
 	);
 
-sub find {
-	my $self = shift;
-	my %params = @_;
-	my @values;
-	my $sql = 'SELECT *,(SELECT SUM(amount) FROM Payments WHERE (deleted=false or deleted IS NULL) AND order_id=Index) AS paid FROM Orders WHERE 1>0';
-	if ( $params{'id'} ) {
-		$sql .= ' AND index=?';
-		push @values, $params{'id'};
-	} # end if
-	if ( $params{'docket'} ) {
-		$sql .= ' AND lngdocketnumber=?';
-		push @values, $params{'docket'};
-	} # end if
-	if ( $params{'invoice_id'} ) {
-		$sql .= ' AND invoice_id=?';
-		push @values, $params{'invoice_id'};
-	} # end if
-	if ( $params{'company_id'} ) {
-		if ( ref $params{'company_id'} eq 'ARRAY' ) {
-			if ( @{$params{'company_id'}} ) {
-				$sql .= q{ AND CompanyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
-				push @values, @{$params{'company_id'}};
-			} else {
-				$openprint::log->warn("EMpty company array passed to openprint::Project->find");
-			} # end if
-		} else {
-			$sql .= q{ AND CompanyIndex=?};
-			push @values, $params{'company_id'};
-		} # end if
-	} # end if
-	if ( $params{'user_id'} ) {
-		if ( $params{'user_id'} =~ /\D/ ) {
-			$sql .= " AND (UserIndex $params{'user_id'})";
-		} else {
-			$sql .= q{ AND (UserIndex=?)};
-			push @values, $params{'user_id'};
-		} # end if
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= q{ AND (dtmorderdate BETWEEN ? AND ?)};
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= q{ AND (dtmorderdate >= ?::timestamp with time zone)};
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= q{ AND (dtmorderdate <= ?::timestamp with time zone)};
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'value_start'} and $params{'value_end'} ) {
-		$sql .= q{ AND (curtotalsale BETWEEN ? AND ? )};
-		push @values, $params{'value_start','value_end'};
-	} elsif ( $params{'value_start'} ) {
-		$sql .= q{ AND (curtotalsale >= ?)};
-		push @values, $params{'value_start'};
-	} elsif ( $params{'value_end'} ) {
-		$sql .= q{ AND (curtotalsale <= ?)};
-		push @values, $params{'value_end'};
-	} # end if
-	if ( $params{'status'} ) {
-		if ( ref $params{'status'} eq 'ARRAY' ) {
-			$sql .= q{ AND strStatus IN (} . join(',', map {'?'} @{$params{'status'}}). ')';
-			push @values, @{$params{'status'}};
-		} else {
-			$sql .= q{ AND (strStatus=?)};
-			push @values, $params{'status'};
-		} # end if
-	} # end if
-	if ( $params{'session_id'} ) {
-		$sql .= ' AND strsessionid=?';
-		push @values, $params{'session_id'};
-	} # end if
-	if ( $params{'salesrep_id'} ) {
-		$sql .= ' AND employeeindex=?';
-		push @values, $params{'salesrep_id'};
-	} # end if
-	if ( $params{'currency_id'} ) {
-		$sql .= ' AND currencyindex=?';
-		push @values, $params{'currency_id'};
-	} # end if
-	if ( exists $params{'owing_>'} ) {
-		$sql .= ' AND ( ((SELECT SUM(amount) FROM Payments WHERE order_id=Index) IS NULL AND curtotalsale>?) OR (curtotalsale - (SELECT SUM(amount) FROM Payments WHERE order_id=Index) ) > ?) ';
-		push @values, @params{'owing_>','owing_>'};
-	} # end if
-	if ( exists $params{'order'} ) {
-		if ( $params{'order'} eq 'created_on' ) {
-			$sql .= ' ORDER BY dtmorderdate';
-		} elsif( $params{'order'} eq 'total' ) {
-			$sql .= ' ORDER BY curtotalsale';
-		} elsif ( $params{'order'} eq 'company' ) {
-			$sql .= ' ORDER BY lower(strCompanyName)';
-		} elsif ( $params{'order'} ) {
-			$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-		} # end if
-	} # end if
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug('Error (' . $openprint::dbh->errstr . ") Loading Orders: $sql @values");
-		return;
-	} else {
-		$openprint::log->debug("Loading Orders: $sql @values #results:" . @$data);
-		return map { new openprint::Order( $_->{index}, $_ ) } @$data;
-	} # end if
-} # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT *,(SELECT SUM(amount) FROM Payments WHERE (deleted=false or deleted IS NULL) AND order_id=Index) AS paid FROM Orders WHERE Index=?', {}, $$self{'id'} );
-$openprint::log->debug("Loaded order: " . $$self{'id'} );
-		if ( ( ! $data ) and $openprint::dbh->errstr() ) {
-			$openprint::log->error('Error loading Order: ' . $openprint::dbh->errstr() );
-			return;
-		} # end if
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-} # end sub load
-
 sub save {
 	my ( $self, $params ) = @_;
 
@@ -187,6 +71,7 @@ sub save {
 
 	my $ac = sql::start_transaction( $dbh );
 
+	$$self{'owing'} = $$self{'total'} - $$self{'paid'};
 	my %sql;
 	foreach my $key ( keys %fields ) {
 		next if $key eq 'paid';
@@ -194,13 +79,6 @@ sub save {
 		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
 
-	if ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
-$openprint::log->debug("Removing tax rates because the order is not complete");
-		delete $sql{'federal_tax_rate'};
-		delete $sql{'state_tax_rate'};
-		delete $sql{'harmonized_tax_rate'};
-	} # end if
-		
 	if ( ! $$self{'id'} ) {
 		if ( $openprint::config{'OrderIDStyle'} eq 'Year' ) {
 			$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
@@ -226,6 +104,16 @@ $openprint::log->debug("Removing tax rates because the order is not complete");
 	} # end if
 
 	$self->load();
+	if ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
+		# Reload taxes
+		foreach my $Tax ( $self->Taxes() ) {
+			my $error = $Tax->save();
+			if ( $error ) {
+				$dbh->rollback();
+				return $error;
+			} # end if
+		} # end foreach $Tax
+	} # end if
 	sql::end_transaction( $dbh, $ac );
 	return;
 } # end sub save
@@ -488,119 +376,6 @@ sub send_cancellation_notice {
 	
 } # end sub send_cancellation_notice
 
-# These fields have 3 possible values, undef meaning not yet calculated. Empty string means calculated, but no tax applies.  Numeric = value;
-sub federal_tax {
-	my ( $self, $new ) = @_;
-	if ( $new ) {
-		$$self{'federal_tax'} = $new;
-	} elsif ( ! defined $$self{'federal_tax'} ) {
-		$$self{'federal_tax'} = '';
-		if ( $self->Company()->gst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax->find('country'=>$self->country(),'state'=>$self->state() );
-			if ( @Taxes == 1 ) {
-				my $tax_rate = $Taxes[0]->federaltax_rate();
-				if ( $tax_rate ) {
-					$$self{'federal_tax'} = $self->subtotal() * ( $tax_rate/100 );
-				} # end if tax_rate 
-			} # no tax for this state/country
-		} # end if exempt
-	} # end if ! $$self{'federal_tax'};
-	return $$self{'federal_tax'};
-} # end sub federal_tax
-
-sub state_tax {
-	my ( $self, $new ) = @_;
-#$log->debug("state_tax");
-	if ( $new ) {
-		$$self{'state_tax'} = $new;
-	} elsif ( ! defined $$self{'state_tax'} ) {
-		$$self{'state_tax'} = '';
-		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-#$log->debug("Not exempt");
-			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
-#$log->debug("Taxes: " . @Taxes );
-			if ( @Taxes == 1 ) {
-				my $tax_rate = $Taxes[0]->statetax_rate();
-#$log->debug("State tax rate: $tax_rate");
-				if ( $tax_rate ) {
-					$$self{'state_tax'} = $self->subtotal() * ( $tax_rate/100 );
-				} # end if tax_rate
-			} # no tax for this state/country
-#} else {
-#$log->debug("exempt" . $self->Company()->pst_exempt());
-		} # end if pst_exempt ne 'Y'
-	} # end if ! $$self{'state_tax'};
-	return $$self{'state_tax'};
-} # end sub state_tax
-
-sub harmonized_tax {
-	my ( $self, $new ) = @_;
-	if ( $new ) {
-		$$self{'harmonized_tax'} = $new;
-	} elsif ( ( ! defined $$self{'harmonized_tax'} ) and sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
-		$$self{'harmonized_tax'} = '';
-		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
-			if ( @Taxes == 1 ) {
-				my $tax_rate = $Taxes[0]->harmonizedtax_rate();
-				if ( $tax_rate ) {
-					$$self{'harmonized_tax'} = $self->subtotal() * ( $tax_rate/100 );
-				} # end if tax_rate
-			} # no tax for this state/country
-		} # end if exempt
-	} # end if ! $$self{'harmonized_tax'};
-	return $$self{'harmonized_tax'};
-} # end sub harmonized_tax
-
-sub federal_tax_rate {
-	my $self = $_[0];
-	if ( @_ == 2 ) {
-		$$self{'federal_tax_rate'} = $_[1];
-	} # end if
-	if ( ! defined $$self{'federal_tax_rate'} ) {
-		if ( $self->Company()->gst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
-			if ( @Taxes == 1 ) {
-				$$self{'federal_tax_rate'} = $Taxes[0]->federaltax_rate();
-			} # no tax for this state/country
-		} # end if exempt
-	} # end if
-	return 1*$$self{'federal_tax_rate'};
-} # end sub federal_tax_rate
-
-sub state_tax_rate {
-	my $self = $_[0];
-	if ( @_ == 2 ) {
-		$$self{'state_tax_rate'} = $_[1];
-	} # end if
-	if ( ( ! defined $$self{'state_tax_rate'} ) and sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
-		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
-			if ( @Taxes == 1 ) {
-				$$self{'state_tax_rate'} = $Taxes[0]->statetax_rate();
-			} # no tax for this state/country
-		} # end if exempt
-	} # end if
-	return 1*$$self{'state_tax_rate'};
-} # end sub state_tax_rate
-
-sub harmonized_tax_rate {
-	my $self = $_[0];
-	if ( @_ == 2 ) {
-		$$self{'harmonized_tax_rate'} = $_[1];
-	} # end if
-$openprint::log->debug("harmonized_tax_rate $$self{'harmonized_tax_rate'} status: $$self{'status'}");
-	if ( ( ! defined $$self{'harmonized_tax_rate'} ) and sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
-		if ( $self->Company()->pst_exempt() ne 'Y' ) {
-			my @Taxes = openprint::Tax->find('country'=>$self->country(), 'state'=>$self->state() );
-			if ( @Taxes == 1 ) {
-				$$self{'harmonized_tax_rate'} = $Taxes[0]->harmonizedtax_rate();
-			} # no tax for this state/country
-		} # end if exempt
-	} # end if
-	return 1*$$self{'harmonized_tax_rate'};
-} # end sub harmonized_tax_rate
-
 sub subtotal {
 	my $self = shift;
 	if ( @_ ) {
@@ -636,7 +411,10 @@ sub total {
 	if ( @_ ) {
 		$$self{'total'} = shift;
 	} elsif ( sets::isin( $$self{'status'}, ['Re-Opened','Incomplete'] ) or ! $$self{'total'} ) {
-		$$self{'total'} = $self->subtotal() + $self->state_tax() + $self->federal_tax() + $self->harmonized_tax();
+		$$self{'total'} = $self->subtotal();
+		foreach my $Tax ( $self->Taxes() ) {
+			$$self{'total'} += $Tax->amount();
+		} # end foreach Tax
 $log->debug("Calcingtotal $$self{total}");
 	} # end if
 	return $$self{'total'};
@@ -774,7 +552,47 @@ sub send_sales_order {
 
 sub owing {
 	return $_[0]{'total'} - $_[0]{'paid'};
-}
+} # end sub owing
+
+sub Taxes {
+    my ( $self ) = @_;
+    if ( ! $$self{'Taxes'} ) {
+        @{$$self{'Taxes'}} = openprint::Order_Tax->find('claim_id'=>$$self{'id'});
+    } # end if
+    if ( ! @{$$self{'Taxes'}} ) {
+        foreach my $Tax ( openprint::Tax->find(
+                    'period_start_null_or_<='   =>  $$self{'created_on'},
+                    'period_end_null_or_>='     =>  $$self{'created_on'},
+                    'country'   =>  $self->Company()->country(),
+                    'state'     =>  $self->Company()->state()),
+                ) {
+            my $T = new openprint::Order_Tax();
+            $T->save({
+                'claim_id'=>  $$self{'id'},
+                'tax_id'    =>  $$Tax{'id'},
+                'rate'      =>  $$Tax{'rate'},
+            });
+            push @{$$self{'Taxes'}}, $T;
+        } # end foreach Tax
+    } # end if
+    return @{$$self{'Taxes'}};
+} # end sub Taxes
+
+sub Tax {
+    my $result = openprint::Order_Tax->find_one('claim_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() );
+    if ( ! $result ) {
+        return new openprint::Order_Tax();
+    } # end if
+    return $result;
+} # end sub Tax
+
+sub paid {
+	$_[0]{'paid'} = $_[1] if ( @_ == 2 );
+	if ( ! defined $_[0]{'paid'} ) {
+		$_[0]{'paid'} = misc::sum( map { $_->amount() } openprint::Payment::find('order_id'=>$_[0]{'id'}) );
+	} # end if
+	return $_[0]{'paid'};
+} # end sub paid
 
 1;
 __END__

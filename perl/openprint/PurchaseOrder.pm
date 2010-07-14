@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
+use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -23,10 +23,10 @@ require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 
-my $debug = 0;
+$debug = 0;
 
-$table = 'PurchaseOrders';
-$serial = 'Purchaseorders_id_seq';
+$table = 'purchaseorders';
+$serial = 'purchaseorders_id_seq';
 
 %fields = (
 	'id'				=>	'id',
@@ -42,12 +42,6 @@ $serial = 'Purchaseorders_id_seq';
 	'delivered_on_switch'		=>	'delivered_on_switch',
 	'total'				=>	'total',
 	'subtotal'			=>	'subtotal',
-	'federaltax'		=>	'federaltax',
-	'federaltax_rate'	=>	'federaltax_rate',
-	'federaltax_charge'	=>	'federaltax_charge',
-	'statetax'			=>	'statetax',
-	'statetax_rate'		=>	'statetax_rate',
-	'statetax_charge'	=>	'statetax_charge',
 	'deleted'			=>	'deleted',
 	'supplier_id'		=>	'supplier_id',
 	'shipping_method'	=>	'shipping_method',
@@ -89,13 +83,8 @@ $serial = 'Purchaseorders_id_seq';
 	'updated_on'	=> 'NOW()',
 	'deleted'		=>	0,
 	'currency_id'	=> $session{'Currency_id'},
-	'tax'			=>	0,
 	'total'			=>	0,
 	'subtotal'		=>	0,
-	'federaltax'	=>	undef,
-	'federaltax_rate'	=>	undef,
-	'statetax'		=>	undef,
-	'statetax_rate'	=>	undef,
 	'manifest_id'	=>	undef,
 	'cancelled'		=>	0,
 );
@@ -469,6 +458,9 @@ sub Manifest {
 
 sub Taxes {
     my ( $self ) = @_;
+
+	return if ! $$self{'id'};
+
     if ( ! $$self{'Taxes'} ) {
         @{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
     } # end if
@@ -492,7 +484,7 @@ sub Taxes {
 } # end sub Taxes
 
 sub Tax {
-    my $result = openprint::PurchaseOrder_Tax->find_one('purchaseorder_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() );
+    my $result = openprint::PurchaseOrder_Tax->find_one('purchaseorder_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() ) if $_[0]{'id'};
     if ( ! $result ) {
         return new openprint::PurchaseOrder_Tax();
     } # end if

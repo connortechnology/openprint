@@ -1,6 +1,6 @@
-DROP   TABLE tbl_ProjectType_Defaults;
+DROP   TABLE IF EXISTS tbl_ProjectType_Defaults;
 CREATE TABLE tbl_ProjectType_Defaults (
-		lngProjectTypeIndex     INT4, FOREIGN KEY (lngProjectTypeIndex) REFERENCES Project_Types (lngIndex),
+		lngProjectTypeIndex     INTEGER, FOREIGN KEY (lngProjectTypeIndex) REFERENCES Project_Types (id),
 		strFieldName            TEXT,
 		strDefaultValue         TEXT
 		);

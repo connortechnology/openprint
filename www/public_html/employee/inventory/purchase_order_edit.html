@@ -121,10 +121,11 @@ function getSelectionId(input, li) {
 	</p>
 	<div class="PO">
 		<div class="PageTitle">
-		<h1>PURCHASE ORDER (<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>)</h1>
+			<h1>PURCHASE ORDER (<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>)</h1>
 		</div>
+		<div class="Information">
 <!--#include virtual="_vendor.html"-->
-		<div class="rightColumn">
+		<div class="ShipTo">
 		<fieldset><legend>SHIP TO:</legend>
 			<p><label for="shipto_contact">Contact:</label><input type="text" name="shipto_contact" id="shipto_contact" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_contact() ) ?>" /></p>
 			<p><label for="shipto_name">Name:</label><input type="text" name="shipto_name" id="shipto_name" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_name() ) ?>" /></p>
@@ -170,7 +171,8 @@ function getSelectionId(input, li) {
 				<span id="notification_div"><!--#include virtual="_po_notifications.html"--></span>
 			</p>
 			</fieldset>
-		</div>
+		</div><!--ShipTo-->
+	</div><!--Information-->
 		<br class="spacer"/>
 		<table>
 			<tr>

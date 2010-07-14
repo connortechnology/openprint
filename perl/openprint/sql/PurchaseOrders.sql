@@ -1,8 +1,9 @@
 
+DROP TABLE IF EXISTS PurchaseOrder_Taxes;
 DROP TABLE IF EXISTS PurchaseOrder_Logs;
 DROP TABLE IF EXISTS PurchaseOrder_Notifications;
-DROP TABLE IF EXISTS PurchaseOrder_ContentTypes;
 DROP TABLE IF EXISTS PurchaseOrder_Contents;
+DROP TABLE IF EXISTS PurchaseOrder_ContentTypes;
 DROP TABLE IF EXISTS PurchaseOrders;
 
 CREATE TABLE PurchaseOrders (
@@ -15,15 +16,9 @@ CREATE TABLE PurchaseOrders (
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	subtotal	float,
-	federaltax	float,
-	federaltax_rate	float,
-	federaltax_charge	boolean,
-	statetax	float,
-	statetax_rate	float,
-	statetax_charge	boolean,
 	authorized_by	INTEGER, FOREIGN KEY (authorized_by) REFERENCES Users (id),
 	authorized_on	TIMESTAMP WITH TIME ZONE,
-	delivered_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	delivered_on	TIMESTAMP WITH TIME ZONE,
 	delivered_on_switch	TEXT,
 	deleted		BOOLEAN NOT NULL default false,
 	shipping_terms	TEXT,
@@ -63,7 +58,7 @@ CREATE TABLE PurchaseOrder_ContentTypes (
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE PurchaseOrder_COntents (
+CREATE TABLE PurchaseOrder_Contents (
 	id SERIAL NOT NULL,
 	po_id	INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
 	type_id	INTEGER, FOREIGN KEY (type_id) REFERENCES PurchaseOrder_ContentTypes (id),
