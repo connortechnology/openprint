@@ -187,7 +187,7 @@ sub send_notification {
 	my $email_template = misc::load_file( $log, $openprint::config{'SkinPath'} . '/email_template.html' );
 
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/stock_allocation_notification.html\"-->";
-	$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
 	$Email->send( 

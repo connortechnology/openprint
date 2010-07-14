@@ -3,19 +3,11 @@ package openprint::Claim_Content;
 require openprint::Object;
 
 use strict;
-use openprint ();
-use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-require sql;
-require ssi;
-require misc;
 require openprint::Claim_ContentType;
 
-my $debug = 0;
+$debug = 0;
 
 $table = 'claim_contents';
 $serial = 'claim_contents_id_seq';

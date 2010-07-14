@@ -71,10 +71,10 @@ sub send_notifications {
 		my %info = (
 			'PAR'	=>	$self,
 		);
-		$info{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$text, \%info );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$text, \%info );
 $openprint::log->debug( $info{'ReplacementText'} );
 
-		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info );
+		my $body = ssi::variable_substitution( \$email_template, \%info );
 $openprint::log->debug( $body );
 		foreach my $User ( @Users ) {
 			my %mail = (

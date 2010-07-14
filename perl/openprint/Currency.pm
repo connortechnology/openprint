@@ -4,12 +4,12 @@ package openprint::Currency;
 use strict;
 use Number::Format;
 use openprint ();
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $debug $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-require openprint::Object;
 require sql;
 
+$debug = 0;
 $table = 'Currencies';
 $serial = 'CurrencyIndex_seq';
 %fields = (
@@ -22,21 +22,6 @@ $serial = 'CurrencyIndex_seq';
 );
 %defaults = (
 );
-
-my $debug = 0;
-
-sub get {
-	my ( $params ) = @_;
-	my @Currencies = find(@_);
-	if ( @Currencies == 1 ) {
-		return $Currencies[0] 
-	} elsif ( @Currencies > 1 ) {
-		$log->error('More than 1 currency found in openprint::Currency::get');
-	} else {
-		$log->error('No Currency found in openprint::Currency::get');
-	} # end if
-	return;
-} # end sub get
 
 sub conversions {
 	my ( $self, $to ) = @_;
@@ -151,5 +136,4 @@ sub format {
 } # end sub format
 
 1;
-
 __END__

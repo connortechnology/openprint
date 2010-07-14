@@ -262,6 +262,12 @@ if ( ! openprint::PurchaseOrder_ContentType->find_one('name'=>'Other') ) {
 	my $PO_CT = new openprint::PurchaseOrder_ContentType();
 	$PO_CT->save({'name'=>'Other'});
 } # end if
+if ( $config{'Default State Tax'} ) {
+	$dbh->do("DELETE FROM Configuration WHERE name='Default State Tax'");
+}
+if ( $config{'Default Federal Tax'} ) {
+	$dbh->do("DELETE FROM Configuration WHERE name='Default Federal Tax'");
+}
 	
 $dbh->disconnect();
 1;

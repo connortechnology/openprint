@@ -232,7 +232,7 @@ sub send {
 		get_user_detail( $user_index, \%replacements );
 		$replacements{'User'} = new openprint::User( $user_index );
 
-		$replacements{ReplacementText} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$body, \%replacements );
+		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
 		if ( ! $replacements{ReplacementText} ) {
 			$results .= 'No body.  Not sending.<br/>';
 			next;
@@ -309,7 +309,7 @@ sub trial {
 	foreach my $user_index ( @mail_user_ids ) {
 # de we need to send this email?
 		$replacements{'User'} = new openprint::User( $user_index );
-		$replacements{ReplacementText} = ssi::variable_substitution( undef, $openprint::log, $openprint::dbh, \$body, \%replacements );
+		$replacements{ReplacementText} = ssi::variable_substitution( \$body, \%replacements );
 		if ( ! $replacements{ReplacementText} ) {
 			$results .= 'No body.  Not sending<br/>';
 			next;

@@ -11,11 +11,11 @@ require openprint::Currency;
 require openprint::logs;
 use openprint ();
 
-my $debug = 1;
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
+$debug = 1;
 $table = 'pricelists';
 $serial = 'pricelists_id_seq';
 %fields = (
@@ -95,6 +95,4 @@ sub Currency {
 } # end sub Currency
 
 1;
-
 __END__
-~       

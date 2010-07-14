@@ -275,7 +275,7 @@ sub send_approval_required_notification {
 	foreach my $U ( openprint::User->find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$self->total() ) ) {
 		next if $U->id() == $Me->id();
 
-		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
+		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
 		my %mail = (
 				SMTP    => $config{'Mail Server'},
@@ -300,11 +300,11 @@ sub send_to_vendor {
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_body.html\"-->";
-	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+	$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 	my $purchase_order = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/purchase_order.html' );
-	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
+	push @attachments, $From->Company()->name().'-PO'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$purchase_order, \%info ) ) ), 'text/html', 'quoted-printable';
 
 	my %mail = (
 			SMTP    => $config{'Mail Server'},
@@ -331,7 +331,7 @@ sub send_to_vendor {
 	} # end if
 	if ( $self->notifications() ) {
 		$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/purchase_order_notification.html\"-->";
-		$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+		$_ = MIME::QuotedPrint::encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 		@attachments = ('', $_, 'text/html', 'quoted-printable');
 		my $Email = new openprint::Email();
 		$results .= 'Notifications: <br/>' . $Email->send( 

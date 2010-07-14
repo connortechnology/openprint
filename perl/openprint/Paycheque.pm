@@ -1,20 +1,11 @@
 package openprint::Paycheque;
 @ISA = qw(openprint::Object);
 
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
-
-my $debug = 1;
-
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 require sql;
+$debug = 1;
 
 $table = 'paycheques';
 $serial = 'paycheque_id_seq';
@@ -52,10 +43,6 @@ sub Employee {
 	return new openprint::User( $_[0]{employee_id} );
 } # end sub Recipient
 
-sub Currency {
-	return new openprint::Currency( $_[0]{currency_id} );
-} # end sub Currency
-
 sub add_Timetrack {
 	my ( $self, $Timetrack ) = @_;
 	sql::insert( undef, undef, 'paycheques_timetracks', 'timetrack_id', $Timetrack->id(), 'paycheque_id', $$self{id} );
@@ -68,6 +55,4 @@ sub del_Timetrack {
 } # end sub del_Timetrack
 
 1;
-
 __END__
-~       

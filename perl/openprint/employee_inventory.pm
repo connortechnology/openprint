@@ -1104,7 +1104,7 @@ sub send_paper_arrival_notification {
 			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my %mail = (
 					SMTP	=> $config{'Mail Server'},

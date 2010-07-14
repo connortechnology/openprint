@@ -87,126 +87,10 @@ $serial = 'claims_id_seq';
 	'editor_id'		=>	[],
 );
 
-sub find {
-	my $self = shift;
-	my %params = @_;
-	my @values;
-	my $sql = 'SELECT * FROM Claims WHERE 1>0';
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'id_like'} ) {
-		$sql .= " AND id LIKE '%$params{id_like}%'";
-	} # end if
-	if ( exists $params{'po_id'} ) {
-		if ( ref $params{'po_id'} eq 'ARRAY' ) {
-			if ( @{$params{'po_id'}} ) {
-				$sql .= ' AND po_id IN ('. join(',', map {'?'} @{$params{'po_id'}} ) . ')';
-				push @values, @{$params{'po_id'}};
-			} else {
-				return ();
-			} # end if
-		} else {
-			$sql .= ' AND po_id=?';
-			push @values, $params{'po_id'};
-		} # end if
-	} # end if
-	if ( exists $params{'supplier_id'} ) {
-		if ( ref $params{'supplier_id'} eq 'ARRAY' ) {
-			if ( @{$params{'supplier_id'}} ) {
-				$sql .= ' AND supplier_id IN ('. join(',', map {'?'} @{$params{'supplier_id'}} ) . ')';
-				push @values, @{$params{'supplier_id'}};
-			} else {
-				return ();
-			} # end if
-		} else {
-			$sql .= ' AND supplier_id=?';
-			push @values, $params{'supplier_id'};
-		} # end if
-	} # end if
-	if ( exists $params{'docket'} ) {
-		if ( ref $params{'docket'} eq 'ARRAY' ) {
-				$sql .= ' AND docket = {?}';
-				push @values, $params{'docket'};
-		} else {
-			$sql .= ' AND ? = ANY docket';
-			push @values, $params{'docket'};
-		} # end if
-	} # end if
-
-	if ( $params{'received_on_start'} and $params{'received_on_end'} ) {
-		$sql .= ' AND ( received_on BETWEEN ? AND ? )';
-		push @values, @params{'received_on_start','received_on_end'};
-	} elsif ( $params{'received_on_start'} ) {
-		$sql .= ' AND received_on >= ?';
-		push @values, $params{'received_on_start'};
-	} elsif ( $params{'received_on_end'} ) {
-		$sql .= ' AND received_on <= ?';
-		push @values, $params{'received_on_end'};
-	} # end if
-
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND created_on >= ?';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND created_on <= ?';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{'updated_on_end'};
-	} # end if
-	if ( exists $params{'deleted'} ) {
-		if ( ref $params{'deleted'} eq 'ARRAY' ) {
-			if ( @{$params{'deleted'}} ) {
-				$sql .= ' AND deleted IN ('. join(',', map {'?'} @{$params{'deleted'}} ) . ')';
-				push @values, @{$params{'deleted'}};
-			} else {
-				return ();
-			} # end if
-		} else {
-			$sql .= ' AND deleted=?';
-			push @values, $params{'deleted'};
-		} # end if
-	} else {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
-		push @values, 0;
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading Claim SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No Claim loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded Claim ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::Claim( $_->{id}, $_ ) } @$data;
-} # end sub find
-
 sub save {
 	my ( $self, $hash ) = @_;
-	delete $$self{'subtotal'};
-	$$hash{'subtotal'} = $self->subtotal();
-	$$hash{'total'} = $self->total();
+	$self->subtotal(undef);
+	$self->total(undef);
 	if ( ! $$hash{'currency_id'} ) {
 		my $Currency = openprint::Currency::get_current();
 		$$hash{'currency_id'} = $Currency->id();
@@ -272,7 +156,14 @@ sub subtotal {
 
 sub total {
 	my ( $self ) = @_;
-	return $self->subtotal() + $self->federaltax() + $self->statetax();
+	$$self{'total'} = $_[1] if ( @_ > 1 );
+	if ( ! $$self{'total'} ) {
+		$$self{'total'} = $self->subtotal();
+        foreach my $Tax ( $self->Taxes() ) {
+            $$self{'total'} += $Tax->amount();
+        } # end foreach Tax
+	} # end if
+	return $$self{'total'};
 } # end sub total
 
 sub Contact {
@@ -292,11 +183,11 @@ sub send {
 
 	my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 	$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/claim_body.html\"-->";
-	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
+	$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 	push @attachments, ('', $_, 'text/html', 'quoted-printable');
 
 	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/claim.html' );
-	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$content, \%info ) ) ), 'text/html', 'quoted-printable';
+	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( \$content, \%info ) ) ), 'text/html', 'quoted-printable';
 
 	my $results = 'CLAIM ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	my $Email = new openprint::Email();
