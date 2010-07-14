@@ -245,14 +245,14 @@ sub save {
 		$sql{id} = $$self{'id'};
         if ( my $e = sql::insert( undef, undef, 'Companies', \%sql ) ) {
 			$dbh->rollback();
-    sql::end_transaction( $dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			delete $$self{'id'};
 			return $e;
 		} # end if
 	} elsif ( $$param{'force_insert'} ) {
         if ( my $e = sql::insert( undef, undef, 'Company', \%sql ) ) {
 			$dbh->rollback();
-    sql::end_transaction( $dbh, $ac );
+			sql::end_transaction( $dbh, $ac );
 			return $e;
 		} # end if
     } else {

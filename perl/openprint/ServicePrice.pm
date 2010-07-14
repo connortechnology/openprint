@@ -4,22 +4,11 @@ use strict;
 
 require sql;
 require openprint::Object;
-require openprint::logs;
-use openprint;
-use vars qw( %variable %session %param %config $log $dbh %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*session = \%openprint::session;
-*param = \%openprint::param;
-*config = \%openprint::config;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
-my $debug = 1;
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
+$debug = 1;
 $table = 'Service_Prices';
 $serial = 'serviceprices_id_seq';
 
@@ -63,6 +52,4 @@ sub next {
 } # end sub next
 
 1;
-
 __END__
-~       
