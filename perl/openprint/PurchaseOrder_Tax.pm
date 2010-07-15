@@ -4,20 +4,17 @@ package openprint::PurchaseOrder_Tax;
 use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-require sql;
-
 $debug = 1;
-
 $table = 'purchaseorder_taxes';
 $serial = 'purchaseorder_taxes_id_seq';
 
 %fields = (
-	'id'			=>	'id',
+	'id'				=>	'id',
 	'purchaseorder_id'	=>	'purchaseorder_id',
-	'tax_id'		=>	'tax_id',
-	'rate'			=>	'rate',
-	'amount'		=>	'amount',
-	'charge'		=>	'charge',
+	'tax_id'			=>	'tax_id',
+	'rate'				=>	'rate',
+	'amount'			=>	'amount',
+	'charge'			=>	'charge',
 );
 
 %transforms = (
@@ -38,8 +35,8 @@ sub amount {
 	} # end if
 
 	if ( ! defined $$self{'amount'} ) {
-		if ( $$self{'charge'} ) {
-			$$self{'amount'} = ($$self{'rate'}/100) * $self->PurchaseOrder()->subtotal();
+		if ( $self->charge() ) {
+			$$self{'amount'} = sprintf('%.2f', ($$self{'rate'}/100) * $self->PurchaseOrder()->subtotal() );
 		} # end if
 	} # end if
 	return $$self{'amount'};
@@ -51,17 +48,18 @@ sub charge {
 		$$self{'charge'} = $_[1];
 	} # end if
 
-	if ( $self->PurchaseOrder()->company_id() and ! defined $$self{'charge'} ) {
+	if ( $self->PurchaseOrder()->supplier_id() and ! defined $$self{'charge'} ) {
+$openprint::log->debug("Calculating Tax: " . $self->name() );
 		if ( sets::isin( $self->name(), ['GST','HST'] ) ) {
 			if ( $self->PurchaseOrder()->Supplier()->taxexempt1() eq 'Y' ) {
-				$$self{'charge'} = 0;
+				return 0;
 			} # end if
-			$$self{'charge'} = 1;
+			return 1;
 		} elsif ( sets::isin( $self->name(), ['PST'] ) ) {
 			if ( $self->PurchaseOrder()->Supplier()->taxexempt2() eq 'Y' ) {
-				$$self{'charge'} = 0;
+				return 0;
 			} # end if
-			$$self{'charge'} = 1;
+			return 1;
 		} # end if 
 	} # end if
 	return $$self{'charge'};
