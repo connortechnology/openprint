@@ -709,7 +709,7 @@ sub calc {
 		if ( ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
 	 		$$specs{'OverTotal'.$qty_index} = $$specs{'OverBase'.$qty_index} + $$specs{'OverSetup'.$qty_index} + $$specs{'OverRun'.$qty_index};
 		}
-	} # end foreach
+	} # end foreach qty_index
 
 	if ( ($Project->Type()->name() eq 'PresentationFolders') or (($$variable{'Group'} == 1 ) and sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
 		if ( $$specs{'rdbPocketSize'} and ( $$specs{'rdbPocketSize'} ne 'Other' ) ) {
@@ -877,6 +877,8 @@ sub calc {
 				$variables{'txtWidth'} = [ sets::exclude( ['output'], $variables{'txtWidth'} ) ];
 				$variables{'txtHeight'} = [ sets::exclude( ['output'], $variables{'txtHeight'} ) ];
 			} # end if
+			$$specs{'txtFinalWidth'} = $$printing_specs{'txtFinalWidth'};
+			$$specs{'txtFinalHeight'} = $$printing_specs{'txtFinalHeight'};
 		} else {
 			if ( $Project->Type()->name() eq 'ScratchPads' ) {
 				$$specs{'txtSpreadSize'} = 1;
@@ -1264,85 +1266,7 @@ $log->warn("There are no quantities!");
 			last;
 		} # end foreach
 
-		delete $$specs{'PrintingTypes'};
-#$openprint::log->debug('available: ' . join(',', @available_printingtypes) );
-		if ( $$printing_specs{'PrintingType'} and sets::isin( $$printing_specs{'PrintingType'}, \@available_printingtypes ) ) {
-			$$specs{'PrintingTypes'} = [ $$printing_specs{'PrintingType'} ];
-#$openprint::log->debug("PT: " . join(',', @{$$specs{'PrintingTypes'}} ) );
-		} else {
-
-			if ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
-# FIgure out printing types
-				foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-					if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
-						if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-							$$specs{'PrintingTypes'} = ['Digital'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
-							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
-							$$specs{'PrintingTypes'} = ['Offset','Waterless'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
-							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
-							$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-						} else {
-							$openprint::log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
-						} # end if
-					} # end if
-					last if $$specs{'PrintingTypes'};
-				} # end foreach
-
-			} elsif ( $$specs{'txtSignatureType'} eq 'Interior Pages' ) {
-# if the cover is digital, then we need digital
-# if another interior spread is digital, then we need digital
-# if the cover is offset, then we need offset
-# if the cover is waterless, then we can do waterless, or offset
-				foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
-					next if $index == $service_index;
-					my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
-					next if ( ( $index > $service_index ) and ( $$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) );
-
-					if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
-						if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-							$$specs{'PrintingTypes'} = ['Digital'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
-							$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
-							$$specs{'PrintingTypes'} = ['Offset'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
-							$$specs{'PrintingTypes'} = ['Web'];
-						} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
-							$$specs{'PrintingTypes'} = ['Sheetfed'];
-						} # end if
-					} # end if
-					last if $$specs{'PrintingTypes'};
-				} # end foreach
-
-				if ( ( ! $$specs{'PrintingTypes'} ) and ( $$specs{'OverridePrintingType'.$qty_index} ne 'Y' ) ) {
-					my $cover_specs;
-					foreach my $index ( $Project->signatures({'type'=>'Cover Pages'}) ) {
-						$cover_specs = openprint::service::get_specs_ref( $Project, $index );
-						last;
-					} # end foreach
-					if ( $cover_specs ) {
-						if ( sets::isin( $$cover_specs{'PrintingType'.$qty_index}, \@available_printingtypes ) ) {
-							if ( $$cover_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
-								$$specs{'PrintingTypes'} = ['Digital'];
-							} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
-								$$specs{'PrintingTypes'} = [ 'Waterless', 'Offset' ];
-							} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
-								$$specs{'PrintingTypes'} = ['Offset'];
-							} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Web' ) {
-								$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-							} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
-								$$specs{'PrintingTypes'} = ['Sheetfed','Web'];
-							} # end if
-						} # end if
-					} # end if
-				} # end if PrintingTypes
-			} # end if Spread Type
-		} # end if printing_specs{'PrintingType'}
+		$$specs{'PrintingTypes'} = get_printing_types( $Project, $service_index, $printing_specs, $specs, $qty_index, \@available_printingtypes );
 		if ( $debug ) {
 			if ( $$specs{'PrintingTypes'} ) {
 				$openprint::log->debug("Printing TYpes for qty$qty_index " . join(',', @{$$specs{'PrintingTypes'}} ) );
@@ -1823,7 +1747,8 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 
 		# These are passed along for consideration in get_project_price.  Hence they should only occur after the current service, right?
 		my @signatures;
-		foreach ( sort $Project->signatures({'Group'=>$$specs{'Group'}}) ) {
+		foreach ( sort $Project->signatures() ) {
+		#foreach ( sort $Project->signatures({'Group'=>$$specs{'Group'}}) ) {
 			push @signatures, $_ if $_ > $service_index;
 		} # end foreach
 
@@ -2165,7 +2090,7 @@ $log->debug("Press $$Press{strid} Impositions beforefiltering: " . @impositions 
 $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
 					next;
 				} else {
-					$imp->display('Accepted stock! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
+					#$imp->display('Accepted stock! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
 				} # end if
 			} elsif ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
 				if ( $Paper->height() != $$sig_specs{"CutOff$qty_index"} ) {
@@ -2173,10 +2098,10 @@ $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty
 				} # end if
 			}  # end if
 			if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
-$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
+#$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
 				next if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};	
 			} elsif ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
-$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() );
+#$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() ) if $debug;
 				next;
 			} # end if
 
@@ -2186,7 +2111,7 @@ $imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne 
 			} # end if
 
 			if ( $$sig_specs{'PreviousStockType'} and ( $Paper->type() ne $$sig_specs{'PreviousStockType'} ) ) {
-$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $imp->Paper()->type() );
+#$imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $imp->Paper()->type() );
 				next;
 			} # end if
 
@@ -2205,11 +2130,11 @@ $imp->display("PreviousStockType: $$sig_specs{'PreviousStockType'} ne " . $imp->
 					}# end foreach
 				} # end if
 				if ( sets::isin( $imp->pages(), \@dont_do_pages ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
-$imp->dispay('In dont do pages');
+#$imp->dispay('In dont do pages');
 					next;
 				} # end if
 				if ( $$sig_specs{'PreviousImposition'} and ( $$sig_specs{'PreviousImposition'} > $imp->imposition() ) ) {
-$imp->display("Previous Imposition");
+#$imp->display("Previous Imposition");
 					next;
 				} # end if
 				if ( ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ) and ( $imp->pages() != $$sig_specs{'PageQuantity'.$qty_index} ) ) {
@@ -2217,11 +2142,11 @@ $imp->display("Previous Imposition");
 					next;
 				} # end if
 				if (($max_pages >= $imp->pages() ) and ($$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y') ) {
-$imp->display("Max paeages: $max_pages >= " . $imp->pages() );
+#$imp->display("Max paeages: $max_pages >= " . $imp->pages() );
 					next;
 				} elsif ($max_impositions{$imp->pages()}/2 > $imp->imposition()) {
 # Only do this if not sheet size overrides
-$imp->dispay('Ma imposition!');
+#$imp->dispay('Ma imposition!');
 					next;
 				} # end if
 
@@ -2714,7 +2639,7 @@ if ( ! $recurse ) {
 			my @paper_strings = keys %PaperCounts;
 			if ( 1 == @paper_strings and $imp->Paper()->to_string() ne $paper_strings[0] ) {
 $openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->to_string() );
-			} else {
+			} elsif ( $debug ) {
 				foreach my $k ( @paper_strings ) {
 					$openprint::log->debug( "$k => $PaperCounts{$k}" );
 				} # end 
@@ -4672,5 +4597,91 @@ sub filter_coatings_from_colours {
 	return @c;
 } # end sub filter_coatings_from_colours
 
+sub get_printing_types {
+	my ( $Project, $service_index, $printing_specs, $specs, $qty_index, $available_printingtypes ) = @_;
+	my $results;
+
+#$openprint::log->debug('available: ' . join(',', @available_printingtypes) );
+	if ( $$printing_specs{'PrintingType'} and sets::isin( $$printing_specs{'PrintingType'}, $available_printingtypes ) ) {
+		$results = [ $$printing_specs{'PrintingType'} ];
+#$openprint::log->debug("PT: " . join(',', @{$$specs{'PrintingTypes'}} ) );
+	} else {
+
+		if ( $$specs{'txtSignatureType'} eq 'Cover Pages' ) {
+# FIgure out printing types
+
+			# If this is the cover, then we should ignore the interior pages, except for if there is an override.
+			foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+				if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, $available_printingtypes ) and ( $$sig_specs{'OverridePrintingType'.$qty_index} eq 'Y' ) ) {
+					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
+						$results = ['Digital'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
+						$results = [ 'Waterless', 'Offset' ];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
+						$results = ['Offset','Waterless'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+						$results = ['Sheetfed','Web'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+						$results = ['Sheetfed','Web'];
+					} else {
+						$openprint::log->warn("Unknown printing type: " . $$sig_specs{'PrintingType'.$qty_index} );
+					} # end if
+				} # end if
+				last if $results;
+			} # end foreach
+
+		} elsif ( $$specs{'txtSignatureType'} eq 'Interior Pages' ) {
+# if the cover is digital, then we need digital
+# if another interior spread is digital, then we need digital
+# if the cover is offset, then we need offset
+# if the cover is waterless, then we can do waterless, or offset
+			foreach my $index ( $Project->signatures({'type'=>'Interior Pages'}) ) {
+				next if $index == $service_index;
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+				next if ( ( $index > $service_index ) and ( $$sig_specs{'OverridePrintingType'.$qty_index} ne 'Y' ) );
+
+				if ( sets::isin( $$sig_specs{'PrintingType'.$qty_index}, $available_printingtypes ) ) {
+					if ( $$sig_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
+						$results = ['Digital'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
+						$results = [ 'Waterless', 'Offset' ];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
+						$results = ['Offset'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+						$results = ['Web'];
+					} elsif ( $$sig_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+						$results = ['Sheetfed'];
+					} # end if
+				} # end if
+				last if $results;
+			} # end foreach
+
+			if ( ( ! $$specs{'PrintingTypes'} ) and ( $$specs{'OverridePrintingType'.$qty_index} ne 'Y' ) ) {
+				my $cover_specs;
+				foreach my $index ( $Project->signatures({'type'=>'Cover Pages'}) ) {
+					$cover_specs = openprint::service::get_specs_ref( $Project, $index );
+					last;
+				} # end foreach
+				if ( $cover_specs ) {
+					if ( sets::isin( $$cover_specs{'PrintingType'.$qty_index}, $available_printingtypes ) ) {
+						if ( $$cover_specs{'PrintingType'.$qty_index} eq 'Digital' ) {
+						$results = ['Digital'];
+						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Waterless' ) {
+							$results = [ 'Waterless', 'Offset' ];
+						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Offset' ) {
+							$results = ['Offset'];
+						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Web' ) {
+							$results = ['Sheetfed','Web'];
+						} elsif ( $$cover_specs{'PrintingType'.$qty_index} eq 'Sheetfed' ) {
+							$results = ['Sheetfed','Web'];
+						} # end if
+					} # end if
+				} # end if
+			} # end if PrintingTypes
+		} # end if Spread Type
+	} # end if printing_specs{'PrintingType'}
+	return $results;
+} # end sub get_printing_types
 1;
 __END__

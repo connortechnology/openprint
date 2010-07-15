@@ -5,9 +5,7 @@ use strict;
 require sql;
 require openprint::SurveyQuestion;
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'Surveys';
 $serial = 'survey_id_seq';
 

@@ -509,9 +509,12 @@ if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 		$STC->save({'sorting'=>10}) if ! $STC->sorting();
 	} # end if
 
+my $data;
 if ( sets::isin( 'service_types', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_types LIMIT 1', {} );
-	if ( $data and ! exists $$data{'type'} ) {
+	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Service_types LIMIT 1', {} );
+} # end if
+if ( $data ) {
+	if ( ! exists $$data{'type'} ) {
 		$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
 	} # end if
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
@@ -521,10 +524,7 @@ if ( sets::isin( 'service_types', \@tables ) ) {
 		$dbh->do('ALTER TABLE service_types DROP COLUMN category');
 	}# end if
 } else {
-	$_ = misc::load_file( $log, q{../openprint/sql/Service_Types.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	}
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Service_Types.sql}) ) or die;
 }
 if ( ! sets::isin( 'service_categories_id_seq', \@sequences ) ) {
 	$dbh->do('create sequence service_categories_id_seq;');
@@ -532,6 +532,10 @@ if ( ! sets::isin( 'service_categories_id_seq', \@sequences ) ) {
 	$dbh->do(q`select setval('service_categories_id_seq', (select max(id) from service_categories) )`);
 	$dbh->do(q`drop sequence servicecategoriesindex_seq`) if sets::isin( 'servicecategoriesindex_seq', \@sequences );
 } # en dif
+
+if ( ! sets::isin( 'tbl_service_defaults', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_Service_Defaults.sql}) ) or die;
+}
 
 if ( $version < 1586 ) {
 	print "Updating to version 1586\n";
@@ -1128,6 +1132,10 @@ if ( ! $blah ) {
 	} 
 } # end if
 
+if ( ! sets::isin( 'material_categories', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Material_Categories.sql}) ) or die;
+} else {
+
 	$dbh->do(q{alter table material_categories alter column id drop default});
 	if ( sets::isin('materialcategoriesindex_seq', \@sequences ) ) {
 		$dbh->do('drop sequence materialcategoriesindex_seq') 
@@ -1137,6 +1145,7 @@ if ( ! $blah ) {
 	}
 	$dbh->do(q{select setval('material_categories_id_seq', (select max(id) from material_categories))});
 	$dbh->do(q{alter table material_categories alter column id set default nextval('material_categories_id_seq')});
+}
 
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );
@@ -1248,19 +1257,17 @@ if ( ! sets::isin( 'purchaseorders', \@tables ) ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 } # end if
+if ( ! sets::isin( 'purchaseorder_contenttypes', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrder_ContentTypes.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+}
 if ( ! sets::isin( 'purchaseorder_contents', \@tables ) ) {
-	$dbh->do('
-			CREATE TABLE PurchaseOrder_COntents (
-				id SERIAL NOT NULL,
-				po_id   INTEGER NOT NULL, FOREIGN KEY (po_id) REFERENCES PurchaseOrders (id),
-				qty     float,
-				price   float,
-				total   float,
-				item    text,
-				docket  text,
-				description text,
-				PRIMARY KEY (id)
-				);');
+	$_ = misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Contents.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
 } # en dif
 
 
@@ -2102,10 +2109,14 @@ if ( ! sets::isin( 'manifest_content_types', \@tables ) ) {
 		$dbh->do('alter table manifest_content_types add supplier_invoice text');
 	} # end if
 } 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Ordered_Products LIMIT 1', {} );
-if ( ! $data ) {
+if ( ! sets::isin( 'ordered_products', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Ordered_Products.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
 } else {
-	if ( ! exists $$data{'project_id'} ) {
+	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Ordered_Products LIMIT 1', {} );
+	if ( $data and ! exists $$data{'project_id'} ) {
 		$dbh->do('ALTER TABLE Ordered_Products add project_id integer');
 		$dbh->do('ALTER TABLE Ordered_Products add foreign key (project_id) references projects (id)');
 	} # end if
@@ -2427,6 +2438,12 @@ if ( $version < $new_version ) {
 	$version = $new_version;
 } # end if
 
+if ( ! sets::isin( 'paper_prices', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Paper_Prices.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
 foreach my $PP ( openprint::PaperPrice->find('units'=>'Per M') ) {
 	$PP->Cost( sprintf('%.2f', $PP->Cost() * 100 / $PP->Paper()->mweight() ) );
 	$PP->Price( sprintf('%.2f', $PP->Price() * 100 / $PP->Paper()->mweight() ) );
@@ -2446,10 +2463,16 @@ $dbh->do(q`alter table orders alter column index set default nextval('order_id_s
 }
 
 if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding') ) {
-sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
-		$PaddingServiceType->id(), 'rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
-sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
-		$PaddingServiceType->id(), 'rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
+	sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
+			$PaddingServiceType->id(), 'rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
+	sql::update( undef, undef, 'tbl_service_defaults', ['lngservicetypeindex=? AND strfieldname=? AND strdefaultvalue=?',
+			$PaddingServiceType->id(), 'rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
+} # end if
+if ( ! sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/tbl_ProjectType_Defaults.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
 } # end if
 sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
 sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );

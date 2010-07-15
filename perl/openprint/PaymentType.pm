@@ -3,12 +3,9 @@ package openprint::PaymentType;
 
 use strict;
 
-require sql;
-use openprint ();
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
+$debug = 1;
 $table = 'paymenttypes';
 $serial = 'paymenttypes_id_seq';
 
@@ -19,10 +16,6 @@ $serial = 'paymenttypes_id_seq';
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 );
-my $debug = 1;
-
 
 1;
-
 __END__
-~       

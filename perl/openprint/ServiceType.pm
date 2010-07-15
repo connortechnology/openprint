@@ -8,8 +8,8 @@ use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-$table = 'Service_Types';
-$serial = 'ServiceTypeIndex';
+$table = 'service_types';
+$serial = 'service_types_id_seq';
 
 %fields = (
 	'id'				=>	'id',

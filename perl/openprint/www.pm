@@ -283,7 +283,7 @@ $log->debug("User Type: $session{'user_type'}");
 
 		if ( $second eq 'proj' ) {
 			require openprint::employee_production;
-			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @openprint::param{'ProjectIndex','ServiceIndex'} );
+			openprint::print_project::get_service_specifications( $r, $log, $dbh, \%variable, @openprint::param{'ProjectIndex','ServiceIndex'} ) if $filename ne 'multipage_signatures.html';
 			$variable{'ProjectIndex'} = $r->param('ProjectIndex');
 			$variable{'ServiceIndex'} = $r->param('ServiceIndex');
 			

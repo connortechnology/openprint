@@ -24,6 +24,7 @@ require sql;
 	'invoice_id'		=>	'invoice_id',
 	'product_id'		=>	'product_id',
 	'description'		=>	'description',
+	'po'				=>	'po',
 );
 
 %transforms = (
@@ -31,7 +32,7 @@ require sql;
 %defaults = (
 	'invoice_id'	=>	undef,
 	'product_id'	=>	undef,
-	'price'			=>	0,
+	'price'			=>	undef,	# undef means look it up in the Product
 	'quantity'		=>	undef,
 );
 
@@ -49,8 +50,20 @@ sub name {
 
 sub total {
 	my ( $self ) = @_;
-	return $$self{'quantity'} * $$self{'price'};
+	return $$self{'quantity'} * $self->price();
 } # end sub total
+
+sub price {
+	my $self = $_[0];
+	if ( @_ == 2 ) {
+		$$self{'price'} = $_[1];
+	} # end if
+	if ( ( ! defined $$self{'price'} ) and $$self{'product_id'} ) {
+		my %Price = $self->Product()->get_price( $$self{'quantity'} );
+		$$self{'price'} = $Price{'Price'};
+	} # end if
+	return $$self{'price'};
+} # end sub price
 
 sub description {
 	my ( $self ) = @_;

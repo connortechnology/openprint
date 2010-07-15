@@ -5,6 +5,7 @@
 		<!--#include virtual="/includes/quote_prepared_by.html"-->
 		<!--#include virtual="/includes/quote_prepared_for.html"-->
 	</div>
+<? if ( $$variable{'Quote'}->Projects() ) ?>
 <table class="List">
 	<tr> 
 		<th width="60" align="left">ID</th>
@@ -66,6 +67,47 @@ return $html;
 	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
 	<? endwhile ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
 </table>
+<? endif ( $$variable{'Quote'}->Projects() ) ?>
+<? if ( $$variable{'Quote'}->Products() ) ?>
+<table>
+	<thead>
+		<tr>
+			<th class="description">Product</th>
+			<th class="quantity">Quantity</th>
+			<th class="cost">Cost</th>
+			<th class="markup">Markup</th>
+			<th class="price">Price</th>
+		</tr>
+	</thead>
+	<tbody>
+		<? echo (
+			my $html;
+			my $rowclass;
+			my $subtotal = 0;
+			foreach my $Product ( $$variable{'Quote'}->Products() ) {
+				$html .= sprintf('<tr%1$s>
+									<td class="description">%3$s</td>
+									<td class="quantity">%4$s</td>
+									<td class="price">%5$s</td>
+									<td class="markup">%6$s</td>
+									<td class="newprice">%7$s</td>
+									</tr>', $rowclass, $Product->id(), $Product->description(), 
+									Number::Format::format_number($Product->quantity()), 
+									openprint::Currency::format( $Product->cost() ), 
+									1*$Product->markup().'%', 
+									openprint::Currency::format( $Product->price() ) );
+				$subtotal += $Product->price();
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Product
+		$html .= '<tr class="totals">';
+		$html .= '<td colspan="4" style="text-align: right;">Subtotal:</td><td class="newprice">';
+		$html .= openprint::Currency::format( $subtotal );
+		$html .= '</td></tr>';
+			return $html;
+		) ?>
+	</tbody>
+</table>
+<? endif ( $$variable{'Quote'}->Products() ) ?>
 <span class="Currency">All prices are in <b><? echo ( $$variable{'Quote'}->Currency->name() ) ?></b> and are subject to applicable taxes.</span>
 		<? if ( $$variable{'AdministratorName'} ) ?><b>Administrator Name:</b><?AdministratorName?><br/><? endif ( $$variable{'AdministratorName'} ) ?>
 		<? if ( $$variable{'AdministratorComments'} ) ?><b>Administrator Comments:</b><?AdministratorComments?><br/><? endif ( $$variable{'AdministratorComments'} ) ?>

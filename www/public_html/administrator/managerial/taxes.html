@@ -1,21 +1,27 @@
+<div class="Taxes">
 <form method="post" action="taxes.html" id="f1" name="f1">
 	<table class="List sortable">
 		<tr>
 			<th width="20">&nbsp;</th>
-			<th align="left">Country</th>
-			<th align="left">State/Province</th>
-			<th width="80">Federal (%)</th>
-			<th width="80">State (%)</th>
-			<!--<th width="80">Harmonised (%)</th>-->
+			<th class="name">Name</th>
+			<th class="period">Period</th>
+			<th class="country">Country</th>
+			<th class="state">State/Province</th>
+			<th class="rate">Rate (%)</th>
 		</tr>
 		<? eval (
-				@{$$variable{'TAXES'}} = openprint::Tax->find('order'=>'lower(state)');
+				@{$$variable{'TAXES'}} = openprint::Tax->find('order'=>'period_start, lower(state)');
 				) ?>
 		<? while ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
 		<tr>
 			<td><input type="checkbox" id="tax_ids<? echo ( $$variable{'Tax'}->id() ) ?>" name="tax_ids" value="<? echo ( $$variable{'Tax'}->id() ) ?>" /></td>
-			<td><? echo ( $countries::countries{$$variable{'Tax'}->country()} ? $countries::countries{$$variable{'Tax'}->country()} : $$variable{'Tax'}->country() ) ?></td>
-			<td><? echo (
+			<td class="name"><input type="text" id="name-<? echo ( $$variable{'Tax'}->id() ) ?>" name="name-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->name() ) ?>" /></td>
+			<td class="period">
+				<? echo ( ssi::date_select( 'period_start-'.$$variable{'Tax'}->id(), [ split('-',$$variable{'Tax'}->period_start())] ); ) ?> to 
+				<? echo ( ssi::date_select( 'period_end-'.$$variable{'Tax'}->id(), [ split('-',$$variable{'Tax'}->period_end())] ); ) ?>
+			</td>
+			<td class="country"><? echo ( $countries::countries{$$variable{'Tax'}->country()} ? $countries::countries{$$variable{'Tax'}->country()} : $$variable{'Tax'}->country() ) ?></td>
+			<td class="state"><? echo (
 				if ( $$variable{'Tax'}->country() eq 'CA' and $provinces::provinces{$$variable{'Tax'}->state()} ) {
 					return $provinces::provinces{$$variable{'Tax'}->state()};
 				} elsif ( $$variable{'Tax'}->country() eq 'US' and $states::states{$$variable{'Tax'}->state()} ) {
@@ -24,20 +30,21 @@
 					return $$variable{'Tax'}->state();
 				} # end if
 				) ?></td>
-			<td> 
-				<input type="text" name="federaltax_rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->federaltax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-			</td>
-			<td> 
-				<input type="text" name="statetax_rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->statetax_rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+			<td class="rate"> 
+				<input type="text" name="rate-<? echo ( $$variable{'Tax'}->id() ) ?>" value="<? echo ( $$variable{'Tax'}->rate() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</td>
 		</tr>
 		<? endwhile ( $$variable{'Tax'} = shift @{$$variable{'TAXES'}}; ) ?>
 		<tr class="totals">
 			<td>&nbsp;</td>
-			<td><input type="text" name="country-New"/></td>
-			<td><input type="text" name="state-New"/></td>
-			<td><input type="text" name="federaltax_rate-New" /></td>
-			<td><input type="text" name="statetax_rate-New" /></td>
+			<td class="name"><input type="text" id="name-New" name="name-New" /></td>
+			<td class="period">
+				<? echo ( ssi::date_select( 'period_start-New',[] ); ) ?> to 
+				<? echo ( ssi::date_select( 'period_end-New',[] ); ) ?>
+			</td>
+			<td class="country"><input type="text" name="country-New"/></td>
+			<td class="state"><input type="text" name="state-New"/></td>
+			<td class="rate"><input type="text" name="rate-New" /></td>
 		</tr>
 	</table>
 	<p class="buttons"> 
@@ -47,3 +54,4 @@
 	</p>
 	<input type="hidden" name="btnFunction"/>
 </form>
+</div>

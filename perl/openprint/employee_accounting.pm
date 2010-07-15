@@ -268,9 +268,9 @@ sub credit_applications {
 			my $Me = new openprint::User( $variable{'UserIndex'} );
 
 			$params{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
-			$params{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$params{'ReplacementText'}, \%params );
+			$params{'ReplacementText'} = ssi::variable_substitution( \$params{'ReplacementText'}, \%params );
 			$_ = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-			my $template = ssi::variable_substitution( $r, $log, $dbh, \$_, \%params );
+			my $template = ssi::variable_substitution( \$_, \%params );
 			my %mail = (
 					SMTP	=> $config{'Mail Server'},
 					FROM	=> $config{'AdministratorEmail'},

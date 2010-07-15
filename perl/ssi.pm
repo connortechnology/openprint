@@ -271,9 +271,8 @@ sub return_years {
 	my ( $start, $end, $selected ) = @_;
 	$start = $openprint::config{'startYear'} if ! $start;
 	$end = (localtime(time))[5] + 1901 if ! $end;
-	$selected = (localtime(time))[5] + 1900 if ! defined $selected;
-	my @years = map { $_, $_ } ( $start .. $end );	
-	return make_drop_down( \@years, $selected );
+	#$selected = (localtime(time))[5] + 1900 if ! defined $selected;
+	return make_drop_down( [ map { $_, $_ } ( $start .. $end ) ], $selected );
 } # end sub return_years
 
 sub getyears {
@@ -295,8 +294,8 @@ sub getmonths {
 	my $selected = shift;
 	if ( $selected ) {
 		$selected = int($selected);
-	} elsif ( ! defined $selected ) {
-		$selected = (localtime(time))[4]+1;
+	#} elsif ( ! defined $selected ) {
+		#$selected = (localtime(time))[4]+1;
 	} # end if
 	return make_drop_down( \@months, $selected );
 } # edn sub getmonths
@@ -496,7 +495,6 @@ sub date_select {
 		( $year, $month, $day ) = ( '', '', '' );
 	} else {
 		( $year, $month, $day ) = Date::Calc::Localtime( $value ne '' ? Date::Parse::str2time( $value ) : time );
-$log->debug("$year-$month-$day");
 	} # end if
 	if ( ref $options eq 'HASH' ) {
 	} elsif ( $options ) {

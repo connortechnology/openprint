@@ -17,7 +17,6 @@
 package openprint::Estimating::Turnaround;
 use strict;
 
-require openprint::project;
 require openprint::service;
 
 require sql;

@@ -11,7 +11,7 @@
 	</div>
 	Projects highlighted in yellow are scheduled for printing.<br/>
 	<? echo (
-		@{$$variable{'Statuses'}} = ( 'In Prepress', 'Proofs Out', 'Waiting For QA Approval' );
+		@{$$variable{'Statuses'}} = ( 'In Prepress', 'Waiting For Customer Approval', 'Waiting For QA Approval' );
 		my $html;
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">'.$status.'</div>';

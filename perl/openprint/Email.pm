@@ -12,20 +12,6 @@ use vars qw( $table $serial %fields %transforms %defaults $log $dbh %session %co
 *session = \%openprint::session;
 *config = \%openprint::config;
 
-$table = 'mailbox';
-
-%fields = (
-	'id'		=>	'username',
-	'password'	=>	'password',
-	'name'		=>	'name',
-	'maildir'	=>	'maildir',
-	'quota'		=>	'quota',
-	'domain'	=>	'domain',
-	'created_on'	=>	'created',
-	'updated_on'	=>	'modified',
-	'active'		=>	'active',
-);
-
 sub send {
 	my ( $self, %params ) = @_;
 
@@ -39,6 +25,7 @@ sub send {
 	} # end if
 
     my %mail = (
+			BCC		=>	$params{'BCC'},
             SMTP    => $params{'SMTP'} ? $params{'SMTP'} : $config{'Mail Server'},
             FROM    => $$self{'from'},
             SUBJECT => $params{'SUBJECT'} ? $params{'SUBJECT'} : $$self{'subject'},
@@ -46,6 +33,7 @@ sub send {
 	my @attachments = $params{'ATTACHMENTS'} ? @{$params{'ATTACHMENTS'}} : @{$$self{'ATTACHMENTS'}};
 
 	my @recipients = $self->to();
+$log->debug("Email: Recipients @recipients");
 	if ( $params{'TO'} ) {
 		if ( ref $params{'TO'} eq 'ARRAY' ) {
 			@recipients = @{$params{'TO'}};
@@ -55,15 +43,15 @@ sub send {
 	} # end if
 $log->debug("Email: Recipients @recipients");
 	foreach my $recipient ( @recipients ) {
-		s/^\s+//, s/\s+$// for $recipient;
-		next if ! $recipient;
 		
 		if ( ref $recipient eq 'openprint::User' ) {
+$openprint::log->debug("checking vacation to " . $recipient->email() );
 			if ( email::get_vacation( $recipient->email() ) ) {
 				$results .= 'Not sending to ' . $recipient->email() . ' because they are on vacation.<br/>';
 				next;
 			} # end if
 			$mail{'TO'} = sprintf('"%s" <%s>', $recipient->name(), $recipient->email() );
+$openprint::log->debug("Sending to $mail{'To'}");
 		} elsif ( $recipient =~ /^"(.*)" <(.*)>$/ ) {
 			my ( $name, $email ) = ( $1, $2 );
 			if ( email::get_vacation( $email ) ) {
@@ -72,12 +60,15 @@ $log->debug("Email: Recipients @recipients");
 			} # end if
 			$mail{'TO'} = $recipient;
 		} else {
+			s/^\s+//, s/\s+$// for $recipient;
+			next if ! $recipient;
 			if ( email::get_vacation( $recipient ) ) {
 				$results .= 'Not sending to ' . $recipient . ' because they are on vacation.<br/>';
 				next;
 			} # end if
 			$mail{'TO'} = $recipient;
 		} # end if
+$openprint::log->debug("Sending to $mail{'To'}");
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= 'Sent to: ' .  ssi::htmlize( $mail{'TO'} ) . '<br/>';
 

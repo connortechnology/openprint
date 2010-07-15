@@ -13,6 +13,7 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 require openprint::Invoice;
 require openprint::Invoice_Interest;
+require openprint::Tax;
 
 sub history {
 
@@ -24,6 +25,7 @@ sub history {
 				'description'	=>	$param{'product-description-'.$Product->id()},
 				'price'			=>	$param{'product-price-'.$Product->id()},
 				'quantity'		=>	$param{'product-quantity-'.$Product->id()},
+				'po'			=>	$param{'product-po-'.$Product->id()},
 				});
 		} # end foreach
 		$param{'currency_id'} = openprint::Currency::get_current()->id() if ! $param{'currency_id'};
@@ -47,9 +49,13 @@ sub history {
 			$variable{'information'} .= 'Invoice unposted.<br/>';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
-		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
-		$variable{'error'} .= $Invoice->send();
-		$variable{'information'} .= 'Invoice sent.<br/>';
+		my $Invoice = openprint::Invoice->find_one( 'id'=>$param{'invoice_id'} );
+		if ( ! $Invoice ) {
+			$variable{'error'} .= "Invoice $param{'invoice_id'} not found";
+		} else {
+			$variable{'error'} .= $Invoice->send();
+			$variable{'information'} .= 'Invoice sent.<br/>';
+		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Invoice = new openprint::Invoice( $param{'invoice_id'} );
 		if ( ! ( $variable{'error'} .= $Invoice->delete() ) ) {
@@ -64,7 +70,7 @@ sub history {
 		my @Header = ('ID','Due On','Company','SubTotal','GST Rate', 'GST','Total','Interest','Owing');
 		my @Data;
 
-		my ($subtotal, $federaltax_total, $interest_total, $total, $owing_total );
+		my ($subtotal, $interest_total, $total, $owing_total );
 
 		foreach my $Invoice ( openprint::Invoice->find( 
 					'created_on_start'  => sprintf('%.4d-%.2d-%.2d 00:00:00', @param{'created_on_start_year','created_on_start_month','created_on_start_day'} ),
@@ -91,13 +97,12 @@ sub history {
             } # end if
 
 			$subtotal += $Invoice->subtotal();
-			$federaltax_total += $Invoice->federaltax();
 			$total += $Invoice->total();
 			$interest_total += $Invoice->interest();
 			$owing_total += $Invoice->owing();
-			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), $Invoice->federaltaxrate(), $Invoice->federaltax(), $Invoice->total(), $Invoice->interest(), $Invoice->owing();
+			push @Data, $Invoice->id(), $Invoice->due_on(), $Invoice->Invoicee()->name(), $Invoice->subtotal(), $Invoice->total(), $Invoice->interest(), $Invoice->owing();
 		} # end foreach Invoice
-		push @Data, 'Totals:', '', '', $subtotal, '', $federaltax_total, $total, $interest_total, $owing_total;
+		push @Data, 'Totals:', '', '', $subtotal, '', $total, $interest_total, $owing_total;
 
 		misc::export_csv( $r, $log, \%variable, 'invoices.csv', \@Header, \@Data );
 	} elsif ( $param{'btnFunction'} eq 'Account Statement' ) {
@@ -115,6 +120,7 @@ sub history {
 					FROM    => $config{'AccountingEmail'},
 					TO      => sprintf('"%s" <%s>', $Recipient->name(), $Recipient->email() ),
 					BCC     => sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
+					#TO		=>	sprintf('"%s %s" <%s>', new openprint::User( $session{'user_id'} )->get('firstname','lastname','email') ),
 					SUBJECT => 'Account Statement from ' . ( new openprint::User( $session{'user_id'} )->Company()->name() ),
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments );
@@ -231,6 +237,7 @@ sub _invoiced_products {
 			'description'	=>	$param{'product-description-'.$Product->id()},
 			'price'			=>	$param{'product-price-'.$Product->id()},
 			'quantity'		=>	$param{'product-quantity-'.$Product->id()},
+			'po'			=>	$param{'product-po-'.$Product->id()},
 			});
 	} # end foreach
 
@@ -239,6 +246,14 @@ sub _invoiced_products {
 		$variable{'error'} .= $IP->save({
 				'invoice_id'=>$variable{'Invoice'}->id(),
 				'quantity'	=> 1
+				});
+	} elsif ( $param{'action'} eq 'add' ) {
+		my $IP = new openprint::Invoiced_Product( );
+		$variable{'error'} .= $IP->save({
+				'product_id'	=>	$param{'product-id-'},
+				'invoice_id'	=>	$variable{'Invoice'}->id(),
+				'quantity'		=>	$param{'product-quantity-'} ? $param{'product-quantity-'} : 1,
+				'po'			=>	$param{'product-po-'},
 				});
 	} elsif ( $param{'action'} eq 'remove' ) {
 		my $IP = new openprint::Invoiced_Product( $param{'product_id'} );

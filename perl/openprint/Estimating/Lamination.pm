@@ -18,7 +18,6 @@ package openprint::Estimating::Lamination;
 use POSIX qw{ ceil };
 use strict;
 
-require openprint::project;
 require openprint::Equipment;
 require openprint::service;
 

@@ -45,11 +45,6 @@ sub delete {
 	delete $$Paper{'Prices'};
 } # end sub delete
 
-sub Paper {
-	my $self = shift;
-	return new openprint::Paper( $$self{paper_id} );
-} # end sub Paper
-
 sub costperm {
 	my $self = shift;
 	my $Paper = $self->Paper();

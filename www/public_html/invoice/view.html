@@ -138,10 +138,9 @@
         </table>
     </fieldset>
 </div>
-<!--#include virtual="_notes.html"-->
 <!--#include virtual="_totals.html"-->
 <? if ( $$variable{'Invoice'}->Payments() ) ?>
-<div id="Payments">
+<div class="Payments">
 	<fieldset><legend>Payments</legend>
 		<table>
 			<tr><th>ID</th><th align="left">When</th><th>Notes</th><th class="Price">Amount</th></tr>
@@ -150,7 +149,10 @@
 				$$variable{'payment_total'} = 0;
 				foreach my $P ( $$variable{'Invoice'}->Payments() ) {
 					my $Payment = $P->Payment();
-					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td style="text-align:right;">%4$s</td></tr>', $Payment->id(), $Payment->received_on(), $Payment->memo(), openprint::Currency::format( $Payment->amount() ) );
+					$html .= sprintf('<tr><td><a href="/payment/edit.html?payment_id=%1$d">%1$d</a></td><td>%2$s</td><td>%3$s</td><td class="Price">%4$s</td></tr>', 
+						$Payment->id(), 
+						Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Payment->received_on() ) ),
+						$Payment->memo(), openprint::Currency::format( $Payment->amount() ) );
 					$$variable{'payment_total'} += $Payment->amount();
 				} # end foreach
 				return $html;

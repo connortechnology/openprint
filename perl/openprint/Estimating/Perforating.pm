@@ -22,7 +22,6 @@ require openprint::service;
 require openprint::Material;
 require openprint::imposition;
 require openprint::Imposition;
-require openprint::project;
 
 my $debug = 0;
 

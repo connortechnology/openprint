@@ -7,7 +7,6 @@ use openprint ();
 
 require openprint::Project;
 require openprint::order;
-require openprint::project;
 require openprint::service;
 require openprint::Equipment;
 require openprint::employee_project;
@@ -397,10 +396,6 @@ sub projects {
 sub _project_list {
 	ssi::save_params( '/employee/production/projects.html', 'DueDateStartYear','DueDateStartMonth','DueDateStartDay', 'DueDateEndYear','DueDateEndMonth','DueDateEndDay', 'ProjectStatus', 'ddmSalesRep', 'ddmEmployee', 'ddmCustomer', 'ddmPress' );
 }
-
-sub project_view {
-	return openprint::employee_project::view( @_ );
-} # end sub view_project
 
 sub send_additional_charges_notifications {
 	my ( $r, $log, $dbh, $order_id, $project_index ) = @_;
@@ -1309,8 +1304,12 @@ sub _li_change {
 		if ( (exists $param{'forms'}) and ( $param{'forms'} != $Job->forms() ) ) {
 			my @service_ids = @{$$Job{'service_id'}};
 			if ( $Job->forms() > $param{'forms'} ) {
-				@service_ids = splice @service_ids, 0, $param{'forms'};
-				$sql{'service_id'} = \@service_ids;
+				my @new_service_ids = splice @service_ids, 0, $param{'forms'};
+				$sql{'service_id'} = \@new_service_ids;
+				$Job->Project()->add_to_log(@session{'company_id','user_id'}, 'Removed form ' . join(',', sort map {
+					my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ );	
+					$$sig_specs{'SignatureIndex'};
+					} @service_ids ) . ' from press schedule.' );
 			} elsif ( $Job->forms() < $param{'forms'} ) {
 				my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $service_ids[0] );
 				while ( @service_ids < $param{'forms'} ) {

@@ -86,7 +86,7 @@ Please select a Paper to view/edit.<br>
 			<select name="Quality" size="1">
 				<option value="">select</option>
 			<? echo (
-					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockQuality::find('order'=>'lower(longname)') ], $session{'/employee/inventory/paper.html?Quality'} );
+					return ssi::make_drop_down( [ map { $_->id(), $_->longname() } openprint::StockQuality->find('order'=>'lower(longname)') ], $session{'/employee/inventory/paper.html?Quality'} );
 				) ?>
 			</select>
 		</p>

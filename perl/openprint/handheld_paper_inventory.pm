@@ -25,7 +25,7 @@ sub rfidtag_details {
 	} # end if
 
 	if ( length $param{'rfidtag_id'} != 15 ) {
-		my @RFIDTags = openprint::RFIDTag::find('id_like'=>'%'.$param{'rfidtag_id'},'valid'=>1);
+		my @RFIDTags = openprint::RFIDTag->find('id_like'=>'%'.$param{'rfidtag_id'},'valid'=>1);
 		if ( @RFIDTags != 1 ) {
 			$variable{'error'} = 'Invalid RFID Tag # ' . $param{'rfidtag_id'} . ' : length 15 != ' . length $param{'rfidtag_id'};
 			return;

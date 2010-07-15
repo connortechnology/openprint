@@ -3,8 +3,6 @@ package openprint::StockPurpose;
 
 use strict;
 
-require sql;
-
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'stockpurposes';
 $serial='stockpurposes_id_seq';

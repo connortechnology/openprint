@@ -22,7 +22,7 @@ sub profile {
 
 	$param{'company_id'} = new openprint::User($session{'user_id'})->company_id() if ! $param{'company_id'};
 
-	my $User = new openprint::User( $param{'user_id'} );
+	my $User = new openprint::User( exists $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} );
 
     if ( $param{'btnFunction'} eq 'Save' ) {
 		if ( $param{'password'} ) {

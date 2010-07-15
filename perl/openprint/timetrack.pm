@@ -65,3 +65,6 @@ sub edit {
 		$variable{'Timetrack'}->ending( $session{'/timetrack/edit.html?ending'} ) if ! $variable{'Timetrack'}->ending();
 	} # end if
 } # end sub edit
+
+1;
+__END__

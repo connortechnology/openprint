@@ -247,7 +247,7 @@ if ( 0 ) {
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
-foreach my $Skid ( openprint::Skid::find('quantity_>='=>1,'type'=>'Roll') ) {
+foreach my $Skid ( openprint::Skid->find('quantity_>='=>1,'type'=>'Roll') ) {
 	next if ! $Skid->rfidtag_id();
 	next if ! $Skid->RFIDTag()->id();
 	foreach my $C ( $Skid->Contents() ) {
@@ -691,13 +691,13 @@ sub skid_details {
 
 	if ( ! @skid_ids ) {
 		if ( $param{'rfidtag_id'} ) {
-			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.$param{'rfidtag_id'}, 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				$param{'skid_id'} = $skid_ids[0];
 			} # end if
 		} elsif ( $param{'rfidtag_hex'} ) {
-			my @RFIDTags = openprint::RFIDTag::find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
+			my @RFIDTags = openprint::RFIDTag->find( 'id_like' => '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id','type'=>'Skid');
 			if ( @RFIDTags == 1 ) {
 				@skid_ids = ( $RFIDTags[0]->skid_id() );
 				$param{'skid_id'} = $skid_ids[0];
@@ -1104,7 +1104,7 @@ sub send_paper_arrival_notification {
 			my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 
 			$info{'ReplacementText'} = "<!--#include virtual=\"/email_content/paper_arrived_notification.html\"-->";
-			$_ = encode_qp( ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) );
+			$_ = encode_qp( ssi::variable_substitution( \$email_template, \%info ) );
 			my @body = ('', $_, 'text/html', 'quoted-printable');
 			my %mail = (
 					SMTP	=> $config{'Mail Server'},
@@ -1772,10 +1772,13 @@ sub purchase_order_view {
 		} else {
 			$param{'delivered_on'} = undef;
 		} # end if
-		$param{'federaltax_charge'} = $param{'federaltax_charge'} ? 1 : 0;
-		$param{'statetax_charge'} = $param{'statetax_charge'} ? 1 : 0;
+		foreach my $Tax ( $PO->Taxes() ) {
+			# Order is important here.
+			$Tax->charge($param{'tax_charge-'.$Tax->id()});
+			$Tax->amount(undef);
+			$Tax->save();
+		} # end foreach
 		$variable{'error'} .= $PO->save( \%param );
-$log->debug("PO total: " . $PO->total() . ' Me total: ' . $Me->purchasing_limit() );
 		if ( ! $PO->authorized() ) {
 			if ( $PO->total() < $Me->purchasing_limit() ) {
 				$variable{'error'} .= $PO->save({
@@ -1995,6 +1998,8 @@ sub _manifest_type {
 }
 
 sub _po_select_vendor {
+}
+sub _po_select_contact {
 }
 
 sub _verification_log {

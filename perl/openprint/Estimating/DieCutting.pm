@@ -18,10 +18,8 @@ package openprint::Estimating::DieCutting;
 use strict;
 use POSIX qw( ceil );
 
-require openprint::project;
 require openprint::Equipment;
 require openprint::service;
-require openprint::print;
 use openprint;
 use vars qw( $log $dbh );
 *log = \$openprint::log;

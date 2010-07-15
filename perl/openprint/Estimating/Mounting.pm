@@ -18,7 +18,6 @@ package openprint::Estimating::Mounting;
 use POSIX qw{ ceil };
 use strict;
 
-require openprint::project;
 require openprint::service;
 
 require sql;

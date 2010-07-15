@@ -19,7 +19,6 @@ use strict;
 
 my $debug = 0;
 
-require openprint::project;
 require openprint::Equipment;
 require openprint::service;
 

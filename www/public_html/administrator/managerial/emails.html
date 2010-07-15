@@ -13,8 +13,8 @@
 		<? echo (
 			my $html = '';
 			my $mail_dbh = email::db_connect();
-			$openprint::Email::dbh = $mail_dbh;
-			my @Emails = openprint::Email->find('order'=>'username');
+			$openprint::Email_Account::dbh = $mail_dbh;
+			my @Emails = openprint::Email_Account->find('order'=>'username');
 
 			foreach my $Email ( @Emails ) {
 				my $User = openprint::User->find_one('email'=>$Email->id());

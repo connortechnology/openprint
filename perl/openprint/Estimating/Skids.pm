@@ -20,7 +20,6 @@ use warnings;
 no warnings qw(uninitialized);
 use POSIX qw(ceil);
 
-require openprint::project;
 require openprint::service;
 
 require sql;

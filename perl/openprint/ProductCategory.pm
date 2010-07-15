@@ -3,13 +3,8 @@ package openprint::ProductCategory;
 
 use strict;
 
-use openprint ();
-use vars qw($serial $table $log $dbh %variable %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw($serial $table %fields %transforms %defaults );
 
-require sql;
 require openprint::logs;
 
 $serial = 'product_categories_id_seq';
@@ -49,7 +44,6 @@ sub products {
 	$params{'category_id'} = $$self{'id'};
 
 	return openprint::Product->find( %params );
-	
 } # end sub products
 
 sub ProjectType {

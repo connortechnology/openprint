@@ -20,7 +20,6 @@ my $debug = 1;
 
 require sql;
 require openprint::Currency;
-require openprint::project;
 require openprint::print_project;
 require openprint::service;
 require openprint::Order;
@@ -28,9 +27,7 @@ require openprint::OrderedProduct;
 require openprint::usergroup;
 require openprint::press_schedule;
 require openprint::Payment;
-require openprint::Tax;
 require openprint::PaperAllocation;
-require openprint::PaymentType;
 
 sub delete_unfinished_orders {
 	# clean out old orders
