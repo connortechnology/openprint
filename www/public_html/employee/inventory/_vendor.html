@@ -40,8 +40,16 @@
 				} # end if
 			) ?></span></label>
 			<select id="vendor_state" name="vendor_state">
-			<option value=""> Select </option>
-			<? echo ( ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->vendor_state()); ) ?>
+				<option value=""> Select </option>
+				<? echo ( 
+					if ( $$variable{'PurchaseOrder'}->vendor_country() eq 'US' ) {
+						return ssi::make_drop_down( \@states::states, $$variable{'PurchaseOrder'}->vendor_state() );
+					} elsif ( $$variable{'PurchaseOrder'}->vendor_country() eq 'CA' ) {
+						return ssi::make_drop_down( \@provinces::provinces, $$variable{'PurchaseOrder'}->vendor_state() );
+					} else {
+						return ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->vendor_state());
+					} # end if
+				) ?>
 			</select>
 		</p>
 		<p><label for="vendor_city">City:</label><input type="text" name="vendor_city" id="vendor_city" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_city() ) ?>" /></p>
