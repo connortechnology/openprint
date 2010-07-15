@@ -3,7 +3,7 @@ package openprint::Skid;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %variable %session $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh %variable %session $table $serial %fields %transforms %defaults %find_fields $debug );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *log = \$openprint::log;
@@ -21,7 +21,7 @@ require openprint::SkidContent;
 require openprint::Manifest;
 require openprint::ManifestContent;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -37,6 +37,8 @@ $serial = 'skid_id_seq';
 	'rfidtag_id'	=>	'rfidtag_id',
 	'type'			=>	'type',
 	'deleted'		=>	'deleted',
+);
+%find_fields = (
 );
 
 %transforms = (

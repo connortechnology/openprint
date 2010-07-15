@@ -14,13 +14,13 @@ Please select a Skid to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Docket:</label>
-			<input type="text" name="Docket" size="6" value="<? echo ( $session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2').serialize() );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2').serialize() );",'','Go' ); ) ?>
+			<input type="text" name="Docket" size="6" value="<? echo ( $session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2') );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );",'','Go' ); ) ?>
 		</p>
 		<p>
 			<label>Verification:</label>
-			<input type="text" name="verification_code" size="9" value="<? echo ( $session{'/employee/inventory/skids.html?verification_code'} ) ?>" onkeyup="" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2').serialize() );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2').serialize() );",'','Go' ); ) ?>
+			<input type="text" name="verification_code" size="9" value="<? echo ( $session{'/employee/inventory/skids.html?verification_code'} ) ?>" onkeyup="" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2') );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );",'','Go' ); ) ?>
 		</p>
 		<hr/>
 		<p>
@@ -141,7 +141,7 @@ Please select a Skid to view/edit.<br>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2').serialize() );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );", '', 'Show Results' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'skid_details.html', 'Add New Skid' ),
 				); ) ?>

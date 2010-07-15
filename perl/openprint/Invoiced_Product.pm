@@ -74,6 +74,4 @@ sub description {
 } # end if
 
 1;
-
 __END__
-~       

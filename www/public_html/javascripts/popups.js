@@ -81,53 +81,21 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 } // end function AjaxToggleContent
 
 
-function AjaxLoadContent( divID, page, parameters, message ) {
+function LoadContent( divID, page, parameters, message ) {
 	var div = $( divID );
 	if ( div ) {
 		if ( message ) div.innerHTML = message;
 		else div.innerHTML = 'Please wait....';
 	} // end if
 	var method = 'get';
+	alert( typeof parameters );
+	if ( typeof parameters == 'object' ) {
+		parameters = parameters.serialize();
+	} 
 	if ( parameters.length > 8190 ) 
 		method = 'post';
 	
 	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
-}
-
-function LoadContent( divID, page, inputs, message ) {
-	var div = $( divID );
-	if ( div ) {
-		if ( message ) div.innerHTML = message;
-		else div.innerHTML = 'Please wait....';
-	} // end if
-	if ( ! inputs ) {
-		inputs = new Array();
-	} // end if
-
-    inputs.unshift(divID,page);
-    jsrsExecute( '/jsrs.htm', cbLoadMyContent, 'openprint::jsrs_handler::load_content', inputs );
-
-}
-
-function cbLoadMyContent( results ) {
-	var div;
-	var content;
-	var pairs = results.split('|');
-	for ( var i = 0; i < pairs.length; i += 1 ){
-		if ( pairs[i].indexOf('~') != -1 ) {
-			var data = pairs[i].split('~');
-			if ( data[0] == 'Div' ) {
-				div = $( data[1] );
-			} else if ( data[0] == 'Content' ) {
-				content = data[1];
-			} // end if
-		} // end if
-	} // end for
-	if ( div ) {
-		div.innerHTML = content;
-	} else {
-		alert('no div');
-	} // end if
 }
 
 var contentWin;

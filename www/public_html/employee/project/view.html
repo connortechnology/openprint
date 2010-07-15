@@ -454,7 +454,7 @@ $log->debug("Have no job: $Job");
 </div>
 <? endif ( $$variable{'Project'}->docket() ) ?>
 <br class="spacer"/>
-<fieldset><legend onclick="AjaxLoadContent('StockAllocations','_stock_allocations.html', { project_id: <? echo ( $$variable{'Project'}->id() ) ?> } );">Allocated</legend>
+<fieldset><legend onclick="LoadContent('StockAllocations','_stock_allocations.html', { project_id: <? echo ( $$variable{'Project'}->id() ) ?> } );">Allocated</legend>
 <div id="StockAllocations">
 <!--#include virtual="_stock_allocations.html"-->
 </div>

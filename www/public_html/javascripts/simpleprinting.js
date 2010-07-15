@@ -89,9 +89,7 @@ function Dimensions_onchange( select, signature ) {
 	} // end if
 	remove_div('OrderButton');
 	// Refreshes Paper: we do this so that we don't get any stocks in the list that are smaller than our size.
-	///jsrsExecute( '/jsrs.htm', cbFillDropDowns, 'openprint::paper::get_paper', get_parameters(select.form, '', '' ) );
 	rdbSuppliedStock_onchange( select, signature );
-	//calc( select.form.name );
 } // end if
 
 var contentWin;
