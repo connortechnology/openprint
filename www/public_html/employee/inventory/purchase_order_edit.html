@@ -147,7 +147,15 @@ function getSelectionId(input, li) {
 				) ?></span></label>
 				<select id="shipto_state" name="shipto_state">
 					<option value=""> select </option>
-					<? echo ( ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->shipto_state()); ) ?>
+					<? echo (
+						if ( $$variable{'PurchaseOrder'}->shipto_country() eq 'US' ) {
+							return ssi::make_drop_down( \@states::states, $$variable{'PurchaseOrder'}->shipto_state() );
+						} elsif ( $$variable{'PurchaseOrder'}->shipto_country() eq 'CA' ) {
+							return ssi::make_drop_down( \@provinces::provinces, $$variable{'PurchaseOrder'}->shipto_state() );
+						} else {
+							return ssi::return_states_and_provinces($$variable{'PurchaseOrder'}->shipto_state());
+						} # end if
+					) ?>
 				</select>
 			</p>
 			<p><label for="shipto_city">City:</label><input type="text" name="shipto_city" id="shipto_city" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_city() ) ?>" /></p>
