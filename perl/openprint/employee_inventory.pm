@@ -1706,7 +1706,7 @@ sub purchase_order_view {
 						'type_id'		=>	$param{'type_id-'.$content_id},
 						});
 				$types{$C->Type()->name()} = 1;
-				if ( $C->docket() ) {
+				if ( $C->docket() and ! ( $C->docket() =~ /\D/ ) ) {
 					foreach my $P ( openprint::Project::find('docket'=>$C->docket()) ) {
 						$P->add_to_log( @session{'company_id','user_id'}, 
 								sprintf('<a href="/employee/inventory/purchase_order_view.html?po_id=%1$d">%2$s%3$s %4$s ordered on PO%1$d</a>',
@@ -1773,9 +1773,12 @@ sub purchase_order_view {
 		} else {
 			$param{'delivered_on'} = undef;
 		} # end if
+		if ( ( $param{'vendor_country'} ne $PO->vendor_country() ) or ( $param{'vendor_state'} ne $PO->vendor_state() ) ) {
+			$PO->Taxes(1);
+		} # end if need to change taxes
 		foreach my $Tax ( $PO->Taxes() ) {
 			# Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
-			$Tax->charge(1*$param{'tax_charge-'.$Tax->id()});
+			$Tax->charge(1*$param{'tax_charge-'.$Tax->id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->id()};
 			$Tax->amount(undef);
 			$Tax->save();
 		} # end foreach
