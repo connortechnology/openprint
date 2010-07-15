@@ -95,7 +95,7 @@
 		</p>
 		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
 		 <p class="buttons">
-			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "AjaxLoadContent('Results','/employee/reports/_order_history_results.html', f1.serialize() );", '', 'Show Results' ); ) ?>
+			 <? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "LoadContent('Results','/employee/reports/_order_history_results.html', f1.serialize() );", '', 'Show Results' ); ) ?>
 		 </p>
 	</fieldset>
 </form>

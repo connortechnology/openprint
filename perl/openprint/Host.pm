@@ -4,8 +4,8 @@ require openprint::Object;
 use Net::ARP;
 use strict;
 
-my $debug = 1;
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults %types );
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults %types );
+$debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
@@ -29,8 +29,6 @@ $serial = 'hosts_id_seq';
 	'dhcp'		=>	0,
 );
 use openprint ();
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
 sub resolve {
 	my ( $self ) = @_;

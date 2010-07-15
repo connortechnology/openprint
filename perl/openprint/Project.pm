@@ -1248,20 +1248,12 @@ sub Order {
 
 sub signatures {
 	my ( $self, $params ) = @_;
-	if ( ! exists $$self{'signatures'} ) {
-		my $services = $self->services();
-		if ( ! sets::isin( $self->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines','Calendars' ] ) ) {
-$openprint::log->debug("Project Type: " . $self->Type()->name() );
-			@{$$self{'signatures'}} = @{$$services{''}} if $$services{''};
-		} # end if
-		if ( $$services{'AdditionalSignature'} ) {
-			push @{$$self{'signatures'}}, @{$$services{'AdditionalSignature'}};
-		} # end if
-	} # end if
 
-	if ( $params ) {
+	my $services = $self->services();
+
+	if ( $params and $$serviecs{'AdditionalSignature'} ) {
 		my @sigs;
-		foreach my $s_id ( @{$$self{'signatures'}} ) {
+		foreach my $s_id ( @{$$services{'AdditionalSignature'}} ) {
 			my $specs = openprint::service::get_specs_ref( $self, $s_id );
 
 			if ( $$params{'type'} ) {
@@ -1274,10 +1266,8 @@ $openprint::log->debug("Project Type: " . $self->Type()->name() );
 		} # end foreach signatures
 		return @sigs;
 	} # end if
+	return @{$$services{'AdditionalSignature'}} if $$services{'AdditionalSignature'};
 
-	if ( $$self{'signatures'} ) {
-		return @{$$self{'signatures'}};
-	} # end if
 	return ();
 } # end sub signatures
 

@@ -1,4 +1,3 @@
-# This is a blank module, to be copied to another module 
 package openprint::priceset;
 
 use strict;
