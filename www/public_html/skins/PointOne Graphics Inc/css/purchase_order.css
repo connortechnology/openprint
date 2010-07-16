@@ -210,3 +210,33 @@ div.autocomplete ul li {
 	width: 48%;
 	float: left;
 }
+.PO .Totals {
+	width: 200px;
+	float: right;
+}
+.PO .Totals ul, .PO .Totals ul li {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+	text-align: right;
+}
+.PO .Totals ul li:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .PO .Totals ul li {height: 1%;}
+.PO .Totals ul li {display: block;}
+/* End hide from IE-mac */
+.PO .Totals ul li label {
+	width: 110px;
+	float: left;
+	text-align: right;
+}
+.PO ul.notifications li {
+	padding: 0px;
+}

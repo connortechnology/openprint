@@ -315,6 +315,9 @@ sub send {
 
 sub Taxes {
     my ( $self ) = @_;
+
+	return if ! ( $$self{'id'} and $$self{'supplier_id'} );
+
     if ( ! $$self{'Taxes'} ) {
         @{$$self{'Taxes'}} = openprint::Claim_Tax->find('claim_id'=>$$self{'id'});
     } # end if
