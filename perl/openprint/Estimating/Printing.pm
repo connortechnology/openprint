@@ -520,13 +520,11 @@ my $master_time = gettimeofday();
 				my @Papers = openprint::Paper::find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
 						'project_type_id'=>$Project->type()->id(),
 						);
-	$log->debug("# of papers: " . @Papers );
 				my %sizes;
 				foreach my $Paper ( @Papers ) {
 					$sizes{(1*$$Paper{width}).'x'.(1*$$Paper{height})} = $Paper;
 				} # end foreach Paper	
 				my @keys = keys %sizes;
-	$log->debug("# of sizes: " . @keys );
 				if ( 1 == @keys ) {
 					@$specs{'txtWidth','txtHeight'} = ( $sizes{$keys[0]}->width(), $sizes{$keys[0]}->height() );	
 				} # end if
@@ -556,7 +554,6 @@ my $master_time = gettimeofday();
 
 	my @side_one_colours = get_colours( $specs, 'SideOne' );
 	my @side_two_colours = get_colours( $specs, 'SideTwo' );
-$openprint::log->debug("# of colours: " . @side_one_colours );
 	my %inkCoverage = get_inkcoverage( $specs );
 	if ( $$specs{'ProjectType'} eq 'ScratchPads' ) {
 		if ( ! $$specs{'PageQuantity'} ) {
@@ -730,7 +727,6 @@ $openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.
 						# Must be big enough to cut
 						next if ( $P->start_width() < $$specs{'OverrideStockWidth'.$qty_index} or $P->start_height() < $$specs{'OverrideStockHeight'.$qty_index} ) and ( $P->start_width() < $$specs{'OverrideStockHeight'.$qty_index} or $P->start_height() < $$specs{'OverrideStockWidth'.$qty_index} );
 					} # end if
-$openprint::log->debug('cloning');
 					my $P2 = $P->clone();
 
 					# Make sure gsm has calculated

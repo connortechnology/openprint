@@ -25,7 +25,7 @@
 		<p><label for="vendor_address1">Address:</label><input type="text" name="vendor_address1" id="vendor_address1" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_address1() ) ?>" />
 		<input type="text" name="vendor_address2" id="vendor_address2" value="<? echo ( $$variable{'PurchaseOrder'}->vendor_address2() ) ?>" /></p>
 		<p><label for="vendor_country">Country:</label>
-			<select id="vendor_country" name="vendor_country" onchange="Country_onchange( this, this.form.vendor_state );">
+			<select id="vendor_country" name="vendor_country" onchange="Country_onchange( this, this.form.vendor_state );update_taxes( this.form );">
 				<option value=""> select </option>
 				<? echo ( ssi::return_countries($$variable{'PurchaseOrder'}->vendor_country() ); ) ?>
 			</select>
@@ -39,7 +39,7 @@
 					return 'State/Province:';
 				} # end if
 			) ?></span></label>
-			<select id="vendor_state" name="vendor_state">
+			<select id="vendor_state" name="vendor_state" onchange="update_taxes( this.form );">
 				<option value=""> Select </option>
 				<? echo ( 
 					if ( $$variable{'PurchaseOrder'}->vendor_country() eq 'US' ) {
