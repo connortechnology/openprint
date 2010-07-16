@@ -158,6 +158,7 @@ if ( $Type ) {
 	foreach my $Project ( openprint::Project->find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {
 		# Skip multipage projects
 		next if sets::isin( $Project->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines','Calendars' ] );
+		my $services = $Project->services();
 		my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		my $new_signature = $Project->copy_signature( $print_specs, openprint::service::status( $Project, $$services{''}[0] ) );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {

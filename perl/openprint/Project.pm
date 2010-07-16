@@ -1251,7 +1251,7 @@ sub signatures {
 
 	my $services = $self->services();
 
-	if ( $params and $$serviecs{'AdditionalSignature'} ) {
+	if ( $params and $$services{'AdditionalSignature'} ) {
 		my @sigs;
 		foreach my $s_id ( @{$$services{'AdditionalSignature'}} ) {
 			my $specs = openprint::service::get_specs_ref( $self, $s_id );
