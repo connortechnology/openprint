@@ -1,0 +1,52 @@
+<? echo ( 
+	$r->content_type('text/javascript');
+	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	my $created_on = $PO->created_on();
+	$created_on = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
+	my @new_taxes = openprint::Tax->find(
+                'period_start_null_or_<='   =>  $created_on,
+                'period_end_null_or_>='     =>  $created_on,
+                'country'   =>  $param{'vendor_country'},
+                'state'     =>  $param{'vendor_state'},
+           );
+	my @old_taxes = $PO->Taxes();
+
+	my @taxes_to_remove;
+	my @taxes_to_add;
+
+	# Clear out any no longer valid taxes
+	foreach my $Tax ( @old_taxes ) {
+		if ( ! sets::isin( $Tax->tax_id(), [ map { $_->id() } @new_taxes ] ) ) {
+			$Tax->delete();
+		} else {
+			push @taxes_to_add, $Tax;
+		} # end if
+	} # end foreach old Tax
+
+	foreach my $Tax ( @new_taxes ) {
+		if ( ! sets::isin( $Tax->id(), [ map { $_->tax_id() } @old_taxes ] ) ) {
+			my $T = new openprint::PurchaseOrder_Tax();
+			$T->save({
+					'purchaseorder_id'	=>	$PO->id(),
+					'tax_id'            =>  $$Tax{'id'},
+					'rate'              =>  $$Tax{'rate'},
+					});
+			push @taxes_to_add, $T;
+		} # end if
+	} # end foreach Tax 
+
+	my $html .= q`$('Taxes').innerHTML = '';`;
+	if ( @taxes_to_add ) {
+		$html .= q`$('Taxes').innerHTML = '<ul>`;
+		foreach my $Tax ( @taxes_to_add ) {
+			$html .= sprintf(q`<li id="tax-%1$d"><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%) <input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" />:</label>%4$s<span id="tax_amount-%1$d">%5$.2f</span></li>`, $Tax->id(),
+							$Tax->name(), $Tax->rate(), $PO->Currency()->symbol(), $Tax->amount(),
+							ssi::checked( $Tax->charge() ),
+							);
+		} # end foreach Tax
+		$html .= "</ul>';\n";
+	} # end if
+	$html .= 'tax_ids = [' . join(',', map { $_->id() } @taxes_to_add ) . "];\n";
+		
+	return $html;
+) ?>
