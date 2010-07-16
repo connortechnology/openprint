@@ -199,7 +199,7 @@ sub make_select {
 
 	for ( my $n = 0; $n < @{$options}; $n += 2 ) {
 		my $checked = ( sets::isin( $$options[$n], @{$checkarray} ) ? ' selected="selected"' : '' );
-		$temp .= "<option value=\"$$options[$n]\"$checked>" . ( $length ne '' ? substr($$options[$n + 1],0, $length): $$options[$n+1] ) . "</option>\n";
+		$temp .= "<option value=\"$$options[$n]\"$checked>" . HTML::Entities::encode_entities( $length ne '' ? substr($$options[$n + 1],0, $length): $$options[$n+1] ) . "</option>\n";
 	} # end for
 
 	return $temp;
