@@ -16,7 +16,7 @@
 		<? endif ( $$variable{'Article'}->deleted() ) ?>
 		
 		<input type="hidden" name="article_id" value="<? echo ( $param{'article_id'} ) ?>" />
-		<div class="leftColumn">
+			<div class="content">
 			<ul>
 			<li><label for="company_id">Company:</label>
 				<select id="company_id" name="company_id">
@@ -24,10 +24,10 @@
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Article'}->company_id() ? $$variable{'Article'}->company_id() : $session{'company_id'} ); ) ?>
 				</select>
 			</li>
-			<li><label for="user_id">Author:</label>
-				<select id="user_id" name="user_id">
+			<li><label for="created_by">Author:</label>
+				<select id="created_by" name="created_by">
 					<option value=""> select </option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Article'}->id() ? $$variable{'Article'}->user_id() : $session{'user_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Article'}->id() ? $$variable{'Article'}->created_by() : $session{'user_id'} ); ) ?>
 				</select>
 			</li>
 			<li>
@@ -47,9 +47,10 @@
 				</li>
 				<li>
 					<label for="body">Body:</label>
-					<textarea cols="" id="body" name="body" rows="<? echo ( $$variable{'Article'}->body() ? scalar split("\n", $$variable{'Article'}->body()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);" style="width: 100%;"><? echo ( $$variable{'Article'}->body() ) ?></textarea>
+					<textarea cols="" id="body" name="body" rows="<? echo ( $$variable{'Article'}->body() ? scalar split("\n", $$variable{'Article'}->body()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Article'}->body() ) ?></textarea>
 				</li>
 			</ul>
+			</div>
 			<p class="buttons">
 				<? echo (
 					my $html = '';
@@ -64,9 +65,6 @@
 					return $html;
 				) ?>
 			</p>
-		</div>
-		<div class="rightColumn">
-		</div>
 	</fieldset>
 	<input type="hidden" name="btnFunction" />
 </form>

@@ -63,14 +63,6 @@
 				<input type="radio" id="published_01" name="published" value="0;1" <? echo ( ssi::checked( $session{'/article/history.html?published'} eq '0;1' ) ) ?> onclick="load_articles(this.form);" />
 				<label class="radio" for="published_01">Both</label>
 			</p>
-			<p><label>Paid?:</label>
-				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( ssi::checked( $session{'/article/history.html?paid'} eq '1' ); ) ?> onclick="load_articles(this.form);" />
-				<label class="radio" for="paid_1">Yes</label>
-				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/article/history.html?paid'} eq '0' ); ) ?> onclick="load_articles(this.form);" />
-				<label class="radio" for="paid_0">No</label>
-				<input type="radio" id="paid_01" name="paid" value="0;1" <? echo ( ssi::checked( $session{'/article/history.html?paid'} eq '0;1' ); ) ?> onclick="load_articles(this.form);" />
-				<label class="radio" for="paid_01">Both</label>
-			</p>
 			<p>
 				<label>Author:</label>
 				<select name="author_id" id="author_id" onchange="load_articles(this.form);">
