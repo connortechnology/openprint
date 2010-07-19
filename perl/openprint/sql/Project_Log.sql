@@ -1,8 +1,8 @@
 
-DROP TABLE Project_Log;
+DROP TABLE IF EXISTS Project_Log;
 
 CREATE TABLE Project_Log (
-	Project_Id	INTEGER	NOT NULL, FOREIGN KEY(Project_Id) REFERENCES Projects (Index),
+	Project_Id	INTEGER	NOT NULL, FOREIGN KEY(Project_Id) REFERENCES Projects (Id),
 	Company_id	INTEGER, FOREIGN KEY(Company_id) REFERENCES Companies (id),
 	User_Id		INTEGER, FOREIGN KEY(User_id) REFERENCES Users (id),
 	dtmTimestamp		timestamp with time zone NOT NULL default(NOW()),
