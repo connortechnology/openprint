@@ -2,17 +2,15 @@ package openprint::Article;
 @ISA = qw(openprint::Object);
 
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms %config $log $dbh %session );
+
+require sql;
+use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $dbh %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
 
-my $debug = 1;
-
-require sql;
+$debug = 1;
 
 $table = 'articles';
 $serial = 'articles_id_seq';
@@ -114,16 +112,6 @@ sub find {
 	return map { new openprint::Article( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM '.$table.' WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
 sub send_notifications {
 	my ( $self ) = @_;
 
@@ -159,8 +147,12 @@ sub save {
 	$$self{'created_by'} = $session{'user_id'} if ! $$self{'created_by'};
 	return $self->SUPER::save( $data );
 } # end sub save
+sub Company {
+	return new openprint::Company( $_[0]{'company_id'} );
+} # end sub Company
+sub Author {
+	return new openprint::User( $_[0]{'created_by'} );
+} # end sub Author
 
 1;
-
 __END__
-~       

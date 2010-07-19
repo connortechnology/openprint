@@ -1,0 +1,98 @@
+<div class="PageTitle">
+<h1>Articles</h1>
+<h2>History</h2>
+</div>
+<script type="text/javascript">
+<!--
+	function delete_confirm(form) {
+		var number_of_deleted_articles = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_articles += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_articles == 0 ) {
+			alert("To Delete Articles, click the checkbox beside the article.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_articles + " articles from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_articles( form ) {
+		$('ArticleList').innerHTML = 'Please wait...';
+		new Ajax.Updater('ArticleList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<? if ( $session{'user_id'} ) ?>
+<div class="Article"><div class="History">
+	<form id="f1" name="f1" method="post" action="/article/history.html">
+		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+			<div class="leftColumn">
+<? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+			<p>
+				<label>Company:</label>
+				<select name="company_id" id="company_id" onchange="load_articles(this.form);">
+					<option value="">All</option>
+					<? echo ( openprint::Company::get_dropdown( $session{'/article/history.html?company_id'} ); ) ?>
+				</select>
+			</p>
+<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+			<p>
+				<label>Created:</label>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'created_on_start', [@session{'/article/history.html?created_on_start_year','/article/history.html?created_on_start_month','/article/history.html?created_on_start_day'}], {onchange=>'load_articles(this.form);'} ); ) ?>
+					to 
+				</span>
+				<span class="DateSelector">
+<? echo ( ssi::date_select( 'created_on_end', [@session{'/article/history.html?created_on_end_year','/article/history.html?created_on_end_month','/article/history.html?created_on_end_day'}], {onchange=>'load_articles(this.form);'} ); ) ?>
+				</span>
+			</p>
+			</div>
+			<div class="rightColumn">
+<? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+			<p><label>Published?:</label>
+				<input type="radio" id="published_1" name="published" value="1" <? echo ( ssi::checked( $session{'/article/history.html?published'} eq '1' ); ) ?> onclick="load_articles(this.form);" />
+				<label class="radio" for="published_1">Yes</label>
+				<input type="radio" id="published_0" name="published" value="0" <? echo ( ssi::checked( $session{'/article/history.html?published'} eq '0' ); ) ?> onclick="load_articles(this.form);" />
+				<label class="radio" for="published_0">No</label>
+				<input type="radio" id="published_01" name="published" value="0;1" <? echo ( ssi::checked( $session{'/article/history.html?published'} eq '0;1' ) ) ?> onclick="load_articles(this.form);" />
+				<label class="radio" for="published_01">Both</label>
+			</p>
+			<p><label>Paid?:</label>
+				<input type="radio" id="paid_1" name="paid" value="1" <? echo ( ssi::checked( $session{'/article/history.html?paid'} eq '1' ); ) ?> onclick="load_articles(this.form);" />
+				<label class="radio" for="paid_1">Yes</label>
+				<input type="radio" id="paid_0" name="paid" value="0" <? echo ( ssi::checked( $session{'/article/history.html?paid'} eq '0' ); ) ?> onclick="load_articles(this.form);" />
+				<label class="radio" for="paid_0">No</label>
+				<input type="radio" id="paid_01" name="paid" value="0;1" <? echo ( ssi::checked( $session{'/article/history.html?paid'} eq '0;1' ); ) ?> onclick="load_articles(this.form);" />
+				<label class="radio" for="paid_01">Both</label>
+			</p>
+			<p>
+				<label>Author:</label>
+				<select name="author_id" id="author_id" onchange="load_articles(this.form);">
+					<option value="">All</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)') ], $session{'/article/history.html?author_id'} ); ) ?>
+				</select>
+			</p>
+			</div>
+<? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+			<br class="spacer"/>
+			<p class="buttons">
+				<? echo ( join('',
+					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_articles(f1);", '', 'Show Results' ),
+					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', '/article/edit.html', 'New Article' ),
+					); ) ?>
+			</p>
+		</fieldset>
+		<div id="ArticleList"><!--#include virtual="_history.html"--></div>
+	</form>
+	</div>
+</div>
+<? else ( $session{'user_id'} ) ?>
+	Only logged in customers have a article history.
+<? endif ( $session{'user_id'} ) ?>
