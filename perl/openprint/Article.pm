@@ -8,11 +8,8 @@ use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $d
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
 
 $debug = 1;
-
 
 $table = 'articles';
 $serial = 'articles_id_seq';
@@ -81,6 +78,12 @@ sub send_notifications {
 	} # end if to
 
 } # end sub send_notification
+sub Company {
+	return new openprint::Company( $_[0]{'company_id'} );
+} # end sub Company
+sub Author {
+	return new openprint::User( $_[0]{'created_by'} );
+} # end sub Author
 
 1;
 __END__

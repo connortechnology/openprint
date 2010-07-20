@@ -1,0 +1,54 @@
+<? eval (
+	@{$$variable{'Articles'}} = ();
+	foreach my $Article ( openprint::Article::find( 
+		'published_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/article/history.html?published_on_start_year','/article/history.html?published_on_start_month','/article/history.html?published_on_start_day'} ),
+		'published_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/article/history.html?published_on_end_year','/article/history.html?published_on_end_month','/article/history.html?published_on_end_day'} ),
+		'published'			=>	$session{'/article/history.html?published'},
+		'company_id'			=> $session{'/article/history.html?company_id'},
+		'employee_id'			=> $session{'/article/history.html?employee_id'},
+		'order'				=> 'published_on',
+		) ) {
+		push @{$$variable{'Articles'}}, $Article;
+	} # end foreach Article
+) ?>
+
+<? if ( @{$$variable{'Articles'}} == 0 ) ?>
+	There are no articles which match your search criteria. 
+<? else ( @{$$variable{'Articles'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Article ID #</b> to view article details.<br/>
+		To delete articles from history check the appropriate article(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="Company">Company</th>
+			<th class="EmployeeName">Employee</th>
+			<th class="DateTime">Created On</th>
+			<th class="DateTime">Published On</th>
+			<th class="Title">Title</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Article ( @{$$variable{'Articles'}} ) {
+				$html .= sprintf(q` 
+				<tr title="%2$s" %8$s onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+					<td class="Company"><a href="/article/edit.html?article_id=%1$d">%3$s</a></td>
+					<td class="EmployeeName"><a href="/article/edit.html?article_id=%1$d">%4$s</a></td>
+					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%5$s</a></td>
+					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%6$s</a></td>
+					<td class="Title"><a href="/article/edit.html?article_id=%1$d">%7$s</a></td>
+				</tr>
+				`, $Article->id(), ssi::html_escape($Article->body()), ssi::htmlize($Article->Company()->name()), 
+				ssi::htmlize( $Article->Author()->name() ),
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->created_on() ) ),
+				( $Article->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+				ssi::htmlize($Article->title()),
+				$rowclass,
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Article
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{'Articles'}} == 0 ) ?>
