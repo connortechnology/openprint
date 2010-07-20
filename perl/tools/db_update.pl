@@ -1851,6 +1851,7 @@ my $ac = sql::start_transaction( $dbh );
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if $$data{'currencyindex'};
 $dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
 $dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER') if ! exists $$data{'owner_id'};
+$dbh->do('ALTER TABLE Pricelists ADD deleted BOOLEAN NOT NULL default false') if ! exists $$data{'deleted'};
 $dbh->do('ALTER TABLE Pricelists ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
 if ( sets::isin( 'price_lists_id_seq', \@sequences )   ) {
 $dbh->do('DROP SEQUENCE IF EXISTS price_lists_id_seq');
@@ -2457,9 +2458,9 @@ if ( ! sets::isin( 'companies_accountingcontacts', \@tables ) ) {
 	} # end foreach
 } # end if
 if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
-$dbh->do('create sequence order_id_seq');
-$dbh->do(q`select setval('order_id_seq', (select max(index) from orders) )`);
-$dbh->do(q`alter table orders alter column index set default nextval('order_id_seq');`);
+	$dbh->do('create sequence order_id_seq');
+	$dbh->do(q`select setval('order_id_seq', (select max(index) from orders) )`);
+	$dbh->do(q`alter table orders alter column index set default nextval('order_id_seq');`);
 }
 
 if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding') ) {

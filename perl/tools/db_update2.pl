@@ -189,6 +189,9 @@ if ( ! openprint::Order_Tax->find() ) {
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $Order ( openprint::Order->find() ) {
 		my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Orders WHERE id=? LIMIT 1', {}, $Order->id() );
+		if ( ! $data ) {
+			die $openprint::dbh->errstr();
+		} # end if
 		foreach my $Tax ( openprint::Tax->find(
 					'country'			=>	$Order->country(), 
 					'state'				=>	$Order->state(), 
@@ -227,7 +230,7 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
 	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
 	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
-	$dbh->do('UPDATE ORders set owing=curtotalsale-paid');
+	$dbh->do('UPDATE orders SET owing=curtotalsale-paid');
 }
 if ( sets::isin('purchaseorders', \@tables ) ) {
 	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
