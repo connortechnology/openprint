@@ -1603,6 +1603,11 @@ sub purchase_order_view {
 
 	my $Me = new openprint::User( $session{'user_id'} );
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	if ( ! $PO->id() ) {
+		$variable{'error'} .= 'Invalid PO # given: ' . $param{'po_id'}.'<br/>';
+		$variable{'PurchaseOrder'} = $PO;
+		return;
+	} # end if
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $PO->delete();
 		if ( ! $variable{'error'} ) {
@@ -1669,10 +1674,22 @@ sub purchase_order_view {
 			} # end foreach
 			$New->save();
 			$variable{'information'} .= 'PO ' . $PO->id() . ' copied to PO ' . $New->id() .'<br/>';
+			my $L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					'user_id'	=>	$session{'user_id'},
+					'po_id'		=>	$New->id(),
+					'reason'	=>	'Copied from PO '. $PO->id(),
+					});
+			$L = new openprint::PurchaseOrder_Log();
+			$L->save({
+					'user_id'	=>	$session{'user_id'},
+					'po_id'		=>	$PO->id(),
+					'reason'	=>	'Copied to PO '. $New->id(),
+					});
 			$PO = $New;
 		} # end if
 		if ( ! $PO->authorized() ) {
-			if ( $PO->total() < $Me->purchasing_limit() ) {
+			if ( sets::isin( $session{'user_type'}, ['A'] ) or ( $PO->total() < $Me->purchasing_limit() ) ) {
 				$variable{'error'} .= $PO->save({
 						'authorized'	=> 1,
 						'authorized_on'	=> 'NOW()',

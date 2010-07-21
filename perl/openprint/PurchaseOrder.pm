@@ -266,7 +266,10 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
-	return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'},'order'=>'id');
+	if ( $_[0]{'id'} ) {
+		return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'},'order'=>'id');
+	} # end if
+	return ();
 } # end sub Contents
 
 sub send_approval_required_notification {
@@ -281,6 +284,7 @@ sub send_approval_required_notification {
 
 	foreach my $U ( openprint::User::find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$self->total() ) ) {
 		next if $U->id() == $Me->id();
+		next if ! Email::Valid->address($U->email() );
 
 		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info ) ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
@@ -548,7 +552,7 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by'	, 'authorized_on', 'delivered_on' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on' ) {
 		delete $$New{$_};
 	} # end foreach
 	$$New{'created_by'} = $session{'user_id'};
@@ -560,7 +564,10 @@ sub Manifest {
 
 sub Taxes {
     my ( $self ) = @_;
-    if ( ! $$self{'Taxes'} ) {
+	if ( ! $$self{'id'} ) {
+		return ();
+	} # end if
+    if ( $$self{'id'} and ! $$self{'Taxes'} ) {
         @{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
     } # end if
     if ( $$self{'vendor_country'} and $$self{'vendor_state'} and ! @{$$self{'Taxes'}} ) {
