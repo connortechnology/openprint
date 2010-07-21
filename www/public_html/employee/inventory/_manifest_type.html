@@ -35,12 +35,12 @@
 		} # end if
 	) ?>
 	<div class="leftColumn">
-		<p>
+		<p id="Owner-<?type_id?>_div">
 			<label for="Owner-<?type_id?>">Owner:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.Owner);" class="filter" />
 			<select id="Owner-<?type_id?>" name="Owner-<?type_id?>"><? echo ( openprint::Company::get_dropdown( $param{'Owner-'.$$variable{'type_id'}} ? $param{'Owner-'.$$variable{'type_id'}} : $session{'company_id'} ); ) ?></select>
 		</p>
-		<p>
+		<p id="Manufacturer-<?type_id?>_div">
 			<label for="txtManufacturer-<?type_id?>" onclick="toggleInput('Manufacturer-<?type_id?>');">Manufacturer:</label>
 			<select id="Manufacturer-<?type_id?>" name="Manufacturer-<?type_id?>" size="1" onchange="Manufacturer_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
@@ -56,7 +56,7 @@
 			</select>
 			<input style="display: none;" type="text" id="txtManufacturer-<?type_id?>" name="txtManufacturer-<?type_id?>" />
 		</p>
-		<p>
+		<p id="Name-<?type_id?>_div">
 			<label for="txtName-<?type_id?>" onclick="toggleInput('Name-<?type_id?>');">Name:</label>
 			<select id="Name-<?type_id?>" name="Name-<?type_id?>" size="1" onchange="Name_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
@@ -65,7 +65,7 @@
 					) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtName-<?type_id?>" name="txtName-<?type_id?>" />
-		</p><p>
+		</p><p id="Finish-<?type_id?>_div">
 			<label for="txtFinish-<?type_id?>" onclick="toggleInput('Finish-<?type_id?>');">Finish:</label>
 			<select id="Finish-<?type_id?>" name="Finish-<?type_id?>" size="1" onchange="Finish_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
@@ -74,7 +74,7 @@
 				) ?>
 			</select>
 			<input style="display: none;" type="text" id="txtFinish-<?type_id?>" name="txtFinish-<?type_id?>" />
-		</p><p>
+		</p><p id="Colour-<?type_id?>_div">
 			<label for="txtColour-<?type_id?>" onclick="toggleInput('Colour-<?type_id?>');">Colour:</label>
 			<select id="Colour-<?type_id?>" name="Colour-<?type_id?>" size="1" onchange="Colour_onChange(this,'-<?type_id?>');">
 				<option value="">select</option>
@@ -164,13 +164,13 @@
 		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Docket:</label>
-			<input type="text" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater('PurchaseOrders','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('docket').value} } );"/>
+			<input type="text" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater('PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('docket').value} } );"/>
 		</p>
 		<p>
 			<label>Purchase Order:</label>
-			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO', 'go.gif', '', '/employee/inventory/purchase_order_view.html?po_id='.$$variable{'Type'}->po_id(), 'Go' ) : '' ) ?>
+			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO'.$$variable{'Type'}->id(), 'go.gif', '', '/employee/inventory/purchase_order_view.html?po_id='.$$variable{'Type'}->po_id(), 'Go' ) : '' ) ?>
 		</p>
-		<div id="PurchaseOrders">
+		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
 	<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
 			<!--#include virtual="_manifest_purchase_orders.html"-->
 	<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
@@ -178,6 +178,6 @@
 	</div>
 	<br class="spacer"/>
 	<br class="spacer"/>
-	<div id="ManifestContents"><!--#include virtual="_manifest_contents.html"--></div>
+	<div id="ManifestContents<? echo ( $$variable{'Type'}->id() ) ?>"><!--#include virtual="_manifest_contents.html"--></div>
 	<br class="spacer"/>
 </fieldset>
