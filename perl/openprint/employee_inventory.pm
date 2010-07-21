@@ -1370,13 +1370,16 @@ sub manifest {
 				my $total_qty = 0;
 				# Save data for the rest of the contents
 				foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
-					if ( exists $param{"qty_lbs-$$Type{id}-$$C{id}"} ) {
+					my $checked_out = openprint::PaperInventory::find('skid_id'=>$C->Skid()->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ? 1 : 0; 
+					if ( exists $param{"qty_lbs-$$Type{id}-$$C{id}"} and ( $C->quantity() != $param{"qty_lbs-$$Type{id}-$$C{id}"} ) ) {
 						$variable{'error'} .= $C->save({ 'quantity'	=> sprintf('%d', $param{"qty_lbs-$$Type{id}-$$C{id}"}) });
+						if ( ! $checked_out ) {
+							save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
+						} # end if
 					} # end if
 					$total_qty += $C->quantity();
-					save_inventory( $C->Skid(), $Paper, $C->quantity(), sprintf('Inventory adjusted from manifest %1$s.', $Manifest->name() ) );
 					#if ( $Project and ( $param{"allocate-$$Type{id}"} eq 'Specific' ) ) {
-					if ( $Project ) {
+					if ( $Project and ! $checked_out ) {
 						my $PA = openprint::PaperAllocation::find_one('skid_id'=>$C->skid_id());
 						if ( ! $PA ) {
 							$Paper->allocate( $C->Skid(), $Project->id(), $C->quantity(), $Paper->type() eq 'Roll' ? 'lbs' : 'sheets' );
@@ -1387,10 +1390,6 @@ sub manifest {
 						} elsif ( $PA->project_id() != $Project->id() ) {
 							$variable{'information'} .= sprintf('Skid <a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a> already allocated to docket <a href="/employee/project/view.html?ProjectIndex=%2$d">%3$d</a>.<br/>', $C->skid_id(), $PA->project_id(), $PA->docket() );
 						} # end if
-					} # end if
-					if ( openprint::PaperInventory::find('skid_id'=>$C->Skid()->id(), 'paper_id'=>undef, 'comment_like'=>'Checked out%' ) ) {
-						# If the stock has already been checked out, add a subtraction to keep counts in line.
-						save_inventory( $C->Skid(), $Paper, -1*$C->quantity(), 'Automatic checkout after manifest inventory update.' );
 					} # end if
 				} # end foreach tag_id
 

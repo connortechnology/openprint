@@ -63,7 +63,7 @@ sub handler {
 	$log	= $r->log;
 
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
-	foreach my $key ( sets::union( $r->param ) ) {
+	foreach my $key ( sort sets::union( $r->param ) ) {
 		my @values = $r->param($key);
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
