@@ -66,7 +66,7 @@ sub handler {
 	openprint::Service::init_cache();
 	openprint::Equipment::init_cache();
 
-	foreach my $key ( $r->param() ) {
+	foreach my $key ( sort $r->param() ) {
 $log->debug("Paramter: $key => " . $r->param($key) );
 }
 	jsrs::Dispatch( $r, $log, $dbh, \%variable );
