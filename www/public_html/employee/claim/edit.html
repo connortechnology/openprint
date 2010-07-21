@@ -77,17 +77,24 @@ function update_totals( form ) {
 	} // end for
 	//$('subtotal').innerHTML = subtotal;
 	$('subtotal').innerHTML = do_decimals( subtotal, 2 );
-	var federaltax = 0;
-	if ( form.federaltax_charge.checked ) {
-		federaltax = subtotal * form.federaltax_rate.value/100;
-	} // end if
-	$('federaltax').innerHTML = do_decimals( federaltax, 2 );
-	var statetax = 0;
-	if ( form.statetax_charge.checked ) {
-		statetax =  subtotal * form.statetax_rate.value/100;
-	} // end if
-	$('statetax').innerHTML = do_decimals( statetax, 2 );
-	$('total').innerHTML = do_decimals( subtotal + federaltax + statetax, 2 );
+	var total = subtotal;
+	var tax = 0;
+	<? echo ( 
+		my $html = '';
+		foreach my $Tax ( $$variable{'Claim'}->Taxes() ) {
+			$html .= sprintf(q`
+				if ( form.elements['tax_charge-%1$d'].checked ) {
+					tax = subtotal * $('tax_rate-%1$d').innerHTML/100;
+				} else {
+					tax = 0;
+				} // end if
+				$('tax-%1$d').innerHTML = do_decimals( tax, 2 );
+				total += parseFloat( tax );
+			`, $Tax->id() );
+		} # end foreach Tax
+		return $html;
+	) ?>
+	$('total').innerHTML = do_decimals( total, 2 );
 } // end function update_totals
 function getSelectionId(input, li) {
 	var re = /(\w+)-(\w+)/;
@@ -147,8 +154,6 @@ function del_content(form, content_id ) {
 -->
 </script>
 <form id="f1" name="f1" action="<? echo ( $$variable{'Claim'}->id() ? 'view' : 'edit' ) ?>.html?claim_id=<? echo ( $$variable{'Claim'}->id() ) ?>" method="post">
-	<input type="hidden" name="federaltax_rate" value="<? echo ( $$variable{'Claim'}->federaltax_rate() ) ?>" />
-	<input type="hidden" name="statetax_rate" value="<? echo ( $$variable{'Claim'}->statetax_rate() ) ?>" />
 	<!--#include virtual="/includes/error_reporting.html"-->
 	<p class="buttons" id="buttons">
 <? echo ( 
@@ -203,27 +208,26 @@ function del_content(form, content_id ) {
 		<!--#include virtual="_contents.html"-->
 		</div>
 <table class="List">
-    <tr>
-		<td class="RemarksTitle">Remarks:</td>
+    <tr class="subtotal">
+		<td class="RemarksTitle" rowspan="<? echo ( $$variable{'Claim'}->Taxes() + 2 ) ?>">
+Remarks:<br/>
+<textarea class="mce" id="reason" name="reason" rows="2" cols=""><? echo ( $$variable{'Claim'}->reason() ) ?></textarea>
+		</td>
         <td class="totals">SUBTOTAL</td>
         <td class="Price"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->subtotal(0) ); ) ?></td>
     </tr>
-    <tr>
-		<td rowspan="3"><textarea class="mce" id="reason" name="reason" rows="2" cols=""><? echo ( $$variable{'Claim'}->reason() ) ?></textarea></td>
-        <td class="totals">
-            <? echo ( ($$variable{'Claim'}->Company()->country() eq 'CA' ? 'GST' : 'FEDERAL TAX').' ( '.$$variable{'Claim'}->federaltax_rate().'% )' ) ?>
-            <input type="checkbox" id="federaltax_charge" name="federaltax_charge" value="1" <? echo ( ssi::checked( $$variable{'Claim'}->federaltax_charge() ); ) ?> onclick="update_totals(this.form);" />
-        </td>
-        <td class="Price"><? echo ( sprintf('%s<span id="federaltax">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->federaltax(0) ); ) ?></td>
-    </tr>
-    <tr>
-        <td class="totals">
-            <? echo ( ($$variable{'Claim'}->Company()->state() eq 'ON' ? 'PST' : 'STATE TAX').' ( '.$$variable{'Claim'}->statetax_rate().'% )' ) ?>
-            <input type="checkbox" id="statetax_charge" name="statetax_charge" value="1" <? echo ( ssi::checked( $$variable{'Claim'}->statetax_charge() ); ) ?> onclick="update_totals(this.form);" />
-        </td>
-        <td class="Price"><? echo ( sprintf('%s<span id="statetax">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->statetax(0) ); ) ?></td>
-    </tr>
-    <tr>
+	   <? echo ( 
+			my $html;
+			foreach my $Tax ( $$variable{'Claim'}->Taxes() ) {
+				$html .= sprintf('<tr class="tax"><td class="totals">%2$s (<span id="tax_rate-%1$d">%3$d</span>%)
+					<input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" />:</td><td class="Price">%4$s<span id="tax-%1$d">%5$.2f</span></td></tr>', $Tax->id(),
+					$Tax->name(), $Tax->rate(), $$variable{'Claim'}->Currency()->symbol(), $Tax->amount(),
+					ssi::checked( $Tax->charge() ),
+					);
+			} # end foreach Tax
+			return $html;
+		) ?>
+    <tr class="total">
         <td class="totals">TOTAL</td>
         <td class="Price"><? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{'Claim'}->Currency()->symbol(), $$variable{'Claim'}->total() ); ) ?></td>
     </tr>
@@ -235,7 +239,7 @@ function del_content(form, content_id ) {
 			Currency:
 			<select name="currency_id">
 				<option value=""> select one </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'Claim'}->currency_id() ? $$variable{'Claim'}->currency_id() : $session{'Currency_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find() ], $$variable{'Claim'}->currency_id() ? $$variable{'Claim'}->currency_id() : $session{'Currency_id'} ); ) ?>
 			</select>
 			<br class="spacer"/>
 		</div>

@@ -18,7 +18,6 @@ package openprint::Estimating::Shipping;
 use strict;
 use POSIX qw{ ceil };
 
-require openprint::project;
 require openprint::obj_customer;
 
 require sql;
@@ -94,7 +93,7 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	my @shipping_services;
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 		next if ! $$services{$ServiceType->name()};
 		foreach ( @{$$services{$ServiceType->name()}} ) {
 			push @shipping_services, $_ if $_ != $service_index;

@@ -11,7 +11,7 @@
 		$signature += 1;
 	} # end if
 
-	my @PPFs = openprint::CIP3_PPF::find(
+	my @PPFs = openprint::CIP3_PPF->find(
 				'docket'	=>	$$variable{'Project'}->docket(),
 				'signature'	=>	$signature,
 				'order'		=>	'created_on DESC',

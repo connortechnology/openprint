@@ -18,7 +18,6 @@ package openprint::Estimating::Lamination;
 use POSIX qw{ ceil };
 use strict;
 
-require openprint::project;
 require openprint::Equipment;
 require openprint::service;
 
@@ -77,12 +76,12 @@ sub calc {
 	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
 
 	my %MaterialPrice;
-	if ( my @Materials = openprint::Material::find( 'name'=>$$specs{'LaminationType'} ) ) {
+	if ( my @Materials = openprint::Material->find( 'name'=>$$specs{'LaminationType'} ) ) {
 		%MaterialPrice = $Materials[0]->get_price( undef, undef );
 	} # en if
 
    my @possible_equipment;
-   my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+   my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 
     if ( ! @all_equipment ) {
       	$$specs{'alert'} = 'We have no laminating equipment.';
@@ -119,7 +118,7 @@ sub calc {
 		my %bestPrice;
 		my @equipment = ();
 		if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
-			@equipment = openprint::Equipment::find( 'strid'=> $$specs{"ddmEquipment$qty_index"} );
+			@equipment = openprint::Equipment->find( 'strid'=> $$specs{"ddmEquipment$qty_index"} );
 		} else {
 			@equipment = @possible_equipment;
 		} # end if
@@ -169,7 +168,7 @@ sub calc {
 				} # end if
 
 				# have to reload price to get one with quantity discounts
-				if ( my @Materials = openprint::Material::find( 'name'=>$$specs{'LaminationType'} ) ) {
+				if ( my @Materials = openprint::Material->find( 'name'=>$$specs{'LaminationType'} ) ) {
 					%MaterialPrice = $Materials[0]->get_price( $area, $Equipment );
 				} # en if
 				my $materialprice = $MaterialPrice{Price} * $area;
@@ -198,7 +197,7 @@ sub calc {
 sub display {
 	my ( $log, $dbh, $variable ) = @_;
 
-	my @equipment = openprint::Equipment::find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
 	foreach my $qty_index ( 1 .. 3 ) {	
 	$$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->strid(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 	} # end foreach qty_index

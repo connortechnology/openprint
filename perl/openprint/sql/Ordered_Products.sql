@@ -1,9 +1,7 @@
-DROP TABLE Ordered_Products;
-DROP SEQUENCE OrderedProduct_id_seq;
-CREATE SEQUENCE OrderedProduct_id_seq;
+DROP TABLE IF EXISTS Ordered_Products;
 
 CREATE TABLE Ordered_Products (
-	id			INTEGER NOT NULL default nextval('OrderedProduct_id_seq'),
+	id			SERIAL,
 	order_id	INTEGER	NOT NULL, FOREIGN KEY (order_id) REFERENCES Orders (Index),
 	product_id	INTEGER	NOT NULL, FOREIGN KEY (product_id) REFERENCES Products (id),
 	quantity	INTEGER,

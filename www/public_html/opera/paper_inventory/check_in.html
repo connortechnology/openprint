@@ -1,0 +1,78 @@
+<? eval (
+	require eprint::employee_inventory;
+
+	$openprint::param{'skid_id'} =~ s/\D//g;
+	$openprint::param{'Docket'} =~ s/\D//g;
+	$openprint::param{'Project'} =~ s/\D//g;
+	@$variable{'skid_id','Quantity','Docket','Project'} = @openprint::param{'skid_id','Quantity','Docket','Project'};
+
+	if ( $openprint::param{'btnFunction'} eq 'Submit' ) {
+		if ( ! $openprint::param{'skid_id'} ) {
+			$$variable{'error'} .= 'Please specify the skid #.<br/>';
+			return;
+		} # end if
+		my $Skid = new eprint::Skid( $$variable{'skid_id'} );
+		if ( ! $Skid->id() ) {
+			$$variable{'error'} .= 'Invalid skid #.<br/>';
+			return;
+		} # end if
+
+		if ( ! ( $openprint::param{'Quantity'} and $openprint::param{'Docket'} ) ) {
+			my @data = sql::execute( $log, $dbh, q{SELECT paper_id, quantity, units, project_id FROM Paper_Allocations WHERE skid_id=?}, $$variable{'skid_id'} );
+			if ( @data == 4 ) {
+				my ( $paper_id, $quantity, $units, $project_id ) = @data;
+				my $Project = new openprint::Project( $project_id );
+				$$variable{'Docket'} = $Project->docket();
+				$$variable{'Quantity'} = $quantity if ! $$variable{'Quantity'};
+				$$variable{'Units'} = $units;
+				$$variable{'error'} .= 'Please verify docket and quantity.';
+			} elsif ( @data > 4 and $$variable{'Docket'} ) {
+				while ( @data ) {
+					my ( $paper_id, $quantity, $units, $project_id ) = @data;
+					my $Project = new openprint::Project( $project_id );
+					if ( $Project->docket() == $$variable{'Docket'} ) {
+						$$variable{'Quantity'} = $quantity if ! $$variable{'Quantity'};
+						$$variable{'Units'} = $units;
+						$$variable{'error'} .= 'Please verify quantity.';
+					} # end if
+				} # end while
+			} # end if
+			return;
+		} else {
+			eprint::employee_inventory::check_in( $variable, @openprint::param{'skid_id','paper_id', 'Quantity','Project','Docket'} );
+		} # end if
+	} # end if
+) ?>
+<div class="error"><?error?></div>
+<div class="information"><?information?></div>
+<form action="check_in.html" method="post" name="f1">
+	<fieldset><legend>Check In</legend>
+		<p>
+			<label for="skid_id">Skid #:</label>
+			<input type="text" id="skid_id" name="skid_id" value="<?skid_id?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event );"/>
+		</p>
+		<p>
+			<label for="Quantity">Quantity:</label>
+			<input type="text" id="Quantity" name="Quantity" size="7" style="width: auto;" value="<?Quantity?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event );" />
+			<select name="Units" style="width: auto;">
+				<? echo ( ssi::make_drop_down( [ map { $_, $_ } ( 'sheets','lbs' ) ], $$variable{Units} ); ) ?>
+			</select>
+		</p><p>
+			<label for="Docket">Docket:</label>
+			<input type="text" id="Docket" name="Docket" value="<?Docket?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event );"/>
+		</p>
+		<p>
+			<label for="Project">Project:</label>
+			<input type="text" id="Project" name="Project" value="<?Project?>" onchange="change_handler(this);" onkeypress="return input_handler(this, event );"/>
+		</p>
+		<br/>
+		<p class="buttons">
+			<? echo ( join( '',
+				ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"f1.btnFunction.value='Submit';f1.submit();",'','Submit'),
+				ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset'),
+			); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" value="Submit"/>
+</form>
+<script type="text/javascript">document.forms['f1'].skid_id.focus();</script>

@@ -22,7 +22,7 @@ The following stock has been allocated for docket <b><? echo ( $$variable{'Proje
     <tbody>
 <? echo ( 
     my $html;
-    foreach my $PA ( openprint::PaperAllocation::find('paper_id'=>$$variable{'Allocation'}->paper_id(), 'order'=>'created_on') ) {
+    foreach my $PA ( openprint::PaperAllocation->find('paper_id'=>$$variable{'Allocation'}->paper_id(), 'order'=>'created_on') ) {
         $html .= sprintf('<tr>
                             <td class="Docket"><a href="/employee/project/view.html?project_id=%1$d">%2$d</a></td>
                             <td class="Date">%3$s</td>

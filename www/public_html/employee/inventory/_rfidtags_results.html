@@ -5,11 +5,11 @@
 
 	@{$$variable{'RFIDTags'}} = ();
 	if ( $param{'rfidtag_id'} ) {
-		@{$$variable{'RFIDTags'}} = openprint::RFIDTag::find( 'id_like'	=> '%'.$param{'rfidtag_id'}.'%', 'order' =>	'id');
+		@{$$variable{'RFIDTags'}} = openprint::RFIDTag->find( 'id_like'	=> '%'.$param{'rfidtag_id'}.'%', 'order' =>	'id');
 	} elsif ( $param{'rfidtag_hex'} ) {
-		@{$$variable{'RFIDTags'}} = openprint::RFIDTag::find( 'id_like'	=> '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id');
+		@{$$variable{'RFIDTags'}} = openprint::RFIDTag->find( 'id_like'	=> '%'.hex($param{'rfidtag_hex'}).'%', 'order' => 'id');
 	} else {
-		foreach my $RFIDTag ( openprint::RFIDTag::find( 
+		foreach my $RFIDTag ( openprint::RFIDTag->find( 
 			'owner_id'	=>	( defined $session{'/employee/inventory/rfidtags.html?Owner'} ? $session{'/employee/inventory/rfidtags.html?Owner'} : undef ),
 			'created_on_start'	=>	Date::Calc::check_date( @session{
 				'/employee/inventory/rfidtags.html?created_on_start_year',
@@ -45,14 +45,14 @@
 			) ) {
 			if ( ! $session{'/employee/inventory/rfidtags.html?assigned'} ) {
 				if ( $RFIDTag->type() eq 'Skid' ) {
-					next if openprint::Skid::find('rfidtag_id'=>$RFIDTag->id() );
+					next if openprint::Skid->find('rfidtag_id'=>$RFIDTag->id() );
 				} elsif ( $RFIDTag->type() eq 'Location' ) {
 					next if $RFIDTag->location_id();
 				} # end if
 			} # end if
 			if ( ! $session{'/employee/inventory/rfidtags.html?notassigned'} ) {
 				if ( $RFIDTag->type() eq 'Skid' ) {
-					next if ! openprint::Skid::find('rfidtag_id'=>$RFIDTag->id() );
+					next if ! openprint::Skid->find('rfidtag_id'=>$RFIDTag->id() );
 				} elsif ( $RFIDTag->type() eq 'Location' ) {
 					next if ! $RFIDTag->location_id();
 				} # end if

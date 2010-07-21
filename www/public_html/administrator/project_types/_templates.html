@@ -3,7 +3,7 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif', "f1.reset();", '', 'Reset' ); ) ?>
 <? endif ( $param{'ddmProjectType'} ) ?>
 <? eval (
-	@{$$variable{'Templates'}} = openprint::ProjectType_Template::find('order'=>'lower(type),lower(description)','projecttype_id'=>$param{'ddmProjectType'} );
+	@{$$variable{'Templates'}} = openprint::ProjectType_Template->find('order'=>'lower(type),lower(description)','projecttype_id'=>$param{'ddmProjectType'} );
 ) ?>
 <table class="List">
 	<tr>

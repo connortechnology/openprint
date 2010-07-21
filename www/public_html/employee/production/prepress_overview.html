@@ -11,7 +11,7 @@
 	</div>
 	Projects highlighted in yellow are scheduled for printing.<br/>
 	<? echo (
-		@{$$variable{'Statuses'}} = ( 'In Prepress', 'Proofs Out', 'Waiting For QA Approval' );
+		@{$$variable{'Statuses'}} = ( 'In Prepress', 'Waiting For Customer Approval', 'Waiting For QA Approval' );
 		my $html;
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">'.$status.'</div>';
@@ -24,7 +24,7 @@
 		foreach my $status ( @{$$variable{'Statuses'}} ) {
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Statuses'}})).'%;">';
 			$html .= '<ul>';
-			foreach my $Project ( openprint::Project::find('status'=>$status, 'order'=>'lngdocketnumber' ) ) {
+			foreach my $Project ( openprint::Project->find('status'=>$status, 'order'=>'lngdocketnumber' ) ) {
 				next if ! $Project->docket();
 				my $services = $Project->services();
 
@@ -45,7 +45,7 @@
 				} # end foreach sig
 
 				my $colour = 'blue';
-				if ( openprint::ScheduledJob::find('project_id'=>$Project->id(), 'starttime_null'=>0 ) ) {
+				if ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'starttime_null'=>0 ) ) {
 					$colour = 'yellow';
 				} # end if
 				if ( $Project->rush() ) {

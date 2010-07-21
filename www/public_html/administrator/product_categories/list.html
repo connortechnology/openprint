@@ -7,7 +7,7 @@
 	</tr>
 
 <? eval (
-	@{$$variable{'Categories'}} = openprint::ProductCategory::find( 'order' => 'lower(name)' );
+	@{$$variable{'Categories'}} = openprint::ProductCategory->find( 'order' => 'lower(name)' );
 ) ?>
 <? while ( $$variable{'Category'} = shift @{$$variable{'Categories'}} ) ?>
 <tr<?rowclass?>>

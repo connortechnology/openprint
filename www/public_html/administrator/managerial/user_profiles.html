@@ -97,7 +97,7 @@ Please select a company or user to obtain login information.<br/>
 				<select name="company_id">
 					<option value=""> Select </option>
 					<? echo ( 
-my @Companies = openprint::Company::find('order'=>'lower(name)');
+my @Companies = openprint::Company->find('order'=>'lower(name)');
 if ( $$variable{'User'}->Company()->deleted() ) {
 unshift @Companies, $$variable{'User'}->Company();
 } # end if
@@ -221,7 +221,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 		</p>
 		<? echo (
 			my $html;
-			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ) {
+			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
 				
 				$html .= sprintf('<p><label>Limit for %2$s</label><input type="text" name="po_limit-%1$d" value="%3$s" /></p>', $PO_Type->get('id','name'), $$variable{'User'}->po_limit( $PO_Type->id() ) );
 			} # end foreach PO_Type
@@ -232,7 +232,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 		<p>
 			<label>Assistant to:</label>
 			<select name="csr_ids" size="4" multiple="multiple">
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
 			</select>
 		</p>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
@@ -250,7 +250,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				require openprint::Usergroup;
 				my $html = '<ul>';
 				my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
-				foreach my $Group ( openprint::Usergroup::find( 'order'=>'lower(name)' ) ) {
+				foreach my $Group ( openprint::Usergroup->find( 'order'=>'lower(name)' ) ) {
 					$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label>%2$s</label></li>', $Group->id(), $Group->name(), sets::isin( $Group->id(), \@UserGroups ) ? 'checked="checked"' : '' );
 				} # end foreach
 				return $html . '</ul>';
@@ -262,7 +262,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				require openprint::Usergroup;
 				my $html = '<ul>';
 				my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
-				foreach my $CSR ( openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) {
+				foreach my $CSR ( openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ) {
 					$html .= sprintf('<li><input type="checkbox" id="csr_ids%1$d" name="csr_ids" value="%1$d" %3$s /><label>%2$s</label></li>', $CSR->id(), $CSR->name(), sets::isin( $CSR->id(), $$variable{'User'}->csr_ids() ) ? 'checked="checked"' : '' );
 				} # end foreach
 				return $html . '</ul>';
@@ -376,7 +376,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
     require openprint::Log;
     my $html = '';
 
-    foreach my $Log ( openprint::Log::find('user_id'=>$$variable{'User'}->id(),'order'=>'date_time DESC', 'limit'=>10, 'action_type'=>[2,3,78,79] ) ) {
+    foreach my $Log ( openprint::Log->find('user_id'=>$$variable{'User'}->id(),'order'=>'date_time DESC', 'limit'=>10, 'action_type'=>[2,3,78,79] ) ) {
         $html .= sprintf('<tr><td>%s</td><td style="overflow:hidden;" title="%s">%s</td><td>%s</td><td>%s</td></tr>',
             Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Log->date_time() ) ),
             $Log->ip_address(), $Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Company()->name(),$Log->note() );

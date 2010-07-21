@@ -10,7 +10,7 @@
 
 	@company_ids = ( $session{'/employee/reports/stock_usage.html?company_id'} ) if $session{'/employee/reports/stock_usage.html?company_id'};
 
-	my @Orders = openprint::Order::find(
+	my @Orders = openprint::Order->find(
 		'status'		=>	[ 'In Production','Picked Up','Shipped','Waiting For Customer Approval','Complete','Waiting For Pickup','Order Submitted','Paid','Pending Deposit','Re-Opened' ],
 		'company_id'	=>	( @company_ids ? \@company_ids : '' ),
 		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00',

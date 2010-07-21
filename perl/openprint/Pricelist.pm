@@ -11,11 +11,11 @@ require openprint::Currency;
 require openprint::logs;
 use openprint ();
 
-my $debug = 1;
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
+$debug = 1;
 $table = 'pricelists';
 $serial = 'pricelists_id_seq';
 %fields = (
@@ -24,34 +24,10 @@ $serial = 'pricelists_id_seq';
 	'owner_id'		=>	'owner_id',
 	'currency_id'	=>	'currency_id',
 	'description'	=>	'description',
+	'deleted'		=>	'deleted',
 );
 
-sub find {
-	my %params = @_;
-
-	my @values;
-	my $sql = q{SELECT * FROM Pricelists WHERE 1>0};
-	if ( $params{'id'} ) {
-		$sql .= q{ AND id =?};
-		push @values, $params{'id'};
-	} # end if
-	if ( $params{'name'} ) {
-		$sql .= q{ AND name =?};
-		push @values, $params{'name'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->error("Error Loading Pricelist: ($sql) (@values): " . $openprint::dbh->errstr );
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Pricelist: ($sql) (@values) :" . @$data );
-	} # end if
-	return map { new openprint::Pricelist( $_->{id}, $_ ) } @$data;
-
-} # end sub find
-
-sub delete {
+sub destroy {
 	my $self = shift;
 
 	my @PaperPrices = $self->getPrices('Paper');
@@ -84,7 +60,7 @@ sub getPrices {
 		} # end while
 	} # end if
 	if ( ( ! $type ) or $type eq 'Paper' ) {
-		push @prices, openprint::PaperPrice::find( 'pricelist_id'=>$$self{'id'} );
+		push @prices, openprint::PaperPrice->find( 'pricelist_id'=>$$self{'id'} );
 	} # end if
 	if ( ( ! $type ) or $type eq 'Product' ) {
 		my @indexes = sql::execute( undef, undef, q{SELECT id FROM Product_Prices WHERE pricelist_id=?}, $$self{'id'} );
@@ -113,12 +89,10 @@ sub Previous {
 	return $New;
 } # end sub prev
 
-sub currency {
+sub Currency {
 	my $self = shift;
 	return new openprint::Currency( $$self{'currency_id'} );
-} # end sub currency
+} # end sub Currency
 
 1;
-
 __END__
-~       

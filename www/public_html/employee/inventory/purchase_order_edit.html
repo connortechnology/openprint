@@ -23,8 +23,13 @@ function calc_price( element ) {
 	var matches = re.exec( element.name );
 	if ( matches ) {
 		var index = matches[2];
-		var cost = parseFloat( $('price-'+index).value.replace(/[^\d\-\.]/g, '' ) );
-		var qty = parseFloat( $('qty-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+		$('price-'+index).value = $('price-'+index).value.replace(/[^\d\-\.]/g, '' );
+		re =  /^\s*(\+|-)?((\d+(\.\d+)?)|(\.\d+))\s*$/;
+		if ( ! re.test($('price-'+index).value) ) $('price-'+index+'-alert').innerHTML = 'Not a valid price!';
+		else $('price-'+index+'-alert').innerHTML = '';
+		$('qty-'+index).value = $('qty-'+index).value.replace(/[^\d\-\.]/g, '' );
+		var cost = parseFloat( $('price-'+index).value );
+		var qty = parseFloat( $('qty-'+index).value );
 		var type = get_value( $('type-'+index) );
 		if ( type == 'Roll Stock' ) {
 			qty /= 100;
@@ -38,7 +43,6 @@ function calc_price( element ) {
 } // end function calc_price
 function update_totals( form ) {
 	var subtotal = 0;
-	var total;
 	var re = /total-(.+)/
 
 	for ( var index = 0; index < form.elements.length; index += 1 ) {
@@ -48,19 +52,25 @@ function update_totals( form ) {
 			subtotal += parseFloat(1*e.value);
 		} // end if
 	} // end for
-	//$('subtotal').innerHTML = subtotal;
 	$('subtotal').innerHTML = do_decimals( subtotal, 2 );
-	var federaltax = 0;
-	if ( form.federaltax_charge.checked ) {
-		federaltax = subtotal * form.federaltax_rate.value/100;
-	} // end if
-	$('federaltax').innerHTML = do_decimals( federaltax, 2 );
-	var statetax = 0;
-	if ( form.statetax_charge.checked ) {
-		statetax =  subtotal * form.statetax_rate.value/100;
-	} // end if
-	$('statetax').innerHTML = do_decimals( statetax, 2 );
-	$('total').innerHTML = do_decimals( subtotal + federaltax + statetax, 2 );
+	var total = subtotal;
+	var tax = 0;
+	<? echo ( 
+		my $html = '';
+		foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
+			$html .= sprintf(q`
+				if ( form.elements['tax_charge-%1$d'].checked ) {
+					tax = subtotal * $('tax_rate-%1$d').innerHTML/100;
+				} else {
+					tax = 0;
+				} // end if
+				$('tax-%1$d').innerHTML = do_decimals( tax, 2 );
+				total += parseFloat( tax );
+			`, $Tax->id() );
+		} # end foreach Tax
+		return $html;
+	) ?>
+	$('total').innerHTML = do_decimals( total, 2 );
 } // end function update_totals
 function getSelectionId(input, li) {
 	var re = /(\w+)-(\w+)/;
@@ -95,8 +105,6 @@ function getSelectionId(input, li) {
 -->
 </script>
 <form id="f1" name="f1" action="purchase_order_view.html?po_id=<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>" method="post">
-	<input type="hidden" name="federaltax_rate" value="<? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ) ?>" />
-	<input type="hidden" name="statetax_rate" value="<? echo ( $$variable{'PurchaseOrder'}->statetax_rate() ) ?>" />
 	<!--#include virtual="/includes/error_reporting.html"-->
 	<p class="buttons" id="buttons">
 <? echo ( 
@@ -113,10 +121,11 @@ function getSelectionId(input, li) {
 	</p>
 	<div class="PO">
 		<div class="PageTitle">
-		<h1>PURCHASE ORDER (<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>)</h1>
+			<h1>PURCHASE ORDER (<? echo ( $$variable{'PurchaseOrder'}->id() ) ?>)</h1>
 		</div>
+		<div class="Information">
 <!--#include virtual="_vendor.html"-->
-		<div class="rightColumn">
+		<div class="ShipTo">
 		<fieldset><legend>SHIP TO:</legend>
 			<p><label for="shipto_contact">Contact:</label><input type="text" name="shipto_contact" id="shipto_contact" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_contact() ) ?>" /></p>
 			<p><label for="shipto_name">Name:</label><input type="text" name="shipto_name" id="shipto_name" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_name() ) ?>" /></p>
@@ -154,6 +163,7 @@ function getSelectionId(input, li) {
 					) ?></span>
 				</label><input type="text" name="shipto_postalcode" id="shipto_postalcode" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_postalcode() ) ?>" /></p>
 			<p><label for="shipto_phone">Phone:</label><input type="text" name="shipto_phone" id="shipto_phone" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_phone() ) ?>" /></p>
+			<p><label for="shipto_mobile">Mobile:</label><input type="text" name="shipto_mobile" id="shipto_mobile" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_mobile() ) ?>" /></p>
 			<p><label for="shipto_fax">Fax:</label><input type="text" name="shipto_fax" id="shipto_fax" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_fax() ) ?>" /></p>
 			<p><label for="shipto_sms">SMS:</label><input type="text" name="shipto_sms" id="shipto_sms" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_sms() ) ?>" /></p>
 			<p><label for="shipto_email">Email:</label><input type="text" name="shipto_email" id="shipto_email" value="<? echo ( $$variable{'PurchaseOrder'}->shipto_email() ) ?>" /></p>
@@ -161,7 +171,8 @@ function getSelectionId(input, li) {
 				<span id="notification_div"><!--#include virtual="_po_notifications.html"--></span>
 			</p>
 			</fieldset>
-		</div>
+		</div><!--ShipTo-->
+	</div><!--Information-->
 		<br class="spacer"/>
 		<table>
 			<tr>
@@ -244,7 +255,7 @@ function getSelectionId(input, li) {
 		<td>
 			<select name="type_id-new" id="type_id-new">
 				<option value=""> select one </option>
-<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ] ); ) ?>
+<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ] ); ) ?>
 			</select>
 		</td>
 		<td colspan="6">Click on Add to add a new line to this PO.</td>
@@ -253,20 +264,18 @@ function getSelectionId(input, li) {
 		<td colspan="7" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="subtotal">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
-	<tr>
-		<td colspan="7" class="totals">
-			<? echo ( $$variable{'PurchaseOrder'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?>
-			<input type="checkbox" id="federaltax_charge" name="federaltax_charge" value="1" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->federaltax_charge() ); ) ?> onclick="update_totals(this.form);" />
-		</td>
-		<td style="text-align: right;"><? echo ( sprintf('%s<span id="federaltax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
-	</tr>
-	<tr>
-		<td colspan="7" class="totals">
-			<? echo ( $$variable{'PurchaseOrder'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?>
-			<input type="checkbox" id="statetax_charge" name="statetax_charge" value="1" <? echo ( ssi::checked( $$variable{'PurchaseOrder'}->statetax_charge() ); ) ?> onclick="update_totals(this.form);" />
-		</td>
-		<td style="text-align: right;"><? echo ( sprintf('%s<span id="statetax">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
-	</tr>
+               <? echo ( 
+                    my $html;
+                    foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
+                        $html .= sprintf('<tr class="tax"><td colspan="7" class="totals">%2$s (<span id="tax_rate-%1$d">%3$d</span>%)
+							<input type="checkbox" id="tax_charge-%1$d" name="tax_charge-%1$d" value="1" %6$s onclick="update_totals(this.form);" />:</td><td class="Price">%4$s<span id="tax-%1$d">%5$.2f</span></td></tr>', $Tax->id(),
+                            $Tax->name(), $Tax->rate(), $$variable{'PurchaseOrder'}->Currency()->symbol(), $Tax->amount(),
+							ssi::checked( $Tax->charge() ),
+                            );
+                    } # end foreach Tax
+                    return $html;
+                ) ?>
+
 	<tr>
 		<td colspan="7" class="totals">TOTAL</td>
 		<td style="text-align: right;"><? echo ( sprintf('%s<span id="total">%.2f</span>', $$variable{'PurchaseOrder'}->Currency()->symbol(), $$variable{'PurchaseOrder'}->total() ); ) ?></td>
@@ -284,7 +293,7 @@ function getSelectionId(input, li) {
 			Currency:
 			<select name="currency_id">
 				<option value=""> select one </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find() ], $$variable{'PurchaseOrder'}->currency_id() ? $$variable{'PurchaseOrder'}->currency_id() : $session{'Currency_id'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find() ], $$variable{'PurchaseOrder'}->currency_id() ? $$variable{'PurchaseOrder'}->currency_id() : $session{'Currency_id'} ); ) ?>
 			</select>
 			<br/>
 			<br/>

@@ -36,7 +36,7 @@
 				%3$s
 				%4$s
 			</p>`, $type,
-			ssi::make_drop_down( [ map { $_->id(), $_->shortname() } eval('openprint::'.$type."::find('order'=>'lower(shortname)')") ] ),
+			ssi::make_drop_down( [ map { $_->id(), $_->shortname() } eval('openprint::'.$type."->find('order'=>'lower(shortname)')") ] ),
 			ssi::writeButton( $log, $dbh, $type.'Save', 'save.gif', "save('$type');", '', 'Save' ),
 			ssi::writeButton( $log, $dbh, $type.'Delete', 'delete.gif', "destroy('$type');", '', 'Delete' ),
 			);

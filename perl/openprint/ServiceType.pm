@@ -4,12 +4,13 @@ require openprint::Object;
 require openprint::ServiceType_Category;
 
 use strict;
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh $debug $table $serial %find_fields %fields %transforms %defaults );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-$table = 'Service_Types';
-$serial = 'ServiceTypeIndex';
+$debug = 0;
+$table = 'service_types';
+$serial = 'service_types_id_seq';
 
 %fields = (
 	'id'				=>	'id',
@@ -23,78 +24,14 @@ $serial = 'ServiceTypeIndex';
 	'view_visible'		=> 'view_visible',
 	'category'			=>	undef,
 );
+%find_fields = (
+	'category'	=>	'(SELECT name FROM ServiceType_Categories WHERE id=category_id)',
+);
 %transforms = (
 );
 %defaults = (
 	'sorting'	=>	undef,
 );
-
-my $debug = 0;
-
-my %cache;
-
-sub init_cache {
-	%cache = map { $_->name(), $_->id() } find();
-} # end sub init_cache
-
-sub find_one {
-    my %params = @_;
-    $params{'limit'} = 1;
-    my @Results = find(%params);
-    return $Results[0] if @Results;
-} # end sub find_one
-
-sub find {
-	my %params = @_;
-	my @values;
-	my $sql = q{SELECT * FROM Service_Types WHERE 1>0};
-
-	if ( exists $params{'name'} ) {
-		if ( ref $params{'name'} eq 'ARRAY' ) {
-            $sql .= q{ AND name IN (}.join(',', map {'?'} @{$params{'name'}} ).')';
-            push @values, @{$params{'name'}};
-		} else {
-			# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
-			if ( ( keys %params ) == 1 ) {
-				if ( %cache ) {
-					if ( exists $cache{$params{'name'}} ) {
-						return ( new openprint::ServiceType( $cache{$params{'name'}} ) );
-					} else {
-						return;
-					} # end if
-				} # end if
-			} # end if
-			$sql .= ' AND name=?';
-			push @values, $params{'name'};
-		} # end if
-	} # end if
-
-	if ( $params{'category'} ) {
-		$sql .= ' AND category_id=(SELECT id FROM ServiceType_Categories WHERE name=?)';
-		push @values, $params{'category'};
-	} # end if
-	if ( $params{'category_id'} ) {
-		$sql .= ' AND category_id=?';
-		push @values, $params{'category_id'};
-	} # end if
-	if ( $params{'create_visible'} ) {
-		$sql .= ' AND create_visible=?';
-		push @values, $params{'create_visible'};
-	} # end if
-	if ( $params{'view_visible'} ) {
-		$sql .= ' AND view_visible=?';
-		push @values, $params{'view_visible'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$log->error("Error loading ServiceTypes: ($sql) (@values)");
-		return;
-	} elsif ( $debug ) {
-		$log->debug("Loading ServiceTypes: ($sql) (@values) (".@$data.')');
-	} # end if
-	return map { new openprint::ServiceType( $_->{id}, $_ ); } @$data;
-} # end sub find
 
 
 sub next {
@@ -135,7 +72,7 @@ sub delete {
 sub category {
 	my ( $self ) = @_;
 	if ( @_ == 2 ) {
-		my $ServiceType_Category = openprint::ServiceType_Category::find_one('name'=>$_[1]);
+		my $ServiceType_Category = openprint::ServiceType_Category->find_one('name'=>$_[1]);
 		if ( $ServiceType_Category ) {
 			$$self{'category_id'} = $ServiceType_Category->id();
 		} else {

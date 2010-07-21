@@ -29,7 +29,7 @@
 		<select name="ddmEmployee" size="1" onchange="load_projects(this.form);">
 			<option value="">All Employees</option>
 <? echo (
-	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(firstname)', 'usergroups'=>['Prepress'], 'type'=>['E','A'] ) ],
+	ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname)', 'usergroups'=>['Prepress'], 'type'=>['E','A'] ) ],
 	$session{'/employee/production/projects.html?dmEmployee'} );
 )?>
 			</select>
@@ -40,7 +40,7 @@
 			<option value="">All Employees</option>
 <? echo (
 	$session{'/employee/production/projects.html?ddmSalesRep'} = $session{'user_id'} if ! $session{'/employee/production/projects.html?ddmSalesRep'};
-	my @Users = openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)', 'type'=>['E','A'],'usergroups'=>['Sales']);
+	my @Users = openprint::User->find( 'order'=>'lower(strfirstname),lower(strlastname)', 'type'=>['E','A'],'usergroups'=>['Sales']);
 	if ( ! sets::isin( $session{'/employee/production/projects.html?ddmSalesRep'}, [ map { $_->id() } @Users ] ) ) {
 		$session{'/employee/production/projects.html?ddmSalesRep'} = '';
 	} # end if
@@ -89,7 +89,7 @@
 			<select name="ddmPress" onchange="load_projects(this.form);">
 				<option value="">All Presses</option>
 <? echo (
-		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment::find('category'=>'Printing', 'order'=>'lower(strname)' ) ], $session{'/employee/production/projects.html?ddmPress'} );
+		ssi::make_drop_down( [ map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing', 'order'=>'lower(strname)' ) ], $session{'/employee/production/projects.html?ddmPress'} );
 ) ?>
 			</select>
 	</p>

@@ -7,5 +7,6 @@ CREATE TABLE Invoiced_Products (
 	invoice_id	INTEGER, FOREIGN KEY (invoice_id) REFERENCES Invoices (id),
 	product_id	INTEGER, FOREIGN KEY (product_id) REFERENCES Products (id),
 	description	TEXT,
+	po			TEXT,
 	PRIMARY KEY (id)
 );

@@ -22,48 +22,7 @@ $table = 'ordered_products';
 	'price'			=> 'price',
 	'shipping_type'	=> 'shipping_type',
 	'requested_for'	=> 'requested_for',
-	'gst'			=> 'gst',
-	'hst'			=> 'hst',
-	'pst'			=> 'pst',
 );
-
-sub find {
-	my %params = @_;
-	my $sql = 'SELECT * FROM Ordered_Products WHERE 1>0';
-	my @values;
-
-	if ( $params{'id'} ) {
-		$sql .= ' AND id=?';
-		push @values, $params{id};
-	} # end if
-
-	if ( exists $params{'order_id'} ) {
-		if ( $params{'order_id'} ) {
-			$sql .= ' AND order_id=?';
-			push @values, $params{'order_id'};
-		} elsif ( ! defined $params{'order_id'} ) {
-			$sql .= ' AND order_id IS NULL';
-		} # end if
-	} # end if
-	if ( $params{'product_id'} ) {
-		$sql .= ' AND product_id=?';
-		push @values, $params{'product_id'};
-	} # end if
-	if ( $params{'project_id'} ) {
-		$sql .= ' AND project_id=?';
-		push @values, $params{'project_id'};
-	} # end if
-	
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug('Error (' . $openprint::dbh->errstr . ") Loading Ordered Products: $sql @values");
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Ordered Products: $sql @values #results:" . @$data);
-	} # end if
-	return map { new openprint::OrderedProduct( $_->{id}, $_ ) } @$data;
-	
-} # end sub find
 
 sub delete {
 	my $self = shift;

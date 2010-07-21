@@ -1,17 +1,17 @@
 <? eval (
 	if ( $param{'po_id'} ) {
-		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
 			'id'=>$param{'po_id'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'deleted'=>[1,0],
 			'order' => 'id desc');
 	} elsif ( $param{'docket'} ) {
-		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
 			'docket'=>$param{'docket'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'order' => 'id desc');
 	} elsif ( $param{'manifest_id'} ) {
-		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder::find( 
+		@{$$variable{'PurchaseOrders'}} = openprint::PurchaseOrder->find( 
 			'manifest_id'=>$param{'manifest_id'}, 
 			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'order' => 'id desc');
@@ -28,7 +28,7 @@
 		$search{'cancelled'} = $session{'/employee/inventory/purchase_orders.html?cancelled'} if $session{'/employee/inventory/purchase_orders.html?cancelled'} ne '';
 
 		@{$$variable{'PurchaseOrders'}} = ();
-		foreach my $PO ( openprint::PurchaseOrder::find( %search ) ) {
+		foreach my $PO ( openprint::PurchaseOrder->find( %search ) ) {
 			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'Y' and $PO->authorized() ne '1';
 			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'N' and $PO->authorized() ne '0';
 			next if $session{'/employee/inventory/purchase_orders.html?authorized'} eq 'U' and $PO->authorized() ne '';
@@ -62,13 +62,13 @@
 		<th width="20"><input type="checkbox" onclick="select_all( $('f1'), 'po_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 		<th width="35"style="text-align: left;">ID</th>
-		<th width="110" style="text-align: left;">Date</th>
+		<th class="DateTime">Date</th>
 		<th style="text-align: left;">Supplier</th>
 		<th style="text-align: left;">Created By</th>
 		<th style="text-align: left;">Authorized/Declined By</th>
 		<th width="100" style="text-align: left;">Manifest</th>
 		<th width="100" style="text-align: left;">Docket</th>
-		<th width="90" style="text-align: right;">Total</th>
+		<th class="Price">Total</th>
 	</tr>
 	<? echo ( 
 		my $html = '';
@@ -89,7 +89,7 @@
 
 			$html .= sprintf( q`
 				<td><a href="purchase_order_view.html?po_id=%1$d">%1$d</a></td>
-				<td><a href="purchase_order_view.html?po_id=%1$d">%2$s</a></td>
+				<td class="DateTime"><a href="purchase_order_view.html?po_id=%1$d">%2$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%3$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%4$s</a></td>
 				<td><a href="purchase_order_view.html?po_id=%1$d">%6$s</a></td>

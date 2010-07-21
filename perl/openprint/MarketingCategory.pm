@@ -21,6 +21,7 @@ $serial = 'Marketing_Category_id_seq';
 
 # Returns a paper object specified by the parameters
 sub find {
+	my $self = shift;
 	my %params = @_;
 
 	if ( $params{'id'} ) {
@@ -78,7 +79,7 @@ sub previous {
 sub companies {
 	my ( $self, %params ) = @_;
 	$params{'marketing_category_id'} = $$self{'id'};
-	return openprint::Company::find( %params );
+	return openprint::Company->find( %params );
 } # end sub companies
 
 sub add_company {

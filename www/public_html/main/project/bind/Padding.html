@@ -24,7 +24,7 @@
 		</p>
 		<!--#include virtual="/includes/main/proj/padding.html"-->
 <? eval ( 
-	@{$$variable{'GlueTypes'}} = openprint::Material::find('category'=>'Padding Glue');
+	@{$$variable{'GlueTypes'}} = openprint::Material->find('category'=>'Padding Glue');
 ) ?>
 <? if ( @{$$variable{'GlueTypes'}} > 1 ) ?>
 		<p>

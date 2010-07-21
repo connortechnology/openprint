@@ -14,8 +14,10 @@
 			my $html = '';
 			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 			$$variable{'service_total'} = 0;
-			foreach my $Timetrack ( openprint::Timetrack::find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
-				$html .= sprintf( q`<tr title="%s" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`, ssi::htmlize( $Timetrack->description() ) );
+			foreach my $Timetrack ( openprint::Timetrack->find('invoice_id'=>$$variable{'Invoice'}->id(), 'order'=>'starting') ) {
+				my $desc = $Timetrack->description();
+				$desc =~ s/"/&quot;/gm;
+				$html .= sprintf( q`<tr title="%s" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');">`, $desc );
 				$html .= sprintf('<td class="Employee"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%3$s</a></td>', $Timetrack->id(), $$variable{'Invoice'}->id(), ssi::htmlize( $Timetrack->Employee()->name() ) );
 				$html .= sprintf('<td class="Service"><a href="/timetrack/edit.html?timetrack_id=%1$d&amp;invoice_id=%2$d">%3$s</a></td>', $Timetrack->id(), $$variable{'Invoice'}->id(), ssi::htmlize( $Timetrack->Service()->name() ) );
 				$html .= sprintf('<td class="DateTime">%s</td>', Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Timetrack->starting() ) ) );
@@ -25,7 +27,7 @@
 				$html .= sprintf('<td class="Rate">%s%s</td>', openprint::Currency::format( $$Price{'Price'} ), $$Price{'units'} );
 				$html .= sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$Price{'Total'} ) );
 				$html .= sprintf('<td class="unprintable">%s</td>', ssi::writeButton( $log, $dbh, 'del'.$Timetrack->id(), '', 'del_timetrack('.$Timetrack->id().');', '', '-' ) );
-				$html .= '</tr>';
+				$html .= "</tr>\n";
 				$$variable{'service_total'} += $$Price{'Total'};
 			} # end foreach Timetrack
 			return $html;

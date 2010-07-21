@@ -1,7 +1,7 @@
 package openprint::content_prin;
 
 use strict;
-require openprint::project;
+require openprint::main_project;
 require openprint::ProjectType;
 use openprint ();
 use vars qw( $log $dbh %variable %param %session );
@@ -12,7 +12,7 @@ use vars qw( $log $dbh %variable %param %session );
 *session = \%openprint::session;
 
 sub _breakdown {
-	openprint::project::view( $log, $dbh, \%variable, $param{'project_id'} ) if $param{'project_id'};
+	openprint::main_project::view( $param{'project_id'} ) if $param{'project_id'};
 }
 
 sub load_simple {
@@ -33,7 +33,7 @@ sub load_simple {
 			$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
 		} elsif ( $param{'ProjectType'} ) {
 			$param{'ProjectType'} =~ s/\s//g;
-			$variable{'ProjectType'} = openprint::ProjectType::find_one( 'name'=>$param{'ProjectType'} );
+			$variable{'ProjectType'} = openprint::ProjectType->find_one( 'name'=>$param{'ProjectType'} );
 			if ( ! $variable{'ProjectType'} ) {
 				$variable{'ProjectType'} = new openprint::ProjectType();
 				$variable{'error'} .= "Invalid Project Type: $param{ProjectType}";

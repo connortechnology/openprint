@@ -11,7 +11,6 @@ require Compress::Zlib;
 use openprint ();
 use MIME::Base64;
 use Image::Magick;
-use Number::Format;
 
 use vars qw( $log $dbh %config $table $serial %fields %transforms %defaults );
 
@@ -59,62 +58,6 @@ sub runstyle {
 	} 
 	return $WorkStyles{$$self{'WorkStyle'}};
 }
-sub find {
-	my %params = @_;
-
-	my $sql = 'SELECT ';
-	$sql .= 'DISTINCT' if $params{'distinct'};
-	$sql .= ' * FROM ' . $table . ' WHERE 1>0';
-	my @values;
-
-	if ( exists $params{'data_null'} ) {
-		if ( $params{'data_null'} ) {
-			$sql .= ' AND data IS NULL';
-		} else {
-			$sql .= ' AND data IS NOT NULL';
-		} # end if
-	} # end if
-	if ( exists $params{'docket'} ) {
-		$sql .= ' AND docket=?';
-		push @values, $params{'docket'};
-	} # end if
-	if ( exists $params{'signature'} ) {
-		$sql .= ' AND signature=?';
-		push @values, $params{'signature'};
-	} # end if
-	if ( exists $params{'side'} ) {
-		$sql .= ' AND side=?';
-		push @values, $params{'side'};
-	} # end if
-	if ( exists $params{'compressed'} ) {
-		$sql .= ' AND compressed=?';
-		push @values, $params{'compressed'};
-		if ( ! $params{'compressed'} ) {
-			$sql .= ' OR compressed IS NULL';	
-		} # end if
-	} # end if
-	if ( $params{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $params{'deleted'};
-	} else {
-		$sql .= ' AND deleted=?';
-		push @values, 0;
-	} # end if
-
-	$sql .= " ORDER BY $params{order}" if $params{'order'};
-	$sql .= " LIMIT $params{limit}" if $params{'limit'};
-	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$log->debug("openprint::CIP3_PPF::find( $sql) @values reason:" . $dbh->errstr);
-		return;
-	} # end if
-
-	if ( $debug ) {
-		$log->debug("openprint::CIP3_PPF::find($sql) (@values): #of records:" . @$data );
-	} # end if
-	return map { new openprint::CIP3_PPF( $_->{id}, $_ ); } @$data;
-} # end sub find
-
 sub parseSheet {
 	my $sheet = shift @_;
 	while ( @_ ) {
@@ -218,7 +161,6 @@ sub parseSeparation {
 				$line = shift;
 			} # end while
 			$$image{'image'} = join("\r\n", @image_data);
-			#$log->debug("Got image data for $$image{ink} $$image{width}x$$image{height}=".Number::Format::format_number($$image{width}*$$image{height})." Depth: $$image{depth} lines: " . @image_data . " length: " . Number::Format::format_number(length($$image{'image'})) );
 			last;
 		} elsif ( $line =~ /^CIP3EndSeparation/ ) {
 			last;
@@ -459,13 +401,13 @@ $log->debug("Saving PPF: " . sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out
 	my $error = misc::save_file( $log, sprintf('%s/%d_Sg%dSd%s.ppf', $$Equipment{'cip3_out'}, @$self{'docket','signature','side'}, ), $data );
 	if ( $error ) {
 		$log->error($error);
-		foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {
+		foreach my $Project ( openprint::Project->find('docket'=>$$self{'docket'}) ) {
 			$Project->add_to_log( @openprint::session{'company_id','user_id'}, "Failed to send CIP Files for form $$self{signature} side $$self{side}. Reason: $error" );
 		} # end foreach $Project
 		
 		return $error;
 	} 
-	foreach my $Project ( openprint::Project::find('docket'=>$$self{'docket'}) ) {
+	foreach my $Project ( openprint::Project->find('docket'=>$$self{'docket'}) ) {
 		$Project->add_to_log( @openprint::session{'company_id','user_id'}, "CIP Files released for form $$self{signature} side $$self{side}" );
 	} # end foreach $Project
 	return;

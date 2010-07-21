@@ -144,7 +144,7 @@ $log->debug("Sewing!!!!!!!!!!!!!!!!!!");
 			} # end if
 		} # end if
 		$price = $makeReadyPrice + $servicePrice{'Total'};
-		if ( my $Material = openprint::Material::find_one('name'=>'Thread') ) {
+		if ( my $Material = openprint::Material->find_one('name'=>'Thread') ) {
 			my %materialPrice = $Material->get_price( $qty * $$specs{'Quantity'}, undef );
 			if ( %materialPrice ) {
 				$materialPrice{'Total'} = $materialPrice{'Price'} * $$specs{'Quantity'} * $qty;

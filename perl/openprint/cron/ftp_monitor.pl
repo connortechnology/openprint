@@ -299,16 +299,16 @@ EOT
 
 	if ( $company_name ) {
 # Try to figure out the company
-		if ( my @Companies = openprint::Company::find('name'=>$company_name,'limit'=>1) ) {
+		if ( my @Companies = openprint::Company->find('name'=>$company_name,'limit'=>1) ) {
 			$Company = $Companies[0];
 		} # end if
 	} # end if
 	if ( $Company ) {
-		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user},'limit'=>1) ) {
+		if ( my @Users = openprint::User->find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user},'limit'=>1) ) {
 			$User = $Users[0];
 		} # end if
 	} else {
-		if ( my @Users = openprint::User::find('email'=>lc $upload_info->{user},'limit'=>1) ) {
+		if ( my @Users = openprint::User->find('email'=>lc $upload_info->{user},'limit'=>1) ) {
 			$User = $Users[0];
 			$Company = $User->Company();
 		} # end if
@@ -342,9 +342,9 @@ EOT
 			} else {
 				$variable{'ReplacementText'} = misc::load_file( $log, $opts->{'document_root'} . '/email_content/ftp_csr_notification.html' );
 			} # end if
-			$variable{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
+			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
 			my $email_template = misc::load_file( $log, $opts->{'skin_path'} . '/email_template.html' );
-			my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
+			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			my %mail = (
 							SMTP    => $config{'Mail Server'},
 							FROM    => $from,

@@ -1,20 +1,16 @@
 package openprint::Timetrack;
 @ISA = qw(openprint::Object);
 
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use openprint ();
 
 require openprint::Currency;
 require openprint::Company;
 require openprint::Service;
 
-my $debug = 0;
 
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms %find_cache );
+use vars qw( $debug $table $serial %fields %defaults %transforms );
+$debug = 1;
 
 require sql;
 
@@ -61,157 +57,6 @@ $serial = 'timetracks_id_seq';
 	'travel_associated'	=>	0,
 	'distance'		=>	undef,
 );
-
-sub find {
-	my %params = @_;
-
-	#my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
-	#return map { new openprint::Timetrack( $_ ) } @{$find_cache{$hash_key}} if $find_cache{$hash_key};
-
-	my $sql = q{SELECT * FROM Timetracks WHERE 1>0};
-	my @values;
-
-	if ( $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= q{ AND id=?};
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-
-	if ( $params{'service_id'} ) {
-		if ( ref $params{'service_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND service_id IN (}.join(',', map {'?'} @{$params{'service_id'}} ).')';
-			push @values, @{$params{'service_id'}};
-		} else {
-			$sql .= q{ AND service_id=?};
-			push @values, $params{'service_id'};
-		} # end if
-	} # end if
-
-	if ( $params{'employee_id'} ) {
-		if ( ref $params{'employee_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND user_id IN (}.join(',', map {'?'} @{$params{'employee_id'}} ).')';
-			push @values, @{$params{'employee_id'}};
-		} else {
-			$sql .= q{ AND user_id=?};
-			push @values, $params{'employee_id'};
-		} # end if
-	} # end if
-
-	if ( $params{'company_id'} ) {
-		if ( ref $params{'company_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND company_id IN (}.join(',', map {'?'} @{$params{'company_id'}} ).')';
-			push @values, @{$params{'company_id'}};
-		} else {
-			$sql .= q{ AND company_id=?};
-			push @values, $params{'company_id'};
-		} # end if
-	} # end if
-
-	if ( exists $params{'invoice_id'} ) {
-		if ( $params{'invoice_id'} ) {
-			if ( ref $params{'invoice_id'} eq 'ARRAY' ) {
-				$sql .= q{ AND invoice_id IN (}.join(',', map {'?'} @{$params{'invoice_id'}} ).')';
-				push @values, @{$params{'invoice_id'}};
-			} else {
-				$sql .= q{ AND invoice_id=?};
-				push @values, $params{'invoice_id'};
-			} # end if
-		} else {
-			$sql .= q{ AND invoice_id IS NULL};
-		} # end if
-	} # end if
-
-	if ( exists $params{'paycheque_id'} ) {
-		if ( ! $params{'paycheque_id'} ) {
-			$sql .= q{ AND paycheque_id IS NULL};
-		} elsif ( ref $params{'paycheque_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND paycheque_id IN (}.join(',', map {'?'} @{$params{'invoice_id'}} ).')';
-			push @values, @{$params{'paycheque_id'}};
-		} else {
-			$sql .= q{ AND paycheque_id=?};
-			push @values, $params{'paycheque_id'};
-		} # end if
-	} # end if
-
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND created_on >= ?';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND created_on <= ?';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{'updated_on_end'};
-	} # end if
-	if ( $params{'starting_start'} and $params{'starting_end'} ) {
-		$sql .= ' AND ( starting BETWEEN ? AND ? )';
-		push @values, @params{'starting_start','starting_end'};
-	} elsif ( $params{'starting_start'} ) {
-		$sql .= ' AND starting >= ?';
-		push @values, $params{'starting_start'};
-	} elsif ( $params{'starting_end'} ) {
-		$sql .= ' AND starting <= ?';
-		push @values, $params{'starting_end'};
-	} # end if
-	if ( $params{'ending_start'} and $params{'ending_end'} ) {
-		$sql .= ' AND ( ending BETWEEN ? AND ? )';
-		push @values, @params{'ending_start','ending_end'};
-	} elsif ( $params{'ending_start'} ) {
-		$sql .= ' AND ending >= ?';
-		push @values, $params{'ending_start'};
-	} elsif ( $params{'ending_end'} ) {
-		$sql .= ' AND ending <= ?';
-		push @values, $params{'ending_end'};
-	} # end if
-
-	if ( $params{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $params{'deleted'};
-	} else {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
-		push @values, 0;
-	} # end if
-
-	if ( $params{'order'} ) {
-		$sql .= " ORDER BY $params{'order'}";
-	} # end if
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->warn("Error loading Timetracks: ($sql) (@values)" . $openprint::dbh->errstr );
-		return;
-	} elsif ($debug ) {
-		$openprint::log->debug("openprint::Timetrack::find($sql) (@values)");
-	} # end if
-	#@{$find_cache{$hash_key}} = map { $_->{id} } @$data;
-	return map { new openprint::Timetrack( $_->{id}, $_ ); } @$data;
-} # end sub find
-
-sub Currency {
-	return new openprint::Currency( $_[0]{currency_id} );
-} # end sub Currency
-
-sub Company {
-	return new openprint::Company( $_[0]{company_id} );
-} # end sub Company
-
-sub Service {
-	return new openprint::Service( $_[0]{service_id} );
-} # end sub Service
 
 sub elapsed {
 	my ( $self ) = @_;
@@ -275,9 +120,6 @@ sub wage {
 	return $self->User()->wage() * $elapsed / 3600;
 } # end sub  wage
 
-sub User {
-	return new openprint::User( $_[0]{user_id} );
-} # end sub User
 sub Employee {
 	return new openprint::User( $_[0]{user_id} );
 } # end sub Employee
@@ -288,12 +130,6 @@ sub paid {
 sub invoiced {
 	return $_[0]->invoice_id() ? 1 : 0;
 } # end sub invoiced
-
-sub save {
-	%find_cache = ();
-	my $self = shift;
-	return $self->SUPER::save(@_);
-}
 
 sub copy {
 	my $New = $_[0]->SUPER::copy();

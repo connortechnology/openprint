@@ -12,6 +12,8 @@ use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
+my $debug = 1;
+
 $table = 'services';
 $serial = 'services_id_seq';
 
@@ -77,10 +79,11 @@ sub delete {
 sub prices {
 	my $self = shift;
 
-	return openprint::ServicePrice::find( 'service_id'=>$$self{id} );
+	return openprint::ServicePrice->find( 'service_id'=>$$self{id} );
 } # end sub prices
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	my $sql = 'SELECT * FROM Services WHERE 1>0';
 	my @values;
@@ -94,6 +97,10 @@ sub find {
 		} # end if
 		$sql .= ' AND name=?';
 		push @values, $params{'name'};
+	} # end if
+	if ( $params{'name_like'} ) {
+		$sql .= ' AND name LIKE ?';
+		push @values, $params{'name_like'};
 	} # end if
 	if ( $params{category_id} ) {
 		$sql .= ' AND category_id=?';
@@ -110,6 +117,8 @@ sub find {
 	if ( ! $data ) {
 		$log->debug("Error loading Service ($sql) (@values) Reason: " . $dbh->errstr );
 		return;
+	} elsif ( $debug ) {
+		$log->debug("Loading Service ($sql) (@values) " . @$data );
 	} # end if
 	return map { new openprint::Service( $_->{id}, $_ ) } @$data;
 } # end sub find

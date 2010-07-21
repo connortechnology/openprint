@@ -66,7 +66,7 @@ sub handle_JMF_Message {
 	my $SenderID = $JMF->getAttribute('SenderID');
 	my $TimeStamp = $JMF->getAttribute('TimeStamp');
 
-	my @Equipment = openprint::Equipment::find( 'strid'=>$SenderID );
+	my @Equipment = openprint::Equipment->find( 'strid'=>$SenderID );
 	if ( ! @Equipment ) {
 		# Error
 $openprint::log->debug("Equipment $SenderID not found");

@@ -2,75 +2,23 @@ package openprint::Upload;
 @ISA = qw( openprint::Object );
 use strict;
 
-require openprint::Company;
 require openprint::File;
 
 my $debug = 1;
 
-sub find {
-	my %params = @_;
-	my $sql = q{SELECT * FROM Uploads WHERE 1>0};
-	my @values;
-	if ( $params{'company_id'} ) {
-		$sql .= q{ AND company_id=?};
-		push @values, $params{'company_id'};
-	} # end if
-	if ( $params{'started_on_start'} and $params{'started_on_end'} ) {
-		$sql .= q{ AND (start BETWEEN ? AND ?)};
-		push @values, $params{'started_on_start'},$params{'started_on_end'};
-	} elsif ( $params{'started_on_start'} ) {
-		$sql .= q{ AND started_on >= ?};
-		push @values, $params{'started_on_start'};
-	} elsif ( $params{'started_on_end'} ) {
-		$sql .= q{ AND started_on <= ?};
-		push @values, $params{'started_on_end'};
-	} # end if
-
-	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-	$sql .= " LIMIT $params{'limit'}" if ( $params{'limit'} );
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->error("Error loading Upload: ($sql) (@values)");
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Upload: ($sql) (@values) (".@$data.')');
-	} # end if
-	return map { new openprint::Upload( $_->{id}, $_ ); } @$data;
-} # end sub find
-
-sub load {
-    my ( $self, $data ) = @_;
-    if ( ! $data ) {
-        $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Uploads WHERE id=?', {}, $$self{id} );
-    } # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
-sub save {
-	my $self = shift;
-	my %sql = (
-		);
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Upload_id_seq')} );
-		sql::insert( $openprint::log, $openprint::dbh, 'Uploads', 'id', $$self{'id'}, %sql );
-	} else {
-		sql::update( $openprint::log, $openprint::dbh, 'Uploads', ['id=?', $$self{'id'}], %sql );
-	} # end if
-} # end sub save
-
-sub Company {
-	my $self = shift;
-	return new openprint::Company($$self{company_id});
-} # end sub Company
-
-sub User {
-	my $self = shift;
-	return new openprint::User($$self{user_id});
-} # end sub User
+use vars qw( $table $serial %fields %transforms %defaults );
+$table = 'uploads';
+$serial = 'upload_id_seq';
+%fields = (
+	'id'			=>	'id',
+	'company_id'	=>	'company_id',
+	'user_id'		=>	'user_id',
+	'started_on'	=>	'started_on',
+);
 
 sub Files {
 	my $self = shift;
-	return openprint::File::find('upload_id'=>$$self{id});
+	return openprint::File->find('upload_id'=>$$self{id});
 } # end sub
 
 1;

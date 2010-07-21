@@ -50,7 +50,7 @@ sub calc {
 		#return $$specs{'Status'} = 'uncalculated';
 	#} # end if
 
-	my @Equipment = openprint::Equipment::find('Specifications'=>{'SoftFolding Capable'=>'Y'},'use_in_estimating'=>1);
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'SoftFolding Capable'=>'Y'},'use_in_estimating'=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no soft folding equipment.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -155,7 +155,7 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment::find( 
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 
 			'Specifications'	=>	{'SoftFolding Capable'=>'Y'},
 			'use_in_estimating'	=>	1,
 			'order'				=>	'lower(strName)'

@@ -6,9 +6,9 @@ require sql;
 require openprint::Object;
 require openprint::logs;
 
-my $debug = 1;
 
-use vars qw( $table $serial %defaults %transforms %fields );
+use vars qw( $debug $table $serial %defaults %transforms %fields );
+$debug = 1;
 $table = 'tbl_Material_Prices';
 $serial = 'materialprices_id_seq';
 
@@ -26,86 +26,21 @@ $serial = 'materialprices_id_seq';
 	'discountable'	=>	'ysndiscountable',
 	'interpolate'	=>	'interpolate',
 );
-
-sub find {
-	my %params = @_;
-	my $sql = 'SELECT * FROM tbl_Material_Prices WHERE 1>0';
-	my @values;
-
-	if ( $params{'pricelist_id'} ) {
-		$sql .= ' AND lnglistindex=?';
-		push @values, $params{'pricelist_id'};
-	} # end if
-	if ( $params{'Pricelist'} ) {
-		$sql .= ' AND lnglistindex=?';
-		push @values, $params{'Pricelist'}->id();
-	} # end if
-	if ( $params{'material_id'} ) {
-		$sql .= ' AND lngmaterialindex=?';
-		push @values, $params{'material_id'};
-	} # end if
-	if ( $params{'Material'} ) {
-		$sql .= ' AND lngmaterialindex=?';
-		push @values, $params{'Material'}->id();
-	} # end if
-	if ( $params{'equipment_id'} ) {
-		$sql .= ' AND lngEquipmentIndex=?';
-		push @values, $params{'equipment_id'};
-	} # end if
-	if ( $params{'Equipment'} ) {
-		if ( $params{'Equipment'}->id() ) {
-		$sql .= ' AND lngEquipmentIndex=?';
-		push @values, $params{'Equipment'}->id();
-		} else {
-		$sql .= ' AND lngEquipmentIndex IS NULL';
-		} # end if
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("Error loading Material Price ($sql) (@values) Reason: " . $openprint::dbh->errstr );
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Material Price ($sql) (@values) " . @$data );
-	} # end if
-	return map { new openprint::MaterialPrice( $_->{id}, $_ ) } @$data;
-} # end sub find
-
-sub save {
-	my ( $self, $param ) = @_;
-
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, "SELECT nextval('materialprices_id_seq')" );
-		sql::insert( undef, undef, 'tbl_Material_Prices',
-				'id',					$$self{'id'},
-				'lngListIndex',			$$self{'pricelist_id'},
-				'lngMaterialIndex',		$$self{'material_id'},
-				'lngEquipmentIndex', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
-				'lngMin',				$$self{'min'} eq '' ? undef : $$self{'min'},
-				'lngMax',				$$self{'max'} eq '' ? undef : $$self{'max'},
-				'strUnits',				$$self{'units'},
-				'dblCost',				1*$$self{'cost'},
-				'dblMarkup',			1*$$self{'markup'},
-				'dblPrice',				1*$$self{'price'},
-				'ysnDiscountable',		$$self{'discountable'},
-				);
-	} else {
-		sql::update( undef, undef, 'tbl_Material_Prices', ['id=?', $$self{'id'}],
-				'lngListIndex',			$$self{'pricelist_id'},
-				'lngMaterialIndex',		$$self{'material_id'},
-				'lngEquipmentIndex', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
-				'lngMin',				$$self{'min'} eq '' ? undef : $$self{'min'},
-				'lngMax',				$$self{'max'} eq '' ? undef : $$self{'max'},
-				'strUnits',				$$self{'units'},
-				'dblCost',				1*$$self{'cost'},
-				'dblMarkup',			1*$$self{'markup'},
-				'dblPrice',				1*$$self{'price'},
-				'ysnDiscountable',		$$self{'discountable'},
-				);
-	} # end if
-} # end sub save
+%transforms = (
+	'min'		=>	[ 's/[^\d\.\-]//g' ],
+	'max'		=>	[ 's/[^\d\.\-]//g' ],
+	'cost'		=>	[ 's/[^\d\.\-]//g' ],
+	'markup'	=>	[ 's/[^\d\.\-]//g' ],
+	'price'		=>	[ 's/[^\d\.\-]//g' ],
+);
+%defaults = (
+	'min'			=>	undef,
+	'max'			=>	undef,
+	'cost'			=>	0,
+	'markup'		=>	0,
+	'price'			=>	0,
+	'equipment_id'	=>	undef,
+);
 
 sub next {
 	my $self = shift;
@@ -113,6 +48,4 @@ sub next {
 } # end sub next
 
 1;
-
 __END__
-~       

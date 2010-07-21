@@ -109,18 +109,18 @@ if ( 0 ) {
 					<label>Supplied Inserts:</label>
 					<input name="txtInsertQuantity" size="4" value="<?txtInsertQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				</p>
-			<? if ( openprint::ServiceType::find('name'=>'Tipping') ) ?>
+			<? if ( openprint::ServiceType->find('name'=>'Tipping') ) ?>
 				<p>
 					<label># of tip-ins:</label>
 					<input name="TippingQuantity" size="4" value="<?TippingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				</p>
-			<? endif ( openprint::ServiceType::find('name'=>'Tipping') ) ?>
-			<? if ( openprint::ServiceType::find('name'=>'Blowing') ) ?>
+			<? endif ( openprint::ServiceType->find('name'=>'Tipping') ) ?>
+			<? if ( openprint::ServiceType->find('name'=>'Blowing') ) ?>
 				<p>
 					<label># of blow-ins:</label>
 					<input name="BlowingQuantity" size="4" value="<?BlowingQuantity?>" onkeyup="this.value=this.value.replace(/\D/,'');"/>
 				</p>
-			<? endif ( openprint::ServiceType::find('name'=>'Blowing') ) ?>
+			<? endif ( openprint::ServiceType->find('name'=>'Blowing') ) ?>
 				</div>
 			</fieldset>
 			</div>
@@ -133,7 +133,7 @@ $log->debug("Groups: (" . join(',', @Groups ) . ')' );
 					# Unshift so that cover is always first
 					unshift @Groups, 1;
 					# Load Defaults
-					if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+					if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'AdditionalSignature') ) {
 
 						$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
 						my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
@@ -149,7 +149,7 @@ $log->debug("Groups: (" . join(',', @Groups ) . ')' );
 					# Ensure 1 interior pages
 					push @Groups, 2;
 					# Load Defaults
-					if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'AdditionalSignature') ) {
+					if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'AdditionalSignature') ) {
 						$_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
 						my @defaults = sql::execute( $log, $dbh, $_, $ServiceTypes[0]->id() );
 						while ( my ( $name, $value ) = splice @defaults,0,2 ) {

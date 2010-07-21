@@ -59,7 +59,7 @@ sub email_campaigns {
         misc::export_csv( $r, $log, \%variable, $Campaign->name().' Recipients.csv', \@header, \@data );
 	} # end if
 
-	@{$variable{'Campaigns'}} = openprint::EmailCampaign::find( 'order' => 'lower(name)' );
+	@{$variable{'Campaigns'}} = openprint::EmailCampaign->find( 'order' => 'lower(name)' );
 	$variable{'campaign_id'} = $Campaign->id();
 
 } # end sub email_campaigns

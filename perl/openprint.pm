@@ -49,13 +49,13 @@ sub session_init {
 	} # end if
 
 	if ( $r->param('Currency') ) {
-		my @currencies = openprint::Currency::find( 'short' => $r->param('Currency') );
+		my @currencies = openprint::Currency->find( 'short' => $r->param('Currency') );
 		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
 	} elsif ( $openprint::param{'select_currency_id'} ) {
 		my $Currency = new openprint::Currency( $openprint::param{'select_currency_id'} );;
 		$session{'Currency_id'} = $Currency->id();
 	} elsif ( ! $session{'Currency_id'} ) {
-		my @currencies = openprint::Currency::find( 'short' => $r->dir_config('Currency') );
+		my @currencies = openprint::Currency->find( 'short' => $r->dir_config('Currency') );
 		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
 	} # end if
 
@@ -78,7 +78,7 @@ sub session_init {
 	} # end if
 	if ( $config{'Pricelist'} ) {
 		if ( ! $session{'Pricelist_id'} ) {
-			my @pricelists = openprint::Pricelist::find( 'name' => $config{'Pricelist'} );
+			my @pricelists = openprint::Pricelist->find( 'name' => $config{'Pricelist'} );
 			$session{'Pricelist_id'} = (shift @pricelists)->id() if @pricelists;
 		} # end if
 	} # end if
@@ -103,10 +103,10 @@ sub switch_company {
 	if ( $Company->currency_id() ) {
 		$session{'Currency_id'} = $Company->currency_id();
 	} elsif ( $Company->country() eq 'US' ) {
-		my @currencies = openprint::Currency::find('short'=>'USD');
+		my @currencies = openprint::Currency->find('short'=>'USD');
 		$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 	} elsif ( $Company->country() eq 'CA' ) {
-		my @currencies = openprint::Currency::find('short'=>'CAD');
+		my @currencies = openprint::Currency->find('short'=>'CAD');
 		$session{'Currency_id'} = (shift @currencies)->id() if @currencies;
 	} # end if
 	my @keys = sets::exclude( [ 'Currency_id', '_session_id','user_id','company_id','user_type','Country' ], [ keys %session ] );

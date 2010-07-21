@@ -7,7 +7,7 @@
 		<p><label>Press:</label>
 			<select name="press_id">
 			
-		<? echo ( ssi::make_drop_down( [map { $_->id(), $_->name() } openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)') ] ) ) ?>
+		<? echo ( ssi::make_drop_down( [map { $_->id(), $_->name() } openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)') ] ) ) ?>
 			</select>
 		</p>
 		<p>

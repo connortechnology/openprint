@@ -88,6 +88,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 					$html .= $$variable{'PurchaseOrder'}->shipto_address2().'<br/>' if $$variable{'PurchaseOrder'}->shipto_address2();
 					$html .= sprintf('%s %s, %s', $$variable{'PurchaseOrder'}->get('shipto_city','shipto_state', 'shipto_postalcode')) . '<br/>';
 					$html .= 'Phone: ' . $$variable{'PurchaseOrder'}->shipto_phone().'<br/>' if $$variable{'PurchaseOrder'}->shipto_phone();
+					$html .= 'Mobile: ' . $$variable{'PurchaseOrder'}->shipto_mobile().'<br/>' if $$variable{'PurchaseOrder'}->shipto_mobile();
 					$html .= 'Fax: ' . $$variable{'PurchaseOrder'}->shipto_fax().'<br/>' if $$variable{'PurchaseOrder'}->shipto_fax();
 					$html .= 'SMS: ' . $$variable{'PurchaseOrder'}->shipto_sms().'<br/>' if $$variable{'PurchaseOrder'}->shipto_sms();
 					$html .= $$variable{'PurchaseOrder'}->shipto_email().'<br/>' if $$variable{'PurchaseOrder'}->shipto_email();
@@ -98,7 +99,7 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 			<p><label>NOTIFY:</label>
 			<? echo (
 				my $html = '';
-				foreach my $U ( openprint::User::find('id'=>[$$variable{'PurchaseOrder'}->notifications()],'order' => 'lower(strfirstName),lower(strlastname)' ) ) {
+				foreach my $U ( openprint::User->find('id'=>[$$variable{'PurchaseOrder'}->notifications()],'order' => 'lower(firstName),lower(lastname)' ) ) {
 					$html .= sprintf( q{<a href="mailto:%1$s">%2$s &lt;%1$s&gt;</a><br/>}, $U->email(), $U->name() );
 				} # end foreach
 				return $html;
@@ -196,15 +197,15 @@ Manifest: <a href="/employee/inventory/manifest.html?manifest_id=<? echo ( $$var
 		<td colspan="5" class="totals">SUBTOTAL</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->subtotal() ); ) ?></td>
 	</tr>
-    <tr<? echo ( $$variable{'PurchaseOrder'}->federaltax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_country() eq 'CA' ? 'GST' : 'FEDERAL TAX' ) ?> ( <? echo ( $$variable{'PurchaseOrder'}->federaltax_rate() ) ?>%)</td>
-        <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->federaltax() ); ) ?></td>
-    </tr>
-    <tr<? echo ( $$variable{'PurchaseOrder'}->statetax_charge() ? '' : ' style="display:none;"' ) ?>>
-        <td colspan="5" class="totals"><? echo ( $$variable{'PurchaseOrder'}->shipto_state() eq 'ON' ? 'PST' : 'STATE TAX' ) ?></td>
-        <td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->statetax() ); ) ?></td>
-    </tr>
-
+                <? echo ( 
+                    my $html;
+                    foreach my $Tax ( $$variable{'PurchaseOrder'}->Taxes() ) {
+                        $html .= sprintf('<tr class="tax"><td colspan="5" class="totals">%s (%d%):</td><td class="Price">%s</td></tr>',
+                            $Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+                            );
+                    } # end foreach Tax
+                    return $html;
+                ) ?>
 	<tr>
 		<td colspan="5" class="totals">TOTAL</td>
 		<td style="text-align: right;"><? echo ( return openprint::Currency::format( $$variable{'PurchaseOrder'}->total() ); ) ?></td>

@@ -6,12 +6,12 @@
 	</tr>
 	<? echo (
 		my $html;
-		my @Vs = openprint::Skid_Verification::find('skid_id'=>$openprint::param{'skid_id'},'order'=>'created_on' );
+		my @Vs = openprint::Skid_Verification->find('skid_id'=>$openprint::param{'skid_id'},'order'=>'created_on' );
 		my $rowclass;
 		foreach my $V ( @Vs ) {
 			$html .= sprintf( '<tr%s><td>%s</td><td>%s</td><td>%s</td></tr>',
 				$rowclass,
-				Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($V->created_on() ) ),
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($V->created_on() ) ),
 				$V->User()->name(),
 				$V->code(),
 				);

@@ -24,7 +24,7 @@ use vars qw($r %variable $log $dbh %config %param );
 sub import_specs {
 	my ( $r, $Equipment ) = @_;
 
-	my %equipment = map { $_->strid(), $_->id() } openprint::Equipment::find();
+	my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
 
 	my $error = '';
 	if ( $param{'fileSpecifications'} ) {
@@ -78,7 +78,7 @@ sub export_specs {
 	my @header = ( 'Equipment ID', 'Field Name','Min', 'Max', 'Units', 'Value','Interpolate' );
 
 	my @data;
-	foreach my $Spec ( openprint::EquipmentSpecification::find( 'equipment_id'=>$Equipment->id(), 'order'=>'strName, dblmin' ) ) {
+	foreach my $Spec ( openprint::EquipmentSpecification->find( 'equipment_id'=>$Equipment->id(), 'order'=>'strName, dblmin' ) ) {
 		push @data, $Spec->Equipment()->strid(), $Spec->name(), $Spec->min(), $Spec->max(), $Spec->units(), $Spec->value(), $Spec->interpolate();
 	} # end foreach
 
@@ -200,6 +200,35 @@ sub _fold_specification {
 		} # end if
 	} # end if
 } # end sub _fold_specification
+
+sub _stock_setting_popup {
+	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+} # end sub _stock_settings_popup
+
+sub _stocks {
+	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+	if ( $param{'action'} eq 'add' ) {
+		my $Setting = new openprint::Equipment_Stock_Setting();
+		$variable{'error'} .= $Setting->save(\%param);
+		%param = ();
+	} # end if
+	ssi::save_params('/administrator/equipment/edit.html', 'Group','Manufacturer','Name','Finish','Colour','Weight','Types' );
+} # end sub _stocks
+
+sub _stock_settings {
+	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $Setting = new openprint::Equipment_Stock_Setting( $param{'id'} );
+		$variable{'error'} .= $Setting->delete();
+		%param = ();
+	} elsif ( $param{'action'} eq 'save' ) {
+		foreach my $Setting ( $variable{'Equipment'}->Stock_Settings() ) {
+			$variable{'error'} .= $Setting->save({'grain'=>$param{"grain_$$Setting{id}"}});
+		} # end foreach Setting
+		%param = ();
+	} # end if
+} # end sub _stock_settings
+
 1;
 
 __END__

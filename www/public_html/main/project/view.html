@@ -2,10 +2,6 @@
 	<h1>PROJECTS</h1>
 	<h2>View Project</h2>
 </div>
-<? eval (
-	$$variable{'OrderStatus'} = $$variable{'Project'}->Order()->status();
-) ?>
-
 <script type="text/javascript">
 <!--
 	function open_project_docket() {
@@ -15,7 +11,7 @@
 </script>
 <div class="Project"><div class="View">
 	<? if ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
-	<div class="warning">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <? echo ( $$variable{'Project'}->Company()->name() ) ?>!</div>
+	<div class="warning unprintable">Warning: You are logged in as <? echo ( new openprint::Company( $session{'company_id'} )->name() ) ?> but this project belongs to <? echo ( $$variable{'Project'}->Company()->name() ) ?>!</div>
 	<? endif ( $$variable{'Project'}->company_id() != $session{'company_id'} ) ?>
 	<? if ( $$variable{'ProjectIndex'} eq '' ) ?>
 	There is no current project. 
@@ -56,7 +52,7 @@
 				if ( $$variable{'Project'}->order_id() and sets::isin( $$variable{'Project'}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'ContinueOrder', 'continueorder.gif', "f1.action='/main/order/information.html?OrderID=".$$variable{'Project'}->order_id()."';f1.btnFunction.value='';f1.submit();", '', 'Continue Order' );
 				} # end if
-				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) and $$variable{'OrderStatus'} ) {
+				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) and $$variable{'Project'}->Order()->status() ) {
 					$html .= ssi::writeButton( $log, $dbh, 'Docket', 'projectDocket.gif', 'open_project_docket();', '', 'Docket' );
 				} # end if
 				if ( sets::isin( $$variable{'Project'}->status(), 'Proofs Out','Approved','Printed','Complete' ) ) {
@@ -108,7 +104,7 @@
 	my $ProjectCurrency = $Project->Currency();
 	my $services = $Project->services();
 	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
-	foreach my $ServiceCategory ( openprint::ServiceType_Category::find('order'=>'sorting,name') ) {
+	foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
 		if ( $ServiceCategory->name() eq 'Printing' ) {
             my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
@@ -135,7 +131,7 @@
 					} # end if
 					$html .= '</td>';
 				} # end nif
-				$html .= "</tr>\n<tr>";
+				$html .= "</tr>\n";
 				my @sigs = $Project->signatures();
 				while (@sigs) {
 					my $ss_id = shift @sigs;
@@ -185,7 +181,7 @@
 					if ( ! $$variable{'Quote'} ) {
 						$html .= sprintf('<td class="status">%s</td>', $statuses{$ss_id} );
 
-						$html .= '<td class="actions">';
+						$html .= '<td class="unprintable actions">';
 						if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $ss_id );
 						} # end if
@@ -227,7 +223,7 @@
 			} # end if $$services{'AdditionalSignature'}
 
 		} else {
-			foreach my $ServiceType ( openprint::ServiceType::find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
+			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
 				next if ! $$services{$ServiceType->name()};
 				foreach my $service_id ( @{$$services{$ServiceType->name()}} ) {
 					my $specs = openprint::service::get_specs_ref( $Project, $service_id );
@@ -292,6 +288,7 @@
 							} else {
 								$html .= sprintf(q`<br/>%1$s`, $summaries[$line] );
 							} # end if
+							$html .= '</td>';
 							foreach my $qty_index ( $Project->quantity_indexes() ) {
 								$html .= '<td class="price">';
 								my $summary = openprint::service::summary( $Project->id(), $service_id, $qty_index );

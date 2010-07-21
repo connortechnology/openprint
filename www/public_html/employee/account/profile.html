@@ -9,7 +9,7 @@
 				<input type="text" onkeyup="filterDDM(this, f1.company_id);" onkeydown="if(event.keyCode == 13){this.form.submit();}" size="4" />
 				<select name="company_id" id="company_id" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(name)' ) ], $param{'company_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)' ) ], $param{'company_id'} ); ) ?>
 				</select>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 			</li>
@@ -25,7 +25,7 @@
 						if ( $session{'user_type'} ne 'A' ) {
 							$params{'type'} = ['C','E'];
 						} # end if
-						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( %params ) ], $param{'user_id'} ); ) ?>
+						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( %params ) ], $param{'user_id'} ); ) ?>
 				</select>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 			</li>
@@ -214,7 +214,7 @@
 			<li>
 				<label>Assistant to:</label>
 				<select name="csr_ids" size="4" multiple="multiple">
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
 				</select>
 			</li>
 			<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
@@ -226,7 +226,7 @@
 		if ( $$variable{'User'}->id() ) {
 			@users_categories = sql::execute( $log, $dbh,'SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?', $$variable{'User'}->id() );
 		} # end if
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory::find('order'=>'lower(name)') ], \@users_categories );
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::MarketingCategory->find('order'=>'lower(name)') ], \@users_categories );
 	) ?>
 				</select>
 			</li>
@@ -237,7 +237,7 @@
 					require openprint::Usergroup;
 					my $html = '<ul class="UserGroups">';
 					my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
-					foreach my $Group ( openprint::Usergroup::find( 'order'=>'lower(name)' ) ) {
+					foreach my $Group ( openprint::Usergroup->find( 'order'=>'lower(name)' ) ) {
 						$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label>%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@UserGroups ) ) );
 					} # end foreach
 					return $html . '</ul>';

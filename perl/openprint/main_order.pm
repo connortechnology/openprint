@@ -62,7 +62,6 @@ sub information {
 		} # end if OrderID
 	} elsif ( $param{'btnFunction'} eq 'Process Order' ) {
 		if ( $param{'quote_id'} ) {
-$openprint::log->debug("Making order from quote");
 			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{'quote_id'} );
 		} else {
 			my $project_index = $param{'ProjectIndex'};
@@ -148,9 +147,9 @@ $openprint::log->debug("Making order from quote");
 		
 			# WE ARE logged in as someone else
 			if ( $User->company_id() != $session{'company_id'} ) {
-				my @Users = openprint::User::find( 
+				my @Users = openprint::User->find( 
 						'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
-						'order'=>'lower(LastName),lower(FirstName)'
+						'order'=>'lower(lastname),lower(firstname)'
 						);
 				$User = $Users[0] if @Users;
 			} # end if
@@ -195,7 +194,7 @@ sub submit {
 $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . $Price{'Price'} );
 			my $Project = $Product->Project();
 			my $services = $Project->services();
-			foreach my $ShippingType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+			foreach my $ShippingType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 				next if ! $$services{$ShippingType->name()};
 				foreach my $service_id ( @{$$services{$ShippingType->name()}} ) {
 					my $specs =  openprint::service::get_specs_ref( $Project, $service_id );
@@ -229,7 +228,7 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 			push @errors, "Please give project $$Project{id} a reference";
 		} # end if
 		my $services = $Project->services();
-		my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
+		my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping');
 		foreach my $ServiceType ( @ServiceTypes ) {
 			next if ! $$services{$ServiceType->name()};
 			next if sets::isin( $ServiceType->name(), [ 'CustomerPickUp','Turnaround'] );
@@ -299,8 +298,8 @@ sub confirmation {
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		# Commit Project Information
-		my @Taxes = openprint::Tax::find('state'=>$Order->state(),'country'=>$Order->country() );
-		my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonisedtax_rate','federaltax_rate') if @Taxes;
+		my @Taxes = openprint::Tax->find('state'=>$Order->state(),'country'=>$Order->country() );
+		my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonizedtax_rate','federaltax_rate') if @Taxes;
 
 		my $Company = $Order->Company();
 		my ( $pst_exempt, $gst_exempt ) = ( $Company->pst_exempt(), $Company->gst_exempt() );
@@ -398,8 +397,11 @@ sub confirmation {
 		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
 		$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
 		$Order->federal_tax( $gst_total );
+		$Order->federal_tax_rate();
 		$Order->state_tax( $pst_total );
+		$Order->state_tax_rate();
 		$Order->harmonized_tax( $hst_total );
+		$Order->harmonized_tax_rate();
 		$Order->total( $total );
 		$Order->downpayment( $downpayment );
 		$Order->status( $status );
@@ -449,7 +451,7 @@ sub confirmation {
 	$variable{'OrderID'} = $order_id;
 	$variable{'Order'} = $Order;
 	delete $session{'OrderID'}
-} # end sub finalise_order
+} # end sub confirmation
 
 sub history {
 

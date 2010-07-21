@@ -174,7 +174,7 @@ sub calc {
 
 		foreach my $signature_service_index ( @signature_service_indices ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			my $Equipment = openprint::Equipment::find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index});
+			my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index});
 			my %Results = signature_calc( $Project, $specs, $signature_service_index, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment );
 			$totalPrice += $Results{'Total'};
 			$$specs{"hdnBreakdown$qty_index"} += $Results{'Breakdown'};
@@ -198,7 +198,7 @@ sub signature_calc {
 	my %Results;
 
 	my $signature_index = $$sig_specs{'SignatureIndex'};
-	$Equipment = openprint::Equipment::find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
+	$Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
 	next if ! $Equipment;
 
 	if ( ( ! sets::isin( 1, $$indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
@@ -334,7 +334,7 @@ sub insert_colour_proof {
 	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
 
 	#$log->debug("*** Inserting Colour Proof *******");
-	my $Equipment = openprint::Equipment::find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} );
+	my $Equipment = openprint::Equipment->find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} );
 	return if ! $Equipment;
 
 	my ( $default_proof_type ) = $Equipment->specification( 'Default Colour Proof' );
@@ -372,7 +372,7 @@ sub insert_colour_proof {
 sub insert_layout_proof {
 	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs ) = @_;
 
-	my $Equipment = openprint::Equipment::find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} );
+	my $Equipment = openprint::Equipment->find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} );
 	return if ! $Equipment;
 
 	my ( $default_proof_type ) = $Equipment->specification( 'Default Layout Proof' );
@@ -432,7 +432,7 @@ sub load_proof_info {
                 "txtProofHeight-$signature_index-$proof_index-$qty_index",
                 "ddmProofType-$signature_index-$proof_index-$qty_index"
                 };
-		push @proof_info, $proof_index, $quantity, 1*$width, 1*$height, $type, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service::find('category'=>'Proofs') ], $type );
+		push @proof_info, $proof_index, $quantity, 1*$width, 1*$height, $type, ssi::make_drop_down( [ map { $_->name(), $_->description() } openprint::Service->find('category'=>'Proofs') ], $type );
     } # end foreach
     return @proof_info;
 } # end sub load_proof_info
@@ -573,7 +573,7 @@ sub summary {
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			foreach my $key ( keys %{$specs} ) {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
-					if ( my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
+					if ( my @Service = openprint::Service->find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
 						if ( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'PressProof' ) {
 							my $desc = sprintf('</td><td align="left">%s', $Service[0]->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
@@ -614,7 +614,7 @@ sub breakupsummary {
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			foreach my $key ( keys %{$specs} ) {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
-					my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"});
+					my @Service = openprint::Service->find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"});
 					if ( @Service ) {	
 						my $desc = sprintf('<td align="left"> %s&quot;x%s&quot;</td><td align="left">%s', @$specs{
 								"txtProofWidth-$signature_index-$proof_index-$qty_index",
@@ -662,7 +662,7 @@ sub project_summary {
 			if ( my ($proof_index, $qty_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
 				next if ! $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"};
 				next if ! $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
-				if ( my @Service = openprint::Service::find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
+				if ( my @Service = openprint::Service->find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
 					$types{$Service[0]->description()} = 1;
 				} # end if
 			} # end if

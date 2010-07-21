@@ -81,53 +81,21 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 } // end function AjaxToggleContent
 
 
-function AjaxLoadContent( divID, page, parameters, message ) {
+function LoadContent( divID, page, parameters, message ) {
 	var div = $( divID );
 	if ( div ) {
 		if ( message ) div.innerHTML = message;
 		else div.innerHTML = 'Please wait....';
 	} // end if
 	var method = 'get';
+	alert( typeof parameters );
+	if ( typeof parameters == 'object' ) {
+		parameters = parameters.serialize();
+	} 
 	if ( parameters.length > 8190 ) 
 		method = 'post';
 	
 	new Ajax.Updater( divID, page, { method: method, parameters: parameters, evalScripts: true } );
-}
-
-function LoadContent( divID, page, inputs, message ) {
-	var div = $( divID );
-	if ( div ) {
-		if ( message ) div.innerHTML = message;
-		else div.innerHTML = 'Please wait....';
-	} // end if
-	if ( ! inputs ) {
-		inputs = new Array();
-	} // end if
-
-    inputs.unshift(divID,page);
-    jsrsExecute( '/jsrs.htm', cbLoadMyContent, 'openprint::jsrs_handler::load_content', inputs );
-
-}
-
-function cbLoadMyContent( results ) {
-	var div;
-	var content;
-	var pairs = results.split('|');
-	for ( var i = 0; i < pairs.length; i += 1 ){
-		if ( pairs[i].indexOf('~') != -1 ) {
-			var data = pairs[i].split('~');
-			if ( data[0] == 'Div' ) {
-				div = $( data[1] );
-			} else if ( data[0] == 'Content' ) {
-				content = data[1];
-			} // end if
-		} // end if
-	} // end for
-	if ( div ) {
-		div.innerHTML = content;
-	} else {
-		alert('no div');
-	} // end if
 }
 
 var contentWin;
@@ -153,35 +121,16 @@ className:"alphacube", width:400, height:420
 	}
 } // end function bug_report
 
-
-function ajax_window( url, width, height ) {
-	if ( ! contentWin ) {
-		if ( ! width )
-			width = 400;
-		
-		contentWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
-className:"alphacube", width:width, height:height
-		} );
-		// Set up a windows observer, check ou debug window to get messages
-		myObserver = {
-			onDestroy: function(eventName, win) {
-			   if (win == contentWin) {
-				   contentWin = null;
-				   Windows.removeObserver(this);
-			   }
-		   }
-		}
-		Windows.addObserver(myObserver);
-	} // end if
-	contentWin.setAjaxContent(url, null , true);
-}
 var popupWin;
 function popup_window( url, parameters, options ) {
 	if ( ! popupWin ) {
 		var width = 400;
-		if ( options &&options.width )
-			width = options.width;
-		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width} );
+		var height = 400;
+		if ( options ) {
+			if ( options.width ) width = options.width;
+			if ( options.height ) height = options.height;
+		} // end if
+		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height} );
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {

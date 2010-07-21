@@ -3,6 +3,7 @@ package openprint::print;
 use strict;
 
 require sql;
+require openprint::main_project;
 require openprint::print_project;
 require openprint::service;
 require openprint::Currency;
@@ -118,7 +119,7 @@ sub view_services {
 				my $ProjectCurrency = $Project->Currency();
 				my $conversion_rate = $CurrentCurrency->conversions( $ProjectCurrency->id() );
 
-				if ( my @ServiceTypes = openprint::ServiceType::find('name'=>'CustomService') ) {
+				if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'CustomService') ) {
 					my $ac = sql::start_transaction( $dbh );
 
 					sql::insert( $log, $dbh, 'tbl_Project_Contents',
@@ -189,7 +190,9 @@ sub view_services {
 			} # end if
 		} # end if btnFunction defined
 		if ( defined $openprint::param{'remove'} and ( $openprint::param{'remove'} ne '' ) ) {
-			openprint::print_project::delete_service( $log, $dbh, $project_index, $r->param('remove') );
+			foreach my $s_id ( split(',', $openprint::param{'remove'} ) ) {
+				openprint::print_project::delete_service( $log, $dbh, $project_index, $s_id );
+			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
@@ -201,7 +204,7 @@ sub view_services {
 		} # end if 
 		if ( ! $$variable{'Redirect'} ) {
 			$Project->update_status();
-			openprint::project::view( $log, $dbh, $variable, $project_index );
+			openprint::main_project::view( $project_index );
 		} # end if
 	} # end if
 
@@ -224,6 +227,8 @@ sub print_prices {
 
 	my $service_index = $$variable{'ServiceIndex'};
 	$service_index = $openprint::param{'ServiceIndex'} if ! $service_index;
+	my @service_ids = split(',', $service_index);
+	$service_index = $service_ids[0];
 	my $project_index = $$variable{'ProjectIndex'};
 	$project_index = $openprint::param{'ProjectIndex'} if ! $project_index;
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
@@ -405,7 +410,7 @@ $log->debug('add interiorpages');
 		if ( $type == 1 ) {
 			# Presentation Folder Cover -> Make sure required services like Die Cutting and Gluing are present
 			if ( sets::isin( $$param{'rdbTemplateType'.$type}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-				if ( my @ProjectTypes = openprint::ProjectType::find('name'=>'PresentationFolders') ) {
+				if ( my @ProjectTypes = openprint::ProjectType->find('name'=>'PresentationFolders') ) {
 					foreach my $ServiceType ( $ProjectTypes[0]->required_ServiceTypes() ) {
 						if ( ! $$services{$ServiceType->name()} ) {
 							push @{$$services{$ServiceType->name()}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType );

@@ -16,7 +16,7 @@
 		clear_ddm( contact_ddm );
 		add_option( contact_ddm, '', 'select' );
 	";
-	my @Users = openprint::User::find('company_id'=>$param{'supplier_id'},'order'=>'lower(strfirstname),lower(strlastname)' );
+	my @Users = openprint::User->find('company_id'=>$param{'supplier_id'},'order'=>'lower(firstname),lower(lastname)' );
 	my $selected = $Users[0]->id() if @Users == 1;
 	foreach my $User ( @Users ) {
 		my $name = $User->name();

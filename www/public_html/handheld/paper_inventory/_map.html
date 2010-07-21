@@ -1,24 +1,23 @@
 <? echo (
-	if ( $openprint::param{'location_id'} ) {
-		$$variable{'Location'} = new openprint::Location( $openprint::param{'location_id'} );
+	if ( $param{'location_id'} ) {
+		$$variable{'Location'} = new openprint::Location( $param{'location_id'} );
 	} elsif ( $$variable{'RFIDTag'} and $$variable{'RFIDTag'}->location_id() ) {
 		$$variable{'Selected'} = $$variable{'RFIDTag'}->Location();
 		$$variable{'Location'} = $$variable{'Selected'}->Parent();
-	} elsif ( $openprint::param{'selected_name'} ) {
-		my @locations = openprint::Location::find( 'name' => $openprint::param{'selected_name'} );
-		$$variable{'Selected'} = shift @locations;
-	} elsif ( $openprint::param{'selected_id'} ) {
-		$$variable{'Selected'} = new openprint::Location( $openprint::param{'selected_id'} );
+	} elsif ( $param{'selected_name'} ) {
+		$$variable{'Selected'} = openprint::Location->find_one( 'name_lc' => $param{'selected_name'} );
+	} elsif ( $param{'selected_id'} ) {
+		$$variable{'Selected'} = new openprint::Location( $param{'selected_id'} );
 		$$variable{'Location'} = $$variable{'Selected'}->Parent();
 	} # end if
 	if ( ! $$variable{'Location'} ) {
-	if ( $openprint::param{'location_id'} ) {
-		$$variable{'Location'} = new openprint::Location( $openprint::param{'location_id'} );
+	if ( $param{'location_id'} ) {
+		$$variable{'Location'} = new openprint::Location( $param{'location_id'} );
 	} else {
 		$$variable{'Location'} = new openprint::Location( 1 );
 	} # end if
 	} # end if
-	if ( defined $openprint::param{'parent'} and $$variable{'Location'}->parent() ) {
+	if ( defined $param{'parent'} and $$variable{'Location'}->parent() ) {
 		$$variable{'Location'} = $$variable{'Location'}->parent();
 	} # end if
 	
@@ -32,7 +31,7 @@
 	my @path;
 	my $Parent = $$variable{'Location'};
 	do {
-		unshift @path, sprintf(q`<a href="rfidtag_details.html?location_id=%1$d&skid_id=%3$d&rfidtag_id=%4$d">%2$s</a>`, $Parent->id(), $Parent->name(), @openprint::param{'skid_id','rfidtag_id'} );
+		unshift @path, sprintf(q`<a href="rfidtag_details.html?location_id=%1$d&skid_id=%3$d&rfidtag_id=%4$d">%2$s</a>`, $Parent->id(), $Parent->name(), @param{'skid_id','rfidtag_id'} );
 	} while ( $Parent = $Parent->parent() );
 	$html = join("&nbsp;&gt;\n", @path);
 	return $html;
@@ -42,7 +41,7 @@
 	<? echo (
 		my $html;
 		foreach my $Region ( $$variable{'Location'}->children() ) {
-			$html .= sprintf(q{<area shape="rect" href="rfidtag_details.html?location_id=%d&skid_id=%d&rfidtag_id=%d" }, $Region->id(), @openprint::param{'skid_id','rfidtag_id'} );
+			$html .= sprintf(q{<area shape="rect" href="rfidtag_details.html?location_id=%d&skid_id=%d&rfidtag_id=%d" }, $Region->id(), @param{'skid_id','rfidtag_id'} );
 
 			$html .= sprintf(q{coords="%1$s" alt="%2$s" title="%2$s" />}, $Region->coordinates(), $Region->name() );
 		} # end foreach

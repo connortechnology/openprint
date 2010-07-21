@@ -19,7 +19,7 @@
 				my $html = '';
 				my $rowclass = '';
 				if ( $$variable{'Project'}->docket() ) {
-					foreach my $PI ( openprint::PaperInventory::find('docket'=>$$variable{'Project'}->docket() ) ) {
+					foreach my $PI ( openprint::PaperInventory->find('docket'=>$$variable{'Project'}->docket() ) ) {
 						$html .= sprintf('<tr%5$s><td>%1$d</td><td>%2$s</td><td>%3$d%4$s</td></tr>', $PI->skid_id(), $PI->Skid()->rfidtag_id(), -1*$PI->delta(), ($PI->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets'), $rowclass );
 						$html .= '<tr><td colspan="3">';
 						foreach my $C ( $PI->Skid()->Contents() ) {

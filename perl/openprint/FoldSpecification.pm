@@ -36,36 +36,7 @@ $serial = 'foldspecification_id_seq';
 );
 
 my $debug = 0;
-sub find {
-	my %params = @_;
 
-	if ( $params{'id'} ) {
-		return new openprint::EquipmentSpecification( $params{'id'} );
-	} else {
-		my $sql;
-		my @values;
-		$sql = q{SELECT * FROM Fold_Specifications WHERE 1>0};
-		if ( $params{'Fold'} and $params{'Fold'}->id() ) {
-			$sql .= q{ AND fold_id=?};
-			push @values, $params{'Fold'}->id();
-		} # end if
-		if ( $params{'fold_id'} ) {
-			$sql .= q{ AND fold_id=?};
-			push @values, $params{'fold_id'};
-		} # end if
-
-		$sql .= " OR $params{'or'}" if $params{'or'};
-		$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-		if ( ! $data ) {
-			$log->error( "Error loading Fold Specification ($sql) (@values) :" . $dbh->errstr );
-		} elsif ( $debug ) {
-			$log->debug( $sql . join(',',@values). ' Number of results: ' . @$data );
-		} # end if
-		
-		return map { new openprint::FoldSpecification( $_->{id}, $_ ) } @$data;
-	} # end if
-} # end sub find
 
 sub Fold {
 	my $self = shift;

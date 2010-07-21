@@ -1,6 +1,18 @@
 <script type="text/javascript">
 <!--
 flippingBook.pages = [
+	<? if ( $$variable{'PageFlip'}->id() ) ?>
+		<? echo (
+			my $html;
+			foreach my $Page ( $$variable{'PageFlip'}->Pages() ) {
+				if ( ! -e $Page->dst_path().$Page->dst_filename() ) {
+					$$variable{'error'} .= $Page->writeImage();
+				} # end if
+				$html .= '"/images/PageFlip/'.$$variable{'PageFlip'}->docket().'/'.$Page->dst_filename().'",'."\n";
+			} # end foreach
+			return $html;
+		) ?>
+	<? else ( $$variable{'PageFlip'}->id() ) ?>
 	"pages/page-001.jpeg",
 	"pages/page-002.jpeg",
 	"pages/page-003.jpeg",
@@ -16,12 +28,11 @@ flippingBook.pages = [
 	"pages/page-013.jpeg",
 	"pages/page-014.jpeg",
 	"pages/page-015.jpeg"
+	<? endif ( $$variable{'PageFlip'}->id() ) ?>
 ];
 
 
 flippingBook.contents = [
-	[ "Cover", 1 ],
-	[ "Modern", 4 ]
 ];
 
 // define custom book settings here
@@ -43,6 +54,14 @@ flippingBook.settings.zoomHintEnabled = true;
 flippingBook.create();
 -->
 </script>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( ( $$variable{'PageFlip'}->company_id() == $session{'company_id'} ) or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
+<p class="buttons">
+	<? echo ( join('',
+		ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', '/pageflip/edit.html?pageflip_id='.$$variable{'PageFlip'}->id(), 'Edit' ),
+		); ) ?>
+</p>
+<? endif ( ( $$variable{'PageFlip'}->company_id() == $session{'company_id'} ) or sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) ) ?>
 <div id="fbContainer">
     	<a class="altlink" href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash"><div id="altmsg">Download Adobe Flash Player.</div></a>
     </div>

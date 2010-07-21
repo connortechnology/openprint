@@ -17,55 +17,16 @@ my $debug = 0;
 	'quantity'		=>	'quantity',
 	'purpose_id'	=>	'purpose_id',
 	'units'			=>	'units',
+	'quality_id'	=>	'quality_id',
 );
 %defaults = (
 	'purpose_id'	=>	undef,
+	'quality_id'	=>	undef,
 );
 %transforms = (
 );
 $table = 'Skid_Contents';
 $serial = 'skid_contents_id_seq';
-
-sub find_one {
-	my %params = @_;
-	$params{'limit'}=1;
-	my @Results = find(%params);
-	return $Results[0] if @Results;
-} # end sub find_one
-
-sub find {
-	my %params = @_;
-
-	my $sql = 'SELECT * FROM Skid_Contents WHERE 1>0';
-	my @values;
-	if ( $params{'skid_id'} ) {
-		$sql .= ' AND skid_id=?';
-		push @values, $params{'skid_id'};
-	} # end if
-	if ( $params{'paper_id'} ) {
-		$sql .= ' AND paper_id=?';
-		push @values, $params{'paper_id'};
-	} # end if
-	if ( $params{'Paper'} ) {
-		$sql .= ' AND paper_id=?';
-		push @values, $params{'Paper'}->id();
-	} # end if
-	if ( exists $params{'quantity_>'} ) {
-		$sql .= ' AND quantity > ?';
-		push @values, $params{'quantity_>'};
-	} # end if
-
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$log->debug("openprint::SkidContent::find( $sql)" . $dbh->errstr);
-		return;
-	} elsif ( $debug ) {
-		$log->debug("Loading openprint::SkidContent::find($sql) : @values # of results: " . @$data );
-	} # end if
-	return map { new openprint::SkidContent( $_->{id}, $_ ); } @$data;
-} # end sub find
 
 sub purpose {
 	my $self = shift;
@@ -104,6 +65,22 @@ sub allocated {
 	return 0;
 } # end sub allocated
 
+sub quality {
+    my ( $self, $quality ) = @_;
+
+    if ( defined $quality ) {
+		$quality =~ s/^\s+//;
+		$quality =~ s/\s+$//;
+		$quality =~ s/\s\s+$/ /;
+        @$self{'quality_id','quality'} = sql::execute( undef, undef, q{SELECT id, longname FROM PaperQualities WHERE lower(longname)=?}, lc $quality );
+        if ( ! $$self{'quality_id'} ) {
+			$$self{'quality'} = $quality;
+        } # end if
+    } elsif ( $$self{'quality_id'} and ! $$self{'quality'} ) {
+        $$self{'quality'} = new openprint::StockQuality( $$self{'quality_id'} )->longname();
+    } # end if
+    return $$self{'quality'};
+} # end sub quality
 
 1;
 

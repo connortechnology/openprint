@@ -2,8 +2,8 @@
 	<fieldset><legend>Colour Definitions:</legend>
 		<? eval ( 
 			$$variable{'ColourDefinitions'} = $dbh->selectall_arrayref( 'SELECT * FROM Inks ORDER BY lower(pmsid)', { Slice => {} } );
-			@{$$variable{'Materials'}} = map { $_->id(), $_->name() } openprint::Material::find('order'=>'lower(name)');
-			@{$$variable{'Services'}} = map { $_->id(), $_->name() } openprint::Service::find('order'=>'lower(name)');
+			@{$$variable{'Materials'}} = map { $_->id(), $_->name() } openprint::Material->find('order'=>'lower(name)');
+			@{$$variable{'Services'}} = map { $_->id(), $_->name() } openprint::Service->find('order'=>'lower(name)');
 		 ) ?>
 		<table class="List">
 			<tr><th>Colour</th><th>Material</th><th>Service</th><th width="40">Washups</th><th width="20"></th></tr>

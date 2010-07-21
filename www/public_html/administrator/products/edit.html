@@ -9,7 +9,7 @@
 				<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 					<option value="">All</option>
 					<? echo (
-							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory::find('order'=>'lower(name)') ], $openprint::param{'ddmSearchCategory'} );
+							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory->find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} );
 							) ?>
 				</select>
 			</p>
@@ -18,7 +18,9 @@
 				<select name="product_id" onchange="if(this.options[this.selectedIndex].value != ''){form.btnFunction.value='';f1.submit();}">
 					<option value="">select</option>
 					<? echo (
-		  return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product::find( 'category_id'=>$openprint::param{'ddmSearchCategory'},'order'=>'lower(name)' ) ], $$variable{'Product'}->id() );
+							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Product->find( 
+									( $param{'ddmSearchCategory'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),
+									'order'=>'lower(name)' ) ], $$variable{'Product'}->id() );
 					) ?>
 				</select>
 			</p>
@@ -57,7 +59,7 @@
 				<select name="category_id">
 					<option value="">Select a category</option>
 					<? echo (
-						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory::find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProductCategory->find('order'=>'lower(name)') ], $$variable{'Product'}->category_id() );
 					) ?>
 				</select>
 			</p>
@@ -73,7 +75,7 @@
 				<label>Template:</label>
 				<select name="project_id" id="project_id">
 					<option value="">select</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project::find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->reference() } openprint::Project->find('predefined'=>1,'order'=>'lower(strprojectreference)') ], $$variable{'Product'}->project_id() ); ) ?>
 				</select>
 			</p>
 		</fieldset>

@@ -167,18 +167,27 @@ $log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $
 	my $starttime_seconds = $date_seconds + $self->starttime_time_seconds();
 	my $endtime_seconds = $starttime_seconds + $self->duration_seconds();
 
-$log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ) . " ending: " . 
-Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds)
-);
 
-	my $Shift = new openprint::Shift();
-	$Shift->save({
-		'equipment_id'	=>	$$self{'equipment_id'},
-		'operator_id'	=>	$$self{'operator_id'},
-		'shift_id'		=>	$$self{'id'},
-		'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ),
-		'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
-	});
+	my $Shift;
+	if ( $Shift = openprint::Shift->find_one(
+				'equipment_id'	=>	$$self{'equipment_id'},
+				'shift_id'		=>	$$self{'id'},
+				'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ),
+				'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
+				) ) {
+	} else {
+		$log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ) . " ending: " . 
+				Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds)
+				);
+		$Shift = new openprint::Shift();
+		$Shift->save({
+				'equipment_id'	=>	$$self{'equipment_id'},
+				'operator_id'	=>	$$self{'operator_id'},
+				'shift_id'		=>	$$self{'id'},
+				'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ),
+				'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
+				});
+	} # end if
 	return $Shift;
 } # end sub emanantise
 

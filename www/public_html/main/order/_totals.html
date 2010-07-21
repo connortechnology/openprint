@@ -6,19 +6,19 @@
 		</li>
 		<? if ( $$variable{'Order'}->federal_tax() ne '' ) ?>
 		<li id="FederalTax">
-			<label><? echo ( $$variable{'Order'}->country() eq 'CA' ? 'GST': 'Federal Tax' ) ?>:</label>
+			<label><? echo ( $$variable{'Order'}->country() eq 'CA' ? 'GST': 'Federal Tax' ) ?>(<? echo ( $$variable{'Order'}->federal_tax_rate() ) ?>%):</label>
 			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->federal_tax() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->federal_tax() ne '' ) ?>
 		<? if ( $$variable{'Order'}->state_tax() ne '' ) ?>
 		<li id="StateTax">
-			<label><? echo ( $$variable{'Order'}->country() eq 'CA' ? 'PST': 'State Tax' ) ?>:</label>
+			<label><? echo ( $$variable{'Order'}->country() eq 'CA' ? 'PST': 'State Tax' ) ?> (<? echo ( 1*$$variable{'Order'}->state_tax_rate() ) ?>%):</label>
 			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->state_tax() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->state_tax() ne '' ) ?>
 		<? if ( $$variable{'Order'}->harmonized_tax() ne '' ) ?>
 		<li id="HarmonizedTax">
-			<label>Harmonized Tax:</label>
+			<label>Harmonized Tax (<? echo ( 1*$$variable{'Order'}->harmonized_tax_rate() ) ?>%):</label>
 			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->harmonized_tax() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->harmonized_tax() ne '' ) ?>

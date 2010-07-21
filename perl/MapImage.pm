@@ -42,6 +42,7 @@ sub create_image {
 	$image->Draw(stroke=>'red', primitive=>'rectangle', points=>join(',',map{$_-1} split(',',$Location->coordinates())));
 	my $e = $image->Write( join('/', $path, $Location->parent()->name(),$Location->name().'.gif' ) );
 	$r->log->error($e) if $e;
+	undef $image;
 } # end sub create_image
 
 sub handler {
@@ -104,7 +105,7 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 
 			my $pi = new Image::Magick;
 			$pi->Read(join('/', $path, $P->Parent()->name().'.gif'));
-				$r->log->debug("Scaling from: " . $P->name() . ' to ' . $P->Parent()->name() );
+			$r->log->debug("Scaling from: " . $P->name() . ' to ' . $P->Parent()->name() );
 			my ( $pw, $ph ) = $pi->Get( 'width','height' );
 			#my ( $px1, $py1, $px2, $py2 ) = split(',', $P->coordinates() );
 			my ( $x1, $y1, $x2, $y2 ) = split(',', $P->coordinates() );
@@ -141,6 +142,7 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 		$image->Resize( geometry=>$r->param('width'), filter=>'Cubic' );
 		} 
 		print $image->ImageToBlob();
+		undef $image;
 
 	} else {
 		$r->log->debug("Path: ".$r->filename." Filename: $filename, selected: $selected");
@@ -154,7 +156,7 @@ $r->log->debug( "Location: " . $Location->name() . ':' . $Location->coordinates(
 			}
 		}
 		
-		my @Locations = openprint::Location::find('name'=>$selected);
+		my @Locations = openprint::Location->find('name'=>$selected);
 		if ( @Locations and $Locations[0]->parent_id() ) {
 			pop @path;
 			my $path = join('/', @path );

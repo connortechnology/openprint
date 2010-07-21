@@ -44,7 +44,7 @@ display: none;
 		<label>Label:</label>
 			<select name="type_name" size="1" onchange="LoadContent('Label','/labels/_'+this.options[this.selectedIndex].value+'.html');">
 				<option value=""> select </option>
-				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->name() } openprint::LabelType::find('order'=>'lower(name)') ] ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->name(), $_->name() } openprint::LabelType->find('order'=>'lower(name)') ] ); ) ?>
 			</select>
 	</p>
 </fieldset>

@@ -36,7 +36,7 @@ sub save {
 		} # end foreach
 	} # end if
 	if ( keys %{$self->{servicespricesets}} ) {
-		foreach ( openprint::ServicePrice::find('pricelist_id'=>$self->{list_index}) ) {
+		foreach ( openprint::ServicePrice->find('pricelist_id'=>$self->{list_index}) ) {
 			$_->delete();
 		} # end foreach
 		foreach my $product_index ( keys %{$self->{servicespricesets}} ) {

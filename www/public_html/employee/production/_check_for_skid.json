@@ -14,7 +14,7 @@
 		if ( $RFIDTag->id() ) {
 			return q`$('rfidtag_id').style.color = 'green';$('skid_id').value='`.$RFIDTag->Skid()->id().q`';`;
 		} else {
-			my @Tags = openprint::RFIDTag::find( 'id_like'=>'%'.$param{'rfidtag_id'} );
+			my @Tags = openprint::RFIDTag->find( 'id_like'=>'%'.$param{'rfidtag_id'} );
 			if ( @Tags == 1 ) {
 				return q`$('rfidtag_id').style.color = 'green';$('skid_id').value='`.$Tags[0]->Skid()->id().q`';`;
 			} # end if

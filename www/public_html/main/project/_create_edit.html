@@ -62,7 +62,7 @@
 	) ?>
 <? endif ( @{$$variable{'Modes'}} > 1 ) ?>
 
-<? eval (  @{$$variable{'OptionServiceTypes'}} = openprint::ServiceType::find('category'=>'Options','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
+<? eval (  @{$$variable{'OptionServiceTypes'}} = openprint::ServiceType->find('category'=>'Options','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
 <? if ( @{$$variable{'OptionServiceTypes'}} ) ?>
 <fieldset><legend>Options:</legend>
 	<ul>
@@ -86,7 +86,7 @@
 	<ul>
 <? echo ( 
 	my $html = '';
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Prepress','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Prepress','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
 		$html .= sprintf(q`
 			<li>
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
@@ -102,7 +102,7 @@
 	<ul>
 <? echo ( 
 	my $html = '';
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Bindery','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Bindery','create_visible'=>1,'order'=>'sorting,lower(description)') ) {
 		$html .= sprintf(q`
 			<li>
 				<input type="checkbox" name="chkServices%1$s" id="chkServices%1$s" value="%1$s" onclick="service_onclick( this );" %3$s />
@@ -114,7 +114,7 @@
 ) ?>
 	</ul>
 </fieldset>
-<? eval ( @{$$variable{'SpecialtyServiceTypes'}} = openprint::ServiceType::find('category'=>'Specialty','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
+<? eval ( @{$$variable{'SpecialtyServiceTypes'}} = openprint::ServiceType->find('category'=>'Specialty','create_visible'=>1,'order'=>'sorting,lower(description)'); ) ?>
 <? if (	@{$$variable{'SpecialtyServiceTypes'}} ) ?>
 <fieldset><legend>What type of specialty finishing services are required for the project?</legend>
 	<ul>
@@ -138,7 +138,7 @@
 
 <? echo ( 
 	my $html = '';
-	my @ServiceTypes = openprint::ServiceType::find('category'=>'Packaging','create_visible'=>1,'order'=>'sorting,lower(description)');
+	my @ServiceTypes = openprint::ServiceType->find('category'=>'Packaging','create_visible'=>1,'order'=>'sorting,lower(description)');
 	if ( @ServiceTypes ) {
 		$html .= '<fieldset><legend>How would you like your project packaged?</legend><ul>';
 
@@ -157,7 +157,7 @@
 
 <? echo ( 
 	my $html = '';
-	my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping','create_visible'=>1,'order'=>'sorting,lower(description)');
+	my @ServiceTypes = openprint::ServiceType->find('category'=>'Shipping','create_visible'=>1,'order'=>'sorting,lower(description)');
 	
 	if ( @ServiceTypes ) {
 		$html .= '<fieldset><legend>Please select your delivery method:</legend><ul>';
@@ -177,7 +177,7 @@
 <fieldset>
 <? eval ( 
 	@{$$variable{'design_options'}} = ( 'ElectronicFile', 'Electronic File' );
-	if ( openprint::ServiceType::find('name'=>'FilmStripping') ) {
+	if ( openprint::ServiceType->find('name'=>'FilmStripping') ) {
 		push @{$$variable{'design_options'}}, 'FinalFilm', 'Final Film';
 	} # end if
 ) ?>

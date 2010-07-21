@@ -37,7 +37,7 @@ sub sign_off {
             $variable{'Redirect'} = '/main/project/sign_off.html';
         } # end if
     } # end if
-    openprint::project::view( $log, $dbh, \%variable, $param{'ProjectIndex'} );
+    openprint::main_project::view( $param{'ProjectIndex'} );
     $variable{'ProjectIndex'} = $param{'ProjectIndex'};
 } # end sub sign_off
 
@@ -53,12 +53,12 @@ sub history {
 	# Doing it here will set the defaults if neccessary, but then they will get overriden by the saev_params below.  This is neccessary because save_params will update lastupdated.
 	ssi::setup_date_select( '/main/project/history.html', 'created_on', -180, 0 );
 	ssi::setup_date_select( '/main/project/history.html', 'updated_on', -14, 0 );
-    if ( ! $session{'/main/project/history.html?ddmStatus'} ) {
+    if ( ! exists $session{'/main/project/history.html?ddmStatus'} ) {
         $session{'/main/project/history.html?ddmStatus'} = join(';', ( 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ) );
     } # end if
 
 	ssi::save_params( '/main/project/history.html', 
-			'ddmStatus', 'type_id',
+			'ddmStatus', 'type_id', 'predefined',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
@@ -68,13 +68,34 @@ sub history {
 
 sub _history {
 	ssi::save_params( '/main/project/history.html', 
-			'ddmStatus', 'type_id',
+			'ddmStatus', 'type_id', 'predefined',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
 			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
 			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day', 
 			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day', 
 			);
 } # end sub _history 
+
+sub view {
+	my ( $project_index ) = @_;
+
+	if ( exists $param{'ShowAllSignatures'} ) {
+		$session{'ShowAllSignatures'} = $param{'ShowAllSignatures'};
+	} # end if
+	$variable{'ProjectIndex'} = $project_index;
+	my $Project = $variable{'Project'} = new openprint::Project( $project_index );
+	my $save = 0;
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		if ( $$Project{'price'.$qty_index} != $Project->price($qty_index,undef) ) {
+			$save = 1;
+			last;
+		} # endif
+	} # end foreach
+	if ( $save ) {
+		$Project->save();
+	} # end if
+$openprint::log->debug("Saving $save");
+} # end sub view
 
 1;
 __END__

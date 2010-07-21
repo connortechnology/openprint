@@ -1,11 +1,10 @@
 package openprint::Label;
 @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -16,6 +15,8 @@ require ssi;
 require misc;
 
 my $debug = 1;
+
+$table = 'labels';
 
 %fields = (
 	'id'			=>	'id',
@@ -31,77 +32,10 @@ my $debug = 1;
 %defaults = (
 );
 
-# Returns a paper object specified by the parameters
-sub find {
-	my %params = @_;
-	@params{lc keys %params} = @params{keys %params};
-	my @values;
-	my $sql = 'SELECT * FROM labels WHERE 1>0';
-
-	if ( $params{'version'} ) {
-		$sql .= ' AND version=?';
-		push @values, $params{'version'};
-	} else {
-		#$sql .= ' AND version IS NULL';
-	} # end if
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'name_id'} ) {
-		$sql .= ' AND name_id=?';
-		push @values, $params{'name_id'};
-	} # end if
-	if ( $params{'docket'} ) {
-		$sql .= ' AND docket=?';
-		push @values, $params{'docket'};
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'}
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND ( created_on >= ?)';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on <= ?)';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'type_id'} ) {
-		if ( ref $params{'type_id'} eq 'ARRAY' ) {
-			$sql .= ' AND type_id IN (' . join(',', map { '?' } @{$params{'type'}} ) . ')';
-			push @values, @{$params{'type_id'}};
-		} else {
-			$sql .= ' AND type_id=?';
-			push @values, $params{'type_id'};
-		} # end if
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " ORDER BY $params{'order_by'}" if $params{'order_by'};
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("Error loading labels SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$openprint::log->debug('No labels loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$openprint::log->debug("Debug loaded labels ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::Label( $_->{id}, $_ ) } @$data;
-} # end sub find
-
 sub load {
 	my ( $self, $data ) = @_;
 	if ( ! $data ) {
-#
-#$openprint::log->debug("Loading label $$self{id}") if $debug;
 		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Labels WHERE id=?}, {}, $$self{'id'} );
-#$openprint::log->debug("Loading label $$self{id} $$data{data}") if $debug;
 	} # end if
 	@$self{keys %$data} = @$data{keys %$data};
 	delete $$self{'data'};
@@ -158,8 +92,12 @@ sub delete {
 } # end sub delete
 
 sub Order {
-	return openprint::Order::find('docket'=>$_[0]{'docket'});
+	return openprint::Order->find('docket'=>$_[0]{'docket'});
 } # end sub Order
+
+sub Project {
+	return openprint::Project->find_one('docket'=>$_[0]{'docket'});
+} # end sub Project
 
 sub Type {
 	return new openprint::LabelType( $_[0]{'type_id'} );

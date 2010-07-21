@@ -1,0 +1,143 @@
+<? eval (
+	if ( $openprint::param{'action'} eq 'Submit') {
+		my @papers = openprint::Paper->find(
+			'owner_id'	=>	$r->param('Owner'),
+			'name_id'	=>	$r->param('ddmPaperName'),
+			'name'		=>	$r->param('txtPaperName'),
+			'finish_id'	=>	$r->param('ddmPaperFinish'),
+			'finish'	=>	$r->param('txtPaperFinish'),
+			'colour_id'	=>	$r->param('ddmPaperColour'),
+			'colour'	=>	$r->param('txtPaperColour'),
+			'weight_id'	=>	$r->param('ddmPaperWeight'),
+			'weight'	=>	$r->param('txtPaperWeight'),
+			'width'		=>	$r->param('PaperWidth'),
+			'height'	=>	$r->param('PaperHeight'),
+			);
+		my $Paper;
+		if ( 0 == @papers ) {
+			$Paper = new openprint::Paper( );	
+			$Paper->owner_id( $r->param('Owner') );
+			$Paper->name( $r->param('txtPaperName') ) if $r->param('txtPaperName');
+			$Paper->name_id( $r->param('ddmPaperName') ) if $r->param('ddmPaperName');
+			$Paper->finish( $r->param('txtPaperFinish') ) if $r->param('txtPaperFinish');
+			$Paper->finish_id( $r->param('ddmPaperFinish') ) if $r->param('ddmPaperFinish');
+			$Paper->colour( $r->param('txtPaperColour') ) if $r->param('txtPaperColour');
+			$Paper->colour_id( $r->param('ddmPaperColour') ) if $r->param('ddmPaperColour');
+			$Paper->weight( $r->param('txtPaperWeight') ) if $r->param('txtPaperWeight');
+			$Paper->weight_id( $r->param('ddmPaperWeight') ) if $r->param('ddmPaperWeight');
+			if ( $r->param('ddmPaperSize') ) {
+				my ( $width, $height ) = split 'x', $r->param('ddmPaperSize');
+				$Paper->width($width);
+				$Paper->height($height);
+			} else {
+				$Paper->width($r->param('PaperWidth'));
+				$Paper->height($r->param('PaperHeight'));
+			} # end if
+			$Paper->save();
+			$$variable{'information'} .= 'Paper created.<br/>';
+		} elsif ( 1 == @papers ) {
+			$Paper = shift @papers;
+		} # end if
+		$Paper->add_inventory( $r->param('Quantity'), $r->param('Location'), $variable );
+		my $Skid = new openprint::Skid( );
+		$Skid->add( $Paper, $r->param('Quantity') );
+		$Skid->save();
+		$Skid->print_label();
+		$$variable{'information'} .= "Added skid # $$Skid{'id'}<br/>";
+	} # end if
+) ?>
+<script type="text/javascript">
+	function toggle( name ) {
+		var ddm = $( 'ddm' + name );
+		var txt = $( 'txt' + name );
+		if ( ddm.style.display == 'none' ) {
+			ddm.style.display = 'inline';
+			txt.style.display = 'none';
+		} else {
+			txt.style.display = 'inline';
+			ddm.style.display = 'none';
+		} // end if
+	}
+</script>
+<form id="f1" name="f1" action="receive.html" method="post">
+	<? if ( $$variable{'information'} ) ?>
+	<?information?><hr/>
+	<? endif ( $$variable{'information'} ) ?>
+	<fieldset><legend>Receive Paper</legend>
+		<p>
+			<label for="PaperName" onClick="toggle('PaperName');">Name:</label>
+			<select id="ddmPaperName" name="ddmPaperName" size="1">
+				<? echo (
+						my @options = ( '', 'select one',
+							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperNames ORDER BY lower(longname)} )
+							);
+						return ssi::make_drop_down( \@options, $r->param('ddmPaperBrand') );
+				) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtPaperName" name="txtPaperName" />
+		</p>
+		<p>
+			<label for="txtPaperFinish" onClick="toggle('PaperFinish');">Finish:</label>
+			<select id="ddmPaperFinish" name="ddmPaperFinish" size="1">
+				<? echo (
+						my @options = ( '', 'select one',
+							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperFinishes ORDER BY lower(longname)} )
+							);
+						return ssi::make_drop_down( \@options, $r->param('ddmPaperFinish') );
+				) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtPaperFinish" name="txtPaperFinish" />
+		</p><p>
+			<label for="txtPaperColour" onClick="toggle('PaperColour');">Colour:</label>
+			<select id="ddmPaperColour" name="ddmPaperColour" size="1">
+				<? echo (
+						my @options = ( '', 'select one',
+							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperColours ORDER BY lower(longname)} )
+							);
+						return ssi::make_drop_down( \@options, $r->param('ddmPaperColour') );
+				) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtPaperColour" name="txtPaperColour" />
+		</p><p>
+			<label for="txtPaperWeight" onClick="toggle('PaperWeight');">Weight:</label>
+			<select id="ddmPaperWeight" name="ddmPaperWeight" size="1">
+				<? echo (
+						my @options = ( '', 'select one',
+							sql::execute( $log, $dbh, q{SELECT id, longname FROM PaperWeights ORDER BY lower(longname)} )
+							);
+						return ssi::make_drop_down( \@options, $r->param('ddmPaperWeight') );
+				) ?>
+			</select>
+			<input style="display: none;" type="text" id="txtPaperWeight" name="txtPaperWeight" />
+		</p><p>
+			<label for="PaperWidth" onClick="toggle('PaperSize');">Sheet Size:</label>
+			<select id="ddmPaperSize" name="ddmPaperSize" size="1">
+			<? echo (
+					my @options = ( '', 'select one',
+						sql::execute( $log, $dbh, q{SELECT DISTINCT width || 'x' || height as size, width || 'x' || height  FROM Papers ORDER BY size} )
+						);
+					return ssi::make_drop_down( \@options, $r->param('ddmPaperSize') );
+					) ?>
+			</select>
+			<span id="txtPaperSize" style="display: none;">
+			<input type="text" id="PaperWidth" name="PaperWidth" size="6" />&nbsp;x&nbsp;<input type="text" id="PaperHeight" name="PaperHeight" size="6" />
+		</p><p>
+			<label for="Owner">Owner:</label>
+			<select id="Owner" name="Owner"><? echo ( openprint::obj_customer::get_customer_dropdown( $log, $dbh, $variable, $$variable{'cust_id'} ); ) ?></select>
+		</p><p>
+			<label for="Quantity">Quantity:</label>
+			<input type="text" id="Quantity" name="Quantity" size="10" />
+		</p><p>
+			<label for="Location">Location:</label>
+			<input type="text" id="Location" name="Location"/>
+		</p><p>
+			<label for="Docket">Docket:</label>
+			<input type="text" id="Docket" name="Docket" size="10" />
+		</p>
+		<br/>
+		<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', "f1.elements['action'].value='Submit';f1.submit();", '', 'Submit' ); ) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="action" />
+</form>

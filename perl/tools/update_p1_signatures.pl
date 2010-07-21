@@ -33,7 +33,7 @@ sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBl
 sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 
-foreach my $Project ( openprint::Project::find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {
+foreach my $Project ( openprint::Project::find( 'order'=>'id desc','limit'=>10000 ) ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -132,7 +132,7 @@ foreach my $Project ( openprint::Project::find( 'company_id'=>6, 'order'=>'id de
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $$specs{'ddmPackageType'} );
 					if ( $$specs{'ddmPackageType'.$qty_index} =~ /\D/ ) {
-						if ( my $Material = openprint::Material::find_one( 'name'=>$$specs{'ddmPackageType'.$qty_index} ) ) {
+						if ( my $Material = openprint::Material->find_one( 'name'=>$$specs{'ddmPackageType'.$qty_index} ) ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $Material->id() );
 						} # end if
 					} # end if
@@ -153,5 +153,19 @@ foreach my $Project ( openprint::Project::find( 'company_id'=>6, 'order'=>'id de
 	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
 
 } # end foreach Project
+my $Type = openprint::ProjectType->find_one('name'=>'Multipage');
+if ( $Type ) {
+	foreach my $Project ( openprint::Project->find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {
+		# Skip multipage projects
+		next if sets::isin( $Project->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines','Calendars' ] );
+		my $services = $Project->services();
+		my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+		my $new_signature = $Project->copy_signature( $print_specs, openprint::service::status( $Project, $$services{''}[0] ) );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
+		} # end foreach
+	} # end foreach Project
+} # end if Type
+	
 1;
 __END__

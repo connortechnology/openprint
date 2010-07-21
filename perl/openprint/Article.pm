@@ -2,17 +2,14 @@ package openprint::Article;
 @ISA = qw(openprint::Object);
 
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms %config $log $dbh %session );
+require sql;
+use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $dbh %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
 
-my $debug = 1;
-
-require sql;
+$debug = 1;
 
 $table = 'articles';
 $serial = 'articles_id_seq';
@@ -53,81 +50,10 @@ $serial = 'articles_id_seq';
 	'deleted'		=> 0,
 );
 
-sub find {
-	my %params = @_;
-
-	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
-	my @values;
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND created_on >= ?';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND created_on <= ?';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{'updated_on_end'};
-	} # end if
-	if ( $params{'published_on_start'} and $params{'published_on_end'} ) {
-		$sql .= " AND ( $fields{published_on} BETWEEN ? AND ? )";
-		push @values, @params{'published_on_start','published_on_end'};
-	} elsif ( $params{'published_on_start'} ) {
-		$sql .= " AND $fields{published_on} >= ?";
-		push @values, $params{'published_on_start'};
-	} elsif ( $params{'published_on_end'} ) {
-		$sql .= " AND $fields{published_on} <= ?";
-		push @values, $params{'published_on_end'};
-	} # end if
-
-	if ( $params{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $params{'deleted'};
-	} else {
-		$sql .= ' AND deleted=?';
-		push @values, 0;
-	} # end if
-
-	if ( $params{'order'} ) {
-		$sql .= " ORDER BY $params{'order'}";
-	} # end if
-	if ( $params{'limit'} ) {
-		$sql .= " LIMIT $params{'limit'}";
-	} # end if
-
-	my $data = $openprint::dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$openprint::log->warn("Error loading Articles: ($sql) (@values)" . $openprint::dbh->errstr );
-		return;
-	} elsif ($debug ) {
-		$openprint::log->debug("openprint::Article::find($sql) (@values)");
-	} # end if
-	return map { new openprint::Article( $_->{id}, $_ ); } @$data;
-} # end sub find
-
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( (! $data) and $$self{'id'} ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM '.$table.' WHERE id=?', {}, $$self{'id'} );
-		if ( ! $data ) { $openprint::log->debug($openprint::dbh->errstr ); }
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
 sub send_notifications {
 	my ( $self ) = @_;
 
-	my @Users = openprint::User::find('usergroup'=>'Quality Control Notifications');
+	my @Users = openprint::User->find('usergroup'=>'Quality Control Notifications');
 
 	if ( @Users ) {
 		my $From = new openprint::User( $session{'user_id'} );
@@ -137,11 +63,9 @@ sub send_notifications {
 		my %info = (
 			'Article'	=>	$self,
 		);
-		$info{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$text, \%info );
-$openprint::log->debug( $info{'ReplacementText'} );
+		$info{'ReplacementText'} = ssi::variable_substitution( \$text, \%info );
 
-		my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%info );
-$openprint::log->debug( $body );
+		my $body = ssi::variable_substitution( \$email_template, \%info );
 		foreach my $User ( @Users ) {
 			my %mail = (
 					SMTP    => $config{'Mail Server'},
@@ -154,13 +78,12 @@ $openprint::log->debug( $body );
 	} # end if to
 
 } # end sub send_notification
-sub save {
-	my ( $self, $data ) = @_;
-	$$self{'created_by'} = $session{'user_id'} if ! $$self{'created_by'};
-	return $self->SUPER::save( $data );
-} # end sub save
+sub Company {
+	return new openprint::Company( $_[0]{'company_id'} );
+} # end sub Company
+sub Author {
+	return new openprint::User( $_[0]{'created_by'} );
+} # end sub Author
 
 1;
-
 __END__
-~       

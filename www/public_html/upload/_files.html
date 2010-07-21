@@ -4,11 +4,11 @@
 		$param{'docket'} =~ s/\D//g;
 		$param{'project_id'} =~ s/\D//g;
 		if ( $param{'docket'} ) {
-			if ( my @Projects = openprint::Project::find('docket'=>$param{'docket'}, 'company_id'=>$session{'company_id'} ) ) {
+			if ( my @Projects = openprint::Project->find('docket'=>$param{'docket'}, 'company_id'=>$session{'company_id'} ) ) {
 				$param{'project_id'} = $Projects[0]->id();
 			} # end if
 		} elsif ( $param{'project_id'} ) {
-			if ( my @Projects = openprint::Project::find('id'=>$param{'project_id'}, 'company_id'=>$session{'company_id'} ) ) {
+			if ( my @Projects = openprint::Project->find('id'=>$param{'project_id'}, 'company_id'=>$session{'company_id'} ) ) {
 				$param{'docket'} = $Projects[0]->id();
 			} # end if
 		} # end if
@@ -104,7 +104,7 @@
 		<? endwhile ( @$variable{'path','filename','size', 'description','mtime'} = splice @{$$variable{'PROJECT_FILES'}},0,5; ) ?>
 <? endif ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
 	</table>
-<p class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', Serialize(f1));}", '', 'Delete' ); ) ?></p>
+<p class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', f1.serialize());}", '', 'Delete' ); ) ?></p>
 	<input type="hidden" name="project_id" value="<? echo($param{'project_id'}) ?>"/>
 	<input type="hidden" name="docket" value="<? echo($param{'docket'}) ?>"/>
 	<input type="hidden" name="btnFunction" />

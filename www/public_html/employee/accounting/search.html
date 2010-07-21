@@ -1,6 +1,6 @@
 <? eval (
 		foreach my $key ( 'ddmCustomer','ddmStatus','ddmEmployee','ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','dblTotal1','dblTotal2' ) {
-			$session{'/employee/accounting/search.html?'.$key} = $openprint::param{$key} if defined $openprint::param{$key};
+			$session{'/employee/accounting/search.html?'.$key} = $param{$key} if defined $param{$key};
 		} # end foreach
 		if ( ! $session{'/employee/accounting/search.html?ddmStatus'} ) {
 			$session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
@@ -21,28 +21,28 @@
 <script language="javascript" src="/javascripts/barcode.js"></script>
 Choose criteria and click show results. You may the download the results in CSV (spreadsheet format) to view in a program such as Microsoft Excel.<br>
 <br>
-<form name="f1" method="post" action="search.html">
+<form name="f1" method="post" action="/employee/accounting/search.html">
 	<div style="float: left; width: 35%;">
 	<fieldset class="filters">
 		<p>
 			<label>Docket #:</label>
-			<input type="text" name="StartDocket" value="<? echo ( $openprint::param{'StartDocket'} ) ?>" size="6"	onkeypress="return input_handler( this, event);" />
-			- <input type="text" name="EndDocket" value="<? echo ( $openprint::param{'EndDocket'} ) ?>" size="6"	onkeypress="return input_handler( this, event);" />
+			<input type="text" name="StartDocket" value="<? echo ( $param{'StartDocket'} ) ?>" size="6"	onkeypress="return input_handler( this, event);" />
+			- <input type="text" name="EndDocket" value="<? echo ( $param{'EndDocket'} ) ?>" size="6"	onkeypress="return input_handler( this, event);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'DocketGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
 			<label>Order ID:</label>
-			<input type="text" name="order_id" value="<? echo ( $openprint::param{'order_id'} ) ?>" size="13"	onkeypress="return input_handler( this, event);" />
+			<input type="text" name="order_id" value="<? echo ( $param{'order_id'} ) ?>" size="13"	onkeypress="return input_handler( this, event);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'OrderGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
 			<label>Invoice ID:</label>
-			<input type="text" name="invoice_id" size="13" value="<? echo ( $openprint::param{'invoice_id'} ) ?>"	onkeypress="return input_handler( this, event);" />
+			<input type="text" name="invoice_id" size="13" value="<? echo ( $param{'invoice_id'} ) ?>"	onkeypress="return input_handler( this, event);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'InvoiceGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
 			<label>Project ID:</label>
-			<input type="text" name="project_id" size="13" value="<? echo ( $openprint::param{'project_id'} ) ?>"	onkeypress="return input_handler( this, event);" />
+			<input type="text" name="project_id" size="13" value="<? echo ( $param{'project_id'} ) ?>"	onkeypress="return input_handler( this, event);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'ProjectGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>
@@ -72,7 +72,7 @@ Choose criteria and click show results. You may the download the results in CSV 
 				<option value="">All Employees</option>
 				<? echo (
 				    ssi::make_drop_down( 
-						[ map { $_->id(), $_->name() } openprint::User::find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)' ) ],
+						[ map { $_->id(), $_->name() } openprint::User->find( 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)' ) ],
 						$session{'/employee/accounting/search.html?ddmEmployee'} ); 
 					) ?>
 			</select>

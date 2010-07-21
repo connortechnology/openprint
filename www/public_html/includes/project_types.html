@@ -1,6 +1,6 @@
 <? echo ( 
 	require openprint::ProjectTypeCategory;
-	my @ProjectTypeCategories = openprint::ProjectTypeCategory::find('order'=>'sort,lower(name)');
+	my @ProjectTypeCategories = openprint::ProjectTypeCategory->find('order'=>'sort,lower(name)');
 	my $html = '<ul id="ProjectTypes">';
 	foreach my $ProjectTypeCategory ( @ProjectTypeCategories ) {
 		my @ProjectTypes = $ProjectTypeCategory->ProjectTypes('order'=>'sorting,lower(name)');

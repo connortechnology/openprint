@@ -24,8 +24,8 @@
 		<? eval ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects(); ) ?>
 		<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 		<tr<?rowclass?>>
-			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
-			<td><a href="/employee/production/project_view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>&OrderID=<?OrderID?>"><? echo ( $$variable{'Project'}->reference(); ) ?></a></td>
+			<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->id() ) ?></a></td>
+			<td><a href="/employee/project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id() ) ?>"><? echo ( $$variable{'Project'}->reference(); ) ?></a></td>
 			<td align="left"><? echo ( $$variable{'Project'}->status(); ) ?></td>
 			<td class="Date"><? echo ( $$variable{'Project'}->requested_date(); ) ?></td>
 			<td class="Date"><? echo ( $$variable{'Project'}->due_date(); ) ?></td>
@@ -36,23 +36,7 @@
 		<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 	</table>
 	<div style="float: right; width: 250px;">
-		<!--#include virtual="/includes/order_totals.html" --> 
-		<table>
-			<tr> 
-				<td width="175" align="right"><b>Amount Paid:</b></td>
-				<td width="75" align="right"><?CurrencySymbol?> <?AmountPaid?></td>
-			</tr>
-			<? if ( $$variable{'AmountPaid'} < $$variable{'Downpayment'} ) ?>
-			<tr> 
-				<td align="right"><b>Deposit Due:</b></td>
-				<td align="right"><?CurrencySymbol?> <?DepositDue?></td>
-			</tr>
-			<? endif ( $$variable{'AmountPaid'} < $$variable{'Downpayment'} ) ?>
-			<tr> 
-				<td align="right"><b>Amount Owing:</b></td>
-				<td align="right"><?CurrencySymbol?> <? echo ( $$variable{'Order'}->owing(); ) ?></td>
-			</tr>
-		</table>
+		<!--#include virtual="/main/order/_totals.html" -->
 		<br/>
 		<span class="Currency">All prices listed in <?CurrencyName?>.</span>
 	</div>

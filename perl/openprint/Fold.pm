@@ -94,56 +94,6 @@ sub to_string {
 	return sprintf('%s %dx%d=%d pages min:%d max:%d impo', @$self{'name','page_columns','page_rows','pages', 'min_imposition','max_imposition'} );
 } # end sub to_string
 
-sub find_one {
-	my %params = @_;
-	$params{'limit'}=1;
-	my @Results = find(%params);
-	return $Results[0] if @Results;
-} # end sub find_one
-sub find {
-	my %params = @_;
-
-	if ( $params{'id'} ) {
-		return new openprint::Fold( $params{'id'} );
-	} else {
-		my $sql;
-		my @values;
-		$sql = q{SELECT * FROM Folds WHERE 1>0};
-		if ( $params{'Equipment'} and $params{'Equipment'}->id() ) {
-			$sql .= q{ AND equipment_id=?};
-			push @values, $params{'Equipment'}->id();
-		} # end if
-		if ( $params{'equipment_id'} ) {
-			$sql .= q{ AND equipment_id=?};
-			push @values, $params{'equipment_id'};
-		} # end if
-		if ( defined $params{'pages'} ) {
-			$sql .= q{ AND pages=?};
-			push @values, $params{'pages'} ? $params{'pages'} : undef;
-		} # end if
-		if ( defined $params{'type'} ) {
-			$sql .= q{ AND type=?};
-			push @values, $params{'type'} ? $params{'type'} : undef;
-		} # end if
-
-		if ( $params{'name'} ) {
-			$sql .= q{ AND name=?};
-			push @values, $params{'name'};
-		} # end if
-
-		$sql .= " OR $params{'or'}" if $params{'or'};
-		$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-		if ( ! $data ) {
-			$log->error( "Error loading Fold ($sql) (@values) :" . $dbh->errstr );
-		} elsif ( $debug ) {
-			$log->debug( $sql . join(',',@values) . ' Number of results: ' . @$data );
-		} # end if
-		
-		return map { new openprint::Fold( $_->{id}, $_ ) } @$data;
-	} # end if
-} # end sub find
-
 sub delete {
 	my ( $self ) = @_;
 	my $ac = sql::start_transaction( $dbh );
@@ -171,7 +121,7 @@ sub Equipment {
 sub Specifications {
 	my $self = shift;
 	if ( ! $$self{'Specifications'} ) {
-		@{$$self{'Specifications'}} = openprint::FoldSpecification::find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
+		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
 	} # end if
 	return @{$$self{'Specifications'}};
 } # end sub Equipment
@@ -180,7 +130,7 @@ sub Specification {
 	my ( $self, $range ) = @_;
 
     if ( ! $$self{'Specifications'} ) {
-		@{$$self{'Specifications'}} = openprint::FoldSpecification::find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
+		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
     } # end if
 
     if ( ! @{$$self{'Specifications'}} ) {

@@ -12,14 +12,17 @@ require sql;
 my $dbh;
 
 sub db_connect {
-	return $dbh = sql::open_sql( $log, 
-	(
-		'host'		=>	$r->dir_config('mail_db_hostname'),
-		'database'	=>	$r->dir_config('mail_db_name'),
-		'login'		=>	$r->dir_config('mail_db_username'),
-		'password'	=>	$r->dir_config('mail_db_password'),
-		'driver'	=>	$r->dir_config('mail_db_driver'),
-	) );
+	if ( $config{'mail_db_name'} ) {
+		return $dbh = sql::open_sql( $log, 
+				(
+				 'host'		=>	$config{'mail_db_hostname'},
+				 'database'	=>	$config{'mail_db_name'},
+				 'login'	=>	$config{'mail_db_username'},
+				 'password'	=>	$config{'mail_db_password'},
+				 'driver'	=>	$config{'mail_db_driver'},
+				) );
+	} # end if;
+	return;
 } # end sub connect
 
 sub set_password {
@@ -34,11 +37,13 @@ sub get_vacation {
 	my ( $email ) = @_;
 
 	$dbh = db_connect() if ! $dbh; 
-
-	my ( $subject, $message ) = sql::execute( $log, $dbh, q{SELECT subject, body FROM vacation WHERE email=?}, $email );
-	if ( $message or $subject ) {
-		return 1, $subject, $message;
+	if ( $dbh ) {
+		my ( $subject, $message ) = sql::execute( $log, $dbh, q{SELECT subject, body FROM vacation WHERE email=?}, $email );
+		if ( $message or $subject ) {
+			return 1, $subject, $message;
+		} # end if
 	} # end if
+	return;	
 } # end sub get_vacation
 
 sub start_vacation {

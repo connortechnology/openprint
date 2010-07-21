@@ -33,7 +33,7 @@
 			} elsif ( $$variable{'Order'}->status() eq 'Cancelled' ) {
 			} # end if
 			if ( $$variable{'AmountOutstanding'} ) {
-				my @Payments = openprint::PaymentType::find();
+				my @Payments = openprint::PaymentType->find();
 				if ( @Payments == 1 and $Payments[0]->name() eq 'PayPal' ) {
 					$html .= '<a href="/payment/make.html?order_id='.$$variable{'Order'}->id().'&amp;btnFunction=SetExpressCheckOut"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif" alt="ExpressCheckOut"/></a>';
 				} else {

@@ -16,17 +16,15 @@
 	return $html;
 ) ?>
 <? if ( @{$$variable{'pending_drops'}} ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <script type="text/javascript">
 // <![CDATA[
 	drops.push("<? echo ( join('","', @{$$variable{'pending_drops'}} ) ) ?>");
 <? if ( $r->uri() =~ /_pending/ ) ?>
-	for ( var i = 0; i < drops.length; i += 1 ) {
-		if ( $(drops[i]) ) {
-			Sortable.create(drops[i], {dropOnEmpty:true,containment:drops,constraint:false, onUpdate:dropfunction });
-		} // end if
-	} // end foreach id in drops
+	setup_drops();
 	setup_dates();
 <? endif ( $r->uri() =~ /_pending/ ) ?>
 // ]]>
 </script>
+<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 <? endif ( @{$$variable{'pending_drops'}} ) ?>

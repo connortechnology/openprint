@@ -1,21 +1,19 @@
 package openprint::Invoice_Interest;
 @ISA = qw(openprint::Object);
 
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
+require sql;
+
+use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
-
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 $table = 'invoice_interests';
 $serial = 'invoice_interests_id_seq';
 
-require sql;
+$debug = 0;
 
 %fields = (
 	'id'				=>	'id',
@@ -36,96 +34,6 @@ require sql;
 	'amount'		=>	0,
 );
 
-sub find {
-	my %params = @_;
-
-	my $sql = 'SELECT * FROM ' . $table . ' WHERE 1>0';
-	my @values;
-	if ( $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= q{ AND id=?};
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'invoice_id'} ) {
-		if ( ref $params{'invoice_id'} eq 'ARRAY' ) {
-			$sql .= q{ AND invoice_id IN (}.join(',', map {'?'} @{$params{'invoice_id'}} ).')';
-			push @values, @{$params{'invoice_id'}};
-		} else {
-			$sql .= q{ AND invoice_id=?};
-			push @values, $params{'invoice_id'};
-		} # end if
-	} # end if
-
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= ' AND created_on >= ?';
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= ' AND created_on <= ?';
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= ' AND ( updated_on BETWEEN ? AND ? )';
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= ' AND updated_on >= ?';
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= ' AND updated_on <= ?';
-		push @values, $params{'updated_on_end'};
-	} 
-	if ( $params{'updated_on_>'} ) {
-		$sql .= ' AND updated_on > ?';
-		push @values, $params{'updated_on_>'};
-	} 
-	if ( $params{'updated_on_<'} ) {
-		$sql .= ' AND updated_on < ?';
-		push @values, $params{'updated_on_<'};
-	} # end if
-
-	if ( $params{'compounded_on_start'} and $params{'compounded_on_end'} ) {
-		$sql .= ' AND ( compounded_on BETWEEN ? AND ? )';
-		push @values, @params{'compounded_on_start','compounded_on_end'};
-	} elsif ( $params{'compounded_on_start'} ) {
-		$sql .= ' AND compounded_on >= ?';
-		push @values, $params{'compounded_on_start'};
-	} elsif ( $params{'compounded_on_end'} ) {
-		$sql .= ' AND compounded_on <= ?';
-		push @values, $params{'compounded_on_end'};
-	} 
-	if ( $params{'compounded_on_>'} ) {
-		$sql .= ' AND compounded_on > ?';
-		push @values, $params{'compounded_on_>'};
-	} # end if
-	if ( $params{'compounded_on_<'} ) {
-		$sql .= ' AND compounded_on < ?';
-		push @values, $params{'compounded_on_<'};
-	} 
-	if ( $params{'compounded_on'} ) {
-		$sql .= ' AND compounded_on = ?';
-		push @values, $params{'compounded_on'};
-	} # end if
-
-	if ( $params{'order'} ) {
-		$sql .= " ORDER BY $params{'order'}";
-	} # end if
-
-	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$log->warn("Error loading Invoice_Interest: ($sql) (@values)" . $dbh->errstr );
-		return;
-	} elsif ($debug ) {
-		$log->debug("openprint::Invoice_Interest::find($sql) (@values) " . @$data . ' records');
-	} # end if
-	return map { new openprint::Invoice_Interest( $_->{id}, $_ ); } @$data;
-} # end sub find
-
 sub save {
 	my ( $self, $data ) = @_;
 	my $ac = sql::start_transaction( $dbh );
@@ -135,11 +43,5 @@ sub save {
 	return $error;
 } # end sub save
 
-sub Invoice {
-	return new openprint::Invoice( $_[0]{invoice_id} );
-} # end sub Order
-
 1;
-
 __END__
-~       

@@ -1,7 +1,7 @@
 <? eval ( $$variable{'error'} = ''; ) ?>
 <? if ( $param{'txtCompanyName'} ) ?>
 <? eval ( 
-	if ( openprint::Company::find( 'name'=>$param{'txtCompanyName'} ) ) {
+	if ( openprint::Company->find( 'name'=>$param{'txtCompanyName'} ) ) {
 		$$variable{'error'} = 'A company with that name aready exists.  Please select it from the dropdown, or change the name of the company below.';
 	} else {
 		my $Company = new openprint::Company();

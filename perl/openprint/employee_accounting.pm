@@ -24,7 +24,7 @@ use vars qw( $r $log $dbh %variable %param %session %config);
 sub search {
 	if ( $param{'btnFunction'} eq 'Go' ) {
         if ( $param{'StartDocket'} ) {
-            my @orders = openprint::Order::find('docket'=>$param{'StartDocket'},'id'=>$param{'order_id'}, 'invoice_id'=>$param{'invoice_id'} );
+            my @orders = openprint::Order->find('docket'=>$param{'StartDocket'},'id'=>$param{'order_id'}, 'invoice_id'=>$param{'invoice_id'} );
             if ( @orders == 1 ) {
                 $param{'order_id'} = $orders[0]->id();
                 $variable{'Redirect'} = '/employee/accounting/details.html';
@@ -203,7 +203,7 @@ sub stock {
 	require openprint::ManifestContent;
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		foreach my $Type ( openprint::Manifest_Content_Type::find('cost'=>undef) ) {
+		foreach my $Type ( openprint::Manifest_Content_Type->find('cost'=>undef) ) {
 			$param{'cost-'.$Type->id()} =~ s/[^\d\.]//g;
 			if ( $param{'units-'.$Type->id()} eq '/lb' ) {
 				$param{'cost-'.$Type->id()} *= 100;
@@ -268,9 +268,9 @@ sub credit_applications {
 			my $Me = new openprint::User( $variable{'UserIndex'} );
 
 			$params{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/credit_change_notification.html' );
-			$params{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$params{'ReplacementText'}, \%params );
+			$params{'ReplacementText'} = ssi::variable_substitution( \$params{'ReplacementText'}, \%params );
 			$_ = misc::load_file( $log, $config{'SkinPath'}.'/email_template.html' );
-			my $template = ssi::variable_substitution( $r, $log, $dbh, \$_, \%params );
+			my $template = ssi::variable_substitution( \$_, \%params );
 			my %mail = (
 					SMTP	=> $config{'Mail Server'},
 					FROM	=> $config{'AdministratorEmail'},

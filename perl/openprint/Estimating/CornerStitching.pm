@@ -17,7 +17,6 @@
 package openprint::Estimating::CornerStitching;
 use strict;
 
-require openprint::project;
 require openprint::Equipment;
 require openprint::service;
 
@@ -94,7 +93,7 @@ sub calc {
 	my @possible_equipment;
 
 	my $error = '';
-	my @all_equipment = openprint::Equipment::find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 

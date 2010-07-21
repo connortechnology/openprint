@@ -51,7 +51,7 @@ Current Project ID: <? echo ( $session{'project_id'} ) ?>
 </textarea>
 	</p>
 	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Send', 'send.gif', "LoadContent('BugReport','/bug_report.html', Serialize(bug_report) );", '', 'Send' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Send', 'send.gif', q`LoadContent('BugReport','/bug_report.html', $('bug_report').serialize() );`, '', 'Send' ); ) ?>
 		<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'contentWin.destroy();', '', 'Cancel' ); ) ?>
 	</p>
 	<input type="hidden" name="btnFunction" value="Send"/>

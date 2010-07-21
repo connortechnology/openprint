@@ -1,53 +1,56 @@
-<div class="error"><?error?></div>
-<div class="information"><?information?></div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" action="rfidtag_details.html" method="post">
-	<fieldset>
-		<p>
-			<label for="rfidtag_id">RFID #:</label>
-			<input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="16"/>
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "f1.submit();", '', 'Go' ) ) ?>
-		</p>
-	</fieldset>
+	<table>
+		<tr>
+			<td>RFID#</td>
+			<td>Skid#</td>
+			<td></td>
+		</tr><tr>
+			<td><input type="text" id="rfidtag_id" name="rfidtag_id" onkeypress="return input_handler(this, event);" onchange="this.form.skid_id.value='';change_handler(this);if(this.value ){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="16" onkeyup="this.form.skid_id.value='';" /></td>
+			<td><input type="text" id="skid_id" name="skid_id" onkeypress="return input_handler(this, event);" onchange="change_handler(this);if(this.value.length >= <? echo ( ($_) = sql::execute( undef, undef, 'SELECT MIN(id) FROM Skids' ); return 1*(length $_); ) ?> ){this.form.submit();}" onfocus="if(this.value.length>16){this.value='';}" size="7" /></td>
+			<td><? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "f1.submit();", '', 'Go' ) ) ?></td>
+		</tr>
+	</table>
 </form>
 <hr/>
 <? if ( $$variable{'RFIDTag'} ) ?>
 <form id="f2" name="f2" action="rfidtag_details.html" method="post">
 	<input type="hidden" name="rfidtag_id" value="<? echo ( $$variable{'RFIDTag'}->id() ) ?>" />
 	<fieldset>
-		<p class="buttons">
+		<table>
+			<tr><td>RFID #</td><td>Skid #</td><td>Seen: <? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'RFIDTag'}->updated_on() ) ); ) ?></td></tr>
+			<tr>
+			<td><? echo ( $$variable{'RFIDTag'}->id_short() ) ?></td>
+			<td><? echo ( $$variable{'RFIDTag'}->skid_id() ) ?></td>
+			<td>
 			<? echo ( join('',
 						ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f2.btnFunction.value='Save';f2.submit();", '', 'Save' ),
 						ssi::writeButton( $log, $dbh, 'Clear', 'clear.gif', 'clearForm(f2);', '', 'Clear' ),
-						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
+						ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', "f2.btnFunction.value='';f2.submit();", '', 'Reload' ),
 						); ) ?>
-		</p>
-		<p>
-			<label>Tag #:</label>
-			<? echo ( $$variable{'RFIDTag'}->id() ) ?>
-		</p>
+			</td>
+		</tr>		
+		</table>
 		<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
-		<p>
-			<label for="skid_id">Skid #:</label>
-			<input type="text" id="skid_id" name="skid_id" value="<? echo ( $$variable{'RFIDTag'}->skid_id() ) ?>" onkeypress="return input_handler(this, event);" onchange="change_handler(this);" />
+		<p class="verification_code">
+			<label for="verification_code">
+			<? echo ( ssi::writeButton( $log, $dbh, 'vpopulate', '', "f2.verification_code.value='".Date::Format::time2str( '%Y%m%d', time )."';", '', 'Verification:' ); ) ?>
+</label>
+			<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" size="8"/>
 		</p>
-		<p>
-			<label for="verification_code">Verification:</label>
-			<input type="text" id="verification_code" name="verification_code" onchange="change_handler(this);" onkeypress="return input_handler(this,event);" />
-		</p>
-		<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
-		<p>
+<? eval ( $$variable{'Skid'} = $$variable{'RFIDTag'}->Skid() ) ?>
+<!--#include virtual="_current_contents.html"-->
+<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
+		<p class="location_id">
 			<label for="location_id">Location:</label>
 			<select id="location_id" name="location_id">
 				<option value="">select</option>
 				<? echo ( 
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)')], $openprint::param{'location_id'} ? $openprint::param{'location_id'} : $$variable{'RFIDTag'}->location_id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)')], $param{'location_id'} ? $param{'location_id'} : $$variable{'RFIDTag'}->location_id() );
 					) ?>
 			</select>
 		</p>
-<? if ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
-<? eval ( $$variable{'Skid'} = $$variable{'RFIDTag'}->Skid() ) ?>
-<!--#include virtual="_current_contents.html"-->
-<? endif ( $$variable{'RFIDTag'}->type() eq 'Skid' ) ?>
+			
 		<div class="rightColumn" id="Map">
 			<!--#include virtual="_map.html"-->
 		</div>

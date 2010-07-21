@@ -4,7 +4,6 @@ use strict;
 
 require openprint::Equipment;
 require openprint::pricing;
-require openprint::project;
 
 require openprint::Estimating::Cutting;
 require openprint::Estimating::Counting;
@@ -46,7 +45,7 @@ sub init_cache {
 sub get_index_by_id {
 	my ( $id ) = @_;
 	if ( ! %cache_index_by_id ) {
-		%cache_index_by_id = map { $_->name(), $_->id() } openprint::Service::find();
+		%cache_index_by_id = map { $_->name(), $_->id() } openprint::Service->find();
 	} # end if
 	return $cache_index_by_id{$id};
 } # end sub get_index_by_id
@@ -55,7 +54,7 @@ sub get_id_by_index {
 	my ( $log, $dbh, $index ) = @_;
 
 	if ( ! %cache_id_by_index ) {
-		%cache_id_by_index = map { $_->id(), $_->name() } openprint::Service::find();
+		%cache_id_by_index = map { $_->id(), $_->name() } openprint::Service->find();
 	} # end if
 
 	return $cache_id_by_index{$index};
@@ -274,7 +273,6 @@ sub auto_calculate {
 			push @{$$services{'Paper'}}, $Project->add_service( 'Paper' );
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Paper");
 
 	if ( openprint::Estimating::Cutting::neccessary( $Project ) ) {
 		if ( ! $$services{'Cutting'} ) {
@@ -283,7 +281,6 @@ $openprint::log->debug("Apres Paper");
 			} # end if
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Cutting");
 
 	if ( openprint::Estimating::PerfectBound::neccessary( $Project ) ) {
 		if ( ! $$services{'PerfectBound'} ) {
@@ -294,7 +291,6 @@ $openprint::log->debug("Apres Cutting");
 			openprint::print_project::delete_service( $log, $dbh, $project_index, $si );
 		} # end while
 	} # end if
-$openprint::log->debug("Apres PF");
 
 	if ( openprint::Estimating::Stitching::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) ) {
@@ -331,7 +327,6 @@ $openprint::log->debug("Apres PF");
 			} # end foreach
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Collat");
 
 # Proofs
 	if ( ! ( $$services{'Proofs'} or $$services{'NoPrinting'} ) ) {
@@ -343,7 +338,6 @@ $openprint::log->debug("Apres Collat");
 			openprint::Estimating::Proofs::insert_proof_defaults( $log, $dbh, $project_index, $si );
 		} # end if
 	} # end foreach
-$openprint::log->debug("Apres porrat");
 
 	if ( ! $$services{'BulkSkids'} ) {
 		if ( openprint::Estimating::Skids::neccessary( $Project, 'BulkSkids' ) ) {
@@ -355,7 +349,6 @@ $openprint::log->debug("Apres porrat");
 			push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' );
 		} # end if
 	} # end if
-$openprint::log->debug("Apres Skdis");
 
 	if ( ! $$services{'PlainCartons'} ) {
 		if ( openprint::Estimating::Skids::neccessary( $Project, 'PlainCartons' ) ) {
@@ -409,7 +402,7 @@ $openprint::log->debug("Apres Skdis");
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
 	} # end while service_type
-	foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+	foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 		if ( $$services{$ServiceType->name()} ) {
 			foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
 				$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $ServiceType->type() );
@@ -540,6 +533,9 @@ sub get_runtime {
 
 sub summary {
 	my ( $Project, $service_id, $qty_index ) = @_;
+
+	my @service_ids = split(',', $service_id );
+	$service_id = $service_ids[0];
 
 	$Project = new openprint::Project( $Project ) if ref $Project ne 'openprint::Project';
 	my $services = $Project->services();

@@ -18,7 +18,6 @@ package openprint::Estimating::Mounting;
 use POSIX qw{ ceil };
 use strict;
 
-require openprint::project;
 require openprint::service;
 
 require sql;
@@ -80,7 +79,7 @@ sub calc {
 
 	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
 	my %MaterialPrice;
-	if ( my @Materials = openprint::Material::find('name'=>$$specs{'MountingType'}) ) {
+	if ( my @Materials = openprint::Material->find('name'=>$$specs{'MountingType'}) ) {
 		%MaterialPrice = $Materials[0]->get_price( undef, undef );
 	} # end if
 
@@ -109,7 +108,7 @@ sub calc {
 				my $area = $$specs{'txtFinalWidth'} * $$specs{'txtFinalHeight'};
 	
 				# have to reload price to get one with quantity discounts
-				if ( my @Materials = openprint::Material::find('name'=>$$specs{'MountingType'}) ) {
+				if ( my @Materials = openprint::Material->find('name'=>$$specs{'MountingType'}) ) {
 					%MaterialPrice = $Materials[0]->get_price( $area, undef );
 				} # end if
 				my $materialprice = $MaterialPrice{Price} * $area;

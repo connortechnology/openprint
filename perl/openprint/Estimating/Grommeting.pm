@@ -119,7 +119,7 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( "Service: \$\%.2f \%s = \$\%.2f<br/>", @servicePrice{'Price','units','Total'} );
 		} # end if
 		$price = $makeReadyPrice + $servicePrice{'Total'};
-		if ( my @Materials = openprint::Material::find('name'=>'Grommets') ) {
+		if ( my @Materials = openprint::Material->find('name'=>'Grommets') ) {
 			my %materialPrice = $Materials[0]->get_price( $qty * $$specs{'Quantity'}, undef );
 			if ( %materialPrice ) {
 				$materialPrice{'Total'} = $materialPrice{'Price'} * $$specs{'Quantity'} * $qty;

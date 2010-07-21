@@ -10,7 +10,7 @@
 	);
 	$sql{'csr_id'} = $param{'CSR'};
 	
-	@{$$variable{'PROJECTS'}} = openprint::Project::find(%sql);
+	@{$$variable{'PROJECTS'}} = openprint::Project->find(%sql);
 ) ?>
 Results for <? echo ( 
 	$$variable{'FastCount'} = 0;

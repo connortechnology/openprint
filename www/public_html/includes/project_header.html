@@ -58,7 +58,7 @@
 						<label>Predefined For:</label>
 						<? echo (
 							my $html = '';
-							foreach my $Product ( openprint::Product::find('project_id'=>$$variable{'Project'}->id()) ) {
+							foreach my $Product ( openprint::Product->find('project_id'=>$$variable{'Project'}->id()) ) {
 								$html .= $Product->name() . '<br/>';
 							} # end foreach Product
 							return $html;

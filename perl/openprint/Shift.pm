@@ -47,14 +47,9 @@ $serial = 'shifts_id_seq';
 	'updated_on'		=>	'NOW()',
 );
 
-sub find_one {
-	my %params = @_;
-	$params{'limit'} = 1;
-	my @Results = find(%params);
-	return $Results[0] if @Results;
-} # end sub find_one
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 
 	my @values;
@@ -212,10 +207,10 @@ sub name {
 } # end sub name
 
 sub schedule {
-	return openprint::press_schedule::find( 'starttime_start'=>$_[0]{'starttime'}, 'starttime_end'=>$_[0]{'endtime'}, 'equipment_id'=>$_[0]{'equipment_id'} );
+	return openprint::press_schedule->find( 'starttime_start'=>$_[0]{'starttime'}, 'starttime_end'=>$_[0]{'endtime'}, 'equipment_id'=>$_[0]{'equipment_id'} );
 } # end sub schedule
 sub Schedule {
-	return openprint::ScheduledJob::find( 
+	return openprint::ScheduledJob->find( 
 			'starttime_null'	=>	$_[0]{'starttime'} ? 0 : 1,
 			'starttime_>='		=>	$_[0]{'starttime'}, 
 			'starttime_<'		=>	$_[0]{'endtime'}, 
@@ -247,7 +242,7 @@ sub assign_operator_id {
 $log->debug( "assign_operator_id $$self{'starttime'} => $Y, $M, $D, $h, $m, $s");
 	if ( Date::Calc::check_date( 1970, 1, $D ) and Date::Calc::check_time( $h, $m, $s ) ) {
 		my $time = Date::Calc::Mktime( 1970, 1, $D, $h, $m, $s );
-		my $Shift = openprint::Equipment_Shift::find_one(
+		my $Shift = openprint::Equipment_Shift->find_one(
 				'equipment_id'	=>	$$self{'equipment_id'}, 
 				'starttime'		=>	Date::Format::time2str( '%H:%M:%S', $time ),
 				);
@@ -337,10 +332,10 @@ sub get_from_ul_id {
 
 	my $Shift;
 	if ( $shift_name and $date ) {
-		$Shift = openprint::Shift::find_one( 'equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>$date );
+		$Shift = openprint::Shift->find_one( 'equipment_id'=>$equipment_id, 'name'=>$shift_name, 'startdate'=>$date );
 if ( 0 ) {
 		if ( ! $Shift ) {
-			if ( my $ES = openprint::Equipment_Shift::find_one('equipment_id'=>$equipment_id, 'name'=>$shift_name ) ) {
+			if ( my $ES = openprint::Equipment_Shift->find_one('equipment_id'=>$equipment_id, 'name'=>$shift_name ) ) {
 				$Shift = $ES->emanantise( Date::Parse::str2time($date) );
 			} # end if
 		} # end if
@@ -370,7 +365,7 @@ sub Next {
 	my $Next = find_one('starttime_>=' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
 $log->debug( $Next->to_string() );
 	if ( ! $Next ) {
-		my $ES = openprint::Equipment_Shift::find_one(
+		my $ES = openprint::Equipment_Shift->find_one(
 				'equipment_id'	  =>  $$self{'equipment_id'},
 				'starttime_start'   =>  $self->Shift()->Equipment_Shift()->endtime(),
 				'order'			 =>  'starttime',

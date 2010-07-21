@@ -174,7 +174,7 @@ sub load {
 
 	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
 	if ( ! $$self{'Press'} ) {
-		my @Presses = openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index});
+		my @Presses = openprint::Equipment->find('strid'=>$$specs{'ddmPress'.$qty_index});
 		$$self{'Press'} =  $Presses[0];
 	} # end if
 

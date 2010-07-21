@@ -2,7 +2,7 @@ package openprint::bindery_schedule;
 use strict;
 
 require openprint::Project;
-require openprint::ProjectService;
+require openprint::Project_Service;
 require openprint::service;
 
 use vars qw( @columns %services );
@@ -145,15 +145,15 @@ sub get_lis {
 
 	if ( @schedule ) {
 		if ( my @projects = map { $$_{'projectindex'} } @schedule ) {
-			if ( my @companies = map { $_->company_id() } openprint::Project::find( 'id'=>\@projects ) ) {
-				openprint::Company::find( 'id'=>\@companies );
+			if ( my @companies = map { $_->company_id() } openprint::Project->find( 'id'=>\@projects ) ) {
+				openprint::Company->find( 'id'=>\@companies );
 			} # end if
 		} # end if
 	} # end if
 
 	foreach my $row ( @schedule ) {
 		my $Project = new openprint::Project( $$row{'projectindex'} );
-		my $Service = new openprint::ProjectService( $$row{'serviceindex'} );
+		my $Service = new openprint::Project_Service( 'project_id'=>$$row{'projectindex'}, 'id'=>$$row{'serviceindex'}} );
 		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, @$row{'projectindex','serviceindex'} );
 
 		my $colour = 'white';
@@ -219,7 +219,7 @@ sub get_lis {
 				$html .= '<br/>';
 				$html .= sprintf(q{<a href="#" onClick="icon_action(%1$d,%2$d,'%3$s','%4$s');return false;"><img class="icon" name="%1$d%3$sicon" src="/images/icons/bindery/%3$s-grey.gif" /></a>},@$row{'projectindex','serviceindex'}, $service, openprint::bindery_schedule::get_column($service) );
 			} else {
-				my $Icon_Service = new openprint::ProjectService( $services{$service}[0] );
+				my $Icon_Service = new openprint::Project_Service( {'project_id'=>$Project->id(), 'id'=>$services{$service}[0]} );
 
 				my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $Project->id(), $services{$service}[0] );
 				if ( ! $specs{'RunTime'} ) {
@@ -278,7 +278,7 @@ sub move_up {
 
 	my @results;
 	my %sorting;
-	my %service_types = map { $_->id(), $_->name() } openprint::ServiceType::find();
+	my %service_types = map { $_->id(), $_->name() } openprint::ServiceType->find();
 	foreach my $row ( find( 'project_id'=> $p_id, 'statuses'=>['calculated','uncalculated','Ordered'] ) ) {
 		my $column = get_column($service_types{$$row{'servicetype_id'}} );
 		if ( ! $column ) {

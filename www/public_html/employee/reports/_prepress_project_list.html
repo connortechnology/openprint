@@ -10,7 +10,7 @@
 			( $session{'user_type'} ne 'A' )
 			and ! ( openprint::usergroup::is_user_in( ['Estimating', 'Prepress'], $session{'user_id'} ) )
 		   ) {
-			$sql{'company_id'} = [ map { $_->id() } openprint::Company::find('salesrep_id'=>$session{'user_id'}) ];
+			$sql{'company_id'} = [ map { $_->id() } openprint::Company->find('salesrep_id'=>$session{'user_id'}) ];
 		} # end if
 
 		
@@ -23,7 +23,7 @@
 		$sql{'company_id'} = $param{'ddmCustomer'} if $param{'ddmCustomer'};
 		$sql{'order_id_is_null'} = 0;
 		$sql{'order'} = 'lngDocketnumber';
-		@{$$variable{'PROJECTS'}} = openprint::Project::find(%sql);
+		@{$$variable{'PROJECTS'}} = openprint::Project->find(%sql);
 	} # end if
 ) ?>
 <? if ( @{$$variable{'PROJECTS'}} ) ?>

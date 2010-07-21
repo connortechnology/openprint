@@ -5,7 +5,7 @@
 	<? echo (
 		my $html;
 		my $services = $$variable{'Project'}->services();
-		my @ShippingTypes = openprint::ServiceType::find('category'=>'Shipping','order'=>'lower(name)');
+		my @ShippingTypes = openprint::ServiceType->find('category'=>'Shipping','order'=>'lower(name)');
 
 		foreach my $ShippingType ( @ShippingTypes ) {
 			$html .= sprintf(q`<input type="checkbox" id="ShippingType%1$d%2$s" name="ShippingType%1$d" value="%2$s" onclick="if( !this.checked) {$('ShippingQuestions%1$d%2$s').innerHTML='';} else if ( ! $('ShippingQuestions%1$d%2$s').innerHTML ) { new Ajax.Updater('ShippingQuestions%1$d%2$s','/main/order/_%2$s.html', { method: 'get', parameters:{ project_id: %1$d, service_id: %5$d, ServiceTypeName: '%2$s' } } ); }" %4$s /><label class="radio" for="ShippingType%1$d%2$s">%3$s</label>`,

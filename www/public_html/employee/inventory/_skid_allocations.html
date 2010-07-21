@@ -9,7 +9,7 @@
 	</tr>
 	<? echo (
 		my $html;
-		my @Allocations = openprint::PaperAllocation::find( 'skid_id'=>$$variable{'Skid'}->id(), 'order'=>'created_on' );
+		my @Allocations = openprint::PaperAllocation->find( 'skid_id'=>$$variable{'Skid'}->id(), 'order'=>'created_on' );
 
 		my $rowclass;
 		foreach my $Allocation ( @Allocations ) {

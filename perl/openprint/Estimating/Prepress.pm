@@ -17,7 +17,6 @@
 package openprint::Estimating::Prepress;
 use strict;
 
-require openprint::project;
 require openprint::service;
 
 require sql;

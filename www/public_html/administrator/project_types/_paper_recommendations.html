@@ -5,8 +5,8 @@
 <? echo (
 	my $html;
 	
-	my @all_papers = openprint::Paper::find('order'=>'name,finish,colour,weight,width,height');
-	my @recommended_papers = openprint::Paper::find( 'project_type_id' => $$variable{'ProjectType'}->id(),'order'=>'name,finish,colour,weight,width,height' );
+	my @all_papers = openprint::Paper->find('order'=>'name,finish,colour,weight,width,height');
+	my @recommended_papers = openprint::Paper->find( 'project_type_id' => $$variable{'ProjectType'}->id(),'order'=>'name,finish,colour,weight,width,height' );
 	foreach my $Paper ( @recommended_papers ) {
 		$html .= '<tr><td>'.$Paper->to_string().'</td><td><input type="checkbox" name="Paper'.$Paper->id().'" value="'.$Paper->id().'" checked="checked" /></td></tr>';
 

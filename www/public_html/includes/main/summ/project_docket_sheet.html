@@ -242,18 +242,7 @@
 			} # end if
 			$html .= '</td><td class="docketText">';
 
-			foreach my $side ( 'SideOne','SideTwo' ) {
-				my @colours = openprint::Estimating::Printing::get_colours( $sig_specs, $side );
-				$html .= scalar @colours;
-				$html .= '+AQ (Gloss)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Gloss' );
-				$html .= '+AQ (Matte)' if ( $$sig_specs{'rdbAqueous'.$side} eq 'Matte' );
-				$html .= '+Varnish (Spot Gloss)' if ( $$sig_specs{'chkVarnishSpotGloss'.$side} );
-				$html .= '+Varnish (Spot Matte)' if ( $$sig_specs{'chkVarnishSpotMatte'.$side} );
-				$html .= '+Varnish (Dry Trap)' if ( $$sig_specs{'chkVarnishDryTrap'.$side} );
-				$html .= '+Varnish (Overall Gloss)' if ( $$sig_specs{'chkVarnishOverallGloss'.$side} );
-				$html .= '+Varnish (Overall Matte)' if ( $$sig_specs{'chkVarnishOverallMatte'.$side} );
-				$html .= '/' if $side eq 'SideOne'; 
-			} # end foreach side;
+			$html .= openprint::Estimating::Printing::get_colour_description( $sig_specs );
 
 			if ( $$sig_specs{'UsePress'} eq 'Web1' ) {
 				$html .= '<br/><table>';
@@ -275,23 +264,23 @@ $inkCoverage{$colour} = 100;
 					} # end if
 					my $InkMaterial;
 					if ( sets::isin( $colour, ['Cyan','Magenta','Yellow','Black'] ) ) {
-						if ( my @materials = openprint::Material::find('name'=>$colour.'Ink') ) {
+						if ( my @materials = openprint::Material->find('name'=>$colour.'Ink') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} elsif ( sets::isin( $colour, ['Overall Varnish Matte', 'Spot Varnish Matte' ] ) ) {
-						if ( my @materials = openprint::Material::find('name'=>'MatteVarnish') ) {
+						if ( my @materials = openprint::Material->find('name'=>'MatteVarnish') ) {
 						$InkMaterial = $materials[0];
-						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
+						} elsif ( my @materials = openprint::Material->find('name'=>'Varnish') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} elsif ( sets::isin( $colour, ['Overall Varnish Gloss', 'Spot Varnish Gloss' ] ) ) {
-						if ( my @materials = openprint::Material::find('name'=>'GlossVarnish') ) {
+						if ( my @materials = openprint::Material->find('name'=>'GlossVarnish') ) {
 						$InkMaterial = $materials[0];
-						} elsif ( my @materials = openprint::Material::find('name'=>'Varnish') ) {
+						} elsif ( my @materials = openprint::Material->find('name'=>'Varnish') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} else {
-						if ( my @materials = openprint::Material::find('name'=>'PMSInk') ) {
+						if ( my @materials = openprint::Material->find('name'=>'PMSInk') ) {
 						$InkMaterial = $materials[0];
 						} # end if
 					} # end if

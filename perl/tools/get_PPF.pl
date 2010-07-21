@@ -27,7 +27,7 @@ my %params = (
 $params{'signature'} = $ARGV[1] if $ARGV[1];
 $params{'side'} = $ARGV[2] if $ARGV[2];
 $params{'order'} = 'created_on DESC';
-foreach my $PPF ( openprint::CIP3_PPF::find(%params) ) {
+foreach my $PPF ( openprint::CIP3_PPF->find(%params) ) {
 	my $docket = $PPF->docket();
 	my $filename = sprintf('%dsg%dsd%s', $PPF->get('docket','signature','side') );
 $log->warn("Compressed?" . $PPF->compressed() );

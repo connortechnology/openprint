@@ -1,11 +1,3 @@
-<? eval (
-	if ( ! exists $session{'/employee/inventory/skids.html?withrfid'} ) {
-		$param{'withrfid'} = $session{'/employee/inventory/skids.html?withrfid'} = 1;
-	} # end if
-	if ( ! exists $session{'/employee/inventory/skids.html?withoutrfid'} ) {
-		$param{'withoutrfid'} = $session{'/employee/inventory/skids.html?withoutrfid'} = 0;
-	} # end if
-) ?>
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <!--#include virtual="/includes/error_reporting.html"-->
 Please select a Skid to view/edit.<br>
@@ -22,47 +14,49 @@ Please select a Skid to view/edit.<br>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Docket:</label>
-			<input type="text" name="Docket" size="6" value="<? echo ( $session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2').serialize() );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2').serialize() );",'','Go' ); ) ?>
+			<input type="text" name="Docket" size="6" value="<? echo ( $session{'/employee/inventory/skids.html?Docket'} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2') );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );",'','Go' ); ) ?>
 		</p>
 		<p>
 			<label>Verification:</label>
-			<input type="text" name="verification_code" size="9" value="<? echo ( $session{'/employee/inventory/skids.html?verification_code'} ) ?>" onkeyup="" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2').serialize() );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2').serialize() );",'','Go' ); ) ?>
+			<input type="text" name="verification_code" size="9" value="<? echo ( $session{'/employee/inventory/skids.html?verification_code'} ) ?>" onkeyup="" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){LoadContent( 'Results', '/employee/inventory/_skids_results.html', $('f2') );}" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );",'','Go' ); ) ?>
 		</p>
 		<hr/>
-		<? eval (
-			if ( ! $session{'/employee/inventory/skids.html?created_on_start_year'} ) {
-				@session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'} = Date::Calc::Today();
-			} # end if
-			if ( ! $session{'/employee/inventory/skids.html?created_on_end_year'} ) {
-				@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} = Date::Calc::Today();
-			} # end if
-			@$variable{'created_on_start_years','created_on_start_months','created_on_start_days','Start'} = ssi::get_dates( $log, $dbh, 
-				@session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'}
-				);
-			@$variable{'created_on_end_years','created_on_end_months','created_on_end_days','End'} = ssi::get_dates( $log, $dbh, 
-				@session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'}
-				);
-		) ?>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_start', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/skids.html?created_on_start_year','/employee/inventory/skids.html?created_on_start_month','/employee/inventory/skids.html?created_on_start_day'} ) ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_start' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'created_on_start_today', 't.gif', 'set_today( f2.created_on_start_year, f2.created_on_start_month, f2.created_on_start_day );', '', 'T' ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_end', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/skids.html?created_on_end_year','/employee/inventory/skids.html?created_on_end_month','/employee/inventory/skids.html?created_on_end_day'} ) ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'created_on_end' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'created_on_end_today', 't.gif', 'set_today( f2.created_on_end_year, f2.created_on_end_month, f2.created_on_end_day );', '', 'T' ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Last Updated:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'updated_on_start', $session{'/employee/inventory/skids.html?updated_on_start_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/skids.html?updated_on_start_year','/employee/inventory/skids.html?updated_on_start_month','/employee/inventory/skids.html?updated_on_start_day'} ) : ' ' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_start' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'updated_on_start_today', 't.gif', 'set_today( f2.updated_on_start_year, f2.updated_on_start_month, f2.updated_on_start_day );', '', 'T' ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'updated_on_end', $session{'/employee/inventory/skids.html?updated_on_end_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/skids.html?updated_on_end_year','/employee/inventory/skids.html?updated_on_end_month','/employee/inventory/skids.html?updated_on_end_day'} ) : ' ' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'updated_on_end' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'updated_on_end_today', 't.gif', 'set_today( f2.updated_on_end_year, f2.updated_on_end_month, f2.updated_on_end_day );', '', 'T' ); ) ?>
+			</span>
+		</p>
+		<p>
+			<label>Last Seen (RFID):</label>
+			<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_start' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'last_seen_start_today', 't.gif', 'set_today( f2.last_seen_start_year, f2.last_seen_start_month, f2.last_seen_start_day );', '', 'T' ); ) ?>
+			to 
+			</span>
+			<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/inventory/skids.html', 'last_seen_end' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'last_seen_end_today', 't.gif', 'set_today( f2.last_seen_end_year, f2.last_seen_end_month, f2.last_seen_end_day );', '', 'T' ); ) ?>
 			</span>
 		</p>
 		<p>
@@ -79,11 +73,31 @@ Please select a Skid to view/edit.<br>
 			<input type="text" name="fsc_code" size="13" value="<? echo ( $session{'/employee/inventory/skids.html?fsc_code'} ) ?>"  />
 		</p>
 		<p>
-            <label>Empty/Non Empty?</label>
-            <input type="checkbox" id="empty" name="empty" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/skids.html?empty'} eq 'Y' ) ?> />
-            <label class="radio" for="empty">Empty</label>
-            <input type="checkbox" id="notempty" name="notempty" value="Y" <? echo ( 'checked="checked"' if $session{'/employee/inventory/skids.html?notempty'} eq 'Y' or ! exists $session{'/employee/inventory/skids.html?notempty'} ) ?> />
-            <label class="radio" for="notempty">Not Empty</label>
+            <label>Empty?</label>
+            <input type="radio" id="emptyY" name="empty" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?empty'} eq 'Y' ); ) ?> />
+            <label class="radio" for="emptyY">Yes</label>
+            <input type="radio" id="emptyN" name="empty" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?empty'} eq 'N' ); ) ?> />
+            <label class="radio" for="notempty">No</label>
+            <input type="radio" id="emptyB" name="empty" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?empty'} eq 'B' ); ) ?> />
+            <label class="radio" for="emptyB">Both</label>
+		</p>
+		<p>
+            <label>Has Contents?</label>
+            <input type="radio" id="contentsY" name="contents" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contents'} eq 'Y' ); ) ?> />
+            <label class="radio" for="contentsY">Yes</label>
+            <input type="radio" id="contentsN" name="contents" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contents'} eq 'N' ); ) ?> />
+            <label class="radio" for="contentsN">No</label>
+            <input type="radio" id="contentsB" name="contents" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?contents'} eq 'B' ); ) ?> />
+            <label class="radio" for="contentsB">Both</label>
+		</p>
+		<p>
+            <label>Has Manifest?</label>
+            <input type="radio" id="hasmanifestY" name="hasmanifest" value="Y" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?hasmanifest'} eq 'Y' ); ) ?> />
+            <label class="radio" for="hasmanifestY">Yes</label>
+            <input type="radio" id="hasmanifestN" name="hasmanifest" value="N" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?hasmanifest'} eq 'N' ); ) ?> />
+            <label class="radio" for="hasmanifestN">No</label>
+            <input type="radio" id="hasmanifestB" name="hasmanifest" value="B" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?hasmanifest'} eq 'B' ); ) ?> />
+            <label class="radio" for="hasmanifestB">Both</label>
 		</p>
 		<p>
             <label>Allocated?</label>
@@ -102,23 +116,32 @@ Please select a Skid to view/edit.<br>
             <label class="radio" for="notempty">Without RFID</label>
 		</p>
 		<p><label>Type:</label>
-            <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/skids.html?Type'} ) or sets::isin( 'Sheet', split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) ?> />
+            <input type="radio" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?Type'} eq 'Sheet'); ) ?> />
             <label class="radio" for="TypeSheet">Sheet</label>
-            <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( 'checked="checked"' if ( ! $session{'/employee/inventory/skids.html?Type'} ) or sets::isin( 'Roll', split(';', $session{'/employee/inventory/skids.html?Type'} ) ) ) ?> />
+            <input type="radio" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( $session{'/employee/inventory/skids.html?Type'} eq 'Roll' ); ) ?> />
             <label class="radio" for="TypeRoll">Roll</label>
+            <input type="radio" id="TypeBoth" name="Type" value="All" <? echo ( ssi::checked ( $session{'/employee/inventory/skids.html?Type'} eq 'All' or !$session{'/employee/inventory/skids.html?Type'} ); ) ?> />
+            <label class="radio" for="TypeBoth">Both</label>
         </p>
 		<p><label>Location:</label>
 			<select name="location_id">
 				<? echo ( 
-					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location::find('order'=>'lower(name)') );
-
+					my @options = ('','All', 'None', 'None',  map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') );
 					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?location_id'} );
+				) ?>
+			</select>
+		</p>
+		<p><label>Quality:</label>
+			<select name="quality_id">
+				<? echo ( 
+					my @options = ('','All', map { $_->id(), $_->name() } openprint::StockQuality->find('order'=>'lower(shortname)') );
+					ssi::make_drop_down( \@options, $session{'/employee/inventory/skids.html?quality_id'} );
 				) ?>
 			</select>
 		</p>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "AjaxLoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2').serialize() );", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "LoadContent( 'Results', '/employee/inventory/_skids_results.html', \$('f2') );", '', 'Show Results' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f2.reset();', '', 'Reset' ),
 				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', 'skid_details.html', 'Add New Skid' ),
 				); ) ?>

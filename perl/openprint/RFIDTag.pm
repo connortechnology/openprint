@@ -17,7 +17,7 @@ require misc;
 require openprint::RFIDTagType;
 require openprint::Location;
 
-my $debug = 0;
+my $debug = 1;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (
@@ -40,8 +40,8 @@ $serial = 'rfidtags_id_seq';
 	'valid'			=>	0,
 );
 
-# Returns a paper object specified by the parameters
 sub find {
+	my $self = shift;
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;
@@ -76,6 +76,10 @@ sub find {
 	if ( $params{'id_like'} ) {
 		$sql .= ' AND id LIKE ?';
 		push @values, $params{id_like};
+	} # end if
+	if ( $params{'short_id'} ) {
+		$sql .= ' AND id = ?';
+		push @values, sprintf('%.15d', $params{'short_id'} );
 	} # end if
 	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
 		$sql .= ' AND ( created_on BETWEEN ? AND ? )';
@@ -150,6 +154,10 @@ sub save {
 	} # end if
 	$$self{'updated_on'} = 'NOW()';
 
+	if ( $self->type() eq 'Skid' ) {
+		$self->Skid()->save({location_id=>$$self{'location_id'}});
+	} # end if
+
 	delete $$self{'type'};
 	$$self{'updated_on'} = 'NOW()';
 	
@@ -222,7 +230,7 @@ sub skid_id {
 		return;
 	} # end if
 	if ( ! $$self{'skid_id'} ) {
-		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
+		my @Skids = openprint::Skid->find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
 		if ( @Skids ) {
 			$$self{'skid_id'} = $Skids[0]->id();
 		} # end if
@@ -237,7 +245,7 @@ sub Skid {
 		return;
 	} # end if
 	if ( ! $$self{'skid_id'} ) {
-		my @Skids = openprint::Skid::find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
+		my @Skids = openprint::Skid->find('rfidtag_id'=>$$self{'id'},'deleted'=>[0,1]);
 		if ( @Skids ) {
 			$$self{'skid_id'} = $Skids[0]->id();
 		} # end if
@@ -248,12 +256,17 @@ sub Skid {
 sub id_short {
 	my ( $self ) = @_;
 	return '' if ! $$self{'id'};
+	return $$self{'id'} if $self->is_invalid_id();
+
 	my ( $type, $significant ) = $$self{'id'} =~ /^(\d)(\d{14})$/;
 	return 1*$significant;
 } # end sub id_short
 
 sub is_invalid_id {
 	my ( $id ) = @_;
+	if ( ref $id eq 'openprint::RFIDTag' ) {
+		$id = $id->id();
+	} # end if
 
 	if ( length $id != 15 ) {
 		return 'Invalid length.  A valid tag should be 15 characters long. This one is ' . length $id;

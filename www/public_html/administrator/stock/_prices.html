@@ -1,7 +1,7 @@
 <form name="Prices" action="">
 	<? eval ( 
 		$$variable{'Stock'} = new openprint::Paper( $param{'stock_id'} );
-		@{$$variable{'Pricelists'}} = openprint::Pricelist::find('order'=>'lower(name)');
+		@{$$variable{'Pricelists'}} = openprint::Pricelist->find('order'=>'lower(name)');
 		) ?>
 	<input type="hidden" name="width" value="<? echo ( $$variable{'Stock'}->width() ) ?>" />
 	<input type="hidden" name="height" value="<? echo ( $$variable{'Stock'}->height() ) ?>" />

@@ -17,7 +17,7 @@ You may the download the results in CSV (spreadsheet format) to view in a progra
 			<input type="text" onkeyup="filterDDM(this, f1.ddmCustomers);" size="4" />
 			<select name="ddmCustomers" onchange="if(this.options[this.selectedIndex].value != '') f1.submit();">
 				<option value=""> Select a Customer</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find('order'=>'lower(name)')], $param{'ddmCustomers'} ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('order'=>'lower(name)')], $param{'ddmCustomers'} ); ) ?>
 			</select>
 		</p>
 		<p> 
@@ -35,7 +35,7 @@ You may the download the results in CSV (spreadsheet format) to view in a progra
 			<select name="currency_id" size="1">
 			<option value="">All Currencies</option>
 <? echo ( 
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find('order'=>'lower(name)') ], $param{'currency_id'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $param{'currency_id'} );
 ) ?>
 			</select>
 		</p>
@@ -43,7 +43,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::
 			<label>Sales Reps:</label>
 			<select name="salesrep_id" size="1">
 				<option value="">All Employees</option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroups'=>['Sales'], 'order'=>'lower(firstname),lower(lastname)') ], $param{'salesrep_id'} ); ) ?>
+			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroups'=>['Sales'], 'order'=>'lower(firstname),lower(lastname)') ], $param{'salesrep_id'} ); ) ?>
 			</select>
 		</p>
 		<p> 

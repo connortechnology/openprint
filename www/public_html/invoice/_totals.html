@@ -6,18 +6,15 @@
 					<label>Sub Total:</label>
 					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->subtotal() ); ) ?>
 				</li>
-				<? if ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
-				<li class="gst">
-					<label>GST:</label>
-					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->federaltax() ); ) ?>
-				</li>
-				<? endif ( $$variable{'Invoice'}->federaltax() ne '' ) ?>
-				<? if ( $$variable{'Invoice'}->statetax() ne '' ) ?>
-				<li class="pst">
-					<label>PST:</label>
-					<? echo ( openprint::Currency::format( $$variable{'Invoice'}->statetax() ); ) ?>
-				</li>
-				<? endif ( $$variable{'Invoice'}->statetax() ne '' ) ?>
+				<? echo ( 
+					my $html;
+					foreach my $Tax ( $$variable{'Invoice'}->Taxes() ) {
+						$html .= sprintf('<li class="tax"><label>%s (%d%):</label>%s</li>', 
+							$Tax->name(), $Tax->rate(), openprint::Currency::format( $Tax->amount() ),
+							);
+					} # end foreach Tax
+					return $html;
+				) ?>
 				<li class="total">
 					<label>Total:</label>
 					<span id="total"><? echo ( openprint::Currency::format( $$variable{'Invoice'}->total() ); ) ?></span>

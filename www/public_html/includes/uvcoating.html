@@ -1,6 +1,6 @@
 <? eval (
-    push @{$$variable{'uvoptions'}}, 'Overall' if openprint::Service::find('name'=>'UVCoatingOverall');
-    #push @{$$variable{'uvoptions'}}, 'Spot' if openprint::Service::find('name'=>'UVCoatingSpot');
+    push @{$$variable{'uvoptions'}}, 'Overall' if openprint::Service->find('name'=>'UVCoatingOverall');
+    #push @{$$variable{'uvoptions'}}, 'Spot' if openprint::Service->find('name'=>'UVCoatingSpot');
     push @{$$variable{'uvoptions'}}, 'None';
 	$$variable{'SideOneCoatingType'} = 'None' if ! $$variable{'SideOneCoatingType'};
 	$$variable{'SideTwoCoatingType'} = 'None' if ! $$variable{'SideTwoCoatingType'};

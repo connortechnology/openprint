@@ -3,7 +3,7 @@
 	<input type="hidden" name="stock_ids" value="<? echo ( join(',', (ref $param{'stock_ids'} eq 'ARRAY' ? @{$param{'stock_ids'}} : $param{'stock_ids'} ) ); ) ?>" />
 	<input type="hidden" name="btnFunction" value="ApplyChanges"/>
 	<fieldset><legend><input type="radio" id="modenew" name="mode" value="new" checked="checked" /> New Pricing</legend>
-		<? eval ( @{$$variable{'Pricelists'}} = openprint::Pricelist::find(); ) ?>
+		<? eval ( @{$$variable{'Pricelists'}} = openprint::Pricelist->find(); ) ?>
 		<? while ( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?>
 		<p>
 			<label>Prices for pricelist <? echo ( $$variable{'Pricelist'}->name() ) ?>:</label>
