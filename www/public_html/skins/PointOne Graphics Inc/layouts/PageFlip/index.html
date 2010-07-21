@@ -1,1 +1,191 @@
-default.html
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<title><?PageTitle?></title>	
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/popups.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.2"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
+		<link href="/css/common.css" rel="stylesheet" type="text/css"/>
+		<link href="/css/common-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
+		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
+		<link href="/css/main.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="/css/menu.css" rel="stylesheet" type="text/css" media="screen, print"/>
+		<link href="/css/menu-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
+		<link href="/css/button.css" rel="stylesheet" type="text/css" media="screen,print"/>
+		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
+		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
+		<? if ( $r->uri() =~ /\/main\/project/ ) ?>
+		<link href="/css/project.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/project/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/order/ ) ?>
+		<link href="/css/order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/order/ ) ?>
+		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
+		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
+		<? if ( $r->uri() =~ /\/pageflip\/view/ ) ?>
+<script type="text/javascript" src="/javascripts/pageflip/liquid.js"></script>
+<script type="text/javascript" src="/javascripts/pageflip/swfobject.js"></script>
+<script type="text/javascript" src="/javascripts/pageflip/flippingbook.js"></script>
+<link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
+		<? endif ( $r->uri() =~ /\/pageflip\/view/ ) ?>
+		<? if ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
+<link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
+		<? endif ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
+
+		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
+		<link rel="shortcut icon" href="/images/favicon.ico"/>
+		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
+	</head>
+	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
+			<div id="Header">	
+				<div id="Logo">
+				<table><tr>
+				<td><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
+				<td><a href="/index.html"><span id="PointOne">PointOne</span><br/><span id="GraphicsInc">GRAPHICS INC</span></a></td>
+				</tr></table>
+				</div>
+				<div id="Menu">
+					<ul id="menubar">
+						<? if ( $session{'user_type'} eq 'A' ) ?>
+						<li id="MenuAdministrator" class="off"><a href="/administrator/index.html">ADMIN SIDE</a></li>
+						<? endif ( $session{'user_type'} eq 'A' ) ?>
+						<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+						<li id="MenuEmployee" class="off"><a href="/employee/index.html">EMPLOYEE SIDE</a></li>
+						<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+						<li id="MenuAbout" class="<? echo ( ($r->uri() =~ /newsletters/ or $r->uri() =~ /main\/company/ or $r->uri() eq '/index.html' or $r->uri() eq '') ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuAbout'), 'off', 'on');return false;">ABOUT POINTONE</a>
+							<ul>
+								<li><a href="/main/company/about.html">&raquo; Corporate Video</a></li>
+								<li><a href="/main/company/the_pointone_difference.html">&raquo; PointOne Difference</a></li>
+								<li><a href="/main/company/our_people.html">&raquo; Our People</a></li>
+								<li><a href="/main/company/online_project_management.html">&raquo; Online Job Management</a></li>
+								<li><a href="/main/company/policies.html">&raquo; Policies</a></li>
+								<li><a href="/main/company/contact.html">&raquo; Contact</a></li>
+								<li><a href="/newsletters/1/index.html">&raquo; Newsletter</a></li>
+							</ul>
+						</li>
+						<li id="MenuServices" class="<? echo ( $r->uri() =~ /main\/services/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuServices'), 'off', 'on');return false;">SERVICES</a>
+							<ul>
+								<li><a href="/main/services/prepress.html;NOSSL">&raquo; Prepress</a></li>
+								<li><a href="/main/services/production.html;NOSSL">&raquo; Production</a></li>
+								<li><a href="/main/services/finishing.html;NOSSL">&raquo; Finishing</a></li>
+								<li><a href="/main/services/delivery.html;NOSSL">&raquo; Delivery</a></li>
+							</ul>
+						</li>
+						<li id="MenuAccount" class="<? echo ( $r->uri() =~ /main\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">ACCOUNT</a>
+							<ul>
+	<? if ( $session{'user_id'} ) ?>
+								<li><a href="/main/account/company_profile.html">&raquo; Company Profile</a></li>
+								<li><a href="/main/account/user_profile.html">&raquo; User Profile</a></li>
+	<? if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+								<li><a href="/main/account/select_company.html">&raquo; Select Company</a></li>
+								<li><a href="/main/account/registration.html">&raquo; Registration</a></li>
+	<? endif ( sets::isin( $session{'user_type'}, ['E','A'] ) ) ?>
+								<li><a href="/main/account/logout.html">&raquo; Logout</a></li>
+	<? else ( $session{'user_id'} ) ?>
+								<li><a href="/main/account/login.html">&raquo; Login</a></li>
+								<li><a href="/main/account/registration.html">&raquo; Registration</a></li>
+	<? endif ( $session{'user_id'} ) ?>
+								<li><a href="/main/account/credit_application.html">&raquo; Credit Application</a></li>
+								<li><a href="/main/account/reseller_application.html">&raquo; Reseller Application</a></li>
+							</ul>
+						</li>
+						<li id="MenuProjects" class="<? echo ( $r->uri() =~ /main\/project/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuProjects'), 'off', 'on');return false;">PROJECTS</a>
+							<ul>
+								<li><a href="/main/project/create_edit.html;NOSSL">&raquo; Create Project</a></li>
+								<li><a href="/main/project/view.html;NOSSL">&raquo; Current Project</a></li>
+								<li><a href="/main/project/history.html;NOSSL">&raquo; History</a></li>
+							</ul>
+						</li>
+						<li id="MenuQuotes" class="<? echo ( $r->uri() =~ /main\/quote/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuQuotes'), 'off', 'on');return false;">QUOTES</a>
+							<ul>
+								<li><a href="/main/quote/details.html;NOSSL">&raquo; Current Quote</a></li>
+								<li><a href="/main/quote/history.html;NOSSL">&raquo; History</a></li>
+							</ul>
+						</li>
+						<li id="MenuOrders" class="<? echo ( $r->uri() =~ /main\/order/ ? 'on' : 'off' ) ?>"><a href="#"  onclick="toggleMenu($('MenuOrders'), 'off', 'on');return false;">ORDERS</a>
+							<ul>
+								<li><a href="/main/order/information.html;NOSSL">&raquo; Current Order</a></li>
+								<li><a href="/main/order/history.html;NOSSL">&raquo; History</a></li>
+							</ul>
+						</li>
+						<li id="MenuSupport" class="<? echo ( ( $r->uri() =~ /site_map/  or  $r->uri() =~ /support/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuSupport'), 'off', 'on');return false;">SUPPORT</a>
+							<ul>
+								<li><a href="/support/colour_profiles.html;NOSSL">&raquo; Colour Profiles</a></li>
+								<li><a href="/site_map.html;NOSSL">&raquo; Site Map</a></li>
+								<li><a href="/support/help_desk.html;NOSSL">&raquo; Help Desk</a></li>
+								<li><a href="/support/returns.html;NOSSL">&raquo; Returns</a></li>
+							</ul>
+						</li>
+				<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+					<li class="off"><a href="#" onclick="bug_report_window();return false;">SEND BUG REPORT</a></li>
+				<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
+					</ul>
+				</div>
+	<? if ( ! $session{'user_id'} ) ?>
+				<div id="QuickLogin">
+					<form name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
+						<fieldset><legend>QUICK LOGIN:</legend>
+							<br/>
+							EMAIL:<br/>
+							<input type="text" name="email" id="email" onkeydown="if(event.keyCode == 13){checkLoginData( this, this.form.password );}"/><br/>
+							<br/>
+							PASSWORD:<br/>
+							<input type="password" name="password" id="password" onkeydown="if(event.keyCode == 13){checkLoginData(this.form.email, this);}"/><br class="spacer"/>
+							<br/>
+								<? echo ( join('', 
+									ssi::writeButton( $log, $dbh, 'QuickLoginButton','login.gif',"QuickLoginForm.btnFunction.value='Login';QuickLoginForm.submit();", '', 'Login' ),
+									ssi::writeButton( $log, $dbh, 'QuickForgotButton','forgot.gif',"QuickLoginForm.btnFunction.value='Forgotten Password';QuickLoginForm.submit();", '', 'Forgotten Password' ),
+									ssi::writeButton( $log, $dbh, 'QuickRegistration','registration.gif','', '/main/account/registration.html', 'Register Now' ),
+									);
+								) ?>
+						</fieldset>
+						<input type="hidden" name="btnFunction" />
+					</form>
+				</div>
+	<? endif ( ! $session{'user_id'} ) ?>
+				<div id="CurrencySelection">
+					Currently selected currency:
+					<form name="SelectCurrency" action="<? echo ( misc::get_url( $r->uri(), \%openprint::param, { 'exclude'=>'select_currency_id'} ); ) ?>" method="post">
+						<select name="select_currency_id" onchange="this.form.submit();">
+							<? echo (
+								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $session{'Currency_id'} );
+							) ?>
+						</select>
+					</form>
+				</div>
+				<div id="DidYouKnow">
+					<div id="DidYouKnowHeader">Did you know?</div>
+						<div id="DidYouKnowText">
+						<? echo ( 
+							my @messages = (
+								#'Our 8 colour Heidelberg Perfector Press enables printing both sides of the sheet in a single pass saving you time and money.',
+								#'PointOne continues to invest in new technology, ensuring old equipment does not limit our production.',
+								'PointOne is ISO 9001:2000 certified which means that we are constantly measuring our performance and initiating procedures for continuous improvement.',
+								#'PointOne matches the capabilities of our press production to our finishing equipment to ensure efficiency.',
+								#'Our new MAN Roland Heat Set Web Press is capable of running 65,000 impressions per hour.',
+								#'The PointOne online estimating tool allows you to track jobs through production, 24 hours a day, 7 days a week.',
+								#'PointOne has 2 separate FUJI CTP imaging systems to ensure we have back up plate burning capabilities.',
+								#'The PoineOne ftp site is fibre optic based for fast, easy file uploads.',
+								#'Our Rampage ripping software is one of the largest installations in Canada.',
+								q{We shop the globe for technology, equipment and paper to ensure we're offering clients the very best in service and value.},	
+								q{The PointOne name originated from our desire to provide clients with 'One Point' for complete printing services - from prepress to delivery!},
+							);
+							return '&quot;'.$messages[rand @messages].'&quot;';
+						) ?>
+					</div>
+				</div>
+			</div>
+		<div id="Content">
+			<div id="ContentInner">
+				<?PageContent?>
+			</div><!--ContentInner-->
+		</div><!--Content-->
+	</body>
+</html>
