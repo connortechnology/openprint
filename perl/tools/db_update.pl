@@ -519,8 +519,10 @@ if ( $data ) {
 	} # end if
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
 	if ( exists $$data{'category'} ) {
+		if ( ! exists $$data{'category_id'} ) {
 		$dbh->do(q`ALTER TABLE service_types add category_id INTEGER`);
 		$dbh->do('UPDATE service_types set category_id=(select id from servicetype_categories where name=category)');
+		} # end if
 		$dbh->do('ALTER TABLE service_types DROP COLUMN category');
 	}# end if
 } else {
