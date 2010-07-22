@@ -1,6 +1,6 @@
 
-DROP TABLE tbl_Equipment_Specifications;
-DROP	SEQUENCE EquipmentSpecification_seq;
+DROP TABLE IF EXISTS tbl_Equipment_Specifications;
+DROP	SEQUENCE IF EXISTS EquipmentSpecification_seq;
 CREATE	SEQUENCE EquipmentSpecification_seq;
 
 CREATE TABLE tbl_Equipment_Specifications (

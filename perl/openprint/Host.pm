@@ -4,7 +4,7 @@ require openprint::Object;
 use Net::ARP;
 use strict;
 
-use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults %types );
+use vars qw( $debug $table $serial %fields %transforms %defaults %types );
 $debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
@@ -36,7 +36,7 @@ sub resolve {
 	if ( @h ) {
 		return $h[0];
 	} elsif ( $debug ) {
-		$log->warn("Unable to reverse DNS $$self{'ip'}");
+		$openprint::log->warn("Unable to reverse DNS $$self{'ip'}");
 	} # end if
 	return undef;
 } # end sub resolve
@@ -44,7 +44,7 @@ sub resolve {
 sub get_mac {
 	my ( $self ) = @_;
 	my $mac = Net::ARP::arp_lookup( 'eth1', $$self{'ip'} );
-$log->debug("Mac: $mac");
+$openprint::log->debug("Mac: $mac");
 	return $mac;
 } # end sub get_mac
 

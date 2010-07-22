@@ -4,6 +4,8 @@ CREATE TABLE Ordered_Products (
 	id			SERIAL,
 	order_id	INTEGER	NOT NULL, FOREIGN KEY (order_id) REFERENCES Orders (Index),
 	product_id	INTEGER	NOT NULL, FOREIGN KEY (product_id) REFERENCES Products (id),
+    project_id integer,
+    FOREIGN KEY (project_id) REFERENCES projects (id),
 	quantity	INTEGER,
 	price		NUMERIC(10,2),
 	requested_for	date,

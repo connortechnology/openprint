@@ -1,9 +1,8 @@
-DROP	SEQUENCE	lngProjectIndex_seq;
+DROP	SEQUENCE	IF EXISTS lngProjectIndex_seq;
 CREATE	SEQUENCE	lngProjectIndex_seq;
 
-DROP	SEQUENCE		DocketNumber_seq;
+DROP	SEQUENCE		IF EXISTS DocketNumber_seq;
 CREATE	SEQUENCE		DocketNumber_seq;
-SELECT setval ('"docketnumber_seq"', 19000, true);
 
 DROP	TABLE	IF EXISTS Projects;
 
@@ -25,7 +24,7 @@ CREATE	TABLE	Projects	(
 	strMode					TEXT,
 	strPrograms				TEXT,
 	strOtherPrograms		TEXT,
-	type_id					INTEGER NOT NULL, FOREIGN KEY (type_id) REFERENCE ProjectTypes (id),
+	type_id					INTEGER NOT NULL, FOREIGN KEY (type_id) REFERENCES Project_Types (id),
 	price1					NUMERIC(10,2),
 	price2					NUMERIC(10,2),
 	price3					NUMERIC(10,2),

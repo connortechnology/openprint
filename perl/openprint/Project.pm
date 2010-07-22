@@ -24,6 +24,8 @@ require openprint::JDF;
 require openprint::OrderedProduct;
 require openprint::ScheduledJob;
 require openprint::Project_Service;
+require openprint::Todo;
+require openprint::Bug;
 
 my $debug = 1;
 
@@ -72,7 +74,15 @@ sub delete {
 sub destroy {
 	my $self = shift;
 	my $ac = sql::start_transaction( $openprint::dbh );
-	sql::update( undef, undef, 'Ordered_Products', ['project_id=?', $$self{'id'}], 'project_id', undef );
+	foreach my $Product ( openprint::OrderedProduct->find( 'project_id'=>$$self{'id'} ) ) {
+		$Product->save({'project_id'=>undef});
+	} # end foreach Product
+	foreach my $Todo ( openprint::Todo->find( 'project_id'=>$$self{'id'} ) ) {
+		$Todo->save({'project_id'=>undef});
+	} # end foreach Todo
+	foreach my $B ( openprint::Bug->find( 'project_id'=>$$self{'id'} ) ) {
+		$B->destroy();
+	} # end foreach bug
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Service_Specifications WHERE lngProjectIndex=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
 	sql::execute( $openprint::log, $openprint::dbh, q{DELETE FROM Project_Log WHERE project_id=?}, $$self{'id'} );
