@@ -1,0 +1,71 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+
+<script type="text/javascript">
+<!--
+	tinyMCE.init({
+		mode : "textareas",
+		theme : "simple"
+	});
+-->
+</script>
+<div class="Article"><div class="Edit">
+<form name="f1" id="f1" action="history.html" method="post">
+	<fieldset><legend>Editing Article<? echo ( $$variable{'Article'}->id() ? '('.$$variable{'Article'}->id().')' : '' ) ?></legend>
+		<? if ( $$variable{'Article'}->deleted() ) ?>
+		<span class="warning">This article has been deleted</span>
+		<? endif ( $$variable{'Article'}->deleted() ) ?>
+		
+		<input type="hidden" name="article_id" value="<? echo ( $param{'article_id'} ) ?>" />
+			<div class="content">
+			<ul>
+			<li><label for="company_id">Company:</label>
+				<select id="company_id" name="company_id">
+					<option value=""> select </option>
+					<? echo ( openprint::Company::get_dropdown( $$variable{'Article'}->company_id() ? $$variable{'Article'}->company_id() : $session{'company_id'} ); ) ?>
+				</select>
+			</li>
+			<li><label for="created_by">Author:</label>
+				<select id="created_by" name="created_by">
+					<option value=""> select </option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Article'}->id() ? $$variable{'Article'}->created_by() : $session{'user_id'} ); ) ?>
+				</select>
+			</li>
+			<li>
+				<label>Published:</label>
+				<input type="radio" name="published" value="1" id="published1" <? echo ( ssi::checked( sets::isin( $$variable{'Article'}->published(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('published_on_time').show();$('ending_time').show(); } else { $('published_on_time').hide();$('ending_time').hide(); }" />
+				<label class="radio" for="published1">Yes</label>
+				<input type="radio" name="published" value="0" id="published0" <? echo ( ssi::checked( $$variable{'Article'}->published() eq '0' ); ) ?> onclick="if(!this.checked) { $('published_on_time').show();$('ending_time').show(); } else { $('published_on_time').hide();$('ending_time').hide(); }" />
+				<label class="radio" for="published0">No</label>
+			</li>
+			<li><label>Published at:</label>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'published_on', $$variable{'Article'}->published_on(), q`check_time_published_on(this.form,'published_on','ending');update_duration(this.form,'published_on','ending');`, (! sets::isin( $$variable{'Article'}->published(), [ '', 1 ] )) ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Today_start', 't.gif', 'set_today( f1.published_on_year, f1.published_on_month, f1.published_on_day, f1.published_on_hour, f1.published_on_minute );', '', 'T' ); ) ?>
+</span>
+			</li>
+				<li><label>Title:</label>
+					<input type="text" id="title" name="title" value="<? echo ( $$variable{'Article'}->title() ) ?>" />
+				</li>
+				<li>
+					<label for="body">Body:</label>
+					<textarea cols="" id="body" name="body" rows="<? echo ( $$variable{'Article'}->body() ? scalar split("\n", $$variable{'Article'}->body()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Article'}->body() ) ?></textarea>
+				</li>
+			</ul>
+			</div>
+			<p class="buttons">
+				<? echo (
+					my $html = '';
+					#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+					
+					if ( $$variable{'Article'}->id() ) {
+					$html = ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();check_time_published_on(f1);', '', 'Reset' );
+					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					$html .= ssi::writeButton( $log, $dbh, 'copy', 'copy.gif', "f1.action='edit.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
+					} # end if
+					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+					return $html;
+				) ?>
+			</p>
+	</fieldset>
+	<input type="hidden" name="btnFunction" />
+</form>
+</div></div>
