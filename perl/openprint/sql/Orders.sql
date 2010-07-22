@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS Orders;
 
 CREATE TABLE Orders (
-	Index		INTEGER NOT NULL,
+	id		SERIAL,
 	CompanyIndex	INTEGER NOT NULL, FOREIGN KEY (CompanyIndex) REFERENCES companies (id),
 	UserIndex		INTEGER NOT NULL, FOREIGN KEY (UserIndex) REFERENCES Users (id),
 	EmployeeIndex	INTEGER NOT NULL, FOREIGN KEY (EmployeeIndex) REFERENCES Users (id),

@@ -1,10 +1,10 @@
-DROP SEQUENCE Equipment_Index_seq;
+DROP SEQUENCE IF EXISTS Equipment_Index_seq;
 CREATE SEQUENCE Equipment_Index_seq;
 
-DROP TABLE tbl_Equipment;
+DROP TABLE IF EXISTS tbl_Equipment;
 
 CREATE TABLE tbl_Equipment (
-	lngIndex			INT4 NOT NULL DEFAULT nextval('Equipment_Index_seq'),
+	lngIndex			INTEGER NOT NULL DEFAULT nextval('Equipment_Index_seq'),
 	strID				TEXT,
 	strName				TEXT,
 	strDescription		TEXT,
@@ -21,6 +21,10 @@ CREATE TABLE tbl_Equipment (
     cip3_hold			boolean,
     cip3_merge			boolean,
     cip3_monitor		boolean,
+	jdf_id				TEXT,
+	jdf_name			TEXT,
+	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations(id),
+	smartscheduling		BOOLEAN,
 	PRIMARY KEY (lngIndex)
 );
 

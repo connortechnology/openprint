@@ -1,8 +1,8 @@
-DROP TABLE Order_Contents;
+DROP TABLE IF EXISTS Order_Contents;
 
 CREATE TABLE Order_Contents (
-	OrderIndex 		INT4 NOT NULL,FOREIGN KEY(OrderIndex) REFERENCES Orders (Index),
-	lngProjectIndex INT4 NOT NULL,FOREIGN KEY(lngProjectIndex) REFERENCES Projects (Index),
+	OrderIndex 		INTEGER NOT NULL,FOREIGN KEY(OrderIndex) REFERENCES Orders (index),
+	lngProjectIndex INTEGER NOT NULL,FOREIGN KEY(lngProjectIndex) REFERENCES Projects (id),
 	strDescription	TEXT,
 	intQuantity	 	INT4,
 	intQuantityIndex 	INT4,
