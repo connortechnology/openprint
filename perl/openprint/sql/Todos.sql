@@ -7,7 +7,7 @@ CREATE TABLE Todos (
 	duedate		date,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
-	project_id	INTEGER, FOREIGN KEY (project_id) REFERENCES tbl_Projects (id),
+	project_id	INTEGER, FOREIGN KEY (project_id) REFERENCES Projects (id),
 	completed	BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );
