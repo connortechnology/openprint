@@ -322,3 +322,9 @@ div.LoginLog td.When {
 	text-align: right;
 	padding-right: 8px;
 }
+body a#trustlogo {
+    position: fixed;
+    right: 0px;
+    bottom: 0px;
+}
+
