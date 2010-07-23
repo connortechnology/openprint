@@ -6,7 +6,7 @@ use Carp ( cluck );
 
 use strict;
 use openprint ();
-use vars qw( $log %variable %fields %transforms %defaults %config );
+use vars qw( $debug $log %variable %fields %transforms %defaults %config );
 *variable = \%openprint::variable;
 *config = \%openprint::config;
 *log = \$openprint::log;
@@ -31,7 +31,7 @@ require openprint::StockGroup;
 require openprint::StockMaterial;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+$debug = 0;
 
 my @fields = (
 		'id', 'created_on',
@@ -296,9 +296,9 @@ sub copy {
 } # end sub copy
 
 sub prices {
-	my $self = shift;
+	my ( $self, $list_id ) = @_;
 	if ( ! $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>shift );
+		@{$$self{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $$self{'id'}, 'pricelist_id' => $list_id );
 	} # end if
 	return @{$$self{'Prices'}};
 } # end sub prices
