@@ -160,6 +160,10 @@
 						</select>
 					</form>
 				</div>
+    <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
+<a href="http://www.instantssl.com" id="comodoTL"><img src="/images/tl_transp.gif" alt="SSL"/></a>
+    <? endif ( $ENV{'HTTPS'} eq 'on' ) ?>
+
 				<div id="DidYouKnow">
 					<div id="DidYouKnowHeader">Did you know?</div>
 						<div id="DidYouKnowText">
