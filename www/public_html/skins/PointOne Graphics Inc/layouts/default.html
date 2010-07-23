@@ -40,6 +40,9 @@
 		<? endif ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
 
 		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
+    <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
+<script type="text/javascript" src="/javascripts/trustlogo.js?version=1.0"></script>
+    <? endif ( $ENV{'HTTPS'} eq 'on' ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
 	</head>
@@ -160,9 +163,6 @@
 						</select>
 					</form>
 				</div>
-    <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
-<a href="http://www.instantssl.com" id="comodoTL"><img src="/images/tl_transp.gif" alt="SSL"/></a>
-    <? endif ( $ENV{'HTTPS'} eq 'on' ) ?>
 
 				<div id="DidYouKnow">
 					<div id="DidYouKnowHeader">Did you know?</div>
@@ -191,5 +191,9 @@
 				<?PageContent?>
 			</div><!--ContentInner-->
 		</div><!--Content-->
+    <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
+<a href="http://www.instantssl.com" id="comodoTL">SSL</a>
+<script type="text/javascript">TrustLogo("https://www.point-one.com/images/tl_transp.gif", "SC4", "bottomright");</script>
+    <? endif ( $ENV{'HTTPS'} eq 'on' ) ?>
 	</body>
 </html>
