@@ -68,9 +68,9 @@ foreach my $PO ( openprint::PurchaseOrder::find('order'=>'id desc') ) {
 		$tax_total += $Tax->amount();
 	} # end if
 	$tax_total = sprintf('%.2f', $tax_total);
-	my $total = int( $PO->subtotal() + $tax_total );
+	my $total = sprintf( '%.0f', $PO->subtotal() + $tax_total );
 
-	if ( ($tax_total > 0) and ( $total != int($PO->total()) ) ) {
+	if ( ($tax_total > 0) and ( $total != sprintf('%.0f', $PO->total()) ) ) {
 		$log->error(sprintf('PO %1$d has an invalid total. %2$s != %3$s + %4$s : %5$s', $PO->id(), $PO->total(), $PO->subtotal(), $tax_total, $total ) );
 	#$PO->save();
 		next;
