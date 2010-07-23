@@ -3006,7 +3006,7 @@ sub calc_price {
 	} else {
 		$overs += ceil( $setup_overs + $run_overs );
 	} # end if
-	$overs *= $Paper->parts() if $Paper->parts();
+	#$overs *= $Paper->parts() if $Paper->parts();
 	$overs = $min_overs if $overs < $min_overs;
 
 	my $impressions = $net_sheets + $overs;
@@ -3505,13 +3505,13 @@ sub calc_price {
 		$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
  	} # end if
 	$setup_overs += $fm_overs;
-	$setup_overs *= $Paper->parts() if $Paper->parts();
+	#$setup_overs *= $Paper->parts() if $Paper->parts();
 
 	if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
 		$run_overs = $$specs{'OverRun'.$qty_index};
 	} else {
 		$run_overs = ceil( $net_sheets * $over_rate );
-		$run_overs *= $Paper->parts() if $Paper->parts();
+		#$run_overs *= $Paper->parts() if $Paper->parts();
 	} # end if
 
 	my $total_overs = $additional_overs;
@@ -3524,7 +3524,7 @@ sub calc_price {
 	$total_overs += $bindery_overs - $total_overs if $bindery_overs > $total_overs;
 
 	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
-	$total_overs *= $Paper->parts() if $Paper->parts();
+	#$total_overs *= $Paper->parts() if $Paper->parts();
 	$total_overs = $min_overs if $total_overs < $min_overs;
 
 	my $gross_sheets = $net_sheets + $total_overs;
