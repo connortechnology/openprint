@@ -191,16 +191,16 @@ sub calc_price {
 #$run_price += $qty * $folding_price;
 #} # end fi
 
-	if ( $$specs{'txtHoleClearingHoles'} > 0 ) {
-		my $hole_qty = $$specs{'txtHoleClearingHoles'} * $imposition;
-		my %HoleClearingPrice = openprint::service::get_price_object( 'HoleClearing', $$specs{'txtHoleClearingHoles'} * $$specs{"txtQuantity$qty_index"}, undef ); 
+	if ( $$specs{'txtHoleClearingHoles-'.$$sig_specs{'SignatureIndex'}} > 0 ) {
+		my $hole_qty = $$specs{'txtHoleClearingHoles-'.$$sig_specs{'SignatureIndex'}} * $imposition;
+		my %HoleClearingPrice = openprint::service::get_price_object( 'HoleClearing', $$specs{'txtHoleClearingHoles-'.$$sig_specs{'SignatureIndex'}} * $$specs{"txtQuantity$qty_index"}, undef ); 
 		$HoleClearingPrice{'Total'} = $impressions * $HoleClearingPrice{'Price'} * $hole_qty;
 		if ( lc $HoleClearingPrice{'units'} eq 'per m' ) {
 			$HoleClearingPrice{'Total'} /= 1000;
 		} # end if
 		$Total{'HoleClearingPrice'} = \%HoleClearingPrice;
 		$Total{'Total'} += $HoleClearingPrice{'Total'};
-		$Total{'MPrice'} += ( $HoleClearingPrice{'Total'} * $$specs{'txtHoleClearingHoles'} / $impressions ) * 1000;
+		$Total{'MPrice'} += ( $HoleClearingPrice{'Total'} * $$specs{'txtHoleClearingHoles-'.$$sig_specs{'SignatureIndex'}} / $impressions ) * 1000;
 		#$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%.2f %s * %d impressions * %d holes = $%.2f<br/>', @HoleClearingPrice{'Price','units'}, $impressions, $hole_qty, $HoleClearingPrice{'Total'});
 	} # end if
 
@@ -322,7 +322,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;MakeReady: $%.2f<br/>', $results{'Price'}{'MakeReady'}{'Price'});
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;DiePrice: $%.2f<br/>', $results{'Price'}{'DiePrice'}{'Price'});
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'ServicePrice'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'} );
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'HoleClearingPrice'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'}, $$specs{"txtHoleClearingHoles-$$sig_specs{'SignatureIndex'}"} ) if $results{'Price'}{'HoleClearingPrice'};
+				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'HoleClearingPrice'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'}, $$specs{"txtHoleClearingHoles-$$sig_specs{'SignatureIndex'}"} ) if exists $results{'Price'}{'HoleClearingPrice'};
 
 				if ( $$specs{'OverrideStrippingPrice'} ne 'Y' ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'Stripping'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'} );
