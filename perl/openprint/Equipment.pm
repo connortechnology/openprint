@@ -368,7 +368,7 @@ $openprint::log->debug("Looking for $name : $range") if $debug;
 	} # end if
 $openprint::log->debug("Looking for $name : $range") if $debug;
 
-	return misc->find_entry( $range, $$self{'Specifications'}{$name}, $debug );
+	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
 } # end sub specification
 
 sub copy {

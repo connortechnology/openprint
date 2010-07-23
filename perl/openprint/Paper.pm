@@ -950,6 +950,9 @@ sub get_price {
 #$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
 	} elsif ( $$self{'id'} ) {
 		my $list_id = openprint::pricing::get_pricelist_id( );
+		if ( ! $list_id ) {
+			$openprint::log->warn( 'No pricelist' );
+		} # end if
 		my $bestPrice;
 		my @Prices = $self->prices( $list_id );
 		if ( (! $$self{'supplied'} ) and ! @Prices ) {
