@@ -157,18 +157,6 @@ if ( ! sets::isin( 'pressactivities', \@tables ) ) {
 if ( ! sets::isin( 'project_files', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Project_Files.sql' ) ) or die;
 }
-if ( ! sets::isin( 'todos', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Todos.sql' ) ) or die;
-}
-if ( ! sets::isin( 'bug_statuses', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Bug_Statuses.sql' ) ) or die;
-}
-if ( ! sets::isin( 'bugs', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Bugs.sql' ) ) or die;
-}
-if ( ! sets::isin( 'bug_comments', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Bug_Comments.sql' ) ) or die;
-}
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Users LIMIT 1', {} );
 if ( $data ) {
@@ -340,6 +328,19 @@ if ( $data ) {
 } else {
 	$log->debug( 'No Companies found.' );
 } # end if
+
+if ( ! sets::isin( 'todos', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Todos.sql' ) ) or die;
+}
+if ( ! sets::isin( 'bug_statuses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Bug_Statuses.sql' ) ) or die;
+}
+if ( ! sets::isin( 'bugs', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Bugs.sql' ) ) or die;
+}
+if ( ! sets::isin( 'bug_comments', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Bug_Comments.sql' ) ) or die;
+}
 
 if ( ! sets::isin( 'locations', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Locations.sql});
@@ -535,6 +536,11 @@ if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	if ( ! sets::isin('service_types_id_seq', \@sequences) ) {
+		$dbh->do(q{CREATE SEQUENCE service_types_id_seq});
+		$dbh->do(q{select setval('service_types_id_seq', (SELECT Max(id) FROM service_types) )});
+	} # end if
+	$dbh->do(q{ALTER TABLE service_types alter id set default nextval('service_types_is_seq')});
 } # end if
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql});
