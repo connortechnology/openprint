@@ -173,12 +173,12 @@ function del_content(form, content_id ) {
 		<!--#include virtual="_vendor.html"-->
 		<div class="rightColumn">
 			<fieldset>
-				<p><label>Date filed to vendor:
+				<p><label>Filed to vendor:
 					<input type="checkbox" name="filed" id="filed" onclick="if(this.checked){$('filed_on_span').show();} else {$('filed_on_span').hide();}" <? echo ( ssi::checked( $$variable{'Claim'}->filed_on() ); ) ?> />
 					</label>
 					<span id="filed_on_span" class="DateSelector" <? echo ( $$variable{'Claim'}->filed_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'filed_on', $$variable{'Claim'}->filed_on() ); ) ?></span>
 				</p>
-				<p><label>Date sent to accounts:
+				<p><label>Sent to accounts:
 					<input type="checkbox" name="sent_to_accounts" id="sent_to_accounts" onclick="if(this.checked){$('sent_to_accounts_on_span').show();} else {$('sent_to_accounts_on_span').hide();}" <? echo ( ssi::checked( $$variable{'Claim'}->sent_to_accounts_on() ); ) ?> />
 </label>
 					<span id="sent_to_accounts_on_span" class="DateSelector" <? echo ( $$variable{'Claim'}->sent_to_accounts_on() ? '' : 'style="display:none;"' ) ?>><? echo ( ssi::date_select( 'sent_to_accounts_on', $$variable{'Claim'}->sent_to_accounts_on() ); ) ?></span>
@@ -200,6 +200,7 @@ function del_content(form, content_id ) {
 				</p>
 				<p><label>Docket:</label><input type="text" name="docket" id="docket" value="<? echo ( join(',',$$variable{'Claim'}->docket() ? @{$$variable{'Claim'}->docket()} : ()) ) ?>" onkeyup="this.value=this.value.replace(/[^,\d]/g,'');" /></p>
 				<p><label>Editors:</label><span id="editors"><!--#include virtual="_editors.html"--></span></p>
+				<p><label>Also Notify:</label><span id="also_notify"><!--#include virtual="_also_notify.html"--></span></p>
 			</fieldset>
 		</div>
 		<br class="spacer"/>
