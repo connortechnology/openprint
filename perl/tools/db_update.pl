@@ -376,7 +376,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 } else {
     $dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_Equipment.sql} )) or die;
 } # end if
-if ( ! sets::isin( 'tbl_equipment_specifications' ) ) {
+if ( ! sets::isin( 'tbl_equipment_specifications', \@tables ) ) {
 	my $sql = misc::load_file( $log, q{../openprint/sql/tbl_Equipment_Specifications.sql}) or die "Can't load tbl_Equipment_Specifications.sql";
 	$dbh->do($sql);
 } else {
