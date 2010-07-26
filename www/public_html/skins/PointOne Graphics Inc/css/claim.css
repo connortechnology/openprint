@@ -344,7 +344,11 @@ div.Claim .Disclaimer {
 	text-align: left;
 }
 .Claims table tr td.Company, .Claims table tr th.Company {
-	width: 100px;
+	width: 125px;
+	text-align: left;
+	overflow: hidden;
+}
+.Claims table tr .CreatedBy {
 	text-align: left;
 	overflow: hidden;
 }

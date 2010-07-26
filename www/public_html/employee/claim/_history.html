@@ -51,12 +51,12 @@
 <table class="List sortable">
 	<tr>
 <? if ( $session{'user_type'} eq 'A' ) ?>
-		<th width="20"><input type="checkbox" onclick="select_all( $('f1'), 'claim_id', this.checked );"/></th>
+		<th width="20"><input type="checkbox" onclick="select_all( $('f2'), 'claim_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 		<th class="ID">ID</th>
 		<th class="Date">Date</th>
 		<th class="Company">Vendor</th>
-		<th style="text-align: left;">Created By</th>
+		<th class="CreatedBy">Created By</th>
 		<th class="Date">Filed On</th>
 		<th class="Date">Sent to Accounts</th>
 		<th class="Date">Invoiced</th>
@@ -79,7 +79,7 @@
 				<td class="ID"><a href="view.html?claim_id=%1$d">%1$d</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%2$s</a></td>
 				<td class="Company"><a href="view.html?claim_id=%1$d">%3$s</a></td>
-				<td><a href="view.html?claim_id=%1$d">%4$s</a></td>
+				<td class="CreatedBy"><a href="view.html?claim_id=%1$d">%4$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%5$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%6$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%7$s</a></td>
@@ -108,9 +108,7 @@
 		<? echo (
 			my $html;
 			if ( $session{'user_type'} eq 'A' ) {
-				#$html .= ssi::writeButton($log, $dbh, 'Decline', 'decline.gif', "open_decline_window(f1);", '', 'Decline Selected' );
-				#$html .= ssi::writeButton($log, $dbh, 'Authorize', 'authorize.gif', "f1.btnFunction.value='Authorize';f1.submit();", '', 'Authorize Selected' );
-				$html .= ssi::writeButton($log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete Selected' );
+				$html .= ssi::writeButton($log, $dbh, 'Delete', 'delete.gif', "f2.btnFunction.value='Delete';f2.submit();", '', 'Delete Selected' );
 			} # end if
 			return $html;
 		) ?>

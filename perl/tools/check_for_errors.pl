@@ -10,6 +10,7 @@ require openprint::User;
 require openprint::Project;
 require openprint::Quote;
 require openprint::Order;
+require openprint::ScheduledJob;
 
 use openprint ();
 use vars qw( $log $dbh );
@@ -57,6 +58,7 @@ foreach my $Product ( openprint::Product::find() ) {
 	} # end if
 } # end foreach Product
 
+if ( 0 ) {
 foreach my $PO ( openprint::PurchaseOrder::find('order'=>'id desc') ) {
 	if ( $PO->subtotal() > $PO->total() ) {
 		$log->error('PO ' . $PO->id() . ' has an invalid total.' . $PO->subtotal() . ' > ' . $PO->total() );
@@ -76,6 +78,13 @@ foreach my $PO ( openprint::PurchaseOrder::find('order'=>'id desc') ) {
 		next;
 	} 
 }
+}
+
+foreach my $Job ( openprint::ScheduledJob::find() ) {
+	if ( ! $Job->Shift() ) {
+		$log->error('No shift for job ' . $Job->to_string());
+	} # end if
+} # end foreach
 $dbh->disconnect();
 1;
 __END__

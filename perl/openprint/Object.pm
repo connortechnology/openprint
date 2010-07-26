@@ -205,6 +205,10 @@ sub copy {
 sub delete {
     my ( $self ) = @_;
     my $type = ref $self;
+	if ( ! $$self{'id'} ) {
+		$log->error("Called delete on object with no id of type $type");
+		return;
+	} # end if
     my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	if ( exists $fields{'deleted'} ) {
