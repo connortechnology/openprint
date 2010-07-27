@@ -22,13 +22,13 @@ You must register for a login, and be logged in before you can apply to become a
 		<p class="required"> denotes required information.</p>
 		<form name="f1" method="post" action="<?SecureSiteURL?>/account/reseller_application.html">
 			<div class="ResellerApplication">
-				<!--#include virtual="/account/_business_information.html"-->
-				<? if ( $$variable{'StateProvince'} eq 'ON' ) ?>
+				<? if ( new openprint::Company($session{'company_id'})->state() eq 'ON' ) ?>
 				<p> 
 				To become a reseller and for PST exemption you must fill out and fax a tax form.	Please <a href="#" alt="Ontario_PST_Exempt.pdf" onClick="openPDF('/pdfs/Ontario_PST_Exempt.pdf'); return false;">click here</a> to download the form in PDF format..
 				</p>
-				<? endif ( $$variable{'StateProvince'} eq 'ON' ) ?>
-		<!--#include virtual="/account/_trade_references.html"-->
+				<? endif ( new openprint::Company($session{'company_id'})->state() eq 'ON' ) ?>
+				<!--#include virtual="/account/_business_information.html"-->
+				<!--#include virtual="/account/_trade_references.html"-->
 			</div><!-- Application -->
 			<fieldset>
 				<p class="buttons">

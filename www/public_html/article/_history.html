@@ -1,6 +1,6 @@
 <? eval (
 	@{$$variable{'Articles'}} = ();
-	foreach my $Article ( openprint::Article::find( 
+	foreach my $Article ( openprint::Article->find( 
 		'published_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/article/history.html?published_on_start_year','/article/history.html?published_on_start_month','/article/history.html?published_on_start_day'} ),
 		'published_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/article/history.html?published_on_end_year','/article/history.html?published_on_end_month','/article/history.html?published_on_end_day'} ),
 		'published'			=>	$session{'/article/history.html?published'},

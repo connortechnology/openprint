@@ -9,13 +9,13 @@ require openprint::Location;
 require openprint::Equipment_Stock_Setting;
 require sql;
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
-my $debug = 0;
+$debug = 0;
 my %find_cache;
 %fields = (
 	'id'	=>	'id',
@@ -368,7 +368,7 @@ $openprint::log->debug("Looking for $name : $range") if $debug;
 	} # end if
 $openprint::log->debug("Looking for $name : $range") if $debug;
 
-	return misc->find_entry( $range, $$self{'Specifications'}{$name}, $debug );
+	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
 } # end sub specification
 
 sub copy {

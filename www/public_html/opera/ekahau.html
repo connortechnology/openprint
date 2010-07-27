@@ -1,6 +1,6 @@
 
 <? echo (
 	my $html;
-	$html .= openprint::Ekahau::find( $log, $ENV{'REMOTE_ADDR'} );
+	$html .= openprint::Ekahau->find( $log, $ENV{'REMOTE_ADDR'} );
 	return $html;
 ) ?>

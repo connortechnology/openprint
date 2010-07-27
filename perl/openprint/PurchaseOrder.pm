@@ -225,6 +225,9 @@ sub save {
 
 	# force recalculation
 	$self->subtotal(undef);
+	foreach my $Tax ( $self->Taxes() ) {
+		$Tax->amount(undef);
+	} # end foreach Tax
 	$self->total(undef);
 	if ( ! $$self{'currency_id'} ) {
 		my $Currency = openprint::Currency::get_current();
@@ -259,7 +262,10 @@ sub Authorized_By {
 } # end sub Authorized_By
 
 sub Contents {
-	return openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
+	if ( $_[0]{'id'} ) {
+		return openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
+	} # end if
+	return ();
 } # end sub Contents
 
 sub send_approval_required_notification {
@@ -274,6 +280,7 @@ sub send_approval_required_notification {
 
 	foreach my $U ( openprint::User->find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$self->total() ) ) {
 		next if $U->id() == $Me->id();
+		next if ! Email::Valid->address($U->email() );
 
 		$_ = MIME::QuotedPrint::encode_qp( Encode::encode('utf-8', ssi::variable_substitution( \$email_template, \%info ) ) );
 		my @body = ('', $_, 'text/html', 'quoted-printable');
@@ -363,17 +370,22 @@ sub subtotal {
 		foreach my $C ( $self->Contents() ) {
 			$$self{'subtotal'} += $C->total();
 		} # end foreach
+		$$self{'subtotal'} = sprintf( '%.2f', $$self{'subtotal'} );
 	} # end if
 	return $$self{'subtotal'};
 } # end sub subtotal
 
 sub total {
 	my ( $self ) = @_;
+	if ( @_ == 2 ) {
+		$$self{'total'} = $_[1];
+	} # end if
 	if ( ! $$self{'total'} ) {
 		$$self{'total'} = $self->subtotal();
         foreach my $Tax ( $self->Taxes() ) {
             $$self{'total'} += $Tax->amount();
         } # end foreach Tax
+		$$self{'total'} = sprintf('%.2f', $$self{'total'} );
 	} # end if
 	return $$self{'total'};
 } # end sub total
@@ -446,7 +458,7 @@ sub copy {
 	my $self = shift;
 	my $New = new openprint::PurchaseOrder();
 	@$New{keys %fields} = @$self{keys %fields};
-	foreach ( 'id', 'authorized', 'authorized_by'	, 'authorized_on', 'delivered_on' ) {
+	foreach ( 'id', 'authorized', 'authorized_by', 'authorized_on', 'delivered_on' ) {
 		delete $$New{$_};
 	} # end foreach
 	$$New{'created_by'} = $session{'user_id'};
@@ -459,27 +471,57 @@ sub Manifest {
 sub Taxes {
     my ( $self ) = @_;
 
-	return if ! $$self{'id'};
-
-    if ( ! $$self{'Taxes'} ) {
+	if ( ! $$self{'id'} ) {
+		return ();
+	} # end if
+    if ( $$self{'id'} and ! $$self{'Taxes'} ) {
         @{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
     } # end if
-    if ( ! @{$$self{'Taxes'}} ) {
+    if ( $$self{'vendor_country'} and $$self{'vendor_state'} and ! @{$$self{'Taxes'}} ) {
         foreach my $Tax ( openprint::Tax->find(
                     'period_start_null_or_<='   =>  $$self{'created_on'},
                     'period_end_null_or_>='     =>  $$self{'created_on'},
-                    'country'   =>  $self->Company()->country(),
-                    'state'     =>  $self->Company()->state()),
-                ) {
+                    'country'   =>  $self->Supplier()->country(),
+                    'state'     =>  $self->Supplier()->state(),
+                ) ) {
             my $T = new openprint::PurchaseOrder_Tax();
             $T->save({
-                'purchaseorder_id'=>  $$self{'id'},
-                'tax_id'    =>  $$Tax{'id'},
-                'rate'      =>  $$Tax{'rate'},
+                'purchaseorder_id'	=>  $$self{'id'},
+                'tax_id'    		=>  $$Tax{'id'},
+                'rate'      		=>  $$Tax{'rate'},
             });
             push @{$$self{'Taxes'}}, $T;
         } # end foreach Tax
     } # end if
+	if ( @_ > 1 ) {
+		my @new_taxes = openprint::Tax->find(
+				'period_start_null_or_<='   =>  $$self{'created_on'},
+				'period_end_null_or_>='     =>  $$self{'created_on'},
+				'country'   =>  $self->Supplier()->country(),
+				'state'     =>  $self->Supplier()->state(),
+		   );
+
+		# Clear out any no longer valid taxes
+		foreach my $Tax ( @{$$self{'Taxes'}} ) {
+			if ( ! sets::isin( $Tax->tax_id(), [ map { $_->id() } @new_taxes ] ) ) {
+				$Tax->delete();
+			} # end if
+		} # end foreach old Tax
+        @{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
+		if ( @new_taxes != @{$$self{'Taxes'}} ) {
+			foreach my $Tax ( @new_taxes ) {
+				if ( ! sets::isin( $Tax->id(), [ map { $_->tax_id() } @{$$self{'Taxes'}} ] ) ) {
+					my $T = new openprint::PurchaseOrder_Tax();
+					$T->save({
+							'purchaseorder_id'  =>  $$self{'id'},
+							'tax_id'            =>  $$Tax{'id'},
+							'rate'              =>  $$Tax{'rate'},
+							});
+					push @{$$self{'Taxes'}}, $T;
+				} # end if
+			} # end foreach Tax	
+		} # end if have new taxes
+	} # end if recalculate
     return @{$$self{'Taxes'}};
 } # end sub Taxes
 

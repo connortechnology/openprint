@@ -59,7 +59,7 @@
 <? endif ( $$variable{'Job'}->Equipment()->specification('DoStockVerification') eq 'Y' ) ?>
 	</fieldset>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'SaveStartTime', 'save.gif', q`new Ajax.Request('_li_change.json',{parameters:JobForm.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'SaveStartTime', 'save.gif', q`new Ajax.Request('_li_change.json',{parameters:$('JobForm').serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'CancelStartTime', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' ); ) ?>
 		</p>
 	<input type="hidden" name="action" value="SaveJob" />

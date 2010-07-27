@@ -212,7 +212,11 @@ sub clone {
 sub delete {
 	my ( $self ) = @_;
 	my $type = ref $self;
-	my $table = eval '$'.$type.'::table';
+	if ( ! $$self{'id'} ) {
+		$log->error("Called delete on object with no id of type $type");
+		return;
+	} # end if
+    my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	if ( exists $fields{'deleted'} ) {
 		sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 1 );
@@ -267,83 +271,99 @@ sub find {
 
 	foreach my $k ( keys %params ) {
 		next if sets::isin( $k,[ 'order','limit','or' ] );
-		next if ! $fields{$k};
-		if ( ref $params{$k} eq 'ARRAY' ) {
-			$sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-			push @values, @{$params{$k}};
-		} elsif ( ! defined $params{$k} ) {
-			$sql .= " AND $fields{$k} IS NULL";
-		} else {
+		if ( $fields{$k} ) {
+			if ( ref $params{$k} eq 'ARRAY' ) {
+				$sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+				push @values, @{$params{$k}};
+			} elsif ( ! defined $params{$k} ) {
+				$sql .= " AND $fields{$k} IS NULL";
+			} else {
 #$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
-			$sql .= " AND $fields{$k}=?";
-			push @values, $params{$k};
+				$sql .= " AND $fields{$k}=?";
+				push @values, $params{$k};
+			} # end if
+			delete $params{$k};
+		} elsif ( $find_fields{$k} ) {
+			if ( ref $params{$k} eq 'ARRAY' ) {
+				$sql .= " AND $find_fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+				push @values, @{$params{$k}};
+			} elsif ( ! defined $params{$k} ) {
+				$sql .= " AND $find_fields{$k} IS NULL";
+			} else {
+#$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
+				$sql .= " AND $find_fields{$k}=?";
+				push @values, $params{$k};
+			} # end if
+			delete $params{$k};
 		} # end if
-#$openprint::log->debug("Before delete @values");
-		delete $params{$k};
-#$openprint::log->debug("Aftere delete @values");
 	} # end foreach k
 
 	if ( %params ) {
-		foreach my $k ( keys %find_fields, keys %fields ) {
-			if ( exists $params{$k.'_like'} ) {
-				$sql .= " AND $fields{$k} LIKE ?";
-				push @values, $params{$k.'_like'};
-				delete $params{$k.'_like'};
-			} 
-			if ( exists $params{$k.'_start'} ) {
-				$sql .= " AND $fields{$k} >= ?";
-				push @values, $params{$k.'_start'};
-				delete $params{$k.'_start'};
-			} 
-			if ( exists $params{$k.'_end'} ) {
-				$sql .= " AND $fields{$k} <= ?";
-				push @values, $params{$k.'_end'};
-				delete $params{$k.'_end'};
-			} # end if
-			if ( exists $params{$k.'_<'} ) {
-				$sql .= " AND $fields{$k} < ?";
-				push @values, $params{$k.'_<'};
-				delete $params{$k.'_<'};
-			} # end if
-			if ( exists $params{$k.'_<='} ) {
-				$sql .= " AND $fields{$k} <= ?";
-				push @values, $params{$k.'_<='};
-				delete $params{$k.'_<='};
-			} # end if
-			if ( exists $params{$k.'_null_or_<='} ) {
-				$sql .= " AND ( $fields{$k} <= ? OR $fields{$k} IS NULL )";
-				push @values, $params{$k.'_null_or_<='};
-				delete $params{$k.'_null_or_<='};
-			} # end if
-			if ( exists $params{$k.'_>='} ) {
-				$sql .= " AND $fields{$k} >= ?";
-				push @values, $params{$k.'_>='};
-				delete $params{$k.'_>='};
-			} # end if
-			if ( exists $params{$k.'_null_or_>='} ) {
-				$sql .= " AND ( $fields{$k} >= ? OR $fields{$k} IS NULL )";
-				push @values, $params{$k.'_null_or_>='};
-				delete $params{$k.'_null_or_>='};
-			} # end if
-			if ( exists $params{$k.'_>'} ) {
-				$sql .= " AND $fields{$k} > ?";
-				push @values, $params{$k.'_>'};
-				delete $params{$k.'_>'};
-			} # end if
-			if ( exists $params{$k.'_lc'} ) {
-				$sql .= " AND lower($fields{$k}) = ?";
-				push @values, lc $params{$k.'_lc'};
-				delete $params{$k.'_lc'};
-			} # end if
-			if ( defined $params{$k.'_null'} ) {
-				if ( $params{$k.'_null'} ) {
-					$sql .= " AND $fields{$k} IS NULL";
-				} else {
-					$sql .= " AND $fields{$k} IS NOT NULL";
+		foreach ( 'find_fields', 'fields' ) {
+			my $f = eval '\%'.$type.'::'.$_;
+			next if ! $f;
+
+			foreach my $k ( keys %$f ) {
+				if ( exists $params{$k.'_like'} ) {
+					$sql .= " AND $$f{$k}::text LIKE ?";
+					push @values, $params{$k.'_like'};
+					delete $params{$k.'_like'};
+				} 
+				if ( exists $params{$k.'_start'} ) {
+					$sql .= " AND $$f{$k} >= ?";
+					push @values, $params{$k.'_start'};
+					delete $params{$k.'_start'};
+				} 
+				if ( exists $params{$k.'_end'} ) {
+					$sql .= " AND $$f{$k} <= ?";
+					push @values, $params{$k.'_end'};
+					delete $params{$k.'_end'};
 				} # end if
-			} # end if
-		} # end foreach
-	} # end if
+				if ( exists $params{$k.'_<'} ) {
+					$sql .= " AND $$f{$k} < ?";
+					push @values, $params{$k.'_<'};
+					delete $params{$k.'_<'};
+				} # end if
+				if ( exists $params{$k.'_<='} ) {
+					$sql .= " AND $$f{$k} <= ?";
+					push @values, $params{$k.'_<='};
+					delete $params{$k.'_<='};
+				} # end if
+				if ( exists $params{$k.'_null_or_<='} ) {
+					$sql .= " AND ( $$f{$k} <= ? OR $$f{$k} IS NULL )";
+					push @values, $params{$k.'_null_or_<='};
+					delete $params{$k.'_null_or_<='};
+				} # end if
+				if ( exists $params{$k.'_>='} ) {
+					$sql .= " AND $$f{$k} >= ?";
+					push @values, $params{$k.'_>='};
+					delete $params{$k.'_>='};
+				} # end if
+				if ( exists $params{$k.'_null_or_>='} ) {
+					$sql .= " AND ( $$f{$k} >= ? OR $$f{$k} IS NULL )";
+					push @values, $params{$k.'_null_or_>='};
+					delete $params{$k.'_null_or_>='};
+				} # end if
+				if ( exists $params{$k.'_>'} ) {
+					$sql .= " AND $$f{$k} > ?";
+					push @values, $params{$k.'_>'};
+					delete $params{$k.'_>'};
+				} # end if
+				if ( exists $params{$k.'_lc'} ) {
+					$sql .= " AND lower($$f{$k}) = ?";
+					push @values, lc $params{$k.'_lc'};
+					delete $params{$k.'_lc'};
+				} # end if
+				if ( defined $params{$k.'_null'} ) {
+					if ( $params{$k.'_null'} ) {
+						$sql .= " AND $$f{$k} IS NULL";
+					} else {
+						$sql .= " AND $$f{$k} IS NOT NULL";
+					} # end if
+				} # end if
+			} # end foreach k in fields
+		} # end foreach set of fields
+	} # end if %params
 
 	# Check for Object references
 	if ( %params ) {
@@ -377,8 +397,8 @@ sub find {
 		$openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
 	} elsif ( ( ! @$data ) and $debug ) {
 		$openprint::log->debug("No $type ($sql) (@values) " );
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
+	} elsif ( $debug or 1 ) {
+		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data );
 	} # end if
 	return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
 } # end sub find

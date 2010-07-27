@@ -1615,6 +1615,11 @@ if ( ! openprint::MaterialCategory->find('name'=>'BulkSkids') ) {
     print "Adding BulkSkids Category\n";
 } # end if
 
+if ( my $M = openprint::Material->find_one('name'=>'BulkSkids') ) {
+	if ( ! openprint::Material->find('name'=>'BulkSkid') ) {
+		$M->save({'name'=>'BulkSkid'});
+	} 
+}
 foreach my $M ( openprint::Material->find('name'=>'BulkSkid') ) {
 	if ( ! $M->specification('Maximum Weight') ) {
 		my $S = new openprint::MaterialSpecification();

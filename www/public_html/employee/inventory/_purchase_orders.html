@@ -42,12 +42,12 @@
 				} # end foreach
 				next if $next;
 			} # end if
-			if ( $session{'/employee/inventory/purchase_orders.html?types'} ) {
-				my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
-				if ( ! sets::intersection( @types, split(';', $session{'/employee/inventory/purchase_orders.html?types'} ) ) ) {
-					next;
-				} # en dif
-			} # end if
+			my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
+			if ( $session{'/employee/inventory/purchase_orders.html?types'} eq '' ) {
+				next if @types;
+			} elsif ( ! sets::intersection( @types, split(';', $session{'/employee/inventory/purchase_orders.html?types'} ) ) ) {
+				next;
+			} # en dif
 			push @{$$variable{'PurchaseOrders'}}, $PO;
 		} # end foreach PO
 	} # end if
@@ -77,7 +77,7 @@
 		while ( my $PO = shift @{$$variable{'PurchaseOrders'}} ) {
 			$html .= sprintf(q`<tr id="tr-%1$d" onmouseover="$('tr-%1$d').addClassName('highlightOn');" onmouseout="$('tr-%1$d').removeClassName('highlightOn');">`, $PO->id() );
 			if ( $session{'user_type'} eq 'A' ) {
-				$html .= '<td><input type="checkbox" id="po_id" name="po_id" value="'.$PO->id().'"/></td>';
+				$html .= '<td><input type="checkbox" name="po_id" value="'.$PO->id().'"/></td>';
 			} # end if
 			my $total = $PO->total();
 
