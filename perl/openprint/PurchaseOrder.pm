@@ -263,7 +263,7 @@ sub Authorized_By {
 
 sub Contents {
 	if ( $_[0]{'id'} ) {
-		return openprint::PurchaseOrder_Content::find('po_id'=>$_[0]{'id'},'order'=>'id');
+		return openprint::PurchaseOrder_Content->find('po_id'=>$_[0]{'id'},'order'=>'id');
 	} # end if
 	return ();
 } # end sub Contents

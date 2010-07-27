@@ -564,7 +564,7 @@ sub Shift {
 $openprint::log->error('Shouldnt have to instantite here');
 # We really shouldn't have to instantiate Shifts here.
 if ( 0 ) {
-			@Shifts = openprint::Equipment_Shift::find(
+			@Shifts = openprint::Equipment_Shift->find(
 					'equipment_id'  =>  $$self{'equipment_id'},
 					'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 					'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
