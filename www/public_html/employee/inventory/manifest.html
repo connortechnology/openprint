@@ -1,55 +1,9 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <script type="text/javascript" src="/javascripts/barcode.js"></script>
 <script type="text/javascript" src="/javascripts/paper.js"></script>
-<script type="text/javascript">
-function mweight_to_gsm( form, type_id ) {
-	var mweight = parseFloat(1*form.elements['mweight-'+type_id].value);
-	var width = parseFloat(1*form.elements['width-'+type_id].value);
-	var height = parseFloat(1*form.elements['height-'+type_id].value);
-	var gsm = parseInt((mweight/1000)/(width*height)*7030645.0)/10;
-	form.elements['gsm-'+type_id].value = gsm;
-}
-function gsm_to_mweight( form, type_id ) {
-	var gsm = parseFloat(1*form.elements['gsm-'+type_id].value);
-	var width = parseFloat(1*form.elements['width-'+type_id].value);
-	var height = parseFloat(1*form.elements['height-'+type_id].value);
-	var mweight = parseInt((gsm/703064.5)*(width*height)*10000)/10;
-	form.elements['mweight-'+type_id].value = mweight;
-}
-
-function delete_content( c_id ) {
-	new Ajax.Request( '_manifest_content.html', {
-		method: 'get',
-		parameters: { content_id: c_id, action: 'Remove' },
-		onSuccess: function(transport){
-			var tr = $('tr-'+c_id);
-			new Insertion.After('tr-'+c_id, transport.responseText);
-			if(!tr){alert('tr not found');}else{tr.parentNode.removeChild(tr);}
-		},
-		evalScripts: true
-	 } );
-} // end function delete_conetnt( c_id )
-
-function add_content(form, type_id) {
-	new Ajax.Request( '_manifest_content.html', {
-			method: 'get', 
-			parameters: {
-				action:		'Add',
-				type_id:    type_id,
-				manifest_id: form.manifest_id.value,
-				rfidtag_id: $('rfidtag_id-'+type_id+'-').value,
-				skid_id:    $('skid_id-'+type_id+'-').value,
-				docket:     $('docket-'+type_id+'-').value,
-				qty_lbs:    $('qty_lbs-'+type_id+'-').value
-			},
-			onSuccess: function (transport) { new Insertion.Before('totals-'+type_id, transport.responseText);return true; }, 
-			evalScripts: true
-		}
-	);
-}
-</script>
+<script type="text/javascript" src="/employee/inventory/manifest.js"></script>
 <div class="Manifest">
-	<form name="f1" id="f1" method="post" action="manifest.html">
+	<form name="f1" id="f1" method="post" action="manifest.html" onsubmit="return manifest_onsubmit(this);">
 		<input type="hidden" id="manifest_id" name="manifest_id" value="<? echo ( $$variable{'Manifest'}->id() ) ?>" />
 		<fieldset>
 			<div class="leftColumn">
@@ -94,7 +48,7 @@ function add_content(form, type_id) {
 		</div>
 		<p class="buttons">
 			<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif', "new Ajax.Updater('Types', '_manifest_type.html', { method: 'get', parameters: { manifest_id: '".$$variable{'Manifest'}->id()."', action: 'Add'}, insertion: 'bottom' } );", '', 'Add Another Stock' ); ) ?>
-			<? echo ( ssi::writeButton( $log, $dbh, 'submit', 'submit.gif', "f1.btnFunction.value='Submit';f1.submit();", '', 'Save' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'submit', 'submit.gif', "f1.btnFunction.value='Submit';if(f1.onsubmit())f1.submit();", '', 'Save' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' ); ) ?>
 		</p>
 		<input type="hidden" name="btnFunction" />

@@ -65,7 +65,7 @@ sub handler {
 		$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
 	} # end foreach
 
-	foreach my $key ( $r->param() ) {
+	foreach my $key ( sort $r->param() ) {
 $log->debug("Paramter: $key => " . $r->param($key) );
 }
 	jsrs::Dispatch( $r, $log, $dbh, \%variable );

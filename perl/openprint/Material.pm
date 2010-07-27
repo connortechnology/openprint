@@ -72,7 +72,7 @@ sub Specification {
 	my ( $self, $name, $range ) = @_;
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::MaterialSpecification->find( 'Material'=>$self, 'order'=>'min' ) ) {
+		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'min' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
 	} # end if

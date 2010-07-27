@@ -38,8 +38,8 @@ sub amount {
 	} # end if
 
 	if ( ! defined $$self{'amount'} ) {
-		if ( $$self{'charge'} ) {
-			$$self{'amount'} = ($$self{'rate'}/100) * $self->Claim()->subtotal();
+		if ( $self->charge() ) {
+			$$self{'amount'} = sprintf('%.2f', ($$self{'rate'}/100) * $self->Claim()->subtotal() );
 		} # end if
 	} # end if
 	return $$self{'amount'};
