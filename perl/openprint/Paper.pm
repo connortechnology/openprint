@@ -297,6 +297,7 @@ sub copy {
 
 sub prices {
 	my ( $self, $list_id ) = @_;
+	$list_id = openprint::pricing::get_pricelist_id( ) if ! $list_id;
 	if ( ! $$self{'Prices'} ) {
 		@{$$self{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $$self{'id'}, 'pricelist_id' => $list_id );
 	} # end if
@@ -914,7 +915,7 @@ sub skids {
 
 sub previous {
     my $self = shift;
-	my @papers = find( 'order'=>'name,finish,colour,weight,width,height' );
+	my @papers = openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i-1] if ($papers[$i] == $self )and ($i > 0);
     } # end if
@@ -922,7 +923,7 @@ sub previous {
 } # end sub previous
 sub next {
     my $self = shift;
-	my @papers = find( 'order'=>'name,finish,colour,weight,width,height' );
+	my @papers = openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' );
 	for ( my $i = 0; $i < @papers; $i += 1 ) {
 		return $papers[$i+1] if ($papers[$i] == $self )and ($i < @papers);
     } # end if
@@ -956,7 +957,7 @@ sub get_price {
 		my $bestPrice;
 		my @Prices = $self->prices( $list_id );
 		if ( (! $$self{'supplied'} ) and ! @Prices ) {
-			$openprint::log->warn( 'No prices for paper for pricelist ' . $list_id );
+			$openprint::log->warn( 'No prices for paper for pricelist ' . $list_id . " $$self{id} " . $self->to_string() );
 			return %price;
 		} # end if
 		foreach my $Price ( @Prices ) {
@@ -1261,14 +1262,14 @@ sub load_from_signature {
 				$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
 				$params{'type'}	= $$specs{'StockType'.$qty_index};
 			} # end if
-			my @Papers = find( %params );
+			my @Papers = openprint::Paper->find( %params );
 			if ( ! @Papers ) {
 #$log->debug("Didn't find specific paper $params{'width'}x$params{'height'}");
 				delete $params{'width'};
 				delete $params{'height'};
-				@Papers = find( %params );
-			} elsif ( @Papers > 1 ) {
-				Carp::cluck("More than 1 paper found in load_from_signature");
+				@Papers = openprint::Paper->find( %params );
+			} elsif ( $qty_index and ( @Papers > 1 ) ) {
+				Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'}");
 			} # end if
 #$log->debug("Found " . @Papers );
 			if ( ! @Papers ) {
