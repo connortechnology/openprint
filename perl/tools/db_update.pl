@@ -2471,7 +2471,7 @@ if ( ! sets::isin( 'paper_prices', \@tables ) ) {
 		$dbh->do($st);
 	} # end foreach
 } # end if
-foreach my $PP ( openprint::PaperPrice->find('units'=>'Per M') ) {
+foreach my $PP ( openprint::PaperPrice->find('Units'=>'Per M') ) {
 	$PP->Cost( sprintf('%.2f', $PP->Cost() * 100 / $PP->Paper()->mweight() ) );
 	$PP->Price( sprintf('%.2f', $PP->Price() * 100 / $PP->Paper()->mweight() ) );
 	$PP->Units('Per 100lbs');
