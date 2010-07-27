@@ -570,7 +570,7 @@ $openprint::log->debug("$1");
 		} # end if
 
 		if ( $first ) {
-			my $module = 'openprint::' . $first;
+			my $module = 'openprint::' . lc $first;
 			$module .= '_'.$second if $second;
 			eval( "require $module;" );
 			$log->warn( "Eval error of require, Reason: " . $@ ) if $@;

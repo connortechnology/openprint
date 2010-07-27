@@ -212,7 +212,11 @@ sub clone {
 sub delete {
 	my ( $self ) = @_;
 	my $type = ref $self;
-	my $table = eval '$'.$type.'::table';
+	if ( ! $$self{'id'} ) {
+		$log->error("Called delete on object with no id of type $type");
+		return;
+	} # end if
+    my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	if ( exists $fields{'deleted'} ) {
 		sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 1 );

@@ -59,6 +59,7 @@ $serial = 'claims_id_seq';
 	'vendor_sms'		=>	'vendor_sms',
 	'vendor_email'		=>	'vendor_email',
 	'editor_id'			=>	'editor_id',
+	'also_notify'		=>	'also_notify',
 );
 
 %transforms = (
@@ -90,6 +91,9 @@ $serial = 'claims_id_seq';
 sub save {
 	my ( $self, $hash ) = @_;
 	$self->subtotal(undef);
+	foreach my $Tax ( $self->Taxes() ) {
+		$Tax->amount(undef);
+	} # end foreach Tax
 	$self->total(undef);
 	if ( ! $$hash{'currency_id'} ) {
 		my $Currency = openprint::Currency::get_current();
@@ -97,7 +101,14 @@ sub save {
 	} # end if
 	$$self{'created_by'} = $session{'user_id'} if ! $$self{'created_by'};
 	$$self{'company_id'} = $session{'company_id'} if ! $$self{'company_id'};
-	return $self->SUPER::save( $hash );
+	my $error = $self->SUPER::save( $hash );
+	if ( ! $error ) {
+		# Taxes
+		foreach my $T ( $self->Taxes() ) {
+			$error .= $T->save();
+		} # end foreach
+	} # end if
+	return $error;
 } # end sub save
 
 sub destroy {
@@ -150,6 +161,7 @@ sub subtotal {
 		foreach my $C ( $self->Contents() ) {
 			$$self{'subtotal'} += $C->total();
 		} # end foreach
+        $$self{'subtotal'} = sprintf('%.2f', $$self{'subtotal'} );
 	} # endif
 	return $$self{'subtotal'};
 } # end sub subtotal
@@ -162,6 +174,7 @@ sub total {
         foreach my $Tax ( $self->Taxes() ) {
             $$self{'total'} += $Tax->amount();
         } # end foreach Tax
+        $$self{'total'} = sprintf('%.2f', $$self{'total'} );
 	} # end if
 	return $$self{'total'};
 } # end sub total
@@ -202,6 +215,9 @@ sub send {
 
 sub Taxes {
     my ( $self ) = @_;
+
+	return if ! ( $$self{'id'} and $$self{'supplier_id'} );
+
     if ( ! $$self{'Taxes'} ) {
         @{$$self{'Taxes'}} = openprint::Claim_Tax->find('claim_id'=>$$self{'id'});
     } # end if

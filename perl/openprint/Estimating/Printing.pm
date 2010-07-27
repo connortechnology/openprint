@@ -927,13 +927,11 @@ sub calc {
 				my @Papers = openprint::Paper->find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
 						'project_type_id'=>$Project->type()->id(),
 						);
-	#$log->debug("# of papers: " . @Papers );
 				my %sizes;
 				foreach my $Paper ( @Papers ) {
 					$sizes{(1*$$Paper{width}).'x'.(1*$$Paper{height})} = $Paper;
 				} # end foreach Paper	
 				my @keys = keys %sizes;
-	#$log->debug("# of sizes: " . @keys );
 				if ( 1 == @keys ) {
 					@$specs{'txtWidth','txtHeight'} = ( $sizes{$keys[0]}->width(), $sizes{$keys[0]}->height() );	
 				} # end if

@@ -19,7 +19,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		foreach my $claim_id ( ref $param{'claims'} eq 'ARRAY' ? @{$param{'claims'}} : split(',',$param{'claims'}) ) {
+		foreach my $claim_id ( ref $param{'claim_id'} eq 'ARRAY' ? @{$param{'claim_id'}} : split(',',$param{'claim_id'}) ) {
 			my $Claim = new openprint::Claim( $claim_id );
 			$variable{'error'} .= $Claim->delete();
 
@@ -166,13 +166,21 @@ sub _select_contact {
 sub _check_for_skid {
 } # end sub _check_for_skid
 sub _editors {
-	$variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
+	my $Claim = $variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
 	if ( $param{'action'} eq 'add' ) {
-		$variable{'error'} = $variable{'Claim'}->save({'editor_id'=>[ sets::union( ( $variable{'Claim'}->editor_id() ? @{$variable{'Claim'}->editor_id()} : () ), $param{'editor_id'} ) ]});
+		$variable{'error'} = $Claim->save({'editor_id'=>[ sets::union( ( $Claim->editor_id() ? @{$Claim->editor_id()} : () ), $param{'editor_id'} ) ]});
 	} elsif ( $param{'action'} eq 'remove' ) {
-		$variable{'error'} = $variable{'Claim'}->save({'editor_id'=>[ sets::exclude( [$param{'editor_id'}], $variable{'Claim'}->editor_id() ) ]});
+		$variable{'error'} = $Claim->save({'editor_id'=>[ sets::exclude( [$param{'editor_id'}], $Claim->editor_id() ) ]});
 	} # end if
 } # end sub _editors
 
+sub _also_notify {
+	my $Claim = $variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
+	if ( $param{'action'} eq 'add' ) {
+		$variable{'error'} = $Claim->save({'also_notify'=>[ sets::union( ( $Claim->also_notify() ? @{$Claim->also_notify()} : () ), $param{'also_notify'} ) ]});
+	} elsif ( $param{'action'} eq 'remove' ) {
+		$variable{'error'} = $Claim->save({'also_notify'=>[ sets::exclude( [$param{'also_notify'}], $Claim->also_notify() ) ]});
+	} # end if
+} # end sub _also_notify
 1;
 __END__

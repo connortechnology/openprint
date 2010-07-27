@@ -17,6 +17,7 @@ require misc;
 require Date::Parse;
 require openprint::User;
 require openprint::PaperAllocation;
+require openprint::Shift;
 
 my $debug = 0;
 
@@ -533,6 +534,12 @@ sub forms {
 	return 0;
 } # end sub forms
 
+sub shift_id {
+	my $Shift = $_[0]->Shift();
+	return $Shift->id() if $Shift;
+	return;
+} # end sub shift_id
+
 sub Shift {
 	my ( $self ) = @_;
 	my $Shift;
@@ -554,7 +561,10 @@ sub Shift {
 				#'limit'			=>	1,
 				);
 		if ( ! @Shifts ) {
-			@Shifts = openprint::Equipment_Shift->find(
+$openprint::log->error('Shouldnt have to instantite here');
+# We really shouldn't have to instantiate Shifts here.
+if ( 0 ) {
+			@Shifts = openprint::Equipment_Shift::find(
 					'equipment_id'  =>  $$self{'equipment_id'},
 					'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 					'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
@@ -567,6 +577,7 @@ sub Shift {
 					'limit'		 =>  1,
 					) if ! @Shifts;
 			$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
+} # end if
 		} else {
 			$Shift = shift @Shifts;
 			if ( @Shifts ) {
@@ -751,6 +762,11 @@ sub split {
 
 	} # end if
 } # end sub split
+
+sub to_string {
+	my $self = $_[0];
+	return sprintf('%d %s on %s starting %s', $self->project_id(), join(',', @{$self->service_id()}), $self->Equipment()->name(), $self->starttime() );
+} # end sub to_string
 
 1;
 __END__

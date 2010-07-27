@@ -21,4 +21,4 @@ return $html;
 	return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ] );
 ) ?>
 </select>
-<? echo ( ssi::writeButton( $log, $dbh, 'add', 'add.gif', "new Ajax.Updater( 'editors', '_editors.html', { parameters: { claim_id: $$variable{'Claim'}{id}, editor_id: \$('new_editor_id').value, action:'add'} } );", '', 'Add' ); ) ?>
+<? echo ( ssi::writeButton( $log, $dbh, 'editorsadd', 'add.gif', "new Ajax.Updater( 'editors', '_editors.html', { parameters: { claim_id: $$variable{'Claim'}{id}, editor_id: \$('new_editor_id').value, action:'add'} } );", '', 'Add' ); ) ?>
