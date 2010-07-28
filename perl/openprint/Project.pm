@@ -6,7 +6,7 @@ package openprint::Project;
 use strict;
 use openprint ();
 
-use vars qw( $log $dbh %config $table $serial %fields );
+use vars qw( $log $dbh %config $table $serial %fields %find_fields );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -64,6 +64,14 @@ $serial = 'lngProjectIndex_seq';
 	'rush'				=>	'rush',
 	'style_id'			=>	'style_id',
 	'summary'			=>	'summary',
+);
+
+%find_fields = (
+	'take_over' => q{(SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id)},
+	'ordered_on_start'	=>	q{(SELECT dtmOrderDate FROM Orders WHERE Index=order_id)},
+	'salesrep_id'		=>	'(SELECT employeeindex FROM Orders WHERE Index=order_id)',
+	'takenover_on'		=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=index AND description LIKE 'Taken Over by%')},
+	'csr_id'			=>	'(SELECT salesrep_id FROM Companies WHERE companies.id=company_id)',
 );
 
 sub delete {
@@ -530,245 +538,6 @@ sub update_status {
 	return $$self{'status'};
 
 } # end sub update_project_status
-
-sub find {
-	my $self = shift;
-	my %params = @_;
-	my $sql = q{SELECT * FROM Projects WHERE 1>0};
-	my @values;
-	if ( $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('.join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-	if ( $params{'id_start'} and $params{'id_end'} ) {
-			$sql .= ' AND (id BETWEEN ? AND ?)';
-			push @values, @params{'id_start','id_end'};
-	} elsif ( $params{'id_start'} ) {
-			$sql .= ' AND id >= ?';
-			push @values, $params{'id_start'};
-	} elsif ( $params{'id_end'} ) {
-			$sql .= ' AND id <= ?';
-			push @values, $params{'id_end'};
-	} # end if
-	if ( $params{'id_like'} ) {
-		$sql .= " AND id::text LIKE '$params{'id_like'}%'";
-	} # end if
-
-	if ( $params{'type_id'} ) {
-		$sql .= ' AND type_id=?';
-		push @values, $params{'type_id'};
-    } # end if
-	if ( exists $params{'predefined'} ) {
-		if ( $params{'predefined'} ne '' ) {
-			$sql .= ' AND predefined=?';
-			push @values, $params{'predefined'};
-		} # end if
-	} # end if
-
-	if ( $params{'reference'} ) {
-		$sql .= q{ AND strprojectreference LIKE ?};
-		push @values, '%'.$params{'reference'}.'%';
-	} # en dif
-	if ( exists $params{'company_id'} ) {
-		if ( ref $params{'company_id'} eq 'ARRAY' ) {
-			if ( @{$params{'company_id'}} ) {
-				$sql .= q{ AND company_id IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
-				push @values, @{$params{'company_id'}};
-			} else {
-				$openprint::log->warn("EMpty company array passed to openprint::Project->find");
-			} # end if
-		} elsif ( ! defined $params{'company_id'} ) {
-			$sql .= q{ AND company_id IS NULL};
-		} else {
-			$sql .= q{ AND company_id=?};
-			push @values, $params{'company_id'};
-		} # end if
-	} # end if
-	if ( $params{'user_id'} ) {
-		if ( $params{'user_id'} =~ /\D/ ) {
-			$sql .= " AND (user_id $params{'user_id'})";
-		} else {
-			$sql .= q{ AND (user_id=?)};
-			push @values, $params{'user_id'};
-		} # end if
-	} # end if
-	if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-		$sql .= q{ AND (dtmcreationdate BETWEEN ? AND ?)};
-		push @values, @params{'created_on_start','created_on_end'};
-	} elsif ( $params{'created_on_start'} ) {
-		$sql .= q{ AND (dtmcreationdate >= ?)};
-		push @values, $params{'created_on_start'};
-	} elsif ( $params{'created_on_end'} ) {
-		$sql .= q{ AND (dtmcreationdate <= ?)};
-		push @values, $params{'created_on_end'};
-	} # end if
-	if ( $params{'updated_on_start'} and $params{'updated_on_end'} ) {
-		$sql .= q{ AND (dtmlastmodified BETWEEN ? AND ?)};
-		push @values, @params{'updated_on_start','updated_on_end'};
-	} elsif ( $params{'updated_on_start'} ) {
-		$sql .= q{ AND (dtmlastmodified >= ?)};
-		push @values, $params{'updated_on_start'};
-	} elsif ( $params{'updated_on_end'} ) {
-		$sql .= q{ AND (dtmlastmodified <= ?)};
-		push @values, $params{'updated_on_end'};
-	} # end if
-	if ( $params{'updated_on_>='} ) {
-		$sql .= q{ AND (dtmlastmodified >= ?)};
-		push @values, $params{'updated_on_>='};
-	} # end if
-	if ( $params{'updated_on_<='} ) {
-		$sql .= q{ AND (dtmlastmodified <= ?)};
-		push @values, $params{'updated_on_<='};
-	} # end if
-
-	if ( $params{'take_over_start'} and $params{'take_over_end'} ) {
-		$sql .= q{ AND ((SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id) BETWEEN ? AND ?)};
-		push @values, @params{'take_over_start','take_over_end'};
-	} elsif ( $params{'take_over_start'} ) {
-		$sql .= q{ AND ((SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id) >= ?)};
-		push @values, $params{'take_over_start'};
-	} elsif ( $params{'take_over_end'} ) {
-		$sql .= q{ AND ((SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id) <= ?)};
-		push @values, $params{'take_over_end'};
-	} # end if
-	
-	if ( $params{'ordered_on_start'} and $params{'ordered_on_end'} ) {
-		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) BETWEEN ? AND ?)};
-		push @values, @params{'ordered_on_start','ordered_on_end'};
-	} elsif ( $params{'ordered_on_start'} ) {
-		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) >= ?)};
-		push @values, $params{'ordered_on_start'};
-	} elsif ( $params{'ordered_on_end'} ) {
-		$sql .= q{ AND ((SELECT dtmOrderDate FROM Orders WHERE Index=order_id) <= ?)};
-		push @values, $params{'ordered_on_end'};
-	} # end if
-
-	if ( $params{'salesrep_id'} ) {
-		$sql .= ' AND (SELECT employeeindex FROM Orders WHERE Index=order_id)=?';
-		push @values, $params{'salesrep_id'};
-	} # end if
-	if ( $params{'csr_id'} ) {
-		$sql .= ' AND ( company_id IN (SELECT id FROM Companies WHERE salesrep_id=?) )';
-		push @values, $params{'csr_id'};
-	} # end if
-
-	if ( $params{'value_start'} and $params{'value_end'} ) {
-		$sql .= q{ AND ( (price1 BETWEEN ? AND ? ) OR (price2 BETWEEN ? AND ?) OR (price3 BETWEEN ? AND ? ) )};
-		push @values, @params{'value_start','value_end','value_start','value_end','value_start','value_end'};
-	} elsif ( $params{'value_start'} ) {
-		$sql .= q{ AND (price1 >= ? OR price2 >= ? OR price3 >= ?)};
-		push @values, @params{'value_start','value_start','value_start'};
-	} elsif ( $params{'value_end'} ) {
-		$sql .= q{ AND (price1 <= ? OR price2 <= ? OR price3 <= ?)};
-		push @values, @params{'value_end','value_end','value_end'};
-	} # end if
-	if ( $params{'status'} ) {
-		if ( ref $params{'status'} eq 'ARRAY' ) {
-			if ( @{$params{'status'}} ) {
-				$sql .= q{ AND (strStatus IN (} . join(',', map {'?'} @{$params{'status'}}). ') )';
-						push @values, @{$params{'status'}};
-			} # end if
-		} else {
-			$sql .= q{ AND (strStatus=?)};
-			push @values, $params{'status'};
-		} # end if
-	} # end if
-	if ( exists $params{'reprint'} ) {
-		if ( ref $params{'reprint'} eq 'ARRAY' ) {
-			if ( @{$params{'reprint'}} ) {
-				$sql .= q{ AND (reprint IN (} . join(',', map {'?'} @{$params{'reprint'}}). ') )';
-						push @values, @{$params{'reprint'}};
-			} # end if
-		} elsif ( ! defined $params{'reprint'} ) {
-			$sql .= q{ AND (reprint IS NULL)};
-		} else {
-			$sql .= q{ AND (reprint=?)};
-			push @values, $params{'reprint'};
-		} # end if
-	} # end if
-	if ( $params{'used_press_name'} ) {
-		if ( ref $params{'used_press_name'} eq 'ARRAY' ) {
-			if ( @{$params{'used_press_name'}} ) {
-				$sql .= ' AND (';
-				$sql .= join(' OR ', map { q{(? IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Projects.id AND strName IN ( 'UsePress','ddmPress1','ddmPress2','ddmPress3')))} } @{$params{'used_press_name'}} );
-				$sql .= ')';
-				push @values, @{$params{'used_press_name'}};
-			} else {
-$openprint::log->debug("No presses in used_press_name");
-			} # end if
-		} else {
-			$sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Projects.id AND strName='UsePress')};
-			push @values, $params{'used_press_name'};
-		} # end if
-	} # end if
-	if ( $params{'estimated_press_name'} ) {
-		$sql .= q{ AND ?::text IN (SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=Projects.id AND strName IN ('ddmPress1','ddmPress2','ddmPress3') )};
-		push @values, $params{'estimated_press_name'};
-	} # end if
-
-	if ( $params{'due_date_start'} and $params{'due_date_end'} ) {
-		$sql .= q{ AND (due_date BETWEEN ? AND ?};
-		push @values, @params{'due_date_start','due_date_end'};
-		if ( exists $params{'due_date'} and ! $params{'due_date'} ) {
-			$sql .= q{ OR due_date IS NULL};
-		} # end if
-		$sql .= ')';
-	} elsif ( $params{'due_date_start'} ) {
-		$sql .= q{ AND due_date >= ?};
-		push @values, $params{'due_date_start'};
-	} elsif ( $params{'due_date_end'} ) {
-		$sql .= q{ AND due_date <= ?};
-		push @values, $params{'due_date_end'};
-	} # end if
-	if ( $params{'due_date_>='} ) {
-		$sql .= q{ AND due_date >= ?};
-		push @values, $params{'due_date_>='};
-	} # end if
-	if ( $params{'due_date_<='} ) {
-		$sql .= q{ AND due_date <= ?};
-		push @values, $params{'due_date_<='};
-	} # end if
-	if ( $params{'takenover_on_>='} ) {
-		$sql .= q{ AND (SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=index AND description LIKE 'Taken Over by%') >= ?};
-		push @values, $params{'takenover_on_>='};
-	} # end if
-	if ( $params{'takenover_on_<='} ) {
-		$sql .= q{ AND (SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=index AND description LIKE 'Taken Over by%') <= ?};
-		push @values, $params{'takenover_on_<='};
-	} # end if
-	if ( $params{'docket'} ) {
-		$sql .= ' AND lngdocketnumber=?';
-		push @values, $params{'docket'};
-	} # end if
-	if ( $params{'docket_>='} and $params{'docket_<='} ) {
-		$sql .= ' AND ( lngdocketnumber BETWEEN ? AND ? )';
-		push @values, @params{'docket_>=','docket_<='};
-	} elsif ( $params{'docket_>='} ) {
-		$sql .= ' AND lngdocketnumber >= ?';
-		push @values, $params{'docket_>='};
-	} elsif ( $params{'docket_<='} ) {
-		$sql .= ' AND lngdocketnumber <= ?';
-		push @values, $params{'docket_<='};
-	} # end if
-	$sql .= $params{'misc'} if $params{'misc'};
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->debug("Error loading Projects ($sql) (@values) Reason: " . $openprint::dbh->errstr );
-	} elsif ( ! @$data ) {
-		$openprint::log->debug("No	Projects ($sql) (@values) " );
-	} elsif ( $debug ) {
-		$openprint::log->debug("Loading Projects ($sql) (@values) # of results:" . @$data );
-	} # end if
-	return map { new openprint::Project( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub save {
 	my ( $self, $hash ) = @_;

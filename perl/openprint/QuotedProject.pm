@@ -3,7 +3,7 @@ package openprint::QuotedProject;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %session %config $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh %session %config $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \%openprint::session;
@@ -12,7 +12,7 @@ use vars qw( $log $dbh %session %config $table $serial %fields %transforms %defa
 require sql;
 require openprint::QuoteLevel;
 
-my $debug = 0;
+$debug = 1;
 
 $table = 'tbl_quote_details';
 $serial = 'tbl_quote_details_id_seq';

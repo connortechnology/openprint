@@ -193,8 +193,7 @@ sub information {
 # this should only happen if there was an error creating the quote
 	$quote_id = $session{'quote_id'} if ! $quote_id;
 
-	my $Quote = new openprint::Quote( $quote_id );	
-	$variable{'Quote'} = $Quote;
+	my $Quote = $variable{'Quote'} = new openprint::Quote( $quote_id );	
 	$session{'quote_id'} = $quote_id;
 
 	if ( $param{'remove'} ) {

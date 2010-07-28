@@ -6,7 +6,7 @@ use MIME::Base64;
 use openprint::Currency;
 use strict;
 use openprint ();
-use vars qw($r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
+use vars qw( $debug $r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -19,7 +19,7 @@ require openprint::logs;
 require openprint::QuotedProject;
 require openprint::QuotedProduct;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'quotes';
 $serial = 'quotes_id_seq';
@@ -54,6 +54,7 @@ $serial = 'quotes_id_seq';
 %defaults = (
 	'created_on'	=>	'NOW()',
 	'updated_on'	=>	'NOW()',
+	'currency_id'	=>	'openprint::Currency::get_current()',
 );
 
 sub load {

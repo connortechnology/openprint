@@ -45,7 +45,7 @@
 			</p>
 			<p>
 				<label>Reference:</label>
-				<input type="text" id="Reference" name="Reference" onkeyup="load_projects( this.form );" />
+				<input type="text" id="reference" name="reference" value="<? echo ( $param{'reference'} ) ?>" onkeyup="load_projects( this.form );" />
 			</p>
 			<p>
 				<label>Status:</label>
@@ -96,6 +96,12 @@
 			</p>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 			</div>
+			<p class="buttons">
+					<? echo ( join( '',
+					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
+					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+					); ) ?>
+			</p>
 		</fieldset>
 		<div id="ProjectList"><!--#include virtual="_history.html"--></div>
 	</div>

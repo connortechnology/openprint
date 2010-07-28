@@ -180,7 +180,7 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 
 			if ( ( ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-				$$self{$field} = $defaults{$field};
+				$$self{$field} = eval $defaults{$field};
 			} else {
 	#$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			} # end if
