@@ -160,7 +160,7 @@ sub price {
 		$$self{'price'.$qty_index} = $new_value;
 	} # end if
 	if ( ! (1*$$self{'price'.$qty_index}) ) {
-		$$self{'price'.$qty_index} = sprintf('%.2f', $self->Project()->price($qty_index) * ( 1 + $$self{'markup'}/100 ) );
+		$$self{'price'.$qty_index} = sprintf('%.2f', $self->Project()->price($qty_index) * ( 1 + $$self{'markup'.$qty_index}/100 ) );
 	} # end if
 	return $$self{'price'.$qty_index};
 } # end sub total
