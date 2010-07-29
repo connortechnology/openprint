@@ -271,7 +271,8 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 				<input type="text" id="ForFax" name="ForFax" value="<?ForFax?>" />
 			</li>
 			</ul></div>
-		</fieldset></div>
+		</fieldset>
+	</div>
 	<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 		<div id="Information">
 			<fieldset><legend>Information</legend>
