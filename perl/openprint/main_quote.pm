@@ -307,8 +307,8 @@ sub submit {
 		foreach my $QP ( $Quote->Quoted_Projects() ) {
 			foreach my $qty_index ( 1 .. 3 ) {
 				$QP->markup( $qty_index, $param{'markup'.$qty_index.'_'.$QP->project_id()} );
-				$QP->save();
-			} # end if
+			} # end foreach
+			$QP->save();
 		} # end foreach
 		foreach my $QP ( $Quote->Products() ) {
 				$QP->save({
@@ -338,15 +338,15 @@ sub confirmation {
 
 		my @subtotals;
 
-		foreach my $Project ( $Quote->Quoted_Projects() ) {
+		foreach my $QP ( $Quote->Quoted_Projects() ) {
 			foreach my $qty_index ( 1 .. 3 ) {
-				$Project->quantity( $Project->Project()->quantity() );
-				$Project->price( $qty_index, $Project->Project()->price($qty_index)*(1+($Project->markup( $qty_index )/100)) );	
-				$subtotals[$qty_index] += $Project->price( $qty_index );
+				$QP->quantity( $QP->Project()->quantity() );
+				$QP->price( $qty_index, undef );	
+				$subtotals[$qty_index] += $QP->price( $qty_index );
 			} # end foreach
-			$Project->description( $Project->reference() );
-			$Project->save();
-		} # end while
+			$QP->description( $QP->Project()->reference() );
+			$QP->save();
+		} # end foreach QP
 		foreach my $Product ( $Quote->Products() ) {
 			$Product->save({'cost'=>$Product->cost()});
 		} # end foreach Product

@@ -49,7 +49,7 @@ $serial = 'quotes_id_seq';
 
 %find_fields = (
 	'salesrep_id' => '(SELECT lngsalespersion FROM companies WHERE id=company_id)',
-	'for_name' => q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=index)},
+	'for_name' => q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=quotes.id)},
 );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
@@ -159,13 +159,13 @@ sub add_log {
 
 sub Quoted_Projects {
 	my $self = shift;
-	return map {new openprint::QuotedProject( $_ );} sql::execute( undef, undef, q{SELECT id FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
+	return openprint::QuotedProject->find('quote_id'=>$$self{'id'});
 } # end sub Quoted_Projects
 
 sub Projects {
 	my $self = shift;
 	if ( ! exists $$self{'Projects'} ) {
-	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT project_id FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
+		@{$$self{'Projects'}} = map { $_->Project() } $self->Quoted_Projects();
 	} # end if
 	return @{$$self{'Projects'}};
 } # end sub projects
@@ -356,6 +356,7 @@ sub send {
 					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					TO      => sprintf('%s %s <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					#TO      => '"Isaac Connor" <iconnor@connortechnology.com>',
+BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
@@ -381,6 +382,7 @@ sub send {
 				SMTP    => $openprint::config{'Mail Server'},
 				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
+BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id}",
 				);
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
@@ -403,7 +405,7 @@ sub send {
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'QuotingEmail'},
 					TO      => $openprint::config{'QuotingEmail'},
-#BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
+BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 					SUBJECT => "$$self{'for_companyname'} : Quote $$self{id}",
 					);
 			misc::send_email_with_attachment( $log, \%mail, @body, "Quote$$self{id}.html", $email_template, 'text/html', 'quoted-printable' );

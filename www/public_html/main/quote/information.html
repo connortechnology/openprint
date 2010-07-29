@@ -317,7 +317,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<tr<?rowclass?>> 
 				<td class="projects" rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
 				<td align="center"> 
-					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="5" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
+					<input type="text" name="markup<?index?>_<?project_index?>" size="5" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
 				</td>
 				<td align="right"><?qty?></td>
 				<td align="right"> 
@@ -333,7 +333,7 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<? if ( $$variable{'qty'} ) ?>
 			<tr<?rowclass?>> 
 				<td align="center"> 
-					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="6"  value="<?markup?>" onkeyup="calc_from_markup(f1, this);"/>
+					<input type="text" name="markup<?index?>_<?project_index?>" size="6"  value="<?markup?>" onkeyup="calc_from_markup(f1, this);"/>
 				</td>
 				<td align="right"><?qty?></td>
 				<td align="right"> 
