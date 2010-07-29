@@ -1,13 +1,11 @@
 package openprint::QuotedProject;
-@ISA = qw(openprint::Project);
+@ISA = qw(openprint::Object);
 
 use strict;
 use openprint ();
-use vars qw( $debug $log $dbh %session %config $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*session = \%openprint::session;
-*config = \%openprint::config;
 
 require sql;
 require openprint::QuoteLevel;

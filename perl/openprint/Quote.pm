@@ -52,9 +52,12 @@ $serial = 'quotes_id_seq';
 	'for_name' => q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=index)},
 );
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
-	'currency_id'	=>	'openprint::Currency::get_current()',
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'currency_id'	=>	'openprint::Currency::get_current()->id()',
+	'user_id'		=>	'$openprint::session{user_id}',
+	'company_id'	=>	'$openprint::session{company_id}',
+	'status'		=>	q`'Incomplete'`,
 );
 
 sub load {
@@ -77,11 +80,11 @@ sub save {
 	my %sql;
 	foreach my $key ( keys %fields ) {
 		next if ! $fields{$key};
-		$sql{$fields{$key}} = ( defined $$self{$key} ? $$self{$key} : $defaults{$key} );
+		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
 		
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
-		my $ac = sql::start_transaction( $dbh );
 		if ( $openprint::config{'QuoteIDFormat'} eq 'Year' ) {
 			$dbh->do( "LOCK TABLE $table IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 
@@ -99,10 +102,14 @@ sub save {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
-		sql::end_transaction( $dbh, $ac );
 	} else {
-		sql::update( undef, undef, $table, ['id=?', $$self{'id'}], \%sql );
+		my $error = sql::update( undef, undef, $table, ['id=?', $$self{'id'}], \%sql );
+		if ( $error ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} # end if
+		sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return;
 } # end sub save
@@ -138,7 +145,7 @@ sub status {
 		#$self->add_log( "Changed Status to $new_status" );
 	} # end if
 	return $$self{'status'};
-} # end sub set_status
+} # end sub status
 
 sub add_log {
 	my ( $self, $comment ) = @_;

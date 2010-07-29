@@ -43,12 +43,14 @@ sub make_quote_from_quote {
 # check that the specified quote actually exists.
 	if ( $Quote->id() and ( $Quote->company_id() == $customer ) ) {
 # pull info for the quote we are duplicating
-		my $new_quote_id = create_quote();
+		my $NewQuote = new openprint::Quote();
+		$NewQuote->save();
+		my $new_quote_id = $NewQuote->id();
 		
 		my @data = sql::execute( $log, $dbh, 'SELECT project_id, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE quote_id=?', $quote_id );
 		while ( @data ) {
 			my ( $project_index, $markup1, $markup2, $markup3 ) = splice @data, 0, 4;
-			add_project_to_quote( $r, $log, $dbh, \%variable, $new_quote_id, $project_index );
+			add_project_to_quote( $new_quote_id, $project_index );
 			sql::update( $log, $dbh, 'tbl_Quote_Details', ['quote_id=? AND project_id=?', $new_quote_id, $project_index],[
 					'dblMarkup1', 1*$markup1,
 					'dblMarkup2', 1*$markup2,
@@ -60,7 +62,6 @@ sub make_quote_from_quote {
 		my %by;
 		openprint::quote::get_user_by_info( $log, $dbh, \%by, $quote_id );
 		openprint::quote::get_user_for_info( $log, $dbh, \%for, $quote_id );
-		my $NewQuote = new openprint::Quote( $new_quote_id );
 		$NewQuote->store_user_by_info( \%by );
 		$NewQuote->store_user_for_info( \%for );
 		$NewQuote->add_log( 'Copied from quote ' . $quote_id );
@@ -113,18 +114,17 @@ sub history_details {
 } # end sub history_details
 
 sub add_project_to_quote {
-	my ( $r, $log, $dbh, $variable, $quote_id, $project_id ) = @_;
-
-	$project_id = $param{'ProjectIndex'} if ! $project_id;
-	$project_id = $session{'project_id'} if ! $project_id;
+	my ( $quote_id, $project_id ) = @_;
 
 	$quote_id = $session{'quote_id'} if ! $quote_id;
 	$quote_id = new openprint::Quote( $quote_id )->id() if $quote_id;
-	$quote_id = create_quote() if ! $quote_id;
-	$session{'quote_id'} = $quote_id;
-
 	my $Quote = new openprint::Quote( $quote_id );
+	$Quote->save() if ! $Quote->id();
+	$session{'quote_id'} = $quote_id = $Quote->id();
+	return if ! $quote_id;
 
+	$project_id = $param{'ProjectIndex'} if ! $project_id;
+	$project_id = $session{'project_id'} if ! $project_id;
 	# check to make sure project isn't already in the quote.
 	my @QuotedProjects = openprint::QuotedProject->find('quote_id'=>$Quote->id(), 'project_id'=>$project_id );
 	if ( @QuotedProjects > 1 ) {
@@ -154,19 +154,6 @@ $openprint::log->error( $error );
 	return $quote_id;
 } # end sub add_project_to_quote
 
-sub create_quote {
-	my $Quote = new openprint::Quote();
-	$Quote->user_id( $session{'user_id'} );
-	$Quote->company_id( $session{'company_id'} );
-	$Quote->created_on( undef );
-	$Quote->updated_on( undef );
-	$Quote->status( 'Incomplete' );
-	$Quote->Currency( openprint::Currency::get_current() );
-	$Quote->save();
-
-	return $Quote->id();
-} # end sub create_quote
-
 # this page displays the user info page.
 # It also processes and stores the information from the details page, in terms of markup, etc.
 sub information {
@@ -182,7 +169,7 @@ sub information {
 		});
 		$quote_id = $Quote->id();
 	} elsif ( $param{'btnFunction'} eq 'Process Quote' ) {
-		$quote_id = add_project_to_quote( $r, $log, $dbh, \%variable );
+		$quote_id = add_project_to_quote( );
 	} elsif ( ($param{'btnFunction'} eq 'Process New Quote') and $param{'quote_id'} ) {
 		$quote_id = make_quote_from_quote( $r, $log, $dbh, @session{'company_id','user_id'}, $param{'quote_id'} );
 	} elsif ( $param{'btnFunction'} eq 'Continue' ) {
@@ -268,11 +255,9 @@ sub submit {
 
     my $quote_id = $param{'quote_id'};
 	$quote_id = $session{'quote_id'} if ! $quote_id;
-	if ( ! $quote_id ) {
-		$quote_id = create_quote();
-		$session{'quote_id'} = $quote_id;
-	} # end if
     my $Quote = $variable{'Quote'} = new openprint::Quote( $quote_id );
+	$Quote->save() if ! $Quote->id();
+	$session{'quote_id'} = $Quote->id();
 
     if ( $param{'btnFunction'} eq 'Continue' ) {
 		my %by;

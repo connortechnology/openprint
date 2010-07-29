@@ -32,8 +32,8 @@ require openprint::PaperAllocation;
 sub delete_unfinished_orders {
 	# clean out old orders
 	my $ac = sql::start_transaction( $dbh );
-	foreach my $order ( sql::execute( $log, $dbh, q{SELECT Index FROM Orders WHERE strSessionID=? AND strStatus='Incomplete'}, $session{_session_id} ) ) {
-		new openprint::Order( $order )->delete();
+	foreach my $Order ( openprint::Order->find('session_id'=>$session{_session_id},'status'=>'Incomplete') ) {
+		$Order->delete();
 	} # end foreach
 	sql::update( $log, $dbh, 'Orders', ['strSessionID=?', $session{'_session_id'}], 'strSessionID', undef );
 	sql::end_transaction( $dbh, $ac );
@@ -46,7 +46,7 @@ sub get_unfinished_order {
 		return $Order->id() if $Order->id();
 	} # end if
 
-	my @Orders = openprint::Order->find('session_id'=>$session{'_session_id'}, 'status'=>'Re-Opened', 'order'=>'index DESC' );
+	my @Orders = openprint::Order->find('session_id'=>$session{'_session_id'}, 'status'=>'Re-Opened', 'order'=>'id DESC' );
 	foreach my $Order ( @Orders ) {
 		if ( ! $Order->company_id() ) {
 			$log->error("Re-Opened Order has no company for order $$Order{id}!");
@@ -58,7 +58,7 @@ sub get_unfinished_order {
 		} # end if
 	} # foreach
 
-	@Orders = openprint::Order->find('session_id'=>$session{'_session_id'}, 'status'=>'Incomplete', 'order'=>'index DESC' );
+	@Orders = openprint::Order->find('session_id'=>$session{'_session_id'}, 'status'=>'Incomplete', 'order'=>'id DESC' );
 
 	foreach my $Order ( @Orders ) {
 		if ( ! $Order->company_id() ) {
@@ -78,7 +78,7 @@ sub get_unfinished_order {
 } # end sub get_unfinished_order
 
 sub get_order_id {
-	my ( $order ) = sql::execute( $log, $dbh, 'SELECT MAX(Index) FROM Orders' );
+	my ( $order ) = sql::execute( $log, $dbh, 'SELECT MAX(Id) FROM Orders' );
 
 	$order =~ /(\d\d\d\d)/;
 	if ( $1 != ( 1900 + (localtime(time))[5] ) or $order eq '' ) {
@@ -532,7 +532,7 @@ sub cancel_order {
 	my ( $order_id ) = @_;
 
 	my $Order = new openprint::Order( $order_id );
-	sql::update( $log, $dbh, 'Orders', ['Index=?',$order_id], 'strStatus', 'Cancelled' );
+	$Order->save({'status'=>'Cancelled'});
 	$_ = 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?';
 	foreach my $project_index ( sql::execute( $log, $dbh, $_, $order_id ) ) {
 		my $Project = new openprint::Project( $project_index );

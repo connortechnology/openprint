@@ -7,7 +7,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %fields %defaults %transforms $no_cache 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
+my $debug = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -180,7 +180,8 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 
 			if ( ( ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-				$$self{$field} = eval $defaults{$field};
+				$$self{$field} = eval($defaults{$field});
+				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			} else {
 	#$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			} # end if

@@ -1,10 +1,6 @@
 <? eval (
-	$param{'/main/order/history.html?lastupdated'} = time;
-	if ( $param{'ddmStartYear'} ) {
-		openprint::store_session( '/main/order/history.html', \%param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
-	} # end if
 	$$variable{'Currency'} = openprint::Currency::get_current();
-	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = ( $$variable{'Currency'}->name(),$$variable{'Currency'}->symbol(), $$variable{'Currency'}->short());
+	@$variable{'CurrencyName','CurrencySymbol','CurrencyShort'} = $$variable{'Currency'}->get('name','symbol','short');
 	if ( $param{'OrderID'} ) {
 		@{$$variable{'Orders'}} = openprint::Order->find('id'=>$param{'OrderID'},'company_id'=>$session{'company_id'}, );
 		if ( sets::isin( $session{'user_type'}, ['A','E'] ) and ! @{$$variable{'Orders'}} ) {
@@ -18,11 +14,11 @@
 	} else {
 
 		@{$$variable{'Orders'}} = openprint::Order->find(
-				'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/order/history.html?ddmStartYear','/main/order/history.html?ddmStartMonth','/main/order/history.html?ddmStartDay'} ),
-				'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/order/history.html?ddmEndYear','/main/order/history.html?ddmEndMonth','/main/order/history.html?ddmEndDay'} ),
+				'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/order/history.html?created_on_start_year','/main/order/history.html?created_on_start_month','/main/order/history.html?created_on_start_day'} ),
+				'created_on_end'	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/order/history.html?created_on_end_year','/main/order/history.html?created_on_end_month','/main/order/history.html?created_on_end_day'} ),
 				'company_id'		=>	$session{'company_id'},
-				'user_id'			=>	$session{'/main/order/history.html?ddmOrderedBy'},
-				'order'				=> 'Index DESC',
+				( $session{'/main/order/history.html?ddmOrderedBy'} ? ( 'user_id'			=>	$session{'/main/order/history.html?ddmOrderedBy'} ) : () ),
+				'order'				=>	$openprint::Order::fields{'id'}.' DESC',
 				);
 	} # end if
 
@@ -70,11 +66,11 @@
 		<tr<?rowclass?>> 
 			<td><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
 			<td><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
-			<td align="left"><? echo ( $$variable{'Order'}->name(); ) ?></td>
-			<td class="Date"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></td>
-			<td class="Status"><? echo ( $$variable{'Order'}->status(); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'balance'} ); ) ?></td>
+			<td align="left"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->name(); ) ?></a></td>
+			<td class="Date"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></a></td>
+			<td class="Status"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
+			<td class="Price"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></a></td>
+			<td class="Price"><a href="history_details.html?OrderID=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format( $$variable{'balance'} ); ) ?></a></td>
 		</tr>
 		<tr<?rowclass?>>
 			<td colspan="2">&nbsp;</td>
