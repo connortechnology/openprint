@@ -374,7 +374,7 @@ $log->debug("Have no job: $Job");
 <? endif ( @{$$variable{'PurchaseOrders'}} ) ?>
 </div>
 <div class="rightColumn">
-	<form name="LabelForm" id="LabelForm" method="post" action="/employee/production/labels/label.html">
+	<form name="LabelForm" id="LabelForm" method="post" action="/employee/production/labels/label.html" onsubmit="if(!get_ddm_value(document.LabelForm.type_id)){alert('Please select the label type.');return false;} else {return true};">
 		<input type="hidden" name="project_id" value="<? echo ( $$variable{'ProjectIndex'} ) ?>"/>
 		<fieldset><legend>Labels &amp; Packing Slips</legend>
 			<div id="Labels"><!--#include virtual="/employee/production/_labels.html"--></div>

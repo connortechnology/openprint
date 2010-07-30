@@ -19,11 +19,12 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		foreach my $claim_id ( ref $param{'claims'} eq 'ARRAY' ? @{$param{'claims'}} : split(',',$param{'claims'}) ) {
+		foreach my $claim_id ( ref $param{'claim_id'} eq 'ARRAY' ? @{$param{'claim_id'}} : split(',',$param{'claim_id'}) ) {
 			my $Claim = new openprint::Claim( $claim_id );
 			$variable{'error'} .= $Claim->delete();
 
 		} # end foreach claim_id
+		%param = ();
 	} # end if
 	ssi::save_params( '/employee/claim/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','supplier_id', 'created_by', 'status' ) );
 } # end sub history
@@ -46,7 +47,7 @@ sub view {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $Claim->id() ) {
 			$Claim->id( $param{'claim_id'} );
-			$variable{'error'} .= $Claim->save();
+			$variable{'error'} .= $Claim->save({'supplier_id'=>$param{'supplier_id'}});
 		} # end if
 		foreach my $C ( $Claim->Contents() ) {
 			if ( ! $param{"rfidtag_id-$$C{id}"} ) { $param{"rfidtag_id-$$C{id}"} = undef; };
@@ -74,6 +75,12 @@ sub view {
 					'description'	=>	$param{"description-$$C{id}"},
 					} );
 		} # end foreach Contents
+		foreach my $Tax ( $Claim->Taxes() ) {
+			# Order is important here.
+			$Tax->charge($param{'tax_charge-'.$Tax->id()});
+			$Tax->amount(undef);
+			$Tax->save();
+		} # end foreach Tax
 		$Claim->filed_on( $param{'filed'} ? join('-', @param{'filed_on_year','filed_on_month','filed_on_day'} ) : undef );
 		$Claim->sent_to_accounts_on( $param{'sent_to_accounts'} ? join('-', @param{'sent_to_accounts_on_year','sent_to_accounts_on_month','sent_to_accounts_on_day'} ) : undef );
 		$Claim->invoiced_on( $param{'invoiced'} ? join('-', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} ) : undef );
@@ -159,13 +166,21 @@ sub _select_contact {
 sub _check_for_skid {
 } # end sub _check_for_skid
 sub _editors {
-	$variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
+	my $Claim = $variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
 	if ( $param{'action'} eq 'add' ) {
-		$variable{'error'} = $variable{'Claim'}->save({'editor_id'=>[ sets::union( ( $variable{'Claim'}->editor_id() ? @{$variable{'Claim'}->editor_id()} : () ), $param{'editor_id'} ) ]});
+		$variable{'error'} = $Claim->save({'editor_id'=>[ sets::union( ( $Claim->editor_id() ? @{$Claim->editor_id()} : () ), $param{'editor_id'} ) ]});
 	} elsif ( $param{'action'} eq 'remove' ) {
-		$variable{'error'} = $variable{'Claim'}->save({'editor_id'=>[ sets::exclude( [$param{'editor_id'}], $variable{'Claim'}->editor_id() ) ]});
+		$variable{'error'} = $Claim->save({'editor_id'=>[ sets::exclude( [$param{'editor_id'}], $Claim->editor_id() ) ]});
 	} # end if
 } # end sub _editors
 
+sub _also_notify {
+	my $Claim = $variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
+	if ( $param{'action'} eq 'add' ) {
+		$variable{'error'} = $Claim->save({'also_notify'=>[ sets::union( ( $Claim->also_notify() ? @{$Claim->also_notify()} : () ), $param{'also_notify'} ) ]});
+	} elsif ( $param{'action'} eq 'remove' ) {
+		$variable{'error'} = $Claim->save({'also_notify'=>[ sets::exclude( [$param{'also_notify'}], $Claim->also_notify() ) ]});
+	} # end if
+} # end sub _also_notify
 1;
 __END__

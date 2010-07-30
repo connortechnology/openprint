@@ -29,14 +29,20 @@
 		<? if ( $r->uri() =~ /\/main\/quote/ ) ?>
 		<link href="/css/quote.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $r->uri() =~ /\/main\/quote/ ) ?>
-		<? if ( $r->uri() =~ /\/pageflip/ ) ?>
+		<? if ( $r->uri() =~ /\/pageflip\/view/ ) ?>
 <script type="text/javascript" src="/javascripts/pageflip/liquid.js"></script>
 <script type="text/javascript" src="/javascripts/pageflip/swfobject.js"></script>
 <script type="text/javascript" src="/javascripts/pageflip/flippingbook.js"></script>
 <link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
-		<? endif ( $r->uri() =~ /\/pageflip/ ) ?>
+		<? endif ( $r->uri() =~ /\/pageflip\/view/ ) ?>
+		<? if ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
+<link href="/css/pageflip.css" rel="stylesheet" type="text/css" />
+		<? endif ( $r->uri() =~ /\/pageflip\/edit/ ) ?>
 
 		<script type="text/javascript" src="/javascripts/tips.js?version=1.0"></script>
+    <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
+<script type="text/javascript" src="/javascripts/trustlogo.js?version=1.0"></script>
+    <? endif ( $ENV{'HTTPS'} eq 'on' ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico"/>
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
 	</head>
@@ -157,6 +163,7 @@
 						</select>
 					</form>
 				</div>
+
 				<div id="DidYouKnow">
 					<div id="DidYouKnowHeader">Did you know?</div>
 						<div id="DidYouKnowText">
@@ -184,5 +191,9 @@
 				<?PageContent?>
 			</div><!--ContentInner-->
 		</div><!--Content-->
+    <? if ( $ENV{'HTTPS'} eq 'on' ) ?>
+<a href="http://www.instantssl.com" id="comodoTL">SSL</a>
+<script type="text/javascript">TrustLogo("https://www.point-one.com/images/tl_transp.gif", "SC4", "bottomright");</script>
+    <? endif ( $ENV{'HTTPS'} eq 'on' ) ?>
 	</body>
 </html>

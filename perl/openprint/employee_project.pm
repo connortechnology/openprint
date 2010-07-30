@@ -13,6 +13,7 @@ require openprint::Equipment;
 require openprint::employee_schedule;
 require openprint::bindery_schedule;
 require openprint::press_schedule;
+require openprint::employee_production;
 
 require sql;
 require openprint::MXML;
@@ -476,14 +477,11 @@ sub send_additional_charges_notifications {
 	my $Operator = new openprint::User( $session{'user_id'} );
 
 	@info{'CSRFirstName','CSRLastName','CSREmail'} = ( $CSR->firstname(), $CSR->lastname(), $CSR->email() );
-
 	@info{'CustomerFirstName','CustomerLastName','CustomerEmail'} = ( $Order->first_name(), $Order->last_name(), $Order->email() );
 	@info{'OperatorFirstName','OperatorLastName','OperatorEmail'} = ( $Operator->firstname(), $Operator->lastname(), $Operator->email() );
 	@info{'EmployeeFirstName','EmployeeLastName','EmployeeEmail','EmployeeExtension'} = ( $Operator->firstname(), $Operator->lastname(), $Operator->email(), $Operator->extension() );
 
 	$info{'CompletionDate'} = Date::Format::time2str( $config{'DateTimeFormat'}, time );
-	$info{'SecureSiteURL'} = $r->dir_config('ExternalSecureSiteURL');
-	$info{'siteURL'} = $r->dir_config('ExternalSiteURL');
 	my $Project = new openprint::Project( $project_index );
 	$info{'Project'} = $Project;
 
@@ -517,6 +515,7 @@ sub send_additional_charges_notifications {
 #TO      => 'iconnor@point-one.com',
 			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
 			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
+			BCC		=>	'"Isaac Connor" <iconnor@point-one.com>',
 			SUBJECT => 'Additional Charges required',
 			);
 	misc::send_email_with_attachment( $log, \%mail, @body );
@@ -733,7 +732,7 @@ sub is_sig_complete {
 		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Ordered' );
 		return 0;
 	} # end if
-	if ( $session{'user_id'} != $param{"operator_id-$$sig_specs{'SignatureIndex'}"} ) {
+	if ( $param{"operator_id-$$sig_specs{'SignatureIndex'}"} and ( $session{'user_id'} != $param{"operator_id-$$sig_specs{'SignatureIndex'}"} ) ) {
 		$Project->add_to_log( @session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} complete for " . new openprint::User( $param{"operator_id-$$sig_specs{'SignatureIndex'}"} )->name() );
 	} else {
 		$Project->add_to_log( @session{'company_id','user_id'}, "Marking form $$sig_specs{'SignatureIndex'} complete." );

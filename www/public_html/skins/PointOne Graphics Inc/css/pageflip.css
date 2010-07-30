@@ -1,5 +1,4 @@
 
-
 #fbFooter {
 	height: 49px;
 	background-color: #000000;
@@ -44,6 +43,95 @@ a.altlink:visited {
 	color: #DDDDDD;
 }
 
-a.altlink:hover{
+a.altlink:hover {
 	color: #FFFFFF;
+}
+
+.PageFlip ul {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+.PageFlip ul li {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+}
+.PageFlip {
+	display: block;
+}
+.PageFlip .Edit {
+	display: block;
+}
+.PageFlip .Pages {
+	float: left;
+	width: 30%;
+	border: 1px solid black;
+}
+.PageFlip img {
+	width: 640px;
+	position: absolute;
+	top: 140px;
+	right: 10px;
+	z-index: 9;
+}
+.PageFlip #Page {
+	position: absolute;
+	top: 140px;
+	right: 10px;
+	width: 640px;
+	z-index: 10;
+}
+
+#CropTop {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	right: 0px;
+	height: 1px;
+	background-color: black;
+	margin: 0px -10px 0px -10px;
+	z-index: 11;
+}
+
+#CropBottom {
+	position: absolute;
+	left: 0px;
+	bottom: 0px;
+	right: 0px;
+	height: 1px;
+	background-color: black;
+	margin: 0px -10px 0px -10px;
+	z-index: 11;
+}
+#CropLeft {
+	position: absolute;
+	width: 1px;
+	top: 0px;
+	left: 0px;
+	bottom: 0px;
+	background-color: black;
+	margin: -10px 0px -10px 0px;
+	z-index: 11;
+}
+#CropRight {
+	position: absolute;
+	width: 1px;
+	top: 0px;
+	bottom: 0px;
+	right: 0px;
+	background-color: black;
+	margin: -10px 0px -10px 0px;
+	z-index: 11;
+}
+table tr .crop, table tr .filename, table tr .page {
+	text-align: left;
+}
+table tr .page {
+	width: 35px;
+}
+table tr .filename {
+}
+table tr .crop {
+	width: 100px;
 }

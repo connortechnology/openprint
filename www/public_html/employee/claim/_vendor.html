@@ -2,7 +2,7 @@
 	<fieldset><legend>VENDOR:</legend>
 		<p><label>Select:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" onkeydown="if(event.keyCode == 13){this.form.supplier_id.onchange();}" class="filter" />
-			<select name="supplier_id" onchange="new Ajax.Request('_select_vendor.json', {method:'get', parameters: { supplier_id: this.value } } );">
+			<select id="supplier_id" name="supplier_id" onchange="new Ajax.Request('_select_vendor.json', {method:'get', parameters: { supplier_id: this.value } } );">
 				<option value="">select</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $$variable{'Claim'}->supplier_id() ); ) ?>
 			</select>

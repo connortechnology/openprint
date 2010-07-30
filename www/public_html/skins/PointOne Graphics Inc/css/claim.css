@@ -36,7 +36,7 @@
 	background-color: #e4ebf4;
 }
 	
-.Claim table tr.total td, .Claim table tr.subtotal td, .Claim table tr.federaltax td, .Claim table tr.statetax td {
+.Claim table tr.total td, .Claim table tr.subtotal td, .Claim table tr.tax td {
 	text-align: right;
 }
 .Claim table td input[type="text"] {
@@ -344,7 +344,11 @@ div.Claim .Disclaimer {
 	text-align: left;
 }
 .Claims table tr td.Company, .Claims table tr th.Company {
-	width: 100px;
+	width: 125px;
+	text-align: left;
+	overflow: hidden;
+}
+.Claims table tr .CreatedBy {
 	text-align: left;
 	overflow: hidden;
 }

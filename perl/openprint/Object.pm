@@ -64,16 +64,18 @@ sub load {
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	my @identified_by = eval '@'.$type.'::identified_by';
+	my $d = eval '$'.$type.'::dbh';
+	$d = $dbh if ! $d;
 
 	if ( ! $data ) {
 		if ( @identified_by ) {
 $log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=' . $$self{$_} } @identified_by ) );
-			$data = $dbh->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 		} else {
-			$data = $dbh->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
-			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $dbh->errstr ) if $dbh->errstr;
+			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
 		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
@@ -83,13 +85,13 @@ $log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE '
 sub save {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
-if ( $data ) {
-foreach my $k ( keys %$data ) {
-$log->debug("$type ::save $k => $$data{$k}");
-}
-} else {
-$log->debug("No data");
-}
+#if ( $data ) {
+#foreach my $k ( keys %$data ) {
+#$log->debug("$type ::save $k => $$data{$k}");
+#}
+#} else {
+#$log->debug("No data");
+#}
 	$self->set( $data ? $data : {} );
 #if ( $data ) {
 #foreach my $k ( keys %$data ) {
@@ -179,8 +181,8 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 
 			my %defaults = eval('%'.$type.'::defaults');
 
-			if ( ( (! defined $$self{$field}) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
-				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
+			if ( ( ( ! defined $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
+				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug or 1;
 				$$self{$field} = $defaults{$field};
 			} # end if
 		} # end if
@@ -203,6 +205,10 @@ sub copy {
 sub delete {
     my ( $self ) = @_;
     my $type = ref $self;
+	if ( ! $$self{'id'} ) {
+		$log->error("Called delete on object with no id of type $type");
+		return;
+	} # end if
     my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	if ( exists $fields{'deleted'} ) {
@@ -234,21 +240,112 @@ sub find {
 	my $type = shift;
     my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
+	my $debug = eval '$'.$type.'::debug';
 
 	my %params = @_;
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
 	my @values;
 
 	foreach my $k ( keys %params ) {
-		next if sets::isin( $k,[ 'order','limit' ] );
+		next if sets::isin( $k,[ 'order','limit','or' ] );
+		next if ! $fields{$k};
 		if ( ref $params{$k} eq 'ARRAY' ) {
 			$sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
 			push @values, @{$params{$k}};
+        } elsif ( ! defined $params{$k} ) {
+            $sql .= " AND $fields{$k} IS NULL";
 		} else {
 			$sql .= " AND $fields{$k}=?";
 			push @values, $params{$k};
 		} # end if
+		delete $params{$k};
 	} # end foreach k
+    if ( %params ) {
+        foreach my $k ( keys %fields ) {
+            if ( exists $params{$k.'_like'} ) {
+                $sql .= " AND $fields{$k} LIKE ?";
+                push @values, $params{$k.'_like'};
+                delete $params{$k.'_like'};
+            }
+            if ( exists $params{$k.'_start'} ) {
+                $sql .= " AND $fields{$k} >= ?";
+                push @values, $params{$k.'_start'};
+                delete $params{$k.'_start'};
+            }
+            if ( exists $params{$k.'_end'} ) {
+                $sql .= " AND $fields{$k} <= ?";
+                push @values, $params{$k.'_end'};
+                delete $params{$k.'_end'};
+            } # end if
+            if ( exists $params{$k.'_<'} ) {
+                $sql .= " AND $fields{$k} < ?";
+                push @values, $params{$k.'_<'};
+                delete $params{$k.'_<'};
+            } # end if
+            if ( exists $params{$k.'_<='} ) {
+                $sql .= " AND $fields{$k} <= ?";
+                push @values, $params{$k.'_<='};
+                delete $params{$k.'_<='};
+            } # end if
+            if ( exists $params{$k.'_null_or_<='} ) {
+                $sql .= " AND ( $fields{$k} <= ? OR $fields{$k} IS NULL )";
+                push @values, $params{$k.'_null_or_<='};
+                delete $params{$k.'_null_or_<='};
+            } # end if
+            if ( exists $params{$k.'_>='} ) {
+                $sql .= " AND $fields{$k} >= ?";
+                push @values, $params{$k.'_>='};
+                delete $params{$k.'_>='};
+            } # end if
+            if ( exists $params{$k.'_null_or_>='} ) {
+               $sql .= " AND ( $fields{$k} >= ? OR $fields{$k} IS NULL )";
+                push @values, $params{$k.'_null_or_>='};
+                delete $params{$k.'_null_or_>='};
+            } # end if
+            if ( exists $params{$k.'_>'} ) {
+                $sql .= " AND $fields{$k} > ?";
+                push @values, $params{$k.'_>'};
+                delete $params{$k.'_>'};
+            } # end if
+            if ( exists $params{$k.'_lc'} ) {
+                $sql .= " AND lower($fields{$k}) = ?";
+                push @values, lc $params{$k.'_lc'};
+                delete $params{$k.'_lc'};
+            } # end if
+            if ( defined $params{$k.'_null'} ) {
+                if ( $params{$k.'_null'} ) {
+                    $sql .= " AND $fields{$k} IS NULL";
+                } else {
+                    $sql .= " AND $fields{$k} IS NOT NULL";
+                } # end if
+            } # end if
+        } # end foreach
+    } # end if
+
+    # Check for Object references
+    if ( %params ) {
+        foreach my $k ( keys %params ) {
+            next if sets::isin( ref $params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
+            my $f = (lc $k).'_id';
+            if ( exists $fields{$f} ) {
+                if ( $params{$k}->id() ) {
+                $sql .= " AND $fields{$f} = ?";
+#$openprint::log->debug("$params{$k}" . ref $params{$k});
+                push @values, $params{$k}->id();
+                } else {
+                    $sql .= " AND $fields{$f} IS NULL";
+                } # en dif
+                delete $params{$k};
+            } # end if
+        } # end foreach
+    } # end if
+
+    if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
+        $sql .= ' AND (deleted=? OR deleted IS NULL)';
+        push @values, 0;
+    } # end if
+
+	$sql .= " OR $params{'or'}" if $params{'or'};
     $sql .= " ORDER BY $params{'order'}" if $params{'order'};
     $sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 
@@ -257,10 +354,10 @@ sub find {
         $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
     } elsif ( ! @$data ) {
         $openprint::log->debug("No $type ($sql) (@values) " );
-    } elsif ( eval "$type::debug" ) {
+    } elsif ( $debug ) {
         $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
     } # end if
-    return map { $type->new( $_->{index}, $_ ) } @$data;
+    return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
 } # end sub find
 
 sub find_one {
@@ -268,7 +365,7 @@ $openprint::log->debug("find_one @_ ");
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;
-	my @Results = eval($type.'::find(%params);');
+	my @Results = eval($type.'->find(%params);');
 	return $Results[0] if @Results;
 } # end sub find_one
 
@@ -283,6 +380,12 @@ sub AUTOLOAD {
 	if ( @_ ) {
 		return $self->{$name} = shift;
 	} else {
+		my $fields = eval '\%'.$type.'::fields';
+		if ( $fields and exists $$fields{lc $name . '_id'} ) {
+			if ( eval '\%openprint::'.$name.'::fields' ) {
+				return new("openprint::$name", $$self{lc $name . '_id'});
+			} # end if
+		} # end if
 		return $self->{$name};
 	} # end if
 } # end sub AUTOLOAD

@@ -17,10 +17,12 @@
 				<li>
 					<label>IP Address:</label>
 					<input type="text" id="ip" name="ip" value="<? echo ( $$variable{'Host'}->ip() ) ?>" />
+					<input type="checkbox" name="dhcp" id="dhcp" value="1" <? echo ( ssi::checked( $$variable{'Host'}->dhcp() ); ) ?> />
+					<label class="radio" for="dhcp">DHCP?</label>
 				</li>
 				<li>
 					<label>MAC:</label>
-					<input type="text" id="mac" name="mac" value="<? echo ( $$variable{'Host'}->mac() ) ?>" />
+					<textarea id="mac" name="mac" rows="<? echo ( $$variable{'Host'}->mac() ? scalar @{$$variable{'Host'}->mac()} : 1 ) ?>" cols=""><? echo ( $$variable{'Host'}->mac() ? join("\n", @{$$variable{'Host'}->mac()} ) : '' ) ?></textarea>
 				</li>
 				<li>
 					<label>Blocked:</label>
