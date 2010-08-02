@@ -1,18 +1,16 @@
 package openprint::QuotedProject;
-@ISA = qw(openprint::Project);
+@ISA = qw(openprint::Object);
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %session %config $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*session = \%openprint::session;
-*config = \%openprint::config;
 
 require sql;
 require openprint::QuoteLevel;
 
-my $debug = 0;
+$debug = 1;
 
 $table = 'tbl_quote_details';
 $serial = 'tbl_quote_details_id_seq';
@@ -75,18 +73,19 @@ sub Project {
 } # end sub Project
 sub markup {
 	my ( $self, $qty_index, $new_value ) = @_;
-	if ( defined $new_value ) {
+	if ( @_ == 3 ) {
 		$$self{'markup'.$qty_index} = $new_value;
+		$self->price($qty_index, undef );
 	} # end if
 	return $$self{'markup'.$qty_index};
 } # end sub total
 sub price {
 	my ( $self, $qty_index, $new_value ) = @_;
-	if ( defined $new_value ) {
+	if ( @_ == 3 ) {
 		$$self{'price'.$qty_index} = $new_value;
 	} # end if
 	if ( ! (1*$$self{'price'.$qty_index}) ) {
-		$$self{'price'.$qty_index} = sprintf('%.2f', $self->Project()->price($qty_index) * ( 1 + $$self{'markup'}/100 ) );
+		$$self{'price'.$qty_index} = sprintf('%.2f', $self->Project()->price($qty_index) * ( 1 + $$self{'markup'.$qty_index}/100 ) );
 	} # end if
 	return $$self{'price'.$qty_index};
 } # end sub total

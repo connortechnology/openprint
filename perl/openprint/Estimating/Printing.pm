@@ -927,13 +927,11 @@ sub calc {
 				my @Papers = openprint::Paper->find( 'name'=> $$specs{'ddmStockBrand'}, 'finish'=>$$specs{'ddmStockFinish'}, 'colour'=>$$specs{'ddmStockColour'}, 'weight'=>$$specs{'ddmStockWeight'},
 						'project_type_id'=>$Project->type()->id(),
 						);
-	#$log->debug("# of papers: " . @Papers );
 				my %sizes;
 				foreach my $Paper ( @Papers ) {
 					$sizes{(1*$$Paper{width}).'x'.(1*$$Paper{height})} = $Paper;
 				} # end foreach Paper	
 				my @keys = keys %sizes;
-	#$log->debug("# of sizes: " . @keys );
 				if ( 1 == @keys ) {
 					@$specs{'txtWidth','txtHeight'} = ( $sizes{$keys[0]}->width(), $sizes{$keys[0]}->height() );	
 				} # end if
@@ -1752,6 +1750,20 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 			push @signatures, $_ if $_ > $service_index;
 		} # end foreach
 
+		# These used to be calculated for Perfect Bonud (and SaddleStitching).  Doing it here means it only happens once.
+		my @other_impositions;
+		foreach my $sig_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+# Don't try to load uncalculated sigs.  They can't count, might turn it 1 out
+			next if ! $$sig_specs{'txtImposition'.$qty_index};
+			next if $$sig_specs{'Group'} == 1;
+			next if ( ($$sig_specs{'Group'} == $$specs{'Group'}) and ($sig_id >= $service_index) );
+#$openprint::log->debug("PerfectBond: Group: $$sig_specs{'Group'} == $$service_specs{'Group'} and $sig_id >= $service_index");
+			my $I = new openprint::Imposition();
+			$I->load( $sig_specs, $qty_index );
+			push @other_impositions, $I;					
+		} # end foreach sig_id
+
 		%signature_price_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
 # Only thread qtys 2 and 3
@@ -1764,10 +1776,10 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 						'login'		=> $openprint::r->dir_config('db_user'),
 						'password'	=> $openprint::r->dir_config('db_password'),
 						);
-					return get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, undef, 1 );
+					return get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \@other_impositions, undef, 1 );
 					} );
 		} else {
-			my $sig_price = get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, undef, 1 );
+			my $sig_price = get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \@other_impositions, undef, 1 );
 			$prices{$qty_index} = $sig_price;
 		} # end if
 
@@ -1814,8 +1826,9 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 		$$specs{'ddmPress'.$qty_index} = $Press->strid();
 		$$specs{'PrintingType'.$qty_index} = $Press->specification('Printing Type');
 		$$specs{'txtMWeight'.$qty_index} = $Paper->mweight() ? $Paper->mweight() : $Paper->wpsi() * $Paper->width() * $Paper->height() * 1000;
-		$$specs{'txtStockGSM'} = $Imposition->Paper()->gsm();
-		$$specs{'txtSpecificStockCalliper'} = $Imposition->Paper()->calliper();
+		$$specs{'paper_id'.$qty_index} = $Paper->id();
+		$$specs{'txtStockGSM'} = $Paper->gsm();
+		$$specs{'txtSpecificStockCalliper'} = $Paper->calliper();
 		if ( $Paper->type() eq 'Roll' ) {
 			$$specs{'ddmStockSheetSize'.$qty_index} = $Paper->width() . '" Roll';
 			$$specs{'txtPressSheetQty'.$qty_index} = $best_price{'Stock Weight'}.'lbs';
@@ -2366,7 +2379,7 @@ return @impositions;
 } # end sub calculate_impositions
 
 sub get_project_price {
-	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $previous_forms_cache, $signatures, $best_price, $recursion_depth ) = @_;
+	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $previous_forms_cache, $signatures, $other_impositions, $best_price, $recursion_depth ) = @_;
 #$openprint::log->debug("******** get_project_price");
 	my %previous_forms_cache;
 	my %best_price;
@@ -2560,7 +2573,7 @@ $recurse = 1;
 #$openprint::log->debug("Equipment override: ".$new_specs{'chkOverridePress'.$qty_index} );
 #$openprint::log->debug("Page QUantity override: ".$new_specs{'chkOverridePageQuantity'.$qty_index} );
 #$imp->display("get_projcetcalc_price this imp $best_price{'Comparison Cost'} $$price{'Comparison Cost'}");
-							$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), $recursion_depth + 1 );
+							$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, $other_impositions, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), $recursion_depth + 1 );
 						} # end if
 						$upq = 0;
 
@@ -2724,15 +2737,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 			#if ( ! $upq ) {
 				# The idea is to only calc these on the last sig
 				if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$sig_specs{'txtSignatureType'} ne 'Cover Spreads') ) {
-					my @all_impositions;
-					foreach my $sig_id ( $Project->signatures() ) {
-						next if $sig_id >= $service_index;
-						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-						my $I = new openprint::Imposition();
-						$I->load( $sig_specs, $qty_index );
-						push @all_impositions, $I;
-					}
-					push @all_impositions, @{$$price{'Impositions'}};
+					my @all_impositions = @{$other_impositions}, @{$$price{'Impositions'}};
 					
 #my $starttime = gettimeofday();
 					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @all_impositions );
@@ -2752,20 +2757,9 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 
 				if ( $$services{'PerfectBound'} and $$sig_specs{'txtSignatureType'} ne 'Cover Spreads') {
 #my $starttime = gettimeofday();
-					my @Impositions = @{$$price{'Impositions'}};
+					my @all_impositions = @{$other_impositions}, @{$$price{'Impositions'}};
 
-					foreach my $sig_id ( $Project->signatures() ) {
-						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-# Don't try to load uncalculated sigs.  They can't count, might turn it 1 out
-						next if ! $$sig_specs{'txtImposition'.$qty_index};
-						next if $$sig_specs{'Group'} == 1;
-						next if ( ($$sig_specs{'Group'} == $$service_specs{'Group'}) and ($sig_id >= $service_index) );
-#$openprint::log->debug("PerfectBond: Group: $$sig_specs{'Group'} == $$service_specs{'Group'} and $sig_id >= $service_index");
-						my $I = new openprint::Imposition();
-						$I->load( $sig_specs, $qty_index );
-						push @Impositions, $I;					
-					} # end foreach sig_id
-					my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{'HasPerfectBound'}, $$project{'PerfectBoundSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @Impositions );
+					my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{'HasPerfectBound'}, $$project{'PerfectBoundSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @all_impositions );
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'PerfectBound Breakdown'} .= "PerfectBound error: $$results{'alert'}<br/>";
 						$$price{'Comparison Cost'} += 1000000;

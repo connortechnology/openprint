@@ -1,7 +1,7 @@
 package openprint::Service;
 @ISA = qw( openprint::Object );
 use strict;
-use vars qw($table $serial %fields %transforms %defaults %session $log $dbh );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh );
 
 require sql;
 require openprint::Object;
@@ -12,7 +12,7 @@ use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'services';
 $serial = 'services_id_seq';
@@ -26,7 +26,10 @@ $serial = 'services_id_seq';
 		'taxexempt1'		=>	'taxexempt1',
 		'taxexempt2'		=>	'taxexempt2',
 		'owner_id'			=>	'owner_id',
-		);	
+	 	);	
+%find_fields = (
+	'category' => '(SELECT name FROM Service_Categories WHERE service_categories.id=category_id)',
+);
 
 %transforms = (
 		);
@@ -37,12 +40,6 @@ $serial = 'services_id_seq';
 		'taxexempt1'	=>	'N',
 		'taxexempt2'	=>	'N',
 		);
-
-my %cache;
-
-sub init_cache {
-	%cache = map { $_->name(), $_->id() } find();
-} # end sub init_cache
 
 sub save {
 	my ( $self, $params ) = @_;
@@ -67,7 +64,6 @@ sub delete {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
-	delete $cache{$$self{name}};
 	my $ac = sql::start_transaction( $dbh );
     sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Services WHERE id=?}, $$self{id} );
@@ -81,47 +77,6 @@ sub prices {
 
 	return openprint::ServicePrice->find( 'service_id'=>$$self{id} );
 } # end sub prices
-
-sub find {
-	my $self = shift;
-	my %params = @_;
-	my $sql = 'SELECT * FROM Services WHERE 1>0';
-	my @values;
-
-	if ( $params{'name'} ) {
-		# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
-		if ( ( keys %params ) == 1 ) {
-			if ( %cache and $cache{$params{name}} ) {
-				return ( new openprint::Service( $cache{$params{name}} ) );
-			} # end if
-		} # end if
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
-	} # end if
-	if ( $params{'name_like'} ) {
-		$sql .= ' AND name LIKE ?';
-		push @values, $params{'name_like'};
-	} # end if
-	if ( $params{category_id} ) {
-		$sql .= ' AND category_id=?';
-		push @values, $params{category_id};
-	} # end if
-	if ( $params{'category'} ) {
-		$sql .= ' AND category_id=(SELECT id FROM Service_Categories WHERE name=?)';
-		push @values, $params{'category'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading Service ($sql) (@values) Reason: " . $dbh->errstr );
-		return;
-	} elsif ( $debug ) {
-		$log->debug("Loading Service ($sql) (@values) " . @$data );
-	} # end if
-	return map { new openprint::Service( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist ) = @_;

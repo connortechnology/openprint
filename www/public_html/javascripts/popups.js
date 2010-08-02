@@ -88,7 +88,7 @@ function LoadContent( divID, page, parameters, message ) {
 		else div.innerHTML = 'Please wait....';
 	} // end if
 	var method = 'get';
-	alert( typeof parameters );
+	//alert( typeof parameters );
 	if ( typeof parameters == 'object' ) {
 		parameters = parameters.serialize();
 	} 

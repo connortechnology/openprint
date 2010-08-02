@@ -39,17 +39,7 @@ Only logged in customers have a quote history.
 			</p>
 			<p>
 				<label for="QuotedFor">Quoted For:</label>
-				<select name="QuotedFor" size="1" onchange="load_quotes( this.form );">
-					<option value=""> all </option>
-	<? echo (
-		$_ = "SELECT DISTINCT tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName, tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ".
-			"FROM Quotes, tbl_Quote_Users_For ".
-			"WHERE Quotes.CompanyIndex = $session{'company_id'} ".
-			" AND Quotes.strStatus != 'Incomplete' AND tbl_Quote_Users_For.quote_id = Quotes.id ".
-			" ORDER BY tbl_Quote_Users_For.strFirstName || ' ' || tbl_Quote_Users_For.strLastName ";
-		ssi::fill_drop_down( $log, $dbh, $_, $session{'/main/quote/history.html?QuotedFor'} );
-	) ?>
-				</select>
+				<input type="text" name="QuotedFor" id="QuotedFor" onkeyup="load_quotes(this.form);" />
 			</p>
 			<p>
 				<label for="ddmStartDay">Quote Date:</label>

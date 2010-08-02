@@ -20,7 +20,7 @@
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
-		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1'), $$variable{type_id} );", '', 'Add' ); ) ?></td>
+		<td><? echo ( ssi::writeButton( $log, $dbh, 'Add'.$$variable{'type_id'}, 'add.gif', "add_content( \$('f1'), $$variable{type_id} );", '', 'Add' ); ) ?></td>
 	</tr>
 	<? echo (
 		my $html = '';

@@ -6,7 +6,7 @@ use MIME::Base64;
 use openprint::Currency;
 use strict;
 use openprint ();
-use vars qw($r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
+use vars qw( $debug $r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -19,7 +19,7 @@ require openprint::logs;
 require openprint::QuotedProject;
 require openprint::QuotedProduct;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'quotes';
 $serial = 'quotes_id_seq';
@@ -47,121 +47,18 @@ $serial = 'quotes_id_seq';
 	'deleted'		=>	'deleted',
 	);
 
-%defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
+%find_fields = (
+	'salesrep_id' => '(SELECT lngsalespersion FROM companies WHERE id=company_id)',
+	'for_name' => q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=quotes.id)},
 );
-
-sub find {
-	my $self = shift;
-	my %params = @_;
-	if ( $params{'id'} ) {
-		return new openprint::Quote( $params{'id'} );
-	} else {
-		my @values;
-		my $sql = "SELECT * FROM $table WHERE 1>0";
-		if ( $params{'company_id'} ) {
-			if ( ref $params{'company_id'} eq 'ARRAY' ) {
-				if ( @{$params{'company_id'}} ) {
-					$sql .= q{ AND CompanyIndex IN (} . join(',', map {'?'} @{$params{'company_id'}}). ')';
-					push @values, @{$params{'company_id'}};
-				} else {
-					$log->warn("EMpty company array passed to openprint::Quote->find");
-				} # end if
-			} else {
-				$sql .= q{ AND CompanyIndex=?};
-				push @values, $params{'company_id'};
-			} # end if
-		} # end if
-		if ( $params{'user_id'} ) {
-			if ( $params{'user_id'} =~ /\D/ ) {
-				$sql .= " AND (UserIndex $params{'user_id'})";
-			} else {
-				$sql .= q{ AND (UserIndex=?)};
-				push @values, $params{'user_id'};
-			} # end if
-		} # end if
-		if ( $params{'created_on_start'} and $params{'created_on_end'} ) {
-			$sql .= q{ AND (dtmquotedate BETWEEN ? AND ?)};
-			push @values, @params{'created_on_start','created_on_end'};
-		} elsif ( $params{'created_on_start'} ) {
-			$sql .= q{ AND (dtmquotedate >= ?::timestamp with time zone)};
-			push @values, $params{'created_on_start'};
-		} elsif ( $params{'created_on_end'} ) {
-			$sql .= q{ AND (dtmquotedate <= ?::timestamp with time zone)};
-			push @values, $params{'created_on_end'};
-		} # end if
-		if ( $params{'total_start'} and $params{'total_end'} ) {
-			$sql .= q{ AND ( (curtotalsale1 BETWEEN ? AND ? ) OR (curtotalsale2 BETWEEN ? AND ? ) OR (curtotalsale3 BETWEEN ? AND ? ) )};
-			push @values, @params{'total_start','total_end','total_start','total_end','total_start','total_end'};
-		} elsif ( $params{'total_start'} ) {
-			$sql .= q{ AND (curtotalsale1 >= ? OR curtotalsale2 >= ? OR curtotalsale3 >= ?)};
-			push @values, @params{'total_start','total_start','total_start'};
-		} elsif ( $params{'total_end'} ) {
-			$sql .= q{ AND (curtotalsale1 <= ? OR curtotalsale2 <= ? OR curtotalsale3 <= ?)};
-			push @values, @params{'total_end','total_end','total_end'};
-		} # end if
-		if ( $params{'status'} ) {
-			if ( ref $params{'status'} eq 'ARRAY' ) {
-				$sql .= q{ AND strStatus IN (} . join(',', map {'?'} @{$params{'status'}}). ')';
-				push @values, @{$params{'status'}};
-			} else {
-				$sql .= q{ AND (strStatus=?)};
-				push @values, $params{'status'};
-			} # end if
-		} # end if
-		if ( $params{'currency_id'} ) {
-			$sql .= ' AND ( currency_id = ? )';
-			push @values, $params{'currency_id'};
-		} # end if
-		if ( $params{'salesrep_id'} ) {
-			$sql .= ' AND ( companyindex IN ( SELECT index FROM company WHERE lngsalesperson=? ) )';
-			push @values, $params{'salesrep_id'};
-		} # end if
-		if ( $params{'for_name'} ) {
-			$sql .= q{ AND (SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=index)=?};
-			push @values, $params{'for_name'};
-		} # end if
-		if ( $params{'id_like'} ) {
-			$sql .= " AND id::text LIKE '$params{'id_like'}%'";
-		} # end if
-	if ( exists $params{'deleted'} ) {
-		if ( ref $params{'deleted'} eq 'ARRAY' ) {
-			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
-			push @values, @{$params{'deleted'}};
-		} else {
-			$sql .= ' AND deleted=?';
-			push @values, $params{'deleted'};
-		} # end if
-	} else {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
-		push @values, 0;
-	} # end if
-
-		if ( exists $params{'order'} ) {
-			if ( $params{'order'} eq 'created_on' ) {
-				$sql .= ' ORDER BY dtmquotedate';
-			} elsif ( $params{'order'} ) {
-				$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-			} # end if
-		} # end if
-		$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-		if ( ! $data ) {
-			$log->warn("Error loading Quotes: ($sql) (@values) reason: " . $dbh->errstr() );
-			return;
-		} elsif ( $debug ) {
-			$log->debug("Loading Quotes: ($sql) (@values)");
-		} # end if
-		return map { new openprint::Quote( $_->{index}, $_ ) } @$data;
-	} # end if
-} # end sub find
-
-sub copy {
-	my $self = shift;
-	my $new = new openprint::Quote( );
-	return $new;
-} # end sub copy
+%defaults = (
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'currency_id'	=>	'openprint::Currency::get_current()->id()',
+	'user_id'		=>	'$openprint::session{user_id}',
+	'company_id'	=>	'$openprint::session{company_id}',
+	'status'		=>	q`'Incomplete'`,
+);
 
 sub load {
 	my ( $self, $data ) = @_;
@@ -183,11 +80,11 @@ sub save {
 	my %sql;
 	foreach my $key ( keys %fields ) {
 		next if ! $fields{$key};
-		$sql{$fields{$key}} = ( defined $$self{$key} ? $$self{$key} : $defaults{$key} );
+		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
 		
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
-		my $ac = sql::start_transaction( $dbh );
 		if ( $openprint::config{'QuoteIDFormat'} eq 'Year' ) {
 			$dbh->do( "LOCK TABLE $table IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 
@@ -205,10 +102,14 @@ sub save {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
-		sql::end_transaction( $dbh, $ac );
 	} else {
-		sql::update( undef, undef, $table, ['id=?', $$self{'id'}], \%sql );
+		my $error = sql::update( undef, undef, $table, ['id=?', $$self{'id'}], \%sql );
+		if ( $error ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} # end if
+		sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return;
 } # end sub save
@@ -236,11 +137,6 @@ sub to_string {
 	return '';
 } # end sub
 
-sub created_by_id {
-	my $self = shift;
-	return $$self{'created_by_id'};
-} # end sub created_by_id
-
 sub status {
 	my ( $self, $new_status ) = @_;
 	if ( defined $new_status and $$self{'status'} ne $new_status ) {
@@ -249,7 +145,7 @@ sub status {
 		#$self->add_log( "Changed Status to $new_status" );
 	} # end if
 	return $$self{'status'};
-} # end sub set_status
+} # end sub status
 
 sub add_log {
 	my ( $self, $comment ) = @_;
@@ -261,20 +157,15 @@ sub add_log {
 			);
 } # end sub add_log
 
-sub Company {
-	my $self = shift;
-	return new openprint::Company( $$self{'company_id'} );
-} # end sub company
-
 sub Quoted_Projects {
 	my $self = shift;
-	return map {new openprint::QuotedProject( $_ );} sql::execute( undef, undef, q{SELECT id FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
+	return openprint::QuotedProject->find('quote_id'=>$$self{'id'});
 } # end sub Quoted_Projects
 
 sub Projects {
 	my $self = shift;
 	if ( ! exists $$self{'Projects'} ) {
-	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT project_id FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
+		@{$$self{'Projects'}} = map { $_->Project() } $self->Quoted_Projects();
 	} # end if
 	return @{$$self{'Projects'}};
 } # end sub projects
@@ -286,14 +177,6 @@ sub Products {
 	} # end if
 	return @{$$self{'Products'}};
 } # end sub projects
-
-sub Currency {
-	my $self = $_[0];
-	if ( @_ == 2 ) {
-		$$self{'currency_id'} = $_[1]->id();
-	} # end if
-	return new openprint::Currency( $$self{'currency_id'} );
-} # end sub Currency
 
 sub for_name {
 	my $self = shift;
@@ -473,6 +356,7 @@ sub send {
 					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					TO      => sprintf('%s %s <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					#TO      => '"Isaac Connor" <iconnor@connortechnology.com>',
+BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
@@ -498,6 +382,7 @@ sub send {
 				SMTP    => $openprint::config{'Mail Server'},
 				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
+BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id}",
 				);
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
@@ -520,14 +405,14 @@ sub send {
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'QuotingEmail'},
 					TO      => $openprint::config{'QuotingEmail'},
-#BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
+BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 					SUBJECT => "$$self{'for_companyname'} : Quote $$self{id}",
 					);
 			misc::send_email_with_attachment( $log, \%mail, @body, "Quote$$self{id}.html", $email_template, 'text/html', 'quoted-printable' );
 		} # end if
 	} # end if
 
-} # end sub send_quote
+} # end sub send
 
 sub total {
 	my ( $self, $qty_index, $new_value ) = @_;

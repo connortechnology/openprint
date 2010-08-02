@@ -67,7 +67,7 @@
 				<label>Author:</label>
 				<select name="author_id" id="author_id" onchange="load_articles(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)') ], $session{'/article/history.html?author_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)') ], $session{'/article/history.html?author_id'} ); ) ?>
 				</select>
 			</p>
 			</div>

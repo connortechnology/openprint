@@ -1,9 +1,3 @@
-<script type="text/javascript">
-	function load_orders( form ) {
-		$('OrderList').innerHTML = 'Please wait...';
-		new Ajax.Updater('OrderList','/main/order/_order_list.html', {method:'get',parameters: Form.serialize(form)});
-	} // end function load_quotes
-</script>
 <div class="PageTitle">
 <h1>Orders</h1>
 <h2>History</h2>
@@ -15,49 +9,39 @@
 			<p>
 				<label for="OrderID">Order ID:</label>
 				<input type="text" size="10" id="OrderID" name="OrderID" onkeydown="if(event.keyCode == 13){f1.submit();}" />
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "load_orders(f1);", '', 'Go' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "LoadContent('Results','/main/order/_history.html',f1);", '', 'Go' ); ) ?>
 			</p>
 			<p>
 				<label>Docket:</label>
 				<input type="text" size="10" id="Docket" name="Docket" onkeydown="if(event.keyCode == 13){f1.submit();}" />
-				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "load_orders(f1);", '', 'Go' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "LoadContent('Results','/main/order/_history.html',f1);", '', 'Go' ); ) ?>
 			</p>
 		</fieldset>
 		<fieldset id="Filter" class="filters unprintable"><legend>or Select Search Criteria:</legend>
 			<p>
 				<label>Ordered by:</label>
-				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="load_orders( this.form );">
+				<select id="ddmOrderedBy" name="ddmOrderedBy" size="1" onchange="LoadContent('Results','/main/order/_history.html',this.form);">
 					<option value="">Ordered By</option>
 					<? echo ( 
 						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id' => $session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)' ) ], $session{'/main/order/history.html?ddmOrderedBy'} );
 					) ?>
 				</select>
 			</p>
-	<? eval (
-		if ( $param{'ddmStartYear'} ) {
-			openprint::store_session( '/main/order/history.html', \%param, qw(ddmStartYear ddmStartMonth ddmStartDay ddmEndYear ddmEndMonth ddmEndDay ddmOrderedBy) );
-		} elsif ( ( ! $session{'/main/order/history.html?ddmStartYear'} ) or $session{'/main/order/history.html?lastupdated'} < (time-3600) ) {
-			@session{'/main/order/history.html?ddmStartYear','/main/order/history.html?ddmStartMonth','/main/order/history.html?ddmStartDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), -30 );
-			@session{'/main/order/history.html?ddmEndYear','/main/order/history.html?ddmEndMonth','/main/order/history.html?ddmEndDay'} = Date::Calc::Today();
-			$session{'/main/order/history.html?ddmOrderedBy'} = '';
-		} # end if
-
-		@$variable{'StartYears','StartMonths','StartDays'} = get_dates( $log, $dbh, @session{'/main/order/history.html?ddmStartYear', '/main/order/history.html?ddmStartMonth', '/main/order/history.html?ddmStartDay'} );
-		@$variable{'EndYears','EndMonths','EndDays'} = get_dates( $log, $dbh, @session{'/main/order/history.html?ddmEndYear', '/main/order/history.html?ddmEndMonth', '/main/order/history.html?ddmEndDay'} );
-	) ?>
 			<p> 
 				<label>Created:</label>
 				<span class="DateSelector">
-				<select name="ddmStartDay" onchange="load_orders( this.form );"><?StartDays?></select>
-				<select name="ddmStartMonth" onchange="setDaysDropDown(document.f1.ddmStartYear.value,this.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);load_orders( this.form );"><?StartMonths?></select>
-				<select name="ddmStartYear" onchange="setDaysDropDown(this.value,document.f1.ddmStartMonth.value,document.f1.ddmStartDay,document.f1.ddmStartDay.value);load_orders( this.form );"><?StartYears?></select>
+<? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_start', { 'onchange'=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
 				to
 				</span>
 				<span class="DateSelector">
-				<select name="ddmEndDay" onchange="load_orders( this.form );"><?EndDays?></select>
-				<select name="ddmEndMonth" onchange="setDaysDropDown(this.form.ddmEndYear.value,this.value,this.form.ddmEndDay,this.form.ddmEndDay.value);load_orders( this.form );"><?EndMonths?></select>
-				<select name="ddmEndYear" onchange="setDaysDropDown(this.value,document.f1.ddmEndMonth.value,document.f1.ddmEndDay,document.f1.ddmEndDay.value);load_orders( this.form );"><?EndYears?></select>
+<? echo ( ssi::date_select_session( '/main/order/history.html', 'created_on_end', { 'onchange'=>q`LoadContent('Results','_history.html',this.form);` } ); ) ?>
 				</span>
+			</p>
+			<p class="buttons">
+				<? echo ( join( '',
+					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
+					ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				); ) ?>
 			</p>
 		</fieldset>
 	</div>
@@ -65,7 +49,7 @@
 	<hr class="spacer"/>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<div id="OrderList"><!--#include virtual="_order_list.html"--></div>
+<div id="Results"><!--#include virtual="_history.html"--></div>
 <? else ( $session{'user_id'} ) ?>
 Only logged in customers have an order history. 
 <? endif ( $session{'user_id'} ) ?>

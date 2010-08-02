@@ -3,10 +3,10 @@
 <h2>User Profile</h2>
 </div>
 <? if ( $session{'user_id'} ) ?>
-	<span class="requiredFieldIndicator">*</span> denotes required information.<br/>
+	<span class="required"></span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
 		<div class="UserProfile">
-			<fieldset class="filter">
+			<fieldset class="filters">
 			<? if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) ?>
 				<p>
 					<label for="ddmUser">User Name:</label>

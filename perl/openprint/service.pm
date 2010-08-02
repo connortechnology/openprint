@@ -350,12 +350,6 @@ sub auto_calculate {
 		} # end if
 	} # end if
 
-	if ( ! $$services{'PlainCartons'} ) {
-		if ( openprint::Estimating::Skids::neccessary( $Project, 'PlainCartons' ) ) {
-			push @{$$services{'PlainCartons'}}, $Project->add_service( 'PlainCartons' );
-		} # end if
-	} # end if
-
 	if ( ! $$services{'Scoring'} ) {
 		if ( openprint::Estimating::Scoring::neccessary( $Project ) ) {
 			push @{$$services{'Scoring'}}, $Project->add_service( 'Scoring' );

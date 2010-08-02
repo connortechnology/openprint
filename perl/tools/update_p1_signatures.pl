@@ -151,11 +151,13 @@ foreach my $Project ( openprint::Project::find( 'order'=>'id desc','limit'=>1000
 	my $summary = $Project->summary();
 
 	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
+	openprint::service::init_cache();
 
 } # end foreach Project
+openprint::Object::init_cache();
 my $Type = openprint::ProjectType->find_one('name'=>'Multipage');
 if ( $Type ) {
-	foreach my $Project ( openprint::Project->find( 'company_id'=>6, 'order'=>'id desc','limit'=>1000 ) ) {
+	foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>10000 ) ) {
 		# Skip multipage projects
 		next if sets::isin( $Project->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines','Calendars' ] );
 		my $services = $Project->services();
@@ -164,8 +166,12 @@ if ( $Type ) {
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
 		} # end foreach
+		# attempt to free memory
+		openprint::service::init_cache();
 	} # end foreach Project
 } # end if Type
+
+$dbh->disconnect();
 	
 1;
 __END__
