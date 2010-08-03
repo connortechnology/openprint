@@ -606,8 +606,8 @@ sub fits_on_equipment {
 		return 'Calliper too big';
 	} # end if
 	if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
-		my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-		my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
+		my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 ) if $$sig_specs{'txtFinalWidth'};
+		my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 ) if $$sig_specs{'txtFinalHeight'};
 		if ( $width_folds and $$sig_specs{'txtWidth'} > $max_feed_width ) {
 			return "Width ($$sig_specs{'txtWidth'}) too large for feed width ($max_feed_width).";
 		} elsif ( $height_folds and $$sig_specs{'txtHeight'} > $max_feed_width ) {
