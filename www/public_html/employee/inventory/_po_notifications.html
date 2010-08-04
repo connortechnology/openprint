@@ -3,7 +3,7 @@
 	<? echo (
 		my $html;
 		if ( $$variable{'PurchaseOrder'}->notifications() ) {
-			foreach my $U ( openprint::User::find('id'=>[$$variable{'PurchaseOrder'}->notifications()],'order' => 'lower(strfirstName),lower(strlastname)' ) ) {
+			foreach my $U ( openprint::User->find('id'=>[$$variable{'PurchaseOrder'}->notifications()],'order' => 'lower(strfirstName),lower(strlastname)' ) ) {
 				$html .= sprintf( q{<li id="notification_%d"><span style="float: left;">%s</span><span style="float: right;">%s</span></li>}, $U->id(), $U->name(), ssi::writeButton( $log, $dbh, 'd'.$U->id(), 'x.gif', q`new Ajax.Updater('notification_div','_po_notifications.html', { method: 'get', parameters: { action: 'delete', po_id : ` . $$variable{'PurchaseOrder'}->id() . q`, notification_id: ` . $U->id() .q`}, evalScripts: true } );`, '', 'X' ) 
 					);
 			} # end while
@@ -14,11 +14,11 @@
 		<select name="new_notification_id" id="new_notification_id">
 			<option value=""> select one </option>
 		<? echo ( 
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find(
+			return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find(
 		'order' => 'lower(strfirstname),lower(strlastname)',
 				'id'=>[ sets::exclude(
 						[$$variable{'PurchaseOrder'}->notifications()], 
-						[ map { $_->id() } openprint::User::find( 'company_id'=>new openprint::User($session{'user_id'})->company_id() ) ]
+						[ map { $_->id() } openprint::User->find( 'company_id'=>new openprint::User($session{'user_id'})->company_id() ) ]
 					) ],
 		 ) ] );
 		) ?>
