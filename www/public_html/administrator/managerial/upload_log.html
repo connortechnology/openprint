@@ -24,6 +24,16 @@
 			<select name="EndDay"><? echo ( ssi::getdays( $session{$r->uri().'?EndDay'} ); ) ?></select>
 			</span>
 		</p>
+		<p>
+			<label>Company:</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.company_id);" onkeydown="if(event.keyCode == 13){searchLog.btnFunction.value='Go';searchLog.submit();}" size="4" />
+			<select name="company_id" id="company_id" onchange="searchLog.submit();" >
+				<option value="">All</option>
+				<? echo (
+					return openprint::Company::get_dropdown( $param{'company_id'} );
+				) ?>
+			</select>
+		</p>
 		<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Search','',"document.searchLog.submit();", '', 'Search' ); ) ?>
 		</p>
@@ -36,6 +46,7 @@
 			<th align="left">Company</th>
 			<th align="left">User</th>
 			<th align="left">File</th>
+			<th class="size">Size</th>
 		</tr>
 			<? echo (
 				if ( %param ) {
@@ -49,21 +60,26 @@
 				my @Uploads = openprint::Upload::find(
 					'started_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'upload_log.html?StartYear','upload_log.html?StartMonth','upload_log.html?StartDay'} ),
 					'started_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'upload_log.html?EndYear','upload_log.html?EndMonth','upload_log.html?EndDay'} ),
+					( $param{'company_id'} ? ( 'company_id'=>$param{'company_id'} ) : () ),
 					'order'=>'start DESC',
 				);
 
+				my $total = 0;
 				foreach my $Upload ( @Uploads ) {
-					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="size">%s</td></tr>',
 						$rowclass,
 						Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Upload->start() ) ),
 						$Upload->company_id() ? $Upload->Company()->name() : ( $Upload->company() ? $Upload->company() : $Upload->User()->Company()->name() ),
 						$Upload->user_id() ? $Upload->User()->name() : $Upload->user(),
 						join('<br/>',map { $_->filename() } $Upload->Files() ),
-						
+						misc::format_bytes( $Upload->size() ),
 						);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
+					$total += $Upload->size();
 				} # end foreach
+				$html .= '<tr class="totals"><td colspan="4">Totals:</td><td class="size">'.misc::format_bytes($total).'</td></tr>';
 				return $html;
 			) ?>
+
 		</table>
 </fieldset>

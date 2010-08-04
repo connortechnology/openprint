@@ -2,7 +2,23 @@ package openprint::File;
 @ISA = qw( openprint::Object );
 use strict;
 
-my $debug = 1;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+
+$debug = 1;
+$table = 'project_files';
+$serial = 'project_files_id_seq';
+%fields = (
+	'id'	=>	'id',
+	'project_id'	=>	'project_id',
+	'filename'		=>	'filename',
+	'description'	=>	'description',
+	'upload_id'		=>	'upload_id',
+	'deleted'		=>	'deleted',
+	'size'			=>	'size',
+);
+%defaults = (
+	'deleted'		=>	0,
+);
 
 sub find {
 	my %params = @_;
@@ -29,26 +45,5 @@ sub find {
 	return map { new openprint::File( $_->{id}, $_ ); } @$data;
 } # end sub find
 
-sub load {
-    my ( $self, $data ) = @_;
-    if ( ! $data ) {
-        $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Project_Files WHERE id=?', {}, $$self{id} );
-    } # end if
-	@$self{keys %$data} = @$data{keys %$data};
-} # end sub load
-
-sub save {
-	my $self = shift;
-	my %sql = (
-		);
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Upload_id_seq')} );
-		sql::insert( $openprint::log, $openprint::dbh, 'Project_Files', 'id', $$self{'id'}, %sql );
-	} else {
-		sql::update( $openprint::log, $openprint::dbh, 'Project_Files', ['id=?', $$self{'id'}], %sql );
-	} # end if
-} # end sub save
-
 1;
 __END__
-

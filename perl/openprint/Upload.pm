@@ -20,6 +20,12 @@ $serial = 'upload_id_seq';
 	'file_path'		=>	'file_path',
 	'company'		=>	'company',
 );
+%defaults = (
+	'start'	=>	'NOW()',
+	'size'	=>	undef,
+	'total'	=>	undef,
+	'finished'	=>	0,
+);
 
 
 sub find {
@@ -60,18 +66,6 @@ sub load {
     } # end if
 	@$self{keys %$data} = @$data{keys %$data};
 } # end sub load
-
-sub save {
-	my $self = shift;
-	my %sql = (
-		);
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('Upload_id_seq')} );
-		sql::insert( $openprint::log, $openprint::dbh, 'Uploads', 'id', $$self{'id'}, %sql );
-	} else {
-		sql::update( $openprint::log, $openprint::dbh, 'Uploads', ['id=?', $$self{'id'}], %sql );
-	} # end if
-} # end sub save
 
 sub Company {
 	my $self = shift;
