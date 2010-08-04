@@ -25,8 +25,8 @@ $openprint::Object::no_cache = 1;
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
 #push @projects, map { new openprint::Project( $_ ); } sql::execute( undef, undef, q{SELECT DISTINCT projectindex from Schedule} );
-#push @projects, openprint::Project::find( 'id'=>222386, 'company_id'=>6, 'id_start'=>200000, 'order'=>'index desc');
-push @projects, openprint::Project::find( 'id_end'=>'150000', 'order'=>'index desc');
+#push @projects, openprint::Project->find( 'id'=>222386, 'company_id'=>6, 'id_start'=>200000, 'order'=>'index desc');
+push @projects, openprint::Project->find( 'id_end'=>'150000', 'order'=>'index desc');
 #@projects = sets::union( @projects );
 
 foreach my $Project ( @projects ) {
@@ -341,7 +341,7 @@ if ( $$specs{'ddmStockBrand'} eq 'Customer Supplied' ) {
 						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, "chkOverrideFoldType-0-$qty_index", $$specs{'chkOverride-txt'.$fold.'Qty'} );
 					} # end if
 					openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, "$fold-Qty-0-$qty_index", $$specs{'txt'.$fold.'Qty'} );
-					my @Equipment = openprint::Equipment::find( 'strid'=>$$specs{'ddmEquipment'.$qty_index} );
+					my @Equipment = openprint::Equipment->find( 'strid'=>$$specs{'ddmEquipment'.$qty_index} );
 					if ( @Equipment ) {
 						my $Equipment = shift @Equipment;
 						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $s_id, "ddmEquipment-0-$qty_index", $Equipment->id() );

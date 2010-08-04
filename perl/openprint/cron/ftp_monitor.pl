@@ -11,6 +11,7 @@ require openprint::Company;
 require openprint::User;
 require Email::Valid;
 require logger;
+require openprint::Upload;
 
 use vars qw( $log $dbh %config);
 *log = \$openprint::log;
@@ -106,14 +107,14 @@ die 'Error opening db' if ! $dbh;
 %openprint::config = ();
 configuration::init_cache( $log, $dbh, {} );
 if ( $opts->{'site_url'} ) {
-$config{'siteURL'} = $opts->{'site_url'};
-$config{'ExternalSiteURL'} = $opts->{'site_url'};
+	$config{'siteURL'} = $opts->{'site_url'};
+	$config{'ExternalSiteURL'} = $opts->{'site_url'};
 } # end if
 if ( $opts->{'site_title'} ) {
-$config{'SiteTitle'} = $opts->{'site_title'};
+	$config{'SiteTitle'} = $opts->{'site_title'};
 } # end if
 if ( $opts->{'skin_path'} ) {
-$config{'SkinPath'} = $opts->{'skin_path'};
+	$config{'SkinPath'} = $opts->{'skin_path'};
 } # end if
 
 my $fifoh;
@@ -182,7 +183,6 @@ if (open($fifoh, "< $fifo")) {
 				}
 
 				if ($send_email) {
-print "Sending email.\n";
 					send_email({
 						timestamp => $curr_time,
 						duration => $xfer_nsecs,
@@ -194,7 +194,6 @@ print "Sending email.\n";
 						user => $user_name,
 						status => $completion_status,
 					});
-print "Sent email.\n";
 				} # end if send email
 			}
 
@@ -293,6 +292,7 @@ EOT
 		my @parts = split('/', $company_name);
 		$company_name = shift @parts;
 	} # end if
+	my $proper_file_path = '/'.$company_name.'/'.$file_str;
 
 	my $Company;
 	my $User;
@@ -312,6 +312,28 @@ EOT
 			$User = $Users[0];
 			$Company = $User->Company();
 		} # end if
+	} # end if
+
+	my $Upload = new openprint::Upload();
+	my $error = $Upload->save({
+		('company_id'	=>	$Company ? $Company->id() : undef),
+		('user_id'		=>	$User ? $User->id() : undef ),
+		'company'		=>	$company_name,
+		'size'			=>	$upload_info->{size},
+		'total'			=>	$upload_info->{size},
+		'finished'		=>	$upload_info->{timestamp},
+		'file_path'		=>	$proper_file_path,
+	});
+	if ( $error ) {
+		print STDERR $error 
+	} else {
+		my $File = new openprint::File();
+		$error = $File->save({
+			'size'		=>	$upload_info->{size},
+			'filename'	=>	$proper_file_path,
+			'upload_id'	=>	$Upload->id(),
+		});
+		print STDERR $error if $error;
 	} # end if
 
 	if ( $Company and $User ) {
@@ -334,7 +356,7 @@ EOT
 			my %variable;
 			$variable{'Company'} = $Company;
 			$variable{'User'} = $User;
-			$variable{'filename'} = $file;
+			$variable{'filename'} = $proper_file_path;
 			$variable{'size'} = $upload_info->{size};
 
 			if (-e $opts->{'skin_path'} . '/email_content/uploadfiles_csr_notification.html') {
@@ -349,12 +371,10 @@ EOT
 							SMTP    => $config{'Mail Server'},
 							FROM    => $from,
 							TO      => $to,
-							#CC		=>	'iconnor@penultima.org',
+							BCC		=>	'iconnor@penultima.org',
 							SUBJECT => $subject,
 					   );
-print("Sending email to $mail{TO} from $mail{FROM}\n" );
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
-print("Sent email to $mail{TO}\n" );
 		} # end if
 	
 	} elsif ( 1 ) {
