@@ -292,6 +292,7 @@ EOT
 		my @parts = split('/', $company_name);
 		$company_name = shift @parts;
 	} # end if
+	my $proper_file_path = '/'.$company_name.'/'.$file_str;
 
 	my $Company;
 	my $User;
@@ -321,7 +322,7 @@ EOT
 		'size'			=>	$upload_info->{size},
 		'total'			=>	$upload_info->{size},
 		'finished'		=>	$upload_info->{timestamp},
-		'file_path'		=>	$file,
+		'file_path'		=>	$proper_file_path,
 	});
 	if ( $error ) {
 		print STDERR $error 
@@ -329,7 +330,7 @@ EOT
 		my $File = new openprint::File();
 		$error = $File->save({
 			'size'		=>	$upload_info->{size},
-			'filename'	=>	$file,	
+			'filename'	=>	$proper_file_path,
 			'upload_id'	=>	$Upload->id(),
 		});
 		print STDERR $error if $error;
@@ -355,7 +356,7 @@ EOT
 			my %variable;
 			$variable{'Company'} = $Company;
 			$variable{'User'} = $User;
-			$variable{'filename'} = $file;
+			$variable{'filename'} = $proper_file_path;
 			$variable{'size'} = $upload_info->{size};
 
 			if (-e $opts->{'skin_path'} . '/email_content/uploadfiles_csr_notification.html') {
