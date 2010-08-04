@@ -342,19 +342,17 @@ EOT
 			} else {
 				$variable{'ReplacementText'} = misc::load_file( $log, $opts->{'document_root'} . '/email_content/ftp_csr_notification.html' );
 			} # end if
-			$variable{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
+			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
 			my $email_template = misc::load_file( $log, $opts->{'skin_path'} . '/email_template.html' );
-			my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
+			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			my %mail = (
 							SMTP    => $config{'Mail Server'},
 							FROM    => $from,
 							TO      => $to,
-							#CC		=>	'iconnor@penultima.org',
+							BCC		=>	'iconnor@penultima.org',
 							SUBJECT => $subject,
 					   );
-print("Sending email to $mail{TO} from $mail{FROM}\n" );
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
-print("Sent email to $mail{TO}\n" );
 		} # end if
 	
 	} elsif ( 1 ) {
