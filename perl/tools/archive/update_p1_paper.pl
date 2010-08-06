@@ -29,7 +29,7 @@ my $data = $dbh->selectall_arrayref( 'SELECT * FROM tbl_Paper', {'Slice'=>{}} );
 foreach my $paper ( @$data ) {
 	next if  $$paper{'strname'} eq 'Customer Supplied';
 	$log->warn("Considering paper: $$paper{'strname'} $$paper{'strfinish'} $$paper{'strcolour'} $$paper{'strweight'} $$paper{'dblwidth'}x$$paper{'dblheight'}");
-	my @papers = openprint::Paper::find(
+	my @papers = openprint::Paper->find(
 			'name'	=>	$$paper{'strname'},
 			'finish'=>	$$paper{'strfinish'},
 			'colour'=>	$$paper{'strcolour'},
@@ -60,7 +60,7 @@ foreach my $paper ( @$data ) {
 		$Paper->created_on('2007-01-01 00:00:00');
 		@{$$Paper{'recommendations'}} = sql::execute( undef, undef, q{SELECT strID FROM Project_Types WHERE lngIndex IN ( SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?)}, $$paper{lngindex} );
 	$log->warn("Recommended for: @{$$Paper{'recommendations'}}");
-		@{$$Paper{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$paper{'lngindex'} );
+		@{$$Paper{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $$paper{'lngindex'} );
 		$_ = $Paper->save();
 		if ( $_ ) {
 			$log->error($_);
@@ -80,7 +80,7 @@ foreach my $paper ( @$data ) {
 			$Paper->taxexempt2( $$paper{'ysntaxexempt2'} eq 'Y' ? 1 : 0 );
 
 			@{$$Paper{'recommendations'}} = sql::execute( undef, undef, q{SELECT strName FROM Project_Types WHERE lngIndex IN ( SELECT lngProjectTypeIndex FROM paper_recommendations WHERE lngPaperIndex=?)}, $$paper{lngindex} );
-			@{$$Paper{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$paper{'lngindex'} );
+			@{$$Paper{'Prices'}} = openprint::PaperPrice->find( 'paper_id' => $$paper{'lngindex'} );
 			$Paper->manufacturer( 'unknown') if ! $Paper->manufacturer();
 			$_ = $Paper->save();
 		} # end foreach

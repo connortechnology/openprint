@@ -1,12 +1,12 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 use lib '/etc/apache2/lib/perl';
 
 use sql;
 use sets;
 
 use strict;
-use Socket;
 use Date::Parse;
+use Socket;
 
 require logger;
 
@@ -24,7 +24,7 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'help', 
-    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s',
+    'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s','blacklist=s', 'debug=s',
  );
 
 if ($opts->{help}) {
@@ -69,6 +69,7 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Invalid user attack from ([0-9.]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: User [\w+] from ([0-9.]+) not allowed because not listed in AllowUsers$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ proftpd\[[0-9]+\]: [\.\-A-Za-z0-9]+ \([\.\-A-Za-z0-9]+\[([.:a-zA-Z0-9]+)\]\) \- Maximum login attempts \(100\) exceeded, connection refused$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from ([.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
 );
 
 my %host_counts;
@@ -80,10 +81,10 @@ foreach my $log_file ( @log_files ) {
 	if ( open( FH, "<$log_file" ) ) {
 		foreach my $line (<FH>) {
 			foreach my $re ( @re ) {
-#print "Trying \n$re against\n $line\n" if $line =~ /authen/;
+print "Trying \n$re against\n $line\n" if $opts->{debug};
 				if ( $line =~ /$re/ ) {
 					my ($when, $source ) = ( $1, $2 );
-					#print "match for $source\n";
+					print "match for $source\n" if $opts->{debug};
 					my $ip;
 					if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
 						# Is an IP
@@ -92,13 +93,13 @@ foreach my $log_file ( @log_files ) {
 						# is a hostname
 						$ip = gethostbyname($source);
 						if ( defined $ip ) {
-							$ip = inet_ntoa($ip);
-							#print "Got $ip for $source\n";
+							$ip = Socket::inet_ntoa($ip);
+							print "Got $ip for $source\n" if $opts->{debug};
 						} # end if
 					} # end if
 					next if sets::isin( $ip, \@whitelist );
 					if ( ! $ip ) {
-						print "No ip for $source\n";
+						print "No ip for $source\n" if $opts->{debug};
 					} else {
 						if ( ! $host_counts{$ip} ) {
 							$host_counts{$ip} = $openprint::dbh->selectrow_hashref( 'SELECT * FROM blacklist WHERE ip=?', {}, $ip );
@@ -130,7 +131,7 @@ foreach my $ip ( sort keys %host_counts ) {
 			print $e . "\n";
 		} # end if
 	} # end if
-	#print "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}\n";
+	print "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}\n" if $opts->{debug};
 } # end foreach ip
 sql::end_transaction( $dbh, $ac );
 

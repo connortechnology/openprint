@@ -484,6 +484,10 @@ sub login {
 			$variable{'error'} = 'We were unable to email your password to you.	Please contact support.';
 		} # end if
 	} elsif ( $param{'btnFunction'} eq 'Login' ) {
+		if ( ! $param{'email'} ) {
+			$variable{'error'} = 'Please enter the email address of the account to retrieve.';
+			return;
+		} # end if
 		openprint::login::verify_login( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 	} # end if
 } # end sub login
