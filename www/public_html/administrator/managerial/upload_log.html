@@ -1,28 +1,38 @@
 <form name="searchLog" action="upload_log.html" method="post">
 	<fieldset class="filters"><legend>Search</legend>
 	<? eval (
-		if ( $openprint::param{'StartYear'} ) {
-			@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} =
-				@openprint::param{'StartYear','StartMonth','StartDay'};
-			@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} =
-				@openprint::param{'EndYear','EndMonth','EndDay'};
+		if ( $param{'StartYear'} ) {
+			@session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} =
+				@param{'StartYear','StartMonth','StartDay'};
+			@session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} =
+				@param{'EndYear','EndMonth','EndDay'};
 		} else {
-			@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = Date::Calc::Today();
-			@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = Date::Calc::Today();
+			@session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = Date::Calc::Today();
+			@session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = Date::Calc::Today();
 		} # end if
 	) ?>
 		<p>
 			<label>Date:</label>
 			<span class="DateSelector">
-			<select name="StartYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?StartYear'} ); ) ?></select>
-			<select name="StartMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?StartMonth'} ); ) ?></select>
-			<select name="StartDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?StartDay'} ); ) ?></select>
+			<select name="StartYear"><? echo ( ssi::return_years( undef, undef, $session{$r->uri().'?StartYear'} ); ) ?></select>
+			<select name="StartMonth"><? echo ( ssi::getmonths( $session{$r->uri().'?StartMonth'} ); ) ?></select>
+			<select name="StartDay"><? echo ( ssi::getdays( $session{$r->uri().'?StartDay'} ); ) ?></select>
 			&nbsp;to&nbsp;</span>
 			<span class="DateSelector">
-			<select name="EndYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?EndYear'} ); ) ?></select>
-			<select name="EndMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?EndMonth'} ); ) ?></select>
-			<select name="EndDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?EndDay'} ); ) ?></select>
+			<select name="EndYear"><? echo ( ssi::return_years( undef, undef, $session{$r->uri().'?EndYear'} ); ) ?></select>
+			<select name="EndMonth"><? echo ( ssi::getmonths( $session{$r->uri().'?EndMonth'} ); ) ?></select>
+			<select name="EndDay"><? echo ( ssi::getdays( $session{$r->uri().'?EndDay'} ); ) ?></select>
 			</span>
+		</p>
+		<p>
+			<label>Company:</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.company_id);" onkeydown="if(event.keyCode == 13){searchLog.btnFunction.value='Go';searchLog.submit();}" size="4" />
+			<select name="company_id" id="company_id" onchange="searchLog.submit();" >
+				<option value="">All</option>
+				<? echo (
+					return openprint::Company::get_dropdown( $param{'company_id'} );
+				) ?>
+			</select>
 		</p>
 		<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Search','',"document.searchLog.submit();", '', 'Search' ); ) ?>
@@ -36,34 +46,40 @@
 			<th align="left">Company</th>
 			<th align="left">User</th>
 			<th align="left">File</th>
+			<th class="size">Size</th>
 		</tr>
 			<? echo (
-				if ( %openprint::param ) {
+				if ( %param ) {
 					foreach my $k ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay' ) {
-						$openprint::session{'upload_log.html?'.$k} = $openprint::param{$k};
+						$session{'upload_log.html?'.$k} = $param{$k};
 					} # end foreach
 				} # end if
 				require openprint::Upload;
 				my $html = '';
 				my $rowclass;
 				my @Uploads = openprint::Upload->find(
-					'started_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @openprint::session{'upload_log.html?StartYear','upload_log.html?StartMonth','upload_log.html?StartDay'} ),
-					'started_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @openprint::session{'upload_log.html?EndYear','upload_log.html?EndMonth','upload_log.html?EndDay'} ),
+					'started_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'upload_log.html?StartYear','upload_log.html?StartMonth','upload_log.html?StartDay'} ),
+					'started_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'upload_log.html?EndYear','upload_log.html?EndMonth','upload_log.html?EndDay'} ),
+					( $param{'company_id'} ? ( 'company_id'=>$param{'company_id'} ) : () ),
 					'order'=>'start DESC',
 				);
 
+				my $total = 0;
 				foreach my $Upload ( @Uploads ) {
-					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>',
+					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="size">%s</td></tr>',
 						$rowclass,
 						Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Upload->start() ) ),
-						$Upload->company_id() ? $Upload->Company()->name() : $Upload->company(),
+						$Upload->company_id() ? $Upload->Company()->name() : ( $Upload->company() ? $Upload->company() : $Upload->User()->Company()->name() ),
 						$Upload->user_id() ? $Upload->User()->name() : $Upload->user(),
 						join('<br/>',map { $_->filename() } $Upload->Files() ),
-						
+						misc::format_bytes( $Upload->size() ),
 						);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
+					$total += $Upload->size();
 				} # end foreach
+				$html .= '<tr class="totals"><td colspan="4">Totals:</td><td class="size">'.misc::format_bytes($total).'</td></tr>';
 				return $html;
 			) ?>
+
 		</table>
 </fieldset>

@@ -180,7 +180,8 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 
 			if ( ( ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-				$$self{$field} = $defaults{$field};
+				$$self{$field} = eval($defaults{$field});
+				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			} else {
 	#$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			} # end if
@@ -308,6 +309,11 @@ sub find {
 					$sql .= " AND $$f{$k}::text LIKE ?";
 					push @values, $params{$k.'_like'};
 					delete $params{$k.'_like'};
+				} 
+				if ( exists $params{$k.'_ilike'} ) {
+					$sql .= " AND $$f{$k}::text ILIKE ?";
+					push @values, $params{$k.'_ilike'};
+					delete $params{$k.'_ilike'};
 				} 
 				if ( exists $params{$k.'_start'} ) {
 					$sql .= " AND $$f{$k} >= ?";

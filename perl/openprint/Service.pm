@@ -41,12 +41,6 @@ $serial = 'services_id_seq';
 		'taxexempt2'	=>	'N',
 		);
 
-my %cache;
-
-sub init_cache {
-	%cache = map { $_->name(), $_->id() } find();
-} # end sub init_cache
-
 sub save {
 	my ( $self, $params ) = @_;
 
@@ -70,7 +64,6 @@ sub delete {
 	my $self = shift;
 
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
-	delete $cache{$$self{name}};
 	my $ac = sql::start_transaction( $dbh );
     sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Services WHERE id=?}, $$self{id} );

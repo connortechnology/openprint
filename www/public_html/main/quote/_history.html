@@ -7,10 +7,10 @@
 	} else {
 		@{$$variable{'Quotes'}} = openprint::Quote->find( 
 			'company_id'		=> $session{'company_id'},
-			'for_name'			=> $session{'/main/quote/history.html?QuotedFor'},
+( $session{'/main/quote/history.html?QuotedFor'} ? ( 'for_name_ilike'			=> '%'.$session{'/main/quote/history.html?QuotedFor'}.'%' ) : () ),
 			'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/quote/history.html?created_on_start_year','/main/quote/history.html?created_on_start_month','/main/quote/history.html?created_on_start_day'}),
 			'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/quote/history.html?created_on_end_year','/main/quote/history.html?created_on_end_month','/main/quote/history.html?created_on_end_day'}),
-			'order'				=> 'dtmquotedate DESC',
+			'order'				=> $openprint::Quote::fields{'created_on'}.' DESC',
 			);
 	} # end if
 	$$variable{'Currency'} = new openprint::Currency( $session{Currency_id} );
@@ -36,9 +36,6 @@
 					<th width="20" class="unprintable" align="center"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f2);" /></th>
 				</tr>
 				<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
-				<? eval ( 
-					$$variable{'conversion_rate'} = $$variable{'Quote'}->Currency()->conversions( $session{'Currency_id'} );
-				) ?>
 				<tr<?rowclass?>> 
 					<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>&amp;btnFunction=SelectCompany&amp;ddmCompany=<? echo ( $$variable{'Quote'}->company_id() ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
 					<td align="left"><? hecho ( $$variable{'Quote'}->Company()->name(); ) ?></td>
@@ -79,9 +76,6 @@
 			<th width="20" class="unprintable" align="center"><input type="checkbox" name="checkall" onclick="selectAllCheckboxes(this,document.f2);" /></th>
 		</tr>
 		<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
-		<? eval ( 
-			$$variable{'conversion_rate'} = $$variable{'Quote'}->Currency()->conversions( $session{'Currency_id'} );
-		) ?>
 		<tr<?rowclass?>> 
 			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
 			<td align="left"><? echo ( ssi::htmlize($$variable{'Quote'}->for_name()); ) ?></td>

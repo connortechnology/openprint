@@ -6,7 +6,7 @@ use MIME::Base64;
 use openprint::Currency;
 use strict;
 use openprint ();
-use vars qw($r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
+use vars qw( $debug $r %variable $log $dbh %config %session $table $serial %fields %transforms %defaults %find_fields );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -19,7 +19,7 @@ require openprint::logs;
 require openprint::QuotedProject;
 require openprint::QuotedProduct;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'quotes';
 $serial = 'quotes_id_seq';
@@ -49,11 +49,15 @@ $serial = 'quotes_id_seq';
 
 %find_fields = (
 	'salesrep_id' => '(SELECT lngsalespersion FROM companies WHERE id=company_id)',
-	'for_name' => q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=index)},
+	'for_name' => q{(SELECT strFirstName || ' ' || strLastName FROM tbl_Quote_Users_for WHERE quote_id=quotes.id)},
 );
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'currency_id'	=>	'openprint::Currency::get_current()->id()',
+	'user_id'		=>	'$openprint::session{user_id}',
+	'company_id'	=>	'$openprint::session{company_id}',
+	'status'		=>	q`'Incomplete'`,
 );
 
 sub load {
@@ -76,11 +80,11 @@ sub save {
 	my %sql;
 	foreach my $key ( keys %fields ) {
 		next if ! $fields{$key};
-		$sql{$fields{$key}} = ( defined $$self{$key} ? $$self{$key} : $defaults{$key} );
+		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
 		
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
-		my $ac = sql::start_transaction( $dbh );
 		if ( $openprint::config{'QuoteIDFormat'} eq 'Year' ) {
 			$dbh->do( "LOCK TABLE $table IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
 
@@ -98,10 +102,14 @@ sub save {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if
-		sql::end_transaction( $dbh, $ac );
 	} else {
-		sql::update( undef, undef, $table, ['id=?', $$self{'id'}], \%sql );
+		my $error = sql::update( undef, undef, $table, ['id=?', $$self{'id'}], \%sql );
+		if ( $error ) {
+			sql::end_transaction( $dbh, $ac );
+			return $error;
+		} # end if
 	} # end if
+		sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return;
 } # end sub save
@@ -137,7 +145,7 @@ sub status {
 		#$self->add_log( "Changed Status to $new_status" );
 	} # end if
 	return $$self{'status'};
-} # end sub set_status
+} # end sub status
 
 sub add_log {
 	my ( $self, $comment ) = @_;
@@ -151,13 +159,13 @@ sub add_log {
 
 sub Quoted_Projects {
 	my $self = shift;
-	return map {new openprint::QuotedProject( $_ );} sql::execute( undef, undef, q{SELECT id FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
+	return openprint::QuotedProject->find('quote_id'=>$$self{'id'});
 } # end sub Quoted_Projects
 
 sub Projects {
 	my $self = shift;
 	if ( ! exists $$self{'Projects'} ) {
-	@{$$self{'Projects'}} = map {new openprint::Project( $_ );} sql::execute( undef, undef, q{SELECT project_id FROM tbl_Quote_Details WHERE quote_id=?}, $$self{'id'} );
+		@{$$self{'Projects'}} = map { $_->Project() } $self->Quoted_Projects();
 	} # end if
 	return @{$$self{'Projects'}};
 } # end sub projects
@@ -348,6 +356,7 @@ sub send {
 					FROM    => sprintf('%s %s <%s>', @$self{'by_firstname','by_lastname','by_email'}),
 					TO      => sprintf('%s %s <%s>', @$self{'for_firstname','for_lastname','for_email'}),
 					#TO      => '"Isaac Connor" <iconnor@connortechnology.com>',
+BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 					SUBJECT => "Quote $$self{id} : " . $self->reference(),
 					);
 			misc::send_email_with_attachment( $log, \%mail, @attachments, @project_summaries );
@@ -373,6 +382,7 @@ sub send {
 				SMTP    => $openprint::config{'Mail Server'},
 				FROM    => sprintf("%s %s <%s>", @$self{'by_firstname','by_lastname','by_email'}),
 				TO      => sprintf("%s %s <%s>", @$self{'for_firstname','for_lastname','for_email'}),
+BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 				SUBJECT => "$openprint::config{'SiteTitle'}:Quote $$self{id}",
 				);
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
@@ -395,7 +405,7 @@ sub send {
 					SMTP    => $openprint::config{'Mail Server'},
 					FROM    => $openprint::config{'QuotingEmail'},
 					TO      => $openprint::config{'QuotingEmail'},
-#BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
+BCC        =>  '"Isaac Connor" <iconnor@penultima.org>',
 					SUBJECT => "$$self{'for_companyname'} : Quote $$self{id}",
 					);
 			misc::send_email_with_attachment( $log, \%mail, @body, "Quote$$self{id}.html", $email_template, 'text/html', 'quoted-printable' );

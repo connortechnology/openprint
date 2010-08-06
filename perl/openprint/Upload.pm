@@ -4,16 +4,26 @@ use strict;
 
 require openprint::File;
 
-my $debug = 1;
-
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
 $table = 'uploads';
-$serial = 'uploads_id_seq';
+$serial = 'upload_id_seq';
 %fields = (
 	'id'			=>	'id',
+	'start'			=>	'start',
+	'size'			=>	'size',
+	'total'			=>	'total',
+	'finished'		=>	'finished',
 	'company_id'	=>	'company_id',
 	'user_id'		=>	'user_id',
-	'started_on'	=>	'started_on',
+	'file_path'		=>	'file_path',
+	'company'		=>	'company',
+);
+%defaults = (
+	'start'	=>	'NOW()',
+	'size'	=>	undef,
+	'total'	=>	undef,
+	'finished'	=>	0,
 );
 
 sub Files {
@@ -23,4 +33,3 @@ sub Files {
 
 1;
 __END__
-

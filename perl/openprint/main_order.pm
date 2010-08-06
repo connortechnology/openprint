@@ -65,7 +65,7 @@ sub information {
 			( $order_id, $error ) = openprint::order::make_order_from_quote( $param{'quote_id'} );
 		} else {
 			my $project_index = $param{'ProjectIndex'};
-			$_ = q{SELECT strStatus FROM Orders WHERE Index IN (SELECT OrderIndex FROM Order_Contents WHERE lngProjectIndex=?)}.
+			$_ = q{SELECT strStatus FROM Orders WHERE id IN (SELECT OrderIndex FROM Order_Contents WHERE lngProjectIndex=?)}.
 				q{AND strStatus IN ( 'Pending Deposit', 'In Production', 'Complete', 'Shipped', 'Waiting For Pickup', 'Picked Up' )};
 			if ( sql::execute( $log, $dbh, $_, $project_index ) ) {
 				return misc::error($log, $dbh, \%variable, q{Can't order project.}, "Project $project_index has already been ordered." );
@@ -454,8 +454,23 @@ sub confirmation {
 } # end sub confirmation
 
 sub history {
+	ssi::setup_date_select( '/main/order/history.html', 'created_on', -30, 0 );
+	ssi::save_params( '/main/order/history.html', 
+			'ddmOrderedBy',
+			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
+			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
+			);
 
 } # end sub history
+sub _history {
+	ssi::setup_date_select( '/main/order/history.html', 'created_on', -30, 0 );
+	ssi::save_params( '/main/order/history.html', 
+			'ddmOrderedBy',
+			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
+			'created_on_end_year', 'created_on_end_month','created_on_end_day', 
+			);
+
+} # end sub _history
 
 sub history_details {
 	my $order_id = $param{'OrderID'};
@@ -490,14 +505,14 @@ sub history_details {
 
         if ( $variable{'DepositDue'} > 0 ) {
             foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-                sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+                sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
                 sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?',$project_index, 'Ordered'], 'strStatus', 'Pending Deposit' );
             } # end foreach
         } else {
             $Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
             foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-                sql::update( $log, $dbh, 'Projects', ['Index=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+                sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
                 sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
             } # end foreach
             if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {
