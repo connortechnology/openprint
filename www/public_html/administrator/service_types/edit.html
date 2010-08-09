@@ -12,7 +12,9 @@
 			<label>Service Type:</label>
 			<select name="ServiceType_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">Select a Service Type</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find('category_id'=>$param{'SearchCategory'}, 'order'=>'lower(name)') ], $$variable{'ServiceType'}->id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find(
+					( $param{'SearchCategory'} ? ( 'category_id'=>$param{'SearchCategory'} ) : () ), 
+					  'order'=>'lower(name)') ], $$variable{'ServiceType'}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons"> 

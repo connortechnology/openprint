@@ -56,7 +56,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	my ( $carton_service_index ) = $$services{'PlainCartons'}[0] if $$services{'PlainCartons'};
+	my $carton_service_index = $$services{'PlainCartons'}[0] if $$services{'PlainCartons'};
 	( $carton_service_index ) = $$services{'BulkSkids'}[0] if $$services{'BulkSkids'};
 	if ( ! $carton_service_index ) {
 		$$specs{'alert'} .= 'Project must be in cartons or on skids.<br/>';

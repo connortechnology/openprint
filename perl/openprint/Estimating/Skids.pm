@@ -114,7 +114,7 @@ sub calc {
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
 		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	} # end if
-	if ( ! $$specs{'txtFinishedCalliper'} ) {
+	if ( ! 1 * $$specs{'txtFinishedCalliper'} ) {
 		$$specs{'alert'} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if

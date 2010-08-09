@@ -9,5 +9,10 @@
 ) ?>	
 <li class="required">
 	<label>Amount:</label>
-	<input type="text" name="txtQuantity<? echo ( $$variable{'QuantityIndex'} ) ?>-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QuantityIndex'}."-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" style="width: 50%;" /> of <? echo ( $$variable{'Project'}->quantity( $$variable{'QuantityIndex'} ); ) ?>
+<? if ( $$variable{'Order'}->status() eq 'Incomplete' ) ?>
+	<input type="text" name="txtQuantity<? echo ( $$variable{'QuantityIndex'} ) ?>-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QuantityIndex'}."-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" style="width: 50%;" />
+<? else ( $$variable{'Order'}->status() eq 'Incomplete' ) ?>
+<? echo ( $$variable{'txtQuantity'.$$variable{'QuantityIndex'}."-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>
+<? endif ( $$variable{'Order'}->status() eq 'Incomplete' ) ?>
+ of <? echo ( $$variable{'Project'}->quantity( $$variable{'QuantityIndex'} ); ) ?>
 </li>
