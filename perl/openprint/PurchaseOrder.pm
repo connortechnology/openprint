@@ -474,7 +474,7 @@ sub Taxes {
 	if ( ! $$self{'id'} ) {
 		return ();
 	} # end if
-    if ( $$self{'id'} and ! $$self{'Taxes'} ) {
+    if ( ! $$self{'Taxes'} ) {
         @{$$self{'Taxes'}} = openprint::PurchaseOrder_Tax->find('purchaseorder_id'=>$$self{'id'});
     } # end if
     if ( $$self{'vendor_country'} and $$self{'vendor_state'} and ! @{$$self{'Taxes'}} ) {

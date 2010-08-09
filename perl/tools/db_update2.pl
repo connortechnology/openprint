@@ -44,10 +44,10 @@ my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_sc
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
 if ( ! sets::isin( 'quote_log', \@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Quote_Log.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Quote_Log.sql}) );
+} # end if
+if ( ! sets::isin( 'quoted_products', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Quoted_Products.sql}) );
 } # end if
 
 if ( sets::isin( 'quotes', \@tables ) ) {
@@ -71,20 +71,13 @@ if ( sets::isin( 'invoiced_products', \@tables ) ) {
 	} # end if
 } # end if
 if ( sets::isin( 'hosts', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM hosts LIMIT 1', {} );
-	if ( $data ) {
-		$dbh->do('ALTER TABLE hosts add block boolean') if ! exists $$data{'block'};
-		$dbh->do('ALTER TABLE hosts add monitor boolean') if ! exists $$data{'monitor'};
-	} # end if
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
+	$dbh->do('ALTER TABLE hosts add block boolean') if ! exists $$data{'block'};
+	$dbh->do('ALTER TABLE hosts add monitor boolean') if ! exists $$data{'monitor'};
 } # end if
 my $data = 0;
 if ( sets::isin( 'emailcampaigns', \@tables ) ) {
 	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM emailcampaigns LIMIT 1', {} );
-} # end if
-
-if ( $data ) {
-	$dbh->do('ALTER TABLE hosts add block boolean') if ! exists $$data{'block'};
-	$dbh->do('ALTER TABLE hosts add monitor boolean') if ! exists $$data{'monitor'};
 } else {
 	$_ = misc::load_file( $log, q{../openprint/sql/EmailCampaigns.sql});
 	foreach my $st ( split(';', $_ ) ) {
@@ -178,6 +171,19 @@ if ( ! openprint::Invoice_Tax->find() ) {
 	sql::end_transaction( $dbh, $ac );
 } # end if
 
+my $data = 0;
+if ( sets::isin( 'orders', \@tables ) ) {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
+} # end if
+if ( $data ) {
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE orders rename column index to id');
+	} # end if
+	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
+	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
+	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
+	$dbh->do('UPDATE orders SET owing=curtotalsale-paid');
+}
 if ( ! sets::isin('order_taxes', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Order_Taxes.sql});
 	foreach my $st ( split(';', $_ ) ) {
@@ -190,7 +196,7 @@ if ( ! openprint::Order_Tax->find() ) {
 	foreach my $Order ( openprint::Order->find() ) {
 		my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Orders WHERE id=? LIMIT 1', {}, $Order->id() );
 		if ( ! $data ) {
-			die $openprint::dbh->errstr();
+			die 'Error loading order ' . $Order->id() . ' : ' . $openprint::dbh->errstr();
 		} # end if
 		foreach my $Tax ( openprint::Tax->find(
 					'country'			=>	$Order->country(), 
@@ -222,19 +228,6 @@ if ( ! openprint::Order_Tax->find() ) {
 	} # end foreachOrder 
 	sql::end_transaction( $dbh, $ac );
 } # end if
-my $data = 0;
-if ( sets::isin( 'orders', \@tables ) ) {
-	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
-} # end if
-if ( $data ) {
-	if ( ! exists $$data{'id'} ) {
-		$dbh->do('ALTER TABLE orders rename column index to id');
-	} # end if
-	$dbh->do('ALTER TABLE Orders ADD paid NUMERIC(10,2)') if ( ! exists $$data{'paid'} );
-	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
-	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
-	$dbh->do('UPDATE orders SET owing=curtotalsale-paid');
-}
 if ( sets::isin('purchaseorders', \@tables ) ) {
 	$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM purchaseorders LIMIT 1', {} );
 	if ( $data ) {

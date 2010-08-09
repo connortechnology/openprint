@@ -376,7 +376,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 } else {
     $dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_Equipment.sql} )) or die;
 } # end if
-if ( ! sets::isin( 'tbl_equipment_specifications' ) ) {
+if ( ! sets::isin( 'tbl_equipment_specifications', \@tables ) ) {
 	my $sql = misc::load_file( $log, q{../openprint/sql/tbl_Equipment_Specifications.sql}) or die "Can't load tbl_Equipment_Specifications.sql";
 	$dbh->do($sql);
 } else {
@@ -536,12 +536,12 @@ if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 	$dbh->do(q`ALTER TABLE service_types ADD type TEXT`);
 	$dbh->do(q`UPDATE service_types SET type=name WHERE type IS NULL`);
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+} # end if
 	if ( ! sets::isin('service_types_id_seq', \@sequences) ) {
 		$dbh->do(q{CREATE SEQUENCE service_types_id_seq});
 		$dbh->do(q{select setval('service_types_id_seq', (SELECT Max(id) FROM service_types) )});
 	} # end if
 	$dbh->do(q{ALTER TABLE service_types alter id set default nextval('service_types_is_seq')});
-} # end if
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql});
 	foreach my $st ( split(';', $_ ) ) {
@@ -896,6 +896,22 @@ if ( $data ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (supplier_id) REFERENCES Companies(id)');
 	} # end if
 } # end if
+my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1', {} );
+my $ac = sql::start_transaction( $dbh );
+$dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if $$data{'currencyindex'};
+$dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
+$dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER') if ! exists $$data{'owner_id'};
+$dbh->do('ALTER TABLE Pricelists ADD deleted BOOLEAN NOT NULL default false') if ! exists $$data{'deleted'};
+$dbh->do('ALTER TABLE Pricelists ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
+if ( sets::isin( 'price_lists_id_seq', \@sequences )   ) {
+$dbh->do('DROP SEQUENCE IF EXISTS price_lists_id_seq');
+} 
+if ( ! sets::isin( 'pricelists_id_seq', \@sequences ) ) {
+$dbh->do('CREATE SEQUENCE pricelists_id_seq');
+$dbh->do(q`SELECT setval('pricelists_id_seq', (SELECT MAX(id) FROM Pricelists))`);
+$dbh->do(q`ALTER TABLE pricelists alter id set default nextval('pricelists_id_seq')`);
+} # end if
+sql::end_transaction( $dbh, $ac );
 if ( $version < 1901 ) {
 	print "Updating to version 1901\n";
 	my $ac = sql::start_transaction( $dbh );
@@ -1171,9 +1187,9 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 	} # end foreach Spec
 	if ( ! openprint::ServicePrice->find('service_id'=>$FoldingService->id(), 'equipment_id'=>$E->id() ) ) {
 		foreach my $Pricelist ( openprint::Pricelist->find() ) {
-if ( ! $Pricelist->id() ) {
-print "ERror pricelits: " . $Pricelist->name() . "\n";
-} else {
+			if ( ! $Pricelist->id() ) {
+				print "ERror pricelits: " . $Pricelist->name() . "\n";
+			} else {
 			my $ServicePrice = new openprint::ServicePrice();
 			$ServicePrice->save({
 				'service_id'	=>	$FoldingService->id(),
@@ -1565,7 +1581,7 @@ foreach my $M ( openprint::Material->find('name_like'=>'Plain Carton%') ) {
 			my $S = new openprint::MaterialSpecification();
 			$S->save({
 				'material_id'	=>	$M->id(),
-				'name'			=>	'Depth',
+				'name'			=>	'Width',
 				'value'			=>	$w,
 			});
 		} # end if
@@ -1883,22 +1899,6 @@ if ( ! $data ) {
 	} # end if
 } # end if
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1', {} );
-my $ac = sql::start_transaction( $dbh );
-$dbh->do('ALTER TABLE Pricelists RENAME COLUMN currencyindex TO currency_id') if $$data{'currencyindex'};
-$dbh->do('ALTER TABLE Pricelists RENAME COLUMN index TO id') if $$data{'index'};
-$dbh->do('ALTER TABLE Pricelists ADD owner_id INTEGER') if ! exists $$data{'owner_id'};
-$dbh->do('ALTER TABLE Pricelists ADD deleted BOOLEAN NOT NULL default false') if ! exists $$data{'deleted'};
-$dbh->do('ALTER TABLE Pricelists ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
-if ( sets::isin( 'price_lists_id_seq', \@sequences )   ) {
-$dbh->do('DROP SEQUENCE IF EXISTS price_lists_id_seq');
-} 
-if ( ! sets::isin( 'pricelists_id_seq', \@sequences ) ) {
-$dbh->do('CREATE SEQUENCE pricelists_id_seq');
-$dbh->do(q`SELECT setval('pricelists_id_seq', (SELECT MAX(id) FROM Pricelists))`);
-$dbh->do(q`ALTER TABLE pricelists alter id set default nextval('pricelists_id_seq')`);
-} # end if
-sql::end_transaction( $dbh, $ac );
 
 if ( sets::isin( 'ordered_products', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='ordered_products'", 'column_name');
@@ -2488,6 +2488,7 @@ if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
 	$dbh->do(q`select setval('order_id_seq', (select max(index) from orders) )`);
 	$dbh->do(q`alter table orders alter column index set default nextval('order_id_seq');`);
 }
+
 if ( ! sets::isin( 'order_contents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Order_Contents.sql' ) ) or die;
 }
