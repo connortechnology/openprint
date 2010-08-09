@@ -38,32 +38,32 @@ To save, process a new quote or process an order from this quotation, please cli
 </span>
 <div class="Quote">
 	<div class="Header">
-<!--#include virtual="/includes/quote_header.html" -->
-<!--#include virtual="/includes/quote_information.html" -->
+		<!--#include virtual="/includes/quote_header.html" -->
+		<!--#include virtual="/includes/quote_information.html" -->
 	</div>
-		<!--#include virtual="_projects.html"-->
-		<!--#include virtual="_products_view.html"-->
-<table class="List">
-	<tr>
-		<td>
-			<? if ( $$variable{'AdministratorName'} ) ?>
-			<b>Administrator Name:</b> <?AdministratorName?><br>
-			<? endif ( $$variable{'AdministratorName'} ) ?>
-			<? if ( $$variable{'AdministratorComments'} ) ?>
-			<b>Administrator Comments:</b> <?AdministratorComments?><br>
-			<? endif ( $$variable{'AdministratorComments'} ) ?>
-		</td>
-	</tr>
-	<tr>
-		<td colspan="3" align="right"><br/>
-			<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
-			Prices are subject to applicable taxes.<br/>
-		</td>
-	</tr>
-	<tr>
-		<td colspan="3" align="left"><br/>
-		<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
-		</td>
-	</tr>
-</table>
+	<!--#include virtual="_projects.html"-->
+	<!--#include virtual="_products_view.html"-->
+	<table class="List">
+		<tr>
+			<td>
+				<? if ( $$variable{'AdministratorName'} ) ?>
+				<b>Administrator Name:</b> <?AdministratorName?><br>
+				<? endif ( $$variable{'AdministratorName'} ) ?>
+				<? if ( $$variable{'AdministratorComments'} ) ?>
+				<b>Administrator Comments:</b> <?AdministratorComments?><br>
+				<? endif ( $$variable{'AdministratorComments'} ) ?>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3" align="right"><br/>
+				<span class="Currency">All prices listed in <? echo ( $$variable{'Quote'}->Currency()->name(); ) ?>.</span><br class="spacer"/>
+				Prices are subject to applicable taxes.<br/>
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3" align="left"><br/>
+			<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
+			</td>
+		</tr>
+	</table>
 </div><!--Quote-->

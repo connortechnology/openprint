@@ -5,7 +5,7 @@
 		<!--#include virtual="/includes/quote_prepared_by.html"-->
 		<!--#include virtual="/includes/quote_prepared_for.html"-->
 	</div>
-<? if ( $$variable{'Quote'}->Projects() ) ?>
+<? if ( $$variable{'Quote'}->Quoted_Projects() ) ?>
 <table class="List">
 	<tr> 
 		<th width="60" align="left">ID</th>
@@ -19,10 +19,8 @@
 	<? echo (
 		my $html;
 		my $rowclass;
-		my $subtotal;
-		my $newsubtotal;
 
-		foreach my $QP ( $$variable{'Quote'}->Projects() ) {
+		foreach my $QP ( $$variable{'Quote'}->Quoted_Projects() ) {
 			my $Project = $QP->Project();
 			my $services = $Project->services();
 
@@ -64,12 +62,8 @@
 					openprint::Currency::format( $QP->price($qty_index) ),
 					);
 				} # end foreach
-				$subtotal += $QP->Project()->price($quantity);
-				$newsubtotal += $QP->price($quantity);
 				$html .= "</table>\n</td>\n</tr>\n";
 			} # end foreach QP
-			$html .= sprintf(q`<tr class="totals"><td colspan="5">Subtotal:</td><td class="price">%s</td><td class="newprice">%s</td></tr>`, openprint::Currency::format( $subtotal ), openprint::Currency::format( $newsubtotal ) );
-
 			return $html;
 		) ?>
 </table>

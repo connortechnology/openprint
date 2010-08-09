@@ -3,7 +3,7 @@ package openprint::Order;
 
 use strict;
 use openprint ();
-use vars qw( %session %config %variable $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields %transforms %defaults );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *variable = \%openprint::variable;
@@ -17,7 +17,7 @@ require openprint::Order_Tax;
 require openprint::Payment;
 require openprint::Tax;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'orders';
 $serial = 'orders_id_seq';
@@ -28,12 +28,6 @@ $serial = 'orders_id_seq';
 	'user_id'					=> 'userindex',
 	'docket'					=> 'lngdocketnumber',
 	'status'					=> 'strstatus',
-	'federal_tax'				=> 'curfedtax',
-	'federal_tax_rate'			=>	'federal_tax_rate',
-	'state_tax'					=> 'curprovtax',
-	'state_tax_rate'			=> 'state_tax_rate',
-	'harmonized_tax'			=> 'curharmtax',
-	'harmonized_tax_rate'		=> 'harmonized_tax_rate',
 	'total'						=> 'curtotalsale',
 	'downpayment'				=> 'curdownpayment',
 	'created_on'				=> 'dtmorderdate',
@@ -72,6 +66,8 @@ sub save {
 	my $ac = sql::start_transaction( $dbh );
 
 	$$self{'owing'} = $$self{'total'} - $$self{'paid'};
+	$$self{'company_id'} = $session{'company_id'} if ! $$self{'company_id'};
+	$$self{'user_id'} = $session{'user_id'} if ! $$self{'user_id'};
 	my %sql;
 	foreach my $key ( keys %fields ) {
 		next if $key eq 'paid';
@@ -81,10 +77,10 @@ sub save {
 
 	if ( ! $$self{'id'} ) {
 		if ( $openprint::config{'OrderIDStyle'} eq 'Year' ) {
-			$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
+			$sql{'id'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );
 		} else {
 			@$self{'id'} = sql::execute( $log, $dbh, q{SELECT nextval('order_id_seq')} );
-			$sql{'index'} = $$self{'id'};
+			$sql{'id'} = $$self{'id'};
 		} # end if
 		$sql{$fields{'created_on'}} = 'NOW()';
 		if ( ( my $error = sql::insert( $log, $dbh, 'Orders', \%sql ) ) ) {
@@ -97,7 +93,7 @@ sub save {
 			return $error;
 		} # end if	
 	} else {
-		if ( ( my $error = sql::update( $log, $dbh, 'Orders', ['index=?', $$self{'id'}], \%sql ) ) ) {
+		if ( ( my $error = sql::update( $log, $dbh, 'Orders', ['id=?', $$self{'id'}], \%sql ) ) ) {
 			sql::end_transaction( $dbh, $ac );
 			return $error;
 		} # end if	
@@ -226,7 +222,7 @@ sub approve {
 sub status {
 	my ( $self, $new_status ) = @_;
 	if ( defined $new_status and $$self{'status'} ne $new_status ) {
-		sql::update( $log, $dbh, 'Orders', ['index=?', $$self{'id'}], 'strStatus', $new_status );
+		sql::update( $log, $dbh, 'Orders', ['id=?', $$self{'id'}], 'strStatus', $new_status );
 		$$self{'status'} = $new_status;
 		$self->add_log( "Changed Status to $new_status" );
 	} # end if
@@ -325,8 +321,8 @@ sub Currency {
 
 sub pay {
     my $self = shift;
-    $_ = 'SELECT CompanyIndex, currencyindex, curTotalSale, (SELECT SUM(amount) FROM Payments WHERE (deleted=false or deleted IS NULL) AND completed=true AND order_id=Orders.Index) FROM Orders WHERE Index=?';
-    my ( $company_index, $currency_id, $amount, $paid ) = sql::execute( $openprint::log, $openprint::dbh, $_, $$self{id} );
+
+    my ( $company_index, $currency_id, $amount, $paid ) = $self->get('company_id','currency_id','total','paid');
     if ( $amount - $paid <= 0 ) {
         $self->update_status();
         return "Order $$self{id} is already paid!<br/>";
@@ -556,10 +552,15 @@ sub owing {
 
 sub Taxes {
     my ( $self ) = @_;
-    if ( ! $$self{'Taxes'} ) {
-        @{$$self{'Taxes'}} = openprint::Order_Tax->find('claim_id'=>$$self{'id'});
+
+    if ( ! $$self{'id'} ) {
+        return ();
     } # end if
-    if ( ! @{$$self{'Taxes'}} ) {
+
+    if ( ! $$self{'Taxes'} ) {
+        @{$$self{'Taxes'}} = openprint::Order_Tax->find('order_id'=>$$self{'id'});
+    } # end if
+    if ( $self->Company()->country() and $self->Company()->state() and ! @{$$self{'Taxes'}} ) {
         foreach my $Tax ( openprint::Tax->find(
                     'period_start_null_or_<='   =>  $$self{'created_on'},
                     'period_end_null_or_>='     =>  $$self{'created_on'},
@@ -568,7 +569,7 @@ sub Taxes {
                 ) {
             my $T = new openprint::Order_Tax();
             $T->save({
-                'claim_id'=>  $$self{'id'},
+                'order_id'=>  $$self{'id'},
                 'tax_id'    =>  $$Tax{'id'},
                 'rate'      =>  $$Tax{'rate'},
             });
@@ -579,7 +580,7 @@ sub Taxes {
 } # end sub Taxes
 
 sub Tax {
-    my $result = openprint::Order_Tax->find_one('claim_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() );
+    my $result = openprint::Order_Tax->find_one('order_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() );
     if ( ! $result ) {
         return new openprint::Order_Tax();
     } # end if

@@ -78,7 +78,7 @@
 		<? while ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
 		<tr<?rowclass?>> 
 			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( $$variable{'Quote'}->id(); ) ?></a></td>
-			<td align="left"><? echo ( ssi::htmlize($$variable{'Quote'}->for_name()); ) ?></td>
+			<td align="left"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Quote'}->for_name()); ) ?></a></td>
 			<td class="Date"><a href="history_details.html?quote_id=<? echo ( $$variable{'Quote'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Quote'}->created_on() ) ); ) ?></a></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total1() ) ); ) ?></td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Quote'}->Currency()->convert_from( $$variable{'Quote'}->total2() ) ); ) ?></td>
@@ -92,7 +92,7 @@
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
 		<? endwhile ( $$variable{'Quote'} = shift @{$$variable{'Quotes'}} ) ?>
 	</table>
-	<div class="unprintable" style="float: right;"><? echo ( ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f2.btnFunction.value='Delete';delete_confirm(f2);", '', 'Delete' ); ) ?></div>
+	<p class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f2.btnFunction.value='Delete';delete_confirm(f2);", '', 'Delete' ); ) ?></p>
 	<input type="hidden" name="btnFunction" />
 </form>
 <span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name(); ) ?>.</span>

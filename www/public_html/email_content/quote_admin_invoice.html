@@ -15,58 +15,67 @@
 		<th class="price">Price</th>
 		<th class="newprice">Final Price</th>
 	</tr>
-<? eval ( $$variable{'rowclass'} = ''; ) ?>
-	<? while ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
-	<tr<?rowclass?>> 
-		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/employee/project/view.html?ProjectIndex=<?project_index?>"><?project_index?></a></td>
-		<td><a href="<? echo ( $config{ExternalSiteURL} ) ?>/employee/project/view.html?ProjectIndex=<?project_index?>">
-<? echo (
-my $html;
-my $Project = new openprint::Project( $$variable{'project_index'} );
-$html .= ssi::htmlize($Project->reference()) . ':<br/>' if $Project->reference();
-$html .= $Project->summary() if $config{'ShowProjectSummaryOnQuote'} ne 'N';
-return $html;
-) ?></a></td>
+	<? echo (
+		my $html;
+		my $rowclass;
+		my $subtotal;
+		my $newsubtotal;
+
+		foreach my $QP ( $$variable{'Quote'}->Quoted_Projects() ) {
+			my $Project = $QP->Project();
+			$html .= sprintf(q`
+	<tr%1$s> 
+		<td><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%3$d</a></td>
+		<td><a href="%2$s/employee/project/view.html?ProjectIndex=%3$d">%4$s</a></td>
 		<td colspan="5">
 			<table>
-				<? while ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
-				<? if ( $$variable{'qty'} ) ?>
-				<tr>		
-<td width="130" align="right">
-<? echo (
-my $Project = new openprint::Project( $$variable{'project_index'} );
-my %services = $Project->services();
-my $weight;
+			`, $rowclass, $config{'ExternalSiteURL'}, $QP->project_id(),
+			(
+			 ( $Project->reference() ? ssi::htmlize($Project->reference()) . ':<br/>' : '' ) .
+			 ( $config{'ShowProjectSummaryOnQuote'} ne 'N' ? $Project->summary() : '' ),
+			),
+			);
+			my $services = $Project->services();
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+			
+				$html .= '<tr><td class="weight">';
+				my $weight;
 
-if ( $services{'BulkSkids'} ) {
-my $specs = openprint::service::get_specs_ref( $Project, $services{'BulkSkids'}[0] );
-$weight = $$specs{'totalWeight'.$$variable{qty_index}};
-} elsif ( $services{'PlainCartons'} ) {
-my $specs = openprint::service::get_specs_ref( $Project, $services{'PlainCartons'}[0] );
-$weight = $$specs{'totalWeight'.$$variable{qty_index}};
-} else {
-$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{'qty'};
-} # end if
-my $g = Math::Units::convert( $weight, 'lbs','g');
-if ( $g > 1000 ) {
-	return sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
-} else {
-	return sprintf( '%.0flbs (%.0fg)', $weight, $g );
-} # end if
-) ?></td>
+				if ( $services{'BulkSkids'} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{'BulkSkids'}[0] );
+					$weight = $$specs{'totalWeight'.$qty_index};
+				} elsif ( $services{'PlainCartons'} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
+					$weight = $$specs{'totalWeight'.$qty_index};
+				} else {
+					$weight = openprint::print::get_finished_weight( $Project->id() ) * $Project->quantity($qty_index);
+				} # end if
+				my $g = Math::Units::convert( $weight, 'lbs','g');
+				if ( $g > 1000 ) {
+					$html .= sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
+				} else {
+					$html .= sprintf( '%.0flbs (%.0fg)', $weight, $g );
+				} # end if
+				$html .= sprintf('</td><td class="markup">%1$s</td><td class="quantity">%2$s</td><td class="price">%3$s</td><td class="newprice">%4$s</td></tr>',
+                        $Project->markup($qty_index),
+                        $Project->quantity($qty_index),
+                        openprint::Currency::format( $Project->price($qty_index) ),
+                        openprint::Currency::format( $QP->price($qty_index) )
+                        );
+                $subtotal += $Project->price($qty_index);
+                $newsubtotal += $QP->price($qty_index);
+            } # end foreach qty_index
+            $html .= "</table>\n</td>\n</tr>\n";
+            $html .= sprintf('<tr class="totals"><td colspan="4">Subtotal:</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
+                openprint::Currency::format( $subtotal ),
+                openprint::Currency::format( $newsubtotal ),
+				);
 
-					<td class="markup"><?markup?></td>
-					<td class="quantity"><?qty?></td>
-					<td class="price"><? echo ( openprint::Currency::format( $$variable{'stdprice'} ); ) ?></td>
-					<td class="newprice"><? echo ( openprint::Currency::format( $$variable{'newprice'} ); ) ?></td>
-				</tr>
-				<? endif ( $$variable{'qty'} ) ?>
-				<? endwhile ( @$variable{'qty_index','markup','qty','stdprice','newprice','colour'} = splice @{$$variable{'PROJECT_PRICES_'.$$variable{'project_index'}}},0,6; ) ?>
-			</table>
-		</td>
-	</tr>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-<? endwhile ( @$variable{'project_index','name'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
+			$html .= "</table>\n</td>\n</tr>\n";
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach QP
+		return $html;
+	) ?>
 </table>
 
 <span class="Currency">All prices are in <? echo ( $$variable{'Quote'}->Currency()->name() ) ?> and are subject to applicable taxes.</span>

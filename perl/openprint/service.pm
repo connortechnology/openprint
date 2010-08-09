@@ -268,6 +268,7 @@ sub auto_calculate {
 			} # end if
 		} # end if
 	} # end if
+
 	if ( openprint::Estimating::Paper::neccessary( $log, $dbh, $project_index ) ) {
 		if ( ! $$services{'Paper'} ) {
 			push @{$$services{'Paper'}}, $Project->add_service( 'Paper' );

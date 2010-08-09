@@ -359,7 +359,7 @@ sub confirmation {
 		$Quote->save();
 		$Quote->send();
 		$Quote->add_log( 'Submitted' );
-	} # end if
+	} # end if ! Complete
 	delete $session{'quote_id'};
 } # end sub finalise_quote
 

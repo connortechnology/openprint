@@ -26,7 +26,7 @@ if ( ! @dbs ) {
 foreach my $db ( @dbs ) {
 	$db =~ s/^\s*([\w\-]*)\s*$/$1/;
 	next if $db =~ /template\d/;
-	my $dbh = DBI->connect("dbi:Pg:dbname=$db;", 'postgres', undef, {AutoCommit=>1} );
+	my $dbh = DBI->connect("dbi:Pg:dbname=$db;".($host?'host='.$host:''), 'postgres', undef, {AutoCommit=>1} );
 	if ( ! $dbh ) {
 		print "Unable to connect to $db\n";
 		next;
@@ -38,7 +38,7 @@ foreach my $db ( @dbs ) {
 	} # end if
 	if ( $$row{'backup'} ) {
 		print "Backing up $db\n";
-		if ( ! -d "$path/$host/$db" ) {
+		if ( ! -e "$path/$host/$db" ) {
 			if ( ! `mkdir $path/$host/$db` ) {
 				print "Unable to mkdir $path/$host/$db .. skipping\n";
 				next;
