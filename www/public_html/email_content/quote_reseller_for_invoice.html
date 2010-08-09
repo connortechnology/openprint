@@ -4,7 +4,7 @@
 		<!--#include virtual="/includes/quote_prepared_by.html" -->
 		<!--#include virtual="/includes/quote_prepared_for.html" -->
 	</div>
-<? if ( $$variable{'Quote'}->Projects() ) ?>
+<? if ( $$variable{'Quote'}->Quoted_Projects() ) ?>
 	<table class="List">
 		<tr> 
 			<th width="60" align="left">ID</th>
@@ -16,8 +16,7 @@
 		<? echo (
 			my $html;
 			my $rowclass = '';
-			my $subtotal;
-			foreach my $QP ( $$variable{'Quote'}->Projects() ) {
+			foreach my $QP ( $$variable{'Quote'}->Quoted_Projects() ) {
 				my $Project = $QP->Project();
 				my $services = $Project->services();
 				$html .= sprintf(q`<tr><td>%2$d</td><td>%3$s%4$s</td><td colspan="3"><table>`,
@@ -37,22 +36,19 @@
 					} else {
 						$weight = openprint::print::get_finished_weight( $Project->id() ) * $$variable{qty};
 					} # end if
-					my $g = Math::Units::convert( $weight, 'lbs','g');
+					my $g = Math::Units::convert( $weight, 'lbs', 'g' );
 					if ( $g > 1000 ) {
 						return sprintf( '%.0flbs (%.0fkg)', $weight, $g/1000 );
 					} else {
 						return sprintf( '%.0flbs (%.0fg)', $weight, $g );
 					} # end if
-					$html .= sprintf(q`<tr><td class="weight">%s</td>
-						<td class="quantity">%s</td>
-						<td class="price">%s</td>
-					</tr>`, $weight, $QP->quantity($qty_index),
-					openprint::Currency::format( $QP->price($qty_index) ),
-					);
+					$html .= sprintf(q`<tr><td class="weight">%s</td><td class="quantity">%s</td><td class="price">%s</td></tr>`, 
+							$weight, $QP->quantity($qty_index),
+							openprint::Currency::format( $QP->price($qty_index) ),
+							);
 				} # end foreach qty_index
 				$html .= "</table>\n</td>\n</tr>\n";
 			} # end foreach QP
-			$html .= sprintf(q`<tr class="totals"><td colspan="4">Subtotal:</td><td class="price">%s</td></tr>`, openprint::Currency::format( $subtotal ) );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 			return $html;
 		) ?>

@@ -24,7 +24,7 @@
 			$html .= sprintf(q`<tr%1$s> 
 				<td class="description"><a href="/main/project/view.html?ProjectIndex=%2$d">%3$s%4$s</a></td>
 				<td colspan="5">
-				<table>`, $$variable{'rowclass'}, $Project->id(), 
+				<table>`, $rowclass, $Project->id(), 
 				( $Project->references() ? ssi::htmlize( $Project->references() ) . ':<br/>' : '' ),
 				$Project->summary(),
 				);
