@@ -1,27 +1,28 @@
-package openprint::ServiceType_Default;
+package openprint::ProjectType_Default;
 @ISA = qw(openprint::Object);
 require openprint::Object;
 
 use strict;
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults %find_fields );
 
 
 $debug = 1;
 
-$table = 'tbl_service_defaults';
-$serial = 'tbl_Service_Defaults_lngID_seq';
+$table = 'tbl_projecttype_defaults';
+$serial = 'tbl_projecttype_defaults_id_seq';
 
 %fields = (
-	'id'				=>	'lngindex',
+	'id'				=>	'id',
 	'projecttype_id'	=>	'lngprojecttypeindex',
-	'servicetype_id'	=>	'lngservicetypeindex',
 	'name'				=>	'strfieldname',
 	'value'				=>	'strdefaultvalue',
+);
+%find_fields = (
+	'projecttype'		=>	'SELECT name FROM project_types WHERE id=projecttype_id';
 );
 
 %transforms = (
 	'id'				=>	[ 's/\D//g' ],
-	'servicetype_id'	=>	[ 's/\D//g' ],
 	'projecttype_id'	=>	[ 's/\D//g' ],
 );
 

@@ -157,6 +157,7 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>100 
 } # end foreach Project
 openprint::Object::init_cache();
 }
+if ( 0 ) {
 my $Type = openprint::ProjectType->find_one('name'=>'MultiPagePublication');
 if ( $Type ) {
 	$Type->save({'name'=>'MultiPage'});
@@ -179,6 +180,28 @@ if ( $Type ) {
 		#openprint::service::init_cache();
 	} # end foreach Project
 } # end if Type
+}
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbAqueousSideOne'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbAqueousSideTwo'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbGripHeight'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbGripWidth'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbWaxFree'`);
+foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
+	my $SD = new openprint::ServiceType_Default();
+	$SD->save({	
+			'name'			=>	$Default->name(),
+			'value'			=>	$Default->value(),
+			'projecttype_id'=>	$Default->projecttype_id(),
+			} );
+} # end foreach
+foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef) ) {
+	my $SD = new openprint::ServiceType_Default();
+	$SD->save({	
+			'name'			=>	$Default->name(),
+			'value'			=>	$Default->value(),
+			'projecttype_id'=>	$Default->projecttype_id(),
+			} );
+} # end foreach
 
 $dbh->disconnect();
 	
