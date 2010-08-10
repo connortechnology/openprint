@@ -35,9 +35,9 @@ sub save_service {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=? AND (NOT strStatus=?) OR (strStatus IS NULL)', $Project->id(), $service_index, 'Completed' ], 'strStatus', ($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated') );
 	#eval "openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type_id );"
 	if ( $ServiceType->id() ) {
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
 	} else {
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
 	} # end if
 	if ( $r->param('additional_service') eq 'Y' ) {
 		openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );
@@ -92,15 +92,20 @@ sub view_services {
 					$recalc = 1;
 				} # end if
 
-				if ( $openprint::param{'PrintingService'} eq 'Y' or $recalc ) {
+				if ( (!$openprint::param{'ServiceType'} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->name() );
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
-					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
+					$recalc = 1;
+				} elsif ( $openprint::param{'ServiceType'} eq 'AdditionalSignature' ) {
+					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
+					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste'] ) ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
-					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index );
+					$recalc = 1;
 				} # end if
+				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index ) if $recalc;
+		
 				$Project->summary(undef);
 				$Project->save();
 			} elsif ( $r->param('btnFunction') eq 'Modify Project' ) {

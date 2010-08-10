@@ -2,6 +2,7 @@ package openprint::ServiceType;
 @ISA = qw(openprint::Object);
 require openprint::Object;
 require openprint::ServiceType_Category;
+require openprint::ServiceType_Default;
 
 use strict;
 use vars qw( $log $dbh $debug $table $serial %find_fields %fields %transforms %defaults );
@@ -83,6 +84,10 @@ sub category {
 	} # end if
 	return new openprint::ServiceType_Category( $$self{'category_id'} )->name();
 } # end sub category
+
+sub Defaults {
+	return openprint::ServiceType_Default->find('servicetype_id'=>$_[0]{'id'});
+} # end sub Defaults
 
 1;
 __END__
