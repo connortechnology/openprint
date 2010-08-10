@@ -190,13 +190,20 @@ $dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbGripWidth
 $dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbWaxFree'`);
 require openprint::ProjectType_Default;
 require openprint::ServiceType_Default;
+my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
+if ( ! $ServiceType ) {
+	$ServiceType = new openprint::ServiceType();
+	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1});
+}
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
 	my $SD = new openprint::ServiceType_Default();
 	$SD->save({	
 			'name'			=>	$Default->name(),
 			'value'			=>	$Default->value(),
 			'projecttype_id'=>	$Default->projecttype_id(),
+			'servicetype_id'	=>	$ServiceType->id(),
 			} );
+	$Default->destroy();
 } # end foreach
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef) ) {
 	my $SD = new openprint::ServiceType_Default();
@@ -204,7 +211,9 @@ foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef)
 			'name'			=>	$Default->name(),
 			'value'			=>	$Default->value(),
 			'projecttype_id'=>	$Default->projecttype_id(),
+			'servicetype_id'	=>	$ServiceType->id(),
 			} );
+	$Default->destroy();
 } # end foreach
 
 $dbh->disconnect();
