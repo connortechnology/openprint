@@ -131,7 +131,7 @@ sub send_vacation_email {
 			do_mail ($email, $orig_from, $row[0], $row[1]);
 			do_log ($orig_messageid, $orig_to, $orig_from, $orig_subject); 
 		} else {
-			do_mail ($orig_from, $orig_from, 'Vacation set with empty body and subject!', '' );
+			do_mail ($orig_from, $orig_from, 'Vacation set with empty body and subject! Please either turn off your vacation auto-responder or enter a message to be sent to people while you are away.', '' );
 		} # end if
 	} # end if
 
