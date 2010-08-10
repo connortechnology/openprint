@@ -15,7 +15,7 @@
 		timeout = null;
 		gettingNewPrice = true;
 		var h = form.serialize(true);
-		h.ServiceType = 'Multipage';
+		h.ServiceType = 'MultiPage';
 		h.callback = 'cbBookResults';
 		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 	}
@@ -180,7 +180,7 @@ $log->debug("Groups: (" . join(',', @Groups ) . ')' );
 		<input type="hidden" name="ContinueProject" value="Y"/>
 		<input type="hidden" name="NewBook" value="Y"/>
 		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>"/>
-		<input type="hidden" name="ServiceType" value="Multipage"/>
+		<input type="hidden" name="ServiceType" value="MultiPage"/>
 		<input type="hidden" name="remaining_pages" />
 		<input type="hidden" name="next_group_id" />
 	</form>

@@ -92,10 +92,12 @@ sub calc {
 			$$specs{'MPrice'.$qty_index} += $Results{'MPrice'};
 		} # end foreach signature
 
+		my $markup = $$specs{"Markup$qty_index"} ? $$specs{"Markup$qty_index"} : 0;
+
 		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{'txtUnitPrice'.$qty_index} );
-		$$specs{'MPrice'.$qty_index} = sprintf( $openprint::config{'UnitPriceFormat'}, $$specs{'MPrice'.$qty_index}*(1+$$specs{"Markup$qty_index"}/100) );
+		$$specs{'MPrice'.$qty_index} = $$specs{'Markup'.$qty_index} ? sprintf( $openprint::config{'UnitPriceFormat'}, $$specs{'MPrice'.$qty_index}*(1+$markup/100) ) : '0.00';
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index}*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index}*(1+$markup/100) );
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
@@ -109,7 +111,7 @@ sub signature_calc {
 	my %Results;
 	my $services = $Project->services();
 
-$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
+	$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
 
     if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
         if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $Imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
@@ -154,6 +156,9 @@ $$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{
 
 	$Results{'Status'} = 'calculated';
 
+	my @side_one_colours = openprint::Estimating::Printing::get_colours( $printing_specs, 'SideOne' );
+	$openprint::log->debug("@side_one_colours : " . ( sets::intersection( 'Cyan','Magenta','Yellow','Black', @side_one_colours ) ) );
+
 	foreach my $Equipment ( @Equipment ) {
 		my $heads = $Equipment->specification('Numbering Heads');
 		my @colours = split(',', $Equipment->specification('Numbering Colours') );
@@ -172,12 +177,19 @@ $$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{
 			my $last_run;
 			$Results{'Breakdown'} .= sprintf('<b>Imposition: %dx%d=%dout</b><br/>', $I->get('columns','rows','imposition') ); 
 
-			if ( $Equipment->strid() eq $$printing_specs{'ddmPress'.$qty_index} ) {
-				next if $I->imposition() != $Imposition->imposition();
+			if ( $Equipment->strid() eq $$printing_specs{'ddmPress'.$qty_index} and $I->imposition() == $Imposition->imposition() ) {
 				$Results{'Breakdown'} .= 'Numbering while printing.<br/>';
+	$openprint::log->debug("@side_one_colours : " . ( sets::intersection( 'Cyan','Magenta','Yellow','Black', @side_one_colours ) ) );
+				if ( ! ( 
+							sets::isin( $$specs{'colour'}, \@side_one_colours ) or 
+							( 4 == sets::intersection( 'Cyan','Magenta','Yellow','Black', @side_one_colours ) )
+					   ) ) {
+					$last_run = $$specs{'SetsOfNumbers'} * $I->imposition();
+				} # end if
 			} else {
 				if ( $_ = $Equipment->fits( $I->layout_width(), $I->layout_height(), $I->Paper()->calliper() ) ) {
 					$Results{'Breakdown'} .= "$_<br/>";
+					$last_run = $$specs{'SetsOfNumbers'};
 					next;
 				} # end if
 
@@ -285,7 +297,7 @@ sub summary {
 		return '';
 	} # end if
 
-	return sprintf( '%d sets of ' . $$specs{'colour'} . ' numbers', $$specs{'SetsOfNumbers'} );;
+	return sprintf( '%d set%s of %s numbers', $$specs{'SetsOfNumbers'}, ( $$specs{'SetsOfNumbers'} == 1 ? '' : 's' ), $$specs{'colour'} );
 } # end sub summary
 
 sub display {

@@ -268,6 +268,14 @@ if ( $config{'Default Federal Tax'} ) {
 	$dbh->do("DELETE FROM Configuration WHERE name='Default Federal Tax'");
 }
 	
+if ( sets::isin( 'tbl_service_defaults', \@tables ) ) {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_service_defaults'", 'column_name');
+	if ( ! exists $$data{'projecttype_id'} ) {
+		$dbh->do('ALTER TABLE tbl_service_defaults add projecttype_id INTEGER');
+		$dbh->do('ALTER TABLE tbl_service_defaults add FOREIGN KEY (projecttype_id) REFERENCES project_types (id) ');
+	} # end if
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

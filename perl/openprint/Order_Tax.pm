@@ -5,6 +5,9 @@ use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 require sql;
+require openprint::Order;
+require openprint::Tax;
+require openprint::OrderedProject;
 
 $debug = 1;
 
@@ -38,15 +41,18 @@ sub amount {
 	} # end if
 
 	if ( ! defined $$self{'amount'} ) {
-		if ( $$self{'charge'} ) {
+		if ( $self->charge() ) {
 			$$self{'amount'} = 0;
-			foreach my $Project ( $self->Order()->Projects() ) {
-				$$self{'amount'} += $Project->ordered_price() * ($$self{'rate'}/100);
+$openprint::log->debug($self->Order());
+			foreach my $Project ( $self->Order()->Ordered_Projects() ) {
+$openprint::log->debug("Order Project price " . $Project->price() );
+				$$self{'amount'} += $Project->price() * ($$self{'rate'}/100);
 			} # end foreach Project
 			foreach my $Product ( $self->Order()->Products() ) {
 				$$self{'amount'} += $Product->price() * ($$self{'rate'}/100);
 			} # end foreach Project
 		} # end if
+		$$self{'amount'} = sprintf('%.2f', $$self{'amount'} );
 	} # end if
 	return $$self{'amount'};
 } # end sub amount

@@ -52,9 +52,8 @@ sub information {
 		if ( $order_id = $param{'OrderID'} ) {
 			my $Order = new openprint::Order( $order_id );
 			$Order->save({'status'=>'Re-Opened','session_id'=>$session{'_session_id'}});
-			foreach my $Project ( $Order->Projects() ) {
-				sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $order_id, $Project->id()], 'cursalesprice', undef );
-				#sql::update( $log, $dbh, 'tbl_Project_Contents', "lngProjectIndex=$project_index AND strStatus NOT IN ('Complete','Proofs Out','Approved')", 'strStatus', 'calculated' );
+			foreach my $OP ( $Order->Ordered_Projects() ) {
+				$variable{'error'} .= $OP->save({'price'=>undef});
 			} # end foreach
 			$Order->add_to_log( 'Re-Opened' );
 		} else {
@@ -255,6 +254,10 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 				} # end if
 			} # end foreach service_id
 		} # end foreach ServiceType
+		if ( $Project->order_id() != $order_id ) {
+			$Project->order_id( $order_id );
+			$Project->save();
+		} # end if
 	} # end foreach  Project
 	if ( @errors ) {
 		%param = ();
@@ -268,12 +271,9 @@ $log->debug("CHecking Shipping service $service_id " . $ServiceType->name() );
 	$variable{'Currency'} = $Currency;
 	$variable{'Order'} = $Order;
 
-	foreach my $Project ( $Order->Projects() ) {
-		if ( $Project->order_id() != $order_id ) {
-			$Project->order_id( $order_id );
-			$Project->save();
-		} # end if
-	} # end foreach Project
+	foreach my $Tax ( $Order->Taxes() ) {
+		$Tax->amount(undef);
+	} # end foreach Tax
 
 	$variable{'OrderID'} = $order_id;
 
@@ -298,85 +298,19 @@ sub confirmation {
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
 		# Commit Project Information
-		my @Taxes = openprint::Tax->find('state'=>$Order->state(),'country'=>$Order->country() );
-		my ( $pst_rate, $hst_rate, $gst_rate ) = $Taxes[0]->get('statetax_rate','harmonizedtax_rate','federaltax_rate') if @Taxes;
-
-		my $Company = $Order->Company();
-		my ( $pst_exempt, $gst_exempt ) = ( $Company->pst_exempt(), $Company->gst_exempt() );
-
-		my $sub_total = 0;
-		my $gst_total;
-		my $pst_total;
-		my $hst_total;
-		my $total = 0;
-
-		foreach my $Project ( $Order->Projects() ) {
-			my ( $pst_amount, $gst_amount, $hst_amount );
-
-			my $price = $Project->ordered_price();
-			my $qty = $Project->ordered_quantity();
-
-			if ( $Project->currency_id() != $session{'Currency_id'} ) {
-				my $rate = $Project->Currency()->conversions( $session{'Currency_id'} );
-				$price *= $rate;
-			} # end if
-
-# get product tax exemption
-
-			if ( $pst_rate ne '' ) {
-				if ( $pst_exempt ne 'Y' ) {
-					$pst_amount = $price * ($pst_rate/100);
-				} else {
-					$pst_amount = 0;
-				} # end if
-			} # end if
-			if ( $gst_rate ne '' ) {
-				if ( $gst_exempt ne 'Y' ) {
-					$gst_amount = $price * ($gst_rate/100);
-				} else {
-					$gst_amount = 0;
-				} # end if
-			} # end if
-
-			if ( $hst_rate ne '' ) {
-				if ( $gst_exempt ne 'Y' ) {
-					$hst_amount = $price * ($hst_rate/100);
-				} else {
-					$hst_amount = 0;
-				} # end if
-			} # end if
-
-			sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $order_id, $Project->id()],
-					'strDescription',	$Project->reference(),
-					'curSalesPrice',	$price,
-					'intQuantity',		$qty,
-					'dblTax1', ( $gst_amount ne '' ? $gst_amount : undef ),
-					'dblTax2', ( $pst_amount ne '' ? $pst_amount : undef ),
-					'dblTax3', ( $hst_amount ne '' ? $hst_amount : undef ),
-					);
-
-			$sub_total += $price;
-			$gst_total += $gst_amount if $gst_amount ne '';
-			$pst_total += $pst_amount if $pst_amount ne '';
-			$hst_total += $hst_amount if $hst_amount ne '';
-			$total += $price + $gst_amount + $pst_amount + $hst_amount;
+		foreach my $OP ( $Order->Ordered_Projects() ) {
+			$OP->save({
+				'reference'	=> $OP->Project()->reference(),
+				'price'		=> $OP->Project()->Currency()->convert_from( $OP->price(undef) ),
+				'quantity'	=> undef,
+			});
 		} # end foreach Project
 
-		foreach my $Product ( $Order->Products() ) {
-			my $price = $Product->price();
-			my $pst_amount = $price * ($pst_rate/100) if ( $pst_rate and $pst_exempt ne 'Y' ); 
-			my $gst_amount = $price * ($gst_rate/100) if ( $gst_rate and $gst_exempt ne 'Y' );
-			my $hst_amount = $price * ($hst_rate/100) if ( $hst_rate and $gst_exempt ne 'Y' );
-			$sub_total += $price;
-			$gst_total += $gst_amount if $gst_amount ne '';
-			$pst_total += $pst_amount if $pst_amount ne '';
-			$hst_total += $hst_amount if $hst_amount ne '';
-			$total += $price + $gst_amount + $pst_amount + $hst_amount;
-			$Product->gst($gst_amount);
-			$Product->hst($hst_amount);
-			$Product->pst($pst_amount);
-			$Product->save();
-		} # end foreach Product
+		my $sub_total = $Order->subtotal(undef);
+		foreach my $Tax ( $Order->Taxes() ) {
+			$Tax->save({'amount'=>undef});
+		} # end foreach Tax
+		my $total = $Order->total(undef);
 
 		my $customer_credit = new openprint::customer_credit( $session{'company_id'} );
 		my ( $downpayment ) = $customer_credit->get( 'Downpayment' );
@@ -396,13 +330,6 @@ sub confirmation {
 		# This is messed up.  I think an order should never switch companies unless it doesn't have a company assigned.  I don't see how it could work any other way.
 		$Order->company_id( $session{'company_id'} ) if ! $Order->company_id();
 		$Order->salesrep_id( new openprint::Company( $session{'company_id'} )->salesrep_id() );
-		$Order->federal_tax( $gst_total );
-		$Order->federal_tax_rate();
-		$Order->state_tax( $pst_total );
-		$Order->state_tax_rate();
-		$Order->harmonized_tax( $hst_total );
-		$Order->harmonized_tax_rate();
-		$Order->total( $total );
 		$Order->downpayment( $downpayment );
 		$Order->status( $status );
 		$Order->administrator_name( $param{'AdministratorName'} );

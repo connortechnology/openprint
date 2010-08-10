@@ -1,27 +1,19 @@
 <div id="Totals">
+	<div class="content">
 	<ul>
 		<li id="SubTotal">
 			<label>Sub Total:</label>
 			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->subtotal() ) ); ) ?>
 		</li>
-		<? if ( $$variable{'Order'}->federal_tax() ne '' ) ?>
-		<li id="FederalTax">
-			<label><? echo ( $$variable{'Order'}->country() eq 'CA' ? 'GST': 'Federal Tax' ) ?>(<? echo ( $$variable{'Order'}->federal_tax_rate() ) ?>%):</label>
-			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->federal_tax() ) ); ) ?>
-		</li>
-		<? endif ( $$variable{'Order'}->federal_tax() ne '' ) ?>
-		<? if ( $$variable{'Order'}->state_tax() ne '' ) ?>
-		<li id="StateTax">
-			<label><? echo ( $$variable{'Order'}->country() eq 'CA' ? 'PST': 'State Tax' ) ?> (<? echo ( 1*$$variable{'Order'}->state_tax_rate() ) ?>%):</label>
-			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->state_tax() ) ); ) ?>
-		</li>
-		<? endif ( $$variable{'Order'}->state_tax() ne '' ) ?>
-		<? if ( $$variable{'Order'}->harmonized_tax() ne '' ) ?>
-		<li id="HarmonizedTax">
-			<label>Harmonized Tax (<? echo ( 1*$$variable{'Order'}->harmonized_tax_rate() ) ?>%):</label>
-			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->harmonized_tax() ) ); ) ?>
-		</li>
-		<? endif ( $$variable{'Order'}->harmonized_tax() ne '' ) ?>
+                <? echo ( 
+                    my $html;
+                    foreach my $Tax ( $$variable{'Order'}->Taxes() ) {
+                        $html .= sprintf('<li class="tax"><label>%s (%d%):</label>%s</li>',
+                            $Tax->name(), $Tax->rate(), openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $Tax->amount() ) ),
+                            );
+                    } # end foreach Tax
+                    return $html;
+                ) ?>
 		<? if ( $$variable{'Order'}->total() ) ?>
 		<li id="Total">
 			<label>Total:</label>
@@ -47,6 +39,7 @@
         <? endif ( $$variable{'AmountOutstanding'} ) ?>
 		<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
 	</ul>
+	</div>
 	<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name() ) ?>.
 	<? echo ( 
 		if ( $$variable{'Currency'}->id() != $$variable{'Order'}->Currency()->id() ) {

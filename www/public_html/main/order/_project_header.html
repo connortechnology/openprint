@@ -13,28 +13,29 @@
 				<ul>
 					<li class="reference">
 						<label>Reference:</label>
-						<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->reference() ) ?>
+						<? if ( sets::isin($$variable{'Order'}->status(), [ 'Incomplete','Re-Opened']) and ! $$variable{'Project'}->reference() ) ?>
 						<textarea name="Reference<? echo ( $$variable{'Project'}->id() ) ?>" cols="" rows="<? echo ( ssi::count_lines( $$variable{'Project'}->reference() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Project'}->reference() ) ?></textarea>
+						<? else ( sets::isin($$variable{'Order'}->status(), [ 'Incomplete','Re-Opened']) and ! $$variable{'Project'}->reference() ) ?>
 						<? else ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->reference() ) ?>
 						<? echo ( $$variable{'Project'}->reference(); ) ?>
-						<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->reference() ) ?>
+						<? endif ( sets::isin($$variable{'Order'}->status(), [ 'Incomplete','Re-Opened']) and ! $$variable{'Project'}->reference() ) ?>
 					</li>
 					<li class="project_id"><label>Project Number:</label><? echo ( $$variable{'Project'}->id() ) ?></li>
 <? if ( $$variable{'Project'}->ordered_quantity() ) ?>
 					<li><label>Quantity:</label><? echo ( $$variable{'Project'}->ordered_quantity() ) ?></li>
 <? endif ( $$variable{'Project'}->ordered_quantity() ) ?>
 <? if ( $config{'OrderMode'} ne 'Simple' ) ?>
-		<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ( $$variable{'Project'}->quantity_indexes() > 1 ) ) ?>
+		<? if ( sets::isin( $$variable{'Order'}->status(),[ 'Incomplete','Re-Opened' ] ) and ( $$variable{'Project'}->quantity_indexes() > 1 ) ) ?>
 		<!--#include virtual="_quantity_select.html"-->
-		<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ( $$variable{'Project'}->quantity_indexes() > 1 ) ) ?>
+		<? endif ( sets::isin( $$variable{'Order'}->status(),[ 'Incomplete','Re-Opened' ] ) and ( $$variable{'Project'}->quantity_indexes() > 1 ) ) ?>
 <? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
-		<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
+		<? if ( ($$variable{'Order'}->status() eq 'Re-Opened' ) or (  ($$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date()  ) ) ?>
 		<!--#include virtual="_required_by.html"-->
-		<? else ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
+		<? else ( ($$variable{'Order'}->status() eq 'Re-Opened' ) or (  ($$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date()  ) ) ?>
 			<? if ( $$variable{'Project'}->requested_date() ) ?>
 			<li class="requested_for"><label>Requested For:</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></li>
 			<? endif ( $$variable{'Project'}->requested_date() ) ?>
-		<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
+		<? endif ( ($$variable{'Order'}->status() eq 'Re-Opened' ) or (  ($$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date()  ) ) ?>
 				</ul>
 			</div>
 		</fieldset>

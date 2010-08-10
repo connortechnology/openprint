@@ -157,12 +157,19 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>100 
 } # end foreach Project
 openprint::Object::init_cache();
 }
-my $Type = openprint::ProjectType->find_one('name'=>'Multipage');
-$Type = openprint::ProjectType->find_one('name'=>'MultiPagePublication') if ! $Type;
+if ( 0 ) {
+my $Type = openprint::ProjectType->find_one('name'=>'MultiPagePublication');
+if ( $Type ) {
+	$Type->save({'name'=>'MultiPage'});
+	sql::update( undef, undef, 'tbl_service_specifications',[ 'strname=? AND strvalue', 'ProjectType', 'MultiPagePublication' ], 'strvalue', 'MultiPage' );
+} else {
+	$Type = openprint::ProjectType->find_one('name'=>'MultiPage');
+} # end if
+
 if ( $Type ) {
 	foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>100 ) ) {
 		# Skip multipage projects
-		next if sets::isin( $Project->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines','Calendars' ] );
+		next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
 		my $services = $Project->services();
 		my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 $log->warn("got specs $$services{''}[0]");
@@ -175,6 +182,28 @@ $log->warn("got specs");
 		#openprint::service::init_cache();
 	} # end foreach Project
 } # end if Type
+}
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbAqueousSideOne'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbAqueousSideTwo'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbGripHeight'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbGripWidth'`);
+$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbWaxFree'`);
+foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
+	my $SD = new openprint::ServiceType_Default();
+	$SD->save({	
+			'name'			=>	$Default->name(),
+			'value'			=>	$Default->value(),
+			'projecttype_id'=>	$Default->projecttype_id(),
+			} );
+} # end foreach
+foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>undef) ) {
+	my $SD = new openprint::ServiceType_Default();
+	$SD->save({	
+			'name'			=>	$Default->name(),
+			'value'			=>	$Default->value(),
+			'projecttype_id'=>	$Default->projecttype_id(),
+			} );
+} # end foreach
 
 $dbh->disconnect();
 	

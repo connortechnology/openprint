@@ -238,9 +238,9 @@ sub signature_calc {
 	#if ( $$specs{'txtPressSheetComboItems'} ) {
 		#$impressions *= $$specs{'txtPressSheetComboItems'};
 	#} # end if
-	if ( $$sig_specs{'Versions'} ) {
-		$impressions *= $$sig_specs{'Versions'};
-	} # end if
+	#if ( $$sig_specs{'Versions'} ) {
+		#$impressions *= $$sig_specs{'Versions'};
+	#} # end if
 #$openprint::log->debug("Impressions: $impressions");
 if ( 1 ) {
 	# This just can't be right anymore. Actually it can... if double sided, impressions are doubled...

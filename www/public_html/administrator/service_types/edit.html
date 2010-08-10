@@ -1,3 +1,4 @@
+<!--#include virtual="/includes/error_reporting.html"-->
 <p class="error">Please do not make changes here unless you know what you are doing!</p>
 <form name="f1" method="post" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
@@ -12,7 +13,7 @@
 			<label>Service Type:</label>
 			<select name="ServiceType_id" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">Select a Service Type</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ServiceType->find(
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ': ' . $_->description() } openprint::ServiceType->find(
 					( $param{'SearchCategory'} ? ( 'category_id'=>$param{'SearchCategory'} ) : () ), 
 					  'order'=>'lower(name)') ], $$variable{'ServiceType'}->id() ); ) ?>
 			</select>
@@ -24,7 +25,7 @@
 				ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
 				ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 				ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),
-				ssi::writeButton( $log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';fmChange=3;fmCheck(f1);",'','Copy'),
+				ssi::writeButton( $log, $dbh, 'Copy1','copy.gif',"f1.btnFunction.value='Copy';fmCheck(f1);",'','Copy'),
 				ssi::writeButton( $log, $dbh, 'Reset1','reset.gif','f1.reset();','','Reset'),
 			); ) ?>
 		</p>

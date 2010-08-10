@@ -522,7 +522,7 @@ sub update_status {
 		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
 			$new_status = 'Unordered';
 			foreach my $qty_index ( $self->quantity_indexes() ) {
-				if ( openprint::Estimating::Multipage::status( $$self{'id'}, undef, $qty_index ) ) {
+				if ( openprint::Estimating::MultiPage::status( $$self{'id'}, undef, $qty_index ) ) {
 					$new_status = 'uncalculated';
 					last;
 				} # end if
@@ -609,14 +609,15 @@ sub save {
 			return $e;
 		} # end if
 	} # end if
+
+	# I'm not sure we should be doing this.
 	if ( $$self{'order_id'} ) {
 		sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', @$self{'order_id','id'} ], {
-			'shippingtype'	=>	$$self{'shippingtype'},
-			'daterequired'	=>	$$self{'requested_date'},
-			'intquantity'	=>	$$self{'ordered_quantity_index'},
-			'cursalesprice'	=>	$$self{'ordered_price'},
+			'shippingtype'		=>	$$self{'shippingtype'},
+			'daterequired'		=>	$$self{'requested_date'},
+			'intquantityindex'	=>	$$self{'ordered_quantity_index'},
+			'cursalesprice'		=>	$$self{'ordered_price'},
 } );
-			
 	} # end if
 	$self->load();
 	sql::end_transaction( $openprint::dbh, $ac );
@@ -952,11 +953,14 @@ sub ordered_quantity {
 
 sub ordered_quantity_index {
 	my $self = shift;
+	if ( @_ ) {
+		$$self{ordered_quantity_index} = $_[1];
+	} # end if
 	if ( ! $$self{ordered_quantity_index} ) {
 		my @qtys = $self->quantity_indexes();
 #$openprint::log->debug("Project ordered_qty_index @qtys ");
 		if ( 1 == @qtys ) {
-			return $qtys[0];
+			$$self{ordered_quantity_index} = $qtys[0];
 		} # end if
 	} # end if
 	return $$self{ordered_quantity_index};
@@ -965,7 +969,7 @@ sub ordered_quantity_index {
 sub ordered_price {
 	my $self = shift;
 	return $$self{'ordered_price'} if $$self{'ordered_price'};
-$openprint::log->debug("Ordered price: $$self{'ordered_price'}");
+$openprint::log->debug("Ordered price: ($$self{'ordered_price'}) " . $$self{'price'.$self->ordered_quantity_index()});
 	return $$self{'price'.$self->ordered_quantity_index()};
 } # end sub ordered_price
 

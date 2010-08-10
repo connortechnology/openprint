@@ -39,7 +39,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $pid );
 
-	if ( $Project->Type()->name() ne 'MultiPagePublication' ) {
+	if ( $Project->Type()->name() ne 'MultiPage' ) {
 		$$specs{'alert'} = 'Soft Folding is only relevant for multi-page publications.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if

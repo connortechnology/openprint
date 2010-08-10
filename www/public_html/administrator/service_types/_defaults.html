@@ -1,26 +1,33 @@
 <table class="List">
 	<tr> 
+		<th align="left">Project Type</th>
 		<th align="left">Field Name</th>
 		<th align="left">Field Value</th>
 	</tr>
-	<? eval ( 
-		@{$$variable{'Defaults'}} = sql::execute( undef, undef, q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? ORDER BY strFieldName, strFieldName}, $$variable{'ServiceType'}->id() ? $$variable{'ServiceType'}->id() : undef);
-	 ) ?>
-
-	<? while ( @{$$variable{'Defaults'}} ) ?>
-		<? eval ( @$variable{'name','value'} = splice @{$$variable{'Defaults'}},0,2; ) ?>
-		<? eval ( $$variable{'index'} = @{$$variable{'Defaults'}}; ) ?>
-		<tr<?rowclass?>> 
-			<td><input type="text" name="txtName-<?index?>" value="<?name?>" /></td>
-			<td><input type="text" name="txtValue-<?index?>" value="<?value?>" /></td>
-		</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( @{$$variable{'Defaults'}} ) ?>
+	<? echo ( 
+		my $html = '';
+		my $rowclass;
+		my @ProjectTypes = openprint::ProjectType->find('order'=>'lower(name)');
+		foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$$variable{'ServiceType'}->id(),'order'=>$openprint::ServiceType_Default::fields{'name'}) ) {
+			$html .= sprintf(q`
+					<tr%1$s> 
+						<td><select name="projecttype_id-%2$d"><option value=""> all </option>%5$s</select></td>
+						<td><input type="text" name="name-%2$d" value="%3$s" /></td>
+						<td><input type="text" name="value-%2$d" value="%4$s" /></td>
+					</tr>
+			`, $rowclass, $Default->get('id','name','value'),
+			ssi::make_drop_down( [ map { $_->id(), $_->name() } @ProjectTypes], $Default->projecttype_id() ),
+ );
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Default
+		return $html;
+	) ?>
 	<tr class="totals"> 
-		<td colspan="2">Add New</td>
+		<td colspan="3">Add New</td>
 	</tr>
 	<tr> 
-		<td><input type="text" name="txtName-New" /></td>
-		<td><input type="text" name="txtValue-New" /></td>
+		<td><select name="projecttype_id-New"><option value=""> all </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ] ); ) ?></select></td>
+		<td><input type="text" name="name-New" /></td>
+		<td><input type="text" name="value-New" /></td>
 	</tr>
 </table>
