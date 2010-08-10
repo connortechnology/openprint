@@ -27,14 +27,22 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} = $ServiceType->save( \%param );
 		my $ac = sql::start_transaction( $dbh );
-        sql::execute( $log, $dbh, q{DELETE FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=?}, $ServiceType->id() );
         foreach my $key ( keys %param ) {
-            if ( $key =~ /txtName-(.*)/ and $param{"txtName-$1"} ne '' ) {
-                $variable{'error'} .= sql::insert( $log, $dbh, 'tbl_Service_Defaults',
-                        'lngServiceTypeIndex', $ServiceType->id(),
-                        'strFieldName',		$param{"txtName-$1"},
-                        'strDefaultValue',	$param{"txtValue-$1"},
-                        );
+            if ( $key =~ /name\-(.*)/ ) {
+				my $SD = new openprint::ServiceType_Default( $1 );
+				if ( $param{"name\-$1"} ne '' ) {
+					$SD->save({
+						'projecttype_id'	=>	$param{'projecttype_id-'.$$SD{'id'}},
+						'name'				=>	$param{'name-'.$$SD{'id'}},
+						'value'				=>	$param{'value-'.$$SD{'id'}},
+						}) if (
+							( $SD->projecttype_id() != $param{'projecttype_id-'.$$SD{'id'}} ) and
+							( $SD->name() != $param{'name-'.$$SD{'id'}} ) and
+							( $SD->value() != $param{'value-'.$$SD{'id'}} )
+							);
+				} else {
+					$variable{'error'} .= $SD->delete();
+				} # end if
             } # end if
         } # end foreach
 		sql::end_transaction( $dbh, $ac );
@@ -57,5 +65,4 @@ sub edit {
 } # end sub types_edit
 
 1;
-
 __END__

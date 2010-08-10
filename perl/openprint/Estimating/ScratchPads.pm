@@ -201,7 +201,7 @@ $openprint::log->debug("Scratch Pads : save");
 			if ( $$param{'GroupPageQuantity'.$group_id} and ! $Project->signatures({'Group'=>$group_id}) ) {
 				my $ac = sql::start_transaction( $dbh );
 				$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-				my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'AdditionalSignature' );
+				my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'Signature' );
 				if ( $group_id ) {
 					openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSignatureType', 'Cover Pages' );
 					openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtServiceDescription', 'Backing' );
@@ -231,7 +231,7 @@ $openprint::log->debug("Scratch Pads : save");
 		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-			my ($cover_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'AdditionalSignature' );
+			my ($cover_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'Signature' );
 			openprint::service::insert_service_spec( $log, $dbh, $p_id, $cover_index, 'txtSignatureType', 'Cover Pages');
 			openprint::service::insert_service_spec( $log, $dbh, $p_id, $cover_index, 'txtServiceDescription', 'Backing');
 			openprint::service::insert_service_spec( $log, $dbh, $p_id, $cover_index, 'Group', 1 );
@@ -260,7 +260,7 @@ $openprint::log->debug("Scratch Pads : save");
 # Must have at least 1 interioer signature
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'AdditionalSignature' );
+		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'Signature' );
 		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSignatureType', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtServiceDescription', 'Padding Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'Group', 2 );
@@ -327,7 +327,7 @@ $openprint::log->debug("Scratch Pads : save");
 # Must have at least 1 interioer signature
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'AdditionalSignature' );
+		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $p_id, 'Signature' );
 		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtSignatureType', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'txtServiceDescription', 'Pad Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $p_id, $print_service_index, 'Group', $max_group + 1 );

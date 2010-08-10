@@ -109,14 +109,14 @@
             my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
                 $html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', $rowclass, $Project->Type()->url(), $Project->id(), $$services{''}[0],
-                    ( $$services{'AdditionalSignature'} ? '' : openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ) ),
+                    ( $$services{'Signature'} ? '' : openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ) ),
                     );
             } else {
                 $html .= sprintf('<tr%s><td><b>Printing</b><br/>%s</td>', $rowclass,
                         openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ),
                     );
             } # end if
-			if ( $$services{'AdditionalSignature'} ) {
+			if ( $$services{'Signature'} ) {
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				my @totals;
 
@@ -220,7 +220,7 @@
 				} # end if
 				$html .= "</tr>\n";
 				$rowclass = $rowclass ? '' : ' class="colRow"';
-			} # end if $$services{'AdditionalSignature'}
+			} # end if $$services{'Signature'}
 
 		} else {
 			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {

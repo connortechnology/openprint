@@ -76,9 +76,9 @@ if ( $$variable{'HiddenSignatures'} ) {
 				$html .= '<td class="unprintable">&nbsp;</td>';
 			} # end if
 			$html .= sprintf('<td><a href="/employee/proj/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', $Project->Type()->url(), $Project->id(), $$services{''}[0],
-				( $$services{'AdditionalSignature'} ? '' : openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ) ),
+				( $$services{'Signature'} ? '' : openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ) ),
 				);
-            if ( $$services{'AdditionalSignature'} ) {
+            if ( $$services{'Signature'} ) {
                 $rowclass = $rowclass ? '' : ' class="colRow"';
                 my @totals;
 
@@ -158,7 +158,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 				$html .= '</td>';
                 $html .= "</tr>\n";
                 $rowclass = $rowclass ? '' : ' class="colRow"';
-            } # end if $$services{'AdditionalSignature'}
+            } # end if $$services{'Signature'}
 
         } else {
             foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {

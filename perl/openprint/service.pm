@@ -103,7 +103,7 @@ sub save_service {
 	if ( (! $service_type) and (! $$specs{'ProjectType'}) ) {
 		$log->error( "No serviceType in params for service $service_index.  Trying to recover" );
 	} # end if
-	if ( sets::isin( $service_type, [ '', 'AdditionalSignature' ] ) ) {
+	if ( sets::isin( $service_type, [ '', 'Signature' ] ) ) {
 		$service_type = 'Printing';
 	} # end if
 	eval ( 'require openprint::Estimating::'.$service_type.';' );
@@ -392,7 +392,7 @@ sub auto_calculate {
 			my $ServiceType = $Project->ServiceType( $service_index );
 			next if $ServiceType->category() eq 'Shipping';
 			my $service_type = $ServiceType->type();
-			next if sets::isin( $service_type, ['','AdditionalSignature'] );
+			next if sets::isin( $service_type, ['','Signature'] );
 			$specs = internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type );
 			$alert .= $$specs{'alert'};
 		} # end foreach service_index
@@ -510,7 +510,7 @@ sub get_runtime {
     my $qty_index = $Project->ordered_quantity_index();
     my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 
-    if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'AdditionalSignature' ) ) {
+    if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'Signature' ) ) {
 		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
 		return $$time{'Total'} if $time;
 		return 0;
@@ -536,7 +536,7 @@ sub summary {
 	my $services = $Project->services();
 
 	my $specs = get_specs_ref( $Project, $service_id );
-	if ( $$specs{'ServiceType'} eq 'AdditionalSignature' or ( $$specs{'ServiceType'} eq '' and ! $$specs{'txtTotalPageQuantity'}  ) ) {
+	if ( $$specs{'ServiceType'} eq 'Signature' or ( $$specs{'ServiceType'} eq '' and ! $$specs{'txtTotalPageQuantity'}  ) ) {
 		return openprint::Estimating::Printing::summary($Project, $service_id, $specs, $qty_index );
 	} elsif ( sets::isin( $$specs{'ServiceType'}, ['ShrinkWrap','KraftWrap','Bundling','Banding','CrossBanding'] ) ) {
 		return openprint::Estimating::Packaging::summary($Project, $service_id, $specs, $qty_index );

@@ -120,7 +120,7 @@ sub view {
 		my $status = openprint::service::status( $project_index, $service_index );
 
 		my ( $service_type ) = openprint::service::get_specifications( $log, $dbh, $project_index, $service_index, 'ServiceType' );
-		if ( $service_type eq 'AdditionalSignature' ) {
+		if ( $service_type eq 'Signature' ) {
 			my $complete = is_sig_complete( $project_index, $service_index );
 			if ( $complete ) {
 # Run through each of the signatures and if everyone is complete, then set the printing service to complete
@@ -340,7 +340,7 @@ sub view {
 				openprint::service::status( $project_index, $service_index, 'Ordered' );
 				$Project->add_to_log( @session{'company_id','user_id'}, "Marked Ordered from $status" );
 			} #nd if
-		} elsif ( $service_type eq 'AdditionalSignature' ) {
+		} elsif ( $service_type eq 'Signature' ) {
 			foreach my $param ( qw/txtEmployeeName txtEmployeeComments UsedStockBrand UsedStockFinish UsedStockColour UsedStockWeight UsedStockSheetSize UsedSheetQuantity ddmPressCompletionDateMonth ddmPressCompletionDateDay ddmPressCompletionDateYear rdbPressComplete UsedImposition UsedColumns UsedRows UsedDutchColumns UsedDutchRows UsedRunStyle UsePress/ ) {
 				next if $$service_specs{"$param-$$service_specs{'SignatureIndex'}"} eq $param{"$param-$$service_specs{'SignatureIndex'}"};
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, $param, $param{"$param-$$service_specs{'SignatureIndex'}"} );
@@ -386,10 +386,10 @@ sub view {
 			my $ServiceType = new openprint::ServiceType( $param{'NewServiceType'} );
 			my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $ServiceType->name() );
 
-			if ( $ServiceType->name() eq 'AdditionalSignature' ) {
+			if ( $ServiceType->name() eq 'Signature' ) {
 				$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 				my ( $signature_count ) = sql::execute( $log, $dbh, $_, $project_index );
-				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'txtSignatureType', 'AdditionalSignature' );
+				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'txtSignatureType', 'Signature' );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'txtServiceDescription', 'Additional Signature' );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $new_service_index, 'SignatureIndex', ++$signature_count );
 			} # end if

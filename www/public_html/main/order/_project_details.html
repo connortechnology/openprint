@@ -16,9 +16,9 @@
 		my $total;
 		foreach my $category ( 'Prepress','Printing','Bindery','Specialty','Packaging','Shipping','Custom Services','Materials' ) {
 			if ( $category eq 'Printing' ) {
-				if ( $$services{'AdditionalSignature'} ) {
+				if ( $$services{'Signature'} ) {
 					my $printing_total = 0;
-					foreach my $service_id ( @{$$services{'AdditionalSignature'}} ) {
+					foreach my $service_id ( @{$$services{'Signature'}} ) {
 						my $service_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_id );
 						$printing_total += $$service_specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
 					} # end foreach

@@ -1034,9 +1034,9 @@ sub signatures {
 
 	my $services = $self->services();
 
-	if ( $params and $$services{'AdditionalSignature'} ) {
+	if ( $params and $$services{'Signature'} ) {
 		my @sigs;
-		foreach my $s_id ( @{$$services{'AdditionalSignature'}} ) {
+		foreach my $s_id ( @{$$services{'Signature'}} ) {
 			my $specs = openprint::service::get_specs_ref( $self, $s_id );
 
 			if ( $$params{'type'} ) {
@@ -1049,7 +1049,7 @@ sub signatures {
 		} # end foreach signatures
 		return @sigs;
 	} # end if
-	return @{$$services{'AdditionalSignature'}} if $$services{'AdditionalSignature'};
+	return @{$$services{'Signature'}} if $$services{'Signature'};
 
 	return ();
 } # end sub signatures
@@ -1115,7 +1115,7 @@ sub add_signature {
 	
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
-	my ($print_service_index) = $self->add_service( 'AdditionalSignature' );
+	my ($print_service_index) = $self->add_service( 'Signature' );
 	openprint::service::status( $self->id(), $print_service_index, $status );
 	if ( ! $sig_index ) {
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};

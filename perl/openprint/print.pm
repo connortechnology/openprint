@@ -97,7 +97,7 @@ sub view_services {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->name() );
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					$recalc = 1;
-				} elsif ( $openprint::param{'ServiceType'} eq 'AdditionalSignature' ) {
+				} elsif ( $openprint::param{'ServiceType'} eq 'Signature' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste'] ) ) {
@@ -296,8 +296,8 @@ $log->debug("special group $group_id");
 $log->debug("adding special group $group_id");
 				my $ac = sql::start_transaction( $dbh );
 				$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-				my $print_service_index = $Project->add_service( 'AdditionalSignature' );
-				push @{$$services{'AdditionalSignature'}}, $print_service_index;
+				my $print_service_index = $Project->add_service( 'Signature' );
+				push @{$$services{'Signature'}}, $print_service_index;
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
 				openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', $group_id );
@@ -328,8 +328,8 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 		if ( ! $Project->signatures({'type'=>'Cover Pages'}) ) {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-			my $cover_index = $Project->add_service( 'AdditionalSignature' );
-			push @{$$services{'AdditionalSignature'}}, $cover_index;
+			my $cover_index = $Project->add_service( 'Signature' );
+			push @{$$services{'Signature'}}, $cover_index;
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtSignatureType', 'Cover Pages');
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'txtServiceDescription', 'Cover');
 			openprint::service::insert_service_spec( $log, $dbh, $project_index, $cover_index, 'Group', 1 );
@@ -366,8 +366,8 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 	while ( $need_gate_spreads > 0 ) {
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my $gate_index = $Project->add_service( 'AdditionalSignature' );
-		push @{$$services{'AdditionalSignature'}}, $gate_index;
+		my $gate_index = $Project->add_service( 'Signature' );
+		push @{$$services{'Signature'}}, $gate_index;
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'txtSignatureType', 'Gate Folded Pages');
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'txtServiceDescription', 'Gate Folded Pages');
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $gate_index, 'Group', 3 );
@@ -384,8 +384,8 @@ $openprint::log->debug("$k => $specified_pages{$k}" );
 $log->debug('add interiorpages');
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my $print_service_index = $Project->add_service( 'AdditionalSignature' );
-		push @{$$services{'AdditionalSignature'}}, $print_service_index;
+		my $print_service_index = $Project->add_service( 'Signature' );
+		push @{$$services{'Signature'}}, $print_service_index;
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', 2 );
@@ -494,7 +494,7 @@ $log->debug('add interiorpages');
 # Must have at least 1 interioer signature
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'AdditionalSignature' );
+		my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $project_index, 'Signature' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtSignatureType', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'txtServiceDescription', 'Interior Pages' );
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $print_service_index, 'Group', $max_group + 1 );
@@ -696,7 +696,7 @@ sub get_finished_calliper {
 
 		if ( $Project->Type()->name() eq 'ScratchPads' ) {
 			$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
-		} elsif ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
+		} elsif ( $$sig_specs{'ServiceType'} eq 'Signature' ) {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $$sig_specs{'PageQuantity'.$qty_index} ) {
 					$calliper *= int($$sig_specs{'PageQuantity'.$qty_index}/2);

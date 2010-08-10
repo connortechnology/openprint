@@ -119,8 +119,8 @@ sub get_incomplete_services_in_category {
 		my $Project = new openprint::Project( $project_index );
 		my $services = $Project->services();
 
-		if ( $$services{'AdditionalSignature'} ) {
-			foreach my $index ( @{$$services{'AdditionalSignature'}} ) {
+		if ( $$services{'Signature'} ) {
+			foreach my $index ( @{$$services{'Signature'}} ) {
 				if ( openprint::service::status( $Project->id(), $index ) ne 'calculated' ) {
 					return $index;
 				} # end if
@@ -182,7 +182,7 @@ sub choose_service {
 	$log->debug("****** FOUND NO INCOMPLETE PRINTING SERVICES ********");
 	
 	$_ = "SELECT strValue, lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=?".
-		" AND strName='ServiceType' AND strValue != 'AdditionalSignature' AND lngServiceIndex IN (".join(',',@incomplete_services).")";
+		" AND strName='ServiceType' AND strValue != 'Signature' AND lngServiceIndex IN (".join(',',@incomplete_services).")";
 	my @project_services = sql::execute( $log, $dbh, $_, $project_index );
 
 	$_ = "SELECT name, strDetailedUrl FROM Service_Types WHERE strDetailedUrl != '' ORDER BY sorting";
@@ -293,7 +293,7 @@ sub get_services_in_category {
 
 	if ( $category eq 'Printing' ) {
 #The entire point of this is to sort the signature groups
-		if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'AdditionalSignature') ) {
+		if ( my @ServiceTypes = openprint::ServiceType->find('name'=>'Signature') ) {
 			$_ = "SELECT lngServiceIndex FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName = 'txtSignatureType' AND strValue IN ('Interior Pages','Gate Folded Pages','Cover Pages') ORDER BY lngServiceIndex";
 			my @signatures = sql::execute( $log, $dbh, $_, $project_index );
 			

@@ -192,8 +192,12 @@ require openprint::ProjectType_Default;
 require openprint::ServiceType_Default;
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 if ( ! $ServiceType ) {
+	$ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
+	$ServiceType->save({'name'=>'Signature'});
+}
+if ( ! $ServiceType ) {
 	$ServiceType = new openprint::ServiceType();
-	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1});
+	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1,'category'=>'Printing'});
 }
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
 	my $SD = new openprint::ServiceType_Default();

@@ -220,11 +220,11 @@ sub delete {
     my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	if ( exists $fields{'deleted'} ) {
-		sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 1 );
+		sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], 'deleted', 1 );
 		return $dbh->errstr if $dbh->errstr;
 		$$self{'deleted'}=1;
 	} else {
-		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$fields{'id'}.'=?', $$self{'id'} );
 		return $dbh->errstr if $dbh->errstr;
 		delete $openprint::Object::cache{$type}{$$self{id}};
 	} # end if
@@ -249,7 +249,8 @@ sub destroy {
 	my ( $self ) = @_;
 	my $type = ref $self;
 	my $table = eval '$'.$type.'::table';
-	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+	my %fields = eval '%'.$type.'::fields';
+	sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$fields{'id'}.'=?', $$self{'id'} );
 	delete $openprint::Object::cache{$type}{$$self{id}};
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 } # end sub destroy

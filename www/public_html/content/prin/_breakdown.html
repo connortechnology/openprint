@@ -32,7 +32,7 @@
 			$html .= sprintf('<tr%s><td><b>Printing</b><br/>%s</td>', $rowclass,
 				openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ),
 				);
-			if ( $$services{'AdditionalSignature'} ) {
+			if ( $$services{'Signature'} ) {
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 				my @totals;
 
@@ -104,7 +104,7 @@
 				$html .= '<td class="status">'.$statuses{$service_id}.'</td>';
 				$html .= "</tr>\n";
 				$rowclass = $rowclass ? '' : ' class="colRow"';
-			} # end if $$services{'AdditionalSignature'}
+			} # end if $$services{'Signature'}
 		} else {
 			foreach my $ServiceType ( openprint::ServiceType->find('category_id'=>$ServiceCategory->id(),'order'=>'sorting', 'view_visible'=>1) ) {
 				next if ! $$services{$ServiceType->name()};

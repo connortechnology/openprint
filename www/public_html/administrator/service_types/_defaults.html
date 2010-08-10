@@ -8,7 +8,7 @@
 		my $html = '';
 		my $rowclass;
 		my @ProjectTypes = openprint::ProjectType->find('order'=>'lower(name)');
-		foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$$variable{'ServiceType'}->id(),'order'=>$openprint::ServiceType_Default::fields{'name'}) ) {
+		foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$$variable{'ServiceType'}->id(),'order'=>'projecttype_id,'.$openprint::ServiceType_Default::fields{'name'}) ) {
 			$html .= sprintf(q`
 					<tr%1$s> 
 						<td><select name="projecttype_id-%2$d"><option value=""> all </option>%5$s</select></td>

@@ -23,7 +23,7 @@ sub _signature {
 		if ( ! $Project->signatures({'Group'=>$param{'group_id'}}) ) {
 			my $ac = sql::start_transaction( $dbh );
 			$dbh->do( "LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE" ) or $log->error( DBI->errstr );
-			my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'AdditionalSignature' );
+			my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Signature' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtSignatureType', 'Interior Pages' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'txtServiceDescription', 'Interior Pages' );
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $print_service_index, 'Group', $param{'group_id'} );
