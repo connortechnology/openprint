@@ -46,10 +46,16 @@
 			) ?>
 			</select>
 		</p>
+<? if ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
+		<p> 
+			<label>Type:</label>
+			<input type="text" name="type" value="<? echo ( $$variable{'ProjectType'}->type() ) ?>" /> 
+		</p>
 		<p> 
 			<label>URL:</label>
 			<input type="text" id="url" name="url" value="<? echo ( $$variable{'ProjectType'}->url(); ) ?>" />
 		</p>
+<? endif ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ?>
 		<p> 
 			<label>Sort:</label>
 			<input type="text" id="sorting" name="sorting" value="<? echo ( $$variable{'ProjectType'}->sorting(); ) ?>" />

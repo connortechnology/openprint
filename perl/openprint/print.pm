@@ -94,11 +94,13 @@ sub view_services {
 
 				if ( (!$openprint::param{'ServiceType'} ) or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
-					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->name() );
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Signature' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
+# Might need to test for status of project service
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste'] ) ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );

@@ -247,7 +247,6 @@ sub auto_calculate {
 	my $specs;
 	my $Project = new openprint::Project( $project_index );
 
-# Need these.  If it's a book, then we get printing service + signatures, else just printing service
 	my @signature_indices = $Project->signatures();
 	return if ! scalar @signature_indices;
 
