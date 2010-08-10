@@ -13,6 +13,7 @@ use vars qw( $debug %session %config %variable $log $dbh $table $serial %fields 
 require sql;
 require openprint::logs;
 require openprint::OrderedProduct;
+require openprint::OrderedProject;
 require openprint::Order_Tax;
 require openprint::Payment;
 require openprint::Tax;
@@ -100,6 +101,7 @@ sub save {
 	} # end if
 
 	$self->load();
+if ( 0 ) {
 	if ( sets::isin($$self{'status'}, ['Re-Opened','Incomplete'] ) ) {
 		# Reload taxes
 		foreach my $Tax ( $self->Taxes() ) {
@@ -110,6 +112,7 @@ sub save {
 			} # end if
 		} # end foreach $Tax
 	} # end if
+}
 	sql::end_transaction( $dbh, $ac );
 	return;
 } # end sub save
@@ -281,6 +284,10 @@ sub Company {
 	my $self = shift;
 	return new openprint::Company( $$self{'company_id'} );
 } # end sub company
+
+sub Ordered_Projects {
+	return openprint::OrderedProject->find('order_id'=>$_[0]{'id'},'order'=>$openprint::OrderedProject::fields{'project_id'});
+} # end sub Ordered_Projects
 
 sub Projects {
 	my $self = shift;

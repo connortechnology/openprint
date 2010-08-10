@@ -5,25 +5,7 @@
 <div class="Order"><div class="Submit">
 	<form method="post" name="f1" action="confirmation.html">
 		<!--#include virtual="/includes/order_header.html" -->
-<? echo (
-	my $html;
-	@{$$variable{'Products'}} = $$variable{'Order'}->Products();
-	@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
-	foreach my $Product ( @{$$variable{'Products'}} ) {
-		$$variable{'Product'} = $Product;
-		$$variable{'Project'} = $$variable{'Product'}->Project();
-		$html .= '<div class="Project">';
-		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_product_information.html', $variable );
-		$html .= '</div>';
-	} # end foreach
-	foreach my $Project ( @{$$variable{'Projects'}} ) {
-		$$variable{'Project'} = $Project;
-		$html .= '<div class="Project">';
-		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html', $variable );
-		$html .= '</div>';
-	} # end foreach
-	return $html;
-) ?>
+		<!--#include virtual="_contents.html" -->
 		<? if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 		<div id="AdminOptions"><ul>
 			<li>

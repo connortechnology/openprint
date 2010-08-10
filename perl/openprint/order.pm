@@ -344,6 +344,7 @@ sub save_project_information {
 			$Project->ordered_quantity_index( $qtys[0] );
 		} # end if
 	} # end if
+$openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 
 	if ( $param{'ddmDueDateYear'.$project_index} and $param{'ddmDueDateMonth'.$project_index} and $param{'ddmDueDateDay'.$project_index} ) {
 
