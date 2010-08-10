@@ -13,7 +13,7 @@ $serial = 'tbl_Service_Defaults_lngID_seq';
 
 %fields = (
 	'id'				=>	'lngindex',
-	'projecttype_id'	=>	'lngprojecttypeindex',
+	'projecttype_id'	=>	'projecttype_id',
 	'servicetype_id'	=>	'lngservicetypeindex',
 	'name'				=>	'strfieldname',
 	'value'				=>	'strdefaultvalue',

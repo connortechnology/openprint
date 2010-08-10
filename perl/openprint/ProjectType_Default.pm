@@ -18,7 +18,7 @@ $serial = 'tbl_projecttype_defaults_id_seq';
 	'value'				=>	'strdefaultvalue',
 );
 %find_fields = (
-	'projecttype'		=>	'SELECT name FROM project_types WHERE id=projecttype_id';
+	'projecttype'		=>	'(SELECT name FROM project_types WHERE id=lngprojecttypeindex)',
 );
 
 %transforms = (

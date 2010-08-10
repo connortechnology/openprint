@@ -183,11 +183,13 @@ $log->warn("got specs");
 	} # end foreach Project
 } # end if Type
 }
-$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbAqueousSideOne'`);
-$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbAqueousSideTwo'`);
-$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbGripHeight'`);
-$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbGripWidth'`);
-$dbh->do(q`DELETE FROM projecttype_defaults where strname='rdbWaxFree'`);
+$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbAqueousSideOne'`);
+$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbAqueousSideTwo'`);
+$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbGripHeight'`);
+$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbGripWidth'`);
+$dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbWaxFree'`);
+require openprint::ProjectType_Default;
+require openprint::ServiceType_Default;
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
 	my $SD = new openprint::ServiceType_Default();
 	$SD->save({	
