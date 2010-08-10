@@ -19,7 +19,7 @@ require openprint::Currency;
 require openprint::User;
 require openprint::ServiceType;
 require openprint::logs;
-require openprint::Estimating::Multipage;
+require openprint::Estimating::MultiPage;
 
 # Projects are like Orders, in that you can have several in here, but only ONE of them may be unfinished.
 
@@ -266,7 +266,7 @@ $openprint::log->warn("Hey, insert_service_spec didn't update the hash!");
 		sql::end_transaction( $dbh, $ac );
 
 # Sets up the book service
-		openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'Multipage' );
+		openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'MultiPage' );
 
 # Setup the colours
 		if ( $$specs{'Colours'} eq '4/4' ) {
@@ -761,7 +761,7 @@ $openprint::log->debug('Deleting Folding');
 	} # end foreach
 	sql::end_transaction( $dbh, $ac );
 	$openprint::log->warn("Before auto");
-	openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $$Project{'id'} );
+	openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $$Project{'id'} );
 	$$specs{'alert'} .= openprint::service::auto_calculate( $r, $log, $dbh, $variable, $$Project{'id'} );
 	$openprint::log->warn("Aftere auto");
 	# Need to reload this because the auto calculation can add services, and we wouldn't otherwise pick them up

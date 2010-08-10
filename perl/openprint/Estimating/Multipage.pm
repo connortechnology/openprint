@@ -14,7 +14,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 
-package openprint::Estimating::Multipage;
+package openprint::Estimating::MultiPage;
 
 use POSIX qw{ ceil };
 use strict;
@@ -209,7 +209,7 @@ sub calculate_signatures {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 
 	my $status;
-$openprint::log->debug("****************************************************************Starting Multipage::calculate_signatures");
+$openprint::log->debug("****************************************************************Starting MultiPage::calculate_signatures");
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 

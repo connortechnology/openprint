@@ -1094,7 +1094,7 @@ foreach my $E ( openprint::Equipment->find('category'=>'Printing') ) {
 		if ( $Spec->max() == 1 ) {
 			$Spec->max('');
 		} elsif ( $Spec->min() == 2 ) {
-			$Spec->name('Default Bleed SizeMultiPagePublication');
+			$Spec->name('Default Bleed SizeMultiPage');
 			$Spec->min('');
 		} # end if
 		$_ = $Spec->save();

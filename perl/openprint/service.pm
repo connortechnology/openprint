@@ -27,7 +27,7 @@ require openprint::Estimating::Printing;
 require openprint::Estimating::Shipping;
 require openprint::Estimating::Spiral;
 require openprint::Estimating::UPS;
-require openprint::Estimating::Multipage;
+require openprint::Estimating::MultiPage;
 require openprint::logs;
 
 my $debug = 0;

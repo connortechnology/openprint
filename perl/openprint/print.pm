@@ -14,7 +14,7 @@ require openprint::Estimating::Shipping;
 require openprint::Estimating::Stitching;
 require openprint::Estimating::Padding;
 require openprint::Estimating::Proofs;
-require openprint::Estimating::Multipage;
+require openprint::Estimating::MultiPage;
 
 sub get_ServiceType {
 	my ( $project_index, $service_index ) = @_;
@@ -92,20 +92,13 @@ sub view_services {
 					$recalc = 1;
 				} # end if
 
-				if ( $r->param('NewBook') eq 'Y' ) {
+				if ( $openprint::param{'PrintingService'} eq 'Y' or $recalc ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
-					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
-					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
-					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
-				} elsif ( $r->param('PrintingService') eq 'Y' or $recalc ) {
-
-					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
-					# Now run code to modify all other services
-					# Only do this if all signatures have been specified, otherwise it is a waste of time
-					$log->info("********* Auto Calculate  ( PrintingService eq 'Y' ) *************");
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->name() );
+					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste'] ) ) {
-					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index );
 				} # end if
 				$Project->summary(undef);
@@ -172,7 +165,7 @@ sub view_services {
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
-				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+				openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
 				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
 				$Project->summary(undef);
 				$Project->save();
@@ -180,7 +173,7 @@ sub view_services {
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
-				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+				openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
 				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
 				$Project->summary(undef);
 				$Project->save();
@@ -271,9 +264,12 @@ sub multipage_signatures {
 			$$param{'txtSpreadSize'} = 4;
 		} elsif ( sets::isin( $$param{'rdbTemplateType'}, ['CornerStitching', 'Cerlox', 'PlasticCoil','MetalCoil'] ) ) {
 			$$param{'txtSpreadSize'} = 2;
-		} else {
+		} elsif ( $Project->Type()->name() eq 'MultiPage' ) {
 			$openprint::log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );
 			$$param{'txtSpreadSize'} = 4;
+		} else {
+			$openprint::log->warn("Unknown Bindery Type: $$param{'rdbTemplateType'}" );
+			$$param{'txtSpreadSize'} = 2;
 		} # end if
 		openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_index, 'txtSpreadSize', $$param{'txtSpreadSize'} );
 	} # end if

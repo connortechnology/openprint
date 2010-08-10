@@ -350,7 +350,7 @@ $openprint::log->debug("Scratch Pads : save");
 		} # end foreach
 	} # end if
 
-	openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, \%variable, $p_id );
+	openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, \%variable, $p_id );
 	openprint::service::auto_calculate( $r, $log, $dbh, \%variable, $p_id, $s_id );
 } # end sub save
 

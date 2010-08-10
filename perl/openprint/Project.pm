@@ -522,7 +522,7 @@ sub update_status {
 		} elsif ( sets::isin( 'calculated', \@statuses ) ) { # This works because we have already checked for uncalculated
 			$new_status = 'Unordered';
 			foreach my $qty_index ( $self->quantity_indexes() ) {
-				if ( openprint::Estimating::Multipage::status( $$self{'id'}, undef, $qty_index ) ) {
+				if ( openprint::Estimating::MultiPage::status( $$self{'id'}, undef, $qty_index ) ) {
 					$new_status = 'uncalculated';
 					last;
 				} # end if

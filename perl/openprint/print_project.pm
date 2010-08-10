@@ -18,7 +18,7 @@ require openprint::Currency;
 require openprint::User;
 require openprint::ServiceType;
 require openprint::logs;
-require openprint::Estimating::Multipage;
+require openprint::Estimating::MultiPage;
 
 # Projects are like Orders, in that you can have several in here, but only ONE of them may be unfinished.
 
@@ -220,7 +220,7 @@ sub continue_project {
 			my $Project = new openprint::Project( $project_index );
 			foreach my $qty_index ( 1 .. 3 ) {
 				next if ! $Project->quantity($qty_index);
-				if ( $_ = openprint::Estimating::Multipage::status( $project_index, undef, $qty_index ) ) {
+				if ( $_ = openprint::Estimating::MultiPage::status( $project_index, undef, $qty_index ) ) {
 					my @sigs = $Project->signatures({'Group'=>$_});
 					my $src_id = pop @sigs;
 					my $src_specs = openprint::service::get_specs_ref( $Project, $src_id );
@@ -807,7 +807,7 @@ sub reuse_project {
 	if ( $Project->quantity1() != $NewProject->quantity1()
 			or $Project->quantity2() != $NewProject->quantity2()
 			or $Project->quantity3() != $NewProject->quantity3() ) {
-		openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $NewProject->id() );
+		openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $NewProject->id() );
 		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $NewProject->id(), undef );
 	} # endif
 	$openprint::session{'project_id'} = $NewProject->id();

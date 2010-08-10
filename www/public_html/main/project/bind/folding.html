@@ -18,7 +18,6 @@
 		h.ServiceType = 'Folding';
 		h.callback = 'cbFoldingResults';
 		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
-
     }
     function cbFoldingResults( results ) {
 		
@@ -104,12 +103,11 @@ function Fold_onchange( element, signature, qty_index, index ) {
 					$html .= make_drop_down( $$variable{'EquipmentArray'}, $$variable{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 					$html .= '</select>';
 
-if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-					$html .= sprintf('<input type="checkbox" id="chkOverrideEquipment-%1$d-%2$d" name="chkOverrideEquipment-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideEquipment-%1$d-%2$d">Override</label>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
-} elsif ( $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ) {
-					$html .= sprintf('<input type="hidden" name="chkOverrideEquipment-%1$d-%2$d" value="Y" />Overriden', $$sig_specs{'SignatureIndex'}, $qty_index );
-
-} # end if
+					if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+						$html .= sprintf('<input type="checkbox" id="chkOverrideEquipment-%1$d-%2$d" name="chkOverrideEquipment-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideEquipment-%1$d-%2$d">Override</label>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ? 'checked="checked"' : '' );
+					} elsif ( $$variable{'chkOverrideEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index} eq 'Y' ) {
+						$html .= sprintf('<input type="hidden" name="chkOverrideEquipment-%1$d-%2$d" value="Y" />Overriden', $$sig_specs{'SignatureIndex'}, $qty_index );
+					} # end if
 					$html .= '</span>';
 				} # end foreach qty_index
 				$html .= '</p>';
