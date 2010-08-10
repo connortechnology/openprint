@@ -109,7 +109,7 @@ sub signature_calc {
 	my %Results;
 	my $services = $Project->services();
 
-$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
+	$$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{'txtQuantity'.$qty_index};
 
     if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
         if ( $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} > $Imposition->imposition() or $$specs{"txtImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} <= 0 ) {
@@ -172,12 +172,13 @@ $$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) if ! $$specs{
 			my $last_run;
 			$Results{'Breakdown'} .= sprintf('<b>Imposition: %dx%d=%dout</b><br/>', $I->get('columns','rows','imposition') ); 
 
-			if ( $Equipment->strid() eq $$printing_specs{'ddmPress'.$qty_index} ) {
-				next if $I->imposition() != $Imposition->imposition();
+			if ( $Equipment->strid() eq $$printing_specs{'ddmPress'.$qty_index} and $I->imposition() == $Imposition->imposition() ) {
 				$Results{'Breakdown'} .= 'Numbering while printing.<br/>';
+				$last_run = $$specs{'SetsOfNumbers'} * $I->imposition();
 			} else {
 				if ( $_ = $Equipment->fits( $I->layout_width(), $I->layout_height(), $I->Paper()->calliper() ) ) {
 					$Results{'Breakdown'} .= "$_<br/>";
+					$last_run = $$specs{'SetsOfNumbers'};
 					next;
 				} # end if
 
