@@ -104,13 +104,18 @@
 	my $ProjectCurrency = $Project->Currency();
 	my $services = $Project->services();
 	my %statuses = sql::execute( $log, $dbh, q{SELECT lngServiceIndex, strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $Project->id() );
+    my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
 	foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
 		if ( $ServiceCategory->name() eq 'Printing' ) {
-            my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
+				if ( $Project->Type()->url() ) {
                 $html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', $rowclass, $Project->Type()->url(), $Project->id(), $$services{''}[0],
                     ( $$services{'Signature'} ? '' : openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ) ),
                     );
+				} else {
+					$html .= sprintf('<tr%s><td><b>Printing</b></td>', $rowclass  );
+				} # end if
             } else {
                 $html .= sprintf('<tr%s><td><b>Printing</b><br/>%s</td>', $rowclass,
                         openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ),
@@ -123,7 +128,7 @@
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<td class="price">&nbsp;</td>';
 				} # end foreach
-				$html .= '<td class="status">&nbsp;</td>';
+				$html .= '<td class="status">'.$statuses{$$services{''}[0]}.'</td>';
 				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 					$html .= '<td class="unprintable actions">';
 					if ( $Project->Type()->url() ) {
@@ -164,7 +169,7 @@
 						} # end for
 					} # end if
 					if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
-						$html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s</a></td>', $rowclass, 'prin/multipage_signatures.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+						$html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s</a></td>', $rowclass, 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
 							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
 							);
 					} else {

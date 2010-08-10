@@ -275,6 +275,14 @@ if ( sets::isin( 'tbl_service_defaults', \@tables ) ) {
 		$dbh->do('ALTER TABLE tbl_service_defaults add FOREIGN KEY (projecttype_id) REFERENCES project_types (id) ');
 	} # end if
 } # end if
+if ( sets::isin( 'project_types', \@tables ) ) {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
+	if ( ! exists $$data{'type'} ) {
+		$dbh->do('ALTER TABLE project_types add type text');
+		$dbh->do(q`UPDATE project_types set type='SinglePage'`;
+		$dbh->do(q`UPDATE project_types set type='MultiPage' WHere name='MultiPage'`;
+	} # end if
+} # end if
 
 $dbh->disconnect();
 1;

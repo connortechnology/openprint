@@ -19,6 +19,7 @@ $serial = 'project_types_id_seq';
 	'category_id'	=>	'category_id',
 	'url'			=>	'url',
 	'sorting'		=>	'sorting',
+	'type'			=>	'type',
 );
 %transforms = (
 	'name'	=>	[ 's/\s//g' ],

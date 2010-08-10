@@ -118,7 +118,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 					} else {
 						$html .= '<td class="unprintable">&nbsp;</td>';
 					} # end if
-					$html .= sprintf('<td><a href="/employee/proj/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s</a></td>', 'prin/multipage_signatures.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+					$html .= sprintf('<td><a href="/employee/proj/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s</a></td>', 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
 							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
 							);
 					$html .= sprintf('<td class="price"><b>%s</b><br/>%s</td>', openprint::Currency::format( $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} )),openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
