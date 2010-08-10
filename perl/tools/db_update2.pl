@@ -279,8 +279,8 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='project_types'", 'column_name');
 	if ( ! exists $$data{'type'} ) {
 		$dbh->do('ALTER TABLE project_types add type text');
-		$dbh->do(q`UPDATE project_types set type='SinglePage'`;
-		$dbh->do(q`UPDATE project_types set type='MultiPage' WHere name='MultiPage'`;
+		$dbh->do(q`UPDATE project_types set type='SinglePage'`);
+		$dbh->do(q`UPDATE project_types set type='MultiPage' WHere name='MultiPage'`);
 	} # end if
 } # end if
 
