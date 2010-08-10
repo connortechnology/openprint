@@ -165,7 +165,9 @@ if ( $Type ) {
 		next if sets::isin( $Project->Type()->name(), [ 'MultiPagePublication', 'Newsletters','Magazines','Calendars' ] );
 		my $services = $Project->services();
 		my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-		my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project, $$services{''}[0] ) );
+$log->warn("got specs $$services{''}[0]");
+		my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
+$log->warn("got specs");
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
 		} # end foreach

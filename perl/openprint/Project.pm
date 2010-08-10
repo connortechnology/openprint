@@ -1111,7 +1111,7 @@ sub add_signature {
 	
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
-	my ($print_service_index) = openprint::print_project::insert_service( $log, $dbh, $self->id(), 'AdditionalSignature' );
+	my ($print_service_index) = $self->add_service( 'AdditionalSignature' );
 	openprint::service::status( $self->id(), $print_service_index, $status );
 	if ( ! $sig_index ) {
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
@@ -1125,7 +1125,9 @@ sub add_signature {
 
 sub copy_signature {
     my ( $self, $sig_specs, $data, $status ) = @_;
+$log->warn("in copy");
     my $new_service_index = $self->add_signature( undef, $status );
+$log->warn("after add copy");
     my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
 
 	my $ac = sql::start_transaction( $dbh );

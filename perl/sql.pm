@@ -54,6 +54,7 @@ sub execute {
 		$l->error( "Error Preparing SQL: ($print_sql): " . $d->errstr ) if $l;
 		return;
 	} # end if
+#$l->warn($sql);
 	if ( ! $sth->execute(@values) ) {
 		$l->error("SQL execution failed: ($print_sql):" . $d->errstr) if $l;
 		return;
