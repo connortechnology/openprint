@@ -9,14 +9,15 @@ require openprint::logs;
 require openprint::MaterialSpecification;
 require openprint::MaterialCategory;
 
-use vars qw{ $log $dbh %session $table $serial %fields %transforms %defaults };
+use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults };
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \$openprint::session;
+
 $table = 'Materials';
 $serial = 'MaterialIndex_seq';
 
-my $debug = 1;
+$debug = 1;
 
 %fields = (
 		'id'				=>	'id',
@@ -27,6 +28,9 @@ my $debug = 1;
 		'taxexempt1'		=>	'taxexempt1',
 		'taxexempt2'		=>	'taxexempt2',
 		);	
+%find_fields = (
+		'category'	=>	'(SELECT name FROM Material_Categories WHERE id=category_id)',
+);
 
 %transforms = (
 		);
@@ -38,14 +42,6 @@ my $debug = 1;
 		'taxexempt2'	=>	'N',
 		);
 
-my %cache;
-my $cache_init;
-
-sub init_cache {
-	$cache_init = 0;
-	%cache = ();
-#map { $_->name(), $_->id() } find();
-} # end sub init_cache
 
 sub delete {
 	my $self = shift;
@@ -101,65 +97,6 @@ sub Specifications {
 	my $self = shift;
 	return openprint::MaterialSpecification->find( 'Material'=>$self, 'order'=>'name,min' );
 } # end sub Specifications
-
-sub find_one {
-	my @results = find( @_, 'limit', 1 );
-	if ( @results > 1 ) {
-		$openprint::log->error('Material->find_one more than 1 result!');
-	} elsif ( @results ) {
-		return $results[0];
-	} # end if
-	return;
-} # end sub find_one
-
-sub find {
-	my $self = shift;
-	my %params = @_;
-	my $sql = 'SELECT * FROM Materials WHERE 1>0';
-	my @values;
-
-	if ( exists $params{'name'} ) {
-		# cache optimisation, if we are looking up just by name, then we can do a quick idnex lookup
-		if ( ( keys %params ) == 1 or ( ( keys %params ) == 2 and $params{'limit'} ) ) {
-			#if ( ( exists $cache{$params{name}} ) and $cache{$params{name}} ) {
-			if ( ! $cache_init ) {
-				%cache = map { $_->name(), $_->id() } find();
-				$cache_init = 1;
-			}
-			if ( exists $cache{$params{'name'}} ) {
-				return ( new openprint::Material( $cache{$params{'name'}} ) );
-			} else {
-				return;
-			} # end if
-		} else {
-			$sql .= ' AND name=?';
-			push @values, $params{'name'};
-		} # end if
-	} # end if
-	if ( $params{'name_like'} ) {
-		$sql .= ' AND name LIKE ?';
-		push @values, $params{'name_like'};
-	} # end if
-	if ( $params{'category_id'} ) {
-		$sql .= ' AND category_id=?';
-		push @values, $params{'category_id'};
-	} # end if
-	if ( $params{'category'} ) {
-		$sql .= ' AND category_id=(SELECT id FROM Material_Categories WHERE name=?)';
-		push @values, $params{'category'};
-	} # end if
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading Material ($sql) (@values) Reason: " . $openprint::dbh->errstr );
-		return;
-	} elsif ( $debug ) {
-		$log->debug("Loading Material ($sql) (@values) " . @$data );
-	} # end if
-	return map { new openprint::Material( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub get_price {
 	my ( $self, $quantity, $Equipment ) = @_;

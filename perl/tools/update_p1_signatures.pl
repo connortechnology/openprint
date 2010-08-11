@@ -193,7 +193,7 @@ require openprint::ServiceType_Default;
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 if ( ! $ServiceType ) {
 	$ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
-	$ServiceType->save({'name'=>'Signature'});
+	$ServiceType->save({'name'=>'Signature','type'=>'Signature'});
 }
 if ( ! $ServiceType ) {
 	$ServiceType = new openprint::ServiceType();

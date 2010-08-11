@@ -1488,7 +1488,7 @@ $openprint::log->debug("No W&T due to multipass" . $Papers[0]->gsm() );
 						$$project{'Cut Off'} = $cut_offs[0];
 						my @start_impositions = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
 									undef, 
-									undef, $Press,
+									$Press,
 									);
 						foreach my $I ( @start_impositions ) {
 							#find minimum cut off
@@ -1522,7 +1522,7 @@ $openprint::log->debug("No W&T due to multipass" . $Papers[0]->gsm() );
 					} else {
 						push @i, openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
 								undef, 
-								undef, $Press,
+								$Press,
 								);
 					} # end if
 					if ( $P->start_width() ) {
@@ -1588,7 +1588,6 @@ $openprint::log->debug("No W&T due to multipass" . $Papers[0]->gsm() );
 
 						my @i = openprint::imposition::get_imposition( $project, $do_work_turn, $do_perfecting, $$specs{'Versions'}, $P,
 								undef, 
-								undef,
 								$Press );
 						last if ! @i;
 						push @imps, @i;
@@ -1627,6 +1626,9 @@ $i->display();
 					   ) {
 					} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $imp->Paper()->height() == $$specs{"CutOff$qty_index"} ) ) {
 						#$add = 1;
+					} elsif ( ( $$specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) and ( $imp->grain_direction() ne $$specs{"rdbGrainDirection$qty_index"} ) ) {
+						$add = 0;
+						next;
 					} elsif ( ! $imps{$str} ) {
 						#$add = 1;
 					} else {
@@ -2072,10 +2074,12 @@ sub calculate_impositions {
 		} # end if
 	} # end if
 
-$log->debug("Press $$Press{strid} Impositions beforefiltering: " . @impositions ) if $debug or 1;
+ if ( $debug or 0 ) {
+$log->debug("Press $$Press{strid} Impositions beforefiltering: " . @impositions );
 	foreach my $imp ( @impositions ) {
 		$imp->display();
 	} # end foreach
+} # end if
 
 	if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) and ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 		@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = split('x', $$sig_specs{"ddmStockSheetSize$qty_index"} );
@@ -2100,7 +2104,7 @@ $log->debug("Press $$Press{strid} Impositions beforefiltering: " . @impositions 
 				if ( 
 						( $Paper->width() != $$sig_specs{"OverrideStockWidth$qty_index"} ) or 
 						( $$sig_specs{"OverrideStockHeight$qty_index"} and ( $Paper->height() != $$sig_specs{"OverrideStockHeight$qty_index"} ) )) {
-$imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
+$imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} ) if $debug;
 					next;
 				} else {
 					#$imp->display('Accepted stock! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
@@ -2111,8 +2115,12 @@ $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty
 				} # end if
 			}  # end if
 			if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
-#$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
-				next if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};	
+				next if $imp->dutch_columns();
+				if ( $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index}	) {
+$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} );
+$imp->display();
+					next;
+				} # end if
 			} elsif ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
 #$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() ) if $debug;
 				next;
@@ -2167,6 +2175,12 @@ $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty
 			push @results, $imp;
 		} # end foreach imp
 
+ if ( $debug or 0 ) {
+$log->debug("Press $$Press{strid} Impositions before paper filtering: " . @results );
+	foreach my $imp ( @results ) {
+		$imp->display();
+	} # end foreach
+} # end if
 		my %imps;
 		foreach my $imp ( @results ) {
 			my $add = 1;
@@ -2350,7 +2364,7 @@ if ( $$project{'HasFolding'} and ( $Press->Specification('Folding Capable') eq '
 	$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after folding:' . @impositions) if $debug;
 } # end if Folding
 
-if ( $debug ) {
+if ( $debug or 0 ) {
 	$openprint::log->debug($$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} . " Press: " .$Press->strid() . ' # ' . @impositions );
 	foreach my $imp ( @impositions ) {
 		$imp->display();
@@ -3634,7 +3648,7 @@ sub calc_price {
 		$setup_cost += $price{'Imposition Total'};
 
 		my %SteppingCharge;
-		if ( ! (%SteppingCharge = openprint::service::get_price_object( 'Stepping Charge'.$Project->Type()->strid(), undef, $Press) ) ) {
+		if ( ! (%SteppingCharge = openprint::service::get_price_object( 'Stepping Charge'.$Project->Type()->name(), undef, $Press) ) ) {
 			%SteppingCharge = openprint::service::get_price_object( 'Stepping Charge', undef, $Press);
 		} # end if
 		if ( %SteppingCharge ) {
@@ -3645,7 +3659,7 @@ sub calc_price {
 
 		if ( $Imposition->pages() ) {
 			my %PageCharge;
-			if ( ! ( %PageCharge = openprint::service::get_price_object( 'Page Charge'.$Project->Type()->strid(),$Imposition->pages(),$Press) ) ) {
+			if ( ! ( %PageCharge = openprint::service::get_price_object( 'Page Charge'.$Project->Type()->name(),$Imposition->pages(),$Press) ) ) {
 				%PageCharge = openprint::service::get_price_object( 'Page Charge', $Imposition->pages(), $Press );
 			} # end if
 			if ( %PageCharge ) {

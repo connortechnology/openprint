@@ -2,7 +2,7 @@ package openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
+use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -11,8 +11,17 @@ my $debug = 0;
 $no_cache = 0;
 
 sub init_cache {
-	$no_cache = 0;
-	%cache = ();
+	if ( @_ ) {
+		my @items = $_[0]->find();
+$log->debug("init_cache of $_[0] # of items: " . @items );
+		foreach ( @items ) {
+			$name_cache{$_[0]}{$_->name()} = $_;
+		} # end foreach
+	} else {
+		$no_cache = 0;
+		%cache = ();
+		%name_cache = ();
+	} # end if
 } # end sub init_cache
 
 sub debug {
@@ -270,6 +279,11 @@ sub find {
 	my %params = @_;
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
 	my @values;
+
+	if ( $params{'name'} and ( ( 1 == keys %params ) or ( 2 == keys %params and $params{'limit'} ) ) and $name_cache{$type} ) {
+		return $name_cache{$type}{$params{'name'}} if $name_cache{$type}{$params{'name'}};
+		return;
+	} # end if
 
 	foreach my $k ( keys %params ) {
 		next if sets::isin( $k,[ 'order','limit','or' ] );

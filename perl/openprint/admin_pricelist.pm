@@ -141,14 +141,14 @@ sub edit {
 			my ( $prod_id, $equip_ids, @data ) = misc::trim( $csv->fields());
 			next if ! $prod_id;
 			
-			my $prod_index = openprint::service::get_index_by_id( $prod_id );
-			if ( $prod_index eq '' ) {
+			my $Service = openprint::Service->find_one('name'=>$prod_id);
+			if ( ! $Service ) {
 				$error .= "No Service found for $prod_id<br>";
 				next;
 			} # end if
 
 			if ( $equip_ids eq '' ) {
-					my $price_set = $pricelist->getServicesPriceSet( $prod_index );
+					my $price_set = $pricelist->getServicesPriceSet( $Service->id() );
 					my $price = new openprint::service_price( $log, $dbh, $price_set );
 					$price->set( undef, @data );
 					$price_set->addPrice( $price );
@@ -160,7 +160,7 @@ sub edit {
 						next;
 					} # end if
 
-					my $price_set = $pricelist->getServicesPriceSet( $prod_index );
+					my $price_set = $pricelist->getServicesPriceSet( $Service->id() );
 					my $price = new openprint::service_price( $log, $dbh, $price_set );
 					$price->set( $equipment{$equip_id}, @data );
 					$price_set->addPrice( $price );
