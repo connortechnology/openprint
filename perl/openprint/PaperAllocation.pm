@@ -5,7 +5,7 @@ use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw(%session %variable $dbh $log $table $serial %fields %transforms %defaults );
+use vars qw(%session %variable $dbh $log $debug $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -24,7 +24,7 @@ require openprint::logs;
 require openprint::Manufacturer;
 require openprint::Email;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'paper_allocations';
 $serial = 'paper_allocation_id_seq';
@@ -45,7 +45,7 @@ $serial = 'paper_allocation_id_seq';
 );
 
 %defaults = (
-	'created_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
 );
 # Returns a paper object specified by the parameters
 sub find {

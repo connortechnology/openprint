@@ -18,7 +18,7 @@ $serial = 'invoice_logs_id_seq';
 %transforms = (
 );
 %defaults = (
-	'created_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
 );
 
 1;

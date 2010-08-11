@@ -21,8 +21,8 @@ $serial = 'todos_id_seq';
 %transforms = (
 );
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
 	'completed'		=>	0,
 );
 

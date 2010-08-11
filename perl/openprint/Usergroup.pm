@@ -3,9 +3,9 @@ package openprint::Usergroup;
 use strict;
 require sql;
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'usergroups';
 $serial = 'usergroups_id_seq';
@@ -13,6 +13,9 @@ $serial = 'usergroups_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'name'			=>	'name',
+);
+%find_fields = (
+	'user_id'		=>	'(SELECT user_id FROM users_in_usergroups WHERE usergroup_id=usergroups.id)',
 );
 
 %transforms = (

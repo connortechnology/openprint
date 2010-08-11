@@ -20,7 +20,7 @@ $serial = 'upload_id_seq';
 	'company'		=>	'company',
 );
 %defaults = (
-	'start'	=>	'NOW()',
+	'start'	=>	q`'NOW()'`,
 	'size'	=>	undef,
 	'total'	=>	undef,
 	'finished'	=>	0,

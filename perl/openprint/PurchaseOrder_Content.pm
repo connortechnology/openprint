@@ -39,7 +39,7 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 
 %defaults = (
 	'po_id'			=>	undef,
-	'created_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
 	'price'			=>	undef,
 	'total'			=>	undef,
 	'qty'			=>	undef,

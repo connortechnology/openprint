@@ -7,14 +7,14 @@ use vars qw( %config $log $dbh %session );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
 
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 require sql;
 require openprint::PaymentType;
 
+$debug = 1;
 $table = 'payments';
 $serial = 'payments_id_seq';
 
@@ -42,8 +42,8 @@ $serial = 'payments_id_seq';
 );
 %defaults = (
 	'order_id'		=>	undef,
-	'created_on'	=> 'NOW()',
-	'updated_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
+	'updated_on'	=> q`'NOW()'`,
 	'completed'		=>	0,
 	'deleted'		=>	0,
 );
@@ -51,7 +51,7 @@ $serial = 'payments_id_seq';
 sub destroy {
 	my $self = shift;
     sql::execute( undef, undef, q{DELETE FROM ledgers WHERE payment_id=?}, $$self{'id'} );
-    return sql::execute( undef, undef, q{DELETE FROM Payments WHERE id=?}, $$self{'id'} );
+    return $self->SUPER::destroy();
 } # end sub destroy
 
 sub Payor {

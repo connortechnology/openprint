@@ -43,8 +43,8 @@ $serial = 'shifts_id_seq';
 
 %defaults = (
 	'operator_id'		=>	undef,
-	'created_on'		=>	'NOW()',
-	'updated_on'		=>	'NOW()',
+	'created_on'		=>	q`'NOW()'`,
+	'updated_on'		=>	q`'NOW()'`,
 );
 
 

@@ -1,6 +1,7 @@
 package openprint::PAR;
 @ISA = qw(openprint::Object);
 
+use openprint ();
 use vars qw( %config $log $dbh %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
@@ -52,8 +53,8 @@ require sql;
 	'part2_user_id'	=> undef,
 	'part3_user_id'	=> undef,
 	'part4_user_id'	=> undef,
-	'created_on'	=> 'NOW()',
-	'updated_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
+	'updated_on'	=> q`'NOW()'`,
 	'deleted'		=> 0,
 	'area_id'		=>	undef,
 );
@@ -72,10 +73,8 @@ sub send_notifications {
 			'PAR'	=>	$self,
 		);
 		$info{'ReplacementText'} = ssi::variable_substitution( \$text, \%info );
-$openprint::log->debug( $info{'ReplacementText'} );
 
 		my $body = ssi::variable_substitution( \$email_template, \%info );
-$openprint::log->debug( $body );
 		foreach my $User ( @Users ) {
 			my %mail = (
 					SMTP    => $config{'Mail Server'},

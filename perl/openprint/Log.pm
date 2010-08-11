@@ -6,8 +6,8 @@ require openprint::logAction;
 require openprint::Host;
 use strict;
 
-my $debug = 1;
-use vars qw( $log $dbh $table $serial %fields %tansforms %defaults %types );
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults %types );
+$debug = 1;
 $table = 'log';
 $serial = 'log_id_seq';
 %fields = (
@@ -21,14 +21,14 @@ $serial = 'log_id_seq';
 	'ip_address'	=>	undef,
 );
 %defaults = (
-	'date_time'	=>	'NOW()',
+	'date_time'	=>	"'NOW()'",
 );
 
 %types = (
-2	=> 'Successful Login',
-3	=>	'Logout', 
-78	=>	'Failed Login',
-79	=> '',
+	2	=> 'Successful Login',
+	3	=>	'Logout', 
+	78	=>	'Failed Login',
+	79	=> '',
 );
 use openprint ();
 *log = \$openprint::log;
@@ -36,7 +36,7 @@ use openprint ();
 
 sub User {
 	my $self = shift;
-return new openprint::User( $$self{user_id} );	
+	return new openprint::User( $$self{user_id} );	
 } # end sub User
 
 sub Company {

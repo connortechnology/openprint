@@ -41,52 +41,38 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 			<input type="text" name="StartDocket" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go1', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</li>
-		</ul>
-	</fieldset>
-	<fieldset>
-		<p>
+		<li>
 			<label>Order #</label>
 			<input type="text" name="OrderID" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go2', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
-		</p>
-	</fieldset>
-	<fieldset>
-		<p>
+		</li>
+		<li>
 			<label>Project #</label>
 			<input type="text" name="project_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}"/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
-		</p>
-	</fieldset>
-	<fieldset>
-		<p>
+		</li>
+		<li>
 			<label>Skid #</label>
 			<input type="text" name="skid_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go4', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
-		</p>
-	</fieldset>
-	<fieldset>
-		<p><label>Paper #</label>
+		</li>
+		<li><label>Paper #</label>
 			<input type="text" name="paper_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go5', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
-		</p>
-	</fieldset>
-	<fieldset>
-		<p><label>RFID #</label>
+		</li>
+		<li><label>RFID #</label>
 			<input type="text" name="rfidtag_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Go6', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
-		</p>
-	</fieldset>
-	<fieldset>
-		<p><label>PO #</label>
+		</li>
+		<li><label>PO #</label>
 			<input type="text" name="po_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="this.value=this.value.replace(/\D/g,'');" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'GoPO', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
-		</p>
-	</fieldset>
-	<fieldset>
-		<p><label>Manifest #</label>
+		</li>
+		<li><label>Manifest #</label>
 			<input type="text" name="manifest_name" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeyup="" onkeydown="if(event.keyCode == 13){submit_handler(f1);}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'GoManifest', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
-		</p>
+		</li>
+	</ul>
 	</fieldset>
 </form>
 <script type="text/javascript">document.f1.StartDocket.focus();</script>

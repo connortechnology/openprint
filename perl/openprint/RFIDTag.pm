@@ -33,8 +33,8 @@ $serial = 'rfidtags_id_seq';
 );
 
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
 	'location_id'	=>	undef,
 	'type_id'		=>	undef,
 	'valid'			=>	0,

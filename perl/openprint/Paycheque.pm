@@ -28,9 +28,9 @@ $serial = 'paycheque_id_seq';
 );
 %defaults = (
 	'deleted'		=>	0,
-	'created_on'	=> 'NOW()',
-	'updated_on'	=> 'NOW()',
-	'paid_on'		=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
+	'updated_on'	=> q`'NOW()'`,
+	'paid_on'		=> q`'NOW()'`,
 	'total'			=>	undef,
 );
 

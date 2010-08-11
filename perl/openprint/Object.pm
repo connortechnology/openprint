@@ -7,16 +7,18 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
+my $debug = 1;
 $no_cache = 0;
 
 sub init_cache {
 	if ( @_ ) {
-		my @items = $_[0]->find();
-$log->debug("init_cache of $_[0] # of items: " . @items );
-		foreach ( @items ) {
-			$name_cache{$_[0]}{$_->name()} = $_;
-		} # end foreach
+		if ( ! $name_cache{$_[0]} ) {
+			my @items = $_[0]->find();
+	$log->debug("init_cache of $_[0] # of items: " . @items );
+			foreach ( @items ) {
+				$name_cache{$_[0]}{$_->name()} = $_;
+			} # end foreach
+		} # end if
 	} else {
 		$no_cache = 0;
 		%cache = ();
@@ -369,6 +371,11 @@ sub find {
 					$sql .= " AND $$f{$k} > ?";
 					push @values, $params{$k.'_>'};
 					delete $params{$k.'_>'};
+				} # end if
+				if ( exists $params{$k.'_in'} ) {
+					$sql .= " AND ? IN $$f{$k}";
+					push @values, $params{$k.'_in'};
+					delete $params{$k.'_in'};
 				} # end if
 				if ( exists $params{$k.'_lc'} ) {
 					$sql .= " AND lower($$f{$k}) = ?";
