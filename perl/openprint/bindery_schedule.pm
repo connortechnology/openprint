@@ -19,6 +19,7 @@ use vars qw( @columns %services );
 	);
 
 sub find {
+	my $self = shift;
 	my %params = @_;
 	my @values;
 	my $sql = 'SELECT *, starttime+runtime as endtime FROM Bindery_Schedule WHERE 1>0';
@@ -135,7 +136,7 @@ sub get_lis {
 		} 
 	} # end if
 
-	my @schedule = find( 
+	my @schedule = openprint::bindery_schedule->find( 
 				'start_time_start'	=> sprintf('%s 00:00:00', $start_time_start ),
 				'start_time_end'	=> sprintf('%s 23:59:59', $start_time_end ),
 				'service_types'		=> $service_types,
@@ -153,7 +154,7 @@ sub get_lis {
 
 	foreach my $row ( @schedule ) {
 		my $Project = new openprint::Project( $$row{'projectindex'} );
-		my $Service = new openprint::Project_Service( 'project_id'=>$$row{'projectindex'}, 'id'=>$$row{'serviceindex'}} );
+		my $Service = new openprint::Project_Service( 'project_id'=>$$row{'projectindex'}, 'id'=>$$row{'serviceindex'} );
 		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, @$row{'projectindex','serviceindex'} );
 
 		my $colour = 'white';

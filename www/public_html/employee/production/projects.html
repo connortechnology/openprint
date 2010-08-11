@@ -40,7 +40,7 @@
 			<option value="">All Employees</option>
 <? echo (
 	$session{'/employee/production/projects.html?ddmSalesRep'} = $session{'user_id'} if ! $session{'/employee/production/projects.html?ddmSalesRep'};
-	my @Users = openprint::User->find( 'order'=>'lower(strfirstname),lower(strlastname)', 'type'=>['E','A'],'usergroups'=>['Sales']);
+	my @Users = openprint::User->find( 'order'=>'lower(firstname),lower(lastname)', 'type'=>['E','A'],'usergroups'=>['Sales']);
 	if ( ! sets::isin( $session{'/employee/production/projects.html?ddmSalesRep'}, [ map { $_->id() } @Users ] ) ) {
 		$session{'/employee/production/projects.html?ddmSalesRep'} = '';
 	} # end if

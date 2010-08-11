@@ -1420,5 +1420,20 @@ sub Service {
 	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'id'=>$service_id} );
 } # end sub Service
 
+sub used_press_names {
+	my $self = $_[0];
+	my @results;
+	foreach my $service_id ( $self->signatures() ) {
+		my $Service = new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'id'=>$service_id} );
+		my $sig_specs = $Service->specs();
+		if ( ! $$sig_specs{'UsePress'} ) {
+			push @results, $$sig_specs{'ddmPress'.$self->ordered_quantity_index()};
+		} else {
+			push @results, $$sig_specs{'UsePress'};
+		} # end if
+	} # end foreach
+	return sets::union( @results );	
+} # end sub used_press_names
+
 1;
 __END__
