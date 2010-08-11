@@ -1,19 +1,10 @@
 package openprint::EmailTemplate;
 @ISA = qw(openprint::Object);
 
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
-my $debug = 0;
-
 use strict;
-use vars qw( $table $serial %fields %defaults %transforms );
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-require sql;
-
+$debug = 0;
 $table = 'EmailTemplates';
 $serial = 'emailtemplates_id_seq';
 
@@ -29,8 +20,8 @@ $serial = 'emailtemplates_id_seq';
 %transforms = (
 );
 %defaults = (
-	'created_on'	=> 'NOW()',
-	'updated_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
+	'updated_on'	=> q`'NOW()'`,
 	'deleted'		=> 0,
 );
 

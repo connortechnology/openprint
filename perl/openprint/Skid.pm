@@ -47,8 +47,8 @@ $serial = 'skid_id_seq';
 %defaults = (
 	'location_id'	=>	undef,
 	'rfidtag_id'	=>	undef,
-	'updated_on'	=>	'NOW()',
-	'created_on'	=>	'NOW()',
+	'updated_on'	=>	q`'NOW()'`,
+	'created_on'	=>	q`'NOW()'`,
 	'deleted'		=>	0,
 	'type'		=>	undef,
 );

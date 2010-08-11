@@ -36,9 +36,9 @@ my $debug = 1;
 );
 
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
-	'lastseen_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'lastseen_on'	=>	q`'NOW()'`,
 	'location_id'	=>	undef,
 );
 

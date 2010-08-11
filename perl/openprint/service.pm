@@ -33,32 +33,10 @@ require openprint::logs;
 my $debug = 0;
 
 use vars qw( %specs_cache );
-my %cache_index_by_id;
-my %cache_id_by_index;
 
 sub init_cache {
-	%cache_index_by_id = ();
-	%cache_id_by_index = ();
 	%specs_cache = ();
 } # end sub init_cache
-
-sub get_index_by_id {
-	my ( $id ) = @_;
-	if ( ! %cache_index_by_id ) {
-		%cache_index_by_id = map { $_->name(), $_->id() } openprint::Service->find();
-	} # end if
-	return $cache_index_by_id{$id};
-} # end sub get_index_by_id
-
-sub get_id_by_index {
-	my ( $log, $dbh, $index ) = @_;
-
-	if ( ! %cache_id_by_index ) {
-		%cache_id_by_index = map { $_->id(), $_->name() } openprint::Service->find();
-	} # end if
-
-	return $cache_id_by_index{$index};
-} # end sub get_id_by_index
 
 sub get_price {
 	my ( $service, $range, $Equipment ) = @_;
@@ -70,11 +48,11 @@ sub get_price {
 sub get_price_object {
 	my ( $service, $range, $Equipment ) = @_;
 
-	my $index = get_index_by_id( $service );
-	return if ! $index;
+	my $Service = openprint::Service->find_one('name'=>$service);
+	return if ! $Service;
 
 	my $list_id = openprint::pricing::get_pricelist_id( );
-	my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $index, $list_id, 'openprint::service_priceset', $range, $$Equipment{'id'} );
+	my %price = openprint::pricing::get_best_price_object( $openprint::log, $openprint::dbh, $openprint::session{'company_id'}, $Service->id(), $list_id, 'openprint::service_priceset', $range, $$Equipment{'id'} );
 	return if ! %price;
 
 	my $Pricelist = new openprint::Pricelist( $list_id );

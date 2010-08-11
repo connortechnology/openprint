@@ -25,7 +25,7 @@
 						if ( $session{'user_type'} ne 'A' ) {
 							$params{'type'} = ['C','E'];
 						} # end if
-						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( %params ) ], $param{'user_id'} ); ) ?>
+						ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( %params ) ], $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} ); ) ?>
 				</select>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go2','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 			</li>
@@ -34,13 +34,15 @@
 		<? endif ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) ?>
 		<fieldset>
 			<p class="buttons">
-				<? echo ( join('',
+				<? echo ( 
+						my $html;
 						if ( ($session{'user_type'} eq 'A' ) or ( openprint::usergroup::is_user_in( ['UserManagement'], $session{'user_id'} ) ) ) {
 							$html .= ssi::writeButton( $log, $dbh, 'New1','new.gif',"addCheck(f1);",'','New'),
 						} # end if
-						ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save'),
-						ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset'),
-						); ) ?>
+						$html .= ssi::writeButton( $log, $dbh, 'Submit1','submit.gif',"f1.btnFunction.value='Save';f1.submit();",'','Save');
+						$html .= ssi::writeButton( $log, $dbh, 'Reset1','reset.gif',"f1.reset();",'','Reset');
+						return $html;
+						) ?>
 			</p>
 		</fieldset>
 	<p class="required"> denotes required information.<br/></p>
@@ -236,9 +238,9 @@
 				<? echo (
 					require openprint::Usergroup;
 					my $html = '<ul class="UserGroups">';
-					my @UserGroups = map { $_->id() } $$variable{'User'}->Groups();
+					my @usergroup_ids = map { $_->id() } $$variable{'User'}->Groups();
 					foreach my $Group ( openprint::Usergroup->find( 'order'=>'lower(name)' ) ) {
-						$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label>%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@UserGroups ) ) );
+						$html .= sprintf('<li><input type="checkbox" id="UserGroups%1$d" name="UserGroups" value="%1$d" %3$s /><label for="UserGroups%1$d">%2$s</label></li>', $Group->id(), $Group->name(), ssi::checked( sets::isin( $Group->id(), \@usergroup_ids ) ) );
 					} # end foreach
 					return $html . '</ul>';
 				) ?>

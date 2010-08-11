@@ -23,7 +23,7 @@ use vars qw( $log $dbh %fields %transforms %defaults $table $serial @identified_
 );
 %defaults = (
 	'operator_id'	=>	undef,
-	'created_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
 );
 $table = 'tbl_project_contents';
 $serial = 'ContentsServiceIndex_seq';

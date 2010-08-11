@@ -90,12 +90,12 @@ sub handler {
 
 
 		# This one has to go here, because it loads data, the others clear data, so they can go after the requires
-		configuration::init_cache( $log, $dbh, $r->dir_config() );
+	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	if ( $dbh ) {
 		openprint::session_init();
 
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
-			eval sprintf('openprint::%s::init_cache();', $o );
+			eval sprintf('openprint::%s->init_cache();', $o );
 			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
 		} # end foreach
 
@@ -185,8 +185,8 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 	} # end if
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
-	openprint::service::init_cache();
 	openprint::pricing::clear_cache();
+	openprint::service::init_cache();
 	openprint::Object::init_cache();
 	return Apache2::Const::OK;
 } # end sub handler

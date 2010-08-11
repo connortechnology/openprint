@@ -66,13 +66,13 @@ my $debug = 0;
 );
 
 %defaults = (
-	'web_active'	=>	'N',
-	'ftp_active'	=>	'0',
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
-	'type'			=>	'C',
-	'change_password'	=>	'N',
-	'administrator'		=>	'N',
+	'web_active'	=>	q`'N'`,
+	'ftp_active'	=>	0,
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'type'			=>	q`'C'`,
+	'change_password'	=>	q`'N'`,
+	'administrator'		=>	q`'N'`,
 	'commission'		=>	undef,
 	'quote_level'		=> undef,
 	'purchasing_limit'	=>	undef,
@@ -157,39 +157,8 @@ sub save {
 		misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp($email_template), 'text/html', 'quoted-printable' ) );
     } # end if
 
-	$self->set( $params ) if $params;
-
-    my %sql;
-	foreach my $k ( keys %fields ) {
-		foreach my $transform ( @{$transforms{$k}} ) {
-			eval '$$self{$k} =~ ' . $transform;
-		} # end foreach
-
-		if ( $$self{$k} eq '' and exists $defaults{$k} ) {
-			$$self{$k} = $defaults{$k};
-		} # end if
-		$sql{$fields{$k}} = $$self{$k};
-	} # end foreach
-
-	my $ac = sql::start_transaction( $dbh );
-	if ( ! $self->{id} ) {
-		@$self{id} = sql::execute( $log, $dbh, q{SELECT nextval('users_id_seq')} );
-		$sql{id} = $$self{id};
-		if ( my $error = sql::insert( $log, $dbh, 'Users', \%sql ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-	} elsif ( $$params{'force_insert'} ) {
-		if ( my $error = sql::insert( $openprint::log, $openprint::dbh, 'Users', \%sql ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-	} else {
-		if ( my $error = sql::update( $log, $dbh, 'Users', ['id=?',$$self{id}], \%sql ) ) {
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-	} # end if
+	my $error = $self->SUPER::save( $params );
+	return $error if $error;
 
 	if ( exists $$params{'assistant_ids'} ) {
 		$self->assistant_ids( $$params{'assistant_ids'} );
@@ -197,7 +166,6 @@ sub save {
 	if ( exists $$params{'csr_ids'} ) {
 		$self->csr_ids( $$params{'csr_ids'} );
 	} # end if
-	sql::end_transaction( $dbh, $ac );
 	return;
 } # end sub save
 
@@ -430,7 +398,7 @@ sub csr_ids {
 sub Groups {
 	my ( $self ) = @_;
 
-    return openprint::Usergroup->find('user_id'=>$$self{id} );
+    return openprint::Usergroup->find('user_id_in'=>$$self{id} );
 } # end sub Groups
 sub notifications {
 	my ( $self, $notifications_hash ) = @_;

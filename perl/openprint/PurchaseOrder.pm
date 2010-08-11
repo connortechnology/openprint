@@ -79,10 +79,10 @@ $serial = 'purchaseorders_id_seq';
 );
 
 %defaults = (
-	'created_on'	=> 'NOW()',
-	'updated_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
+	'updated_on'	=> q`'NOW()'`,
 	'deleted'		=>	0,
-	'currency_id'	=> $session{'Currency_id'},
+	'currency_id'	=> q`$session{'Currency_id'}`,
 	'total'			=>	0,
 	'subtotal'		=>	0,
 	'manifest_id'	=>	undef,
@@ -91,6 +91,7 @@ $serial = 'purchaseorders_id_seq';
 
 # Returns a paper object specified by the parameters
 sub find {
+	my $self = shift;
 	my %params = @_;
 	@params{lc keys %params} = @params{keys %params};
 	my @values;

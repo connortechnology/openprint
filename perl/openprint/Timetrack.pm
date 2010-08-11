@@ -12,8 +12,6 @@ use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 $debug = 1;
 
-require sql;
-
 $table = 'timetracks';
 $serial = 'timetracks_id_seq';
 %fields = (
@@ -43,8 +41,8 @@ $serial = 'timetracks_id_seq';
 	'distance'	=>	[ 's/[^\d\.]//g' ],
 );
 %defaults = (
-	'created_on'	=> 'NOW()',
-	'updated_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
+	'updated_on'	=> q`'NOW()'`,
 	'deleted'		=> 0,
 	'rate'			=>	undef,
 	'paycheque_id'	=>	undef,

@@ -34,7 +34,7 @@ $serial = 'CIP3_PPF_id_seq';
 	'compressed'	=>	'compressed',
 );
 %defaults = (
-	'created_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
 	'deleted'		=>	0,
 );
 %transforms = (

@@ -71,8 +71,8 @@ $serial = 'claims_id_seq';
 );
 
 %defaults = (
-	'created_on'	=>	'NOW()',
-	'updated_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
 	'filed_on'	=>	undef,
 	'sent_to_accounts_on'	=>	undef,
 	'invoiced_on'	=>	undef,

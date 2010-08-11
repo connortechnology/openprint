@@ -1,20 +1,13 @@
 package openprint::Skid_Verification;
 @ISA = qw(openprint::Object);
 require openprint::Object;
-use MIME::QuotedPrint;
 
 use strict;
 use openprint ();
-use vars qw($log $dbh %config $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
-
-require sql;
 require openprint::User;
+use vars qw($debug $table $serial %fields %transforms %defaults );
 
-my $debug = 1;
-
+$debug = 1;
 $table = 'skid_verifications';
 $serial = 'skid_verifications_id_seq';
 
@@ -30,7 +23,7 @@ $serial = 'skid_verifications_id_seq';
 );
 
 %defaults = (
-	'created_on'	=>	'NOW()',
+	'created_on'	=>	q`'NOW()'`,
 );
 
 sub User {

@@ -1,19 +1,12 @@
 package openprint::Invoice_Interest;
 @ISA = qw(openprint::Object);
 
-require sql;
-
-use vars qw( $log $dbh );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
 use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
+$debug = 0;
 $table = 'invoice_interests';
 $serial = 'invoice_interests_id_seq';
-
-$debug = 0;
 
 %fields = (
 	'id'				=>	'id',
@@ -29,8 +22,8 @@ $debug = 0;
 );
 %defaults = (
 	'invoice_id'	=>	undef,
-	'created_on'	=> 'NOW()',
-	'updated_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
+	'updated_on'	=> q`'NOW()'`,
 	'amount'		=>	0,
 );
 

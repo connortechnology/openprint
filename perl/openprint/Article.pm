@@ -44,9 +44,9 @@ $serial = 'articles_id_seq';
 %transforms = (
 );
 %defaults = (
-	'created_on'	=> 'NOW()',
-	'updated_on'	=> 'NOW()',
-	'published_on'	=> 'NOW()',
+	'created_on'	=> q`'NOW()'`,
+	'updated_on'	=> q`'NOW()'`,
+	'published_on'	=> q`'NOW()'`,
 	'deleted'		=> 0,
 );
 
