@@ -128,17 +128,18 @@ sub get_incomplete_services_in_category {
 		} # end if
 		return;
 	} else {
+		my @ServiceTypes = openprint::ServiceType->find('category'=>$category);
+		return map { $_->service_id() } openprint::Project_Service->find( 'servicetype_id'=>[ map { $_->id() } @ServiceTypes ], 'project_id'=>$project_index, 'status' => 'uncalculated' );
 
-		my @products = sql::execute( $log, $dbh, 'SELECT name FROM Service_Types WHERE Category=?',$category );
 
-		$_ = "SELECT MIN(lngServiceIndex) FROM tbl_Project_Contents\n".
-			"WHERE lngProjectIndex='$project_index'\n".
-			"AND lngServiceIndex IN ( ".
-			"						SELECT lngServiceIndex FROM tbl_Service_Specifications ".
-			"						WHERE lngProjectIndex='$project_index' AND strName='ServiceType' ".
-			"						AND strValue IN ( '".join("','", @products). "'	) ) ".
-			"AND strStatus == 'uncalculated'";
-		return sql::execute( $log, $dbh, $_ );
+		#$_ = "SELECT MIN(lngServiceIndex) FROM tbl_Project_Contents\n".
+			#"WHERE lngProjectIndex='$project_index'\n".
+			#"AND lngServiceIndex IN ( ".
+			#"						SELECT lngServiceIndex FROM tbl_Service_Specifications ".
+			#"						WHERE lngProjectIndex='$project_index' AND strName='ServiceType' ".
+			#"						AND strValue IN ( '".join("','", @products). "'	) ) ".
+			#"AND strStatus == 'uncalculated'";
+		#return sql::execute( $log, $dbh, $_ );
 	} # end if
 } # end sub get_incomplete_services_in_category
 
@@ -302,12 +303,14 @@ sub get_services_in_category {
 			} # end while
 		} # end if
 	} else { 
-		$_ = "SELECT lngServiceIndex, Service_Types.id FROM tbl_Service_Specifications, Service_Types WHERE lngProjectIndex=?
-			  AND tbl_Service_Specifications.strName='ServiceType'
-			  AND strValue IN ( SELECT name FROM Service_Types WHERE category = ? )
-			  AND strValue = name
-			  ORDER BY sorting";
-		@services = sql::execute( $log, $dbh, $_, $project_index, $category );
+		my @ServiceTypes = openprint::ServiceType->find('category'=>$category);
+		@services = map { $_->service_id(), $_->servicetype_id() } openprint::Project_Service->find( 'servicetype_id'=>[ map { $_->id() } @ServiceTypes ], 'project_id'=>$project_index );
+		#$_ = "SELECT lngServiceIndex, Service_Types.id FROM tbl_Service_Specifications, Service_Types WHERE lngProjectIndex=?
+			  #AND tbl_Service_Specifications.strName='ServiceType'
+			  #AND strValue IN ( SELECT name FROM Service_Types WHERE category = ? )
+			  #AND strValue = name
+			  #ORDER BY sorting";
+		#@services = sql::execute( $log, $dbh, $_, $project_index, $category );
 	} # end if
 	return @services;
 } # end sub get_services_in_category
