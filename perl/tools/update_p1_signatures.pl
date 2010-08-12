@@ -33,7 +33,7 @@ sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBl
 sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
 
-if ( 0 ) {
+if ( 1 ) {
 foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>100 ) ) {
 	my $services = $Project->services();
 
@@ -157,31 +157,32 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>100 
 } # end foreach Project
 openprint::Object::init_cache();
 }
-if ( 0 ) {
-my $Type = openprint::ProjectType->find_one('name'=>'MultiPagePublication');
-if ( $Type ) {
-	$Type->save({'name'=>'MultiPage'});
-	sql::update( undef, undef, 'tbl_service_specifications',[ 'strname=? AND strvalue', 'ProjectType', 'MultiPagePublication' ], 'strvalue', 'MultiPage' );
-} else {
-	$Type = openprint::ProjectType->find_one('name'=>'MultiPage');
-} # end if
+if ( 1 ) {
+	my $Type = openprint::ProjectType->find_one('name'=>'MultiPagePublication');
+	if ( $Type ) {
+		$Type->save({'name'=>'MultiPage'});
+		sql::update( undef, undef, 'tbl_service_specifications',[ 'strname=? AND strvalue', 'ProjectType', 'MultiPagePublication' ], 'strvalue', 'MultiPage' );
+	} else {
+		$Type = openprint::ProjectType->find_one('name'=>'MultiPage');
+	} # end if
 
-if ( $Type ) {
-	foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>100 ) ) {
-		# Skip multipage projects
-		next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
-		my $services = $Project->services();
-		my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-$log->warn("got specs $$services{''}[0]");
-		my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
-$log->warn("got specs");
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
-		} # end foreach
-		# attempt to free memory
-		#openprint::service::init_cache();
-	} # end foreach Project
-} # end if Type
+	if ( $Type ) {
+		foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>100 ) ) {
+			# Skip multipage projects
+			next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
+			my $services = $Project->services();
+			my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	$log->warn("got specs $$services{''}[0]");
+			my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
+	$log->warn("got specs");
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
+			} # end foreach
+			# attempt to free memory
+			#openprint::service::init_cache();
+		} # end foreach Project
+	} # end if Type
+	$dbh->do(q`UPDATE project_types set url=NULL where url='prin/prin_broc.html'`);
 }
 $dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbAqueousSideOne'`);
 $dbh->do(q`DELETE FROM tbl_projecttype_defaults where strfieldname='rdbAqueousSideTwo'`);

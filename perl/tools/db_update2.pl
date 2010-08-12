@@ -284,6 +284,12 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 	} # end if
 } # end if
 
+if ( ! sets::isin('equipment_stock_settings', \@tables ) ) {
+	$_ = misc::load_file( $log, q{../openprint/sql/Equipment_Stock_Settings.sql});
+	foreach my $st ( split(';', $_ ) ) {
+		$dbh->do($st);
+	} # end foreach
+} # end if
 $dbh->disconnect();
 1;
 __END__
