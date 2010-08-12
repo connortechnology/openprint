@@ -12,7 +12,8 @@
 			<label>Service:</label>
 			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service->find('category_id'=>$param{'ddmSearchCategory'},'order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service->find(
+( $param{'ddmSearchCategory'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),'order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
 			</select>
 		</p>
 		<p class="buttons">

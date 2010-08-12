@@ -10,6 +10,7 @@
 	var projectType = "<?ProjectTypeID?>";
 </script>
 <!--#include virtual="/main/project/prin/_templates.html"-->
+
 <? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js?version=1.0"></script>
 <script type="text/javascript">
@@ -28,9 +29,42 @@
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
+        <input type="hidden" name="txtSignatureType" value="<?txtSignatureType?>" />
+        <input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>" />
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
-		<fieldset><legend><?ProjectTypeName?></legend>
+        <? if ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+            <!--#include virtual="/includes/main/proj/templates/signature_template_select.html"-->
+            <!--#include virtual="/includes/main/proj/templates/signatures.html"-->
+        <? endif ( $$variable{'txtSignatureType'} eq 'Cover Pages' or $$variable{'txtSignatureType'} eq 'GateFolded Spreads' ) ?>
+		<fieldset><legend><? echo ( $$variable{'Project'}->Type()->name() ) ?> <?txtSignatureType?></legend>
+<? if ( $$variable{'txtSignatureType'} ) ?>
+<? if ( $$variable{'Group'} == 1 ) ?>
+            <div class="leftColumn">
+<? endif ( $$variable{'Group'} == 1 ) ?>
+                <p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
+                <p>
+                    <label>Spread dimensions:</label>
+                        <input type="text" name="txtWidth" size="7" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
+                        <input type="text" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> ->
+                        <input type="text" name="txtFinalWidth" size="7" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
+                        <input type="text" name="txtFinalHeight" size="7" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
+                    <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+                    <input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( ssi::checked( $$variable{'chkOverrideDimensions'} ); ) ?> />
+                    <label class="radio" for="chkOverrideDimensions">Override</label>
+                    <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+                </p>
+<? if ( $$variable{'Group'} == 1 ) ?>
+            </div>
+            <div class="rightColumn" id="PresentationFolderQuestions" <? echo ( ! sets::isin( $$variable{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ? 'style="display:none;"' : '' ) ?> >
+            <? echo (
+                my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/presentation_folder_printing.html' );
+                return variable_substitution( \$html, $variable );
+            ) ?>
+            </div>
+<? endif ( $$variable{'Group'} == 1 ) ?>
+<? endif ( $$variable{'txtSignatureType'} ) ?>
+
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
                 <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
                 <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->

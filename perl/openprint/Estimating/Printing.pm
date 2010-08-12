@@ -4422,15 +4422,17 @@ if ( 0 ) {
 			$html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
 		} else {
 			$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
-			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
-				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
-					$html .= sprintf( ' of %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
-				} # end if
+			if ( 1 ) {
 			} else {
 				$html .= sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
 			} # end if
 		} # end if
 } # end if
+			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
+				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
+					$html .= sprintf( ' of %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+				} # end if
+			} # end if
 
 		return $html;
 	} else {

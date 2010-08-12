@@ -618,10 +618,11 @@ sub get_price {
 	my $pocketMakeReady = openprint::service::get_price( $$ServiceType{'name'}.'PocketMakeReady', $$specs{"txtPockets$qty_index"}, $Equipment );
 	$price{'MakeReady'} = $MakeReady{'Price'} + $pocketMakeReady * ( $$specs{"txtPockets$qty_index"} + $plusCover );
 
-	my $maxPockets = $Equipment->specification( 'Number of Pockets', undef );
-	my $neededPockets = $$specs{"txtPockets$qty_index"};
+	my $maxPockets = 1*$Equipment->specification( 'Number of Pockets', undef );
+	my $neededPockets = 1*$$specs{"txtPockets$qty_index"};
 	$price{'RunTime'} += $neededPockets * $Equipment->specification( 'Pocket Make Ready', undef );
 
+	my $unitsPerHour;
 # Calculate Full Passes
 	if ( $maxPockets and ( $neededPockets > $maxPockets ) ) {
 # Loaded here, so we don't do it in the loop many times
@@ -631,7 +632,7 @@ sub get_price {
 		} # end if
 		$price{'ServicePrice'} = \%servicePrice;
 		
-		my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
+		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets );
 		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
 			$price{'RunTime'} += $runtime * 360;
 		my $loopbreak_pockets = $neededPockets;
@@ -656,28 +657,30 @@ sub get_price {
 		} # end while
 	} # end if
 
-# Calculate Last Pass
 	my %servicePrice;
-	if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}.$neededPockets.'Pockets', $qty, $Equipment ) ) ) {
-		%servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}, $neededPockets, $Equipment );
+# Calculate Last Pass
+	if ( $neededPockets ) {
+		if ( ! ( %servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}.$neededPockets.'Pockets', $qty, $Equipment ) ) ) {
+			%servicePrice = openprint::service::get_price_object( $$ServiceType{'name'}, $neededPockets, $Equipment );
+		} # end if
+		$price{'LastServicePrice'} = \%servicePrice;
+		$unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
+		my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
+		$price{'RunTime'} += $runtime * 360;
+		if ( $servicePrice{'units'} eq 'Per M' ) {
+			$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
+			$price{'Service'} += $servicePrice{'Total'};
+		} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
+			$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
+			$price{'Service'} += $servicePrice{'Total'}
+		} elsif ( lc $servicePrice{'units'} eq 'each' ) {
+			$servicePrice{'Total'} = $servicePrice{'Price'} * $qty;
+			$price{'Service'} += $servicePrice{'Total'}
+		} else {
+			$openprint::log->debug("Unknown Units: $servicePrice{'units'} for $$ServiceType{'name'} range($neededPockets) equipment(".$Equipment->strid().")");
+		} # end if
+		$price{'Passes'} += 1;
 	} # end if
-	$price{'LastServicePrice'} = \%servicePrice;
-	my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $neededPockets );
-	my $runtime = $unitsPerHour ? $qty/$unitsPerHour : 0; # in seconds
-	$price{'RunTime'} += $runtime * 360;
-	if ( $servicePrice{'units'} eq 'Per M' ) {
-		$servicePrice{'Total'} = $servicePrice{'Price'} * $qty/1000;
-		$price{'Service'} += $servicePrice{'Total'};
-	} elsif ( $servicePrice{'units'} =~ /Per Hour/i ) {
-		$servicePrice{'Total'} = $servicePrice{'Price'} * $runtime;
-		$price{'Service'} += $servicePrice{'Total'}
-	} elsif ( lc $servicePrice{'units'} eq 'each' ) {
-		$servicePrice{'Total'} = $servicePrice{'Price'} * $qty;
-		$price{'Service'} += $servicePrice{'Total'}
-	} else {
-		$openprint::log->debug("Unknown Unit Type: $servicePrice{'units'} for $$ServiceType{'name'} range($neededPockets) equipment(".$Equipment->strid().")");
-	} # end if
-	$price{'Passes'} += 1;
 
 	if ( $$specs{'txtInsertQuantity'} > 0 ) {
 		$price{'Insert'} = openprint::service::get_price( $$ServiceType{'name'}.'Insert', $$specs{'txtInsertQuantity'}, $Equipment) * $$specs{'txtInsertQuantity'};
