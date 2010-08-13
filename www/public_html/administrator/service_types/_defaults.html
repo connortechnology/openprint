@@ -26,8 +26,8 @@
 		<td colspan="3">Add New</td>
 	</tr>
 	<tr> 
-		<td><select name="projecttype_id-New"><option value=""> all </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ] ); ) ?></select></td>
-		<td><input type="text" name="name-New" /></td>
-		<td><input type="text" name="value-New" /></td>
+		<td><select name="projecttype_id-"><option value=""> all </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ] ); ) ?></select></td>
+		<td><input type="text" name="name-" /></td>
+		<td><input type="text" name="value-" /></td>
 	</tr>
 </table>
