@@ -1,6 +1,7 @@
 package openprint::Invoice_Interest;
 @ISA = qw(openprint::Object);
 
+use openprint ();
 use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
@@ -29,10 +30,10 @@ $serial = 'invoice_interests_id_seq';
 
 sub save {
 	my ( $self, $data ) = @_;
-	my $ac = sql::start_transaction( $dbh );
+	my $ac = sql::start_transaction( $openprint::dbh );
 	my $error = $self->SUPER::save( $data );
 	$error .= $self->Invoice()->save({'interest'=>undef});
-	sql::end_transaction( $dbh, $ac );
+	sql::end_transaction( $openprint::dbh, $ac );
 	return $error;
 } # end sub save
 

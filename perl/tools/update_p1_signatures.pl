@@ -24,6 +24,7 @@ $sql_server{'password'} = $ARGV[2];
 $sql_server{'password'} = $sql_server{'database'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
+my $projects_count = 1000;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
@@ -34,7 +35,7 @@ sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'
 } # end foreach bleed
 
 if ( 1 ) {
-foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>100 ) ) {
+foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>$projects_count ) ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -167,7 +168,7 @@ if ( 1 ) {
 	} # end if
 
 	if ( $Type ) {
-		foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>100 ) ) {
+		foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>$projects_count  ) ) {
 			# Skip multipage projects
 			next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
 			my $services = $Project->services();
@@ -194,11 +195,11 @@ require openprint::ServiceType_Default;
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 if ( ! $ServiceType ) {
 	$ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
-	$ServiceType->save({'name'=>'Signature','type'=>'Signature'});
+	$ServiceType->save({'name'=>'Signature','type'=>'Printing'});
 }
 if ( ! $ServiceType ) {
 	$ServiceType = new openprint::ServiceType();
-	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1,'category'=>'Printing'});
+	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1,'category'=>'Printing','type'=>'Printing'});
 }
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
 	my $SD = new openprint::ServiceType_Default();

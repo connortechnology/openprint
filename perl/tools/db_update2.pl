@@ -283,6 +283,13 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 		$dbh->do(q`UPDATE project_types set type='MultiPage' WHere name='MultiPage'`);
 	} # end if
 } # end if
+if ( sets::isin( 'service_types', \@tables ) ) {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='service_types'", 'column_name');
+	if ( ! exists $$data{'projecttype_id'} ) {
+		$dbh->do('ALTER TABLE service_types add projecttype_id INTEGER');
+		$dbh->do('ALTER TABLE service_types add FOREIGN KEY (projecttype_id) REFERENCES project_types (id)');
+	} # end if
+} # end if
 
 if ( ! sets::isin('equipment_stock_settings', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Equipment_Stock_Settings.sql});
