@@ -103,7 +103,7 @@ sub view_services {
 					# Only do this if all signatures have been specified, otherwise it is a waste of time
 					$log->info("********* Auto Calculate  ( PrintingService eq 'Y' ) *************");
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
-				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste'] ) ) {
+				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching'] ) ) {
 					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index );
 				} # end if
