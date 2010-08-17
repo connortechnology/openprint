@@ -14,26 +14,26 @@
 
 	$$variable{'DateStart'} = join('-', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) );
 	$$variable{'DateEnd'} = join('-', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) );
-	my $sql = "SELECT OrderIndex, tbl_Projects.Index, tbl_Projects.lngDocketNumber,".
+	my $sql = "SELECT OrderIndex, Projects.id, Projects.lngDocketNumber,".
 		"to_char(due_date, 'MM/DD/YYYY 22:00'), strStatus ".
-		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=tbl_Projects.Index and description IN ('Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup' ,'Marked Shipped')) ".
-		"FROM Order_Contents, tbl_Projects WHERE 1>0";
+		", (SELECT to_char(MAX(dtmtimestamp),'MM/DD/YYYY HH24:MI') FROM Project_Log WHERE Project_log.project_id=Projects.id and description IN ('Marked Printed','Marked Bindery Complete','Marked Waiting For Pickup' ,'Marked Shipped')) ".
+		"FROM Order_Contents, Projects WHERE 1>0";
 	$sql .= " AND ( due_date BETWEEN '$$variable{'DateStart'}' AND '$$variable{'DateEnd'}')";
-	$sql .= " AND Order_Contents.lngProjectIndex = tbl_Projects.Index";
+	$sql .= " AND Order_Contents.lngProjectIndex = Projects.id";
 	if ( $param{'Status'} ) {
 		if ( ref $param{'Status'} eq 'ARRAY' ) {
-			$sql .= " AND tbl_Projects.strStatus IN ('".join("','",@{$param{'Status'}} )."')";
+			$sql .= " AND Projects.strStatus IN ('".join("','",@{$param{'Status'}} )."')";
 		} else {
-			$sql .= " AND tbl_Projects.strStatus = '$param{'Status'}'";
+			$sql .= " AND Projects.strStatus = '$param{'Status'}'";
 		} # end if
 	} # end if
-	$sql .= " AND (SELECT lngSalesPerson FROM Company WHERE Company.Index=tbl_Projects.CompanyIndex) = $param{'CSR'}" if $param{'CSR'};
+	$sql .= " AND (SELECT lngSalesPerson FROM Companies WHERE Companies.id=Projects.company_id) = $param{'CSR'}" if $param{'CSR'};
 	$sql .= " ORDER BY lngDocketNumber";
 	@{$$variable{'PROJECTS'}} = sql::execute( $log, $dbh, $sql );
 ) ?>
 Results for <? echo ( 
 	if ( $param{'CSR'} ) {
-		return new openprint::User( $openprpint::param{'CSR'} )->name();
+		return new openprint::User( $param{'CSR'} )->name();
 	} # end if
 	$$variable{'LateCount'} = 0;
 	return '';

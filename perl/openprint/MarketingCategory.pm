@@ -6,7 +6,7 @@ require sql;
 
 use openprint ();
 
-use vars qw( $log $dbh %fields %transforms %defaults $table $serial );
+use vars qw( $log $dbh %fields %find_fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
@@ -16,47 +16,12 @@ use vars qw( $log $dbh %fields %transforms %defaults $table $serial );
 	'description'	=>	'description',
 	'greeting'		=>	'greeting',
 );
+%find_fields = (
+	'user_id'		=>	'(SELECT user_id FROM users_in_marketing_categories WHERE category_id=marketing_categories.id)',
+	'company_id'	=>	'(SELECT company_id FROM companies_in_marketing_categories WHERE category_id=marketing_categories.id)',
+);
 $table = 'Marketing_Categories';
 $serial = 'Marketing_Category_id_seq';
-
-# Returns a paper object specified by the parameters
-sub find {
-	my $self = shift;
-	my %params = @_;
-
-	if ( $params{'id'} ) {
-		return new openprint::MarketingCategory( $params{'id'} );
-	} else {
-		my $sql;
-		my @values;
-		$sql = q{SELECT * FROM Marketing_Categories WHERE 1>0};
-
-		if ( $params{'name'} ) {
-			$sql .= q{ AND name=?};
-			push @values, $params{'name'};
-		} # end if
-		if ( $params{'company_id'} ) {
-			$sql .= ' AND id IN (SELECT category_id FROM Companies_in_Marketing_Categories WHERE company_id=?)';
-			push @values, $params{'company_id'};
-		} # end if
-		if ( $params{'user_id'} ) {
-			$sql .= ' AND id IN (SELECT category_id FROM Users_in_Marketing_Categories WHERE user_id=?)';
-			push @values, $params{'user_id'};
-		} # end if
-		$sql .= " OR $params{'or'}" if $params{'or'};
-		$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-
-		my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-		if ( ! $data ) {
-			$log->debug("Error loading Marketing Categories: ($sql)".DBI->errstr );
-			return;
-		} elsif ( ! @$data ) {
-			$log->debug("No Marketing Categories: ($sql)".DBI->errstr );
-			return;
-		} # end if
-		return map { new openprint::MarketingCategory( $_->{id}, $_ ) } @$data;
-	} # end if
-} # end sub find
 
 sub delete {
 	my $self = shift;
@@ -76,10 +41,15 @@ sub previous {
 	return new openprint::MarketingCategory( sql::execute( undef, undef, q{SELECT MIN(id) FROM Marketing_Categories WHERE id > ?}, $$self{id} ) );
 } # end sub previous
 
-sub companies {
+sub Companies {
 	my ( $self, %params ) = @_;
 	$params{'marketing_category_id'} = $$self{'id'};
 	return openprint::Company->find( %params );
+} # end sub Companies
+
+sub companies {
+$openprint::log->warn("Deprecated use of MarketingCategory::companies");
+return Companies(@_);
 } # end sub companies
 
 sub add_company {

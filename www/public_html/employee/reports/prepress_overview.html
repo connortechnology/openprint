@@ -1,6 +1,6 @@
 <script type="text/javascript">
 	function load_projects( form ) {
-		LoadContent('ProjectList','/employee/reports/_prepress_project_list.html', Serialize( form ) );
+		LoadContent('ProjectList','/employee/reports/_prepress_project_list.html', form.serialize() );
 	} // end function
 </script>
 
@@ -63,6 +63,12 @@
 			 <select name="TakeOverEndMonth" onchange="setDaysDropDown(this.form.TakeOverEndYear.value,this.value,this.form.TakeOverEndDay,this.form.TakeOverEndDay.value);load_projects(this.form);"><?TakeOverEndMonths?></select>
 			<select name="TakeOverEndDay" onchange="load_projects(this.form);"><?TakeOverEndDays?></select>
 		</p>
+	<p class="buttons">
+		<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+		); ) ?>
+	</p>
 	</fieldset>
 	<hr/>
 </form>

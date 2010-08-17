@@ -12,7 +12,6 @@
 		   ) {
 			$sql{'company_id'} = [ map { $_->id() } openprint::Company->find('salesrep_id'=>$session{'user_id'}) ];
 		} # end if
-
 		
 	} elsif ( $$variable{'StartDocket'} ) {
 		$sql{'docket_like'} = $$variable{'StartDocket'}.'%';
@@ -31,7 +30,7 @@
 	<table class="List">
 		<tr> 
 			<th width="190" align="left">ID</th>
-			<th width="80">Start Date</th>
+			<th class="Date">Start Date</th>
 			<th align="left">Company</th>
 			<th width="80" align="left">Flat</th>
 			<th width="80" align="left">Finished</th>
@@ -55,15 +54,15 @@
 					my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
 					$html .= sprintf( q{<tr%17$s>
 						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%3$s</a>&nbsp;</td>
-						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%4$s</a></td>
+						<td class="Date"><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%4$s</a></td>
 						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%5$s</a></td>
 						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%8$s&quot; x %9$s&quot;</a></td>
 						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%6$s&quot; x %7$s&quot;</a></td>
 						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%10$s</a></td>
 						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%11$s out</a></td>
-						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%14$d/%15$d</a></td>
+						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%15$d/%16$d</a></td>
 						<td><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%12$s&quot; x %13$s&quot;</a></td>
-						<td align="right"><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%16$s</a></td>
+						<td align="right"><a href="/employee/project/view.html?OrderID=%1$d&ProjectIndex=%2$d">%14$s</a></td>
 						}, $Project->get('order_id','id'), $$variable{'ID'}, 
 						Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Project->started_on() ) ), 
 						$Project->Company()->name(), 

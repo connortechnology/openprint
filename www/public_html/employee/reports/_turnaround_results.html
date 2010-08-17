@@ -8,7 +8,7 @@
 		'status'			=>	['Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Picked Up','Shipped','Complete','Waiting For Pickup'],
 		'order'				=>	'lngdocketnumber',
 	);
-	$sql{'csr_id'} = $param{'CSR'};
+	$sql{'csr_id'} = $param{'CSR'} if $param{'CSR'};
 	
 	@{$$variable{'PROJECTS'}} = openprint::Project->find(%sql);
 ) ?>
