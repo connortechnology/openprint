@@ -1739,6 +1739,7 @@ foreach my $S ( openprint::Service->find('name'=>'Aqueous') ) {
 		my $S2 = $S->copy();
 		$S2->name('Aqueous Matte Overall');
 		$S2->description('Aqueous Matte Overall');
+		$S2->category('Coating');
 		$S2->save();
 		foreach my $P ( $S->prices() ) {
 			$P = $P->copy();
@@ -1751,6 +1752,7 @@ foreach my $S ( openprint::Service->find('name'=>'Aqueous') ) {
 		my $S2 = $S->copy();
 		$S2->name('Aqueous Matte Spot');
 		$S2->description('Aqueous Matte Spot');
+		$S2->category('Coating');
 		$S2->save();
 		foreach my $P ( $S->prices() ) {
 			$P = $P->copy();
@@ -1936,7 +1938,7 @@ if ( $data ) {
 	} # end if
 } # end if
 
-sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment,Paper', 'type','text') if ! $config{'Cached Objects'};
+sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment', 'type','text') if ! $config{'Cached Objects'};
 
 
 

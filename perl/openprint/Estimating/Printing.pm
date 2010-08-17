@@ -4412,7 +4412,7 @@ sub summary {
 		} # end if
 		return '' if ! $$specs{'txtImposition'.$qty_index};
 		my $html = sprintf(qq{%s %dout %s},
-				$$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
+				$$printing_specs{'txtTotalPageQuantity'} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
 				$$specs{'txtImposition'.$qty_index},
 				($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . ssi::htmlize($$specs{'ddmRunStyle'.$qty_index}) : ssi::htmlize($$specs{'ddmRunStyle'.$qty_index}) ), 
 				);

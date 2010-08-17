@@ -32,5 +32,5 @@
 </select>
 	<input type="text" id="ColourCoatingColour<?index?><?Side?><?Signature?>" name="ColourCoatingColour<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingColour$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" size="9" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /PMS/ ? '' : 'style="display:none;"' ) ?> />
 	<span id="ColourCoatingCoverage<?index?><?Side?><?Signature?>" <? echo ( $$variable{"ColourCoatingType$$variable{index}$$variable{Side}$$variable{Signature}"} =~ /Overall/ ? 'style="display:none;"' : '' ) ?> >
-	<input type="text" name="ColourCoatingCoverage<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingCoverage$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" size="4" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" /> %</span>
+	<input type="text" name="ColourCoatingCoverage<?index?><?Side?><?Signature?>" value="<? echo ( $$variable{"ColourCoatingCoverage$$variable{index}$$variable{Side}$$variable{Signature}"} ) ?>" size="3" onkeyup="SpecialColour_onchange(this, '<?Side?>', '<?index?>', '<?Signature?>' );" />%</span>
 </span>

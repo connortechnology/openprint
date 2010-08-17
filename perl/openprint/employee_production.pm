@@ -185,12 +185,12 @@ sub bindery_overview {
 		} # end if
 	} # end foreach
 
-	$_ = "SELECT Projects.Index, Orders.Index, Projects.lngDocketNumber, Projects.CompanyIndex";
+	$_ = "SELECT Projects.id, Orders.id, Projects.lngDocketNumber, Projects.company_id";
 	$_ .= ", intQuantityIndex, due_date, Projects.strStatus\n";
 	$_ .=" FROM Projects, Order_Contents, Orders";
 	$_ .= " WHERE Projects.strStatus IN ( '". join("','", @statuses ) ."' )";
-	$_ .= " AND Orders.Index=Order_Contents.OrderIndex AND Orders.strStatus='In Production'";
-	$_ .= " AND Projects.Index = Order_Contents.lngProjectIndex";
+	$_ .= " AND Orders.id=Order_Contents.OrderIndex AND Orders.strStatus='In Production'";
+	$_ .= " AND Projects.id = Order_Contents.lngProjectIndex";
 	$_ .= " AND due_date BETWEEN '$variable{'StartDate'}' AND '$variable{'EndDate'}'";
 	$_ .= " AND Orders.lngEmployeeID=".$r->param('ddmSalesRep') if $r->param('ddmSalesRep');
 	$_ .= " ORDER BY due_date";
@@ -249,19 +249,20 @@ sub bindery_overview {
 		} # end foreach
         next if $complete;
 
+		my $services = $Project->services();
 #my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $service_indices{''} );
-		my %printing_specs = openprint::service::get_specifications_pairs( $log, $dbh, $project_index, $Project->get_project_type_service_index() );
+		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
 		my @BinderyServices = ();
-		if ( my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery') ) {
+		if ( my %bindery_services = openprint::print_project::get_services_in_category( $log, $dbh, $project_index, 'Bindery' ) ) {
 			$_ = 'SELECT name FROM Service_Types WHERE id IN ( ' . join(',', @bindery_services{keys %bindery_services} ) . ')';
 			@BinderyServices = sql::execute( $log, $dbh, $_ );
 		} # end if
 
-		if ( ! $printing_specs{'txtQuantity'.$qty_index} ) {
-			$printing_specs{'txtQuantity'.$qty_index} = $Project->quantity( $qty_index );
+		if ( ! $$printing_specs{'txtQuantity'.$qty_index} ) {
+			$$printing_specs{'txtQuantity'.$qty_index} = $Project->quantity( $qty_index );
 		} # end if
-		my $description = $printing_specs{'txtQuantity'.$qty_index};
+		my $description = $$printing_specs{'txtQuantity'.$qty_index};
 
 		if ( ! @BinderyServices ) {
 			$description .= ' Ship Flat';
@@ -270,41 +271,41 @@ sub bindery_overview {
 		} else {
 			if ( ! @service_indices{'SaddleStitching','Loop Stitching'} ) {
 				if ( $service_indices{'Cutting'} and ! $service_indices{'Folding'} ) {
-					$description .= ', ' . $printing_specs{'txtFinalWidth'} . 'x'  . $printing_specs{'txtFinalHeight'};
+					$description .= ', ' . $$printing_specs{'txtFinalWidth'} . 'x'  . $$printing_specs{'txtFinalHeight'};
 				} # end if
 				if ( $service_indices{'Folding'} ) {
-					$description .= ', '. $printing_specs{'txtWidth'} . 'x' . $printing_specs{'txtHeight'} . ' > ' . $printing_specs{'txtFinalWidth'} . 'x'  . $printing_specs{'txtFinalHeight'};
+					$description .= ', '. $$printing_specs{'txtWidth'} . 'x' . $$printing_specs{'txtHeight'} . ' > ' . $$printing_specs{'txtFinalWidth'} . 'x'  . $$printing_specs{'txtFinalHeight'};
 				} # end if
 			} # end if
 
-			if ( $printing_specs{'txtTotalPageQuantity'} ) {
+			if ( $$printing_specs{'txtTotalPageQuantity'} ) {
 				$description .= ', ';
-				if ( $printing_specs{'rdbCover'} eq 'DifferentCover' ) {
-					$description .= $printing_specs{'txtTotalPageQuantity'} -4 . 'pp+C';
+				if ( $$printing_specs{'rdbCover'} eq 'DifferentCover' ) {
+					$description .= $$printing_specs{'txtTotalPageQuantity'} -4 . 'pp+C';
 				} else {
-					$description .= $printing_specs{'txtTotalPageQuantity'} . 'pp';
+					$description .= $$printing_specs{'txtTotalPageQuantity'} . 'pp';
 				} # end if
-				$description .= ', ' . $printing_specs{'txtFinalWidth'} . 'x' . $printing_specs{'txtFinalHeight'};
+				$description .= ', ' . $$printing_specs{'txtFinalWidth'} . 'x' . $$printing_specs{'txtFinalHeight'};
 
-				if ( $printing_specs{'txtInsertQuantity'} ) {
-					$description .= ' with ' . $printing_specs{'txtInsertQuantity'} . ' Inserts Page ' . $printing_specs{'Page1'} . ' and page ' . $printing_specs{'Page2'};
+				if ( $$printing_specs{'txtInsertQuantity'} ) {
+					$description .= ' with ' . $$printing_specs{'txtInsertQuantity'} . ' Inserts Page ' . $$printing_specs{'Page1'} . ' and page ' . $$printing_specs{'Page2'};
 				} # end if
 			} # end if
 		} # end if
 
-		if ( $printing_specs{'txtSignatureQuantity'} ) {
-			$description .= $printing_specs{'txtSignatureQuantity'} . '-';
+		if ( $$printing_specs{'txtSignatureQuantity'} ) {
+			$description .= $$printing_specs{'txtSignatureQuantity'} . '-';
 
-			if ( $printing_specs{'txtSignatureQty2Page'} ) { $description .= '2pp' };
-			if ( $printing_specs{'txtSignatureQty4Page'} ) { $description .= '4pp' };
-			if ( $printing_specs{'txtSignatureQty8Page'} ) { $description .= '8pp' };
-			if ( $printing_specs{'txtSignatureQty12Page'} ) { $description .= '12pp' };
-			if ( $printing_specs{'txtSignatureQty16Page'} ) { $description .= '16pp' };
-			if ( $printing_specs{'txtSignatureQty20Page'} ) { $description .= '20pp' };
-			if ( $printing_specs{'txtSignatureQty24Page'} ) { $description .= '24pp' };
-			if ( $printing_specs{'txtSignatureQty32Page'} ) { $description .= '32pp' };
-			if ( $printing_specs{'txtSignatureQtySingleGateFolded'} ) { $description .= 'Single Gate Folded' };
-			if ( $printing_specs{'txtSignatureQtyDoubleGateFolded'} ) { $description .= 'Double Gate Folded' };
+			if ( $$printing_specs{'txtSignatureQty2Page'} ) { $description .= '2pp' };
+			if ( $$printing_specs{'txtSignatureQty4Page'} ) { $description .= '4pp' };
+			if ( $$printing_specs{'txtSignatureQty8Page'} ) { $description .= '8pp' };
+			if ( $$printing_specs{'txtSignatureQty12Page'} ) { $description .= '12pp' };
+			if ( $$printing_specs{'txtSignatureQty16Page'} ) { $description .= '16pp' };
+			if ( $$printing_specs{'txtSignatureQty20Page'} ) { $description .= '20pp' };
+			if ( $$printing_specs{'txtSignatureQty24Page'} ) { $description .= '24pp' };
+			if ( $$printing_specs{'txtSignatureQty32Page'} ) { $description .= '32pp' };
+			if ( $$printing_specs{'txtSignatureQtySingleGateFolded'} ) { $description .= 'Single Gate Folded' };
+			if ( $$printing_specs{'txtSignatureQtyDoubleGateFolded'} ) { $description .= 'Double Gate Folded' };
 		} # end if
 
 		if ( sets::intersection( @Services, keys %service_indices ) ) {
