@@ -74,8 +74,8 @@ sub rma {
 
 	$_ = q{SELECT company_id,
 		to_char(dtmRequestDate,'MM/DD/YYYY'), chrRMAType, strDescription, ysnApprove, txtComments,strRMANumber,
-		order_id, (SELECT dtmOrderDate FROM Orders WHERE Orders.Index=RMA.order_id),
-		project_id, (SELECT strReference FROM Projects WHERE Projects.Index=project_id)
+		order_id, (SELECT dtmOrderDate FROM Orders WHERE Orders.id=RMA.order_id),
+		project_id, (SELECT strReference FROM Projects WHERE Projects.id=project_id)
 		FROM RMA WHERE id=?};
 	@$variable{'CustomerIndex', 
 		'RequestDate', 'RMAType','Problem','Verdict','txtAdminComments','RMANumber',
@@ -160,8 +160,8 @@ sub returns {
 		my %info;
 		$_ = 'SELECT company_id,user_id,'.
 			"to_char(dtmRequestDate,'MM/DD/YYYY'), chrRMAType, strDescription, ysnApprove, txtComments, strRMANumber,\n".
-			"order_id, (SELECT dtmOrderDate FROM Orders WHERE Index=RMA.order_id),\n".
-			"project_id, (SELECT strReference FROM Projects WHERE Projects.Index=RMA.project_id)\n".
+			"order_id, (SELECT dtmOrderDate FROM Orders WHERE orders.id=RMA.order_id),\n".
+			"project_id, (SELECT strReference FROM Projects WHERE Projects.id=RMA.project_id)\n".
 			"FROM RMA WHERE id=?";
 		@info{'company_id', 'user_id',
 			'RequestDate', 'RMAType','Problem','Verdict','txtAdminComments','RMANumber',

@@ -68,9 +68,9 @@ $serial = 'lngProjectIndex_seq';
 
 %find_fields = (
 	'take_over' => q{(SELECT MIN(starttime) FROM tbl_Project_Contents WHERE lngProjectIndex=id)},
-	'ordered_on_start'	=>	q{(SELECT dtmOrderDate FROM Orders WHERE Index=order_id)},
-	'salesrep_id'		=>	'(SELECT employeeindex FROM Orders WHERE Index=order_id)',
-	'takenover_on'		=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=index AND description LIKE 'Taken Over by%')},
+	'ordered_on'	=>	q{(SELECT dtmOrderDate FROM Orders WHERE orders.id=order_id)},
+	'salesrep_id'		=>	'(SELECT employeeindex FROM Orders WHERE orders.id=order_id)',
+	'takenover_on'		=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
 	'csr_id'			=>	'(SELECT salesrep_id FROM Companies WHERE companies.id=company_id)',
 );
 
@@ -1273,9 +1273,13 @@ sub ordered_on {
 	my ( $self ) = @_;
 	if ( ! exists $$self{'ordered_on'} ) {
 		@$self{'ordered_on'} = sql::execute( undef, undef, q`SELECT MAX(dtmtimestamp) FROM Project_Log WHERE project_id=? AND description LIKE 'Add to Order%'`, $$self{'id'} );
+		if ( ! $$self{'ordered_on'} ) {
+			$$self{'ordered_on'} = $self->Order()->created_on();
+		} # end if
 	} # end if
 	return $$self{'ordered_on'};
 } # end sub ordered_on
+
 sub ordered_on_seconds {
 	return Date::Parse::str2time( $_[0]->ordered_on() );
 } # end sub ordered_on_seconds
