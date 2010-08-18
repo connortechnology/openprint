@@ -45,14 +45,13 @@
                 <p><label>Description:</label><input type="text" name="txtServiceDescription" value="<?txtServiceDescription?>" /></p>
                 <p>
                     <label>Spread dimensions:</label>
-                        <input type="text" name="txtWidth" size="7" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
-                        <input type="text" name="txtHeight" size="7" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> ->
-                        <input type="text" name="txtFinalWidth" size="7" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
-                        <input type="text" name="txtFinalHeight" size="7" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" />
-                    <? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-                    <input type="checkbox" id="chkOverrideDimensions" name="chkOverrideDimensions" value="Y" onclick="if(!this.checked){calc(this.form.name);}" <? echo ( ssi::checked( $$variable{'chkOverrideDimensions'} ); ) ?> />
-                    <label class="radio" for="chkOverrideDimensions">Override</label>
-                    <? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+                        <input type="text" name="txtWidth" size="5" value="<?txtWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
+                        <input type="text" name="txtHeight" size="5" value="<?txtHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);"/> =>
+                        <input type="text" name="txtFinalWidth" size="5" value="<?txtFinalWidth?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /> x
+                        <input type="text" name="txtFinalHeight" size="5" value="<?txtFinalHeight?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc(this.form.name);" /><? echo (
+							return sets::isin( $session{'user_type'}, ['A','E'] ) ?
+							ssi::write_override( 'chkOverrideDimensions', $$variable{'chkOverrideDimensions'}, '', "calc('f1');" ) : '';
+							) ?>
                 </p>
 <? if ( $$variable{'Group'} == 1 ) ?>
             </div>

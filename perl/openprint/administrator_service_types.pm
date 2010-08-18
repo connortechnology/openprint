@@ -28,7 +28,7 @@ sub edit {
 		$variable{'error'} = $ServiceType->save( \%param );
 		my $ac = sql::start_transaction( $dbh );
         foreach my $key ( keys %param ) {
-            if ( $key =~ /name\-(.*)/ ) {
+            if ( $key =~ /^name\-(.*)$/ ) {
 				my $SD = new openprint::ServiceType_Default( $1 );
 				if ( $param{"name\-$1"} ne '' ) {
 					$SD->save({

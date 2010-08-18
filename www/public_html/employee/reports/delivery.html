@@ -4,7 +4,7 @@
 </div>
 <script type="text/javascript">
 	function load_projects( form ) {
-		LoadContent('Results','/employee/reports/_delivery_results.html', Serialize( form ) );
+		LoadContent('Results','/employee/reports/_delivery_results.html', form.serialize() );
 	} // end function
 </script>
 <form name="f1" method="post" action="delivery.html">

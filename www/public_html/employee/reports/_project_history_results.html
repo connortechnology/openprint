@@ -15,9 +15,11 @@
 			'status' =>	$param{'status'},
 			'value_start' => $param{'value_start'},
 			'value_end' => $param{'value_end'},
-			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
 			'order' => 'id',
 );
+	if ( $param{'Estimator'} ) {
+		$filters{'user_id'} => $param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'};
+	} # end if
 	if ( $param{'company_id'} and exists $companies{$param{'company_id'}} ) {
 		$filters{'company_id'} = $param{'company_id'};
 	} # end if

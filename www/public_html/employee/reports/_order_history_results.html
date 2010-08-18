@@ -9,36 +9,39 @@
 	#$parameters{'order'} = 'lower(strname)';
 	my @Companies = openprint::Company->find( %parameters );
 	my %companies = map { int($_->id()), $_->name() } @Companies;
+
+
 	@{$$variable{'Orders'}} = ();
 	if ( %companies ) {
-		foreach my $Order ( openprint::Order->find( 
-			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
+	my %filters = (
 			'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
-			'status' =>	$param{'status'},
-			'value_start' => $param{'value_start'},
-			'value_end' => $param{'value_end'},
-			'order' => ($param{'order'} ? $param{'order'} : 'Index'),
-			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
-		);
-		) ) {
+			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
+			'order' => ($param{'order'} ? $openprint::fields{$param{'order'}} : 'id'),
+			( $param{'status'} ? ( 'status' =>	$param{'status'} ) : () ),
+			( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
+			( $param{'value_end'} ? ( 'value_end' => $param{'value_end'} ) : () ),
+);
+if ( $param{'Estimator'} ) {
+			$filters{'user_id'} = $param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT id FROM Users WHERE type IN ('E','A') AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'};
+} # end nif
+
+		foreach my $Order ( openprint::Order->find( %filters ) ) {
 			if ( $param{'press_id'} ) {
 				my $Press = new openprint::Equipment( $param{'press_id'} );
 				my $on_press = 0;
 				foreach my $Project ( $Order->Projects() ) {
-					foreach my $sig_id ( $Project->signatures() ) {
-						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-						if ( ! $$sig_specs{'UsePress'} ) {
-							$$sig_specs{'UsePress'} = $$sig_specs{'ddmPress'.$Project->ordered_quantity_index()};
-						} # end if
-						if ( $$sig_specs{'UsePress'} eq $Press->strid() ) {
-							$on_press = 1;
-						} # end if	
-						last if $on_press;
-					} # end foreach sig
+					$on_press = sets::isin( $Press->strid(), $Project->used_press_names() );
 					last if $on_press;
 				} # end foreach Project
 				next if ! $on_press;
+			} # end if
+			if ( $param{'pos'} ) {
+				if ( $param{'pos'} eq 'With' ) {
+					next if ! openprint::PurchaseOrder_Content->find('docket'=>$Order->docket());
+				} elsif ( $param{'pos'} eq 'Without' ) {
+					next if openprint::PurchaseOrder_Content->find('docket'=>$Order->docket());
+				} # end if
 			} # end if
 			push @{$$variable{'Orders'}}, $Order;
 		} # end foreach Order

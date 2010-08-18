@@ -29,11 +29,11 @@
 			</p>
 			<p> 
 				<label>Description:</label>
-				<textarea name="description" rows="5"  ><? echo ( ssi::htmlize( $$variable{'Category'}->description() ); ) ?></textarea>
+				<textarea name="description" rows="5" cols=""><? echo ( ssi::htmlize( $$variable{'Category'}->description() ); ) ?></textarea>
 			</p>
 			<p> 
 				<label>Greeting:</label>
-				<textarea name="greeting" rows="5"  ><? echo ( ssi::htmlize( $$variable{'Category'}->greeting() ); ) ?></textarea>
+				<textarea name="greeting" rows="5" cols=""><? echo ( ssi::htmlize( $$variable{'Category'}->greeting() ); ) ?></textarea>
 			</p>
 		</fieldset>
 	</div>
@@ -42,9 +42,9 @@
 			<fieldset><legend>Companies in this marketing Category:</legend>
 				<? echo (
 					my $html;
-					foreach my $Company ( $$variable{'Category'}->companies( 'order' => 'lower(name)' ) ) {
-						$html .= sprintf( q{<input type="checkbox" id="chkDelete%d" name="chkDelete" value="%d" />}, $Company->id(), $Company->id() );
-						$html .= sprintf( q{<label class="radio" for="chkDelete%d">%s</label><br/>}, $Company->id(), $Company->name() );
+					foreach my $Company ( $$variable{'Category'}->Companies( 'order' => 'lower(name)' ) ) {
+						$html .= sprintf( q{<input type="checkbox" id="chkDelete%1$d" name="chkDelete" value="%1$d" />
+						<label class="radio" for="chkDelete%1$d">%2$s</label><br/>}, $Company->id(), $Company->name() );
 					} # end while
 					return $html;
 				) ?>
