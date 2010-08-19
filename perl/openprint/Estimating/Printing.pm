@@ -4003,7 +4003,7 @@ sub get_run_price {
 
 			my $mod_colours = $side_one_colours % $max_colours;
 			if ( $mod_colours ) {
-				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press);
+				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press );
 				$running_price += $RunPrice{'Price'};
 				$run_price{'units'} = $RunPrice{'units'} if ! $run_price{'units'};
 #$log->debug("**** RUN PRICE 3 : $running_price **") if $debug;
@@ -4022,7 +4022,7 @@ sub get_run_price {
 #
 			my $mod_colours = $side_two_colours % $max_colours;
 			if ( $mod_colours ) {
-				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press);
+				my %RunPrice = openprint::service::get_price_object( $mod_colours.$impression_service, $impressions, $Press );
 				$running_price += $RunPrice{'Price'};
 				$run_price{'units'} = $RunPrice{'units'} if ! $run_price{'units'};
 			} # end if
@@ -4590,7 +4590,7 @@ sub get_colour_description {
 sub filter_coatings_from_colours {
 	my @c;
 	foreach my $c ( @{$_[0]} ) {
-		if ( !( $c =~ /Varnish/i or $c =~ /Aqueous/i ) ) {
+		if ( !( $c =~ /Varnish/i or $c =~ /Aqueous/i or $c =~ /UV/i ) ) {
 			push @c, $c;
 		} # end if
 	} # end foreach c
