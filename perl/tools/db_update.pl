@@ -895,6 +895,9 @@ if ( $data ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD supplier_id INTEGER');
 		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (supplier_id) REFERENCES Companies(id)');
 	} # end if
+	if ( ! exists $$data{'interpolate'} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD interpolate boolean default false');
+	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1', {} );
 my $ac = sql::start_transaction( $dbh );

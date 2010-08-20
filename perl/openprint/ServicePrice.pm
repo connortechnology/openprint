@@ -10,7 +10,7 @@ use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 1;
 $table = 'Service_Prices';
-$serial = 'serviceprices_id_seq';
+$serial = 'service_prices_id_seq';
 
 %fields = (
 	'id'			=>	'id',
