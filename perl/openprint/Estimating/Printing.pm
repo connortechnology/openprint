@@ -3803,7 +3803,7 @@ sub select_presses {
 			} # end if
 		} # end if
 
-		if ( ( @side_one_colours > $Press->specification('Number of Colours') or @side_two_colours > $Press->specification('Number of Colours') ) and $Press->specification('Multipass', $Paper->gsm()) eq 'N' ) {
+		if ( ( @side_one_colours > $Press->specification('Number of Colours') or @side_two_colours > $Press->specification('Number of Colours') ) and ( $Press->specification('Multipass', $Paper->gsm()) ne 'Y' ) ) {
 			$results{$press_id} = "Too many colours and no multipass.";
 			next;
 		} elsif ( $Press->specification('Web Press') eq 'Y' ) {
