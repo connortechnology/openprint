@@ -236,10 +236,20 @@ sub send_email {
 
 	my $file = $upload_info->{file};
 	my $file_str = basename($file);
+	my $regexp = $opts->{'file_path'}.'(.*)'.$file_str;
+	my ( $company_name ) = $file =~ /^$regexp$/;
+	if ( $company_name ) {
+		$company_name =~ s/^\/*//g;
+		my @parts = split('/', $company_name);
+		$company_name = shift @parts;
+	} # end if
+	my $proper_file_path = '/'.$company_name.'/'.$file_str;
 
-	my $subject = "User '$upload_info->{user}' uploaded file '$file_str' via FTP";
+	my $subject;
 	if ($opts->{subject}) {
 		$subject = $opts->{subject};
+	} else {
+		$subject = "User '$upload_info->{user}' uploaded file '$proper_file_path' via FTP";
 	}
 
 	my $bytes_str = "bytes";
@@ -285,14 +295,6 @@ Cheers,
 
 EOT
 
-	my $regexp = $opts->{'file_path'}.'(.*)'.$file_str;
-	my ( $company_name ) = $file =~ /^$regexp$/;
-	if ( $company_name ) {
-		$company_name =~ s/^\/*//g;
-		my @parts = split('/', $company_name);
-		$company_name = shift @parts;
-	} # end if
-	my $proper_file_path = '/'.$company_name.'/'.$file_str;
 
 	my $Company;
 	my $User;
@@ -323,6 +325,7 @@ EOT
 		'total'			=>	$upload_info->{size},
 		'finished'		=>	$upload_info->{timestamp},
 		'file_path'		=>	$proper_file_path,
+		'type'			=>	'FTP',
 	});
 	if ( $error ) {
 		print STDERR $error 
