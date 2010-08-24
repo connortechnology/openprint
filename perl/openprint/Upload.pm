@@ -19,6 +19,7 @@ $serial = 'upload_id_seq';
 	'user_id'		=>	'user_id',
 	'file_path'		=>	'file_path',
 	'company'		=>	'company',
+	'type'			=>	'type',
 );
 %defaults = (
 	'start'	=>	'NOW()',

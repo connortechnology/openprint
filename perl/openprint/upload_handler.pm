@@ -57,7 +57,7 @@ sub handler {
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
 		my $rsize=$request->headers_in->{'Content-Length'};
 		sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
-		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'company', $company ] );
+		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'company', $company, 'type', 'Web' ] );
 
 		my $upload_hook = sub {
 			my ( $upload, $data, $data_len, $hook_data ) = @_;

@@ -12,5 +12,6 @@ CREATE TABLE Uploads (
 	company		TEXT,
 	user_id		INTEGER, FOREIGN KEY (user_id) REFERENCES Users (index),
 	file_path	TEXT,
+	type		TEXT,
 	PRIMARY KEY (id)
 );
