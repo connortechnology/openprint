@@ -150,6 +150,11 @@ if ( ! sets::isin( 'bindery_schedule', \@tables ) ) {
 }
 if ( ! sets::isin( 'uploads', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Uploads.sql' ) ) or die;
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='uploads'", 'column_name');
+	if ( ! exists $$data{'type'} ) {
+		$dbh->do(q`ALTER TABLE uploads add type text`);
+	} # end if
 }
 if ( ! sets::isin( 'pressactivities', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/PressActivities.sql' ) ) or die;
