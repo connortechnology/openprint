@@ -325,6 +325,7 @@ EOT
 		'total'			=>	$upload_info->{size},
 		'finished'		=>	$upload_info->{timestamp},
 		'file_path'		=>	$proper_file_path,
+		'type'			=>	'FTP',
 	});
 	if ( $error ) {
 		print STDERR $error 
