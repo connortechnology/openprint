@@ -108,7 +108,7 @@
 	</table>
 	<span class="Currency">All prices listed in <? echo ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>
-<span class="unprintable" style="float: right;">
+<p class="buttons">
 <? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
-</span>
+</p>
 <? endif ( @{$$variable{'Projects'}} == 0 ) ?>
