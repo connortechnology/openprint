@@ -1,6 +1,10 @@
-body {
-	min-width: 780px;
-} 
+@media only screen and (max-device-width: 480px) {
+}
+@media screen and (min-device-width: 481px) {
+	body {
+		min-width: 780px;
+	} 
+}
 fieldset p {
 	padding-left: 140px;
 }
