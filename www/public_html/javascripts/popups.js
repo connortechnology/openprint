@@ -205,7 +205,15 @@ onDestroy: function(eventName, win) {
 		Windows.addObserver(myObserver);
 	} // end if
 	popupWin.setHTMLContent('Loading... please wait');
-	popupWin.showCenter();
+	if ( options && options.center != "" ) {
+		if ( options.center == "true" ) {
+			popupWin.showCenter();
+		} else {
+			popupWin.show();
+		} // end if
+	} else {
+		popupWin.showCenter();
+	} // end if
 	if ( parameters ) {
 		url += '?' + parameters;
 	}
