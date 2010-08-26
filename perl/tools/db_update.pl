@@ -2545,6 +2545,11 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
+	if ( ! exists $$data{'dhcp'} ) {
+		$dbh->do('ALTER TABLE hosts add dhcp boolean');
+	} # end if
 } 
 if ( ! sets::isin('log',\@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Logs.sql});
