@@ -310,19 +310,29 @@ if ( ! sets::isin( 'companies', \@tables ) ) {
 		sql::end_transaction( $dbh, $ac );
 	} # end if
 } # end if
-my $data1 = $openprint::dbh->selectrow_hashref( 'SELECT * FROM companies LIMIT 1', {} );
-if ( $data1 ) {
-if ( ! exists $$data1{'deleted'} ) {
-		$dbh->do(q`ALTER TABLE companies add deleted BOOLEAN default false`);
-} # end if
-} # end if
 my $data = $dbh->selectrow_hashref( 'SELECT * FROM companies LIMIT 1', {} );
 if ( $data ) {
 	if ( ! exists $$data{'notes'} ) {
 		$dbh->do('alter table companies add notes text');
 	} # end if
+	if ( ! exists $$data{'mailinglist'} ) {
+		if ( exists $$data{'ysnmailinglist'} ) {
+			$dbh->do(q`alter table companies rename column ysnmailinglist to mailinglist`);
+		} else {
+		$dbh->do(q`alter table companies add mailinglist CHAR(1) DEFAULT 'N'`);
+		}
+	} # end if
+	if ( ! exists $$data{'quote_project_breakdown'} ) {
+		$dbh->do(q`alter table companies add quote_project_breakdown CHAR(1) DEFAULT 'N'`);
+	} # end if
+	if ( ! exists $$data{'detail_level'} ) {
+		$dbh->do(q`alter table companies add detail_level INTEGER`);
+	} # end if
+	$dbh->do('alter table companies drop column strftplogin') if ( exists $$data{'strftplogin'} );
+	$dbh->do('alter table companies drop column strftppassword') if ( exists $$data{'strftppassword'} );
+	$dbh->do('alter table companies drop column strftphomedir') if ( exists $$data{'strftphomedir'} );
+	
 	if ( ! exists $$data{'deleted'} ) {
-		$log->debug( 'Adding deleted to Companies.' );
 		my $ac = sql::start_transaction( $dbh );
 		$dbh->do(q`alter table companies add deleted boolean`);
 		$dbh->do(q`alter table companies alter deleted set default false`);
@@ -899,6 +909,9 @@ if ( $data ) {
 	if ( ! exists $$data{'supplier_id'} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD supplier_id INTEGER');
 		$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (supplier_id) REFERENCES Companies(id)');
+	} # end if
+	if ( ! exists $$data{'interpolate'} ) {
+		$dbh->do('ALTER TABLE Service_Prices ADD interpolate boolean default false');
 	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1', {} );
@@ -2548,7 +2561,7 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
 	if ( ! exists $$data{'dhcp'} ) {
-		$dbh->do('ALTER TABLE hosts add dhcp boolean');
+		$dbh->do('ALTER TABLE hosts add dhcp boolean default false');
 	} # end if
 } 
 if ( ! sets::isin('log',\@tables ) ) {

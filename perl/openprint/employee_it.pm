@@ -25,18 +25,27 @@ sub hosts {
 		$variable{'error'} .= $Host->save(\%param);
 		%param = ();
 	} # end if
-	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on', 0 );
+	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', 0 );
+	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', 0 );
+
 	if ( ! exists $session{'/employee/it/hosts.html?assigned'} ) {
 		$session{'/employee/it/hosts.html?assigned'} = 1;
 	} # end if
 	if ( ! exists $session{'/employee/it/hosts.html?notassigned'} ) {
 		$session{'/employee/it/hosts.html?notassigned'} = 1;
 	} # end if
+	ssi::save_params( '/employee/it/hosts.html', 
+			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
+			'updated_on_year', 'updated_on_month', 'updated_on_mday',
+			);
 
 } # end sub hosts
 
 sub _hosts {
-	ssi::save_params( '/employee/it/hosts.html', 'created_on', 'updated_on' );
+	ssi::save_params( '/employee/it/hosts.html', 
+			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
+			'updated_on_year', 'updated_on_month', 'updated_on_mday',
+			);
 } # end sub _hosts
 
 sub host {

@@ -1,7 +1,9 @@
 #!/usr/bin/perl
+use lib '/var/www/testing/perl';
 use strict;
 require Date::Calc;
 require DBI;
+require sets;
 
 my ($sec,$min,$hour, $mday, $mon, $year,$wday,$yday,$isdst) = localtime(time);
 $mon++;
@@ -29,6 +31,16 @@ foreach my $db ( @dbs ) {
 	my $dbh = DBI->connect("dbi:Pg:dbname=$db;".($host?'host='.$host:''), 'postgres', undef, {AutoCommit=>1} );
 	if ( ! $dbh ) {
 		print "Unable to connect to $db\n";
+		next;
+	} # end if
+	my $tables = $dbh->selectcol_arrayref( q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
+	if ( ! $tables ) {
+		print "Error loading tables from of $db " . $dbh->errstr()."\n";
+		next;
+	} # end if
+	
+	if ( ! sets::isin( 'database_info', $tables ) ) {
+		print "No database_info table in $db $tables @$tables\n";
 		next;
 	} # end if
 	my $row = $dbh->selectrow_hashref( q{SELECT backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
