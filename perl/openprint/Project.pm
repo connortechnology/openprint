@@ -1049,9 +1049,9 @@ sub signatures {
 		} # end foreach signatures
 		return @sigs;
 	} # end if
-	return @{$$services{'Signature'}} if $$services{'Signature'};
+	return @{$$services{'Signature'}} if $$services{'Signature'} and @{$$services{'Signature'}};
 
-	return ();
+	return;
 } # end sub signatures
 
 sub status_change {

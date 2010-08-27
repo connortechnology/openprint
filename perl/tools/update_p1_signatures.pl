@@ -46,9 +46,10 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
 	foreach my $sig_id ( $Project->signatures() ? $Project->signatures() : $$services{''}[0] ) {
-$log->warn("Updating sig $sig_id of project $$Project{'id'}");
+		next if ! $sig_id;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		if ( $$sig_specs{'SignatureIndex'} eq '' ) {
+$log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureIndex");
 			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 			my ( $sig_index ) = sql::execute( undef, undef, $_, $Project->id() );
 			$sig_index += 1;
@@ -201,7 +202,7 @@ require openprint::ServiceType_Default;
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 if ( ! $ServiceType ) {
 	$ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
-	$ServiceType->save({'name'=>'Signature','type'=>'Printing'});
+	$ServiceType->save({'name'=>'Signature','type'=>'Printing','url'=>'prin/Signature.html'});
 }
 if ( ! $ServiceType ) {
 	$ServiceType = new openprint::ServiceType();
