@@ -283,7 +283,7 @@ File just uploaded via FTP:
 	User: $upload_info->{user}
 		Client: $upload_info->{client}
 
-	File: $file $attached
+	File: $proper_file_path $attached
 		Size: $upload_info->{size} $bytes_str
 		At: $upload_info->{timestamp}
 		Duration: $upload_info->{duration} $secs_str
@@ -309,7 +309,8 @@ EOT
 		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user},'limit'=>1) ) {
 			$User = $Users[0];
 		} # end if
-	} else {
+	} # end if
+	if ( ! $User ) {
 		if ( my @Users = openprint::User::find('email'=>lc $upload_info->{user},'limit'=>1) ) {
 			$User = $Users[0];
 			$Company = $User->Company();
