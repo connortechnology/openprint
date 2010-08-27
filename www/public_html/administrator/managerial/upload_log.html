@@ -45,6 +45,7 @@
 			<th class="DateTime">When</th>
 			<th align="left">Company</th>
 			<th align="left">User</th>
+			<th align="left">Type</th>
 			<th align="left">File</th>
 			<th class="size">Size</th>
 		</tr>
@@ -66,18 +67,19 @@
 
 				my $total = 0;
 				foreach my $Upload ( @Uploads ) {
-					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="size">%s</td></tr>',
+					$html .= sprintf('<tr%s><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="size">%s</td></tr>',
 						$rowclass,
 						Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Upload->start() ) ),
 						$Upload->company_id() ? $Upload->Company()->name() : ( $Upload->company() ? $Upload->company() : $Upload->User()->Company()->name() ),
 						$Upload->user_id() ? $Upload->User()->name() : $Upload->user(),
+						$Upload->type(),
 						join('<br/>',map { $_->filename() } $Upload->Files() ),
 						misc::format_bytes( $Upload->size() ),
 						);
 					$rowclass = $rowclass ? '' : ' class="colRow"';
 					$total += $Upload->size();
 				} # end foreach
-				$html .= '<tr class="totals"><td colspan="4">Totals:</td><td class="size">'.misc::format_bytes($total).'</td></tr>';
+				$html .= '<tr class="totals"><td colspan="5">Totals:</td><td class="size">'.misc::format_bytes($total).'</td></tr>';
 				return $html;
 			) ?>
 
