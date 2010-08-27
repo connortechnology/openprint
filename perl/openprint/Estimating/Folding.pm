@@ -321,7 +321,7 @@ sub impositions {
 } # end sub impositions
 
 sub signature_calc {
-	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $SignatureImposition, $uv_specs, $aq_specs ) = @_;
+	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $SignatureImposition, $uv_specs, $aq_specs, $stitching_specs ) = @_;
 
 	my $services = $Project->services();
 	my $Press = $SignatureImposition->Press();
@@ -353,6 +353,15 @@ sub signature_calc {
 		$SignatureImposition->display('Signature Imposition:');
 	} # end if
 
+		if ( $$services{'SaddleStitching'} ) {
+			if ( ! $stitching_specs ) {
+			$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
+			}
+		} elsif ( $$services{'LoopStitching'} ) {
+			if ( ! $stitching_specs ) {
+			$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
+			} # end if
+		} # end if
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 		$openprint::log->debug("Overriding Folding Equipment for sig $$sig_specs{'SignatureIndex'} to " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		if ( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
@@ -486,15 +495,7 @@ sub signature_calc {
 		} # end if
 
 		my $cut_dimension = '';
-		if ( $$services{'SaddleStitching'} ) {
-			#my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
-			#$max_out = $$stitching_specs{'Imposition'.$qty_index};
-	#$openprint::log->debug("Got impo from SaddleStitching: $max_out out") if $debug;
-		} elsif ( $$services{'LoopStitching'} ) {
-			#my $stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
-			#$max_out = $$stitching_specs{'Imposition'.$qty_index};
-	#$openprint::log->debug("Got impo from LoopStitching: $imposition out") if $debug;
-		} elsif ( $$sig_specs{'txtFinalWidth'} and $$sig_specs{'txtFinalHeight'} ) {
+		if ( $$sig_specs{'txtFinalWidth'} and $$sig_specs{'txtFinalHeight'} ) {
 			# Something else entirely
 			my @Impositions = @Set_Of_Impositions;
 			@Set_Of_Impositions = ();
@@ -577,11 +578,16 @@ sub signature_calc {
 				next;
 			} # end if
 		} elsif ( $Equipment->specification( 'Folding Capable' ) eq 'When Stitching' ) {
-# Means it's a PerfectBinder, so can only do covers
-			if ( $$sig_specs{'Group'} != 1 ) {
+# Means it's a Stitcher, or a Duplo, so can only do covers
+			if ( $Equipment->specification('Fold Covers Only') and  $$sig_specs{'Group'} != 1 ) {
 				$Breakdown .= 'Stitcher can only fold 4pg cover:<br/>';
 				next;
 			} # end if
+			if ( $$stitching_specs{'ddmEquipment'.$qty_index} != $Equipment->id() ) {
+				$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.new openprint::Equipment( $$stitching_specs{'ddmEquipment'.$qty_index} )->strid() .'.<br/>';
+				next;
+			} # end if
+		
 		} # end if
 		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
 			my $ppt = $Press->specification('Printing Type');

@@ -501,6 +501,21 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 			} # end if
 
 			my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
+		if ( $$services{'Folding'} ) {
+			# Special case for when we might be folding and stitching on the same machine
+			$$specs{'ddmEquipment'.$qty_index} = $Equipment->id();
+			my $folding_cost = 0;
+			foreach my $sig_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+               my $Imposition = new openprint::Imposition;
+                $Imposition->load( $sig_specs, $qty_index );
+
+			my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs );
+				$folding_cost += $folding_results{'Price'};
+			} # end foreach sig
+			$$price{'txtPrice'} += $folding_cost;
+			$$specs{'hdnBreakdown'.$qty_index} .= "Folding cost: $folding_cost<br/>";
+		} # end if
 			if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
 				$bestEquipment = $Equipment;
 				$bestPrice = $price;

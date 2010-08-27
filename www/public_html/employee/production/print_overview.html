@@ -243,6 +243,8 @@
 			# When it's time to add shifts, we add in sets, until we find an already-implemented shift.
 			my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(),'order'=>'starttime');
 
+			my $PreviousShift;
+
 			# Showing over 100 days makes the browser crawl forever. So limit it.
 			$end = 100 if $end > 100;
 			foreach ( 1 .. $end ) {
@@ -256,32 +258,48 @@
 					'starttime_<'		=>	$tomorrow,
 					'order'				=>	'starttime',
 					);
-				if ( @Equipment_Shifts and ! @Shifts ) {
-					my $NextES;
-					my $PreviousShift = openprint::Shift->find_one( 
-							'equipment_id'	=>	$E->id(), 
-							'starttime_<'	=>	$today,
-							'order'			=>	'starttime DESC'
-							);
-					if ( $PreviousShift ) {
-						my $break = @Equipment_Shifts;
-						while ( $Equipment_Shifts[0]->id() != $PreviousShift->shift_id() ) {
+				if ( @Equipment_Shifts ) {
+					if ( @Shifts != @Equipment_Shifts ) {
+						if ( $PreviousShift ) {
+							# Align Equipment_Shifts with PreviousShift
+							my $break = @Equipment_Shifts;
+							while ( $Equipment_Shifts[0]->id() != $PreviousShift->shift_id() ) {
+								push @Equipment_Shifts, shift @Equipment_Shifts;
+								$break -= 1;
+								last if ! $break;
+							} # end while
+							if ( $Equipment_Shifts[0]->id() != $PreviousShift->shift_id() ) {
+								$log->error("Shift $$PreviousShift{'shift_id'} does not exist in " . join(',', map { $_->id() } @Equipment_Shifts ) );
+								( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
+								next;
+							} # end if
 							push @Equipment_Shifts, shift @Equipment_Shifts;
-							$break -= 1;
-							last if ! $break;
-						} # end while
-						if ( $Equipment_Shifts[0]->id() != $PreviousShift->shift_id() ) {
-							$log->error("Shift $$PreviousShift{'shift_id'} does not exist in " . join(',', map { $_->id() } @Equipment_Shifts ) );
-							( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-							next;
 						} # end if
-						push @Equipment_Shifts, shift @Equipment_Shifts;
-					} # end if
-					foreach my $NextES ( @Equipment_Shifts ) {
-						my $Shift = $NextES->emanantise( Date::Parse::str2time($today) );
-						push @Shifts, $Shift if $Shift->starttime_seconds() < Date::Parse::str2time($tomorrow);
-					} # end foreach
-				} # end if
+
+						my @NewShifts;
+						foreach my $NextES ( @Equipment_Shifts ) {
+							my $found = 0;
+							foreach my $S ( @Shifts ) {
+								if ( $S->shift_id() == $NextES->id() ) {
+									push @NewShifts, $S;
+									$found = 1;
+									last;
+								} # end if
+							} # end foreach Shift
+							if ( ! $found ) {
+								my $Shift = $NextES->emanantise( Date::Parse::str2time($today) );
+								if ( $Shift->starttime_seconds() < Date::Parse::str2time($tomorrow) ) {
+									push @NewShifts, $Shift;
+								} else {
+									$log->error("Bad shift! " . $Shift->to_string() );
+								} # end if
+							} # end if ! found
+
+						} # end foreach ES
+						@Shifts = @NewShifts;
+					} # end if ! Shifts
+				} # end if @equipment_Shifts
+if ( 0 ) {
 				# Remove duplicates
 				for ( my $i = 0; $i < @Shifts; $i += 1 ) {
 					for ( my $j = $i+1; $j < @Shifts; $j += 1 ) {
@@ -292,10 +310,12 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 						} # end if
 					} # end for j
 				} # end for
+}
 				foreach my $Shift ( @Shifts ) {	
 					push @{$$variable{'drops'}}, $Shift->ul_id();
 					$html .= $Shift->get_ul( );
 				} # end foreach Shift
+				$PreviousShift = pop @Shifts;
 
 				( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
 			} # end foreach delta day

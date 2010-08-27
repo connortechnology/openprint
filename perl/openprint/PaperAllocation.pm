@@ -191,9 +191,9 @@ sub send_notification {
 	my @body = ('', $_, 'text/html', 'quoted-printable');
 	my $Email = new openprint::Email();
 	$Email->send( 
-#'TO'		=>	\@recipients, 
-			'TO'		=>	'iconnor@point-one.com',
-			SUBJECT 	=> 'Stock allocated for docket ' . $Project->docket(),
+			'TO'		=>	\@recipients, 
+			#'TO'		=>	'iconnor@point-one.com',
+			'SUBJECT' 	=> 'Stock allocated for docket ' . $Project->docket(),
 			'FROM'		=>	new openprint::User( $session{'user_id'} ),
 			'ATTACHMENTS'	=>	\@body,
 			);

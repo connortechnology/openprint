@@ -172,7 +172,17 @@ if ( $$variable{'HiddenSignatures'} ) {
 					$summary =~ s/\n/<br\/>/g;
 					$html .= $summary;
 					$html .= '</td>';
-                    $html .= '<td class="status">'.$statuses{$service_id}.'</td>';
+                    $html .= '<td class="status">'.$statuses{$service_id};
+					if ( $ServiceCategory->name() eq 'Shipping' ) {
+						require openprint::SignatureCapture;
+						my @Signatures = openprint::SignatureCapture->find(
+								'project_id'	=>	$$variable{'Project'}->id(),
+								'service_id'	=>	$service_id,
+								'order'			=>	'id',
+								);
+						$html .= '<br/>' . join('<br/>', map { sprintf('<img src="%s" alt=""/>', $_->file_path() ); } @Signatures );
+					} # end if
+					$html .= '</td>';
                     $html .= "</tr>\n";
                     $rowclass = $rowclass ? '' : ' class="colRow"';
                 } # end foreach service_id
