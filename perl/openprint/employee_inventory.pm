@@ -1927,6 +1927,8 @@ sub purchase_order_edit {
 } # end sub purchase_order_edit
 
 sub purchase_orders {
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting', -30, 0 );
+
 	ssi::save_params( '/employee/inventory/purchase_orders.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types' ) );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		foreach my $po_id ( ref $param{'po_id'} eq 'ARRAY' ? @{$param{'po_id'}} : $param{'po_id'} ) {

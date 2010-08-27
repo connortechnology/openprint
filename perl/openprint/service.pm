@@ -449,8 +449,8 @@ sub internal_calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my $specs = get_specs_ref( $Project, $service_index );
-	my %specs = %{$specs};
+	my $specs = get_specs_ref( $Project, $service_index ) if $service_index;
+	my %specs = %{$specs} if $specs;
 
 	if ( ! $service_type ) {
 		my $ServiceType = $Project->ServiceType( $service_index );
