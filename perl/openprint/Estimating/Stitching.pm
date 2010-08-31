@@ -17,7 +17,7 @@
 package openprint::Estimating::Stitching;
 use strict;
 
-my $debug = 1;
+my $debug = 0;
 
 require openprint::project;
 require openprint::Equipment;
@@ -130,13 +130,17 @@ sub get_imposition {
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 # includes teh cost of folding...
 sub signature_calc {
-	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_service_index, @Impositions ) = @_;
+	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, @Impositions ) = @_;
 
 	my %results;
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 	my $ServiceType = $Project->ServiceType( $service_index );
-	my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_service_index );
+	if ( ! $ServiceType->id() ) {
+		$results{'alert'} .= 'Unable to determine stitching type!<br/>';
+		$results{'Status'} = 'uncalculated';
+		return \%results;
+	} # end if
 
 	my $plusCover = $$printing_specs{'rdbCover'} eq 'Different' ? 1 : 0;
 
@@ -166,7 +170,7 @@ sub signature_calc {
 			#$openprint::log->debug(" $$I{'runstyle'} " . ($$I{'imposition'}%4) );
 		} # end if
 	} # end foreach Imposition
-$openprint::log->debug("Imp: $imposition");
+#$openprint::log->debug("Imp: $imposition");
 	my $I = $Impositions[0];
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
@@ -270,6 +274,10 @@ sub calc {
 	$$specs{'Status'} = 'calculated';
 	my $Project = new openprint::Project( $project_index );
 	my $ServiceType = $Project->ServiceType( $service_index );
+	if ( ! $ServiceType->id() ) {
+		$$specs{'alert'} .= 'Unable to determine stitching type!<br/>';
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	my $services = $Project->services();
 	if ( ! $$services{''} ) {
@@ -510,23 +518,27 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 			} # end if
 
 			my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
+			$$price{'ComparisonPrice'} = $$price{'txtPrice'};
 
 			if ( $$services{'Folding'} ) {
 # Special case for when we might be folding and stitching on the same machine
 				$$specs{'ddmEquipment'.$qty_index} = $Equipment->id();
 				my $folding_cost = 0;
+				$$folding_specs{'StitchingCost'} = $$price{'txtPrice'};
+				$$folding_specs{'StitchingEquipment'} = $Equipment;
+
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 					my $Imposition = new openprint::Imposition;
 					$Imposition->load( $sig_specs, $qty_index );
-
 					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs );
+				$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
 					$folding_cost += $folding_results{'Price'};
 				} # end foreach sig
-				$$price{'txtPrice'} += $folding_cost;
+				$$price{'ComparisonPrice'} += $folding_cost;
 				$$specs{'hdnBreakdown'.$qty_index} .= "Folding cost: $folding_cost<br/>";
 			} # end if
-			if ( ( ! $bestPrice ) or $$price{'txtPrice'} < $$bestPrice{'txtPrice'} ) {
+			if ( ( ! $bestPrice ) or $$price{'ComparisonPrice'} < $$bestPrice{'ComparisonPrice'} ) {
 				$bestEquipment = $Equipment;
 				$bestPrice = $price;
 			} # end if
@@ -671,7 +683,7 @@ sub get_price {
 				$servicePrice{'Total'} = $servicePrice{'Price'} * $qty;
 				$price{'Service'} += $servicePrice{'Total'};
 			} else {
-				$openprint::log->debug("Unknown Unit Type: ($servicePrice{'units'}) on $$ServiceType{'name'}");
+				$openprint::log->debug("Unknown Unit Type: ($servicePrice{'units'}) for service $$ServiceType{'name'} on $$Equipment{name}");
 			} # end if
 
 			# The minus 1 is because the result of each pass takes up a pocket

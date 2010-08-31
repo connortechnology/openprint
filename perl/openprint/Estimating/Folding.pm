@@ -352,23 +352,24 @@ sub signature_calc {
 	my $Breakdown;
 
 	my @my_equipment;
-	my $stitching_service_index;
 
 	if ($debug) {
 		$SignatureImposition->display('Signature Imposition:');
 	} # end if
 
-		if ( $$services{'SaddleStitching'} ) {
-			if ( ! $stitching_specs ) {
-				$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
-				$stitching_service_index = $$services{'SaddleStitching'}[0];
-			}
-		} elsif ( $$services{'LoopStitching'} ) {
-			if ( ! $stitching_specs ) {
-				$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
-				$stitching_service_index = $$services{'LoopStitching'}[0];
-			} # end if
+	my $stitching_service_index;
+	if ( $$services{'SaddleStitching'} ) {
+		if ( ! $stitching_specs ) {
+			$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
+		}
+		$stitching_service_index = $$services{'SaddleStitching'}[0];
+	} elsif ( $$services{'LoopStitching'} ) {
+		if ( ! $stitching_specs ) {
+			$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
 		} # end if
+		$stitching_service_index = $$services{'LoopStitching'}[0];
+	} # end if
+
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 		$openprint::log->debug("Overriding Folding Equipment for sig $$sig_specs{'SignatureIndex'} to " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		if ( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
@@ -592,6 +593,10 @@ sub signature_calc {
 			} # end if
 			if ( ! $stitching_service_index ) {
 				$Breakdown .= 'Not stitching:<br/>';
+				next;
+			} # end if
+			if ( ( exists $$specs{'StitchingCost'} ) and ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) ) {
+				$Breakdown .= "Not stitching on $$Equipment{name}:<br/>";
 				next;
 			} # end if
 		} # end if
@@ -1028,6 +1033,8 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 					last;
 				} # end if
 			} # end foreach fold_type
+			my $stitching_part;
+if ( ! exists $$specs{'StitchingCost'} ) {
 				# Add in stitching estimate, based on if the folder is this piece of equipment
 				my @Signature_Impositions;
 				foreach ( $Project->signatures() ) {
@@ -1039,7 +1046,7 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 				my %fold_specs = %$specs;
 				$fold_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $Equipment->id();
 				$fold_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"} = $totalPrice;
-				my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $signature_service_index, @Signature_Impositions );
+				my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, @Signature_Impositions );
 				if ( ! $$results{'Equipment'} ) {
 					$Breakdown .= "unable to determine stitching equipment $$results{alert} $fold_specs{'hdnBreakdown'.$qty_index}<br/>";
 					next;
@@ -1048,8 +1055,15 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 					$Breakdown .= $$stitching_specs{"hdnBreakdown$qty_index"};
 					next;
 				} # end if
-				my $stitching_part = $$results{'Price'} / $Project->signatures();
+				$stitching_part = $$results{'Price'} / $Project->signatures();
 				$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->strid() . '<br/>';
+} elsif ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
+	$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$specs{'StitchingEquipment'}->strid() .'.<br/>';
+} else {
+	$stitching_part = $$specs{'StitchingCost'};
+	$Breakdown .= "Stitching cost: $stitching_part on " . $$specs{'StitchingEquipment'}->strid() . '<br/>';
+} 
+
 				my $comparison_cost = $totalPrice + $stitching_part;
 
 				$Breakdown .= 'Total: $' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . ' / comparison : ' . $comparison_cost . ' <br/><br/>';

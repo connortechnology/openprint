@@ -2735,7 +2735,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					push @all_impositions, @{$$price{'Impositions'}};
 					
 #my $starttime = gettimeofday();
-					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @all_impositions );
+					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, @all_impositions );
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
 #$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>" . $$project{'StitchingSpecs'}{'hdnBreakdown'.$qty_index};
