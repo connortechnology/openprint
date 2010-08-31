@@ -38,32 +38,32 @@ my @variables = (
 	);
 
 sub variables {
-my @v = @variables;
-my ( $p_id, $s_id, $specs ) = @_;
+	my @v = @variables;
+	my ( $p_id, $s_id, $specs ) = @_;
 
-my $Project = new openprint::Project( $p_id );
-foreach my $s_s_id ( $Project->signatures() ) {
-	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
-		push @v, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
-		push @v, "chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index";
-		foreach my $fold_index ( 1 .. 4 ) {
-			push @v, "FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
-			push @v, "FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
-			push @v, "FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
-			push @v, "FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
-			push @v, "FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
-			push @v, "FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
-			push @v, "FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
-			push @v, "FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+	my $Project = new openprint::Project( $p_id );
+	foreach my $s_s_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
+			push @v, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
+			push @v, "chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index";
+			foreach my $fold_index ( 1 .. 4 ) {
+				push @v, "FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldColumns-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldRows-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldFolds-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+				push @v, "FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
+			} # end foreach
+#foreach my $fold_type ( keys %fold_types ) {
+#} # end foreach
 		} # end foreach
-		#foreach my $fold_type ( keys %fold_types ) {
-		#} # end foreach
 	} # end foreach
-} # end foreach
 
-return @v;
+	return @v;
 } # end sub variables
 
 
@@ -1243,6 +1243,23 @@ sub display {
 	my @equipment = openprint::Equipment::find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 } # end sub display
+
+sub signature_summary {
+	my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+	if ( $qty_index ) {
+		my @folds;
+		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+		foreach my $fold_index ( 1 .. 4 ) {
+			next if ! $$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"};
+			push @folds, sprintf('%1$d %3$s %2$dout', @$specs{"FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index",
+					"FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index",
+					"FoldType-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index"} );
+		} # end foreach
+		return join(', ', @folds).' on ' . $Equipment->name();
+	} # end if
+} # end sub signature_summary
 
 sub summary {
 	return '';

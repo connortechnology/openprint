@@ -13,12 +13,12 @@ require Email::Valid;
 require logger;
 require openprint::Upload;
 
-use vars qw( $log $dbh %config);
+use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 $log = logger->new();
-$log->{level} = "warn";
+$log->{level} = "debug";
 
 use File::Basename qw(basename);
 use Getopt::Long;
@@ -35,6 +35,7 @@ GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'log=s', 'recipient=s@', 'sleep=s', 'smtp-server=s', 'subject=s',
 	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
+	'scoreboard=s',
  );
 
 if ($opts->{help}) {
@@ -117,11 +118,37 @@ if ( $opts->{'skin_path'} ) {
 	$config{'SkinPath'} = $opts->{'skin_path'};
 } # end if
 
+# Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
+# older than a certain age, the email notification should go out, and the hash entry cleared.
+my %uploads;
+
+			my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
+			foreach my $score ( @$scoreboard ) {
+				foreach my $k ( keys %$score ) {
+				print " $k => $$score{$k}\n";
+				} 
+			} # end foreach
 my $fifoh;
 if (open($fifoh, "< $fifo")) {
+print "Opened fifo\n";
 	while (1) {
-		my $line = <$fifoh>;
-		if ($line) {
+		my $line;
+		eval {
+			local $SIG{ALRM} = sub { die "alarm\n" };
+			alarm 10;
+			$line = <$fifoh>;
+			alarm 0;
+		}; # end eval
+		if ( $@ ) {
+			die unless $@ eq "alarm\n";
+			print "Should check scoreboard now.\n";
+			my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
+			foreach my $score ( @$scoreboard ) {
+				foreach my $k ( keys %$score ) {
+				print " $k => $$score{$k}\n";
+				} 
+			} # end foreach
+		} elsif ($line) {
 			chomp($line);
 
 			if ($line =~ /^(\S+\s+\S+\s+\d+\s+\d+:\d+:\d+\s+\d+)\s+(\d+)\s+(.*?)\s+(\d+)\s+(.*?)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.*?)\s+.*?(\S+)$/o) {
@@ -218,6 +245,7 @@ if (open($fifoh, "< $fifo")) {
 			} # end if log file
 		} else {
 			# No input at this time. Sleep for half a second (or less) and check again.
+$log->debug( "No input\n" );
 			usleep($delay * 1000000);
 		} # End if $line
 	} # end while <input>
@@ -235,6 +263,7 @@ sub send_email {
 	my $upload_info = shift;
 
 	my $file = $upload_info->{file};
+# File should be the full path, relative to filesystem root.
 	my $file_str = basename($file);
 	my $regexp = $opts->{'file_path'}.'(.*)'.$file_str;
 	my ( $company_name ) = $file =~ /^$regexp$/;
@@ -244,6 +273,7 @@ sub send_email {
 		$company_name = shift @parts;
 	} # end if
 	my $proper_file_path = '/'.$company_name.'/'.$file_str;
+$log->debug("File $file, file_str $file_str, company: $company_name proper: $proper_file_path");
 
 	my $subject;
 	if ($opts->{subject}) {
@@ -277,23 +307,6 @@ sub send_email {
 		$attached = "(attached)";
 	}
 
-	my $text = <<EOT;
-File just uploaded via FTP:
-
-	User: $upload_info->{user}
-		Client: $upload_info->{client}
-
-	File: $proper_file_path $attached
-		Size: $upload_info->{size} $bytes_str
-		At: $upload_info->{timestamp}
-		Duration: $upload_info->{duration} $secs_str
-		Status: $status
-		Transfer type: $type_str
-
-Cheers,
-	--$program
-
-EOT
 
 
 	my $Company;
@@ -302,18 +315,22 @@ EOT
 	if ( $company_name ) {
 # Try to figure out the company
 		if ( my @Companies = openprint::Company::find('name'=>$company_name,'limit'=>1) ) {
+$log->debug("Found company $company_name");
 			$Company = $Companies[0];
 		} # end if
 	} # end if
 	if ( $Company ) {
+		# If we hae the company, then narrow the user search
 		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user},'limit'=>1) ) {
 			$User = $Users[0];
+$log->debug("Found user $$upload_info{user} with company");
 		} # end if
 	} # end if
 	if ( ! $User ) {
 		if ( my @Users = openprint::User::find('email'=>lc $upload_info->{user},'limit'=>1) ) {
 			$User = $Users[0];
 			$Company = $User->Company();
+$log->debug("Found user $$upload_info{user} with out company.  Company is $$Company{name}");
 		} # end if
 	} # end if
 
@@ -349,7 +366,9 @@ EOT
 		} # end if
 
 		my $to;
-		if ( $Company->salesrep_id() ) {
+		if ( $User->email() eq 'iconnor@penultima.org' ) {
+			$to = '"Isaac Connor" <iconnor@penultima.org>';
+		} elsif ( $Company->salesrep_id() ) {
 			if ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) {
 				$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') ),
 			} # end if
@@ -382,6 +401,23 @@ EOT
 		} # end if
 	
 	} elsif ( 1 ) {
+	my $text = <<EOT;
+File just uploaded via FTP:
+
+	User: $upload_info->{user}
+		Client: $upload_info->{client}
+
+	File: $proper_file_path $attached
+		Size: $upload_info->{size} $bytes_str
+		At: $upload_info->{timestamp}
+		Duration: $upload_info->{duration} $secs_str
+		Status: $status
+		Transfer type: $type_str
+
+Cheers,
+	--$program
+
+EOT
 		my $email_info = {
 			smtp => $smtp_server,
 			From => $from,
@@ -518,3 +554,51 @@ Command-line options:
 
 EOH
 }
+
+sub time_stamp {
+	my @w = reverse ( (localtime($_[0])) [0..5] );
+	$w[0]+=1900; $w[1]++;
+	return sprintf "%d-%02d-%02d %02d:%02d:%02d", @w;
+}
+
+sub get_scoreboard {
+	my ( $score_file ) = @_;
+	my ($server_uptime, $record);
+	my @scoreboard;
+#  pid_t sce_pid;
+#  uid_t sce_uid;
+#  gid_t sce_gid;
+#  char sce_user[32];
+#  int sce_server_port;
+#  char sce_server_addr[80], sce_server_label[32];
+#  char sce_client_addr[INET_ADDRSTRLEN];
+#  char sce_client_name[PR_TUNABLE_SCOREBOARD_BUFFER_SIZE];
+#  char sce_class[32];
+#  char sce_cwd[PR_TUNABLE_SCOREBOARD_BUFFER_SIZE];
+#  char sce_cmd[5];
+#  char sce_cmd_arg[PR_TUNABLE_SCOREBOARD_BUFFER_SIZE];
+#  time_t sce_begin_idle, sce_begin_session;
+#  off_t sce_xfer_size, sce_xfer_done, sce_xfer_len;
+#  unsigned long sce_xfer_elapsed;
+#0000000 beef dead 0000 0000 0002 0104 0000 0000
+#0000010 2c20 0000 0000 0000 3d87 4c78 0000 0000
+#0000020 307c 0000 0021 0000 0021 0000 6369 6e6f
+
+	my $header = "L L l L L L L L";
+	my $template = "L L L A32 L A80 A32 A16 A80 A32 A80 A5 A79 L L L L L L";
+	my $recordsize = length(pack($template,(  )));
+	open(SCORE,$score_file) or die "Unable' to open $score_file:$!\n";
+	my $headersize = length(pack($header));
+	read(SCORE, $record, $headersize );
+	while (read(SCORE,$record,$recordsize)) {
+		my %score;
+		@score{'sce_pid','sce_uid','sce_gid','sce_user','sce_server_port','sce_server_addr',
+			'sce_server_label','sce_client_addr','sce_client_name','sce_class','sce_cwd','sce_cmd','sce_cmd_arg','sce_begin_idle','sce_begin_session',
+			'sce_xfer_size','sce_xfer_done','sce_xfer_len','sce_xfer_elapsed'} = unpack($template,$record);
+		if ($score{'sce_pid'} != 0) {
+			push @scoreboard, \%score;
+		} # end if
+	} # end while
+	close(SCORE);
+	return \@scoreboard;
+} # end sub get_scoreboard

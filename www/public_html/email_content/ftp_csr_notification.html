@@ -51,17 +51,7 @@
 		</thead>
 		<tbody>
 			<tr><td nowrap="nowrap"><? echo ( $$variable{'filename'} ) ?></td><td align="right">
-		<? echo (
-			my $size = $$variable{'size'};
-			if ( $size > 1048576 ) {
-				$size = sprintf( '%.3f MB', $size / 1048576 );
-			} elsif ( $size > 1024 ) {
-				$size = sprintf( '%.3f KB', $size / 1024 );
-			} else {
-				$size .= ' B';
-			} # end if
-			return $size;
-		) ?>
+		<? echo ( misc::format_bytes($$variable{'size'}); ) ?>
 			</td></tr>
 		</tbody>
 	</table>	

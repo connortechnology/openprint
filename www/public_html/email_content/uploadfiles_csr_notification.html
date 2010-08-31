@@ -15,7 +15,6 @@ OR:
 		$$variable{'txtAddress1'} = $Company->address1();
 		$$variable{'txtAddress2'} = $Company->address2();
 		$$variable{'txtPostalCode'} = $Company->postalcode();
-		
 	} else {
 		@$variable{'txtContactName','txtCompanyName','txtEmailAddress','txtPhoneNumber','txtAddress1','txtAddress2','txtPostalCode'} = 
 			@param{'txtContactName','txtCompanyName','txtEmailAddress','txtPhoneNumber','txtAddress1','txtAddress2','txtPostalCode'};
@@ -29,7 +28,7 @@ OR:
 				<p><label>Company Name:</label><?txtCompanyName?></p>
 				<p><label>Address:</label><?txtAddress1?></p>
 				<? if ( $$variable{'txtAddress2'} ) ?><p><label>&nbsp;</label><?txtAddress2?></p><? endif ( $$variable{'txtAddress2'} ) ?>
-				<p><label>Postal Code:</label><?txtPostalCode?></p>
+				<? if ( $$variable{'txtPostalCode'} ) ?><p><label>Postal Code:</label><?txtPostalCode?></p><? endif ( $$variable{'txtPostalCode'} ) ?>
 			</div>
 		</div>
 		<div style="float: left; width: 50%;">
