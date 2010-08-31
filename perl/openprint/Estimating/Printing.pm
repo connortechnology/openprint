@@ -4436,9 +4436,12 @@ if ( 1 ) {
 			} # end if
 		} # end if
 } # end if
+if ( $$services{'Folding'} ) {
+	$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{'Folding'}[0], undef, $qty_index, $service_index, undef );
+} # end if
 
 		return $html;
-	} else {
+	} else { # ! qty_index
 		my $dimensions = '';
 		if ( $$specs{'txtSignatureType'} ) {
 			if ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) {
@@ -4478,7 +4481,7 @@ if ( 1 ) {
 			} # end if
 		} # end if
 		return $string;
-	} # end if
+	} # end if qty_index
 } # end sub summary
 
 
