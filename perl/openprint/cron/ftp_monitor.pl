@@ -270,21 +270,21 @@ sub check_scoreboard {
 sub send_email {
 	my @uploads = @_;
 
-	my $upload = $uploads[0];
-
-	my $file = $upload->{file};
+	foreach my $upload ( @uploads ) {
+		my $file = $upload->{file};
 # File should be the full path, relative to filesystem root.
-	my $file_str = basename($file);
-	my $regexp = $opts->{'file_path'}.'(.*)'.$file_str;
-	my ( $company_name ) = $file =~ /^$regexp$/;
-	if ( $company_name ) {
-		$company_name =~ s/^\/*//g;
-		my @parts = split('/', $company_name);
-		$company_name = shift @parts;
-	} # end if
-	$$upload{'proper_file_path'} = '/'.$company_name.'/'.$file_str;
-$log->debug("File $file, file_str $file_str, company: $company_name proper: $$upload{proper_file_path}");
+		my $file_str = basename($file);
+		my $regexp = $opts->{'file_path'}.'(.*)'.$file_str;
+		my ( $company_name ) = $file =~ /^$regexp$/;
+		if ( $company_name ) {
+			$company_name =~ s/^\/*//g;
+		   my @parts = split('/', $company_name);
+		   $$upload{'company_name'} = shift @parts;
+		} # end if
+	   $$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$file_str;
+	} # end foreach upload
 
+	my $upload = $uploads[0];
 	my $subject;
 	if ($opts->{subject}) {
 		$subject = $opts->{subject};
@@ -294,19 +294,13 @@ $log->debug("File $file, file_str $file_str, company: $company_name proper: $$up
 		$subject = "User '$upload->{user}' has uploaded files via FTP";
 	} # end if
 
-	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';
-	my $status = $upload->{status} eq 'i' ? 'Incomplete' : 'Completed';
-	my $secs_str = $upload->{duration} == 1 ? 'sec' : 'secs';
-	my $type_str = $upload->{transfer_type} eq 'a' ? 'ASCII' : 'Binary';
-	my $attached = ($opts->{'attach-file'} and -e $file) ? '(attached)' : '';
-
 	my $Company;
 	my $User;
 
-	if ( $company_name ) {
+	if ( $$upload{'company_name'} ) {
 # Try to figure out the company
-		if ( my @Companies = openprint::Company::find('name'=>$company_name,'limit'=>1) ) {
-$log->debug("Found company $company_name");
+		if ( my @Companies = openprint::Company::find('name'=>$$upload{'company_name'},'limit'=>1) ) {
+$log->debug("Found company $$upload{'company_name'}");
 			$Company = $Companies[0];
 		} # end if
 	} # end if
@@ -325,28 +319,30 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 		} # end if
 	} # end if
 
-	my $Upload = new openprint::Upload();
-	my $error = $Upload->save({
-		('company_id'	=>	$Company ? $Company->id() : undef),
-		('user_id'		=>	$User ? $User->id() : undef ),
-		'company'		=>	$company_name,
-		'size'			=>	$upload->{size},
-		'total'			=>	$upload->{size},
-		'finished'		=>	$upload->{timestamp},
-		'file_path'		=>	$$upload{proper_file_path},
-		'type'			=>	'FTP',
-	});
-	if ( $error ) {
-		print STDERR $error 
-	} else {
-		my $File = new openprint::File();
-		$error = $File->save({
-			'size'		=>	$upload->{size},
-			'filename'	=>	$$upload{proper_file_path},
-			'upload_id'	=>	$Upload->id(),
+	foreach my $upload ( @uploads ) {
+		my $Upload = new openprint::Upload();
+		my $error = $Upload->save({
+			('company_id'	=>	$Company ? $Company->id() : undef),
+			('user_id'		=>	$User ? $User->id() : undef ),
+			'company'		=>	$$upload{'company_name'},
+			'size'			=>	$upload->{size},
+			'total'			=>	$upload->{size},
+			'finished'		=>	$upload->{timestamp},
+			'file_path'		=>	$$upload{proper_file_path},
+			'type'			=>	'FTP',
 		});
-		print STDERR $error if $error;
-	} # end if
+		if ( $error ) {
+			print STDERR $error 
+		} else {
+			my $File = new openprint::File();
+			$error = $File->save({
+				'size'		=>	$upload->{size},
+				'filename'	=>	$$upload{proper_file_path},
+				'upload_id'	=>	$Upload->id(),
+			});
+			print STDERR $error if $error;
+		} # end if
+	} # end foreach upload
 
 	if ( $Company and $User ) {
 		my $from;
@@ -391,6 +387,11 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 		} # end if
 	
 	} elsif ( 1 ) {
+	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';
+	my $status = $upload->{status} eq 'i' ? 'Incomplete' : 'Completed';
+	my $secs_str = $upload->{duration} == 1 ? 'sec' : 'secs';
+	my $type_str = $upload->{transfer_type} eq 'a' ? 'ASCII' : 'Binary';
+	my $attached = ($opts->{'attach-file'} and -e $$upload{file}) ? '(attached)' : '';
 	my $text = <<EOT;
 File just uploaded via FTP:
 
@@ -417,7 +418,7 @@ EOT
 		};
 
 		if ($opts->{'attach-file'}) {
-			if (-e $file) {
+			if (-e $$upload{file}) {
 				$email_info->{'MIME-Version'} = '1.0';
 
 				my $boundary = '====' . time() . '====';
@@ -429,7 +430,7 @@ EOT
 				$email_info->{Body} .= "Content-Transfer-Encoding: quoted-printable\n\n";
 				$email_info->{Body} .= "$text\n";
 
-				if (open(my $fh, "< $file")) {
+				if (open(my $fh, "< $$upload{file}")) {
 					binmode($fh);
 
 	# Note: this reads the entire file into memory, and can fail if
@@ -444,7 +445,7 @@ EOT
 
 					$email_info->{Body} .= "$boundary\n";
 
-					$email_info->{Body} .= "Content-Disposition: attachment; filename=\"$file\"\n";
+					$email_info->{Body} .= "Content-Disposition: attachment; filename=\"$$upload{file}\"\n";
 					if ($upload->{transfer_type} eq 'a') {
 						$email_info->{Body} .= "Content-Type: text/plain; charset=\"iso-8859-1\"\n\n";
 						$email_info->{Body} .= $attach;
@@ -459,7 +460,7 @@ EOT
 
 				} else {
 					my $timestamp = scalar(localtime());
-					print STDERR "$program: $timestamp: error reading file '$file' for attaching: $!\n";
+					print STDERR "$program: $timestamp: error reading file '$$upload{file}' for attaching: $!\n";
 				}
 
 			} else {
