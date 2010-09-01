@@ -191,6 +191,8 @@ sub view_services {
 		if ( defined $openprint::param{'remove'} and ( $openprint::param{'remove'} ne '' ) ) {
 			openprint::print_project::delete_service( $log, $dbh, $project_index, $r->param('remove') );
 			$openprint::session{'project_id'} = $project_index;
+			$Project->summary(undef);
+			$Project->save();
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
 		} # end if

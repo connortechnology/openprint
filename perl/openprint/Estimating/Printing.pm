@@ -4423,7 +4423,7 @@ if ( 0 ) {
 			} # end if
 		} # end if
 } # end if
-if ( $$services{'Folding'} ) {
+if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 	$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{'Folding'}[0], undef, $qty_index, $service_index, undef );
 } # end if
 

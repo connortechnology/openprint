@@ -81,7 +81,7 @@ my $smtp_server = $opts->{'smtp-server'};
 
 #print "file path: " .  $opts->{file_path} . "\n";
 
-my $delay = 0.5;
+my $delay = 1.0;
 if ($opts->{sleep}) {
 	$delay = $opts->{sleep};
 }
@@ -122,13 +122,14 @@ if ( $opts->{'skin_path'} ) {
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
 
-			my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
-			foreach my $score ( @$scoreboard ) {
-				foreach my $k ( keys %$score ) {
-				print " $k => $$score{$k}\n";
-				} 
-			} # end foreach
+my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
+foreach my $score ( @$scoreboard ) {
+	foreach my $k ( keys %$score ) {
+		print " $k => $$score{$k}\n";
+	} 
+} # end foreach
 my $fifoh;
+print "prior to Opened fifo\n";
 if (open($fifoh, "< $fifo")) {
 print "Opened fifo\n";
 	while (1) {
@@ -141,13 +142,8 @@ print "Opened fifo\n";
 		}; # end eval
 		if ( $@ ) {
 			die unless $@ eq "alarm\n";
-			print "Should check scoreboard now.\n";
-			my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
-			foreach my $score ( @$scoreboard ) {
-				foreach my $k ( keys %$score ) {
-				print " $k => $$score{$k}\n";
-				} 
-			} # end foreach
+			check_scoreboard();
+			next;
 		} elsif ($line) {
 			chomp($line);
 
@@ -184,11 +180,7 @@ print "Opened fifo\n";
 				my $user_name = $10;
 				my $completion_status = $11;
 
-				my $send_email = 0;
-
-				if ($xfer_direction eq 'i') {
-					$send_email = 1;
-				}
+				my $send_email = $xfer_direction eq 'i' ? 1 : 0;
 
 				if ($send_email) {
 
@@ -201,7 +193,6 @@ print "Opened fifo\n";
 						if ($user_name !~ /$opts->{'watch-users'}/) {
 							$send_email = 0;
 						}
-
 					} elsif ($opts->{'ignore-users'}) {
 						if ($user_name =~ /$opts->{'ignore-users'}/) {
 							$send_email = 0;
@@ -210,7 +201,7 @@ print "Opened fifo\n";
 				}
 
 				if ($send_email) {
-					send_email({
+					push @{$uploads{$user_name}}, {
 						timestamp => $curr_time,
 						duration => $xfer_nsecs,
 						client => $client,
@@ -220,33 +211,33 @@ print "Opened fifo\n";
 						auth_mode => $access_mode,
 						user => $user_name,
 						status => $completion_status,
-					});
+					};
 				} # end if send email
-			}
+			} else {
+				$log->error("Unparsed line $line");
+			} # end if
 
 			if ($opts->{log}) {
 				# Note: since this opens, writes, then closes the log file for every
 				# write, it will interact with log rotation scripts MUCH better than
 				# proftpd by itself.	Just one of the small benefits.
 
-				my $log_file = $opts->{log};
 				my $logfh;
-
-				if (open($logfh, ">> $log_file")) {
+				if (open($logfh, ">> $$opts{log}")) {
 					print $logfh "$line\n";
-
 					unless (close($logfh)) {
-						print STDERR "$program: error writing to log file '$log_file': $!\n";
+						print STDERR "$program: error writing to log file '$$opts{log}': $!\n";
 					}
-
 				} else {
-					print STDERR "$program: error opening log file '$log_file': $!\n";
-				}
+					print STDERR "$program: error opening log file '$$opts{log}': $!\n";
+				} # end if
 			} # end if log file
+			$line = undef;
 		} else {
 			# No input at this time. Sleep for half a second (or less) and check again.
-$log->debug( "No input\n" );
-			usleep($delay * 1000000);
+#$log->debug( "No input\n" );
+			check_scoreboard();
+			usleep($delay * 1000* 1000);
 		} # End if $line
 	} # end while <input>
 
@@ -259,10 +250,29 @@ if ( $opts->{'pid_file'} ) {
 	unlink $opts->{'pid_file'};
 } # end if
 
-sub send_email {
-	my $upload_info = shift;
+sub check_scoreboard {
+	my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
+	my @users = map { $$_{'sce_user'} } @$scoreboard;
+	print "Users: @users in scoreboard\n";
 
-	my $file = $upload_info->{file};
+	foreach my $user ( keys %uploads ) {
+		if ( ! sets::isin( $user, \@users ) ) {
+			print "Sending mail for $user\n";
+# No longer logged in, so we can process and send emails.
+			send_email( @{$uploads{$user}} );
+			delete $uploads{$user};
+		} else {
+			print "Holding mail for $user\n";
+		} # end if
+	} # end foreach $user
+}
+
+sub send_email {
+	my @uploads = @_;
+
+	my $upload = $uploads[0];
+
+	my $file = $upload->{file};
 # File should be the full path, relative to filesystem root.
 	my $file_str = basename($file);
 	my $regexp = $opts->{'file_path'}.'(.*)'.$file_str;
@@ -272,42 +282,23 @@ sub send_email {
 		my @parts = split('/', $company_name);
 		$company_name = shift @parts;
 	} # end if
-	my $proper_file_path = '/'.$company_name.'/'.$file_str;
-$log->debug("File $file, file_str $file_str, company: $company_name proper: $proper_file_path");
+	$$upload{'proper_file_path'} = '/'.$company_name.'/'.$file_str;
+$log->debug("File $file, file_str $file_str, company: $company_name proper: $$upload{proper_file_path}");
 
 	my $subject;
 	if ($opts->{subject}) {
 		$subject = $opts->{subject};
+	} elsif ( scalar @uploads == 1 ) {
+		$subject = "User '$upload->{user}' uploaded file '$$upload{proper_file_path}' via FTP";
 	} else {
-		$subject = "User '$upload_info->{user}' uploaded file '$proper_file_path' via FTP";
-	}
+		$subject = "User '$upload->{user}' has uploaded files via FTP";
+	} # end if
 
-	my $bytes_str = "bytes";
-	if ($upload_info->{size} == 1) {
-		$bytes_str = "byte";
-	}
-
-	my $status = "Completed";
-	if ($upload_info->{status} eq 'i') {
-		$status = "Incomplete";
-	}
-
-	my $secs_str = "secs";
-	if ($upload_info->{duration} == 1) {
-		$secs_str = "sec";
-	}
-
-	my $type_str = "Binary";
-	if ($upload_info->{transfer_type} eq 'a') {
-		$type_str = "ASCII";
-	}
-
-	my $attached = "";
-	if ($opts->{'attach-file'} and -e $file) {
-		$attached = "(attached)";
-	}
-
-
+	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';
+	my $status = $upload->{status} eq 'i' ? 'Incomplete' : 'Completed';
+	my $secs_str = $upload->{duration} == 1 ? 'sec' : 'secs';
+	my $type_str = $upload->{transfer_type} eq 'a' ? 'ASCII' : 'Binary';
+	my $attached = ($opts->{'attach-file'} and -e $file) ? '(attached)' : '';
 
 	my $Company;
 	my $User;
@@ -321,16 +312,16 @@ $log->debug("Found company $company_name");
 	} # end if
 	if ( $Company ) {
 		# If we hae the company, then narrow the user search
-		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload_info->{user},'limit'=>1) ) {
+		if ( my @Users = openprint::User::find('company_id'=>$Company->id(), 'email'=>lc $upload->{user},'limit'=>1) ) {
 			$User = $Users[0];
-$log->debug("Found user $$upload_info{user} with company");
+$log->debug("Found user $$upload{user} with company");
 		} # end if
 	} # end if
 	if ( ! $User ) {
-		if ( my @Users = openprint::User::find('email'=>lc $upload_info->{user},'limit'=>1) ) {
+		if ( my @Users = openprint::User::find('email'=>lc $upload->{user},'limit'=>1) ) {
 			$User = $Users[0];
 			$Company = $User->Company();
-$log->debug("Found user $$upload_info{user} with out company.  Company is $$Company{name}");
+$log->debug("Found user $$upload{user} with out company.  Company is $$Company{name}");
 		} # end if
 	} # end if
 
@@ -339,10 +330,10 @@ $log->debug("Found user $$upload_info{user} with out company.  Company is $$Comp
 		('company_id'	=>	$Company ? $Company->id() : undef),
 		('user_id'		=>	$User ? $User->id() : undef ),
 		'company'		=>	$company_name,
-		'size'			=>	$upload_info->{size},
-		'total'			=>	$upload_info->{size},
-		'finished'		=>	$upload_info->{timestamp},
-		'file_path'		=>	$proper_file_path,
+		'size'			=>	$upload->{size},
+		'total'			=>	$upload->{size},
+		'finished'		=>	$upload->{timestamp},
+		'file_path'		=>	$$upload{proper_file_path},
 		'type'			=>	'FTP',
 	});
 	if ( $error ) {
@@ -350,8 +341,8 @@ $log->debug("Found user $$upload_info{user} with out company.  Company is $$Comp
 	} else {
 		my $File = new openprint::File();
 		$error = $File->save({
-			'size'		=>	$upload_info->{size},
-			'filename'	=>	$proper_file_path,
+			'size'		=>	$upload->{size},
+			'filename'	=>	$$upload{proper_file_path},
 			'upload_id'	=>	$Upload->id(),
 		});
 		print STDERR $error if $error;
@@ -379,8 +370,7 @@ $log->debug("Found user $$upload_info{user} with out company.  Company is $$Comp
 			my %variable;
 			$variable{'Company'} = $Company;
 			$variable{'User'} = $User;
-			$variable{'filename'} = $proper_file_path;
-			$variable{'size'} = $upload_info->{size};
+			$variable{'Uploads'} = \@uploads;
 
 			if (-e $opts->{'skin_path'} . '/email_content/uploadfiles_csr_notification.html') {
 				$variable{'ReplacementText'} = misc::load_file( $log, $opts->{'skin_path'} . '/email_content/ftp_csr_notification.html' );
@@ -404,13 +394,13 @@ $log->debug("Found user $$upload_info{user} with out company.  Company is $$Comp
 	my $text = <<EOT;
 File just uploaded via FTP:
 
-	User: $upload_info->{user}
-		Client: $upload_info->{client}
+	User: $upload->{user}
+		Client: $upload->{client}
 
-	File: $proper_file_path $attached
-		Size: $upload_info->{size} $bytes_str
-		At: $upload_info->{timestamp}
-		Duration: $upload_info->{duration} $secs_str
+	File: $$upload{proper_file_path} $attached
+		Size: $upload->{size} $bytes_str
+		At: $upload->{timestamp}
+		Duration: $upload->{duration} $secs_str
 		Status: $status
 		Transfer type: $type_str
 
@@ -455,7 +445,7 @@ EOT
 					$email_info->{Body} .= "$boundary\n";
 
 					$email_info->{Body} .= "Content-Disposition: attachment; filename=\"$file\"\n";
-					if ($upload_info->{transfer_type} eq 'a') {
+					if ($upload->{transfer_type} eq 'a') {
 						$email_info->{Body} .= "Content-Type: text/plain; charset=\"iso-8859-1\"\n\n";
 						$email_info->{Body} .= $attach;
 
