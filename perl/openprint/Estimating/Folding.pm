@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -1034,35 +1034,37 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 				} # end if
 			} # end foreach fold_type
 			my $stitching_part;
-if ( ! exists $$specs{'StitchingCost'} ) {
-				# Add in stitching estimate, based on if the folder is this piece of equipment
-				my @Signature_Impositions;
-				foreach ( $Project->signatures() ) {
-					my $s_specs = openprint::service::get_specs_ref( $Project, $_ );
-					my $i = new openprint::Imposition();
-					$i->load( $sig_specs, $qty_index );
-					push @Signature_Impositions, $i;
-				} # end foreach ss_id
-				my %fold_specs = %$specs;
-				$fold_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $Equipment->id();
-				$fold_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"} = $totalPrice;
-				my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, @Signature_Impositions );
-				if ( ! $$results{'Equipment'} ) {
-					$Breakdown .= "unable to determine stitching equipment $$results{alert} $fold_specs{'hdnBreakdown'.$qty_index}<br/>";
-					next;
-				} elsif ( $$results{'Equipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
-					$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$results{'Equipment'}->strid() .'.<br/>';
-					$Breakdown .= $$stitching_specs{"hdnBreakdown$qty_index"};
-					next;
+			if ( $stitching_service_index ) {
+				if ( ! exists $$specs{'StitchingCost'} ) {
+# Add in stitching estimate, based on if the folder is this piece of equipment
+					my @Signature_Impositions;
+					foreach ( $Project->signatures() ) {
+						my $s_specs = openprint::service::get_specs_ref( $Project, $_ );
+						my $i = new openprint::Imposition();
+						$i->load( $sig_specs, $qty_index );
+						push @Signature_Impositions, $i;
+					} # end foreach ss_id
+					my %fold_specs = %$specs;
+					$fold_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $Equipment->id();
+					$fold_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"} = $totalPrice;
+					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, @Signature_Impositions );
+					if ( ! $$results{'Equipment'} ) {
+						$Breakdown .= "unable to determine stitching equipment $$results{alert} $fold_specs{'hdnBreakdown'.$qty_index}<br/>";
+						next;
+					} elsif ( $$results{'Equipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
+						$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$results{'Equipment'}->strid() .'.<br/>';
+						$Breakdown .= $$stitching_specs{"hdnBreakdown$qty_index"};
+						next;
+					} # end if
+					$stitching_part = $$results{'Price'} / $Project->signatures();
+					$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->strid() . '<br/>';
+				} elsif ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
+					$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$specs{'StitchingEquipment'}->strid() .'.<br/>';
+				} else {
+					$stitching_part = $$specs{'StitchingCost'};
+					$Breakdown .= "Stitching cost: $stitching_part on " . $$specs{'StitchingEquipment'}->strid() . '<br/>';
 				} # end if
-				$stitching_part = $$results{'Price'} / $Project->signatures();
-				$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->strid() . '<br/>';
-} elsif ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
-	$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$specs{'StitchingEquipment'}->strid() .'.<br/>';
-} else {
-	$stitching_part = $$specs{'StitchingCost'};
-	$Breakdown .= "Stitching cost: $stitching_part on " . $$specs{'StitchingEquipment'}->strid() . '<br/>';
-} 
+			} # end if
 
 				my $comparison_cost = $totalPrice + $stitching_part;
 
