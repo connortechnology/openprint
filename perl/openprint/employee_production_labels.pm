@@ -24,12 +24,10 @@ sub _label {
 		$Label->set_data($param{'field'}=>$param{'value'});
 		$Label->save();
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
-$openprint::log->debug("_label get " . join('',$Label->get_data($param{'field'})));
 	} elsif ( $param{'action'} eq 'get' ) {
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
 	} elsif ( $param{'action'} eq 'getnohtml' ) {
 		$variable{'PageContent'} = join('',$Label->get_data($param{'field'}));
-$openprint::log->debug('filtering');
 		$variable{'PageContent'} =~ s/<br\/>/\n/ig;
 	} # end if
 } # end sub _label
@@ -38,6 +36,4 @@ sub label {
 } # end sub label
 
 1;
-
 __END__
-~	   
