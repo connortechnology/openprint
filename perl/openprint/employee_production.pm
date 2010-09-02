@@ -837,7 +837,8 @@ sub barcode {
 		add_to_barcode_log( $log, $dbh, \%variable, $Project->id(), $docket_id, $param{'Operator'}, $message );
 #$variable{'Results'} = sprintf('<tr><td>%.4d-%.2d-%.2d %.2d:%.2d:%.2d</td><td>%s</td><td><a href="/employee/project/view.html?ProjectIndex=%d&OrderID=%d">%d</a></td><td>%s</td></tr>', Date::Calc::Today_and_Now(), $operators{$operator}, $project_index, $order_id, $docket_id, $message ) . $variable{'Results'};
 		$Project->update_status();
-		openprint::order::update_order_status( $r, $log, $dbh, $param{'Order'} );
+		my $Order = new openprint::Order( $param{'Order'} );
+		$Order->update_status();
 	} # end if
 
 } # end sub barcode

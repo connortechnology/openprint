@@ -180,7 +180,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 								'service_id'	=>	$service_id,
 								'order'			=>	'id',
 								);
-						$html .= '<br/>' . join('<br/>', map { sprintf('<img src="%s" alt=""/>', $_->file_path() ); } @Signatures );
+						$html .= '<br/>' . join('<br/>', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="SignatureCapture"/>`, $_->id(), $_->file_path() ); } @Signatures );
 					} # end if
 					$html .= '</td>';
                     $html .= "</tr>\n";

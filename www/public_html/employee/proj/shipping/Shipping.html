@@ -1,16 +1,27 @@
 <script type="text/javascript" src="/javascripts/service.js?version=1.0"></script>
 <script type="text/javascript">
-function calc( formName ) {
+function calc( formName, force ) {
+    var form = getFormObj( formName );
 	if ( gettingNewPrice ) {
-		setTimeout( "calc('" + formName + "');", 1000 );
-	} else {
-		remove_div('AlertDiv');
-		gettingNewPrice = true;
-		var form = getFormObj( formName );
-		jsrsExecute( '/jsrs.htm', cbFillUPSResults, 'openprint::service::external_calc', get_variables( formName, form.ServiceType.value ) );
+		if ( timeout ) {
+			clearTimeout( timeout );
+		} // end if
+		if ( ! force ) {
+			setTimeout( "calc('"+formName+"');", 1000 );
+			return;
+		} // end if
 	} // end if
+	timeout = null;
+	gettingNewPrice = true;
+
+	remove_div('AlertDiv');
+	gettingNewPrice = true;
+	
+	var h = form.serialize(true);
+	h.callback = 'cbShippingResults';
+	new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 } // end calc()
-function cbFillUPSResults( results ) {
+function cbShippingResults( results ) {
 	cbFillResults( results );
 	var form = getFormObj( 'f1' );
 	if ( ( form.elements['NeedPlainCartons'].value > 0 ) && confirm('Your project must be packed in cartons in order to be shipped.  Would you like to add Plain Cartons to your project?' ) ) {
