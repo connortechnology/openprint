@@ -219,8 +219,7 @@ sub continue_project {
 
 		if ( ! $service_index ) {
 			my $Project = new openprint::Project( $project_index );
-			foreach my $qty_index ( 1 .. 3 ) {
-				next if ! $Project->quantity($qty_index);
+			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				if ( $_ = openprint::Estimating::MultiPage::status( $project_index, undef, $qty_index ) ) {
 					my @sigs = $Project->signatures({'Group'=>$_});
 					my $src_id = pop @sigs;
@@ -521,7 +520,7 @@ sub create_edit_process {
 	$openprint::session{'project_id'} = $Project->id();
 	if ( $error ne '' ) {
 		$$variable{'Redirect'} = '/main/project/create_edit.html';
-		$$variable{'error'} = 'Fields not complete';
+		$$variable{'error'} = 'Error saving project';
 		$$variable{'details'} = $error;
 		foreach ( $r->param() ) {
 			$$variable{$_} = $r->param($_);
@@ -647,11 +646,7 @@ sub create_edit_process {
 		$Project->quantity3( int $openprint::param{'txtQuantity3'} );
 	} # end if
 
-	# Because we do some low-level crappy stuff, we need to clear the caches, cuz they are stale
-	openprint::service::init_cache();
-
-	my @project_types = openprint::ProjectType->find( 'name' => $openprint::param{'rdbProjectType'} );
-	my $ProjectType = shift @project_types;
+	my $ProjectType = openprint::ProjectType->find_one( 'name' => $openprint::param{'rdbProjectType'} );
 	my $OldProjectType = $Project->Type();
 
 	$Project->reference( $r->param('txtProjectReference') );
@@ -680,16 +675,15 @@ sub create_edit_process {
 
 	# take care of the Graphic Design service
 	if ( $r->param('rdbGraphicDesign') eq 'Y' ) {
-		push @{$services{'GraphicDesign'}}, insert_service( $log, $dbh, $project_index, 'GraphicDesign') if ! $services{'GraphicDesign'};
+		push @{$services{'GraphicDesign'}}, $Project->add_service('GraphicDesign') if ! $services{'GraphicDesign'};
 	} # end if
-
 
 	my %statuses = sql::execute( $log, $dbh, 'SELECT lngserviceindex, strstatus FROM tbl_Project_Contents WHERE lngprojectindex=?', $project_index );
 
 	foreach my $ServiceType ( openprint::ServiceType->find( 'create_visible'=>'Y') ) {
 		if ( $openprint::param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
 			if ( ! $services{$ServiceType->name()} ) {	
-				push @{$services{$ServiceType->name()}}, insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );
+				push @{$services{$ServiceType->name()}}, $Project->add_service($ServiceType->name());
 				$recalculate = 1;
 			} # end if
 		} else {
@@ -705,7 +699,7 @@ sub create_edit_process {
 		} # end if
 	} # end foreach
 	if ( ! ( $services{'Proofs'} or $services{'NoPrinting'} ) ) {
-		push @{$services{'Proofs'}}, insert_service( $log, $dbh, $project_index, 'Proofs');
+		push @{$services{'Proofs'}}, $Project->add_service('Proofs');
 		$recalculate = 1;
 	} # end if
 
@@ -716,6 +710,8 @@ sub create_edit_process {
 			openprint::service::internal_calc( $log, $dbh, $variable, $Project->id(), $signature_service_index, 'Printing' );
 		} # end foreach
 		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $Project->id(), undef );
+		$Project->summary( undef );
+		$Project->save();
 	} # end if
 	return $Project->id();
 } # end sub create_edit_process

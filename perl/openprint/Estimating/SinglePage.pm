@@ -54,6 +54,11 @@ sub no_outputs {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
+	my $Project = new openprint::Project( $project_index );
+	if ( ! $Project->signatures() ) {
+		$Project->add_signature( );
+	} # end if
+
 	my $group_id = '';
 	openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
 	openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );

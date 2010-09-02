@@ -1,4 +1,4 @@
-<form name="f1" method="post" action="prepress_productivity.html">
+<form name="f1" method="post" action="/employee/reports/prepress_productivity.html">
 <fieldset class="filters"><legend>Report Criteria</legend>
 	Choose report criteria and click Show Results.<br/><br/>
 	<p>
@@ -6,7 +6,7 @@
 			<select name="ddmEmployee" size="1">
 				<option value="Prepress">All Prepress Employees</option>
 				<option value="All" <? echo ( 'selected' if $r->param('ddmEmployee') eq 'All' ) ?>>All Employees</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)') ], $r->param('ddmEmployee') ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)') ], $r->param('ddmEmployee') ); ) ?>
 			</select>
 	</p>
 	<? eval (
@@ -41,14 +41,17 @@
 	</p>
 </fieldset>
 <? eval ( 
-		my %params = ( 'type'=>['E','A'], 'order'=>'lower(strlastname),lower(strfirstname)' );
+		my %params = ( 'type'=>['E','A'], 'order'=>'lower(lastname),lower(firstname)' );
 		if ( $param{'ddmEmployee'} eq 'Prepress' or ! $param{'ddmEmployee'} ) {
 			$params{'usergroup'} = 'Prepress';
 		} elsif ( $param{'ddmEmployee'} ne 'All' ) {
 			$params{'id'} = $param{'ddmEmployee'};
 		} # end if
 		@{$$variable{'Results'}} = openprint::User->find( %params );
-		@{$$variable{'Projects'}} = openprint::Project->find( 'ordered_on_start'=>"$$variable{'Start'} 00:00:00", 'ordered_on_end'=>"$$variable{'End'} 23:59:59" );
+		@{$$variable{'Projects'}} = openprint::Project->find( 
+			'ordered_on_>='	=>	"$$variable{'Start'} 00:00:00", 
+			'ordered_on_<='	=>	"$$variable{'End'} 23:59:59"
+			);
  ) ?>
  <? if ( @{$$variable{'Projects'}} ) ?>
 	Total # of Dockets in the time period: <? echo ( @{$$variable{'Projects'}} ) ?>:
@@ -156,15 +159,14 @@
 		<th valign="top" align="left" width="100">Index</th>
 		<th valign="top" align="left">Reference</th>
 		<th valign="top" align="left">Company</th>
-		<th valign="top" align="right" width="100">Ordered On</th>
+		<th class="Date">Ordered On</th>
 	</tr>
 <? while ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>
-<? eval ( @$variable{'DateOrdered'} = sql::execute( $log, $dbh, q{SELECT date(dtmOrderDate) FROM Orders WHERE Index=?}, $$variable{'Project'}->order_id() ); ) ?>
 	<tr<?colrow?>>
 		<td valign="top"><a href="/employee/project/view.html?project_id=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
 		<td valign="top"><? echo ( ssi::htmlize( $$variable{'Project'}->reference() ); ) ?></td>
 		<td valign="top"><? echo ( ssi::htmlize( $$variable{'Project'}->Company()->name() ); ) ?></td>
-		<td valign="top" align="right"><?DateOrdered?></td>
+		<td class="Date"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->ordered_on() ) ); ) ?></td>
 	</tr>
 <? eval ( $$variable{'colrow'} = $$variable{'colrow'} ? '' : ' class="colRow"' ) ?>
 <? endwhile ( $$variable{'Project'} = shift @{$$variable{'UnassignedProjects'}} ) ?>

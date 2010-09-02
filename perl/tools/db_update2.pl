@@ -136,7 +136,7 @@ $dbh->do("UPDATE companies set country='CA' WHERE country='Canada'");
 $dbh->do("UPDATE companies set state='ON' WHERE state='Ontario'");
 $dbh->do("UPDATE taxes set country='CA' WHERE country='Canada'");
 $dbh->do("UPDATE taxes set state='ON' WHERE state='Ontario'");
-if ( ! openprint::Invoice_Tax->find() ) {
+if ( ! openprint::Invoice_Tax->find_one() ) {
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $Invoice ( openprint::Invoice->find() ) {
 		my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM invoices WHERE id=? LIMIT 1', {}, $Invoice->id() );
@@ -191,7 +191,7 @@ if ( ! sets::isin('order_taxes', \@tables ) ) {
 	} # end foreach
 } # end if
 
-if ( ! openprint::Order_Tax->find() ) {
+if ( ! openprint::Order_Tax->find_one() ) {
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $Order ( openprint::Order->find() ) {
 		my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Orders WHERE id=? LIMIT 1', {}, $Order->id() );
@@ -292,10 +292,10 @@ if ( sets::isin( 'service_types', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin('equipment_stock_settings', \@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Equipment_Stock_Settings.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Equipment_Stock_Settings.sql}) );
+} # end if
+if ( ! sets::isin('signaturecapture', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/SignatureCapture.sql}) );
 } # end if
 $dbh->disconnect();
 1;

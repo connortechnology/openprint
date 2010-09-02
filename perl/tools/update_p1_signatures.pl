@@ -13,7 +13,7 @@ use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$log = new logger( 'debug' );
+$log = new logger( 'warn' );
 my %sql_server;
 $sql_server{'database'} = $ARGV[0];
 $sql_server{'database'} = 'point-one' if ! $sql_server{'database'};
@@ -21,10 +21,12 @@ $sql_server{'driver'}   = 'Pg';
 $sql_server{'login'}    = $ARGV[1];
 $sql_server{'login'} = $sql_server{'database'} if ! $sql_server{'login'};
 $sql_server{'password'} = $ARGV[2];
-$sql_server{'password'} = $sql_server{'database'} if ! $sql_server{'password'};
+$sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
 my $projects_count = 1000;
+my $project_id = 0;
+my $company_id = 0;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
@@ -35,14 +37,19 @@ sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'
 } # end foreach bleed
 
 if ( 1 ) {
-foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>$projects_count ) ) {
+foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
+	( $project_id ? ( 'id'=>$project_id) : () ),
+	( $company_id ? ('company_id'=>$company_id) : () ),
+	'limit'=>$projects_count ) ) {
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 
-	foreach my $sig_id ( $Project->signatures() ) {
+	foreach my $sig_id ( $Project->signatures() ? $Project->signatures() : $$services{''}[0] ) {
+		next if ! $sig_id;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 		if ( $$sig_specs{'SignatureIndex'} eq '' ) {
+$log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureIndex");
 			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
 			my ( $sig_index ) = sql::execute( undef, undef, $_, $Project->id() );
 			$sig_index += 1;
@@ -51,7 +58,8 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>$pro
 		foreach my $bleed ( 'Left','Right','Top','Bottom' ) {
 			if ( $$sig_specs{'chkBleed'.$bleed} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'Bleed'.$bleed, $$sig_specs{'chkBleed'.$bleed} );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkBleed'.$bleed, '' );
+				openprint::service::delete_service_spec( $Project->id(), $sig_id, 'chkBleed'.$bleed );
+				#openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkBleed'.$bleed, '' );
 			} # end if
 		} # end foreach
 		#if ( ! exists $$sig_specs{'Group'} ) {
@@ -172,10 +180,9 @@ if ( 1 ) {
 			# Skip multipage projects
 			next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
 			my $services = $Project->services();
+			next if $$services{'Signature'};
 			my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	$log->warn("got specs $$services{''}[0]");
 			my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
-	$log->warn("got specs");
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
 			} # end foreach
@@ -195,7 +202,7 @@ require openprint::ServiceType_Default;
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 if ( ! $ServiceType ) {
 	$ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
-	$ServiceType->save({'name'=>'Signature','type'=>'Printing'});
+	$ServiceType->save({'name'=>'Signature','type'=>'Printing','url'=>'prin/Signature.html'});
 }
 if ( ! $ServiceType ) {
 	$ServiceType = new openprint::ServiceType();

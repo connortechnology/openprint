@@ -53,11 +53,11 @@ sub view_services {
 	if ( defined $openprint::param{'btnFunction'} and ( $openprint::param{'btnFunction'} eq 'Save Project' ) ) {
 		$log->debug("*** Time to Save Project - View Services Function ***");
 		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
+		return if $$variable{'Redirect'};
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		my $Project = new openprint::Project( $project_index );
+		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, undef, $Project->Type()->type() );
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-		$Project->summary(undef);
-		$Project->save();
 	} # end if
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
@@ -102,7 +102,7 @@ sub view_services {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
 # Might need to test for status of project service
 					$recalc = 1;
-				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste'] ) ) {
+				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching'] ) ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
 					$recalc = 1;
 				} # end if
