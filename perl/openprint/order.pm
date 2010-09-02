@@ -696,8 +696,8 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 			$Product->save();
 		} # end foreach Product
 
-		$$variable{'Error'} .= store_order_info( $r, $log, $dbh, $cookie, $variable );
-		if ( $$variable{'Error'} ) {
+		$$variable{'error'} .= store_order_info( $r, $log, $dbh, $cookie, $variable );
+		if ( $$variable{'error'} ) {
 			$$variable{'Redirect'} = '/main/order/information.html';
 			return;
 		} # end if
