@@ -30,18 +30,26 @@
 			</p>
 			<p>
 				<label>Time Associated:</label>
-				<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }" />
+				<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');" />
 				<label class="radio" for="time_associated1">Yes</label>
-				<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Timetrack'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }" />
+				<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Timetrack'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_time').show();$('ending_time').show(); } else { $('starting_time').hide();$('ending_time').hide(); }update_duration(this.form,'starting','ending');" />
 				<label class="radio" for="time_associated0">No</label>
 			</p>
 			<p><label>Start:</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), q`check_time_starting(this.form,'starting','ending');update_duration(this.form,'starting','ending');`, (! sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] )) ); ) ?>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting', $$variable{'Timetrack'}->starting(), 
+						{
+						'onchange'	=>	q`check_time_starting(this.form,'starting','ending'); update_duration(this.form,'starting','ending');`,
+						'showtime'	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ) 
+						} ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Today_start', 't.gif', 'set_today( f1.starting_year, f1.starting_month, f1.starting_day, f1.starting_hour, f1.starting_minute );', '', 'T' ); ) ?>
 </span>
 			</p>
 			<p><label>End:</label>
-			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), q`update_duration(this.form,'starting','ending');`, ! sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ) ); ) ?>
+			<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending', $$variable{'Timetrack'}->ending(), 
+						{
+						'onchange'	=>	q`update_duration(this.form,'starting','ending');`,
+						'showtime'	=>	sets::isin( $$variable{'Timetrack'}->time_associated(), [ '', 1 ] ),
+						} ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Today_end', 't.gif', 'set_today( f1.ending_year, f1.ending_month, f1.ending_day, f1.ending_hour, f1.ending_minute );', '', 'T' ); ) ?>
 </span>
 			</p>
