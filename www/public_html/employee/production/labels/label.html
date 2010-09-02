@@ -7,7 +7,7 @@
 		$$variable{'Label'}->docket( $$variable{'Project'}->docket() );
 	} # end if
 
-	if ( ! $$variable{'id'} ) {
+	if ( $param{'type_id'} and ! $param{'id'} ) {
 		$$variable{'error'} .= $$variable{'Label'}->save();
 		$$variable{'Project'}->add_to_log( @session{'company_id','user_id'}, 'Added Label/Packing Slip' );
 	} # end if
@@ -17,15 +17,19 @@
 		<? echo ( join('',
 			ssi::writeButton( $log, $dbh, 'Print','print.gif','window.print();', '', 'Print' ),
 			ssi::writeButton( $log, $dbh, 'Close','close.gif','', 
-$param{'project_id'} ? 
-'/employee/project/view.html?ProjectIndex='.$param{'project_id'} :
-'/employee/production/projects.html?StartDocket='.$$variable{'Label'}->docket(), 
-'Back' ),
+				$param{'project_id'} ? 
+				'/employee/project/view.html?ProjectIndex='.$param{'project_id'} :
+				'/employee/production/projects.html?StartDocket='.$$variable{'Label'}->docket(), 
+				'Back' ),
 		); ) ?>
 	</p>
 </div>
 
 <? echo (
-	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'.html' );
-	return ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+	if ( ! $$variable{'Label'}->type_id() ) {
+		return 'Unknown label type.';
+	} else {
+		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/employee/production/labels/_'.$$variable{'Label'}->Type()->name().'.html' );
+		return ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+	} # end if
 ) ?>
