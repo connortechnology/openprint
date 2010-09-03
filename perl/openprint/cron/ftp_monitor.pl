@@ -17,8 +17,6 @@ use vars qw( $log $dbh %config );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
-$log = logger->new();
-$log->{level} = "debug";
 
 use File::Basename qw(basename);
 use Getopt::Long;
@@ -32,7 +30,8 @@ my $program = basename($0);
 
 my $opts = {};
 GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
-	'log=s', 'recipient=s@', 'sleep=s', 'smtp-server=s', 'subject=s',
+	'log_file=s', 'log_level=s',
+	'recipient=s@', 'sleep=s', 'smtp-server=s', 'subject=s',
 	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
 	'scoreboard=s',
@@ -42,6 +41,8 @@ if ($opts->{help}) {
 	usage();
 	exit 0;
 }
+
+$log = logger->new( {'file'=>$$opts{'log_file'}, 'level'=>$$opts{'log_level'} ? $$opts{'log_level'} : 'debug' } );
 
 unless ($opts->{db_name}) {
 	print STDERR "$program: missing required --db_name parameter\n";
@@ -123,15 +124,8 @@ if ( $opts->{'skin_path'} ) {
 my %uploads;
 
 my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
-foreach my $score ( @$scoreboard ) {
-	foreach my $k ( keys %$score ) {
-		print " $k => $$score{$k}\n";
-	} 
-} # end foreach
 my $fifoh;
-print "prior to Opened fifo\n";
 if (open($fifoh, "< $fifo")) {
-print "Opened fifo\n";
 	while (1) {
 		my $line;
 		eval {
@@ -198,7 +192,7 @@ print "Opened fifo\n";
 							$send_email = 0;
 						}
 					}
-				}
+				} # end if send email
 
 				if ($send_email) {
 					push @{$uploads{$user_name}}, {
@@ -217,21 +211,7 @@ print "Opened fifo\n";
 				$log->error("Unparsed line $line");
 			} # end if
 
-			if ($opts->{log}) {
-				# Note: since this opens, writes, then closes the log file for every
-				# write, it will interact with log rotation scripts MUCH better than
-				# proftpd by itself.	Just one of the small benefits.
-
-				my $logfh;
-				if (open($logfh, ">> $$opts{log}")) {
-					print $logfh "$line\n";
-					unless (close($logfh)) {
-						print STDERR "$program: error writing to log file '$$opts{log}': $!\n";
-					}
-				} else {
-					print STDERR "$program: error opening log file '$$opts{log}': $!\n";
-				} # end if
-			} # end if log file
+			$log->debug("$line\n");
 			$line = undef;
 		} else {
 			# No input at this time. Sleep for half a second (or less) and check again.
@@ -242,7 +222,6 @@ print "Opened fifo\n";
 	} # end while <input>
 
 	close($fifoh);
-	print "Fifo closed.\n";
 } else {
 	die "$program: unable to read FIFO '$fifo': $!\n";
 }
@@ -253,19 +232,19 @@ if ( $opts->{'pid_file'} ) {
 sub check_scoreboard {
 	my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
 	my @users = map { $$_{'sce_user'} } @$scoreboard;
-	print "Users: @users in scoreboard\n";
+	$log->debug( "Users: @users in scoreboard\n" );
 
 	foreach my $user ( keys %uploads ) {
 		if ( ! sets::isin( $user, \@users ) ) {
-			print "Sending mail for $user\n";
+			$log->debug( "Sending mail for $user\n" );
 # No longer logged in, so we can process and send emails.
 			send_email( @{$uploads{$user}} );
 			delete $uploads{$user};
 		} else {
-			print "Holding mail for $user\n";
+			$log->debug( "Holding mail for $user\n" );
 		} # end if
 	} # end foreach $user
-}
+} # end sub check_scoreboard
 
 sub send_email {
 	my @uploads = @_;
