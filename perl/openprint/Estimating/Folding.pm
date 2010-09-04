@@ -23,7 +23,7 @@ require sql;
 
 use vars qw( @folds %fold_types );
 
-my $debug = 0;
+my $debug = 1;
 
 my @equipment;
 my @stitchers;
@@ -45,9 +45,12 @@ sub variables {
 	foreach my $s_s_id ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			push @v, "chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
-			push @v, "ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index";
-			push @v, "chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index";
+			push @v, (
+					"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index",
+					"Price-$$sig_specs{'SignatureIndex'}-$qty_index",
+					);
 			foreach my $fold_index ( 1 .. 4 ) {
 				push @v, "FoldQty-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
 				push @v, "FoldImposition-$$sig_specs{'SignatureIndex'}-$qty_index-$fold_index";
@@ -340,6 +343,7 @@ sub signature_calc {
 
 	my $bestM;
 	my $bestPrice;
+	my $bestComparison;
 	my $bestRunPrice = 0;
 	my $bestRunTime = 0;
 	my $bestSetupPrice = 0;
@@ -353,15 +357,19 @@ sub signature_calc {
 		$SignatureImposition->display('Signature Imposition:');
 	} # end if
 
-		if ( $$services{'SaddleStitching'} ) {
-			if ( ! $stitching_specs ) {
+	my $stitching_service_index;
+	if ( $$services{'SaddleStitching'} ) {
+		if ( ! $stitching_specs ) {
 			$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'SaddleStitching'}[0] );
-			}
-		} elsif ( $$services{'LoopStitching'} ) {
-			if ( ! $stitching_specs ) {
+		}
+		$stitching_service_index = $$services{'SaddleStitching'}[0];
+	} elsif ( $$services{'LoopStitching'} ) {
+		if ( ! $stitching_specs ) {
 			$stitching_specs = openprint::service::get_specs_ref( $Project, $$services{'LoopStitching'}[0] );
-			} # end if
 		} # end if
+		$stitching_service_index = $$services{'LoopStitching'}[0];
+	} # end if
+
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
 		$openprint::log->debug("Overriding Folding Equipment for sig $$sig_specs{'SignatureIndex'} to " . $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		if ( $$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} ) {
@@ -583,11 +591,14 @@ sub signature_calc {
 				$Breakdown .= 'Stitcher can only fold 4pg cover:<br/>';
 				next;
 			} # end if
-			if ( $$stitching_specs{'ddmEquipment'.$qty_index} != $Equipment->id() ) {
-				$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.new openprint::Equipment( $$stitching_specs{'ddmEquipment'.$qty_index} )->strid() .'.<br/>';
+			if ( ! $stitching_service_index ) {
+				$Breakdown .= 'Not stitching:<br/>';
 				next;
 			} # end if
-		
+			if ( ( exists $$specs{'StitchingCost'} ) and ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) ) {
+				$Breakdown .= "Not stitching on $$Equipment{name}:<br/>";
+				next;
+			} # end if
 		} # end if
 		if ( my $pt = $Equipment->specification('PrintingTypes') ) {
 			my $ppt = $Press->specification('Printing Type');
@@ -1022,12 +1033,47 @@ $openprint::log->debug("No MakeReady for " . $Fold->type().'MakeReady' . ' ' . $
 					last;
 				} # end if
 			} # end foreach fold_type
+			my $stitching_part;
+			if ( $stitching_service_index ) {
+				if ( ! exists $$specs{'StitchingCost'} ) {
+# Add in stitching estimate, based on if the folder is this piece of equipment
+					my @Signature_Impositions;
+					foreach ( $Project->signatures() ) {
+						my $s_specs = openprint::service::get_specs_ref( $Project, $_ );
+						my $i = new openprint::Imposition();
+						$i->load( $sig_specs, $qty_index );
+						push @Signature_Impositions, $i;
+					} # end foreach ss_id
+					my %fold_specs = %$specs;
+					$fold_specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"} = $Equipment->id();
+					$fold_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"} = $totalPrice;
+					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $stitching_service_index, $stitching_specs, $qty_index, \%fold_specs, $sig_specs, @Signature_Impositions );
+					if ( ! $$results{'Equipment'} ) {
+						$Breakdown .= "unable to determine stitching equipment $$results{alert} $fold_specs{'hdnBreakdown'.$qty_index}<br/>";
+						next;
+					} elsif ( $$results{'Equipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
+						$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$results{'Equipment'}->strid() .'.<br/>';
+						$Breakdown .= $$stitching_specs{"hdnBreakdown$qty_index"};
+						next;
+					} # end if
+					$stitching_part = $$results{'Price'} / $Project->signatures();
+					$Breakdown .= "Stitching cost: $stitching_part on " . $$results{'Equipment'}->strid() . '<br/>';
+				} elsif ( $$specs{'StitchingEquipment'}->id() != $Equipment->id() and $Equipment->specification('Folding Capable') eq 'When Stitching' ) {
+					$Breakdown .= 'Not stitching on ' . $Equipment->strid().' stitching on '.$$specs{'StitchingEquipment'}->strid() .'.<br/>';
+				} else {
+					$stitching_part = $$specs{'StitchingCost'};
+					$Breakdown .= "Stitching cost: $stitching_part on " . $$specs{'StitchingEquipment'}->strid() . '<br/>';
+				} # end if
+			} # end if
 
-			$Breakdown .= 'Total: $' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . '<br/><br/>';
+				my $comparison_cost = $totalPrice + $stitching_part;
 
-			if ( ( $totalPrice < $bestPrice ) or ( ! defined $bestPrice ) ) {
+				$Breakdown .= 'Total: $' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . ' / comparison : ' . $comparison_cost . ' <br/><br/>';
+
+			if ( ( $comparison_cost < $bestComparison ) or ( ! defined $bestComparison ) ) {
 #$openprint::log->debug("Got better prrice $totalPrice < $bestPrice " . $Equipment->name() ) if $debug;
 				$bestM = $mprice;
+				$bestComparison = $comparison_cost;
 				$bestPrice = $totalPrice;
 				$bestEquipment = $Equipment;
 				$bestRunTime = int($totalTime);
@@ -1164,6 +1210,7 @@ sub calc {
 				my %results = signature_calc( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Imposition->Paper(), $Imposition, $uv_specs, $aq_specs );
 				$$specs{'hdnBreakdown'.$qty_index} .= $results{'Breakdown'};
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MR Waste: %d, Run Waste: %d<br/>', @results{'MakeReadyOvers','RunOvers'} );
+				$$specs{"Price-$$sig_specs{'SignatureIndex'}-$qty_index"} = $results{'Price'};
 				$price += $results{'Price'};
 				$mprice += $results{'MPrice'};
 				if ( $results{'Equipment'} ) {
@@ -1197,7 +1244,7 @@ sub calc {
 						$$specs{"FoldAngles-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->angles();
 						$$specs{"FoldRunspeed-$$sig_specs{'SignatureIndex'}-$qty_index-$index"} = $Fold->runspeed($Imposition->Paper()->gsm());
 						$index += 1;
-					} # end foreach
+					} # end foreach fold
 
 				} else {
 					if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ne 'Y' ) {

@@ -1,7 +1,7 @@
 <fieldset>
 	<legend>Contact Information</legend>
 	<div id="contactInformation">
-		<div style="float: left; width: 50%;">
+		<div class="leftColumn" style="float: left; width: 50%;">
 			<div class="fieldContainer">
 				<p>
 					<label>Company Name:</label>
@@ -14,13 +14,15 @@
 					<? echo ( $$variable{'Company'}->address2() ) ?><br/>
 <? endif ( $$variable{'Company'}->address2() ) ?>
 				</p>
+<? if ( $$variable{'Company'}->postal_code() ) ?>
 				<p>
 					<label>Postal Code:</label>
 					<? echo ( $$variable{'Company'}->postal_code() ) ?>
 				</p>
+<? endif ( $$variable{'Company'}->postal_code() ) ?>
 			</div>
 		</div>
-		<div style="float: left; width: 50%;">
+		<div class="rightColumn" style="float: left; width: 50%;">
 			<div class="fieldContainer">
 				<p>
 					<label>Contact Name:</label>
@@ -41,7 +43,7 @@
 </fieldset>
 
 <fieldset>
-	<legend>File</legend>
+	<legend>File<? echo ( @{$$variable{'Uploads'}} == 1 ? '' : 's' ) ?></legend>
 	<table border="0" cellpadding="1" cellspacing="0" width="100%">
 		<thead>
 		 <tr>
@@ -50,9 +52,13 @@
 		 </tr>
 		</thead>
 		<tbody>
-			<tr><td nowrap="nowrap"><? echo ( $$variable{'filename'} ) ?></td><td align="right">
-		<? echo ( misc::format_bytes($$variable{'size'}); ) ?>
-			</td></tr>
+			<? echo ( 
+				my $html;
+				foreach my $Upload ( @{$$variable{'Uploads'}} ) {
+					$html .= sprintf('<tr><td nowrap="nowrap">%s</td><td align="right">%s</td></tr>', $$Upload{'proper_file_path'}, misc::format_bytes($$Upload{'size'}) ); 
+				} # end foreach Upload
+				return $html;
+			) ?>
 		</tbody>
 	</table>	
 </fieldset>

@@ -1,6 +1,7 @@
 package openprint::service;
 
 use strict;
+use Carp qw( cluck );
 
 require openprint::Equipment;
 require openprint::pricing;
@@ -154,7 +155,7 @@ sub get_specifications_pairs {
 sub get_specs_ref {
 	my ( $p_id, $s_id ) = @_;
 	if ( (! $p_id ) or (! $s_id) ) {
-		$openprint::log->error("********* Called get_specs_ref with Project Index or Service Index ****************");
+		Carp::cluck("********* Called get_specs_ref with Project Index or Service Index ****************");
 		return;
 	} # end if
 	if ( sets::isin( ref $p_id, [ 'openprint::Project', 'openprint::QuotedProject' ] ) ) {
