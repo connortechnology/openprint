@@ -565,7 +565,10 @@ sub datetime_select {
 	$html .= '<option value=""> </option>';
 	$html .= getdays( $day, $year, $month );
 	$html .= '</select></span>';
-	$html .= sprintf('<span id="%1$s_time" class="time"><select name="%1$s_hour" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf('<span id="%1$s_time" class="time"%3$s><select name="%1$s_hour" onchange="%2$s">', $prefix, $$options{'onchange'},
+			( ( exists $$options{'showtime'} and ! $$options{'showtime'} ) ? ' style="display:none;"' : '' ) 
+			);
+
 	$html .= '<option value=""> </option>';
 	$html .= make_drop_down( [ map { $_, $_ } ( 0 .. 23 ) ], $hour );
 	$html .= '</select>';

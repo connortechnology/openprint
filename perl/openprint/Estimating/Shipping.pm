@@ -113,7 +113,12 @@ sub calc {
 			$$specs{"txtPackageWeight".$qty_index} = $$carton_specs{"txtPackageWeight".$qty_index};
 		} # end if
 		if ( ! $$carton_specs{'txtItemsPerPackage'.$qty_index} ) {
-			$$specs{'alert'} = 'Unable to determine how many items per carton for qty '. $qty_index;
+			# XXX DEPRECATE
+			if ( $$carton_specs{'txtItemsPerPackage'} ) {
+				$$carton_specs{'txtItemsPerPackage'.$qty_index} = $$carton_specs{'txtItemsPerPackage'};
+			} else {
+				$$specs{'alert'} = 'Unable to determine how many items per carton for qty '. $qty_index;
+			} # end if
 		} # end if
 
         my $other_shipped_quantity = 0;

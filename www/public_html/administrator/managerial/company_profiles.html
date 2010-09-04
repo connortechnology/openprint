@@ -159,7 +159,7 @@
 		</p>
 		<? if ( $$variable{'CustomerIndex'} ) ?>
 			<? eval (
-				@{$$variable{'Orders'}} = openprint::Order->find('company_id'=>$$variable{'CustomerIndex'},'order'=>'index DESC');
+				@{$$variable{'Orders'}} = openprint::Order->find('company_id'=>$$variable{'CustomerIndex'},'order'=>'id DESC');
 			) ?>
 			<p><label># of Orders:</label>
 				<a href="/administrator/reports/orders.html?ddmCustomer=<?CustomerIndex?>"><? echo ( @{$$variable{'Orders'}} ) ?></a>

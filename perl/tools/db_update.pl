@@ -1366,6 +1366,9 @@ if ( ! sets::isin( 'purchaseorder_contents', \@tables ) ) {
 		$dbh->do($st);
 	} # end foreach
 } # en dif
+if ( ! sets::isin( 'user_purchaseorder_limits', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/PurchaseOrder_Contents.sql}) ) or die 'user_purchaseorder_limits';
+} # end if
 
 
 foreach my $Type ( openprint::ServiceType->find('name'=>'BulkSkids') ) {
@@ -1529,7 +1532,7 @@ if ( ! $data ) {
 
 
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Quote_Details LIMIT 1', {} );
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_quote_details'", 'column_name');
 if ( $data ) {
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do(q`alter table tbl_Quote_Details add include_detailed boolean default false`) if ! exists $$data{'include_detailed'};
@@ -1539,6 +1542,7 @@ if ( $data ) {
 	} # end if
 	$dbh->do(q`alter table tbl_Quote_Details add id SERIAL NOT NULL`) if ! exists $$data{'id'};
 	$dbh->do(q`alter table tbl_Quote_Details DROP dblmarkup`) if exists $$data{'dblmarkup'};
+	$dbh->do(q`ALTER TABLE tbl_Quote_Details rename projectindex to project_id`) if exists $$data{'projectindex'};
 	sql::end_transaction( $dbh, $ac );
 } # end if
 $log->debug("Materials");

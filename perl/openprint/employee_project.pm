@@ -27,6 +27,7 @@ require openprint::PaperInventory;
 require openprint::RFIDTag;
 require openprint::ScheduledJob;
 require openprint::ServiceType_Category;
+require openprint::SignatureCapture;
 
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -360,7 +361,10 @@ sub view {
 
 		$Project->update_status();
 		$order_id = $Project->order_id() if ! $order_id;
-		openprint::order::update_order_status( $r, $log, $dbh, $order_id ) if $order_id;
+		if ( $order_id ) {
+			my $Order = new openprint::Order( $order_id );
+			$Order->update_status( );
+		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Shipped' ) {
 		$Project->status_change( undef, undef, 'Shipped' );
@@ -433,7 +437,7 @@ sub view {
 
 			$Project->add_to_log( @session{'company_id','user_id'}, sprintf( 'Added Custom Line: %s, (%.2f)', @param{'txtServiceName','txtPrice'} ) );
 			$Project->update_status( );
-			openprint::order::update_order_status( $r, $log, $dbh, $order_id );
+			$Project->Order()->update_status();
 
 			sql::end_transaction( $dbh, $ac );
 			} # end if
@@ -458,13 +462,13 @@ sub view {
 			} # end if
 		} # end foreach
 		$Project->update_status();
-		openprint::order::update_order_status( $r, $log, $dbh, $param{'OrderID'} );
+		$Project->Order()->update_status();
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Approve' ) {
 		my $Order = new openprint::Order( $param{'OrderID'} );
 		$Order->approve();
 		$Project->update_status();
-		openprint::order::update_order_status( $r, $log, $dbh, $order_id );
+		$Order->update_status();
 	} # end if
 
 	if ( $project_index ) {
@@ -472,7 +476,7 @@ sub view {
 	} # end if
 	$variable{'Project'} = $Project if ! $variable{'Project'};
 
-} # end sub view_project
+} # end sub view
 
 sub send_additional_charges_notifications {
 	my ( $order_id, $project_index ) = @_;
@@ -890,8 +894,9 @@ sub _stock_allocations {
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 }
 
+sub _signaturecapture {
+	$variable{'Signature'} = new openprint::SignatureCapture( $param{'id'} );
+}
 
 1;
-
 __END__
-~	   

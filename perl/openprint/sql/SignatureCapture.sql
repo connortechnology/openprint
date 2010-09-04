@@ -5,5 +5,6 @@ CREATE TABLE SignatureCapture (
 	service_id	INTEGER NOT NULL, 
 /*FOREIGN KEY (service_id) REFERENCES tbl_Project_Contents(lngserviceindex), */
 	deleted		BOOLEAN NOT NULL default false,
+	created_on	timestamp with time zone not null default now(),
 	PRIMARY KEY (id)
 );
