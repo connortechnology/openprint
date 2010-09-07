@@ -2168,39 +2168,6 @@ $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty
 			my %SmallerPrice = $Paper->get_price($stock_qty > $Paper->minimum_order_weight() ? $stock_qty : $Paper->minimum_order_weight() );
 
 			if ( $SpreadLayout > 0 ) {
-				if ( $imp->runstyle() eq 'Work & Tumble' ) {
-					my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
-					if ( $imps{$str} ) {
-						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
-							my $I = $imps{$str}[$j];
-							my %BiggerPrice = $I->Paper()->get_price($stock_qty);
-							if ( ( $I->Paper()->area() <= $Paper->area() )
-									and ( $I->Paper()->minimum_order_weight() <= $Paper->minimum_order_weight() )
-									and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
-									and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
-							   ) {
-								$add = 0;
-							} # end if
-						} # end for
-					} # end if $imps{$str}
-				} elsif ( $imp->runstyle() eq 'Work & Turn' ) {
-					my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows'}, 'Work & Tumble', $$imp{'image_orientation'} );
-					if ( $imps{$str} ) {
-						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
-							my $I = $imps{$str}[$j];
-							my %BiggerPrice = $I->Paper()->get_price($stock_qty);
-							if ( ( $I->Paper()->area() >= $Paper->area() )
-									and ( $I->Paper()->minimum_order_weight() >= $Paper->minimum_order_weight() )
-									and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
-									and ( $I->Paper()->is_cut() or ! $Paper->is_cut() )
-							   ) {
-								splice @{$imps{$str}}, $j, 1;
-								$j -= 1;
-							} # end if
-						} # end for
-					} # end if $imps{$str}
-				} # end if
-
 				my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
@@ -2246,48 +2213,6 @@ if ( 0 ) {
 				} # end if $imps{$str}
 				push @{$imps{$str}}, $imp if $add;
 			} else { # No SpreadLayout
-				if ( $imp->runstyle() eq 'Work & Tumble' ) {
-					my $str = sprintf('%d=%dx%d %s %s', @$imp{'imposition','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
-					if ( $imps{$str} ) {
-						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
-							my $I = $imps{$str}[$j];
-							if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
-								next;
-							} elsif ( ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$sig_specs{"CutOff$qty_index"} ) ) {
-								next;
-							} # end if
-							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-							if ( ( $I->Paper()->area() <= $Paper->area() )
-									and ( $I->Paper()->minimum_order_weight() <= $Paper->minimum_order_weight() )
-									and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
-									and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
-							   ) {
-								$add = 0;
-							} # end if
-						} # end for
-					} # end if overriden or not or cached
-				} elsif ( $imp->runstyle() eq 'Work & Turn' ) {
-					my $str = sprintf('%d=%dx%d %s %s', @$imp{'imposition','columns','rows'}, 'Work & Turn', $$imp{'image_orientation'} );
-					if ( $imps{$str} ) {
-						for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
-							my $I = $imps{$str}[$j];
-							if ( ($$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $I->Paper()->width() == $$sig_specs{"OverrideStockWidth$qty_index"}) and ( (! $$sig_specs{"OverrideStockHeight$qty_index"} ) or $I->Paper()->height() == $$sig_specs{"OverrideStockHeight$qty_index"} )) {
-								next;
-							} elsif ( ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$sig_specs{"CutOff$qty_index"} ) ) {
-								next;
-							} # end if
-							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-							if ( ( $I->Paper()->area() >= $Paper->area() )
-									and ( $I->Paper()->minimum_order_weight() >= $Paper->minimum_order_weight() )
-									and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
-									and ( ! ( ( ! $I->Paper()->is_cut() ) and $Paper->is_cut() ) )
-							   ) {
-								splice @{$imps{$str}}, $j, 1;
-								$j -= 1;
-							} # end if
-						} # end for
-					} # end if overriden or not or cached
-				} # end if
 				my $str = sprintf('%d=%dx%d %s %s', @$imp{'imposition','columns','rows','runstyle','image_orientation'} );
 				if ( $imps{$str} ) {
 					for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
@@ -4425,6 +4350,9 @@ if ( 0 ) {
 } # end if
 if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 	$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{'Folding'}[0], undef, $qty_index, $service_index, undef );
+} # end if
+if ( $$services{'Scoring'} and @{$$services{'Scoring'}} ) {
+	$html .= "\nscored " . openprint::Estimating::Scoring::signature_summary( $Project, $$services{'Scoring'}[0], undef, $qty_index, $service_index, undef );
 } # end if
 
 		return $html;
