@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head>
 		<title><?PageTitle?></title>	
-<meta name="google-site-verification" content="aaOQLrPQWxB3cNvqI3F5-zXk4BEO1AKn99Tx4wNkqbM" />
+<meta name="google-site-verification" content="YTpRpIPEwsZGWzuoY_3aYH0SVQZaPwKPn0OHi9fy7U4" />
 		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
 		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
 		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
@@ -40,7 +40,7 @@
 	</head>
 	<body onload="if ( typeof(body_onLoad) == 'function' ) body_onLoad();">
 		<div id="Header">	
-			<a href="/index.html"><img id="Logo" src="/images/EdgewaterLogo.png" alt="Edgewater Print Management"/></a>
+			<a href="/index.html"><img id="Logo" src="/images/frontier_logo.jpg" alt="Frontier Canada Inc"/></a>
 <? if ( ! $session{'user_id'} ) ?>
 			<div id="QuickLogin">
 				<form name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
@@ -93,11 +93,7 @@
 				</form>
 			</div><!--Currency-->
 		</div><!--Header-->
-		<? if ( $r->uri() eq '/index.html' ) ?>
-		<div id="HomeMenu">
-		<? else ( $r->uri() eq '/index.html' ) ?>
 		<div id="Menu">
-		<? endif ( $r->uri() eq '/index.html' ) ?>
 		<? echo ( ssi::include( $config{'SkinPath'}.'/includes/customer-menu.html' ); ) ?>
 		</div>
 		<div id="Content">
@@ -106,8 +102,8 @@
 			</div><!--ContentInner-->
 		</div><!--Content-->
 		<div id="Footer">	
-<span style="float: left;">&copy; EDGEWATER PRINT MANAGEMENT.  ALL RIGHTS RESERVED.</span>
-<span style="float: right;">SITE BY CONNORTECHNOLOGY.COM</span>
+<span style="float: left;">&copy; Frontier Canada Inc.  All Rights Reserved.</span>
+<span style="float: right;">Site by <a href="http://www.connortechnology.com">CONNORTECHNOLOGY.COM</a></span>
 		</div>
 	</body>
 </html>
