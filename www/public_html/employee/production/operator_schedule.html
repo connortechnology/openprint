@@ -10,17 +10,26 @@
 	<fieldset class="filters"><legend>Display Criteria</legend>
 		<div class="leftColumn">
 		<p>
-			<label>Presses:</label>
-			<select name="Presses" multiple="multiple" size="4">
+			<label>Equipment Category</label>
+			<select name="category" id="category" onchange="f1.submit();">
+				<option value="">All</option>
+			<? echo (
+return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment ORDER BY strcategory' ) ], $session{'/employee/production/operator_schedule.html?category'} );
+) ?>
+			</select>
+		</p>
+		<p>
+			<label>Equipment:</label>
+			<select name="Equipment" multiple="multiple" size="4">
 <? echo ( 
-	@{$$variable{'Presses'}} = ();
-	my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+	@{$$variable{'Equipment'}} = ();
+	my @presses = openprint::Equipment::find('category'=>$session{'/employee/production/operator_schedule.html?category'},'UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
-		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/operator_schedule.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/operator_schedule.html?Presses'} ) ] );
+		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/operator_schedule.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/operator_schedule.html?Equipment'} ) ] );
 	} # end foreach press
 
-	if ( $session{'/employee/production/operator_schedule.html?Presses'} ) {
-		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/operator_schedule.html?Presses'} ] );
+	if ( $session{'/employee/production/operator_schedule.html?Equipment'} ) {
+		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/operator_schedule.html?Equipment'} ] );
 	} else {
 		return ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
@@ -45,8 +54,8 @@
 	</fieldset>
 	<? echo (
 		my $html;
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Presses'}})).'%;"><a href="/employee/production/operator_schedule.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
+		foreach my $E ( @{$$variable{'Equipment'}} ) {
+			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/operator_schedule.html?Equipment='.$E->id().'">'.$E->name().'</a></div>';
 		} # end foreach Equipment
 		return $html;
 	) ?>
@@ -54,8 +63,8 @@
 	<? echo (
 		my $html;
 		my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/employee/production/_operator_shift_li.html' );
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Presses'}})).'%;"><ul>';
+		foreach my $E ( @{$$variable{'Equipment'}} ) {
+			$html .= '<div class="PressColumn" style="width:'.int(100/(@{$$variable{'Equipment'}})).'%;"><ul>';
 
 			my @OperatorShifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(), 'order'=>'starttime' );
 			foreach my $Shift ( @OperatorShifts ) {	

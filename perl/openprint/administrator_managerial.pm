@@ -123,6 +123,9 @@ sub user_profiles {
 
 	my $user_id = $openprint::param{'ddmUser'};
 	my $user_role = $openprint::param{'ddmUserRole'};
+	if ( ! exists $openprint::param{'ddmCustomer'} ) {
+		$openprint::param{'ddmCustomer'} = $openprint::session{'company_id'};
+	} # end if
 	my $cust_id = $openprint::param{'ddmCustomer'};
 
 
