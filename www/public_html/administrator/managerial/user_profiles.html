@@ -28,7 +28,7 @@ Please select a company or user to obtain login information.<br/>
 				<input type="text" onkeyup="filterDDM(this, f1.ddmCustomer);" onkeydown="if(event.keyCode == 13){f1.btnFunction.value='';this.form.submit();}" size="4" />
 				<select name="ddmCustomer" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';f1.submit();}">
 					<option value="">All Companies</option>
-					<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomer'} ); ) ?>
+					<? echo ( openprint::Company::get_dropdown( $openprint::param{'ddmCustomer'} ? $param{'ddmCustomer'} : $session{'company_id'} ); ) ?>
 				</select>
 				<? echo ( ssi::writeButton( $log, $dbh, 'Go1','go.gif',"f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 			</p>

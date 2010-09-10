@@ -1,0 +1,179 @@
+
+ul#menubar {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+	background-color: #006bb4;
+	width: 100%;
+	float: none;
+	z-index: 6000;
+	display: block;
+	position: absolute;
+}
+ul#menubar:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html ul#menubar {height: 1%;}
+ul#menubar {display: block;}
+/* End hide from IE-mac */
+
+ul#menubar li {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+	float: left;
+	background-color: #006bb4;
+	display: inline;
+}
+ul#menubar li a {
+	color: white;
+	font-weight: bold;
+	font-size: 13px;
+	outline: 0;
+	padding: 0px;
+	margin: 0px;
+}
+ul#menubar li a:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html ul#menubar li a {height: 1%;}
+ul#menubar li a {display: block;}
+/* End hide from IE-mac */
+
+ul#menubar li ul  {
+	list-style: none;
+	margin: 0px;
+	padding: 5px;
+	background-color: #006bb4;
+	position: absolute;
+}
+ul#menubar li ul:after {
+    content: ".";
+    display: block;
+    height: 0;
+    font-size: 0;
+    clear: both;
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html ul#menubar li ul {height: 1%;}
+ul#menubar li ul {display: block;}
+/* End hide from IE-mac */
+
+#menubar li.off ul {
+    display: none;
+}
+#menubar li.on ul {
+	display: block;
+}
+#menubar li.off:hover ul,#menubar li.on:hover ul, #menubar li.over ul {
+    /*display the current topic*/
+    display: block;
+}
+
+ul#menubar li ul li {
+	padding: 0px;
+	margin: 0px;
+}
+ul#menubar li ul li a {
+	outline: 0;
+	padding: 0px;
+	padding-top: 3px;
+	padding-left: 2px;
+	padding-right: 2px;
+	margin-left: 6px;
+	margin-right: 6px;
+	float: left;
+}
+	
+
+
+#menubar li.off {
+}
+#menubar li.on {
+	background-color: #8C8A8B;
+}
+#menubar li.off:hover, #menubar li.on:hover {
+	background-color: #ffc038;
+}
+
+
+#menubar li ul li:hover {
+	background-color: #8C8A8B;
+}
+
+li#MenuAbout {
+	width: 75px;
+}
+li#MenuAbout ul {
+	width: 181px;
+}
+li#MenuAbout ul li a {
+	width: 170px;
+}
+li#MenuServices {
+	width: 75px;
+}
+li#MenuServices ul {
+	width: 86px;
+}
+li#MenuServices ul li a {
+	width: 75px;
+}
+li#MenuAccount {
+	width: 75px;
+}
+li#MenuAccount ul {
+	width: 151px;
+}
+li#MenuAccount ul li a {
+	width: 140px;
+}
+li#MenuProjects {
+	width: 75px;
+}
+li#MenuProjects ul {
+	width: 121px;
+}
+li#MenuProjects ul li a {
+	width: 110px;
+}
+li#MenuQuotes {
+	width: 75px;
+}
+li#MenuQuotes ul {
+	width: 111px;
+}
+li#MenuQuotes ul li a {
+	width: 100px;
+}
+li#MenuOrders {
+	width: 75px;
+}
+li#MenuOrders ul {
+	width: 111px;
+}
+li#MenuOrders ul li a {
+	width: 100px;
+}
+li#MenuSupport {
+	width: 75px;
+}
+li#MenuSupport ul {
+	width: 101px;
+}
+li#MenuSupport ul li a {
+	width: 90px;
+}
