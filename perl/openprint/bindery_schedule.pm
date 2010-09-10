@@ -2,7 +2,7 @@ package openprint::bindery_schedule;
 use strict;
 
 require openprint::Project;
-require openprint::ProjectService;
+require openprint::Project_Service;
 require openprint::service;
 
 use vars qw( @columns %services );
@@ -153,7 +153,7 @@ sub get_lis {
 
 	foreach my $row ( @schedule ) {
 		my $Project = new openprint::Project( $$row{'projectindex'} );
-		my $Service = new openprint::ProjectService( $$row{'serviceindex'} );
+		my $Service = $Project->Service( $$row{'serviceindex'} );
 		my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, @$row{'projectindex','serviceindex'} );
 
 		my $colour = 'white';
@@ -219,7 +219,7 @@ sub get_lis {
 				$html .= '<br/>';
 				$html .= sprintf(q{<a href="#" onClick="icon_action(%1$d,%2$d,'%3$s','%4$s');return false;"><img class="icon" name="%1$d%3$sicon" src="/images/icons/bindery/%3$s-grey.gif" /></a>},@$row{'projectindex','serviceindex'}, $service, openprint::bindery_schedule::get_column($service) );
 			} else {
-				my $Icon_Service = new openprint::ProjectService( $services{$service}[0] );
+				my $Icon_Service = $Project->Service( $services{$service}[0] );
 
 				my %specs = openprint::service::get_specifications_pairs( $openprint::log, $openprint::dbh, $Project->id(), $services{$service}[0] );
 				if ( ! $specs{'RunTime'} ) {

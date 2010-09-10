@@ -37,6 +37,8 @@ $serial = 'equipment_shifts_id_seq';
 
 %defaults = (
 	'operator_id'	=>	undef,
+	'starttime'		=>	'00:00:00',
+	'name'			=>	'Shift',
 );
 
 sub find_one {
