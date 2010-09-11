@@ -14,6 +14,7 @@ $serial = 'signaturecapture_id_seq';
 	'image_data'	=>	'image_data',
 	'service_id'	=>	'service_id',
 	'deleted'		=>	'deleted',
+	'created_on'	=>	'created_on',
 );
 %defaults = (
 	'deleted'		=>	0,
@@ -28,8 +29,11 @@ sub file_path {
 	if ( ! -e $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'} ) {
 		mkdir $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'};
 	} # end if
-	misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'.bmp', $$self{'image_data'} );
-	return '/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'.bmp';
+	if ( ! -e $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'} ) {
+		mkdir $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'};
+	} # end if
+	misc::save_file( $openprint::log, $openprint::config{'SkinPath'}.'/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.gif', $$self{'image_data'} );
+	return '/images/SignatureCapture/'.$$self{'project_id'}.'/'.$$self{'service_id'}.'/'.$$self{'id'}.'.gif';
 } # end sub file_path
 
 1;
