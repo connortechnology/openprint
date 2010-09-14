@@ -700,7 +700,7 @@ sub is_sig_complete {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
-	foreach my $Job ( openprint::ScheduledJob( 'project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+	foreach my $Job ( openprint::ScheduledJob::find( 'project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
 		$Job->delete();
 	} # end foreach Job
 
@@ -1248,7 +1248,7 @@ $log->debug("ES: " . $NextES->name() );
 		if ( ! $start_time ) {
 			last;
         } elsif ( ! $$row{starttime} ) {
-            $row->Project()->add_to_log( @session{'company_id','user_id'}, "Scheduled to print on " . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
+            $row->Project()->add_to_log( @session{'company_id','user_id'}, "Scheduled on " . $row->Equipment()->strid() . ' at ' . Date::Format::time2str( $config{'DateTimeFormat'}, $start_time) );
         } # end if
 
         $start_time += $run_time;
@@ -1464,7 +1464,7 @@ sub _shift_change {
 sub operator_schedule {
     if ( %param ) {
         if ( $param{'btnFunction'} eq 'Reset' ) {
-            foreach my $param ( 'Presses' ) {
+            foreach my $param ( 'category', 'Equipment' ) {
                 delete $session{$r->uri().'?'.$param};
             } # end if
 		} elsif ( $param{'action'} eq 'save' ) {
@@ -1474,16 +1474,16 @@ sub operator_schedule {
 			my $Shift = new openprint::Equipment_Shift( $param{'shift_id'} );
 			$variable{'error'} .= $Shift->delete();
         } else {
-            ssi::save_params( $r->uri(), ( 'Presses' ) );
+            ssi::save_params( $r->uri(), ( 'category', 'Equipment' ) );
         } # end if
     } elsif ( ( time - $session{$r->uri().'lastupdated'} ) > 24*60*60 ) {
-        foreach my $param ( 'Presses') {
+        foreach my $param ( 'category', 'Equipment') {
             delete $session{$r->uri().'?'.$param};
         } # end if
     } # end if
     $session{$r->uri().'?lastupdated'} = time;
 	if ( $param{'btnFunction'} eq 'Add Shift' ) {
-		my @Equipment = map { new openprint::Equipment( $_ ) } ( ref $param{'Presses'} eq 'ARRAY' ? @{$param{'Presses'}} : ( $param{'Presses'} ) );
+		my @Equipment = map { new openprint::Equipment( $_ ) } ( ref $param{'Equipment'} eq 'ARRAY' ? @{$param{'Equipment'}} : ( $param{'Equipment'} ) );
 		foreach my $Equipment ( @Equipment ) {
 			next if ! $Equipment->id();
 
