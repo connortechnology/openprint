@@ -194,6 +194,8 @@ sub view_services {
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $s_id );
 			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
+			$Project->summary(undef);
+			$Project->save();
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
 		} # end if

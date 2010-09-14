@@ -579,7 +579,25 @@ sub get_specs {
 	} # end foreach
 } # end sub get_specs
 
+sub signature_summary {
+	my ( $Project, $service_index, $specs, $qty_index, $s_id, $sig_specs ) = @_;
+	$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $s_id ) if ! $sig_specs;
+	if ( $qty_index ) {
+		my @folds;
+		my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+		return ' on ' . $Equipment->name();
+	} # end if
+} # end sub signature_summary
+
 sub summary {
+	my ( $Project, $service_index, $specs, $qty_index ) = @_;
+	my $services = $Project->services();
+
+	if ( $qty_index ) {
+
+	} else {
+	} # end if
 } # end sub summary
 
 sub fits_on_equipment {
