@@ -29,6 +29,7 @@ require openprint::StockWeight;
 require openprint::StockQuality;
 require openprint::StockGroup;
 require openprint::StockMaterial;
+require openprint::Equipment_Stock_Setting;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 $debug = 1;
@@ -441,6 +442,9 @@ sub delete {
     sql::execute( undef, undef, q{DELETE FROM Paper_prices WHERE lngpaperindex=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Paper_recommendations WHERE lngpaperindex=?}, $$self{'id'} );
     sql::execute( undef, undef, q{DELETE FROM Skid_Contents WHERE paper_id=?}, $$self{'id'} );
+	foreach my $ESS ( openprint::Equipment_Stock_Setting->find('stock_id'=>$$self{'id'} ) ) {
+		$ESS->destroy();
+	} # end foreach
     sql::execute( undef, undef, q{DELETE FROM Papers WHERE id=?}, $$self{'id'} );
 
     if ( ! sql::execute( undef, undef, q{SELECT DISTINCT manufacturer_id FROM Papers WHERE manufacturer_id=?}, $$self{'manufacturer_id'} ) ) {

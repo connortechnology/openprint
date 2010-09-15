@@ -312,7 +312,7 @@ $inkCoverage{$colour} = 100;
 		} # end foreach
 		$html .= '</td><td class="docketText">';
 		foreach my $f ( $form .. ($form+$signatures-1) ) {
-			$html .= sprintf('%d imps<br/>%d sheets<br/>%d lbs F%d<br/>', $gross_impressions, $gross_sheets, $gross_impressions * $Paper->area() * $Paper->wpsi(), $f );
+			$html .= sprintf('%d imps<br/>%d sheets<br/>%.0f lbs F%d<br/>', $gross_impressions, $gross_sheets, $gross_sheets * $Paper->area() * $Paper->wpsi(), $f );
 		} # end foreach
 		$html .= '</td>';
 		

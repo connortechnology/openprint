@@ -191,9 +191,16 @@ sub view_services {
 		} # end if btnFunction defined
 		if ( defined $openprint::param{'remove'} and ( $openprint::param{'remove'} ne '' ) ) {
 			foreach my $s_id ( split(',', $openprint::param{'remove'} ) ) {
+				my $PS = $Project->Service( $s_id );
+				next if ! $PS->id();
+				my $ServiceType = $PS->ServiceType();
+				my $specs = $PS->specs();
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $s_id );
 			} # end foreach s_id
 			$openprint::session{'project_id'} = $project_index;
+			$Project->summary(undef);
+			$Project->save();
 		} elsif ( ( defined $openprint::param{'calc'} ) and $openprint::param{'calc'} ) {
 			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $r->param('calc') );
 		} # end if
