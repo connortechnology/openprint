@@ -761,9 +761,9 @@ sub speed {
 				if ( $ServiceType->name() eq 'Folding' ) {
 					my $signatures = $self->pertains_id();
 if ( ! $signatures ) {
-$log->warn("No pertains");
-} elsif ( ! @$signatures ) {
-$log->warn("Empty pertains");
+$log->warn("No pertains $signatures");
+} elsif ( ! @{$signatures} ) {
+$log->warn("Empty pertains @$signatures");
 }
 					$$self{'speed'} = openprint::Estimating::Folding::runspeed( $Project, $Service, $self->Equipment(), $Project->ordered_quantity_index(), $$signatures[0] );
 				} elsif ( $ServiceType->name() eq 'Cutting' ) {
@@ -844,6 +844,9 @@ sub pertains_id {
 	} # end if
 	if ( (! $_[0]{'pertains_id'} ) and $_[0]{'service_id'} ) {
 		return $_[0]{'service_id'};
+	} # end if
+	if ( $_[0]{'pertains_id'} ) {
+		return $_[0]{'pertains_id'};
 	} # end if
 	return [];
 } # end sub pertains_id
