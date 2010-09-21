@@ -19,7 +19,7 @@ require openprint::User;
 require openprint::PaperAllocation;
 require openprint::Shift;
 
-my $debug = 0;
+my $debug = 1;
 
 $table = 'schedule';
 $serial = 'schedule_id_seq';
@@ -30,6 +30,7 @@ $serial = 'schedule_id_seq';
 	'runtime'		=>	'runtime',
 	'project_id'	=>	'projectindex',
 	'service_id'	=>	'service_id',
+	'pertains_id'	=>	'pertains_id',
 	'equipment_id'	=>	'equipment_id',
 	'locked'		=>	'starttime_locked',
 	'speed'			=>	'speed',
@@ -98,6 +99,15 @@ sub find {
 		} else {
 			$sql .= ' AND ? = ANY(service_id)';
 			push @values, $params{'service_id'};
+		} # end if
+	} # end if
+	if ( $params{'pertains_id'} ) {
+		if ( ref $params{'pertains_id'} eq 'ARRAY' ) {
+			$sql .= ' AND pertains_id={?}';
+			push @values, $params{'pertains_id'};
+		} else {
+			$sql .= ' AND ? = ANY(pertains_id)';
+			push @values, $params{'pertains_id'};
 		} # end if
 	} # end if
 
@@ -176,7 +186,7 @@ sub runtime_seconds {
 		$$self{'runtime'} = misc::seconds2hms($_[0]);
 	} # end if
 	
-	return misc::hms2time( $self->runtime );
+	return misc::hms2time( $self->runtime() );
 } # end sub runtime_seconds
 
 sub starttime_seconds {
@@ -238,30 +248,42 @@ sub comment {
 		my $Project = new openprint::Project( $$self{'project_id'} );
 	#if ( $$self{'service_id'} and @{$$self{'service_id'}} ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
+		if ( $self->ServiceType() eq 'Folding' ) {
+			my $qty_index = $Project->ordered_quantity_index();
 
-		$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
-		my $Equipment = $self->Equipment();
+			foreach my $service_index ( @{$$self{'service_id'}} ) {
+				my $Service = $Project->Service( $service_index );
+				my $specs = $Service->specs();
 
-		if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
-			my $services = $Project->services();
-			if ( $$services{'Folding'} ) {
-				my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
-				if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
-					my $Imposition = new openprint::Imposition();
-					$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
-					my $foldtype = sprintf('%sx%s-%dPage-%sFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
-					$comment .= "($foldtype inline)";
-				} else {
-					$comment .= '(sheeted)';
+				foreach my $fold_type ( keys %openprint::Estimating::Folding::fold_types ) {
+
+					if ( $$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+						$comment .= $$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} . ' ' . $fold_type . '<br/>';
+					} # end if
+				} # end foreach
+			} # end foreach service_index
+
+		} elsif ( $self->ServiceType() eq 'Cutting' ) {
+		} elsif ( $self->ServiceType() eq 'SaddleStitching' ) {
+		} else {
+			$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
+			my $Equipment = $self->Equipment();
+
+			if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
+				my $services = $Project->services();
+				if ( $$services{'Folding'} ) {
+					my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+					if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
+						my $Imposition = new openprint::Imposition();
+						$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
+						my $foldtype = sprintf('%sx%s-%dPage-%sFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
+						$comment .= "($foldtype inline)";
+					} else {
+						$comment .= '(sheeted)';
+					} # end if
 				} # end if
 			} # end if
-		} else {
-#$comment .= 'This press does not fold';
 		} # end if
-# Store it.
-#foreach my $sig_id ( @{$$self{'service_id'}} ) {
-#openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'txtEmployeeComments', $comment );
-#} # end foreach sig_id	
 		return $comment;
 	} # end if has service_ids
 
@@ -464,18 +486,22 @@ sub get_li {
 sub operator_id {
 	my ( $self, $operator_id ) = @_;
 
+	my $Project = $self->Project();
+
 	if ( defined $operator_id ) {
 		$$self{'operator_id'} = $operator_id;
 		if ( $$self{'project_id'} ) {
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
-				sql::update( $log, $dbh, 'tbl_Project_Contents',  ['lngProjectIndex=? AND lngServiceIndex=?', $$self{'project_id'}, $sig_id], 'operator_id', $operator_id ? $operator_id : undef );
+				my $Service = $Project->Service( $sig_id );
+				$Service->save({'operator_id'=>$operator_id});
 			} # end foreach
 		} # end if
 	} # end if
 	if ( ! $$self{'operator_id'} ) {
 		if ( $$self{'project_id'} ) {
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
-				@$self{'operator_id'} = sql::execute( undef, undef, 'SELECT operator_id FROM tbl_Project_COntents WHERE lngProjectIndex=? AND lngServiceIndex=?', $$self{'project_id'}, $sig_id );
+				my $Service = $Project->Service( $sig_id );
+				$$self{'operator_id'} = $Service->operator_id();
 				last;
 			} # end foreach
 		} # end if
@@ -523,8 +549,13 @@ sub runtime {
 		my $seconds = 0;
 		if ( $$self{'project_id'} ) {
 			my $Project = $self->Project();
+			my @forms = @{$self->pertains_id()};
+
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
-				$seconds += openprint::service::get_runtime( $Project, $sig_id, $self->Equipment(), $self->impressions()/@{$$self{'service_id'}}, $self->speed() );
+				my $Service = $Project->Service( $sig_id );
+				$seconds += $Service->runtime( $self->Equipment(), @forms ? $self->impressions()/@forms : $self->impressions(), $self->speed());
+
+				#$seconds += openprint::service::get_runtime( $Project, $sig_id, $self->Equipment(), $self->impressions()/@{$$self{'service_id'}}, $self->speed() );
 			} # end foreach
 		} # end if
 		$$self{'runtime'} = misc::seconds2hms( $seconds );
@@ -773,6 +804,33 @@ sub to_string {
 	my $self = $_[0];
 	return sprintf('%d %s on %s starting %s', $self->project_id(), join(',', @{$self->service_id()}), $self->Equipment()->name(), $self->starttime() );
 } # end sub to_string
+
+sub pertains_id {
+	
+	if ( @_ > 1 ) {
+		$_[0]{'pertains_id'} = $_[1];
+	} # end if
+	if ( (! $_[0]{'pertains_id'} ) and $_[0]{'service_id'} ) {
+		return $_[0]{'service_id'};
+	} # end if
+	return [];
+} # end sub pertains_id
+
+sub servicetype_id {
+	my ( $self ) = @_;
+	my @service_ids = @{$self->service_id()};
+	foreach my $s_id ( @service_ids ) {
+		my $Service = $self->Project()->Service( $s_id );
+		return $Service->servicetype_id() if $Service->servicetype_id();
+	} # end if
+	return undef;
+} # end sub servicetype_id
+
+sub ServiceType {
+	my ( $self ) = @_;
+	my $servicetype_id = $self->servicetype_id();
+	return new openprint::ServiceType( $servicetype_id );
+} # end sub ServiceType
 
 1;
 __END__

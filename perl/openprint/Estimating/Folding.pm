@@ -680,18 +680,18 @@ sub summary {
 } # end sub summary
 
 sub runtime {
-    my ( $p_id, $s_id, $specs, $qty_index ) = @_;
-    return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-	my @Equipment = openprint::Equipment::find('strid'=>$$specs{'ddmEquipment'.$qty_index});
-	return 0 if @Equipment != 1; 
+    my ( $Project, $s_id, $specs, $qty_index, $sig_id ) = @_;
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+	
+	my $Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} );
 
-    my $runTime = $Equipment[0]->specification( 'Station Make Ready' ) * 60;
+    my $runTime = $Equipment->specification( 'Station Make Ready' ) * 60;
     foreach my $name ( keys %$specs ) {
         if ( $name =~ /^txt(\w*)Qty$/ ) {
             my $type = $1;
             my $quantity = $$specs{$name} * $$specs{'txtQuantity'.$qty_index};
             if ( $quantity > 0 ) {
-                my $runSpeed = $Equipment[0]->specification( $type.'RunSpeed' );
+                my $runSpeed = $Equipment->specification( $type.'RunSpeed' );
                 if ( $runSpeed ) {
                     $runTime += $quantity * 3600 / $runSpeed; # Convert to seconds
                 } # end if

@@ -993,8 +993,6 @@ $log->debug("No Shift specified!");
 sub _drop {
 	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 
-	$log->debug("Shift: " . $Shift->to_string() );
-
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
 	@{$variable{'changed'}} = ( $Shift->ul_id() );
 
@@ -1020,6 +1018,10 @@ $log->debug("Order before coalesce: @order");
 		my $previous;
 		foreach my $row_id ( @order ) {
 			my $Job = new openprint::ScheduledJob( $row_id );
+			if ( ( $Job->ServiceType()->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Job->Equipment()->servicetype_id() ) ) {
+				$variable{'information'} .= $Shift->Equipment()->name() . ' is not appropriate for ' . $Job->ServiceType()->name() . '<br/>';
+				next;
+			} # end if
 			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
 				my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
 				my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
@@ -1041,7 +1043,7 @@ $log->debug("Sigs are the same, coalescing ");
 $log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
 				$previous = $Job;
 			} # end if
-		} # end foreach row
+		} # end foreach row_id
 
 $log->debug("Order after coalesce: @order");
 		sql::end_transaction( $dbh, $ac );

@@ -35,10 +35,12 @@ $serial= 'Equipment_Index_seq';
 	'cip3_merge'		=>	'cip3_merge',
 	'cip3_monitor'		=>	'cip3_monitor',
 	'smartscheduling'	=>	'smartscheduling',
+	'servicetype_id'	=>	'servicetype_id',
 );
 
 %defaults = (
 	'location_id'		=>	undef,
+	'servicetype_id'	=>	undef,
 );
 
 sub init_cache {
@@ -504,6 +506,12 @@ sub Location {
 
 sub Shifts {
 } # end sub
+
+sub servicetype_id {
+	my ( $self ) = @_;
+	return [] if ! $$self{'servicetype_id'};
+	return $$self{'servicetype_id'};
+} # end sub servicetype_id
 
 1;
 __END__

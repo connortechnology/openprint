@@ -1,6 +1,7 @@
 package openprint::service;
 
 use strict;
+use Carp qw( cluck );
 
 require openprint::Equipment;
 require openprint::pricing;
@@ -164,7 +165,7 @@ sub get_specifications_pairs {
 	my ( $log, $dbh, $project_index, $service_index, @specs ) = @_;
 
 	if ( ! $project_index and ! $service_index ) {
-		$log->error("********* Called get_specifications_pairs with Project Index or Service Index ****************");
+		cluck("********* Called get_specifications_pairs with Project Index or Service Index ****************");
 		return;
 	} # end if
 
@@ -184,7 +185,7 @@ sub get_specifications_pairs {
 sub get_specs_ref {
 	my ( $p_id, $s_id ) = @_;
 	if ( (! $p_id ) or (! $s_id) ) {
-		$openprint::log->error("********* Called get_specs_ref with Project Index or Service Index ****************");
+		cluck("********* Called get_specs_ref with Project Index or Service Index ****************");
 		return;
 	} # end if
 	if ( ref $p_id eq 'openprint::Project' ) {
@@ -495,10 +496,11 @@ $log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$serv
 
 # Returns vale in seconds
 sub get_runtime {
-    my ( $Project, $service_index, $Equipment, $impressions, $speed ) = @_;
+    my ( $Project, $service_index, $Equipment, $impressions, $speed, $pertains_to ) = @_;
 
+	my $Service = $Project->Service( $service_index );
+    my $specs = $Service->specs();
     my $qty_index = $Project->ordered_quantity_index();
-    my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 
     if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'AdditionalSignature' ) ) {
 		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
@@ -507,7 +509,7 @@ sub get_runtime {
     } elsif ( $$specs{'ServiceType'} eq 'Cutting' ) {
         return openprint::Estimating::Cutting::runtime( $Project->id(), $service_index, $specs, $qty_index );
     } elsif ( $$specs{'ServiceType'} eq 'Folding' ) {
-       return openprint::Estimating::Folding::runtime( $Project->id(), $service_index, $specs, $qty_index );
+       return openprint::Estimating::Folding::runtime( $Project, $Service, $qty_index, $pertains_to );
     } elsif ( $$specs{'ServiceType'} eq 'Drilling' ) {
         return openprint::Estimating::Drilling::runtime( $Project->id(), $service_index, $specs, $qty_index );
     } elsif ( sets::isin( $$specs{'ServiceType'}, 'SaddleStitching','LoopStitching' ) ) {

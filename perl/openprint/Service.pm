@@ -214,6 +214,28 @@ sub copy {
 	return $new;
 } # end sub copy
 
+sub runtime {
+    my ( $self, $Equipment, $impressions, $speed, $pertains_to ) = @_;
+
+	my $Project = $self->Project();
+    my $qty_index = $Project->ordered_quantity_index();
+    my $specs = $self->specs();
+
+    if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'AdditionalSignature' ) ) {
+		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
+		return $$time{'Total'} if $time;
+		return 0;
+    } elsif ( $$specs{'ServiceType'} eq 'Cutting' ) {
+        return openprint::Estimating::Cutting::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
+    } elsif ( $$specs{'ServiceType'} eq 'Folding' ) {
+       return openprint::Estimating::Folding::runtime( $Project, $self, $qty_index, $pertains_to );
+    } elsif ( $$specs{'ServiceType'} eq 'Drilling' ) {
+        return openprint::Estimating::Drilling::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
+    } elsif ( sets::isin( $$specs{'ServiceType'}, 'SaddleStitching','LoopStitching' ) ) {
+        return openprint::Estimating::Stitching::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
+    } # end if
+
+} # end sub get_runtime
 
 1;
 __END__

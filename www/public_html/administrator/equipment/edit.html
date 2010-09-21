@@ -66,10 +66,20 @@
 		</p>
 		<p>
 			<label>Use in scheduling:</label>
-			<input type="radio" id="useinschedulingtrue" name="useinscheduling" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->useinscheduling(); ) ?> />
+			<input type="radio" id="useinschedulingtrue" name="useinscheduling" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->useinscheduling(); ) ?> onclick="$('servicetype_ids').show();" />
 			<label class="radio" for="useinschedulingtrue">Yes</label>
-			<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->useinscheduling(); ) ?> />
+			<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->useinscheduling(); ) ?> onclick="$('servicetype_ids').hide();" />
 			<label class="radio" for="useinschedulingfalse">No</label>
+		</p>
+		<p id="servicetype_ids" <? echo ( $$variable{'Equipment'}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
+			<label>Services:</label>
+			<select name="servicetype_id" id="servicetype_id" multiple="multiple" size="4">
+
+				<? echo ( ssi::make_select( 
+					[ map { $_->id(), $_->name() } openprint::ServiceType::find('order'=>'lower(name)') ],
+					$$variable{'Equipment'}->servicetype_id(),
+); ) ?>
+			</select>
 		</p>
 		<p>
 			<label>Smart Scheduling:</label>
