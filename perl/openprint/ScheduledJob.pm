@@ -41,6 +41,7 @@ $serial = 'schedule_id_seq';
 	'operator_id'		=>	undef,
 	'stock_verified'	=>	'stock_verified',
 	'stock'				=>	'stock',
+	'servicetype_id'	=>	'servicetype_id',
 );
 
 %transforms = (
@@ -81,6 +82,14 @@ sub find {
 	if ( exists $params{'equipment_id'} ) {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
+	} # end if
+	if ( $params{'servicetype_id'} ) {
+		$sql .= ' AND servicetype_id=?';
+		push @values, $params{'servicetype_id'};
+	} # end if
+	if ( $params{'servicetype'} ) {
+		$sql .= ' AND servicetype_id=(SELECT id FROM service_types WHERE name=?)';
+		push @values, $params{'servicetype'};
 	} # end if
 	if ( $params{'project_id'} ) {
 		if ( substr($params{'project_id'},0,1) == '!' ) {
@@ -338,7 +347,7 @@ sub get_li {
 			$colour = 'complete';
 		} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
 			$colour = 'approval';
-		} elsif ( 1 < sql::execute( $log, $dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=?}, $$self{'project_id'} ) ) {
+		} elsif ( 1 < sql::execute( $log, $dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=? AND servicetype_id=?}, @$self{'project_id','servicetype_id'} ) ) {
 			$colour = 'multipress';
 		} # end if
 		if ( $Project->rush() ) {
