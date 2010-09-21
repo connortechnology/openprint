@@ -1571,5 +1571,22 @@ sub _split_popup {
 	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
 } # end sub _split_popup
 
+sub bindery_schedule2 {
+	if ( %param ) {
+		if ( $param{'btnFunction'} eq 'Reset' ) {
+			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
+				delete $session{'/employee/production/bindery_schedule2.html?'.$param};
+			} # end if
+		} else {
+			ssi::save_params( '/employee/production/bindery_schedule2.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale' ) );
+		} # end if
+	} elsif ( ( time - $session{'/employee/production/bindery_schedule2.html?lastupdated'} ) > 24*60*60 ) {
+		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
+			delete $session{'/employee/production/bindery_schedule2.html?'.$param};
+		} # end if
+	} # end if
+	$session{'/employee/production/bindery_schedule2.html?lastupdated'} = time;
+} # end sub bindery_schedule2
+
 1;
 __END__

@@ -532,14 +532,22 @@ sub impressions {
 		} # end if
 	} elsif ( $$self{'project_id'} ) {
 		my $Project = $self->Project();
-		foreach my $sig_id ( @{$$self{'service_id'}} ) {
+		foreach my $sig_id ( @{$self->service_id()} ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-			if ( ! $$sig_specs{'ImpressionQuantity'} ) {
-				$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
-				openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
-			} # end if
 			$impressions += $$sig_specs{'ImpressionQuantity'};
 		} # end foreach sig
+		
+		if ( ! $impressions ) {
+# Pull from printing
+			foreach my $sig_id ( @{$self->pertains_id()} ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+				if ( ! $$sig_specs{'ImpressionQuantity'} ) {
+					$$sig_specs{'ImpressionQuantity'} = $$sig_specs{'hdnImpressionQuantity'.$Project->ordered_quantity_index()};
+					openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'ImpressionQuantity', $$sig_specs{'ImpressionQuantity'} );
+				} # end if
+				$impressions += $$sig_specs{'ImpressionQuantity'};
+			} # end foreach sig
+		} # end if
 	} # end if
 	return $impressions;
 } # end sub impressions
@@ -745,9 +753,24 @@ sub speed {
 		if ( (!($$self{'speed'} = $self->Equipment()->specification('Default Scheduling Runspeed'))) and $$self{'project_id'} ) {
 			my $Project = $self->Project();
 			if ( $Project->ordered_quantity_index() ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] ) if $$self{'service_id'} and @{$$self{'service_id'}};
+				my $Service = $Project->Service( $$self{'service_id'}[0] );
+				my $ServiceType = $Service->ServiceType();
+				my $specs = $Service->specs();
+				return if ! $specs;
 
-				$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, $sig_specs, $Project->ordered_quantity_index(), $self->Equipment() ) if $sig_specs;
+				if ( $ServiceType->name() eq 'Folding' ) {
+					my $signatures = $self->pertains_id();
+if ( ! $signatures ) {
+$log->warn("No pertains");
+} elsif ( ! @$signatures ) {
+$log->warn("Empty pertains");
+}
+					$$self{'speed'} = openprint::Estimating::Folding::runspeed( $Project, $Service, $self->Equipment(), $Project->ordered_quantity_index(), $$signatures[0] );
+				} elsif ( $ServiceType->name() eq 'Cutting' ) {
+				} elsif ( $ServiceType->name() eq 'SaddleStitching' ) {
+				} else {
+					$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, $specs, $Project->ordered_quantity_index(), $self->Equipment() );
+				} # end if
 			} # end if
 		} # end if
 	} # en dif
@@ -824,16 +847,6 @@ sub pertains_id {
 	} # end if
 	return [];
 } # end sub pertains_id
-
-sub servicetype_id {
-	my ( $self ) = @_;
-	my @service_ids = @{$self->service_id()};
-	foreach my $s_id ( @service_ids ) {
-		my $Service = $self->Project()->Service( $s_id );
-		return $Service->servicetype_id() if $Service->servicetype_id();
-	} # end if
-	return undef;
-} # end sub servicetype_id
 
 sub ServiceType {
 	my ( $self ) = @_;
