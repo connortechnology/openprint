@@ -38,6 +38,7 @@ ul#menubar li a {
 	outline: 0;
 	padding: 0px;
 	margin: 0px;
+	display: block;
 }
 ul#menubar li a:after {
     content: ".";
