@@ -24,9 +24,9 @@ $sql_server{'password'} = $ARGV[2];
 $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
-my $projects_count = 1000;
+my $projects_count = 10;
 my $project_id = 0;
-my $company_id = 0;
+my $company_id = 6;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
@@ -48,6 +48,10 @@ foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 	foreach my $sig_id ( $Project->signatures() ? $Project->signatures() : $$services{''}[0] ) {
 		next if ! $sig_id;
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		if ( $$sig_specs{'ServiceType'} eq 'AdditionalSignature' ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ServiceType', 'Signature' );
+		} # end if
+			
 		if ( $$sig_specs{'SignatureIndex'} eq '' ) {
 $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureIndex");
 			$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
@@ -170,7 +174,7 @@ if ( 1 ) {
 	my $Type = openprint::ProjectType->find_one('name'=>'MultiPagePublication');
 	if ( $Type ) {
 		$Type->save({'name'=>'MultiPage'});
-		sql::update( undef, undef, 'tbl_service_specifications',[ 'strname=? AND strvalue', 'ProjectType', 'MultiPagePublication' ], 'strvalue', 'MultiPage' );
+		sql::update( undef, undef, 'tbl_service_specifications',[ 'strname=? AND strvalue=?', 'ProjectType', 'MultiPagePublication' ], 'strvalue', 'MultiPage' );
 	} else {
 		$Type = openprint::ProjectType->find_one('name'=>'MultiPage');
 	} # end if
@@ -181,6 +185,8 @@ if ( 1 ) {
 			next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
 			my $services = $Project->services();
 			next if $$services{'Signature'};
+			next if ! $$services{''};
+			next if ! $$services{''}[0];
 			my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
 			foreach my $qty_index ( $Project->quantity_indexes() ) {

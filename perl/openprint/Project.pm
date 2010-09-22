@@ -1129,9 +1129,7 @@ sub add_signature {
 
 sub copy_signature {
     my ( $self, $sig_specs, $data, $status ) = @_;
-$log->warn("in copy");
     my $new_service_index = $self->add_signature( undef, $status );
-$log->warn("after add copy");
     my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
 
 	my $ac = sql::start_transaction( $dbh );
