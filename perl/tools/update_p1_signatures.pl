@@ -24,7 +24,7 @@ $sql_server{'password'} = $ARGV[2];
 $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
-my $projects_count = 10;
+my $projects_count = 100;
 my $project_id = 0;
 my $company_id = 6;
 
@@ -35,6 +35,15 @@ foreach my $bleed ( 'Top','Bottom','Left','Right' ) {
 sql::update( undef, undef, 'tbl_ProjectType_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 sql::update( undef, undef, 'tbl_service_Defaults', ['strfieldname=?', 'chkBleed'.$bleed], 'strfieldname', 'Bleed'.$bleed );
 } # end foreach bleed
+my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
+if ( ! $ServiceType ) {
+	$ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
+	$ServiceType->save({'name'=>'Signature','type'=>'Printing','url'=>'prin/Signature.html'});
+}
+if ( ! $ServiceType ) {
+	$ServiceType = new openprint::ServiceType();
+	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1,'category'=>'Printing','type'=>'Printing'});
+}
 
 if ( 1 ) {
 foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
@@ -207,12 +216,7 @@ require openprint::ProjectType_Default;
 require openprint::ServiceType_Default;
 my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
 if ( ! $ServiceType ) {
-	$ServiceType = openprint::ServiceType->find_one('name'=>'AdditionalSignature');
-	$ServiceType->save({'name'=>'Signature','type'=>'Printing','url'=>'prin/Signature.html'});
-}
-if ( ! $ServiceType ) {
-	$ServiceType = new openprint::ServiceType();
-	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1,'category'=>'Printing','type'=>'Printing'});
+	die 'Should have Signature by now';
 }
 foreach my $Default ( openprint::ProjectType_Default->find('projecttype'=>'Letterhead') ) {
 	my $SD = new openprint::ServiceType_Default();
