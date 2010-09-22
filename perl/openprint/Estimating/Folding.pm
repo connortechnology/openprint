@@ -692,6 +692,20 @@ $openprint::log->debug("Looking for Folding $sig_id runspeed $type-Qty-$$sig_spe
 		}# end if
 	}# end foreach
 $openprint::log->debug("Folding runspeed: ($speed)");
+	if ( ! $speed ) {
+		my $Imposition = new openprint::Imposition;
+		$Imposition->load( $sig_specs, $qty_index );
+		$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
+		if ( $Imposition->pages() ) {
+			$speed = $Equipment->specification( $Imposition->pages().'PageSignatureFoldRunSpeed' );
+		} # end if
+	} # end if
+	if ( ! $speed ) {
+		if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
+			$openprint::log->debug("Getting fold from template: " . $$sig_specs{'rdbTemplateType'} );
+			$speed = $Equipment->specification( $$sig_specs{'rdbTemplateType'}.'PageSignatureFoldRunSpeed' );
+		}
+	} # end if
 	return $speed;
 } # end sub runspeed
 

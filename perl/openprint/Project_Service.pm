@@ -97,7 +97,7 @@ sub runtime {
     } elsif ( $$specs{'ServiceType'} eq 'Drilling' ) {
         return openprint::Estimating::Drilling::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
     } elsif ( sets::isin( $$specs{'ServiceType'}, 'SaddleStitching','LoopStitching' ) ) {
-        return openprint::Estimating::Stitching::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
+        return openprint::Estimating::Stitching::runtime( $Project, $self, $Equipment, $qty_index, $speed );
     } # end if
 
 } # end sub get_runtime

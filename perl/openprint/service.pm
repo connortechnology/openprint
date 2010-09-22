@@ -497,25 +497,8 @@ $log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$serv
 # Returns vale in seconds
 sub get_runtime {
     my ( $Project, $service_index, $Equipment, $impressions, $speed, $pertains_to ) = @_;
-
 	my $Service = $Project->Service( $service_index );
-    my $specs = $Service->specs();
-    my $qty_index = $Project->ordered_quantity_index();
-
-    if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'AdditionalSignature' ) ) {
-		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
-		return $$time{'Total'} if $time;
-		return 0;
-    } elsif ( $$specs{'ServiceType'} eq 'Cutting' ) {
-        return openprint::Estimating::Cutting::runtime( $Project->id(), $service_index, $specs, $qty_index );
-    } elsif ( $$specs{'ServiceType'} eq 'Folding' ) {
-       return openprint::Estimating::Folding::runtime( $Project, $Service, $qty_index, $pertains_to );
-    } elsif ( $$specs{'ServiceType'} eq 'Drilling' ) {
-        return openprint::Estimating::Drilling::runtime( $Project->id(), $service_index, $specs, $qty_index );
-    } elsif ( sets::isin( $$specs{'ServiceType'}, 'SaddleStitching','LoopStitching' ) ) {
-        return openprint::Estimating::Stitching::runtime( $Project->id(), $service_index, $specs, $qty_index );
-    } # end if
-
+	return $Service->runtime( $Equipment, $impressions, $speed, $pertains_to );
 } # end sub get_runtime
 
 sub summary {

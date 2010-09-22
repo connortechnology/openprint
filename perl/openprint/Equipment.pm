@@ -8,7 +8,7 @@ require openprint::Fold;
 require openprint::Location;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
 my %find_cache;
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'tbl_equipment';
@@ -99,6 +99,16 @@ sub find {
 			} # end if
 		} # end foreach
 	} # end if
+if ( $params{'servicetype_id'} ) {
+        if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
+            $sql .= ' AND servicetype_id={?}';
+            push @values, $params{'servicetype_id'};
+        } else {
+            $sql .= ' AND ? = ANY(servicetype_id)';
+            push @values, $params{'servicetype_id'};
+        } # end if
+    } # end if
+
 	if ( $params{'UseInEstimating'} ) {
 		$sql .= ' AND UseInEstimating=?';
 		push @values, 1;

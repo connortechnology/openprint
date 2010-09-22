@@ -39,14 +39,14 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub print_overview {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
+			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/print_overview.html', ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale' ) );
+			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale' ) );
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > 24*60*60 ) {
-		foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
+		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
@@ -58,9 +58,9 @@ sub print_overview {
 sub press_schedule {
 
 	if ( $param{'btnFunction'} eq 'Reflow' ) {
-		my $Equipment = new openprint::Equipment( $param{'Presses'} );
+		my $Equipment = new openprint::Equipment( $param{'Equipment'} );
 		if ( $Equipment->smartscheduling() ) {
-			my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' );
+			my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$param{'Equipment'},'order'=>'starttime' );
 			if ( @Jobs ) {
 				reorder_jobs( @Jobs );
 			} else {
@@ -950,21 +950,31 @@ sub _bump_job {
 } # end sub _bump_job
 
 sub _pending_approved {
-	$session{'/employee/production/print_overview.html?pending_approved'} = $session{'/employee/production/print_overview.html?pending_approved'} ? 0 : 1;
-    @{$variable{'Presses'}} = ();
-    my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
-    foreach (@presses) {
-        push @{$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
-    } # end foreach press
+	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
+$log->debug("REFERRER ($referer)");
+
+	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
+    @{$variable{'Equipment'}} = ();
+	if ( $session{$referer.'?pending_approved'} ) {
+		foreach my $equipment_id ( split(';', $session{$referer.'?Equipment'} ) ) {
+			my $E = new openprint::Equipment( $equipment_id );
+			push @{$variable{'Equipment'}}, $E if $E->id();
+		} # end foreach
+	} # end if
+$log->debug("Equipment: @{$variable{'Equipment'}}");
 } # end sub _pending_approved
 
 sub _pending {
-	$session{'/employee/production/print_overview.html?pending'} = $session{'/employee/production/print_overview.html?pending'} ? 0 : 1;
-    @{$variable{'Presses'}} = ();
-    my @presses = openprint::Equipment::find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
-    foreach (@presses) {
-        push @{$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
-    } # end foreach press
+	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
+$log->debug("REFERRER ($ENV{'HTTP_REFERER'}) ($referer)");
+	$session{$referer.'?pending'} = $session{$referer.'?pending'} ? 0 : 1;
+    @{$variable{'Equipment'}} = ();
+	if ( $session{$referer.'?pending'} ) {
+		foreach my $equipment_id ( split(';', $session{$referer.'?Equipment'} ) ) {
+			my $E = new openprint::Equipment( $equipment_id );
+			push @{$variable{'Equipment'}}, $E if $E->id();
+		} # end foreach
+	} # end if
 } # end sub _pending
 
 sub _ul {
