@@ -1002,6 +1002,7 @@ $log->debug("No Shift specified!");
 
 sub _drop {
 	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
+	my $Equipment = $Shift->Equipment(); # For efficiency
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
 	@{$variable{'changed'}} = ( $Shift->ul_id() );
@@ -1028,8 +1029,8 @@ $log->debug("Order before coalesce: @order");
 		my $previous;
 		foreach my $row_id ( @order ) {
 			my $Job = new openprint::ScheduledJob( $row_id );
-			if ( ( $Job->ServiceType()->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Job->Equipment()->servicetype_id() ) ) {
-				$variable{'information'} .= $Shift->Equipment()->name() . ' is not appropriate for ' . $Job->ServiceType()->name() . '<br/>';
+			if ( ( $Job->ServiceType()->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+				$variable{'alert'} .= $Equipment->name() . ' is not appropriate for ' . $Job->ServiceType()->name() . '<br/>';
 				next;
 			} # end if
 			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
@@ -1055,10 +1056,10 @@ $log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index(
 			} # end if
 		} # end foreach row_id
 
-$log->debug("Order after coalesce: @order");
+$log->debug("Order after coalesce: @order : " . join(',', map { new openprint::ScheduledJob($_)->Project()->docket() } @order ) );
 		sql::end_transaction( $dbh, $ac );
 
-		if ( ! $Shift->Equipment()->smartscheduling() ) {
+		if ( ! $Equipment->smartscheduling() ) {
 $log->debug("Old");
 			return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'ul_id'}, $param{'services'} );
 $log->debug("Old2");
@@ -1070,12 +1071,12 @@ $log->debug("Old2");
 			if ( $Shift->starttime() ) {
 				my @final_order;
 # Get jobs before the shift, leave them in order.
-				foreach my $row ( openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
+				foreach my $row ( openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' ) ) {
 					push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
 				} # end foreach row
 
 # Get the rest of the jobs on this equipment
-				my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
+				my @jobs = openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' );
 
 # Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
 				foreach my $row_id ( @order ) {
@@ -1106,7 +1107,7 @@ $log->debug("Old2");
 					$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()}) if $Job->starttime() or ( $Job->equipment_id() != $Shift->equipment_id() );
 				} # end foreach row_id
 # If it was a formerly scheduled job, then shuffle
-				reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
+				reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' )) if $was_scheduled;
 			} # end if	has starttime
 			sql::end_transaction( $dbh, $ac );
 		} # end if
