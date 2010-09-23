@@ -191,6 +191,9 @@
 							</ul>
 						</li>
 					<li class="off"><a href="#" onclick="bug_report_window();return false;">SEND BUG REPORT</a></li>
+<? if ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
+					<li class="off"><a href="/session.html">SESSION</a></li>
+<? endif ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
 			<li class="off"><a href="<? echo ( misc::get_url( $$variable{'uri'}, \%param, { 'include'=>{'menu'=>0} } ); ) ?>">HIDE MENU</a></li>
 <? endif ( $session{'user_id'} ) ?>
 					</ul>
