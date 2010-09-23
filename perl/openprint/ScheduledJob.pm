@@ -85,8 +85,13 @@ sub find {
 		push @values, $params{'equipment_id'};
 	} # end if
 	if ( $params{'servicetype_id'} ) {
-		$sql .= ' AND servicetype_id=?';
-		push @values, $params{'servicetype_id'};
+		if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
+			$sql .= ' AND servicetype_id IN ('. join(',', map {'?'} @{$params{'servicetype_id'}} ) . ')';
+			push @values, @{$params{'servicetype_id'}};
+		} else {
+			$sql .= ' AND servicetype_id=?';
+			push @values, $params{'servicetype_id'};
+		} # end if
 	} # end if
 	if ( $params{'servicetype'} ) {
 		$sql .= ' AND servicetype_id=(SELECT id FROM service_types WHERE name=?)';
@@ -497,12 +502,13 @@ sub operator_id {
 
 	my $Project = $self->Project();
 
-	if ( defined $operator_id ) {
+	if ( ( defined $operator_id ) and ( $operator_id != $$self{'operator_id'} ) ) {
 		$$self{'operator_id'} = $operator_id;
 		if ( $$self{'project_id'} ) {
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
+				next if ! $sig_id;
 				my $Service = $Project->Service( $sig_id );
-				$Service->save({'operator_id'=>$operator_id});
+				$Service->save({'operator_id'=>$operator_id}) if $Service->project_id();
 			} # end foreach
 		} # end if
 	} # end if
