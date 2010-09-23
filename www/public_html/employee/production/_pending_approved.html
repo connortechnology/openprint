@@ -1,17 +1,17 @@
 <? echo ( 
 	my $html;
 	@{$$variable{'pending_approved_drops'}} = ();
-	if ( $session{'/employee/production/print_overview.html?pending_approved'} ) {
-		my $Shift = new openprint::Shift();
-		$Shift->name('Approved');
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
-			$Shift->equipment_id( $E->id() );
-			push @{$$variable{'pending_approved_drops'}}, $Shift->ul_id();
-			$html .= $Shift->get_ul( {'Status'=>['Approved','Shipped','Picked Up']} );
-			$html .= '</div>';
-		} # end foreach press
-	} # end if
+	my $Shift = new openprint::Shift();
+	$Shift->name('Approved');
+	my $ul_id = $Shift->ul_id();
+
+	foreach my $E ( @{$$variable{'Equipment'}} ) {
+		$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
+		$Shift->equipment_id( $E->id() );
+		push @{$$variable{'pending_approved_drops'}}, $ul_id;
+		$html .= $Shift->get_ul( {'Status'=>['Approved','Shipped','Picked Up']} );
+		$html .= '</div>';
+	} # end foreach press
 	return $html;
 ) ?>
 <? if ( @{$$variable{'pending_approved_drops'}} ) ?>

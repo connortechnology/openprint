@@ -86,6 +86,7 @@ sub edit {
 	} elsif ( $openprint::param{'btnFunction'} eq 'Copy' ) {
 		$Equipment = $Equipment->copy();
 	} elsif ( $openprint::param{'btnFunction'} eq 'Save' ) {
+		$openprint::param{'servicetype_id'} = [ $openprint::param{'servicetype_id'} ] if ref $openprint::param{'servicetype_id'} ne 'ARRAY';
 		$Equipment->save( \%openprint::param );
 		my $ac = sql::start_transaction( $openprint::dbh );
 		sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $Equipment->id() );
