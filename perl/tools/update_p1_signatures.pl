@@ -171,29 +171,6 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 			} # end foreach ssid
 		} # end if
 	} # end foreach
-			if ( $$services{'Proofs'} ) {
-				foreach my $service ( @{$$services{'Proofs'}} ) {
-					my $specs = openprint::service::get_specs_ref( $Project, $service );
-					foreach my $key ( keys %{$specs} ) {
-						if ( $key =~ /^txtProofIndex-0-(\d*)-(\d*)$/ ) {
-							my ( $proof_index, $qty_index ) = ( $1, $2 );
-
-							foreach my $spec ( 
-									'txtProofWidth',
-									'txtProofHeight',
-									'txtProofQuantity',
-									'ddmProofType',
-									'txtProofUnitPrice',
-									'txtProofIndex',
-									'chkOverride',) {
-
-								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "$spec-1-$proof_index-$qty_index", $$specs{"$spec-0-$proof_index-$qty_index"} );
-								openprint::service::delete_service_spec( $Project->id(), $service, $$specs{"$spec-0-$proof_index-$qty_index"} );
-							} # end foreach spec
-						} # end if
-					} # end foreach key
-				} # end foraech service
-			} # end if Proofs
 	my $summary = $Project->summary();
 
 	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
@@ -230,7 +207,7 @@ if ( 1 ) {
 					foreach my $qty_index ( $Project->quantity_indexes() ) {
 						if ( $$specs{"ddmEquipment-0-$qty_index"} and ! $$specs{"ddmEquipment-1-$qty_index"} ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "ddmEquipment-1-$qty_index", $$specs{"ddmEquipment-0-$qty_index"} );
-							openprint::service::delete_service_spec( $Project->id(), $service, $$specs{"ddmEquipment-0-$qty_index"} );
+							openprint::service::delete_service_spec( $Project->id(), $service, "ddmEquipment-0-$qty_index" );
 						} # end if
 					}
 				} # end foraech service
@@ -252,10 +229,39 @@ if ( 1 ) {
 									'chkOverride',) {
 
 								openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "$spec-1-$proof_index-$qty_index", $$specs{"$spec-0-$proof_index-$qty_index"} );
-								openprint::service::delete_service_spec( $Project->id(), $service, $$specs{"$spec-0-$proof_index-$qty_index"} );
+								openprint::service::delete_service_spec( $Project->id(), $service, "$spec-0-$proof_index-$qty_index" );
 							} # end foreach spec
 						} # end if
 					} # end foreach key
+				} # end foraech service
+			} # end if Proofs
+			if ( $$services{'Cutting'} ) {
+				foreach my $service ( @{$$services{'Cutting'}} ) {
+					my $specs = openprint::service::get_specs_ref( $Project, $service );
+					foreach my $spec ( "txtStockCalliper-", "chkOverrideCalliper-", "txtAdditionalCuts" ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, $spec.'1', $$specs{$spec.'0'} );
+						openprint::service::delete_service_spec( $Project->id(), $service, $spec.'0' );
+					} # end foreach
+					foreach my $spec ( 
+							"txtCalculatedCuts",
+							"ddmEquipment",
+							"ddmStockCutEquipment",
+							"chkOverrideStockCutEquipment",
+							"chkOverrideCalculatedCuts",
+							"OverrideVerticalCuts",
+							"txtVerticalCuts",
+							"OverrideHorizontalCuts",
+							"txtHorizontalCuts",
+							"OverrideDVerticalCuts",
+							"txtDVerticalCuts",
+							"OverrideDHorizontalCuts",
+							"txtDHorizontalCuts",
+							) {
+						foreach my $qty_index ( $Project->quantity_indexes() ) {
+							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "$spec-1-$qty_index", $$specs{"$spec-0-$qty_index"} );
+							openprint::service::delete_service_spec( $Project->id(), $service, "$spec-0-$qty_index" );
+						} # end foreach qty
+					} # end foreach spec
 				} # end foraech service
 			} # end if Proofs
 		} # end foreach Project
