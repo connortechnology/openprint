@@ -171,6 +171,17 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 			} # end foreach ssid
 		} # end if
 	} # end foreach
+	if ( $$services{'Folding'} ) {
+	foreach my $service ( @{$$services{'Folding'}} ) {
+		my $specs = openprint::service::get_specs_ref( $Project, $service );
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
+			if ( $$specs{"ddmEquipment-0-$qty_index"} and ! $$specs{"ddmEquipment-1-$qty_index"} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $service, "ddmEquipment-1-$qty_index", $$specs{"ddmEquipment-0-$qty_index"} );
+				openprint::service::delete_service_spec( $Project->id(), $service, $$specs{"ddmEquipment-0-$qty_index"} );
+			} # end if
+		}
+	} # end foraech service
+	} # end if
 	my $summary = $Project->summary();
 
 	sql::update( undef, undef, 'Projects', ['id=?', $Project->id()], 'summary', $summary );
