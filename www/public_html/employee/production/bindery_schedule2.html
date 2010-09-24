@@ -108,10 +108,20 @@
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
 		<div class="presses">
-		<ul><li><label>Equipment:</label>
+		<ul>
+		<li>
+			<label>Category</label>
+			<select name="category" id="category" onchange="f1.submit();">
+				<option value="">All</option>
+			<? echo (
+return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment WHERE useinscheduling=true ORDER BY strcategory' ) ], $session{'/employee/production/operator_schedule.html?category'} );
+) ?>
+			</select>
+		</li>
+<li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment::find('category'=>'Bindery','UseInScheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment::find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'UseInScheduling'=>1,'order'=>'lower(strcategory),lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/bindery_schedule2.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) ] );
 	} # end foreach press
