@@ -1,5 +1,8 @@
-<? eval ( openprint::Estimating::Cutting::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} ); ) ?>
-<? eval ( @{$$variable{'tempCuttingGroups'}} = @{$$variable{'CuttingGroups'}} ) ?>
+<? eval ( 
+	openprint::Estimating::Cutting::display( $log, $dbh, $variable, @$variable{'ProjectIndex','ServiceIndex'} );
+	@{$$variable{'tempCuttingGroups'}} = @{$$variable{'CuttingGroups'}};
+) ?>
+
 <? while ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
 	<? if ( $$variable{'Reference'} ) ?>
 		<p>
@@ -28,7 +31,7 @@
 my $html;
 foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 
-        $html .= '<span class="value">'. $$variable{'txtCalculatedCuts-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}.'</span>';
+        $html .= '<span class="value">'. $$variable{'txtCalculatedCuts-'.$$variable{'SignatureIndex'}.'-'.$qty_index}.'</span>';
 } # end foreach qty_index
 return $html;
 ) ?>
