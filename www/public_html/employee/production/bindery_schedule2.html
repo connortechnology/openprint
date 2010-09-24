@@ -312,7 +312,7 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 				} # end for
 }
 				foreach my $Shift ( @Shifts ) {	
-					push @{$$variable{'drops'}}, $Shift->ul_id();
+					push @{$$variable{'drops'}}, $Shift->ul_id() if $Shift->operator_id() or ! $Equipment->smartscheduling();
 					$html .= $Shift->get_ul( );
 				} # end foreach Shift
 				$PreviousShift = pop @Shifts;
