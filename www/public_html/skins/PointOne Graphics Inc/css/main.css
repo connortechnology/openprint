@@ -328,3 +328,10 @@ body a#trustlogo {
     bottom: 0px;
 }
 
+.Terms {
+	background-color: white;
+	padding: 5px;
+}
+.Terms h1, .Terms h2 {
+text-align: center;
+}
