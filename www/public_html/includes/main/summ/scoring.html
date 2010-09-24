@@ -1,10 +1,10 @@
 <? while ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
 <? if ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} or $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>
 	<? if ( $$variable{'Reference'} ) ?>
-	<div class="row">Information for <b><?Reference?></b></div>
+	<p>Information for <b><?Reference?></b></p>
 	<? endif ( $$variable{'Reference'} ) ?>
-	<div class="row"> 
-		<span class="label">Number of scores per item:</span>
+	<p> 
+		<label>Number of scores per item:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -15,9 +15,9 @@
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</div>
-	<div class="row">
-		<span class="label">Imposition:</span>
+	</p>
+	<p>
+		<label>Imposition:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -26,9 +26,9 @@
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</div>
-	<div class="row">
-		<span class="label">Equipment:</span>
+	</p>
+	<p>
+		<label>Equipment:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -36,6 +36,6 @@
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	</div>
+	</p>
 <? endif ( $$variable{"txtVerticalQty-$$variable{'SignatureIndex'}"} or $$variable{"txtHorizontalQty-$$variable{'SignatureIndex'}"} ) ?>
 <? endwhile ( @$variable{'SignatureIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>

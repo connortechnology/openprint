@@ -1,5 +1,5 @@
-<div class="row">
-	<span class="label">Items per <?ServiceTypeName?>:</span>
+<p>
+	<label>Items per <?ServiceTypeName?>:</label>
 <? if ( $$variable{'Project'}->quantity(1) ) ?>
 	<span class="value">
 		<?txtItemsPerPackage1?>
@@ -15,9 +15,9 @@
 		<?txtItemsPerPackage3?>
 	</span>
 <? endif ( $$variable{'Project'}->quantity(3) ) ?>
-</div>
-<div class="row">
-    <span class="label"><?ServiceTypeName?> quantity:</span>
+</p>
+<p>
+    <label><?ServiceTypeName?> quantity:</label>
 <? if ( $$variable{'Project'}->quantity(1) ) ?>
     <span class="value">
 		<?txtPackageQuantity1?>
@@ -33,5 +33,4 @@
 		<?txtPackageQuantity3?>
 	</span>
 <? endif ( $$variable{'Project'}->quantity(3) ) ?>
-	<br class="spacer"/>
-</div>
+</p>

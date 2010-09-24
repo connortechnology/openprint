@@ -1,5 +1,5 @@
-<div class="row">
-	<span class="label"><b>Unit Price:</b></span>
+<p>
+	<label><b>Unit Price:</b></label>
     <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
     <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
     <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -7,10 +7,9 @@
     <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
     <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<br class="spacer"/>
-</div>
-<div class="row">
-	<span class="label"><b>Total Service Price:</b></span>
+</p>
+<p>
+	<label><b>Total Service Price:</b></label>
     <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
     <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
     <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -18,5 +17,4 @@
     <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
     <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<br class="spacer"/>
-</div>
+</p>

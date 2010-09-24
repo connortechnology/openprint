@@ -1,16 +1,22 @@
-<div class="row"> 
-	<span class="label">Supplied project format:</span>
-	<span class="value"><?ddmDesign?></span>
-</div>
+<? if ( $$variable{'ddmDesign'} ) ?>
+<p> 
+	<label>Supplied project format:</label>
+	<?ddmDesign?>
+</p>
+<? endif ( $$variable{'ddmDesign'} ) ?>
 <? if ( $$variable{'txtOtherPrograms'} ) ?>
-<div class="row"> 
-	<span class="label">Additional software information:</span>
-	<span class="value"><?txtOtherPrograms?></span>
+<p> 
+	<label>Additional software information:</label>
+	<?txtOtherPrograms?>
 </div>
 <? endif ( $$variable{'txtOtherPrograms'} ) ?>
-<div class="row">
-	<span class="label">Quantity:</span>
-	<? echo ( '<span class="value">'.$$variable{'Project'}->quantity1().'</span>' if $$variable{'Project'}->quantity1() > 0; ) ?>
-	<? echo ( '<span class="value">'.$$variable{'Project'}->quantity2().'</span>' if $$variable{'Project'}->quantity2() > 0; ) ?>
-	<? echo ( '<span class="value">'.$$variable{'Project'}->quantity3().'</span>' if $$variable{'Project'}->quantity3() > 0; ) ?>
-</div>
+<p>
+	<label>Quantity:</label>
+<? echo ( 
+	my $html;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= '<span class="value">'.$$variable{'Project'}->quantity($qty_index).'</span>';
+	} # end foreach
+	return $html;
+) ?>
+</p>

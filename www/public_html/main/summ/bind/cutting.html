@@ -2,50 +2,47 @@
 <? eval ( @{$$variable{'tempCuttingGroups'}} = @{$$variable{'CuttingGroups'}} ) ?>
 <? while ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>
 	<? if ( $$variable{'Reference'} ) ?>
-		<div class="row">
+		<p>
 			Information for:&nbsp; <b><?Reference?> </b><br/> 
-		</div>
+		</p>
 	<? endif ( $$variable{'Reference'} ) ?>
 <? if ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} or $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
-<div class="row">
-			<span class="label">Supplied Sheet Size:</span>
+<p>
+			<label>Supplied Sheet Size:</label>
 			<span class="value">
 				<? echo ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>&nbsp;x&nbsp;
 				<? echo ( $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
 			</span>
-		</div>
-		<div class="row">
-			<span class="label">Running Press Sheet Size:</span> 
+		</p>
+		<p>
+			<label>Running Press Sheet Size:</label> 
 			<span class="value">
 				<? echo ( $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>&nbsp;x&nbsp;
 				<? echo ( $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
 </span>
-		</div>
+		</p>
 <? endif ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} or $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} != $$variable{"txtSheetSizeHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"} ) ?>
-    <div class="row">
-        <span class="label">Calculated regular cuts:</span>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-        <span class="value">
-            <? echo ( $$variable{'txtCalculatedCuts-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}} ) ?>
-        </span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-    </div>
+    <p>
+        <label>Calculated regular cuts:</label>
+<? echo (
+my $html;
+foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+
+        $html .= '<span class="value">'. $$variable{'txtCalculatedCuts-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}.'</span>';
+} # end foreach qty_index
+return $html;
+) ?>
+    </p>
     <? if ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>
-    <div class="row">
-        <span class="label">Additional Cuts:</span>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-        <span class="value">
-            <? echo ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>
-        </span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-    </div>
+    <p>
+        <label>Additional Cuts:</label>
+<? echo (
+my $html;
+foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+        $html .= '<span class="value">'.$$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}}.'</span>';
+} # end foreach
+return $html;
+) ?>
+    </p>
     <? endif ( $$variable{'txtAdditionalCuts'.$$variable{'SignatureIndex'}} ) ?>
 <? endwhile ( @$variable{'SignatureServiceIndex','SignatureIndex','Reference'} = splice @{$$variable{'tempCuttingGroups'}},0,3; ) ?>

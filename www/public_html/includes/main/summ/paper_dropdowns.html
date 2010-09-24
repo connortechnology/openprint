@@ -1,5 +1,5 @@
-<div class="row">
-	<span class="label">Is stock supplied?</span>
+<p>
+	<label>Is stock supplied?</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -7,9 +7,9 @@
 <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
-<div class="row">
-    <span class="label">Stock:</span>
+</p>
+<p>
+    <label>Stock:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -17,9 +17,9 @@
 <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
-<div class="row">
-    <span class="label">Finish:</span>
+</p>
+<p>
+    <label>Finish:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -27,9 +27,9 @@
 <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
-<div class="row">
-    <span class="label">Colour:</span>
+</p>
+<p>
+    <label>Colour:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -37,9 +37,9 @@
 <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
-<div class="row">
-    <span class="label">Calliper &amp; Weight:</span>
+</p>
+<p>
+    <label>Calliper &amp; Weight:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -48,4 +48,4 @@
 <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
+</p>
