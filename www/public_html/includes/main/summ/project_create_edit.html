@@ -1,15 +1,21 @@
-<? if ( $$variable{'ddmDesign'} ) ?>
+<? if ( $$variable{'Project'}->design() ) ?>
 <p> 
 	<label>Supplied project format:</label>
-	<?ddmDesign?>
+	<span class="value"><? echo ( $$variable{'Project'}->design() ) ?></span>
 </p>
-<? endif ( $$variable{'ddmDesign'} ) ?>
-<? if ( $$variable{'txtOtherPrograms'} ) ?>
+<? endif ( $$variable{'Project'}->design() ) ?>
+<? if ( $$variable{'Project'}->programs() ) ?>
+<p> 
+	<label>Software:</label>
+<span class="value"><? echo ( $$variable{'Project'}->programs() ) ?></span>
+</p>
+<? endif ( $$variable{'Project'}->programs() ) ?>
+<? if ( $$variable{'Project'}->other_programs() ) ?>
 <p> 
 	<label>Additional software information:</label>
-	<?txtOtherPrograms?>
-</div>
-<? endif ( $$variable{'txtOtherPrograms'} ) ?>
+<span class="value"><? echo ( $$variable{'Project'}->other_programs() ) ?></span>
+</p>
+<? endif ( $$variable{'Project'}->other_programs() ) ?>
 <p>
 	<label>Quantity:</label>
 <? echo ( 
