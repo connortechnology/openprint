@@ -69,7 +69,7 @@
 				$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 				if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
-				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?project_id=".$$variable{'ProjectIndex'}."', 800 );", '', 'View Log' );
+				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "popup_window('_view_log.html', 'project_id=".$$variable{'ProjectIndex'}."', {width:800} );", '', 'View Log' );
 				} # end if
 				return $html;
 			) ?>

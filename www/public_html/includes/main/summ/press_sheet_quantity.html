@@ -1,6 +1,6 @@
 <!--
-<div class="row"> 
-	<span class="label">Press Sheet Cost:</span>
+<p> 
+	<label>Press Sheet Cost:</label>
 <? if ( ( ! $$variable{'OrderedQuantityIndex'} ) or ( $$variable{'OrderedQuantityIndex'} == 1 ) ) ?>
 		<? if ( $$variable{'hdnPaperPrice1'} > 0 ) ?>
 		<span class="value"> $<?hdnPaperPrice1?> </span>
@@ -17,10 +17,10 @@
 		<? endif ( $$variable{'hdnPaperPrice3'} > 0 ) ?>
 <? endif ( ( ! $$variable{'OrderedQuantityIndex'} ) or ( $$variable{'OrderedQuantityIndex'} == 3 ) ) ?>
 	<br class="spacer"/>
-</div>
+</p>
 -->
-<div class="row"> 
-	<span class="label">Impression Count:</span>
+<p> 
+	<label>Impression Count:</label>
 <? echo ( 
 	my $html = '';
 	my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
@@ -30,9 +30,9 @@
 	} # end foreach qty_index
 	return $html;
 ) ?>
-</div>
-<div class="row"> 
-	<span class="label">Gross Stock Quantity:</span>
+</p>
+<p> 
+	<label>Gross Stock Quantity:</label>
 <? echo ( 
 	my $html = '';
 	my $sig_specs = openprint::service::get_specs_ref( @$variable{'Project','ServiceIndex'} );
@@ -52,10 +52,10 @@
 	} # end foreach qty_index
 	return $html;
 ) ?>
-</div>
+</p>
 <!--
-<div class="row"> 
-	<span class="label">Press Sheet Net Quantity:</span>
+<p> 
+	<label>Press Sheet Net Quantity:</label>
 	<? if ( $$variable{'Project'}->quantity1() ) ?>
 	<span class="value"> <?hdnNetSheetCount1?> </span>
 	<? endif ( $$variable{'Project'}->quantity1() ) ?>
@@ -65,5 +65,5 @@
 	<? if ( $$variable{'Project'}->quantity3() ) ?>
 	<span class="value"> <?hdnNetSheetCount3?> </span>
 	<? endif ( $$variable{'Project'}->quantity3() ) ?>
-</div>
+</p>
 -->
