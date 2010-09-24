@@ -515,7 +515,7 @@ sub send_additional_charges_notifications {
 #TO      => 'iconnor@point-one.com',
 			TO      => join(',', sprintf( "%s %s <%s>", @info{'CustomerFirstName','CustomerLastName','CustomerEmail'}), $param{'AdditionalEmailRecipients'}),
 			CC      => sprintf( '"%s %s" <%s>', @info{'CSRFirstName','CSRLastName','CSREmail'}),
-			BCC		=>	'"Isaac Connor" <iconnor@point-one.com>',
+			#BCC		=>	'"Isaac Connor" <iconnor@point-one.com>',
 			SUBJECT => 'Additional Charges required',
 			);
 	misc::send_email_with_attachment( $log, \%mail, @body );

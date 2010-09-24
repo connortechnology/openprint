@@ -135,3 +135,11 @@ td.Docket, th.Docket {
 	width: 80px;
 text-align: left;
 }
+.Terms {
+	background-color: white;
+	padding: 5px;
+	border: 1px solid #000088;
+}
+.Terms h1, .Terms h2 {
+text-align: center;
+}
