@@ -174,7 +174,7 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 					if ( $Paper->type() eq 'Sheet' ) {
 						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * ceil( $totals{$paper_string}{"qty_$qty_index"} / $sheets_per_package );
 					} elsif ( $Paper->type() eq 'Roll' ) {
-						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * int($totals{$paper_string}{"qty_$qty_index"}/$sheets_per_package);
+						$totals{$paper_string}{"qty_$qty_index"} = $sheets_per_package * ($totals{$paper_string}{"qty_$qty_index"}/$sheets_per_package);
 					} # end if
 				} # end foreah qty_index
 			} # end if sheets_per_package
@@ -184,7 +184,7 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 			foreach my $qty_index ( $Project->quantity_indexes() ) {
 				next if ! $totals{$paper_string}{"qty_$qty_index"};
 				if ( $$Paper{'minimum_order'} > $totals{$paper_string}{"qty_$qty_index"} ) {
-					$totals{$paper_string}{"qty_$qty_index"} = ceil( $$Paper{'minimum_order'} );
+					$totals{$paper_string}{"qty_$qty_index"} = $$Paper{'minimum_order'};
 				} # end if
 			} # end foreach qty_index
 		} # end if
@@ -211,9 +211,9 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 				if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 					my %price;
 					if ( $Paper->type() eq 'Sheet' ) {
-					%price = $Paper->get_price( $totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight() );
+						%price = $Paper->get_price( $totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight() );
 					} else {
-					%price = $Paper->get_price( $totals{$paper_id}{"qty_$qty_index"} );
+						%price = $Paper->get_price( $totals{$paper_id}{"qty_$qty_index"} );
 					} # end if
 					$$specs{"cost-$ss_id-$stock_index-$qty_index"} = $price{'100lb Price'};
 #$openprint::log->warn("Getting prices for $stock_index $paper_id (".$totals{$paper_id}{"qty_$qty_index"}.'sheets) => $' . $price{'100lb Price'}.'/100lb');
@@ -336,6 +336,12 @@ $openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id
 					$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
 				} # end if
 				$html .= $$specs{"qty-$stock_id-$qty_index"}.'lbs';
+				if ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {
+if ( ! $Paper->sheet_weight() ) {
+$openprint::log->debug("No Sheet Weight: $$Paper{height}:" . $Paper->to_string() );
+}
+					$html .= sprintf(' %.0finches',( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() );
+				} # end if
 			} else {
 				$html .= 'none';
 			} # end if
