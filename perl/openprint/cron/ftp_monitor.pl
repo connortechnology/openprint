@@ -108,6 +108,7 @@ $openprint::dbh = sql::open_sql( $log,
 die 'Error opening db' if ! $dbh;
 %openprint::config = ();
 configuration::init_cache( $log, $dbh, {} );
+$log->debug("Cache inited");
 if ( $opts->{'site_url'} ) {
 	$config{'siteURL'} = $opts->{'site_url'};
 	$config{'ExternalSiteURL'} = $opts->{'site_url'};
@@ -124,8 +125,10 @@ if ( $opts->{'skin_path'} ) {
 my %uploads;
 
 my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
+$log->debug("Got scoreboard");
 my $fifoh;
 if (open($fifoh, "< $fifo")) {
+$log->debug("opened fifo");
 	while (1) {
 		my $line;
 		eval {
@@ -223,6 +226,7 @@ if (open($fifoh, "< $fifo")) {
 
 	close($fifoh);
 } else {
+	$log->error("unable to read FIFO '$fifo': $!\n");
 	die "$program: unable to read FIFO '$fifo': $!\n";
 }
 if ( $opts->{'pid_file'} ) {
@@ -572,3 +576,6 @@ sub get_scoreboard {
 	close(SCORE);
 	return \@scoreboard;
 } # end sub get_scoreboard
+
+1;
+__END__
