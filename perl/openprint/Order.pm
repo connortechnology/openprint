@@ -50,6 +50,7 @@ require openprint::OrderedProduct;
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
 	'created_on'				=>	'dtmorderdate',
+	'terms_accepted'			=>	'terms_accepted',
 	);
 sub find {
 	my %params = @_;
@@ -174,15 +175,15 @@ sub load {
 sub save {
 	my ( $self, $params ) = @_;
 
-	my $ac = sql::start_transaction( $dbh );
-
+	$self->set( $params ) if $params;
 	my %sql;
 	foreach my $key ( keys %fields ) {
 		next if $key eq 'paid';
 		$$self{$key} = undef if $$self{$key} eq '';
 		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
-		
+
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		if ( $openprint::config{'OrderIDStyle'} eq 'Year' ) {
 			$sql{'index'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );

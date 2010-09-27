@@ -2,6 +2,7 @@
 <h1>Order</h1>
 <h2>Submit</h2>
 </div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form method="post" name="f1" action="confirmation_make_order.html">
 	<!--#include virtual="/includes/order_header.html" -->
 	<br class="spacer"/>
@@ -37,7 +38,19 @@
 		</tr>
 	</table>
 	<br class="spacer"/>
-	<? echo ( ssi::include( $config{'SkinPath'}.'/includes/order_disclaimer.html'); ) ?>
+	<? echo ( 
+		if ( ( $session{'company_id'} == $$variable{'Order'}->company_id() ) and ( new openprint::User( $session{'user_id'} )->company_id() == $session{'company_id'} ) ) {
+			my $html;
+			$html .= return ssi::include( $config{'SkinPath'}.'/includes/order_disclaimer.html');
+			$html .= '
+			<div class="AcceptTerms">
+			<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
+			By checking the box and clicking Continue you agree to accept the listed terms and conditions.
+			</div>';
+			return $html;
+		} # end if
+		return '';
+	) ?>
 	<br/>
 	<span style="float: right;">
 	<? echo ( ssi::writeButton( $log, $dbh, 'Complete', 'complete.gif', 'f1.submit();', '', 'Complete Order' ); ) ?>
