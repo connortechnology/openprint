@@ -785,7 +785,7 @@ sub signature_calc {
 	$results{'Price'}		= $bestPrice;
 	$results{'MPrice'}		= ($bestM/$$specs{'txtQuantity'.$qty_index})*1000;
 	$results{'Equipment'}	= $bestEquipment;
-	if ( my $Spec = $bestEquipment->Specification('Cutting Overs') ) {
+	if ( $bestEquipment and ( my $Spec = $bestEquipment->Specification('Cutting Overs') ) ) {
 		if ( $$Spec{'units'} eq 'Sheets' ) {
 			$results{'Overs'} = $$Spec{'value'};
 		} # end if

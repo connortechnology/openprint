@@ -1349,7 +1349,7 @@ sub load_from_signature {
 	$Paper = $Paper->clone();
 	if ( $qty_index ) {
 		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
-#$log->debug("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+$log->debug("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			$Paper->start_width( $Paper->width() ) if ! $Paper->start_width();
 			$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
