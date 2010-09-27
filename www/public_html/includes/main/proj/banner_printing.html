@@ -5,7 +5,7 @@
 				<li><label># of Grommets per Banner:</label>
 					<input type="text" size="4" name="grommets" id="grommets" value="<?grommets?>" onkeyup="this.value=this.value.replace(/\D/g, '');calc(this.form.name);" />
 				</li>
-				<li id="hemmed"><label>Will your banner have pole pockets?</label>
+				<li id="pocketsli"><label>Will your banner have pole pockets?</label>
 					<input type="radio" name="pockets" id="pocketsY" value="Y" <? echo ( ssi::checked( $$variable{'pockets'} eq 'Y' ); ) ?> onclick="$('PocketSizeli').show();calc(this.form.name);" />
 					<label class="radio" for="pocketsY">Yes</label>
 					<input type="radio" name="pockets" id="pocketsN" value="N" <? echo ( ssi::checked( $$variable{'pockets'} ne 'Y' ); ) ?> onclick="$('PocketSizeli').hide();calc(this.form.name);" />
