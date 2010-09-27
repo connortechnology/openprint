@@ -1,9 +1,9 @@
 <? while ( @$variable{'SignatureGroupIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
-<div class="row">
+<p>
 	<? if ( $$variable{'Reference'} ) ?>
 	Information for:&nbsp;<b><?Reference?></b><br/>
 	<? endif ( $$variable{'Reference'} ) ?>
-	<span class="label">Quantity, size &amp; type of proof:</span>
+	<label>Quantity, size &amp; type of proof:</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -24,6 +24,6 @@
 	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
+</p>
 <? endwhile ( @$variable{'SignatureGroupIndex','Reference'} = splice @{$$variable{'SignatureGroups'}},0,2; ) ?>
 

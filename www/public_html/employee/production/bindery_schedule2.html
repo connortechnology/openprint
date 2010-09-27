@@ -72,8 +72,8 @@
 </div>
 <? eval (
 	my ( $starttime, $endtime );
-	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
-		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/print_overview.html?Equipment'} ) ).')' );
+	if ( $session{'/employee/production/bindery_schedule2.html?Equipment'} ) {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) ).')' );
 	} else {
 		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 	} # end if
@@ -84,24 +84,24 @@
 			$endtime = Date::Format::time2str( '%Y-%m-%d', $endtime_seconds );
 		}
 	} # end if
-	if ( ! $session{'/employee/production/print_overview.html?schedule_start_year'} ) {
+	if ( ! $session{'/employee/production/bindery_schedule2.html?schedule_start_year'} ) {
 		@session{
-				'/employee/production/print_overview.html?schedule_start_year',
-				'/employee/production/print_overview.html?schedule_start_month',
-				'/employee/production/print_overview.html?schedule_start_day'}
+				'/employee/production/bindery_schedule2.html?schedule_start_year',
+				'/employee/production/bindery_schedule2.html?schedule_start_month',
+				'/employee/production/bindery_schedule2.html?schedule_start_day'}
 				= $starttime ? split('-', $starttime ) : Date::Calc::Today();
 	} # end if
 
-	if ( ! $session{'/employee/production/print_overview.html?schedule_end_year'} ) {
+	if ( ! $session{'/employee/production/bindery_schedule2.html?schedule_end_year'} ) {
 		@session{
-				'/employee/production/print_overview.html?schedule_end_year',
-				'/employee/production/print_overview.html?schedule_end_month',
-				'/employee/production/print_overview.html?schedule_end_day'}
+				'/employee/production/bindery_schedule2.html?schedule_end_year',
+				'/employee/production/bindery_schedule2.html?schedule_end_month',
+				'/employee/production/bindery_schedule2.html?schedule_end_day'}
 				= $endtime ? split('-', $endtime ) : Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
 	} # end if
 ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
-<form name="f1" method="post" action="print_overview.html">
+<form name="f1" method="post" action="bindery_schedule2.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
 	<input type="hidden" name="ServiceIndex" />
@@ -111,16 +111,16 @@
 		<ul><li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment::find('category'=>'Bindery','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
-		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/print_overview.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Equipment'} ) ] );
+		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/bindery_schedule2.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) ] );
 	} # end foreach press
 
 	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
-	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
-		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/print_overview.html?Equipment'} ] );
+	if ( $session{'/employee/production/bindery_schedule2.html?Equipment'} ) {
+		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ] );
 	} else {
-		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
+		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
 	return $html;
 ) ?>
@@ -133,18 +133,18 @@
 				<label>Date Range:</label>
 				<span class="DateSelector">
 					<? echo ( 
-						my $html = ssi::date_select( 'schedule_start', [ @session{'/employee/production/print_overview.html?schedule_start_year',
-	'/employee/production/print_overview.html?schedule_start_month',
-	'/employee/production/print_overview.html?schedule_start_day'} ] );
+						my $html = ssi::date_select( 'schedule_start', [ @session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+	'/employee/production/bindery_schedule2.html?schedule_start_month',
+	'/employee/production/bindery_schedule2.html?schedule_start_day'} ] );
 						$html .= ssi::writeButton( $log, $dbh, 'Today_start', 't.gif', 'set_today( f1.schedule_start_year, f1.schedule_start_month, f1.schedule_start_day );f1.submit();', '', 'T' ); 
 					) ?>
 				&nbsp;to&nbsp;
 				</span>
 				<span class="DateSelector">
 					<? echo ( 
-						my $html = ssi::date_select( 'schedule_end', [ @session{'/employee/production/print_overview.html?schedule_end_year',
-	'/employee/production/print_overview.html?schedule_end_month',
-	'/employee/production/print_overview.html?schedule_end_day'} ] );
+						my $html = ssi::date_select( 'schedule_end', [ @session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+	'/employee/production/bindery_schedule2.html?schedule_end_month',
+	'/employee/production/bindery_schedule2.html?schedule_end_day'} ] );
 						$html .= ssi::writeButton( $log, $dbh, 'Today_end', 't.gif', 'set_today( f1.schedule_end_year, f1.schedule_end_month, f1.schedule_end_day );f1.submit();', '', 'T' );
 						return $html;
 					) ?>
@@ -161,7 +161,7 @@
 							'30'	=>	'30px / hour',
 							'40'	=>	'40px / hour',
 						);
-						return ssi::make_drop_down( \@options, $session{'/employee/production/print_overview.html?scale'} );
+						return ssi::make_drop_down( \@options, $session{'/employee/production/bindery_schedule2.html?scale'} );
 					) ?>
 				</select>
 			</li>
@@ -188,7 +188,7 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddMaintenance', 'add.gif', "ajax_window('_add_maintenance.html', 600, 400 );", '', 'Add Maintenance' ); ) ?>
 			<? echo (
 				if ( @{$$variable{'Equipment'}} == 1 and $$variable{'Equipment'}[0]->smartscheduling() ) {
-					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', 'print_overview.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', 'Reflow Jobs' );
+					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', 'bindery_schedule2.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', 'Reflow Jobs' );
 				} # end if
 				return;
 			) ?>
@@ -201,23 +201,23 @@
 	<div class="PressScheduleHeader">
 		Press Schedule For 
 		<? echo ( Date::Calc::Date_to_Text( 
-					@session{'/employee/production/print_overview.html?schedule_start_year',
-					'/employee/production/print_overview.html?schedule_start_month',
-					'/employee/production/print_overview.html?schedule_start_day'} ); ) ?>
+					@session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+					'/employee/production/bindery_schedule2.html?schedule_start_month',
+					'/employee/production/bindery_schedule2.html?schedule_start_day'} ); ) ?>
 
-		<? if ( Date::Calc::Date_to_Days( @session{'/employee/production/print_overview.html?schedule_end_year', '/employee/production/print_overview.html?schedule_end_month', '/employee/production/print_overview.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+		<? if ( Date::Calc::Date_to_Days( @session{'/employee/production/bindery_schedule2.html?schedule_end_year', '/employee/production/bindery_schedule2.html?schedule_end_month', '/employee/production/bindery_schedule2.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
 		to <? echo ( Date::Calc::Date_to_Text( 
-					@session{'/employee/production/print_overview.html?schedule_end_year',
-					'/employee/production/print_overview.html?schedule_end_month',
-					'/employee/production/print_overview.html?schedule_end_day'} ); ) ?>
-		<? endif ( Date::Calc::Date_to_Days( @session{'/employee/production/print_overview.html?schedule_end_year', '/employee/production/print_overview.html?schedule_end_month', '/employee/production/print_overview.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
+					@session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+					'/employee/production/bindery_schedule2.html?schedule_end_month',
+					'/employee/production/bindery_schedule2.html?schedule_end_day'} ); ) ?>
+		<? endif ( Date::Calc::Date_to_Days( @session{'/employee/production/bindery_schedule2.html?schedule_end_year', '/employee/production/bindery_schedule2.html?schedule_end_month', '/employee/production/bindery_schedule2.html?schedule_end_day'}) > Date::Calc::Date_to_Days( Date::Calc::Today() ) ) ?>
 		<br/>
 	</div>
 	Projects highlighted in yellow have forms on other presses.<br/>
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a></div>';
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/bindery_schedule2.html?Equipment='.$E->id().'">'.$E->name().'</a></div>';
 		} # end foreach
 		return $html;
 		) ?>
@@ -227,21 +227,21 @@
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
 			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
-			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
-					'/employee/production/print_overview.html?schedule_start_month',
-					'/employee/production/print_overview.html?schedule_start_day'};
+			my ( $year, $month, $day ) = @session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+					'/employee/production/bindery_schedule2.html?schedule_start_month',
+					'/employee/production/bindery_schedule2.html?schedule_start_day'};
 			my $end = Date::Calc::Delta_Days( 
 				@session{
-				'/employee/production/print_overview.html?schedule_start_year',
-				'/employee/production/print_overview.html?schedule_start_month',
-				'/employee/production/print_overview.html?schedule_start_day',
-				'/employee/production/print_overview.html?schedule_end_year',
-				'/employee/production/print_overview.html?schedule_end_month',
-				'/employee/production/print_overview.html?schedule_end_day'}
+				'/employee/production/bindery_schedule2.html?schedule_start_year',
+				'/employee/production/bindery_schedule2.html?schedule_start_month',
+				'/employee/production/bindery_schedule2.html?schedule_start_day',
+				'/employee/production/bindery_schedule2.html?schedule_end_year',
+				'/employee/production/bindery_schedule2.html?schedule_end_month',
+				'/employee/production/bindery_schedule2.html?schedule_end_day'}
 				) + 1;
 
 			# When it's time to add shifts, we add in sets, until we find an already-implemented shift.
-			my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(),'order'=>'starttime');
+			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
 
 			my $PreviousShift;
 
@@ -252,7 +252,7 @@
 				my $tomorrow = sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, 1 ) );
 
 				# Get the shifts on this day.
-				my @Shifts = openprint::Shift->find( 
+				my @Shifts = openprint::Shift::find( 
 					'equipment_id' 		=>	$E->id(),
 					'starttime_>='		=>	$today,
 					'starttime_<'		=>	$tomorrow,
@@ -322,10 +322,10 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 
 			$html .= '</div>';
 		} # end foreach press
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
 		$html .= '</div></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'Pending', '_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
 		$html .= '</div></div>';
 		return $html;

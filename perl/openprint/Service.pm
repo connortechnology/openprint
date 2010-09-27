@@ -66,7 +66,7 @@ sub delete {
 	delete $openprint::Object::cache{'openprint::Service'}{$$self{id}} if $openprint::Object::cache{'openprint::Service'};	
 	my $ac = sql::start_transaction( $dbh );
     sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE service_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM Services WHERE id=?}, $$self{id} );
+	$self->SUPER::delete();
 	openprint::logs::insertLogRecord('10', "Service Index: " . $$self{id},);
 	sql::end_transaction( $dbh, $ac );
 	return $dbh->errstr();

@@ -919,22 +919,21 @@ sub display {
 	@{$$variable{'CuttingGroups'}} = ();
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
-		my $specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-		push @{$$variable{'CuttingGroups'}}, $signature_service_index, @$specs{'SignatureIndex','txtServiceDescription'};
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+		push @{$$variable{'CuttingGroups'}}, $signature_service_index, @$sig_specs{'SignatureIndex','txtServiceDescription'};
 		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			next if $$specs{'StockType'.$qty_index} eq 'Roll';
-			@$variable{"txtSuppliedStockWidth-$$specs{'SignatureIndex'}-$qty_index", "txtSuppliedStockHeight-$$specs{'SignatureIndex'}-$qty_index",
-				"txtSheetSizeWidth-$$specs{'SignatureIndex'}-$qty_index", "txtSheetSizeHeight-$$specs{'SignatureIndex'}-$qty_index"} =
-				@$specs{"hdnSuppliedStockWidth$qty_index","hdnSuppliedStockHeight$qty_index","StockWidth$qty_index","StockHeight$qty_index"};
+			next if $$sig_specs{'StockType'.$qty_index} eq 'Roll';
+			@$variable{"txtSuppliedStockWidth-$$sig_specs{'SignatureIndex'}-$qty_index", "txtSuppliedStockHeight-$$sig_specs{'SignatureIndex'}-$qty_index",
+				"txtSheetSizeWidth-$$sig_specs{'SignatureIndex'}-$qty_index", "txtSheetSizeHeight-$$sig_specs{'SignatureIndex'}-$qty_index"} =
+				@$sig_specs{"hdnSuppliedStockWidth$qty_index","hdnSuppliedStockHeight$qty_index","StockWidth$qty_index","StockHeight$qty_index"};
 
 		} # end foreach
-#, $signature_qty;
-
 	} # end foreach
 	if ( @{$$variable{'CuttingGroups'}} == 0 ) {
 # this will display the first group of cutting fields for projects that dont' have a printing service.
 		push @{$$variable{'CuttingGroups'}}, 0;
 	} # end if
+$openprint::log->debug("Cutting Groups: " . @{$$variable{'CuttingGroups'}} );
 
 } # end sub display
 

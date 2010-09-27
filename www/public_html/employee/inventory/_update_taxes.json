@@ -1,6 +1,8 @@
 <? echo ( 
 	$r->content_type('text/javascript');
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+	return if ! $PO->id();
+
 	my $created_on = $PO->created_on();
 	$created_on = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	my @new_taxes = openprint::Tax->find(

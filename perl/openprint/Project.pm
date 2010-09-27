@@ -1116,6 +1116,10 @@ sub add_signature {
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $log->error( $dbh->errstr() );
 	my ($print_service_index) = $self->add_service( 'Signature' );
+	if ( ! $print_service_index ) {
+		$log->error("Error adding Signature!");
+		return;
+	} # end if
 	openprint::service::status( $self->id(), $print_service_index, $status );
 	if ( ! $sig_index ) {
 		$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
@@ -1129,9 +1133,11 @@ sub add_signature {
 
 sub copy_signature {
     my ( $self, $sig_specs, $data, $status ) = @_;
-$log->warn("in copy");
     my $new_service_index = $self->add_signature( undef, $status );
-$log->warn("after add copy");
+	if ( ! $new_service_index ) {
+		$log->error('Error copying signature.');
+		return;
+	} # end if
     my $new_specs = openprint::service::get_specs_ref( $self, $new_service_index );
 
 	my $ac = sql::start_transaction( $dbh );
@@ -1208,10 +1214,8 @@ sub add_service {
 
     my $ServiceType;
     if ( ref $type ne 'openprint::ServiceType' ) {
-        if ( my @ServiceTypes = openprint::ServiceType->find('name'=>$type) ) {
-            $ServiceType = $ServiceTypes[0];
-        } else {
-            $log->warn("Service $type IS NOT in the system.");
+        if ( ! ( $ServiceType = openprint::ServiceType->find_one('name'=>$type) ) ) {
+            $log->error("Service $type IS NOT in the system.");
             return;
         } # end if
     } else {
