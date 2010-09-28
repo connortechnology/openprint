@@ -1312,25 +1312,59 @@ sub summary {
 	return '';
 } # end sub summary
 
-sub runtime {
-	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
-	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-	my $Equipment = new openprint::Equipment($$specs{'ddmEquipment'.$qty_index});
-
-	my $runTime = $Equipment->specification( 'Station Make Ready' ) * 60;
-	foreach my $name ( keys %$specs ) {
-		if ( $name =~ /^txt(\w*)Qty$/ ) {
-			my $type = $1;
-			my $quantity = $$specs{$name} * $$specs{'txtQuantity'.$qty_index};
-			if ( $quantity > 0 ) {
-				my $runSpeed = $Equipment->specification( $type.'RunSpeed' );
-				if ( $runSpeed ) {
-					$runTime += $quantity * 3600 / $runSpeed; # Convert to seconds
-				} # end if
-			} # end if
+sub runspeed {
+    my ( $Project, $Service, $Equipment, $qty_index, $sig_id ) = @_;
+	my $specs = $Service->specs();
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+	my $speed;
+	foreach my $type ( keys %fold_types ) {
+$openprint::log->debug("Looking for Folding $sig_id runspeed $type-Qty-$$sig_specs{SignatureIndex}-$qty_index: $speed");
+		if ( $$specs{"$type-Qty-$$sig_specs{SignatureIndex}-$qty_index"} ) {
+			$speed = $Equipment->specification( $type.'RunSpeed' );
+			last if $speed;
+		}# end if
+	}# end foreach
+$openprint::log->debug("Folding runspeed: ($speed)");
+	if ( ! $speed ) {
+		my $Imposition = new openprint::Imposition;
+		$Imposition->load( $sig_specs, $qty_index );
+		$openprint::log->debug("Getting fold from imposition: " . $Imposition->pages() );
+		if ( $Imposition->pages() ) {
+			$speed = $Equipment->specification( $Imposition->pages().'PageSignatureFoldRunSpeed' );
 		} # end if
-	} # end foreach
-	return $runTime;
+	} # end if
+	if ( ! $speed ) {
+		if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
+			$openprint::log->debug("Getting fold from template: " . $$sig_specs{'rdbTemplateType'} );
+			$speed = $Equipment->specification( $$sig_specs{'rdbTemplateType'}.'PageSignatureFoldRunSpeed' );
+		}
+	} # end if
+	return $speed;
+} # end sub runspeed
+
+sub runtime {
+    my ( $Project, $Service, $Equipment, $qty_index, $impressions, $speed, $sig_id ) = @_;
+
+	my $specs = $Service->specs();
+	my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+	$Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) if ! $Equipment;
+
+	# Make ready
+    my $runTime = $Equipment->specification( 'Station Make Ready' ) * 60;
+    foreach my $name ( keys %$specs ) {
+        if ( $name =~ /^txt(\w*)Qty$/ ) {
+            my $type = $1;
+            my $quantity = $$specs{$name} * $impressions;
+            if ( $quantity > 0 ) {
+                $speed = $Equipment->specification( $type.'RunSpeed' ) if ! $speed;
+$openprint::log->debug("Folding runspeed for $type: $speed");
+                if ( $speed ) {
+                    $runTime += $quantity * 3600 / $speed; # Convert to seconds, units is typically per hour
+                } # end if
+            } # end if
+        } # end if
+    } # end foreach
+    return $runTime;
 } # end sub runtime
 
 # The purpose is to cut any Impos > 1 into singletons

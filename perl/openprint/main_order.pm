@@ -297,6 +297,18 @@ sub confirmation {
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
+		if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
+			if ( ! $param{'accept_terms'} ) {
+				$variable{'error'} = 'Terms not accepted';
+				$variable{'information'} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+				$variable{'Redirect'} = '/main/order/submit.html';
+				return;
+			} else {
+				$Order->add_log( 'User accepted the terms and conditions.' );
+				$Order->save({'terms_accepted'=>1});
+			} # end if
+		} # end if employee or admin
+
 		# Commit Project Information
 		foreach my $OP ( $Order->Ordered_Projects() ) {
 			$OP->save({
@@ -403,7 +415,19 @@ sub history_details {
 	my $order_id = $param{'OrderID'};
 	my $Order = new openprint::Order( $order_id );
 
-	if ( $param{'btnFunction'} eq 'Cancel' ) {
+	if ( $param{'btnFunction'} eq 'AcceptTerms' ) {
+		if ( ( $Order->company_id() != $session{'company_id'} ) or ( new openprint::User( $session{'user_id'} )->company_id() != $session{'company_id'} ) ) {
+			$variable{'error'} = 'Terms not accepted';
+			$variable{'information'} = 'You are not authorised to accept the terms and conditions.';
+		} elsif ( ! $param{'accept_terms'} ) {
+			$variable{'error'} = 'Terms not accepted';
+			$variable{'information'} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+		} else {
+			$Order->add_log( 'User accepted the terms and conditions.' );
+			$Order->save({'terms_accepted'=>1});
+		} # end if
+
+	} elsif ( $param{'btnFunction'} eq 'Cancel' ) {
 		openprint::order::cancel_order( $order_id );
 	} elsif ( $param{'btnFunction'} eq 'Pay' ) {
 		$Order->pay();

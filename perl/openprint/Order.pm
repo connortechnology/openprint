@@ -57,14 +57,13 @@ $serial = 'orders_id_seq';
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
 	'created_on'				=>	'dtmorderdate',
+	'terms_accepted'			=>	'terms_accepted',
 	);
 
 sub save {
 	my ( $self, $params ) = @_;
 
 	$self->set( $params );
-
-	my $ac = sql::start_transaction( $dbh );
 
 	$$self{'owing'} = $$self{'total'} - $$self{'paid'};
 	$$self{'company_id'} = $session{'company_id'} if ! $$self{'company_id'};
@@ -76,6 +75,7 @@ sub save {
 		$sql{$fields{$key}} = $$self{$key};
 	} # end foreach
 
+	my $ac = sql::start_transaction( $dbh );
 	if ( ! $$self{'id'} ) {
 		if ( $openprint::config{'OrderIDStyle'} eq 'Year' ) {
 			$sql{'id'} = $$self{'id'} = openprint::order::get_order_id( $openprint::log, $openprint::dbh );

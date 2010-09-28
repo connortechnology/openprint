@@ -96,6 +96,7 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$Equipment = $Equipment->copy();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+		$param{'servicetype_id'} = [ $param{'servicetype_id'} ] if ref $param{'servicetype_id'} ne 'ARRAY';
 		$Equipment->save( \%param );
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$Equipment->delete();

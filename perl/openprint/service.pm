@@ -135,7 +135,7 @@ sub get_specifications_pairs {
 	my ( $log, $dbh, $project_index, $service_index, @specs ) = @_;
 
 	if ( ! $project_index and ! $service_index ) {
-		$log->error("********* Called get_specifications_pairs with Project Index or Service Index ****************");
+		cluck("********* Called get_specifications_pairs with Project Index or Service Index ****************");
 		return;
 	} # end if
 
@@ -483,25 +483,9 @@ $log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$serv
 
 # Returns vale in seconds
 sub get_runtime {
-    my ( $Project, $service_index, $Equipment, $impressions, $speed ) = @_;
-
-    my $qty_index = $Project->ordered_quantity_index();
-    my $specs = openprint::service::get_specs_ref( $Project, $service_index );
-
-    if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'Signature' ) ) {
-		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
-		return $$time{'Total'} if $time;
-		return 0;
-    } elsif ( $$specs{'ServiceType'} eq 'Cutting' ) {
-        return openprint::Estimating::Cutting::runtime( $Project->id(), $service_index, $specs, $qty_index );
-    } elsif ( $$specs{'ServiceType'} eq 'Folding' ) {
-       return openprint::Estimating::Folding::runtime( $Project->id(), $service_index, $specs, $qty_index );
-    } elsif ( $$specs{'ServiceType'} eq 'Drilling' ) {
-        return openprint::Estimating::Drilling::runtime( $Project->id(), $service_index, $specs, $qty_index );
-    } elsif ( sets::isin( $$specs{'ServiceType'}, 'SaddleStitching','LoopStitching' ) ) {
-        return openprint::Estimating::Stitching::runtime( $Project->id(), $service_index, $specs, $qty_index );
-    } # end if
-
+    my ( $Project, $service_index, $Equipment, $impressions, $speed, $pertains_to ) = @_;
+	my $Service = $Project->Service( $service_index );
+	return $Service->runtime( $Equipment, $impressions, $speed, $pertains_to );
 } # end sub get_runtime
 
 sub summary {

@@ -2,6 +2,7 @@
 <h1>Order</h1>
 <h2>Submit</h2>
 </div>
+<<<<<<< HEAD
 <div class="Order"><div class="Submit">
 	<form method="post" name="f1" action="confirmation.html">
 		<!--#include virtual="/includes/order_header.html" -->
@@ -20,7 +21,21 @@
 		<? endif ( sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 		<!--#include virtual="_totals.html" -->
 		<br class="spacer"/>
-		<div class="Disclaimer"><? echo ( $config{'OrderViewDisclaimer'} ) ?></div>
+		<div class="Disclaimer">
+	<? echo ( 
+		if ( ( $session{'company_id'} == $$variable{'Order'}->company_id() ) and ( new openprint::User( $session{'user_id'} )->company_id() == $session{'company_id'} ) ) {
+			my $html;
+			$html .= $config{'OrderViewDisclaimer'};
+			$html .= '
+			<div class="AcceptTerms">
+			<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
+			By checking the box and clicking Complete Order you agree to accept the listed terms and conditions.
+			</div>';
+			return $html;
+		} # end if
+		return '';
+	) ?>
+</div>
 		<p class="buttons">
 		<? echo ( 
 			my $html;
@@ -33,3 +48,4 @@
 	</form>
 </div>
 </div>
+=======
