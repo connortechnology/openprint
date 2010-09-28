@@ -6,10 +6,10 @@ require sql;
 
 use openprint ();
 
-use vars qw( $log $dbh %fields %find_fields %transforms %defaults $table $serial );
+use vars qw( $debug $log $dbh %fields %find_fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-
+$debug = 1;
 %fields = (
 	'id'			=>	'id',
 	'name'			=>	'name',
