@@ -3,14 +3,13 @@
 	@{$$variable{'pending_approved_drops'}} = ();
 	my $Shift = new openprint::Shift();
 	$Shift->name('Approved');
-	my $ul_id = $Shift->ul_id();
 
 	foreach my $E ( @{$$variable{'Equipment'}} ) {
-		$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
+		$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">'."\n";
 		$Shift->equipment_id( $E->id() );
-		push @{$$variable{'pending_approved_drops'}}, $ul_id;
+		push @{$$variable{'pending_approved_drops'}}, $Shift->ul_id();
 		$html .= $Shift->get_ul( {'Status'=>['Approved','Shipped','Picked Up']} );
-		$html .= '</div>';
+		$html .= "</div>\n";
 	} # end foreach press
 	return $html;
 ) ?>
