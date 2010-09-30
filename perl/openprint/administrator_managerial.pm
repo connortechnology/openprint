@@ -23,6 +23,7 @@ require openprint::Company;
 require openprint::customer_credit;
 require openprint::Email;
 require openprint::Email_Account;
+require openprint::UserGroup;
 
 sub configuration {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -702,6 +703,12 @@ sub email {
 		$variable{'Email'} = new openprint::Email_Account( $param{'id'} );
 	} # end if
 } # end sub email
+
+sub usergroups {
+}
+sub usergroup {
+$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
+}
 
 1;
 __END__

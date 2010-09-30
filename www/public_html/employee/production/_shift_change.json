@@ -1,7 +1,7 @@
 <? if ( $$variable{'changed'} ) ?>
 <? echo ( 
 	my @drops = sets::union( @{$$variable{'changed'}} );
-$log->debug("Drops: @drops");
+#$log->debug("Drops: @drops");
 	$r->content_type('text/javascript');
 	my $html = '';
 	$html .= "alert('$variable{error}');" if $variable{'error'};
@@ -12,4 +12,6 @@ $log->debug("Drops: @drops");
 	} # end foreach id
 	return $html;
 ) ?>
+	drops.push("<? echo ( join('","', @{$$variable{'changed'}} ) ) ?>");
+	setup_drops();
 <? endif ( $$variable{'changed'} ) ?>

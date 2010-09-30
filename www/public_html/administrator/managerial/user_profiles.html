@@ -204,7 +204,7 @@ Please select a company or user to obtain login information.<br/>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
 		<? eval ( @{$$variable{'Groups'}} = openprint::user::groups( $log, $dbh, $$variable{'UserIndex'} ); )?>
 		<p>
-			<label>Groups:</label>
+			<label><a href="/administrator/managerial/usergroups.html">Groups</a>:</label>
 			<select name="UserGroups" multiple="multiple" size="4">
 				<? echo ( ssi::make_select( [openprint::usergroup::find( $log, $dbh )], $$variable{'Groups'} ) ) ?>
 			</select>
