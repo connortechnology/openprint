@@ -54,7 +54,7 @@ sub variables {
 		push @v, "txtStockCalliper-$$specs{'SignatureIndex'}";
 		push @v, "chkOverrideCalliper-$$specs{'SignatureIndex'}";
 		push @v, "txtAdditionalCuts$$specs{'SignatureIndex'}";
-		foreach my $qty_index ( 1 .. 3 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			push @v, "txtCalculatedCuts-$$specs{'SignatureIndex'}-$qty_index";
 		} # end foreach
 	} # end foreach
@@ -840,23 +840,49 @@ sub summary {
 	$specs = openprint::service::get_specs_ref( $project_id, $service_id ) if ! $specs;
 } # end sub summary
 
-sub runtime {
-    my ( $p_id, $s_id, $specs, $qty_index ) = @_;
-    return 0 if ! $$specs{'ddmEquipment'.$qty_index};
+sub runspeed {
+	my ( $Project, $Service, $Equipment, $qty_index, $signatures ) = @_;
 
+	my $specs = $Service->specs();
+	# Cutting Time is in seconds, so 3600/Cutting Time = # per hour
+	my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
+	my $cuttime = $Equipment->specification( 'Cutting Time' ) + $Equipment->specification( 'Make Ready Time' );
+	return 0 if ! $cuttime;
+	my $runspeed = 0;
+	foreach my $sig_id ( @{$signatures} ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		next if ! $$sig_specs{'txtSpecificStockCalliper'};
+		next if ! $$specs{"txtCalculatedCuts-$$sig_specs{'SignatureIndex'}-$qty_index"} or $$specs{"txtAdditionalCuts$$sig_specs{'SignatureIndex'}"};
+
+		$runspeed += int(
+			( $liftDepth / $$sig_specs{'txtSpecificStockCalliper'} ) * 
+			3600/( $cuttime * ( $$specs{"txtCalculatedCuts-$$sig_specs{'SignatureIndex'}-$qty_index"} + $$specs{"txtAdditionalCuts$$sig_specs{'SignatureIndex'}"} ) ) );
+#$openprint::log->debug( "Caclulationg runspeed for sig $sig_id $$sig_specs{'SignatureIndex'}) ( $$specs{"txtCalculatedCuts-$$sig_specs{'SignatureIndex'}-$qty_index"} )");
+	} # end foreach
+	return $runspeed;
+}
+
+sub runtime {
+    my ( $Project, $Service, $Equipment, $qty_index, $impressions, $speed, $signatures ) = @_;
+
+	my $specs = $Service->specs();
 	my $runtime = 0;
-	my @Equipment = openprint::Equipment::find('strid'=>$$specs{'ddmEquipment'.$qty_index});
-	if ( @Equipment ) {	
-		my $makeready = $Equipment[0]->specification( 'Make Ready Time' );
-		my $runspeed = $Equipment[0]->specification( 'Cutting Time' );
-		my $Project = new openprint::Project( $p_id );
-		foreach my $s_s_id ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $Project, $s_s_id );
-			$runtime += $$specs{"txtCalculatedCuts$$sig_specs{'SignatureIndex'}"} * ( $makeready + $runspeed);
-			$runtime += $$specs{"txtAdditionalCuts$$sig_specs{'SignatureIndex'}"} * ( $makeready + $runspeed);
-		} # end foreach
-	
+	if ( ! $Equipment ) {
+		return 0 if ! $$specs{'ddmEquipment'.$qty_index};
+		$Equipment = openprint::Equipment::find_one('strid'=>$$specs{'ddmEquipment'.$qty_index});
+		return 0 if ! $Equipment;
 	} # end if
+
+	my $makeready = $Equipment->specification( 'Make Ready Time' );
+	my $runspeed = $Equipment->specification( 'Cutting Time' );
+	my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
+$openprint::log->debug("Cutting runtime: $makeready $runspeed");
+	foreach my $sig_id ( @{$signatures} ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+$openprint::log->debug( "Caclulationg runspeed for sig $sig_id $$sig_specs{'SignatureIndex'}) (".$$specs{"txtCalculatedCuts-$$sig_specs{'SignatureIndex'}-$qty_index"} );
+		$runtime += ( $$specs{"txtCalculatedCuts-$$sig_specs{'SignatureIndex'}-$qty_index"} + $$specs{"txtAdditionalCuts$$sig_specs{'SignatureIndex'}"} ) * ( $makeready + $runspeed) * ( $impressions/($liftDepth/$$sig_specs{'txtSpecificStockCalliper'} ) );
+	} # end foreach
+$openprint::log->debug("Cutting runtime: $runtime $impressions");
 	return $runtime;
 } # end sub runtime
 
