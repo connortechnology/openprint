@@ -242,15 +242,15 @@ sub comment {
 	if ( @_ > 1 ) {
 		$$self{'comment'} = $comment;
 		if ( $$self{'project_id'} ) {
-			foreach my $sig_id ( @{$$self{'service_id'}} ) {
-				openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $sig_id, 'txtEmployeeComments', $comment );
+			foreach my $service_id ( @{$$self{'service_id'}} ) {
+				openprint::service::insert_service_spec( $log, $dbh, $$self{'project_id'}, $service_id, 'txtEmployeeComments', $comment );
 			} # end foreach sig_id	
 		} # end if
 	} else {
 		if ( $$self{'project_id'} ) {
 			my $Project = new openprint::Project( $$self{'project_id'} );
-			foreach my $sig_id ( @{$$self{'service_id'}} ) {
-				my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+			foreach my $service_id ( @{$$self{'service_id'}} ) {
+				my $sig_specs = openprint::service::get_specs_ref( $Project, $service_id );
 				if ( $comment = $$sig_specs{'txtEmployeeComments'} ) {
 					last;
 				} # end if
@@ -261,35 +261,41 @@ sub comment {
 	if ( ( ! $$self{'comment'} ) and $$self{'project_id'} and $$self{'service_id'} and @{$$self{'service_id'}} ) {
 		my $Project = new openprint::Project( $$self{'project_id'} );
 	#if ( $$self{'service_id'} and @{$$self{'service_id'}} ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
-		if ( $self->ServiceType() eq 'Folding' ) {
+		if ( $self->ServiceType()->name() eq 'Folding' ) {
 			my $qty_index = $Project->ordered_quantity_index();
 
 			foreach my $service_index ( @{$$self{'service_id'}} ) {
 				my $Service = $Project->Service( $service_index );
 				my $specs = $Service->specs();
 
-				foreach my $fold_type ( keys %openprint::Estimating::Folding::fold_types ) {
+				foreach my $sig_id ( @{$self->pertains_id()} ) {
+					my $SignatureService = $Project->Service( $sig_id );
+					my $sig_specs = $SignatureService->specs();
 
-					if ( $$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
-						$comment .= $$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} . ' ' . $fold_type . '<br/>';
-					} # end if
-				} # end foreach
+					foreach my $fold_type ( keys %openprint::Estimating::Folding::fold_types ) {
+
+						if ( $$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} ) {
+							$comment .= $$specs{"$fold_type-Qty-$$sig_specs{'SignatureIndex'}-$qty_index"} . ' ' . $fold_type . '<br/>';
+						} # end if
+					} # end foreach
+				} # end foreach sig_id
+				$comment = 'unknown fold' if ! $comment;
 			} # end foreach service_index
 
-		} elsif ( $self->ServiceType() eq 'Cutting' ) {
-		} elsif ( $self->ServiceType() eq 'SaddleStitching' ) {
+		} elsif ( $self->ServiceType()->name() eq 'Cutting' ) {
+		} elsif ( $self->ServiceType()->name() eq 'SaddleStitching' ) {
 		} else {
-			$comment = openprint::Estimating::Printing::get_colour_description( $sig_specs );
+			my $service_specs = openprint::service::get_specs_ref( $Project, $$self{'service_id'}[0] );
+			$comment = openprint::Estimating::Printing::get_colour_description( $service_specs );
 			my $Equipment = $self->Equipment();
 
 			if ( $Equipment->specification('Folding Capable') eq 'When Printing' ) {
 				my $services = $Project->services();
 				if ( $$services{'Folding'} ) {
 					my $fold_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
-					if ( $$fold_specs{'ddmEquipment-'.$$sig_specs{'SignatureIndex'}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
+					if ( $$fold_specs{'ddmEquipment-'.$$service_specs{'SignatureIndex'}.'-'.$Project->ordered_quantity_index()} == $Equipment->id() ) {
 						my $Imposition = new openprint::Imposition();
-						$Imposition->load( $sig_specs, $Project->ordered_quantity_index() );
+						$Imposition->load( $service_specs, $Project->ordered_quantity_index() );
 						my $foldtype = sprintf('%sx%s-%dPage-%sFold', $Imposition->get('spread_columns','spread_rows','pages','image_orientation' ) );
 						$comment .= "($foldtype inline)";
 					} else {
@@ -361,9 +367,9 @@ sub get_li {
 
 	my $html;
 
-	my $Project = new openprint::Project( $$self{'project_id'} );
+	my $Project = $self->Project();
 	my $services = $Project->services();
-	my $Equipment = new openprint::Equipment($$self{'equipment_id'});
+	my $Equipment = $self->Equipment();
 
 	my $colour = '';
 
@@ -449,7 +455,9 @@ sub get_li {
 			} elsif ( @{$$self{'service_id'}} > 2 ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", '', 'S' );
 			} # end if
-			$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
+			if ( sets::isin( $self->ServiceType()->name(), [ '','AdditionalSignature' ] ) ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
+			} # end if
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{'project_id'} and ( $self->status() ne 'In Production' ) ) ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { schedule_id: $$self{id}, action: 'start' } } );", '', 'Start' );
@@ -478,7 +486,9 @@ sub get_li {
 		$html .= sprintf( q{<span class="RunTime">%2$.2d:%3$.2d</span>}, $$self{'id'}, split(':',$self->runtime()) );
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
+			if ( sets::isin( $self->ServiceType()->name(), [ '','AdditionalSignature' ] ) ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
+			} # end if
 		} # end if
 		if ( $$self{'operator_id'} == $session{'user_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Start'.$$self{'id'}, '', "new Ajax.Request('_li_change.json', { parameters: { id: $$self{id}, action: 'start' } } );", '', 'Start' );
@@ -576,7 +586,7 @@ sub runtime {
 
 			foreach my $sig_id ( @{$$self{'service_id'}} ) {
 				my $Service = $Project->Service( $sig_id );
-				$seconds += $Service->runtime( $self->Equipment(), @forms ? $self->impressions()/@forms : $self->impressions(), $self->speed());
+				$seconds += $Service->runtime( $self->Equipment(), @forms > 1 ? $self->impressions()/@forms : $self->impressions(), $self->speed(), $self->pertains_id() );
 
 				#$seconds += openprint::service::get_runtime( $Project, $sig_id, $self->Equipment(), $self->impressions()/@{$$self{'service_id'}}, $self->speed() );
 			} # end foreach
@@ -588,10 +598,7 @@ sub runtime {
 
 sub forms {
 	my ( $self ) = @_;
-	if ( $$self{'service_id'} ) {
-		return scalar @{$$self{'service_id'}};
-	} # end if
-	return 0;
+	return scalar @{$self->pertains_id()};
 } # end sub forms
 
 sub shift_id {
@@ -752,6 +759,7 @@ sub bump {
 
 sub speed {
 	my $self = shift;
+$log->debug("Speed");
 	if ( @_ ) {
 		$$self{'speed'} = $_[0];
 	} # end if
@@ -773,6 +781,8 @@ $log->warn("Empty pertains @$signatures");
 }
 					$$self{'speed'} = openprint::Estimating::Folding::runspeed( $Project, $Service, $self->Equipment(), $Project->ordered_quantity_index(), $$signatures[0] );
 				} elsif ( $ServiceType->name() eq 'Cutting' ) {
+					my $signatures = $self->pertains_id();
+					$$self{'speed'} = openprint::Estimating::Cutting::runspeed( $Project, $Service, $self->Equipment(), $Project->ordered_quantity_index(), $signatures );
 				} elsif ( $ServiceType->name() eq 'SaddleStitching' ) {
 				} else {
 					$$self{'speed'} = openprint::Estimating::Printing::runspeed( $Project, $specs, $Project->ordered_quantity_index(), $self->Equipment() );
@@ -780,6 +790,7 @@ $log->warn("Empty pertains @$signatures");
 			} # end if
 		} # end if
 	} # en dif
+$log->debug("DOne Speed $$self{'speed'}");
 	return $$self{'speed'};
 } # end sub speed
 

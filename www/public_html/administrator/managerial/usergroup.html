@@ -1,0 +1,27 @@
+<form id="f1" name="f1" action="usergroup.html" method="post">
+	<p class="buttons">
+		<? echo ( 
+			my $html = ssi::writeButton( $log, $dbh, 'Save', 'save.gif', 'f1.submit();', '', 'Save' );
+			return $html;
+) ?>
+	</p>
+	<ul><li><label>Name:</label>
+	<input type="text" name="name" id="name" value="<? echo ( $$variable{'UserGroup'}->name() ) ?>" />
+	</li>
+	</ul>
+	Listing of users in <? echo ( $$variable{'UserGroup'}->name() ) ?><br/>
+	<table class="sortable">
+		<thead><tr><th>Name</th><th>Company</th></tr></thead>
+		<tbody>
+		<? echo (
+		my $html;
+		foreach my $User ( $$variable{'UserGroup'}->Users('order'=>'lower(strfirstname),lower(strlastname)') ) {
+			$html .= sprintf(q`<tr><td><a href="/administrator/managerial/user_profiles.html?ddmUser=%1$d">%2$s</a></td><td><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%4$d">%3$s</a></td></tr>`, 
+				$User->id(), $User->name(), $User->Company()->name(), $User->company_id(),
+				);
+		} # end foreach UG
+		return $html;
+		) ?>
+		</tbody>
+	</table>
+</form>
