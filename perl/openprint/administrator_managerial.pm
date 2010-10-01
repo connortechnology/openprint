@@ -705,10 +705,14 @@ sub email {
 } # end sub email
 
 sub usergroups {
-}
+	if ( $param{'command'} eq 'Save' ) {
+		my $Group = new openprint::UserGroup( $param{'id'} );
+		$variable{'error'} .= $Group->save( \%param );
+	} # end if
+} # end sub usergroups
 sub usergroup {
-$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
-}
+	$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
+} # end sub usergroup
 
 1;
 __END__

@@ -1,13 +1,19 @@
-<form id="f1" name="f1" action="usergroup.html" method="post">
+<form id="f1" name="f1" action="usergroups.html" method="post">
+	<input type="hidden" name="command" />
 	<p class="buttons">
 		<? echo ( 
-			my $html = ssi::writeButton( $log, $dbh, 'Save', 'save.gif', 'f1.submit();', '', 'Save' );
+			my $html = ssi::writeButton( $log, $dbh, 'Save', 'save.gif', "f1.command.value='Save';f1.submit();", '', 'Save' );
 			return $html;
 ) ?>
 	</p>
-	<ul><li><label>Name:</label>
-	<input type="text" name="name" id="name" value="<? echo ( $$variable{'UserGroup'}->name() ) ?>" />
-	</li>
+	<ul>
+		<li><label>ID:</label>
+		<input type="hidden" name="id" id="id" value="<? echo ( $$variable{'UserGroup'}->id() ) ?>" />
+<? echo ( $$variable{'UserGroup'}->id() ) ?>
+		</li>
+		<li><label>Name:</label>
+		<input type="text" name="name" id="name" value="<? echo ( $$variable{'UserGroup'}->name() ) ?>" />
+		</li>
 	</ul>
 	Listing of users in <? echo ( $$variable{'UserGroup'}->name() ) ?><br/>
 	<table class="sortable">
