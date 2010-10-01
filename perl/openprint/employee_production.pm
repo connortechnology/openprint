@@ -51,6 +51,7 @@ sub print_overview {
 		} # end if
 	} # end if
 	$session{'/employee/production/print_overview.html?lastupdated'} = time;
+	$variable{'referer'} = '/employee/production/print_overview.html';
 
 	press_schedule();
 } # end sub print_overview
@@ -1647,6 +1648,7 @@ sub bindery_schedule2 {
 		} # end if
 	} # end if
 	$session{'/employee/production/bindery_schedule2.html?lastupdated'} = time;
+	$variable{'referer'} = '/employee/production/bindery_schedule2.html';
 } # end sub bindery_schedule2
 
 1;
