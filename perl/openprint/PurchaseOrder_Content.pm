@@ -14,7 +14,7 @@ use vars qw(%variable $log $dbh $table $serial %config %fields %transforms %defa
 require sql;
 require openprint::PurchaseOrder_ContentType;
 
-my $debug = 1;
+my $debug = 0;
 $table = 'PurchaseOrder_Contents';
 $serial = 'PurchaseOrder_Contents_id_seq';
 
