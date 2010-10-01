@@ -457,6 +457,8 @@ sub get_li {
 			} # end if
 			if ( sets::isin( $self->ServiceType()->name(), [ '','AdditionalSignature' ] ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
+} else {
+$log->debug("ServiceType: $$self{'project_id'} $$self{'servicetype_id'}" . $self->ServiceType()->name() );
 			} # end if
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{'project_id'} and ( $self->status() ne 'In Production' ) ) ) {
@@ -759,7 +761,7 @@ sub bump {
 
 sub speed {
 	my $self = shift;
-$log->debug("Speed");
+#$log->debug("Speed");
 	if ( @_ ) {
 		$$self{'speed'} = $_[0];
 	} # end if
@@ -790,7 +792,7 @@ $log->warn("Empty pertains @$signatures");
 			} # end if
 		} # end if
 	} # en dif
-$log->debug("DOne Speed $$self{'speed'}");
+#$log->debug("DOne Speed $$self{'speed'}");
 	return $$self{'speed'};
 } # end sub speed
 
@@ -869,9 +871,7 @@ sub pertains_id {
 } # end sub pertains_id
 
 sub ServiceType {
-	my ( $self ) = @_;
-	my $servicetype_id = $self->servicetype_id();
-	return new openprint::ServiceType( $servicetype_id );
+	return new openprint::ServiceType( $_[0]{'servicetype_id'} );
 } # end sub ServiceType
 
 1;
