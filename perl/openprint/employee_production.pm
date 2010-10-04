@@ -700,7 +700,7 @@ sub is_sig_complete {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $signature_service_index], 'strStatus','Complete' );
 
 # Remove jobs from the Schedule when marked complete.
-	foreach my $Job ( openprint::ScheduledJob::find( 'project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
+	foreach my $Job ( openprint::ScheduledJob->find( 'project_id'=>$project_index, 'service_id'=>$signature_service_index ) ) {
 		$Job->delete();
 	} # end foreach Job
 

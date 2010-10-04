@@ -1032,7 +1032,7 @@ sub runtime {
 	my $runtime = 0;
 	if ( ! $Equipment ) {
 		return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-		$Equipment = openprint::Equipment::find_one('strid'=>$$specs{'ddmEquipment'.$qty_index});
+		$Equipment = openprint::Equipment->find_one('strid'=>$$specs{'ddmEquipment'.$qty_index});
 		return 0 if ! $Equipment;
 	} # end if
 

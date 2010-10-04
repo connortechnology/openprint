@@ -805,7 +805,7 @@ sub runtime {
 			$openprint::log->error("No equipment in estimate");
 			return 0;
 		} # end if
-		$Equipment = openprint::Equipment::find_one('id'=>$$specs{'ddmEquipment'.$qty_index});
+		$Equipment = openprint::Equipment->find_one('id'=>$$specs{'ddmEquipment'.$qty_index});
 		if ( ! $Equipment ) {
 			$openprint::log->error("No equipment found for quoted Equipment ");
 			return 0;

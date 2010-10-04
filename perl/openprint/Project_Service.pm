@@ -58,12 +58,12 @@ sub Equipment {
 	} # end if
 	my $specs = $self->specs();
 	if ( $self->ServiceType()->name() eq 'Cutting' ) {
-		return openprint::Equipment::find_one(
+		return openprint::Equipment->find_one(
 				'use_in_scheduling'=>1,
 				'Specifications'=>{'Cutting Capable'=>'Y'},
 				);
 	} elsif ( $self->ServiceType()->name() eq 'Folding' ) {
-		return openprint::Equipment::find_one(
+		return openprint::Equipment->find_one(
 				'use_in_scheduling'=>1,
 				'Specifications'=>{'Folding Capable'=>'Y'},
 				);
@@ -71,7 +71,7 @@ sub Equipment {
 		if ( $$specs{'ddmEquipment'.$qty_index} ) {
 			return new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
 		} else {
-		return openprint::Equipment::find_one(
+		return openprint::Equipment->find_one(
 				'use_in_scheduling'=>1,
 				'Specifications'=>{'Stitching Capable'=>'Y'},
 				);
