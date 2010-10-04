@@ -121,16 +121,16 @@ return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strca
 <li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment::find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'UseInScheduling'=>1,'order'=>'lower(strcategory),lower(strname)');
+	my @presses = openprint::Equipment->find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'UseInScheduling'=>1,'order'=>'lower(strcategory),lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/bindery_schedule2.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) ] );
 	} # end foreach press
 
 	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
 	if ( $session{'/employee/production/bindery_schedule2.html?Equipment'} ) {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ] );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ] );
 	} else {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
 	return $html;
 ) ?>
@@ -251,7 +251,7 @@ return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strca
 				) + 1;
 
 			# When it's time to add shifts, we add in sets, until we find an already-implemented shift.
-			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
+			my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(),'order'=>'starttime');
 
 			my $PreviousShift;
 
@@ -262,7 +262,7 @@ return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strca
 				my $tomorrow = sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, 1 ) );
 
 				# Get the shifts on this day.
-				my @Shifts = openprint::Shift::find( 
+				my @Shifts = openprint::Shift->find( 
 					'equipment_id' 		=>	$E->id(),
 					'starttime_>='		=>	$today,
 					'starttime_<'		=>	$tomorrow,
