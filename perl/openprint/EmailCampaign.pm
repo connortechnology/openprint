@@ -27,13 +27,15 @@ my @Fields = (
 	'email_text',
 	'attachments',
 	'lastrun',
+	'nextrun',
 	'created_on',
 	'updated_on',
 	'template_id',
 );
 
 my %Defaults = (
-	'lastrun'	=> 'NOW()',
+	'lastrun'	=> undef,
+	'nextrun'	=> undef,
 	'interval'	=> undef,
 	'timeofday'	=> undef,
 	'created_on'	=> 'NOW()',
@@ -252,6 +254,7 @@ sub send {
 	my @mail_user_ids = sql::execute($openprint::log, $openprint::dbh, $self->{'query'});
 	$results .= "There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n";
 	$self->{'lastrun'} = 'NOW()';
+	@$self{'nextrun'} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{'id'} );
 	$self->save();
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");
