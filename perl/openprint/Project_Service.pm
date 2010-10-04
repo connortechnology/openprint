@@ -91,7 +91,7 @@ sub runtime {
 		return $$time{'Total'} if $time;
 		return 0;
     } elsif ( $$specs{'ServiceType'} eq 'Cutting' ) {
-        return openprint::Estimating::Cutting::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
+        return openprint::Estimating::Cutting::runtime( $Project, $self, $Equipment, $qty_index, $impressions, $speed, $pertains_to );
     } elsif ( $$specs{'ServiceType'} eq 'Folding' ) {
        return openprint::Estimating::Folding::runtime( $Project, $self, $Equipment, $qty_index, $impressions, $speed, $pertains_to );
     } elsif ( $$specs{'ServiceType'} eq 'Drilling' ) {
