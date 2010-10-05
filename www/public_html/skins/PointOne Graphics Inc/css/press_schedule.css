@@ -101,7 +101,6 @@ div.PressColumn ul li {display: block;}
 width: 196px;
 } 
 	.When {
-		background-color: #ffb4da;
 		font-weight: bold;
 		font-size: 14px;
 	   margin: 0px;
@@ -120,6 +119,12 @@ width: 196px;
 /* Hides from IE-mac \*/
 * html .When {height: 1%;}
 .When {display: block;}
+.Printing .When {
+		background-color: #ffb4da;
+}
+.Bindery .When {
+	background-color: #c1e8e6;
+}
 	.When span {
 		padding: 2px;
 		width: auto;
