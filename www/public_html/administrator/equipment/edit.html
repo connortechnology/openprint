@@ -84,6 +84,10 @@ function filter_onChange( element, id, selected ) {
 			<input type="text" name="description" value="<? hecho ( $$variable{Equipment}->description(); ) ?>" />
 		</p>
 		<p> 
+			<label>Sort:</label>
+			<input type="text" name="sorting" value="<? echo ( $$variable{Equipment}->sorting(); ) ?>" />
+		</p>
+		<p> 
 			<label>Image:</label>
 			<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
 		</p>
