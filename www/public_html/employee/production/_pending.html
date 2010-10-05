@@ -1,18 +1,18 @@
 <? echo ( 
 	my $html;
 	@{$$variable{'pending_drops'}} = ();
-	if ( $session{'/employee/production/print_overview.html?pending'} ) {
+	if ( $session{$$variable{'referer'}.'?pending'} ) {
 		my $Shift = new openprint::Shift();
 		$Shift->name('Pending');
 
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
+		foreach my $E ( @{$$variable{'Equipment'}} ) {
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
 			$Shift->equipment_id( $E->id() );
 			push @{$$variable{'pending_drops'}}, $Shift->ul_id();
 			$html .= $Shift->get_ul( {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete']});
 			$html .= '</div>';
-		} # end foreach press
-	} # end if
+		} # end foreach Equipment
+	} # end if 
 	return $html;
 ) ?>
 <? if ( @{$$variable{'pending_drops'}} ) ?>

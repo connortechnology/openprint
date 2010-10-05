@@ -42,6 +42,9 @@
 		<? if ( $$variable{'uri'} =~ /print_overview/ ) ?>
 		<link href="/css/press_schedule.css?version=1.2" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /print_overview/ ) ?>
+		<? if ( $$variable{'uri'} =~ /bindery_schedule2/ ) ?>
+		<link href="/css/press_schedule.css?version=1.2" rel="stylesheet" type="text/css"/>
+		<? endif ( $$variable{'uri'} =~ /bindery_schedule2/ ) ?>
 		<? if ( $$variable{'uri'} =~ /operator_schedule/ ) ?>
 		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /operator_schedule/ ) ?>
@@ -115,6 +118,7 @@
 								<? endif ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) ?>
 								<li><a href="/employee/production/bindery_overview.html;NOSSL">&raquo; Bindery Overview</a></li>
 								<li><a href="/employee/production/bindery_schedule.html;NOSSL">&raquo; Bindery Schedule</a></li>
+								<li><a href="/employee/production/bindery_schedule2.html;NOSSL">&raquo; Bindery Schedule2</a></li>
 							</ul>
 						</li>
 						<? if ( openprint::usergroup::is_user_in( ['Marketing'], $session{'user_id'} ) ) ?>
@@ -187,6 +191,9 @@
 							</ul>
 						</li>
 					<li class="off"><a href="#" onclick="bug_report_window();return false;">SEND BUG REPORT</a></li>
+<? if ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
+					<li class="off"><a href="/session.html">SESSION</a></li>
+<? endif ( new openprint::User( $session{user_id} )->email() =~ /^iconnor/ ) ?>
 			<li class="off"><a href="<? echo ( misc::get_url( $$variable{'uri'}, \%param, { 'include'=>{'menu'=>0} } ); ) ?>">HIDE MENU</a></li>
 <? endif ( $session{'user_id'} ) ?>
 					</ul>

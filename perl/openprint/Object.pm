@@ -35,7 +35,7 @@ sub new {
 	if ( ref $id eq 'HASH' ) {
 		# First off, for now, don't cache figure that out later
 		my @keys = keys %{$id};
-$log->debug("Multi-key Obejct @keys" );
+#n$log->debug("Multi-key Obejct @keys" );
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
 	} else {
@@ -69,7 +69,7 @@ sub load {
 
 	if ( ! $data ) {
 		if ( @identified_by ) {
-$log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=' . $$self{$_} } @identified_by ) );
+#$log->debug("Loading multiple-key row: " . 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=' . $$self{$_} } @identified_by ) );
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 		} else {
 			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );

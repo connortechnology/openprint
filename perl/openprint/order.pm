@@ -696,8 +696,8 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 			$Product->save();
 		} # end foreach Product
 
-		$$variable{'Error'} .= store_order_info( $r, $log, $dbh, $cookie, $variable );
-		if ( $$variable{'Error'} ) {
+		$$variable{'error'} .= store_order_info( $r, $log, $dbh, $cookie, $variable );
+		if ( $$variable{'error'} ) {
 			$$variable{'Redirect'} = '/main/order/information.html';
 			return;
 		} # end if
@@ -843,6 +843,18 @@ sub finalise_order {
 	my $Order = new openprint::Order( $order_id );
 
 	if ( $Order->id() and ( sets::isin( $Order->status(), ['Incomplete','Re-Opened'] ) ) ) {
+
+		if ( ( $Order->company_id() == $session{'company_id'} ) and ( $session{'company_id'} == new openprint::User( $session{'user_id'})->company_id() ) ) {
+			if ( ! $openprint::param{'accept_terms'} ) {
+				$$variable{'error'} = 'Terms not accepted';
+				$$variable{'information'} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+				$$variable{'Redirect'} = '/main/order/submit.html';
+				return;
+			} else {
+				$Order->add_log( 'User accepted the terms and conditions.' );
+				$Order->save({'terms_accepted'=>1});
+			} # end if
+		} # end if employee or admin
 
 		# Commit Project Information
 		# get taxes
@@ -1269,7 +1281,18 @@ sub history_details {
 	my $order_id = $openprint::param{'OrderID'};
 	my $Order = new openprint::Order( $order_id );
 
-	if ( $openprint::param{'btnFunction'} eq 'Cancel' ) {
+	if ( $openprint::param{'btnFunction'} eq 'AcceptTerms' ) {
+		if ( ( $Order->company_id() != $openprint::session{'company_id'} ) or ( new openprint::User( $openprint::session{'user_id'} )->company_id() != $openprint::session{'company_id'} ) ) {
+			$$variable{'error'} = 'Terms not accepted';
+			$$variable{'information'} = 'You are not authorised to accept the terms and conditions.';
+		} elsif ( ! $openprint::param{'accept_terms'} ) {
+			$$variable{'error'} = 'Terms not accepted';
+			$$variable{'information'} = 'You must check the box to indicate your acceptance of the terms and conditions.';
+		} else {
+			$Order->add_log( 'User accepted the terms and conditions.' );
+			$Order->save({'terms_accepted'=>1});
+		} # end if
+	} elsif ( $openprint::param{'btnFunction'} eq 'Cancel' ) {
 		cancel_order( $log, $dbh, $order_id );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Pay' ) {
 		$Order->pay();

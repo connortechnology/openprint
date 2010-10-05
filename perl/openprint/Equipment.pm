@@ -8,7 +8,7 @@ require openprint::Fold;
 require openprint::Location;
 require sql;
 
-my $debug = 0;
+my $debug = 1;
 my %find_cache;
 use vars qw( $table $serial %fields %transforms %defaults );
 $table = 'tbl_equipment';
@@ -35,10 +35,12 @@ $serial= 'Equipment_Index_seq';
 	'cip3_merge'		=>	'cip3_merge',
 	'cip3_monitor'		=>	'cip3_monitor',
 	'smartscheduling'	=>	'smartscheduling',
+	'servicetype_id'	=>	'servicetype_id',
 );
 
 %defaults = (
 	'location_id'		=>	undef,
+	'servicetype_id'	=>	undef,
 );
 
 sub init_cache {
@@ -97,6 +99,16 @@ sub find {
 			} # end if
 		} # end foreach
 	} # end if
+if ( $params{'servicetype_id'} ) {
+        if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
+            $sql .= ' AND servicetype_id={?}';
+            push @values, $params{'servicetype_id'};
+        } else {
+            $sql .= ' AND ? = ANY(servicetype_id)';
+            push @values, $params{'servicetype_id'};
+        } # end if
+    } # end if
+
 	if ( $params{'UseInEstimating'} ) {
 		$sql .= ' AND UseInEstimating=?';
 		push @values, 1;
@@ -504,6 +516,12 @@ sub Location {
 
 sub Shifts {
 } # end sub
+
+sub servicetype_id {
+	my ( $self ) = @_;
+	return [] if ! $$self{'servicetype_id'};
+	return $$self{'servicetype_id'};
+} # end sub servicetype_id
 
 1;
 __END__

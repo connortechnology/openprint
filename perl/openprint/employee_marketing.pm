@@ -36,6 +36,7 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub email_campaigns {
 	my $Campaign = new openprint::EmailCampaign( $param{'campaign_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
+		$param{'nextrun'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 );
 		$Campaign->save( \%param );
     } elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$Campaign = $Campaign->copy();
@@ -97,6 +98,7 @@ sub email_campaign {
 		$Campaign = $Campaign->copy();
 		$variable{'error'} .= $Campaign->save( );
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
+		$param{'nextrun'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', @param{'nextrun_year','nextrun_month','nextrun_day','nextrun_hour','nextrun_minute'}, 0 );
 		$Campaign->save( \%param );
 	} # end if
 	$Campaign->load_info( \%variable ) if $Campaign;

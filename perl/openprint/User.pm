@@ -365,9 +365,17 @@ sub find {
 		$sql .= q{ AND companyindex=?};
 		push @values, $param{'company_id'};
 	} # end if
+	if ( $param{'usergroup_id'} ) {
+		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=?)};
+		push @values, $param{'usergroup_id'};
+	} # end if
 	if ( $param{'usergroup'} ) {
+		if ( ref $param{'usergroup'} eq 'ARRAY' ) {
+		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id IN (SELECT id FROM usergroups WHERE name IN ('} . join("','", @{$param{'usergroup'}}) . q{')))};
+		} else {
 		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=(SELECT id FROM usergroups WHERE name=?))};
 		push @values, $param{'usergroup'};
+		} 
 	} # end if
 	if ( $param{'usergroups'} ) {
 		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id IN (SELECT id FROM usergroups WHERE name IN ('} . join("','", @{$param{'usergroups'}}) . q{')))};

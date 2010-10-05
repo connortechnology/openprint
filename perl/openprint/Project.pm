@@ -1059,7 +1059,7 @@ sub ordered_quantity_index {
 	} # end if
 	if ( ! $$self{ordered_quantity_index} ) {
 		my @qtys = $self->quantity_indexes();
-$openprint::log->debug("Project ordered_qty_index @qtys ");
+#$openprint::log->debug("Project ordered_qty_index @qtys ");
 		if ( 1 == @qtys ) {
 			return $qtys[0];
 		} # end if

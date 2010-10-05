@@ -57,7 +57,7 @@ $session{'company_id'} = 6;
 
 # The first query to execute grabs the ids of all of the email campaigns
 # that are currently set to run
-my @campaign_ids = openprint::EmailCampaign::find( 'active' => 'Y', 'misc' => '(lastrun+interval<now() OR lastrun IS NULL ) AND ( timeofday IS NULL or timeofday <= NOW()::time)' );
+my @campaign_ids = openprint::EmailCampaign::find( 'active' => 'Y', 'misc' => '(nextrun < now()) AND ( timeofday IS NULL or timeofday <= NOW()::time)' );
 
 $log->info("There are ".@campaign_ids." active campaigns\n");
 

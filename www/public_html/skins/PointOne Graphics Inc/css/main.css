@@ -328,3 +328,16 @@ body a#trustlogo {
     bottom: 0px;
 }
 
+.Terms {
+	background-color: white;
+	padding: 5px;
+}
+.Terms h1, .Terms h2 {
+text-align: center;
+}
+.AcceptTerms {
+	font-weight: bold;
+	background-color: white;
+	padding: 5px;
+	margin: 5px 0px 5px 0px;
+}

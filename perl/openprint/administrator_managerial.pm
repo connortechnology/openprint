@@ -23,6 +23,7 @@ require openprint::Company;
 require openprint::customer_credit;
 require openprint::Email;
 require openprint::Email_Account;
+require openprint::UserGroup;
 
 sub configuration {
 	my ( $r, $log, $dbh, $variable ) = @_;
@@ -123,6 +124,9 @@ sub user_profiles {
 
 	my $user_id = $openprint::param{'ddmUser'};
 	my $user_role = $openprint::param{'ddmUserRole'};
+	if ( ! exists $openprint::param{'ddmCustomer'} ) {
+		$openprint::param{'ddmCustomer'} = $openprint::session{'company_id'};
+	} # end if
 	my $cust_id = $openprint::param{'ddmCustomer'};
 
 
@@ -699,6 +703,16 @@ sub email {
 		$variable{'Email'} = new openprint::Email_Account( $param{'id'} );
 	} # end if
 } # end sub email
+
+sub usergroups {
+	if ( $param{'command'} eq 'Save' ) {
+		my $Group = new openprint::UserGroup( $param{'id'} );
+		$variable{'error'} .= $Group->save( \%param );
+	} # end if
+} # end sub usergroups
+sub usergroup {
+	$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
+} # end sub usergroup
 
 1;
 __END__

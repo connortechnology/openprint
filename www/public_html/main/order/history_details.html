@@ -12,6 +12,7 @@
 <h1>Order History</h1>
 <h2>Viewing Order <?OrderID?></h2>
 </div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <span style="float: right;">
 <? echo ( my $html = '';
 		$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
@@ -71,9 +72,29 @@ Projects listed in red have changed price from the time this order was originall
 <br class="spacer"/>
 	<span class="Currency">All prices listed in <?CurrencyName?>.</span>
 <br class="spacer"/><br/>
-	<? echo ( ssi::include( $config{'SkinPath'}.'/includes/order_disclaimer.html'); ) ?>
-<br class="spacer"/>
 	<form name="f1" method="post" action="history_details.html">
+	<? echo ( 
+		my $html = ssi::include( $config{'SkinPath'}.'/includes/order_disclaimer.html');
+		if ( $html ) {
+			$html .= '<div class="AcceptTerms">';
+			if ( $$variable{'Order'}->terms_accepted() ) {
+				$html .= '<br/>Terms have been accepted.';
+			} elsif( sets::isin( $$variable{'Order'}->status(), [ 'Complete','Pending Deposit', 'In Production' ] ) ) {
+				my $Me = new openprint::User( $session{'user_id'} );
+				if ( $Me->company_id() == $session{'company_id'} and $Me->company_id() == $$variable{'Order'}->company_id() ) {
+					$html .= '<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
+					By checking the box and clicking Accept you agree to accept the listed terms and conditions.';
+
+					$html .= ssi::writeButton( $log, $dbh, 'Accept', 'accept.gif', "f1.btnFunction.value='AcceptTerms';f1.submit();", '', 'Accept' );
+				} else {
+					$html .= "The terms and conditions have not yet been accepted.";
+				} # end if
+			} # end if 
+			$html .= '</div>';
+		} # end if html
+		return $html;
+	) ?>
+<br class="spacer"/>
 <span style="float: right;">
 		<input type="hidden" name="btnFunction" value=""/>
 		<input type="hidden" name="OrderID" value="<?OrderID?>"/>

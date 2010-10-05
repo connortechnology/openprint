@@ -97,6 +97,9 @@ div.PressColumn ul li {display: block;}
 	div.PressColumn li.rush, li.rush {
 		border: 2px solid blue;
 	} 
+	.legend li.rush {
+width: 196px;
+} 
 	.When {
 		background-color: #ffb4da;
 		font-weight: bold;
@@ -359,7 +362,7 @@ div.legend ul li ul {
 }
 div.legend ul li ul li {
 	padding:0px;
-	width: 100%;
+	width: 200px;
 }
 div.legend ul li ul li label {
 	margin: 0px;

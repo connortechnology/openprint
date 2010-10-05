@@ -64,12 +64,14 @@ sub verify_login {
 
 	if ( ! $user_id ) {
 		# user not found.	Let's see if we got the password wrong, or the email wrong.
-		( $user_id ) = sql::execute( $log, $dbh, q{SELECT Index FROM Users WHERE strEmail=?}, $email );
-		if ( ! $user_id ) {
+		my @user_ids = sql::execute( $log, $dbh, q{SELECT Index FROM Users WHERE strEmail=?}, $email );
+		if ( ! @user_ids ) {
 			$$variable{'details'} = "\"$email\" is not a valid account.	Please try again.";
 		} else {
 			$$variable{'details'} = "The password you entered was not correct.	Please try again.";
-			openprint::logs::insertLogRecord(78,'Invalid Password', $user_id );
+			foreach ( @user_ids ) {
+				openprint::logs::insertLogRecord(78,'Invalid Password. Username='.$email, $_, new openprint::User($_)->company_id() );
+			} # end foreach
 		} # end if
 		$$variable{'error'} = 'Authentication Failed.';
 		return;
