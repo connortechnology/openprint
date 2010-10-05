@@ -72,8 +72,8 @@
 </div>
 <? eval (
 	my ( $starttime, $endtime );
-	if ( $session{'/employee/production/print_overview.html?Presses'} ) {
-		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/print_overview.html?Presses'} ) ).')' );
+	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/print_overview.html?Equipment'} ) ).')' );
 	} else {
 		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 	} # end if
@@ -108,17 +108,17 @@
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
 		<div class="presses">
-		<ul><li><label>Presses:</label>
+		<ul><li><label>Equipment:</label>
 <? echo ( 
-	@{$$variable{'Presses'}} = ();
+	@{$$variable{'Equipment'}} = ();
 	my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
-		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
+		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/print_overview.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Equipment'} ) ] );
 	} # end foreach press
 
-	my $html = '<select name="Presses" multiple="multiple" size="'. @presses.'">';
-	if ( $session{'/employee/production/print_overview.html?Presses'} ) {
-		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/print_overview.html?Presses'} ] );
+	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
+	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/print_overview.html?Equipment'} ] );
 	} else {
 		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
@@ -187,8 +187,8 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddDocket', 'add.gif', "ajax_window('_add_docket.html', 600, 400 );", '', 'Add Docket' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddMaintenance', 'add.gif', "ajax_window('_add_maintenance.html', 600, 400 );", '', 'Add Maintenance' ); ) ?>
 			<? echo (
-				if ( @{$$variable{'Presses'}} == 1 and $$variable{'Presses'}[0]->smartscheduling() ) {
-					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', 'print_overview.html?Presses='.$$variable{'Presses'}[0]->id().'&amp;btnFunction=Reflow', 'Reflow Jobs' );
+				if ( @{$$variable{'Equipment'}} == 1 and $$variable{'Equipment'}[0]->smartscheduling() ) {
+					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', 'print_overview.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', 'Reflow Jobs' );
 				} # end if
 				return;
 			) ?>
@@ -216,8 +216,8 @@
 	Projects highlighted in yellow have forms on other presses.<br/>
 	<? echo (
 		my $html;
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;"><a href="/employee/production/print_overview.html?Presses='.$E->id().'">'.$E->name().'</a></div>';
+		foreach my $E ( @{$$variable{'Equipment'}} ) {
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a></div>';
 		} # end foreach
 		return $html;
 		) ?>
@@ -225,8 +225,8 @@
 	<? echo (
 		@{$$variable{'drops'}} = ();
 		my $html;
-		foreach my $E ( @{$$variable{'Presses'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Presses'}})).'%;">';
+		foreach my $E ( @{$$variable{'Equipment'}} ) {
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
 			my ( $year, $month, $day ) = @session{'/employee/production/print_overview.html?schedule_start_year',
 					'/employee/production/print_overview.html?schedule_start_month',
 					'/employee/production/print_overview.html?schedule_start_day'};
@@ -312,7 +312,7 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 				} # end for
 }
 				foreach my $Shift ( @Shifts ) {	
-					push @{$$variable{'drops'}}, $Shift->ul_id();
+					push @{$$variable{'drops'}}, $Shift->ul_id() if $Shift->operator_id() or ! $E->smartscheduling();
 					$html .= $Shift->get_ul( );
 				} # end foreach Shift
 				$PreviousShift = pop @Shifts;

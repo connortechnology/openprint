@@ -1,22 +1,32 @@
-<div class="row">
-	<span class="label">&nbsp;</span>
+<p>
+<? echo ( 
+	my $html = '';
+	my @summaries;
+	$_ = openprint::service::summary( $$variable{'Project'},$$variable{'ServiceIndex'} );
+	@summaries = ref $_ eq 'ARRAY' ? @{$_} : ( $_ );
+	my @qty_summaries;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$qty_summaries[$qty_index] = openprint::service::summary( $$variable{'Project'}, $$variable{'ServiceIndex'}, $qty_index );
+	} # end foreach qty_index
+
+	for ( my $i = 0; $i < @summaries; $i += 1 ) {
+		$html .= '<p><label>'.$summaries[$i].'</label>';
+
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			my @s = ref $qty_summaries[$qty_index] eq 'ARRAY' ? @{$qty_summaries[$qty_index]} : ( $qty_summaries[$qty_index] );
+			$html .= '<span class="value">' . $s[$i] . '</span>';
+		} # end foreach qty_index
+	} # end foreach summary
+	return $html;
+) ?>
+</p>
+<p>
+	<label>MPrice:</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="value">
-		<? echo ( openprint::service::summary( $$variable{'Project'}->id(), $$variable{'ServiceIndex'}, $$variable{'QTYIndex'} ); ) ?>
-	</span>
+	<span class="value"><? echo ( $$variable{'Currency'}->symbol().$$variable{'MPrice'.$$variable{'QTYIndex'}} ) ?></span>
 	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
-<div class="row">
-	<span class="label">MPrice:</span>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="value"><? echo ( $$variable{'MPrice'.$$variable{'QTYIndex'}} ) ?></span>
-	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
+</p>

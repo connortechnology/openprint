@@ -245,7 +245,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 		</div>
 		<br class="spacer"/>
 		</fieldset>
-		<fieldset><legend>Groups</legend>
+		<fieldset><legend><a href="/administrator/managerial/usergroups.html">Groups</a></legend>
 			<? echo (
 				require openprint::Usergroup;
 				my $html = '<ul>';

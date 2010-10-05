@@ -1,6 +1,5 @@
-<div class="row">
-	<span class="label"><? echo ( openprint::service::summary( $$variable{'Project'}->id(), $$variable{'ServiceIndex'} ); ) ?>&nbsp;
-	</span>
+<p>
+	<label><? echo ( openprint::service::summary( $$variable{'Project'}->id(), $$variable{'ServiceIndex'} ); ) ?>&nbsp;</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -10,4 +9,4 @@
 	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
+</p>

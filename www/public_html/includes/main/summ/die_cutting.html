@@ -1,19 +1,19 @@
-<div class="row"> 
-	<span class="label">Supplied die?</span>
+<p> 
+	<label>Supplied die?</label>
 	<span class="value">
 <? if ( $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>
 	Yes</span>
 <? else ( $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>
 	No</span>
-		</div>
-		<div class="row"> 
-		<span class="label">Dimensions of the die cut:</span>
-		<span class="value"> <?txtDieWidth?> x <?txtDieHeight?> <span class="smTbl">(W x H)</span></span>
-		</div>
-		<div class="row"> 
-		<span class="label">Hole clearing:</span>
-		<span class="value"> 
+</p>
+<p> 
+	<label>Dimensions of the die cut:</label>
+	<span class="value"> <?txtDieWidth?> x <?txtDieHeight?> (W x H)</span>
+</p>
+<p> 
+	<label>Hole clearing:</span>
+	<span class="value"> 
 	<? echo ( $$variable{'rdbHoleClearing'} eq 'Y' ? 'Yes' : 'No' ) ?>
 	</span>
 <? endif ( $$variable{'rdbSuppliedDie'} eq 'Y' ) ?>
-</div>
+</p>

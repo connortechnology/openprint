@@ -58,12 +58,12 @@ sub Equipment {
 	} # end if
 	my $specs = $self->specs();
 	if ( $self->ServiceType()->name() eq 'Cutting' ) {
-		return openprint::Equipment::find_one(
+		return openprint::Equipment->find_one(
 				'use_in_scheduling'=>1,
 				'Specifications'=>{'Cutting Capable'=>'Y'},
 				);
 	} elsif ( $self->ServiceType()->name() eq 'Folding' ) {
-		return openprint::Equipment::find_one(
+		return openprint::Equipment->find_one(
 				'use_in_scheduling'=>1,
 				'Specifications'=>{'Folding Capable'=>'Y'},
 				);
@@ -71,13 +71,36 @@ sub Equipment {
 		if ( $$specs{'ddmEquipment'.$qty_index} ) {
 			return new openprint::Equipment( $$specs{'ddmEquipment'.$qty_index} );
 		} else {
-		return openprint::Equipment::find_one(
+		return openprint::Equipment->find_one(
 				'use_in_scheduling'=>1,
 				'Specifications'=>{'Stitching Capable'=>'Y'},
 				);
 		} # end if
 	} # end if
 } # end sub Equipment
+
+sub runtime {
+    my ( $self, $Equipment, $impressions, $speed, $pertains_to ) = @_;
+
+	my $Project = $self->Project();
+    my $qty_index = $Project->ordered_quantity_index();
+    my $specs = $self->specs();
+
+    if ( $$specs{'ProjectType'} or ( $$specs{'ServiceType'} eq 'AdditionalSignature' ) ) {
+		my $time = openprint::Estimating::Printing::runtime( $Project, $specs, $Equipment, $impressions, $speed );
+		return $$time{'Total'} if $time;
+		return 0;
+    } elsif ( $$specs{'ServiceType'} eq 'Cutting' ) {
+        return openprint::Estimating::Cutting::runtime( $Project, $self, $Equipment, $qty_index, $impressions, $speed, $pertains_to );
+    } elsif ( $$specs{'ServiceType'} eq 'Folding' ) {
+       return openprint::Estimating::Folding::runtime( $Project, $self, $Equipment, $qty_index, $impressions, $speed, $pertains_to );
+    } elsif ( $$specs{'ServiceType'} eq 'Drilling' ) {
+        return openprint::Estimating::Drilling::runtime( $Project->id(), $$self{'service_id'}, $specs, $qty_index );
+    } elsif ( sets::isin( $$specs{'ServiceType'}, 'SaddleStitching','LoopStitching' ) ) {
+        return openprint::Estimating::Stitching::runtime( $Project, $self, $Equipment, $qty_index, $speed );
+    } # end if
+
+} # end sub get_runtime
 
 1;
 __END__

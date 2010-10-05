@@ -96,9 +96,9 @@
 
 	my $html = '<select name="Presses" multiple="multiple" size="'. @presses.'">';
 	if ( $session{'/employee/production/prepress_schedule.html?Presses'} ) {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/prepress_schedule.html?Presses'} ] );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/prepress_schedule.html?Presses'} ] );
 	} else {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
 	return $html;
 ) ?>
@@ -112,10 +112,10 @@
 	my $html = '<select name="statuses" multiple="multiple" size="'. @statuses.'">';
 	if ( $session{'/employee/production/prepress_schedule.html?statuses'} ) {
 		@{$$variable{'statuses'}} = split( ';', $session{'/employee/production/prepress_schedule.html?statuses'} );
-		$html .= ssi::make_select( [ map { $_, $_ } @statuses ], $$variable{'statuses'} ); 
+		$html .= ssi::make_drop_down( [ map { $_, $_ } @statuses ], $$variable{'statuses'} ); 
 	} else {
 		@{$$variable{'statuses'}} = @statuses;
-		$html .= ssi::make_select( [ map { $_, $_ } @statuses ], [ map { $_ } @statuses ] );
+		$html .= ssi::make_drop_down( [ map { $_, $_ } @statuses ], [ map { $_ } @statuses ] );
 	} # end if
 	return $html;
 )?>

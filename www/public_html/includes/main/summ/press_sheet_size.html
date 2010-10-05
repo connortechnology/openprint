@@ -1,5 +1,5 @@
-<div class="row">
-	<span class="label">Press sheet size:</span>
+<p>
+	<label>Press sheet size:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -14,4 +14,4 @@ if ( $$variable{'StockType'.$$variable{'QTYIndex'}} eq 'Roll' ) {
 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
+</p>

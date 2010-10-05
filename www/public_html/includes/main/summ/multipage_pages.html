@@ -1,5 +1,5 @@
-<div class="row"> 
-	<span class="label">Cover Type:</span>
+<p> 
+	<label>Cover Type:</label>
 <? echo (
 	my $html;
 	foreach my $qty ( $$variable{'Project'}->quantities() ) {
@@ -8,9 +8,9 @@
 	} # end foreach
 	return $html;
 ) ?>
-</div>
-<div class="row"> 
-	<span class="label">Total page quantity:</span>
+</p>
+<p> 
+	<label>Total page quantity:</label>
 <? echo (
 	my $html;
 	foreach my $qty ( $$variable{'Project'}->quantities() ) {
@@ -19,10 +19,10 @@
 	} # end foreach
 	return $html;
 ) ?>
-</div>
+</p>
 <? if ( $$variable{'txtGateFoldedSpreadQuantity'} ) ?>
-<div class="row"> 
-	<span class="label">Total gate folded spread quantity:</span>
+<p> 
+	<label>Total gate folded spread quantity:</label>
 <? echo (
 	my $html;
 	foreach my $qty ( $$variable{'Project'}->quantities() ) {
@@ -31,5 +31,5 @@
 	} # end foreach
 	return $html;
 ) ?>
-</div>
+</p>
 <? endif ( $$variable{'txtGateFoldedSpreadQuantity'} ) ?>

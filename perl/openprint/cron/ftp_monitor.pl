@@ -12,6 +12,7 @@ require openprint::User;
 require Email::Valid;
 require logger;
 require openprint::Upload;
+use openprint ();
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -28,10 +29,12 @@ use Encode;
 
 my $program = basename($0);
 
+my @args = @ARGV;
+
 my $opts = {};
 GetOptions($opts, 'attach-file', 'fifo=s', 'from=s', 'help', 'ignore-users=s',
 	'log_file=s', 'log_level=s',
-	'recipient=s@', 'sleep=s', 'smtp-server=s', 'subject=s',
+	'recipient=s', 'sleep=s', 'smtp-server=s', 'subject=s',
 	'watch-users=s','pid_file=s', 'db_name=s', 'db_host=s', 'db_user=s', 'db_pass=s',
 	'skin_path=s', 'document_root=s', 'file_path=s','site_title=s', 'site_url=s',
 	'scoreboard=s',
@@ -42,54 +45,41 @@ if ($opts->{help}) {
 	exit 0;
 }
 
-$log = logger->new( {'file'=>$$opts{'log_file'}, 'level'=>$$opts{'log_level'} ? $$opts{'log_level'} : 'debug' } );
-
-unless ($opts->{db_name}) {
-	print STDERR "$program: missing required --db_name parameter\n";
-	exit 1;
-}
-unless ($opts->{db_user}) {
-	print STDERR "$program: missing required --db_user parameter\n";
-	exit 1;
-}
-unless ($opts->{db_pass}) {
-	print STDERR "$program: missing required --db_pass parameter\n";
-	exit 1;
-}
-unless ($opts->{fifo}) {
-	print STDERR "$program: missing required --fifo parameter\n";
-	exit 1;
-}
-my $fifo = $opts->{fifo};
-
-unless ($opts->{from}) {
-	print STDERR "$program: missing required --from parameter\n";
-	exit 1;
-}
-my $from = $opts->{from};
-
-unless ($opts->{recipient}) {
-	print STDERR "$program: missing required --recipient parameter\n";
-	exit 1;
-}
-my $recipients = $opts->{recipient};
-
-unless ($opts->{'smtp-server'}) {
-	print STDERR "$program: missing required --smtp-server parameter\n";
-	exit 1;
-}
-my $smtp_server = $opts->{'smtp-server'};
-
-#print "file path: " .  $opts->{file_path} . "\n";
-
-my $delay = 1.0;
-if ($opts->{sleep}) {
-	$delay = $opts->{sleep};
+$log = new logger('level'=>'debug');
+$log->debug("Help");
+# Get our configuration information
+if (my $err = ReadCfg('/etc/ftp_monitor.conf')) {
+    die $err;
+} else {
+	#$log->debug("Successfully read cfg");
+	#foreach my $k ( keys %CFG::Config ) {
+		#$log->debug("$k => $CFG::Config{$k}");
+	#} # end foreach
 }
 
-if ( $opts->{'pid_file'} ) {
+foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
+	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
+	if ( ! $CFG::Config{$param} ) {
+		die "$program: missing required --$param parameter";
+	}
+} # end foreach required-param
+foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url' ) {
+	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
+} # end foreach non-requiredp aram
+if ( $CFG::Config{'site_url'} ) {
+	$CFG::Config{'siteURL'} = $CFG::Config{'site_url'};
+	$CFG::Config{'ExternalSiteURL'} = $CFG::Config{'site_url'};
+} # end if
+
+$CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
+$CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
+
+$CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
+$CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
+
+if ( $CFG::Config{'pid_file'} ) {
 	my $pidh;
-	if (open($pidh, '> '.$opts->{'pid_file'} ) ) {
+	if (open($pidh, '> '.$CFG::Config{'pid_file'} ) ) {
 		print $pidh $$."\n"; 
 		close($pidh);
 	} else {
@@ -97,35 +87,24 @@ if ( $opts->{'pid_file'} ) {
 	} # end if
 } # end if
 
-$openprint::log->info("Opening SQL connection");
+$log = logger->new( {'file'=>$CFG::Config{'log_file'}, 'level'=>$CFG::Config{'log_level'}} );
+$log->info("Opening SQL connection");
 $openprint::dbh = sql::open_sql( $log, 
-	'host'		=> $opts->{'db_host'},
-	'database'	=> $opts->{'db_name'},
+	'host'		=> $CFG::Config{'db_host'},
+	'database'	=> $CFG::Config{'db_name'},
 	'driver'	=> 'Pg',
-	'login'		=> $opts->{'db_user'},
-	'password'	=> $opts->{'db_pass'},
+	'login'		=> $CFG::Config{'db_user'},
+	'password'	=> $CFG::Config{'db_pass'},
 );
 die 'Error opening db' if ! $dbh;
-%openprint::config = ();
-configuration::init_cache( $log, $dbh, {} );
-if ( $opts->{'site_url'} ) {
-	$config{'siteURL'} = $opts->{'site_url'};
-	$config{'ExternalSiteURL'} = $opts->{'site_url'};
-} # end if
-if ( $opts->{'site_title'} ) {
-	$config{'SiteTitle'} = $opts->{'site_title'};
-} # end if
-if ( $opts->{'skin_path'} ) {
-	$config{'SkinPath'} = $opts->{'skin_path'};
-} # end if
-
+configuration::init_cache( $log, $dbh, \%CFG::Config );
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
 
-my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
+my $scoreboard = get_scoreboard( $config{'scoreboard'} );
 my $fifoh;
-if (open($fifoh, "< $fifo")) {
+if (open($fifoh, "< $config{fifo}")) {
 	while (1) {
 		my $line;
 		eval {
@@ -183,12 +162,12 @@ if (open($fifoh, "< $fifo")) {
 					# don't send email.	Otherwise, check for an --ignore-users filter,
 					# and see if the user matches that ignore filter.
 
-					if ($opts->{'watch-users'}) {
-						if ($user_name !~ /$opts->{'watch-users'}/) {
+					if ($config{'watch-users'}) {
+						if ($user_name !~ /$config{'watch-users'}/) {
 							$send_email = 0;
 						}
-					} elsif ($opts->{'ignore-users'}) {
-						if ($user_name =~ /$opts->{'ignore-users'}/) {
+					} elsif ($config{'ignore-users'}) {
+						if ($user_name =~ /$config{'ignore-users'}/) {
 							$send_email = 0;
 						}
 					}
@@ -217,22 +196,22 @@ if (open($fifoh, "< $fifo")) {
 			# No input at this time. Sleep for half a second (or less) and check again.
 #$log->debug( "No input\n" );
 			check_scoreboard();
-			usleep($delay * 1000* 1000);
+			usleep($config{'sleep'} * 1000* 1000);
 		} # End if $line
 	} # end while <input>
 
 	close($fifoh);
 } else {
-	die "$program: unable to read FIFO '$fifo': $!\n";
+	die "$program: unable to read FIFO '$config{fifo}': $!\n";
 }
-if ( $opts->{'pid_file'} ) {
-	unlink $opts->{'pid_file'};
+if ( $config{'pid_file'} ) {
+	unlink $config{'pid_file'};
 } # end if
 
 sub check_scoreboard {
-	my $scoreboard = get_scoreboard( $opts->{'scoreboard'} );
+	my $scoreboard = get_scoreboard( $config{'scoreboard'} );
 	my @users = map { $$_{'sce_user'} } @$scoreboard;
-	$log->debug( "Users: @users in scoreboard\n" );
+	#$log->debug( "Users: @users in scoreboard\n" );
 
 	foreach my $user ( keys %uploads ) {
 		if ( ! sets::isin( $user, \@users ) ) {
@@ -253,7 +232,7 @@ sub send_email {
 		my $file = $upload->{file};
 # File should be the full path, relative to filesystem root.
 		my $file_str = basename($file);
-		my $regexp = $opts->{'file_path'}.'(.*)'.$file_str;
+		my $regexp = $config{'file_path'}.'(.*)'.$file_str;
 		my ( $company_name ) = $file =~ /^$regexp$/;
 		if ( $company_name ) {
 			$company_name =~ s/^\/*//g;
@@ -265,8 +244,8 @@ sub send_email {
 
 	my $upload = $uploads[0];
 	my $subject;
-	if ($opts->{subject}) {
-		$subject = $opts->{subject};
+	if ($config{subject}) {
+		$subject = $config{subject};
 	} elsif ( scalar @uploads == 1 ) {
 		$subject = "User '$upload->{user}' uploaded file '$$upload{proper_file_path}' via FTP";
 	} else {
@@ -281,18 +260,18 @@ sub send_email {
 		if ( my @Companies = openprint::Company->find('name'=>$$upload{'company_name'},'limit'=>1) ) {
 $log->debug("Found company $$upload{'company_name'}");
 			$Company = $Companies[0];
+		} else {
+$log->debug("Didn't Found company $$upload{'company_name'}");
 		} # end if
 	} # end if
 	if ( $Company ) {
 		# If we hae the company, then narrow the user search
-		if ( my @Users = openprint::User->find('company_id'=>$Company->id(), 'email'=>lc $upload->{user},'limit'=>1) ) {
-			$User = $Users[0];
+		if ( $User = openprint::User->find_one('company_id'=>$Company->id(), 'email'=>lc $upload->{user}) ) {
 $log->debug("Found user $$upload{user} with company");
 		} # end if
 	} # end if
 	if ( ! $User ) {
-		if ( my @Users = openprint::User->find('email'=>lc $upload->{user},'limit'=>1) ) {
-			$User = $Users[0];
+		if ( $User = openprint::User->find_one('email'=>lc $upload->{user},'limit'=>1) ) {
 			$Company = $User->Company();
 $log->debug("Found user $$upload{user} with out company.  Company is $$Company{name}");
 		} # end if
@@ -307,11 +286,12 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			'size'			=>	$upload->{size},
 			'total'			=>	$upload->{size},
 			'finished'		=>	$upload->{timestamp},
+			'start'			=>	$upload->{timestamp},
 			'file_path'		=>	$$upload{proper_file_path},
 			'type'			=>	'FTP',
 		});
 		if ( $error ) {
-			print STDERR $error 
+			$log->error( $error );
 		} else {
 			my $File = new openprint::File();
 			$error = $File->save({
@@ -319,7 +299,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 				'filename'	=>	$$upload{proper_file_path},
 				'upload_id'	=>	$Upload->id(),
 			});
-			print STDERR $error if $error;
+			$log->error( $error ) if $error;
 		} # end if
 	} # end foreach upload
 
@@ -332,7 +312,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 		} # end if
 
 		my $to;
-		if ( $User->email() eq 'iconnor@penultima.org' ) {
+		if ( $User->email() =~ /^iconnor/ ) {
 			$to = '"Isaac Connor" <iconnor@penultima.org>';
 		} elsif ( $Company->salesrep_id() ) {
 			if ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) {
@@ -347,13 +327,13 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$variable{'User'} = $User;
 			$variable{'Uploads'} = \@uploads;
 
-			if (-e $opts->{'skin_path'} . '/email_content/uploadfiles_csr_notification.html') {
-				$variable{'ReplacementText'} = misc::load_file( $log, $opts->{'skin_path'} . '/email_content/ftp_csr_notification.html' );
+			if (-e $config{'skin_path'} . '/email_content/ftp_csr_notification.html') {
+				$variable{'ReplacementText'} = misc::load_file( $log, $config{'skin_path'} . '/email_content/ftp_csr_notification.html' );
 			} else {
-				$variable{'ReplacementText'} = misc::load_file( $log, $opts->{'document_root'} . '/email_content/ftp_csr_notification.html' );
+				$variable{'ReplacementText'} = misc::load_file( $log, $config{'document_root'} . '/email_content/ftp_csr_notification.html' );
 			} # end if
 			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
-			my $email_template = misc::load_file( $log, $opts->{'skin_path'} . '/email_template.html' );
+			my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
 			my $body = ssi::variable_substitution( \$email_template, \%variable );
 			my %mail = (
 							SMTP    => $config{'Mail Server'},
@@ -370,7 +350,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 	my $status = $upload->{status} eq 'i' ? 'Incomplete' : 'Completed';
 	my $secs_str = $upload->{duration} == 1 ? 'sec' : 'secs';
 	my $type_str = $upload->{transfer_type} eq 'a' ? 'ASCII' : 'Binary';
-	my $attached = ($opts->{'attach-file'} and -e $$upload{file}) ? '(attached)' : '';
+	my $attached = ($config{'attach-file'} and -e $$upload{file}) ? '(attached)' : '';
 	my $text = <<EOT;
 File just uploaded via FTP:
 
@@ -389,14 +369,14 @@ Cheers,
 
 EOT
 		my $email_info = {
-			smtp => $smtp_server,
-			From => $from,
-			To => join(', ', @$recipients),
+			smtp => $config{'smtp_server'},
+			From => $config{'from'},
+			To => $config{'recipient'},
 			BCC	=>	'iconnor@point-one.com',
 			Subject => $subject,
 		};
 
-		if ($opts->{'attach-file'}) {
+		if ($config{'attach-file'}) {
 			if (-e $$upload{file}) {
 				$email_info->{'MIME-Version'} = '1.0';
 
@@ -439,7 +419,7 @@ EOT
 
 				} else {
 					my $timestamp = scalar(localtime());
-					print STDERR "$program: $timestamp: error reading file '$$upload{file}' for attaching: $!\n";
+					$log->error( "$program: $timestamp: error reading file '$$upload{file}' for attaching: $!" );
 				}
 
 			} else {
@@ -457,7 +437,7 @@ EOT
 		unless ($res) {
 			my $timestamp = scalar(localtime());
 
-			print STDERR "$program: $timestamp: error sending email: $Mail::Sendmail::error\n";
+			$log->error( "$program: $timestamp: error sending email: $Mail::Sendmail::error" );
 		}
 	} # end if can figure out company name or not
 } # end sub send_email
@@ -572,3 +552,33 @@ sub get_scoreboard {
 	close(SCORE);
 	return \@scoreboard;
 } # end sub get_scoreboard
+
+# Read a configuration file
+#   The arg can be a relative or full path, or
+#   it can be a file located somewhere in @INC.
+sub ReadCfg {
+    my $file = $_[0];
+
+    our $err;
+
+    {   # Put config data into a separate namespace
+        package CFG;
+		use vars qw( %Config );
+
+        # Process the contents of the config file
+        my $rc = do($file);
+
+        # Check for errors
+        if ($@) {
+            $::err = "ERROR: Failure compiling '$file' - $@";
+        } elsif (! defined($rc)) {
+            $::err = "ERROR: Failure reading '$file' - $!";
+        } elsif (! $rc) {
+            $::err = "ERROR: Failure processing '$file'";
+        }
+    }
+
+    return ($err);
+}
+
+

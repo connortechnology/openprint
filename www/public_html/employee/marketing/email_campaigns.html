@@ -1,19 +1,28 @@
 <?Results?>
 <table class="List">
 	<tr>
-		<th align="left">Name</th><th align="left">Last Run</th><th align="right">Active</th>
+		<th align="left">Name</th><th align="left" class="DateTime">Last Run</th><th align="left" class="DateTime">Next Run</th><th align="right">Active</th>
 	</tr>
-	<? while ( $$variable{'Campaign'} = shift @{$$variable{'Campaigns'}}; ) ?>  
-		<? eval ( @$variable{ keys %{$$variable{'Campaign'}} } = @{$$variable{'Campaign'}}{keys %{$$variable{'Campaign'}}} ) ?>
-		<tr<?rowclass?>>
-			<td><a href="email_campaign.html?campaign_id=<? echo ( $$variable{'Campaign'}->id(); ) ?>"><?name?></a></td>
-			<td align="left"><a href="email_campaign.html?campaign_id=<? echo ( $$variable{'Campaign'}->id(); ) ?>"><?lastrun?></a></td>
-			<td align="right"><a href="email_campaign.html?campaign_id=<? echo ( $$variable{'Campaign'}->id(); ) ?>"><?active?></a></td>
-		</tr>
-	<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-	<? endwhile ( $$variable{'Campaign'} = shift @{$$variable{'Campaigns'}}; ) ?>  
+	<? echo (
+		my $html;
+		my $rowclass;
+		foreach my $Campaign ( @{$$variable{'Campaigns'}} ) {
+			$html .= "<tr$rowclass>\n";
+			$html .= sprintf(q`
+				<td><a href="email_campaign.html?campaign_id=%1$d">%2$s</a></td>
+				<td align="left"><a href="email_campaign.html?campaign_id=%1$d">%3$s</a></td>
+				<td align="left"><a href="email_campaign.html?campaign_id=%1$d">%4$s</a></td>
+				<td align="right"><a href="email_campaign.html?campaign_id=%1$d">%5$s</a></td>
+	`, $Campaign->id(), $Campaign->name(),
+$Campaign->lastrun() ? Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Campaign->lastrun() ) ) : 'never',
+$Campaign->nextrun() ? Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Campaign->nextrun() ) ) : 'never',
+$Campaign->active() );
+			$html .= "</tr>\n";
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Campaign
+		return $html;
+	) ?>
 </table>
 <p class="buttons">
 <? echo ( ssi::writeButton( $log, $dbh, 'New', 'new.gif', '','email_campaign.html', 'New'); ) ?>
 </p>
-<br class="spacer"/>

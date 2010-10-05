@@ -297,6 +297,12 @@ if ( ! sets::isin('equipment_stock_settings', \@tables ) ) {
 if ( ! sets::isin('signaturecapture', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, q{../openprint/sql/SignatureCapture.sql}) );
 } # end if
+if ( sets::isin( 'email_campaigns', \@tables ) ) {
+	$data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='email_campaigns'", 'column_name');
+	if ( ! $$data{'nextrun'} ) {
+		$dbh->do( 'ALTER TABLE email_campaigns add nextrun timestamp with time zone' );
+	} # end if
+} # end if
 $dbh->disconnect();
 1;
 __END__

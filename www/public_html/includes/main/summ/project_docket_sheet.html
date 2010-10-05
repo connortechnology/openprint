@@ -222,6 +222,7 @@
 			} else {
 				$html .= sprintf('&nbsp;%s&quot; x %s&quot;', @$sig_specs{'StockWidth'.$$variable{'Project'}->ordered_quantity_index(), 'StockHeight'.$$variable{'Project'}->ordered_quantity_index()} );
 			} # end if
+			$html .= sprintf(' %.0fM', $Paper->mweight() ) if $Paper->type() eq 'Sheet';
 			$html .='<hr/>';
 			if ( $$sig_specs{'ddmStockFinish'} eq 'Coated 1 Side' or $$sig_specs{'ddmStockFinish'} eq 'C1S' ) {
 				$html .= '<br/><b>Please Verify Uncoated Side Image</b>';

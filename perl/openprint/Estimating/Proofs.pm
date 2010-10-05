@@ -68,6 +68,9 @@ sub variables {
 	return @v;
 } # end sub variables
 
+sub outputs {
+} # end sub outputs
+
 sub get_indexes {
 	my ( $specs, $qty_index, $indexes, $types ) = @_;
 	foreach my $key ( keys %{$specs} ) {

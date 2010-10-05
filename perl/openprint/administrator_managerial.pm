@@ -18,6 +18,7 @@ require openprint::customer_credit;
 require openprint::Tax;
 require openprint::Email;
 require openprint::Email_Account;
+require openprint::UserGroup;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -659,6 +660,16 @@ sub email {
 		$variable{'Email'} = new openprint::Email_Account( $param{'id'} );
 	} # end if
 } # end sub email
+
+sub usergroups {
+	if ( $param{'command'} eq 'Save' ) {
+		my $Group = new openprint::UserGroup( $param{'id'} );
+		$variable{'error'} .= $Group->save( \%param );
+	} # end if
+} # end sub usergroups
+sub usergroup {
+	$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
+} # end sub usergroup
 
 1;
 __END__

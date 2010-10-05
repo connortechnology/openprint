@@ -796,13 +796,21 @@ sub summary {
 } # end sub summary
 
 sub runtime {
-	my ( $p_id, $s_id, $specs, $qty_index ) = @_;
+	my ( $Project, $Service, $Equipment, $qty_index, $speed ) = @_;
 
-	return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-	my @Equipment = openprint::Equipment->find( 'id' => $$specs{'ddmEquipment'.$qty_index} );
-	return 0 if @Equipment != 1;
-
-	my $Equipment = $Equipment[0];
+	my $specs = $Service->specs();
+	if ( ! $Equipment ) {
+		$openprint::log->warn("No equipment passed to runtime");
+		if ( ! $$specs{'ddmEquipment'.$qty_index} ) {
+			$openprint::log->error("No equipment in estimate");
+			return 0;
+		} # end if
+		$Equipment = openprint::Equipment->find_one('id'=>$$specs{'ddmEquipment'.$qty_index});
+		if ( ! $Equipment ) {
+			$openprint::log->error("No equipment found for quoted Equipment ");
+			return 0;
+		} # end if
+	} # end if
 
 	my $runTime;
 
@@ -822,15 +830,13 @@ sub runtime {
 
 	my $maxPockets = $Equipment->specification( 'Number of Pockets' );
 	my $makereadytime = $Equipment->specification( 'Pocket Make Ready' ) * 60;
-	$openprint::log->debug("MakeReadyTime: $makereadytime");
+	$openprint::log->debug("Pockets: $pockets MakeReadyTime: $makereadytime");
 	$runTime += $pockets * $makereadytime;
 
 # Calculate Full Passes
 	if ( $pockets > $maxPockets ) {
 # Loaded here, so we don't do it in the loop many times
 		if ( my $unitsPerHour = $Equipment->specification( 'Units Per Hour', $maxPockets ) ) {
-
-
 			$runTime += ($$specs{"txtQuantity$qty_index"}*3600/$unitsPerHour) * int ( $pockets / $maxPockets );
 			$pockets = $pockets % $maxPockets;
 		} # end if
@@ -842,7 +848,6 @@ sub runtime {
 	} # end if
 	return $runTime;
 } # end sub get_runtime
-
 
 1;
 __END__

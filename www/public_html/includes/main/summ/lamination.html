@@ -1,6 +1,6 @@
 <? if ( openprint::service::get_index_by_id( $log, $dbh, 'Lamination' ) ) ?>	
-<div class="row"> 
-	<span class="label"><? echo ( ssi::writeTip('Laminating'); ) ?> type:</span>
+<p> 
+	<label><? echo ( ssi::writeTip('Laminating'); ) ?> type:</label>
 	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
@@ -8,5 +8,5 @@
 	<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
 	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
+</p>
 <? endif ( openprint::service::get_index_by_id( $log, $dbh, 'Lamination' ) ) ?>	

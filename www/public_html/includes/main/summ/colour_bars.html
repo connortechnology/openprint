@@ -1,5 +1,5 @@
-<div class="row"> 
-    <span class="label">Colour bars:</span>
+<p> 
+    <label>Colour bars:</label>
 <? eval ( $$variable{'QTYIndex'} = 1 ) ?>
 <? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 <? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
@@ -15,4 +15,4 @@ return 'Auto';
 <? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
     <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-</div>
+</p>

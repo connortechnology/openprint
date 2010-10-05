@@ -69,7 +69,7 @@
 				$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 				if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
-				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?project_id=".$$variable{'ProjectIndex'}."', 800 );", '', 'View Log' );
+				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "popup_window('_view_log.html', 'project_id=".$$variable{'ProjectIndex'}."', {width:800} );", '', 'View Log' );
 				} # end if
 				return $html;
 			) ?>
@@ -108,18 +108,16 @@
 
 	foreach my $ServiceCategory ( openprint::ServiceType_Category->find('order'=>'sorting,name') ) {
 		if ( $ServiceCategory->name() eq 'Printing' ) {
+			my $summary = eval( 'openprint::Estimating::'.$Project->Type()->type().q`::summary($Project, $$services{''}[0], $printing_specs )` );
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
 				if ( $Project->Type()->url() ) {
-                $html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', $rowclass, $Project->Type()->url(), $Project->id(), $$services{''}[0],
-                    ( $$services{'Signature'} ? '' : openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ) ),
-                    );
+                $html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', $rowclass, $Project->Type()->url(), $Project->id(), $$services{''}[0], $summary );
 				} else {
 					$html .= sprintf('<tr%s><td><b>Printing</b></td>', $rowclass  );
 				} # end if
             } else {
-                $html .= sprintf('<tr%s><td><b>Printing</b><br/>%s</td>', $rowclass,
-                        openprint::Estimating::Printing::summary($Project, $$services{''}[0], $printing_specs ),
-                    );
+
+                $html .= sprintf('<tr%s><td><b>Printing</b><br/>%s</td>', $rowclass, $summary );
             } # end if
 			if ( $$services{'Signature'} ) {
 				$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -186,11 +184,11 @@
 					if ( ! $$variable{'Quote'} ) {
 						$html .= sprintf('<td class="status">%s</td>', $statuses{$ss_id} );
 
-						$html .= '<td class="unprintable actions">';
 						if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
+						$html .= '<td class="unprintable actions">';
 							$html .= sprintf('<a href="/main/project/view.html?ProjectIndex=%1$d&amp;remove=%2$d">Remove</a>', $Project->id(), $ss_id );
-						} # end if
 						$html .= '</td>';
+						} # end if
 					} # end if
 					$html .= '</tr>';
 					$rowclass = $rowclass ? '' : ' class="colRow"';

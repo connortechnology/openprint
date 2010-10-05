@@ -79,6 +79,10 @@ function filter_onChange( element, id, selected ) {
     <? echo ( ssi::fill_drop_down( $log, $dbh, 'SELECT DISTINCT strCategory,strCategory FROM tbl_Equipment ORDER BY strCategory', $$variable{Equipment}->category() ); ) ?>
 			</select>
 		</p>
+		<p>
+			<label>Sort:</label>
+			<input type="text" name="sorting" value="<? echo ( $$variable{Equipment}->sorting(); ) ?>" />
+		</p>
 		<p> 
 			<label>Description:</label>
 			<input type="text" name="description" value="<? hecho ( $$variable{Equipment}->description(); ) ?>" />
@@ -102,11 +106,22 @@ function filter_onChange( element, id, selected ) {
 		</p>
 		<p>
 			<label>Use in scheduling:</label>
-			<input type="radio" id="useinschedulingtrue" name="useinscheduling" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->useinscheduling(); ) ?> />
+			<input type="radio" id="useinschedulingtrue" name="useinscheduling" value="true"  <? echo ( ssi::checked( $$variable{'Equipment'}->useinscheduling() ); ) ?> onclick="$('schedulingoptions').show();" />
 			<label class="radio" for="useinschedulingtrue">Yes</label>
-			<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->useinscheduling(); ) ?> />
+			<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->useinscheduling() ); ) ?> onclick="$('schedulingoptions').hide();" />
 			<label class="radio" for="useinschedulingfalse">No</label>
 		</p>
+<div id="schedulingoptions" <? echo ( $$variable{'Equipment'}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
+        <p>
+            <label>Services:</label>
+            <select name="servicetype_id" id="servicetype_id" multiple="multiple" size="4">
+
+                <? echo ( ssi::make_drop_down(
+                    [ map { $_->id(), $_->name() } openprint::ServiceType->find('order'=>'lower(name)') ],
+                    $$variable{'Equipment'}->servicetype_id(),
+); ) ?>
+            </select>
+        </p>
 		<p>
 			<label>Smart Scheduling:</label>
 			<input type="radio" id="smartscheduling1" name="smartscheduling" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->smartscheduling() ); ) ?> />
@@ -114,6 +129,7 @@ function filter_onChange( element, id, selected ) {
 			<input type="radio" id="smartscheduling0" name="smartscheduling" value="0"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->smartscheduling() ); ) ?> />
 			<label class="radio" for="smartscheduling0">No</label>
 		</p>
+</div>
 <? if ( $config{'JMFEnabled'} eq 'Y' ) ?>
 		<p>
 			<label>Use JMF:</label>

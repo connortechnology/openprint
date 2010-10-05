@@ -39,11 +39,14 @@ my %find_cache;
 	'cip3_merge'		=>	'cip3_merge',
 	'cip3_monitor'		=>	'cip3_monitor',
 	'smartscheduling'	=>	'smartscheduling',
+	'servicetype_id'	=>	'servicetype_id',
+	'sorting'			=>	'sorting',
 );
 %transforms = (
 );
 %defaults = (
-	'location_id'	=>	undef,
+	'location_id'		=>	undef,
+	'servicetype_id'	=>	undef,
 );
 
 sub init_cache {
@@ -103,6 +106,16 @@ sub find {
 $openprint::log->debug('Specifications not a hash ref in Equipment->find: ' .  $params{'Specifications'}  );
 		} # end if
 	} # end if
+if ( $params{'servicetype_id'} ) {
+        if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
+            $sql .= ' AND servicetype_id={?}';
+            push @values, $params{'servicetype_id'};
+        } else {
+            $sql .= ' AND ? = ANY(servicetype_id)';
+            push @values, $params{'servicetype_id'};
+        } # end if
+    } # end if
+
 	if ( $params{'UseInEstimating'} ) {
 		$sql .= ' AND UseInEstimating=?';
 		push @values, 1;
@@ -516,6 +529,11 @@ sub Stock_Settings {
 	} # end if
 	return values %{$_[0]{'Stock_Settings'}};
 } # end sub Stock_Settings
+sub servicetype_id {
+	my ( $self ) = @_;
+	return [] if ! $$self{'servicetype_id'};
+	return $$self{'servicetype_id'};
+} # end sub servicetype_id
 
 1;
 __END__
