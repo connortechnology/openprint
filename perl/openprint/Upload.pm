@@ -21,6 +21,7 @@ $serial = 'upload_id_seq';
 	'company_id'	=>	'company_id',
 	'user_id'		=>	'user_id',
 	'company'		=>	'company',	
+	'type'			=>	'type',
 );
 
 my $debug = 1;
