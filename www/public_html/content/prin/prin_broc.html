@@ -49,11 +49,10 @@
 								</li>
 								<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['NCR'] ) ) ?>
 								<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
-								<!--#include virtual="/includes/aqueous.html"-->
-
-								<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
-								<!--#include virtual="/includes/uvcoating.html"-->
-								<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
+									<!--#include virtual="/includes/aqueous.html"-->
+									<? if ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
+									<!--#include virtual="/includes/uvcoating.html"-->
+									<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
 								<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Banners', 'InkjetOutputs','NCR','Letterhead'] ) ) ?>
 							</ul>
 						</div>

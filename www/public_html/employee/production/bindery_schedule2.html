@@ -108,19 +108,29 @@
 	<input type="hidden" name="schedule_id" />
 	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
 		<div class="presses">
-		<ul><li><label>Equipment:</label>
+		<ul>
+		<li>
+			<label>Category</label>
+			<select name="category" id="category" onchange="f1.submit();">
+				<option value="">All</option>
+			<? echo (
+return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment WHERE useinscheduling=true ORDER BY strcategory' ) ], $session{'/employee/production/operator_schedule.html?category'} );
+) ?>
+			</select>
+		</li>
+<li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment::find('category'=>'Bindery','UseInScheduling'=>1,'order'=>'lower(strname)');
+	my @presses = openprint::Equipment->find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'UseInScheduling'=>1,'order'=>'lower(strcategory),lower(strname)');
 	foreach (@presses) {
 		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/bindery_schedule2.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) ] );
 	} # end foreach press
 
 	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
 	if ( $session{'/employee/production/bindery_schedule2.html?Equipment'} ) {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ] );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ] );
 	} else {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
 	return $html;
 ) ?>
@@ -241,7 +251,7 @@
 				) + 1;
 
 			# When it's time to add shifts, we add in sets, until we find an already-implemented shift.
-			my @Equipment_Shifts = openprint::Equipment_Shift::find('equipment_id'=>$E->id(),'order'=>'starttime');
+			my @Equipment_Shifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(),'order'=>'starttime');
 
 			my $PreviousShift;
 
@@ -252,7 +262,7 @@
 				my $tomorrow = sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( $year, $month, $day, 1 ) );
 
 				# Get the shifts on this day.
-				my @Shifts = openprint::Shift::find( 
+				my @Shifts = openprint::Shift->find( 
 					'equipment_id' 		=>	$E->id(),
 					'starttime_>='		=>	$today,
 					'starttime_<'		=>	$tomorrow,
@@ -312,7 +322,7 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 				} # end for
 }
 				foreach my $Shift ( @Shifts ) {	
-					push @{$$variable{'drops'}}, $Shift->ul_id() if $Shift->operator_id() or ! $Equipment->smartscheduling();
+					push @{$$variable{'drops'}}, $Shift->ul_id() if $Shift->operator_id() or ! $E->smartscheduling();
 					$html .= $Shift->get_ul( );
 				} # end foreach Shift
 				$PreviousShift = pop @Shifts;
@@ -321,6 +331,7 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 			} # end foreach delta day
 
 			$html .= '</div>';
+$log->debug("html for $$E{name} : $html");
 		} # end foreach press
 		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );

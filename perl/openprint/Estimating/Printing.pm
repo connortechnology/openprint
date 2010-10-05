@@ -2618,7 +2618,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 				if ( $Paper->full_packages() ) {
 					my $sheets_per_package = $Paper->sheets_per_package();
 					if ( $sheets_per_package ) {
-						$PaperCounts{$paper_string} = $sheets_per_package * ceil( $PaperCounts{$paper_string}/$sheets_per_package);
+						$PaperCounts{$paper_string} = $sheets_per_package * ceil( $PaperCounts{$paper_string}/$sheets_per_package );
 					} # end if
 				} # end if
 
@@ -2634,7 +2634,12 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 				$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $weight / 100 );
 				$$price{'Comparison Cost'} += $paper_price{'Total'};
 				$$price{'Stock Total'} += $paper_price{'Total'};
-				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s SPP:%s Minimum: %s %slbs * %.2f/100lbs = $%.2f<br/>', $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : $PaperCounts{$paper_string}.'lbs', $Paper->to_string(), $Paper->sheets_per_package(), $Paper->minimum_order(), $weight, @paper_price{'100lb Price','Total'} );
+				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s %s %s, %slbs * %.2f/100lbs = $%.2f<br/>', 
+						( $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : $PaperCounts{$paper_string}.'lbs'), 
+						$Paper->to_string(),
+						( $Paper->sheets_per_package() ? 'SPP:'.$Paper->sheets_per_package() : '' ),
+						( $Paper->minimum_order() ? 'Minimum: ' . $Paper->minimum_order() : '' ), 
+						$weight, @paper_price{'100lb Price','Total'} );
 			} # end foreach Paper in PaperCounts
 #$openprint::log->debug($$price{'Paper Breakdown'});
 #$openprint::log->debug("Comparison: $$price{'Comparison Cost'}");
@@ -3468,7 +3473,7 @@ sub calc_price {
 	my $gross_sheets = $net_sheets + $total_overs;
 	$impressions = $gross_sheets;
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
-	my $weight = ceil( $gross_sheets * $Paper->sheet_weight() );
+	my $weight = sprintf('%.2f', $gross_sheets * $Paper->sheet_weight() );
 
 	my %sheet_qty = (
 			'Impressions'				=>	$impressions, 

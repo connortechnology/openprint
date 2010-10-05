@@ -33,13 +33,15 @@ $serial = 'emailcampaign_id_seq';
 	'email_text'	=>	'email_text',
 	'attachments'	=>	'attachments',
 	'lastrun'		=>	'lastrun',
+	'nextrun'		=>	'nextrun',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 	'template_id'	=>	'template_id',
 );
 
 %defaults = (
-	'lastrun'	=> q`'NOW()'`,
+	'lastrun'	=>	undef,
+	'nextrun'	=>	undef,
 	'interval'	=> undef,
 	'timeofday'	=> undef,
 	'created_on'	=> q`'NOW()'`,
@@ -196,6 +198,7 @@ sub send {
 	my @mail_user_ids = sql::execute($openprint::log, $openprint::dbh, $self->{'query'});
 	$results .= "There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n";
 	$self->{'lastrun'} = 'NOW()';
+	@$self{'nextrun'} = sql::execute( undef, undef, 'SELECT NOW()+interval FROM emailcampaigns WHERE id=?', $$self{'id'} );
 	$self->save();
 
 	#$self->{log}->info("There are ". scalar @mail_user_ids." users that fit the campaign<br/>\n");

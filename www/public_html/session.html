@@ -1,3 +1,4 @@
+<fieldset><legend>Session:</legend>
 <? echo ( 
 	my $html;
 	foreach my $k ( sort keys %session ) {
@@ -5,7 +6,8 @@
 	}
 	return $html;
 ) ?>
-ENV<br/>
+</fieldset>
+<fieldset><legend>Environment</legend>
 <? echo ( 
 	my $html;
 	foreach my $k ( sort keys %ENV ) {
@@ -13,3 +15,4 @@ ENV<br/>
 	}
 	return $html;
 ) ?>
+</fieldset>

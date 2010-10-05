@@ -39,14 +39,14 @@ use vars qw( $r $log $dbh %variable %param %session %config );
 sub print_overview {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
+			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
 				delete $session{'/employee/production/print_overview.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/print_overview.html', ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale' ) );
+			ssi::save_params( '/employee/production/print_overview.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale' ) );
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/print_overview.html?lastupdated'} ) > 24*60*60 ) {
-		foreach my $param ( 'Presses','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
+		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale' ) {
 			delete $session{'/employee/production/print_overview.html?'.$param};
 		} # end if
 	} # end if
@@ -58,9 +58,9 @@ sub print_overview {
 sub press_schedule {
 
 	if ( $param{'btnFunction'} eq 'Reflow' ) {
-		my $Equipment = new openprint::Equipment( $param{'Presses'} );
+		my $Equipment = new openprint::Equipment( $param{'Equipment'} );
 		if ( $Equipment->smartscheduling() ) {
-			my @Jobs = openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$param{'Presses'},'order'=>'starttime' );
+			my @Jobs = openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$param{'Equipment'},'order'=>'starttime' );
 			if ( @Jobs ) {
 				reorder_jobs( @Jobs );
 			} else {
@@ -948,21 +948,31 @@ sub _bump_job {
 } # end sub _bump_job
 
 sub _pending_approved {
-	$session{'/employee/production/print_overview.html?pending_approved'} = $session{'/employee/production/print_overview.html?pending_approved'} ? 0 : 1;
-    @{$variable{'Presses'}} = ();
-    my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
-    foreach (@presses) {
-        push @{$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
-    } # end foreach press
+	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
+$log->debug("REFERRER ($referer)");
+
+	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
+    @{$variable{'Equipment'}} = ();
+	if ( $session{$referer.'?pending_approved'} ) {
+		foreach my $equipment_id ( split(';', $session{$referer.'?Equipment'} ) ) {
+			my $E = new openprint::Equipment( $equipment_id );
+			push @{$variable{'Equipment'}}, $E if $E->id();
+		} # end foreach
+	} # end if
+$log->debug("Equipment: @{$variable{'Equipment'}}");
 } # end sub _pending_approved
 
 sub _pending {
-	$session{'/employee/production/print_overview.html?pending'} = $session{'/employee/production/print_overview.html?pending'} ? 0 : 1;
-    @{$variable{'Presses'}} = ();
-    my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
-    foreach (@presses) {
-        push @{$variable{'Presses'}}, $_ if ! $session{'/employee/production/print_overview.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/print_overview.html?Presses'} ) ] );
-    } # end foreach press
+	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
+$log->debug("REFERRER ($ENV{'HTTP_REFERER'}) ($referer)");
+	$session{$referer.'?pending'} = $session{$referer.'?pending'} ? 0 : 1;
+    @{$variable{'Equipment'}} = ();
+	if ( $session{$referer.'?pending'} ) {
+		foreach my $equipment_id ( split(';', $session{$referer.'?Equipment'} ) ) {
+			my $E = new openprint::Equipment( $equipment_id );
+			push @{$variable{'Equipment'}}, $E if $E->id();
+		} # end foreach
+	} # end if
 } # end sub _pending
 
 sub _ul {
@@ -990,8 +1000,7 @@ $log->debug("No Shift specified!");
 
 sub _drop {
 	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
-
-	$log->debug("Shift: " . $Shift->to_string() );
+	my $Equipment = $Shift->Equipment(); # For efficiency
 
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
 	@{$variable{'changed'}} = ( $Shift->ul_id() );
@@ -1018,6 +1027,10 @@ $log->debug("Order before coalesce: @order");
 		my $previous;
 		foreach my $row_id ( @order ) {
 			my $Job = new openprint::ScheduledJob( $row_id );
+			if ( ( $Job->ServiceType()->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+				$variable{'alert'} .= $Equipment->name() . ' is not appropriate for ' . $Job->ServiceType()->name() . '<br/>';
+				next;
+			} # end if
 			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
 				my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
 				my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
@@ -1039,12 +1052,12 @@ $log->debug("Sigs are the same, coalescing ");
 $log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index() );
 				$previous = $Job;
 			} # end if
-		} # end foreach row
+		} # end foreach row_id
 
-$log->debug("Order after coalesce: @order");
+$log->debug("Order after coalesce: @order : " . join(',', map { new openprint::ScheduledJob($_)->Project()->docket() } @order ) );
 		sql::end_transaction( $dbh, $ac );
 
-		if ( ! $Shift->Equipment()->smartscheduling() ) {
+		if ( ! $Equipment->smartscheduling() ) {
 $log->debug("Old");
 			return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'ul_id'}, $param{'services'} );
 $log->debug("Old2");
@@ -1056,12 +1069,12 @@ $log->debug("Old2");
 			if ( $Shift->starttime() ) {
 				my @final_order;
 # Get jobs before the shift, leave them in order.
-				foreach my $row ( openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'order'=>'starttime' ) ) {
+				foreach my $row ( openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' ) ) {
 					push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
 				} # end foreach row
 
 # Get the rest of the jobs on this equipment
-				my @jobs = openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'order'=>'starttime' );
+				my @jobs = openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_start'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' );
 
 # Search for each job in the list of remaining jobs.  If we don't find it, it might be on another press.
 				foreach my $row_id ( @order ) {
@@ -1092,7 +1105,7 @@ $log->debug("Old2");
 					$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()}) if $Job->starttime() or ( $Job->equipment_id() != $Shift->equipment_id() );
 				} # end foreach row_id
 # If it was a formerly scheduled job, then shuffle
-				reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' )) if $was_scheduled;
+				reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' )) if $was_scheduled;
 			} # end if	has starttime
 			sql::end_transaction( $dbh, $ac );
 		} # end if
@@ -1563,6 +1576,23 @@ sub prepress_schedule {
 sub _split_popup {
 	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
 } # end sub _split_popup
+
+sub bindery_schedule2 {
+	if ( %param ) {
+		if ( $param{'btnFunction'} eq 'Reset' ) {
+			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale','equipment' ) {
+				delete $session{'/employee/production/bindery_schedule2.html?'.$param};
+			} # end if
+		} else {
+			ssi::save_params( '/employee/production/bindery_schedule2.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale','equipment' ) );
+		} # end if
+	} elsif ( ( time - $session{'/employee/production/bindery_schedule2.html?lastupdated'} ) > 24*60*60 ) {
+		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale','equipment' ) {
+			delete $session{'/employee/production/bindery_schedule2.html?'.$param};
+		} # end if
+	} # end if
+	$session{'/employee/production/bindery_schedule2.html?lastupdated'} = time;
+} # end sub bindery_schedule2
 
 1;
 __END__
