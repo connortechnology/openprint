@@ -1207,6 +1207,7 @@ sub reorder_jobs {
 
 	my $start_time = time;
 	my $row = $order[0];
+	push @{$variable{'changed'}}, $$row->Shift()->ul_id();
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
 	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
@@ -1228,8 +1229,11 @@ last;
 		# First, grab most recent shift, this will give us the last equipment shift.
 		my $NextES;
 
-		# This is neccessary, because it happens because we have no shifts in teh array
-		my $PreviousShift = openprint::Shift::find_one( 'equipment_id' => $$row{'equipment_id'}, 'order'=>'starttime DESC' );
+		# This is neccessary, because it happens because we have no shifts in teh array, so try to get any Shifts, 
+		my $PreviousShift = openprint::Shift::find_one( 
+			'equipment_id' => $$row{'equipment_id'}, 
+			'order'=>'starttime DESC',
+		 );
 		if ( $PreviousShift ) {
 			# The logic here should be, grab the ES from the last shift, and then get the next ES.  It should not be based on time
 			$NextES = openprint::Equipment_Shift::find_one( 
@@ -1479,6 +1483,7 @@ sub _shift_change {
 			return;
 		} # end if
 
+		# Prevent starttime changing from excluding jobs
 		foreach my $J ( $Shift->Schedule() ) {
 			next if ! $J->locked();
 			if ( $J->starttime_seconds() > $new_starttime ) {
@@ -1491,6 +1496,7 @@ sub _shift_change {
 			} # end if
 		} # end foreach J
 
+		# Prevent overlapping shifts
 		foreach my $S ( openprint::Shift::find(
 					'starttime_<='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
 					'endtime_>'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ),

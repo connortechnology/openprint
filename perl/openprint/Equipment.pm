@@ -36,6 +36,7 @@ $serial= 'Equipment_Index_seq';
 	'cip3_monitor'		=>	'cip3_monitor',
 	'smartscheduling'	=>	'smartscheduling',
 	'servicetype_id'	=>	'servicetype_id',
+	'sorting'			=>	'sorting',
 );
 
 %defaults = (
