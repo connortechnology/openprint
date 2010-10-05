@@ -12,6 +12,7 @@ require openprint::User;
 require Email::Valid;
 require logger;
 require openprint::Upload;
+use openprint ();
 
 use vars qw( $log $dbh %config );
 *log = \$openprint::log;
@@ -44,18 +45,22 @@ if ($opts->{help}) {
 	exit 0;
 }
 
-$log = logger->new('level'=>'debug');
+$log = new logger('level'=>'debug');
+$log->debug("Help");
 # Get our configuration information
 if (my $err = ReadCfg('/etc/ftp_monitor.conf')) {
-    print(STDERR $err, "\n");
-    exit(1);
+    die $err;
+} else {
+	#$log->debug("Successfully read cfg");
+	#foreach my $k ( keys %CFG::Config ) {
+		#$log->debug("$k => $CFG::Config{$k}");
+	#} # end foreach
 }
 
 foreach my $param ( 'db_name','db_user','db_pass','fifo','from','recipient','smtp-server' ) {
 	$CFG::Config{$param} = $$opts{$param} if $$opts{$param};
 	if ( ! $CFG::Config{$param} ) {
-		print STDERR "$program: missing required --$param parameter\n";
-		exit 1;
+		die "$program: missing required --$param parameter";
 	}
 } # end foreach required-param
 foreach my $param ( 'pid_file', 'db_host', 'log_file', 'log_level', 'sleep', 'scoreboard', 'file_path','skin_path','document_root','watch-users','ignore-users','site_title','site_url' ) {
@@ -67,9 +72,7 @@ if ( $CFG::Config{'site_url'} ) {
 } # end if
 
 $CFG::Config{'SiteTitle'} = $CFG::Config{'site_title'};
-$CFG::Config{'SkinPath'} = $CFG::Config{'SkinPath'};
-
-
+$CFG::Config{'SkinPath'} = $CFG::Config{'skin_path'};
 
 $CFG::Config{'log_level'} = 'debug' if ! $CFG::Config{'log_level'};
 $CFG::Config{'sleep'} = 1.0 if ! $CFG::Config{'sleep'};
@@ -263,14 +266,12 @@ $log->debug("Didn't Found company $$upload{'company_name'}");
 	} # end if
 	if ( $Company ) {
 		# If we hae the company, then narrow the user search
-		if ( my @Users = openprint::User->find('company_id'=>$Company->id(), 'email'=>lc $upload->{user},'limit'=>1) ) {
-			$User = $Users[0];
+		if ( $User = openprint::User->find_one('company_id'=>$Company->id(), 'email'=>lc $upload->{user}) ) {
 $log->debug("Found user $$upload{user} with company");
 		} # end if
 	} # end if
 	if ( ! $User ) {
-		if ( my @Users = openprint::User->find('email'=>lc $upload->{user},'limit'=>1) ) {
-			$User = $Users[0];
+		if ( $User = openprint::User->find_one('email'=>lc $upload->{user},'limit'=>1) ) {
 			$Company = $User->Company();
 $log->debug("Found user $$upload{user} with out company.  Company is $$Company{name}");
 		} # end if
@@ -285,11 +286,12 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			'size'			=>	$upload->{size},
 			'total'			=>	$upload->{size},
 			'finished'		=>	$upload->{timestamp},
+			'start'			=>	$upload->{timestamp},
 			'file_path'		=>	$$upload{proper_file_path},
 			'type'			=>	'FTP',
 		});
 		if ( $error ) {
-			print STDERR $error 
+			$log->error( $error );
 		} else {
 			my $File = new openprint::File();
 			$error = $File->save({
@@ -297,7 +299,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 				'filename'	=>	$$upload{proper_file_path},
 				'upload_id'	=>	$Upload->id(),
 			});
-			print STDERR $error if $error;
+			$log->error( $error ) if $error;
 		} # end if
 	} # end foreach upload
 
@@ -310,7 +312,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 		} # end if
 
 		my $to;
-		if ( $User->email() eq 'iconnor@penultima.org' ) {
+		if ( $User->email() =~ /^iconnor/ ) {
 			$to = '"Isaac Connor" <iconnor@penultima.org>';
 		} elsif ( $Company->salesrep_id() ) {
 			if ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) {
@@ -325,7 +327,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$variable{'User'} = $User;
 			$variable{'Uploads'} = \@uploads;
 
-			if (-e $config{'skin_path'} . '/email_content/uploadfiles_csr_notification.html') {
+			if (-e $config{'skin_path'} . '/email_content/ftp_csr_notification.html') {
 				$variable{'ReplacementText'} = misc::load_file( $log, $config{'skin_path'} . '/email_content/ftp_csr_notification.html' );
 			} else {
 				$variable{'ReplacementText'} = misc::load_file( $log, $config{'document_root'} . '/email_content/ftp_csr_notification.html' );
@@ -417,7 +419,7 @@ EOT
 
 				} else {
 					my $timestamp = scalar(localtime());
-					print STDERR "$program: $timestamp: error reading file '$$upload{file}' for attaching: $!\n";
+					$log->error( "$program: $timestamp: error reading file '$$upload{file}' for attaching: $!" );
 				}
 
 			} else {
@@ -435,7 +437,7 @@ EOT
 		unless ($res) {
 			my $timestamp = scalar(localtime());
 
-			print STDERR "$program: $timestamp: error sending email: $Mail::Sendmail::error\n";
+			$log->error( "$program: $timestamp: error sending email: $Mail::Sendmail::error" );
 		}
 	} # end if can figure out company name or not
 } # end sub send_email

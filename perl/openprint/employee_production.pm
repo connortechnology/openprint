@@ -51,6 +51,7 @@ sub print_overview {
 		} # end if
 	} # end if
 	$session{'/employee/production/print_overview.html?lastupdated'} = time;
+	$variable{'referer'} = '/employee/production/print_overview.html';
 
 	press_schedule();
 } # end sub print_overview
@@ -949,6 +950,7 @@ sub _bump_job {
 
 sub _pending_approved {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
+	$variable{'referer'} = $referer;
 $log->debug("REFERRER ($referer)");
 
 	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
@@ -964,6 +966,7 @@ $log->debug("Equipment: @{$variable{'Equipment'}}");
 
 sub _pending {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
+	$variable{'referer'} = $referer;
 $log->debug("REFERRER ($ENV{'HTTP_REFERER'}) ($referer)");
 	$session{$referer.'?pending'} = $session{$referer.'?pending'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
@@ -999,6 +1002,8 @@ $log->debug("No Shift specified!");
 } # end sub _ul
 
 sub _drop {
+		my $ac = sql::start_transaction( $dbh );
+		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 	my $Equipment = $Shift->Equipment(); # For efficiency
 
@@ -1019,23 +1024,71 @@ if ( 0 ) {
 		my @order = split( '&', $services );
 		return if ! @order;
 
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 		# Coalesce Jobs
 $log->debug("Order before coalesce: @order");
 		my $previous;
-		foreach my $row_id ( @order ) {
+		for ( my $i = 0; $i < @order; $i += 1 ) {
+			my $row_id = $order[$i];
 			my $Job = new openprint::ScheduledJob( $row_id );
-			if ( ( $Job->ServiceType()->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
-				$variable{'alert'} .= $Equipment->name() . ' is not appropriate for ' . $Job->ServiceType()->name() . '<br/>';
+			if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+$log->debug("Bindery:, servicetypes different");
+				my $Project = $Job->Project();
+				my $services = $Project->services();
+				my @Jobs;
+				foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
+					my $ST = new openprint::ServiceType( $servicetype_id );
+					next if ( ! $$services{$ST->name()} ) or ! @{$$services{$ST->name()}};
+$log->debug("Dong Job for $servicetype_id : " . $ST->name() );
+					# Get all already existing jobs for this servicetype
+					foreach my $service_id ( @{$$services{$ST->name()}} ) {
+						my @J = openprint::ScheduledJob::find('project_id'=>$Project->id(),'service_id'=>$service_id);
+						if ( ! @J ) {
+							# Create a new Job
+							my $J = new openprint::ScheduledJob();
+							$J->save({
+									'project_id'	=>	$Project->id(),
+									'service_id'	=>	[ $service_id ],
+									'servicetype_id'	=>	$servicetype_id,
+									'equipment_id'		=>	$Equipment->id(),
+									'pertains_id'		=>	[ $Job->Project()->signatures() ],
+									});
+							push @Jobs, $J;
+						} else {
+							push @Jobs, @J;
+						} # end found a job or not
+					} # end foreach service_id
+				} # end foreach servicetype_id
+				if ( ! @Jobs ) {
+					$variable{'alert'} .= 'Docket ' . $Project->docket() . ' is not appropriate for ' . $Equipment->name() . '\n';
+					splice @order, $i, 1;
+					$i -= 1;
+					next;
+				} # end if
+				my @job_ids = sets::union( map { $_->id() } @Jobs );
+
+#$log->debug("Jobs for  " . join(',',@job_ids ) );
+				# If any of these jobs were in the list, remove them so they move up instead of getting duplicated.
+				@order = sets::exclude( \@job_ids, \@order ); 
+				if ( @order ) {
+#$log->debug("Order @order");
+					while ( $i and $order[$i] != $row_id ) {
+						$i -= 1;
+#$log->debug("Decreasing i to $i");
+					} # end while
+					splice @order, $i, 1, @job_ids;
+				} else {
+					push @order, @job_ids;
+				} # end if
+				$i -= 1;
 				next;
-			} # end if
+			} # end if different servicetype
+#$log->debug("Order before coalesce: @order : " . join(',', map { new openprint::ScheduledJob($_)->Project()->docket() } @order ) );
 			if ( $previous and $previous->project_id() and $Job->project_id() and ( $previous->project_id() == $Job->project_id() ) ) {
 				my $sig_specs1 = openprint::service::get_specs_ref( $previous->Project(), $$previous{'service_id'}[0] );
 				my $sig_specs2 = openprint::service::get_specs_ref( $Job->Project(), $$Job{'service_id'}[0] );
-				if ( openprint::Estimating::Printing::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() ) ) {
-$log->debug("Sigs are the same, coalescing ");
+				if ( eval 'openprint::Estimating::'.$Job->ServiceType()->name().'::compare_signatures( $sig_specs1, $sig_specs2, $Job->Project()->ordered_quantity_index() )' ) {
+#$log->debug("Sigs are the same, coalescing ");
 					$_ = $previous->save({
 							'runtime'		=>	Date::Format::time2str( '%H:%M:%S', $previous->runtime_seconds() + $Job->runtime_seconds() ),
 							'service_id'	=>	[ @{$$previous{'service_id'}}, @{$$Job{'service_id'}} ],	
@@ -1055,15 +1108,13 @@ $log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index(
 		} # end foreach row_id
 
 $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::ScheduledJob($_)->Project()->docket() } @order ) );
-		sql::end_transaction( $dbh, $ac );
 
 		if ( ! $Equipment->smartscheduling() ) {
+	sql::end_transaction( $dbh, $ac );
 $log->debug("Old");
 			return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'ul_id'}, $param{'services'} );
 $log->debug("Old2");
 		} else {
-			my $ac = sql::start_transaction( $dbh );
-			$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 			$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 			if ( $Shift->starttime() ) {
@@ -1107,7 +1158,7 @@ $log->debug("Old2");
 # If it was a formerly scheduled job, then shuffle
 				reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' )) if $was_scheduled;
 			} # end if	has starttime
-			sql::end_transaction( $dbh, $ac );
+	sql::end_transaction( $dbh, $ac );
 		} # end if
 
 	} # end if services
@@ -1154,6 +1205,7 @@ sub reorder_jobs {
 
 	my $start_time = time;
 	my $row = $order[0];
+	push @{$variable{'changed'}}, $$row->Shift()->ul_id();
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
 	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
@@ -1423,6 +1475,7 @@ sub _shift_change {
 			return;
 		} # end if
 
+		# Prevent starttime changing from excluding jobs
 		foreach my $J ( $Shift->Schedule() ) {
 			next if ! $J->locked();
 			if ( $J->starttime_seconds() > $new_starttime ) {
@@ -1435,6 +1488,7 @@ sub _shift_change {
 			} # end if
 		} # end foreach J
 
+		# Prevent overlapping shifts
 		foreach my $S ( openprint::Shift->find(
 					'starttime_<='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
 					'endtime_>'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ),
@@ -1592,6 +1646,7 @@ sub bindery_schedule2 {
 		} # end if
 	} # end if
 	$session{'/employee/production/bindery_schedule2.html?lastupdated'} = time;
+	$variable{'referer'} = '/employee/production/bindery_schedule2.html';
 } # end sub bindery_schedule2
 
 1;
