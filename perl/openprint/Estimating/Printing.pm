@@ -1423,6 +1423,7 @@ $I->display();
 		} else {
 			$$specs{'CutOff'.$qty_index} = '';
 		} # end if
+		$$specs{'alert'} .= $Paper->message();
 			
 
 		$$specs{'txtPlateQuantity'.$qty_index} = $best_price{'txtPlateQuantity'};
