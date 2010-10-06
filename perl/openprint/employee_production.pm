@@ -1207,7 +1207,7 @@ sub reorder_jobs {
 
 	my $start_time = time;
 	my $row = $order[0];
-	push @{$variable{'changed'}}, $$row->Shift()->ul_id();
+	push @{$variable{'changed'}}, $row->Shift()->ul_id();
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
 	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
