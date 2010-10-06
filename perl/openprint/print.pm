@@ -39,7 +39,10 @@ sub save_service {
 	} else {
 		openprint::service::save_service( $r, $log, $dbh, $Project->id(), $service_index );
 	} # end if service_type_id
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=? AND (NOT strStatus=?) OR (strStatus IS NULL)', $Project->id(), $service_index, 'Completed' ], 'strStatus', ($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated') );
+	my $Service = $Project->Service( $service_index );
+	$Service->save({'status'=>($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated')}) if $Service->status() and $Service->status() ne 'Completed';
+
+	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=? AND (NOT strStatus=?) OR (strStatus IS NULL)', $Project->id(), $service_index, 'Completed' ], 'strStatus', ($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated') );
 	#eval "openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type_id );"
 	if ( $ServiceType->id() ) {
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
