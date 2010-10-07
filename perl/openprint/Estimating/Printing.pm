@@ -1423,7 +1423,14 @@ $I->display();
 		} else {
 			$$specs{'CutOff'.$qty_index} = '';
 		} # end if
-		$$specs{'alert'} .= $Paper->message();
+		if ( !
+                (
+                 ( $$specs{'rdbAqueousSideOne'} and ( $$specs{'rdbAqueousSideOne'} ne 'None' ) ) or
+                 ( $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' ) ) 
+) ) {
+
+			$$specs{'popup'} .= $Paper->message() if $Paper->message();
+		} # end if
 			
 
 		$$specs{'txtPlateQuantity'.$qty_index} = $best_price{'txtPlateQuantity'};
