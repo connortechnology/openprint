@@ -662,7 +662,7 @@ sub signature_calc {
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
 #$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if $debug;
 						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Imposition->Paper()->calliper() );
-#$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc );
+						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc );
 						if ( $rc ) {
 							if ( @my_equipment == 1 ) {
 								$Breakdown .= "Doesn't fit: $rc<br/>";
@@ -679,20 +679,38 @@ sub signature_calc {
 							if ( $Fold ) {
 								# Need to check feed width
 								if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
-									my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
-									my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'}) -1 );
-$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if $debug;
-									if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $Fold->folds() ) ) {
-										if ( $$sig_specs{'txtWidth'} >= $max_feed_width ) {
-$openprint::log->debug("Fold no good due to max feed width on width.") if $debug;
-											$Fold = undef;
+									if ( $Equipment->specification('Orientation') ) {
+										if (						
+												( $Equipment->specification('Orientation') eq 'Portrait' and $Imposition->layout_width() <= $Imposition->layout_height() ) or
+												( $Equipment->specification('Orientation') eq 'Landscape' and $Imposition->layout_width() >= $Imposition->layout_height() ) 
+										   ) {
+											if ( $Imposition->layout_width() >= $max_feed_width ) {
+												$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{txtWidth}).") if $debug;
+												$Fold = undef;
+											} # end if
+										} else {
+											if ( $Imposition->layout_height() >= $max_feed_width ) {
+												$Fold = undef;
+												$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtHeight}).") if $debug;
+											} # end if
 										} # end if
-									} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $Fold->folds() ) ) {
-										if ( $$sig_specs{'txtHeight'} >= $max_feed_width ) {
-											$Fold = undef;
-$openprint::log->debug("Fold no good due to max feed width on height.") if $debug;
+									} else {
+										# decide whether it's running portrait or landscape basessd on which way the folds go
+										my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
+										my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1 );
+										$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if $debug;
+										if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $Fold->folds() ) ) {
+											if ( $$sig_specs{'txtWidth'} >= $max_feed_width ) {
+												$openprint::log->debug("Fold no good due to max feed width on width.") if $debug;
+												$Fold = undef;
+											} # end if
+										} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $Fold->folds() ) ) {
+											if ( $$sig_specs{'txtHeight'} >= $max_feed_width ) {
+												$Fold = undef;
+												$openprint::log->debug("Fold no good due to max feed width on height.") if $debug;
+											} # end if
 										} # end if
-									} # end if
+									} # end if has an orientation
 								} # end if has max_feed_width
 							} # end if
 							if ( $Fold ) {
