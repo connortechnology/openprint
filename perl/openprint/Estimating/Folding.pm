@@ -700,12 +700,13 @@ sub signature_calc {
 										my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1 );
 										$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if $debug;
 										if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $Fold->folds() ) ) {
-											if ( $$sig_specs{'txtWidth'} >= $max_feed_width ) {
+# If folds are on width, we grip on height...
+											if ( $$sig_specs{'txtHeight'} >= $max_feed_width ) {
 												$openprint::log->debug("Fold no good due to max feed width on width.") if $debug;
 												$Fold = undef;
 											} # end if
 										} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $Fold->folds() ) ) {
-											if ( $$sig_specs{'txtHeight'} >= $max_feed_width ) {
+											if ( $$sig_specs{'txtWidth'} >= $max_feed_width ) {
 												$Fold = undef;
 												$openprint::log->debug("Fold no good due to max feed width on height.") if $debug;
 											} # end if
