@@ -699,16 +699,16 @@ sub signature_calc {
 										my $width_folds = sprintf('%.0f', ($$sig_specs{'txtWidth'}/$$sig_specs{'txtFinalWidth'})-1 );
 										my $height_folds = sprintf('%.0f', ($$sig_specs{'txtHeight'}/$$sig_specs{'txtFinalHeight'})-1 );
 										$openprint::log->debug("Has max feed width width: $width_folds height: $height_folds $$sig_specs{'txtWidth'} $$sig_specs{'txtHeight'} $max_feed_width") if $debug;
-										if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $Fold->folds() ) ) {
+										if ( ( $width_folds and ! $height_folds ) or ( $width_folds == $Fold->folds() and $height_folds == $Fold->angles() ) ) {
 # If folds are on width, we grip on height...
 											if ( $$sig_specs{'txtHeight'} >= $max_feed_width ) {
-												$openprint::log->debug("Fold no good due to max feed width on width.") if $debug;
+												$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on width ($$sig_specs{'txtHeight'}).") if $debug;
 												$Fold = undef;
 											} # end if
-										} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $Fold->folds() ) ) {
+										} elsif ( ( $height_folds and ! $width_folds ) or ( $height_folds == $Fold->folds() and $height_folds == $Fold->angles() ) ) {
 											if ( $$sig_specs{'txtWidth'} >= $max_feed_width ) {
 												$Fold = undef;
-												$openprint::log->debug("Fold no good due to max feed width on height.") if $debug;
+												$openprint::log->debug("Fold no good due to max feed width ($max_feed_width) on height ($$sig_specs{txtWidth}.") if $debug;
 											} # end if
 										} # end if
 									} # end if has an orientation
