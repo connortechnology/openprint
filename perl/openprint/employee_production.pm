@@ -1686,6 +1686,35 @@ sub bindery_schedule2 {
 		} else {
 			ssi::save_params( '/employee/production/bindery_schedule2.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category' ) );
 		} # end if
+		if ( $param{'action'} eq 'Today' ) {
+			@session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+'/employee/production/bindery_schedule2.html?schedule_start_month',
+'/employee/production/bindery_schedule2.html?schedule_start_day'} = Date::Calc::Today();
+			@session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+'/employee/production/bindery_schedule2.html?schedule_end_month',
+'/employee/production/bindery_schedule2.html?schedule_end_day'} = Date::Calc::Today();
+		} elsif ( $param{'action'} eq '2day' ) {
+			@session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+'/employee/production/bindery_schedule2.html?schedule_start_month',
+'/employee/production/bindery_schedule2.html?schedule_start_day'} = Date::Calc::Today();
+			@session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+'/employee/production/bindery_schedule2.html?schedule_end_month',
+'/employee/production/bindery_schedule2.html?schedule_end_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
+		} elsif ( $param{'action'} eq '3day' ) {
+			@session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+'/employee/production/bindery_schedule2.html?schedule_start_month',
+'/employee/production/bindery_schedule2.html?schedule_start_day'} = Date::Calc::Today();
+			@session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+'/employee/production/bindery_schedule2.html?schedule_end_month',
+'/employee/production/bindery_schedule2.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),2);
+		} elsif ( $param{'action'} eq '1week' ) {
+			@session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+'/employee/production/bindery_schedule2.html?schedule_start_month',
+'/employee/production/bindery_schedule2.html?schedule_start_day'} = Date::Calc::Today();
+			@session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+'/employee/production/bindery_schedule2.html?schedule_end_month',
+'/employee/production/bindery_schedule2.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),6);
+		} # end if
 	} elsif ( ( time - $session{'/employee/production/bindery_schedule2.html?lastupdated'} ) > 24*60*60 ) {
 		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category' ) {
 			delete $session{'/employee/production/bindery_schedule2.html?'.$param};
