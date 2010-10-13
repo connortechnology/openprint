@@ -43,60 +43,6 @@ sub update_late_jobs {
 	} # end while
 } # end sub update_late_jobs
 
-sub drop_project {
-	my ( $r, $log, $dbh, $variable, $id, $services ) = @_;
-	$services =~ s/$id\[\]=//g;
-	my @order = split( '&', $services );
-
-	return if ! @order;
-
-	my $Shift = openprint::Shift::get_from_ul_id( $id );
-	$log->debug("Shift: " . $Shift->to_string() );
-
-	my ( $start_time, $end_time, $operator_id ) = ( $Shift->starttime(), $Shift->endtime(), $Shift->operator_id() );
-
-	my $ac = sql::start_transaction( $dbh );
-	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
-	$log->debug("drop_project: @order");
-	while ( @order ) {
-		my $row_id = shift @order;
-		$log->debug("drop_project: row_id: $row_id : @order");
-		$row_id =~ s/\D//g;
-		$log->debug("drop_project: row_id: $row_id : @order");
-		next if ! $row_id;
-
-		my $Job = new openprint::ScheduledJob( $row_id );
-if ( ! $Job->id() ) {
- # due to coalescing, a job could be deleted
-		$log->debug("drop_project: Job not found");
-		next ;
-} # end if
-
-		my %sql;
-		$sql{'operator_id'} = $operator_id if $operator_id != $Job->operator_id();
-		if ( $$Job{'starttime'} ne $start_time or $$Job{'equipment_id'} != $Shift->equipment_id() ) {
-			$sql{'starttime'} = $start_time;
-			$sql{'equipment_id'} = $Shift->equipment_id();
-		} # end if
-
-		if ( keys %sql ) {
-			$Job->save(\%sql);
-			if ( $Job->project_id() ) {
-				my $Project = $Job->Project();
-				$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
-				my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
-				$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled form' . ( @forms == 1 ? ' ' : 's ' ) . join(',',@forms).' to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
-			} # end if
-		} # end if
-
-		# Starttime is empty when moving to pending
-        if ( @order and $start_time ) {
-			( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $row_id );
-        } # end if
-    } # end foreach
-    sql::end_transaction( $dbh, $ac );
-} # end sub drop_project
-
 sub set_duedate {
 	my ( $r, $log, $dbh, $variable, $schedule_id, $date ) = @_;
 	my $Job = new openprint::ScheduledJob( $schedule_id );
