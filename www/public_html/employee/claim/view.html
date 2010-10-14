@@ -125,20 +125,20 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 	foreach my $C ( $$variable{'Claim'}->Contents() ) {
 		if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 			$html .= sprintf('<tr>
-				<td>%4$s</td>
-				<td class="Quantity">%1$s</td>
-				<td class="Weight">%2$s%3$s</td>
-				<td style="text-align: right;">%5$s%6$s</td>
-				<td style="text-align: right;">%7$s</td>
-			</tr>', $C->quantity(), 
+				<td>%5$s</td>
+				<td class="Quantity">%1$s%2$s</td>
+				<td class="Weight">%3$s%4$s</td>
+				<td style="text-align: right;">%6$s%7$s</td>
+				<td style="text-align: right;">%8$s</td>
+			</tr>', $C->quantity(), $C->quantity_units(),
 			( $C->weight() ?  Number::Format::format_number($C->weight()) : '' ), $C->weight_units(), 
 			$C->description(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
 		} else {
 			$html .= sprintf('<tr>
 				<td>%3$s</td>
-				<td class="Quantity">%1$s</td>
-				<td class="Weight">%2$s</td>
-			</tr>', $C->quantity(), 
+				<td class="Quantity">%1$s%2$s</td>
+				<td class="Weight">%3$s</td>
+			</tr>', $C->quantity(), $C->quantity_units(),
 			( $C->weight() ? Number::Format::format_number($C->weight()) : '' ), $C->weight_units(),
 			$C->description());
 		} # end if

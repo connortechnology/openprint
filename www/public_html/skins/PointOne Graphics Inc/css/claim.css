@@ -47,6 +47,7 @@
 }
 .Claim table .Cost {
 	width: 150px;
+	text-align: left;
 }
 .Claim table td.Price input {
 	text-align: right;
@@ -67,9 +68,11 @@
 }
 .Claim table td.Weight, .Claim table th.Weight {
 	width: 120px;
+	text-align: left;
 }
 .Claim .View table th.Weight {
 	color: #e4ebf4;
+	
 }
 .Claim table td.Weight input[type="text"] {
 	width: 50px;
@@ -77,6 +80,12 @@
 .Claim table td.Cost input[type="text"] {
 	width: 60px;
 	text-align: right;
+} 
+.Claim table td input.SheetName {
+	width: 240px;
+} 
+.Claim table td input.SheetMWeight {
+	width: 40px;
 } 
 .Claim table td textarea {
 	width: 98%;
