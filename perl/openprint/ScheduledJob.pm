@@ -315,7 +315,7 @@ sub stock {
 	if ( @_ == 2 ) {
 		$$self{'stock'} = $stock;
 	} # end if
-	if ( ( ! $$self{'stock'} ) and $$self{'project_id'} ) {
+	if ( ( ! $$self{'stock'} ) and $$self{'project_id'} and ( $self->ServiceType()->name() eq 'AdditionalSignature' ) ) {
 		$$self{'stock'} = 'Stock: ';
 		my $Equipment = $self->Equipment();
 		my $Project = new openprint::Project( $$self{'project_id'} );

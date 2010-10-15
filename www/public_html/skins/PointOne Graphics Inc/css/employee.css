@@ -3,6 +3,7 @@
 @media screen and (min-device-width: 481px) {
 	body {
 		min-width: 780px;
+		max-width: none;
 	} 
 }
 fieldset p {

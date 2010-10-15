@@ -483,7 +483,7 @@ sub internal_calc {
 	$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d', $service_type, $status, $elapsed ) );
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', $status );
+	status( $project_index, $service_index, $status );
 
 	foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index )') ) {
 $log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;
