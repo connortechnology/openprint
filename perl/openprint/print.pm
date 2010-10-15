@@ -34,9 +34,9 @@ sub save_service {
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=? AND (NOT strStatus=?) OR (strStatus IS NULL)', $Project->id(), $service_index, 'Completed' ], 'strStatus', ($openprint::param{'Status'} ? $openprint::param{'Status'} : 'calculated') );
 	#eval "openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $service_type_id );"
 	if ( $ServiceType->id() ) {
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' service saved.' );
 	} else {
-	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
+		$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Printing service saved.' );
 	} # end if
 	if ( $r->param('additional_service') eq 'Y' ) {
 		openprint::print_project::insert_service( $log, $dbh, $Project->id(), $ServiceType->name() );
@@ -65,6 +65,7 @@ sub view_services {
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
 
@@ -106,6 +107,13 @@ sub view_services {
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching'] ) ) {
 					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index );
+				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Folding' ] ) ) {
+					if ( $$services{'Cutting'} and @{$$services{'Cutting'}} ) {	
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'Cutting'}[0], 'Cutting' );
+					} # end if
+					if ( $$services{'SaddleStitching'} and @{$$services{'SaddleStitching'}} ) {	
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'SaddleStitching'}[0], 'Stitching' );
+					} # end if
 				} # end if
 				$Project->summary(undef);
 				$Project->save();

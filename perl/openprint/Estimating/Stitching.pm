@@ -170,6 +170,7 @@ sub signature_calc {
 			#$openprint::log->debug(" $$I{'runstyle'} " . ($$I{'imposition'}%4) );
 		} # end if
 	} # end foreach Imposition
+$results{'Breakdown'} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
 #$openprint::log->debug("Imp: $imposition");
 	my $I = $Impositions[0];
 
@@ -183,6 +184,41 @@ sub signature_calc {
 	} else {
 		$$specs{'Imposition'.$qty_index} = $imposition;
 	} # end if
+$results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
+
+	my %pages;
+	my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
+	if ( $folding_specs ) {
+		foreach my $index ( 1 .. 4 ) {
+			next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+			my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+			next if ! $type;
+			my ( $pages ) = $type =~ /(\d+)PageFold/;
+$results{'Breakdown'} .= "Folding$index: sig_pages; $sig_pages type: $type pages: $pages qty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . '<br/>';
+			if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
+				$pages{$pages} += $sig_pages / $pages;
+			} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $$sig_specs{'PageQuantity'.$qty_index} ) {
+				$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+			} else {
+				$pages{$pages} += 1;
+			} # end if
+#$$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+		} # end foreach index
+	} # end if
+
+	# If not all pages have been folde, then revert to just pull from the sig.
+	if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
+		$$specs{"txtPockets$qty_index"} += 1;
+		$$specs{'txtSignatureQty'.$sig_pages.'Page-'.$qty_index} += 1;
+	} else {
+		foreach my $page ( keys %pages ) {
+			# The -1 is because the signature has already been counted in the pocket calc.
+			$$specs{"txtPockets$qty_index"} += $pages{$page} - 1;
+			$$specs{'txtSignatureQty'.$page.'Page-'.$qty_index} += $pages{$page} - 1;
+		} # end foreach
+	} # end if
+	$results{'Breakdown'} .= 'after pockets: ' . $$specs{"txtPockets$qty_index"} . '<br/>';
+
 
 	my $error;
 	# THe Equipment::find call gets cached... and the rest is impo-specific... so we can't really cache this.
@@ -395,6 +431,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
 				if ( $folding_specs ) {
 					foreach my $index ( 1 .. 4 ) {
+						next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
