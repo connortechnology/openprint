@@ -51,5 +51,15 @@ sub next {
 	return new openprint::ServicePrice( sql::execute( undef,undef, q{SELECT MIN(id) WHERE id > ?}, $$self{'id'} ) );
 } # end sub next
 
+sub Pricelist {
+return new openprint::Pricelist( $_[0]{'pricelist_id'} );
+}
+sub Equipment {
+return new openprint::Equipment( $_[0]{'equipment_id'} );
+}
+sub Service {
+return new openprint::Service( $_[0]{'service_id'} );
+}
+
 1;
 __END__

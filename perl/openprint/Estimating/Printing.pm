@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 my %folding_cache;
@@ -4366,12 +4366,18 @@ if ( 1 ) {
 			} # end if
 		} # end if
 } # end if
-if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-	$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{'Folding'}[0], undef, $qty_index, $service_index, undef );
-} # end if
-if ( $$services{'Scoring'} and @{$$services{'Scoring'}} ) {
-	$html .= "\nscored " . openprint::Estimating::Scoring::signature_summary( $Project, $$services{'Scoring'}[0], undef, $qty_index, $service_index, undef );
-} # end if
+		if ( sets::isin( $openprint::session{'user_type'}, [ 'E', 'A' ] ) ) {
+			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
+				$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{'Folding'}[0], undef, $qty_index, $service_index, undef );
+			} # end if
+			if ( $$services{'Scoring'} and @{$$services{'Scoring'}} ) {
+				my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{'Scoring'}[0] );
+				my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
+				if ( openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $specs, $Paper ) ) {
+					$html .= "\nscored " . openprint::Estimating::Scoring::signature_summary( $Project, $$services{'Scoring'}[0], undef, $qty_index, $service_index, undef );
+				} # end if
+			} # end if
+		} # end if
 
 		return $html;
 	} else { # ! qty_index
