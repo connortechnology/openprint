@@ -25,6 +25,7 @@ my @fields = (
 	'stock_width','stock_height',
 	'quantity',
 	'bleed_size',
+	'specs',
 );
 
 use strict;
@@ -172,6 +173,7 @@ sub load_used {
 sub load {
 	my ( $self, $specs, $qty_index ) = @_;
 
+	$$self{'specs'} = $specs;
 	$$self{'paper'} = openprint::Paper::load_from_signature( undef, $specs, $qty_index ) if ! $$self{'paper'};
 	if ( ! $$self{'Press'} ) {
 		my @Presses = openprint::Equipment::find('strid'=>$$specs{'ddmPress'.$qty_index});
