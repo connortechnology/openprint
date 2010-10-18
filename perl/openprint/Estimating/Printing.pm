@@ -564,7 +564,7 @@ sub calc_from_imposition {
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 		} # end foreach $index
 
-		my $price = calc_price( $Project, $service_id, $Imposition, $project, $services, $specs, $Project->quantity($qty_index), $qty_index, \%PlateCounts );
+		my $price = calc_price( $Project, $service_id, $Imposition, $project, $services, $specs, $Project->quantity($qty_index), $qty_index, \%PlateCounts, [] );
 		plate_cost( $price, \%PlateCounts, $Imposition );
 
 		my $Paper = $Imposition->Paper();
@@ -1752,6 +1752,20 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 			push @signatures, $_ if $_ > $service_index;
 		} # end foreach
 
+        # These used to be calculated for Perfect Bonud (and SaddleStitching).  Doing it here means it only happens once.
+        my @other_impositions;
+        foreach my $sig_id ( $Project->signatures() ) {
+            my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+# Don't try to load uncalculated sigs.  They can't count, might turn it 1 out
+            next if ! $$sig_specs{'txtImposition'.$qty_index};
+            next if $$sig_specs{'Group'} == 1;
+            next if ( ($$sig_specs{'Group'} == $$specs{'Group'}) and ($sig_id >= $service_index) );
+#$openprint::log->debug("PerfectBond: Group: $$sig_specs{'Group'} == $$service_specs{'Group'} and $sig_id >= $service_index");
+            my $I = new openprint::Imposition();
+            $I->load( $sig_specs, $qty_index );
+            push @other_impositions, $I;
+        } # end foreach sig_id
+
 		%signature_price_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
 # Only thread qtys 2 and 3
@@ -1764,10 +1778,10 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 						'login'		=> $openprint::r->dir_config('db_user'),
 						'password'	=> $openprint::r->dir_config('db_password'),
 						);
-					return get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, undef, 1 );
+					return get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \@other_impositions, undef, 1 );
 					} );
 		} else {
-			my $sig_price = get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, undef, 1 );
+			my $sig_price = get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \@other_impositions, undef, 1 );
 			$prices{$qty_index} = $sig_price;
 		} # end if
 
@@ -2291,7 +2305,7 @@ return @impositions;
 } # end sub calculate_impositions
 
 sub get_project_price {
-	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $previous_forms_cache, $signatures, $best_price, $recursion_depth ) = @_;
+	my ( $Project, $service_index, $project, $service_specs, $sig_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, $PlateCounts, $PaperCounts, $previous_forms_cache, $signatures, $other_impositions, $best_price, $recursion_depth ) = @_;
 #$openprint::log->debug("******** get_project_price");
 	my %previous_forms_cache;
 	my %best_price;
@@ -2332,7 +2346,7 @@ my $recurse = 0;
 			$imp = $imp->copy();
 #my $time = gettimeofday();
 #$imp->display($recursion_depth . ' Starting');
-			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts );
+			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts, $other_impositions );
 #$imp->display("Actually calculating this imp $$price{'Comparison Cost'}");
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
@@ -2431,7 +2445,7 @@ my $recurse = 0;
 						and ( ($new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($new_specs{'ddmRunStyle'.$qty_index} eq $imp->runstyle()) )
 ) {
 
-				  		$sig_price = calc_price( $Project, $s_id, $imp, $project, $services, \%new_specs, $qty, $qty_index, \%PlateCounts );
+				  		$sig_price = calc_price( $Project, $s_id, $imp, $project, $services, \%new_specs, $qty, $qty_index, \%PlateCounts, $other_impositions );
 #$imp->display("additional calc_price this imp $$sig_price{'Comparison Cost'}");
 						$additional_price = $$sig_price{'Comparison Cost'};
 
@@ -2485,7 +2499,7 @@ $recurse = 1;
 #$openprint::log->debug("Equipment override: ".$new_specs{'chkOverridePress'.$qty_index} );
 #$openprint::log->debug("Page QUantity override: ".$new_specs{'chkOverridePageQuantity'.$qty_index} );
 #$imp->display("get_projcetcalc_price this imp $best_price{'Comparison Cost'} $$price{'Comparison Cost'}");
-							$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), $recursion_depth + 1 );
+							$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, $other_impositions, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), $recursion_depth + 1 );
 						} # end if
 						$upq = 0;
 
@@ -2655,17 +2669,11 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 				# The idea is to only calc these on the last sig
 				if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$sig_specs{'txtSignatureType'} ne 'Cover Spreads') ) {
 					my @all_impositions;
-					foreach my $sig_id ( $Project->signatures() ) {
-						next if $sig_id >= $service_index;
-						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-						my $I = new openprint::Imposition();
-						$I->load( $sig_specs, $qty_index );
-						push @all_impositions, $I;
-					}
-					push @all_impositions, @{$$price{'Impositions'}};
+					push @all_impositions, @{$other_impositions}, @{$$price{'Impositions'}};
 					
 #my $starttime = gettimeofday();
-					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, @all_impositions );
+$openprint::log->debug("Stitching::signature_calc");
+					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@all_impositions );
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
 #$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>" . $$project{'StitchingSpecs'}{'hdnBreakdown'.$qty_index};
@@ -2802,7 +2810,7 @@ sub check_price {
 # Takes and Imposition object, and calculates a Price Object.
 # Does not need to take folding or Cutting into account, as those were chosen separately
 sub calc_price {
-	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $PlateCounts ) = @_;
+	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $PlateCounts, $other_impositions ) = @_;
 
 	my $Paper = $Imposition->Paper();
 	my $Press = $Imposition->Press();
@@ -2969,7 +2977,8 @@ sub calc_price {
 		if ( $$Imposition{'folding_results'} ) {
 			%folding_results = %{$$Imposition{'folding_results'}};
 		} else {
-			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs'} );
+			my @all_impositions = ( @{$other_impositions}, $Imposition );
+			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, \@all_impositions );
 			#$$Imposition{'folding_results'} = \%folding_results;
 		} # end if
 
