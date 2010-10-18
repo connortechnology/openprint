@@ -130,7 +130,7 @@ sub get_imposition {
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 # includes teh cost of folding...
 sub signature_calc {
-	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, @Impositions ) = @_;
+	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, $Impositions ) = @_;
 
 	my %results;
 	my $services = $Project->services();
@@ -144,6 +144,13 @@ sub signature_calc {
 
 	my $plusCover = $$printing_specs{'rdbCover'} eq 'Different' ? 1 : 0;
 
+	if ( ! $Impositions ) {
+	Carp::cluck ('No Impositions');
+	} # end if
+	if ( ! $printing_specs ) {
+	Carp::cluck ('No printing_specs');
+	} # end if
+
 	# Need to figure out which dimension the spine bisects
 	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
@@ -155,7 +162,7 @@ sub signature_calc {
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 0;
 
-	foreach my $I ( @Impositions ) {
+	foreach my $I ( @$Impositions ) {
 #$I->display('In Stitching:') if $debug;
 		my $sig_specs = $I->specs();
 		my %pages;
@@ -205,7 +212,7 @@ sub signature_calc {
 	} # end foreach Imposition
 #$results{'Breakdown'} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
 #$openprint::log->debug("Imp: $imposition");
-	my $I = $Impositions[0];
+	my $I = $$Impositions[0];
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
@@ -270,7 +277,7 @@ $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_
 				next;
 			} # end if
 			
-			if ( $Impositions[0]{'Folder'}->id() != $Equipment->id() ) {
+			if ( $$Impositions[0]{'Folder'}->id() != $Equipment->id() ) {
 				#$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
 				next;
 			} # end if
@@ -567,7 +574,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 					my $Imposition = new openprint::Imposition;
 					$Imposition->load( $sig_specs, $qty_index );
-					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs );
+					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs, [] );
 				#$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
 					$folding_cost += $folding_results{'Price'};
 				} # end foreach sig
