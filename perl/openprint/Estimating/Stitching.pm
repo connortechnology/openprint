@@ -681,7 +681,7 @@ sub get_price {
 		'MPrice'	=> 0,
 	);
 
-	my $qty = $$specs{'txtQuantity'.$qty_index};
+	my $qty = $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index);
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition')) if $debug;
 	if ( $Equipment->specification("Maximum $$ServiceType{name} Imposition") and ( $Equipment->specification("Maximum $$ServiceType{name} Imposition") < $$specs{'Imposition'.$qty_index} ) ) {
 		$price{'Imposition'} = 1;
@@ -815,7 +815,7 @@ sub get_price {
 
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
-	$price{'MPrice'} += ( $price{'Service'} / $qty ) * 1000;
+	$price{'MPrice'} += ( $price{'Service'} / $qty ) * 1000 if $qty;
 	if ( $Equipment->specification( 'SpineLength Discount' ) ) {
 		$price{'SpineLength Discount'} = $Equipment->specification( 'SpineLength Discount', $$specs{'Height'} );
 		$price{'Service'} *= ( 1 - $price{'SpineLength Discount'}/100);
