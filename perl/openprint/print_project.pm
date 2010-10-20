@@ -762,9 +762,13 @@ sub reuse_project {
 	$openprint::param{'quantity2'} =~ s/\D//g;
 	$openprint::param{'quantity3'} =~ s/\D//g;
 	@openprint::param{'reference','comments'} = misc::trim( @openprint::param{'reference','comments'} );
-
+$openprint::log->debug("reusing $project_index");
 	my $Project = new openprint::Project( $project_index );
+	if ( ! $Project->id() ) {
+		return misc::error( $log, $dbh, $variable, 'Error', "Source project $project_index could not be found." );
+	} # end if
 	my $NewProject = $Project->copy();
+$openprint::log->debug("Have a copy");
 	$NewProject->quantity1( $openprint::param{'quantity1'} );
 	$NewProject->quantity2( $openprint::param{'quantity2'} );
 	$NewProject->quantity3( $openprint::param{'quantity3'} );
@@ -778,7 +782,7 @@ sub reuse_project {
 	if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ) {
 		$NewProject->status('Unordered');
 	} # end if
-	$NewProject->company_id( $r->param('ddmCompany') ) if $r->param('ddmCompany');
+	$NewProject->company_id( $openprint::param{'ddmCompany'} ) if $openprint::param{'ddmCompany'};
 	$NewProject->save();
 	$openprint::session{'project_id'} = $NewProject->id();
 

@@ -886,9 +886,7 @@ sub copy {
 	foreach my $key ( keys %$self ) {
 		$$new{$key} = $$self{$key};
 	} # end foreach
-	delete $$new{'id'};
-	delete $$new{'created_on'};
-	$new->save();
+	$new->save({'id'=>undef, 'created_on'=>undef,'Services'=>undef} );
 
 	my @dont_copy = (
 			'ServiceIndex','ProjectIndex','TemplateType',

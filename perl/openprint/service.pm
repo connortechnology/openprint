@@ -177,14 +177,18 @@ sub get_specifications_pairs {
 
 sub get_specs_ref {
 	my ( $p_id, $s_id ) = @_;
-	if ( (! $p_id ) or (! $s_id) ) {
-		Carp::cluck("********* Called get_specs_ref with Project Index or Service Index ****************");
+	if ( ! $s_id ) {
+		Carp::cluck("********* Called get_specs_ref without Service Index ****************");
 		return;
 	} # end if
-	if ( sets::isin( ref $p_id, [ 'openprint::Project', 'openprint::QuotedProject' ] ) ) {
-		$p_id = $p_id->id();
-	} # end if
 	if ( ! exists $specs_cache{$s_id} ) {
+		if ( sets::isin( ref $p_id, [ 'openprint::Project', 'openprint::QuotedProject' ] ) ) {
+			$p_id = $p_id->id();
+		} # end if
+		if ( ! $p_id ) {
+			Carp::cluck("********* Called get_specs_ref without Project Index ****************");
+			return;
+		} # end if
 		%{$specs_cache{$s_id}} = sql::execute( undef, undef, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $p_id, $s_id );
 	} # end if

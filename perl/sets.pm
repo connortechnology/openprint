@@ -35,10 +35,10 @@ sub isin_regx {
 	foreach my $value (@array) {
 		$value =~ s/\\\\/\\/g;
 		if ( $var =~ /^($value)$/ ) {
-$openprint::log->debug("isin_regx: matched $value");
+#$openprint::log->debug("isin_regx: matched $value");
 			return 1;
 		} else {
-$openprint::log->debug("isin_regx: not matched ($var) ($value)");
+#$openprint::log->debug("isin_regx: not matched ($var) ($value)");
 
 		} # end if
 	} # end foeach
