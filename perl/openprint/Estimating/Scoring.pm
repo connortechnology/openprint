@@ -332,9 +332,13 @@ $openprint::log->warn("No imposition in scoring");
 			$Results{'Breakdown'} .= "No Offline bindery and not printing on $$Equipment{name}.<br/>";
 			next;
 		} # end if
+		my $max_feed_width = $Equipment->specification('Maximum Feed Width');
+		$Results{'Breakdown'} .= "Maximum Feed Width: $max_feed_width<br/>" if $max_feed_width;
+
 		foreach my $I ( @impositions ) {
 			next if ! $I->imposition();
 			next if ( $imposition->imposition() % $I->imposition() );
+			$Results{'Breakdown'} .= $I->to_string().'<br/>';
 			if ( $Equipment->specification('Type') ne 'Press' ) {
 				$score_qty = ($$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"}*$I->columns()) + ($$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} * $I->rows() );
 			} # end if
@@ -346,8 +350,9 @@ $openprint::log->warn("No imposition in scoring");
 				$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
 				next;
 			} # end if
-			if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
+			if ( $max_feed_width ) {
 				if ( $Equipment->specification('Orientation') ) {
+$Results{'Breakdown'} .= "Has orientation setting.<br/>";
 					if (
 							( $Equipment->specification('Orientation') eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
 							( $Equipment->specification('Orientation') eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
@@ -365,17 +370,29 @@ $openprint::log->warn("No imposition in scoring");
 				} else {
 					if ( $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} and $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} ) {
 # Do nothing, we already know it fits on the machine, and it has to go one way or another.
+						$Results{'Breakdown'} .= 'Running either way because scores both ways.<br/>';
 					} elsif ( $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} ) {
-						if ( $I->layout_width() >= $max_feed_width ) {
-							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
-							next;
+						if ( $I->image_orientation() eq 'Vertical' ) {
+							$Results{'Breakdown'} .= 'Running ' . $I->layout_width() . ' ' . $I->image_orientation() . ' on feed of ' . $max_feed_width . '<br/>';
+							if ( $I->layout_width() >= $max_feed_width ) {
+								$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
+								next;
+							} # end if
+						} else {
+							$Results{'Breakdown'} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
+						} # end if
+					} elsif ( $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} ) {
+						if ( $I->image_orientation() eq 'Horizontal' ) {
+							$Results{'Breakdown'} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
+							if ( $I->layout_height() >= $max_feed_width ) {
+								$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
+								next;
+							} # end if
+						} else {
+							$Results{'Breakdown'} .= 'Running ' . $I->layout_width() . ' on feed of ' . $max_feed_width . '<br/>';
 						} # end if
 					} else {
-						if ( $I->layout_height() >= $max_feed_width ) {
-							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
-							next;
-						} # end if
-
+						$Results{'Breakdown'} .= 'Running ' . $I->layout_height() . ' on feed of ' . $max_feed_width . '<br/>';
 					} # end if
 				} # end if
 			} # end if

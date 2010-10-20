@@ -4347,21 +4347,21 @@ sub summary {
 #$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
 		$html .= sprintf(' with %d plate changes = %d plates', @$specs{'txtPlateChangeQuantity'.$qty_index,'txtPlateQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
 
-if ( 0 ) {
 # Have Stock summary line now
 		if ( $$services{'NoPrinting'} ) {
 			$html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
 		} else {
+if ( 0 ) {
 			$html .= ' Stock Qty: ' . $$specs{'txtPressSheetQty'.$qty_index};
+} # end if
 			if ( $$specs{'StockType'.$qty_index} eq 'Roll' ) {
 				if ( $$specs{'ddmRunStyle'.$qty_index} ne 'Web' ) {
-					$html .= sprintf( ' of %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+					$html .= sprintf( ' on %s" Roll.  Cut Off: %s"',  @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
 				} # end if
 			} else {
-				$html .= sprintf(' of %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
+				$html .= sprintf(' on %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
 			} # end if
 		} # end if
-} # end if
 		if ( sets::isin( $openprint::session{'user_type'}, [ 'E', 'A' ] ) ) {
 			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
 				$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{'Folding'}[0], undef, $qty_index, $service_index, undef );
