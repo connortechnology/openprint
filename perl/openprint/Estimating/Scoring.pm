@@ -346,6 +346,39 @@ $openprint::log->warn("No imposition in scoring");
 				$Results{'Breakdown'} .= "Doesn't fit. $_<br/>";
 				next;
 			} # end if
+			if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
+				if ( $Equipment->specification('Orientation') ) {
+					if (
+							( $Equipment->specification('Orientation') eq 'Portrait' and $I->layout_width() <= $I->layout_height() ) or
+							( $Equipment->specification('Orientation') eq 'Landscape' and $I->layout_width() >= $I->layout_height() )
+					   ) {
+						if ( $I->layout_width() >= $max_feed_width ) {
+							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtWidth}).<br/>";
+							next;
+						} # end if
+					} else {
+						if ( $I->layout_height() >= $max_feed_width ) {
+							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width ($$sig_specs{txtHeight}).<br/>";
+							next;
+						} # end if
+					} # end if
+				} else {
+					if ( $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} and $$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} ) {
+# Do nothing, we already know it fits on the machine, and it has to go one way or another.
+					} elsif ( $$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} ) {
+						if ( $I->layout_width() >= $max_feed_width ) {
+							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_width().").<br/>";
+							next;
+						} # end if
+					} else {
+						if ( $I->layout_height() >= $max_feed_width ) {
+							$Results{'Breakdown'} .= "Score no good due to max feed width($max_feed_width) on width (".$I->layout_height().").<br/>";
+							next;
+						} # end if
+
+					} # end if
+				} # end if
+			} # end if
 			if ( ( $_ = $Equipment->specification('Maximum Imposition') ) and ( $_ < $I->imposition() ) ) {
 				$$specs{'hdnBreakdown'.$qty_index} .= "Imposition $$I{imposition}out too high. Maximum: $_<br/>";
 				next;
