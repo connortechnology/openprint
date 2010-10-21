@@ -44,28 +44,35 @@ function validate_data(formName) {
 			<fieldset>
 			<p>
 				<label># of items to ship:</label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-				<input type="text" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="calc(this.form.name);" />
+				<? echo ( 
+					my $html;
+					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+						$html .= sprintf(q`
+							<span class="%1$sColumns">
+				<input type="text" name="txtQuantity%2$d" value="%3$d" size="9" onkeyup="calc(this.form.name);" />
 				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+						`, $$variable{'Columns'}, $qty_index, $$variable{'txtQuantity'.$qty_index}, 
+						);
+					} # end foreach
+					return $html;
+				) ?>
 			</p>
 			<!--#include virtual="/includes/main/proj/shipping_packages.html"-->
 			<p>
 				<label><b>Price (<?CurrencySymbol?>):</b></label>
-				<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-				<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-				<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<span class="<?Columns?>Columns">
-				<input type="text" name="txtPrice<?QTYIndex?>" size="9" value="<? echo ( $$variable{'txtPrice'.$$variable{'QTYIndex'}} ) ?>" <? echo ( 'readonly="readonly" onFocus="this.blur();"' if ! sets::isin($openprint::session{'user_type'},['E','A']); ) ?> />
-				</span>
-				<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-				<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-				<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+				<? echo ( 
+					my $html;
+					foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+						$html .= sprintf(q`
+							<span class="%1$sColumns">
+							<input type="text" name="txtPrice%2$d" size="9" value="%3$s" %4$s />
+							</span>
+						`, $$variable{'Columns'}, $qty_index, $$variable{'txtPrice'.$qty_index}, 
+						( sets::isin($openprint::session{'user_type'},['E','A']) ? '' : 'readonly="readonly" onFocus="this.blur();"' ),
+						);
+					} # end foreach
+					return $html;
+				) ?>
 			</p>
 			<p><label>More Shipping?</label>
 				<input type="radio" id="AdditionalY" name="Additional" value="Y" /><label class="radio" for="AdditionalY">Yes</label>
