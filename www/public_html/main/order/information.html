@@ -4,6 +4,29 @@
 </div>
 <script type="text/javascript">
 <!--
+function same_as_billing( on, id ) {
+
+    var checkbox = $('same_as_billing'+id);
+    var form = checkbox.form;   
+    if ( on ) {
+        form.elements['ToCompanyName'+id].value = form.elements['txtCompanyName'].value;
+        set_rdb_value( form.elements['ToSalutation'+id], get_value( form.elements['rdbSalutation'] ) );
+        form.elements['ToFirstName'+id].value = form.elements['txtFirstName'].value;
+        form.elements['ToLastName'+id].value = form.elements['txtLastName'].value;
+        form.elements['ToAddress1'+id].value = form.elements['txtAddress1'].value;
+        form.elements['ToAddress2'+id].value = form.elements['txtAddress2'].value;
+        form.elements['ToCity'+id].value = form.elements['txtCity'].value;
+        form.elements['ToStateProvince'+id].value = form.elements['ddmStateProvince'].value;
+        form.elements['ToCountry'+id].value = form.elements['ddmCountry'].value;
+        form.elements['ToPostalCode'+id].value = form.elements['txtPostalCode'].value;
+        form.elements['ToPhone'+id].value = form.elements['txtPhone'].value;
+        form.elements['ToFax'+id].value = form.elements['txtFax'].value;
+        form.elements['ToEmail'+id].value = form.elements['txtEmail'].value;
+    } else if ( checkbox.checked ) {    
+        checkbox.checked = false;
+    } // end if
+} // end function same_as_billing
+
 	function radio_select_by_value( radio, value ) {
 		for ( var index = 0; index < radio.length; index += 1 ) {
 			if ( radio[index].value == value ) {

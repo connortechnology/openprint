@@ -13,25 +13,31 @@
 		<label class="radio" for="chkOverridePackageQuantity">Override</label>
 		<br/>
 <? endif ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) ?>
-<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		<input name="txtPackageQuantity<?QTYIndex?>" value="<? echo ( $$variable{"txtPackageQuantity$$variable{'QTYIndex'}"} ) ?>" type="text" size="9" onkeyup="calc('f1');" />
-	</span>
-<? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-    <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? echo ( 
+	my $html;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= sprintf(q`
+			<span class="%1$sColumns">
+				<input name="txtPackageQuantity%2$d" value="%3$s" type="text" size="9" onkeyup="calc('f1');" />
+			</span>
+		`, $$variable{'Columns'}, $qty_index, $$variable{'txtPackageQuantity'.$qty_index},
+		);
+	} # end foreach
+	return $html;
+) ?>
 </p>
 <p>
 	<label>Total Weight:</label>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-		<input name="txtTotalWeight<?QTYIndex?>" value="<? echo ( $$variable{"txtTotalWeight$$variable{'QTYIndex'}"} ) ?>" type="text" size="9" readonly="readonly" /> lbs
-	 </span>
-	 <? endif ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>
-	 <? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	 <? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? echo ( 
+		my $html;
+		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+			$html .= sprintf(q`
+				<span class="%1$sColumns">
+					<input name="txtTotalWeight%2$d" value="%3$s" type="text" size="9" readonly="readonly" /> lbs
+				</span>
+			`, $$variable{'Columns'}, $qty_index, $$variable{'txtTotalWeight'.$qty_index},
+			);
+		} # end foreach
+		return $html;
+	) ?>
 </p>
