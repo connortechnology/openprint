@@ -111,11 +111,6 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
 
         if ( $$specs{'txtQuantity'.$qty_index} == $Project->quantity($qty_index) ) {
             $$specs{'txtQuantity'.$qty_index} = $Project->quantity($qty_index) - $other_shipped_quantity;
-        } # end if
-
-		if ( ! $$specs{'txtQuantity'.$qty_index} ) {
-            $$specs{'alert'} .= 'Please enter the amount in this shipment for quantity ' . $qty_index . '.<br/>';
-            $status = 'uncalculated';
 		} # end if
 
         if ( $other_shipped_quantity + $$specs{'txtQuantity'.$qty_index} > $Project->quantity( $qty_index ) ) {
