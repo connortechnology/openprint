@@ -36,7 +36,7 @@ my %variables = (
 	'FromFirstName'=>['save'],'FromLastName'=>['save'],
 	'ToCompanyName'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],
 	'ToFirstName'=>['save'],'ToLastName'=>['save'],
-	'alert'=>['save'],
+	'alert'=>['save','output'],
 );
 
 sub variables {
@@ -57,7 +57,7 @@ sub no_outputs {
 
 
 sub calc {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index, $specs, $qty_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
@@ -94,7 +94,7 @@ sub calc {
 		} # end foreach
 	} # end foreach ServiceType
 
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
+	foreach $qty_index ( $qty_index ? ( $qty_index ) : $Project->quantity_indexes() ) {
 		$$specs{"txtPrice$qty_index"} =~ s/[^\-\.\d]//g;
 		$$specs{"txtQuantity$qty_index"} =~ s/\D//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -114,7 +114,7 @@ $openprint::log->debug("Other Shipped Quantity: $other_shipped_quantity");
         } # end if
 
 		if ( ! $$specs{'txtQuantity'.$qty_index} ) {
-            $$specs{'alert'} .= 'Please enter the amount in this shipment.<br/>';
+            $$specs{'alert'} .= 'Please enter the amount in this shipment for quantity ' . $qty_index . '.<br/>';
             $status = 'uncalculated';
 		} # end if
 
