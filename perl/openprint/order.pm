@@ -186,9 +186,12 @@ sub add_project_to_order {
 				last;
 			} # end if
 		} # end foreach
+if ( 0 ) {
+# Stop defaulting to CP
 		if ( ! $sql{'ShippingType'} ) {
 			$sql{'ShippingType'} = 'CustomerPickUp';
 		} # end if
+} # end if
 	} else {
 		$sql{'ShippingType'}='CustomerPickUp';
 	} # end if
