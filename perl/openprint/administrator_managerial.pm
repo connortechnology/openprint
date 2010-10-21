@@ -630,6 +630,9 @@ sub _company_accounting_contacts {
 	if ( $param{'new_accounting_contact_id'} ) {
 		$variable{'error'} .= sql::insert( undef, undef, 'companies_accountingcontacts', 'company_id', $variable{'Company'}->id(), 'user_id', $param{'new_accounting_contact_id'} );
 	} # end if
+	if ( $param{'action'} eq 'delete' ) {
+		sql::execute( undef, undef, 'DELETE FROM companies_accountingcontacts WHERE company_id=? AND user_id=?', @param{'company_id','user_id'} );
+	} # end if
 } # end sub
 
 sub payment_options {
