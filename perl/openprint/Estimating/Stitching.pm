@@ -156,7 +156,40 @@ sub signature_calc {
 
 	foreach my $I ( @Impositions ) {
 #$I->display('In Stitching:') if $debug;
-		$$specs{"txtPockets$qty_index"} += 1;
+		my $sig_specs = $I->specs();
+		my %pages;
+		my $sig_pages = $I->pages();
+		if ( $folding_specs ) {
+			foreach my $index ( 1 .. 4 ) {
+				next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				next if ! $type;
+				my ( $pages ) = $type =~ /(\d+)PageFold/;
+				#$results{'Breakdown'} .= "Folding$index: $$sig_specs{SignatureIndex} sig_pages; $sig_pages type: $type pages: $pages qty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . '<br/>';
+				if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
+					$pages{$pages} += $sig_pages / $pages;
+				} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $$sig_specs{'PageQuantity'.$qty_index} ) {
+					$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				} else {
+					$pages{$pages} += 1;
+				} # end if
+#$$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+			} # end foreach index
+
+	# If not all pages have been folde, then revert to just pull from the sig.
+			if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
+				$$specs{"txtPockets$qty_index"} += 1;
+				$$specs{'txtSignatureQty'.$sig_pages.'Page-'.$qty_index} += 1;
+			} else {
+				foreach my $page ( keys %pages ) {
+	# The -1 is because the signature has already been counted in the pocket calc.
+					$$specs{"txtPockets$qty_index"} += $pages{$page};
+					$$specs{'txtSignatureQty'.$page.'Page-'.$qty_index} += $pages{$page};
+				} # end foreach
+			} # end if
+		} else {
+			$$specs{"txtPockets$qty_index"} += 1;
+		} # end if
 
 		if ( $imposition > 1 ) {
 			$imposition = 1 if ( 
@@ -169,6 +202,7 @@ sub signature_calc {
 			#$openprint::log->debug(" $$I{'runstyle'} " . ($$I{'imposition'}%4) );
 		} # end if
 	} # end foreach Imposition
+#$results{'Breakdown'} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
 #$openprint::log->debug("Imp: $imposition");
 	my $I = $Impositions[0];
 
@@ -182,6 +216,7 @@ sub signature_calc {
 	} else {
 		$$specs{'Imposition'.$qty_index} = $imposition;
 	} # end if
+$results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
 
 	my $error;
 	# THe Equipment->find call gets cached... and the rest is impo-specific... so we can't really cache this.
@@ -246,7 +281,7 @@ $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_
 		} # end if
 		my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
 		$$price{'ComparisonPrice'} = $$price{'txtPrice'} + $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
-$$specs{'hdnBreakdown'.$qty_index} .= $Equipment->strid() . ' ' . $$price{'txtPrice'} . ' ' . $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
+#$$specs{'hdnBreakdown'.$qty_index} .= $Equipment->strid() . ' ' . $$price{'txtPrice'} . ' ' . $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
 		if ( ( ! $bestPrice ) or $$price{'ComparisonPrice'} < $$bestPrice{'ComparisonPrice'} ) {
 			$bestEquipment = $Equipment;
 			$bestPrice = $price;
@@ -394,6 +429,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
 				if ( $folding_specs ) {
 					foreach my $index ( 1 .. 4 ) {
+						next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
@@ -531,7 +567,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 					my $Imposition = new openprint::Imposition;
 					$Imposition->load( $sig_specs, $qty_index );
 					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs );
-				$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
+				#$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
 					$folding_cost += $folding_results{'Price'};
 				} # end foreach sig
 				$$price{'ComparisonPrice'} += $folding_cost;
@@ -553,7 +589,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 			} # end if
 			my $servicePrice = $$price{'LastServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: 1 pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'}))."<br/><br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'})).'<br/><br/>';
 		} # end foreach
 		if ( ! $bestEquipment ) {
 			$$specs{'Status'} = 'uncalculated';

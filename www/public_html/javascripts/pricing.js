@@ -36,3 +36,11 @@ function calc_from_price( element ) {
 		} // end if
 	} // end if
 } // end function
+function del_price ( form, pricelist_id, equipment_id, price_id ) {
+	$('prices-'+pricelist_id+'-'+equipment_id).innerHTML = 'Please wait...loading.';
+	new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_prices_table_body.html?action=delete&price_id='+price_id, { method: 'post', parameters:form.serialize() } );
+} /* end function del_price() */
+function copy_price ( form, pricelist_id, equipment_id, price_id ) {
+	$('prices-'+pricelist_id+'-'+equipment_id).innerHTML = 'Please wait...loading.';
+	new Ajax.Updater( 'prices-'+pricelist_id+'-'+equipment_id, '_prices_table_body.html?action=copy&price_id='+price_id, { method: 'post', parameters:form.serialize() } );
+} /* end function add_price() */
