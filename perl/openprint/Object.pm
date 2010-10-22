@@ -390,6 +390,7 @@ sub find {
 					} else {
 						$sql .= " AND $$f{$k} IS NOT NULL";
 					} # end if
+					delete $params{$k.'_null'};
 				} # end if
 			} # end foreach k in fields
 		} # end foreach set of fields
