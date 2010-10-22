@@ -40,6 +40,7 @@ my %find_cache;
 	'cip3_monitor'		=>	'cip3_monitor',
 	'smartscheduling'	=>	'smartscheduling',
 	'servicetype_id'	=>	'servicetype_id',
+	'sorting'			=>	'sorting',
 );
 %transforms = (
 );

@@ -25,6 +25,7 @@ CREATE TABLE tbl_Equipment (
 	jdf_name			TEXT,
 	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations(id),
 	smartscheduling		BOOLEAN,
+	sorting				integer,
 	PRIMARY KEY (lngIndex)
 );
 

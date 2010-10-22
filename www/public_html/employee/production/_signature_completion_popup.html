@@ -10,7 +10,7 @@
 					my $operator_id = $$variable{'Job'}->operator_id();
 					$operator_id = $session{'user_id'} if ! $operator_id;
 
-					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('usergroups'=>['Press'],'order'=>'lower(strfirstname),lower(strlastname)') ], $operator_id );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('usergroup'=>$$variable{'Job'}->Equipment()->category(),'order'=>'lower(firstname),lower(lastname)') ], $operator_id );
 				) ?>
 			</select>
 		</p>

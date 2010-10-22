@@ -1,5 +1,7 @@
 <? eval (
 	@{$$variable{'Payments'}} = ();
+	$$variable{'total'} = $$variable{'remaining_total'} = 0;
+
 	foreach my $Payment ( openprint::Payment->find( 
 		'received_on_start'	=> sprintf('%.4d-%.2d-%.2d', @session{'/payment/history.html?received_on_start_year','/payment/history.html?received_on_start_month','/payment/history.html?received_on_start_day'} ),
 		'received_on_end'	=> sprintf('%.4d-%.2d-%.2d', @session{'/payment/history.html?received_on_end_year','/payment/history.html?received_on_end_month','/payment/history.html?received_on_end_day'} ),
@@ -8,6 +10,8 @@
 		'order'				=> 'id',
 		) ) {
 		push @{$$variable{'Payments'}}, $Payment;
+		$$variable{'total'} += $Payment->amount();
+		$$variable{'remaining_total'} += $Payment->remaining();
 	} # end foreach Payment
 
 	$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
@@ -28,13 +32,10 @@
 			<th>Method</th>
 			<th>Transaction ID</th>
 			<th>Memo</th>
-			<th width="75" style="text-align:right;">Amount</th>
-			<th width="75" style="text-align:right;">Remaining</th>
+			<th class="Price">Amount</th>
+			<th class="Price">Remaining</th>
 		</tr>
 		<? while ( $$variable{'Payment'} = shift @{$$variable{'Payments'}}; ) ?>
-		<? eval ( 
-			$$variable{'conversion_rate'} = $$variable{'Payment'}->Currency()->conversions( $session{'Currency_id'} );
-		) ?>
 		<tr title="<? echo ( $$variable{'Payment'}->description() ) ?>" <?rowclass?> onmouseover="className += ' highlightOn';" onmouseout="className = className.replace(/highlightOn/,'');"> 
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( $$variable{'Payment'}->id(); ) ?></a></td>
 			<td class="Date"><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Payment'}->received_on() ) ); ) ?></a></td>
@@ -42,11 +43,16 @@
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->method(); ) ?></a></td>
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->transaction_id(); ) ?></a></td>
 			<td><a href="/payment/edit.html?payment_id=<? echo ( $$variable{'Payment'}->id(); ) ?>"><? hecho ( $$variable{'Payment'}->description(); ) ?></a></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Payment'}->amount() ); ) ?></td>
-			<td align="right"><? echo ( openprint::Currency::format( $$variable{'Payment'}->remaining() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Payment'}->amount() ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Payment'}->remaining() ); ) ?></td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';) ?>
 		<? endwhile ( $$variable{'Payment'} = shift @{$$variable{'Payments'}}; ) ?>
+		<tr class="totals">
+			<td colspan="6">Totals:</td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'remaining_total'} ); ) ?></td>
+		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>
 	<br class="spacer"/>

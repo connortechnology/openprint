@@ -34,7 +34,12 @@
 		<input type="radio" id="activeN" name="active" value="N" <? echo ( $$variable{'Campaign'}->active() ne 'Y' ? 'checked="checked"' : '' ) ?> />
 		<label for="activeN" class="radio">No</label>
 		</p>
-		<p> <label>Last Run:</label><? echo ( $$variable{'Campaign'}->lastrun() ) ?></p>
+		<p><label>Last Run:</label><? echo ( $$variable{'Campaign'}->lastrun() ) ?></p>
+		<p><label>Next Run:</label><span class="DateTimeSelector"><? echo ( 
+my $html = ssi::datetime_select( 'nextrun', $$variable{'Campaign'}->nextrun() ? $$variable{'Campaign'}->nextrun() : '' );
+$html .= ssi::writeButton( $log, $dbh, 'nextrun', 't.gif', 'set_today( f1.nextrun_year, f1.nextrun_month, f1.nextrun_day, f1.nextrun_hour, f1.nextrun_minute );', '', 'T' );
+return $html;
+) ?></span></p>
 		<p class="buttons">
 			<? echo ( join('',
 				ssi::writeButton( $log, $dbh, 'DeleteBottom', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),

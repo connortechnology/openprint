@@ -18,6 +18,7 @@ require openprint::customer_credit;
 require openprint::Tax;
 require openprint::Email;
 require openprint::Email_Account;
+require openprint::UserGroup;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -629,6 +630,9 @@ sub _company_accounting_contacts {
 	if ( $param{'new_accounting_contact_id'} ) {
 		$variable{'error'} .= sql::insert( undef, undef, 'companies_accountingcontacts', 'company_id', $variable{'Company'}->id(), 'user_id', $param{'new_accounting_contact_id'} );
 	} # end if
+	if ( $param{'action'} eq 'delete' ) {
+		sql::execute( undef, undef, 'DELETE FROM companies_accountingcontacts WHERE company_id=? AND user_id=?', @param{'company_id','user_id'} );
+	} # end if
 } # end sub
 
 sub payment_options {
@@ -659,6 +663,16 @@ sub email {
 		$variable{'Email'} = new openprint::Email_Account( $param{'id'} );
 	} # end if
 } # end sub email
+
+sub usergroups {
+	if ( $param{'command'} eq 'Save' ) {
+		my $Group = new openprint::UserGroup( $param{'id'} );
+		$variable{'error'} .= $Group->save( \%param );
+	} # end if
+} # end sub usergroups
+sub usergroup {
+	$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
+} # end sub usergroup
 
 1;
 __END__

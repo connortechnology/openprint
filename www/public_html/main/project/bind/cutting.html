@@ -67,7 +67,7 @@
 		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
 		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 		<span class="<?Columns?>Columns">
-		<span name="txtSuppliedStockWidth-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span> x
+		<span id="txtSuppliedStockWidth-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSuppliedStockWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span> x
 		<span id="txtSuppliedStockHeight-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSuppliedStockHeight-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span>
 		->
 		<span id="txtSheetSizeWidth-<?SignatureIndex?>-<?QTYIndex?>" ><? echo ( $$variable{"txtSheetSizeWidth-$$variable{'SignatureIndex'}-$$variable{'QTYIndex'}"}; ) ?></span> x
@@ -242,9 +242,9 @@
 		<? echo ( 
 			my $html;
 			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-				$html .= '<span class="'.$$variable{'Columns'}.'">';
+				$html .= '<span class="'.$$variable{'Columns'}.'Columns">';
 				$html .= ssi::writeButton( $log, $dbh, 'Breakdown'.$qty_index, 'price_breakdown.gif', "show_breakdown('$qty_index');", '', 'Breakdown' );
-				$html .= '</span>';
+				$html .= "</span>\n";
 			} # end foreach qty_index
 			return $html;
 		) ?>

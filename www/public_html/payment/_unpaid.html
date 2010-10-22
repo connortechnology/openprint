@@ -4,7 +4,7 @@
 			<th>Invoice</th>
 			<th class="Price">Total</th>
 			<th class="Price">Remaining</th>
-			<th width="10">&nbsp;</th>
+			<th width="20">&nbsp;</th>
 		</tr>
 		<? echo (
 			my $html = '';
@@ -17,14 +17,24 @@
 			) ) {
 				push @Invoices, $I if $I->owing() > 0;
 			} # end foreach $I
+			my ( $total_total, $owing_total );
 			foreach my $I ( @Invoices ) {
+				my $total = $I->Currency()->convert_from( $I->total() );
+				my $owing = $I->Currency()->convert_from( $I->owing() );
+				$total_total += $total;
+				$owing_total += $owing;
+		
 				$html .= '<tr>';
 				$html .= sprintf('<td><a href="/invoice/edit.html?invoice_id=%1$d">%1$d</a></td>', $I->id() );
-				$html .= sprintf('<td class="Price">%1$s%2$.2f</td>', $$variable{'Currency'}->symbol(), $I->total() );
-				$html .= sprintf('<td class="Price">%1$s%2$.2f</td>', $$variable{'Currency'}->symbol(), $I->owing() );
+				$html .= sprintf('<td class="Price">%1$s</td>', openprint::Currency::format( $total ) );
+				$html .= sprintf('<td class="Price">%1$s</td>', openprint::Currency::format( $owing ) );
 				$html .= sprintf('<td>%s</td>', ssi::writeButton( $log, $dbh, 'add'.$I->id(), '', 'pay_invoice('.$I->id().');', '', '+' ) );
 				$html .= '</tr>';
 			} # end foreach $I
+			$html .= sprintf('<tr class="totals"><td>Totals:</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr>',
+				openprint::Currency::format($total_total),
+				openprint::Currency::format($owing_total),
+				);
 			return $html;
 		) ?>
 	</table>

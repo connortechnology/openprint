@@ -297,7 +297,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 } # end sub signature_calc_stock_cutting
 
 sub signature_calc_folding_cutting {
-	my ( $log, $dbh, $variable, $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs ) = @_;
+	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs ) = @_;
 
 	my %results = (
 			'Status'	=> 'calculated',
@@ -318,7 +318,7 @@ sub signature_calc_folding_cutting {
 		} # end if
 	} # end foreach fold
 	my $folding_cuts = misc::sum( map { $folds{$_} } keys %folds);
-	$results{'Breakdown'} .= sprintf('<b>Cutting prior to folding: %d -> %s</b><br/>', $I->pages(), join(',',keys %folds ) );
+	$results{'Breakdown'} .= sprintf('<b>Cutting prior to folding sig: %d qty: %d: %dpg -> folds %s</b><br/>', $$sig_specs{'SignatureIndex'}, $qty_index, $I->pages(), join(',',keys %folds ) );
 	if ( $folding_cuts <= 1 ) {
 		$results{'Breakdown'} .= sprintf('Not needed<br/>' );
 		$results{'Status'} = 'calculated';
@@ -332,11 +332,13 @@ sub signature_calc_folding_cutting {
 		$$specs{"txtStockCalliper-$signature_index"} = $Paper->calliper();
 	} # end if
 
-	my @my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	my @my_equipment;
 
 	if ( $$specs{"chkOverrideFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		$log->debug("Overriding Equipment! " . $$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		@my_equipment = ( new openprint::Equipment( @$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
+	} else {
+		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -356,7 +358,7 @@ sub signature_calc_folding_cutting {
 
 		$results{'Breakdown'} .= "\tEquipment: ".$Equipment->name().':';
 
-		my $reason = $Equipment->fits( $I->paper()->width(), $I->paper()->height() );
+		my $reason = $Equipment->fits( $Paper->width(), $Paper->height() );
 		$results{'Breakdown'} .= $reason . '<br/>';
 		next if $reason;
 
@@ -860,7 +862,7 @@ sub calc {
 
 			# Folding
 			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-				my %results = signature_calc_folding_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
+				my %results = signature_calc_folding_cutting( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
 				$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 				$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
 				$price += $results{'Price'};
@@ -1032,7 +1034,7 @@ sub runtime {
 	my $runtime = 0;
 	if ( ! $Equipment ) {
 		return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-		$Equipment = openprint::Equipment::find_one('strid'=>$$specs{'ddmEquipment'.$qty_index});
+		$Equipment = openprint::Equipment->find_one('strid'=>$$specs{'ddmEquipment'.$qty_index});
 		return 0 if ! $Equipment;
 	} # end if
 

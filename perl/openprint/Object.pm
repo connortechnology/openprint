@@ -1,4 +1,5 @@
 package openprint::Object;
+use Time::HiRes qw{ gettimeofday tv_interval }; 
 
 use strict;
 use openprint ();
@@ -277,6 +278,7 @@ sub find {
 	my %fields = eval '%'.$type.'::fields';
 	my %find_fields = eval '%'.$type.'::find_fields';
 	my $debug = eval '$'.$type.'::debug';
+	my $starttime = [gettimeofday] if $debug;
 
 	my %params = @_;
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
@@ -416,17 +418,31 @@ sub find {
 		push @values, 0;
 	} # end if
 
-	$sql .= " OR $params{'or'}" if $params{'or'};
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
+	if ( $params{'or'} ) {
+		$sql .= " OR $params{'or'}";
+		delete $params{'or'};
+	} # end if
+	if ( $params{'order'} ) {
+		$sql .= " ORDER BY $params{'order'}";
+		delete $params{'order'};
+	} # end if
+	if ( $params{'limit'} ) {
+		$sql .= " LIMIT $params{'limit'}";
+		delete $params{'limit'};
+	} # end if
+	foreach my $k ( keys %params ) {
+		$log->error("Extra parameters in $type ::find $k => $params{$k}");
+	} # end foreach
+	
+$openprint::log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$openprint::log->debug('Error ' . $openprint::dbh->errstr() . " loading $type ($sql) (@values) " );
 	} elsif ( ( ! @$data ) and $debug ) {
 		$openprint::log->debug("No $type ($sql) (@values) " );
-	} elsif ( $debug or 1 ) {
-		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data );
+	} elsif ( $debug ) {
+		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds" );
 	} # end if
 	return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
 } # end sub find
