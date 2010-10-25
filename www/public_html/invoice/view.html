@@ -99,6 +99,7 @@
 		<table class="List">
 			<tr>
 				<th align="left">Product</th>
+				<th class="po">PO Num</th>
 				<th class="Price">Price</th>
 				<th style="text-align: right; width: 50px;">Qty</th>
 				<th class="Price">Total</th>
@@ -109,6 +110,7 @@
 				foreach my $Product ( $$variable{'Invoice'}->Products() ) {
 					$html .= '<tr>';
 					$html .= sprintf('<td align="left">%s</td>', $Product->description() );
+					$html .= sprintf('<td class="po">%s</td>', $Product->po() );
 
 					$html .= sprintf('<td class="Price">%2$s</td>', $Product->id(), openprint::Currency::format($Product->price()) );
 					$html .= sprintf('<td align="right">%2$d</td>', $Product->id(), $Product->quantity() );

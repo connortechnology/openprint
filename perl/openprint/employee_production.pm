@@ -1042,7 +1042,7 @@ $log->debug("Bindery:, servicetypes different");
 $log->debug("Dong Job for $servicetype_id : " . $ST->name() );
 					# Get all already existing jobs for this servicetype
 					foreach my $service_id ( @{$$services{$ST->name()}} ) {
-						my @J = openprint::ScheduledJob::find('project_id'=>$Project->id(),'service_id'=>$service_id);
+						my @J = openprint::ScheduledJob->find('project_id'=>$Project->id(),'service_id'=>$service_id);
 						if ( ! @J ) {
 							# Create a new Job
 							my $J = new openprint::ScheduledJob();

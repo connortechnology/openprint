@@ -1,27 +1,24 @@
 <script type="text/javascript" src="/javascripts/pricing.js"></script>
-<? eval (
-	@{$$variable{'Pricelists'}} = openprint::Pricelist->find('order'=>'lower(name)');
+<? echo (
+	my $html;
+	my @Equipment = openprint::Equipment->find('order'=>'lower(strid)');
 	$$variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
-) ?>
-<? while( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?> 
-	<fieldset><legend>Pricing for Price List: <? echo ( $$variable{'Pricelist'}->name() ) ?></legend>
-		<? if ( @{$$variable{'Prices'}} = openprint::ServicePrice->find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
+	foreach my $Pricelist ( openprint::Pricelist->find('order'=>'lower(name)') ) {
+		$html .= '<fieldset><legend>Pricing for Price List: '.$Pricelist->name() . "</legend>\n";
+		if ( my @Prices = openprint::ServicePrice->find('Service'=>$$variable{'Service'}, 'Pricelist'=>$Pricelist ) ) {
 
-		<? eval ( @{$$variable{'Equipment_ids'}} = sets::union( map{ $_->equipment_id() } @{$$variable{'Prices'}} ); ) ?>
-		<? while ( @{$$variable{'Equipment_ids'}} ) ?>
-			<? eval ( $$variable{Equipment} = new openprint::Equipment( shift @{$$variable{'Equipment_ids'}} ); ) ?>
-			<fieldset class="Equipment">
-<? if ( openprint::Equipment->find() ) ?>
-				<p>
-					<label>Equipment:</label>
-					<select name="ddmEquipment-<? echo ( $$variable{Pricelist}->id() ) ?>-<? echo ( $$variable{Equipment}->id() ) ?>">
-						<option value="">All Equipment</option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ], $$variable{Equipment}->id() ); ) ?>
-					</select>
-				</p>
-<? endif ( openprint::Equipment->find() ) ?>
+		my @equipment_ids = sets::union( map{ $_->equipment_id() } @{$$variable{'Prices'}} );
+		foreach my $Equipment ( map{new openprint::Equipment($_); } sets::union( map{ $_->equipment_id() } @Prices ) ) {
+			$html .= '<fieldset class="Equipment">';
+			if ( @Equipment ) {
+				$html .= '<p><label>Equipment:</label>';
+				$html .= qq`<select name="ddmEquipment-$$Pricelist{id}-$$Equipment{id}"><option value="">All Equipment</option>`;
+				$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ], $Equipment->id() );
+				$html .= '</select></p>';
+			} # end if has equipment
+			$html .= qq'
 				<table class="List">
-					<tr> 
+					<thead><tr> 
 						<th class="Add">&nbsp;</th>
 						<th class="Supplier">Supplier</th>
 						<th class="Range">Quantity Range</th>
@@ -30,43 +27,27 @@
 						<th class="Markup">Mark up</th>
 						<th class="Price">Price</th>
 						<th class="Discount">Discount?</th>
-					</tr>
-					<? echo (
-						my $html = '';
-						my @Prices = openprint::ServicePrice->find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'}, 'Equipment'=>$$variable{Equipment}, 'order'=>'min,max' );
-						foreach my $Price ( @Prices ) {
-							$html .= '<tr>';
-							$html .= sprintf('<td><input type="checkbox" name="chk-%d-%s-%d" checked="checked" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id() );
-							$html .= sprintf('<td><select name="supplier_id-%d-%s-%d"><option value=""> all </option>%s</select></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), ssi::make_drop_down( $$variable{'company_ids'}, $Price->supplier_id() ) );
-							$html .= sprintf('<td class="Range"><input type="text" name="min-%1$d-%2$s-%3$d" value="%4$s"/> - <input type="text" name="max-%1$d-%2$s-%3$d" value="%5$s"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->min(), $Price->max() );
-							$html .= sprintf('<td><input type="text" name="units-%d-%s-%d" value="%s"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->units() );
-							$html .= sprintf('<td><input type="text" name="cost-%d-%s-%d" value="%s" onkeyup="calc_from_cost(this);" /></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->cost() );
-							$html .= sprintf('<td><input type="text" name="markup-%d-%s-%d" value="%s" onkeyup="calc_from_markup(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->markup() );
-							$html .= sprintf('<td><input type="text" name="price-%d-%s-%d" value="%s" onkeyup="calc_from_price(this);"/></td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->price() );
-							$html .= sprintf('<td class="Discount"> 
-								<input type="radio" id="discount-%1$d-%2$s-%3$dY" name="discount-%1$d-%2$s-%3$d" value="Y" %4$s /><label class="radio" for="discount-%1$d-%2$s-%3$d">Yes</label>
-								<input type="radio" id="discount-%1$d-%2$s-%3$dN" name="discount-%1$d-%2$s-%3$d" value="N" %5$s /><label class="radio" for="discount-%1$d-%2$s-%3$d">No </label>
-							</td>', $Price->pricelist_id(), $$variable{'Equipment'}->id(), $Price->id(), $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) );
-							$html .= '</tr>';
-						} # end foreach
-						return $html;
-					) ?>
-				</table>
-			</fieldset><!--Equipment-->
-		<? endwhile ( @{$$variable{'Equipment_ids'}} ) ?>
-		<? endif ( @{$$variable{'Prices'}} = openprint::ServicePrice->find('Service'=>$$variable{'Service'}, 'Pricelist'=>$$variable{'Pricelist'} ) ) ?>
-		<fieldset class="Equipment"><legend>Add New</legend>
-<? if ( openprint::Equipment->find() ) ?>
-			<p>
-				<label>Equipment</label>
-				<select multiple="multiple" size="4" name="ddmEquipment-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New">
-					<option value="" selected="selected">All Equipment</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find('order'=>'lower(strID)') ] ); ) ?>
-				</select>
-			</p>
-<? endif ( openprint::Equipment->find() ) ?>
+						<th class="buttons">&nbsp;</th>
+					</tr></thead><tbody id="prices-$$Pricelist{id}-$$Equipment{id}">
+					';
+			$$variable{'Equipment'} = $Equipment;
+			$$variable{'Pricelist'} = $Pricelist;
+			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/services/_prices_table_body.html', $variable );
+			$html .= '</tbody></table></fieldset><!--Equipment-->';
+		} # end foreach Equipment
+	} # end if prices
+	$html .= '<fieldset class="Equipment"><legend>Add New</legend>';
+	if ( @Equipment ) {
+		$html .= '<p><label>Equipment</label>';
+		$html .= qq`
+				<select multiple="multiple" size="4" name="ddmEquipment-$$Pricelist{id}-New">
+					<option value="" selected="selected">All Equipment</option>`;
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @Equipment ] );
+		$html .= '</select></p>';
+	} # end if has_equipment
+	$html .= qq`
 			<table class="List">
-				<tr> 
+				<thead><tr> 
 					<th class="Add">&nbsp;</th>
 					<th class="Supplier">Supplier</th>
 					<th class="Range">Quantity Range</th>
@@ -75,27 +56,32 @@
 					<th class="Markup">Mark up</th>
 					<th class="Price">Price</th>
 					<th class="Discount">Discount?</th>
-				</tr>
+				</tr></thead><tbody>
 				<tr>
-					<td><input type="checkbox" name="chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" /></td>
-					<td><select name="supplier_id-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0"><option value=""> all </option><? echo ( ssi::make_drop_down( $$variable{'company_ids'} ); ) ?></select></td>
+					<td><input type="checkbox" name="chk-$$Pricelist{id}-New-0" /></td>
+					<td><select name="supplier_id-$$Pricelist{id}-New-0"><option value=""> all </option>`;
+$html .= ssi::make_drop_down( $$variable{'company_ids'} );
+$html .= qq`</select></td>
 					<td class="Range">
-						<input type="text" name="min-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;">
+						<input type="text" name="min-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;">
 						-
-						<input type="text" name="max-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;">
+						<input type="text" name="max-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;">
 					</td>
-					<td><input type="text" name="units-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-					<td><input type="text" name="cost-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_cost(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-					<td><input type="text" name="markup-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
-					<td><input type="text" name="price-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;"> </td>
+					<td><input type="text" name="units-$$Pricelist{id}-New-0" onkeyup="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"> </td>
+					<td><input type="text" name="cost-$$Pricelist{id}-New-0" onkeyup="calc_from_cost(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"> </td>
+					<td><input type="text" name="markup-$$Pricelist{id}-New-0" onkeyup="calc_from_markup(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"> </td>
+					<td><input type="text" name="price-$$Pricelist{id}-New-0" onkeyup="calc_from_price(this);this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;"> </td>
 					<td>
-						<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" id="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0Y" value='Y' checked="checked" onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" />
-						<label class="radio" for="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0Y">Yes</label>
-						<input type="radio" name="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0" id="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0N" value='N'  onchange="this.form.elements['chk-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0'].checked = true;" />
-						<label class="radio" for="discount-<? echo ( $$variable{'Pricelist'}->id() ) ?>-New-0N">No</label>
+						<input type="radio" name="discount-$$Pricelist{id}-New-0" id="discount-$$Pricelist{id}-New-0Y" value='Y' checked="checked" onchange="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;" />
+						<label class="radio" for="discount-$$Pricelist{id}-New-0Y">Yes</label>
+						<input type="radio" name="discount-$$Pricelist{id}-New-0" id="discount-$$Pricelist{id}-New-0N" value='N'  onchange="this.form.elements['chk-$$Pricelist{id}-New-0'].checked = true;" />
+						<label class="radio" for="discount-$$Pricelist{id}-New-0N">No</label>
 					</td>
 				</tr>
 			</table>
 		</fieldset><!--Equipment-->
 	</fieldset><!--Pricelist-->
-<? endwhile( $$variable{'Pricelist'} = shift @{$$variable{'Pricelists'}}; ) ?> 
+`;
+} # end foreach Pricelist
+return $html;
+) ?>

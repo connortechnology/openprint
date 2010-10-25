@@ -165,7 +165,7 @@ if ( ! openprint::Invoice_Tax->find_one() ) {
 				'rate'			=>	$Tax->rate(),
 				'amount'		=>	$new_amount,
 			});
-			$log->warn( $_ ) if $_;
+			die( $_ ) if $_;
 		} # end foreach tax
 	} # end foreach Invoice
 	sql::end_transaction( $dbh, $ac );
@@ -223,7 +223,7 @@ if ( ! openprint::Order_Tax->find_one() ) {
 				'rate'			=>	$Tax->rate(),
 				'amount'		=>	$new_amount,
 			});
-			$log->warn( $_ ) if $_;
+			die( $_ ) if $_;
 		} # end foreach tax
 	} # end foreachOrder 
 	sql::end_transaction( $dbh, $ac );

@@ -23,10 +23,10 @@ sub Users {
 	my ( $self, %param ) = @_;
 	if ( %param ) {
 		$param{'usergroup_id'} = $$self{'id'};
-		return openprint::User::find( %param );	
+		return openprint::User->find( %param );	
 	} elsif ( ! $$self{'Users'} ) {
 		$param{'usergroup_id'} = $$self{'id'};
-		@{$$self{'Users'}} = openprint::User::find( %param );	
+		@{$$self{'Users'}} = openprint::User->find( %param );	
 	} # end if
 	return @{$$self{'Users'}};
 } # end sub Users

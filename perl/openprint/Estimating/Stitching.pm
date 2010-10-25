@@ -129,7 +129,7 @@ sub get_imposition {
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 # includes teh cost of folding...
 sub signature_calc {
-	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, @Impositions ) = @_;
+	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, $Impositions ) = @_;
 
 	my %results;
 	my $services = $Project->services();
@@ -143,6 +143,13 @@ sub signature_calc {
 
 	my $plusCover = $$printing_specs{'rdbCover'} eq 'Different' ? 1 : 0;
 
+	if ( ! $Impositions ) {
+	Carp::cluck ('No Impositions');
+	} # end if
+	if ( ! $printing_specs ) {
+	Carp::cluck ('No printing_specs');
+	} # end if
+
 	# Need to figure out which dimension the spine bisects
 	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
@@ -154,9 +161,42 @@ sub signature_calc {
 	my $imposition = 2;
 	$$specs{"txtPockets$qty_index"} = 0;
 
-	foreach my $I ( @Impositions ) {
+	foreach my $I ( @$Impositions ) {
 #$I->display('In Stitching:') if $debug;
-		$$specs{"txtPockets$qty_index"} += 1;
+		my $sig_specs = $I->specs();
+		my %pages;
+		my $sig_pages = $I->pages();
+		if ( $folding_specs ) {
+			foreach my $index ( 1 .. 4 ) {
+				next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				next if ! $type;
+				my ( $pages ) = $type =~ /(\d+)PageFold/;
+				#$results{'Breakdown'} .= "Folding$index: $$sig_specs{SignatureIndex} sig_pages; $sig_pages type: $type pages: $pages qty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . '<br/>';
+				if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
+					$pages{$pages} += $sig_pages / $pages;
+				} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $$sig_specs{'PageQuantity'.$qty_index} ) {
+					$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+				} else {
+					$pages{$pages} += 1;
+				} # end if
+#$$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
+			} # end foreach index
+
+	# If not all pages have been folde, then revert to just pull from the sig.
+			if ( misc::sum( map { $_ * $pages{$_} } keys %pages ) < $sig_pages ) {
+				$$specs{"txtPockets$qty_index"} += 1;
+				$$specs{'txtSignatureQty'.$sig_pages.'Page-'.$qty_index} += 1;
+			} else {
+				foreach my $page ( keys %pages ) {
+	# The -1 is because the signature has already been counted in the pocket calc.
+					$$specs{"txtPockets$qty_index"} += $pages{$page};
+					$$specs{'txtSignatureQty'.$page.'Page-'.$qty_index} += $pages{$page};
+				} # end foreach
+			} # end if
+		} else {
+			$$specs{"txtPockets$qty_index"} += 1;
+		} # end if
 
 		if ( $imposition > 1 ) {
 			$imposition = 1 if ( 
@@ -169,8 +209,9 @@ sub signature_calc {
 			#$openprint::log->debug(" $$I{'runstyle'} " . ($$I{'imposition'}%4) );
 		} # end if
 	} # end foreach Imposition
+#$results{'Breakdown'} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
 #$openprint::log->debug("Imp: $imposition");
-	my $I = $Impositions[0];
+	my $I = $$Impositions[0];
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
@@ -182,6 +223,7 @@ sub signature_calc {
 	} else {
 		$$specs{'Imposition'.$qty_index} = $imposition;
 	} # end if
+$results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
 
 	my $error;
 	# THe Equipment->find call gets cached... and the rest is impo-specific... so we can't really cache this.
@@ -234,7 +276,7 @@ $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_
 				next;
 			} # end if
 			
-			if ( $Impositions[0]{'Folder'}->id() != $Equipment->id() ) {
+			if ( $$Impositions[0]{'Folder'}->id() != $Equipment->id() ) {
 				#$openprint::log->debug("Folder not the same: " . $$folding_specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"}. ' != ' . $Equipment->id() );
 				next;
 			} # end if
@@ -246,7 +288,7 @@ $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_
 		} # end if
 		my $price = get_price( $Project, $ServiceType, $Equipment, $specs, $plusCover, $qty_index );
 		$$price{'ComparisonPrice'} = $$price{'txtPrice'} + $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
-$$specs{'hdnBreakdown'.$qty_index} .= $Equipment->strid() . ' ' . $$price{'txtPrice'} . ' ' . $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
+#$$specs{'hdnBreakdown'.$qty_index} .= $Equipment->strid() . ' ' . $$price{'txtPrice'} . ' ' . $$folding_specs{"Price-$$sig_specs{SignatureIndex}-$qty_index"};
 		if ( ( ! $bestPrice ) or $$price{'ComparisonPrice'} < $$bestPrice{'ComparisonPrice'} ) {
 			$bestEquipment = $Equipment;
 			$bestPrice = $price;
@@ -394,6 +436,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 				my $sig_pages = $$sig_specs{'PageQuantity'.$qty_index};
 				if ( $folding_specs ) {
 					foreach my $index ( 1 .. 4 ) {
+						next if ! $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						my $type = $$folding_specs{"FoldType-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 						next if ! $type;
 						my ( $pages ) = $type =~ /(\d+)PageFold/;
@@ -530,8 +573,8 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 					my $Imposition = new openprint::Imposition;
 					$Imposition->load( $sig_specs, $qty_index );
-					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs );
-				$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
+					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs, [] );
+				#$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
 					$folding_cost += $folding_results{'Price'};
 				} # end foreach sig
 				$$price{'ComparisonPrice'} += $folding_cost;
@@ -553,7 +596,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 			} # end if
 			my $servicePrice = $$price{'LastServicePrice'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: 1 pass at $%.2f%s=$%.2f<br/>', @$servicePrice{'Price','units','Total'});
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'}))."<br/><br/>";
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'})).'<br/><br/>';
 		} # end foreach
 		if ( ! $bestEquipment ) {
 			$$specs{'Status'} = 'uncalculated';
@@ -637,7 +680,7 @@ sub get_price {
 		'MPrice'	=> 0,
 	);
 
-	my $qty = $$specs{'txtQuantity'.$qty_index};
+	my $qty = $$specs{'txtQuantity'.$qty_index} ? $$specs{'txtQuantity'.$qty_index} : $Project->quantity($qty_index);
 #$openprint::log->debug($price{'Imposition'} . ' on ' .$Equipment->name() . ' max imp: ' . $Equipment->specification('Maximum Imposition')) if $debug;
 	if ( $Equipment->specification("Maximum $$ServiceType{name} Imposition") and ( $Equipment->specification("Maximum $$ServiceType{name} Imposition") < $$specs{'Imposition'.$qty_index} ) ) {
 		$price{'Imposition'} = 1;
@@ -774,7 +817,7 @@ sub get_price {
 
 	$price{'Imposition Discount'} = $Equipment->specification( 'Imposition Discount', $price{'Imposition'} );
 	$price{'Service'} *= ( 1 - $price{'Imposition Discount'}/100);
-	$price{'MPrice'} += ( $price{'Service'} / $qty ) * 1000;
+	$price{'MPrice'} += ( $price{'Service'} / $qty ) * 1000 if $qty;
 	if ( $Equipment->specification( 'SpineLength Discount' ) ) {
 		$price{'SpineLength Discount'} = $Equipment->specification( 'SpineLength Discount', $$specs{'Height'} );
 		$price{'Service'} *= ( 1 - $price{'SpineLength Discount'}/100);

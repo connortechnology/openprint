@@ -564,7 +564,7 @@ sub calc_from_imposition {
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
 		} # end foreach $index
 
-		my $price = calc_price( $Project, $service_id, $Imposition, $project, $services, $specs, $Project->quantity($qty_index), $qty_index, \%PlateCounts );
+		my $price = calc_price( $Project, $service_id, $Imposition, $project, $services, $specs, $Project->quantity($qty_index), $qty_index, \%PlateCounts, [] );
 		plate_cost( $price, \%PlateCounts, $Imposition );
 
 		my $Paper = $Imposition->Paper();
@@ -2364,7 +2364,7 @@ my $recurse = 0;
 			$imp = $imp->copy();
 #my $time = gettimeofday();
 #$imp->display($recursion_depth . ' Starting');
-			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts );
+			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts, $other_impositions );
 #$imp->display("Actually calculating this imp $$price{'Comparison Cost'}");
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
@@ -2463,7 +2463,7 @@ my $recurse = 0;
 						and ( ($new_specs{'chkOverrideRunStyle'.$qty_index} ne 'Y') or ($new_specs{'ddmRunStyle'.$qty_index} eq $imp->runstyle()) )
 ) {
 
-				  		$sig_price = calc_price( $Project, $s_id, $imp, $project, $services, \%new_specs, $qty, $qty_index, \%PlateCounts );
+				  		$sig_price = calc_price( $Project, $s_id, $imp, $project, $services, \%new_specs, $qty, $qty_index, \%PlateCounts, $other_impositions );
 #$imp->display("additional calc_price this imp $$sig_price{'Comparison Cost'}");
 						$additional_price = $$sig_price{'Comparison Cost'};
 
@@ -2689,7 +2689,8 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					my @all_impositions = @{$other_impositions}, @{$$price{'Impositions'}};
 					
 #my $starttime = gettimeofday();
-					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, @all_impositions );
+$openprint::log->debug("Stitching::signature_calc");
+					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@all_impositions );
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
 #$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>" . $$project{'StitchingSpecs'}{'hdnBreakdown'.$qty_index};
@@ -2815,7 +2816,7 @@ sub check_price {
 # Takes and Imposition object, and calculates a Price Object.
 # Does not need to take folding or Cutting into account, as those were chosen separately
 sub calc_price {
-	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $PlateCounts ) = @_;
+	my ( $Project, $service_index, $Imposition, $project, $services, $specs, $qty, $qty_index, $PlateCounts, $other_impositions ) = @_;
 
 	my $Paper = $Imposition->Paper();
 	my $Press = $Imposition->Press();
@@ -2982,7 +2983,8 @@ sub calc_price {
 		if ( $$Imposition{'folding_results'} ) {
 			%folding_results = %{$$Imposition{'folding_results'}};
 		} else {
-			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs'} );
+			my @all_impositions = ( @{$other_impositions}, $Imposition );
+			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, \@all_impositions );
 			#$$Imposition{'folding_results'} = \%folding_results;
 		} # end if
 
@@ -4351,7 +4353,7 @@ sub summary {
 #$html .= $$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . $$specs{'ddmRunStyle'.$qty_index} : $$specs{'ddmRunStyle'.$qty_index};
 		$html .= sprintf(' with %d plate changes = %d plates', @$specs{'txtPlateChangeQuantity'.$qty_index,'txtPlateQuantity'.$qty_index} ) if $$specs{'txtPlateChangeQuantity'.$qty_index};
 
-if ( 1 ) {
+#if ( 1 ) {
 # Have Stock summary line now
 		if ( $$services{'NoPrinting'} ) {
 			$html .= sprintf(' %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
@@ -4365,13 +4367,18 @@ if ( 1 ) {
 				$html .= sprintf(' on %s" x %s"', @$specs{'StockWidth'.$qty_index,'StockHeight'.$qty_index});
 			} # end if
 		} # end if
-} # end if
-if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-	$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{'Folding'}[0], undef, $qty_index, $service_index, undef );
-} # end if
-if ( $$services{'Scoring'} and @{$$services{'Scoring'}} ) {
-	$html .= "\nscored " . openprint::Estimating::Scoring::signature_summary( $Project, $$services{'Scoring'}[0], undef, $qty_index, $service_index, undef );
-} # end if
+		if ( sets::isin( $openprint::session{'user_type'}, [ 'E', 'A' ] ) ) {
+			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
+				$html .= "\nfolded " . openprint::Estimating::Folding::signature_summary( $Project, $$services{'Folding'}[0], undef, $qty_index, $service_index, undef );
+			} # end if
+			if ( $$services{'Scoring'} and @{$$services{'Scoring'}} ) {
+				my $scoring_specs = openprint::service::get_specs_ref( $Project, $$services{'Scoring'}[0] );
+				my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
+				if ( openprint::Estimating::Scoring::signature_needs( $Project, $scoring_specs, $specs, $Paper ) ) {
+					$html .= "\nscored " . openprint::Estimating::Scoring::signature_summary( $Project, $$services{'Scoring'}[0], undef, $qty_index, $service_index, undef );
+				} # end if
+			} # end if
+		} # end if
 
 		return $html;
 	} else { # ! qty_index

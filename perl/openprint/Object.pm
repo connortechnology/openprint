@@ -425,9 +425,22 @@ sub find {
 		push @values, 0;
 	} # end if
 
-	$sql .= " OR $params{'or'}" if $params{'or'};
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
+	if ( $params{'or'} ) {
+		$sql .= " OR $params{'or'}";
+		delete $params{'or'};
+	} # end if
+	if ( $params{'order'} ) {
+		$sql .= " ORDER BY $params{'order'}";
+		delete $params{'order'};
+	} # end if
+	if ( $params{'limit'} ) {
+		$sql .= " LIMIT $params{'limit'}";
+		delete $params{'limit'};
+	} # end if
+	foreach my $k ( keys %params ) {
+		$log->error("Extra parameters in $type ::find $k => $params{$k}");
+	} # end foreach
+	
 $openprint::log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );

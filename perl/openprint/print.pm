@@ -66,6 +66,7 @@ sub view_services {
 	} # end if
 
 	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
 
 	$log->debug(" **** STARTING VIEW SERVICES FUNCTION * Project $project_index( $$Project{id} ) *** $openprint::session{'company_id'}");
 
@@ -103,8 +104,15 @@ sub view_services {
 # Might need to test for status of project service
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching'] ) ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 					$recalc = 1;
+				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Folding' ] ) ) {
+					if ( $$services{'Cutting'} and @{$$services{'Cutting'}} ) {	
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'Cutting'}[0], 'Cutting' );
+					} # end if
+					if ( $$services{'SaddleStitching'} and @{$$services{'SaddleStitching'}} ) {	
+						openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{'SaddleStitching'}[0], 'Stitching' );
+					} # end if
 				} # end if
 				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index ) if $recalc;
 		
