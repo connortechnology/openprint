@@ -1728,7 +1728,10 @@ sub _li {
 
 	my $Job = $variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
 	if ( $param{'action'} eq 'House Stock' ) {
-		$Job->save({stock=>$Job->stock().' House Stock'});	
+		my $stock = $Job->stock();
+		if ( ! ( $stock =~ /House Stock/ ) ) {
+			$Job->save({stock=>$stock.' House Stock'});	
+		} # end if
 	} # end if
 } # end sub _li
 
