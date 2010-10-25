@@ -1724,5 +1724,13 @@ sub bindery_schedule2 {
 	$variable{'referer'} = '/employee/production/bindery_schedule2.html';
 } # end sub bindery_schedule2
 
+sub _li {
+
+	my $Job = $variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+	if ( $param{'action'} eq 'House Stock' ) {
+		$Job->save({stock=>'House Stock'});	
+	} # end if
+} # end sub _li
+
 1;
 __END__
