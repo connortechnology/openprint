@@ -2982,7 +2982,8 @@ sub calc_price {
 		if ( $$Imposition{'folding_results'} ) {
 			%folding_results = %{$$Imposition{'folding_results'}};
 		} else {
-			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs'} );
+			my @all_impositions = @{$other_impositions}, @{$$price{'Impositions'}};
+			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs'}, \@all_impositions );
 			#$$Imposition{'folding_results'} = \%folding_results;
 		} # end if
 
