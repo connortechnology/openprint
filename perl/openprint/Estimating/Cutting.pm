@@ -246,6 +246,7 @@ sub signature_calc_stock_cutting {
 		next if $reason;
 
 		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
+		# no lift depth means 1 at a time.
 		next if ! $liftDepth;
 #		my $sheets = int( $$sig_specs{'txtPressSheetQty'.$qty_index} / ( ($$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"}*$$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"}) / ($sheet_width*$sheet_height) ) );
 
@@ -687,7 +688,7 @@ sub signature_calc {
 			} # end if
 		} # end if
 
-		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 		$results{'Breakdown'} .= '# of cuts: ' . $cuts . ' => ' .($cuts * $sheets) . '<br/>';
 
 		if ( $vertical_cuts > $horizontal_cuts ) {
@@ -696,7 +697,7 @@ sub signature_calc {
 			$totalPrice += $price;
 			if ( $config{'Dumb Cutting'} ne 'Y' ) {
 				$sheets *= $$I{'columns'};
-				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			} # end if
 			$price = ( $runs * $horizontal_cuts * $ServicePrice{'Price'} );
 			$results{'Breakdown'} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $horizontal_cuts, $sheets, $runs, $price );
@@ -707,7 +708,7 @@ sub signature_calc {
 			$totalPrice += $price;
 			if ( $config{'Dumb Cutting'} ne 'Y' ) {
 				$sheets *= $$I{'rows'};
-				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			} # end if
 			$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
 			$results{'Breakdown'} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
@@ -719,7 +720,7 @@ sub signature_calc {
 
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 			$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
-			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 
 			if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
 				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
@@ -727,7 +728,7 @@ sub signature_calc {
 				$totalPrice += $price;
 				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_columns'};
-					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
 
@@ -739,7 +740,7 @@ sub signature_calc {
 				$totalPrice += $price;
 				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_rows'};
-					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
 
@@ -754,7 +755,7 @@ sub signature_calc {
 
 		if ( $$specs{"txtAdditionalCuts$signature_index"} ) {
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
-			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			my $price = ( $runs * $$specs{"txtAdditionalCuts$signature_index"} * $ServicePrice{'Price'} );
 			$results{'Breakdown'} .= 'Additional cuts:<br/>';
 			$results{'Breakdown'} .= sprintf('%d cuts on %d sheets: $%.2f<br/>', $$specs{"txtAdditionalCuts$signature_index"}, $sheets, $price );
