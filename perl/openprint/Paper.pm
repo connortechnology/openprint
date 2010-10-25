@@ -1250,8 +1250,10 @@ sub load_from_signature {
 					);
 			if ( $qty_index ) {
 				$params{'width'} = $$specs{'hdnSuppliedStockWidth'.$qty_index};
-				$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
 				$params{'type'}	= $$specs{'StockType'.$qty_index};
+				if ( $params{'type'} ne 'Roll' ) {
+					$params{'height'} = $$specs{'hdnSuppliedStockHeight'.$qty_index};
+				} # end if
 			} # end if
 			my @Papers = openprint::Paper->find( %params );
 			if ( ! @Papers ) {
@@ -1318,7 +1320,7 @@ sub load_from_signature {
 	$Paper = $Paper->clone();
 	if ( $qty_index ) {
 		if ( $Paper->width() != $$specs{'StockWidth'.$qty_index} or $Paper->height() != $$specs{'StockHeight'.$qty_index} ) {
-$log->debug("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
+#Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			$Paper->start_width( $Paper->width() ) if ! $Paper->start_width();
 			$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
