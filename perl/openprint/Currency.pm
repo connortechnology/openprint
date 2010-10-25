@@ -23,6 +23,9 @@ $serial = 'CurrencyIndex_seq';
 %defaults = (
 );
 
+sub cache_field {
+	return 'short';
+}
 sub conversions {
 	my ( $self, $to ) = @_;
 	return 1 if $$self{id} == $to;
