@@ -1,0 +1,15 @@
+<table>
+	<thead><tr><th>Name</th><th># of Users</th></tr></thead>
+	<tbody>
+	<? echo (
+	my $html;
+	foreach my $UG ( openprint::UserGroup->find('order'=>'lower(name)') ) {
+		$html .= sprintf(q`<tr><td><a href="/administrator/managerial/usergroup.html?id=%1$d">%2$s</a></td><td>%3$d</td></tr>`, 
+			$UG->id(), $UG->name(), scalar $UG->Users()
+			);
+	} # end foreach UG
+	return $html;
+	) ?>
+	</tbody>
+</table>
+

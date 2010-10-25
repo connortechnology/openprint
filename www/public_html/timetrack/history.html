@@ -71,9 +71,9 @@
 			</p>
 			<p>
 				<label>Employee:</label>
-				<select name="employee_id" id="employee_id" onchange="load_timetracks(this.form);">
+				<select name="user_id" id="user_id" onchange="load_timetracks(this.form);">
 					<option value="">All</option>
-					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)') ], $session{'/timetrack/history.html?employee_id'} ); ) ?>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'}, 'order'=>'lower(firstname),lower(lastname)') ], $session{'/timetrack/history.html?user_id'} ); ) ?>
 				</select>
 			</p>
 			</div>

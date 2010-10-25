@@ -1,4 +1,3 @@
-
 <fieldset><legend>Unpaid Timetracks</legend>
 	<table class="List sortable">
 		<tr>
@@ -13,8 +12,8 @@
 			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 			my @Timetracks;
 			foreach my $T ( openprint::Timetrack->find(
-				'employer_id'	=> $openprint::session{'company_id'},
-				'employee_id'	=> $$variable{'Paycheque'}->employee_id(),
+				'employer_id'	=> $session{'company_id'},
+				'user_id'		=> $$variable{'Paycheque'}->employee_id(),
 				'paycheque_id'	=> undef,
 				'order'			=> 'id',
 			) ) {

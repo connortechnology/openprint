@@ -79,6 +79,10 @@ function filter_onChange( element, id, selected ) {
     <? echo ( ssi::fill_drop_down( $log, $dbh, 'SELECT DISTINCT strCategory,strCategory FROM tbl_Equipment ORDER BY strCategory', $$variable{Equipment}->category() ); ) ?>
 			</select>
 		</p>
+		<p>
+			<label>Sort:</label>
+			<input type="text" name="sorting" value="<? echo ( $$variable{Equipment}->sorting(); ) ?>" />
+		</p>
 		<p> 
 			<label>Description:</label>
 			<input type="text" name="description" value="<? hecho ( $$variable{Equipment}->description(); ) ?>" />

@@ -245,6 +245,7 @@ sub signature_calc_stock_cutting {
 		next if $reason;
 
 		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
+		# no lift depth means 1 at a time.
 		next if ! $liftDepth;
 #		my $sheets = int( $$sig_specs{'txtPressSheetQty'.$qty_index} / ( ($$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"}*$$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"}) / ($sheet_width*$sheet_height) ) );
 
@@ -297,7 +298,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 } # end sub signature_calc_stock_cutting
 
 sub signature_calc_folding_cutting {
-	my ( $log, $dbh, $variable, $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs ) = @_;
+	my ( $Project, $service_index, $sig_specs, $specs, $qty_index, $Paper, $I, $fold_specs ) = @_;
 
 	my %results = (
 			'Status'	=> 'calculated',
@@ -318,7 +319,7 @@ sub signature_calc_folding_cutting {
 		} # end if
 	} # end foreach fold
 	my $folding_cuts = misc::sum( map { $folds{$_} } keys %folds);
-	$results{'Breakdown'} .= sprintf('<b>Cutting prior to folding: %d -> %s</b><br/>', $I->pages(), join(',',keys %folds ) );
+	$results{'Breakdown'} .= sprintf('<b>Cutting prior to folding sig: %d qty: %d: %dpg -> folds %s</b><br/>', $$sig_specs{'SignatureIndex'}, $qty_index, $I->pages(), join(',',keys %folds ) );
 	if ( $folding_cuts <= 1 ) {
 		$results{'Breakdown'} .= sprintf('Not needed<br/>' );
 		$results{'Status'} = 'calculated';
@@ -332,11 +333,13 @@ sub signature_calc_folding_cutting {
 		$$specs{"txtStockCalliper-$signature_index"} = $Paper->calliper();
 	} # end if
 
-	my @my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	my @my_equipment;
 
 	if ( $$specs{"chkOverrideFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		$log->debug("Overriding Equipment! " . $$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		@my_equipment = ( new openprint::Equipment( @$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
+	} else {
+		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -356,7 +359,7 @@ sub signature_calc_folding_cutting {
 
 		$results{'Breakdown'} .= "\tEquipment: ".$Equipment->name().':';
 
-		my $reason = $Equipment->fits( $I->paper()->width(), $I->paper()->height() );
+		my $reason = $Equipment->fits( $Paper->width(), $Paper->height() );
 		$results{'Breakdown'} .= $reason . '<br/>';
 		next if $reason;
 
@@ -684,7 +687,7 @@ sub signature_calc {
 			} # end if
 		} # end if
 
-		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+		my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 		$results{'Breakdown'} .= '# of cuts: ' . $cuts . ' => ' .($cuts * $sheets) . '<br/>';
 
 		if ( $vertical_cuts > $horizontal_cuts ) {
@@ -693,7 +696,7 @@ sub signature_calc {
 			$totalPrice += $price;
 			if ( $config{'Dumb Cutting'} ne 'Y' ) {
 				$sheets *= $$I{'columns'};
-				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			} # end if
 			$price = ( $runs * $horizontal_cuts * $ServicePrice{'Price'} );
 			$results{'Breakdown'} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>", $horizontal_cuts, $sheets, $runs, $price );
@@ -704,7 +707,7 @@ sub signature_calc {
 			$totalPrice += $price;
 			if ( $config{'Dumb Cutting'} ne 'Y' ) {
 				$sheets *= $$I{'rows'};
-				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+				$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			} # end if
 			$price = ( $runs * $vertical_cuts * $ServicePrice{'Price'} );
 			$results{'Breakdown'} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs: %.2f<br/>", $vertical_cuts, $sheets, $runs, $price );
@@ -716,7 +719,7 @@ sub signature_calc {
 
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
 			$sheets *= $$sig_specs{'PageQuantity'} if $$sig_specs{'PageQuantity'};
-			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 
 			if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
 				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
@@ -724,7 +727,7 @@ sub signature_calc {
 				$totalPrice += $price;
 				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_columns'};
-					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
 
@@ -736,7 +739,7 @@ sub signature_calc {
 				$totalPrice += $price;
 				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_rows'};
-					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
 				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
 
@@ -751,7 +754,7 @@ sub signature_calc {
 
 		if ( $$specs{"txtAdditionalCuts$signature_index"} ) {
 			$sheets = ceil( $$sig_specs{'txtQuantity'.$qty_index} / $$I{'imposition'} );
-			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : 1;
+			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			my $price = ( $runs * $$specs{"txtAdditionalCuts$signature_index"} * $ServicePrice{'Price'} );
 			$results{'Breakdown'} .= 'Additional cuts:<br/>';
 			$results{'Breakdown'} .= sprintf('%d cuts on %d sheets: $%.2f<br/>', $$specs{"txtAdditionalCuts$signature_index"}, $sheets, $price );
@@ -860,7 +863,7 @@ sub calc {
 
 			# Folding
 			if ( $$services{'Folding'} and @{$$services{'Folding'}} ) {
-				my %results = signature_calc_folding_cutting( $log, $dbh, $variable, $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
+				my %results = signature_calc_folding_cutting( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $Imposition );
 				$$specs{"ddmFoldCutEquipment-$signature_index-$qty_index"} = $results{'Equipment'} ? $results{'Equipment'}->id() : '';
 				$$specs{"txtFoldCutPrice-$signature_index-$qty_index"} = $results{'Price'};
 				$price += $results{'Price'};
@@ -1032,7 +1035,7 @@ sub runtime {
 	my $runtime = 0;
 	if ( ! $Equipment ) {
 		return 0 if ! $$specs{'ddmEquipment'.$qty_index};
-		$Equipment = openprint::Equipment::find_one('strid'=>$$specs{'ddmEquipment'.$qty_index});
+		$Equipment = openprint::Equipment->find_one('strid'=>$$specs{'ddmEquipment'.$qty_index});
 		return 0 if ! $Equipment;
 	} # end if
 

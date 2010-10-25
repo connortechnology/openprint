@@ -2,7 +2,16 @@
 <? echo (
 	my @Users = openprint::User->find('id'=>[sql::execute(undef,undef,'SELECT user_id FROM companies_accountingcontacts WHERE company_id=?', $$variable{'Company'}->id() )],'order'=>'lower(firstname),lower(lastname)' );
 	
-	return @Users ? join('<br/>', map { sprintf('&quot;%s&quot; &lt;%s&gt;', $_->name(), $_->email() ) } @Users ) . '<br/>' : '';
+	my $html;
+	foreach my $User ( @Users ) {
+		$html .= sprintf('&quot;%s&quot; &lt;%s&gt;', $User->name(), $User->email() );
+		$html .= ssi::writeButton( $log, $dbh, 'X'.$User->id(), 'x.gif', qq`
+			new Ajax.Updater('AccountingContacts','_company_accounting_contacts.html?action=delete', { method: 'get', parameters: { company_id: '$$variable{Company}{id}', user_id: $$User{id} } } );"
+`, '', 'X' );
+		$html .= '<br/>';
+	} # end foreach
+	$html .= '<br/>' if ! @Users;
+	return $html;
 ) ?>
 <? echo ( 
 	my $html = '';
