@@ -122,16 +122,18 @@
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
 	my @presses = openprint::Equipment::find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'UseInScheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
+
+	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) );
+	if ( ! @selected_equipment ) {
+		@selected_equipment = map { $_->id() } @presses;
+	}
+
 	foreach (@presses) {
-		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/bindery_schedule2.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) ] );
+		push @{$$variable{'Equipment'}}, $_ if sets::isin( $_->id(), \@selected_equipment );
 	} # end foreach press
 
 	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
-	if ( $session{'/employee/production/bindery_schedule2.html?Equipment'} ) {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ] );
-	} else {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
-	} # end if
+	$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
 	return $html;
 ) ?>
 			</select>
