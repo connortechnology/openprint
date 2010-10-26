@@ -23,6 +23,7 @@ require openprint::ManifestContent;
 require openprint::Manifest_Content_Type;
 require openprint::PaperAllocation;
 require openprint::PurchaseOrder;
+require openprint::Label;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -1838,8 +1839,44 @@ sub purchase_order_edit {
 
 	my $Me = new openprint::User( $session{'user_id'} );
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+
+	if ( $param{'btnFunction'} eq 'New' ) {
+$log->debug("Creating PO from label");
+		my $Label = new openprint::Label( $param{'label_id'} );
+		$log->debug("Creating PO from label $$Label{id}");
+		my $C = $Me->Company();
+		$variable{'error'} .= $PO->save( {
+				'created_by'	=>	$session{'user_id'}, 
+				'company_id'=>$Me->company_id(),
+				'currency_id'		=>	openprint::Currency::get_current()->id(),
+				'created_by'		=>	$Me->id(),
+				'shipto_contact'	=>	$Me->name(),
+				'shipto_name'		=>	$C->name(),
+				'shipto_address1'	=>	$C->address1(),
+				'shipto_address2'	=>	$C->address2(),
+				'shipto_city'		=>	$C->city(),
+				'shipto_state'		=>	$C->state(),
+				'shipto_country'	=>	$C->country(),
+				'shipto_postalcode'	=>	$C->postalcode(),
+				'shipto_phone'		=>	$C->phone(),
+				'shipto_mobile'		=>	$Me->mobile(),
+				'shipto_fax'		=>	$C->fax(),
+				'shipto_email'		=>	$Me->email(),
+				'shipto_sms'		=>	$Me->sms(),
+				} );
+$log->debug("Creating PO $$PO{id} from label $variable{error}");
+		
+		my $C = new openprint::PurchaseOrder_Content();
+        $C->save( {
+            'po_id'         => 	$PO->id(),
+            'qty'           =>  1,
+            'item'          =>  'Shipping',
+            'description'   =>  'From: ' . $Label->get_data('from') . ' To: ' . $Label->get_data('to'),
+            'docket'        =>  $Label->Project()->docket(),
+            'type'       	=> 'Other',
+            });
 	
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{'po_id'} ) {
 			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
 		} # end if

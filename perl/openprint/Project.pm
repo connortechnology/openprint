@@ -474,6 +474,12 @@ sub update_status {
 
 } # end sub update_project_status
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	my %params = @_;
 	my $sql = q{SELECT * FROM tbl_Projects WHERE 1>0};
