@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
+use vars qw( $debug %variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -24,7 +24,7 @@ require openprint::PurchaseOrder_Tax;
 require openprint::Email;
 require openprint::Manifest;
 
-my $debug = 0;
+$debug = 1;
 
 $table = 'PurchaseOrders';
 $serial = 'Purchaseorders_id_seq';
@@ -227,6 +227,7 @@ sub find {
 sub save {
 	my ( $self, $param ) = @_;
 
+$log->debug("Sacving PO");
 	# force recalculation
 	$self->subtotal(undef);
 	foreach my $Tax ( $self->Taxes() ) {
@@ -237,7 +238,9 @@ sub save {
 		my $Currency = openprint::Currency::get_current();
 		$$self{'currency_id'} = $Currency->id();
 	} # end if
+$log->debug("Sacving PO");
 	my $error = $self->SUPER::save( $param );
+$log->debug("Sacving PO $error");
 
 	# Taxes
 	foreach my $T ( $self->Taxes() ) {
