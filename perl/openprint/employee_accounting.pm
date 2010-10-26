@@ -206,11 +206,16 @@ sub expenses {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
 		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );
-		if ( $param{'recipient_id'} ) {
-			delete $param{'recipient'};
-		} else {
-			delete $param{'recipient_id'};
-		} # end if
+		$param{'invoiced_on'} = sprintf('%.4d-%.2d-%.2d', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} );
+		if ( ! $param{'recipient_id'} ) {
+			my $Recipient = openprint::Company->find_one('name_lc'=>lc$param{'recipient'});
+			if ( ! $Recipient ) {
+				$Recipient = new openprint::Company();
+				$variable{'error'} .= $Recipient->save({'name'=>$param{'recipient'}});
+			} # end if ! Recipeint
+			$param{'recipient_id'} = $Recipient->id();
+		} # end if ! recipient_Id
+		delete $param{'recipient'};
 		if ( $param{'category_id'} ) {
 			delete $param{'category'};
 		} else {
@@ -221,8 +226,15 @@ sub expenses {
 			$variable{'Redirect'} = '/employee/accounting/expense.html';
 			return;	
 		} # end if
+		foreach my $Tax ( $Expense->Taxes() ) {
+            # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
+            $Tax->charge(1*$param{'tax_charge-'.$Tax->id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->id()};
+            $Tax->amount(undef);
+            $Tax->save();
+        } # end foreach
+
 		$variable{'information'} .= 'Expense saved successfully.<br/>';
-		delete $param{'expenditure_id'};
+		delete $param{'expense_id'};
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		my $Expenditure = new openprint::Expense( $param{'expense_id'} );
 		if ( $variable{'error'} .= $Expenditure->delete() ) {
