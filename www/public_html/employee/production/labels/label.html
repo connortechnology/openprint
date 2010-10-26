@@ -21,6 +21,7 @@
 				'/employee/project/view.html?ProjectIndex='.$param{'project_id'} :
 				'/employee/production/projects.html?StartDocket='.$$variable{'Label'}->docket(), 
 				'Back' ),
+			ssi::writeButton( $log, $dbh, 'PO', 'po.gif', '', "/employee/inventory/purchase_order_edit.html?btnFunction=New&amp;label_id=$$variable{Label}{id}", 'Generate PO' ),
 		); ) ?>
 	</p>
 </div>

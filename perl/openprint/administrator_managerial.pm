@@ -166,7 +166,7 @@ sub user_profiles {
 		my $error = $User->save( \%openprint::param );
 
 		if ( ! $error ) {
-			foreach my $Type ( openprint::PurchaseOrder_ContentType::find() ) {
+			foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
 				$User->po_limit( $Type->id(), $openprint::param{'po_limit-'.$Type->id()} );
 			} # end foreach Type
 		} # end if
