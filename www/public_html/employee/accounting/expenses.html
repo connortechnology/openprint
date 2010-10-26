@@ -1,0 +1,60 @@
+<div class="PageTitle">
+	<h1>Accounting</h1>
+	<h2>Expenses</h2>
+</div>
+<script type="text/javascript">
+<!--
+	function delete_confirm(form) {
+		var number_of_deleted_expensess = 0;
+		for ( var index = 0; index < form.elements.length; index += 1 ) {
+			if ( ! form.elements[index].name )
+				continue;
+			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+				number_of_deleted_expensess += 1;
+			} // end if
+
+		} // end for
+		if ( number_of_deleted_expensess == 0 ) {
+			alert("To delete Expenses, click the checkbox beside the expenses.");
+		} else {
+			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_expensess + " expensess from history?\n") ) {
+				form.submit();
+			} // end if
+		} // end if
+	}
+	function load_expensess( form ) {
+		$('ExpenseList').innerHTML = 'Please wait...';
+		new Ajax.Updater('ExpenseList','_expenses.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<!--#include virtual="/includes/error_reporting.html"-->
+<form id="f1" name="f1" method="post" action="/employee/accounting/expenses.html">
+	<input type="hidden" name="btnFunction"/>
+	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
+		<div class="leftColumn">
+			<p>
+				<label>Due On:</label>
+				<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'due_on_start', 'load_expensess(this.form);' ); ) ?>
+					to 
+				</span>
+				<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'due_on_end', 'load_expensess(this.form);' ); ) ?>
+				</span>
+			</p>
+		</div>
+		<div class="rightColumn">
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_expensess(f1);", '', 'Show Results' ),
+ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f1.btnFunction.value='Download';f1.submit();", '', 'Download' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'expense.html', 'New Expense' ),
+				); ) ?>
+		</p>
+	</fieldset>
+	<div id="ExpenseList"><!--#include virtual="_expenses.html"--></div>
+</form>
