@@ -556,7 +556,7 @@ if ( sets::isin( 'tbl_service_types', \@tables ) ) {
 		$dbh->do(q{CREATE SEQUENCE service_types_id_seq});
 		$dbh->do(q{select setval('service_types_id_seq', (SELECT Max(id) FROM service_types) )});
 	} # end if
-	$dbh->do(q{ALTER TABLE service_types alter id set default nextval('service_types_is_seq')});
+	$dbh->do(q{ALTER TABLE service_types alter id set default nextval('service_types_id_seq')});
 if ( ! sets::isin( 'servicetype_categories', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/ServiceType_Categories.sql});
 	foreach my $st ( split(';', $_ ) ) {
@@ -2524,10 +2524,13 @@ if ( my $PaddingServiceType = openprint::ServiceType->find_one('name'=>'Padding'
 			$PaddingServiceType->id(), 'rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );
 } # end if
 if ( ! sets::isin( 'tbl_projecttype_defaults', \@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/tbl_ProjectType_Defaults.sql});
-	foreach my $st ( split(';', $_ ) ) {
-		$dbh->do($st);
-	} # end foreach
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_ProjectType_Defaults.sql}) );
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_projecttype_defaults'", 'column_name');
+	if ( ! exists $$data{'id'} ) {
+		$dbh->do('ALTER TABLE tbl_projecttype_defaults ADD id SERIAL');
+		$dbh->do('ALTER TABLE tbl_projecttype_defaults ADD PRIMARY KEY (id)');
+	} # end if
 } # end if
 sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','Y'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'Cardboard' ] );
 sql::update( undef, undef, 'tbl_Projecttype_defaults', ['strfieldname=? AND strdefaultvalue=?','rdbCardboardBacking','N'], [ 'strfieldname', 'Backing', 'strdefaultvalue', 'None']  );

@@ -58,14 +58,17 @@ if ( $year ) {
 print "upgrading db ...";
 `./db_update.pl $dst_db topknotch topknotch` or $log->error($!);
 print "done\n";
+print "upgrading db ...";
+`./db_update2.pl $dst_db topknotch topknotch` or $log->error($!);
+print "done\n";
 $dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>$dst_db, 'password'=>$dst_db, 'host'=>$ARGV[3]) );
 configuration::init_cache( $log, $dbh );
 require openprint::PaymentType;
 my $PayPal = new openprint::PaymentType();
 $PayPal->save({'name'=>'PayPal','description'=>'PayPal'});
 
-#print "upgrading signatures...";
-#`/etc/apache2/lib/perl/tools/update_p1_signatures.pl $dst_db >> /tmp/db_update.log` or $log->error($!);
+print "upgrading signatures...";
+`/etc/apache2/lib/perl/tools/update_topknotch_signatures.pl $dst_db >> /tmp/db_update.log` or $log->error($!);
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'NOW()', 'backup', 0 );
 print "done\n";

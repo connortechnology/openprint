@@ -9,6 +9,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *dbh = \$openprint::dbh;
 
 my $debug = 0;
+my $debug_all = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -17,7 +18,7 @@ sub init_cache {
 			my @items = $_[0]->find();
 	$log->debug("init_cache of $_[0] # of items: " . @items );
 			foreach ( @items ) {
-				$name_cache{$_[0]}{$_->name()} = $_;
+				$name_cache{$_[0]}{$$_{$_->cache_field()}} = $_;
 			} # end foreach
 		} # end if
 	} else {
@@ -26,6 +27,10 @@ sub init_cache {
 		%name_cache = ();
 	} # end if
 } # end sub init_cache
+
+sub cache_field {
+	return 'name';
+}
 
 sub debug {
 	$log->debug("Dumping Object cache");
@@ -277,15 +282,17 @@ sub find {
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
 	my %find_fields = eval '%'.$type.'::find_fields';
+	my $cache_field = eval $type.'->cache_field()';
 	my $debug = eval '$'.$type.'::debug';
+	$debug = $debug_all if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 
 	my %params = @_;
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
 	my @values;
 
-	if ( $params{'name'} and ( ( 1 == keys %params ) or ( 2 == keys %params and $params{'limit'} ) ) and $name_cache{$type} ) {
-		return $name_cache{$type}{$params{'name'}} if $name_cache{$type}{$params{'name'}};
+	if ( $params{$cache_field} and ( ( 1 == keys %params ) or ( 2 == keys %params and $params{'limit'} ) ) and $name_cache{$type} ) {
+		return $name_cache{$type}{$params{$cache_field}} if $name_cache{$type}{$params{$cache_field}};
 		return;
 	} # end if
 

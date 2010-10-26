@@ -31,14 +31,14 @@ sub isin_regx {
 # Takes in a variable, and an array, and checks the array element by
 # element to see if the variable exists inside the array.
 
-	my ($var, @array) = @_;
-	foreach my $value (@array) {
+	my $var = shift;
+	foreach my $value (@_) {
 		$value =~ s/\\\\/\\/g;
 		if ( $var =~ /^($value)$/ ) {
-$openprint::log->debug("isin_regx: matched $value");
+#$openprint::log->debug("isin_regx: matched $value");
 			return 1;
-		} else {
-$openprint::log->debug("isin_regx: not matched ($var) ($value)");
+		#} else {
+#$openprint::log->debug("isin_regx: not matched ($var) ($value)");
 
 		} # end if
 	} # end foeach

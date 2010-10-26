@@ -5,18 +5,14 @@ require openprint::Shift;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw($debug $log $dbh $table $serial %fields %transforms %defaults %find_fields );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*config = \%openprint::config;
-*session = \%openprint::session;
 
-require sql;
 require ssi;
 require misc;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';
@@ -29,6 +25,9 @@ $serial = 'equipment_shifts_id_seq';
 	'equipment_id'	=>	'equipment_id',
     'operator_id'   =>  'operator_id',
 );
+%find_fields = (
+	'endtime'		=>	'(starttime+duration)',
+);
 
 %transforms = (
 	'id'			=>	[ 's/\D//g' ],
@@ -40,92 +39,6 @@ $serial = 'equipment_shifts_id_seq';
 	'starttime'		=>	'00:00:00',
 	'name'			=>	'Shift',
 );
-
-sub find_one {
-    my %params = @_;
-    $params{'limit'} = 1;
-    my @Results = find(%params);
-    return $Results[0] if @Results;
-} # end sub find_one
-
-
-sub find {
-	my %params = @_;
-
-	my @values;
-	my $sql = "SELECT *,starttime+duration-'1 second'::interval as endtime FROM $table WHERE 1>0";
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= ' AND id IN ('. join(',', map {'?'} @{$params{'id'}} ) . ')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-    if ( exists $params{'operator_id'} ) {
-        if ( ref $params{'operator_id'} eq 'ARRAY' ) {
-            $sql .= ' AND operator_id IN ('. join(',', map {'?'} @{$params{'operator_id'}} ) . ')';
-            push @values, @{$params{'operator_id'}};
-        } else {
-            $sql .= ' AND operator_id=?';
-            push @values, $params{'operator_id'};
-        } # end if
-    } # end if
-	if ( exists $params{'equipment_id'} ) {
-		$sql .= ' AND equipment_id=?';
-		push @values, $params{'equipment_id'};
-	} # end if
-	if ( exists $params{'name'} ) {
-		$sql .= ' AND name=?';
-		push @values, $params{'name'};
-	} # end if
-    if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
-        $sql .= ' AND ( starttime BETWEEN ? AND ? )';
-        push @values, @params{'starttime_start','starttime_end'};
-    } elsif ( $params{'starttime_start'} ) {
-        $sql .= ' AND starttime >= ?';
-        push @values, $params{'starttime_start'};
-    } elsif ( $params{'starttime_end'} ) {
-        $sql .= ' AND starttime <= ?';
-        push @values, $params{'starttime_end'};
-    } # end if
-	if ( $params{'starttime_<'} ) {
-        $sql .= ' AND starttime < ?';
-        push @values, $params{'starttime_<'};
-    } 
-	if ( $params{'starttime_>'} ) {
-        $sql .= ' AND starttime > ?';
-        push @values, $params{'starttime_>'};
-    } 
-	if ( $params{'starttime_<='} ) {
-        $sql .= ' AND starttime <= ?';
-        push @values, $params{'starttime_<='};
-    } 
-	if ( $params{'starttime_>='} ) {
-        $sql .= ' AND starttime >= ?';
-        push @values, $params{'starttime_>='};
-    } # end if
-
-	if ( $params{'endtime_end'} ) {
-        $sql .= ' AND starttime+duration <= ?';
-        push @values, $params{'endtime_end'};
-	} # end if
-
-	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->debug("Error loading Equipment_Shifts SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No Equipment_Shifts loaded (' . $sql . ") (@values)" );
-	} elsif ( $debug ) {
-		$log->debug("Debug loaded Equipment_Shifts ($sql) (@values) records:" . @$data );
-	} # end if
-	return map { new openprint::Equipment_Shift( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub starttime_seconds {
 	my ( $self, $new ) = @_;
