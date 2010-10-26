@@ -8,6 +8,7 @@ require openprint::order;
 require openprint::Order;
 require openprint::Ledger;
 require openprint::Expenditure;
+require openprint::Expense;
 require misc;
 require sql;
 
@@ -189,6 +190,7 @@ sub expenditures {
 	} else {
 		ssi::save_params( '/employee/accounting/expenditures.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
 	} # end if
+ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on', -31, 365 );
 
 } # end sub expenditures
 
@@ -199,6 +201,49 @@ sub _expenditures {
 sub expenditure {
 	$variable{'Expenditure'} = new openprint::Expenditure( $param{'expenditure_id'} );
 } # end sub expenditure
+
+sub expenses {
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
+		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );
+		if ( $param{'recipient_id'} ) {
+			delete $param{'recipient'};
+		} else {
+			delete $param{'recipient_id'};
+		} # end if
+		if ( $param{'category_id'} ) {
+			delete $param{'category'};
+		} else {
+			delete $param{'category_id'};
+		} # end if
+		my $Expense = new openprint::Expense( $param{'expense_id'} );
+		if ( $variable{'error'} .= $Expense->save( \%param ) ) {
+			$variable{'Redirect'} = '/employee/accounting/expense.html';
+			return;	
+		} # end if
+		$variable{'information'} .= 'Expense saved successfully.<br/>';
+		delete $param{'expenditure_id'};
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		my $Expenditure = new openprint::Expense( $param{'expense_id'} );
+		if ( $variable{'error'} .= $Expenditure->delete() ) {
+			$variable{'Redirect'} = '/employee/accounting/expense.html';
+			return;	
+		} # end if
+		delete $param{'expense_id'};
+	} else {
+		ssi::save_params( '/employee/accounting/expenses.html', ( 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day') );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on', -31, 365 );
+	} # end if
+} # end sub expenses
+sub _expenses {
+	ssi::save_params( '/employee/accounting/expenses.html', ( 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day') );
+} # end sub _expenses
+
+sub expense {
+	my $Expense = $variable{'Expense'} = new openprint::Expense( $param{'expense_id'} );
+	
+} # end sub expense
+
 sub stock {
 	require openprint::ManifestContent;
 
