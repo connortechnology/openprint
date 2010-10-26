@@ -104,15 +104,17 @@ sub load {
 sub save {
 	my ( $self, $param ) = @_;
 
+	my %data = %{$$self{'data'}};
 	my $ac = sql::start_transaction( $openprint::dbh );
 	my $error = $self->SUPER::save( $param );
 	if ( ! $error ) {
 		sql::execute(undef,undef,'DELETE FROM Label_Data WHERE label_id=?', $$self{'id'} );
-		foreach my $k ( keys %{$$self{'data'}} ) {
-			sql::insert( undef, undef, 'Label_data', 'label_id', $$self{'id'}, 'name', $k, 'value', $$self{'data'}{$k} );
+		foreach my $k ( keys %data ) {
+			sql::insert( undef, undef, 'Label_data', 'label_id', $$self{'id'}, 'name', $k, 'value', $data{$k} );
 		} # end foreach
 	} # end if
 	sql::end_transaction( $openprint::dbh, $ac );
+	%{$$self{'data'}} = %data;
 	return $error;
 } # end sub save
 
