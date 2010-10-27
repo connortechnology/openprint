@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -14,7 +14,7 @@ require sql;
 require ssi;
 require misc;
 
-my $debug = 1;
+$debug = 1;
 $table = 'labels';
 $serial = 'labels_id_seq';
 %fields = (
@@ -23,12 +23,16 @@ $serial = 'labels_id_seq';
 	'reference'		=>	'reference',
 	'content'		=>	'content',
 	'docket'		=>	'docket',
+	'created_on'	=>	'created_on',
 );
 
 %transforms = (
+	'docket'	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
+	'docket'		=>	undef,
+	'created_on'	=>	'NOW()',
 );
 
 # Returns a paper object specified by the parameters
@@ -98,7 +102,7 @@ sub find {
 sub load {
 	my ( $self, $data ) = @_;
 	$self->SUPER::load( $data );
-	%{$$self{'data'}} = sql::execute( undef, undef, 'SELECT name, value FROM label_Data WHERE label_id=?', $$self{'id'} ) if $$self{'id'};
+	%{$$self{'data'}} = sql::execute( undef, undef, 'SELECT name, value FROM label_data WHERE label_id=?', $$self{'id'} ) if $$self{'id'};
 } # end sub load
 
 sub save {

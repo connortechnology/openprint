@@ -274,7 +274,7 @@ sub upload_files {
 		} # end if
 		if ( $session{'company_id'} ) {
 			my $Company = new openprint::Company( $session{'company_id'} );
-			if ( $Company->salesrep_id() ) {
+			if ( $Company->salesrep_id() and ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) ) {
 				$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') );
 			} else {
 				$to = $config{'OrderingEmail'};
