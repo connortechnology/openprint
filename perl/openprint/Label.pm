@@ -108,7 +108,7 @@ sub load {
 sub save {
 	my ( $self, $param ) = @_;
 
-	my %data = %{$$self{'data'}};
+	my %data = %{$$self{'data'}} if $$self{'data'};
 	my $ac = sql::start_transaction( $openprint::dbh );
 	my $error = $self->SUPER::save( $param );
 	if ( ! $error ) {

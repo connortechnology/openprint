@@ -21,6 +21,17 @@
 			'order' => ($param{'order'} ? $param{'order'} : 'Index'),
 			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
 		) ) {
+			if ( $param{'reprint'} ) {
+				my $reprint = 0;
+				foreach my $Project ( $Order->Projects() ) {
+					if ( $Project->reprint() eq 'Y' ) {
+						$reprint=1;
+						last;
+					} # end if
+				} # end foreach Project
+				next if ( $param{'reprint'} eq 'Y' ) and ! $reprint;
+				next if ( $param{'reprint'} eq 'N' ) and $reprint;
+			} # end if reprint
 			if ( $param{'press_id'} ) {
 				my $Press = new openprint::Equipment( $param{'press_id'} );
 				my $on_press = 0;

@@ -74,6 +74,13 @@
 			 </select>
 		</p>
 		<p>
+			<label>Reprint</label>
+			<input type="radio" name="reprint" id="reprintY" value="Y" <? echo ( ssi::checked($param{reprint} eq 'Y' ); ) ?> /><label class="radio" for="reprintY">Yes</label>
+			<input type="radio" name="reprint" id="reprintN" value="N" <? echo ( ssi::checked($param{reprint} eq 'N' ); ) ?> /><label class="radio" for="reprintN">No</label>
+			<input type="radio" name="reprint" id="reprintAll" value="" <? echo ( ssi::checked(!$param{reprint}); ) ?> /><label class="radio" for="reprintAll">Both</label>
+			
+		</p>
+		<p>
 			<label>POs</label>
 			<input type="radio" name="pos" id="posWith" value="With" <? echo ( ssi::checked($param{pos} eq 'With' ); ) ?> /><label class="radio" for="posWith">With</label>
 			<input type="radio" name="pos" id="posWithout" value="Without" <? echo ( ssi::checked($param{pos} eq 'Without' ); ) ?> /><label class="radio" for="posWithout">Without</label>
