@@ -1361,19 +1361,8 @@ sub get_due_date {
 		$runtime += openprint::service::get_runtime( $self, $_ );
 	} # end foreach
 	$duedatedays += int( $runtime / ( 24*60 ) );
-
-	# Make it business days
-	my ( $year, $month, $day ) = Date::Calc::Today();
-	while ($duedatedays) {
-		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-		while ( 6 <= Date::Calc::Day_of_Week( $year, $month, $day ) ) {
-			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, 1 );
-		} # end while
-		$duedatedays -= 1;
-	} # end while
-
-	return sprintf('%.4d-%.2d-%.2d', $year, $month, $day );
-
+	
+	return sprintf('%.4d-%.2d-%.2d', misc::add_delta_business_days( Date::Calc::Today(), $duedatedays ) );
 } # end sub get_due_date
 
 sub Ordered_Product {
@@ -1410,6 +1399,8 @@ sub add_service {
 
     sql::insert( $log, $dbh, 'tbl_Project_Contents', 'lngProjectIndex', $$self{'id'}, 'strStatus', 'uncalculated', 'servicetype_id', $ServiceType->id() );
     ( $service_index ) = sql::execute( $log, $dbh, q{SELECT MAX(lngServiceIndex) FROM tbl_Project_Contents WHERE lngProjectIndex=?}, $$self{'id'} );
+	# Do this so that it doesn't try to load the specs, saving 1 db call.
+	$openprint::service::specs_cache{$service_index} = {};
     openprint::service::insert_service_spec( $log, $dbh, $$self{'id'}, $service_index, 'ServiceType', $ServiceType->name(), 1 );
     $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_Service_Defaults WHERE lngServiceTypeIndex=? OR lngServiceTypeIndex IS NULL ORDER BY lngServiceTypeIndex};
     my @defaults = sql::execute( $log, $dbh, $_, $ServiceType->id() );

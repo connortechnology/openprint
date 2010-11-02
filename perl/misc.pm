@@ -455,6 +455,20 @@ $openprint::log->debug("Returning nothing") if $debug;
     return;
 } # end sub find_entry
 
+sub add_delta_business_days {
+	my ( $year, $month, $day, $delta ) = @_;
+
+	while ($delta) {
+		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, $delta > 0 ? 1 : -1 );
+		while ( 6 <= Date::Calc::Day_of_Week( $year, $month, $day ) ) {
+			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, $delta > 0 ? 1 : -1 );
+		} # end while
+		$delta -= ( $delta > 0 ? 1 : -1 );
+	} # end while
+
+	return ( $year, $month, $day );
+} # end sub add_delta_business_days
+
 1;
 
 __END__

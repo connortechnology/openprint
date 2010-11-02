@@ -54,6 +54,7 @@
 			<hr class="legendUnderline" />
 <? eval (
 	my $Project;
+$log->debug("SEssion: $session{'project_id'} ");
 	if ( $param{'ProjectIndex'} ) {
 		$Project = new openprint::Project( $param{'ProjectIndex'} );
 		$param{'project_id'} = $Project->id();
@@ -88,7 +89,7 @@
 		$$variable{'Quantity'} = $Project->quantity1();
 		if ( $$services{'Turnaround'} ) {
 			my $turnaround_specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
-			@$variable{'duedate_year','duedate_month','duedate_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
+			@$variable{'duedate_year','duedate_month','duedate_day'} = misc::add_delta_business_days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
 		} # end if
 	} # end if
 ) ?>
