@@ -368,10 +368,10 @@ sub summary {
 
 	$log->debug("************************* START OF PROJECT SUMMARY **********************************");
 
-	$project_index = $r->param('ProjectIndex') if ! $project_index;
+	$project_index = $openprint::param{'ProjectIndex'} if ! $project_index;
 	return if ! $project_index;
 
-	my $order_id = $r->param('Order_Id');
+	my $order_id = $openprint::param{'Order_Id'};
 
 	openprint::project::get_header( $log, $dbh, $variable, $project_index, $order_id );
 	$$variable{'OrderId'} = $order_id;

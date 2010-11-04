@@ -4,7 +4,7 @@ require openprint::Object;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -14,20 +14,25 @@ require sql;
 require ssi;
 require misc;
 
-my $debug = 1;
-
+$debug = 1;
+$table = 'labels';
+$serial = 'labels_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'type_id'		=>	'type_id',
 	'reference'		=>	'reference',
 	'content'		=>	'content',
 	'docket'		=>	'docket',
+	'created_on'	=>	'created_on',
 );
 
 %transforms = (
+	'docket'	=>	[ 's/\D//g' ],
 );
 
 %defaults = (
+	'docket'		=>	undef,
+	'created_on'	=>	'NOW()',
 );
 
 # Returns a paper object specified by the parameters
@@ -96,53 +101,25 @@ sub find {
 
 sub load {
 	my ( $self, $data ) = @_;
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( q{SELECT * FROM Labels WHERE id=?}, {}, $$self{'id'} );
-	} # end if
-	@$self{keys %$data} = @$data{keys %$data};
-	delete $$self{'data'};
-	%{$$self{'data'}} = sql::execute( undef, undef, 'SELECT name, value FROM label_Data WHERE label_id=?', $$self{'id'} );
+	$self->SUPER::load( $data );
+	%{$$self{'data'}} = sql::execute( undef, undef, 'SELECT name, value FROM label_data WHERE label_id=?', $$self{'id'} ) if $$self{'id'};
 } # end sub load
 
 sub save {
-	my ( $self, $hash ) = @_;
+	my ( $self, $param ) = @_;
 
-	if ( $hash ) {
-		$self->set( $hash );
-	} # end if
-
-	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$k} = $$self{$k};
-	} # end foreach
-
+	my %data = %{$$self{'data'}} if $$self{'data'};
 	my $ac = sql::start_transaction( $openprint::dbh );
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, q{SELECT nextval('labels_id_seq')} );
-		$sql{'id'} = $$self{'id'};
-
-		if ( my $error = sql::insert( undef, undef, 'Labels', \%sql ) ) {
-			$$self{'id'} = undef;
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-
-    } else {
-		#sql::execute( undef, undef, 'UPDATE Labels SET version=(SELECT MAX(version) FROM Labels WHERE id=?)+1 WHERE id=? AND version IS NULL', @$self{'id','id'} );
-		if ( my $error = sql::update( undef, undef, 'Labels', ['id=?', $$self{id}], [map { $_, $$self{$_} } keys %fields ] ) ) {
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $error;
-		} # end if
-    } # end if
-
-	sql::execute(undef,undef,'DELETE FROM Label_Data WHERE label_id=?', $$self{'id'} );
-	foreach my $k ( keys %{$$self{'data'}} ) {
-		sql::insert( undef, undef, 'Label_data', 'label_id', $$self{'id'}, 'name', $k, 'value', $$self{'data'}{$k} );
-	} # end foreach
-
+	my $error = $self->SUPER::save( $param );
+	if ( ! $error ) {
+		sql::execute(undef,undef,'DELETE FROM Label_Data WHERE label_id=?', $$self{'id'} );
+		foreach my $k ( keys %data ) {
+			sql::insert( undef, undef, 'Label_data', 'label_id', $$self{'id'}, 'name', $k, 'value', $data{$k} );
+		} # end foreach
+	} # end if
 	sql::end_transaction( $openprint::dbh, $ac );
-	$self->load();
-	return;
+	%{$$self{'data'}} = %data;
+	return $error;
 } # end sub save
 
 sub delete {
@@ -158,7 +135,7 @@ sub Order {
 } # end sub Order
 
 sub Project {
-	return openprint::Project->find_one('docket'=>$_[0]{'docket'});
+	return openprint::Project::find_one('docket'=>$_[0]{'docket'});
 } # end sub Project
 
 sub Type {
