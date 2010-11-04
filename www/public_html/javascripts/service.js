@@ -82,6 +82,8 @@ function cbFillResults( results ) {
 				} // end if
 				
                 continue;
+            } else if ( data[0] == 'popup') {
+				alert( data[1] );
             } // end if
 
 			var element = form.elements[data[0]];

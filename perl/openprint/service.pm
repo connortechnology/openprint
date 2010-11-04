@@ -28,7 +28,7 @@ require openprint::Estimating::UPS;
 require openprint::Estimating::Multipage;
 require openprint::logs;
 
-my $debug = 0;
+my $debug = 1;
 
 my %cache_index_by_id;
 my %cache_id_by_index;
@@ -439,6 +439,7 @@ $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 	@vars = sets::exclude( \@no_outputs, \@vars );
 
 	foreach my $key ( @vars ) {
+$log->debug( "$key~$specs{$key}" );
 		if ( exists $specs{$key} ) {
 			if ( ( ! exists $initial_specs{$key} ) or ( $specs{$key} ne $initial_specs{$key} ) ) {
 				push @results, "$key~$specs{$key}";
@@ -455,7 +456,7 @@ sub get_type {
 } # end sub get_type
 
 sub internal_calc {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type, $qty_index ) = @_;
 
 	if ( ! exists $specs_cache{$service_index} ) {
 		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
@@ -475,7 +476,7 @@ sub internal_calc {
 	my $starttime = time;
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring openprint::Estiamting::$service_type ::calc: $@") if $@;
-	if ( ! eval '$status = openprint::Estimating::'.$service_type.'::calc( $log, $dbh, $variable, $project_index, $service_index, \%specs );' ) {
+	if ( ! eval '$status = openprint::Estimating::'.$service_type.'::calc( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );' ) {
 		$log->error("Error in openprint::Estiamting::$service_type ::calc: $@") if $@;
 	} # end if
 	$specs{'Status'} = $status;
@@ -483,7 +484,7 @@ sub internal_calc {
 	$log->debug( "\033" . sprintf( '[41;37m %s calc: (%s) Elapsed seconds: %d', $service_type, $status, $elapsed ) );
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index], 'strStatus', $status );
+	status( $project_index, $service_index, $status );
 
 	foreach my $key ( eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index )') ) {
 $log->debug("Internal Calc:: looking at $key $specs{$key} :". $specs_cache{$service_index}{$key}) if $debug;

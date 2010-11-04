@@ -105,7 +105,6 @@ configuration::init_cache( $log, $dbh, \%CFG::Config );
 my %uploads;
 
 my $scoreboard = get_scoreboard( $config{'scoreboard'} );
-$log->debug("Got scoreboard.");
 my $fifoh;
 if (open($fifoh, "< $config{fifo}")) {
 	while (1) {
@@ -234,7 +233,9 @@ sub send_email {
 	foreach my $upload ( @uploads ) {
 		my $file = $upload->{file};
 # File should be the full path, relative to filesystem root.
+# Problem is, spaces have been replaced by underscores
 		my $file_str = basename($file);
+		$$upload{'file_str'} = $file_str;
 		my $regexp = $config{'file_path'}.'(.*)'.$file_str;
 		my ( $company_name ) = $file =~ /^$regexp$/;
 		if ( $company_name ) {
@@ -278,6 +279,10 @@ $log->debug("Found user $$upload{user} with company");
 		if ( my @Users = openprint::User::find('email'=>lc $upload->{user},'limit'=>1) ) {
 			$User = $Users[0];
 			$Company = $User->Company();
+			foreach my $upload ( @uploads ) {
+				$$upload{'company_name'} = $Company->name();
+				$$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$$upload{'file_str'};
+			} # end foreach upload
 $log->debug("Found user $$upload{user} with out company.  Company is $$Company{name}");
 		} # end if
 	} # end if

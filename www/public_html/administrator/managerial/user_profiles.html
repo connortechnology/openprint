@@ -187,7 +187,7 @@ Please select a company or user to obtain login information.<br/>
 		</p>
 		<? echo (
 			my $html;
-			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType::find('order'=>'lower(name)') ) {
+			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
 				
 				$html .= sprintf('<p><label>Limit for %2$s</label><input type="text" name="po_limit-%1$d" value="%3$s" /></p>', $PO_Type->get('id','name'), $$variable{'User'}->po_limit( $PO_Type->id() ) );
 			} # end foreach PO_Type

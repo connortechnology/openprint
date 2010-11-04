@@ -15,7 +15,13 @@ function calc_price( element ) {
 		$('quantity-'+index).value = $('quantity-'+index).value.replace(/[^\d\-\.]/g, '' );
 		var qty = parseFloat( $('quantity-'+index).value );
 
-		$('weight-'+index).value = $('weight-'+index).value.replace(/[^\d\-\.]/g, '' );
+		if ( $('type-'+index) && ( $('type-'+index).value == 'Sheet Stock' ) ) {
+			var mweight = parseFloat( $('mweight-'+index).value.replace(/[^\d\-\.]/g, '' ) );
+			$('weight-'+index).value = qty * mweight / 1000;
+			qty = 1;
+		} else {
+			$('weight-'+index).value = $('weight-'+index).value.replace(/[^\d\-\.]/g, '' );
+		} // end if
 		var weight = parseFloat( $('weight-'+index).value );
 		var weight_units = $('weight_units-'+index).value;
 
@@ -131,6 +137,10 @@ function textarea_init () {
 textarea_init();
 
 function add_content(form) {
+	if ( form.type_id.selectedIndex < 1 ) {
+		alert('Please select the type of line to add.');
+		return;
+	} 
 	tinyMCE.triggerSave();
 
 	new Ajax.Updater( 'Contents','_contents.html?action=Add&claim_id=<? echo ( $$variable{Claim}->id() ) ?>', {
@@ -151,6 +161,19 @@ function del_content(form, content_id ) {
 		}
 	);
 } // end function add_Content(form)
+function set_description(index) {
+    var desc = $('description-'+index);
+    desc.value = '';
+    if ( $('mweight-'+index) ) { 
+        desc.value += $('mweight-'+index).value +'M ';
+    } // end if
+    var type = $('stocktype-'+index);
+    if ( type && type.options[type.selectedIndex].value ) {
+        desc.value += type.options[type.selectedIndex].value + ' ';
+    } // end if
+    desc.value += $('name-'+index).value;
+}
+
 -->
 </script>
 <form id="f1" name="f1" action="<? echo ( $$variable{'Claim'}->id() ? 'view' : 'edit' ) ?>.html?claim_id=<? echo ( $$variable{'Claim'}->id() ) ?>" method="post">

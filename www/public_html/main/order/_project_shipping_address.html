@@ -82,40 +82,41 @@
 	} # end foreach
 ) ?>
 <br/><b>Destination Address:</b><br/>
+<div class="same_as_billing">Same as Billing <input type="checkbox" name="same_as_billing-<?ProjectIndex?>-<?ServiceIndex?>" id="same_as_billing-<?ProjectIndex?>-<?ServiceIndex?>" onclick="same_as_billing(this.checked, '-<?ProjectIndex?>-<?ServiceIndex?>' );" /></div>
 	<p> 
 		<label>Company Name:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToCompanyName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCompanyName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<input type="text" name="ToCompanyName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCompanyName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 	</p>
 	<p>
 		<label>Salutation:<span class="requiredFieldIndicator">&nbsp;</span></label>
-		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mr." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mr.' ) ?> />
+		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mr." <? echo ( ssi::checked( $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mr.' ); ) ?> onclick="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mr.">Mr. </label>
-		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mrs." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mrs.' ) ?> />
+		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Mrs." <? echo ( ssi::checked( $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Mrs.' ); ) ?> onclick="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Mrs.">Mrs. </label>
-		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Ms." <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Ms.' ) ?> />
+		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms." name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Ms." <? echo ( ssi::checked( $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Ms.' ); ) ?> onclick="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Ms.">Ms. </label>
-		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss" name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Miss" <? echo ( 'checked="checked"' if $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Miss' ) ?> />
+		<input type="radio" id="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss" name="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>" value="Miss" <? echo ( ssi::checked( $$variable{"ToSalutation-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} eq 'Miss' ); ) ?> onclick="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 		<label class="radio" for="ToSalutation-<?ProjectIndex?>-<?ServiceIndex?>Miss">Miss</label>
 	</p>
 	<p>
 		<label>First Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
-		<input type="text" name="ToFirstName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFirstName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>"/>
+		<input type="text" name="ToFirstName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFirstName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 	</p>
 	<p>
 		<label>Last Name:<span class="requiredFieldIndicator">&nbsp;</span></label>
-		<input type="text" name="ToLastName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToLastName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<input type="text" name="ToLastName-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToLastName-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 	</p>
 	<p> 
 		<label>Address:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToAddress1-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress1-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<input type="text" name="ToAddress1-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress1-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 	</p>
 	<p> 
 		<label>&nbsp;</label>
-		<input type="text" name="ToAddress2-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress2-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<input type="text" name="ToAddress2-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToAddress2-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 	</p>
 	<p> 
 		<label>Country:<span class="requiredFieldIndicator">*</span></label>
-			<select name="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>" onchange="Country_onchange(this, this.form.elements['ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>'] );" >
+			<select name="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>" onchange="Country_onchange(this, this.form.elements['ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>'] );same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" >
 				<option value=""> Select </option>
 				<? echo ( 
 					ssi::make_drop_down( \@countries::countries, $$variable{'ToCountry-'.$$variable{ProjectIndex}.'-'.$$variable{ServiceIndex}} );
@@ -124,7 +125,7 @@
 	</p>
 	<p> 
 		<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_state">State/Province:</span><span class="requiredFieldIndicator">*</span></label>
-		<select name="ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>">
+		<select name="ToStateProvince-<?ProjectIndex?>-<?ServiceIndex?>" onchange="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );">
 			<option value=""> Select </option>
 			<? echo ( join('',
 				ssi::make_drop_down( \@states::states, $$variable{"ToStateProvince-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ),
@@ -135,7 +136,7 @@
 	</p>
 	<p> 
 		<label>City:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToCity-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCity-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" />
+		<input type="text" name="ToCity-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToCity-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 	</p>
 	<p> 
 		<label><span id="ToCountry-<?ProjectIndex?>-<?ServiceIndex?>_postal">Zip/Postal Code:</span><span class="requiredFieldIndicator">*</span></label>
@@ -143,14 +144,14 @@
 	</p>
 	<p> 
 		<label>Phone:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" style="width: auto;" size="15"/> ext:
-		<input type="text" name="ToExtension-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToExtension-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" style="width: auto;" size="4" />
+		<input type="text" name="ToPhone-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToPhone-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" style="width: auto;" size="15" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );"/> ext:
+		<input type="text" name="ToExtension-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToExtension-$$variable{ProjectIndex}-$$variable{ServiceIndex}"} ) ?>" style="width: auto;" size="4" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 	</p>
 	<p> 
 		<label>Fax:<span class="requiredFieldIndicator">&nbsp;</span></label>
-		<input type="text" name="ToFax-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFax-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<input type="text" name="ToFax-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToFax-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 	</p>
 	<p> 
 		<label>E-mail:<span class="requiredFieldIndicator">*</span></label>
-		<input type="text" name="ToEmail-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToEmail-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" />
+		<input type="text" name="ToEmail-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{"ToEmail-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="same_as_billing(false, '-<?ProjectIndex?>-<?ServiceIndex?>' );" />
 	</p>

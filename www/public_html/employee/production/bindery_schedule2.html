@@ -109,29 +109,31 @@
 	<fieldset class="filters unprintable"><legend>Display Criteria</legend>
 		<div class="presses">
 		<ul>
-		<li>
-			<label>Category</label>
-			<select name="category" id="category" onchange="f1.submit();">
-				<option value="">All</option>
-			<? echo (
-return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment WHERE useinscheduling=true ORDER BY strcategory' ) ], $session{'/employee/production/operator_schedule.html?category'} );
-) ?>
-			</select>
-		</li>
+			<li>
+				<label>Category</label>
+				<select name="category" id="category" onchange="f1.submit();">
+					<option value="">All</option>
+				<? echo (
+	return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strcategory,strcategory FROM tbl_Equipment WHERE useinscheduling=true ORDER BY strcategory' ) ], $session{'/employee/production/bindery_schedule2.html?category'} );
+	) ?>
+				</select>
+			</li>
 <li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment::find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'UseInScheduling'=>1,'order'=>'lower(strcategory),lower(strname)');
+	my @presses = openprint::Equipment::find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'UseInScheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
+
+	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) );
+	if ( ! @selected_equipment ) {
+		@selected_equipment = map { $_->id() } @presses;
+	}
+
 	foreach (@presses) {
-		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/bindery_schedule2.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) ] );
+		push @{$$variable{'Equipment'}}, $_ if sets::isin( $_->id(), \@selected_equipment );
 	} # end foreach press
 
 	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
-	if ( $session{'/employee/production/bindery_schedule2.html?Equipment'} ) {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ] );
-	} else {
-		$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
-	} # end if
+	$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
 	return $html;
 ) ?>
 			</select>
@@ -174,6 +176,15 @@ return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strca
 						return ssi::make_drop_down( \@options, $session{'/employee/production/bindery_schedule2.html?scale'} );
 					) ?>
 				</select>
+			</li>
+			<li>
+				<label>Quick Views:</label>
+				<? echo (
+					my $html = ssi::writeButton( $log, $dbh, 'Today', 'today.gif', '', '/employee/production/bindery_schedule2.html?action=Today', 'Today' );
+					$html .= ssi::writeButton( $log, $dbh, 'twoday', '2day.gif', '', '/employee/production/bindery_schedule2.html?action=2day', '2day' );
+					$html .= ssi::writeButton( $log, $dbh, 'threeday', '3day.gif', '', '/employee/production/bindery_schedule2.html?action=3day', '3day' );
+					$html .= ssi::writeButton( $log, $dbh, '1week', '1week.gif', '', '/employee/production/bindery_schedule2.html?action=1week', '1week' );
+				) ?>
 			</li>
 			</ul>
 		</div>
@@ -227,7 +238,7 @@ return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strca
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/bindery_schedule2.html?Equipment='.$E->id().'">'.$E->name().'</a></div>';
+			$html .= '<div class="PressColumn ' . $E->category() . '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/bindery_schedule2.html?Equipment='.$E->id().'">'.$E->name().'</a></div>';
 		} # end foreach
 		return $html;
 		) ?>
@@ -236,7 +247,7 @@ return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strca
 		@{$$variable{'drops'}} = ();
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
+			$html .= '<div class="PressColumn ' . $E->category() . '" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;">';
 			my ( $year, $month, $day ) = @session{'/employee/production/bindery_schedule2.html?schedule_start_year',
 					'/employee/production/bindery_schedule2.html?schedule_start_month',
 					'/employee/production/bindery_schedule2.html?schedule_start_day'};

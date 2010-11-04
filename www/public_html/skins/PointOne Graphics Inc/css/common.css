@@ -1,5 +1,6 @@
 html {
-overflow-y: scroll;
+	overflow-y: scroll;
+	height: 100%;
 }
 #Content {
 	top: 0px;
@@ -24,7 +25,7 @@ overflow-y: scroll;
 }
 /* Hides from IE-mac \*/
 * html #Content {height: 1%;}
-* #Content {display: block;}
+#Content {display: block;}
 /* End hide from IE-mac */
 
 #ContentInner {
@@ -32,9 +33,6 @@ overflow-y: scroll;
 	padding-top: 10px;
 	margin: 0px;
 	width: 100%;
-}
-html {
-	height: 100%;
 }
 
 body { 	

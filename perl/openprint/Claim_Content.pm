@@ -25,6 +25,7 @@ $serial = 'claim_contents_id_seq';
 	'claim_id'			=>	'claim_id',
 	'skid_id'			=>	'skid_id',
 	'quantity'			=>	'quantity',
+	'quantity_units'	=>	'quantity_units',
 	'weight'			=>	'weight',
 	'weight_units'		=>	'weight_units',
 	'reason'			=>	'reason',
@@ -43,6 +44,7 @@ $serial = 'claim_contents_id_seq';
 
 %defaults = (
 	'quantity'		=> 0,
+	'quantity_units'	=>	undef,
 	'weight'		=> 0,
 	'weight_units'	=>	undef,
 	'type_id'		=>	undef,
@@ -101,9 +103,8 @@ sub Claim {
 } # end sub Manifest
 
 sub Type {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'type_id'} = $_[0]->id();
+	if ( @_ > 1 ) {
+		$_[0]{'type_id'} = $_[1]->id();
 	} # end if
 	return new openprint::Claim_ContentType( $_[0]{type_id} );
 } # end sub Manifest

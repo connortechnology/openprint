@@ -21,6 +21,7 @@ CREATE TABLE tbl_Equipment (
     cip3_hold			boolean,
     cip3_merge			boolean,
     cip3_monitor		boolean,
+	sorting				integer,
 	PRIMARY KEY (lngIndex)
 );
 

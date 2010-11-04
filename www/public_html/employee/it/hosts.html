@@ -1,5 +1,5 @@
 <script type="text/javascript">
-function load(form) {
+function load_host(form) {
 	new Ajax.Updater( 'Results','/employee/it/_hosts.html', { method: 'get', parameters: form.serialize() } );
 } // end function load
 </script>
@@ -9,9 +9,11 @@ Please select a host to view/edit.<br>
 	<fieldset class="filters"><legend>Choose Host</legend>
 		<p>
 			<label for="ip">Host IP</label>
-			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d]/,'');" onkeydown="this.form.hostname.value='';if(event.keyCode == 13){load($('f1'));}"/>
+			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d]/,'');" onkeydown="this.form.hostname.value='';if(event.keyCode == 13){load_host($('f1'));}"/>
 			Hostname:
-			<input type="text" id="hostname" name="hostname" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load( $('f1') );}" />
+			<input type="text" id="hostname" name="hostname" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
+			MAC:
+			<input type="text" id="mac" name="mac" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('f1').submit();",'','Load' ); ) ?>
 		</p>
 	</fieldset>

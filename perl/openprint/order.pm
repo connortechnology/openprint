@@ -186,9 +186,12 @@ sub add_project_to_order {
 				last;
 			} # end if
 		} # end foreach
+if ( 0 ) {
+# Stop defaulting to CP
 		if ( ! $sql{'ShippingType'} ) {
 			$sql{'ShippingType'} = 'CustomerPickUp';
 		} # end if
+} # end if
 	} else {
 		$sql{'ShippingType'}='CustomerPickUp';
 	} # end if
@@ -361,17 +364,19 @@ sub save_project_information {
 
 	my $services = $Project->services();
 	my @ServiceTypes = openprint::ServiceType::find('category'=>'Shipping');
-	my %ShippingServices = map { $_->name(), $_->id() } @ServiceTypes;
-
+	my @shipping;
 	# If we are specifying the Shipping Type
 	if ( $openprint::param{'ShippingType'.$project_index} ) {
 		foreach my $ShippingType ( @ServiceTypes ) {
 			if ( sets::isin( $ShippingType->name(), $openprint::param{'ShippingType'.$project_index} ) ) {
 				if ( ! $$services{$ShippingType->name()} ) {
+					# Shouldn't happen, the service is inserted when the content is loaded
+					$log->error("Adding shipping service for project $project_index");
 					my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $project_index, $ShippingType->name() );
 					push @{$$services{$ShippingType->name()}}, $new_service_index;
 				} # end if
 			} elsif ( $$services{$ShippingType->name()} ) {
+				# Thismight delete bindery shipping 
 				foreach ( @{$$services{$ShippingType->name()}} ) {
 					openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 				} # end foreach
@@ -379,6 +384,7 @@ sub save_project_information {
 			} # end if
 
 			if ( $$services{$ShippingType->name()} ) {
+				push @shipping, $ShippingType->name();
 				my %shipping_fields = (
 						'txtQuantity'.$Project->ordered_quantity_index()	=> 'txtQuantity'.$Project->ordered_quantity_index(),
 						'ToCompanyName'		=>	'ToCompanyName',
@@ -400,13 +406,14 @@ sub save_project_information {
 					foreach my $spec ( keys %shipping_fields ) {
 						openprint::service::insert_service_spec( $log, $dbh, $project_index, $service_id, $shipping_fields{$spec}, $openprint::param{"$spec-$project_index-$service_id"} ) if exists $openprint::param{"$spec-$project_index-$service_id"};
 					} # end foreach field
-					my $specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, $ShippingType->name() );
+					my $specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_id, $ShippingType->name(), $Project->ordered_quantity_index() );
 $openprint::log->warn($$specs{'alert'}) if $$specs{'alert'};
 				} # end foreach service_id
 			} # end if exists service
 		} # end foreach ShippingType
 	} # end if
 
+	$sql{'shippingtype'} = join(',', @shipping );
 	sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', $order_id, $project_index], \%sql ) if %sql;
 
 	$Project->reference( $openprint::param{"Reference$project_index"} );
@@ -742,7 +749,7 @@ $openprint::log->debug("Initial price for " . $Product->quantity() . ' is : ' . 
 				} # end if
 	
 				if ( openprint::service::status( $project_index, $service_id ) eq 'uncalculated' ) {
-					push @errors, 'Unable to calculate shipping:' . $$specs{'alert'}.'.';
+					push @errors, 'Unable to calculate ' . $ServiceType->name() . '<br/>Reason:' . $$specs{'alert'}.'.';
 				} # end if
 			} # end foreach service_id
 		} # end foreach ServiceType
