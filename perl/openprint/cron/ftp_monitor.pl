@@ -344,7 +344,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 							SMTP    => $config{'Mail Server'},
 							FROM    => $from,
 							TO      => $to,
-							BCC		=>	'iconnor@penultima.org',
+							#nBCC		=>	'iconnor@penultima.org',
 							SUBJECT => $subject,
 					   );
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
