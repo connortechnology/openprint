@@ -105,7 +105,7 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
         </p>
         <p>
             <label>Due Date:</label>
-            <? echo ( Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time( $$variable{Project}->requested_date() ) ); ) ?>
+            <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) ); ) ?>
         </p>
 <? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
 <? else ( $param{'docket'} ) ?>
@@ -129,10 +129,11 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
 		<p>
 			<label>Due Date:</label>
 			<? echo ( 
-				if ( $param{'ddmDueDateYear'} ) {
-					return join('-', @param{'ddmDueDateYear','DueDateMonth','ddmDueDateDay'} );
+				if ( $param{'duedate_year'} ) {
+					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( 
+							sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} ) ) );
 				} else {
-					return Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time( $$variable{Project}->requested_date() ) ); 
+					return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{Project}->requested_date() ) ); 
 				} # end if
 			) ?>
 		</p>
@@ -155,7 +156,10 @@ This email is a confirmation of your upload to <?SiteTitle?>. Please review the 
    	</p>
    	<p>
    		<label>Due Date:</label>
-   		<? echo ( $param{'ddmDueDateYear'} ) ?>-<? echo ( $param{'ddmDueDateMonth'} ) ?>-<? echo ( $param{'ddmDueDateDay'} ) ?>
+   		<? echo ( 
+			return Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( 
+				sprintf('%.4d-%.2d-%.2d', @param{'duedate_year','duedate_month','duedate_day'} ) ) );
+			) ?>
    	</p>
    	<p>
    		<label>Size:</label>

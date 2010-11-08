@@ -176,16 +176,24 @@ sub calc_setup_object {
 			if ( $Paper->grain_direction() ne $Paper->long() ) {
 				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")") if $debug;
 				return;
+			} elsif ( $debug ) {
+				$openprint::log->debug("PROPER grain Paper(".$Paper->grain_direction().") Long (".$Paper->long().")");
 			} # en dif
 		} elsif ( $press_grain eq 'Short' ) {
 			if ( $Paper->grain_direction() ne $Paper->short() ) {
 				$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Short (".$Paper->short().")") if $debug;
 				return;
+			} elsif ( $debug ) {
+				$openprint::log->debug("Proper grain Paper(".$Paper->grain_direction().") Short (".$Paper->short().")") if $debug;
 			} # en dif
 		} elsif ($press_grain ne $Paper->grain_direction() ) {
 			$openprint::log->debug("Improper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if $debug;
 			return;
+		} elsif ( $debug ) {
+			$openprint::log->debug("Proper grain Paper(".$Paper->grain_direction().") Press($press_grain)") if $debug;
 		} # end if
+	} elsif ( $debug ) {
+		$openprint::log->debug("No grain discretion. $press_grain");
 	} # end if press_grain
 
 	my $setup1 = new openprint::Imposition();

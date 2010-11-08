@@ -872,11 +872,6 @@ function getFormObj( formName ) {
 	var form = document.forms[formName];
 	return form;
 }
-
-function getFormObj( formName ) {
-	var form = document.forms[formName];
-	return form;
-}
  
 function disableDiv(elm) {
 
@@ -992,6 +987,24 @@ function update_duration(form, starting_prefix, ending_prefix ) {
         $('duration').innerHTML = days +'days';
     } // end if
 } // end function update_duration
+
+// Defaults to filter weekends out
+function filter_days( form, prefix ) {
+	var date = new Date( form.elements[prefix+'_year'].value, form.elements[prefix+'_month'].value, form.elements[prefix+'_day'].value );
+	var changed = false;
+	if ( date.getDay() == 0 ) {
+		date.setDate(date.getDate()+1);
+		changed = true;
+	} else if ( date.getDay() == 6 ) {
+		date.setDate(date.getDate()+2);
+		changed = true;
+	} // end if
+	if ( changed ) {
+		ddm_select_by_value( form.elements[prefix+'_year'], date.getYear() );
+		ddm_select_by_value( form.elements[prefix+'_month'], date.getMonth() );
+		ddm_select_by_value( form.elements[prefix+'_day'], date.getDate() );
+	} // end if
+} // end function filter_days()
 
 function setup_ie_menu() {
 	if (document.all && document.getElementById) {
