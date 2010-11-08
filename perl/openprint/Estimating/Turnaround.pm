@@ -46,7 +46,7 @@ sub calc {
 		%Price = openprint::service::get_price_object( 'Turnaround', $$specs{'TurnaroundDays'} );
 	} # end if
 	
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		if ( $Price{'units'} eq 'Percent' ) {
 			my ( $price ) = misc::sum( sql::execute( $log, $dbh, qq{SELECT strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex != ? and strName='txtPrice$qty_index'}, $project_index, $service_index ) );
 			$$specs{"txtPrice$qty_index"} = $price * $Price{'Price'}/100;

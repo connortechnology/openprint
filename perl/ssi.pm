@@ -522,6 +522,7 @@ $log->debug("$year-$month-$day");
 			$html .= '</select>';
 		} # endif
 	} # end foreach o
+	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span>';
 	return $html;
 } # end sub date_select
