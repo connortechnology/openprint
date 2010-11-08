@@ -195,6 +195,19 @@ if (open($fifoh, "< $config{fifo}")) {
 			check_scoreboard();
 			usleep($config{'sleep'} * 1000* 1000);
 		} # End if $line
+
+		if ( ! $dbh->ping() ) {
+			$log->info("Opening SQL connection");
+			$openprint::dbh = sql::open_sql( $log, 
+					'host'		=> $CFG::Config{'db_host'},
+					'database'	=> $CFG::Config{'db_name'},
+					'driver'	=> 'Pg',
+					'login'		=> $CFG::Config{'db_user'},
+					'password'	=> $CFG::Config{'db_pass'},
+					);
+			die 'Error opening db' if ! $dbh;
+			configuration::init_cache( $log, $dbh, \%CFG::Config );
+		} # end if
 	} # end while <input>
 
 	close($fifoh);
@@ -229,6 +242,7 @@ sub send_email {
 		my $file = $upload->{file};
 # File should be the full path, relative to filesystem root.
 		my $file_str = basename($file);
+		$$upload{'file_str'} = $file_str;
 		my $regexp = $config{'file_path'}.'(.*)'.$file_str;
 		my ( $company_name ) = $file =~ /^$regexp$/;
 		if ( $company_name ) {
@@ -272,6 +286,10 @@ $log->debug("Found user $$upload{user} with company");
 		if ( my @Users = openprint::User::find('email'=>lc $upload->{user},'limit'=>1) ) {
 			$User = $Users[0];
 			$Company = $User->Company();
+            foreach my $upload ( @uploads ) {
+                $$upload{'company_name'} = $Company->name();
+                $$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$$upload{'file_str'};
+            } # end foreach upload
 $log->debug("Found user $$upload{user} with out company.  Company is $$Company{name}");
 		} # end if
 	} # end if
@@ -341,7 +359,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 							SUBJECT => $subject,
 					   );
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
-		} # end if
+		} # end if to
 	
 	} elsif ( 1 ) {
 	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';
