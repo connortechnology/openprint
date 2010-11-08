@@ -1477,6 +1477,17 @@ sub _li_change {
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
 		$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
+	} elsif ( $param{'action'} eq 'Up' ) {
+		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
+		my $index;
+		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
+		if ( $index > 0 ) {
+			$_ = $Jobs[$index-1];
+			$Jobs[$index-1] = $Jobs[$index];
+			$Jobs[$index] = $_;
+		} # end if
+		reorder_jobs( @Jobs );
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		$variable{'error'} .= $Job->delete();
