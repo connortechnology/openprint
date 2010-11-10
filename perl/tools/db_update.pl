@@ -892,10 +892,6 @@ if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
 		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN ysndiscountable TO discountable');
 		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmin TO min');
 		$dbh->do('ALTER TABLE Service_Prices RENAME COLUMN lngmax TO max');
-		if ( ! exists $$data{'owner_id'} ) {
-			$dbh->do('ALTER TABLE Service_Prices ADD owner_id INTEGER');
-			$dbh->do('ALTER TABLE Service_Prices ADD FOREIGN KEY (owner_id) REFERENCES Companies (id)');
-		} # end if
 		sql::end_transaction( $dbh, $ac );
 		@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 	} # end if
@@ -912,6 +908,11 @@ if ( $data ) {
 	} # end if
 	if ( ! exists $$data{'interpolate'} ) {
 		$dbh->do('ALTER TABLE Service_Prices ADD interpolate boolean default false');
+	} # end if
+} # end if
+if ( ! sets::isin( 'service_prices_id_seq' ) ) {
+	if ( sets::isin( 'serviceprices_id_seq' ) ) {
+		$dbh->do('ALTER sequence serviceprices_id_seq RENAME TO service_prices_id_seq');
 	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1', {} );
@@ -1116,7 +1117,7 @@ foreach my $E ( openprint::Equipment->find('category'=>'Printing') ) {
 			$Spec->min('');
 		} # end if
 		$_ = $Spec->save();
-		$log->error($_) if $_;
+		die $_ if $_;
 	} # end foreach
 } # end foreach
 foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=>'When Printing'}) ) {
@@ -1208,16 +1209,17 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 			if ( ! $Pricelist->id() ) {
 				print "ERror pricelits: " . $Pricelist->name() . "\n";
 			} else {
-			my $ServicePrice = new openprint::ServicePrice();
-			$ServicePrice->save({
-				'service_id'	=>	$FoldingService->id(),
-				'pricelist_id'	=>	$Pricelist->id(),
-				'equipment_id'	=>	$E->id(),
-				'units'			=>	'Per M',
-				'cost'			=>	0,
-				'price'			=>	0,
-				});
-}
+				my $ServicePrice = new openprint::ServicePrice();
+				$_ = $ServicePrice->save({
+						'service_id'	=>	$FoldingService->id(),
+						'pricelist_id'	=>	$Pricelist->id(),
+						'equipment_id'	=>	$E->id(),
+						'units'			=>	'Per M',
+						'cost'			=>	0,
+						'price'			=>	0,
+						});
+				die $_ if $_;
+			}
 		} # end foreach Pricelist
 	} # end if
 } # end foreach Web Press

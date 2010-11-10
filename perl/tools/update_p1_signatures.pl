@@ -46,10 +46,12 @@ if ( ! $ServiceType ) {
 }
 
 if ( 1 ) {
+$log->warn("Updating $projects_count projects for $company_id");
 foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
 	( $project_id ? ( 'id'=>$project_id) : () ),
 	( $company_id ? ('company_id'=>$company_id) : () ),
 	'limit'=>$projects_count ) ) {
+$log->warn("Updating rpoject $$Project{id}");
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
@@ -189,7 +191,9 @@ if ( 1 ) {
 	} # end if
 
 	if ( $Type ) {
-		foreach my $Project ( openprint::Project->find( 'order'=>'id desc','limit'=>$projects_count  ) ) {
+		foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
+( $company_id ? ( 'company_id'=>$company_id ) : () ),
+'limit'=>$projects_count  ) ) {
 			# Skip multipage projects
 			next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
 			my $services = $Project->services();

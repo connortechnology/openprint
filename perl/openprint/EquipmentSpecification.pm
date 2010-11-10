@@ -5,11 +5,9 @@ use openprint ();
 use openprint::Equipment;
 require sql;
 
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-my $debug = 0;
+$debug = 1;
 $table = 'tbl_Equipment_Specifications';
 $serial = 'tbl_equipment_specifications_id_seq';
 
@@ -36,6 +34,10 @@ sub Equipment {
 	my $self = shift;
 	return new openprint::Equipment( $$self{equipment_id} );
 } # end sub Equipment
+
+sub to_string {
+	return join(' ' , map { "$_ => $_[0]{$_}" } keys %fields );
+}
 
 1;
 __END__
