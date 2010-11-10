@@ -3,6 +3,7 @@
 		my @body = ('', "
 			<fieldset><legend>Bug Report</legend>
 				<p><label>Server:</label>$param{'server'}</p>
+				<p><label>Page:</label>$param{'page'}</p>
 				<p><label>When:</label> $param{'when'}</p>
 				<p><label>Name:</label> $param{'user'}</p>
 				<p><label>Company:</label> $param{'company'}</p>
@@ -28,6 +29,10 @@
 	<p>
 		<label>Server:</label>
 		<input type="text" name="server" value="<? echo ( $ENV{'SERVER_NAME'} ) ?>" />
+	</p>
+	<p>
+		<label>Page:</label>
+		<input type="text" name="page" value="<? echo ( $ENV{'HTTP_REFERER'} ) ?>" />
 	</p>
 	<p>
 		<label>When:</label>

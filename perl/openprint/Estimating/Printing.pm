@@ -1855,6 +1855,9 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 		$$specs{'StockWidth'.$qty_index} = $Paper->width();
 		$$specs{'StockHeight'.$qty_index} = $Paper->height();
 		$$specs{'StockType'.$qty_index} = $Paper->type();
+		if ( ! ( $project{'NeedAqueous'} ) ) {
+			$$specs{'popup'} .= $Paper->message() if $Paper->message();
+		} # end if
 
 		$$specs{'txtPlateQuantity'.$qty_index} = $best_price{'txtPlateQuantity'};
 		my $plate_setup = $best_price{'Plate Costs'};

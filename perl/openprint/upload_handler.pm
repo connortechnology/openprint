@@ -237,25 +237,24 @@ $log->error("No destdir");
 
 				my $upload = $r->upload( 'fileUpload'.$index );
 				if ( ! $upload->link( "$config{'ProjectFilesPath'}$destdir$filename" ) ) {
-$log->error("There was an error saving file $param{'fileUpload'.$index}: to $config{'ProjectFilesPath'}$destdir$filename : $!");
+					$log->error("There was an error saving file $param{'fileUpload'.$index}: to $config{'ProjectFilesPath'}$destdir$filename : $!");
 					$$variable{'error'} .= "There was an error saving file $param{'fileUpload'.$index}: $!<br/>";
 					next;
 				} else {
 					$$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
 
-				if ( $param{'project_id'} ) {
-					  sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE project_id=? AND filename=?}, 
-					  $param{'project_id'} ? $param{'project_id'} : undef, $destdir.$filename );
-				} else {
-				   sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE filename=?}, $destdir.$filename );
-				} # end if
-				sql::insert( $log, $dbh, 'project_files', [
-						'project_id',	$param{'project_id'} ? $param{'project_id'} : undef,
-						'filename',		$destdir.$filename,
-						'description',	$param{'txtDescription'.$index},
-						'upload_id',	$param{'serial'},
-						] );
+                foreach my $File ( openprint::File::find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
+                    $File->delete();
+                } # end foreach
+                my $File = new openprint::File();
+                $$variable{'error'} .= $File->save({
+                        'project_id'    =>  ( $param{'project_id'} ? $param{'project_id'} : undef ),
+                        'filename'      =>  $destdir.$filename,
+                        'description'   =>  $param{'txtDescription'.$index},
+                        'upload_id'     =>  $param{'serial'},
+                        'size'          =>  $upload->size(),
+                        } );
 			} # end if
 		} # end foreach file
 		if ( $files ) {
@@ -267,7 +266,6 @@ $log->error("There was an error saving file $param{'fileUpload'.$index}: to $con
 				$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 			} # end if
 			$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
-			my $csr_id;
 			my $to;
 			my $from;
 			if ( $session{'user_id'} ) {
@@ -280,14 +278,12 @@ $log->error("There was an error saving file $param{'fileUpload'.$index}: to $con
 				} # end if
 			} # end if
 			if ( $session{'company_id'} ) {
-				$csr_id = new openprint::Company( $session{'company_id'} )->salesrep_id();
-			} # end nif
-			if ( $csr_id ) {
-				my $CSR = new openprint::User( $csr_id );
-				$to = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email') ),
-			} else {
-				$to = $config{'OrderingEmail'};
+				my $Company = new openprint::Company( $session{'company_id'} );
+				if ( $Company->salesrep_id() and ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) ) {
+					$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') );
+				} # end if
 			} # end if
+			$to = $config{'OrderingEmail'} if ! $to;
 			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 			my $body = ssi::variable_substitution( \$email_template, $variable );
 			my %mail = (

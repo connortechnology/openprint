@@ -66,6 +66,7 @@ sub view {
 			} # end if
 			$variable{'error'} .= $C->save( {
 					'quantity'		=>	sprintf('%d', $param{"quantity-$$C{id}"}),
+					'quantity_units'	=>	$param{"quantity_units-$$C{id}"},
 					'weight'		=>	$param{"weight-$$C{id}"} ? sprintf('%d', $param{"weight-$$C{id}"}) : undef,
 					'weight_units'	=>	$param{"weight_units-$$C{id}"},
 					'cost'			=>	$param{"cost-$$C{id}"},
@@ -155,7 +156,7 @@ sub _contents {
 		$variable{'error'} .= $C->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
 		my $C = new openprint::Claim_Content();
-		$variable{'error'} .= $C->save( { 'claim_id'	=>	$Claim->id() } );
+		$variable{'error'} .= $C->save( { 'claim_id'	=>	$Claim->id(), 'type_id'=>$param{'type_id'} } );
 	} # end if
 } # end sub _contents
 

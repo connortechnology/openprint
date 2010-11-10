@@ -28,6 +28,7 @@ $serial = 'PurchaseOrder_Contents_id_seq';
 	'docket'		=>	'docket',
 	'description'	=>	'description',
 	'type_id'		=>	'type_id',
+	'type'			=>	undef,
 );
 
 %transforms = (
@@ -50,8 +51,19 @@ sub PurchaseOrder {
 } # end sub Supplier
 
 sub Type {
-	return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
+return new openprint::PurchaseOrder_ContentType( $_[0]{type_id} );
 } # end sub Type
+
+sub type {
+	if ( @_ > 1 ) {
+		my $Type = openprint::PurchaseOrder_ContentType->find_one('name'=>$_[1]);
+		if ( $Type ) {
+			$_[0]{'type_id'} = $Type->id();
+			return $Type->name();
+		}
+	}
+	return new openprint::PurchaseOrder_ContentType( $_[0]{'type_id'} )->name();
+} # en dsub type
 
 sub units {
 	my ( $self ) = @_;

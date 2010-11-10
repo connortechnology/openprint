@@ -1002,8 +1002,9 @@ $log->debug("No Shift specified!");
 } # end sub _ul
 
 sub _drop {
-		my $ac = sql::start_transaction( $dbh );
-		$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+	my $ac = sql::start_transaction( $dbh );
+	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+
 	my $Shift = openprint::Shift::get_from_ul_id( $param{'ul_id'} );
 	my $Equipment = $Shift->Equipment(); # For efficiency
 
@@ -1023,7 +1024,6 @@ if ( 0 ) {
 		$services =~ s/$param{ul_id}\[\]=//g;
 		my @order = split( '&', $services );
 		return if ! @order;
-
 
 		# Coalesce Jobs
 $log->debug("Order before coalesce: @order");
@@ -1110,10 +1110,48 @@ $log->debug("Sigs are the not same, " . $Job->Project()->ordered_quantity_index(
 $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::ScheduledJob($_)->Project()->docket() } @order ) );
 
 		if ( ! $Equipment->smartscheduling() ) {
-	sql::end_transaction( $dbh, $ac );
-$log->debug("Old");
-			return openprint::employee_schedule::drop_project( $r, $log, $dbh, \%variable, $param{'ul_id'}, $param{'services'} );
-$log->debug("Old2");
+			$log->debug("Old");
+
+			my ( $start_time, $end_time, $operator_id ) = ( $Shift->starttime(), $Shift->endtime(), $Shift->operator_id() );
+
+			$log->debug("drop_project: @order");
+			while ( @order ) {
+				my $row_id = shift @order;
+				$log->debug("drop_project: row_id: $row_id : @order");
+				$row_id =~ s/\D//g;
+				$log->debug("drop_project: row_id: $row_id : @order");
+				next if ! $row_id;
+
+				my $Job = new openprint::ScheduledJob( $row_id );
+				if ( ! $Job->id() ) {
+# due to coalescing, a job could be deleted
+					$log->debug("drop_project: Job not found");
+					next ;
+				} # end if
+
+				my %sql;
+				$sql{'operator_id'} = $operator_id if $operator_id != $Job->operator_id();
+				if ( $$Job{'starttime'} ne $start_time or $$Job{'equipment_id'} != $Shift->equipment_id() ) {
+					$sql{'starttime'} = $start_time;
+					$sql{'equipment_id'} = $Shift->equipment_id();
+				} # end if
+
+				if ( keys %sql ) {
+					$Job->save(\%sql);
+					if ( $Job->project_id() ) {
+						my $Project = $Job->Project();
+						$Project->save({'due_date'=>$Project->get_due_date()}) if ! $Project->due_date();
+						my @forms = map { my $sig_specs = openprint::service::get_specs_ref( $Job->Project(), $_ ); $$sig_specs{'SignatureIndex'}; } @{$Job->service_id()};
+						$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Scheduled form' . ( @forms == 1 ? ' ' : 's ' ) . join(',',@forms).' to print on ' . $Shift->Equipment()->strid() . ' ' . ( $start_time ? "at $start_time" : $Shift->name() ) );
+					} # end if
+				} # end if
+
+# Starttime is empty when moving to pending
+				if ( @order and $start_time ) {
+					( $start_time ) = sql::execute( $log, $dbh, q{SELECT StartTime + '1 second'::interval FROM Schedule WHERE id=?}, $row_id );
+				} # end if
+			} # end foreach
+			$log->debug("Old2");
 		} else {
 			$dbh->do( 'LOCK TABLE Shifts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -1158,10 +1196,10 @@ $log->debug("Old2");
 # If it was a formerly scheduled job, then shuffle
 				reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' )) if $was_scheduled;
 			} # end if	has starttime
-	sql::end_transaction( $dbh, $ac );
 		} # end if
 
 	} # end if services
+	sql::end_transaction( $dbh, $ac );
 
 	# If there is a changed ul that is newer than our filter, it won't be shown, but a redraw will happen.... so we should adjust the filter to show it.
 	my $filter_seconds = Date::Parse::str2time( sprintf('%.4d-%.2d-%.2d', @session{
@@ -1205,7 +1243,7 @@ sub reorder_jobs {
 
 	my $start_time = time;
 	my $row = $order[0];
-	push @{$variable{'changed'}}, $$row->Shift()->ul_id();
+	push @{$variable{'changed'}}, $row->Shift()->ul_id();
 
 	# This is if there is a job currently running, then use it's start time as the beginning of the schedule
 	if ( $row->locked() and ( $row->starttime_seconds() < $start_time ) ) {
@@ -1431,6 +1469,17 @@ sub _li_change {
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
 		$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
+	} elsif ( $param{'action'} eq 'Up' ) {
+		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
+		my $index;
+		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
+		if ( $index > 0 ) {
+			$_ = $Jobs[$index-1];
+			$Jobs[$index-1] = $Jobs[$index];
+			$Jobs[$index] = $_;
+		} # end if
+		reorder_jobs( @Jobs );
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		$variable{'error'} .= $Job->delete();
@@ -1634,20 +1683,60 @@ sub _split_popup {
 sub bindery_schedule2 {
 	if ( %param ) {
 		if ( $param{'btnFunction'} eq 'Reset' ) {
-			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale','equipment' ) {
+			foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category' ) {
 				delete $session{'/employee/production/bindery_schedule2.html?'.$param};
 			} # end if
 		} else {
-			ssi::save_params( '/employee/production/bindery_schedule2.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale','equipment' ) );
+			ssi::save_params( '/employee/production/bindery_schedule2.html', ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day', 'scale', 'category' ) );
+		} # end if
+		if ( $param{'action'} eq 'Today' ) {
+			@session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+'/employee/production/bindery_schedule2.html?schedule_start_month',
+'/employee/production/bindery_schedule2.html?schedule_start_day'} = Date::Calc::Today();
+			@session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+'/employee/production/bindery_schedule2.html?schedule_end_month',
+'/employee/production/bindery_schedule2.html?schedule_end_day'} = Date::Calc::Today();
+		} elsif ( $param{'action'} eq '2day' ) {
+			@session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+'/employee/production/bindery_schedule2.html?schedule_start_month',
+'/employee/production/bindery_schedule2.html?schedule_start_day'} = Date::Calc::Today();
+			@session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+'/employee/production/bindery_schedule2.html?schedule_end_month',
+'/employee/production/bindery_schedule2.html?schedule_end_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1 );
+		} elsif ( $param{'action'} eq '3day' ) {
+			@session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+'/employee/production/bindery_schedule2.html?schedule_start_month',
+'/employee/production/bindery_schedule2.html?schedule_start_day'} = Date::Calc::Today();
+			@session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+'/employee/production/bindery_schedule2.html?schedule_end_month',
+'/employee/production/bindery_schedule2.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),2);
+		} elsif ( $param{'action'} eq '1week' ) {
+			@session{'/employee/production/bindery_schedule2.html?schedule_start_year',
+'/employee/production/bindery_schedule2.html?schedule_start_month',
+'/employee/production/bindery_schedule2.html?schedule_start_day'} = Date::Calc::Today();
+			@session{'/employee/production/bindery_schedule2.html?schedule_end_year',
+'/employee/production/bindery_schedule2.html?schedule_end_month',
+'/employee/production/bindery_schedule2.html?schedule_end_day'} = Date::Calc::Add_Delta_Days(Date::Calc::Today(),6);
 		} # end if
 	} elsif ( ( time - $session{'/employee/production/bindery_schedule2.html?lastupdated'} ) > 24*60*60 ) {
-		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale','equipment' ) {
+		foreach my $param ( 'Equipment','schedule_start_year','schedule_start_month','schedule_start_day','schedule_end_year','schedule_end_month','schedule_end_day','pending','pending_approved', 'scale', 'category' ) {
 			delete $session{'/employee/production/bindery_schedule2.html?'.$param};
 		} # end if
 	} # end if
 	$session{'/employee/production/bindery_schedule2.html?lastupdated'} = time;
 	$variable{'referer'} = '/employee/production/bindery_schedule2.html';
 } # end sub bindery_schedule2
+
+sub _li {
+
+	my $Job = $variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+	if ( $param{'action'} eq 'House Stock' ) {
+		my $stock = $Job->stock();
+		if ( ! ( $stock =~ /House Stock/ ) ) {
+			$Job->save({stock=>$stock.' House Stock'});	
+		} # end if
+	} # end if
+} # end sub _li
 
 1;
 __END__

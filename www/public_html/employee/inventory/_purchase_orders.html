@@ -43,11 +43,12 @@
 				next if $next;
 			} # end if
 			my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
-			if ( $session{'/employee/inventory/purchase_orders.html?types'} eq '' ) {
-				next if @types;
-			} elsif ( ! sets::intersection( @types, split(';', $session{'/employee/inventory/purchase_orders.html?types'} ) ) ) {
-				next;
-			} # en dif
+			if ( ! @types ) {
+				next if ! sets::isin( ' ', [ split(';',$session{'/employee/inventory/purchase_orders.html?types'} ) ] );
+			} else {
+				next if ! sets::intersection( @types, split(';', $session{'/employee/inventory/purchase_orders.html?types'} ) );
+			} # end if
+
 			push @{$$variable{'PurchaseOrders'}}, $PO;
 		} # end foreach PO
 	} # end if
@@ -104,7 +105,7 @@
 				);
 			$report_total += $total;
 		} # end while
-		$html .= '<tr class="totals"><td colspan="7" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
+		$html .= '<tr class="totals"><td colspan="'.( $session{'user_type'} eq 'A' ? 8 : 7 ) . '" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td style="text-align: right; font-weight: bold;">';
 		$html .= openprint::Currency::format( $report_total );
 		$html .= '</td></tr>';
 		return $html;
