@@ -60,8 +60,8 @@ my @log_files = (
 );
 
 my @re = (
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_unix\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s*$',
-'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_unix\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_(unix|krb5)\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s*$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_(unix|krb5)\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for illegal user root from ([\._a-zA-Z0-9\-]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+)$',
