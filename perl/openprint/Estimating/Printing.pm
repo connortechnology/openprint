@@ -1520,7 +1520,7 @@ sub breakdown {
 	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
 	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
-	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s<br/>', @$price{'Roll2SheetRunCharge','Roll2SheetUnits'} ) if $$price{'Roll2SheetRunCharge'};
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
 	$breakdown .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
 # if $$Varnish{'run_price'};
@@ -2434,12 +2434,12 @@ sub calc_price {
 			if ( $R2SPrice{'units'} eq 'Per M' ) {
 				$price{'Roll2SheetRunCharge'} = sprintf('%.2f',$R2SPrice{'Price'} * $impressions/1000);
 			} else {
-				$openprint::log->error("Unknown units on Woll2SheetRunCharge ( $R2SPrice{'units'} for $$Press{strid}");
+				$openprint::log->error("Unknown units on Roll2SheetRunCharge ( $R2SPrice{'units'} for $$Press{strid}");
 			} # end if
 			$price{'Roll2SheetUnits'} = $R2SPrice{'units'};
+			$price{'Roll2SheetCost'} = $R2SPrice{'Price'};
 			$price{'Comparison Cost'} += $price{'Roll2SheetRunCharge'};
 			$price{'Total Cost'} += $price{'Roll2SheetRunCharge'};
-			$price{'Setup Total'} += $price{'Roll2SheetRunCharge'};
 			$run_cost += $price{'Roll2SheetRunCharge'};
 		} # end if
 	} # end if
