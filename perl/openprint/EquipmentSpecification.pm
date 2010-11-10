@@ -35,9 +35,5 @@ sub Equipment {
 	return new openprint::Equipment( $$self{equipment_id} );
 } # end sub Equipment
 
-sub to_string {
-	return join(' ' , map { "$_ => $_[0]{$_}" } keys %fields );
-}
-
 1;
 __END__

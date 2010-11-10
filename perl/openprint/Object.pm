@@ -506,5 +506,9 @@ sub AUTOLOAD {
 		return $$self{$name};
 	} # end if
 } # end sub AUTOLOAD
+sub to_string {
+	return join(' ' , map { "$_ => $_[0]{$_}" } keys %fields );
+}
+
 1;
 __END__
