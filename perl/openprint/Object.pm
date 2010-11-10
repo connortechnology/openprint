@@ -44,7 +44,7 @@ sub debug {
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
-	my $self = $data ? $data : {};
+	my $self = {};
 	bless $self, $parent;
 
 	if ( ref $id eq 'HASH' ) {
@@ -54,7 +54,7 @@ sub new {
 		$self->load( $data );
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
 $log->debug("Multi-key Obejct @$id @$data{@$id}" );
-		#@$self{@$id} = @$data{@$id};
+		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
@@ -75,10 +75,10 @@ $log->debug("Multi-key Obejct @$id @$data{@$id}" );
 
 sub load {
 	my ( $self, $data ) = @_;
+	my $type = ref $self;
+	my %fields = eval '%'.$type.'::fields';
 	if ( ! $data ) {
-		my $type = ref $self;
 		my $table = eval '$'.$type.'::table';
-		my %fields = eval '%'.$type.'::fields';
 		if ( ! $table ) {
 			$log->error( 'NO table for type ' . $type );
 			return;
@@ -95,8 +95,8 @@ sub load {
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
 		} # end if
-		@$self{keys %fields} = @$data{@fields{keys %fields}};
 	} # end if
+	@$self{keys %fields} = @$data{@fields{keys %fields}};
 } # end sub load
 
 sub save {
