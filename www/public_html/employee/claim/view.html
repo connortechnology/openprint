@@ -1,6 +1,5 @@
-<form id="f1" name="f1" action="view.html" method="post">
+<form id="f1" name="f1" action="view.html?claim_id=<? echo ( $$variable{'Claim'}->id() ) ?>" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" />
-	<input type="hidden" name="claim_id" value="<? echo ( $$variable{'Claim'}->id() ) ?>" />
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
@@ -40,7 +39,7 @@
 			</div>
 			<div class="PageTitle">
 				<h1>CLAIM</h1><br/>
-				CLAIM # [ <? echo ( $$variable{'Claim'}->id() ) ?> ]
+				<a href="/employee/claim/view.html?claim_id=<? echo ( $$variable{'Claim'}->id() ) ?>">CLAIM # [ <? echo ( $$variable{'Claim'}->id() ) ?> ]</a>
 				<br/>
 				Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->created_on() ) ) ) ?><br/>
 			</div>
@@ -122,23 +121,23 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 		<? endif ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( my $html = '';
-	foreach my $C ( $$variable{'Claim'}->Contents() ) {
+	foreach my $C ( $$variable{'Claim'}->Contents('order'=>'id') ) {
 		if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
 			$html .= sprintf('<tr>
-				<td>%4$s</td>
-				<td class="Quantity">%1$s</td>
-				<td class="Weight">%2$s%3$s</td>
-				<td style="text-align: right;">%5$s%6$s</td>
-				<td style="text-align: right;">%7$s</td>
-			</tr>', $C->quantity(), 
+				<td>%5$s</td>
+				<td class="Quantity">%1$s%2$s</td>
+				<td class="Weight">%3$s%4$s</td>
+				<td style="text-align: right;">%6$s%7$s</td>
+				<td style="text-align: right;">%8$s</td>
+			</tr>', $C->quantity(), $C->quantity_units(),
 			( $C->weight() ?  Number::Format::format_number($C->weight()) : '' ), $C->weight_units(), 
 			$C->description(), openprint::Currency::format($C->cost(),2), $C->cost_units(), openprint::Currency::format($C->total()) );
 		} else {
 			$html .= sprintf('<tr>
 				<td>%3$s</td>
-				<td class="Quantity">%1$s</td>
-				<td class="Weight">%2$s</td>
-			</tr>', $C->quantity(), 
+				<td class="Quantity">%1$s%2$s</td>
+				<td class="Weight">%3$s</td>
+			</tr>', $C->quantity(), $C->quantity_units(),
 			( $C->weight() ? Number::Format::format_number($C->weight()) : '' ), $C->weight_units(),
 			$C->description());
 		} # end if
@@ -167,6 +166,44 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 </table>
 		</div><!--Contents-->
 		<div id="Remarks"> <h3>Remarks:</h3> <? echo ( $$variable{'Claim'}->reason() ) ?> </div>
+		<div id="Assets" class="unprintable">
+			<h3>Attachments:</h3>
+				<table>
+					<thead>
+						<tr>
+							<th class="Name">Name</th>
+							<th class="Filename">Filename</th>
+							<th class="DateTime">Added On</th>
+							<th>Thumbnail</th>
+						</tr>
+					</thead>
+					<tbody>
+			<? echo ( 
+				my $html;
+				foreach my $Claim_Asset ( $$variable{'Claim'}->Assets() ) {
+					my $Asset = $Claim_Asset->Asset();
+					$html .= sprintf('
+						<tr>
+							<td><a href="/assets/%1$s" target="_blank">%2$s</a></td>
+							<td><a href="/assets/%1$s" target="_blank">%3$s</a></td>
+							<td><a href="/assets/%1$s" target="_blank">%4$s</a></td>
+							<td></td>
+						</tr>
+						', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
+						Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Asset->created_on() ) ),
+						);
+				} # end foreach Asset
+				return $html;
+			) ?>
+			
+				<tr class="unprintable">
+					<td class="Name"><input type="text" id="name" name="name"/></td>
+					<td colspan="2" class="Filename"><input type="file" id="filename" name="filename"/></td>
+					<td><? echo ( ssi::writeButton($log, $dbh, 'Upload', 'upload.gif', "f1.btnFunction.value='Attach';f1.submit();", '', 'Upload' ); ) ?></td>
+				</tr>
+				</tbody>
+			</table>
+		 </div>
 		<div class="rightColumn" style="text-align: right;">
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 		All prices are in <? echo ( $$variable{'Claim'}->Currency()->name() ) ?>.

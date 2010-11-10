@@ -44,13 +44,17 @@ sub debug {
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
-	my $self = {};
+	my $self = $data ? $data : {};
 	bless $self, $parent;
 
 	if ( ref $id eq 'HASH' ) {
 		# First off, for now, don't cache figure that out later
 		my @keys = keys %{$id};
 		@$self{@keys} = @$id{@keys};
+		$self->load( $data );
+	} elsif ( ref $id eq 'ARRAY' and $data ) {
+$log->debug("Multi-key Obejct @$id @$data{@$id}" );
+		#@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
@@ -71,18 +75,18 @@ sub new {
 
 sub load {
 	my ( $self, $data ) = @_;
-	my $type = ref $self;
-	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
-	if ( ! $table ) {
-		$log->error( 'NO table for type ' . $type );
-		return;
-	} # end if
-	my @identified_by = eval '@'.$type.'::identified_by';
-	my $d = eval '$'.$type.'::dbh';
-	$d = $dbh if ! $d;
-
 	if ( ! $data ) {
+		my $type = ref $self;
+		my $table = eval '$'.$type.'::table';
+		my %fields = eval '%'.$type.'::fields';
+		if ( ! $table ) {
+			$log->error( 'NO table for type ' . $type );
+			return;
+		} # end if
+		my @identified_by = eval '@'.$type.'::identified_by';
+		my $d = eval '$'.$type.'::dbh';
+		$d = $dbh if ! $d;
+
 		if ( @identified_by ) {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 		} else {
@@ -91,9 +95,8 @@ sub load {
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
 		} # end if
+		@$self{keys %fields} = @$data{@fields{keys %fields}};
 	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-
 } # end sub load
 
 sub save {
@@ -136,7 +139,9 @@ sub save {
 	if ( ! $$self{'id'} ) {
 		
 		my $ac = sql::start_transaction( $dbh );
-		($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+		if ( $serial ) {
+			($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+		} # end if
 		if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
 			$dbh->rollback();
 			sql::end_transaction( $dbh, $ac );
@@ -144,8 +149,16 @@ sub save {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} else {
-		if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
-			return $error;
+		if ( $serial ) {
+			if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
+				return $error;
+			} # end if
+		} else {
+			my @identified_by = eval '@'.$type.'::identified_by';
+			my $where = join(' AND ', map { $_.'=?' } @identified_by );
+			if ( my $error = sql::update( undef, undef, $table, [$where, @$self{@identified_by}], \%sql ) ) {
+				return $error;
+			} # end if
 		} # end if
 	} # end if
 	$self->load();
@@ -452,7 +465,12 @@ $openprint::log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttim
 	} elsif ( $debug ) {
 		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds" );
 	} # end if
-	return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
+	if ( $fields{'id'} ) {
+		return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
+	} else {
+		my @identified_by = eval '@'.$type.'::identified_by';
+		return map { $type->new( \@identified_by, $_ ) } @$data;
+	} # end if
 } # end sub find
 
 sub find_one {

@@ -27,6 +27,17 @@ if ( $param{'Estimator'} ) {
 } # end nif
 
 		foreach my $Order ( openprint::Order->find( %filters ) ) {
+			if ( $param{'reprint'} ) {
+				my $reprint = 0;
+				foreach my $Project ( $Order->Projects() ) {
+					if ( $Project->reprint() eq 'Y' ) {
+						$reprint=1;
+						last;
+					} # end if
+				} # end foreach Project
+				next if ( $param{'reprint'} eq 'Y' ) and ! $reprint;
+				next if ( $param{'reprint'} eq 'N' ) and $reprint;
+			} # end if reprint
 			if ( $param{'press_id'} ) {
 				my $Press = new openprint::Equipment( $param{'press_id'} );
 				my $on_press = 0;

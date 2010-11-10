@@ -40,7 +40,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','inventory_number','full_packages','message','diescoring','in_stock','parts',
+		'minimum_order','inventory_number','full_packages','message','diescoring','in_stock','parts','message',
 		'material_id',
 		);
 

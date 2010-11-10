@@ -54,7 +54,9 @@ function cbFillResults( results ) {
 					alert( value );
 				} // end if
 			} // end if
-
+			continue;
+		} else if ( key == 'popup') {
+			alert( value );
 			continue;
 		} else if ( key == 'information') {
 			if (value != '') {

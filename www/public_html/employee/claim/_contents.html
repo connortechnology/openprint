@@ -2,6 +2,7 @@
 <table class="List">
 	<tr>
 		<th width="60">&nbsp;</th>
+		<th class="Type">Type</th>
 		<th>Description</th>
 		<th class="Quantity">Quantity</th>
 		<th class="Weight">Weight</th>
@@ -13,7 +14,6 @@
 		my $total = 0;
 		my %stocks;
 		my @Contents = $$variable{'Claim'}->Contents( 'order'=>'id');
-		my @ContentTypes = openprint::Claim_ContentType->find('order'=>'lower(name)');
 		if ( $$variable{'Claim'} and $$variable{'Claim'}->id() and ! @Contents ) {
 			# Every Claim should have at least 1 line in it, even if not populated.
 			my $Claim = new openprint::Claim_Content();
@@ -22,26 +22,18 @@
 			} # end if
 		} # end if
 		foreach my $C ( @Contents ) {
-			$html .= '<tr>';
-			$html .= '<td rowspan="2">'.ssi::writeButton( $log, $dbh, 'Del'.$C->id(), 'del.gif', "del_content( \$('f1'), $$C{id} );", '', 'Delete' )."</td>\n";
-			$html .= sprintf(q`<td rowspan="2"><textarea class="mce" id="description-%1$d" name="description-%1$d" rows="2" cols="">%2$s</textarea></td>`, $C->id(), $C->description() );
-			$html .= sprintf(q`<td class="Quantity"><input type="text" id="quantity-%1$d" name="quantity-%1$d" value="%2$s" size="10" onkeypress="return input_handler( this, event);" onkeydown="if(event.keyCode == 13){add_content(this.form );}" onkeyup="this.value=this.value.replace(/\D/g,'');" /></td>`, $C->id(), $C->quantity() );
-			$html .= sprintf(q`
-			<td class="Weight">
-				<input type="text" id="weight-%1$d" name="weight-%1$d" value="%2$d" onkeyup="this.value=this.value.replace(/\D/g,'');calc_price(this);update_totals($('f1'));" />
-				<select name="weight_units-%1$d" id="weight_units-%1$d" onchange="calc_price(this);update_totals($('f1'));">%3$s</select>
-			</td>
-			`, $C->id(), $C->weight(), ssi::make_drop_down( [ '','', 'lb', 'lb', 'Kg', 'Kg' ], $$C{'weight_units'} ) );
-			$html .= sprintf(q`
-				<td class="Cost">
-					<input type="text" id="cost-%1$d" name="cost-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);update_totals($('f1'));" />
-					<select name="cost_units-%1$d" id="cost_units-%1$d" onchange="calc_price(this);update_totals($('f1'));">%3$s</select>
-				</td>`, $C->id(), $C->cost(), ssi::make_drop_down( [ '/100lb', '/100lb', '/Kg', '/Kg', ,'/1000', '/1000', 'Each', 'Each' ], $$C{'cost_units'} ) );
-			$html .= sprintf(q`<td class="Price"><input type="text" id="total-%1$d" name="total-%1$d" value="%2$.2f" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');" /></td>`, $C->id(), $C->total() );
-			$html .= "</tr>\n";
-			$html .= '<tr><td colspan="4" class="alert" id="alert-'.$$C{id}.'"></td></tr>';
+			$$variable{'C'} = $C;
+			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/claim/_content_'.$C->Type()->name().'.html', $variable );
 		} # end foreach tag_id
 		return $html;
 	) ?>
-</table>
+	<tr>
+		<td>
 <? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1') );", '', 'Add' ); ) ?>
+		<td colspan="6">
+		<select name="type_id"><option value="">select</option>
+		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Claim_ContentType::find('order'=>'lower(name)') ] ); ) ?>
+		</select>
+		</td>	
+	</tr>
+</table>

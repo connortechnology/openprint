@@ -7,6 +7,8 @@ require openprint::RFIDTag;
 require openprint::Claim;
 require openprint::Claim_Content;
 require openprint::PurchaseOrder;
+require openprint::Asset;
+require openprint::Claim_Asset;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -66,6 +68,7 @@ sub view {
 			} # end if
 			$variable{'error'} .= $C->save( {
 					'quantity'		=>	sprintf('%d', $param{"quantity-$$C{id}"}),
+					'quantity_units'	=>	$param{"quantity_units-$$C{id}"},
 					'weight'		=>	$param{"weight-$$C{id}"} ? sprintf('%d', $param{"weight-$$C{id}"}) : undef,
 					'weight_units'	=>	$param{"weight_units-$$C{id}"},
 					'cost'			=>	$param{"cost-$$C{id}"},
@@ -95,6 +98,29 @@ sub view {
 		%param = ();
 	} elsif ( $param{'btnFunction'} eq 'Send' ) {
 		$variable{'information'} .= $Claim->send();
+	} elsif ( $param{'btnFunction'} eq 'Attach' ) {
+		my $Asset = new openprint::Asset();
+		$variable{'error'} .= $Asset->save( \%param );
+        if ( ! $variable{'error'} ) {
+            $variable{'information'} .= 'Information successfully stored.<br/>';
+        } # end if
+        if ( $param{'filename'} ) {
+            my $upload = $r->upload('filename');
+            if ( ! $upload ) {
+                $Asset->save({'filename'=>''});
+                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+            } elsif ( ! $upload->link( $Asset->on_disk_path() ) ) {
+                $variable{'error'} .= "There was an error saving file $param{'filename'} to " . $Asset->on_disk_path() . ": $!<br/>";
+                $Asset->save({'filename'=>''});
+            } else {
+                $variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+            } # end if
+        } # end if
+		if ( $Asset->id() ) {
+			my $Claim_Asset = new openprint::Claim_Asset();
+			$variable{'error'} .= $Claim_Asset->save({'claim_id'=>$param{'claim_id'},'asset_id'=>$Asset->id()});
+		} # end if
+        %param = ();
 	} # end if btnfunction
 	$variable{'Claim'} = $Claim;
 } # end sub view
@@ -155,7 +181,7 @@ sub _contents {
 		$variable{'error'} .= $C->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
 		my $C = new openprint::Claim_Content();
-		$variable{'error'} .= $C->save( { 'claim_id'	=>	$Claim->id() } );
+		$variable{'error'} .= $C->save( { 'claim_id'	=>	$Claim->id(), 'type_id'=>$param{'type_id'} } );
 	} # end if
 } # end sub _contents
 
