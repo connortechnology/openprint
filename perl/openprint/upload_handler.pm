@@ -294,7 +294,7 @@ $log->error("There was an error saving file $param{'fileUpload'.$index}: to $con
 					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
 					TO		=> $to,
-					BCC		=>	'iconnor@penultima.org',
+					#BCC		=>	'iconnor@penultima.org',
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
@@ -318,7 +318,7 @@ $log->error("There was an error saving file $param{'fileUpload'.$index}: to $con
 					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
 					TO      => $to,
-					BCC		=>	'iconnor@penultima.org',
+					#BCC		=>	'iconnor@penultima.org',
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
