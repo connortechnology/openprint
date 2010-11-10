@@ -38,11 +38,14 @@ sub new {
 #n$log->debug("Multi-key Obejct @keys" );
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
+	} elsif ( ref $id eq 'ARRAY' and $data ) {
+$log->debug("Multi-key Obejct @$id @$data{@$id}" );
+		@$self{@$id} = @$data{@$id};
+		$self->load( $data );
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
-
 
 		$$self{'log'} = $openprint::log;
 		$$self{'dbh'} = $openprint::dbh;
@@ -79,7 +82,6 @@ sub load {
 		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
-
 } # end sub load
 
 sub save {
@@ -121,7 +123,9 @@ sub save {
 
 	if ( ! $$self{'id'} ) {
 		my $ac = sql::start_transaction( $dbh );
-		($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+		if ( $serial ) {
+			($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+		} # end if
 		if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
 			$dbh->rollback();
 			sql::end_transaction( $dbh, $ac );
@@ -129,8 +133,16 @@ sub save {
 		} # end if
 		sql::end_transaction( $dbh, $ac );
 	} else {
-		if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
-			return $error;
+		if ( $serial ) {
+			if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
+				return $error;
+			} # end if
+		} else {
+			my @identified_by = eval '@'.$type.'::identified_by';
+			my $where = join(' AND ', map { $_.'=?' } @identified_by );
+			if ( my $error = sql::update( undef, undef, $table, [$where, @$self{@identified_by}], \%sql ) ) {
+				return $error;
+			} # end if
 		} # end if
 	} # end if
 	$self->load();
@@ -357,7 +369,13 @@ sub find {
     } elsif ( $debug ) {
         $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
     } # end if
-    return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
+	if ( $fields{'id'} ) {
+		return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
+	} else {
+		my @identified_by = eval '@'.$type.'::identified_by';
+		return map { $type->new( \@identified_by, $_ ) } @$data;
+	} # end if
+		
 } # end sub find
 
 sub find_one {

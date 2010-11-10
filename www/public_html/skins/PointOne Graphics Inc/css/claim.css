@@ -320,7 +320,6 @@ div.autocomplete ul li {
 
 p.buttons {
 text-align: right;
-width: 100%;
 margin: 0px;
 padding: 0px;
 float: none;
@@ -335,7 +334,7 @@ p.buttons:after {
 }
 /* Hides from IE-mac \*/
 * html p.buttons {height: 1%;}
-* p.buttons {display: block;}
+p.buttons {display: block;}
 /* End hide from IE-mac */
 fieldset.filters p.buttons {
 	text-align: left;
