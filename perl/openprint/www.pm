@@ -88,16 +88,14 @@ sub handler {
 	my $lastpage = '';
 	my $page = $r->uri();
 
-
-		# This one has to go here, because it loads data, the others clear data, so they can go after the requires
+	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
 	if ( $dbh ) {
-		openprint::session_init();
-
 		foreach my $o ( split(',',$config{'Cached Objects'} ) ) {
 			eval sprintf('openprint::%s->init_cache();', $o );
 			$log->warn( "Eval error of cached object $o Reason: " . $@ ) if $@;
 		} # end foreach
+		openprint::session_init();
 
 	$openprint::log->debug("Page: $page");
 		while ( $page and $lastpage ne $page ) {

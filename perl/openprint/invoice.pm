@@ -128,6 +128,12 @@ sub history {
 		} # end foreach Recipient
 	} # end if
 	ssi::save_params( '/invoice/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day', 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day', 'paid','company_id','bad_debt') );
+	ssi::setup_date_select( '/invoice/history.html', 'created_on', -365, 365 );
+	ssi::setup_date_select( '/invoice/history.html', 'due_on', -365, 365 );
+
+	$session{'/invoice/history.html?paid'} = '0' if ! sets::isin( $session{'/invoice/history.html?paid'}, [ 0,1,2] );
+	$session{'/invoice/history.html?bad_debt'} = '0' if ! sets::isin( $session{'/invoice/history.html?bad_debt'}, [ 0,1,2] );
+	$session{'/invoice/history.html?employee_id'} = $session{'user_id'} if ! exists $session{'/invoice/history.html?employee_id'};
 } # end sub history
 
 sub _history {
