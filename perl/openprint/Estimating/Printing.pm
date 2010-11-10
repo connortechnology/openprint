@@ -1463,8 +1463,8 @@ $openprint::log->debug("No W&T due to multipass" . $Papers[0]->gsm() );
 				} # end if
 				my @imps;
 				if ( $Paper->type() eq 'Roll' ) {
-					if ( ! ( $project{'Runstyles'} = $Press->specification('RunstylesRoll') ) ) {
-						$project{'Runstyles'} = $Press->specification('Runstyles');
+					if ( ! ( $$project{'Runstyles'} = $Press->specification('RunstylesRoll') ) ) {
+						$$project{'Runstyles'} = $Press->specification('Runstyles');
 					} # end if
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
@@ -1553,7 +1553,7 @@ $openprint::log->debug("No W&T due to multipass" . $Papers[0]->gsm() );
 
 					next if ! ( $Paper->width() and $Paper->height() );
 					next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
-					$project{'Runstyles'} = $Press->specification('Runstyles');
+					$$project{'Runstyles'} = $Press->specification('Runstyles');
 
 					my $P = $Paper->clone();
 
@@ -1860,7 +1860,7 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 		$$specs{'StockWidth'.$qty_index} = $Paper->width();
 		$$specs{'StockHeight'.$qty_index} = $Paper->height();
 		$$specs{'StockType'.$qty_index} = $Paper->type();
-		if ( ! ( $project{'NeedAqueous'} ) ) {
+		if ( ! ( $$project{'NeedAqueous'} ) ) {
 			$$specs{'popup'} .= $Paper->message() if $Paper->message();
 		} # end if
 
