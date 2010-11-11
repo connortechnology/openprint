@@ -4372,8 +4372,11 @@ sub summary {
 			$$specs{'txtSpreadSize'} = $$printing_specs{'txtSpreadSize'};
 		} # end if
 		return '' if ! $$specs{'txtImposition'.$qty_index};
-		my $html = sprintf(qq{%s %dout %s},
-				$$printing_specs{'txtTotalPageQuantity'} ? $$specs{'PageQuantity'.$qty_index}.'pp' : '',
+		my $html;
+		if ( $Project->Type()->name() ne 'PresentationFolders' ) {
+			$html .= $$specs{'PageQuantity'.$qty_index} ? $$specs{'PageQuantity'.$qty_index}.'pp ' : '';
+		} # end if
+		$html .= sprintf(qq{%dout %s},
 				$$specs{'txtImposition'.$qty_index},
 				($$specs{'ddmRunStyle'.$qty_index} eq 'Web' ? $$specs{'StockWidth'.$qty_index} . '" ' . ssi::htmlize($$specs{'ddmRunStyle'.$qty_index}) : ssi::htmlize($$specs{'ddmRunStyle'.$qty_index}) ), 
 				);

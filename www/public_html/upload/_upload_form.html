@@ -91,6 +91,9 @@ $log->debug("SEssion: $session{'project_id'} ");
 			my $turnaround_specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
 			@$variable{'duedate_year','duedate_month','duedate_day'} = misc::add_delta_business_days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
 		} # end if
+	} # end if Project and calculated
+	if ( ! Date::Calc::check_date( @$variable{'duedate_year','duedate_month','duedate_day'} ) ) {
+		@$variable{'duedate_year','duedate_month','duedate_day'} = Date::Calc::Today();
 	} # end if
 ) ?>
 			<p>
@@ -104,7 +107,7 @@ $log->debug("SEssion: $session{'project_id'} ");
 			<p>
 				<label>Due Date:</label>
 				<span class="DateSelector">
-					<? echo ( ssi::date_select( 'duedate', [@$variable{'duedate_year','duedate_month','duedate_day'}], { 'onchange'=>"filter_days(document.forms['upload'], 'duedate');" } ); ) ?>
+					<? echo ( ssi::date_select( 'duedate', [@$variable{'duedate_year','duedate_month','duedate_day'}], { 'onchange'=>"filter_days(document.forms['upload'], 'duedate', { futureonly: true, businessonly: true } );" } ); ) ?>
 				</span>
 			</p>
 			<p>

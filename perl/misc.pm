@@ -4,6 +4,7 @@ require Exporter;
 @EXPORT = qw( load_file send_email_with_attached_files send_email_with_attachment build_city_prov_country export_csv export get_destination);
 
 use Text::CSV_XS;
+use Date::Calc qw(Add_Delta_Days);
 
 use MIME::QuotedPrint;
 use Mail::Sendmail;

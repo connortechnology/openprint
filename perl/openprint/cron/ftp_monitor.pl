@@ -198,6 +198,19 @@ if (open($fifoh, "< $config{fifo}")) {
 			check_scoreboard();
 			usleep($config{'sleep'} * 1000* 1000);
 		} # End if $line
+
+		if ( ! $dbh->ping() ) {
+			$log->info("Opening SQL connection");
+			$openprint::dbh = sql::open_sql( $log, 
+					'host'		=> $CFG::Config{'db_host'},
+					'database'	=> $CFG::Config{'db_name'},
+					'driver'	=> 'Pg',
+					'login'		=> $CFG::Config{'db_user'},
+					'password'	=> $CFG::Config{'db_pass'},
+					);
+			die 'Error opening db' if ! $dbh;
+			configuration::init_cache( $log, $dbh, \%CFG::Config );
+		} # end if
 	} # end while <input>
 
 	close($fifoh);
@@ -349,7 +362,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 							SUBJECT => $subject,
 					   );
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
-		} # end if
+		} # end if to
 	
 	} elsif ( 1 ) {
 	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';

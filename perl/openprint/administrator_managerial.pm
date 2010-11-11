@@ -19,6 +19,9 @@ require openprint::Tax;
 require openprint::Email;
 require openprint::Email_Account;
 require openprint::UserGroup;
+require openprint::Invoice;
+require openprint::Payment;
+require openprint::Timetrack;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -330,6 +333,31 @@ sub company_profiles {
 		if ( $param{'txtSearchAccountNum'} ne '' ) {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'}); 
 		} # end if 
+	} elsif ( $param{'btnFunction'} eq 'merge' ) {
+		my $Company = new openprint::Company( $index );
+		foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
+			eval q`
+				foreach ( openprint::`.$type.q`->find('company_id'=>$param{'merge_company_id'}) ) {
+					$_->save({'company_id'=>$Company->id()});
+				} # end foreach
+			`;
+		} # end foreach type
+		foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{'merge_company_id'}) ) {
+			$Timetrack->save({'owner_id'=>$Company->id()});
+		} # end foreach Timetrack
+		foreach ( openprint::Invoice->find('invoicer_id'=>$param{'merge_company_id'}) ) {
+			$_->save({'invoicer_id'=>$Company->id()});
+		} # end foreach 
+		foreach ( openprint::Invoice->find('invoicee_id'=>$param{'merge_company_id'}) ) {
+			$_->save({'invoicee_id'=>$Company->id()});
+		} # end foreach 
+		foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{'merge_company_id'}) ) {
+			$Payment->save({'payor_id'=>$Company->id()}) if $Payment->payor_id() == $Company->id();
+		} # end foreach  Payment
+		foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{'merge_company_id'}) ) {
+			$Payment->save({'recipient_id'=>$Company->id()}) if $_->recipient_id() == $Company->id();
+		} # end foreach  Payment
+		new openprint::Company( $param{'merge_company_id'} )->delete();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 
 		$index = $param{'company_id'};

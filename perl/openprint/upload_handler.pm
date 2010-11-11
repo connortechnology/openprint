@@ -244,7 +244,7 @@ $log->error("No destdir");
 					$$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
 
-                foreach my $File ( openprint::File::find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
+                foreach my $File ( openprint::File->find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
                     $File->delete();
                 } # end foreach
                 my $File = new openprint::File();
@@ -290,7 +290,7 @@ $log->error("No destdir");
 					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
 					TO		=> $to,
-					BCC		=>	'iconnor@penultima.org',
+					#BCC		=>	'iconnor@penultima.org',
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
@@ -314,7 +314,7 @@ $log->error("No destdir");
 					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
 					TO      => $to,
-					BCC		=>	'iconnor@penultima.org',
+					#BCC		=>	'iconnor@penultima.org',
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 					);
 			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );

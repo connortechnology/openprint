@@ -1471,7 +1471,7 @@ sub _li_change {
 		$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
 	} elsif ( $param{'action'} eq 'Up' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
+		my @Jobs = openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
 		my $index;
 		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
 		if ( $index > 0 ) {
