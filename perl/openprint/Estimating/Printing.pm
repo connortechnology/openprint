@@ -140,6 +140,8 @@ my %variables = (
 		'txtPlateChangeQuantity1' => ['save'], 'txtPlateChangeQuantity2' => ['save'], 'txtPlateChangeQuantity3' => ['save'], 
 		'AdditionalPlates1' => ['save'], 'AdditionalPlates2' => ['save'], 'AdditionalPlates3' => ['save'],
 		'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
+		'Roll2SheetMakeReady1' => ['save','output'], 'Roll2SheetMakeReady2'   => ['save','output'], 'Roll2SheetMakeReady3'   => ['save','output'],
+		'Roll2SheetRunCharge1' => ['save','output'], 'Roll2SheetRunCharge2'   => ['save','output'], 'Roll2SheetRunCharge3'   => ['save','output'],
 		'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
 		'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
 		'StitchingImposition1' => ['output'], 'StitchingImposition2' => ['output'], 'StitchingImposition3' => ['output'],
@@ -994,6 +996,7 @@ $openprint::log->debug(join(',',@{$$specs{'PrintingTypes'}} ));
 	# Get plates in each previous signature, so we can get qty discounts
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+            $project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetMakeReady'.$qty_index};
 			$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 		} # end foreach $index
@@ -1145,7 +1148,6 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 			$project{'Perfecting Double Gutter Size'} = $Press->specification('Perfecting Double Gutter Size');
 			$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 			$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
-			$project{'Runstyles'} = $Press->specification('Runstyles');
 
 			$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
 
@@ -1159,6 +1161,9 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 				} # end if
 				my @imps;
 				if ( $Paper->type() eq 'Roll' ) {
+					if ( ! ( $project{'Runstyles'} = $Press->specification('RunstylesRoll') ) ) {
+						$project{'Runstyles'} = $Press->specification('Runstyles');
+					} # end if
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 					next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
@@ -1204,6 +1209,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 
 					next if ! ( $Paper->width() and $Paper->height() );
 					next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
+					$project{'Runstyles'} = $Press->specification('Runstyles');
 
 					my $P = $Paper->clone();
 
@@ -1504,6 +1510,7 @@ sub breakdown {
 	my $breakdown = '';
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
 	$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f<br/>', $$price{'Roll2SheetMakeReady'} ) if $$price{'Roll2SheetMakeReady'};
 	$breakdown .= sprintf("\tImposition Charge:\t\$%1\$.2f + \$%2\$.2f*\%4\$d=\$%3\$.2f<br/>", @$price{'Imposition MakeReady','Imposition Price','Imposition Total'}, $Imposition->imposition() );
 	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", @$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
@@ -1513,6 +1520,7 @@ sub breakdown {
 	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
 	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
 	$breakdown .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
 # if $$Varnish{'run_price'};
@@ -2410,6 +2418,33 @@ sub calc_price {
 	my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
 	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb'};
 
+	my $run_cost = 0;
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+
+		# Add Roll2SheetSetup
+		if ( ! $$project{'roll2sheetcharged'} ) {
+			if ( $price{'Roll2SheetMakeReady'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'Roll2SheetMakeReady', undef, $Press ) ) {
+				$price{'Comparison Cost'} += $price{'Roll2SheetMakeReady'};
+				$price{'Total Cost'} += $price{'Roll2SheetMakeReady'};
+				$price{'Setup Total'} += $price{'Roll2SheetMakeReady'};
+			} # end if
+		} # end if
+# Add Roll2SheetRun
+		if ( my %R2SPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Roll2Sheet', $impressions, $Press ) ) {
+			if ( $R2SPrice{'units'} eq 'Per M' ) {
+				$price{'Roll2SheetRunCharge'} = sprintf('%.2f',$R2SPrice{'Price'} * $impressions/1000);
+			} else {
+				$openprint::log->error("Unknown units on Roll2SheetRunCharge ( $R2SPrice{'units'} for $$Press{strid}");
+			} # end if
+			$price{'Roll2SheetUnits'} = $R2SPrice{'units'};
+			$price{'Roll2SheetCost'} = $R2SPrice{'Price'};
+			$price{'Comparison Cost'} += $price{'Roll2SheetRunCharge'};
+			$price{'Total Cost'} += $price{'Roll2SheetRunCharge'};
+			$run_cost += $price{'Roll2SheetRunCharge'};
+		} # end if
+	} # end if
+
+
 	$price{'Comparison Cost'} += $price{'Paper Price'};
 	#return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Paper' );
 
@@ -2446,7 +2481,7 @@ sub calc_price {
 
 	$price{'Press Setup'} = $press_setup;
 
-	my $run_cost = $run_price{'Price'};
+	$run_cost += $run_price{'Price'};
 
 	$price{'Impressions'} = $impressions;
 	$price{'Impression Cost'} = $run_price{'Cost'};
