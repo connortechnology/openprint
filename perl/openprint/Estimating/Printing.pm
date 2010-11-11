@@ -333,7 +333,7 @@ sub setup_project {
 	$project{'special_colours'} = \%special_colours;
 
 	foreach my $service ( 'Folding','Scoring','Perforating','DieCutting','Cutting','Numbering','Proofs' ) {
-		if ( $$services{$service} ) {
+		if ( $$services{$service} and @{$$services{$service}} ) {
 			$$specs{'Has'.$service} = $project{'Has'.$service} = $$services{$service}[0];
 			%{$project{$service.'Specs'}} = %{openprint::service::get_specs_ref( $Project, $$services{$service}[0] )};
 		} # end if	
@@ -1988,7 +1988,7 @@ sub breakdown {
 	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
 	$breakdown .= sprintf('Plate Make Ready: $%.2f%s * %dplates * %d runs = $%.2f<br/>', @$price{'Plate Setup Price','Plate Setup Units','Plate Setup Count', 'Plate Runs', 'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
-	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s<br/>', @$price{'Roll2SheetRunCharge','Roll2SheetUnits'} ) if $$price{'Roll2SheetRunCharge'};
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s=%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
 	if ( $Press->specification('Charge for setup overs') eq 'N' ) {
 		$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed','Impression Cost','Impression Units','Impression Price'} );
 	} else {
@@ -2692,9 +2692,10 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 						$openprint::log->error("Unknown units on Woll2SheetRunCharge ( $R2SPrice{'units'} for $$Press{strid}");
 					} # end if
 					$$price{'Roll2SheetUnits'} = $R2SPrice{'units'};
+					$$price{'Roll2SheetRunCost'} = $R2SPrice{'Price'};
 					$$price{'Comparison Cost'} += $$price{'Roll2SheetRunCharge'};
 					$$price{'Total Cost'} += $$price{'Roll2SheetRunCharge'};
-					$$price{'Setup Total'} += $$price{'Roll2SheetRunCharge'};
+					$$price{'Run Total'} += $$price{'Roll2SheetRunCharge'};
 				} # end if
 			} # end if
 
