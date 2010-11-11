@@ -913,6 +913,10 @@ if ( $data ) {
 if ( ! sets::isin( 'service_prices_id_seq' ) ) {
 	if ( sets::isin( 'serviceprices_id_seq' ) ) {
 		$dbh->do('ALTER sequence serviceprices_id_seq RENAME TO service_prices_id_seq');
+	} else {
+		$dbh->do('CREATE SEQUENCE service_prices_id_seq');
+		$dbh->do(q`SELECT Setval('service_prices_id_seq', (SELECT max(id) FROM service_prices))`);
+		$dbh->do('ALTER TABLE service_prices alter id set default=nextval(service_prices_id_seq)');
 	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1', {} );
