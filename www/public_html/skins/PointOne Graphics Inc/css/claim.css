@@ -360,3 +360,6 @@ div.Claim .Disclaimer {
 	text-align: left;
 	overflow: hidden;
 }
+#Assets .Thumbnail {
+	width: 68px;
+}
