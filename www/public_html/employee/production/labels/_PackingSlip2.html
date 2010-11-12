@@ -5,45 +5,75 @@
 	} # end if
 	if ( ! $$variable{'Label'}->get_data('from') ) {
 		if ( $$variable{'Project'} ) {
-			if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'Project'}->id(), 'Shipping' ) ) {
-				my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
-				$$variable{'Label'}->set_data('from' => join("\n",
-                    join(',', $$shipping_specs{'FromCompanyName'} ) ,
-                    join(',', $$shipping_specs{'FromAddress1'} , $$shipping_specs{'FromAddress2'},
-                        @$shipping_specs{'FromCity','FromStateProvince','FromCountry'},
-                        $$shipping_specs{'FromPostalCode'} ),
-                    ) );
-			} else {
+			my $services = $$variable{'Project'}->services();
+
+			foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+
+				next if $ServiceType->name() eq 'CustomerPickUp';
+				next if ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} );
+
+				my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{$ServiceType->name()}[0] );
+				if ( $$shipping_specs{'FromCompanyName'} or $$shipping_specs{'FromAddress1'} ) {
+					$$variable{'Label'}->set_data('from'=> join("\n",
+							join(',', $$shipping_specs{'FromCompanyName'} ) ,
+							join(',', $$shipping_specs{'FromAddress1'} , $$shipping_specs{'FromAddress2'},
+								@$shipping_specs{'FromCity','FromStateProvince','FromCountry'},
+								@$shipping_specs{'FromPostalCode'} ),
+							) );
+					last;
+				} # end if
+			} # end foreach ST
+			if ( ! $$variable{'Label'}->get_data('from') ) {
+				if ( 0 ) {
 				my $Order = $$variable{'Project'}->Order();
 				$$variable{'Label'}->set_data('from'=> join("\n", $Order->company_name(),
 						join(',', $Order->get('address1','address2') ),
 						join(',', $Order->get('city','state','country') ),
 						$Order->get('postalcode'),
 						) );
+				} else {
+					my $Owner = new openprint::Company( $config{'Owner'} );
+					$$variable{'Label'}->set_data('from'=> join("\n", $Owner->name(),
+						join(',', $Owner->get('address1','address2') ),
+						join(',', $Owner->get('city','state','country') ),
+						$Owner->get('postalcode'),
+						) );
+				} # end if
 			} # end if
+
+
 		} # end if
 	} # endif
 
-	if ( ! $$variable{'Label'}->get_data('to') ) {
-		if ( my @services = openprint::print_project::get_services_in_category( $log, $dbh, $$variable{'Project'}->id(), 'Shipping' ) ) {
-			my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $services[0] );
-			$$variable{'Label'}->set_data('to'=> join("\n",
-				join(', ', $$shipping_specs{'ToCompanyName'} ) ,
-				join(', ', $$shipping_specs{'ToAddress1'} , $$shipping_specs{'ToAddress2'},
-					@$shipping_specs{'ToCity','ToStateProvince','ToCountry'},
-					@$shipping_specs{'ToPostalCode'} ),
-				) );
-		} else {
-			if ( $$variable{'Project'} ) {
-				my $Company = $$variable{'Project'}->Company();
-				$$variable{'Label'}->set_data('to'=> join("\n", $Company->name(),
-							join(', ', $Company->get('address1','address2') ),
-							join(', ', $Company->get('city','state','country') ),
-							$Company->get('postalcode'),
+	if ( ( ! $$variable{'Label'}->get_data('to') ) and $$variable{'Project'} ) {
+		my $services = $$variable{'Project'}->services();
+
+		foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+
+			next if $ServiceType->name() eq 'CustomerPickUp';
+			next if ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} );
+
+			my $shipping_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$services{$ServiceType->name()}[0] );
+			if ( $$shipping_specs{'ToCompanyName'} or $$shipping_specs{'ToAddress1'} ) {
+				$$variable{'Label'}->set_data('to'=> join("\n",
+							join(', ', $$shipping_specs{'ToCompanyName'} ) ,
+							join(', ', $$shipping_specs{'ToAddress1'} , $$shipping_specs{'ToAddress2'},
+								@$shipping_specs{'ToCity','ToStateProvince','ToCountry'},
+								@$shipping_specs{'ToPostalCode'} ),
 							) );
+				last;
 			} # end if
-		} # end if
-	} # end if
+		} # end foreach ST
+
+		if ( ! $$variable{'Label'}->get_data('to') ) {
+			my $Company = $$variable{'Project'}->Company();
+			$$variable{'Label'}->set_data('to'=> join("\n", $Company->name(),
+						join(', ', $Company->get('address1','address2') ),
+						join(', ', $Company->get('city','state','country') ),
+						$Company->get('postalcode'),
+						) );
+		} # end if ! To
+	} # end if ! To and Project
 
 	if ( ! $$variable{'Label'}->get_data('description') ) {
 		my $html;
