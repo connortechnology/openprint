@@ -95,6 +95,9 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE Ordered_products drop column hst') if ( exists $$data{'hst'} );
 }
 
+if ( ! sets::isin( 'invoices', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoices.sql} ) );
+}
 
 if ( sets::isin( 'taxes', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM taxes LIMIT 1', {} );
@@ -183,6 +186,9 @@ if ( $data ) {
 	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
 	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
 	$dbh->do('UPDATE orders SET owing=curtotalsale-paid');
+	if ( ! exists $$data{terms_accepted} ) {
+		$dbh->do('ALTER TABLE ORDERS ADD terms_accepted boolean default false');
+	} # end if
 }
 if ( ! sets::isin('order_taxes', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Order_Taxes.sql});

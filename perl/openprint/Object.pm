@@ -304,7 +304,7 @@ sub find {
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
 	my @values;
 
-	if ( $params{$cache_field} and ( ( 1 == keys %params ) or ( 2 == keys %params and $params{'limit'} ) ) and $name_cache{$type} ) {
+	if ( $params{$cache_field} and ( ( 1 == keys %params ) or ( 2 == keys %params and exists $params{'limit'} ) ) and $name_cache{$type} ) {
 		return $name_cache{$type}{$params{$cache_field}} if $name_cache{$type}{$params{$cache_field}};
 		return;
 	} # end if
@@ -447,8 +447,8 @@ sub find {
 		$sql .= " ORDER BY $params{'order'}";
 		delete $params{'order'};
 	} # end if
-	if ( $params{'limit'} ) {
-		$sql .= " LIMIT $params{'limit'}";
+	if ( exists $params{'limit'} ) {
+		$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 		delete $params{'limit'};
 	} # end if
 	foreach my $k ( keys %params ) {

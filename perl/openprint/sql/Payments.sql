@@ -2,7 +2,7 @@ DROP TABLE Payments;
 
 CREATE TABLE Payments ( 
 	id					SERIAL NOT NULL,
-	order_id			INTEGER, FOREIGN KEY (order_id) REFERENCES Orders (index),
+	order_id			INTEGER, FOREIGN KEY (order_id) REFERENCES Orders (id),
 	owner_id			INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (id),
 	payor_id			INTEGER NOT NULL, FOREIGN KEY (payor_id) REFERENCES Companies (id),
 	amount				FLOAT,
