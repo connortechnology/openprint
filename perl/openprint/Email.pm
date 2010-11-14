@@ -7,9 +7,9 @@ use openprint ();
 require openprint::User;
 require email;
 
-use vars qw( $table $serial %fields %transforms %defaults $log $dbh %session %config );
+use vars qw( $debug $table $serial %fields %transforms %defaults $log %config );
+$debug = 1;
 *log = \$openprint::log;
-*session = \%openprint::session;
 *config = \%openprint::config;
 
 sub send {

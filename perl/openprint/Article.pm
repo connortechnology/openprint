@@ -1,8 +1,7 @@
-package openprint::Article;
-@ISA = qw(openprint::Object);
-
 use strict;
-require sql;
+package openprint::Article;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $dbh %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
@@ -39,6 +38,7 @@ $serial = 'articles_id_seq';
 	#'author'			=>	'author',
 	'body'				=>	'body',
 	#'state'				=>	'state',
+	'category_id'		=>	'category_id',
 );
 
 %transforms = (
@@ -48,6 +48,7 @@ $serial = 'articles_id_seq';
 	'updated_on'	=> q`'NOW()'`,
 	'published_on'	=> q`'NOW()'`,
 	'deleted'		=> 0,
+	'category_id'	=>	undef,
 );
 
 sub send_notifications {

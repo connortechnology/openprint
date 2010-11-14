@@ -114,7 +114,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 			'salesrep_id'		=> $param{'ddmEmployee'},
 			'status'			=> $param{'ddmStatus'},
 			'currency_id'		=> $param{'ddmCurrency'},
-			'order'				=>	'index',
+			'order'				=>	'id',
 		);
 	} # end if
 ) ?>

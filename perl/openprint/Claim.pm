@@ -91,7 +91,7 @@ $serial = 'claims_id_seq';
 	'total'			=>	0,
 	'subtotal'		=>	0,
 	'deleted'		=>	0,
-	'editor_id'		=>	[],
+	'editor_id'		=>	'[]',
 );
 
 sub save {

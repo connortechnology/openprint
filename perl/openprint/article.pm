@@ -53,3 +53,6 @@ sub edit {
 		$variable{'Article'}->published_on( $session{'/article/edit.html?ending'} ) if ! $variable{'Article'}->published_on();
 	} # end if
 } # end sub edit
+
+sub list {
+} # end sub list

@@ -37,8 +37,8 @@ $serial = 'services_id_seq';
 %defaults = (
 		'supplier_id'	=>	undef,
 		'category_id'	=>	undef,
-		'taxexempt1'	=>	'N',
-		'taxexempt2'	=>	'N',
+		'taxexempt1'	=>	q`'N'`,
+		'taxexempt2'	=>	q`'N'`,
 		);
 
 sub save {

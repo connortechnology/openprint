@@ -1,18 +1,14 @@
+use strict;
 package openprint::CAR;
-@ISA = qw(openprint::Object);
-require sql;
+our @ISA = qw(openprint::Object);
 require openprint::CAR_Area;
 require openprint::CAR_Reason;
 
-use vars qw( $r %config $log $dbh %session );
-*r = \$openprint::r;
+use vars qw( %config $log %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *log = \$openprint::log;
-*dbh = \$openprint::dbh;
 
-
-use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 

@@ -1,18 +1,15 @@
-DROP TABLE tbl_Materials;
-DROP SEQUENCE MaterialIndex_seq;
-CREATE SEQUENCE MaterialIndex_seq;
+DROP TABLE IF EXISTS materials;
+DROP SEQUENCE IF EXISTS materials_id_seq;
 
-CREATE TABLE tbl_Materials (
-	lngIndex			INT4 DEFAULT nextval('MaterialIndex_seq'),
-	lngCategoryIndex	INT4, 
-	strID 				TEXT, UNIQUE(strID),
-	strName				TEXT,
-	strDescription		TEXT,
-	strDetails			TEXT,
-    lngSupplierIndex	INT4,
-	ysnTaxExempt1		char(1) NOT NULL DEFAULT 'N',
-	ysnTaxExempt2		char(1) NOT NULL DEFAULT 'N',
-	PRIMARY KEY (lngIndex)
+CREATE TABLE Materials (
+	id				SERIAL,
+	category_id		INTEGER, FOREIGN KEY (category_id) REFERENCES Material_Categories (id),
+	name			TEXT,
+	description		TEXT,
+    supplier_id		INTEGER, FOREIGN KEY (supplier_id) REFERENCES Companies (id),
+	taxexempt1		char(1) NOT NULL DEFAULT 'N',
+	taxexempt2		char(1) NOT NULL DEFAULT 'N',
+	PRIMARY KEY (id)
 );
  
-CREATE INDEX MaterialID_Index ON tbl_Materials (strID);
+CREATE INDEX materialis_name_idx ON materials (name);

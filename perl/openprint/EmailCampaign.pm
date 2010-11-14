@@ -4,7 +4,6 @@ package openprint::EmailCampaign;
 use openprint::Object;
 use Email::Valid;
 use MIME::QuotedPrint;
-use DBI;
 use openprint ();
 use vars qw( %config );
 *config = \%openprint::config;

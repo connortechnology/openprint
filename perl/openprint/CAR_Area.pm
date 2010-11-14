@@ -4,8 +4,6 @@ package openprint::CAR_Area;
 use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-require sql;
-
 $debug = 0;
 $table = 'car_areas';
 $serial = 'car_areas_id_seq';

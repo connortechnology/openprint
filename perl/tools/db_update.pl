@@ -915,8 +915,8 @@ if ( ! sets::isin( 'service_prices_id_seq' ) ) {
 		$dbh->do('ALTER sequence serviceprices_id_seq RENAME TO service_prices_id_seq');
 	} else {
 		$dbh->do('CREATE SEQUENCE service_prices_id_seq');
-		$dbh->do(q`SELECT Setval('service_prices_id_seq', (SELECT max(id) FROM service_prices))`);
-		$dbh->do('ALTER TABLE service_prices alter id set default=nextval(service_prices_id_seq)');
+		$dbh->do(q`SELECT setval('service_prices_id_seq', (SELECT max(id) FROM service_prices))`);
+		$dbh->do('ALTER TABLE service_prices alter id set default nextval(service_prices_id_seq)');
 	} # end if
 } # end if
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Pricelists LIMIT 1', {} );
@@ -1100,10 +1100,11 @@ my $FoldingService;
 my @FoldingServices = openprint::Service->find('name'=>'Folding');
 if ( ! @FoldingServices ) {
 	$FoldingService = new openprint::Service();
-	$FoldingService->save({
+	$_ = $FoldingService->save({
 		'name'	=>	'Folding',
 		'description'	=>	'Folding',
 });
+	die $_ if $_;
 } else {
 	$FoldingService = $FoldingServices[0];
 } # en dif
@@ -1998,13 +1999,15 @@ if ( ! sets::isin( 'order_contents', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Order_Contents.sql' ) ) or die;
 }
 
-my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Payments LIMIT 1', {} );
-if ( ! $data ) {
-		$_ = misc::load_file( $log, q{../openprint/sql/Payments.sql});
-		foreach my $st ( split(';', $_ ) ) {
-			$dbh->do($st);
-		}
+if ( ! sets::isin( 'payments', \@tables ) ) {
+	$_ = $dbh->do( misc::load_file( $log, q{../openprint/sql/Payments.sql}) );
+	die i$_ if $_;
 } else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='payments'", 'column_name');
+	if ( ! $data ) {
+		die 'Unable to load payments';
+	} # end if
+
 	if ( ! exists $$data{'owner_id'} ) {
 		$dbh->do('ALTER TABLE Payments add owner_id INTEGER');
 		$dbh->do('ALTER TABLE Payments add FOREIGN KEY (owner_id) REFERENCES Companies (id)');
