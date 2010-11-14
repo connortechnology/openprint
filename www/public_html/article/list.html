@@ -1,0 +1,67 @@
+<div class="PageTitle">
+<h1>Articles</h1>
+<h2>History</h2>
+</div>
+<script type="text/javascript">
+<!--
+	function load_articles( form ) {
+		$('ArticleList').innerHTML = 'Please wait...';
+		new Ajax.Updater('ArticleList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<? eval (
+	@{$$variable{'Articles'}} = ();
+	foreach my $Article ( openprint::Article->find( 
+		'published'			=>	1,
+		'category_id'		=>	$param{'category_id'},
+		'order'				=> 'published_on',
+		) ) {
+		push @{$$variable{'Articles'}}, $Article;
+	} # end foreach Article
+) ?>
+
+<? if ( @{$$variable{'Articles'}} == 0 ) ?>
+	There are no articles which match your search criteria. 
+<? else ( @{$$variable{'Articles'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Article ID #</b> to view article details.<br/>
+		To delete articles from history check the appropriate article(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="Company">Company</th>
+			<th class="EmployeeName">Employee</th>
+			<th class="DateTime">Created On</th>
+			<th class="DateTime">Published On</th>
+			<th class="Title">Title</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Article ( @{$$variable{'Articles'}} ) {
+				$html .= sprintf(q` 
+				<tr title="%2$s" %8$s onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+					<td class="Company"><a href="/article/edit.html?article_id=%1$d">%3$s</a></td>
+					<td class="EmployeeName"><a href="/article/edit.html?article_id=%1$d">%4$s</a></td>
+					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%5$s</a></td>
+					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%6$s</a></td>
+					<td class="Title"><a href="/article/edit.html?article_id=%1$d">%7$s</a></td>
+				</tr>
+				`, $Article->id(), ssi::html_escape($Article->body()), ssi::htmlize($Article->Company()->name()), 
+				ssi::htmlize( $Article->Author()->name() ),
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->created_on() ) ),
+				( $Article->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+				ssi::htmlize($Article->title()),
+				$rowclass,
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Article
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{'Articles'}} == 0 ) ?>
+</div>
+	</form>
+	</div>
+</div>
