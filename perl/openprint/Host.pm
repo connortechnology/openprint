@@ -24,7 +24,7 @@ $serial = 'hosts_id_seq';
 	'block'		=>	0,
 	'monitor'	=>	0,
 	'mac'		=>	undef,
-	'hostname'	=>	undef,
+	'hostname'	=>	'undef',
 	'ip'		=>	undef,
 	'dhcp'		=>	0,
 );

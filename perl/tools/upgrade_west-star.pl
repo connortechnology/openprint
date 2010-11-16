@@ -17,7 +17,7 @@ $log = new logger( 'warn' );
 my ( $src_db, $dst_db, $src_host, $year, $month, $day ) = @ARGV;
 $src_db = 'west-star' if ! $src_db;
 $dst_db = 'west-star' if ! $dst_db;
-$src_host = 'weststarprinting.com' if ! $src_host;
+$src_host = 'www.weststarprinting.com' if ! $src_host;
 
 `/etc/init.d/apache2 reload`;
 if ( $year ) {
@@ -34,7 +34,7 @@ if ( $year ) {
 	`su postgres -c "dropdb $dst_db"`;
 	print "done\n";
 	print "Create db...";
-	`su postgres -c "createdb -E SQL_ASCII $dst_db"`;
+	`su postgres -c "createdb  $dst_db"`;
 	print "done\n";
 	print "Loading db...";
 	`su postgres -c "bunzip2 < /tmp/$src_db-$month-$day-$year.sql.bz2 | psql $dst_db"`;
@@ -45,7 +45,7 @@ if ( $year ) {
 	`su postgres -c "dropdb $dst_db"`;
 	print "done\n";
 	print "Create db...";
-	`su postgres -c "createdb -E SQL_ASCII $dst_db"`;
+	`su postgres -c "createdb $dst_db"`;
 	print "done\n";
 	print "Loading db...";
 	`su postgres -c "ssh $src_host pg_dump $src_db | psql $dst_db"`;
@@ -53,9 +53,11 @@ if ( $year ) {
 
 } # end if
 
-`chmod +x /etc/apache2/lib/perl/tools/db_update.pl`;
 print "upgrading db ...";
-`/etc/apache2/lib/perl/tools/db_update.pl $dst_db west-star west-star` or $log->error($!);
+`/etc/apache2/lib/perl/tools/db_update3.pl $dst_db west-star west-star` or $log->error($!);
+print 'Turning off backups...';
+$dbh = sql::open_sql( $log, ('database'=>$dst_db, 'driver'=>'Pg','login'=>'west-star', 'password'=>'west-star') );
+configuration::init_cache( $log, $dbh );
 my ( $version, $updated_on, $backup ) = sql::execute( undef, undef, q{SELECT version,updated_on, backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 sql::insert(undef, undef, 'database_info', 'version', $version, 'updated_on', 'NOW()', 'backup', 0 );
 print "done\n";

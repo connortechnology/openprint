@@ -16,6 +16,11 @@ sub new {
 	return $self;
 } # end sub new
 
+sub level {
+	$_[0]{level} = $_[1] if @_ > 1;
+	return $_[0]{'level'};
+} # end sub level
+
 sub file {
 	my ( $self, $file ) = @_;
 	$$self{'file'} = $file;

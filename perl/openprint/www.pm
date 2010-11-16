@@ -97,14 +97,14 @@ sub handler {
 		} # end foreach
 		openprint::session_init();
 
-	$openprint::log->debug("Page: $page");
+		$openprint::log->debug("Page: $page");
 		while ( $page and $lastpage ne $page ) {
 			# This is for loop detection
 			$lastpage = $page;
-	$variable{'uri'} = $page;
+			$variable{'uri'} = $page;
 			parse_page( $page );
 			if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
-$openprint::log->debug("Reirect: $variable{'Redirect'}");
+				$openprint::log->debug("Reirect: $variable{'Redirect'}");
 				$page = $variable{'Redirect'};
 				$variable{'Redirect'} = '';
 			} # end if
@@ -132,8 +132,14 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			my $content;
 			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
 				$content = misc::load_file( $log, $_ );
+				if ( ! $content ) {
+					$log->error("Found no content at $_");
+				} # end if
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+				if ( ! $content ) {
+					$log->error("Found no content at $ENV{'DOCUMENT_ROOT'}$page");
+				} # end if
 			} # end if
 			#$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 			$variable{'PageContent'} = $content;

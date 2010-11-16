@@ -208,7 +208,7 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 
 			my %defaults = eval('%'.$type . '::defaults');
 
-			if ( ( ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
+			if ( ( ( ! exists $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 				$$self{$field} = eval($defaults{$field});
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
