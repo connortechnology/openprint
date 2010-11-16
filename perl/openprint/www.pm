@@ -431,8 +431,8 @@ $log->debug("logged in");
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
-				$variable{'ServiceType'} = openprint::print::get_ServiceType( @variable{'ProjectIndex','ServiceIndex'} );
-				
+				my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
+				$variable{'ServiceType'} = $Service->ServiceType();
 				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );

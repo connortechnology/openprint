@@ -41,6 +41,9 @@
 <th width="105">Unit Price (<?CurrencySymbol?>)</th>
 <th class="Override">&nbsp;</th>
 </tr>
+	<? if ( ! @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}} ) ?>
+Why is there no proofs?
+	<? endif ( ! @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}} ) ?>
 	<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}},0,6; ) ?>
 				<tr>
 					<td align="center"><input type="text" name="txtProofQuantity-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofQuantity?>" size="3" onkeyup="calc(this.form.name)"  /></td>

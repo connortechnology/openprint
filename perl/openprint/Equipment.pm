@@ -49,6 +49,9 @@ my %find_cache;
 	'servicetype_id'	=>	undef,
 );
 
+sub cache_field {
+	return 'name';
+}
 sub init_cache {
 	%find_cache = ();
 } # end sub init_cache
