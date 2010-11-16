@@ -95,7 +95,7 @@ if ( 0 ) {
 				<p>
 					<label>Cover:</label>
 					<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Self' ); ) ?> />
-					<label class="radio" for="rdbCoverSelf">Self Cover</label>
+					<label class="radio" for="rdbCoverSelf">Self Cover</label><br/>
 					<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Different' ); ) ?> />
 					<label class="radio" for="rdbCoverDifferent">Different Cover</label>
 				</p>
@@ -175,7 +175,7 @@ $log->debug("Groups: (" . join(',', @Groups ) . ')' );
 		<input type="hidden" name="ContinueProject" value="Y"/>
 		<input type="hidden" name="NewBook" value="Y"/>
 		<input type="hidden" name="txtSpreadSize" value="<?txtSpreadSize?>"/>
-		<input type="hidden" name="ServiceType" value="MultiPage"/>
+		<!--<input type="hidden" name="ServiceType" value="MultiPage"/>_-->
 		<input type="hidden" name="remaining_pages" />
 		<input type="hidden" name="next_group_id" />
 	</form>
