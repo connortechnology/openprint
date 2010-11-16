@@ -1778,6 +1778,10 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 			push @other_impositions, $I;					
 		} # end foreach sig_id
 
+		# Prime caches for speed
+		openprint::Material::find();
+		openprint::Service::find();
+
 		%signature_price_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
 # Only thread qtys 2 and 3

@@ -42,7 +42,9 @@ $debug = 1;
 		'taxexempt2'	=>	'N',
 		);
 
-
+sub cache_field {
+	return 'name';
+}
 sub delete {
 	my $self = shift;
 

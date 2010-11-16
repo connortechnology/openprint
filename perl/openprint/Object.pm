@@ -28,9 +28,6 @@ sub init_cache {
 	} # end if
 } # end sub init_cache
 
-sub cache_field {
-	return 'name';
-}
 
 sub debug {
 	$log->debug("Dumping Object cache");
@@ -97,6 +94,11 @@ sub load {
 		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	if ( my $cache_field = $self->cache_field() ) {
+		if ( $fields{$cache_field} ) {
+			$name_cache{$type}{$$self{$cache_field}} = $self;
+		} # end if
+	} # end if
 } # end sub load
 
 sub save {
@@ -469,6 +471,9 @@ $openprint::log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttim
 		return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$type.'::identified_by';
+		if ( ! @identified_by ) {
+			$openprint::log->error("Multi key object $type but no identified by");
+		} # end if
 		return map { $type->new( \@identified_by, $_ ) } @$data;
 	} # end if
 } # end sub find
