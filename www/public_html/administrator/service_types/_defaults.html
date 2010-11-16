@@ -3,31 +3,27 @@
 		<th align="left">Project Type</th>
 		<th align="left">Field Name</th>
 		<th align="left">Field Value</th>
+		<th width="70">&nbsp;</th>
 	</tr>
 	<? echo ( 
 		my $html = '';
 		my $rowclass;
-		my @ProjectTypes = openprint::ProjectType->find('order'=>'lower(name)');
+		@{$$variable{'ProjectTypes'}} = openprint::ProjectType->find('order'=>'lower(name)');
+		my $row = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/administrator/service_types/_row.html' );
+
 		foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$$variable{'ServiceType'}->id(),'order'=>'projecttype_id,'.$openprint::ServiceType_Default::fields{'name'}) ) {
-			$html .= sprintf(q`
-					<tr%1$s> 
-						<td><select name="projecttype_id-%2$d"><option value=""> all </option>%5$s</select></td>
-						<td><input type="text" name="name-%2$d" value="%3$s" /></td>
-						<td><input type="text" name="value-%2$d" value="%4$s" /></td>
-					</tr>
-			`, $rowclass, $Default->get('id','name','value'),
-			ssi::make_drop_down( [ map { $_->id(), $_->name() } @ProjectTypes], $Default->projecttype_id() ),
- );
+			$html .= ssi::variable_substitution( \$row, { 'Default'=>$Default, 'rowclass'=>$rowclass, 'ProjectTypes' => $$variable{'ProjectTypes'} } );
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach Default
 		return $html;
 	) ?>
 	<tr class="totals"> 
-		<td colspan="3">Add New</td>
+		<td colspan="4">Add New</td>
 	</tr>
 	<tr> 
-		<td><select name="projecttype_id-"><option value=""> all </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectType->find('order'=>'lower(name)') ] ); ) ?></select></td>
+		<td><select name="projecttype_id-"><option value=""> all </option><? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'ProjectTypes'}} ] ); ) ?></select></td>
 		<td><input type="text" name="name-" /></td>
 		<td><input type="text" name="value-" /></td>
+		<td>&nbsp;</td>
 	</tr>
 </table>

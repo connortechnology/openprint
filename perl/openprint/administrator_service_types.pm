@@ -27,8 +27,8 @@ sub edit {
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} = $ServiceType->save( \%param );
 		my $ac = sql::start_transaction( $dbh );
-        foreach my $key ( keys %param ) {
-            if ( $key =~ /^name\-(.*)$/ ) {
+		foreach my $key ( keys %param ) {
+			if ( $key =~ /^name\-(.*)$/ ) {
 				my $SD = new openprint::ServiceType_Default( $1 );
 				if ( $param{"name\-$1"} ne '' ) {
 					$SD->save({
@@ -43,13 +43,13 @@ sub edit {
 				} else {
 					$variable{'error'} .= $SD->delete();
 				} # end if
-            } # end if
-        } # end foreach
+			} # end if
+		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		my $New = $ServiceType->copy();
-        
-        if ( $_ = $New->save({'name'=>'Copy of' . $New->name()}) ) {
+		
+		if ( $_ = $New->save({'name'=>'Copy of' . $New->name()}) ) {
 			$variable{'error'} = $_;
 		} else {
 			foreach my $Default ( $ServiceType->Defaults() ) {
@@ -62,7 +62,18 @@ sub edit {
 	} # end if
 
 	$variable{'ServiceType'} = $ServiceType;
-} # end sub types_edit
+} # end sub edit
+
+sub _row {
+	my $Default = new openprint::ServiceType_Default( $param{'default_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		$variable{'error'} .= $Default->delete();
+	} elsif ( $param{'action'} eq 'copy' ) {
+		$Default = $Default->copy();
+		$variable{'error'} .= $Default->save();
+	} # end if
+	$variable{'Default'} = $Default;
+} # end sub _row
 
 1;
 __END__

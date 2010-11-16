@@ -171,7 +171,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			#$log->warn($_);
+			$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -257,14 +257,11 @@ $log->debug("User Type: $session{'user_type'}");
 			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
 
 		} elsif ( $first ) {
-			my $eval = "openprint::$first";
-			$eval .= '_'.$second if $second;
-			eval	'require '.$eval;
-			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
-			$filename =~ /(.*).html/;
-			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
-			eval $eval;
-			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
+			eval( 'require openprint::'.join('_', @path ) );
+$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+$log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
