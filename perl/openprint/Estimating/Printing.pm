@@ -268,9 +268,16 @@ sub no_outputs {
 	my @v;
 	foreach my $k ( keys %variables ) {
 		push @v, $k if ! sets::isin( 'output', $variables{$k} );
-	} # end foreach;
+	} # end foreach
 	return @v;
-}
+} # end sub no_outputs
+sub outputs {
+	my @v;
+	foreach my $k ( keys %variables ) {
+		push @v, $k if sets::isin( 'output', $variables{$k} );
+	} # end foreach
+	return @v;
+} # end sub outputs
 
 sub get_unspecified_pages {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index ) = @_;
