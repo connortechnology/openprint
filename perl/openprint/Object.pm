@@ -55,6 +55,11 @@ $log->debug("Multi-key Obejct @$id @$data{@$id}" );
 		$self->load( $data );
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
+			if ( my $cache_field = $self->cache_field() ) {
+				if ( exists $name_cache{$parent}{$$self{$cache_field}} and ! defined $name_cache{$parent}{$$self{$cache_field}} ) {
+					$name_cache{$parent}{$$self{$cache_field}} = $self;
+				} # end if
+			} # end if
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
 
@@ -95,7 +100,7 @@ sub load {
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
 	if ( my $cache_field = $self->cache_field() ) {
-		if ( $fields{$cache_field} ) {
+		if ( $fields{$cache_field} and $$self{$cache_field} ) {
 			$name_cache{$type}{$$self{$cache_field}} = $self;
 		} # end if
 	} # end if
@@ -303,37 +308,47 @@ sub find {
 	my $starttime = [gettimeofday] if $debug;
 
 	my %params = @_;
-	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
+	my @where;
 	my @values;
 
-	if ( $params{$cache_field} and ( ( 1 == keys %params ) or ( 2 == keys %params and exists $params{'limit'} ) ) and $name_cache{$type} ) {
-		return $name_cache{$type}{$params{$cache_field}} if $name_cache{$type}{$params{$cache_field}};
-		return;
+	if ( $cache_field and $params{$cache_field} and ( ( 1 == keys %params ) or ( 2 == keys %params and exists $params{'limit'} ) ) ) {
+		if ( exists $name_cache{$type} and exists $name_cache{$type}{$params{$cache_field}} ) {
+			if ( $name_cache{$type}{$params{$cache_field}} ) {
+#$openprint::log->debug("returning " . $name_cache{$type}{$params{$cache_field}} . " for $type $cache_field $params{$cache_field}");
+				return $name_cache{$type}{$params{$cache_field}} 
+			} else {
+#$openprint::log->debug("returning nothing for $type $cache_field $params{$cache_field}");
+				return ();
+			} # end if
+		} else {
+#$openprint::log->debug("Undefing $type $cache_field $params{$cache_field}");
+			$name_cache{$type}{$params{$cache_field}} = undef;
+		} # end if
 	} # end if
 
 	foreach my $k ( keys %params ) {
 		next if sets::isin( $k,[ 'order','limit','or' ] );
 		if ( $fields{$k} ) {
 			if ( ref $params{$k} eq 'ARRAY' ) {
-				$sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+				push @where, "$fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
 				push @values, @{$params{$k}};
 			} elsif ( ! defined $params{$k} ) {
-				$sql .= " AND $fields{$k} IS NULL";
+				push @where, "$fields{$k} IS NULL";
 			} else {
 #$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
-				$sql .= " AND $fields{$k}=?";
+				push @where, "$fields{$k}=?";
 				push @values, $params{$k};
 			} # end if
 			delete $params{$k};
 		} elsif ( $find_fields{$k} ) {
 			if ( ref $params{$k} eq 'ARRAY' ) {
-				$sql .= " AND $find_fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+				push @where, "$find_fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
 				push @values, @{$params{$k}};
 			} elsif ( ! defined $params{$k} ) {
-				$sql .= " AND $find_fields{$k} IS NULL";
+				push @where, "$find_fields{$k} IS NULL";
 			} else {
 #$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
-				$sql .= " AND $find_fields{$k}=?";
+				push @where, "$find_fields{$k}=?";
 				push @values, $params{$k};
 			} # end if
 			delete $params{$k};
@@ -347,70 +362,70 @@ sub find {
 
 			foreach my $k ( keys %$f ) {
 				if ( exists $params{$k.'_like'} ) {
-					$sql .= " AND $$f{$k}::text LIKE ?";
+					push @where,"$$f{$k}::text LIKE ?";
 					push @values, $params{$k.'_like'};
 					delete $params{$k.'_like'};
 				} 
 				if ( exists $params{$k.'_ilike'} ) {
-					$sql .= " AND $$f{$k}::text ILIKE ?";
+					push @where, "$$f{$k}::text ILIKE ?";
 					push @values, $params{$k.'_ilike'};
 					delete $params{$k.'_ilike'};
 				} 
 				if ( exists $params{$k.'_start'} ) {
-					$sql .= " AND $$f{$k} >= ?";
+					push @where, "$$f{$k} >= ?";
 					push @values, $params{$k.'_start'};
 					delete $params{$k.'_start'};
 				} 
 				if ( exists $params{$k.'_end'} ) {
-					$sql .= " AND $$f{$k} <= ?";
+					push @where, "$$f{$k} <= ?";
 					push @values, $params{$k.'_end'};
 					delete $params{$k.'_end'};
 				} # end if
 				if ( exists $params{$k.'_<'} ) {
-					$sql .= " AND $$f{$k} < ?";
+					push @where, "$$f{$k} < ?";
 					push @values, $params{$k.'_<'};
 					delete $params{$k.'_<'};
 				} # end if
 				if ( exists $params{$k.'_<='} ) {
-					$sql .= " AND $$f{$k} <= ?";
+					push @where, "$$f{$k} <= ?";
 					push @values, $params{$k.'_<='};
 					delete $params{$k.'_<='};
 				} # end if
 				if ( exists $params{$k.'_null_or_<='} ) {
-					$sql .= " AND ( $$f{$k} <= ? OR $$f{$k} IS NULL )";
+					push @where, "( $$f{$k} <= ? OR $$f{$k} IS NULL )";
 					push @values, $params{$k.'_null_or_<='};
 					delete $params{$k.'_null_or_<='};
 				} # end if
 				if ( exists $params{$k.'_>='} ) {
-					$sql .= " AND $$f{$k} >= ?";
+					push @where, "$$f{$k} >= ?";
 					push @values, $params{$k.'_>='};
 					delete $params{$k.'_>='};
 				} # end if
 				if ( exists $params{$k.'_null_or_>='} ) {
-					$sql .= " AND ( $$f{$k} >= ? OR $$f{$k} IS NULL )";
+					push @where, "( $$f{$k} >= ? OR $$f{$k} IS NULL )";
 					push @values, $params{$k.'_null_or_>='};
 					delete $params{$k.'_null_or_>='};
 				} # end if
 				if ( exists $params{$k.'_>'} ) {
-					$sql .= " AND $$f{$k} > ?";
+					push @where, "$$f{$k} > ?";
 					push @values, $params{$k.'_>'};
 					delete $params{$k.'_>'};
 				} # end if
 				if ( exists $params{$k.'_in'} ) {
-					$sql .= " AND ? IN $$f{$k}";
+					push @where, "? IN $$f{$k}";
 					push @values, $params{$k.'_in'};
 					delete $params{$k.'_in'};
 				} # end if
 				if ( exists $params{$k.'_lc'} ) {
-					$sql .= " AND lower($$f{$k}) = ?";
+					push @where, "lower($$f{$k}) = ?";
 					push @values, lc $params{$k.'_lc'};
 					delete $params{$k.'_lc'};
 				} # end if
 				if ( defined $params{$k.'_null'} ) {
 					if ( $params{$k.'_null'} ) {
-						$sql .= " AND $$f{$k} IS NULL";
+						push @where, "$$f{$k} IS NULL";
 					} else {
-						$sql .= " AND $$f{$k} IS NOT NULL";
+						push @where, "$$f{$k} IS NOT NULL";
 					} # end if
 					delete $params{$k.'_null'};
 				} # end if
@@ -425,11 +440,11 @@ sub find {
 			my $f = (lc $k).'_id';
 			if ( exists $fields{$f} ) {
 				if ( $params{$k}->id() ) {
-				$sql .= " AND $fields{$f} = ?";
-#$openprint::log->debug("$params{$k}" . ref $params{$k});
-				push @values, $params{$k}->id();
+					push @where, "$fields{$f} = ?";
+	#$openprint::log->debug("$params{$k}" . ref $params{$k});
+					push @values, $params{$k}->id();
 				} else {
-					$sql .= " AND $fields{$f} IS NULL";
+					push @where, "$fields{$f} IS NULL";
 				} # en dif
 				delete $params{$k};
 			} # end if
@@ -437,11 +452,14 @@ sub find {
 	} # end if
 
 	if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
+		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
 
+	my $sql = 'SELECT * FROM '.$table;
+	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	if ( $params{'or'} ) {
+		$sql .= ' WHERE' if ! @where;
 		$sql .= " OR $params{'or'}";
 		delete $params{'or'};
 	} # end if
@@ -457,7 +475,7 @@ sub find {
 		$log->error("Extra parameters in $type ::find $k => $params{$k}");
 	} # end foreach
 	
-$openprint::log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
+#$openprint::log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {

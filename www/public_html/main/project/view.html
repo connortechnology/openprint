@@ -111,12 +111,12 @@
 			my $summary = eval( 'openprint::Estimating::'.$Project->Type()->type().q`::summary($Project, $$services{''}[0], $printing_specs )` );
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
 				if ( $Project->Type()->url() ) {
-                $html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', $rowclass, $Project->Type()->url(), $Project->id(), $$services{''}[0], $summary );
+					$html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', 
+						$rowclass, $Project->Type()->url(), $Project->id(), $$services{''}[0], $summary );
 				} else {
 					$html .= sprintf('<tr%s><td><b>Printing</b></td>', $rowclass  );
 				} # end if
             } else {
-
                 $html .= sprintf('<tr%s><td><b>Printing</b><br/>%s</td>', $rowclass, $summary );
             } # end if
 			if ( $$services{'Signature'} ) {

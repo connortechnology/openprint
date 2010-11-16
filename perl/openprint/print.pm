@@ -25,7 +25,8 @@ sub get_ServiceType {
 sub save_service {
 	my ( $r, $log, $dbh, $variable, $Project, $service_index ) = @_;
 	
-	my $ServiceType = get_ServiceType( $Project->id(), $service_index );
+	my $Service = $Project->Service( $service_index );
+	my $ServiceType = $Service->ServiceType();
 
 	if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
 		openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, $variable, $Project->id(), $service_index );

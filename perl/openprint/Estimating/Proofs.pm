@@ -27,7 +27,7 @@ require openprint::print;
 require openprint::service;
 require openprint::Estimating::Printing;
 
-my $debug = 0;
+my $debug = 1;
 my @variables = (
 		'txtPrice',
 		'CustomProofSpecs',
@@ -416,15 +416,15 @@ sub insert_new_proof {
 } # end sub insert_new_proof
 
 sub load_proof_info {
-    my ( $log, $dbh, $variable, $project_index, $service_index, $signature_index, $qty_index, $specs ) = @_;
+    my ( $Project, $service_index, $signature_index, $qty_index, $specs ) = @_;
 
     my @proof_info = ();
 
-	$specs = openprint::service::get_specs_ref( $project_index, $service_index ) if ( ! $specs );
+	$specs = openprint::service::get_specs_ref( $Project, $service_index ) if ! $specs;
 
 	my @proofs;
 	foreach my $key ( keys %$specs ) {
-		if ( $key =~ /^txtProofIndex-$signature_index-\d*-$qty_index$/ ) {
+		if ( $key =~ /^txtProofIndex-$signature_index-\d+-$qty_index$/ ) {
 			push @proofs, $$specs{$key};
 		} # end if
 	} # end foreach
@@ -444,9 +444,9 @@ sub get_proof_specs {
     my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
+	my $services = $Project->services();
 
-	my $specs = openprint::service::get_specs_ref( $project_index, $service_index );
+	my $specs = openprint::service::get_specs_ref( $Project, $service_index );
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %proof_indexes;
 		foreach my $key ( keys %$specs ) {
@@ -456,47 +456,46 @@ sub get_proof_specs {
 		} # end foreach
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
-			my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $signature_index = $$sig_specs{'SignatureIndex'};
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+$log->error("No imposition in signature $signature_index");
 				next;
 			} # end if
-			my $signature_index = $$sig_specs{'SignatureIndex'};
 
-			if ( $$sig_specs{'txtImposition'.$qty_index} ) {
-				if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
-					push @{$proof_indexes{$signature_index}}, 1;
-					$openprint::log->debug("ADDING Layout Proof to $signature_index") if $debug;
-					insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs );
-				} # end if
-				if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y') {
-					push @{$proof_indexes{$signature_index}}, 2;
-					$openprint::log->debug("ADDING Colour Proof to $signature_index") if $debug;
-					insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $specs );
-				} # end if
-				if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y') {
-					push @{$proof_indexes{$signature_index}}, 3;
-					insert_press_proof( $Project, $sig_specs, 3, $qty_index, $specs );
-				} # end if
+			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y') {
+				push @{$proof_indexes{$signature_index}}, 1;
+				$openprint::log->debug("ADDING Layout Proof to $signature_index") if $debug;
+				insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $variable );
+			} # end if
+			if ( ( ! sets::isin( 2, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Colour Proof'} eq 'Y') {
+				push @{$proof_indexes{$signature_index}}, 2;
+				$openprint::log->debug("ADDING Colour Proof to $signature_index") if $debug;
+				insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $variable );
+			} # end if
+			if ( ( ! sets::isin( 3, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Press Proof'} eq 'Y') {
+				push @{$proof_indexes{$signature_index}}, 3;
+				insert_press_proof( $Project, $sig_specs, 3, $qty_index, $variable );
 			} # end if
 
-			my @proof_info = load_proof_info( $log, $dbh, $variable, $project_index, $service_index, $$sig_specs{'SignatureIndex'}, $qty_index, $variable );
-			@{$$variable{'Proofs-'.$$sig_specs{'SignatureIndex'}.'-'.$qty_index}} = @proof_info;
+			my @proof_info = load_proof_info( $Project, $service_index, $signature_index, $qty_index, $variable );
+			@{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}} = @proof_info;
 		} # end foreach signature
 	} # end foreach qty_index
     @{$$variable{'SignatureGroups'}} = ();
     foreach my $signature_service_index ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $project_index, $signature_service_index );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		push @{$$variable{'SignatureGroups'}}, @$sig_specs{'SignatureIndex', 'txtServiceDescription'};
 	} # end foreach signature
 
 # Now do scanning
-	if ( $services{'Scanning'} ) {
-		foreach my $index ( @{$services{'Scanning'}} ) {
-			my $scanning_specs = openprint::service::get_specs_ref( $project_index, $index );
+	if ( $$services{'Scanning'} ) {
+		foreach my $index ( @{$$services{'Scanning'}} ) {
+			my $scanning_specs = openprint::service::get_specs_ref( $Project, $index );
 			if ( $$scanning_specs{'rdbRandomProof'} eq 'Yes' ) {
 # add a scanning proof
 				push @{$$variable{'SignatureGroups'}}, $$scanning_specs{'SignatureIndex'}, 'Scanning Proof';
-				@{$$variable{'Proofs'.$$scanning_specs{'SignatureIndex'}}} = load_proof_info( $log, $dbh, $variable, $project_index, $service_index, $$scanning_specs{'SignatureIndex'} );
+				@{$$variable{'Proofs'.$$scanning_specs{'SignatureIndex'}}} = load_proof_info( $Project, $service_index, $$scanning_specs{'SignatureIndex'} );
 			} # end if
 		} # end foreach scanning service
 	} # end if
