@@ -8,7 +8,7 @@
 			<td>%6$s</td>
 		</tr>`, $$variable{'rowclass'}, $Default->get('id','name','value'),
 		ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'ProjectTypes'}} ], $Default->projecttype_id() ),
-		join(',',
+		join(' ',
 			ssi::writeButton( $log, $dbh, 'delete'.$Default->id(), 'delete.gif', qq`
 				new Ajax.Request( '_row.html', { parameters: { default_id: $$Default{id}, action: 'delete' }, 
 					onSuccess: function() {
