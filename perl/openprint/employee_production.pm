@@ -890,7 +890,7 @@ sub complete_signature {
 	if ( ! $Service->service_id() ) {
 		return;
 	} # end if
-	$Service->save({'status'=>'Complete'})
+	$Service->save({'status'=>'Complete'});
 	my $specs = $Service->specs();
 
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );
