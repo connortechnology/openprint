@@ -887,7 +887,10 @@ sub complete_signature {
 	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_id );
 	my $Service = $Project->Service( $service_id );
-	$Service->save({'status'=>'Complete'});
+	if ( ! $Service->service_id() ) {
+		return;
+	} # end if
+	$Service->save({'status'=>'Complete'})
 	my $specs = $Service->specs();
 
 	sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_id, $service_id], 'strStatus', 'Complete' );

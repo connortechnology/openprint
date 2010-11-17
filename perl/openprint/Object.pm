@@ -318,7 +318,17 @@ sub find {
                 $sql .= " AND $fields{$k} > ?";
                 push @values, $params{$k.'_>'};
                 delete $params{$k.'_>'};
-            } # end if
+			} # end if
+			if ( exists $params{$k.'_in'} ) {
+				$sql .= " AND ? IN $fields{$k}";
+				push @values, $params{$k.'_in'};
+				delete $params{$k.'_in'};
+			} # end if
+			if ( exists $params{$k.'_any'} ) {
+				$sql .= " AND ? = ANY( $fields{$k} )";
+				push @values, $params{$k.'_any'};
+				delete $params{$k.'_any'};
+			} # end if
             if ( exists $params{$k.'_lc'} ) {
                 $sql .= " AND lower($fields{$k}) = ?";
                 push @values, lc $params{$k.'_lc'};
