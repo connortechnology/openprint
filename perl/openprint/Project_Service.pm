@@ -13,7 +13,7 @@ use vars qw( $log $dbh %fields %transforms %defaults $table $serial @identified_
 *dbh = \$openprint::dbh;
 
 %fields = (
-	'id'			=>	'lngserviceindex',
+	'service_id'	=>	'lngserviceindex',
 	'project_id'	=>	'lngprojectindex',
 	'operator_id'	=>	'operator_id',
 	'status'		=>	'strstatus',
@@ -28,7 +28,7 @@ use vars qw( $log $dbh %fields %transforms %defaults $table $serial @identified_
 );
 $table = 'tbl_project_contents';
 $serial = 'ContentsServiceIndex_seq';
-@identified_by = ( 'project_id', 'id' );
+@identified_by = ( 'project_id', 'service_id' );
 
 sub Project {
 	return new openprint::Project( $_[0]{'project_id'} );
@@ -40,7 +40,7 @@ sub Operator {
 
 sub specs {
 	if ( ! $_[0]{'specs'} ) {
-		$_[0]{'specs'} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{'id'} );
+		$_[0]{'specs'} = openprint::service::get_specs_ref( $_[0]->Project(), $_[0]{'service_id'} );
 	} # end if
 	return $_[0]{'specs'};
 } # end sub specs
@@ -104,4 +104,3 @@ sub runtime {
 
 1;
 __END__
-
