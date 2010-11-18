@@ -194,7 +194,7 @@ sub view_services {
 		if ( defined $openprint::param{'remove'} and ( $openprint::param{'remove'} ne '' ) ) {
 			foreach my $s_id ( split(',', $openprint::param{'remove'} ) ) {
 				my $PS = $Project->Service( $s_id );
-				next if ! $PS->id();
+				next if ! $PS->service_id();
 				my $ServiceType = $PS->ServiceType();
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
