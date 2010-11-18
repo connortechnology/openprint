@@ -4,7 +4,7 @@ our @ISA = qw(openprint::Object);
 
 use openprint ();
 
-use vars qw( $log $dbh %config $debug $table $serial %fields %find_fields );
+use vars qw( $log $dbh %config $debug $table $serial %fields %find_fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -61,6 +61,9 @@ $serial = 'lngProjectIndex_seq';
 	'rush'				=>	'rush',
 	'style_id'			=>	'style_id',
 	'summary'			=>	'summary',
+);
+%defaults = (
+	'created_on'	=>	q`'NOW()'`,
 );
 
 %find_fields = (

@@ -60,9 +60,15 @@ sub view_services {
 		return if $$variable{'Redirect'};
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		my $Project = new openprint::Project( $project_index );
+		my $services = $Project->services();
+
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}" . $Project->Type()->type() );
-		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, undef, $Project->Type()->type() );
+		# Will insert starting signatures
+		multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $$services{''}[0] ) if $Project->Type()->type() eq 'MultiPage';
+		# This calls the calc function for the Project service, if one exists, since they may actually store data, need to pass a s_id
+		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() ) if $$services{''};
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+		return if $$variable{'Redirect'};
 	} # end if
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
@@ -274,6 +280,7 @@ sub multipage_signatures {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+	$service_index = $$services{''}[0] if ! $service_index;
 
     $openprint::log->debug(" **** STARTING MULTIPAGE SIGNATURES FUNCTION **** ");
 
@@ -590,9 +597,9 @@ sub publication_pages {
     my $service_index = $openprint::param{'ServiceIndex'};
     my $project_index = $openprint::param{'ProjectIndex'};
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
-	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION *******************************");
+	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION PAGES *******************************");
 
-	@{$$variable{'ddmPressOptions'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strcategory='Printing' AND (UseInEstimating IS true) ORDER BY lower(strName)} );
+	@{$$variable{'ddmPressOptions'}} = map { $_->name(), $_->description() } openprint::Equipment->find('category'=>'Printing','use_in_estimating'=>1, 'order'=>'lower(strname)');
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	
@@ -600,7 +607,7 @@ sub publication_pages {
 
 	my $Project = new openprint::Project( $project_index );
 	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $type = $$sig_specs{'Group'};
 $log->error("No Group!") if ! $type;
 		foreach my $spec ( 

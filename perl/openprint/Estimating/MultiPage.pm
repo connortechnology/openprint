@@ -87,7 +87,6 @@ sub calc {
 
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
 	if ( $$specs{'rdbCover'} eq 'Different' ) {
-
 		if ( ! sets::isin( 1, \@Groups ) ) {
 			push @Groups, 1;
 		} # end if

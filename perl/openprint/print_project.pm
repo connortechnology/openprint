@@ -694,7 +694,7 @@ sub create_edit_process {
 		$recalculate = 1;
 	} # end if
 
-	$Project->add_to_log( @session{'company_id','user_id'}, $param{'ProjectIndex'} ? 'Edited' : 'Created' );
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Edited' );
 	if ( $recalculate ) {
 		$Project->Currency( openprint::Currency::get_current() );
 		foreach my $signature_service_index ( $Project->signatures() ) {
