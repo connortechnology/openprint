@@ -4,6 +4,7 @@ use strict;
 
 require sql;
 require logger;
+require configuration;
 require openprint::Object;
 
 use openprint ();

@@ -31,7 +31,7 @@ require openprint::Estimating::UPS;
 require openprint::Estimating::MultiPage;
 require openprint::logs;
 
-my $debug = 1;
+my $debug = 0;
 
 use vars qw( %specs_cache );
 

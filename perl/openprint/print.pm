@@ -60,6 +60,7 @@ sub view_services {
 		return if $$variable{'Redirect'};
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		my $Project = new openprint::Project( $project_index );
+		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}" . $Project->Type()->type() );
 		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, undef, $Project->Type()->type() );
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
 	} # end if

@@ -57,6 +57,13 @@ sub no_outputs {
     } # end foreach;
     return @v;
 }
+sub outputs {
+    my @v;
+    foreach my $k ( keys %variables ) {
+        push @v, $k, if sets::isin( 'output', $variables{$k} );
+    } # end foreach;
+    return @v;
+}
 
 
 sub calc {

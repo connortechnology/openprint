@@ -135,8 +135,8 @@ sub save {
 		$sql{$fields{$k}} = $$self{$k} if defined $fields{$k};
 	} # end foreach
 	delete $sql{'created_on'};
-	$sql{'updated_by'} = $openprint::session{'user_id'} if exists $fields{'updated_by'};
-	$sql{'updated_on'} = 'NOW()' if exists $fields{'updated_on'};
+	$sql{$fields{'updated_by'}} = $openprint::session{'user_id'} if exists $fields{'updated_by'};
+	$sql{$fields{'updated_on'}} = 'NOW()' if exists $fields{'updated_on'};
 	if ( $debug ) {
 		foreach my $k ( keys %sql ) {
 			$openprint::log->debug("Saving $k => $sql{$k}");
