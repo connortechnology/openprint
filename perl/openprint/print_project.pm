@@ -234,16 +234,11 @@ sub continue_project {
 
 		if ( $redirect ne '' and $service_index != $incoming_service_index ) {
 			#plugin new service.
-			$$variable{'Redirect'} = $redirect;
-
-			$$variable{'ServiceIndex'} = $service_index;
-			$param{'ServiceIndex'} = $service_index;
+			$variable{'ExternalRedirect'} = $redirect . '?'.join('&','ProjectIndex='.$project_index, 'ServiceIndex='.$service_index);;
 		} # end if
-
-		$$variable{'ProjectIndex'} = $project_index;
 	} # end if
 
-	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{'Redirect'} $$variable{'ProjectIndex'} $$variable{'ServiceIndex'} *************************");
+	$log->debug("********************* END PROJECT CONTINUE REDIRECT IS $$variable{'ExternalRedirect'} *************************");
 } # end sub continue_project 
 
 sub try_to_delete_project {

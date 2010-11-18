@@ -14,9 +14,15 @@
 		} // end if
 		timeout = null;
 		gettingNewPrice = true;
-		var h = form.serialize(true);
-		h.ServiceType = 'MultiPage';
-		h.callback = 'cbBookResults';
+		var h = $H(form.serialize(true));
+		h.each(function(pair) {
+				if ( pair.value == '' )
+				h.unset(pair.key);
+				if ( pair.key == 'btnFunction' ) 
+				h.unset(pair.key);
+				});
+		h.set('ServiceType','MultiPage');
+		h.set('callback','cbBookResults');
 		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 	}
 	function cbBookResults( results ) {
@@ -129,11 +135,16 @@ if ( 0 ) {
 			<? echo (
 				my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=? ORDER BY strvalue', $$variable{'ProjectIndex'}, 'Group' );
 $log->debug("Groups: (" . join(',', @Groups ) . ')' );
+				my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature');
+
 				if ( ! sets::isin( 1, \@Groups ) ) {
 					# Unshift so that cover is always first
 					unshift @Groups, 1;
 					# Load Defaults
-					if ( my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature') ) {
+					if ( $ServiceType ) {
+						foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$ServiceType->id() ) ) {
+							$$variable{$Default->name().'1'} = $Default->value();
+						} # end while
 						foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$ServiceType->id(), 'projecttype_id'=>$$variable{'Project'}->type_id() ) ) {
 							$$variable{$Default->name().'1'} = $Default->value();
 						} # end while
@@ -141,12 +152,15 @@ $log->debug("Groups: (" . join(',', @Groups ) . ')' );
 					$$variable{'txtServiceDescription1'} = 'Cover Pages';
 					$$variable{'txtSignatureType1'} = 'Cover Pages';
 				} # end if
-					$$variable{'txtSignatureType1'} = 'Cover Pages';
+
 				if ( ! sets::isin( 2, \@Groups ) ) {
 					# Ensure 1 interior pages
 					push @Groups, 2;
 					# Load Defaults
-					if ( my $ServiceType = openprint::ServiceType->find_one('name'=>'Signature') ) {
+					if ( $ServiceType ) {
+						foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$ServiceType->id() ) ) {
+							$$variable{$Default->name().'2'} = $Default->value();
+						} # end while
 						foreach my $Default ( openprint::ServiceType_Default->find('servicetype_id'=>$ServiceType->id(), 'projecttype_id'=>$$variable{'Project'}->type_id() ) ) {
 							$$variable{$Default->name().'2'} = $Default->value();
 						} # end while

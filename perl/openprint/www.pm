@@ -445,6 +445,12 @@ $log->debug("logged in");
 				if ( $project_index and $service_index ) {
 					my $specs = openprint::service::get_specs_ref( $variable{'Project'}, $service_index );
 					@variable{keys %$specs} = @$specs{keys %$specs};
+if ( 0 ) {
+$log->debug("Variable %variable");
+foreach ( keys %variable ) {
+$log->debug("$_ => $variable{$_}");
+}
+}
 				} # end if
 				$variable{'ProjectType'} = $variable{'Project'}->Type();
 #$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");

@@ -71,19 +71,19 @@ sub save_service {
 		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
 	} # end if
+	my $Project = new openprint::Project( $project_index );
 	my $specs = $specs_cache{$service_index};
 
 	my $service_type = $openprint::param{'ServiceType'};
 	if ( ! $service_type ) {
-		my $Project = new openprint::Project( $project_index );
 		my $ServiceType = $Project->ServiceType( $service_index );
 		$service_type = $ServiceType->type();
 	} # end if
 	if ( (! $service_type) and (! $$specs{'ProjectType'}) ) {
 		$log->error( "No serviceType in params for service $service_index.  Trying to recover" );
 	} # end if
-	if ( sets::isin( $service_type, [ '', 'Signature' ] ) ) {
-		$service_type = 'Printing';
+	if ( ! $service_type ) {
+		$service_type = $Project->Type()->type();
 	} # end if
 	eval ( 'require openprint::Estimating::'.$service_type.';' );
 	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');

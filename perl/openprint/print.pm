@@ -62,13 +62,27 @@ sub view_services {
 		my $Project = new openprint::Project( $project_index );
 		my $services = $Project->services();
 
+		# On project creation, almost nothing should be done.  On Edit, a recalculate should be done, to pick up any missing 
+		# information, set statuses so that continue project will pick up which service to display.
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}" . $Project->Type()->type() );
 		# Will insert starting signatures
-		multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $$services{''}[0] ) if $Project->Type()->type() eq 'MultiPage';
+		#multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $$services{''}[0] ) if $Project->Type()->type() eq 'MultiPage';
 		# This calls the calc function for the Project service, if one exists, since they may actually store data, need to pass a s_id
-		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() ) if $$services{''};
+		
+		# Recealc project service
+		if ( $$services{''} ) {
+			my $service_index = $$services{''}[0];
+			my $status = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
+			if ( $status ne 'calculated' ) {
+				# Recal signatures
+				eval ('openprint::Estimating::'.$Project->Type()->type().'::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );');
+				# Recalc everything else
+				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
+			} # end if
+		} # end if
+# Display any resulting uncalculated services
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-		return if $$variable{'Redirect'};
+		return if $$variable{'ExternalRedirect'};
 	} # end if
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
