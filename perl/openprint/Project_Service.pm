@@ -1,17 +1,18 @@
-package openprint::Project_Service;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::Project_Service;
+our @ISA = qw(openprint::Object);
+
 use openprint ();
 
 require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $log $dbh %fields %transforms %defaults $table $serial @identified_by );
+use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial @identified_by );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
+$debug = 1;
 %fields = (
 	'service_id'	=>	'lngserviceindex',
 	'project_id'	=>	'lngprojectindex',

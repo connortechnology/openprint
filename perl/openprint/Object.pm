@@ -105,7 +105,6 @@ sub save {
 #$debug = 0;
 
 	my $table = eval '$'.$type.'::table';
-	my $serial = eval '$'.$type.'::serial';
 	my %fields = eval '%'.$type.'::fields';
 
 	my %sql;
@@ -120,31 +119,50 @@ sub save {
 			$openprint::log->debug("Saving $k => $sql{$k}");
 		} # end foreach
 	} # end if
-
-	if ( ! $$self{'id'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		if ( $serial ) {
-			($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
-		} # end if
-		if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
-			$dbh->rollback();
-			sql::end_transaction( $dbh, $ac );
-			return $error;
-		} # end if
-		sql::end_transaction( $dbh, $ac );
-	} else {
-		if ( $serial ) {
-			if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
+	my @identified_by = eval '@'.$type.'::identified_by';
+	my $ac = sql::start_transaction( $dbh );
+	if ( @identified_by ) {
+		my %serial = eval '%'.$type.'::serial';
+		my $insert = 0;
+		foreach my $id ( @identified_by ) {
+			next if ! $serial{$id};
+			($$self{$id}) = ($sql{$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
+			$insert = 1;
+		} # end foreach
+		if ( $insert ) {
+			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
+				$dbh->rollback();
+				sql::end_transaction( $dbh, $ac );
 				return $error;
 			} # end if
 		} else {
-			my @identified_by = eval '@'.$type.'::identified_by';
-			my $where = join(' AND ', map { $_.'=?' } @identified_by );
+			my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
 			if ( my $error = sql::update( undef, undef, $table, [$where, @$self{@identified_by}], \%sql ) ) {
+				$dbh->rollback();
+				sql::end_transaction( $dbh, $ac );
+				return $error;
+			} # end if
+		} # end if
+	} else {
+		if ( ! $$self{'id'} ) {
+			my $serial = eval '$'.$type.'::serial';
+			if ( $serial ) {
+				($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+			} # end if
+			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
+				$dbh->rollback();
+				sql::end_transaction( $dbh, $ac );
+				return $error;
+			} # end if
+		} else {
+			if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
+				$dbh->rollback();
+				sql::end_transaction( $dbh, $ac );
 				return $error;
 			} # end if
 		} # end if
 	} # end if
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return;
 } # end sub save
@@ -417,5 +435,11 @@ sub AUTOLOAD {
 		return $self->{$name};
 	} # end if
 } # end sub AUTOLOAD
+sub to_string {
+	my $type = ref($_[0]);
+	my $fields = eval '\%'.$type.'::fields';
+    return join(' ' , map { "$_ => $_[0]{$_}" } keys %fields );
+}
+
 1;
 __END__
