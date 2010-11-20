@@ -79,6 +79,8 @@ my @no_outputs = (
 sub no_outputs {
 return @no_outputs;
 } # end sub outputs
+sub outputs {
+} # end sub outputs
 
 @folds = (
 '2PanelFold',
@@ -587,8 +589,9 @@ sub signature_calc {
 				next;
 			} # end if
 		} elsif ( $Equipment->specification( 'Folding Capable' ) eq 'When Stitching' ) {
+			$Breakdown .= 'When Stitching.';
 # Means it's a Stitcher, or a Duplo, so can only do covers
-			if ( $Equipment->specification('Fold Covers Only') and  $$sig_specs{'Group'} != 1 ) {
+			if ( $Equipment->specification('Fold Covers Only') and $$sig_specs{'Group'} != 1 ) {
 				$Breakdown .= 'Stitcher can only fold 4pg cover:<br/>';
 				next;
 			} # end if

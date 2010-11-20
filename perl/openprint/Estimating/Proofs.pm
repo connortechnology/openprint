@@ -70,6 +70,8 @@ sub variables {
 
 sub outputs {
 } # end sub outputs
+sub no_outputs {
+} # end sub no_outputs
 
 sub get_indexes {
 	my ( $specs, $qty_index, $indexes, $types ) = @_;
@@ -180,7 +182,7 @@ sub calc {
 			my $Equipment = openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index});
 			my %Results = signature_calc( $Project, $specs, $signature_service_index, $sig_specs, $qty_index, \%proof_indexes, \%proof_totals, $Equipment );
 			$totalPrice += $Results{'Total'};
-			$$specs{"hdnBreakdown$qty_index"} += $Results{'Breakdown'};
+			$$specs{"hdnBreakdown$qty_index"} .= $Results{'Breakdown'};
 		} # end foreach my $signature_service_index
 
 		my $minCharge = openprint::service::get_price( 'ProofsMinimumCharge', undef, undef );
@@ -237,12 +239,15 @@ sub signature_calc {
 		next if ! ( $type and $quantity );
 		
 		my %MakeReady = openprint::service::get_price_object( $type.'MakeReady', $$totals{$type}{Quantity}, undef );
+		$$specs{"MRPrice-$signature_index-$proof_index-$qty_index"} = $MakeReady{'Price'};
 		my %price;
 		if ( $type eq 'PressProof' ) {
 			%price = openprint::service::get_price_object( $type, $$totals{$type}{Quantity}, $Equipment );
 		} else {
 			%price = openprint::service::get_price_object( $type, $$totals{$type}{Quantity}, undef );
 		} # end if
+		$$specs{"ServicePrice-$signature_index-$proof_index-$qty_index"} = $price{'Price'};
+		$$specs{"ServiceUnits-$signature_index-$proof_index-$qty_index"} = $price{'units'};
 
 		if ( lc $price{'units'} eq 'per square inch' ) {
 			$price{'Total'} = $price{'Price'} * $$specs{"txtProofWidth-$signature_index-$proof_index-$qty_index"} * $$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} * $quantity;
@@ -575,14 +580,14 @@ sub summary {
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			foreach my $key ( keys %{$specs} ) {
 				if ( my ($proof_index) = $key =~ /^txtProofIndex-$signature_index-(\d*)-$qty_index$/ ) {
-					if ( my @Service = openprint::Service->find('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
+					if ( my $Service = openprint::Service->find_one('name'=>$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"}) ) {
 						if ( $$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'PressProof' ) {
-							my $desc = sprintf('</td><td align="left">%s', $Service[0]->description() );
+							my $desc = sprintf('</td><td align="left">%s', $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
 						} else {
 							my $desc = sprintf('%s&quot;x%s&quot;</td><td align="left">%s', @$specs{
 									"txtProofWidth-$signature_index-$proof_index-$qty_index",
-									"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service[0]->description() );
+									"txtProofHeight-$signature_index-$proof_index-$qty_index"}, $Service->description() );
 							$proof_totals{$desc} += $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"};
 						} # end if
 					} # end if

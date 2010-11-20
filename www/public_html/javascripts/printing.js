@@ -179,7 +179,7 @@ function calc_print( formName, force ) {
 		div.show();
 	} // end if
 	gettingNewPrice = true;
-	var h = form.serialize(true);
+	var h = $H(form.serialize(true));
 	h.each(function(pair) {
 		if ( pair.value == '' ) 
 			h.unset(pair.key);
