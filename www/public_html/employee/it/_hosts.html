@@ -1,3 +1,11 @@
+<? eval (
+	if ( $param{'mac'} ) {
+		@{$$variable{'Hosts'}} = openprint::Host->find('mac_any'=>$param{'mac'}, 'order'=>'lower(hostname)');
+$log->debug("Loaded hosts: " . @{$$variable{'Hosts'}} );
+	} else {
+		@{$$variable{'Hosts'}} = openprint::Host->find('order'=>'lower(hostname)');
+	} 
+) ?>
 <table class="List sortable">
 	<thead>
 		<tr>
@@ -11,7 +19,7 @@
 	<tbody>
 		<? echo (
 			my $html;
-			foreach my $Host ( openprint::Host->find('order'=>'ip,lower(hostname)') ) {
+			foreach my $Host ( @{$$variable{'Hosts'}} ) {
 				$html .= sprintf('
 					<tr>
 						<td><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>

@@ -14,7 +14,7 @@ Please select a host to view/edit.<br/>
 			<input type="text" id="hostname" name="hostname" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
 			MAC:
 			<input type="text" id="mac" name="mac" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
-			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "\$('f1').submit();",'','Load' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "load_host(\$('f1'));",'','Load' ); ) ?>
 		</p>
 	</fieldset>
 </form>

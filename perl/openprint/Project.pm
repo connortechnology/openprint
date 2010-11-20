@@ -1347,7 +1347,7 @@ sub production_cost {
 } # end sub production_cost
 sub Service {
 	my ( $self, $service_id ) = @_;
-	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'id'=>$service_id} );
+	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'service_id'=>$service_id} );
 } # end sub Service
 
 sub used_press_names {
