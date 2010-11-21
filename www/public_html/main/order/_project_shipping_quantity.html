@@ -9,8 +9,9 @@
 ) ?>	
 <li
 <? if ( sets::isin( $$variable{'Order'}->status(), ['Incomplete','Re-Opened'] ) ) ?>
- class="required">
+ class="required"
 <? endif ( sets::isin( $$variable{'Order'}->status(), ['Incomplete','Re-Opened'] ) ) ?>
+>
 	<label>Amount:</label>
 <? if ( sets::isin( $$variable{'Order'}->status(), ['Incomplete','Re-Opened'] ) ) ?>
 	<input type="text" name="txtQuantity<? echo ( $$variable{'QuantityIndex'} ) ?>-<?ProjectIndex?>-<?ServiceIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QuantityIndex'}."-$$variable{'ProjectIndex'}-$$variable{'ServiceIndex'}"} ) ?>" onkeyup="this.value=this.value.replace(/\D/g,'');" style="width: 50%;" />

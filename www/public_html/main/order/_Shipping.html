@@ -1,19 +1,24 @@
 <? eval (
-    $$variable{'Project'} = new openprint::Project( $openprint::param{'project_id'} ) if ! $$variable{'Project'};
+    $$variable{'Project'} = new openprint::Project( $param{'project_id'} ) if ! $$variable{'Project'};
     $$variable{'ProjectIndex'} = $$variable{'Project'}->id() if !  $$variable{'ProjectIndex'};
     my $services = $$variable{'Project'}->services();
 
-    if ( $openprint::param{'ServiceTypeName'} and ! $openprint::param{'service_id'} ) {
-        if ( ! $$services{$openprint::param{'ServiceTypeName'}} ) {
-            my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $$variable{'Project'}->id(), $openprint::param{'ServiceTypeName'} );
-            push @{$$services{$openprint::param{'ServiceTypeName'}}}, $new_service_index;
-            $openprint::param{'service_id'} = $new_service_index;
+    if ( $param{'ServiceTypeName'} and ! $param{'service_id'} ) {
+        if ( ! $$services{$param{'ServiceTypeName'}} ) {
+            my $new_service_index = openprint::print_project::insert_service( $log, $dbh, $$variable{'Project'}->id(), $param{'ServiceTypeName'} );
+            push @{$$services{$param{'ServiceTypeName'}}}, $new_service_index;
+            $param{'service_id'} = $new_service_index;
         } else {
-            $openprint::param{'service_id'} = $$services{$openprint::param{'ServiceTypeName'}}[0];
+            $param{'service_id'} = $$services{$param{'ServiceTypeName'}}[0];
         } # end if
     } # end if
 ) ?>
 <fieldset><legend>Shipping</legend>
-<div class="ShippingQuantity"><!--#include virtual="_project_shipping_quantity.html"--></div>
-<div class="ShippingAddress"><!--#include virtual="_project_shipping_address.html"--></div>
+	<div class="ShippingQuantity">
+	<div class="content">
+		<ul> 
+<!--#include virtual="_project_shipping_quantity.html"--></div>
+		</ul>
+	</div>
+	<div class="ShippingAddress"><!--#include virtual="_project_shipping_address.html"--></div>
 </fieldset>

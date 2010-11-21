@@ -50,9 +50,9 @@ sub new {
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
-$log->debug("Multi-key Obejct @$id @$data{@$id}" );
-		@$self{@$id} = @$data{@$id};
+$log->debug("Multi-key Obejct keys(@$id) : " );
 		$self->load( $data );
+		$log->debug( $self->to_string() );
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			if ( my $cache_field = $self->cache_field() ) {
@@ -549,7 +549,7 @@ sub AUTOLOAD {
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return join(' ' , map { "$_ => $_[0]{$_}" } keys %fields );
+    return join(' ' , map { $_ . ' => '.$_[0]{$_} } keys %fields );
 }
 
 1;
