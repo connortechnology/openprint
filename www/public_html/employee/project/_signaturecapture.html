@@ -1,0 +1,2 @@
+<img src="<? echo ( $$variable{'Signature'}->file_path() ) ?>"/><br/>
+Taken on <? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Signature'}->created_on() ) ) ) ?><br/>
