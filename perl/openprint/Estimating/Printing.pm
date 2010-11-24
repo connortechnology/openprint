@@ -2953,7 +2953,9 @@ sub get_aqueous_price {
 			$impressions = int($impressions/2);
 		} # end if
 		$aqueous_price{'Quantity'} = $impressions;
-		my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press);
+		# We assume that both sides are the same. We add a million if not...
+		my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous '.$$specs{'rdbAqueousSideOne'}, $impressions, $Press);
+		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press) if ! %Price;
 		$aqueous_price{'Run Cost'} = $Price{'Price'};
 		$aqueous_price{'Units'} = $Price{'units'};
 		if ( sets::isin( lc $Price{'units'}, ['per m', 'per 1000','per 1000 impressions'] ) ) {
@@ -3412,6 +3414,7 @@ sub get_colour_description {
 	my $side_one_coatings;
 	$side_one_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideOne'} eq 'Gloss';
 	$side_one_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideOne'} eq 'Matte';
+	$side_one_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideOne'} eq 'Satin';
 	if ( $$specs{'chkVarnishSpotGlossSideOne'} ) {
 		$side_one_coatings .= '+Varnish (Spot Gloss)';
 		$side_one_colours -= 1;
@@ -3439,6 +3442,7 @@ sub get_colour_description {
 	my $side_two_coatings;
 	$side_two_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideTwo'} eq 'Gloss';
 	$side_two_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideTwo'} eq 'Matte';
+	$side_two_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideTwo'} eq 'Satin';
 	if ( $$specs{'chkVarnishSpotGlossSideTwo'} ) {
 		$side_two_coatings .= '+Varnish (Spot Gloss)' ;
 		$side_two_colours -= 1;

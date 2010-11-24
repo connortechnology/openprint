@@ -85,7 +85,7 @@
 				<? endif ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
 			</p>
 			<br class="spacer"/>
-			<p>
+			<p class="Aqueous">
 				<label><b><? echo ( ssi::writeTip( 'Aqueous' ); ) ?>:</b></label>
 				<span class="checkOption">
 					<input type="radio" id="rdbAqueousSideOneGloss<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Gloss' ) ?> />
@@ -94,6 +94,10 @@
 				<span class="checkOption">
 					<input type="radio" id="rdbAqueousSideOneMatte<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Matte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Matte' ) ?> />
 					<label class="radio" for="rdbAqueousSideOneMatte<?Signature?>"><? echo ( ssi::writeTip( 'Matte' ); ) ?></label>
+				</span>
+				<span class="checkOption">
+					<input type="radio" id="rdbAqueousSideOneSatin<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Satin" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Satin' ) ?> />
+					<label class="radio" for="rdbAqueousSideOneSatin<?Signature?>"><? echo ( ssi::writeTip( 'Satin' ); ) ?></label>
 				</span>
 				<span class="checkOption">
 					<input type="radio" id="rdbAqueousSideOneNone<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}}, 'Gloss', 'Matte' ); ) ?> />
@@ -214,7 +218,7 @@
 				<? endif ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
 		</p>
 		<br class="spacer"/>
-		<p>
+		<p class="Aqueous">
 			<label><b><? echo ( ssi::writeTip( 'Aqueous' ); ) ?>:</b></label>
 			<span class="checkOption">
 				<input type="radio" id="rdbAqueousSideTwoGloss<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Gloss' ) ?> />
@@ -223,6 +227,10 @@
 			<span class="checkOption">
 				<input type="radio" id="rdbAqueousSideTwoMatte<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Matte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Matte' ) ?> />
 				<label class="radio" for="rdbAqueousSideTwoMatte<?Signature?>"><? echo ( ssi::writeTip('Matte'); ) ?></label>
+			</span>
+			<span class="checkOption">
+				<input type="radio" id="rdbAqueousSideTwoSatin<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Satin" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Satin' ) ?> />
+				<label class="radio" for="rdbAqueousSideTwoSatin<?Signature?>"><? echo ( ssi::writeTip('Satin'); ) ?></label>
 			</span>
 			<span class="checkOption">
 				<input type="radio" id="rdbAqueousSideTwoNone<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}}, 'Gloss', 'Matte' ) ) ?> />
