@@ -87,18 +87,24 @@
 			<br class="spacer"/>
 			<p class="Aqueous">
 				<label><b><? echo ( ssi::writeTip( 'Aqueous' ); ) ?>:</b></label>
+				<? if ( openprint::Service::find('name'=>'Aqueous Gloss' ) ) ?>
 				<span class="checkOption">
 					<input type="radio" id="rdbAqueousSideOneGloss<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Gloss' ) ?> />
 					<label class="radio" for="rdbAqueousSideOneGloss<?Signature?>"><? echo ( ssi::writeTip( 'Gloss' ); ) ?></label>
 				</span>
+				<? endif ( openprint::Service::find('name'=>'Aqueous Gloss' ) ) ?>
+				<? if ( openprint::Service::find('name'=>'Aqueous Matte' ) ) ?>
 				<span class="checkOption">
 					<input type="radio" id="rdbAqueousSideOneMatte<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Matte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Matte' ) ?> />
 					<label class="radio" for="rdbAqueousSideOneMatte<?Signature?>"><? echo ( ssi::writeTip( 'Matte' ); ) ?></label>
 				</span>
+				<? endif ( openprint::Service::find('name'=>'Aqueous Matte' ) ) ?>
+				<? if ( openprint::Service::find('name'=>'Aqueous Satin' ) ) ?>
 				<span class="checkOption">
 					<input type="radio" id="rdbAqueousSideOneSatin<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Satin" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Satin' ) ?> />
 					<label class="radio" for="rdbAqueousSideOneSatin<?Signature?>"><? echo ( ssi::writeTip( 'Satin' ); ) ?></label>
 				</span>
+				<? endif ( openprint::Service::find('name'=>'Aqueous Satin' ) ) ?>
 				<span class="checkOption">
 					<input type="radio" id="rdbAqueousSideOneNone<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}}, 'Gloss', 'Matte' ); ) ?> />
 					<label class="radio" for="rdbAqueousSideOneNone<?Signature?>">None</label>

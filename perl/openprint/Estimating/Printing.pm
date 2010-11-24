@@ -2453,7 +2453,7 @@ sub calc_price {
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	
 	my %run_price;
-	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ); 
+	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs, scalar @$side_one_colours, scalar @$side_two_colours ); 
 	my %varnish_price;
 	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
 		%run_price = get_run_price( $impressions, scalar(@colours), 0, $Imposition, $Press, $run_speed ); 
@@ -2922,7 +2922,7 @@ sub get_varnish_run_price {
 
 
 sub get_aqueous_price {
-	my ( $log, $dbh, $variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ) = @_;
+	my ( $log, $dbh, $variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs, $side_one_colour_count, $side_two_colour_count ) = @_;
 
 	my %aqueous_price;
 
@@ -2951,7 +2951,7 @@ sub get_aqueous_price {
 				$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
 			} # end if
 		} # end if
-		if ( $aqueous_sides == 1 and $is_sheetwork ) {
+		if ( ( $side_one_colour_count and $side_two_colour_count ) and $is_sheetwork ) {
 			$impressions = int($impressions/2);
 		} # end if
 		foreach my $side ( 'One', 'Two' ) {

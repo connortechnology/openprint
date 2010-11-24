@@ -91,8 +91,6 @@ sub save_file {
 	my ( $log, $file, $contents ) = @_;
 	if ( ! $contents ) {
 		$log->warn("Saving empty file $file");
-	} else {
-		$log->warn("Saving file $file $contents");
 	} # end if
 	if ( open( F, "> $file" ) ) {
 		binmode F;
