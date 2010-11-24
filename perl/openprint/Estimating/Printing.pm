@@ -1523,7 +1523,10 @@ sub breakdown {
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
 	$breakdown .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
 # if $$Varnish{'run_price'};
-	$breakdown .= sprintf("\tAqueous Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'Run Cost','Units','Quantity','Total'} ) if %$Aqueous;;
+	if ( %$Aqueous ) {
+	$breakdown .= sprintf("\tAqueous Front Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideOne Run Cost','SideOne Units','SideOne Quantity','SideOne Total'} );
+	$breakdown .= sprintf("\tAqueous Back Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideTwo Run Cost','SideTwo Units','SideTwo Quantity','SideTwo Total'} );
+	} # end if
 	$breakdown .= sprintf("\tMinimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} );
 	$breakdown .= sprintf("\tRun Charge Total:\t\$%.2f<br/>", $$price{'Run Total'} );
 	$breakdown .= '<b>Material Charges:</b><br/>';
@@ -2491,9 +2494,8 @@ sub calc_price {
 	$run_cost += $varnish_price{'Run Total'};
 
 	$price{'Aqueous'} = \%aqueous;
-	if ( $aqueous{'Total'} ) {
-		$run_cost += $aqueous{'Total'};
-	} # end if
+	$run_cost += $aqueous{'SideOne Total'};
+	$run_cost += $aqueous{'SideTwo Total'};
 	$price{'Minimum Run Charge'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'PressRunChargeMinimum',undef,$Press );
 
 	if ( $run_cost < $price{'Minimum Run Charge'} ) {
@@ -2952,26 +2954,28 @@ sub get_aqueous_price {
 		if ( $aqueous_sides == 1 and $is_sheetwork ) {
 			$impressions = int($impressions/2);
 		} # end if
-		$aqueous_price{'Quantity'} = $impressions;
-		# We assume that both sides are the same. We add a million if not...
-		my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous '.$$specs{'rdbAqueousSideOne'}, $impressions, $Press);
-		%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press) if ! %Price;
-		$aqueous_price{'Run Cost'} = $Price{'Price'};
-		$aqueous_price{'Units'} = $Price{'units'};
-		if ( sets::isin( lc $Price{'units'}, ['per m', 'per 1000','per 1000 impressions'] ) ) {
-			$aqueous_price{'Total'} = $Price{'Price'} * ($impressions/1000);
-		} else {
-			$openprint::log->debug("Unknown units in Aqueous");
-			$aqueous_price{'Total'} = $Price{'Price'};
-		} # end if
-		if ( 
-				( $$specs{'rdbAqueousSideOne'} ne 'None' ) 
-				and 
-				( $$specs{'rdbAqueousSideTwo'} ne 'None' ) 
-				and 
-				( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) 
-				and ( ! $is_sheetwork ) ) {
-			$aqueous_price{'Total'} += 1000000;
+		foreach my $side ( 'One', 'Two' ) {
+			$aqueous_price{"Side$side Quantity"} = $impressions;
+			# We assume that both sides are the same. We add a million if not...
+			my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous '.$$specs{'rdbAqueousSide'.$side}, $impressions, $Press);
+			%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press) if ! %Price;
+			$aqueous_price{"Side$side Run Cost"} = $Price{'Price'};
+			$aqueous_price{"Side$side Units"} = $Price{'units'};
+			if ( sets::isin( lc $Price{'units'}, ['per m', 'per 1000','per 1000 impressions'] ) ) {
+				$aqueous_price{"Side$side Total"} = $Price{'Price'} * ($impressions/1000);
+			} else {
+				$openprint::log->debug("Unknown units in Aqueous");
+				$aqueous_price{"Side$side Total"} = $Price{'Price'};
+			} # end if
+			if ( 
+					( $$specs{'rdbAqueousSideOne'} ne 'None' ) 
+					and 
+					( $$specs{'rdbAqueousSideTwo'} ne 'None' ) 
+					and 
+					( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) 
+					and ( ! $is_sheetwork ) ) {
+				$aqueous_price{"Side$side Total"} += 1000000;
+			} # end if
 		} # end if
 	} # end if
 	return %aqueous_price;
