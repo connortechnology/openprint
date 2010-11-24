@@ -24,12 +24,10 @@ $serial = 'hosts_id_seq';
 	'block'		=>	0,
 	'monitor'	=>	0,
 	'mac'		=>	undef,
-	'hostname'	=>	undef,
+	'hostname'	=>	'undef',
 	'ip'		=>	undef,
 	'dhcp'		=>	0,
 );
-use openprint ();
-
 sub resolve {
 	my ( $self ) = @_;
 	my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip'})),2);

@@ -25,7 +25,8 @@ sub get_ServiceType {
 sub save_service {
 	my ( $r, $log, $dbh, $variable, $Project, $service_index ) = @_;
 	
-	my $ServiceType = get_ServiceType( $Project->id(), $service_index );
+	my $Service = $Project->Service( $service_index );
+	my $ServiceType = $Service->ServiceType();
 
 	if ( $ServiceType and ( $ServiceType->name() eq 'Proofs' ) ) {
 		openprint::Estimating::Proofs::save_proof_specs( $r, $log, $dbh, $variable, $Project->id(), $service_index );
@@ -59,8 +60,29 @@ sub view_services {
 		return if $$variable{'Redirect'};
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
 		my $Project = new openprint::Project( $project_index );
-		openprint::service::internal_calc( $log, $dbh, $variable, $project_index, undef, $Project->Type()->type() );
+		my $services = $Project->services();
+
+		# On project creation, almost nothing should be done.  On Edit, a recalculate should be done, to pick up any missing 
+		# information, set statuses so that continue project will pick up which service to display.
+		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}" . $Project->Type()->type() );
+		# Will insert starting signatures
+		#multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $$services{''}[0] ) if $Project->Type()->type() eq 'MultiPage';
+		# This calls the calc function for the Project service, if one exists, since they may actually store data, need to pass a s_id
+		
+		# Recealc project service
+		if ( $$services{''} ) {
+			my $service_index = $$services{''}[0];
+			my $status = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
+			if ( $status ne 'calculated' ) {
+				# Recal signatures
+				eval ('openprint::Estimating::'.$Project->Type()->type().'::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );');
+				# Recalc everything else
+				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
+			} # end if
+		} # end if
+# Display any resulting uncalculated services
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+		return if $$variable{'ExternalRedirect'};
 	} # end if
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
@@ -101,7 +123,7 @@ sub view_services {
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					$recalc = 1;
-				} elsif ( $openprint::param{'ServiceType'} eq 'Signature' ) {
+				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
 # Might need to test for status of project service
@@ -203,7 +225,7 @@ sub view_services {
 		if ( defined $openprint::param{'remove'} and ( $openprint::param{'remove'} ne '' ) ) {
 			foreach my $s_id ( split(',', $openprint::param{'remove'} ) ) {
 				my $PS = $Project->Service( $s_id );
-				next if ! $PS->id();
+				next if ! $PS->service_id();
 				my $ServiceType = $PS->ServiceType();
 				my $specs = $PS->specs();
 				$Project->add_to_log( @openprint::session{'company_id','user_id'}, $ServiceType->name().' ' . $$specs{'ServiceName'}.' service deleted.' );
@@ -272,6 +294,7 @@ sub multipage_signatures {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
+	$service_index = $$services{''}[0] if ! $service_index;
 
     $openprint::log->debug(" **** STARTING MULTIPAGE SIGNATURES FUNCTION **** ");
 
@@ -588,9 +611,9 @@ sub publication_pages {
     my $service_index = $openprint::param{'ServiceIndex'};
     my $project_index = $openprint::param{'ProjectIndex'};
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
-	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION *******************************");
+	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION PAGES *******************************");
 
-	@{$$variable{'ddmPressOptions'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strcategory='Printing' AND (UseInEstimating IS true) ORDER BY lower(strName)} );
+	@{$$variable{'ddmPressOptions'}} = map { $_->name(), $_->description() } openprint::Equipment->find('category'=>'Printing','use_in_estimating'=>1, 'order'=>'lower(strname)');
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	
@@ -598,7 +621,7 @@ sub publication_pages {
 
 	my $Project = new openprint::Project( $project_index );
 	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project->id(), $ss_id );
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 		my $type = $$sig_specs{'Group'};
 $log->error("No Group!") if ! $type;
 		foreach my $spec ( 

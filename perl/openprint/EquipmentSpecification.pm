@@ -1,9 +1,8 @@
-package openprint::EquipmentSpecification;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::EquipmentSpecification;
+our @ISA = qw( openprint::Object );
 use openprint ();
 use openprint::Equipment;
-require sql;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 

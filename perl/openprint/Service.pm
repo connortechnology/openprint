@@ -40,6 +40,9 @@ $serial = 'services_id_seq';
 		'taxexempt1'	=>	q`'N'`,
 		'taxexempt2'	=>	q`'N'`,
 		);
+sub cache_field {
+	return 'name';
+}
 
 sub save {
 	my ( $self, $params ) = @_;

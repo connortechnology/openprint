@@ -882,9 +882,13 @@ sub add_to_barcode_log {
 sub complete_signature {
 	my ( $log, $dbh, $variable, $project_id, $service_id ) = @_;
 
-	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_id );
 	my $Service = $Project->Service( $service_id );
+	if ( ! $Service->service_id() ) {
+$log->error("No service_id in service for project $project_id, $service_id: " . $Service->to_string() );
+		return;
+	} # end if
+	my $ac = sql::start_transaction( $dbh );
 	$Service->save({'status'=>'Complete'});
 	my $specs = $Service->specs();
 
@@ -1497,7 +1501,7 @@ sub _li_change {
 		} # end foreach
 		$Job->Project()->update_status();
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
-		$Job->delete();
+		$variable{'error'} .= $Job->delete();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );

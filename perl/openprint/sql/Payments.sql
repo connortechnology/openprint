@@ -1,4 +1,4 @@
-DROP TABLE Payments;
+DROP TABLE IF EXISTS Payments;
 
 CREATE TABLE Payments ( 
 	id					SERIAL NOT NULL,

@@ -23,14 +23,14 @@ $serial = 'survey_id_seq';
 sub delete {
 	my $self = shift;
 	my $ac = sql::start_transaction();
+	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM Survey_Answers WHERE survey_id=?}, $$self{id} );
 	foreach my $Q ( $self->Questions() ) {
 		foreach my $A ( $Q->AvailableAnswers() ) {
 			$A->delete();
 		} # end foreach
 		$Q->delete();
 	} # end foreach Question
-	sql::execute( undef, undef, q{DELETE FROM Survey_Responses WHERE survey_id=?}, $$self{id} );
-	sql::execute( undef, undef, q{DELETE FROM Survey_Answers WHERE survey_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Surveys WHERE id=?}, $$self{id} );
 	sql::end_transaction( $ac );
 } # end sub delete

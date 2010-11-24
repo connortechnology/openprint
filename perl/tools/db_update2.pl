@@ -318,6 +318,9 @@ if ( sets::isin( 'email_campaigns', \@tables ) ) {
 		$dbh->do( 'ALTER TABLE email_campaigns add nextrun timestamp with time zone' );
 	} # end if
 } # end if
+if ( ! sets::isin( 'timetracks', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Timetracks.sql}) );
+} # end if
 $dbh->disconnect();
 1;
 __END__

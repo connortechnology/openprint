@@ -16,6 +16,7 @@ apt-get -f -y install libxml-libxml-common-perl libxml-libxml-perl libxml-namesp
 apt-get -f -y --force-yes install perlmagick libgd-barcode-perl 
 apt-get -f -y --force-yes install  libnumber-format-perl
 apt-get -f -y --force-yes install  libbarcode-code128-perl liblinux-inotify2-perl
+apt-get -f -y --force-yes install  libnet-arp-perl
 # Also need Barcode-Code128-2.00
 
 ln -sf /etc/apache2/mods-available/rewrite.load   /etc/apache2/mods-enabled/

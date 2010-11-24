@@ -7,7 +7,7 @@ use strict;
 use Apache2::Request;
 use Apache2::RequestRec ();
 use APR::URI;
-use Apache2::Const -compile => qw(HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
+use Apache2::Const -compile => qw(REDIRECT HTTP_INTERNAL_SERVER_ERROR OK DECLINED HTTP_NOT_FOUND HTTP_FORBIDDEN);# Offers OK, Error,etc for web server.
 use Apache2::Log;
 use Apache2::ServerUtil ();
 use Apache2::RequestIO ();
@@ -97,14 +97,14 @@ sub handler {
 		} # end foreach
 		openprint::session_init();
 
-	$openprint::log->debug("Page: $page");
+		$openprint::log->debug("Page: $page");
 		while ( $page and $lastpage ne $page ) {
 			# This is for loop detection
 			$lastpage = $page;
-	$variable{'uri'} = $page;
+			$variable{'uri'} = $page;
 			parse_page( $page );
 			if ( (exists $variable{'Redirect'}) and $variable{'Redirect'} ) {
-$openprint::log->debug("Reirect: $variable{'Redirect'}");
+				$openprint::log->debug("Reirect: $variable{'Redirect'}");
 				$page = $variable{'Redirect'};
 				$variable{'Redirect'} = '';
 			} # end if
@@ -132,8 +132,14 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			my $content;
 			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
 				$content = misc::load_file( $log, $_ );
+				if ( ! $content ) {
+					$log->error("Found no content at $_");
+				} # end if
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
+				if ( ! $content ) {
+					$log->error("Found no content at $ENV{'DOCUMENT_ROOT'}$page");
+				} # end if
 			} # end if
 			#$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
 			$variable{'PageContent'} = $content;
@@ -165,7 +171,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		} else {
 			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
-			#$log->warn($_);
+			$log->warn($_);
 			$r->print( $_ );
 		} # end if
 	} # end if
@@ -251,14 +257,11 @@ $log->debug("User Type: $session{'user_type'}");
 			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
 
 		} elsif ( $first ) {
-			my $eval = "openprint::$first";
-			$eval .= '_'.$second if $second;
-			eval	'require '.$eval;
-			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
-			$filename =~ /(.*).html/;
-			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
-			eval $eval;
-			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
+			eval( 'require openprint::'.join('_', @path ) );
+$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
+			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
+$log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if		
 
 	} elsif ( $first eq 'employee' ) {
@@ -428,8 +431,8 @@ $log->debug("logged in");
 				$variable{'ProjectIndex'} = $openprint::param{'ProjectIndex'} if ! $variable{'ProjectIndex'};
 				$variable{'ProjectIndex'} = $openprint::session{'project_id'} if ! $variable{'ProjectIndex'};
 				$variable{'Project'} = new openprint::Project( $variable{'ProjectIndex'} );
-				$variable{'ServiceType'} = openprint::print::get_ServiceType( @variable{'ProjectIndex','ServiceIndex'} );
-				
+				my $Service = $variable{'Project'}->Service( $variable{'ServiceIndex'} );
+				$variable{'ServiceType'} = $Service->ServiceType();
 				@variable{'ServiceTypeID','ServiceTypeName','ServiceTypeType'} = $variable{'ServiceType'}->get('name','description','type' ) if $variable{'ServiceType'};
 				my $Currency = openprint::Currency::get_current();
 				@variable{'CurrencyName','CurrencySymbol'} = ( $Currency->name(), $Currency->symbol() );
@@ -442,6 +445,12 @@ $log->debug("logged in");
 				if ( $project_index and $service_index ) {
 					my $specs = openprint::service::get_specs_ref( $variable{'Project'}, $service_index );
 					@variable{keys %$specs} = @$specs{keys %$specs};
+if ( 0 ) {
+$log->debug("Variable %variable");
+foreach ( keys %variable ) {
+$log->debug("$_ => $variable{$_}");
+}
+}
 				} # end if
 				$variable{'ProjectType'} = $variable{'Project'}->Type();
 #$openprint::log->debug("Pid: $variable{'ProjectIndex'} sid: $variable{'ServiceIndex'}");

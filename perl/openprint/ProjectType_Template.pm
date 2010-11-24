@@ -1,22 +1,11 @@
-package openprint::ProjectType_Template;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-use MIME::QuotedPrint;
-
 use strict;
-use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-*config = \%openprint::config;
-*session = \%openprint::session;
+package openprint::ProjectType_Template;
+our @ISA = qw(openprint::Object);
+require openprint::Object;
 
-require sql;
-require ssi;
-require misc;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'projecttemplate';
 $serial = 'projecttemplate_id_seq';

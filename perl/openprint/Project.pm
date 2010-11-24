@@ -1,12 +1,10 @@
-package openprint::Project;
-@ISA = qw(openprint::Object);
-
-# This is the object-oriented version of the project module
-
 use strict;
+package openprint::Project;
+our @ISA = qw(openprint::Object);
+
 use openprint ();
 
-use vars qw( $log $dbh %config $table $serial %fields %find_fields );
+use vars qw( $log $dbh %config $debug $table $serial %fields %find_fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -27,7 +25,7 @@ require openprint::Project_Service;
 require openprint::Todo;
 require openprint::Bug;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'projects';
 $serial = 'lngProjectIndex_seq';
@@ -49,7 +47,6 @@ $serial = 'lngProjectIndex_seq';
 	'mode'			=>	'strmode',
 	'programs'		=>	'strprograms',
 	'other_programs'	=>	'strotherprograms',
-	'printingtype'	=>	'printingtype',
 	'currency_id'	=>	'currency_id',
 	'type_id'		=>	'type_id',
 	'price1'		=>	'price1',
@@ -64,6 +61,9 @@ $serial = 'lngProjectIndex_seq';
 	'rush'				=>	'rush',
 	'style_id'			=>	'style_id',
 	'summary'			=>	'summary',
+);
+%defaults = (
+	'created_on'	=>	q`'NOW()'`,
 );
 
 %find_fields = (
@@ -110,12 +110,10 @@ sub destroy {
 } # end sub destroy
 
 sub Type {
-	my $self = shift;
-	if ( @_ ) {
-		my $ProjectType = shift;
-		$$self{'type_id'} = $ProjectType->id();	
+	if ( @_ > 1 ) {
+		$_[0]{'type_id'} = $_[1]->id();	
 	} # end nif
-	return new openprint::ProjectType( $$self{'type_id'} );
+	return new openprint::ProjectType( $_[0]{'type_id'} );
 } # end sub Type
 
 sub get_project_type_service_index {
@@ -542,7 +540,7 @@ sub update_status {
 sub save {
 	my ( $self, $hash ) = @_;
 
-	@$self{ keys %{$hash} } = @$hash{keys %{$hash} };
+	$self->set( $hash );
 	foreach my $qty_index ( $self->quantity_indexes() ) {
 		$self->price( $qty_index, undef );
 	} # end foreach
@@ -552,85 +550,20 @@ sub save {
 	$$self{'user_id'} = $openprint::session{'user_id'} if ! $$self{'user_id'};
 	$$self{'status'} = 'uncalculated' if ! $$self{'status'};
 	$$self{'predefined'} = '0' if $$self{'predefined'} != 1;
-	my @sql = (
-				'strProjectReference',	$$self{'reference'},
-				'strComments',			$$self{'comments'},
-				'company_id',		 	$$self{'company_id'},
-				'user_id',				$$self{'user_id'},
-				'intQuantity1',		 	( $$self{'quantity1'} ? $$self{'quantity1'} : undef ),
-				'intQuantity2',		 	( $$self{'quantity2'} ? $$self{'quantity2'} : undef ),
-				'intQuantity3',		 	( $$self{'quantity3'} ? $$self{'quantity3'} : undef ),
-				'strStatus',			$$self{'status'},
-				'strMode',				$$self{'mode'},
-				'strDesign',			$$self{'design'},
-				'dtmLastModified',		'NOW()',
-				'currency_id',			$$self{'currency_id'},
-				'type_id',				$$self{'type_id'},
-				'price1',				$$self{'price1'},
-				'price2',				$$self{'price2'},
-				'price3',				$$self{'price3'},
-				'strOtherPrograms',		$$self{'other_programs'},
-				'strPrograms',			$$self{'programs'},
-				'order_id',				$$self{'order_id'} ? $$self{'order_id'} : undef,
-				'lngdocketnumber',		$$self{'docket'} ? $$self{'docket'} : undef,
-				'due_date',				$$self{'due_date'} ? $$self{'due_date'} : undef,
-				'style_id',			 $$self{'style_id'} ? $$self{'style_id'} : undef,
-				'predefined',			$$self{'predefined'} ? $$self{'predefined'} : 'N',
-				'rush',					$$self{'rush'},
-				'summary',				$$self{'summary'},
-				'reprint',				$$self{'reprint'},
-				'reprint_reason',		$$self{'reprint_reason'},
-	);
-	if ( ! $$self{'created_on'} ) {
-		push @sql, 'dtmCreationDate','NOW()';
-	} # end if
 
-	my $ac = sql::start_transaction( $openprint::dbh );
-
-	if ( ! $$self{'id'} ) {
-
-		@$self{'id'} = sql::execute( $openprint::log, $openprint::dbh, q{SELECT nextval('lngProjectIndex_seq'::text)} );
-
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'id',	@$self{'id'}, @sql ) ) {
-			$openprint::dbh->rollback;
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $e;
-		} # end if
-	} elsif ( $$hash{'force_install'} ) {
-		if ( my $e = sql::insert( $openprint::log, $openprint::dbh, 'Projects', 'id',	@$self{'id'}, @sql ) ) {
-			$openprint::dbh->rollback;
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $e;
-		} # end if
-	} else {
-		if ( my $e = sql::update( $openprint::log, $openprint::dbh, 'Projects', ['id=?', $$self{'id'}], \@sql ) ) {
-			$openprint::dbh->rollback;
-			sql::end_transaction( $openprint::dbh, $ac );
-			return $e;
-		} # end if
-	} # end if
+	my $rc = $self->SUPER::save( $hash );
 
 	# I'm not sure we should be doing this.
-	if ( $$self{'order_id'} ) {
+	if ( (!$rc) and $$self{'order_id'} ) {
 		sql::update( $log, $dbh, 'Order_Contents', ['OrderIndex=? AND lngProjectIndex=?', @$self{'order_id','id'} ], {
 			'shippingtype'		=>	$$self{'shippingtype'},
 			'daterequired'		=>	$$self{'requested_date'},
 			'intquantityindex'	=>	$$self{'ordered_quantity_index'},
 			'cursalesprice'		=>	$$self{'ordered_price'},
-} );
+			} );
 	} # end if
-	$self->load();
-	sql::end_transaction( $openprint::dbh, $ac );
-	return;
+	return $rc;
 } # eend sub save
-
-sub Currency {
-	my $self = shift;
-	if ( @_ ) {
-		$$self{'currency_id'} = (shift)->id();
-	} # end if
-	return new openprint::Currency( $$self{'currency_id'} );
-} # end sub Currency
 
 sub quantity_indexes {
 	my ( $self ) = @_;
@@ -1414,7 +1347,7 @@ sub production_cost {
 } # end sub production_cost
 sub Service {
 	my ( $self, $service_id ) = @_;
-	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'id'=>$service_id} );
+	return new openprint::Project_Service( {'project_id'=>$$self{'id'}, 'service_id'=>$service_id} );
 } # end sub Service
 
 sub used_press_names {

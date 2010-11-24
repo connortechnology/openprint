@@ -15,79 +15,102 @@
 			<label class="radio" for="RequireColourProofsA">Auto</label>
 		</p>
 		<!-- The rest is done for each qty -->
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-			<fieldset><legend>The following results are for Quantity <?QTYIndex?> (<? echo ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>)</legend>
+		<? echo ( 
+			my $html = '';
+			foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+				my $quantity = $$variable{'Project'}->quantity($qty_index);
+				$html .= "<fieldset><legend>The following results are for Quantity $qty_index ($quantity)</legend>";
 
-			<? eval ( @{$$variable{'Signatures'}} = $$variable{'Project'}->signatures(); ) ?>
-			<? while ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}}; ) ?>
-				<? eval ( 
-					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $$variable{'SignatureServiceIndex'} );
-					if ( $$sig_specs{'txtImposition'.$$variable{'QTYIndex'}} ) {
-							$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
-							$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $$variable{'SignatureServiceIndex'} );
-							$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), @$variable{'SignatureServiceIndex','QTYIndex'} );
-					} else {
-						$$variable{'SignatureIndex'} = '';
+				foreach my $s_id ( $$variable{'Project'}->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
+					my $signature_index = $$sig_specs{'SignatureIndex'};
+					if ( $$sig_specs{'txtImposition'.$qty_index} ) {
+						$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $s_id );
+						$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), $s_id, $qty_index );
 					} # end if
-				) ?>
-<? if ( $$variable{'SignatureIndex'} ne '' ) ?>
-			<table>
-				<tr><td valign="top" rowspan="<? echo ( int(@{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}}/6)+2) ?>"><br/><?Reference?></td>
-<th width="40">Qty</th>
-<th width="170">Dimensions</th>
-<th width="105" align="left">Type</th>
-<th width="105">Unit Price (<?CurrencySymbol?>)</th>
-<th class="Override">&nbsp;</th>
-</tr>
-	<? while ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}},0,6; ) ?>
-				<tr>
-					<td align="center"><input type="text" name="txtProofQuantity-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofQuantity?>" size="3" onkeyup="calc(this.form.name)"  /></td>
-					<td align="center">
-						<input type="text" name="txtProofWidth-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofWidth?>" size="6" onkeyup="calc(this.form.name)"	 />
-						x 
-						<input type="text" name="txtProofHeight-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofHeight?>" size="6" onkeyup="calc(this.form.name)"  /><br/>
-					</td>
-					<td><select name="ddmProofType-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" onchange="calc(this.form.name);">
-					<option value="">select one</option>
-					<?ddmProofType?>
-					</select></td>
-					<td><input type="text" name="txtProofUnitPrice-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
-					<td>
-					<input type="checkbox" id="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" name="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="Y" <? echo ( 'checked="checked"' if $$variable{"chkOverride-$$variable{'SignatureIndex'}-$$variable{'ProofIndex'}-$$variable{'QTYIndex'}"} ) ?> onchange="if ( ! this.checked ) calc(this.form.name);" />
-					<label for="chkOverride-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>">Override</label>
-					<input type="hidden" name="txtProofIndex-<?SignatureIndex?>-<?ProofIndex?>-<?QTYIndex?>" value="<?ProofIndex?>"/>
-					</td>
-				</tr>
-	<? endwhile ( @$variable{'ProofIndex','ProofQuantity','ProofWidth','ProofHeight','ProofType','ddmProofType'} = splice @{$$variable{'Proofs-'.$$variable{'SignatureIndex'}.'-'.$$variable{'QTYIndex'}}},0,6; ) ?>
-				<tr>
-					<td colspan="4" align="right">Additional proofs?</td>
-					<td colspan="1">
-						<input type="radio" id="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>Y" name="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>" value="Yes" />
-						<label for="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>Y">Yes</label>
-						<input type="radio" id="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>N" name="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>" value="No" checked="checked" />
-						<label for="rdbAdditional-<?SignatureIndex?>-<?QTYIndex?>N">No</label>
-					</td>
-				</tr>
-			</table>
-			<br/>
-<? endif ( $$variable{'SignatureIndex'} ne '' ) ?>
-<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'Signatures'}}; ) ?>
-			<table>
-				<tr>
-					<td align="right"><b>Total Service Price (<?CurrencySymbol?>):</b></td>
-					<td width="110"><?CurrencySymbol?><input name="txtPrice<?QTYIndex?>" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
-					<td class="Override"><? echo ( ssi::writeButton( $log, $dbh, 'Breakdown'.$$variable{'QTYIndex'}, 'price_breakdown.gif', "show_breakdown('$$variable{'QTYIndex'}');", '', 'Breakdown' ) if sets::isin($openprint::session{'user_type'}, ['A','E'] ); ) ?></td>
-				</tr>
-			</table>
-			<br class="spacer"/>
-			<input type="hidden" name="txtQuantity<?QTYIndex?>" value="<? echo ( $$variable{'txtQuantity'.$$variable{'QTYIndex'}} ) ?>"/>
-		</fieldset>
-		<? endif ( $$variable{'Project'}->quantity($$variable{'QTYIndex'}) ) ?>
-			<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<!-- End of Results -->
+					$html .= sprintf( q`
+						<table>
+							<tr><td valign="top" rowspan="%1$d"><br/>%2$s</td>
+								<th width="40">Qty</th>
+								<th width="170">Dimensions</th>
+								<th width="105" align="left">Type</th>
+								<th class="Price">MR (%3$s)</th>
+								<th class="Price">Service (%3$s)</th>
+								<th class="Units">&nbsp;</th>
+								<th class="Price">Total (%3$s)</th>
+								<th class="Override">&nbsp;</th>
+							</tr>
+							`, int(@{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}}/6)+2, $$variable{'Reference'}, $$variable{'CurrencySymbol'} );
+
+					while ( my ( $proof_index,$proof_quantity,$proof_width,$proof_height,$proof_type, $ddmProofType ) = splice @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},0,6 ) {
+						$html .= sprintf( q`
+							<tr>
+								<td align="center"><input type="text" name="txtProofQuantity-%1$d-%3$d-%2$d" value="%4$d" size="3" onkeyup="calc(this.form.name)"  /></td>
+								<td align="center">
+									<input type="text" name="txtProofWidth-%1$d-%3$d-%2$d" value="%5$s" size="6" onkeyup="calc(this.form.name)"	/>
+									x 
+									<input type="text" name="txtProofHeight-%1$d-%3$d-%2$d" value="%6$s" size="6" onkeyup="calc(this.form.name)" />
+								</td>
+								<td><select name="ddmProofType-%1$d-%3$d-%2$d" onchange="calc(this.form.name);">
+								<option value="">select one</option>
+								%7$s
+								</select></td>
+								<td class="Price"><input type="text" name="MRPrice-%1$d-%3$d-%2$d" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+								<td class="Price">
+									<input type="text" name="ServicePrice-%1$d-%3$d-%2$d" value="" size="9" readonly="readonly" onfocus="this.blur();" />
+								</td>
+								<td class="Units">
+									<span id="ServiceUnits-%1$d-%3$d-%2$d"></span>
+								</td>
+								<td class="Price"><input type="text" name="txtProofUnitPrice-%1$d-%3$d-%2$s" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+								<td class="Override"> %8$s <input type="hidden" name="txtProofIndex-%1$d-%3$d-%2$d" value="%3$d"/>
+								</td>
+							</tr>
+							`, $signature_index, $qty_index, $proof_index, $proof_quantity, $proof_width, $proof_height, $ddmProofType,
+								ssi::write_override( 'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index, 
+									$$variable{'chkOverride-'.$signature_index.'-'.$proof_index.'-'.$qty_index},
+									'', "calc('f1');" ),
+									);
+					} # end while proofs
+					$html .= sprintf(q`
+						<tr>
+							<td colspan="6" align="right">Additional proofs?</td>
+							<td class="Price">
+								<input type="radio" id="rdbAdditional-%1$d-%2$dY" name="rdbAdditional-%1$d-%2$d" value="Yes" />
+								<label for="rdbAdditional-%1$d-%2$dY">Yes</label>
+								<input type="radio" id="rdbAdditional-%1$d-%2$dN" name="rdbAdditional-%1$d-%2$d" value="No" checked="checked" />
+								<label for="rdbAdditional-%1$d-%2$dN">No</label>
+							</td>
+							<td class="Override">&nbsp;</td>
+						</tr>
+					</table>
+					<br/>
+					`, $signature_index, $qty_index );
+				} # end foreach Signature
+				$html .= sprintf( q`
+					<table>
+						<tr>
+							<td align="right"><b>Total Service Price (%2$s):</b></td>
+							<td class="Price"><input name="txtPrice%1$d" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+							<td class="Override">&nbsp;</td>
+						</tr>
+						<tr>
+							<td colspan="2" align="right">%4$s
+</td>
+							<td class="Override">&nbsp;</td>
+						</tr>
+					</table>
+					<br class="spacer"/>
+					<input type="hidden" name="txtQuantity%1$d" value="%3$d"/>
+				</fieldset>
+					`, $qty_index, @$variable{'CurrencySymbol','txtQuantity'.$qty_index}, 
+					sets::isin($session{'user_type'}, ['A','E'] ) ? 
+					ssi::writeButton( $log, $dbh, 'Breakdown'.$qty_index, 'price_breakdown.gif', "show_breakdown('$qty_index');", '', 'Breakdown' ) : ''
+					
+					);
+				} # end foreach qty_index
+				return $html;
+			) ?>
 
 			<!--#include virtual="/includes/main/proj/add_to_project.html"-->
 			<!--#include virtual="/includes/main/proj/hdn_fields_prepress.html"-->

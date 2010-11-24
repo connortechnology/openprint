@@ -66,6 +66,7 @@ use Time::HiRes qw{ time gettimeofday tv_interval };
 # These are use to tell the code which variables to save
 # There are other values in teh actual specs hash, but htey are either transitory or should never be changed
 my %variables = (
+	'ProjectIndex'=>[], 'ServiceIndex'=>[], 'ServiceType'=>[], 'btnFunction'=>[], 'callback'=>[],'SignatureIndex'=>[],
 		'Impositions'=>[], 'Additional Impositions1'=>[], 'Additional Impositions2'=>[], 'Additional Impositions3'=>[],
 		'hdnBreakdown1'=>['save','output'], 'hdnBreakdown2'=>['save','output'], 'hdnBreakdown3'=>['save','output'],
 		'txtSignatureType' => ['save'],
@@ -268,9 +269,16 @@ sub no_outputs {
 	my @v;
 	foreach my $k ( keys %variables ) {
 		push @v, $k if ! sets::isin( 'output', $variables{$k} );
-	} # end foreach;
+	} # end foreach
 	return @v;
-}
+} # end sub no_outputs
+sub outputs {
+	my @v;
+	foreach my $k ( keys %variables ) {
+		push @v, $k if sets::isin( 'output', $variables{$k} );
+	} # end foreach
+	return @v;
+} # end sub outputs
 
 sub get_unspecified_pages {
 	my ( $Project, $service_index, $printing_specs, $specs, $qty_index ) = @_;
@@ -1771,6 +1779,10 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 			push @other_impositions, $I;					
 		} # end foreach sig_id
 
+		# Prime caches for speed
+		openprint::Material::find();
+		openprint::Service::find();
+
 		%signature_price_cache = ();
 		my @versions = get_versions( $specs, $qty_index );
 # Only thread qtys 2 and 3
@@ -2717,7 +2729,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					my @all_impositions = @{$other_impositions}, @{$$price{'Impositions'}};
 					
 #my $starttime = gettimeofday();
-$openprint::log->debug("Stitching::signature_calc");
+#$openprint::log->debug("Stitching::signature_calc");
 					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@all_impositions );
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
@@ -3948,22 +3960,15 @@ sub get_run_price {
 	my $impression_service = $Imposition->runstyle() eq 'Perfecting' ? 'ColourImpressionPerfecting' : 'ColourImpression';
 	my %RunPrice;
 
-	if ( $Imposition->runstyle() eq 'Web' ) {
+	if ( sets::isin( $Imposition->runstyle(), [ 'Web', 'Perfecting' ] ) ) {
 # A web does both sides at once, and cannot do multipass
-		$impression_service = 'WebImpression'.$side_one_colours.'/'.$side_two_colours;
-		if ( ! ( %RunPrice = openprint::service::get_price_object( 'WebImpression'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press ) ) ) {
-			%RunPrice = openprint::service::get_price_object( 'WebImpression', $impressions, $Press );
+		$impression_service = $Imposition->runstyle().'Impression'.$side_one_colours.'/'.$side_two_colours;
+		if ( ! ( %RunPrice = openprint::service::get_price_object( $Imposition->runstyle().'Impression'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press ) ) ) {
+			%RunPrice = openprint::service::get_price_object( $Imposition->runstyle().'Impression', $impressions, $Press );
 		} # end if
 		$run_price{'units'} = $RunPrice{'units'};
 		$running_price = $RunPrice{'Price'};
 #$openprint::log->debug("Price: $running_price");
-	} elsif ( $Imposition->runstyle() eq 'Perfecting' ) {
-		$impression_service = 'PerfectingImpression'.$side_one_colours.'/'.$side_two_colours;
-		if ( ! ( %RunPrice = openprint::service::get_price_object( 'PerfectingImpression'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press ) ) ) {
-			%RunPrice = openprint::service::get_price_object( 'PerfectingImpression', $impressions, $Press );
-		} # end if
-		$run_price{'units'} = $RunPrice{'units'};
-		$running_price = $RunPrice{'Price'};
 	} else {
 		if ( $side_one_colours ) {
 			my $full_runs = int($side_one_colours / $max_colours);
@@ -4063,7 +4068,7 @@ sub get_run_price {
 		$run_price{'Price'} = $running_price * $run_price{'RunHours'};
 		$run_price{'MPrice'} = ( $run_price{'Price'} / $impressions ) * 1000;
 	} else {
-		$openprint::log->warn("Unknown Units for $impression_service: ($run_price{'units'}) on " . $Press->strid() );
+		$openprint::log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($run_price{'units'}) on " . $Press->strid() );
 	} # end if
 #$openprint::log->debug("Impresion price: $run_price{'Cost'} $run_price{'units'} = $run_price{'Price'}");
 	return %run_price;
