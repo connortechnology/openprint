@@ -2955,6 +2955,7 @@ sub get_aqueous_price {
 			$impressions = int($impressions/2);
 		} # end if
 		foreach my $side ( 'One', 'Two' ) {
+			next if (!$$specs{'rdbAqueousSide'.$side}) or $$specs{'rdbAqueousSide'.$side} eq 'None';
 			$aqueous_price{"Side$side Quantity"} = $impressions;
 			# We assume that both sides are the same. We add a million if not...
 			my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous '.$$specs{'rdbAqueousSide'.$side}, $impressions, $Press);
