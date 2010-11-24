@@ -1,7 +1,8 @@
 DROP TABLE IF EXISTS Order_Contents;
 
 CREATE TABLE Order_Contents (
-	OrderIndex 		INTEGER NOT NULL,FOREIGN KEY(OrderIndex) REFERENCES Orders (index),
+	id				SERIAL,
+	OrderIndex 		INTEGER NOT NULL,FOREIGN KEY(OrderIndex) REFERENCES Orders (id),
 	lngProjectIndex INTEGER NOT NULL,FOREIGN KEY(lngProjectIndex) REFERENCES Projects (id),
 	strDescription	TEXT,
 	intQuantity	 	INT4,
@@ -12,6 +13,7 @@ CREATE TABLE Order_Contents (
 	curSalesPrice	NUMERIC(20,2),
 	dateRequired	date,
 	dueDate			date,
-	ShippingType	TEXT
+	ShippingType	TEXT,
+	PRIMARY KEY (id)
 );
 

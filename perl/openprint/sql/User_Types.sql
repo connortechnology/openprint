@@ -1,4 +1,4 @@
-DROP TABLE User_Types;
+DROP TABLE IF EXISTS User_Types;
 
 CREATE TABLE User_Types (
 	identifier	char NOT NULL,
