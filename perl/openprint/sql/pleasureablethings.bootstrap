@@ -43,8 +43,6 @@
 \i Sessions.sql
 \i Surveys.sql
 \i tbl_Addresses.sql
-\i tbl_Banners_in_Categories.sql
-\i tbl_Banners.sql
 \i tbl_Credit_App.sql
 \i tbl_Payment_Options.sql
 \i Trade_References.sql
