@@ -1,4 +1,11 @@
 
+drop table if exists log_actions;
+create table log_actions (
+	id	SERIAL,
+	name	TEXT,
+	DESCRIPTION TEXT,
+	PRIMARY KEY (id)
+);
 drop table if exists log;
 CREATE TABLE Log (
 	id SERIAL,
@@ -13,13 +20,6 @@ CREATE TABLE Log (
 	PRIMARY KEY (id)
 );
 
-drop table if exists log_actions;
-create table log_actions (
-	id	SERIAL,
-	name	TEXT,
-	DESCRIPTION TEXT,
-	PRIMARY KEY (id)
-);
 
 insert into log_actions (name,description) values ('Other','Other');
 insert into log_actions (name,description) values ('Login','Login');

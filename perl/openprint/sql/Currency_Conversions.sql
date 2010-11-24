@@ -1,4 +1,4 @@
-DROP TABLE Currency_Conversions;
+DROP TABLE IF EXISTS Currency_Conversions;
 
 CREATE TABLE Currency_Conversions (
 	from_id		INTEGER NOT NULL, FOREIGN KEY (from_id) REFERENCES Currencies (id),

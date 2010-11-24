@@ -9,8 +9,8 @@ CREATE TABLE Asset_Types (
 
 CREATE TABLE Assets (
 	id SERIAL,
-	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Company (index),
-	created_by	INTEGER, FOREIGN KEY (created_by) REFERENCES Users (index),
+	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (id),
+	created_by	INTEGER, FOREIGN KEY (created_by) REFERENCES Users (id),
 	name	text,
 	description	text,
 	filename	text,
