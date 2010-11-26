@@ -218,5 +218,13 @@ sub _also_notify {
 		$variable{'error'} = $Claim->save({'also_notify'=>[ sets::exclude( [$param{'also_notify'}], $Claim->also_notify() ) ]});
 	} # end if
 } # end sub _also_notify
+
+sub _assets {
+	$variable{'Claim'} = new openprint::Claim( $param{'claim_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $CA = new openprint::Claim_Asset( { 'claim_id'=>$param{'claim_id'}, 'asset_id'=>$param{'asset_id'} } );
+		$CA->delete();
+	} # end if
+} # end sub _assets
 1;
 __END__

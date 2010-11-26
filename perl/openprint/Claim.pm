@@ -334,13 +334,13 @@ my MIME::Types $types = MIME::Types->new;
 		push @attachments, $Asset->filename(), 
 			 MIME::Base64::encode_base64( misc::load_file( $log, $Asset->on_disk_path() ) ), 
 			 $types->mimeTypeOf($Asset->filename()), 'base64';
-		
 	} # end foreach Asset
 
 	my $results = 'CLAIM ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	my $Email = new openprint::Email();
 	$results .= $Email->send( 
-			TO	=>	[ split(',', $self->Contact()->email() ) ],
+			#TO	=>	[ split(',', $self->Contact()->email() ) ],
+			TO	=>	'iconnor@point-one.com',
 			FROM	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 			SUBJECT	=>	'CLAIM ' . $self->id() . ' for ' . $self->Vendor()->name(),
 			ATTACHMENTS =>	\@attachments,

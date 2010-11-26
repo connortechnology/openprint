@@ -137,7 +137,7 @@ div.Claim .Header .Logo:after {
 }
 /* Hides from IE-mac \*/
 * html .Claim .Header  .Logo{height: 1%;}
-* .Claim .Header  .Logo{display: block;}
+.Claim .Header  .Logo{display: block;}
 /* End hide from IE-mac */
 
 .Claim div.Header .Logo table {
@@ -366,5 +366,9 @@ div.Claim .Disclaimer {
 	overflow: hidden;
 }
 #Assets .Thumbnail {
-	width: 68px;
+	width: 75px;
+}
+.Claim table .actions {
+	width: 60px;
+	text-align: right;
 }
