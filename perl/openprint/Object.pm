@@ -122,13 +122,20 @@ sub save {
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $ac = sql::start_transaction( $dbh );
 	if ( @identified_by ) {
-		my %serial = eval '%'.$type.'::serial';
 		my $insert = 0;
-		foreach my $id ( @identified_by ) {
-			next if ! $serial{$id};
-			($$self{$id}) = ($sql{$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
+		my %serial = eval '%'.$type.'::serial';
+		if ( ! %serial ) {
+			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
+			my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
+			sql::execute( undef, undef, 'DELETE FROM ' . $table. ' WHERE ' . $where, @$self{@identified_by} );  
 			$insert = 1;
-		} # end foreach
+		} else {
+			foreach my $id ( @identified_by ) {
+				next if ! $serial{$id};
+				($$self{$id}) = ($sql{$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
+				$insert = 1;
+			} # end foreach
+		} # end if
 		if ( $insert ) {
 			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
 				$dbh->rollback();

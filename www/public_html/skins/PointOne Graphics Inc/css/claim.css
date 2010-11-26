@@ -351,10 +351,15 @@ div.Claim .Disclaimer {
 	width: 20px;
 	text-align: left;
 }
-.Claims table tr td.Company, .Claims table tr th.Company {
-	width: 125px;
+.Claims table .Company {
+	width: 190px;
 	text-align: left;
 	overflow: hidden;
+}
+.Claims table .Date {
+}
+.Claims table .Docket {
+	text-align: right;
 }
 .Claims table tr .CreatedBy {
 	text-align: left;

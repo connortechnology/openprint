@@ -52,13 +52,25 @@
 				ssi::setup_date_select( '/employee/claim/history.html', 'created_on', -31 );
         ) ?>
 		<p>
-			<label>Date:</label>
+			<label>Created:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_start', [ @session{'/employee/claim/history.html?created_on_start_year','/employee/claim/history.html?created_on_start_month','/employee/claim/history.html?created_on_start_day'} ], {'onchange'=>"load('Results',\$('f1'));"} ); ) ?>
+			<? echo ( 
+				ssi::date_select_session( '/employee/claim/history.html', 'created_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} );
+			 ) ?>
             to
             </span>
             <span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_end', [ @session{'/employee/claim/history.html?created_on_end_year','/employee/claim/history.html?created_on_end_month','/employee/claim/history.html?created_on_end_day'} ], {'onchange'=>"load('Results',\$('f1'));"} ); ) ?>
+			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'created_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
+            </span>
+		</p>
+		<p>
+			<label>Updated:</label>
+			<span class="DateSelector">
+			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'updated_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
+            to
+            </span>
+            <span class="DateSelector">
+			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'updated_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
             </span>
 		</p>
 		<p>

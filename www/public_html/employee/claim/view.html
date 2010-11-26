@@ -166,44 +166,7 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 </table>
 		</div><!--Contents-->
 		<div id="Remarks"> <h3>Remarks:</h3> <? echo ( $$variable{'Claim'}->reason() ) ?> </div>
-		<div id="Assets" class="unprintable">
-			<h3>Attachments:</h3>
-				<table>
-					<thead>
-						<tr>
-							<th class="Name">Name</th>
-							<th class="Filename">Filename</th>
-							<th class="DateTime">Added On</th>
-							<th class="Thumbnail">Thumbnail</th>
-						</tr>
-					</thead>
-					<tbody>
-			<? echo ( 
-				my $html;
-				foreach my $Claim_Asset ( $$variable{'Claim'}->Assets() ) {
-					my $Asset = $Claim_Asset->Asset();
-					$html .= sprintf('
-						<tr>
-							<td class="Name"><a href="/assets/%1$s" target="_blank">%2$s</a></td>
-							<td class="Filename"><a href="/assets/%1$s" target="_blank">%3$s</a></td>
-							<td class="DateTime"><a href="/assets/%1$s" target="_blank">%4$s</a></td>
-							<td class="Thumbnail">%5$s</td>
-						</tr>
-						', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
-						Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Asset->created_on() ) ),
-( $Asset->filename() =~ /\.(png|PNG|jpg|JPG|gif|GIF|jpeg|JPEG)$/i ? '<img src="/assets/'.$Asset->on_disk_filename().'" width="48" />' : '' )
-						);
-				} # end foreach Asset
-				return $html;
-			) ?>
-			
-				<tr class="unprintable">
-					<td class="Name"><input type="text" id="name" name="name"/></td>
-					<td colspan="2" class="Filename"><input type="file" id="filename" name="filename"/></td>
-					<td><? echo ( ssi::writeButton($log, $dbh, 'Upload', 'upload.gif', "f1.btnFunction.value='Attach';f1.submit();", '', 'Upload' ); ) ?></td>
-				</tr>
-				</tbody>
-			</table>
+		<div id="Assets" class="unprintable"><!--#include virtual="_assets.html"-->
 		 </div>
 		<div class="rightColumn" style="text-align: right;">
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
