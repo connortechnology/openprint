@@ -326,21 +326,23 @@ sub send {
 
 	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/claim.html' );
 	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$content, \%info ) ) ), 'text/html', 'quoted-printable';
-my MIME::Types $types = MIME::Types->new;
 
-	foreach my $Claim_Asset ( $self->Assets() ) {
-		my $Asset = $Claim_Asset->Asset();
-
-		push @attachments, $Asset->filename(), 
-			 MIME::Base64::encode_base64( misc::load_file( $log, $Asset->on_disk_path() ) ), 
-			 $types->mimeTypeOf($Asset->filename()), 'base64';
-	} # end foreach Asset
+	if ( $self->include_attachments() ) {
+		my MIME::Types $types = MIME::Types->new;
+		foreach my $Claim_Asset ( $self->Assets() ) {
+			my $Asset = $Claim_Asset->Asset();
+			push @attachments, $Asset->filename(), 
+				 MIME::Base64::encode_base64( misc::load_file( $log, $Asset->on_disk_path() ) ), 
+				 $types->mimeTypeOf($Asset->filename()), 'base64';
+		} # end foreach Asset
+	} # end if
 
 	my $results = 'CLAIM ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	my $Email = new openprint::Email();
 	$results .= $Email->send( 
-			#TO	=>	[ split(',', $self->Contact()->email() ) ],
-			TO	=>	'iconnor@point-one.com',
+			TO	=>	[ split(',', $self->Contact()->email() ) ],
+			BCC	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			#TO	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 			FROM	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 			SUBJECT	=>	'CLAIM ' . $self->id() . ' for ' . $self->Vendor()->name(),
 			ATTACHMENTS =>	\@attachments,
