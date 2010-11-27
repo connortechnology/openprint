@@ -10,6 +10,13 @@
 			<? if ( $$variable{'Order'}->invoice_id() ) ?>
 			<li><label>Invoice ID:</label><? echo ( $$variable{'Order'}->invoice_id() ) ?></li>
 			<li><label>Date Invoiced:</label><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Order'}->invoiced_on()) ); ) ?></li>
+			<? else ( $$variable{'Order'}->invoice_id() ) ?>
+<? if ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
+	<li class="unprintable invoice_id">
+        <label>Invoice ID:</label><input type="text" id="invoice_id" name="invoice_id" /></span>
+        <? echo ( ssi::writeButton( $log, $dbh, 'Invoice', 'invoice.gif', "f1.btnFunction.value='Invoice';f1.submit();", '', 'Set Invoice ID' ); ) ?>
+    </li>
+<? endif ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
 			<? endif ( $$variable{'Order'}->invoice_id() ) ?>
 			<li><label>Created:</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Order'}->created_on() ) ); ) ?></li>
 			<li><label>Status:</label><? echo ( $$variable{'Order'}->status() ) ?></li>

@@ -56,7 +56,6 @@ $serial = 'orders_id_seq';
 	'salesrep_id'				=>	'employeeindex',
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
-	'created_on'				=>	'dtmorderdate',
 	'terms_accepted'			=>	'terms_accepted',
 	);
 

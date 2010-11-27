@@ -7,11 +7,11 @@
 		<thead>
 			<tr>
 				<th width="50" align="left">Ref #</th>
-				<th width="100" align="center">Date</th>
+				<th class="Date">Date</th>
 				<th width="100" align="left">Type</th>
 				<th align="left">Description</th>
-				<th width="120" align="right">Amount</th>
-				<th width="120" align="right">&nbsp;</th>
+				<th class="Price">Amount</th>
+				<th class="actions">&nbsp;</th>
 			</tr>
 		</thead>
         <? while ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
@@ -27,34 +27,20 @@
         <? endwhile ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
         <tr class="totals unprintable">
             <td colspan="3">Record new payment:</td>
-            <td><input type="text" name="Description" style="width: 100%;"/></td>
-            <td align="right"><?CurrencySymbol?><input type="text" name="Amount" style="width:auto;" size="10"/></td>
+            <td><input type="text" name="Description" /></td>
+            <td class="Price"><?CurrencySymbol?><input type="text" id="Amount" name="Amount" value="<? echo ( $$variable{'Order'}->owing() ) ?>"/></td>
             <td><? echo (ssi::writeButton($log, $dbh, 'AddPayment', 'add', "f1.btnFunction.value='Save Payment';f1.submit();",'','Add' ); ) ?></td>
         </tr>
     </table>
-	<div class="unprintable">
-    <br class="spacer"/>
-    <div style="float: right;">
-        <span style="float: left;">Invoice ID: <input type="text" id="invoice_id" name="invoice_id" /></span>
-        <? echo ( ssi::writeButton( $log, $dbh, 'Invoice', 'invoice.gif', "f1.btnFunction.value='Invoice';f1.submit();", '', 'Set Invoice ID' ); ) ?>
-    </div>
-    <br class="spacer"/>
-    <div style="float: right;">
-        <? echo ( my $html;
-        $html .= ssi::writeButton( $log, $dbh, 'Pay','pay.gif', "f1.btnFunction.value='Pay';f1.submit();",'','Pay' );
-        return $html;
-        ) ?>
-    </div>
-	</div>
 <? else ( ( $session{user_type} eq 'A' ) or ( $session{user_type} eq 'E' and openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ) ?>
 <fieldset><legend>Payments</legend>
 	<table class="List">
         <tr>
             <th width="50" align="left">Ref #</th>
-            <th width="100" align="center">Date</th>
+            <th class="Date">Date</th>
             <th width="100" align="left">Type</th>
             <th align="left">Description</th>
-            <th width="120" align="right">Amount</th>
+            <th class="Price">Amount</th>
         </tr>
         <? while ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
             <tr<?rowclass?>>
