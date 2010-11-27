@@ -7,9 +7,9 @@
 		<thead>
 			<tr>
 				<th width="50" align="left">Ref #</th>
-				<th class="Date">Date</th>
 				<th width="100" align="left">Type</th>
 				<th align="left">Description</th>
+				<th class="ReceivedOn">Received On</th>
 				<th class="Price">Amount</th>
 				<th class="actions">&nbsp;</th>
 			</tr>
@@ -17,17 +17,18 @@
         <? while ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
             <tr<?rowclass?>>
                 <td><? echo ( $$variable{'Payment'}->id() ) ?></td>
-                <td align="center"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->created_on() ) ) ) ?></td>
                 <td>&nbsp;<? echo ( $$variable{'Payment'}->method() ) ?></td>
                 <td>&nbsp;<? echo ( $$variable{'Payment'}->description() ) ?></td>
-                <td align="right"><? echo ( $$variable{'Payment'}->Currency()->symbol(); ) ?> <? echo ( $$variable{'Payment'}->amount() ) ?></td>
+                <td class="ReceivedOn"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->created_on() ) ) ) ?></td>
+                <td class="Price"><? echo ( $$variable{'Payment'}->Currency()->format( $$variable{'Payment'}->amount() ); ) ?></td>
                 <td><? echo ( ssi::writeButton($log, $dbh,'Delete'.$$variable{'Payment'}->id(),'',"confirm_delete( document.f1, '".$$variable{'Payment'}->id()."' );", '', 'Delete' ); ) ?></td>
             </tr>
             <? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
         <? endwhile ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
         <tr class="totals unprintable">
-            <td colspan="3">Record new payment:</td>
+            <td colspan="2">Record new payment:</td>
             <td><input type="text" name="Description" /></td>
+			<td class="ReceivedOn"><? echo ( ssi::date_select('received_on'); ) ?></td>
             <td class="Price"><?CurrencySymbol?><input type="text" id="Amount" name="Amount" value="<? echo ( $$variable{'Order'}->owing() ) ?>"/></td>
             <td><? echo (ssi::writeButton($log, $dbh, 'AddPayment', 'add', "f1.btnFunction.value='Save Payment';f1.submit();",'','Add' ); ) ?></td>
         </tr>
@@ -37,18 +38,18 @@
 	<table class="List">
         <tr>
             <th width="50" align="left">Ref #</th>
-            <th class="Date">Date</th>
             <th width="100" align="left">Type</th>
             <th align="left">Description</th>
+            <th class="Date">Date</th>
             <th class="Price">Amount</th>
         </tr>
         <? while ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>
             <tr<?rowclass?>>
                 <td><? echo ( $$variable{'Payment'}->id() ) ?></td>
-                <td align="center"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->created_on() ) ) ) ?></td>
                 <td>&nbsp;<? echo ( $$variable{'Payment'}->method() ) ?></td>
                 <td>&nbsp;<? echo ( $$variable{'Payment'}->description() ) ?></td>
-                <td align="right"><? echo ( $$variable{'Payment'}->Currency()->symbol(); ) ?> <? echo ( $$variable{'Payment'}->amount() ) ?></td>
+                <td align="center"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Payment'}->received_on() ) ) ) ?></td>
+                <td align="right"><? echo ( $$variable{'Payment'}->Currency()->format( $$variable{'Payment'}->amount() ); ) ?></td>
             </tr>
             <? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
         <? endwhile ( $$variable{'Payment'} = shift @{$$variable{'PAYMENTS'}}; ) ?>

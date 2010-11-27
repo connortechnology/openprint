@@ -2023,7 +2023,10 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 		$dbh->do('ALTER TABLE Payments add updated_on timestamp with time zone not null default NOW()');
 	} # end if
 	if ( exists $$data{'dtmdate'} ) {
-		$dbh->do('ALTER TABLE Payments rename column dtmdate to date');
+		$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
+	} # end if
+	if ( ! exists $$data{'received_on'} ) {
+		$dbh->do('ALTER TABLE Payments add received_on date NOT NULL default NOW()');
 	} # end if
 	if ( exists $$data{'strmethod'} ) {
 		$dbh->do('ALTER TABLE Payments rename column strmethod to method');
@@ -2034,6 +2037,9 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 	if ( exists $$data{'strdescription'} ) {
 		$dbh->do('ALTER TABLE Payments rename column strdescription to memo');
 	} # end if
+	if ( ! exists $$data{'memo'} ) {
+		$dbh->do('ALTER TABLE payments add memo text');
+	}
 	if ( ! exists $$data{'completed'} ) {
 		$dbh->do('ALTER TABLE Payments add completed boolean NOT NULL default false;');
 	} # end if
