@@ -137,7 +137,7 @@ div.Claim .Header .Logo:after {
 }
 /* Hides from IE-mac \*/
 * html .Claim .Header  .Logo{height: 1%;}
-* .Claim .Header  .Logo{display: block;}
+.Claim .Header  .Logo{display: block;}
 /* End hide from IE-mac */
 
 .Claim div.Header .Logo table {
@@ -320,7 +320,6 @@ div.autocomplete ul li {
 
 p.buttons {
 text-align: right;
-width: 100%;
 margin: 0px;
 padding: 0px;
 float: none;
@@ -335,7 +334,7 @@ p.buttons:after {
 }
 /* Hides from IE-mac \*/
 * html p.buttons {height: 1%;}
-* p.buttons {display: block;}
+p.buttons {display: block;}
 /* End hide from IE-mac */
 fieldset.filters p.buttons {
 	text-align: left;
@@ -352,12 +351,24 @@ div.Claim .Disclaimer {
 	width: 20px;
 	text-align: left;
 }
-.Claims table tr td.Company, .Claims table tr th.Company {
-	width: 125px;
+.Claims table .Company {
+	width: 190px;
 	text-align: left;
 	overflow: hidden;
+}
+.Claims table .Date {
+}
+.Claims table .Docket {
+	text-align: right;
 }
 .Claims table tr .CreatedBy {
 	text-align: left;
 	overflow: hidden;
+}
+#Assets .Thumbnail {
+	width: 75px;
+}
+.Claim table .actions {
+	width: 60px;
+	text-align: right;
 }

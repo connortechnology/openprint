@@ -20,6 +20,16 @@
 			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
 			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/claim/history.html?created_on_start_year','/employee/claim/history.html?created_on_start_month','/employee/claim/history.html?created_on_start_day'} ),
 			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/claim/history.html?created_on_end_year','/employee/claim/history.html?created_on_end_month','/employee/claim/history.html?created_on_end_day'} ),
+			(
+			 ( $session{'/employee/claim/history.html?updated_on_start_year'} and $session{'/employee/claim/history.html?updated_on_start_month'} and $session{'/employee/claim/history.html?updated_on_start_day'} ) ? (
+				 'updated_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/claim/history.html?updated_on_start_year','/employee/claim/history.html?updated_on_start_month','/employee/claim/history.html?updated_on_start_day'} ) 
+				 ) : ()
+			),
+			(
+			 ( $session{'/employee/claim/history.html?updated_on_end_year'} and $session{'/employee/claim/history.html?updated_on_end_month'} and $session{'/employee/claim/history.html?updated_on_end_day'} ) ? (
+				 'updated_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/claim/history.html?updated_on_end_year','/employee/claim/history.html?updated_on_end_month','/employee/claim/history.html?updated_on_end_day'} ),
+				 ) : ()
+			),
 			'order',			'id desc',
 		);
 		$search{'supplier_id'} = $session{'/employee/claim/history.html?supplier_id'} if $session{'/employee/claim/history.html?supplier_id'};
@@ -48,45 +58,47 @@
 	There are no claims matching your search criteria.
 <? else ( @{$$variable{'Claims'}} == 0 ) ?>
 	<p>Please click on a <b>Claim #</b> to view details.</p>
-<table class="List sortable">
+<table class="List">
 	<tr>
 <? if ( $session{'user_type'} eq 'A' ) ?>
 		<th width="20"><input type="checkbox" onclick="select_all( $('f2'), 'claim_id', this.checked );"/></th>
 <? endif ( $session{'user_type'} eq 'A' ) ?>
 		<th class="ID">ID</th>
-		<th class="Date">Date</th>
+		<th class="Date">Craeted/Updated</th>
 		<th class="Company">Vendor</th>
 		<th class="CreatedBy">Created By</th>
-		<th class="Date">Filed On</th>
-		<th class="Date">Sent to Accounts</th>
-		<th class="Date">Invoiced</th>
-		<th class="Date">Cancelled</th>
+		<th class="Date">Filed On / Sent to Accounts</th>
+		<th class="Date">Invoiced / Cancelled</th>
 		<th class="Docket">Docket</th>
-		<th class="Price" style="text-align: right;">Total</th>
+		<th class="Price">Total</th>
 	</tr>
 	<? echo ( 
 		my $html = '';
 		my $report_total = 0;
+		my $rowclass;
 		my $Currency = openprint::Currency::get_current();
 		while ( my $Claim = shift @{$$variable{'Claims'}} ) {
-			$html .= sprintf(q`<tr id="tr-%1$d" onmouseover="$('tr-%1$d').addClassName('highlightOn');" onmouseout="$('tr-%1$d').removeClassName('highlightOn');">`, $Claim->id() );
+			$html .= sprintf(q`<tr%2$s id="tr-%1$d-1" onmouseover="$('tr-%1$d-1').addClassName('highlightOn');$('tr-%1$d-2').addClassName('highlightOn');" onmouseout="$('tr-%1$d-1').removeClassName('highlightOn');$('tr-%1$d-2').removeClassName('highlightOn');">`, $Claim->id(), $rowclass );
 			if ( $session{'user_type'} eq 'A' ) {
-				$html .= '<td><input type="checkbox" id="claim_id" name="claim_id" value="'.$Claim->id().'"/></td>';
+				$html .= '<td rowspan="2"><input type="checkbox" id="claim_id" name="claim_id" value="'.$Claim->id().'"/></td>';
 			} # end if
 			my $total = $Claim->Currency()->convert_from( $Claim->total() );
 
 			$html .= sprintf( q`
-				<td class="ID"><a href="view.html?claim_id=%1$d">%1$d</a></td>
+				<td class="ID" rowspan="2"><a href="view.html?claim_id=%1$d">%1$d</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%2$s</a></td>
-				<td class="Company"><a href="view.html?claim_id=%1$d">%3$s</a></td>
-				<td class="CreatedBy"><a href="view.html?claim_id=%1$d">%4$s</a></td>
+				<td class="Company" rowspan="2"><a href="view.html?claim_id=%1$d">%3$s</a></td>
+				<td class="CreatedBy" rowspan="2"><a href="view.html?claim_id=%1$d">%4$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%5$s</a></td>
-				<td class="Date"><a href="view.html?claim_id=%1$d">%6$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%7$s</a></td>
+				<td class="Docket" rowspan="2"><a href="view.html?claim_id=%1$d">%9$s</a></td>
+				<td class="Price" rowspan="2">%10$s</td>
+			</tr><tr%12$s id="tr-%1$d-2" onmouseover="$('tr-%1$d-1').addClassName('highlightOn');$('tr-%1$d-2').addClassName('highlightOn');" onmouseout="$('tr-%1$d-1').removeClassName('highlightOn');$('tr-%1$d-2').removeClassName('highlightOn');">
+				<td class="Date"><a href="view.html?claim_id=%1$d">%11$s</a></td>
+				<td class="Date"><a href="view.html?claim_id=%1$d">%6$s</a></td>
 				<td class="Date"><a href="view.html?claim_id=%1$d">%8$s</a></td>
-				<td class="Docket"><a href="view.html?claim_id=%1$d">%9$s</a></td>
-				<td class="Price">%10$s</td>
-			</tr>`, $Claim->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Claim->created_on())), 
+			</tr>`, $Claim->id(), 
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Claim->created_on())), 
 				$Claim->Vendor()->name(), $Claim->Creator()->name(), 
 				($Claim->filed_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->filed_on())) : ''),
 				($Claim->sent_to_accounts_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->sent_to_accounts_on())) : '' ),
@@ -94,10 +106,13 @@
 				($Claim->cancelled_on() ? Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Claim->cancelled_on())) : '' ),
 				join('<br/>', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$d</a>', $_ ); } $Claim->docket() ? @{$Claim->docket()} : () ),
 				openprint::Currency::format($total), 
+				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Claim->updated_on())), 
+				$rowclass,
 				);
 			$report_total += $total;
+			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end while
-		$html .= '<tr class="totals"><td colspan="'.($session{'user_type'} eq 'A' ? '10' : '9' ).'" style="text-align: right; font-weight: bold;">Total (' . $Currency->name().') :</td><td class="Price" style="font-weight: bold;">';
+		$html .= '<tr class="totals"><td colspan="'.($session{'user_type'} eq 'A' ? '8' : '7' ).'" style="text-align: right;font-weight: bold;">Total (' . $Currency->name().') :</td><td class="Price" style="font-weight: bold;">';
 		$html .= sprintf('%s%s', $Currency->symbol(), Number::Format::format_number( $report_total,2,2 ) );
 		$html .= '</td></tr>';
 		return $html;

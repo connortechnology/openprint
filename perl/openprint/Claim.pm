@@ -1,10 +1,15 @@
+use strict;
 package openprint::Claim;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
+use MIME::Base64;
+use MIME::QuotedPrint;
+use MIME::Types;
+use MIME::Type;
+
 use openprint ();
-use vars qw(%variable $log $dbh %config %session %fields %transforms %defaults $table $serial );
+use vars qw(%variable $log $dbh %config %session $debug %fields %transforms %defaults $table $serial );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -20,9 +25,10 @@ require openprint::PurchaseOrder;
 require openprint::Company;
 require openprint::Currency;
 require openprint::Claim_Tax;
+require openprint::Claim_Asset;
 
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'claims';
 $serial = 'claims_id_seq';
@@ -321,10 +327,22 @@ sub send {
 	my $content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/email_content/claim.html' );
 	push @attachments, $From->Company()->name().'-CLAIM'.$$self{'id'}.'.html', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',ssi::variable_substitution( undef, $log, $dbh, \$content, \%info ) ) ), 'text/html', 'quoted-printable';
 
+	if ( $self->include_attachments() ) {
+		my MIME::Types $types = MIME::Types->new;
+		foreach my $Claim_Asset ( $self->Assets() ) {
+			my $Asset = $Claim_Asset->Asset();
+			push @attachments, $Asset->filename(), 
+				 MIME::Base64::encode_base64( misc::load_file( $log, $Asset->on_disk_path() ) ), 
+				 $types->mimeTypeOf($Asset->filename()), 'base64';
+		} # end foreach Asset
+	} # end if
+
 	my $results = 'CLAIM ' . $$self{'id'} . ' emailed to the following recipients:<br/>';
 	my $Email = new openprint::Email();
 	$results .= $Email->send( 
-			TO	=>	[ split(',', $self->Contact()->email() ) ],
+			TO	=>	($self->Contact()->email() ? $self->Contact() : sprintf('<%s> "%s"', @$self{'vendor_contact','vendor_email'})),
+			BCC	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
+			#TO	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 			FROM	=>	sprintf( '"%s" <%s>', $From->name(), $From->email() ),
 			SUBJECT	=>	'CLAIM ' . $self->id() . ' for ' . $self->Vendor()->name(),
 			ATTACHMENTS =>	\@attachments,
@@ -366,6 +384,16 @@ sub Tax {
     } # end if
     return $result;
 } # end sub Tax
+
+sub Assets {
+	return () if ! $_[0]{'id'};
+	my ( $self, %param ) = @_;
+	$param{'claim_id'} = $_[0]{'id'};
+	$param{'order'}	=	'asset_id' if ! $param{'order'};
+	my @Assets = openprint::Claim_Asset->find(%param);	
+$openprint::log->debug("# of Assets: " . scalar @Assets );
+	return @Assets;
+} # end sub Assets
 
 1;
 __END__

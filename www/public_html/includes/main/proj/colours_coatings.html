@@ -85,18 +85,34 @@
 				<? endif ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
 			</p>
 			<br class="spacer"/>
-			<p>
+			<p class="Aqueous">
 				<label><b><? echo ( ssi::writeTip( 'Aqueous' ); ) ?>:</b></label>
-				<span class="checkOption">
+				<? if ( openprint::Service::find('name'=>'Aqueous Gloss' ) ) ?>
+				<span class="checkOption Gloss">
 					<input type="radio" id="rdbAqueousSideOneGloss<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Gloss' ) ?> />
 					<label class="radio" for="rdbAqueousSideOneGloss<?Signature?>"><? echo ( ssi::writeTip( 'Gloss' ); ) ?></label>
 				</span>
-				<span class="checkOption">
+				<? endif ( openprint::Service::find('name'=>'Aqueous Gloss' ) ) ?>
+				<? if ( openprint::Service::find('name'=>'Aqueous Matte' ) ) ?>
+				<span class="checkOption Matte">
 					<input type="radio" id="rdbAqueousSideOneMatte<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Matte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Matte' ) ?> />
 					<label class="radio" for="rdbAqueousSideOneMatte<?Signature?>"><? echo ( ssi::writeTip( 'Matte' ); ) ?></label>
 				</span>
-				<span class="checkOption">
-					<input type="radio" id="rdbAqueousSideOneNone<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}}, 'Gloss', 'Matte' ); ) ?> />
+				<? endif ( openprint::Service::find('name'=>'Aqueous Matte' ) ) ?>
+				<? if ( openprint::Service::find('name'=>'Aqueous Satin' ) ) ?>
+				<span class="checkOption Satin">
+					<input type="radio" id="rdbAqueousSideOneSatin<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="Satin" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'Satin' ) ?> />
+					<label class="radio" for="rdbAqueousSideOneSatin<?Signature?>"><? echo ( ssi::writeTip( 'Satin' ); ) ?></label>
+				</span>
+				<? endif ( openprint::Service::find('name'=>'Aqueous Satin' ) ) ?>
+				<? if ( openprint::Service::find('name'=>'Aqueous SoftTouch' ) ) ?>
+				<span class="checkOption SoftTouch">
+					<input type="radio" id="rdbAqueousSideOneSoftTouch<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="SoftTouch" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}} eq 'SoftTouch' ) ?> />
+					<label class="radio" for="rdbAqueousSideOneSoftTouch<?Signature?>"><? echo ( ssi::writeTip( 'Soft Touch' ); ) ?></label>
+				</span>
+				<? endif ( openprint::Service::find('name'=>'Aqueous SoftTouch' ) ) ?>
+				<span class="checkOption None">
+					<input type="radio" id="rdbAqueousSideOneNone<?Signature?>" name="rdbAqueousSideOne<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideOne'.$$variable{'Signature'}}, 'Gloss', 'Matte', 'Satin', 'SoftTouch' ); ) ?> />
 					<label class="radio" for="rdbAqueousSideOneNone<?Signature?>">None</label>
 				</span>
 			</p>
@@ -214,18 +230,34 @@
 				<? endif ( openprint::Service::find('name'=>'VarnishDryTrap') ) ?>
 		</p>
 		<br class="spacer"/>
-		<p>
+		<p class="Aqueous">
 			<label><b><? echo ( ssi::writeTip( 'Aqueous' ); ) ?>:</b></label>
-			<span class="checkOption">
+				<? if ( openprint::Service::find('name'=>'Aqueous Gloss' ) ) ?>
+			<span class="checkOption Gloss">
 				<input type="radio" id="rdbAqueousSideTwoGloss<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Gloss' ) ?> />
 				<label class="radio" for="rdbAqueousSideTwoGloss<?Signature?>"><? echo ( ssi::writeTip('Gloss'); ) ?></label>
 			</span>
-			<span class="checkOption">
+				<? if ( openprint::Service::find('name'=>'Aqueous Gloss' ) ) ?>
+				<? if ( openprint::Service::find('name'=>'Aqueous Matte' ) ) ?>
+			<span class="checkOption Matte">
 				<input type="radio" id="rdbAqueousSideTwoMatte<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Matte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Matte' ) ?> />
 				<label class="radio" for="rdbAqueousSideTwoMatte<?Signature?>"><? echo ( ssi::writeTip('Matte'); ) ?></label>
 			</span>
-			<span class="checkOption">
-				<input type="radio" id="rdbAqueousSideTwoNone<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}}, 'Gloss', 'Matte' ) ) ?> />
+				<? endif ( openprint::Service::find('name'=>'Aqueous Matte' ) ) ?>
+				<? if ( openprint::Service::find('name'=>'Aqueous Satin' ) ) ?>
+			<span class="checkOption Satin">
+				<input type="radio" id="rdbAqueousSideTwoSatin<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Satin" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Satin' ) ?> />
+				<label class="radio" for="rdbAqueousSideTwoSatin<?Signature?>"><? echo ( ssi::writeTip('Satin'); ) ?></label>
+			</span>
+				<? endif ( openprint::Service::find('name'=>'Aqueous Satin' ) ) ?>
+				<? if ( openprint::Service::find('name'=>'Aqueous SoftTouch' ) ) ?>
+			<span class="checkOption SoftTouch">
+				<input type="radio" id="rdbAqueousSideTwoSoftTouch<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="SoftTouch" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'SoftTouch' ) ?> />
+				<label class="radio" for="rdbAqueousSideTwoSoftTouch<?Signature?>"><? echo ( ssi::writeTip('Soft Touch'); ) ?></label>
+			</span>
+				<? endif ( openprint::Service::find('name'=>'Aqueous SoftTouch' ) ) ?>
+			<span class="checkOption None">
+				<input type="radio" id="rdbAqueousSideTwoNone<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="None" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if ! sets::isin( $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}}, 'Gloss', 'Matte', 'Satin', 'SoftTouch' ) ) ?> />
 				<label class="radio" for="rdbAqueousSideTwoNone<?Signature?>">None</label>
 			</span>
 		</p>

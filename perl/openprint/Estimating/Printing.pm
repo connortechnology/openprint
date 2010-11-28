@@ -140,6 +140,8 @@ my %variables = (
 		'txtPlateChangeQuantity1' => ['save'], 'txtPlateChangeQuantity2' => ['save'], 'txtPlateChangeQuantity3' => ['save'], 
 		'AdditionalPlates1' => ['save'], 'AdditionalPlates2' => ['save'], 'AdditionalPlates3' => ['save'],
 		'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
+		'Roll2SheetMakeReady1' => ['save','output'], 'Roll2SheetMakeReady2'   => ['save','output'], 'Roll2SheetMakeReady3'   => ['save','output'],
+		'Roll2SheetRunCharge1' => ['save','output'], 'Roll2SheetRunCharge2'   => ['save','output'], 'Roll2SheetRunCharge3'   => ['save','output'],
 		'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
 		'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
 		'StitchingImposition1' => ['output'], 'StitchingImposition2' => ['output'], 'StitchingImposition3' => ['output'],
@@ -994,6 +996,7 @@ $openprint::log->debug(join(',',@{$$specs{'PrintingTypes'}} ));
 	# Get plates in each previous signature, so we can get qty discounts
 			next if $service_index and ($index >= $service_index);
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
+            $project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetMakeReady'.$qty_index};
 			$PlateCounts{$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'txtPlateQuantity'.$qty_index};
 			$PlateCounts{'Blank'.$$sig_specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 		} # end foreach $index
@@ -1145,7 +1148,6 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 			$project{'Perfecting Double Gutter Size'} = $Press->specification('Perfecting Double Gutter Size');
 			$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 			$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
-			$project{'Runstyles'} = $Press->specification('Runstyles');
 
 			$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
 
@@ -1159,6 +1161,9 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 				} # end if
 				my @imps;
 				if ( $Paper->type() eq 'Roll' ) {
+					if ( ! ( $project{'Runstyles'} = $Press->specification('RunstylesRoll') ) ) {
+						$project{'Runstyles'} = $Press->specification('Runstyles');
+					} # end if
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 					next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
@@ -1204,6 +1209,7 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 
 					next if ! ( $Paper->width() and $Paper->height() );
 					next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
+					$project{'Runstyles'} = $Press->specification('Runstyles');
 
 					my $P = $Paper->clone();
 
@@ -1423,12 +1429,11 @@ $I->display();
 		} else {
 			$$specs{'CutOff'.$qty_index} = '';
 		} # end if
-		if ( !
-                (
+		if ( (!$$specs{'AqueousMessage'}) and ! (
                  ( $$specs{'rdbAqueousSideOne'} and ( $$specs{'rdbAqueousSideOne'} ne 'None' ) ) or
                  ( $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' ) ) 
 ) ) {
-
+			$$specs{'AqueousMessage'} = 1;
 			$$specs{'popup'} .= $Paper->message() if $Paper->message();
 		} # end if
 			
@@ -1504,6 +1509,7 @@ sub breakdown {
 	my $breakdown = '';
 	$breakdown .= sprintf("Colour Bar \%s \%s<br/>", $Imposition->colour_bar_size(), $Imposition->colour_bar_orientation() );
 	$breakdown .= sprintf('<b>Setups:</b><br/>Press Setup: $%.2f<br/>', $$price{'Press Setup'} );
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f<br/>', $$price{'Roll2SheetMakeReady'} ) if $$price{'Roll2SheetMakeReady'};
 	$breakdown .= sprintf("\tImposition Charge:\t\$%1\$.2f + \$%2\$.2f*\%4\$d=\$%3\$.2f<br/>", @$price{'Imposition MakeReady','Imposition Price','Imposition Total'}, $Imposition->imposition() );
 	$breakdown .= sprintf("\tRunstyle Charge:\t\$%.2f<br/>", @$price{'Runstyle Charge'} );
 	$breakdown .= sprintf("\tWork & Turn Dry Cost:\t\$%.2f<br/>", @$price{'WorkTurn Dry Charge'} ) if $$price{'WorkTurn Dry Charge'};
@@ -1513,10 +1519,14 @@ sub breakdown {
 	$breakdown .= sprintf("\tPress Wash Charge:\t\$%.2f * \%d washes = \$%.2f<br/>", @$price{'Press Wash Price','Press Washes','Press Wash Total'});
 	$breakdown .= sprintf('Plate Make Ready: $%.2f<br/>', $$price{'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
+	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
 	$breakdown .= sprintf('Impression Charge: %d Impressions/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
 	$breakdown .= sprintf("\tInline Varnish Charge: \$%.4f\%s = %.2f<br/>", @$Varnish{'run_price','Run Units','Run Total'} ) if %$Varnish;;
 # if $$Varnish{'run_price'};
-	$breakdown .= sprintf("\tAqueous Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'Run Cost','Units','Quantity','Total'} ) if %$Aqueous;;
+	if ( %$Aqueous ) {
+	$breakdown .= sprintf("\tAqueous Front Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideOne Run Cost','SideOne Units','SideOne Quantity','SideOne Total'} );
+	$breakdown .= sprintf("\tAqueous Back Run Charge: %.2f%s * %d = \$%.2f<br/>", @$Aqueous{'SideTwo Run Cost','SideTwo Units','SideTwo Quantity','SideTwo Total'} );
+	} # end if
 	$breakdown .= sprintf("\tMinimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} );
 	$breakdown .= sprintf("\tRun Charge Total:\t\$%.2f<br/>", $$price{'Run Total'} );
 	$breakdown .= '<b>Material Charges:</b><br/>';
@@ -2410,13 +2420,40 @@ sub calc_price {
 	my %paper_price = openprint::Estimating::Paper::sheet_calc( $openprint::log, $openprint::dbh, $openprint::variable, $Paper, $$Paper{type} eq 'Roll' ? $sheet_qty{'Weight'} : $sheet_qty{'Gross Sheet Count'} );
 	@price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price', '100lb'} = @paper_price{'Paper Cost', 'Paper Price', 'Sheet Cost', 'Sheet Price','100lb'};
 
+	my $run_cost = 0;
+	if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) ) {
+
+		# Add Roll2SheetSetup
+		if ( ! $$project{'roll2sheetcharged'} ) {
+			if ( $price{'Roll2SheetMakeReady'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'Roll2SheetMakeReady', undef, $Press ) ) {
+				$price{'Comparison Cost'} += $price{'Roll2SheetMakeReady'};
+				$price{'Total Cost'} += $price{'Roll2SheetMakeReady'};
+				$price{'Setup Total'} += $price{'Roll2SheetMakeReady'};
+			} # end if
+		} # end if
+# Add Roll2SheetRun
+		if ( my %R2SPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'Roll2Sheet', $impressions, $Press ) ) {
+			if ( $R2SPrice{'units'} eq 'Per M' ) {
+				$price{'Roll2SheetRunCharge'} = sprintf('%.2f',$R2SPrice{'Price'} * $impressions/1000);
+			} else {
+				$openprint::log->error("Unknown units on Roll2SheetRunCharge ( $R2SPrice{'units'} for $$Press{strid}");
+			} # end if
+			$price{'Roll2SheetUnits'} = $R2SPrice{'units'};
+			$price{'Roll2SheetCost'} = $R2SPrice{'Price'};
+			$price{'Comparison Cost'} += $price{'Roll2SheetRunCharge'};
+			$price{'Total Cost'} += $price{'Roll2SheetRunCharge'};
+			$run_cost += $price{'Roll2SheetRunCharge'};
+		} # end if
+	} # end if
+
+
 	$price{'Comparison Cost'} += $price{'Paper Price'};
 	#return \%price if check_price( $price_to_beat, \%price, $specs, $qty_index, $Imposition, 'Paper' );
 
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	
 	my %run_price;
-	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ); 
+	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs, scalar @$side_one_colours, scalar @$side_two_colours ); 
 	my %varnish_price;
 	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
 		%run_price = get_run_price( $impressions, scalar(@colours), 0, $Imposition, $Press, $run_speed ); 
@@ -2446,7 +2483,7 @@ sub calc_price {
 
 	$price{'Press Setup'} = $press_setup;
 
-	my $run_cost = $run_price{'Price'};
+	$run_cost += $run_price{'Price'};
 
 	$price{'Impressions'} = $impressions;
 	$price{'Impression Cost'} = $run_price{'Cost'};
@@ -2457,9 +2494,8 @@ sub calc_price {
 	$run_cost += $varnish_price{'Run Total'};
 
 	$price{'Aqueous'} = \%aqueous;
-	if ( $aqueous{'Total'} ) {
-		$run_cost += $aqueous{'Total'};
-	} # end if
+	$run_cost += $aqueous{'SideOne Total'};
+	$run_cost += $aqueous{'SideTwo Total'};
 	$price{'Minimum Run Charge'} = openprint::service::get_price( $openprint::log, $openprint::dbh, $openprint::variable, 'PressRunChargeMinimum',undef,$Press );
 
 	if ( $run_cost < $price{'Minimum Run Charge'} ) {
@@ -2886,7 +2922,7 @@ sub get_varnish_run_price {
 
 
 sub get_aqueous_price {
-	my ( $log, $dbh, $variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs ) = @_;
+	my ( $log, $dbh, $variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs, $side_one_colour_count, $side_two_colour_count ) = @_;
 
 	my %aqueous_price;
 
@@ -2915,27 +2951,32 @@ sub get_aqueous_price {
 				$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
 			} # end if
 		} # end if
-		if ( $aqueous_sides == 1 and $is_sheetwork ) {
+		if ( ( $side_one_colour_count and $side_two_colour_count ) and $is_sheetwork ) {
 			$impressions = int($impressions/2);
 		} # end if
-		$aqueous_price{'Quantity'} = $impressions;
-		my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press);
-		$aqueous_price{'Run Cost'} = $Price{'Price'};
-		$aqueous_price{'Units'} = $Price{'units'};
-		if ( sets::isin( lc $Price{'units'}, ['per m', 'per 1000','per 1000 impressions'] ) ) {
-			$aqueous_price{'Total'} = $Price{'Price'} * ($impressions/1000);
-		} else {
-			$openprint::log->debug("Unknown units in Aqueous");
-			$aqueous_price{'Total'} = $Price{'Price'};
-		} # end if
-		if ( 
-				( $$specs{'rdbAqueousSideOne'} ne 'None' ) 
-				and 
-				( $$specs{'rdbAqueousSideTwo'} ne 'None' ) 
-				and 
-				( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) 
-				and ( ! $is_sheetwork ) ) {
-			$aqueous_price{'Total'} += 1000000;
+		foreach my $side ( 'One', 'Two' ) {
+			next if (!$$specs{'rdbAqueousSide'.$side}) or $$specs{'rdbAqueousSide'.$side} eq 'None';
+			$aqueous_price{"Side$side Quantity"} = $impressions;
+			# We assume that both sides are the same. We add a million if not...
+			my %Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous '.$$specs{'rdbAqueousSide'.$side}, $impressions, $Press);
+			%Price = openprint::service::get_price_object( $log, $dbh, $variable, 'Aqueous', $impressions, $Press) if ! %Price;
+			$aqueous_price{"Side$side Run Cost"} = $Price{'Price'};
+			$aqueous_price{"Side$side Units"} = $Price{'units'};
+			if ( sets::isin( lc $Price{'units'}, ['per m', 'per 1000','per 1000 impressions'] ) ) {
+				$aqueous_price{"Side$side Total"} = $Price{'Price'} * ($impressions/1000);
+			} else {
+				$openprint::log->debug("Unknown units in Aqueous");
+				$aqueous_price{"Side$side Total"} = $Price{'Price'};
+			} # end if
+			if ( 
+					( $$specs{'rdbAqueousSideOne'} ne 'None' ) 
+					and 
+					( $$specs{'rdbAqueousSideTwo'} ne 'None' ) 
+					and 
+					( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) 
+					and ( ! $is_sheetwork ) ) {
+				$aqueous_price{"Side$side Total"} += 1000000;
+			} # end if
 		} # end if
 	} # end if
 	return %aqueous_price;
@@ -3378,6 +3419,7 @@ sub get_colour_description {
 	my $side_one_coatings;
 	$side_one_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideOne'} eq 'Gloss';
 	$side_one_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideOne'} eq 'Matte';
+	$side_one_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideOne'} eq 'Satin';
 	if ( $$specs{'chkVarnishSpotGlossSideOne'} ) {
 		$side_one_coatings .= '+Varnish (Spot Gloss)';
 		$side_one_colours -= 1;
@@ -3405,6 +3447,7 @@ sub get_colour_description {
 	my $side_two_coatings;
 	$side_two_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideTwo'} eq 'Gloss';
 	$side_two_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideTwo'} eq 'Matte';
+	$side_two_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideTwo'} eq 'Satin';
 	if ( $$specs{'chkVarnishSpotGlossSideTwo'} ) {
 		$side_two_coatings .= '+Varnish (Spot Gloss)' ;
 		$side_two_colours -= 1;
