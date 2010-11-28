@@ -133,7 +133,6 @@ sub save {
 	foreach my $k ( keys %fields ) {
 		$sql{$fields{$k}} = $$self{$k} if defined $fields{$k};
 	} # end foreach
-	delete $sql{'created_on'};
 	$sql{$fields{'updated_by'}} = $openprint::session{'user_id'} if exists $fields{'updated_by'};
 	$sql{$fields{'updated_on'}} = 'NOW()' if exists $fields{'updated_on'};
 	if ( $debug ) {
@@ -177,6 +176,7 @@ sub save {
 				return $error;
 			} # end if
 		} else {
+			delete $sql{'created_on'};
 			if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );

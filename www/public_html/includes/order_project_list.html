@@ -2,42 +2,53 @@
 <table class="List">
 	<thead>
 		<tr>
-			<th width="75" align="left">Project #</th>
-			<th align="left">Reference</th>
-			<th width="125" align="left">Status</th>
-			<th width="120" align="left">Requested Date</th>
-			<th width="120" align="left">Due Date</th>
-			<th width="75" align="left">Qty</th>
-			<th width="75" align="right">Price</th>
+			<th class="project_id">Project #</th>
+			<th class="reference">Reference</th>
+			<th class="status">Status</th>
+			<th class="Date">Requested Date</th>
+			<th class="Date">Due Date</th>
+			<th class="quantity">Quantity</th>
+			<th class="Price">Price</th>
 		</tr>
 	</thead>
-	<? while ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
-	<tr<?rowclass?>> 
-		<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a></td>
-		<td><a href="../project/view.html?ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
-		<td><? echo ( $$variable{'Project'}->status(); ) ?></td>
-		<td><? echo ( $$variable{'Project'}->requested_date() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ) : ''; ) ?></td>
-		<td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->due_date() ) ) if $$variable{'Project'}->due_date(); ) ?></td>
-		<td align="left"><? echo ( $$variable{'Project'}->ordered_quantity(); ) ?></td>
-		<td align="right">
-<? echo (
-	$$variable{'price'} = $$variable{'Project'}->ordered_price();
-	if ( $$variable{'Project'}->currency_id() != $$variable{'CurrencyIndex'} ) {
-		$$variable{'rate'} = $$variable{'Project'}->Currency()->conversions( $$variable{'Order'}->currency_id() );
+	<tbody>
+	<? echo (
+		my $html;
+		my $rowclass;
+
+		foreach my $Project ( @{$$variable{'Projects'}} ) {
+			$html .= sprintf( q`
+				<tr%1$s> 
+					<td class="project_id"><a href="../project/view.html?ProjectIndex=%2$d">%2$d</a></td>
+					<td class="reference"><a href="../project/view.html?ProjectIndex=%2$d">%3$s</a></td>
+					<td class="status">%4$s</td>
+					<td class="Date">%5$s</td>
+					<td class="Date">%6$s</td>
+					<td class="quantity">%7$d</td>
+					<td class="Price">
+				`, $rowclass, $Project->id(), ssi::htmlize($Project->reference()), $Project->status(),
+				( $Project->requested_date() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->requested_date() ) ) : '' ),
+				( $Project->due_date() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Project->due_date() ) )  : '' ),
+				$Project->ordered_quantity(),
+				);
+
+	$$variable{'price'} = $Project->ordered_price();
+	if ( $Project->currency_id() != $$variable{'CurrencyIndex'} ) {
+		$$variable{'rate'} = $Project->Currency()->conversions( $$variable{'Order'}->currency_id() );
 	} # end if
-	my ( $html, $shipping_html );
+	my $shipping_html;
 	my @ShippingServices = openprint::ServiceType->find('category'=>'Shipping');
-	my $services = $$variable{'Project'}->services();
+	my $services = $Project->services();
 	foreach my $ServiceType ( @ShippingServices ) {
 		next if ! $$services{$ServiceType->name()};
 
 		foreach my $service_index ( @{$$services{$ServiceType->name()}} ) {
-			my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_index );
-			my $price = $$specs{'txtPrice'.$$variable{'Project'}->ordered_quantity_index()};
+			my $specs = openprint::service::get_specs_ref( $Project, $service_index );
+			my $price = $$specs{'txtPrice'.$Project->ordered_quantity_index()};
 			$$variable{'price'} -= $price;
 			$price *= $$variable{'rate'} if $$variable{'rate'};
 			eval(' require openprint::Estimating::'.$ServiceType->name().';' );
-			my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $$variable{Project}, $service_index, $specs, $$variable{Project}->ordered_quantity_index() );') . '<br/>';
+			my $summary = eval('openprint::Estimating::'.$ServiceType->name().'::summary( $Project, $service_index, $specs, $Project->ordered_quantity_index() );') . '<br/>';
 
 			if ( $$specs{'FromAddress1'} or $$specs{'FromCity'} or $$specs{'FromStateProvince'} or $$specs{'FromCountry'} ) {
             $summary .= 'From: ' . join("\n",
@@ -56,13 +67,15 @@
                     ).'<br/>';
 			} # end if
 
-			$shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td colspan="2">$summary</td><td colspan="2">$$specs{'alert'}</td><td align="left">&nbsp;</td><td align="right">`.sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $price).'</td></tr>';
+			$shipping_html .= qq`<tr$rowclass><td>`.$ServiceType->description().qq`</td><td colspan="2">$summary</td><td colspan="2">$$specs{'alert'}</td><td align="left">&nbsp;</td><td align="right">`.openprint::Currency::format($price).'</td></tr>';
 		} # end foreach
 	} # end foreach
-	$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-	$html .= sprintf( '%s%.2f</td></tr>', $$variable{'Currency'}->symbol(), $$variable{'rate'} ? $$variable{'rate'} * $$variable{'price'} : $$variable{'price'} );
-	return $html. '<tr><td>&nbsp;</td><td colspan="6">'.ssi::htmlize($$variable{'Project'}->reference()).'</td></tr>'.$shipping_html;
+	$rowclass = $rowclass ? '' : ' class="colRow"';
+	$html .= sprintf( '%s</td></tr>', openprint::Currency::format( $$variable{'rate'} ? $$variable{'rate'} * $$variable{'price'} : $$variable{'price'} ) );
+	$html .= '<tr><td>&nbsp;</td><td colspan="6">'.$Project->summary().'</td></tr>'.$shipping_html;
+	} # end foreach Project
+	return $html;
 	) ?>
-	<? endwhile ( $$variable{'Project'} = shift @{$$variable{'Projects'}} ) ?>
+	</tbody>
 </table>
 <? endif ( @{$$variable{'Projects'}} = $$variable{'Order'}->Projects() ) ?>

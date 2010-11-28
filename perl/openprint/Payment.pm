@@ -1,14 +1,7 @@
-package openprint::Payment;
-@ISA = qw(openprint::Object);
-
-use vars qw( %config $log $dbh %session );
-*session = \%openprint::session;
-*config = \%openprint::config;
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
-
 use strict;
+package openprint::Payment;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 require sql;
@@ -31,7 +24,7 @@ $serial = 'payments_id_seq';
 	'transaction_id'	=>	'transaction_id',
 	'memo'				=>	'memo',
 	'completed'			=>	'completed',
-	'received_on'		=>	'date',
+	'received_on'		=>	'received_on',
 	'remaining'			=>	'remaining',
 	'deleted'			=>	'deleted',
 	'type_id'			=>	'type_id',
@@ -44,6 +37,7 @@ $serial = 'payments_id_seq';
 	'order_id'		=>	undef,
 	'created_on'	=> q`'NOW()'`,
 	'updated_on'	=> q`'NOW()'`,
+	'received_on'	=>	q`'NOW()'`,
 	'completed'		=>	0,
 	'deleted'		=>	0,
 );
