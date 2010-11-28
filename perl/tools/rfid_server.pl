@@ -105,6 +105,7 @@ sub process_request {
 			$Scanner->load();
 
 			$date = Date::Format::time2str('%Y-%m-%d %H:%M', time );
+			# if not seen in 60 seconds, then update scanner last seen time
 			if ( (time - Date::Parse::str2time($Scanner->lastseen_on())) > 60 ) {
 				if ( my $error = $Scanner->save({'lastseen_on'=>'NOW()'}) ) {
 					$self->log(1, sprintf('%s : %s : error saving scanner: %s', $date, $self->{server}->{peeraddr}, $error ));
@@ -163,7 +164,7 @@ sub process_request {
 							} # end if
 						} # end if
 					} # end if
-				} elsif ( $Scanner->location_id() != $Tag->location_id() ) {
+				} elsif ( ( $Scanner->location_id() != $Tag->location_id() ) or ( time - Date::Parse::str2time( $Tag->updated_on()) > 60 ) ) {
 					$changed = 1;
 					$self->log(1, sprintf('%s(%s) : %s : updating location of tag %s to %s', $date, $self->{server}->{peeraddr}, $Scanner->name(), $Tag->id(), $Scanner->Location()->name() ));
 					$Tag->location_id( $Scanner->location_id(), $Scanner->id() );

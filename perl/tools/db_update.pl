@@ -1967,7 +1967,7 @@ if ( $data ) {
 	} # end if
 } # end if
 
-sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup,Material,Service,ServiceType,Equipment', 'type','text') if ! $config{'Cached Objects'};
+sql::insert($log, $dbh, 'configuration', 'name', 'Cached Objects', 'value','usergroup', 'type','text') if ! $config{'Cached Objects'};
 
 
 

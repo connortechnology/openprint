@@ -1,0 +1,14 @@
+
+		<fieldset>Captured Signatures</fieldset>
+<? echo (
+		require openprint::SignatureCapture;
+		my @Signatures = openprint::SignatureCapture->find(
+			'project_id'    =>  $$variable{'Project'}->id(),
+			'service_id'    =>  $$variable{'ServiceIndex'},
+			'order'         =>  'id',
+			);
+		my $html .= '<br/>' . join('<br/>', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="SignatureCapture"/>`, $_->id(), $_->file_path() ); } @Signatures );
+		return $html;
+) ?>
+
+		</fieldset>

@@ -143,13 +143,20 @@ sub save {
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $ac = sql::start_transaction( $dbh );
 	if ( @identified_by ) {
-		my %serial = eval '%'.$type.'::serial';
 		my $insert = 0;
-		foreach my $id ( @identified_by ) {
-			next if ! $serial{$id};
-			($$self{$id}) = ($sql{$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
+		my %serial = eval '%'.$type.'::serial';
+		if ( ! %serial ) {
+			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
+			my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
+			sql::execute( undef, undef, 'DELETE FROM ' . $table. ' WHERE ' . $where, @$self{@identified_by} );  
 			$insert = 1;
-		} # end foreach
+		} else {
+			foreach my $id ( @identified_by ) {
+				next if ! $serial{$id};
+				($$self{$id}) = ($sql{$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
+				$insert = 1;
+			} # end foreach
+		} # end if
 		if ( $insert ) {
 			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
 				$dbh->rollback();
@@ -266,22 +273,26 @@ sub clone {
 } # end sub clone
 
 sub delete {
-	my ( $self ) = @_;
-	my $type = ref $self;
-	if ( ! $$self{'id'} ) {
+    my ( $self ) = @_;
+    my $type = ref $self;
+    my $table = eval '$'.$type.'::table';
+	my %fields = eval '%'.$type.'::fields';
+	my @identified_by = eval '@'.$type.'::identified_by';
+	@identified_by = ( 'id' ) if ! @identified_by;
+	if ( ! $$self{$identified_by[0]} ) {
 		$log->error("Called delete on object with no id of type $type");
 		return;
 	} # end if
-    my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
+
+	my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
 	if ( exists $fields{'deleted'} ) {
-		sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], 'deleted', 1 );
+		sql::update( undef, undef, $table, [$where, @$self{@identified_by}], 'deleted', 1 );
 		return $dbh->errstr if $dbh->errstr;
 		$$self{'deleted'}=1;
 	} else {
-		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$fields{'id'}.'=?', $$self{'id'} );
+		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
 		return $dbh->errstr if $dbh->errstr;
-		delete $openprint::Object::cache{$type}{$$self{id}};
+		delete $openprint::Object::cache{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	eval 'if ( %'.$type.'::find_cache ) { %'.$type.'::find_cache = (); }';
 	return;

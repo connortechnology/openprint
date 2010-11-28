@@ -25,7 +25,8 @@ CREATE TABLE Users (
 	purchasing_limit		float,
 	purchasing_total_limit	float,
 	deleted					BOOLEAN NOT NULL default false,
-	PRIMARY KEY (Index)
+	PRIMARY KEY (id)
 );
-CREATE INDEX users_email_idx ON Users (strEmail);
+CREATE INDEX users_email_idx ON Users (email);
 alter table Users add foreign key (Company_Id) REFERENCES Companies (Id);
+ALTER TABLE Companies add FOREIGN KEY (Salesrep_id) REFERENCES Users (id);

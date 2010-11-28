@@ -222,7 +222,7 @@ sub user_profiles {
 				sql::execute( undef, undef, 'DELETE FROM User_Service_Defaults WHERE id=?', $service_default_id );
 			} # end if
 		} # end foreach
-		if ( $Param{'name-'} ) {
+		if ( $param{'name-'} ) {
 			sql::insert( undef, undef, 'User_Service_Defaults', {
 					'user_id'		=>$User->id(),
 					'servicetype_id'=>$param{'servicetype_id-'} ? $param{'servicetype_id-'} : undef,
