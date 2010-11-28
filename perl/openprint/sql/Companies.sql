@@ -38,7 +38,10 @@ CREATE TABLE Companies (
 	strBankEmail			TEXT,
 	lngPriceList			INT4,
 	dblPricingPercent		numeric(16,4) DEFAULT '0.0000' NOT NULL,
-	salesrep_id			INTEGER, FOREIGN KEY (Salesrep_id) REFERENCES Users (id),
+	salesrep_id			INTEGER, 
+/* FOREIGN KEY will be added in users after the addition of that table 
+FOREIGN KEY (Salesrep_id) REFERENCES Users (id),
+*/
 	created_on			timestamp with time zone NOT NULL default NOW(),
 	updated_on			timestamp with time zone NOT NULL default NOW(),
 	LastLoggedIn			timestamp with time zone,

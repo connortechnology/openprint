@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS Ordered_Products;
 
 CREATE TABLE Ordered_Products (
 	id			SERIAL,
-	order_id	INTEGER	NOT NULL, FOREIGN KEY (order_id) REFERENCES Orders (Index),
+	order_id	INTEGER	NOT NULL, FOREIGN KEY (order_id) REFERENCES Orders (id),
 	product_id	INTEGER	NOT NULL, FOREIGN KEY (product_id) REFERENCES Products (id),
     project_id integer,
     FOREIGN KEY (project_id) REFERENCES projects (id),

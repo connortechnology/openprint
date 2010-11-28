@@ -7,11 +7,10 @@ CREATE	SEQUENCE		DocketNumber_seq;
 DROP	TABLE	IF EXISTS Projects;
 
 CREATE	TABLE	Projects	(
-	Index			INT4	NOT NULL DEFAULT	nextval('lngProjectIndex_seq'),
-	lngDocketNumber			INT4,
-	strSessionID			char(10),
-	CompanyIndex			INT4, FOREIGN KEY (CompanyIndex) REFERENCES Companies (Id),
-	UserIndex				INT4, FOREIGN KEY (UserIndex) REFERENCES Users (Id),
+	id			INTEGER	NOT NULL DEFAULT	nextval('lngProjectIndex_seq'),
+	lngDocketNumber			INTEGER,
+	company_id			INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (Id),
+	user_id				INTEGER, FOREIGN KEY (user_id) REFERENCES Users (Id),
 	strProjectReference		TEXT,
 	strComments				TEXT,
 	strDesign				TEXT,
@@ -30,11 +29,12 @@ CREATE	TABLE	Projects	(
 	price3					NUMERIC(10,2),
 	externalrefnumber		TEXT,
 	currency_id				INTEGER, FOREIGN KEY (currency_id) REFERENCES currencies (id),
-	order_id				INTEGER, FOREIGN KEY (order_id) REFERENCES orders (index),
+	order_id				INTEGER, FOREIGN KEY (order_id) REFERENCES orders (id),
 	due_date				date,
 	rush					BOOLEAN default false,
 	style_id				INTEGER, FOREIGN KEY (style_id) REFERENCES QuoteLevels (id),
-	PRIMARY	KEY	(Index)
+	summary					TEXT,
+	PRIMARY	KEY	(id)
 );
 
 create index Project_created_on_idx on Projects (dtmcreationdate);
