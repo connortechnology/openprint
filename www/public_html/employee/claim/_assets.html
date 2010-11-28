@@ -1,0 +1,41 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<h3>Attachments:</h3>
+<table>
+	<thead>
+		<tr>
+			<th class="Name">Name</th>
+			<th class="Filename">Filename</th>
+			<th class="DateTime">Added On</th>
+			<th class="Thumbnail">Thumbnail</th>
+			<th class="actions">&nbsp;</th>
+		</tr>
+	</thead>
+	<tbody>
+<? echo ( 
+my $html;
+foreach my $Claim_Asset ( $$variable{'Claim'}->Assets() ) {
+	my $Asset = $Claim_Asset->Asset();
+	$html .= sprintf('
+		<tr>
+			<td class="Name"><a href="/assets/%1$s" target="_blank">%2$s</a></td>
+			<td class="Filename"><a href="/assets/%1$s" target="_blank">%3$s</a></td>
+			<td class="DateTime"><a href="/assets/%1$s" target="_blank">%4$s</a></td>
+			<td class="Thumbnail">%5$s</td>
+			<td class="actions">%6$s</td>
+		</tr>
+		', $Asset->on_disk_filename(), $Asset->name(), $Asset->filename(),
+		Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Asset->created_on() ) ),
+( $Asset->filename() =~ /\.(png|PNG|jpg|JPG|gif|GIF|jpeg|JPEG)$/i ? '<a href="/assets/'.$Asset->on_disk_filename().'" target="_blank"><img src="/assets/'.$Asset->thumbnail_filename().'" /></a>' : '' ),
+		ssi::writeButton( $log, $dbh, 'd'.$Asset->id(), 'delete.gif', q`new Ajax.Updater( 'Assets', '_assets.html', { parameters: { claim_id: `.$$variable{'Claim'}->id().q`, asset_id: `.$Asset->id().q`, action: 'delete' } } );`, '', 'Delete' ),
+		);
+} # end foreach Asset
+return $html;
+) ?>
+
+		<tr class="unprintable">
+			<td class="Name"><input type="text" id="name" name="name"/></td>
+			<td colspan="3" class="Filename"><input type="file" id="filename" name="filename"/></td>
+			<td><? echo ( ssi::writeButton($log, $dbh, 'Upload', 'upload.gif', "f1.btnFunction.value='Attach';f1.submit();", '', 'Upload' ); ) ?></td>
+		</tr>
+	</tbody>
+</table>

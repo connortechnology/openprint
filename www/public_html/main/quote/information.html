@@ -72,15 +72,15 @@
 			<fieldset><legend>Prepared By:</legend>
 			<div class="content">
 				<ul>
-					<li<? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+					<li<? echo ( sets::isin( 'ByEmail', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>>
 						<label>E-mail:</label>
 						<input type="text" id="ByEmail" name="ByEmail" value="<?ByEmail?>" />
 					</li>
-					<li<? echo ( sets::isin( 'ByCompanyName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>> 
+					<li<? echo ( sets::isin( 'ByCompanyName', split(',', $config{'QuoteRequiredFields'}) ) ? ' class="required"' : '' ) ?>>
 						<label>Company Name:</label>
 						<input type="text" id="ByCompanyName" name="ByCompanyName" value="<?ByCompanyName?>" />
 					</li>
-					<li> 
+					<li>
 						<label>Salutation:</label>
 						<input type="radio" id="BySalutationMr." name="BySalutation" value="Mr." <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Mr.' ); ) ?> />
 						<label class="radio" for="BySalutationMr.">Mr.</label>
@@ -91,11 +91,11 @@
 						<input type="radio" id="BySalutationMiss" name="BySalutation" value="Miss" <? echo ( ssi::checked( $$variable{'BySalutation'} eq 'Miss' ); ) ?> />
 						<label class="radio" for="BySalutationMiss">Miss</label>
 					</li>
-					<li <? echo ( sets::isin( 'ByFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? 'class="required"' : '' ) ?>> 
+					<li <? echo ( sets::isin( 'ByFirstName', split(',', $config{'QuoteRequiredFields'}) ) ? 'class="required"' : '' ) ?>>
 						<label>First Name:</label>
 						<input type="text" id="ByFirstName" name="ByFirstName" value="<?ByFirstName?>" />
 					</li>
-					<li <? echo ( sets::isin( 'ByLastName', split(',', $config{'QuoteRequiredFields'}) ) ? 'class="required"' : '' ) ?>> 
+					<li <? echo ( sets::isin( 'ByLastName', split(',', $config{'QuoteRequiredFields'}) ) ? 'class="required"' : '' ) ?>>
 						<label>Last Name:</label>
 						<input type="text" id="ByLastName" name="ByLastName" value="<?ByLastName?>" />
 					</li>
@@ -280,11 +280,11 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 					<ul>
 						<li class="reference"> 
 							<label>Please provide a reference:</label>
-							<textarea id="reference" name="reference" rows="1" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Quote'}->reference() ) ?></textarea>
+							<textarea id="reference" name="reference" rows="1" cols="" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Quote'}->reference() ) ?></textarea>
 						</li>
 						<li class="comments">
 							<label>Additional comments or instructions:</label>
-							<textarea id="comments" name="comments" rows="1" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Quote'}->comments() ) ?></textarea>
+							<textarea id="comments" name="comments" rows="1" cols="" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Quote'}->comments() ) ?></textarea>
 						</li>
 					</ul>
 				</div>

@@ -50,6 +50,30 @@ sub on_disk_path {
 sub on_disk_filename {
 	return $_[0]{'id'}.'_'.$_[0]{'filename'};
 } # end sub on_disk_filename
+sub on_disk_thumbnail_path {
+	my $src = $_[0]->on_disk_path();
+	if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
+		mkdir $openprint::config{'AssetPath'}.'/thumbnails/';
+		$openprint::log->error("Unable to create thumbnail path $openprint::config{'AssetPath'}/thumbnails/: $!" );
+		return $src;
+	} # end if
+	my $dest = $openprint::config{'AssetPath'}.'/thumbnails/'.$_[0]->on_disk_filename();
+	if ( ! -e $dest ) {
+		`convert  -adaptive-resize 75x $src $dest`;
+	} # end if
+	if ( -e $dest ) {
+		return $dest;
+	} else {
+		return $src;
+	} # end if
+} # end sub on_disk_thumbnail_path
+sub thumbnail_filename {
+	my $path = $_[0]->on_disk_thumbnail_path();
+	if ( $path =~ /thumbnails/ ) {
+		return 'thumbnails/'.$_[0]->on_disk_filename();
+	} # end if
+	return $_[0]->on_disk_filename();
+} # end sub thumbnail_filename
 
 1;
 __END__

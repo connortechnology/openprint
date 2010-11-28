@@ -435,7 +435,7 @@ $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 	@vars = sets::exclude( \@no_outputs, \@vars );
 
 	foreach my $key ( @vars ) {
-$log->debug( "$key~$specs{$key}" );
+#$log->debug( "$key~$specs{$key}" );
 		if ( exists $specs{$key} ) {
 			if ( ( ! exists $initial_specs{$key} ) or ( $specs{$key} ne $initial_specs{$key} ) ) {
 				push @results, "$key~$specs{$key}";

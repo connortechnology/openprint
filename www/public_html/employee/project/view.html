@@ -32,7 +32,7 @@ function open_window( page ) {
 <? echo (
 my $html;
 if ( $$variable{'HiddenSignatures'} ) {
-	if ( ! $openprint::session{'ShowAllSignatures'} ) {
+	if ( ! $session{'ShowAllSignatures'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/employee/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
 	} else {
 			$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/employee/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );

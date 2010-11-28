@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 use utf8;
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/p1/perl';
 use strict;
 
 require configuration;
@@ -358,7 +358,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 							SMTP    => $config{'Mail Server'},
 							FROM    => $from,
 							TO      => $to,
-							BCC		=>	'iconnor@penultima.org',
+							#BCC		=>	'iconnor@penultima.org',
 							SUBJECT => $subject,
 					   );
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
