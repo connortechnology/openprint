@@ -81,8 +81,8 @@
 				@{$$variable{'Results'}} = openprint::Log->find(
 					'date_time_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth', $r->uri().'?StartDay'} ),
 					'date_time_end'		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth', $r->uri().'?EndDay'} ),
-					'company_id'	=>	$param{'company_id'},
-					'user_id'		=>	$param{'user_id'},
+					( $param{'company_id'} ? ( 'company_id'	=>	$param{'company_id'} ) : () ),
+					( $param{'user_id'} ? ( 'user_id'		=>	$param{'user_id'} ) : () ),
 					'action_type'	=>	$param{'log_actions'},
 					);
 
