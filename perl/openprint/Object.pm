@@ -3,6 +3,7 @@ use Time::HiRes qw{ gettimeofday tv_interval };
 
 use strict;
 use openprint ();
+require sets;
 use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transforms $no_cache );
 
 *log = \$openprint::log;
@@ -383,7 +384,6 @@ sub find {
 			delete $params{$k};
 		} # end if
 	} # end foreach k
-
 	if ( %params ) {
 		foreach ( 'find_fields', 'fields' ) {
 			my $f = eval '\%'.$type.'::'.$_;
@@ -450,6 +450,11 @@ sub find {
 					push @values, lc $params{$k.'_lc'};
 					delete $params{$k.'_lc'};
 				} # end if
+				if ( exists $params{$k.'_any'} ) {
+					push @where, "? = ANY( $$f{$k} )";
+					push @values, $params{$k.'_any'};
+					delete $params{$k.'_any'};
+				} # end if
 				if ( defined $params{$k.'_null'} ) {
 					if ( $params{$k.'_null'} ) {
 						push @where, "$$f{$k} IS NULL";
@@ -505,7 +510,6 @@ sub find {
 	} # end foreach
 	
 #$openprint::log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
-
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$openprint::log->debug('Error ' . $openprint::dbh->errstr() . " loading $type ($sql) (@values) " );
