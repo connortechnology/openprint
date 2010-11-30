@@ -4,7 +4,7 @@ CREATE SEQUENCE Equipment_Index_seq;
 DROP TABLE IF EXISTS tbl_Equipment;
 
 CREATE TABLE tbl_Equipment (
-	lngIndex			INTEGER NOT NULL DEFAULT nextval('Equipment_Index_seq'),
+	id			INTEGER NOT NULL DEFAULT nextval('Equipment_Index_seq'),
 	strID				TEXT,
 	strName				TEXT,
 	strDescription		TEXT,
@@ -26,7 +26,7 @@ CREATE TABLE tbl_Equipment (
 	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations(id),
 	smartscheduling		BOOLEAN,
 	sorting				integer,
-	PRIMARY KEY (lngIndex)
+	PRIMARY KEY (id)
 );
 
 CREATE INDEX EquipmentID_Index ON tbl_Equipment (strID);

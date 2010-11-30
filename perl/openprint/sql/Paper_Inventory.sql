@@ -1,8 +1,8 @@
 
-DROP TABLE Paper_Inventory;
+DROP TABLE IF EXISTS Paper_Inventory;
 
 CREATE TABLE Paper_Inventory (
-	id			SERIAL NOT NULL,
+	id			SERIAL,
 	Skid_id		INTEGER, FOREIGN KEY (skid_id) REFERENCES Skids (id),
 	Paper_id	INTEGER, FOREIGN KEY (paper_id) REFERENCES Papers (id),
 	User_id		INTEGER, FOREIGN KEY (User_id) REFERENCES Users (id),

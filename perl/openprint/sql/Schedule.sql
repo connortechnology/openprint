@@ -2,8 +2,8 @@ DROP TABLE IF EXISTS Schedule;
 
 CREATE TABLE Schedule (
 	id					SERIAL,
-	Equipment_Id		INTEGER NOT NULL, FOREIGN KEY (Equipment_ID) REFERENCES tbl_Equipment (lngindex),
-	ProjectIndex		INTEGER NOT NULL, FOREIGN KEY (ProjectIndex) REFERENCES Projects (Id),
+	Equipment_Id		INTEGER NOT NULL, FOREIGN KEY (Equipment_ID) REFERENCES tbl_Equipment (id),
+	ProjectIndex		INTEGER NOT NULL, FOREIGN KEY (ProjectIndex) REFERENCES Projects (id),
 	service_id			INTEGER[],
 	StartTime			TIMESTAMP WITH TIME ZONE NOT NULL,
 	starttime_locked	boolean,
