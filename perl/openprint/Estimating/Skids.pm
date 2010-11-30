@@ -102,7 +102,12 @@ sub calc {
 	my $serviceCharge = openprint::service::get_price( $ServiceType->name(), undef, undef );
 	my $packingCharge = openprint::service::get_price( $ServiceType->name().'Packing', undef, undef );
 
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $printing_specs;
+	if ( $Project->signatures() == 1 ) {
+		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{'Signature'}[0] );
+	} else {
+		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	} # end if
 	@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtWidth','txtHeight'};
