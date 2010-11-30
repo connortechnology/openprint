@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 use strict;
 use warnings;
 use lib '/var/www/testing/perl';
@@ -7,6 +7,7 @@ use Getopt::Long;
 use File::Basename qw(basename);
 use openprint;
 
+require misc;
 require logger;
 require sql;
 require openprint::Host;
@@ -49,17 +50,37 @@ if ( $$opts{'db_name'} ) {
 open(ARP, "arp -n|");
 while ( my $line = <ARP> ) {
 	next if $line =~ /^Address/;
-	my ( $ip, $type, $mac, $flags, $iface ) = $line =~ /^([\.\d]{7,15})\s+(\w+)\s+([a-fA-F0-9\-\:]{17})\s+(\w+)\s+(\w+)$/;
-	$log->debug( "line $ip $type $mac $flags $iface" ); 
+	my ( $ip, $type, $mac, $flags, $iface ) = misc::trim( $line =~ /^([\.\d]{7,15})\s+(\w+)\s+([a-fA-F0-9\-\:]{17})\s+(\w+)\s+(\w+)$/ );
+	if ( ! ($ip or $mac) ) {
+		$log->debug( "line $ip $type $mac $flags $iface" );
+		next;
+	}
+	
 	next if ! $dbh;
-	if ( ! ( my $Host = openprint::Host->find_one('mac_any'=>$mac) ) ) {
-		$log->info( "Host for $ip $mac not found, adding" );
-		my $Host = new openprint::Host();	
-		$Host->save({
-			'mac'	=> [ $mac ], 
-			'ip'	=>	$ip,
-			'hostname'	=>	undef,
-			} );
+	my $Host = openprint::Host->find_one('mac_any'=>$mac);
+	if ( $Host ) {
+		if ( ! $Host->ip() ) {
+			$Host->save({'ip'=>$ip});
+		} # end if
+	} else {
+		$Host = openprint::Host->find_one('ip'=>$ip);
+		if ( $Host ) {
+			$Host->save({'mac'=>[ $mac ] } ) if $mac;
+		} else {
+			$log->info( "Host for $ip $mac not found, adding" );
+			$Host = new openprint::Host();	
+			$Host->save({
+					'mac'	=> [ $mac ], 
+					'ip'	=>	$ip,
+					'hostname'	=>	undef,
+					'description' => 	'Discovered by scan_arp.',
+					} ) if ( $mac or $ip );
+		} # end if
+	} # end if
+	if ( $Host and ! $Host->hostname() ) {
+		if ( $_ = $Host->resolve() ) {
+			$Host->save({'hostname'=>$_});
+		} # end if
 	} # end if
 } # end while
 close(ARP);
