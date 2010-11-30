@@ -1096,18 +1096,8 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 }
 
 
-my $FoldingService;
-my @FoldingServices = openprint::Service->find('name'=>'Folding');
-if ( ! @FoldingServices ) {
-	$FoldingService = new openprint::Service();
-	$_ = $FoldingService->save({
-		'name'	=>	'Folding',
-		'description'	=>	'Folding',
-});
-	die $_ if $_;
-} else {
-	$FoldingService = $FoldingServices[0];
-} # en dif
+my $FoldingService = openprint::Service->find_one('name'=>'Folding');
+if ( $FoldingService ) {
 	
 foreach my $E ( openprint::Equipment->find('category'=>'Printing') ) {
 	foreach my $Spec ( $E->Specifications('name'=>'Envelope Ready') ) {
@@ -1228,6 +1218,8 @@ foreach my $E ( openprint::Equipment->find('Specifications'=>{'Folding Capable'=
 		} # end foreach Pricelist
 	} # end if
 } # end foreach Web Press
+} # end if FoldingService
+
 my $blah = $dbh->selectrow_hashref( 'SELECT * FROM Quote_Log LIMIT 1', {} );
 if ( ! $blah ) {
 } else {
@@ -2023,6 +2015,9 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 		$dbh->do('ALTER TABLE Payments add updated_on timestamp with time zone not null default NOW()');
 	} # end if
 	if ( exists $$data{'dtmdate'} ) {
+		$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
+	} # end if
+	if ( exists $$data{'date'} ) {
 		$dbh->do('ALTER TABLE Payments rename column dtmdate to received_on');
 	} # end if
 	if ( ! exists $$data{'received_on'} ) {
