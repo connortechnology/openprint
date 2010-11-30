@@ -8,7 +8,7 @@ require openprint::logs;
 require openprint::Usergroup;
 use openprint ();
 use strict;
-use vars qw( $log $dbh %config %variable %param %fields %transforms %defaults $table $serial );
+use vars qw( $log $dbh %config %variable %param $debug %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -17,7 +17,7 @@ use vars qw( $log $dbh %config %variable %param %fields %transforms %defaults $t
 $table = 'Users';
 $serial = 'users_id_seq';
 
-my $debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'				=>	'id',
@@ -79,44 +79,18 @@ my $debug = 0;
 	'purchasing_total_limit'	=>	undef,
 	'wage'				=>	undef,
 	'deleted'			=>	0,
+	'email_quotes_to_myself'	=>	0,
 );
-
-sub set {
-	my ( $self, $params ) = @_;
-	my @set_fields = ();
-	if ( exists $$params{password} and $$params{password} eq '' ) {
-		delete $$params{password};
-	} # end if
-
-	foreach my $field ( keys %{$params} ) {
-		if ( defined $fields{$field} ) {
-
-			foreach my $transform ( @{$transforms{$field}} ) {
-				eval '$params->{$field} =~ ' . $transform;
-			} # end foreach
-
-			if ( $params->{$field} eq '' and exists $defaults{$field} ) {
-				$params->{$field} = $defaults{$field};
-			} # end if
-
-# if valid db field
-			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
-# Only make changes to fields that have changed
-				$$self{$field} = $$params{$field};
-				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
-			} # end if
-		} else {
-			$log->warn("User::Set::Invalid field requested: ($field)." );
-		} # end if
-	} # end foreach
-	return @set_fields;
-} # end sub set
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
 # If we have not previously loaded the info, we will just save it whether it has actually changed or not.
 # We do this for efficiency's sake.	
 sub save {
 	my ( $self, $params ) = @_;
+
+	if ( exists $$params{password} and $$params{password} eq '' ) {
+		delete $$params{password};
+	} # end if
 
 	if ( $params and $$params{type} and $$self{type} and ( $$params{'type'} ne $$self{'type'} ) and ( $$params{'type'} ne 'C' ) ) {
 # Notify someone
@@ -173,7 +147,7 @@ sub destroy {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
 
 	foreach my $Quote ( openprint::Quote->find('user_id'=>$$self{'id'}) ) {
 		$Quote->delete();

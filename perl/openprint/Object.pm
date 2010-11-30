@@ -109,13 +109,13 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
-#if ( $data ) {
+if ( $data ) {
 #foreach my $k ( keys %$data ) {
 #$log->debug("$type ::save $k => $$data{$k}");
 #}
-#} else {
-#$log->debug("No data");
-#}
+} else {
+$log->debug("No data");
+}
 	$self->set( $data ? $data : {} );
 #if ( $data ) {
 #foreach my $k ( keys %$data ) {
@@ -237,7 +237,7 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 				eval '$$self{$field} =~ ' . $transform;
 			} # end foreach
 
-			my %defaults = eval('%'.$type . '::defaults');
+			my %defaults = eval('%'.$type.'::defaults');
 
 			if ( ( ( ! exists $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
@@ -245,7 +245,7 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 				$openprint::log->error( "Eval error of object default $field Reason: " . $@ ) if $@;
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			} else {
-	#$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+	$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			} # end if
 		} # end if
 	} # end foreach
@@ -509,6 +509,7 @@ sub find {
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$openprint::log->debug('Error ' . $openprint::dbh->errstr() . " loading $type ($sql) (@values) " );
+		return ();
 	} elsif ( ( ! @$data ) and $debug ) {
 		$openprint::log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {

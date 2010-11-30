@@ -149,7 +149,7 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
 
-		my @Users = openprint::User->find( 'email' => lc $param{'email'} );
+		my @Users = openprint::User->find( 'email_lc' => lc $param{'email'} );
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
