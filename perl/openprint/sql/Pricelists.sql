@@ -5,5 +5,6 @@ CREATE TABLE Pricelists (
 	Name		TEXT,
 	Description	TEXT,
 	currency_id	INTEGER, FOREIGN KEY (currency_id) REFERENCES Currencies (id),
+	deleted					BOOLEAN NOT NULL default false,
 	PRIMARY KEY ( id )
 );
