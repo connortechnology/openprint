@@ -8,7 +8,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
+my $debug = 0;
 my $debug_all = 1;
 $no_cache = 0;
 
@@ -244,8 +244,8 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 				$$self{$field} = eval($defaults{$field});
 				$openprint::log->error( "Eval error of object default $field Reason: " . $@ ) if $@;
 				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-			} else {
-	$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+			#} else {
+	#$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			} # end if
 		} # end if
 	} # end foreach

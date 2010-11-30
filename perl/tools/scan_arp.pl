@@ -49,10 +49,11 @@ if ( $$opts{'db_name'} ) {
 open(ARP, "arp -n|");
 while ( my $line = <ARP> ) {
 	next if $line =~ /^Address/;
-	my ( $ip, $type, $mac, $flags, $iface ) = $line =~ /^([\.\d]{7,13})\s+(\w+)\s+([a-fA-F0-9\-\:]{17})\s+(\w+)\s+(\w+)$/;
-	print "line $ip $type $mac $flags $iface\n";
+	my ( $ip, $type, $mac, $flags, $iface ) = $line =~ /^([\.\d]{7,15})\s+(\w+)\s+([a-fA-F0-9\-\:]{17})\s+(\w+)\s+(\w+)$/;
+	$log->debug( "line $ip $type $mac $flags $iface" ); 
 	next if ! $dbh;
 	if ( ! ( my $Host = openprint::Host->find_one('mac_any'=>$mac) ) ) {
+		$log->info( "Host for $ip $mac not found, adding" );
 		my $Host = new openprint::Host();	
 		$Host->save({
 			'mac'	=> [ $mac ], 

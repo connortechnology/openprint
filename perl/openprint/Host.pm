@@ -1,10 +1,10 @@
+use strict;
 package openprint::Host;
-@ISA = qw( openprint::Object );
+our @ISA = qw( openprint::Object );
 require openprint::Object;
 use Net::ARP;
-use strict;
 
-use vars qw( $debug $table $serial %fields %transforms %defaults %types );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
