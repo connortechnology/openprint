@@ -14,9 +14,9 @@ CREATE TABLE Log (
 	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	date_time	timestamp with time zone NOT NULL,
 	ip_address	TEXT,
-	hostname	TEXT,
 	url			TEXT,
 	note		TEXT,
+	host_id		INTEGER NOT NULL, FOREIN KEY (host_id) REFERENCES Hosts (id),
 	PRIMARY KEY (id)
 );
 
