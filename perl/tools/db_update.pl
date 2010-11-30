@@ -2077,7 +2077,7 @@ if ( ! sets::isin( 'payments', \@tables ) ) {
 } # end if
 
 if ( ! sets::isin( 'skid_contents', \@tables ) ) {
-	$dbh->do(misc::load_file( $log, '../openprint/sql/Skids.sql' ) );
+	$dbh->do(misc::load_file( $log, '../openprint/sql/Skids_Contents.sql' ) );
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='skid_contents'", 'column_name');
 	if ( ! exists $$data{'id'} ) {
@@ -2577,16 +2577,14 @@ if ( ! sets::isin( 'hosts', \@tables ) ) {
 	} # end if
 } 
 if ( ! sets::isin('log',\@tables ) ) {
-	$_ = misc::load_file( $log, q{../openprint/sql/Logs.sql});
-	foreach my $st ( split(';', $_ ) ) { $dbh->do($st); } # end foreach
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Logs.sql}) );
+	die if $dbh->errstr();
 } else {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM Log LIMIT 1', {} );
-	if ( $data ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='log'", 'column_name');
 		if ( ! exists $$data{'host_id'} ) {
 			$dbh->do('ALTER TABLE Log add host_id INTEGER');
 			$dbh->do('ALTER TABLE Log add FOREIGN KEY (host_id) REFERENCES Hosts (id)');
 		} # end if
-	} # end if
 } # end if
 if ( 0 and ! openprint::Host->find_one() ) {
 	foreach my $Log ( openprint::Log->find('host_id'=>undef) ) {
