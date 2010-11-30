@@ -1873,6 +1873,7 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 		$$specs{'StockHeight'.$qty_index} = $Paper->height();
 		$$specs{'StockType'.$qty_index} = $Paper->type();
 		if ( ! ( $$project{'NeedAqueous'} ) ) {
+			$$specs{'AqueousMessage'} = 1;
 			$$specs{'popup'} .= $Paper->message() if $Paper->message();
 		} # end if
 

@@ -54,7 +54,7 @@ function howdidyouhearaboutus_onchange(e) {
 			<fieldset><legend>Billing Information</legend>
 				<div class="content">
 					<ul>
-						<li <? echo ( $$variable{'RequiredFields'}{'company_name'} ? 'class="required"' : '' ) ?>> 
+						<li<? echo ( $$variable{'RequiredFields'}{'company_name'} ? ' class="required"' : '' ) ?>> 
 							<label for="company_name">Company/Billing Name:</label>
 							<input type="text" id="company_name" name="company_name" value="<? echo ( ssi::htmlize($param{'company_name'}) ) ?>"  />
 						</li>
@@ -62,7 +62,7 @@ function howdidyouhearaboutus_onchange(e) {
 							<label for="address1">Address Line 1:</label>
 							<input type="text" id="address1" name="address1" value="<? echo ( ssi::htmlize($param{'address1'}) ) ?>"  />
 						</li>
-						<li <? echo ( $$variable{'RequiredFields'}{'address2'} ? 'class="required"' : '' ) ?>> 
+						<li <? echo ( $$variable{'RequiredFields'}{'address2'} ? 'class="required"' : '' ) ?>>
 							<label for="address2">Address Line 2:</label>
 							<input type="text" id="address2" name="address2" value="<? echo ( ssi::htmlize($param{'address2'}); ) ?>"  />
 						</li>

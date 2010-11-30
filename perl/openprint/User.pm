@@ -313,7 +313,7 @@ sub find {
 		push @values, $param{'company_id'};
 	} # end if
 	if ( $param{'usergroup_id'} ) {
-		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=?)};
+		$sql .= q{ AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=?)};
 		push @values, $param{'usergroup_id'};
 	} # end if
 	if ( $param{'usergroup'} ) {
