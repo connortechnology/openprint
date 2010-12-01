@@ -9,7 +9,7 @@
 	my $html = '';
 	my @Labels = openprint::Label::find('docket'=>$$variable{'Project'}->docket(),'order'=>'id');
 	foreach my $Label ( @Labels ) {
-		$html .= sprintf('<tr><td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&project_id=%2$d" title="%3$s">%4$s</a></td><td><a href="/employee/production/labels/label.html?id=%1$d&project_id=%2$d">%5$s</a></td><td>%6$s</td><td>%7$s</td></tr>', 
+		$html .= sprintf('<tr><td class="Date"><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d" title="%3$s">%4$s</a></td><td><a href="/employee/production/labels/label.html?id=%1$d&amp;project_id=%2$d">%5$s</a></td><td>%6$s</td><td>%7$s</td></tr>', 
 			$Label->id(), $$variable{'Project'}->id(), 
 			Date::Format::time2str('%Y-%m-%d %H:%M', Date::Parse::str2time($Label->created_on() ) ), 
 			Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($Label->created_on() ) ), 
