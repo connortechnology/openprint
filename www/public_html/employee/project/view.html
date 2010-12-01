@@ -67,7 +67,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<? endif ( ($session{'user_type'} eq 'A') or openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) ?>
 			<td>
 <? if ( $$variable{'url'} ne '' ) ?>
-<a href="/employee/proj/<?url?>?OrderID=<?OrderID?>&ProjectIndex=<?ProjectIndex?>&ServiceIndex=<?index?>">
+<a href="/employee/proj/<?url?>?OrderID=<?OrderID?>&amp;ProjectIndex=<?ProjectIndex?>&amp;ServiceIndex=<?index?>">
 <?name?>
 <? if ( $$variable{'name'} eq 'Signature' ) ?>
 <? echo ( 
@@ -267,7 +267,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 	<br/>
 	<span style="float: left;">
 		<? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'Docket', 'Docket.gif', "open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket' ),
+		ssi::writeButton( $log, $dbh, 'DocketButton', 'Docket.gif', "open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket' ),
 		ssi::writeButton( $log, $dbh, 'DocketLabel', 'label.gif', "open_window('/employee/production/label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket Label' ),
 		ssi::writeButton( $log, $dbh, 'SkidLabel', 'label.gif', "open_window('/employee/production/skid_label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Skid Label' ),
 		ssi::writeButton( $log, $dbh, 'Summary', 'summary.gif', '', "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Summary' ),
@@ -326,7 +326,7 @@ $log->debug("Have no job: $Job");
 				$html .= ssi::writeButton( $log, $dbh, 'Shipped', 'shipped.gif', "f1.btnFunction.value='Shipped';f1.submit();", '', 'Shipped' );
 			} # end if
 			if ( $$variable{'ShippingType'} eq 'CustomerPickUp' and $$variable{'Project'}->status() ne 'Picked Up' ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
+				$html .= ssi::writeButton( $log, $dbh, 'PickedUp', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
 			} # end if
 			if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='DeleteServices';f1.submit();", '', 'Delete Checked Services' );
@@ -444,8 +444,8 @@ $log->debug("Have no job: $Job");
 		} # end while
 		$html .= '<tr class="totals">';
 		$html .= '<td colspan="2">Time spent before prepress action:</td><td>'. misc::seconds_to_pretty_interval( $prepress_start - $ordered) . '</td></tr>';
-		$html .= '<td colspan="2">Time spent before first scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';
-		$html .= '<td colspan="2">Time spent before last scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_end - $ordered) . '</td></tr>';
+		$html .= '<tr><td colspan="2">Time spent before first scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_start - $ordered) . '</td></tr>';
+		$html .= '<tr><td colspan="2">Time spent before last scheduled:</td><td>'. misc::seconds_to_pretty_interval( $scheduled_end - $ordered) . '</td></tr>';
 		return $html;
 	) ?>
 	</table>
