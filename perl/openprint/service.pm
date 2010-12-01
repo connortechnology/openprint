@@ -427,7 +427,7 @@ sub external_calc {
 #blah
 	eval 'require openprint::Estimating::'.$service_type;
 		$log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
-	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
+	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs, $specs{qty_index} );';
 		$log->error("Error requiring openprint::Estimating::$service_type: in eval: $@") if $@;
 	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
