@@ -97,21 +97,30 @@ if ( $$variable{'HiddenSignatures'} ) {
 			<? echo ( sprintf('$%.2f', $$variable{'price'.$$variable{'Project'}->ordered_quantity_index()} ); ) ?>
 			<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 			</td>
-			<td align="right">&nbsp;<?status?>
+			<td align="right">&nbsp;<?status?><br/>
 <? echo ( 
+	my $html;
 	if ( $$variable{'name'} eq 'Signature' ) {
 		if ( my $Job = openprint::ScheduledJob::find_one('service_id'=>$$variable{'index'}) ) {
-			my $html;
 			if ( ! $Job->starttime() ) {
-				$html = '<br/>Scheduled in pending';
+				$html = 'Scheduled in pending';
 			} else {
-				$html = '<br/>Scheduled for ' . Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Job->starttime() ) );
+				$html = 'Scheduled for ' . Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Job->starttime() ) );
 			} # end if
-			return $html . ' on ' . $Job->Equipment()->strid();
+			$html .= ' on ' . $Job->Equipment()->strid();
 		} elsif ( $$variable{'status'} eq 'Ordered' ) {
-			return '<br/>Not scheduled';
+			$html = 'Not scheduled';
 		} # end if
+	} elsif ( sets::isin( $$variable{name}, [ 'Shipping','CustomerPickUp' ] ) ) {
+		require openprint::SignatureCapture;
+		my @Signatures = openprint::SignatureCapture->find(
+				'project_id'    =>  $$variable{'ProjectIndex'},
+				'service_id'    =>  $$variable{'index'},
+				'order'         =>  'id',
+				);
+		$html .= join('', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="thumbnail"/>`, $_->id(), $_->file_path() ); } @Signatures );
 	} # end if
+	return $html;
 ) ?>
 			</td>
 		</tr>
