@@ -1,0 +1,12 @@
+<? echo (
+	my $html;
+	foreach my $Tax ( $$variable{'Expense'}->Taxes() ) {
+		$html .= sprintf(q`
+<li><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%)<input type="checkbox" name="tax_charge-%1$d" id="tax_charge-%1$d" value="1" %4$s onclick="update_total(this.form);" /></label><input type="text" name="tax_amount-%1$d" id="tax_amount-%1$d" value="%5$s" /></li>
+`, $Tax->tax_id(), $Tax->name(), $Tax->rate(), ssi::checked( $Tax->charge() ), $Tax->amount() );
+	} # end foreach Tax
+	$html .= '<script type="text/javascript">tax_ids = [ ' . join(',', map { $_->tax_id() } $$variable{'Expense'}->Taxes() ). q` ];
+		update_total( $('f1') );
+		</script>`;
+	return $html;
+) ?>

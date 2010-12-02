@@ -101,14 +101,13 @@ sub Recipient {
 sub Taxes {
     my ( $self ) = @_;
 
-    if ( ! $$self{'id'} ) {
-        return ();
-    } # end if
-
-    if ( ! $$self{'Taxes'} ) {
+    if ( $$self{'id'} and ! $$self{'Taxes'} ) {
         @{$$self{'Taxes'}} = openprint::Expense_Tax->find('expense_id'=>$$self{'id'});
+	} else { 
+		@{$$self{'Taxes'}} = ();
     } # end if
-    if ( $self->Company()->country() and $self->Company()->state() and ! @{$$self{'Taxes'}} ) {
+$openprint::log->debug("invoiced_on: $$self{invoiced_on}");
+    if ( $self->Company()->country() and $self->Company()->state() and $$self{'invoiced_on'} and ! @{$$self{'Taxes'}} ) {
         foreach my $Tax ( openprint::Tax->find(
                     'period_start_null_or_<='   =>  $$self{'invoiced_on'},
                     'period_end_null_or_>='     =>  $$self{'invoiced_on'},
@@ -116,11 +115,11 @@ sub Taxes {
                     'state'     =>  $self->Company()->state()),
                 ) {
             my $T = new openprint::Expense_Tax();
-            $T->save({
-                'expense_id'=>  $$self{'id'},
+            $T->set({
                 'tax_id'    =>  $$Tax{'id'},
                 'rate'      =>  $$Tax{'rate'},
             });
+			$T->save({ 'expense_id'=>  $$self{'id'}}) if $$self{'id'};
             push @{$$self{'Taxes'}}, $T;
         } # end foreach Tax
     } # end if

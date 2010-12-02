@@ -3,6 +3,7 @@ CREATE TABLE Article_Categories (
 	id SERIAL,
 	name	TEXT,
 	position	INTEGER,
+	permalink	text,
 	PRIMARY KEY (id)
 );
 
