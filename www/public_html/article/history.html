@@ -42,14 +42,21 @@
 				</select>
 			</p>
 <? endif ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+<? if ( @{$$variable{'Categories'}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
+			<p><label>Category:</label>
+				<select name="category_id" id="category_id" onchange="load_articles(this.form);">
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/article/history.html?category_id'} ); ) ?>
+				</select>
+			</p>
+<? endif ( @{$$variable{'Categories'}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
 			<p>
 				<label>Created:</label>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_start', [@session{'/article/history.html?created_on_start_year','/article/history.html?created_on_start_month','/article/history.html?created_on_start_day'}], {onchange=>'load_articles(this.form);'} ); ) ?>
+<? echo ( ssi::date_select_session( '/article/history.html', 'created_on_start', {onchange=>'load_articles(this.form);'} ); ) ?>
 					to 
 				</span>
 				<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_end', [@session{'/article/history.html?created_on_end_year','/article/history.html?created_on_end_month','/article/history.html?created_on_end_day'}], {onchange=>'load_articles(this.form);'} ); ) ?>
+<? echo ( ssi::date_select_session( '/article/history.html', 'created_on_end', {onchange=>'load_articles(this.form);'} ); ) ?>
 				</span>
 			</p>
 			</div>

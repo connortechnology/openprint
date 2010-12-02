@@ -55,9 +55,9 @@ CREATE TABLE PaperQualities (
 		PRIMARY KEY (id)
 );
 
-DROP SEQUENCE IF EXISTS StockPurposes_id_seq;
+DROP SEQUENCE IF EXISTS StockPurposes_id_seq CASCADE;
 CREATE SEQUENCE StockPurposes_id_seq;
-DROP TABLE IF EXISTS StockPurposes;
+DROP TABLE IF EXISTS StockPurposes CASCADE;
 CREATE TABLE StockPurposes (
 	id  INTEGER NOT NULL default nextval('StockPurposes_id_seq'),
 	name   TEXT NOT NULL,
@@ -98,7 +98,6 @@ CREATE TABLE Papers (
 	grade			integer,	
 	fsc_code		text,
 	message			text,
-	purpose_id		integer, foreign key (purpose_id) REFERENCES stockpurposes (id),
 	parts			integer,
 	PRIMARY KEY (id)
 );

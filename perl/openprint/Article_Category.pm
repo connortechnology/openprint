@@ -1,7 +1,7 @@
-package openprint::Article_Category;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::Article_Category;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 $debug = 1;

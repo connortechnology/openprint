@@ -581,6 +581,10 @@ sub datetime_select {
 	$html .= '<option value=""> </option>';
 	$html .= make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min );
 	$html .= '</select></span>';
+	if ( $$options{'with_today'} ) {
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', 'set_today( f1.'.$prefix.'_year, f1.'.$prefix.'_month, f1.'.$prefix.'_day );'.$$options{'onchange'}, '', 'T' );
+	} # end if
+	$html .= '<span id="'.$prefix.'_alert"></span>';
 	return $html;
 } # end sub datetime_select
 

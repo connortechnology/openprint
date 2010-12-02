@@ -232,6 +232,7 @@ sub expenses {
             $Tax->amount(undef);
             $Tax->save();
         } # end foreach
+		ssi::save_params( '/employee/accounting/expense.html', 'category_id', 'due_on', 'invoiced_on', 'recipient_id', 'business_use' );
 
 		$variable{'information'} .= 'Expense saved successfully.<br/>';
 		delete $param{'expense_id'};
@@ -253,6 +254,13 @@ sub _expenses {
 
 sub expense {
 	my $Expense = $variable{'Expense'} = new openprint::Expense( $param{'expense_id'} );
+    if ( time - $session{'/employee/accounting/expense.html?lastupdated'} < ( 12*60*60 ) ) {
+        $variable{'Expense'}->recipient_id( $session{'/employee/accounting/expense.html?recipient_id'} ) if ! $variable{'Expense'}->recipient_id();
+        $variable{'Expense'}->due_on( $session{'/employee/accounting/expense.html?due_on'} ) if ! $variable{'Expense'}->due_on();
+        $variable{'Expense'}->invoiced_on( $session{'/employee/accounting/expense.html?invoiced_on'} ) if ! $variable{'Expense'}->invoiced_on();
+        $variable{'Expense'}->category_id( $session{'/employee/accounting/expense.html?category_id'} ) if ! $variable{'Expense'}->category_id();
+        $variable{'Expense'}->business_use( $session{'/employee/accounting/expense.html?business_use'} ) if ! $variable{'Expense'}->business_use();
+    } # end if
 	
 } # end sub expense
 

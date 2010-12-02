@@ -54,9 +54,9 @@ $serial = 'expenses_id_seq';
 );
 
 %defaults = (
-	'due_on'		=>	'NOW()',
-	'invoiced_on'	=>	'NOW()',
-	'created_on'	=>	'NOW()',
+	'due_on'		=>	q`'NOW()'`,
+	'invoiced_on'	=>	q`'NOW()'`,
+	'created_on'	=>	q`'NOW()'`,
 	'recipient_id'	=>	undef,
 	'business_use'	=>	undef,
 );
@@ -87,7 +87,7 @@ sub category {
 		$_[0]{'category_id'} = $Category->id();
 		return $Category->name();
 	} # end if
-	return new openprint::Category( $_[0]{'category_id'} )->name();
+	return new openprint::Expense_Category( $_[0]{'category_id'} )->name();
 } # end sub category
 
 sub Category {
