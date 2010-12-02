@@ -2,7 +2,7 @@
 <!--
 	function page_load( div_id, form ) {
 		
-		var div = @(div_id);
+		var div = $(div_id);
 		if ( div )
 			div.innerHTML = 'Please wait. Loading...';
 		new Ajax.Updater( div_id, '_purchase_orders.html', { method: 'get', parameters: form.serialize() } );
