@@ -39,11 +39,10 @@
 		</p>
 		<hr/>
 		<p><label>Created By:</label>
-			<select name="created_by" onchange="page_load('Results',$('f1'));">
-				<option value="">None</option>
-				<? echo ( 
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)','type'=>['A','E'] ) ], $session{'/employee/inventory/purchase_orders.html?created_by'} ); ) ?>
+			<select id="created_by" name="created_by" onchange="page_load('Results',$('f1'));">
+<!--#include virtual="_po_created_by_options.html"-->
 			</select>
+			<input type="checkbox" name="created_by_deleted" id="created_by_deleted" value="1" onclick="new Ajax.Updater($('created_by'), '_po_created_by_options.html', { parameters: { 'created_by_deleted' : this.value } } );" /><label class="radio" for="created_by_deleted">Show Deleted Users</label>
 		</p>
 		<p><label>Vendor:</label>
 			<input type="text" onkeyup="filterDDM(this, this.form.supplier_id);" class="filter" />
@@ -53,7 +52,7 @@
 			</select>
 		</p>
 		<? eval (
-				ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting', -31 );
+				ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting', -7 );
         ) ?>
 		<p>
 			<label>Date:</label>
