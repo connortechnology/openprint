@@ -112,11 +112,11 @@ $log->debug(sets::isin( '', [ split(';',$session{'/employee/inventory/purchase_o
 		</p>
 		<p>
 			<label>Item Contains:</label>
-			<input type="text" id="item_contains" name="item_contains" />
+			<input type="text" id="item_contains" name="item_contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
 		</p>
 		<p>
 			<label>Desc Contains:</label>
-			<input type="text" id="contains" name="contains" />
+			<input type="text" id="contains" name="contains" onkeydown="if(event.keyCode == 13){page_load('Results', $('f1') );}" />
 		</p>
 		<p class="buttons">
 				<? echo ( join( '',
