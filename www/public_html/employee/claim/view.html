@@ -1,6 +1,5 @@
-<form id="f1" name="f1" action="view.html" method="post">
+<form id="f1" name="f1" action="view.html?claim_id=<? echo ( $$variable{'Claim'}->id() ) ?>" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction" />
-	<input type="hidden" name="claim_id" value="<? echo ( $$variable{'Claim'}->id() ) ?>" />
 	<p class="buttons">
 <? echo ( 
 	my $html = '';
@@ -40,7 +39,7 @@
 			</div>
 			<div class="PageTitle">
 				<h1>CLAIM</h1><br/>
-				CLAIM # [ <? echo ( $$variable{'Claim'}->id() ) ?> ]
+				<a href="/employee/claim/view.html?claim_id=<? echo ( $$variable{'Claim'}->id() ) ?>">CLAIM # [ <? echo ( $$variable{'Claim'}->id() ) ?> ]</a>
 				<br/>
 				Date: <? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'Claim'}->created_on() ) ) ) ?><br/>
 			</div>
@@ -167,6 +166,8 @@ join( ', ', map { sprintf('<a href="/employee/project/view.html?docket=%1$d">%1$
 </table>
 		</div><!--Contents-->
 		<div id="Remarks"> <h3>Remarks:</h3> <? echo ( $$variable{'Claim'}->reason() ) ?> </div>
+		<div id="Assets" class="unprintable"><!--#include virtual="_assets.html"-->
+		 </div>
 		<div class="rightColumn" style="text-align: right;">
 	<? if ( ($session{'user_id'} == $$variable{'Claim'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
 		All prices are in <? echo ( $$variable{'Claim'}->Currency()->name() ) ?>.

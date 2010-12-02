@@ -89,8 +89,13 @@ sub load_file {
 
 sub save_file {
 	my ( $log, $file, $contents ) = @_;
+	if ( ! $contents ) {
+		$log->warn("Saving empty file $file");
+	} # end if
 	if ( open( F, "> $file" ) ) {
+		binmode F;
 		print F $contents;
+		close F;
 	} else {
 		$log->warn( "Error opening $file, Reason: $!" );
 		return "Error opening $file, Reason: $!";

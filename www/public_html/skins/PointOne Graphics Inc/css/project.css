@@ -210,6 +210,21 @@ span.SpotColour label, span.Coverages label {
 	float: left;
 	width: 135px;
 }
+.Aqueous .Gloss {
+	width: 22%;
+}
+.Aqueous .Matte {
+	width: 22%;
+}
+.Aqueous .Satin {
+	width: 22%;
+}
+.Aqueous .SoftTouch {
+	width: 33%;
+}
+.Aqueous .None {
+	width: 20%;
+}
 .colourOption {
 	float: left;
 	width: 104px;

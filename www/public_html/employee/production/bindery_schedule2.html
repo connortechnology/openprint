@@ -126,6 +126,7 @@
 	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {
 		@selected_equipment = map { $_->id() } @presses;
+		$session{'/employee/production/bindery_schedule2.html?Equipment'} = join(';', @selected_equipment );
 	}
 
 	foreach (@presses) {

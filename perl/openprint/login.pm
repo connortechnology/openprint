@@ -49,6 +49,11 @@ sub verify_login {
 	my $email = $openprint::param{'email'};
 	$email =~ s/^\s*(.*?)\s*$/$1/;
 	$email =~ tr/[A-Z]/[a-z]/;
+	if ( ! $email ) {
+		$$variable{'details'} = "\"$email\" is not a valid account.	Please try again.";
+		$$variable{'error'} = 'Authentication Failed.';
+		return;
+	} # end if
 
 	$log->debug("** Verifying Login for Email Adress: $email **");
 

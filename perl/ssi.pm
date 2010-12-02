@@ -479,6 +479,9 @@ $log->debug("$year-$month-$day");
 			$html .= '</select>';
 		} # endif
 	} # end foreach o
+	if ( $$options{'with_today'} ) {
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', 'set_today( f1.'.$prefix.'_year, f1.'.$prefix.'_month, f1.'.$prefix.'_day );'.$$options{'onchange'}, '', 'T' );
+	} # end if
 	$html .= '</span>';
 	return $html;
 } # end sub date_select

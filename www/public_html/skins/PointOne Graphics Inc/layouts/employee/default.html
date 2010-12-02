@@ -179,10 +179,11 @@
 								<li><a href="/employee/iso/cars.html;NOSSL">&raquo; Corrective Action Requests</a></li>
 							</ul>
 						</li>
-						<li id="ITMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/it/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ITMenu'), 'off', 'on');return false;">IT</a>
+						<li id="ITMenu" class="<? echo ( ( $$variable{'uri'} =~ /employee\/it/ or $$variable{'uri'} =~ /employee\/assets/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('ITMenu'), 'off', 'on');return false;">IT</a>
 							<ul>
 								<li><a href="/employee/it/hosts.html;NOSSL">&raquo; Hosts</a></li>
 								<li><a href="/mrtg/index.html;NOSSL">&raquo; MRTG Graphs</a></li>
+								<li><a href="/employee/assets/history.html;NOSSL">&raquo; Assets</a></li>
 							</ul>
 						</li>
 						<li id="SupportMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/support/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SupportMenu'), 'off', 'on');return false;">SUPPORT</a>

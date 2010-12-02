@@ -38,11 +38,14 @@ sub new {
 #n$log->debug("Multi-key Obejct @keys" );
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
+	} elsif ( ref $id eq 'ARRAY' and $data ) {
+$log->debug("Multi-key Obejct @$id @$data{@$id}" );
+		@$self{@$id} = @$data{@$id};
+		$self->load( $data );
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
-
 
 		$$self{'log'} = $openprint::log;
 		$$self{'dbh'} = $openprint::dbh;
@@ -79,7 +82,6 @@ sub load {
 		} # end if
 	} # end if
 	@$self{keys %fields} = @$data{@fields{keys %fields}};
-
 } # end sub load
 
 sub save {
@@ -103,7 +105,6 @@ sub save {
 #$debug = 0;
 
 	my $table = eval '$'.$type.'::table';
-	my $serial = eval '$'.$type.'::serial';
 	my %fields = eval '%'.$type.'::fields';
 
 	my %sql;
@@ -118,21 +119,57 @@ sub save {
 			$openprint::log->debug("Saving $k => $sql{$k}");
 		} # end foreach
 	} # end if
-
-	if ( ! $$self{'id'} ) {
-		my $ac = sql::start_transaction( $dbh );
-		($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
-		if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
-			$dbh->rollback();
-			sql::end_transaction( $dbh, $ac );
-			return $error;
+	my @identified_by = eval '@'.$type.'::identified_by';
+	my $ac = sql::start_transaction( $dbh );
+	if ( @identified_by ) {
+		my $insert = 0;
+		my %serial = eval '%'.$type.'::serial';
+		if ( ! %serial ) {
+			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
+			my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
+			sql::execute( undef, undef, 'DELETE FROM ' . $table. ' WHERE ' . $where, @$self{@identified_by} );  
+			$insert = 1;
+		} else {
+			foreach my $id ( @identified_by ) {
+				next if ! $serial{$id};
+				($$self{$id}) = ($sql{$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
+				$insert = 1;
+			} # end foreach
 		} # end if
-		sql::end_transaction( $dbh, $ac );
+		if ( $insert ) {
+			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
+				$dbh->rollback();
+				sql::end_transaction( $dbh, $ac );
+				return $error;
+			} # end if
+		} else {
+			my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
+			if ( my $error = sql::update( undef, undef, $table, [$where, @$self{@identified_by}], \%sql ) ) {
+				$dbh->rollback();
+				sql::end_transaction( $dbh, $ac );
+				return $error;
+			} # end if
+		} # end if
 	} else {
-		if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
-			return $error;
+		if ( ! $$self{'id'} ) {
+			my $serial = eval '$'.$type.'::serial';
+			if ( $serial ) {
+				($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+			} # end if
+			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
+				$dbh->rollback();
+				sql::end_transaction( $dbh, $ac );
+				return $error;
+			} # end if
+		} else {
+			if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
+				$dbh->rollback();
+				sql::end_transaction( $dbh, $ac );
+				return $error;
+			} # end if
 		} # end if
 	} # end if
+	sql::end_transaction( $dbh, $ac );
 	$self->load();
 	return;
 } # end sub save
@@ -205,20 +242,24 @@ sub copy {
 sub delete {
     my ( $self ) = @_;
     my $type = ref $self;
-	if ( ! $$self{'id'} ) {
+    my $table = eval '$'.$type.'::table';
+	my %fields = eval '%'.$type.'::fields';
+	my @identified_by = eval '@'.$type.'::identified_by';
+	@identified_by = ( 'id' ) if ! @identified_by;
+	if ( ! $$self{$identified_by[0]} ) {
 		$log->error("Called delete on object with no id of type $type");
 		return;
 	} # end if
-    my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
+
+	my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
 	if ( exists $fields{'deleted'} ) {
-		sql::update( undef, undef, $table, ['id=?', $$self{id}], 'deleted', 1 );
+		sql::update( undef, undef, $table, [$where, @$self{@identified_by}], 'deleted', 1 );
 		return $dbh->errstr if $dbh->errstr;
 		$$self{'deleted'}=1;
 	} else {
-		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE id=?', $$self{'id'} );
+		sql::execute( undef, undef, 'DELETE FROM '.$table.' WHERE '.$where, @$self{@identified_by} );
 		return $dbh->errstr if $dbh->errstr;
-		delete $openprint::Object::cache{$type}{$$self{id}};
+		delete $openprint::Object::cache{$type}{join('-',@$self{@identified_by})};
 	} # end if
 	return;
 } # end sub delete
@@ -240,86 +281,103 @@ sub find {
 	my $type = shift;
     my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
+
 	my $debug = eval '$'.$type.'::debug';
 
 	my %params = @_;
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
 	my @values;
 
-	foreach my $k ( keys %params ) {
-		next if sets::isin( $k,[ 'order','limit','or' ] );
-		next if ! $fields{$k};
-		if ( ref $params{$k} eq 'ARRAY' ) {
-			$sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-			push @values, @{$params{$k}};
-        } elsif ( ! defined $params{$k} ) {
-            $sql .= " AND $fields{$k} IS NULL";
-		} else {
-			$sql .= " AND $fields{$k}=?";
-			push @values, $params{$k};
-		} # end if
-		delete $params{$k};
-	} # end foreach k
     if ( %params ) {
-        foreach my $k ( keys %fields ) {
-            if ( exists $params{$k.'_like'} ) {
-                $sql .= " AND $fields{$k} LIKE ?";
-                push @values, $params{$k.'_like'};
-                delete $params{$k.'_like'};
-            }
-            if ( exists $params{$k.'_start'} ) {
-                $sql .= " AND $fields{$k} >= ?";
-                push @values, $params{$k.'_start'};
-                delete $params{$k.'_start'};
-            }
-            if ( exists $params{$k.'_end'} ) {
-                $sql .= " AND $fields{$k} <= ?";
-                push @values, $params{$k.'_end'};
-                delete $params{$k.'_end'};
-            } # end if
-            if ( exists $params{$k.'_<'} ) {
-                $sql .= " AND $fields{$k} < ?";
-                push @values, $params{$k.'_<'};
-                delete $params{$k.'_<'};
-            } # end if
-            if ( exists $params{$k.'_<='} ) {
-                $sql .= " AND $fields{$k} <= ?";
-                push @values, $params{$k.'_<='};
-                delete $params{$k.'_<='};
-            } # end if
-            if ( exists $params{$k.'_null_or_<='} ) {
-                $sql .= " AND ( $fields{$k} <= ? OR $fields{$k} IS NULL )";
-                push @values, $params{$k.'_null_or_<='};
-                delete $params{$k.'_null_or_<='};
-            } # end if
-            if ( exists $params{$k.'_>='} ) {
-                $sql .= " AND $fields{$k} >= ?";
-                push @values, $params{$k.'_>='};
-                delete $params{$k.'_>='};
-            } # end if
-            if ( exists $params{$k.'_null_or_>='} ) {
-               $sql .= " AND ( $fields{$k} >= ? OR $fields{$k} IS NULL )";
-                push @values, $params{$k.'_null_or_>='};
-                delete $params{$k.'_null_or_>='};
-            } # end if
-            if ( exists $params{$k.'_>'} ) {
-                $sql .= " AND $fields{$k} > ?";
-                push @values, $params{$k.'_>'};
-                delete $params{$k.'_>'};
-            } # end if
-            if ( exists $params{$k.'_lc'} ) {
-                $sql .= " AND lower($fields{$k}) = ?";
-                push @values, lc $params{$k.'_lc'};
-                delete $params{$k.'_lc'};
-            } # end if
-            if ( defined $params{$k.'_null'} ) {
-                if ( $params{$k.'_null'} ) {
-                    $sql .= " AND $fields{$k} IS NULL";
-                } else {
-                    $sql .= " AND $fields{$k} IS NOT NULL";
-                } # end if
-            } # end if
-        } # end foreach
+		foreach ( 'find_fields', 'fields' ) {
+			my $f = eval '\%'.$type.'::'.$_;
+			next if ! $f;
+
+			foreach my $k ( keys %params ) {
+				next if sets::isin( $k,[ 'order','limit','or' ] );
+				next if ! $$f{$k};
+				if ( ref $params{$k} eq 'ARRAY' ) {
+					$sql .= " AND $$f{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+					push @values, @{$params{$k}};
+				} elsif ( ! defined $params{$k} ) {
+					$sql .= " AND $$f{$k} IS NULL";
+				} else {
+					$sql .= " AND $$f{$k}=?";
+					push @values, $params{$k};
+				} # end if
+				delete $params{$k};
+			} # end foreach k
+
+			foreach my $k ( keys %$f ) {
+				if ( exists $params{$k.'_like'} ) {
+					$sql .= " AND $$f{$k} LIKE ?";
+					push @values, $params{$k.'_like'};
+					delete $params{$k.'_like'};
+				}
+				if ( exists $params{$k.'_start'} ) {
+					$sql .= " AND $$f{$k} >= ?";
+					push @values, $params{$k.'_start'};
+					delete $params{$k.'_start'};
+				}
+				if ( exists $params{$k.'_end'} ) {
+					$sql .= " AND $$f{$k} <= ?";
+					push @values, $params{$k.'_end'};
+					delete $params{$k.'_end'};
+				} # end if
+				if ( exists $params{$k.'_<'} ) {
+					$sql .= " AND $$f{$k} < ?";
+					push @values, $params{$k.'_<'};
+					delete $params{$k.'_<'};
+				} # end if
+				if ( exists $params{$k.'_<='} ) {
+					$sql .= " AND $$f{$k} <= ?";
+					push @values, $params{$k.'_<='};
+					delete $params{$k.'_<='};
+				} # end if
+				if ( exists $params{$k.'_null_or_<='} ) {
+					$sql .= " AND ( $$f{$k} <= ? OR $$f{$k} IS NULL )";
+					push @values, $params{$k.'_null_or_<='};
+					delete $params{$k.'_null_or_<='};
+				} # end if
+				if ( exists $params{$k.'_>='} ) {
+					$sql .= " AND $$f{$k} >= ?";
+					push @values, $params{$k.'_>='};
+					delete $params{$k.'_>='};
+				} # end if
+				if ( exists $params{$k.'_null_or_>='} ) {
+					$sql .= " AND ( $$f{$k} >= ? OR $$f{$k} IS NULL )";
+					push @values, $params{$k.'_null_or_>='};
+					delete $params{$k.'_null_or_>='};
+				} # end if
+				if ( exists $params{$k.'_>'} ) {
+					$sql .= " AND $$f{$k} > ?";
+					push @values, $params{$k.'_>'};
+					delete $params{$k.'_>'};
+				} # end if
+				if ( exists $params{$k.'_in'} ) {
+					$sql .= " AND ? IN $$f{$k}";
+					push @values, $params{$k.'_in'};
+					delete $params{$k.'_in'};
+				} # end if
+				if ( exists $params{$k.'_any'} ) {
+					$sql .= " AND ? = ANY( $$f{$k} )";
+					push @values, $params{$k.'_any'};
+					delete $params{$k.'_any'};
+				} # end if
+				if ( exists $params{$k.'_lc'} ) {
+					$sql .= " AND lower($$f{$k}) = ?";
+					push @values, lc $params{$k.'_lc'};
+					delete $params{$k.'_lc'};
+				} # end if
+				if ( defined $params{$k.'_null'} ) {
+					if ( $params{$k.'_null'} ) {
+						$sql .= " AND $$f{$k} IS NULL";
+					} else {
+						$sql .= " AND $$f{$k} IS NOT NULL";
+					} # end if
+				} # end if
+			} # end foreach key
+		} # end foreach fileds, find_fields
     } # end if
 
     # Check for Object references
@@ -357,7 +415,13 @@ sub find {
     } elsif ( $debug ) {
         $openprint::log->debug("Loading $type ($sql) (@values) # of results:" . @$data );
     } # end if
-    return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
+	if ( $fields{'id'} ) {
+		return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
+	} else {
+		my @identified_by = eval '@'.$type.'::identified_by';
+		return map { $type->new( \@identified_by, $_ ) } @$data;
+	} # end if
+		
 } # end sub find
 
 sub find_one {
@@ -389,5 +453,11 @@ sub AUTOLOAD {
 		return $self->{$name};
 	} # end if
 } # end sub AUTOLOAD
+sub to_string {
+	my $type = ref($_[0]);
+	my $fields = eval '\%'.$type.'::fields';
+    return join(' ' , map { "$_ => $_[0]{$_}" } keys %fields );
+}
+
 1;
 __END__

@@ -27,6 +27,7 @@ require openprint::PaperInventory;
 require openprint::RFIDTag;
 require openprint::ScheduledJob;
 require openprint::ServiceType_Category;
+require openprint::SignatureCapture;
 
 
 use vars qw( $r $log $dbh %variable %param %session %config );
@@ -881,8 +882,11 @@ sub _stock_allocations {
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 }
 
+sub _signaturecapture {
+    $variable{'Signature'} = new openprint::SignatureCapture( $param{'id'} );
+}
+
 
 1;
 
 __END__
-~	   

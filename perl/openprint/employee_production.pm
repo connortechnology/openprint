@@ -884,9 +884,13 @@ sub add_to_barcode_log {
 sub complete_signature {
 	my ( $log, $dbh, $variable, $project_id, $service_id ) = @_;
 
-	my $ac = sql::start_transaction( $dbh );
 	my $Project = new openprint::Project( $project_id );
 	my $Service = $Project->Service( $service_id );
+	if ( ! $Service->service_id() ) {
+$log->error("No service_id in service for project $project_id, $service_id: " . $Service->to_string() );
+		return;
+	} # end if
+	my $ac = sql::start_transaction( $dbh );
 	$Service->save({'status'=>'Complete'});
 	my $specs = $Service->specs();
 
@@ -1477,6 +1481,17 @@ sub _li_change {
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
 		$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
+	} elsif ( $param{'action'} eq 'Up' ) {
+		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
+		my $index;
+		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
+		if ( $index > 0 ) {
+			$_ = $Jobs[$index-1];
+			$Jobs[$index-1] = $Jobs[$index];
+			$Jobs[$index] = $_;
+		} # end if
+		reorder_jobs( @Jobs );
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		$variable{'error'} .= $Job->delete();
@@ -1494,7 +1509,7 @@ sub _li_change {
 		} # end foreach
 		$Job->Project()->update_status();
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
-		$Job->delete();
+		$variable{'error'} .= $Job->delete();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );

@@ -1,7 +1,8 @@
+use strict;
 package email;
 
-use strict;
 use openprint ();
+use warnings;
 use vars qw( $r %config $log );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -12,14 +13,16 @@ require sql;
 my $dbh;
 
 sub db_connect {
-	return $dbh = sql::open_sql( $log, 
+# Fairly important to us the config hash.  r->dir_config causes crashes
+	$dbh = sql::open_sql( $log, 
 	(
-		'host'		=>	$r->dir_config('mail_db_hostname'),
-		'database'	=>	$r->dir_config('mail_db_name'),
-		'login'		=>	$r->dir_config('mail_db_username'),
-		'password'	=>	$r->dir_config('mail_db_password'),
-		'driver'	=>	$r->dir_config('mail_db_driver'),
+		'host'		=>	$config{'mail_db_hostname'},
+		'database'	=>	$config{'mail_db_name'},
+		'login'		=>	$config{'mail_db_username'},
+		'password'	=>	$config{'mail_db_password'},
+		'driver'	=>	$config{'mail_db_driver'},
 	) );
+	return $dbh;
 } # end sub connect
 
 sub set_password {
@@ -32,13 +35,13 @@ sub set_password {
 
 sub get_vacation {
 	my ( $email ) = @_;
-
-	$dbh = db_connect() if ! $dbh; 
+	$dbh = email::db_connect() if ! $dbh; 
 
 	my ( $subject, $message ) = sql::execute( $log, $dbh, q{SELECT subject, body FROM vacation WHERE email=?}, $email );
 	if ( $message or $subject ) {
 		return 1, $subject, $message;
 	} # end if
+	return;
 } # end sub get_vacation
 
 sub start_vacation {

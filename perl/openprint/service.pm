@@ -28,7 +28,7 @@ require openprint::Estimating::UPS;
 require openprint::Estimating::Multipage;
 require openprint::logs;
 
-my $debug = 1;
+my $debug = 0;
 
 my %cache_index_by_id;
 my %cache_id_by_index;
@@ -427,7 +427,7 @@ sub external_calc {
 #blah
 	eval 'require openprint::Estimating::'.$service_type;
 		$log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
-	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
+	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs, $specs{qty_index} );';
 		$log->error("Error requiring openprint::Estimating::$service_type: in eval: $@") if $@;
 	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
@@ -439,7 +439,7 @@ $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 	@vars = sets::exclude( \@no_outputs, \@vars );
 
 	foreach my $key ( @vars ) {
-$log->debug( "$key~$specs{$key}" );
+#$log->debug( "$key~$specs{$key}" );
 		if ( exists $specs{$key} ) {
 			if ( ( ! exists $initial_specs{$key} ) or ( $specs{$key} ne $initial_specs{$key} ) ) {
 				push @results, "$key~$specs{$key}";
