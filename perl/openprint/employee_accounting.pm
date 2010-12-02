@@ -226,11 +226,15 @@ sub expenses {
 			$variable{'Redirect'} = '/employee/accounting/expense.html';
 			return;	
 		} # end if
+
+		# At this point,  the array returned should be the correct, appropriate list of taxes.  What we are updating is merely whether we are charging to for those taxes
 		foreach my $Tax ( $Expense->Taxes() ) {
             # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
-            $Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()};
-            $Tax->amount(undef);
-            $Tax->save();
+			if ( $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()} ) {
+				$Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()});
+				$Tax->amount(undef);
+				$Tax->save();
+			} # end if
         } # end foreach
 		ssi::save_params( '/employee/accounting/expense.html', 'category_id', 'due_on', 'invoiced_on', 'recipient_id', 'business_use' );
 
