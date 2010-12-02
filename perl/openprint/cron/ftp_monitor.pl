@@ -10,6 +10,8 @@ require misc;
 require openprint::Company;
 require openprint::User;
 require Email::Valid;
+require openprint::Email;
+require openprint::User_Notification;
 require logger;
 require openprint::Upload;
 use openprint ();
@@ -321,15 +323,20 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$from = sprintf('"%s" <%s>', $User->name(), $User->email() );
 		} # end if
 
-		my $to;
+		my @to;
 		if ( $User->email() =~ /^iconnor/ ) {
-			$to = '"Isaac Connor" <iconnor@penultima.org>';
-		} elsif ( $Company->salesrep_id() ) {
-			if ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) {
-				$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') ),
-			} # end if
+			@to = ( $User );
 		} else {
-			$to = $config{'OrderingEmail'};
+			if ( $Company->salesrep_id() ) {
+				if ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) {
+					@to = ( $Company->CSR() );
+				} # end if
+			} # end if
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
+		} # end if
+		
+		if ( ! @to ) {
+			@to = ( $config{'OrderingEmail'} );
 		} # end if
 		if ( $to ) {
 			my %variable;
@@ -345,14 +352,15 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$variable{'ReplacementText'} = ssi::variable_substitution( undef, $log, $dbh, \$variable{'ReplacementText'}, \%variable );
 			my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
 			my $body = ssi::variable_substitution( undef, $log, $dbh, \$email_template, \%variable );
-			my %mail = (
-							SMTP    => $config{'Mail Server'},
-							FROM    => $from,
-							TO      => $to,
-							#BCC		=>	'iconnor@penultima.org',
-							SUBJECT => $subject,
-					   );
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
+			my $Mail = new openprint::Email();
+			$Mail->send(
+					SMTP    => $config{'Mail Server'},
+					FROM    => $from,
+					TO      => \@to,
+#BCC		=>	'iconnor@penultima.org',
+					SUBJECT => $subject,
+					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
+				);
 		} # end if
 	
 	} elsif ( 1 ) {

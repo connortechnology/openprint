@@ -53,15 +53,15 @@
 		<? eval ( @{$$variable{'operators'}} = sql::execute( $log, $dbh, q{SELECT DISTINCT operator_id FROM tbl_Project_Contents WHERE lngProjectIndex=? AND operator_id IS NOT NULL}, $$variable{'Project'}->id() ); ) ?>
 		<? if ( (!$param{'ddmEmployee'}) or sets::isin( $param{'ddmEmployee'}, $$variable{'operators'} ) ) ?>
 		<tr<?rowclass?>> 
-			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a>&nbsp;</td>
-			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->docket(); ) ?></a>&nbsp;</td>
-			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->Company()->name(); ) ?></a>&nbsp;</td>
-			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference()); ) ?></a>&nbsp;</td>
+			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&amp;ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->id(); ) ?></a>&nbsp;</td>
+			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&amp;ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->docket(); ) ?></a>&nbsp;</td>
+			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&amp;ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->Company()->name(); ) ?></a>&nbsp;</td>
+			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&amp;ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( ssi::htmlize($$variable{'Project'}->reference()); ) ?></a>&nbsp;</td>
 	<? if ( ! $param{'ddmEmployee'} ) ?>
-			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><?operator?></a>&nbsp;</td>
+			<td><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&amp;ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><?operator?></a>&nbsp;</td>
 	<? endif ( ! $param{'ddmEmployee'} ) ?>
-			<td align="center"><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->due_date(); ) ?></a>&nbsp;</td>
-			<td align="right"><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->status(); ) ?></a>&nbsp;</td>
+			<td align="center"><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&amp;ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->due_date(); ) ?></a>&nbsp;</td>
+			<td align="right"><a href="/employee/project/view.html?OrderID=<? echo ( $$variable{'Project'}->order_id(); ) ?>&amp;ProjectIndex=<? echo ( $$variable{'Project'}->id(); ) ?>"><? echo ( $$variable{'Project'}->status(); ) ?></a>&nbsp;</td>
 		</tr>
 		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} eq ' class="colRow"' ? '' : ' class="colRow"' ) ?>
 		<? endif ( (!$param{'ddmEmployee'}) or sets::isin( $param{'ddmEmployee'}, $$variable{'operators'} ) ) ?>

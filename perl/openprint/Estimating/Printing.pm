@@ -1615,7 +1615,7 @@ $imp->display();
 }
 }
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
-if ( $debug or 0) {
+if ( $debug or 1) {
 $openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
 foreach my $imp ( @impositions ) {
 $imp->display();
@@ -1633,13 +1633,18 @@ if ( 1 ) {
             } # end foreach
             $max_pages /= 3;
             foreach my $imp ( @impositions ) {
-				next if ( $$specs{'PreviousImposition'} and ( $$specs{'PreviousImposition'} > $imp->imposition() ) );
+				if ( $$specs{'PreviousImposition'} and ( $$specs{'PreviousImposition'} > $imp->imposition() ) ) {
+					next;
+				}
 				if ( $$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') {
 					if ( ( $imp->Paper()->width() != $$specs{"OverrideStockWidth$qty_index"}) and ( (! $$specs{"OverrideStockHeight$qty_index"} ) or $imp->Paper()->height() != $$specs{"OverrideStockHeight$qty_index"} )) {
 						next;
 					} # end if
-				} elsif ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
-					if ( $imp->Paper()->height() != $$specs{"CutOff$qty_index"} ) {
+				} 
+				if ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
+					$openprint::log->warn("Want " . $$specs{'CutOff'.$qty_index} . ' got ' . $imp->Paper()->height() );
+					if ( $imp->Paper()->height() != $$specs{'CutOff'.$qty_index} ) {
+						$openprint::log->warn('next');
 						next;
 					} # end if
 				} elsif ($max_pages >= $imp->pages()) {
@@ -1803,9 +1808,9 @@ $openprint::log->debug("QTY after filter: $qty_index on " . $P->strid() );
 				} # end if
 			} # end if
 			if ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
-$openprint::log->warn("Want " . $$specs{'CutOff'.$qty_index} . ' got ' . $imp->Paper()->height() );
+#$openprint::log->warn("Want " . $$specs{'CutOff'.$qty_index} . ' got ' . $imp->Paper()->height() );
 				if ( $imp->Paper()->height() != $$specs{'CutOff'.$qty_index} ) {
-$openprint::log->warn('next');
+#$openprint::log->warn('next');
 					next;
 				} # end if
 			} # end if OverrrideCutOff

@@ -579,13 +579,17 @@ $inkCoverage{$colour} = 100;
 		<? endwhile ( $$variable{'ShrinkWrapServiceIndex'} = pop @{$$variable{'ShrinkWrapServices'}} ) ?>
 		<? endif ( $$variable{Services}{'ShrinkWrap'} ) ?>
 
-		<? if ( $$variable{Services}{'Bundling'} ) ?>
-		<? eval ( @{$$variable{'ShrinkWrapServices'}} = $$variable{Services}{'Bundling'}[0] ) ?>
-		<? while ( $$variable{'BundleServiceIndex'} = pop @{$$variable{'BundleServices'}} ) ?>
-		<? eval ( openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $$variable{'BundleServiceIndex'} ); ) ?>
-, Bundles in <?txtWrapQuantity?>'s
-		<? endwhile ( $$variable{'BundleServiceIndex'} = pop @{$$variable{'BundleServices'}} ) ?>
-		<? endif ( $$variable{Services}{'Bundling'} ) ?>
+		<? echo (
+		my $html;
+		if ( $$variable{Services}{'Bundling'} ) {
+			foreach my $s_id ( @{$$variable{Services}{'Bundling'}} ) {
+				my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
+
+				$html .= ", Bundles in $$specs{txtItemsPerPackage}'s";
+			} # end foreach s_id
+		} # end if
+		return $html;
+		) ?>
 
 		<? if ( $$variable{Services}{'KraftWrap'} ) ?>
 		<? eval ( @{$$variable{'KraftWrapServices'}} = $$variable{Services}{'KraftWrap'}[0] ) ?>

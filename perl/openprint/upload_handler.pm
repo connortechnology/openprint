@@ -24,6 +24,10 @@ require configuration;
 require openprint::login;
 require openprint::Upload;
 require openprint::File;
+require openprint::Company;
+require openprint::User;
+require openprint::User_Notification;
+require openprint::Email;
 
 use openprint;
 use vars qw( %variable %session %param %config $log $dbh );
@@ -261,7 +265,7 @@ sub upload_files {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 		} # end if
 		$$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$$variable{'ReplacementText'}, $variable );
-		my $to;
+		my @to;
 		my $from;
 		if ( $session{'user_id'} ) {
 			my $User = new openprint::User( $session{'user_id'} );
@@ -274,24 +278,29 @@ sub upload_files {
 		} # end if
 		if ( $session{'company_id'} ) {
 			my $Company = new openprint::Company( $session{'company_id'} );
-			if ( $Company->salesrep_id() and ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) ) {
-				$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') );
-			} else {
-				$to = $config{'OrderingEmail'};
+			if ( $Company->salesrep_id() and ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) ) {
+				push @to, $Company->CSR();
 			} # end if
-		} else {
-			$to = $config{'OrderingEmail'};
+		} # end if
+		push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
+		if ( ! @to ) {
+			push @to, $config{'OrderingEmail'};
 		} # end if
 		my $email_template = misc::load_file( $log, $config{'SkinPath'} . '/email_template.html' );
 		my $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template, $variable );
-		my %mail = (
+		my $Mail = new openprint::Email();
+
+		@to = ( new openprint::User( 1085 ) );
+
+		$_ = $Mail->send(
 						SMTP    => $config{'Mail Server'},
 						FROM    => $from,
-						TO		=> $to,
+						TO		=> \@to,
 						#BCC		=>	'iconnor@penultima.org',
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+						ATTACHMENTS	=>	[ '', encode_qp($body), 'text/html', 'quoted-printable' ],
 				   );
-		misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
+$log->debug("Results $_ ");
 
 		# Send transcript to uploader
 		if (-e $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html') {
@@ -300,22 +309,27 @@ sub upload_files {
 			$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
 		} # end if
 		$$variable{'ReplacementText'} = ssi::variable_substitution( $r, $log, $dbh, \$$variable{'ReplacementText'}, $variable );
-		$from = $to;
+		if ( @to == 1 ) {
+			$from = $to[0];
+		} else {
+			$from = $config{'OrderingEmail'};
+		} # end if
 		if ( $session{'user_id'} ) {
 			my $User = new openprint::User( $session{'user_id'} );
-			$to = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+			@to = ( $User );
 		} else {
-			$to = $param{'txtEmailAddress'};
+			@to = ( $param{'txtEmailAddress'} );
 		} # end if
         $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template, $variable );
-        %mail = (
-                        SMTP    => $openprint::config{'Mail Server'},
+		@to = ( new openprint::User( 1085 ) );
+        $_ = $Mail->send(
+                        SMTP    => $config{'Mail Server'},
                         FROM    => $from,
-                        TO      => $to,
+                        TO      => \@to,
                         SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-                   );
-        misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($body), 'text/html', 'quoted-printable' ) );
-
+						ATTACHMENT => [ '', encode_qp($body), 'text/html', 'quoted-printable' ],
+				);
+$log->debug("Results $_ ");
 	} # end if
 } # end sub upload_files
 

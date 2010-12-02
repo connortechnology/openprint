@@ -90,3 +90,7 @@ table tr .ip {
 	text-align: left;
 	width: 100px;
 }
+
+#Results table tr.totals {
+	margin-bottom: 20px;
+}

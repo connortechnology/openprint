@@ -237,7 +237,7 @@
 				<input type="radio" id="rdbAqueousSideTwoGloss<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Gloss" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Gloss' ) ?> />
 				<label class="radio" for="rdbAqueousSideTwoGloss<?Signature?>"><? echo ( ssi::writeTip('Gloss'); ) ?></label>
 			</span>
-				<? if ( openprint::Service::find('name'=>'Aqueous Gloss' ) ) ?>
+				<? endif ( openprint::Service::find('name'=>'Aqueous Gloss' ) ) ?>
 				<? if ( openprint::Service::find('name'=>'Aqueous Matte' ) ) ?>
 			<span class="checkOption Matte">
 				<input type="radio" id="rdbAqueousSideTwoMatte<?Signature?>" name="rdbAqueousSideTwo<?Signature?>" value="Matte" onclick="calc(this.form.name);" <? echo ( 'checked="checked"' if $$variable{'rdbAqueousSideTwo'.$$variable{'Signature'}} eq 'Matte' ) ?> />
