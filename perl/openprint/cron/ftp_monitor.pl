@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 use utf8;
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/point-one/perl';
 use strict;
 
 require configuration;
@@ -338,7 +338,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 		if ( ! @to ) {
 			@to = ( $config{'OrderingEmail'} );
 		} # end if
-		if ( $to ) {
+		if ( @to ) {
 			my %variable;
 			$variable{'Company'} = $Company;
 			$variable{'User'} = $User;
@@ -356,7 +356,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$Mail->send(
 					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
-					TO      => $to,
+					TO      => \@to,
 #BCC		=>	'iconnor@penultima.org',
 					SUBJECT => $subject,
 					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]

@@ -290,8 +290,6 @@ sub upload_files {
 		my $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template, $variable );
 		my $Mail = new openprint::Email();
 
-		@to = ( new openprint::User( 1085 ) );
-
 		$_ = $Mail->send(
 						SMTP    => $config{'Mail Server'},
 						FROM    => $from,
@@ -300,7 +298,6 @@ sub upload_files {
 						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 						ATTACHMENTS	=>	[ '', encode_qp($body), 'text/html', 'quoted-printable' ],
 				   );
-$log->debug("Results $_ ");
 
 		# Send transcript to uploader
 		if (-e $config{'SkinPath'} . '/email_content/uploadfiles_client_notification.html') {
@@ -321,7 +318,6 @@ $log->debug("Results $_ ");
 			@to = ( $param{'txtEmailAddress'} );
 		} # end if
         $body = ssi::variable_substitution( $r, $log, $dbh, \$email_template, $variable );
-		@to = ( new openprint::User( 1085 ) );
         $_ = $Mail->send(
                         SMTP    => $config{'Mail Server'},
                         FROM    => $from,
@@ -329,7 +325,6 @@ $log->debug("Results $_ ");
                         SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
 						ATTACHMENT => [ '', encode_qp($body), 'text/html', 'quoted-printable' ],
 				);
-$log->debug("Results $_ ");
 	} # end if
 } # end sub upload_files
 
