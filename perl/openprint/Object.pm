@@ -281,96 +281,103 @@ sub find {
 	my $type = shift;
     my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
+
 	my $debug = eval '$'.$type.'::debug';
 
 	my %params = @_;
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
 	my @values;
 
-	foreach my $k ( keys %params ) {
-		next if sets::isin( $k,[ 'order','limit','or' ] );
-		next if ! $fields{$k};
-		if ( ref $params{$k} eq 'ARRAY' ) {
-			$sql .= " AND $fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-			push @values, @{$params{$k}};
-        } elsif ( ! defined $params{$k} ) {
-            $sql .= " AND $fields{$k} IS NULL";
-		} else {
-			$sql .= " AND $fields{$k}=?";
-			push @values, $params{$k};
-		} # end if
-		delete $params{$k};
-	} # end foreach k
     if ( %params ) {
-        foreach my $k ( keys %fields ) {
-            if ( exists $params{$k.'_like'} ) {
-                $sql .= " AND $fields{$k} LIKE ?";
-                push @values, $params{$k.'_like'};
-                delete $params{$k.'_like'};
-            }
-            if ( exists $params{$k.'_start'} ) {
-                $sql .= " AND $fields{$k} >= ?";
-                push @values, $params{$k.'_start'};
-                delete $params{$k.'_start'};
-            }
-            if ( exists $params{$k.'_end'} ) {
-                $sql .= " AND $fields{$k} <= ?";
-                push @values, $params{$k.'_end'};
-                delete $params{$k.'_end'};
-            } # end if
-            if ( exists $params{$k.'_<'} ) {
-                $sql .= " AND $fields{$k} < ?";
-                push @values, $params{$k.'_<'};
-                delete $params{$k.'_<'};
-            } # end if
-            if ( exists $params{$k.'_<='} ) {
-                $sql .= " AND $fields{$k} <= ?";
-                push @values, $params{$k.'_<='};
-                delete $params{$k.'_<='};
-            } # end if
-            if ( exists $params{$k.'_null_or_<='} ) {
-                $sql .= " AND ( $fields{$k} <= ? OR $fields{$k} IS NULL )";
-                push @values, $params{$k.'_null_or_<='};
-                delete $params{$k.'_null_or_<='};
-            } # end if
-            if ( exists $params{$k.'_>='} ) {
-                $sql .= " AND $fields{$k} >= ?";
-                push @values, $params{$k.'_>='};
-                delete $params{$k.'_>='};
-            } # end if
-            if ( exists $params{$k.'_null_or_>='} ) {
-               $sql .= " AND ( $fields{$k} >= ? OR $fields{$k} IS NULL )";
-                push @values, $params{$k.'_null_or_>='};
-                delete $params{$k.'_null_or_>='};
-            } # end if
-            if ( exists $params{$k.'_>'} ) {
-                $sql .= " AND $fields{$k} > ?";
-                push @values, $params{$k.'_>'};
-                delete $params{$k.'_>'};
-			} # end if
-			if ( exists $params{$k.'_in'} ) {
-				$sql .= " AND ? IN $fields{$k}";
-				push @values, $params{$k.'_in'};
-				delete $params{$k.'_in'};
-			} # end if
-			if ( exists $params{$k.'_any'} ) {
-				$sql .= " AND ? = ANY( $fields{$k} )";
-				push @values, $params{$k.'_any'};
-				delete $params{$k.'_any'};
-			} # end if
-            if ( exists $params{$k.'_lc'} ) {
-                $sql .= " AND lower($fields{$k}) = ?";
-                push @values, lc $params{$k.'_lc'};
-                delete $params{$k.'_lc'};
-            } # end if
-            if ( defined $params{$k.'_null'} ) {
-                if ( $params{$k.'_null'} ) {
-                    $sql .= " AND $fields{$k} IS NULL";
-                } else {
-                    $sql .= " AND $fields{$k} IS NOT NULL";
-                } # end if
-            } # end if
-        } # end foreach
+		foreach ( 'find_fields', 'fields' ) {
+			my $f = eval '\%'.$type.'::'.$_;
+			next if ! $f;
+
+			foreach my $k ( keys %params ) {
+				next if sets::isin( $k,[ 'order','limit','or' ] );
+				next if ! $$f{$k};
+				if ( ref $params{$k} eq 'ARRAY' ) {
+					$sql .= " AND $$f{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+					push @values, @{$params{$k}};
+				} elsif ( ! defined $params{$k} ) {
+					$sql .= " AND $$f{$k} IS NULL";
+				} else {
+					$sql .= " AND $$f{$k}=?";
+					push @values, $params{$k};
+				} # end if
+				delete $params{$k};
+			} # end foreach k
+
+			foreach my $k ( keys %$f ) {
+				if ( exists $params{$k.'_like'} ) {
+					$sql .= " AND $$f{$k} LIKE ?";
+					push @values, $params{$k.'_like'};
+					delete $params{$k.'_like'};
+				}
+				if ( exists $params{$k.'_start'} ) {
+					$sql .= " AND $$f{$k} >= ?";
+					push @values, $params{$k.'_start'};
+					delete $params{$k.'_start'};
+				}
+				if ( exists $params{$k.'_end'} ) {
+					$sql .= " AND $$f{$k} <= ?";
+					push @values, $params{$k.'_end'};
+					delete $params{$k.'_end'};
+				} # end if
+				if ( exists $params{$k.'_<'} ) {
+					$sql .= " AND $$f{$k} < ?";
+					push @values, $params{$k.'_<'};
+					delete $params{$k.'_<'};
+				} # end if
+				if ( exists $params{$k.'_<='} ) {
+					$sql .= " AND $$f{$k} <= ?";
+					push @values, $params{$k.'_<='};
+					delete $params{$k.'_<='};
+				} # end if
+				if ( exists $params{$k.'_null_or_<='} ) {
+					$sql .= " AND ( $$f{$k} <= ? OR $$f{$k} IS NULL )";
+					push @values, $params{$k.'_null_or_<='};
+					delete $params{$k.'_null_or_<='};
+				} # end if
+				if ( exists $params{$k.'_>='} ) {
+					$sql .= " AND $$f{$k} >= ?";
+					push @values, $params{$k.'_>='};
+					delete $params{$k.'_>='};
+				} # end if
+				if ( exists $params{$k.'_null_or_>='} ) {
+					$sql .= " AND ( $$f{$k} >= ? OR $$f{$k} IS NULL )";
+					push @values, $params{$k.'_null_or_>='};
+					delete $params{$k.'_null_or_>='};
+				} # end if
+				if ( exists $params{$k.'_>'} ) {
+					$sql .= " AND $$f{$k} > ?";
+					push @values, $params{$k.'_>'};
+					delete $params{$k.'_>'};
+				} # end if
+				if ( exists $params{$k.'_in'} ) {
+					$sql .= " AND ? IN $$f{$k}";
+					push @values, $params{$k.'_in'};
+					delete $params{$k.'_in'};
+				} # end if
+				if ( exists $params{$k.'_any'} ) {
+					$sql .= " AND ? = ANY( $$f{$k} )";
+					push @values, $params{$k.'_any'};
+					delete $params{$k.'_any'};
+				} # end if
+				if ( exists $params{$k.'_lc'} ) {
+					$sql .= " AND lower($$f{$k}) = ?";
+					push @values, lc $params{$k.'_lc'};
+					delete $params{$k.'_lc'};
+				} # end if
+				if ( defined $params{$k.'_null'} ) {
+					if ( $params{$k.'_null'} ) {
+						$sql .= " AND $$f{$k} IS NULL";
+					} else {
+						$sql .= " AND $$f{$k} IS NOT NULL";
+					} # end if
+				} # end if
+			} # end foreach key
+		} # end foreach fileds, find_fields
     } # end if
 
     # Check for Object references
