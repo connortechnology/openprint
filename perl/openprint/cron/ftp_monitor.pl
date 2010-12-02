@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 use utf8;
-use lib '/var/www/p1/perl';
+use lib '/var/www/point-one/perl';
 use strict;
 
 require configuration;
