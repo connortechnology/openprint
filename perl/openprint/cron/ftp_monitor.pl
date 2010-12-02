@@ -338,7 +338,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 		if ( ! @to ) {
 			@to = ( $config{'OrderingEmail'} );
 		} # end if
-		if ( $to ) {
+		if ( @to ) {
 			my %variable;
 			$variable{'Company'} = $Company;
 			$variable{'User'} = $User;
