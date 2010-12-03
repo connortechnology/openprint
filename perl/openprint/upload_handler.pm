@@ -21,6 +21,12 @@ require ssi;
 require misc;
 require configuration;
 require openprint::login;
+require openprint::Upload;
+require openprint::File;
+require openprint::Company;
+require openprint::User;
+require openprint::User_Notification;
+require openprint::Email;
 
 use openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
@@ -266,7 +272,7 @@ $log->error("No destdir");
 				$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 			} # end if
 			$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
-			my $to;
+			my @to;
 			my $from;
 			if ( $session{'user_id'} ) {
 				my $User = new openprint::User( $session{'user_id'} );
@@ -279,49 +285,60 @@ $log->error("No destdir");
 			} # end if
 			if ( $session{'company_id'} ) {
 				my $Company = new openprint::Company( $session{'company_id'} );
-				if ( $Company->salesrep_id() and ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) ) {
-					$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') );
+				if ( $Company->salesrep_id() and ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) ) {
+					push @to, $Company->CSR();
 				} # end if
 			} # end if
-			$to = $config{'OrderingEmail'} if ! $to;
-			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			my $body = ssi::variable_substitution( \$email_template, $variable );
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
-					FROM    => $from,
-					TO		=> $to,
-					#BCC		=>	'iconnor@penultima.org',
-					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
+			if ( ! @to ) {
+				push @to, $config{'OrderingEmail'};
+			} # end if
+			if ( @to ) {
+				my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
+				my $body = ssi::variable_substitution( \$email_template, $variable );
+				my $Mail = new openprint::Email();
+
+				$_ = $Mail->send(
+						SMTP    => $config{'Mail Server'},
+						FROM    => $from,
+						TO		=> \@to,
+#BCC		=>	'iconnor@penultima.org',
+						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+						ATTACHMENTS	=>	[ '', encode_qp($body), 'text/html', 'quoted-printable' ],
+						);
 
 # Send transcript to uploader
-			if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
-				$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
-			} else {
-				$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
+				if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
+					$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
+				} else {
+					$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
+				} # end if
+				$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
 			} # end if
-			$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
-			$from = $to;
+
+			if ( @to == 1 ) {
+				$from = $to[0];
+			} else {
+				$from = $config{'OrderingEmail'};
+			} # end if
+
 			if ( $session{'user_id'} ) {
 				my $User = new openprint::User( $session{'user_id'} );
-				$to = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+				@to = ( $User );
 			} else {
-				$to = $param{'txtEmailAddress'};
+				@to = ( $param{'txtEmailAddress'} );
 			} # end if
 			$body = ssi::variable_substitution( \$email_template, $variable );
-			%mail = (
+			$_ = $Mail->send(
 					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
-					TO      => $to,
-					#BCC		=>	'iconnor@penultima.org',
+					TO      => \@to,
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+					ATTACHMENT => [ '', encode_qp($body), 'text/html', 'quoted-printable' ],
 					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 		} else {
 			$variable{'error'} .= 'No files were uploaded.';
 		} # end if files
-
 	} # end if btnfunction eq Upload Files
 } # end sub upload_files
 

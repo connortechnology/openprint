@@ -26,10 +26,10 @@ require sets;
 my %variables = (
 	'txtPrice1'=>['save','output'], 'txtPrice2'=>['save','output'], 'txtPrice3'=>['save','output'],'txtPriceUsed'=>['save'],
 	'txtQuantity1'=>['save','output'], 'txtQuantity2'=>['save','output'], 'txtQuantity3'=>['save','output'],'txtQuantityUsed'=>['save'],
-	'txtPackageQuantity1'=>['save','output'], 'txtPackageQuantity2'=>['save','output'], 'txtPackageQuantity3'=>['save','output'],'txtPackageQuantityUsed'=>['save'],
+	'txtPackageQuantity1'=>['save','output'], 'txtPackageQuantity2'=>['save','output'], 'txtPackageQuantity3'=>['save','output'],'txtPackageQuantityUsed'=>['save','output'],
     'chkOverridePackageQuantity' => ['save'],
-	'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],'txtTotalWeightUsed'=>['save'],
-    'txtPackageWeight1'=>['save','output'], 'txtPackageWeight2'=>['save','output'], 'txtPackageWeight3'=>['save','output'],'txtPackageWeightUsed'=>['save'],
+	'txtTotalWeight1'=>['save','output'], 'txtTotalWeight2'=>['save','output'], 'txtTotalWeight3'=>['save','output'],'txtTotalWeightUsed'=>['save','output'],
+    'txtPackageWeight1'=>['save','output'], 'txtPackageWeight2'=>['save','output'], 'txtPackageWeight3'=>['save','output'],'txtPackageWeightUsed'=>['save','output'],
 
 	'FromCompanyName'=>['save'],'FromAddress1'=>['save'],'FromAddress2'=>['save'],'FromCity'=>['save'],'FromStateProvince'=>['save'],'FromCountry'=>['save'],'FromPostalCode'=>['save'],'FromPhone'=>['save'],'FromFax'=>['save'],'FromEmail'=>['save'],
 	'ToCompanyName'=>['save'],'ToAddress1'=>['save'],'ToAddress2'=>['save'],'ToCity'=>['save'],'ToStateProvince'=>['save'],'ToCountry'=>['save'],'ToPostalCode'=>['save'],'ToPhone'=>['save'],'ToFax'=>['save'],'ToEmail'=>['save'],

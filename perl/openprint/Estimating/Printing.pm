@@ -2137,7 +2137,8 @@ $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty
 				} else {
 					#$imp->display('Accepted stock! ' . $$sig_specs{"OverrideStockWidth$qty_index"} . 'x' . $$sig_specs{"OverrideStockHeight$qty_index"} );
 				} # end if
-			} elsif ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
+			} # end if
+			if ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) {
 				if ( $Paper->height() != $$sig_specs{"CutOff$qty_index"} ) {
 					next;
 				} # end if
