@@ -62,3 +62,15 @@ sub edit {
 
 sub list {
 } # end sub list
+
+sub category {
+	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $Category->save(\%param);
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $Category->delete();
+	} # end if
+} # end sub category
+
+1;
+__END__

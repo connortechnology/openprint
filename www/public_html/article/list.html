@@ -1,6 +1,5 @@
 <div class="PageTitle">
 <h1>Articles</h1>
-<h2>History</h2>
 </div>
 <script type="text/javascript">
 <!--
@@ -19,7 +18,17 @@
 		) ) {
 		push @{$$variable{'Articles'}}, $Article;
 	} # end foreach Article
+	if ( $param{'category_id'} ) {
+		$$variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
+	} # end if
 ) ?>
+<div class="Article">
+<? if ( $param{'category_id'} ) ?>
+<div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
+<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
+<div class="image"><img src="/images/aricle_categories/<? echo ( $$variable{'Category'}->image_filename() ) ?>" /></div>
+</div>
+<? endif ( $param{'category_id'} ) ?>
 
 <? if ( @{$$variable{'Articles'}} == 0 ) ?>
 	There are no articles which match your search criteria. 
@@ -61,7 +70,4 @@
 		) ?>
 	</table>
 <? endif ( @{$$variable{'Articles'}} == 0 ) ?>
-</div>
-	</form>
-	</div>
-</div>
+</div><!--Article-->

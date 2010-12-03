@@ -11,8 +11,10 @@ $serial = 'article_categories_id_seq';
 %fields = (
 	'id'				=>	'id',
 	'name'				=>	'name',
+	'description'		=>	'description',
 	'position'			=>	'position',
 	'permalink'			=>	'permalink',
+	'image_filename'	=>	'image_filename',
 );
 
 %transforms = (

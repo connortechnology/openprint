@@ -4,6 +4,8 @@ CREATE TABLE Article_Categories (
 	name	TEXT,
 	position	INTEGER,
 	permalink	text,
+	image_filename	TEXT,
+	description		TEXT,
 	PRIMARY KEY (id)
 );
 
