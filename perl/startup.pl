@@ -48,6 +48,7 @@ BEGIN {
 	use openprint::Object;
 	use openprint::Company;
 	use openprint::User;
+	use openprint::User_Notification;
 	use openprint::Service;
 	use openprint::Paper;
 	use openprint::Material;

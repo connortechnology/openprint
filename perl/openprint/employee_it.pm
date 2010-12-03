@@ -42,6 +42,12 @@ sub hosts {
 } # end sub hosts
 
 sub _hosts {
+	if ( $param{'btnFunction'} eq 'Delete' ) {
+		foreach my $host_id ( ref $param{'host_id'} eq 'ARRAY' ? @{$param{'host_id'}} : $param{'host_id'} ) {
+			my $Host = new openprint::Host( $host_id );
+			$variable{'error'} .= $Host->delete();
+		} # end foreach host_id
+	} # end if
 	ssi::save_params( '/employee/it/hosts.html', 
 			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
 			'updated_on_year', 'updated_on_month', 'updated_on_mday',

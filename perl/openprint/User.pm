@@ -6,6 +6,8 @@ use MIME::QuotedPrint;
 require openprint::Company;
 require openprint::logs;
 require openprint::Usergroup;
+require openprint::User_Notification;
+
 use openprint ();
 use strict;
 use vars qw( $log $dbh %config %variable %param $debug %fields %transforms %defaults $table $serial );

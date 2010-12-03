@@ -1,5 +1,5 @@
 <script type="text/javascript">
-var tax_ids = [ <? echo ( join(',', map { $_->id() } $$variable{'Expense'}->Taxes() ); ) ?> ];
+var tax_ids = [ <? echo ( join(',', map { $_->tax_id() } $$variable{'Expense'}->Taxes() ); ) ?> ];
 
 function update_total( form ) {
     var total = parseFloat( form.amount.value );
@@ -56,15 +56,11 @@ function update_total( form ) {
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{'Expense'}->currency_id() ? $$variable{'Expense'}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
 					</select>
 				</li>
-				<? echo (
-					my $html;
-					foreach my $Tax ( $$variable{'Expense'}->Taxes() ) {
-						$html .= sprintf(q`
-<li><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%)<input type="checkbox" name="tax_charge-%1$d" id="tax_charge-%1$d" value="1" %4$s onclick="update_total(this.form);" /></label><input type="text" name="tax_amount-%1$d" id="tax_amount-%1$d" value="%5$s" /></li>
-`, $Tax->id(), $Tax->name(), $Tax->rate(), ssi::checked( $Tax->charge() ), $Tax->amount() );
-					} # end foreach Tax
-					return $html;
-				) ?>
+				</ul>
+				<ul id="Taxes">
+				<!--#include virtual="_expense_taxes.html"-->
+				</ul>
+				<ul>
 				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>):</label>
 					<input type="text" name="total" id="total" value="<? echo ( $$variable{'Expense'}->total() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />
 				</li>
@@ -77,7 +73,9 @@ function update_total( form ) {
 			<ul>
 				<li>
 					<label>Invoiced On:</label>
-					<? echo ( return ssi::date_select( 'invoiced_on', $$variable{'Expense'}->invoiced_on() ); ) ?>
+					<? echo ( 	
+						return ssi::date_select( 'invoiced_on', $$variable{'Expense'}->invoiced_on(), {
+							'onchange'=>q`new Ajax.Updater('Taxes','_expense_taxes.html', { parameters: { expense_id: '` . $$variable{'Expense'}->id() . q`', invoiced_on_year: $('invoiced_on_year').value, invoiced_on_month: $('invoiced_on_month').value,invoiced_on_day: $('invoiced_on_day').value }, evalScripts: true } );`} ); ) ?>
 				</li>
 				<li>
 					<label>Due On:</label>
