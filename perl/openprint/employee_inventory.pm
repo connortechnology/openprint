@@ -1819,13 +1819,13 @@ sub purchase_order_view {
 				'reason'	=>	$param{'reason'},
 				});
 		} # end if
-		my @notifications = $PO->notifications();
+		my @notifications = $PO->notifications(); # returns user_ids
 		my @new_notifications = @notifications;
 		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) );
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('name'=>'PSC/PEFC Notifications' ) );
 		} # end if
 		foreach my $type ( keys %types ) {
-			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'PO ' . $type.' Notifications' ) );
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('name'=>'PO ' . $type . ' Notifications' ) );
 		} # end foreach
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);
