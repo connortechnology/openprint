@@ -2,6 +2,7 @@ package openprint::Object;
 
 use strict;
 use openprint ();
+require sets;
 use vars qw( $log $dbh %variable %session $AUTOLOAD %cache %fields %defaults %transforms $no_cache );
 
 *log = \$openprint::log;
