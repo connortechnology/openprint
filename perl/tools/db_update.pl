@@ -103,6 +103,9 @@ if ( sets::isin( 'tbl_projects', \@tables ) ) {
 			$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
 			sql::end_transaction( $dbh, $ac );
 		} # end if
+		if ( ! exists $$data{'externalrefnumber'} ) {
+			$dbh->do('ALTER TABLE tbl_projects add externalrefnumber text');
+		}
 		$dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
 	} # end if
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
@@ -2625,7 +2628,13 @@ if ( sets::isin('product_id_seq', \@sequences ) ) {
 	$dbh->do('ALTER SEQUENCE product_id_seq RENAME TO products_id_seq');
 }
 
-	$dbh->commit();
+foreach my $aq ( 'Gloss', 'Matte', 'Satin', 'SoftTouch' ) {
+foreach my $S ( openprint::Service->find('name'=>'Aqueous '.$aq) ) {
+	if ( $S->category() ne 'Coating' ) {
+		$S->save({'category'=>'Coating'});
+	} # end if
+} # end foreach
+}
 $dbh->disconnect();
 print "Finished\n";
 1;
