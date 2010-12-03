@@ -114,8 +114,8 @@ if ( $data ) {
 #foreach my $k ( keys %$data ) {
 #$log->debug("$type ::save $k => $$data{$k}");
 #}
-} else {
-$log->debug("No data");
+#} else {
+#$log->debug("No data");
 }
 	$self->set( $data ? $data : {} );
 #if ( $data ) {

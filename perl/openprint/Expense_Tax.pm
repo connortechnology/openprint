@@ -69,5 +69,15 @@ sub charge {
 	return $$self{'charge'};
 } # end sub charge
 
+sub rate {
+	if ( @_ > 1 ) {
+		$_[0]{'rate'} = $_[1];
+	} # end if
+	if ( ! defined $_[0]{'rate'} ) {
+		$_[0]{'rate'} = $_[0]->Tax()->rate();
+	} # end if
+	return $_[0]{'rate'};
+} # end sub rate
+
 1;
 __END__

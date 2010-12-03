@@ -98,17 +98,24 @@ sub Recipient {
 	return new openprint::Company( $_[0]{'recipient_id'} );
 }
 
+sub delete {
+	foreach my $T ( $_[0]->Taxes() ) {
+		$T->delete();
+	} # end foreach
+	$_[0]->SUPER::delete();
+} # end sub delete
+
 sub Taxes {
     my ( $self ) = @_;
 
-    if ( ! $$self{'id'} ) {
-        return ();
+    if ( $$self{'id'} ) {
+		if ( ! $$self{'Taxes'} ) {
+			@{$$self{'Taxes'}} = openprint::Expense_Tax->find('expense_id'=>$$self{'id'});
+		} # end if
+	} else { 
+		@{$$self{'Taxes'}} = ();
     } # end if
-
-    if ( ! $$self{'Taxes'} ) {
-        @{$$self{'Taxes'}} = openprint::Expense_Tax->find('expense_id'=>$$self{'id'});
-    } # end if
-    if ( $self->Company()->country() and $self->Company()->state() and ! @{$$self{'Taxes'}} ) {
+    if ( $self->Company()->country() and $self->Company()->state() and $$self{'invoiced_on'} and ! @{$$self{'Taxes'}} ) {
         foreach my $Tax ( openprint::Tax->find(
                     'period_start_null_or_<='   =>  $$self{'invoiced_on'},
                     'period_end_null_or_>='     =>  $$self{'invoiced_on'},
@@ -116,11 +123,13 @@ sub Taxes {
                     'state'     =>  $self->Company()->state()),
                 ) {
             my $T = new openprint::Expense_Tax();
-            $T->save({
-                'expense_id'=>  $$self{'id'},
+            $T->set({
+				'expense_id'	=>	$$self{'id'},
                 'tax_id'    =>  $$Tax{'id'},
                 'rate'      =>  $$Tax{'rate'},
             });
+			# SHould not save.  Saving will be done in the save function This is okay, because in the html, we id our field by the tax_id
+			#$T->save({ 'expense_id'=>  $$self{'id'}}) if $$self{'id'};
             push @{$$self{'Taxes'}}, $T;
         } # end foreach Tax
     } # end if
@@ -129,17 +138,45 @@ sub Taxes {
 
 sub save {
 	my $self = shift;
+
+	$self->set( @_ );
+
+	if ( $self->id() ) {
+		# Taxes, get current, get relevant, save, delete as appropriate
+		my @Old_Taxes = $self->Taxes();
+		my @New_Taxes;
+
+		foreach my $Tax ( openprint::Tax->find(
+					'period_start_null_or_<='   =>  $$self{'invoiced_on'},
+					'period_end_null_or_>='     =>  $$self{'invoiced_on'},
+					'country'   =>  $self->Company()->country(),
+					'state'     =>  $self->Company()->state()),
+				) {
+			my $T = $self->Tax( $Tax );
+			push @New_Taxes, $T;
+			if ( $T->id() ) {
+				for ( my $i = 0; $i < @Old_Taxes; $i += 1 ) {
+					if ( $Old_Taxes[$i]->id() == $T->id() ) {
+						splice @Old_Taxes, $i, 1;
+						last;
+					} # end if
+				} # end for
+			} # end if
+		} # end foreach Tax
+		foreach my $Tax ( @Old_Taxes ) {
+			$Tax->delete() if $Tax->id();
+		} # end foreach Tax
+		@{$$self{'Taxes'}} = @New_Taxes;
+	} # end if
 	foreach my $Tax ( $self->Taxes() ) {
 		$Tax->amount(undef);
 	} # end foreach Tax
 	$self->total(undef);
-
 	my $error = $self->SUPER::save( @_ );
-	# Taxes
-	foreach my $T ( $self->Taxes() ) {
-		$error .= $T->save();
-	} # end foreach
-
+	foreach my $Tax ( $self->Taxes() ) {
+		$error .= $Tax->save({'expense_id'=>$self->id()});
+	} # end foreach Tax
+		
 	return $error;
 } # end sub save
 sub total {
@@ -158,7 +195,12 @@ sub total {
 sub Tax {
     my $result = openprint::Expense_Tax->find_one('expense_id'=>$_[0]{'id'}, 'tax_id'=>$_[1]->id() ) if $_[0]{'id'};
     if ( ! $result ) {
-        return new openprint::Expense_Tax();
+        $result = new openprint::Expense_Tax();
+		$result->set({
+			'expense_id'=>$_[0]{'id'},
+			'tax_id'=>$_[1]->id(),
+			'rate'=>$_[1]->rate(),
+			});
     } # end if
     return $result;
 } # end sub Tax

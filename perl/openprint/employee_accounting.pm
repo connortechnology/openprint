@@ -226,11 +226,15 @@ sub expenses {
 			$variable{'Redirect'} = '/employee/accounting/expense.html';
 			return;	
 		} # end if
+
+		# At this point,  the array returned should be the correct, appropriate list of taxes.  What we are updating is merely whether we are charging to for those taxes
 		foreach my $Tax ( $Expense->Taxes() ) {
             # Order is important here. Also the 1* turns an undef value into a specific boolean 0, because we used a checkbox
-            $Tax->charge(1*$param{'tax_charge-'.$Tax->id()}) if $Tax->charge() != 1*$param{'tax_charge-'.$Tax->id()};
-            $Tax->amount(undef);
-            $Tax->save();
+			if ( $Tax->charge() != 1*$param{'tax_charge-'.$Tax->tax_id()} ) {
+				$Tax->charge(1*$param{'tax_charge-'.$Tax->tax_id()});
+				$Tax->amount(undef);
+				$Tax->save();
+			} # end if
         } # end foreach
 		ssi::save_params( '/employee/accounting/expense.html', 'category_id', 'due_on', 'invoiced_on', 'recipient_id', 'business_use' );
 
@@ -254,6 +258,9 @@ sub _expenses {
 
 sub expense {
 	my $Expense = $variable{'Expense'} = new openprint::Expense( $param{'expense_id'} );
+	$Expense->owner_id( $session{'company_id'} ) if ! $Expense->owner_id();
+	$Expense->invoiced_on( join('-', Date::Calc::Today() ) ) if ! $Expense->invoiced_on();
+
     if ( time - $session{'/employee/accounting/expense.html?lastupdated'} < ( 12*60*60 ) ) {
         $variable{'Expense'}->recipient_id( $session{'/employee/accounting/expense.html?recipient_id'} ) if ! $variable{'Expense'}->recipient_id();
         $variable{'Expense'}->due_on( $session{'/employee/accounting/expense.html?due_on'} ) if ! $variable{'Expense'}->due_on();
@@ -263,6 +270,15 @@ sub expense {
     } # end if
 	
 } # end sub expense
+
+sub _expense_taxes {
+	my $Expense = $variable{'Expense'} = new openprint::Expense( $param{'expense_id'} );
+	$Expense->owner_id( $session{'company_id'} ) if ! $Expense->owner_id();
+	if ( $param{'invoiced_on_year'} and $param{'invoiced_on_month'} and $param{'invoiced_on_day'} ) {
+		$variable{'Expense'}->invoiced_on( join('-', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} ) );
+	} # end if
+
+}
 
 sub stock {
 	require openprint::ManifestContent;
