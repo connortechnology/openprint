@@ -365,10 +365,10 @@ sub find {
 				next if sets::isin( $k,[ 'order','limit','or' ] );
 				next if ! $$f{$k};
 				if ( ref $params{$k} eq 'ARRAY' ) {
-					push @where "$$f{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+					push @where, "$$f{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
 					push @values, @{$params{$k}};
 				} elsif ( ! defined $params{$k} ) {
-					push @where "$$f{$k} IS NULL";
+					push @where, "$$f{$k} IS NULL";
 				} else {
 					push @where, "$$f{$k}=?";
 					push @values, $params{$k};

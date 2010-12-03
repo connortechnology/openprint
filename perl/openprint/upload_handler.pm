@@ -265,6 +265,7 @@ $log->error("No destdir");
 		} # end foreach file
 		if ( $files ) {
 # Notify CSR, and Customer of upload
+			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 			$$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
 			if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html') {
 				$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html' );
@@ -272,6 +273,8 @@ $log->error("No destdir");
 				$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 			} # end if
 			$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
+			my $body = ssi::variable_substitution( \$email_template, $variable );
+			my $Mail = new openprint::Email();
 			my @to;
 			my $from;
 			if ( $session{'user_id'} ) {
@@ -294,9 +297,6 @@ $log->error("No destdir");
 				push @to, $config{'OrderingEmail'};
 			} # end if
 			if ( @to ) {
-				my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-				my $body = ssi::variable_substitution( \$email_template, $variable );
-				my $Mail = new openprint::Email();
 
 				$_ = $Mail->send(
 						SMTP    => $config{'Mail Server'},
@@ -328,7 +328,7 @@ $log->error("No destdir");
 			} else {
 				@to = ( $param{'txtEmailAddress'} );
 			} # end if
-			$body = ssi::variable_substitution( \$email_template, $variable );
+			my $body = ssi::variable_substitution( \$email_template, $variable );
 			$_ = $Mail->send(
 					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
