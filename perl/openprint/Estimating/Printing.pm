@@ -1252,9 +1252,19 @@ $log->warn("There are no quantities!");
 		} # end if
 
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty: ";
-		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
-		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
-#$log->debug("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) $qty");
+		if ( $$specs{'PageQuantity'} ) {
+			$qty *= $$specs{'PageQuantity'};
+			$$specs{'hdnBreakdown'.$qty_index} .= " * $$specs{'PageQuantity'} pages = $qty: ";
+		} # end if
+		if ( $$specs{'txtNameQuantity'} ) {
+			$qty *= $$specs{'txtNameQuantity'};
+			$$specs{'hdnBreakdown'.$qty_index} .= " * $$specs{'txtNameQuantity'} names = $qty: ";
+		} # end if
+		if ( $$specs{'Versions'} ) {
+			$qty *= $$specs{'Versions'};
+			$$specs{'hdnBreakdown'.$qty_index} .= " * $$specs{'Versions'} versions = $qty: ";
+		} # end if
+$log->error("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) ($$specs{Versions}) $qty");
 
 		$$specs{'totalSpreads'} = 1;
 # Figure out how many spreads we need!
@@ -1626,7 +1636,7 @@ $i->display();
 	} # end if
 				foreach my $imp ( @imps ) {
 					if ( $imp->imposition() > $qty ) {
-						$openprint::log->debug("Next because $$imp{imposition} > $qty");
+						$openprint::log->debug("Next because imp $$imp{imposition} > qty $qty");
 					} # end if
 					my $add = 1;
 					my $str = sprintf('%dx%d+%dx%d-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
@@ -1654,8 +1664,8 @@ $i->display();
 								last;
 							} # end if
 
-							my %BiggerPrice = $I->Paper()->get_price($qty/$I->imposition());
-							my %SmallerPrice = $imp->Paper()->get_price($qty/$imp->imposition());
+							my %BiggerPrice = $I->Paper()->get_price(ceil($qty/$I->imposition()));
+							my %SmallerPrice = $imp->Paper()->get_price(ceil($qty/$imp->imposition()));
 							if (
 									( $I->Paper()->area() >= $imp->Paper()->area() )
 									and
@@ -2659,7 +2669,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 				$$price{'Comparison Cost'} += $paper_price{'Total'};
 				$$price{'Stock Total'} += $paper_price{'Total'};
 				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s %s %s, %slbs * %.2f/100lbs = $%.2f<br/>', 
-						( $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : $PaperCounts{$paper_string}.'lbs'), 
+						( $Paper->type() eq 'Sheet' ? ceil($PaperCounts{$paper_string}/$Paper->factor()) .'sheets' : $PaperCounts{$paper_string}.'lbs'), 
 						$Paper->to_string(),
 						( $Paper->sheets_per_package() ? 'SPP:'.$Paper->sheets_per_package() : '' ),
 						( $Paper->minimum_order() ? 'Minimum: ' . $Paper->minimum_order() : '' ), 
@@ -2936,7 +2946,7 @@ sub calc_price {
 		$net_sheets = $$specs{'OverBase'.$qty_index};
 	} else {
 		$net_sheets = ceil($qty / $imposition);
-		$net_sheets *= $$specs{'Versions'} if $$specs{'Versions'};
+		#$net_sheets *= $$specs{'Versions'} if $$specs{'Versions'}; qty is already adjusted
 		$net_sheets *= $Paper->parts() if $Paper->parts();
 	} # end if
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.

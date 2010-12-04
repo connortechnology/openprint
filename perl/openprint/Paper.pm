@@ -1030,11 +1030,14 @@ sub minimum_order {
 		$$self{'minimum_order'} = shift;
 	} # end if
 
-	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} ) if $$self{'width'} and $$self{'height'};
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
-	return $$self{'minimum_order'} * $factor if $factor;
-	return $$self{'minimum_order'};
+	return $$self{'minimum_order'} * $self->factor();
 } # end minimum_order 
+sub factor {
+	my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
+	return 1 if ! $factor;
+	return $factor;
+} # end sub factor
 sub minimum_order_weight {
 	my $self = $_[0];
 	if ( $$self{'type'} eq 'Sheet' ) {
@@ -1049,10 +1052,8 @@ sub sheets_per_package {
 		$$self{sheets_per_package} = shift;
 	} # end if
 
-	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} ) if $$self{'width'} and $$self{'height'};
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
-	return $$self{'sheets_per_package'} * $factor if $factor;
-	return $$self{'sheets_per_package'};
+	return $$self{'sheets_per_package'} * $self->factor();
 } # end sheets_per_package
 	
 sub gsm {

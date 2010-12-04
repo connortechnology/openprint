@@ -61,6 +61,14 @@ sub no_outputs {
 } # end sub no_outputs
 
 
+sub outputs {
+    my @v;
+    foreach my $k ( keys %variables ) {
+        push @v, $k, if sets::isin( 'output', $variables{$k} );
+    } # end foreach;
+    return @v;
+} # end sub outputs
+
 sub calc {
 	my ( undef, undef, undef, $project_index, $service_index, $specs ) = @_;
 $log->debug("ScratchPads::calc");
