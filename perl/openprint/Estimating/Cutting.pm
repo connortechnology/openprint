@@ -273,6 +273,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 			$sheets *= $cuts+1;
 		} # end foreach
 		my $setupCost = openprint::service::get_price( 'CuttingMakeReady', undef, $Equipment );
+		$results{'Breakdown'} .= sprintf('MakeReady: %.2f<br/>', $setupCost );
 		my $totalPrice = $setupCost + $price;
 		my %cleaning;
 		if ( $Paper->bladecleaning() ) {
