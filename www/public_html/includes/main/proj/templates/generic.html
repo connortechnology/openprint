@@ -1,20 +1,20 @@
 <div class="templates">
 	<? echo (
 		my $ProjectType = $$variable{'Project'}->Type();
-		my @Templates = openprint::ProjectType_Template->find('projecttype_id'=>$ProjectType->id(), 'order'=>'type' );
+		my @Templates = sets::union( map { $_->type() } openprint::ProjectType_Template->find('projecttype_id'=>$ProjectType->id(), 'order'=>'type' ) );
 
 		if ( @Templates == 1 ) {
-			return sprintf('<input type="hidden" name="rdbTemplateType" value="%s"/>', $Templates[0]->type() );
+			return sprintf('<input type="hidden" name="rdbTemplateType" value="%s"/>', $Templates[0] );
 		} elsif ( @Templates == 0 ) {
 			return '';
 		} # end if
 		my $html .= misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/includes/main/proj/templates/project_template_select.html' );
 		foreach my $Template ( @Templates ) {
-			if ( -f $config{'SkinPath'}.'/images/templates/'.$ProjectType->name().'/'.$Template->type().'.gif' ) {
-				$html .= sprintf('<p><img src="/images/templates/%3$s/%1$s.gif" alt="%1$s"/><input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s/><label for="rdbTemplateType%1$s">%1$s</label></p>', $Template->type(), ssi::checked( $Template->type() eq $$variable{'rdbTemplateType'} ), $ProjectType->name() );
+			if ( -f $config{'SkinPath'}.'/images/templates/'.$ProjectType->name().'/'.$Template.'.gif' ) {
+				$html .= sprintf('<p><img src="/images/templates/%3$s/%1$s.gif" alt="%1$s"/><input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s/><label for="rdbTemplateType%1$s">%1$s</label></p>', $Template, ssi::checked( $Template eq $$variable{'rdbTemplateType'} ), $ProjectType->name() );
 			} else {
-				$log->error("No Project Template image for " . $config{'SkinPath'}.'/images/templates/'.$ProjectType->name().'/'.$Template->type().'.gif' );
-				$html .= sprintf('<p><input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s /><label for="rdbTemplateType%1$s">%1$s</label></p>', $Template->type(), ssi::checked( $Template->type() eq $$variable{'rdbTemplateType'} ), $ProjectType->name() );
+				$log->error("No Project Template image for " . $config{'SkinPath'}.'/images/templates/'.$ProjectType->name().'/'.$Template.'.gif' );
+				$html .= sprintf('<p><input type="radio" name="rdbTemplateType" id="rdbTemplateType%1$s" value="%1$s" onclick="selectProjectTemplate(this.form.name);" %2$s /><label for="rdbTemplateType%1$s">%1$s</label></p>', $Template, ssi::checked( $Template eq $$variable{'rdbTemplateType'} ), $ProjectType->name() );
 			} # end if
 			$html .= "\n";
 		} # end foreach

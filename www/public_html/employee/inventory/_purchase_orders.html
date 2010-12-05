@@ -42,6 +42,16 @@
 				} # end foreach
 				next if $next;
 			} # end if
+			if ( $param{'item_contains'} ) {
+				my $next = 1;
+				foreach my $C ($PO->Contents()) {
+					if ( $C->item() =~ /$param{'item_contains'}/i ) {
+						$next = 0;
+						last;
+					} # end if
+				} # end foreach
+				next if $next;
+			} # end if
 			my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
 			if ( ! @types ) {
 				next if ! sets::isin( ' ', [ split(';',$session{'/employee/inventory/purchase_orders.html?types'} ) ] );

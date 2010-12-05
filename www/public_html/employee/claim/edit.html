@@ -59,6 +59,9 @@ function calc_price( element ) {
 			} else if ( weight_units != 'Kg' ) {
 				$('alert-'+index).innerHTML += 'The weight is given in ' + weight_units + ' but should be in Kgs';
 			} // end if
+		} else if ( cost_units == '/Hr.' ) {
+			if ( ! qty ) 
+				$('alert-'+index).innerHTML += 'Please enter the # of hours.<br/>';
 		} else if ( cost_units == 'Each' ) {
 			if ( ! qty )
 				$('alert-'+index).innerHTML += 'Please enter quantity.<br/>';

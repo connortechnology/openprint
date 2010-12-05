@@ -23,6 +23,7 @@ $serial = 'services_id_seq';
 		'description'		=>	'description',
 		'supplier_id'		=>	'supplier_id',
 		'category_id'		=>	'category_id',
+		'category'			=>	undef,
 		'taxexempt1'		=>	'taxexempt1',
 		'taxexempt2'		=>	'taxexempt2',
 		'owner_id'			=>	'owner_id',

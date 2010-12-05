@@ -11,9 +11,18 @@
 		} // end if
 		timeout = null;
 		gettingNewPrice = true;
-
 		var form = getFormObj( formName );
-		jsrsExecute( '/jsrs.htm', cbBookResults, 'openprint::service::external_calc', get_variables(formName,'ScratchPads') );
+		var h = $H(form.serialize(true));
+		h.each(function(pair) {
+				if ( pair.value == '' )
+				h.unset(pair.key);
+				if ( pair.key == 'btnFunction' ) 
+				h.unset(pair.key);
+				});
+		h.set('ServiceType','ScratchPads');
+		h.set('callback','cbBookResults');
+		new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
+
 	}
 	function cbBookResults( results ) {
 		cbFillResults(results);

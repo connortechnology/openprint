@@ -1,7 +1,8 @@
+use strict;
 package email;
 
-use strict;
 use openprint ();
+use warnings;
 use vars qw( $r %config $log );
 *r = \$openprint::r;
 *log = \$openprint::log;
@@ -13,6 +14,7 @@ my $dbh;
 
 sub db_connect {
 	if ( $config{'mail_db_name'} ) {
+# Fairly important to us the config hash.  r->dir_config causes crashes
 		return $dbh = sql::open_sql( $log, 
 				(
 				 'host'		=>	$config{'mail_db_hostname'},
@@ -22,7 +24,7 @@ sub db_connect {
 				 'driver'	=>	$config{'mail_db_driver'},
 				) );
 	} # end if;
-	return;
+	return $dbh;
 } # end sub connect
 
 sub set_password {

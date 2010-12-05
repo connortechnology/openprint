@@ -584,15 +584,17 @@ $inkCoverage{$colour} = 100;
 		<? endif ( $$variable{Services}{'ShrinkWrap'} ) ?>
 
 		<? echo (
-			my $html;
-			if ( $$variable{Services}{'Bundling'} ) {
-				foreach ( @{$$variable{Services}{'Bundling'}} ) {
-					openprint::print_project::get_service_specifications( $r, $log, $dbh, $variable, $$variable{'ProjectIndex'}, $_ ); ) ?>
-					$html .= ", Bundles in <?txtWrapQuantity?>'s";
-				} # endforeach
-			} # endif
-			return $html;
+		my $html;
+		if ( $$variable{Services}{'Bundling'} ) {
+			foreach my $s_id ( @{$$variable{Services}{'Bundling'}} ) {
+				my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $s_id );
+
+				$html .= ", Bundles in $$specs{txtItemsPerPackage}'s";
+			} # end foreach s_id
+		} # end if
+		return $html;
 		) ?>
+
 		<? if ( $$variable{Services}{'KraftWrap'} ) ?>
 		<? eval ( @{$$variable{'KraftWrapServices'}} = $$variable{Services}{'KraftWrap'}[0] ) ?>
 		<? while ( $$variable{'KraftWrapServiceIndex'} = pop @{$$variable{'KraftWrapServices'}} ) ?>

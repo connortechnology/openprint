@@ -331,8 +331,8 @@ sub find {
 	my $type = shift;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
-	my %find_fields = eval '%'.$type.'::find_fields';
 	my $cache_field = eval $type.'->cache_field()';
+
 	my $debug = eval '$'.$type.'::debug';
 	$debug = $debug_all if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
@@ -356,38 +356,25 @@ sub find {
 		} # end if
 	} # end if
 
-	foreach my $k ( keys %params ) {
-		next if sets::isin( $k,[ 'order','limit','or' ] );
-		if ( $fields{$k} ) {
-			if ( ref $params{$k} eq 'ARRAY' ) {
-				push @where, "$fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-				push @values, @{$params{$k}};
-			} elsif ( ! defined $params{$k} ) {
-				push @where, "$fields{$k} IS NULL";
-			} else {
-#$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
-				push @where, "$fields{$k}=?";
-				push @values, $params{$k};
-			} # end if
-			delete $params{$k};
-		} elsif ( $find_fields{$k} ) {
-			if ( ref $params{$k} eq 'ARRAY' ) {
-				push @where, "$find_fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-				push @values, @{$params{$k}};
-			} elsif ( ! defined $params{$k} ) {
-				push @where, "$find_fields{$k} IS NULL";
-			} else {
-#$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
-				push @where, "$find_fields{$k}=?";
-				push @values, $params{$k};
-			} # end if
-			delete $params{$k};
-		} # end if
-	} # end foreach k
-	if ( %params ) {
+    if ( %params ) {
 		foreach ( 'find_fields', 'fields' ) {
 			my $f = eval '\%'.$type.'::'.$_;
 			next if ! $f;
+
+			foreach my $k ( keys %params ) {
+				next if sets::isin( $k,[ 'order','limit','or' ] );
+				next if ! $$f{$k};
+				if ( ref $params{$k} eq 'ARRAY' ) {
+					push @where, "$$f{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+					push @values, @{$params{$k}};
+				} elsif ( ! defined $params{$k} ) {
+					push @where, "$$f{$k} IS NULL";
+				} else {
+					push @where, "$$f{$k}=?";
+					push @values, $params{$k};
+				} # end if
+				delete $params{$k};
+			} # end foreach k
 
 			foreach my $k ( keys %$f ) {
 				if ( exists $params{$k.'_like'} ) {
