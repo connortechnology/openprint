@@ -1,6 +1,24 @@
 <script type="text/javascript">
 var tax_ids = [ <? echo ( join(',', map { $_->tax_id() } $$variable{'Expense'}->Taxes() ); ) ?> ];
 
+function calc_amount_from_total( form ) {
+	var tax_rate = 1;
+	for ( var i = 0; i < tax_ids.length; i+= 1 ) {
+	tax_rate += $('tax_rate-'+tax_ids[i]).innerHTML/100;
+	} // end for
+	var amount = parseFloat( form.total.value ) / tax_rate;
+	$('amount').value = do_decimals( amount, 2 );
+    for ( var i = 0; i < tax_ids.length; i+= 1 ) {
+        if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
+            tax = amount * $('tax_rate-'+tax_ids[i]).innerHTML/100;
+        } else {
+            tax = 0;
+        } // end if
+        $('tax_amount-'+tax_ids[i]).value = do_decimals( tax, 2 );
+	} // end for
+}
+
+
 function update_total( form ) {
     var total = parseFloat( form.amount.value );
     for ( var i = 0; i < tax_ids.length; i+= 1 ) {
@@ -62,7 +80,7 @@ function update_total( form ) {
 				</ul>
 				<ul>
 				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>):</label>
-					<input type="text" name="total" id="total" value="<? echo ( $$variable{'Expense'}->total() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />
+					<input type="text" name="total" id="total" value="<? echo ( $$variable{'Expense'}->total() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_amount_from_total(this.form);" size="8" />
 				</li>
 				<li><label for="business_use">Business %</label>
 					<input type="text" name="business_use" id="business_use" value="<? echo ( $$variable{'Expense'}->business_use() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />%
