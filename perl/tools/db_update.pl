@@ -103,6 +103,9 @@ if ( sets::isin( 'tbl_projects', \@tables ) ) {
 			$dbh->do(q`alter table tbl_Projects alter predefined set not null`);
 			sql::end_transaction( $dbh, $ac );
 		} # end if
+		if ( ! exists $$data{'externalrefnumber'} ) {
+			$dbh->do('ALTER TABLE tbl_projects add externalrefnumber text');
+		}
 		$dbh->do(q`ALTER TABLE tbl_Projects rename to Projects`);
 	} # end if
 	@tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
@@ -865,6 +868,11 @@ if ( $version < 1900 ) {
 	sql::insert( undef, undef, 'database_info', 'version', 1900, 'backup', $backup );
 	$version = 1900;
 } # end if
+if ( ! sets::isin( 'pricelists', \@tables ) ) {
+	$dbh->do(misc::load_file( $dbh, '../openprint/sql/Pricelists.sql' ) );
+	die if $dbh->errstr();
+}
+
 if ( sets::isin( 'tbl_service_prices', \@tables ) ) {
 	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Service_Prices LIMIT 1', {} );
 	if ( $data ) {
@@ -2009,8 +2017,14 @@ if ( ! sets::isin( 'paymenttypes', \@tables ) ) {
 
 if ( ! sets::isin( 'order_id_seq', \@sequences ) ) {
 	$dbh->do('create sequence order_id_seq');
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='orders'", 'column_name');
+	if ( exists $$data{'index'} ) {
 	$dbh->do(q`select setval('order_id_seq', (select max(index) from orders) )`);
 	$dbh->do(q`alter table orders alter column index set default nextval('order_id_seq');`);
+	} else {
+	$dbh->do(q`select setval('order_id_seq', (select max(id) from orders) )`);
+	$dbh->do(q`alter table orders alter column id set default nextval('order_id_seq');`);
+	} # end if
 }
 
 if ( ! sets::isin( 'order_contents', \@tables ) ) {
@@ -2625,7 +2639,13 @@ if ( sets::isin('product_id_seq', \@sequences ) ) {
 	$dbh->do('ALTER SEQUENCE product_id_seq RENAME TO products_id_seq');
 }
 
-	$dbh->commit();
+foreach my $aq ( 'Gloss', 'Matte', 'Satin', 'SoftTouch' ) {
+foreach my $S ( openprint::Service->find('name'=>'Aqueous '.$aq) ) {
+	if ( $S->category() ne 'Coating' ) {
+		$S->save({'category'=>'Coating'});
+	} # end if
+} # end foreach
+}
 $dbh->disconnect();
 print "Finished\n";
 1;

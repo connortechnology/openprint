@@ -14,6 +14,7 @@
 \i Companies_AccountingContacts.sql
 \i Assistants.sql
 \i Articles.sql
+\i Article_Categories.sql
 \i Assets.sql
 \i EmailCampaigns.sql
 \i EmailCampaign_Log.sql

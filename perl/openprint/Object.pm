@@ -114,8 +114,8 @@ if ( $data ) {
 #foreach my $k ( keys %$data ) {
 #$log->debug("$type ::save $k => $$data{$k}");
 #}
-} else {
-$log->debug("No data");
+#} else {
+#$log->debug("No data");
 }
 	$self->set( $data ? $data : {} );
 #if ( $data ) {
@@ -331,8 +331,8 @@ sub find {
 	my $type = shift;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
-	my %find_fields = eval '%'.$type.'::find_fields';
 	my $cache_field = eval $type.'->cache_field()';
+
 	my $debug = eval '$'.$type.'::debug';
 	$debug = $debug_all if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
@@ -362,19 +362,17 @@ sub find {
 
 		foreach my $k ( keys %params ) {
 			next if sets::isin( $k,[ 'order','limit','or' ] );
-			if ( $$f{$k} ) {
-				if ( ref $params{$k} eq 'ARRAY' ) {
-					push @where, "$$f{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-					push @values, @{$params{$k}};
-				} elsif ( ! defined $params{$k} ) {
-					push @where, "$$f{$k} IS NULL";
-				} else {
-#$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
-					push @where, "$$f{$k}=?";
-					push @values, $params{$k};
-				} # end if
-				delete $params{$k};
+			next if ! $$f{$k};
+			if ( ref $params{$k} eq 'ARRAY' ) {
+				push @where, "$$f{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+				push @values, @{$params{$k}};
+			} elsif ( ! defined $params{$k} ) {
+				push @where, "$$f{$k} IS NULL";
+			} else {
+				push @where, "$$f{$k}=?";
+				push @values, $params{$k};
 			} # end if
+			delete $params{$k};
 		} # end foreach k
 		last if ! %params;
 

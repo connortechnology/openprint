@@ -1,7 +1,7 @@
-package openprint::Email;
-@ISA = qw( openprint::Object );
-
 use strict;
+
+package openprint::Email;
+our @ISA = qw( openprint::Object );
 
 use openprint ();
 require openprint::User;
@@ -14,6 +14,7 @@ $debug = 1;
 
 sub send {
 	my ( $self, %params ) = @_;
+$log->debug("Sending an email");
 
 	my $results;
 	if ( $params{'FROM'} ) {
@@ -48,8 +49,11 @@ $log->debug("Email: Recipients @recipients");
 		if ( ref $recipient eq 'openprint::User' ) {
 			my @to;
 			foreach my $email ( split (',',  $recipient->email() ) ) {
+				s/^\s+//, s/\s+$// for $email;
+$log->debug("Email: checking vacation for $email");
 				if ( email::get_vacation( $email ) ) {
 					$results .= 'Not sending to ' . $email . ' because they are on vacation.<br/>';
+$log->debug("Email: got vacation for $email");
 					next;
 				} # end if
 				push @to, sprintf('"%s" <%s>', $recipient->name(), $email );
@@ -72,7 +76,6 @@ $log->debug("Email: Recipients @recipients");
 				$mail{'TO'} = $recipient;
 			} # end if
 		} # end if
-$openprint::log->debug("Sending to $mail{'To'}");
 		misc::send_email_with_attachment( $log, \%mail, @attachments );
 		$results .= 'Sent to: ' .  ssi::htmlize( $mail{'TO'} ) . '<br/>';
 

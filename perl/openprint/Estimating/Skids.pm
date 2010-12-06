@@ -119,7 +119,7 @@ sub calc {
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
 		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	} # end if
-	if ( ! 1 * $$specs{'txtFinishedCalliper'} ) {
+	if ( ! (1 * $$specs{'txtFinishedCalliper'} ) ) {
 		$$specs{'alert'} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -181,7 +181,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 					my $imposition = $setup1->imposition() > $setup2->imposition() ? $setup1->imposition() : $setup2->imposition();
 					next if ! $imposition;
 
-					$items_by_size = int ( $depth/$$specs{'txtFinishedCalliper'} * $imposition );
+					$items_by_size = int ( ($depth/$$specs{'txtFinishedCalliper'}) * $imposition );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %d<br/>', $items_by_size );
 # Make sure it's not too heavy
 					if ( $items_by_size > $items_by_weight ) {

@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS Skid_verifications;
 DROP TABLE IF EXISTS Skid_Contents;
 DROP TABLE IF EXISTS Skids;
-DROP SEQUENCE Skid_id_seq;
+DROP SEQUENCE IF EXISTS Skid_id_seq;
 
 CREATE SEQUENCE Skid_id_seq;
 CREATE TABLE Skids (

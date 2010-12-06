@@ -62,6 +62,11 @@ sub variables {
 	return @v;
 } # end sub variables
 
+sub outputs {
+}
+sub no_outputs {
+}
+
 sub signature_needs {
 	my ( $Project, $sig_specs ) = @_;
 	my $services = $Project->services();
@@ -211,6 +216,7 @@ $openprint::log->debug("QTY $qty_index ($paper_string) => " . $totals{$paper_str
 				if ( $$specs{"overridecost-$ss_id-$stock_index-$qty_index"} ne 'Y' ) {
 					my %price;
 					if ( $Paper->type() eq 'Sheet' ) {
+$openprint::log->debug( 'Sheet paper qty: ' . $totals{$paper_id}{"qty_$qty_index"} );
 						%price = $Paper->get_price( $totals{$paper_id}{"qty_$qty_index"} * $Paper->sheet_weight() );
 					} else {
 						%price = $Paper->get_price( $totals{$paper_id}{"qty_$qty_index"} );

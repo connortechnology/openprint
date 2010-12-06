@@ -732,7 +732,7 @@ sub get_finished_calliper {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
 		my $calliper = int($$sig_specs{'txtSpecificStockCalliper'}*10000);
 
-		if ( $Project->Type()->name() eq 'ScratchPads' ) {
+		if ( $Project->Type()->type() eq 'ScratchPads' ) {
 			$finished_calliper += $$printing_specs{'PageQuantity'} * $calliper;
 		} elsif ( $$sig_specs{'ServiceType'} eq 'Signature' ) {
 			foreach my $qty_index ( $Project->quantity_indexes() ) {

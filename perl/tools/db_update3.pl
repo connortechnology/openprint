@@ -26,6 +26,15 @@ configuration::init_cache( $log, $dbh );
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
+if ( sets::isin( 'article_categories', \@tables ) ) {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
+	if ( ! exists $$data{'image_filename'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD image_filename TEXT');
+	} # end if
+	if ( ! exists $$data{'description'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
+	} # end if
+}
 $dbh->disconnect();
 1;
 __END__
