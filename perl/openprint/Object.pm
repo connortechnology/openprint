@@ -356,116 +356,105 @@ sub find {
 		} # end if
 	} # end if
 
-	foreach my $k ( keys %params ) {
-		next if sets::isin( $k,[ 'order','limit','or' ] );
-		if ( $fields{$k} ) {
-			if ( ref $params{$k} eq 'ARRAY' ) {
-				push @where, "$fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-				push @values, @{$params{$k}};
-			} elsif ( ! defined $params{$k} ) {
-				push @where, "$fields{$k} IS NULL";
-			} else {
-#$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
-				push @where, "$fields{$k}=?";
-				push @values, $params{$k};
-			} # end if
-			delete $params{$k};
-		} elsif ( $find_fields{$k} ) {
-			if ( ref $params{$k} eq 'ARRAY' ) {
-				push @where, "$find_fields{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-				push @values, @{$params{$k}};
-			} elsif ( ! defined $params{$k} ) {
-				push @where, "$find_fields{$k} IS NULL";
-			} else {
-#$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
-				push @where, "$find_fields{$k}=?";
-				push @values, $params{$k};
-			} # end if
-			delete $params{$k};
-		} # end if
-	} # end foreach k
-	if ( %params ) {
-		foreach ( 'find_fields', 'fields' ) {
-			my $f = eval '\%'.$type.'::'.$_;
-			next if ! $f;
+	foreach ( 'find_fields', 'fields' ) {
+		my $f = eval '\%'.$type.'::'.$_;
+		next if ! $f;
 
-			foreach my $k ( keys %$f ) {
-				if ( exists $params{$k.'_like'} ) {
-					push @where,"$$f{$k}::text LIKE ?";
-					push @values, $params{$k.'_like'};
-					delete $params{$k.'_like'};
-				} 
-				if ( exists $params{$k.'_ilike'} ) {
-					push @where, "$$f{$k}::text ILIKE ?";
-					push @values, $params{$k.'_ilike'};
-					delete $params{$k.'_ilike'};
-				} 
-				if ( exists $params{$k.'_start'} ) {
-					push @where, "$$f{$k} >= ?";
-					push @values, $params{$k.'_start'};
-					delete $params{$k.'_start'};
-				} 
-				if ( exists $params{$k.'_end'} ) {
-					push @where, "$$f{$k} <= ?";
-					push @values, $params{$k.'_end'};
-					delete $params{$k.'_end'};
+		foreach my $k ( keys %params ) {
+			next if sets::isin( $k,[ 'order','limit','or' ] );
+			if ( $$f{$k} ) {
+				if ( ref $params{$k} eq 'ARRAY' ) {
+					push @where, "$$f{$k} IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
+					push @values, @{$params{$k}};
+				} elsif ( ! defined $params{$k} ) {
+					push @where, "$$f{$k} IS NULL";
+				} else {
+#$openprint::log->debug("k: $k field: $fields{$k} value: $params{$k}");
+					push @where, "$$f{$k}=?";
+					push @values, $params{$k};
 				} # end if
-				if ( exists $params{$k.'_<'} ) {
-					push @where, "$$f{$k} < ?";
-					push @values, $params{$k.'_<'};
-					delete $params{$k.'_<'};
+				delete $params{$k};
+			} # end if
+		} # end foreach k
+		last if ! %params;
+
+		foreach my $k ( keys %$f ) {
+			if ( exists $params{$k.'_like'} ) {
+				push @where,"$$f{$k}::text LIKE ?";
+				push @values, $params{$k.'_like'};
+				delete $params{$k.'_like'};
+			} 
+			if ( exists $params{$k.'_ilike'} ) {
+				push @where, "$$f{$k}::text ILIKE ?";
+				push @values, $params{$k.'_ilike'};
+				delete $params{$k.'_ilike'};
+			} 
+			if ( exists $params{$k.'_start'} ) {
+				push @where, "$$f{$k} >= ?";
+				push @values, $params{$k.'_start'};
+				delete $params{$k.'_start'};
+			} 
+			if ( exists $params{$k.'_end'} ) {
+				push @where, "$$f{$k} <= ?";
+				push @values, $params{$k.'_end'};
+				delete $params{$k.'_end'};
+			} # end if
+			if ( exists $params{$k.'_<'} ) {
+				push @where, "$$f{$k} < ?";
+				push @values, $params{$k.'_<'};
+				delete $params{$k.'_<'};
+			} # end if
+			if ( exists $params{$k.'_<='} ) {
+				push @where, "$$f{$k} <= ?";
+				push @values, $params{$k.'_<='};
+				delete $params{$k.'_<='};
+			} # end if
+			if ( exists $params{$k.'_null_or_<='} ) {
+				push @where, "( $$f{$k} <= ? OR $$f{$k} IS NULL )";
+				push @values, $params{$k.'_null_or_<='};
+				delete $params{$k.'_null_or_<='};
+			} # end if
+			if ( exists $params{$k.'_>='} ) {
+				push @where, "$$f{$k} >= ?";
+				push @values, $params{$k.'_>='};
+				delete $params{$k.'_>='};
+			} # end if
+			if ( exists $params{$k.'_null_or_>='} ) {
+				push @where, "( $$f{$k} >= ? OR $$f{$k} IS NULL )";
+				push @values, $params{$k.'_null_or_>='};
+				delete $params{$k.'_null_or_>='};
+			} # end if
+			if ( exists $params{$k.'_>'} ) {
+				push @where, "$$f{$k} > ?";
+				push @values, $params{$k.'_>'};
+				delete $params{$k.'_>'};
+			} # end if
+			if ( exists $params{$k.'_in'} ) {
+				push @where, "? IN $$f{$k}";
+				push @values, $params{$k.'_in'};
+				delete $params{$k.'_in'};
+			} # end if
+			if ( exists $params{$k.'_lc'} ) {
+				push @where, "lower($$f{$k}) = ?";
+				push @values, lc $params{$k.'_lc'};
+				delete $params{$k.'_lc'};
+			} # end if
+			if ( exists $params{$k.'_any'} ) {
+				push @where, "? = ANY( $$f{$k} )";
+				push @values, $params{$k.'_any'};
+				delete $params{$k.'_any'};
+			} # end if
+			if ( defined $params{$k.'_null'} ) {
+				if ( $params{$k.'_null'} ) {
+					push @where, "$$f{$k} IS NULL";
+				} else {
+					push @where, "$$f{$k} IS NOT NULL";
 				} # end if
-				if ( exists $params{$k.'_<='} ) {
-					push @where, "$$f{$k} <= ?";
-					push @values, $params{$k.'_<='};
-					delete $params{$k.'_<='};
-				} # end if
-				if ( exists $params{$k.'_null_or_<='} ) {
-					push @where, "( $$f{$k} <= ? OR $$f{$k} IS NULL )";
-					push @values, $params{$k.'_null_or_<='};
-					delete $params{$k.'_null_or_<='};
-				} # end if
-				if ( exists $params{$k.'_>='} ) {
-					push @where, "$$f{$k} >= ?";
-					push @values, $params{$k.'_>='};
-					delete $params{$k.'_>='};
-				} # end if
-				if ( exists $params{$k.'_null_or_>='} ) {
-					push @where, "( $$f{$k} >= ? OR $$f{$k} IS NULL )";
-					push @values, $params{$k.'_null_or_>='};
-					delete $params{$k.'_null_or_>='};
-				} # end if
-				if ( exists $params{$k.'_>'} ) {
-					push @where, "$$f{$k} > ?";
-					push @values, $params{$k.'_>'};
-					delete $params{$k.'_>'};
-				} # end if
-				if ( exists $params{$k.'_in'} ) {
-					push @where, "? IN $$f{$k}";
-					push @values, $params{$k.'_in'};
-					delete $params{$k.'_in'};
-				} # end if
-				if ( exists $params{$k.'_lc'} ) {
-					push @where, "lower($$f{$k}) = ?";
-					push @values, lc $params{$k.'_lc'};
-					delete $params{$k.'_lc'};
-				} # end if
-				if ( exists $params{$k.'_any'} ) {
-					push @where, "? = ANY( $$f{$k} )";
-					push @values, $params{$k.'_any'};
-					delete $params{$k.'_any'};
-				} # end if
-				if ( defined $params{$k.'_null'} ) {
-					if ( $params{$k.'_null'} ) {
-						push @where, "$$f{$k} IS NULL";
-					} else {
-						push @where, "$$f{$k} IS NOT NULL";
-					} # end if
-					delete $params{$k.'_null'};
-				} # end if
-			} # end foreach k in fields
-		} # end foreach set of fields
-	} # end if %params
+				delete $params{$k.'_null'};
+			} # end if
+		} # end foreach k in fields
+		last if ! %params;
+	} # end foreach set of fields
 
 	# Check for Object references
 	if ( %params ) {

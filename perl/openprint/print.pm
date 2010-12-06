@@ -129,7 +129,7 @@ sub view_services {
 # Might need to test for status of project service
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching'] ) ) {
-					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Folding' ] ) ) {
 					if ( $$services{'Cutting'} and @{$$services{'Cutting'}} ) {	

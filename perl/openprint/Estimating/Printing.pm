@@ -756,7 +756,7 @@ sub calc {
 		if ( $$specs{'ddmProjectSize'} ne 'Custom' ) {
 #$log->debug("Auto calc dimensions");
 # auto calc flat dimensions
-			$$specs{'txtWidth'} = $$printing_specs{'txtFinalWidth'} * $$specs{'rdbPanels'};
+			$$specs{'txtWidth'} = $$specs{'txtFinalWidth'} * $$specs{'rdbPanels'};
 			my $pockets;
 			if ( $$specs{'rdbPanels'} == 2 ) {
 				$$specs{'chkPocketCenter'} = '';
@@ -774,7 +774,7 @@ sub calc {
 				$pockets += 1;
 			} # end if
 			$$specs{'rdbTemplateType'} = sprintf( '%dPanel%dPocket', $$specs{'rdbPanels'}, $pockets );
-			$$specs{'txtHeight'} = $$printing_specs{'txtFinalHeight'} + $$specs{'PocketSize'};
+			$$specs{'txtHeight'} = $$specs{'txtFinalHeight'} + $$specs{'PocketSize'};
 			$variables{'txtWidth'} = [ sets::union( 'output', @{$variables{'txtWidth'}} ) ];
 			$variables{'txtHeight'} = [ sets::union( 'output', @{$variables{'txtHeight'}} ) ];
 			#$openprint::log->debug("WIdth: $$specs{'txtWidth'} ");
