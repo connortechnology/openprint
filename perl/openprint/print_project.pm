@@ -325,6 +325,7 @@ sub summary {
 	
 	$$variable{'OrderId'} = $order_id;
 	my $Project = new openprint::Project( $project_index );
+	$$variable{'Order'} = $Project->Order();
 	$$variable{'Project'} = $Project;
 	my $services = $Project->services();
 	$$variable{'Services'} = $services;

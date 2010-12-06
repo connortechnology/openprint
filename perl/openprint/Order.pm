@@ -57,7 +57,6 @@ my $debug = 1;
 	'salesrep_id'				=>	'employeeindex',
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
-	'created_on'				=>	'dtmorderdate',
 	);
 
 sub find {
