@@ -34,9 +34,6 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'CopyProject', 'copyProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Copy' ); ) ?>
 		</div>
 		<div style="float: right;">
-			<? if ( $$variable{'Project'}->status() eq 'uncalculated' ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' ); ) ?>
-			<? endif ( $$variable{'Project'}->status() eq 'uncalculated' ) ?>
 			<? if ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) ?>
 				<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
 			<? endif ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) ?>
