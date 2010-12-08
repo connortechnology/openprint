@@ -14,7 +14,7 @@
 		<input type="radio" id="rdbTemplateTypeDoubleGateFold<?Signature?>" name="rdbTemplateType<?Signature?>" value="DoubleGateFold" onclick="$('PresentationFolderQuestions').hide();" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'DoubleGateFold' ? 'checked="checked"' : '' ) ?> />
 		<label for="rdbTemplateTypeDoubleGateFold<?Signature?>">Double Gate Fold</label>
 	</p>
-<? if ( openprint::ProjectType->find('strid'=>'PresentationFolders') ) ?>
+<? if ( openprint::ProjectType->find_one('name'=>'PresentationFolders') ) ?>
 	<p>
 		<img src="/images/templates/Presentation%20Folders/2Panel1Pocket.gif"> 
 		<input type="radio" id="rdbTemplateTypeSinglePocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="2Panel1Pocket" onclick="$('PresentationFolderQuestions').show();$('rdbPanels2<?Signature?>').checked=true;$('chkPocketCenter<?Signature?>').checked=false;selectProjectTemplate('f1');" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '2Panel1Pocket' ? 'checked="checked"' : '' ) ?> /> 
@@ -30,6 +30,6 @@
 		<input type="radio" id="rdbTemplateTypeTriFoldDoublePocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="TriFoldDoublePocket" onclick="$('PresentationFolderQuestions').show();$('rdbPanels3<?Signature?>').checked=true;selectProjectTemplate(this.form.name);" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'TriFoldDoublePocket' ? 'checked="checked"' : '' ) ?> />
 		<label for="rdbTemplateTypeTriFoldDoublePocket<?Signature?>">TriFold Double Pocket</label>
 	</p>
-<? endif ( openprint::ProjectType->find('strid'=>'PresentationFolders') ) ?>
+<? endif ( openprint::ProjectType->find_one('name'=>'PresentationFolders') ) ?>
 	<br class="spacer"/>
 </div>
