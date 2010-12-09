@@ -2,6 +2,12 @@
 	$$variable{'Paper'} = new openprint::Paper( $param{'paper_id'} ) if ! $$variable{'Paper'};
 	if ( $param{'ddmStartYear'} ) {
 		@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+	} elsif ( $session{'/employee/inventory/paper_details.html?ddmStartYear'} ) {
+		@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, @session{
+			'/employee/inventory/paper_details.html?ddmStartYear',
+			'/employee/inventory/paper_details.html?ddmStartMonth',
+			'/employee/inventory/paper_details.html?ddmStartDay'}
+			);
 	} else {
 		@$variable{'StartYears','StartMonths','StartDays','Start'} = ssi::get_dates( $log, $dbh, 
 			Date::Calc::Add_Delta_Days( Date::Calc::Today(), -7 ),
@@ -18,7 +24,7 @@
 		'paper_id'	=>	$param{'paper_id'},
 		'updated_on_start'	=>	$$variable{'Start'} . ' 00:00:00',
 		'updated_on_end'	=>	$$variable{'End'} . ' 23:59:59',
-		'limit'				=>	$param{'limit'},
+		'limit'				=>	$session{'/employee/inventory/paper_details.html?limit'},
 		'order'				=>	'updated_on',
 	);
 	if ( (! @PI) and ! $param{'ddmStartYear'} ) {
@@ -54,7 +60,7 @@
 		<span class="DateSelector">
 		Limit 
 		<select name="limit" onchange="AjaxLoadContent( 'Log', '/employee/inventory/_paper_log.html', $('LogForm').serialize() );">
-			<? echo ( ssi::make_drop_down( [ 10, 10, 25, 25,100, 100, 0, 'All' ], $param{'limit'} ); ) ?>
+			<? echo ( ssi::make_drop_down( [ 10, 10, 25, 25,100, 100, 0, 'All' ], $session{'/employee/inventory/paper_details.html?limit'} ); ) ?>
 		</select>
 		entries
 		</span>
@@ -76,8 +82,8 @@
 			my $rowclass;
 			foreach my $PI ( @{$$variable{'PI'}} ) {
 				$html .= sprintf( '<tr%1$s><td>%2$s</td><td>%3$s</td>
-	<td><a href="skid_details.html?skid_id=%4$d">%4$d</a></td>
-	<td><a href="rfidtag_details.html?rfidtag_id=%5$s">%5$s</a></td>
+	<td><a href="/employee/inventory/skid_details.html?skid_id=%4$d">%4$d</a></td>
+	<td><a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%5$s">%5$s</a></td>
 	<td>%9$s</td>
 	<td align="right">%6$s%8$s</td><td align="right">%7$s%8$s</td>
 	</tr>',
