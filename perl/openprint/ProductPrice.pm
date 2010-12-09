@@ -103,6 +103,16 @@ sub Pricelist {
     return new openprint::Pricelist( $$self{'pricelist_id'} );
 } # end sub Pricelist
 
+sub price {
+	if ( @_ > 1 ) {
+		$_[0]{'price'} = @_[1];
+	} # end if
+	if ( ! defined $_[0]{'price'} ) {
+		$_[0]{'price'} = sprintf( '%.2f', $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+	} # end if
+	return $_[0]{'price'};
+} # end sub price
+
 1;
 
 __END__

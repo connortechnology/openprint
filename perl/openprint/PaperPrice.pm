@@ -121,6 +121,23 @@ sub priceperfoot {
 	return sprintf('%.2f', $$self{'Price'} * ( $Paper->wpsi() * 144 ) /100 );
 }
 
+sub markup {
+	if ( @_ > 1 ) {
+		$_[0]{'Markup'} = $_[1];
+	} # end if
+	return $_[0]{'Markup'};
+} # end sub markup
+
+sub price {
+	if ( @_ > 1 ) {
+		$_[0]{'Price'} = $_[1];
+	} # end if
+	if ( ! defined $_[0]{'Price'} ) {
+		$_[0]{'Price'} = sprintf( '%.2f', $_[0]{'Cost'} * ( 1+($_[0]{'Markup'}/100) ) );
+	} # end if
+	return $_[0]{'Price'};
+}
+
 1;
 
 __END__

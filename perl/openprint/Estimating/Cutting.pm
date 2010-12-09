@@ -402,8 +402,8 @@ sub signature_calc_load_equipment {
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
 	} # end if
-	if ( $Project->Type()->name() eq 'Banners' ) {
-		push @capabilities, 'Banners';
+	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
+		push @capabilities, 'Large Format';
 	} # end if
 	@equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	return @equipment;
@@ -914,8 +914,8 @@ sub display {
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
 		push @capabilities, 'When Stitching';
 	} # end if
-	if ( $Project->Type()->name() eq 'Banners' ) {
-		push @capabilities, 'Banners';
+	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
+		push @capabilities, 'Large Format';
 	} # end if
 
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');

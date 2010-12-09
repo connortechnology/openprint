@@ -30,15 +30,15 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist:
 		<div class="leftColumn">
 		<p> 
 			<label>Price List Name:&nbsp;</label>
-			<input type="text" name="Name" value="<? echo ( $$variable{'Pricelist'}->name(); ) ?>">
+			<input type="text" name="name" value="<? echo ( $$variable{'Pricelist'}->name(); ) ?>">
 		</p>
 		<p> 
 			<label>Price List Description:</label>
-			<textarea name="Description" cols="30" rows="5"><? echo ( $$variable{'Pricelist'}->description(); ) ?></textarea>
+			<textarea name="description" cols="30" rows="5"><? echo ( $$variable{'Pricelist'}->description(); ) ?></textarea>
 		</p>
 		<p> 
 			<label>Currency:</label>
-			<select name="Currency">
+			<select name="currency_id">
 				<option value=""> select </option>
 				<? echo ( 
 						return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency::find( 'order'=>'lower(name)' ) ], $$variable{'Pricelist'}->currency_id() );

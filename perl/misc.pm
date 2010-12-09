@@ -178,7 +178,7 @@ sub get_url {
 	if ( $options and $$options{'exclude'} ) {
 		@keys = sets::exclude( $$options{'exclude'}, \@keys );
 	} # end if	
-	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany' ], \@keys );
+	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany','CompanyFilter','pricelist_id' ], \@keys );
 	my %encoded;
 	foreach my $k ( @keys ) {
 		$encoded{$k} = $$params{$k};
