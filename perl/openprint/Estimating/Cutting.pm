@@ -744,28 +744,46 @@ sub signature_calc {
 			$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 
 			if ( $dutch_vertical_cuts > $dutch_horizontal_cuts ) {
-				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
-				$results{'Breakdown'} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, $price );
+				if ( lc $ServicePrice{'units'} eq 'per inch' ) {
+					$price = ( $runs * $dutch_vertical_cuts *$ServicePrice{'Price'} * $I->image_width() );
+					$results{'Breakdown'} .= sprintf("\t\t%d Vertical cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
+				} else {
+					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
+					$results{'Breakdown'} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+				} # end if
 				$totalPrice += $price;
 				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_columns'};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
-				$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
-
-				$results{'Breakdown'} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $price );
+				if ( lc $ServicePrice{'units'} eq 'per inch' ) {
+					$price = ( $runs * $dutch_horizontal_cuts *$ServicePrice{'Price'} * $I->image_height() );
+					$results{'Breakdown'} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
+				} else {
+					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
+					$results{'Breakdown'} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+				} # end if
 				$totalPrice += $price;
 			} else {
-				$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
-				$results{'Breakdown'} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $price );
+				if ( lc $ServicePrice{'units'} eq 'per inch' ) {
+					$price = ( $runs * $dutch_horizontal_cuts *$ServicePrice{'Price'} * $I->image_height() );
+					$results{'Breakdown'} .= sprintf("\t\t%d Horizontal cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $dutch_horizontal_cuts, $sheets, $runs, $I->image_height(), @ServicePrice{'Price','units'}, $price );
+				} else {
+					$price = ( $runs * $dutch_horizontal_cuts * $ServicePrice{'Price'} );
+					$results{'Breakdown'} .= sprintf('%d Horizontal cuts on %d sheets in %d runs: %.2f<br/>', $dutch_horizontal_cuts, $sheets, $runs, $price );
+				} # end if
 				$totalPrice += $price;
 				if ( $config{'Dumb Cutting'} ne 'Y' ) {
 					$sheets *= $$I{'dutch_rows'};
 					$runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 				} # end if
-				$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
-
-				$results{'Breakdown'} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, $price );
+				if ( lc $ServicePrice{'units'} eq 'per inch' ) {
+					$price = ( $runs * $dutch_vertical_cuts *$ServicePrice{'Price'} * $I->image_width() );
+					$results{'Breakdown'} .= sprintf("%d Vertical cuts on %d sheets in %d runs * %.2f inches: %.2f%s=%.2f<br/>", $dutch_vertical_cuts, $sheets, $runs, $I->image_width(), @ServicePrice{'Price','units'}, $price );
+				} else {
+					$price = ( $runs * $dutch_vertical_cuts * $ServicePrice{'Price'} );
+					$results{'Breakdown'} .= sprintf('%d Vertical cuts on %d sheets in %d runs: %.2f%s=%.2f<br/>', $dutch_vertical_cuts, $sheets, $runs, @ServicePrice{'Price','units'}, $price );
+				} # end if
 				$totalPrice += $price;
 			} # end if
 		} # end if
