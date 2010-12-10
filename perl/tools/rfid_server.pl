@@ -78,10 +78,11 @@ sub process_request {
 
 	my @last_seen;
 
-	my @Users = openprint::User::find('email'=>'rfid');
-	if ( @Users ) {
-		$openprint::session{'user_id'} = $Users[0]->id();
-		$openprint::session{'company_id'} = $Users[0]->company_id();
+	if ( my $User = openprint::User::find('email'=>'rfid') ) {
+		$openprint::session{'user_id'} = $User->id();
+		$openprint::session{'company_id'} = $User->company_id();
+	} else {
+		$self->log( 1, "Error finding rfid user!" );
 	} # end if
 
 	eval {
@@ -96,7 +97,7 @@ sub process_request {
 			$tag .= $data;
 			my ( $antenna, $tag_id, $end ) = $tag =~ /<TAG>\[A(\d)\]\s*(\w*)<\/TAG>(.*)/;
 			if ( ! $tag_id ) {
-				#$self->log(1, "No tag id in $tag\n");
+				$self->log(1, "No tag id in $tag\n") if $debug;
 				next;
 			} # end if
 			$tag = $end;
@@ -149,7 +150,9 @@ sub process_request {
 				} # end if
 			} # end if
 
-			if ( $Scanner->type() eq 'Mobile' ) {
+			if ( ! $Scanner-type() ) {
+				$self->log(1, sprintf('%s : %s : no scanner type %s', $date, $self->{server}->{peeraddr}, $Scanner->type() ));
+			} elsif ( $Scanner->type() eq 'Mobile' ) {
 				if ( sets::isin( $Tag->type(), ['Location','Checkout'] ) ) {
 					if ( $Tag->valid() ) {
 						@last_seen = map {$_->location_id()} openprint::RFIDScannerHistory::find('scanner_id'=>$Scanner->id(),'order'=>'updated_on DESC','limit'=>8) if ! @last_seen;
