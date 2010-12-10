@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 use utf8;
-use lib '/var/www/point-one/perl';
+use lib '/var/www/p1/perl';
 use strict;
 
 require configuration;
@@ -102,6 +102,7 @@ $openprint::dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::init_cache( $log, $dbh, \%CFG::Config );
+$openprint::dbh->disconnect();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
@@ -261,7 +262,14 @@ sub send_email {
 	my $Company;
 	my $User;
 
-	if ( $$upload{'company_name'} ) {
+	$openprint::dbh = sql::open_sql( $log, 
+		'host'		=> $CFG::Config{'db_host'},
+		'database'	=> $CFG::Config{'db_name'},
+		'driver'	=> 'Pg',
+		'login'		=> $CFG::Config{'db_user'},
+		'password'	=> $CFG::Config{'db_pass'},
+	);
+	if ( $openprint::dbh and $$upload{'company_name'} ) {
 # Try to figure out the company
 		if ( my @Companies = openprint::Company::find('name'=>$$upload{'company_name'},'limit'=>1) ) {
 $log->debug("Found company $$upload{'company_name'}");
@@ -362,6 +370,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
 		} # end if
+		$openprint::dbh->disconnect();
 	
 	} elsif ( 1 ) {
 	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';
