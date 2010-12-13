@@ -32,7 +32,7 @@
 					</span>
 					<span id="markup_edit" style="display:none;">
 					<input type="text" name="markup" value="<? echo ( $$variable{'Project'}->markup() ) ?>" size="6" />%
-					<? echo ( ssi::writeButton( $log, $dbh, 'SaveMarkup', 'markup.gif', "f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Save' ); ) ?>
+					<? echo ( ssi::writeButton( $log, $dbh, 'SaveMarkup', 'markup.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Save' ); ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'CancelMarkup', 'cancelmarkup.gif', "f1.markup.value='$$variable{Project}{markup}';\$('markup_edit').hide();\$('markup_view').show();", '', 'Cancel' ); ) ?>
 					</li>
 <script type="text/javascript">
