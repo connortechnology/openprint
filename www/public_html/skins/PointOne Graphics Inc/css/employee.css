@@ -94,3 +94,6 @@ table tr .ip {
 #Results table tr.totals {
 	margin-bottom: 20px;
 }
+.ZM_Monitors .thumbnail {
+	width: 320px;
+}

@@ -288,6 +288,8 @@ sub find {
 	my %params = @_;
 	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
 	my @values;
+	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
+	delete $params{'dbh'};
 
     if ( %params ) {
 		foreach ( 'find_fields', 'fields' ) {
@@ -408,9 +410,9 @@ sub find {
     $sql .= " ORDER BY $params{'order'}" if $params{'order'};
     $sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 
-    my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
+    my $data = $local_dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
     if ( ! $data ) {
-        $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $openprint::dbh->errstr );
+        $openprint::log->debug("Error loading $type ($sql) (@values) Reason: " . $local_dbh->errstr );
     } elsif ( ! @$data ) {
         $openprint::log->debug("No $type ($sql) (@values) " );
     } elsif ( $debug ) {

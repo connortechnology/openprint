@@ -1,12 +1,45 @@
-<table>
+<div class="ZM_Monitors">
+<table class="List">
 	<thead>
 		<tr>
 			<th>Camera</th>
+			<th>Name</th>
+			<th>Function</th>
 		</tr>
 	</thead>
 	<tbody>
+		<? echo (
+			my $html;
+			my $zm_dbh = sql::open_sql( $log,
+				  'database'  => $config{'zm_db_name'},
+				  'driver'    => $config{'zm_db_driver'},
+				  'host'      => $config{'zm_db_hostname'},
+				  'login'     => $config{'zm_db_username'},
+				  'password'  => $config{'zm_db_password'},
+				);
+			return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
+			require openprint::ZM_Monitor;
+			foreach my $Monitor ( openprint::ZM_Monitor->find('dbh'=>$zm_dbh, 'order'=>'Id') ) {
+				next if $Monitor->function() eq 'None';
+				$html .= sprintf(q`
+<tr>
+	<td><a href="camera.html?monitor_id=%1$d"><img src="http://%2$s.internal.point-one.com/cgi-bin/zms?mode=single&monitor=%1$d&amp;maxfps=%5$d" class="thumbnail"/></a></td>
+	<td>%3$s</td>
+	<td>%4$s</td>
+</tr>`,
+$Monitor->id(), $Monitor->server_host(), $Monitor->name(), $Monitor->function(), $Monitor->max_fps(),
+);
+				
+			} # end foreach Monitor	
+			$zm_dbh->disconnect();
+			return $html;
+		) ?>
+
+<!--
 		<tr>
 			<td><img src="http://security2.internal.point-one.com/cgi-bin/zms?mode=jpeg&monitor=26&scale=100&maxfps=5&buffer=1000&connkey=156343&rand=1292249714"/></td>
+-->
 		</tr>	
 	</tbody>
 </table>
+</div>
