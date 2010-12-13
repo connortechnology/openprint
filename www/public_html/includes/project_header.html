@@ -25,6 +25,7 @@
 						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
 					</li>
 					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+<? if ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 					<li><label>Pricing Markup:</label>
 					<span id="markup_view">
 					<? echo ( 1*$$variable{'Project'}->markup() ) ?>%
@@ -34,10 +35,9 @@
 					<input type="text" name="markup" value="<? echo ( $$variable{'Project'}->markup() ) ?>" size="6" />%
 					<? echo ( ssi::writeButton( $log, $dbh, 'SaveMarkup', 'markup.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Save' ); ) ?>
 					<? echo ( ssi::writeButton( $log, $dbh, 'CancelMarkup', 'cancelmarkup.gif', "f1.markup.value='$$variable{Project}{markup}';\$('markup_edit').hide();\$('markup_view').show();", '', 'Cancel' ); ) ?>
+					</span>
 					</li>
-<script type="text/javascript">
-	  new Ajax.InPlaceEditor( 'markup', '/main/project/_markup.html?project_id=<?ProjectIndex?>',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1});
-</script>
+<? endif ( openprint::usergroup::is_user_in( ['Price Overrides'], $session{'user_id'} ) ) ?>
 					<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					<? if ( $$variable{'Project'}->docket() ) ?>
 					<? if ( $$variable{'Project'}->shippingtype() ) ?>
