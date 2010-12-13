@@ -109,7 +109,6 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 		return 'uncalculated';
 	} # end if
 
-
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my %bestPrice;
 
@@ -168,8 +167,8 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 			$status = 'uncalculated';
 		} # end if
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{'Equipment'}->id();
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'Service'} );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'Total'} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'Service'} * (1+$Project->markup()/100) );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'Total'} * (1+$Project->markup()/100) );
 	} # end foreach qty_index
 
 	$log->debug("COLLATING!!!!!!!!!!!!!!!!!!");

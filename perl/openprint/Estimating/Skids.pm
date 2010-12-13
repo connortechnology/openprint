@@ -20,10 +20,7 @@ use warnings;
 no warnings qw(uninitialized);
 use POSIX qw(ceil);
 
-require openprint::project;
 require openprint::service;
-
-require sql;
 
 my $debug = 1;
 
@@ -76,7 +73,7 @@ sub neccessary {
 
 	if ( $type eq 'BulkSkids' ) {
 		my $finished_weight = openprint::print::get_finished_weight( $Project->id() );
-		foreach my $qty_index ( 1 .. 3 ) {
+		foreach my $qty_index ( $Project->quantity_indexes() ) {
 			if ( $finished_weight * $$Project{'quantity'.$qty_index} > 1500 ) {
 				return 1;
 			} # end if
@@ -224,12 +221,12 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 		my $price = $makeReady + $qty * $unitPrice;
 
 		$$specs{"txtPackageQuantity$qty_index"} = $qty;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * $m_qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * (1*$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * $m_qty * (1*$Project->markup()/100) );
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"Markup$qty_index"} ? $price*(1+$$specs{"Markup$qty_index"}/100) : $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, ( $$specs{"Markup$qty_index"} ? $price*(1+$$specs{"Markup$qty_index"}/100) : $price ) * (1*$Project->markup()/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if

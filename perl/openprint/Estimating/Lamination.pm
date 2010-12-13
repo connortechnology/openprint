@@ -18,7 +18,6 @@ package openprint::Estimating::Lamination;
 use POSIX qw{ ceil };
 use strict;
 
-require openprint::project;
 require openprint::Equipment;
 require openprint::service;
 
@@ -71,7 +70,7 @@ sub calc {
 		$$specs{'txtUnitPrice1'} = '';
 		$$specs{'txtUnitPrice2'} = '';
 		$$specs{'txtUnitPrice3'} = '';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	my %MinimumCharge = openprint::service::get_price_object( $$specs{'ServiceType'}.'MinimumCharge', undef, undef );
@@ -86,7 +85,7 @@ sub calc {
 
     if ( ! @all_equipment ) {
       	$$specs{'alert'} = 'We have no laminating equipment.';
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
     } # end if
     my $error = '';
     foreach my $Equipment ( @all_equipment ) {
@@ -102,14 +101,14 @@ sub calc {
 
 	if ( ! @possible_equipment ) {
 		$$specs{'alert'} = "Our equipment cannot run this project, for the following reasons:\n$error\n Please only print flat sheets and contact another bindery.";
-		return 'uncalculated';
+		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
 	# So we can do multiple items at once, as many as will fit in the wiwdth of the laminator.  We need a certain amount of space between the items.  I suspect that this should be an input, not a fixed value, but for now we will make it fixed.
 	my $item_width = $$specs{'txtFinalWidth'};
 	my $item_height = $$specs{'txtFinalHeight'};
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -186,13 +185,14 @@ sub calc {
 		$bestPrice{'Price'} = $MinimumCharge{Price} if $bestPrice{'Price'} < $MinimumCharge{Price};
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{'Equipment'}->strid();
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'Price'}*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, 
+				$bestPrice{'Price'}*(1+$$specs{"Markup$qty_index"}/100) * (1*$Project->markup()/100) );
 		} else {
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # en dif
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'Price'}/$qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{'Price'}/$qty ) * (1*$Project->markup()/100) );
 	} # end foreach qty_index
-	return 'calculated';
+	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
 sub display {

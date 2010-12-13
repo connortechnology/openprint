@@ -63,9 +63,10 @@ sub calc {
 		} else {
 			@no_output = sets::union( 'txtNegativeQuantity'.$qty_index, @no_output );
 		} # end if
-		my $service_price = openprint::service::get_price( $log, $dbh, $variable, 'CDBurning', $$specs{'txtNegativeQuantity'.$qty_index}, undef );
-		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $service_price );
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $service_price * $$specs{'txtNegativeQuantity'.$qty_index} );
+		my $service_price = openprint::service::get_price( 'CDBurning', $$specs{'txtNegativeQuantity'.$qty_index}, undef );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf('%.2f', $service_price * (1+$Project->markup()/100) );
+		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'},
+				$service_price * $$specs{'txtNegativeQuantity'.$qty_index} * (1+$Project->markup()/100) );
 	} # end foreach
 
 	return $$specs{'Status'} = $status;

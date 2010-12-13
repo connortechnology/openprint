@@ -345,13 +345,13 @@ sub calc {
 			$$specs{"StrippingPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"StrippingPrice$qty_index"} );
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100)*(1+$Project->markup()/100) );
 			@no_outputs = sets::exclude( ["txtPrice$qty_index"], \@no_outputs );
 		} else {
 			@no_outputs = sets::union( "txtPrice$qty_index", @no_outputs );
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalUnitPrice );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalMPrice*(1+$$specs{'Markup'.$qty_index}/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ($totalUnitPrice*(1+$Project->markup()/100)) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalMPrice*(1+$$specs{'Markup'.$qty_index}/100)*(1+$Project->markup()/100) );
 
 	} # end foreach qty
 

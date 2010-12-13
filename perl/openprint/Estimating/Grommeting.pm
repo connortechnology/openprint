@@ -136,8 +136,8 @@ $log->debug("Grommeting!!!!!!!!!!!!!!!!!!");
 			$price = $minimumCharge;
 		} # end if
 		$unitPrice = $price / $qty;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( '%.2f', $unitPrice * (1+$Project->markup()/100) );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1+$Project->markup()/100) );
 	} # end foreach
 
 	return $status;

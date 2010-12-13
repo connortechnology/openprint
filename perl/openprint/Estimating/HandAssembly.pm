@@ -17,7 +17,6 @@
 package openprint::Estimating::HandAssembly;
 use strict;
 
-require openprint::project;
 require openprint::service;
 
 require sql;
@@ -56,14 +55,14 @@ sub calc {
 		$$specs{'txtQuantity'} = 0.25;
 	} # end if
 	my $price = openprint::service::get_price( @$specs{'ServiceType','txtQuantity'}, undef );
-	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price );
+	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price * (1*$Project->markup()/100) );
 
 	$price *= $$specs{'txtQuantity'};
-	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
-	foreach my $qty_index ( 1 .. 3 ) {
-		$$specs{"txtUnitPrice$qty_index"} = $$specs{"txtUnitPrice"};
+	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1*$Project->markup()/100) );
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		$$specs{"txtUnitPrice$qty_index"} = $$specs{'txtUnitPrice'};
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = $$specs{"txtPrice"} * (1+$$specs{"Markup$qty_index"}/100);
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'} * (1+$$specs{"Markup$qty_index"}/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if

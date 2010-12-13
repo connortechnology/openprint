@@ -932,10 +932,10 @@ sub calc {
 		if ( $$specs{"OverridePrice$qty_index"} eq 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100)*(1+$Project->markup()/100) );
 		} # end if
-		$$specs{"MPrice$qty_index"} = sprintf( $config{'UnitPriceFormat'}, $mprice *(1+$$specs{'Markup'.$qty_index}/100) );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $config{'UnitPriceFormat'}, $price/$$specs{"txtQuantity$qty_index"} );
+		$$specs{"MPrice$qty_index"} = sprintf( $config{'UnitPriceFormat'}, $mprice *(1+$$specs{'Markup'.$qty_index}/100)*(1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $config{'UnitPriceFormat'}, ($price/$$specs{"txtQuantity$qty_index"})*(1+$Project->markup()/100) );
 
 	} # end foreach quantity
 	return $$specs{'Status'};

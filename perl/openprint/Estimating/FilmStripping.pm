@@ -52,7 +52,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"Markup$qty_index"} =~ s/[^\d\.\-]//g;
 		$$specs{"txtPrice$qty_index"} =~ s/[^\d\.]//g;
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
@@ -72,11 +72,11 @@ sub calc {
 			@no_output = sets::union( 'txtNegativeQuantity'.$qty_index, @no_output );
 		} # end if
 		my $service_price = openprint::service::get_price( 'FilmStripping', $$specs{'txtNegativeQuantity'.$qty_index}, undef );
-		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $service_price );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $service_price * (1+$Project->markup()/100) );
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, ($service_price * $$specs{'txtNegativeQuantity'.$qty_index})*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, ($service_price * $$specs{'txtNegativeQuantity'.$qty_index})*(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 		} else {
-		$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach
 

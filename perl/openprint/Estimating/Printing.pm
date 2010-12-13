@@ -617,17 +617,19 @@ sub calc_from_imposition {
 			if ( $$specs{'pages_supplied'} eq 'Y' ) {
 				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
 			} else {
-				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'},
+						( $$price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) * (1+$Project->markup()/100) )
+						);
 			} # end if
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
-		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$price{'Total Cost'} / $qty );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, ($$price{'Total Cost'} / $qty) * (1+$Project->markup()/100) );
 		my $mprice = $$price{'Impression MPrice'} / $Imposition->imposition();;
 		my $rate = 1+($$price{'Overs Rate'}/100);
 
 
-		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + (($$price{'Ink Price'}/$qty)*1000 ) + $$price{'Paper 1000 Price'} ) );
+		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + (($$price{'Ink Price'}/$qty)*1000 ) + $$price{'Paper 1000 Price'} ) * (1+$Project->markup()/100) );
 
 		if ( $$specs{'txtSignatureType'} ) {
 			$$specs{'PageQuantity'.$qty_index} = $Imposition->pages();
@@ -1905,16 +1907,16 @@ $openprint::log->debug("No impositions for press " . $Press->strid()) if $debug;
 			if ( $$specs{'pages_supplied'} eq 'Y' ) {
 				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, 0 );
 			} else {
-				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) );
+				$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $best_price{'Total Cost'}*(1+$$specs{'Markup'.$qty_index}/100) * (1+$Project->markup()/100) );
 			} # end if
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
-		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $best_price{'Total Cost'} / $qty );
+		$$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, ( $best_price{'Total Cost'} / $qty ) * (1+$Project->markup()/100) );
 		my $mprice = $best_price{'Impression MPrice'} / $Imposition->imposition();
 		my $rate = 1+($best_price{'Overs Rate'}/100);
 		my $ink = (($best_price{'Ink Price'}/$qty)*1000 );
-		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + $ink + ($best_price{'Paper 1000 Price'}*$rate) ) );
+		$$specs{'MPrice'.$qty_index} = sprintf('%.2f', $rate*(1+$$specs{'Markup'.$qty_index}/100)*($mprice + $ink + ($best_price{'Paper 1000 Price'}*$rate) ) * (1+$Project->markup()/100) );
 #$openprint::log->debug("MPrice: Rate: $rate Impression: $best_price{'Impression MPrice'}/$$Imposition{imposition}=$mprice, Ink: (($best_price{'Ink Price'}/$qty)*1000 )=$ink, PaperM: $best_price{'Paper 1000 Price'}");
 
 		if ( $$specs{'txtSignatureType'} ) {

@@ -19,7 +19,6 @@ package openprint::Estimating::ManualLabour;
 use strict;
 
 require sql;
-require openprint::print;
 require openprint::service;
 
 my @variables = (
@@ -70,14 +69,14 @@ sub calc {
 			$price = $$specs{'BasePrice'} * $Project->quantity($qty_index)/1000;
 		} # end if
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) * (1*$Project->markup()/100) );
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
-		$$specs{'MPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} * (1+$$specs{"Markup$qty_index"}/100) );
+		$$specs{'MPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} * (1+$$specs{"Markup$qty_index"}/100) * (1*$Project->markup()/100));
 	} # end foreach
 
-	return 'calculated';
+	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
 

@@ -24,6 +24,21 @@
 					<li><label>Last Updated:</label>
 						<? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $$variable{'Project'}->updated_on() ) ); ) ?>
 					</li>
+					<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
+					<li><label>Pricing Markup:</label>
+					<span id="markup_view">
+					<? echo ( 1*$$variable{'Project'}->markup() ) ?>%
+					<? echo ( ssi::writeButton( $log, $dbh, 'EditMarkup', 'editmarkup.gif', "\$('markup_edit').show();\$('markup_view').hide();", '', 'Edit' ); ) ?>
+					</span>
+					<span id="markup_edit" style="display:none;">
+					<input type="text" name="markup" value="<? echo ( $$variable{'Project'}->markup() ) ?>" size="6" />%
+					<? echo ( ssi::writeButton( $log, $dbh, 'SaveMarkup', 'markup.gif', "f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Save' ); ) ?>
+					<? echo ( ssi::writeButton( $log, $dbh, 'CancelMarkup', 'cancelmarkup.gif', "f1.markup.value='$$variable{Project}{markup}';\$('markup_edit').hide();\$('markup_view').show();", '', 'Cancel' ); ) ?>
+					</li>
+<script type="text/javascript">
+	  new Ajax.InPlaceEditor( 'markup', '/main/project/_markup.html?project_id=<?ProjectIndex?>',{okButton:true,cancelLink:true,submitOnBlur:true,rows:1});
+</script>
+					<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
 					<? if ( $$variable{'Project'}->docket() ) ?>
 					<? if ( $$variable{'Project'}->shippingtype() ) ?>
 					<li> 

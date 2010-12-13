@@ -23,7 +23,6 @@ use vars qw( $log $dbh );
 *dbh = \$openprint::dbh;
 
 require sql;
-require openprint::print;
 require openprint::service;
 require openprint::Estimating::Printing;
 
@@ -185,7 +184,7 @@ sub calc {
 			$totalPrice = $minCharge;
 		} # end if
 
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice * (1*$Project->markup()/100) );
 	} # end foreach qty_index
 
 	$log->debug("PROOFS!!!!!!!!!!!!!!!!!!");
