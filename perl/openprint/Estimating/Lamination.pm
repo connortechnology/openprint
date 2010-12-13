@@ -186,11 +186,11 @@ sub calc {
 		$$specs{"ddmEquipment$qty_index"} = $bestPrice{'Equipment'}->strid();
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, 
-				$bestPrice{'Price'}*(1+$$specs{"Markup$qty_index"}/100) * (1*$Project->markup()/100) );
+				$bestPrice{'Price'}*(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # en dif
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{'Price'}/$qty ) * (1*$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $bestPrice{'Price'}/$qty ) * (1+$Project->markup()/100) );
 	} # end foreach qty_index
 	return $$specs{'Status'} = 'calculated';
 } # end sub calc

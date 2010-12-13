@@ -55,10 +55,10 @@ sub calc {
 	my $runPrice = openprint::service::get_price( 'Scanning', $$specs{'txtQuantity'}, undef );
 	my $price = int( $makeReady + $runPrice * $size );
 
-	$$specs{'txtUnitPrice'} = sprintf( $openprint::config{'UnitPriceFormat'}, $price * (1*$Project->markup()/100) );
+	$$specs{'txtUnitPrice'} = sprintf( $openprint::config{'UnitPriceFormat'}, $price * (1+$Project->markup()/100) );
 	$price *= $$specs{'txtQuantity'};
 
-	$$specs{'txtPrice'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1*$Project->markup()/100) );
+	$$specs{'txtPrice'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1+$Project->markup()/100) );
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtUnitPrice$qty_index"} = $$specs{'txtUnitPrice'};
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {

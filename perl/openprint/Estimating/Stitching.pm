@@ -615,12 +615,12 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 		#} # end if
 		$$specs{'Imposition'.$qty_index} = $$bestPrice{'Imposition'};
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'txtPrice'} * (1+$$specs{"Markup$qty_index"}/100) * (1*$Project->markup()/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$bestPrice{'txtPrice'} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'MPrice'} *(1+$$specs{"Markup$qty_index"}/100) * (1*$Project->markup()/100) );
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $$bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} ) * (1*$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $$bestPrice{'MPrice'} *(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $$bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} ) * (1+$Project->markup()/100) );
 		$$specs{"txtRunTime$qty_index"} = $$bestPrice{'RunTime'};
 	} # end foreach qty_index
 	$log->debug("END STITCHING!!!!!!!");

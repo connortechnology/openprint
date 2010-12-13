@@ -80,7 +80,7 @@ sub calc {
 			$$specs{'alert'} .= 'Unknown units ('.$Price{'units'}.') on service price.<br/>';
 		} # end if
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, ($MRPrice{'Price'} + $Price{'Total'})*(1+$$specs{"Markup$qty_index"}/100)*(1*$Project->markup()/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, ($MRPrice{'Price'} + $Price{'Total'})*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if

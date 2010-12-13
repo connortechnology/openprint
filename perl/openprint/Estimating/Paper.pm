@@ -246,8 +246,8 @@ $openprint::log->debug($paper_id . ' => ' . $totals{$paper_id}{"qty_$qty_index"}
 			$$specs{"txtPrice$qty_index"} += $$specs{"qty-$stock_index-$qty_index"} * $totals{$paper_id}{"Cost"} / 100;
 			$stock_index += 1;
 		} # end foreach Stock
-		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} * (1*$Project->markup()/100) );
-		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} * (1*$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf($openprint::config{'UnitPriceFormat'}, $$specs{"MPrice$qty_index"} * (1+$Project->markup()/100) );
+		$$specs{"txtPrice$qty_index"} = sprintf($openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} * (1+$Project->markup()/100) );
 $openprint::log->debug("Price $qty_index " . $$specs{"txtPrice$qty_index"} ) if $debug;
 	} # end foreach qty_index
 

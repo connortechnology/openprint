@@ -297,9 +297,9 @@ $log->debug("Pickup: $$specs{'ddmPickupType'} Service: $$specs{'ddmServiceType'}
 			} # end if
 			my %ServicePrice = openprint::service::get_price_object( $log, $dbh, $variable, 'UPS Shipping', $cost, undef );
 			if ( $ServicePrice{'Price'} > 0 ) {
-				$ServicePrice{'Total'} = $ServicePrice{'Price'} * (1*$Project->markup()/100);
+				$ServicePrice{'Total'} = $ServicePrice{'Price'} * (1+$Project->markup()/100);
 			} else {
-				$ServicePrice{'Total'} = $cost * (1 + $ServicePrice{'Markup'}/100) * (1*$Project->markup()/100);
+				$ServicePrice{'Total'} = $cost * (1 + $ServicePrice{'Markup'}/100) * (1+$Project->markup()/100);
 			} # end if
 
 			$$specs{"txtPrice$qty_index"} = sprintf( '%.2f', $ServicePrice{'Total'} );
