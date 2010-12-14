@@ -761,11 +761,11 @@ $openprint::log->debug("reusing $project_index");
 		$NewProject->quantity3( $param{'quantity3'} );
 	} # end if
 	if ( exists $param{'reference'} ) {
-		$param{'reference'} = misc::trim( $param{'reference'} );
+		( $param{'reference'} ) = misc::trim( $param{'reference'} );
 		$NewProject->reference( $param{'reference'} );
 	} # end if
 	if ( exists $param{'comments'} ) {
-		$param{'comments'} = misc::trim( $param{'comments'} );
+		( $param{'comments'} ) = misc::trim( $param{'comments'} );
 		$NewProject->comments( $param{'comments'} );
 	} # end if
 	$NewProject->docket( '' );

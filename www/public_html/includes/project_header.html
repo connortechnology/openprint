@@ -103,25 +103,27 @@
 		</fieldset>
 	</div>
 	<br class="spacer"/>
+	<div id="Description">
+		<fieldset><legend>Description:</legend>
+			<div class="content">
+			<? echo ( return $$variable{'Project'}->summary();) ?>
+			</div>
+		</fieldset>
+	</div>
 	<div id="Reference">
 		<fieldset><legend>Reference:</legend>
 			<div class="content">
 			<? hecho ( $$variable{'Project'}->reference(); ) ?>
-			<? if ( $$variable{'Project'}->comments() ) ?>
-	<br/>
-			<p>
-				<label>Additional Comments:</label><? hecho ( $$variable{'Project'}->comments(); ) ?>
-			</p>
-			<? endif ( $$variable{'Project'}->comments() ) ?>
 			</div>
 		</fieldset>
-	</div><div id="Description">
-	<fieldset><legend>Description:</legend>
-		<div class="content">
-		<? echo ( 
-			return $$variable{'Project'}->summary();
-		) ?>
-		</div>
-	</fieldset>
-</div>
-</div>
+	</div>
+	<? if ( $$variable{'Project'}->comments() ) ?>
+	<div id="Comments">
+		<fieldset><legend>Comments:</legend>
+			<div class="content">
+			<? hecho ( $$variable{'Project'}->comments(); ) ?>
+			</div>
+		</fieldset>
+	</div>
+	<? endif ( $$variable{'Project'}->comments() ) ?>
+</div><!--Project-->
