@@ -367,3 +367,6 @@ div.legend ul li ul li label {
 	margin: 0px;
 	width: auto;
 }
+.message {
+	font-size: small;
+}

@@ -22,6 +22,7 @@ CREATE TABLE tbl_Equipment (
     cip3_merge			boolean,
     cip3_monitor		boolean,
 	sorting				integer,
+	message				text,
 	PRIMARY KEY (lngIndex)
 );
 

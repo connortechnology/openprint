@@ -301,6 +301,7 @@ my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Equipment LIMI
 if ( $data ) {
 	$dbh->do(q`alter table tbl_equipment add jdf_name text`) if ! exists $$data{'jdf_name'};
 	$dbh->do(q`alter table tbl_equipment add jdf_id text`) if ! exists $$data{'jdf_id'};
+	$dbh->do(q`alter table tbl_equipment add message text`) if ! exists $$data{'message'};
 } # end if
 
 my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM skid_verifications LIMIT 1', {} );
