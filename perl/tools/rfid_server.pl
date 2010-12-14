@@ -78,7 +78,7 @@ sub process_request {
 
 	my @last_seen;
 
-	if ( my $User = openprint::User::find('email'=>'rfid') ) {
+	if ( my $User = openprint::User::find_one('email'=>'rfid') ) {
 		$openprint::session{'user_id'} = $User->id();
 		$openprint::session{'company_id'} = $User->company_id();
 	} else {
