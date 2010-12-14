@@ -97,7 +97,7 @@
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'Project'}->Currency()->convert_from( $$variable{'Project'}->price3() ) ) if $$variable{'Project'}->quantity(3); ) ?></td>
 			<td class="status"><? echo ( $$variable{'Project'}->status(); ) ?></td>
 			<td class="Date"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></td>
-			<td class="unprintable" align="center"><input type="checkbox" name="chkDelete<? echo ( $$variable{'Project'}->id(); ) ?>" /></td>
+			<td class="unprintable" align="center"><input type="checkbox" name="project_id" value="<? echo ( $$variable{'Project'}->id(); ) ?>" /></td>
 		</tr>
 		<tr<?rowclass?>> 
 			<td>&nbsp;</td>
@@ -110,5 +110,11 @@
 	<br class="spacer"/>
 <p class="buttons">
 <? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
+<? echo (
+	if ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) {
+		return ssi::writeButton( $log, $dbh, 'Copy','copy.gif',"popup_window('_copy_popup.html',f1.serialize() );",'','Copy' );
+	} # end if
+	return;
+) ?>
 </p>
 <? endif ( @{$$variable{'Projects'}} == 0 ) ?>

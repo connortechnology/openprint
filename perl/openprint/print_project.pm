@@ -271,7 +271,6 @@ sub try_to_delete_project {
 	return $error;
 } # end sub try_to_delete_project
 
-
 sub view_pdfs {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
@@ -752,12 +751,11 @@ $openprint::log->debug("reusing $project_index");
 		return misc::error( $log, $dbh, $variable, 'Error', "Source project $project_index could not be found." );
 	} # end if
 	my $NewProject = $Project->copy();
-$openprint::log->debug("Have a copy");
-	$NewProject->quantity1( $param{'quantity1'} );
-	$NewProject->quantity2( $param{'quantity2'} );
-	$NewProject->quantity3( $param{'quantity3'} );
-	$NewProject->reference( $param{'reference'} );
-	$NewProject->comments( $param{'comments'} );
+	$NewProject->quantity1( $param{'quantity1'} ) if exists $param{'quantity1'};
+	$NewProject->quantity2( $param{'quantity2'} ) if exists $param{'quantity2'};
+	$NewProject->quantity3( $param{'quantity3'} ) if exists $param{'quanitty3'};
+	$NewProject->reference( $param{'reference'} ) if exists $param{'reference'};
+	$NewProject->comments( $param{'comments'} ) if exists $param{'comments'};
 	$NewProject->docket( '' );
 	$NewProject->due_date( '' );
 	$NewProject->user_id( $session{'user_id'} );

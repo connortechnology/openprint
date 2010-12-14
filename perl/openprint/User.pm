@@ -1,5 +1,6 @@
+use strict;
 package openprint::User;
-@ISA = qw( openprint::Object );
+our @ISA = qw( openprint::Object );
 use Text::Unaccent;
 use MIME::QuotedPrint;
 
@@ -9,7 +10,6 @@ require openprint::Usergroup;
 require openprint::User_Notification;
 
 use openprint ();
-use strict;
 use vars qw( $log $dbh %config %variable %param $debug %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;

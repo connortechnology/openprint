@@ -26,7 +26,8 @@ CREATE TABLE tbl_Equipment (
 	location_id			INTEGER, FOREIGN KEY (location_id) REFERENCES Locations(id),
 	smartscheduling		BOOLEAN,
 	sorting				integer,
+	message				text,
 	PRIMARY KEY (id)
 );
 
-CREATE INDEX EquipmentID_Index ON tbl_Equipment (strID);
+CREATE INDEX EquipmentID_idx ON tbl_Equipment (strID);

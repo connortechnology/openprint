@@ -43,13 +43,20 @@ sub sign_off {
 
 sub history {
 
-	foreach my $key ( keys %param ) {
-		if ( $key =~ /chkDelete(\d*)/ ) {
-			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $1 );
-		} elsif ( $key eq 'btnFunction' and $r->param($key) eq 'Delete Project' ) {
-			$variable{'error'} .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{'ProjectIndex'} );
-		} # end if
-	} # end foreach
+    if ( $param{'btnFunction'} eq 'Delete Project' ) {
+        if ( $param{'project_id'} ) {
+        foreach my $project_id ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : $param{'project_id'} ) {
+            $error .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $project_id );
+        } # end foreach project_id
+        } elsif ( $param{'ProjectIndex'} ) {
+            $error .= openprint::print_project::try_to_delete_project( $log, $dbh, \%variable, $param{'ProjectIndex'} );
+        } # end if
+    } elsif ( $param{'btnFunction'} eq 'Reuse Project' ) {
+        foreach my $project_id ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : $param{'project_id'} ) {
+            openprint::print_project::reuse_project( $r, $log, $dbh, $ession{_session_id}, \%variable, $project_id );
+        } # end if
+    } # end if
+
 	# Doing it here will set the defaults if neccessary, but then they will get overriden by the saev_params below.  This is neccessary because save_params will update lastupdated.
 	ssi::setup_date_select( '/main/project/history.html', 'created_on', -180, 0 );
 	ssi::setup_date_select( '/main/project/history.html', 'updated_on', -14, 0 );

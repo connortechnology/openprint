@@ -64,5 +64,11 @@ sub host {
 	} # end if
 } # end sub view_host
 
+sub camera {
+} # end sub camera
+
+sub cameras {
+} # end sub cameras
+
 1;
 __END__

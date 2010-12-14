@@ -1742,5 +1742,15 @@ sub _li {
 	} # end if
 } # end sub _li
 
+sub _equipment_popup {
+	my $Equipment = $variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+} # end sub _equipment_popup
+sub _equipment_message {
+	my $Equipment = $variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+	if ( $param{'action'} eq 'Save' ) {
+		$Equipment->save({'message'=>$param{'message'}});
+	} # end if
+} # end sub _equipment_popup
+
 1;
 __END__

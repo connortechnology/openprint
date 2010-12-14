@@ -1295,13 +1295,21 @@ sub manifest {
 					$variable{'information'} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
 					foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
 						foreach my $SkidContent ( $C->Skid()->Contents() ) {
+							# If it has the old type,
 							if ( $SkidContent->paper_id() == $Type->paper_id() ) {
+								my $PI = new openprint::PaperInventory();
+								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Type->paper_id(),
+										'quantity'=>-1*$SkidContent->quantity(),
+										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								# Change the type to the new type
 								$SkidContent->save({'paper_id'=>$Paper->id()});
 								foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
 									$PA->save({'paper_id'=>$Paper->id()});
 								} # end foreach PA
 								my $PI = new openprint::PaperInventory();
-								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Paper->id(),
+										'quantity'=>$SkidContent->quantity(),
+										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
 								
 							} # end if
 						} # end foreach SkidContent
@@ -1817,13 +1825,13 @@ sub purchase_order_view {
 				'reason'	=>	$param{'reason'},
 				});
 		} # end if
-		my @notifications = $PO->notifications();
+		my @notifications = $PO->notifications(); # returns user_ids
 		my @new_notifications = @notifications;
 		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) );
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PSC/PEFC Notifications','value'=>'Yes' ) );
 		} # end if
 		foreach my $type ( keys %types ) {
-			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'PO ' . $type.' Notifications' ) );
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PO ' . $type . ' Notifications','value'=>'Yes' ) );
 		} # end foreach
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);
@@ -2153,5 +2161,10 @@ sub _skids_results {
 
 sub _update_taxes {
 } # end sub _update_taxes
+
+sub _paper_log {
+	ssi::save_params( '/employee/inventory/paper_details.html', ( 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','limit' ) );
+} # end _paper_log
+
 1;
 __END__

@@ -488,6 +488,7 @@ if ( sets::isin( 'tbl_equipment', \@tables ) ) {
 	if ( ! exists $$data{'jdf_id'} ) {
 		$dbh->do(q`alter table tbl_equipment add jdf_id text`);
 	} # end if
+	$dbh->do(q`alter table tbl_equipment add message text`) if ! exists $$data{'message'};
 } else {
     $dbh->do( misc::load_file( $log, q{../openprint/sql/tbl_Equipment.sql} )) or die;
 } # end if

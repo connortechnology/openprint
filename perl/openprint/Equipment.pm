@@ -41,6 +41,7 @@ my %find_cache;
 	'smartscheduling'	=>	'smartscheduling',
 	'servicetype_id'	=>	'servicetype_id',
 	'sorting'			=>	'sorting',
+	'message'			=>	'message',
 );
 %transforms = (
 );
