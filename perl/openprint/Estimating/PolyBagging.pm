@@ -21,7 +21,6 @@ require openprint::Project;
 require openprint::service;
 
 require sql;
-require misc;
 
 my @variables = (
 		'txtPrice1', 'txtPrice2', 'txtPrice3',
@@ -55,7 +54,7 @@ sub calc {
 	my $Equipment = $Equipment[0];
 
 	my %MRPrice = openprint::service::get_price_object( 'PolyBaggingMakeReady', $pockets );
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		my $qty = $Project->quantity($qty_index) + $Equipment->specification( 'Make Ready Waste', $pockets );
 		my $RunWaste = $Equipment->Specification( 'Run Waste', $pockets );
 		if ( $$RunWaste{'units'} eq 'Percent' ) {
@@ -81,9 +80,9 @@ sub calc {
 			$$specs{'alert'} .= 'Unknown units ('.$Price{'units'}.') on service price.<br/>';
 		} # end if
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, ($MRPrice{'Price'} + $Price{'Total'})*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, ($MRPrice{'Price'} + $Price{'Total'})*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach
 	return $$specs{'Status'} = 'calculated';

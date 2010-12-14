@@ -67,7 +67,7 @@ $serial = 'companies_id_seq';
 		);
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],
-	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
+	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//','s/\///g' ],
 	'discount'	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (

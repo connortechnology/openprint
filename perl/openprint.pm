@@ -59,14 +59,25 @@ sub session_init {
 		$session{'Currency_id'} = ( shift @currencies )->id() if @currencies;
 	} # end if
 
-	if ( sets::isin( $session{'user_type'}, ['E','A'] ) and ($r->param('btnFunction') eq 'SelectCompany') ) {
-		if ( $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
-			my $Company = new openprint::Company( $r->param('ddmCompany') );
-			if ( ! $Company->id() ) {
-				$variable{'error'} .= 'Unknown company selected.  Please try again.';
-			} else {
-				switch_company( $Company );
+	if ( sets::isin( $session{'user_type'}, ['E','A'] ) ) {
+		if ( $r->param('btnFunction') eq 'SelectCompany' ) {
+			if ( $r->param('ddmCompany') != $openprint::session{'company_id'} ) {
+				my $Company = new openprint::Company( $r->param('ddmCompany') );
+				if ( ! $Company->id() ) {
+					$variable{'error'} .= 'Unknown company selected.  Please try again.';
+				} else {
+					switch_company( $Company );
+				} # end if
 			} # end if
+		} elsif ( $r->param('btnFunction') eq 'SelectPricelist' ) {
+$log->debug("Selecting Pricelist $param{'pricelist_id'}");
+			my $Pricelist = new openprint::Pricelist( $r->param('pricelist_id') );
+$log->debug("Selecting Pricelist got " . $Pricelist->id() );
+			if ( ! $Pricelist->id() ) {
+$log->debug("Selecting Pricelist default"  );
+				$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $log, $dbh ) );
+			} # end if
+			$session{'Pricelist_id'} = $Pricelist->id() if $Pricelist->id();
 		} # end if
 	} # end if
 

@@ -4,7 +4,6 @@ use warnings;
 no warnings qw(uninitialized);
 
 require openprint::service;
-use sql;
 use POSIX           qw(ceil);
 
 my $debug = 1;
@@ -62,7 +61,7 @@ sub calc {
 
 	my $status = 'calculated';
 
-	foreach my $qty_index ( 1 .. 3 ) {
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'txtQuantity'.$qty_index} =~ s/[^\d\.]//g;
@@ -126,9 +125,10 @@ sub calc {
 			$$specs{'ddmEquipment'.$qty_index} = $BestPrice{'Equipment'}->id();
 		} # end if
 
-        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'LastServicePrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} );
+        $$specs{'txtUnitPrice'.$qty_index} = sprintf($openprint::config{'UnitPriceFormat'}, 
+				( ($BestPrice{'ServicePrice'}{'Total'} + $BestPrice{'LastServicePrice'}{'Total'} ) / $$specs{'txtQuantity'.$qty_index} ) * (1+$Project->markup()/100) );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $BestPrice{'Total'}*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
 			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if

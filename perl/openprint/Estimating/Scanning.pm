@@ -48,20 +48,21 @@ sub calc {
 	if ( ! $$specs{'txtScanWidthFinal'} or ! $$specs{'txtScanHeightFinal'} or ! $$specs{'txtQuantity'} or ! $$specs{'rdbScanner'} ) {
 		return 'uncalculated';
 	} # end if
+	my $Project = new openprint::Project( $project_index );
 
 	my $size = $$specs{'txtScanWidthFinal'} * $$specs{'txtScanHeightFinal'};
 	my $makeReady = openprint::service::get_price( $$specs{'rdbScanner'}.'ScanningMakeReady', $$specs{'txtQuantity'}, undef );
 	my $runPrice = openprint::service::get_price( 'Scanning', $$specs{'txtQuantity'}, undef );
 	my $price = int( $makeReady + $runPrice * $size );
 
-	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price );
+	$$specs{'txtUnitPrice'} = sprintf( $openprint::config{'UnitPriceFormat'}, $price * (1+$Project->markup()/100) );
 	$price *= $$specs{'txtQuantity'};
 
-	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
-	foreach my $qty_index ( 1 .. 3 ) {
-		$$specs{"txtUnitPrice$qty_index"} = $$specs{"txtUnitPrice"};
+	$$specs{'txtPrice'} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1+$Project->markup()/100) );
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		$$specs{"txtUnitPrice$qty_index"} = $$specs{'txtUnitPrice'};
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice"} * (1+$$specs{"Markup$qty_index"}) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{'txtPrice'} * (1+$$specs{"Markup$qty_index"}) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if

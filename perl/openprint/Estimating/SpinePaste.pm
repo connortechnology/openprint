@@ -18,7 +18,6 @@ package openprint::Estimating::SpinePaste;
 use strict;
 
 require openprint::service;
-require sql;
 
 my @variables = (
 		'chkOverrideCalliper',
@@ -276,12 +275,12 @@ sub calc {
 			$$specs{'Runspeed'.$qty_index} = $best{'Price'}{'RunSpeed'} if $$specs{'OverrideRunspeed'.$qty_index} ne 'Y';
 			$$specs{'ddmEquipment'.$qty_index} = $best{'Equipment'}->id();
 			if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $best{'Price'}{'Total'} * (1+$$specs{"Markup$qty_index"}/100) );
+				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $best{'Price'}{'Total'} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 			} else {
 				$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 			} # end if
-			$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $best{'Price'}{'MPrice'} * (1+$$specs{"Markup$qty_index"}/100) );
-			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $best{'Price'}{'ServicePrice'}{'Total'} / $qty );
+			$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $best{'Price'}{'MPrice'} * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
+			$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $best{'Price'}{'ServicePrice'}{'Total'} / $qty ) * (1+$Project->markup()/100) );
 			$$specs{'Status'} = 'calculated';
 		} # end if
     } # end foreach qty_index

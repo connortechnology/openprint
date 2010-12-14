@@ -1,1 +1,7 @@
-	<!--#include virtual="/includes/main/summ/project_docket_sheet.html" -->
+<? echo ( 
+	if ( -e $config{'SkinPath'}.'/docket.html' ) {
+		return ssi::include( $config{'SkinPath'}.'/docket.html' );
+	} else {
+		return ssi::include( $ENV{'DOCUMENT_ROOT'}.'/includes/main/summ/project_docket_sheet.html' );
+	} # end if
+) ?>

@@ -688,8 +688,8 @@ sub load {
 			$openprint::log->error("Error loading Project $$self{'id'}: ".$openprint::dbh->errstr() );
 		} # end if
 	} # endif
-	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason/} =
-		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason/};
+	@$self{qw/id summary docket order_id company_id user_id reference comments design created_on updated_on quantity1 quantity2 quantity3 status mode programs otherprograms printingtype currency_id type_id style_id price1 price2 price3 requested_date ordered_quantity_index ordered_price due_date predefined rush reprint reprint_reason markup/} =
+		@$data{qw/id summary lngdocketnumber order_id company_id user_id strprojectreference strcomments strdesign dtmcreationdate dtmlastmodified intquantity1 intquantity2 intquantity3 strstatus strmode strprograms strotherprograms printingtype currency_id type_id style_id price1 price2 price3 daterequired intquantityindex cursalesprice due_date predefined rush reprint reprint_reason markup/};
 	if ( $$self{'order_id'} ) {
 		@$self{'requested_date','ordered_quantity_index','shippingtype','ordered_price'} = sql::execute( undef, undef, q{SELECT daterequired, intquantityindex, shippingtype, cursalesprice FROM Order_Contents WHERE OrderIndex=? AND lngProjectIndex=?}, @$self{'order_id','id'} );
 	} # end if

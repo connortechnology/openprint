@@ -95,11 +95,12 @@ sub calc {
 			$price = $minimumCharge;
 		} # end if
 
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price / $qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, 
+( $price / $qty ) * (1+$Project->markup()/100) );
 		if ( $$specs{'OverridePrice'.$qty_index} eq 'Y' ) {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} else {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} # end if
 	} # end foreach
 	return $$specs{'Status'} = 'calculated';

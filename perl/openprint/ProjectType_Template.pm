@@ -30,6 +30,10 @@ $serial = 'projecttemplate_id_seq';
 );
 
 %defaults = (
+'finished_width'	=> undef,
+'finished_height'	=> undef,
+'flat_width'	=> undef,
+'flat_height'	=> undef,
 );
 
 1;
