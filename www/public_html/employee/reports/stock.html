@@ -13,7 +13,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                 <select name="Owner" size="1" onchange="f1.submit();">
                 <option value=""> All </option>
                 <? echo ( 
-                    make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(strName)' ) ], exists $session{'/employee/reports/stock.html?Owner'} ? $session{'/employee/reports/stock.html?Owner'} : $session{'company_id'} );
+                    make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(name)' ) ], exists $session{'/employee/reports/stock.html?Owner'} ? $session{'/employee/reports/stock.html?Owner'} : $session{'company_id'} );
                 ) ?>
                 </select>
             </p>

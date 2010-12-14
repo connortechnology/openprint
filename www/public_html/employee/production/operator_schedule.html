@@ -70,7 +70,7 @@ return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strca
 			my @OperatorShifts = openprint::Equipment_Shift->find('equipment_id'=>$E->id(), 'order'=>'starttime' );
 			foreach my $Shift ( @OperatorShifts ) {	
 				$$variable{'Shift'} = $Shift;
-				$html .= ssi::variable_substitution( $r, $log, $dbh, \$content, $variable );
+				$html .= ssi::variable_substitution( \$content, $variable );
 			} # end foreach Shift
 
 			$html .= '</ul></div>';

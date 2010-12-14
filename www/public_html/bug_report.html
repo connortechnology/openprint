@@ -24,42 +24,43 @@
 		<? echo ( ssi::writeButton( $log, $dbh, 'Close', 'close.gif', 'contentWin.destroy();', '', 'Close' ); ) ?>
 <? else ( $param{'btnFunction'} eq 'Send' ) ?>
 <div id="BugReport">
-<form name="bug_report">
-	<fieldset><legend>Bug Report</legend>
-	<p>
-		<label>Server:</label>
-		<input type="text" name="server" value="<? echo ( $ENV{'SERVER_NAME'} ) ?>" />
-	</p>
-	<p>
-		<label>Page:</label>
-		<input type="text" name="page" value="<? echo ( $ENV{'HTTP_REFERER'} ) ?>" />
-	</p>
-	<p>
-		<label>When:</label>
-		<input type="text" name="when" value="<? echo ( localtime ) ?>" />
-	</p>
-	<p>
-		<label>Name:</label>
-		<input type="text" name="user" value="<? echo ( join(' ', new openprint::User( $session{user_id} )->get( 'firstname','lastname' ) ); ) ?>" />
-	</p>
-	<p>
-		<label>Company:</label>
-		<input type="text" name="company" value="<? echo ( new openprint::Company( $session{company_id} )->name(); ) ?>" />
-	</p>
-	<p>
-		<label>Description:</label>
-<textarea name="comment" rows="10" wrap="virtual">
-<? if ( $session{'project_id'} ) ?>
-Current Project ID: <? echo ( $session{'project_id'} ) ?>
-<? echo ( new openprint::Project( $session{'project_id'} )->summary(); ) ?>
-<? endif ( $session{'project_id'} ) ?>
-</textarea>
-	</p>
-	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'Send', 'send.gif', q`LoadContent('BugReport','/bug_report.html', $('bug_report').serialize() );`, '', 'Send' ); ) ?>
-		<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'contentWin.destroy();', '', 'Cancel' ); ) ?>
-	</p>
-	<input type="hidden" name="btnFunction" value="Send"/>
-</form>
+	<form name="bug_report">
+		<fieldset><legend>Bug Report</legend>
+			<p>
+				<label>Server:</label>
+				<input type="text" name="server" value="<? echo ( $ENV{'SERVER_NAME'} ) ?>" />
+			</p>
+			<p>
+				<label>Page:</label>
+				<input type="text" name="page" value="<? echo ( $ENV{'HTTP_REFERER'} ) ?>" />
+			</p>
+			<p>
+				<label>When:</label>
+				<input type="text" name="when" value="<? echo ( localtime ) ?>" />
+			</p>
+			<p>
+				<label>Name:</label>
+				<input type="text" name="user" value="<? echo ( join(' ', new openprint::User( $session{user_id} )->get( 'firstname','lastname' ) ); ) ?>" />
+			</p>
+			<p>
+				<label>Company:</label>
+				<input type="text" name="company" value="<? echo ( new openprint::Company( $session{company_id} )->name(); ) ?>" />
+			</p>
+			<p>
+				<label>Description:</label>
+				<textarea name="comment" rows="10" wrap="virtual">
+				<? if ( $session{'project_id'} ) ?>
+				Current Project ID: <? echo ( $session{'project_id'} ) ?>
+				<? echo ( new openprint::Project( $session{'project_id'} )->summary(); ) ?>
+				<? endif ( $session{'project_id'} ) ?>
+				</textarea>
+			</p>
+			<p class="buttons">
+				<? echo ( ssi::writeButton( $log, $dbh, 'Send', 'send.gif', q`LoadContent('BugReport','/bug_report.html', $('bug_report').serialize() );`, '', 'Send' ); ) ?>
+				<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'contentWin.destroy();', '', 'Cancel' ); ) ?>
+			</p>
+		</fieldset>
+		<input type="hidden" name="btnFunction" value="Send"/>
+	</form>
 </div>
 <? endif ( $param{'btnFunction'} eq 'Send' ) ?>
