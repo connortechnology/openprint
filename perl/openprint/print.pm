@@ -218,8 +218,8 @@ sub view_services {
 				$Project->currency_id( $openprint::session{Currency_id} );
 				my $status = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 				if ( $status ne 'uncalculated' ) {
-				openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
-				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
 				} # end if
 				$Project->summary(undef);
 				$Project->save();

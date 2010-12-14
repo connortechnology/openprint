@@ -35,45 +35,40 @@
 		<? endwhile ( $$variable{'SignatureServiceIndex'} = shift @{$$variable{'SignatureGroups'}}; ) ?>
 <p id="DiePrice">
 	<label><b>Die Price (<?CurrencySymbol?>):</b></label>
-
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="checkbox" id="OverridePrice" name="OverrideDiePrice" value="Y" <? echo ( $$variable{'OverrideDiePrice'} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if ( ! this.checked ) { calc(this.form.name); }"/>
-		<label class="radio" for="OverrideDiePrice">Override</label>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="text" name="DiePrice<?QTYIndex?>" value="<? echo ( $$variable{'DiePrice'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc(this.form.name);" />
-<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<? echo ( $$variable{'DiePrice'.$$variable{'QTYIndex'}} ) ?>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-	</span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+<? echo (
+	my $html;
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= qq`<span class="$$variable{'Columns'}Columns">`;
+		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+			$html .= sprintf(q`<input type="text" name="DiePrice%d" value="%s" size="9" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc(this.form.name);" />`, $qty_index, $$variable{'DiePrice'.$qty_index} );
+			$html .= ssi::write_override( 'OverrideDiePrice'.$qty_index, $$variable{'OverrideDiePrice'.$qty_index}, '', 'calc(this.form.name);' );
+		} else {
+			$html .= $$variable{'DiePrice'.$qty_index};
+		} # end if
+		$html .= '</span>';
+	} # end foreach
+	return $html;
+) ?>
 </p>
 <p id="StrippingPrice">
-	<label><b>Stripping Price (<?CurrencySymbol?>):</b></label>
-
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="checkbox" id="OverrideStrippingPrice" name="OverrideStrippingPrice" value="Y" <? echo ( $$variable{'OverrideStrippingPrice'} eq 'Y' ? 'checked="checked"' : '' ) ?> onclick="if ( ! this.checked ) { calc(this.form.name); }"/>
-		<label class="radio" for="OverrideStrippingPrice">Override</label>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<span class="<?Columns?>Columns">
-<? if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<input type="text" name="StrippingPrice<?QTYIndex?>" value="<? echo ( $$variable{'StrippingPrice'.$$variable{'QTYIndex'}} ) ?>" size="9" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc(this.form.name);" />
-<? else ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-		<? echo ( $$variable{'StrippingPrice'.$$variable{'QTYIndex'}} ) ?>
-<? endif ( sets::isin( $session{'user_type'}, ['A','E'] ) ) ?>
-	</span>
-	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<label><b>Stripping Price (<?CurrencySymbol?>):</b>
+	</label>
+<? echo (
+	my $html;
+	if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+	} # end if
+	foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+		$html .= qq`<span class="$$variable{'Columns'}Columns">`;
+		if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
+			$html .= sprintf(q`<input type="text" name="StrippingPrice%d" value="%s" size="9" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc(this.form.name);" />`, $qty_index, $$variable{'StrippingPrice'.$qty_index} );
+			$html .= ssi::write_override( 'OverrideStrippingPrice'.$qty_index, $$variable{'OverrideStrippingPrice'.$qty_index}, '', 'calc(this.form.name);' );
+		} else {
+			$html .= $$variable{'StrippingPrice'.$qty_index};
+		} # end if
+		$html .= '</span>';
+	} # end foreach
+	return $html;
+) ?>
 </p>
 			<!--#include virtual="/includes/main/proj/_quantities.html"-->
 			<!--#include virtual="/includes/main/proj/_unit_price.html"-->

@@ -11,21 +11,11 @@
 </script>
 <!--#include virtual="/main/project/prin/_templates.html"-->
 
-<? if ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
-<script type="text/javascript" src="/javascripts/proj/calc_presentation_folder.js?version=1.0"></script>
-<script type="text/javascript">
-	function calc() {
-		calc_presentation_folder('f1');
-	}
-</script>
-<script type="text/javascript" src="/javascripts/presentation_folders.js?version=1.0"></script>
-<? else ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <script type="text/javascript">
 	function calc( formName, force ) {
 		calc_print( formName, force );
 	}
 </script>
-<? endif ( $$variable{'ProjectType'}->name() eq 'PresentationFolders' ) ?>
 <div class="Service">
 	<form id="f1" name="f1" method="post" action="/main/project/view.html">
 		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
