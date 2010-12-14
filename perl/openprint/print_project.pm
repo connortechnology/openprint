@@ -742,21 +742,32 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
-	$param{'quantity1'} =~ s/\D//g;
-	$param{'quantity2'} =~ s/\D//g;
-	$param{'quantity3'} =~ s/\D//g;
-	@param{'reference','comments'} = misc::trim( @param{'reference','comments'} );
 $openprint::log->debug("reusing $project_index");
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->id() ) {
 		return misc::error( $log, $dbh, $variable, 'Error', "Source project $project_index could not be found." );
 	} # end if
 	my $NewProject = $Project->copy();
-	$NewProject->quantity1( $param{'quantity1'} ) if exists $param{'quantity1'};
-	$NewProject->quantity2( $param{'quantity2'} ) if exists $param{'quantity2'};
-	$NewProject->quantity3( $param{'quantity3'} ) if exists $param{'quanitty3'};
-	$NewProject->reference( $param{'reference'} ) if exists $param{'reference'};
-	$NewProject->comments( $param{'comments'} ) if exists $param{'comments'};
+	if ( exists $param{'quantity1'} ) {
+		$param{'quantity1'} =~ s/\D//g;
+		$NewProject->quantity1( $param{'quantity1'} );
+	} # end if
+	if ( exists $param{'quantity2'} ) {
+		$param{'quantity2'} =~ s/\D//g;
+		$NewProject->quantity2( $param{'quantity2'} );
+	} # end if
+	if ( exists $param{'quantity3'} ) {
+		$param{'quantity3'} =~ s/\D//g;
+		$NewProject->quantity3( $param{'quantity3'} );
+	} # end if
+	if ( exists $param{'reference'} ) {
+		$param{'reference'} = misc::trim( $param{'reference'} );
+		$NewProject->reference( $param{'reference'} );
+	} # end if
+	if ( exists $param{'comments'} ) {
+		$param{'comments'} = misc::trim( $param{'comments'} );
+		$NewProject->comments( $param{'comments'} );
+	} # end if
 	$NewProject->docket( '' );
 	$NewProject->due_date( '' );
 	$NewProject->user_id( $session{'user_id'} );

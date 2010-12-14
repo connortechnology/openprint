@@ -64,6 +64,16 @@ $serial = 'lngProjectIndex_seq';
 );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'docket'		=>	undef,
+	'quantity1'		=>	undef,
+	'quantity2'		=>	undef,
+	'quantity3'		=>	undef,
+	'price1'		=>	undef,
+	'price2'		=>	undef,
+	'price3'		=>	undef,
+	'order_id'		=>	undef,
+	'due_date'		=>	undef,
 );
 
 %find_fields = (

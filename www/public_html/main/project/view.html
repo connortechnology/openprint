@@ -74,7 +74,7 @@
 		</div>
 		<!--#include virtual="_view.html" -->
 	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
-		<table>
+	<table>
 		<tr class="totals unprintable">
 			<td><input type="text" name="txtServiceName"/></td>
 			<? echo (
