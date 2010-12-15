@@ -3,7 +3,7 @@ package openprint::Skid;
 
 use strict;
 use openprint ();
-use vars qw( $log $dbh %variable %session $table $serial %fields %transforms %defaults %find_fields $debug );
+use vars qw( $log $dbh %variable %session $debug $table $serial %fields %transforms %defaults %find_fields $debug );
 *variable = \%openprint::variable;
 *session = \%openprint::session;
 *log = \$openprint::log;
@@ -21,7 +21,7 @@ require openprint::SkidContent;
 require openprint::Manifest;
 require openprint::ManifestContent;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'Skids';
 $serial = 'skid_id_seq';
@@ -192,8 +192,6 @@ sub find {
 	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
 		$log->debug("Error loading skids SQL($sql)" . DBI->errstr );
-	} elsif ( ! @$data ) {
-		$log->debug('No skidss loaded (' . $sql . ") (@values)" );
 	} elsif ( $debug ) {
 		$log->debug("Debug loaded skids ($sql) (@values) # of results: " . @$data );
 	} # end if
@@ -560,15 +558,14 @@ sub age_days {
 
 sub Manifest {
 	my $self = $_[0];
-	foreach my $MC ( openprint::ManifestContent->find('skid_id'=>$$self{id}) ) {
+	foreach my $MC ( openprint::ManifestContent->find_one('skid_id'=>$$self{id}) ) {
 		return $MC->Manifest();
 	} # end foreach MC
 	return new openprint::Manifest();
 } # end sub Manifest
 
 sub ManifestContents {
-	my $self = $_[0];
-	return openprint::ManifestContent->find('skid_id'=>$$self{id});
+	return openprint::ManifestContent->find('skid_id'=>$_[0]{id});
 } # end sub ManifestContents
 
 sub manifest_id {
