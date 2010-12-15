@@ -1280,12 +1280,12 @@ sub manifest {
 
 		$variable{'error'} .= $Manifest->save( \%param );
 
-		my @Types = openprint::Manifest_Content_Type::find('manifest_id'=>$Manifest->id());
+		my @Types = openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id());
 		if ( ! @Types ) {
 			my $Type = new openprint::Manifest_Content_Type();
 			$variable{'error'} .= $Type->save({'manifest_id'=>$Manifest->id()});
 		} else {
-			foreach my $Type ( openprint::Manifest_Content_Type::find('manifest_id'=>$Manifest->id()) ) {
+			foreach my $Type ( openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id()) ) {
 				my $Paper = save_Paper('-'.$Type->id());
 				if ( ! $Paper ) {
 					$variable{'error'} .= 'Unable to get Stock.<br/>';

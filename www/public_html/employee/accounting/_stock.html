@@ -22,12 +22,12 @@
 			'received_on_end'	=>	sprintf('%.4d-%.2d-%.2d', @param{'received_on_end_year','received_on_end_month','received_on_end_day'} ), 
 			'order'				=>	'received_on',
 	) ) {
-		foreach my $Type ( openprint::Manifest_Content_Type::find('manifest_id'=>$Manifest->id(), 'cost'=>undef, 'order'=>'id') ) {
+		foreach my $Type ( openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id(), 'cost'=>undef, 'order'=>'id') ) {
 			my $Paper = $Type->Paper();
 			my $skid_html = '';
 			my $rfid_html = '';
 			my $qty_html = '';
-			foreach my $MC ( openprint::ManifestContent::find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
+			foreach my $MC ( openprint::ManifestContent->find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
 				$skid_html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a><br/>', $MC->skid_id() );
 				$rfid_html .= sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a><br/>', $MC->Skid()->rfidtag_id() );
 				$qty_html .= sprintf('%1$d%2$s<br/>', $MC->quantity(), $MC->units() );
@@ -44,7 +44,7 @@
 			} else {
 				my %Papers;
 				$html .= '<td>';
-				foreach my $MC ( openprint::ManifestContent::find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
+				foreach my $MC ( openprint::ManifestContent->find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
 					foreach my $SC ( $MC->Skid()->Contents() ) {
 						$Papers{$SC->paper_id()} = $SC->Paper();
 					} # end foreach SC

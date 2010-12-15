@@ -24,8 +24,12 @@ AjaxLoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.s
                         #$session{'/employee/reports/stock.html?last_seen'} = 31 if ! defined $session{'/employee/reports/stock.html?last_seen'};
                         my @options = (
                             '',     'Ever',
-                            '14',   '2 Weeks',
-                            '31',   '1 Month',
+                            '-14',   'Less than 2 Weeks',
+                            '+14',   'More than 2 Weeks',
+                            '-31',   'Less than 1 Month',
+                            '+31',   'More than 1 Month',
+                            '-365',   'Less than 1 Year',
+                            '+365',   'More than 1 Year',
                         );
                         return ssi::make_drop_down( \@options, $session{'/employee/reports/stock.html?last_seen'} );
                     ) ?>
@@ -55,7 +59,7 @@ AjaxLoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.s
                     foreach my $Stock ( openprint::Paper::find(
                             'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
                             #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                'type'=>[split(';', $session{'/employee/reports/stock.html?Type'})],
+							'type'=>[split(';', $session{'/employee/reports/stock.html?Type'})],
                             ) ) {
                         $data{$Stock->manufacturer()} = $Stock->manufacturer_id();
                     } # end foreach

@@ -169,7 +169,7 @@ sub stock {
 	require openprint::ManifestContent;
 
 	if ( $param{'btnFunction'} eq 'Save' ) {
-		foreach my $Type ( openprint::Manifest_Content_Type::find('cost'=>undef) ) {
+		foreach my $Type ( openprint::Manifest_Content_Type->find('cost'=>undef) ) {
 			$param{'cost-'.$Type->id()} =~ s/[^\d\.]//g;
 			if ( $param{'units-'.$Type->id()} eq '/lb' ) {
 				$param{'cost-'.$Type->id()} *= 100;
