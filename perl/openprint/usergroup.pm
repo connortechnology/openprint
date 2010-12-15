@@ -28,6 +28,8 @@ sub names {
 sub is_user_in {
 	my ( $groups, $user_id ) = @_;
 
+	return 1 if $openprint::session{'user_type'} eq 'A';
+
 	if ( ! exists $cache{$user_id} ) {
         @{$cache{$user_id}} = sql::execute(undef, undef, 'SELECT usergroup_id FROM users_in_usergroups WHERE user_id=?', $user_id );
     } # end if

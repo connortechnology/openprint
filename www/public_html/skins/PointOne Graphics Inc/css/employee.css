@@ -97,3 +97,11 @@ table tr .ip {
 .ZM_Monitors .thumbnail {
 	width: 320px;
 }
+table .RFID {
+	width: 140px;
+	text-align: left;
+}
+table .Skid {
+	width: 70px;
+	text-align: left;
+}

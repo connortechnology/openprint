@@ -49,5 +49,30 @@ sub Manifest {
 	return new openprint::Manifest( $_[0]{'manifest_id'} );
 } # end sub Manifest
 
+sub cost_from_po {
+	my $Type = $_[0];
+	my $PO = new openprint::PurchaseOrder( $Type->po_id() );
+	my $PO_Stock;
+	my $Paper = $Type->Paper();
+	foreach my $POC ( $PO->Contents() ) {
+		$log->debug($POC->description());
+		next if $POC->type() ne $Paper->type().' Stock';
+		my ( $weight ) = $POC->description() =~ /(\d+)lb/i;
+		if ( $weight and $Paper->basis_weight() and ( $Paper->basis_weight() != $weight*2 ) ) {
+			$log->debug("Wrong weight: $weight != " . $Paper->basis_weight() );
+			next;
+		} # end if
+		my ( $width ) = $POC->description() =~ /([\.\d]+)in/i;
+		if ( $width and $Paper->width() and ( $Paper->width() != $width ) ) {
+			$log->debug("Wrong width: $width != " . $Paper->width() );
+			next;
+		} # end if
+		$PO_Stock = $POC;
+		last;
+	} # end foreach POC
+	return if ! $PO_Stock;
+	return $PO_Stock->price();
+} # end if
+
 1;
 __END__
