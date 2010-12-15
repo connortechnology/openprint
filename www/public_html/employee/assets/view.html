@@ -1,0 +1,51 @@
+<form id="f1" name="f1" action="view.html" method="post">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="asset_id" value="<? echo ( $$variable{'Asset'}->id() ) ?>" />
+	<p class="buttons">
+<? echo ( 
+	my $html = '';
+	if ( ($session{'user_id'} == $$variable{'Asset'}->created_by() ) or ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) or sets::isin( $session{'user_id'}, $$variable{'Asset'}->editor_id() ) ) {
+		$html .= ssi::writeButton( $log, $dbh, 'Edit', 'edit.gif', '', 'edit.html?asset_id='.$$variable{'Asset'}->id(), 'Edit' );
+		if ( $$variable{'Asset'}->deleted() ) {
+			$html .= ssi::writeButton( $log, $dbh, 'UnDelete', 'undelete.gif', "f1.btnFunction.value='Undelete';f1.submit();", '', 'Undelete' );
+		} else {
+			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Delete';f1.submit();}", '', 'Delete' );
+		} # end if
+	} # end if
+	return $html;
+) ?>
+	</p>
+	<!--#include virtual="/includes/error_reporting.html"-->
+	<div class="Asset"><div class="View">
+			<div class="PageTitle">
+				<h1>Asset</h1><br/>
+				Asset # [ <? echo ( $$variable{'Asset'}->id() ) ?> ]
+			</div>
+			<fieldset>
+				<div class="content">
+					<ul>
+						<li><label>Created On:</label>
+				<? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time( $$variable{'Asset'}->created_on() ) ) ) ?>
+						</li>
+						<li><label>Name:</label>
+						<? echo ( $$variable{'Asset'}->name() ) ?>
+						</li>
+						<li><label>Description:</label>
+						<? echo ( $$variable{'Asset'}->description() ) ?>
+						</li>
+						<li><label>Filename:</label>
+						<? echo ( 
+								my $html = $$variable{'Asset'}->filename() ;
+								if ( $$variable{'Asset'}->filename() =~ /\.(png|gif|jpe?g)$/ ) {
+								$html .= '<br/><img src="/assets/'.$$variable{'Asset'}->on_disk_filename().'" />';
+								} # end if
+								return $html;
+						) ?>
+						</li>
+					</ul>
+				</div>
+			
+				<br/>
+		</div><!--View-->
+	</div><!--Asset-->
+</form>
