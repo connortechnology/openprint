@@ -1,0 +1,61 @@
+<script type="text/javascript">
+<!--
+	function load_page( div, form ) {
+		new Ajax.Updater( 'Results', '_history.html', { method: 'get', parameters: form.serialize() } );
+	} // end function load
+-->
+</script>
+	<!--#include virtual="/includes/error_reporting.html"-->
+<div class="Assets"><div class="History">
+<form id="f1" name="f1" action="history.html" method="post">
+	<fieldset class="filters"><legend>Select Search Criteria:</legend>
+		<ul>
+		<li><label>Asset #:</label>
+			<input type="text" id="asset_id" name="asset_id" size="10" onchange="change_handler(this);" onkeypress="return input_handler( this, event );" onkeydown="if(event.keyCode == 13){load_page( $('f1') );}" onkeyup="this.value=this.value.replace(/\D/g,'');" />
+			<? echo ( ssi::writeButton( $log, $dbh, 'Go3', 'go.gif', "load_page( \$('f1'));",'','Go' ); ) ?>
+		</li>
+		</ul>
+		<hr/>
+		<ul>
+		<li><label>Created By:</label>
+			<select name="created_by" onchange="load_page($('f1'));">
+				<option value="">All</option>
+				<? echo ( 
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)','type'=>['A','E'] ) ], $session{'/employee/asset/history.html?created_by'} ); ) ?>
+			</select>
+		</li>
+		<li><label>Type:</label>
+			<select name="type_id" onchange="load_page($('f1'));">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Asset_Type->find( 'order'=>'lower(name)' ) ], $session{'/employee/asset/history.html?type_id'} ); ) ?>
+			</select>
+		</li>
+		<? eval (
+				ssi::setup_date_select( '/employee/asset/history.html', 'created_on', -31 );
+        ) ?>
+		<li>
+			<label>Date:</label>
+			<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_start', {'onchange'=>"load_page(\$('f1'));"} ); ) ?>
+            to
+            </span>
+            <span class="DateSelector">
+<? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_end', {'onchange'=>"load_page(\$('f1'));"} ); ) ?>
+            </span>
+		</li>
+		</ul>
+		<p class="buttons">
+				<? echo ( join( '',
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', 'f1.submit();', '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'Add', 'add.gif', '', '/employee/assets/edit.html', 'Add New' ),
+				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
+				); ) ?>
+		</p>
+	</fieldset>
+</form>
+<form id="f2" name="f2" action="history.html" method="post">
+	<input type="hidden" name="btnFunction"/>
+	<div id="Results"><!--#include virtual="_history.html"--></div>
+</form>
+</div>
+</div>
