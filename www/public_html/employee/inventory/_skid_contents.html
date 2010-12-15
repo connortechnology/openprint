@@ -5,9 +5,9 @@
 <table class="List">
 	<tr>
 		<th align="left">Owner</th><th class="StockQuantity">Quantity</th><th class="StockQuality">Quality</th><th align="right" width="60">Inches</th>
-		<? if ( ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		<th>Cost</th>
-		<? endif ( ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( 
 	my $html;

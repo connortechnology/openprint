@@ -3,6 +3,7 @@ package openprint::ManifestContent;
 require openprint::Object;
 
 use strict;
+use Math::Round qw( nearest );
 use openprint ();
 use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transforms %defaults );
 *variable = \%openprint::variable;
@@ -52,6 +53,12 @@ sub units {
 		return $Type->Paper()->type() eq 'Roll' ? 'lbs' : 'sheets';
 	} # end if
 } # end sub units
+
+sub value {
+	my $Type = $_[0]->Type();
+	my $cost = $Type->cost() ? $Type->cost() : $Type->cost_from_po();
+	return Math::Round::nearest( .01, $cost * $_[0]{'quantity'}/100 );
+} # end sub value
 
 1;
 __END__
