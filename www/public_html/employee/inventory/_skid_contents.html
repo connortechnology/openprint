@@ -5,10 +5,9 @@
 <table class="List">
 	<tr>
 		<th align="left">Owner</th><th class="StockQuantity">Quantity</th><th class="StockQuality">Quality</th><th align="right" width="60">Inches</th>
-		<? if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
-			<th>Cost</th>
-		<? endif ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) ?>
-	
+		<? if ( ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<th>Cost</th>
+		<? endif ( ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 	</tr>
 <? echo ( 
 	my $html;
@@ -29,12 +28,10 @@
 		$html .= sprintf('<td class="StockQuantity"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), Number::Format::format_number($C->quantity()).$Paper->units() );
 		$html .= sprintf('<td class="StockQuality">%s</td>', $C->quality() );
 		$html .= sprintf('<td align="right"><a href="paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), (($Paper->type() eq 'Sheet') and $Paper->calliper()) ? sprintf('%.1f', Number::Format::format_number($C->quantity()*$Paper->calliper())) : 'unknown' );
-		if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting','SalesAdmin','Sales'], $session{'user_id'} ) ) {
-		$html .= '<td>';
-		$html .= openprint::Currency::format( $C->cost() ) . '/100lb';
-		$html .= '</td>';
-		$html .= '</tr><tr>';
-		$html .= '<td colspan="5">';
+		if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+			$html .= '<td>' . openprint::Currency::format( $C->cost() ) . '/100lb</td>';
+			$html .= '</tr><tr>';
+			$html .= '<td colspan="5">';
 		} else {
 		$html .= '</tr><tr>';
 		$html .= '<td colspan="4">';
