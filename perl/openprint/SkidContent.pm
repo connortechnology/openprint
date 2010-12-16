@@ -135,8 +135,12 @@ sub cost {
 		#$log->debug("No Po_id skid_id $$self{'skid_id'}, paper_id $$self{'paper_id'}");
 		return;
 	} # end if
-	return $MC->cost() if $MC->cost();
-	return $MC->cost_from_po();
+ if ( $MC->cost() ) {
+#$log->debug("Returning cost from Manifest");
+	return $MC->cost();
+	} # end if
+#$log->debug("Returning cost from PO");
+	return $MC->Type()->cost_from_po();
 } # end sub cost
 
 1;
