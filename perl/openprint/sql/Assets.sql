@@ -20,3 +20,4 @@ CREATE TABLE Assets (
 	updated_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
 	PRIMARY KEY (id)
 );
+alter table Users add foreign key (asset_Id) REFERENCES assets (Id);

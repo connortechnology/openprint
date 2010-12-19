@@ -1,5 +1,6 @@
 use strict;
 require openprint::Asset;
+require openprint::Photo_in_Album;
 # A collection of Assets
 package openprint::Photo_Album;
 our @ISA = qw( openprint::Object );
@@ -16,38 +17,37 @@ $table = 'photo_albums';
 	'thumbnail_id'		=>	'thumbnail_id',
 	'created_on'		=>	'created_on',
 	'privacy_mode_id'	=>	'privacy_mode_id',
+	'deleted'			=>	'deleted',
 );
 
 %defaults = (
 	'created_on'	=> q`'NOW()'`,
 	'thumbnail_id'	=>	undef,
 	'user_id'		=>	q`$openprint::session{'user_id'}`,
+	'deleted'		=>	0,
 );
 
 sub thumbnail_url {
 	# if no thumbnail set, then choose randomal
 	if ( ! $_[0]{'thumbnail_id'} ) {
 		my @Photos = $_[0]->Photos();
+$openprint::log->debug("Type: " . ref $Photos[0] ) if @Photos;
 		return $Photos[0]->thumbnail_url() if @Photos;
 	} # end if
 } # end sub thumbnail_url
 
 sub Photos {
-	return map { $_->Asset() } openprint::Photos_in_Albums->find('album_id'=>$_[0]{'id'});
+	if ( @_ > 1 or ! $_[0]{'Photos'} ) {
+		@{$_[0]{'Photos'}} = openprint::Photo_in_Album->find('album_id'=>$_[0]{'id'},'order'=>'asset_id');
+	} # end if
+	return @{$_[0]{'Photos'}};
 } # end sub Photos
 
-package openprint::Photos_in_Albums;
-our @ISA = qw( openprint::Object );
-
-use vars qw( $debug $table %fields %transforms %defaults @identified_by );
-$debug = 1;
-$table = 'photos_in_albums';
-%fields = (
-	'album_id'	=>	'album_id',
-	'asset_id'	=>	'asset_id',
-);
-
-@identified_by = ( 'album_id','asset_id' );
+sub destroy {
+	foreach my $Photo ( $_[0]->Photos() ) {
+		$Photo->destroy();
+	} # end foreach Photo
+} # end sub delete
 
 1;
 __END__

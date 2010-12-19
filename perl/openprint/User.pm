@@ -8,6 +8,7 @@ require openprint::Company;
 require openprint::logs;
 require openprint::Usergroup;
 require openprint::User_Notification;
+require openprint::Asset;
 
 use openprint ();
 use vars qw( $log $dbh %config %variable %param $debug %fields %transforms %defaults $table $serial );
@@ -52,6 +53,7 @@ $debug = 1;
 	'purchasing_limit'	=>	'purchasing_limit',
 	'purchasing_total_limit'	=>	'purchasing_total_limit',
 	'notes'				=>	'notes',
+	'asset_id'			=>	'asset_id',
 	'deleted'			=>	'deleted',
 ); # end %fields
 
@@ -82,6 +84,7 @@ $debug = 1;
 	'wage'				=>	undef,
 	'deleted'			=>	0,
 	'email_quotes_to_myself'	=>	0,
+	'asset_id'			=>	undef,
 );
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
@@ -437,6 +440,10 @@ sub po_limit {
 
 	return $$self{'po_limits'}{$type_id};
 } # end sub po_limit
+
+sub Asset {
+	return new openprint::Asset( $_[0]{'asset_id'} );
+} # end sub Asset
 
 1;
 

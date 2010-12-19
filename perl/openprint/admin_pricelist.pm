@@ -17,7 +17,7 @@ sub edit {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	my $id = $openprint::param{'ddmPriceList'};
-	my $Pricelist = new openprint::Pricelist( $id );
+	my $Pricelist = $$variable{'Pricelist'} = new openprint::Pricelist( $id );
 
 	if ( $r->param('btnFunction') eq '>>' ) {
 		$Pricelist = $Pricelist->Next();
@@ -315,11 +315,7 @@ $openprint::log->debug("Doing $name");
 
 	} # end if
 
-	@$variable{'ID', 'Name','Description', 'Currency'} = @$Pricelist{'id','Name','Description','Currency'};
-
 } # end sub edit
 
 1;
-
 __END__
-

@@ -33,6 +33,7 @@ CREATE TABLE Users (
 	howdidyouhearaboutus	text,
 	howdidyouhearaboutusother	text,
 	deleted					BOOLEAN NOT NULL default false,
+	asset_id				INTEGER,
 	PRIMARY KEY (id)
 );
 CREATE INDEX users_email_idx ON Users (email);

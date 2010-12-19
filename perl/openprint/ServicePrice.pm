@@ -1,10 +1,8 @@
-package openprint::ServicePrice;
-@ISA = qw( openprint::Object );
 use strict;
-
 require sql;
 require openprint::Object;
-
+package openprint::ServicePrice;
+our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 

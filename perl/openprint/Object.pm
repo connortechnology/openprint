@@ -503,8 +503,8 @@ sub find {
 	if ( ! $data ) {
 		$openprint::log->debug('Error ' . $openprint::dbh->errstr() . " loading $type ($sql) (@values) " );
 		return ();
-	} elsif ( ( ! @$data ) and $debug ) {
-		$openprint::log->debug("No $type ($sql) (@values) " );
+	#} elsif ( ( ! @$data ) and $debug ) {
+		#$openprint::log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
 		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds" );
 	} # end if

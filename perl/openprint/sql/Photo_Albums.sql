@@ -8,6 +8,7 @@ CREATE TABLE Photo_Albums (
 	thumbnail_id	INTEGER, FOREIGN KEY (thumbnail_id) REFERENCES Assets (id),
 	privacy_mode_id	INTEGER,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),
+	deleted		BOOLEAN NOT NULL default false,
 	PRIMARY KEY (id)
 );
 
