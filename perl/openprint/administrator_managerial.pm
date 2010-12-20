@@ -150,6 +150,7 @@ sub user_profiles {
 		} # end if
 
 		my @Users = openprint::User->find( 'email_lc' => lc $param{'email'} );
+$log->debug("Users found? " . scalar @Users);
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
@@ -242,7 +243,12 @@ sub user_profiles {
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
-	my @Users = openprint::User->find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(firstname),lower(lastname)' );
+	my @Users = openprint::User->find( 
+		( $cust_id ? ( 'company_id'=>$cust_id ) : () ), 
+		( $user_role ? ( 'type'=>$user_role ) : () ),
+		'order'=>'lower(firstname),lower(lastname)'
+		);
+
 	if ( $User->deleted() ) {
 		unshift @Users, $User;
 	} # end if
