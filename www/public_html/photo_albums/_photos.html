@@ -1,0 +1,22 @@
+<? echo ( 
+	my $html;
+	foreach my $Photo ( $$variable{'Album'}->Photos() ) {
+		$html .= '<div class="Photo">';
+		$html .= sprintf('<img src="%s" alt="%s"/>', $Photo->thumbnail_url(), $Photo->caption() );
+		$html .= '<br/>';
+		if ( $Photo->asset_id() != $$variable{'Album'}->thumbnail_id() ) {
+			$html .= ssi::writeButton( $log, $dbh, 'SAT'.$Photo->asset_id(), 'sat.gif', 
+				sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, asset_id: %d, action: 'set as thumbnail' } } );`, $$variable{'Album'}->id(), $Photo->asset_id() ),
+				'', 'Set as album thumbnail' );
+			$html .= '<br/>';
+		} # end if
+		if ( new openprint::User( $session{'user_id'} )->asset_id() != $Photo->asset_id() ) {
+			$html .= ssi::writeButton( $log, $dbh, 'SPP'.$Photo->asset_id(), 'spp.gif', 
+				sprintf( q`new Ajax.Updater('Photos', '_photos.html', { parameters: { album_id: %d, asset_id: %d, action: 'set as profile pic' } } );`, $$variable{'Album'}->id(), $Photo->asset_id() ),
+, '', 'Set as profile picture' );
+			$html .= '<br/>';
+		} # end if
+		$html .= '</div>';
+	} # end foreach Photo
+	return $html;
+) ?>
