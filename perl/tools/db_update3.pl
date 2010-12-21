@@ -3,6 +3,7 @@ use lib '/var/www/testing/perl';
 use strict;
 
 require sql;
+require misc;
 require logger;
 require configuration;
 require openprint::Object;
@@ -35,8 +36,9 @@ if ( sets::isin( 'article_categories', \@tables ) ) {
 		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
 	} # end if
 }
-if ( sets::isin( 'assets', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '
+if ( ! sets::isin( 'assets', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Assets.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
 } # end if
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
@@ -44,6 +46,13 @@ if ( ! exists $$data{'asset_id'} ) {
 	$dbh->do('ALTER TABLE users add asset_id INTEGER');
 	$dbh->do('ALTER TABLE users add FOREIGN KEY (asset_id) REFERENCES Assets (id)');
 } # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expenses'", 'column_name');
+if ( ! exists $$data{'amount_locked'} ) {
+	$dbh->do('ALTER TABLE expenses add amount_locked BOOLEAN NOT NULL default false');
+}
+if ( ! exists $$data{'total_locked'} ) {
+	$dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
+}
 $dbh->disconnect();
 1;
 __END__

@@ -35,7 +35,9 @@ $serial = 'expenses_id_seq';
 	'category'			=>	undef,
 	'description'		=>	'description',
 	'amount'			=>	'amount',
+	'amount_locked'		=>	'amount_locked',
 	'total'				=>	'total',
+	'total_locked'		=>	'total_locked',
 	'created_on'		=>	'created_on',
 	'due_on'			=>	'due_on',
 	'invoiced_on'		=>	'invoiced_on',
@@ -59,6 +61,8 @@ $serial = 'expenses_id_seq';
 	'created_on'	=>	q`'NOW()'`,
 	'recipient_id'	=>	undef,
 	'business_use'	=>	undef,
+	'amount_locked'	=>	0,
+	'total_locked'	=>	0,
 );
 
 

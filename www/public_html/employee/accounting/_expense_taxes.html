@@ -9,7 +9,7 @@
 	foreach my $Tax ( @Taxes ) {
 		my $Expense_Tax = $$variable{'Expense'}->Tax( $Tax );
 		$html .= sprintf(q`
-<li><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%)<input type="checkbox" name="tax_charge-%1$d" id="tax_charge-%1$d" value="1" %4$s onclick="update_total(this.form);" /></label><input type="text" name="tax_amount-%1$d" id="tax_amount-%1$d" value="%5$s" /></li>
+<li><label>%2$s (<span id="tax_rate-%1$d">%3$d</span>%)<input type="checkbox" name="tax_charge-%1$d" id="tax_charge-%1$d" value="1" %4$s onclick="update_total(this.form);" />:</label><input type="text" name="tax_amount-%1$d" id="tax_amount-%1$d" value="%5$s" /></li>
 `, $Tax->id(), $Tax->name(), $Tax->rate(), ssi::checked( $Expense_Tax->charge() ), $Expense_Tax->amount() );
 	} # end foreach Tax
 	if ( $param{'invoiced_on_year'} ) {

@@ -45,6 +45,7 @@
 <? if ( @{$$variable{'Categories'}} = openprint::Article_Category->find('order'=>'lower(name)') ) ?>
 			<p><label>Category:</label>
 				<select name="category_id" id="category_id" onchange="load_articles(this.form);">
+					<option value="">All</option>
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Categories'}} ], $session{'/article/history.html?category_id'} ); ) ?>
 				</select>
 			</p>
@@ -57,6 +58,16 @@
 				</span>
 				<span class="DateSelector">
 <? echo ( ssi::date_select_session( '/article/history.html', 'created_on_end', {onchange=>'load_articles(this.form);'} ); ) ?>
+				</span>
+			</p>
+			<p>
+				<label>Published:</label>
+				<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/article/history.html', 'published_on_start', {onchange=>'load_articles(this.form);'} ); ) ?>
+					to 
+				</span>
+				<span class="DateSelector">
+<? echo ( ssi::date_select_session( '/article/history.html', 'published_on_end', {onchange=>'load_articles(this.form);'} ); ) ?>
 				</span>
 			</p>
 			</div>

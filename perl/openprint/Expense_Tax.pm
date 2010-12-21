@@ -7,7 +7,7 @@ use vars qw( $debug $table $serial %fields %defaults %transforms );
 require openprint::Expense;
 require openprint::Tax;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'expense_taxes';
 $serial = 'expense_taxes_id_seq';
