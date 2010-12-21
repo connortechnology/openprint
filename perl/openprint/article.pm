@@ -1,6 +1,7 @@
 package openprint::article;
 
 use strict;
+use LWP::UserAgent;
 use openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
@@ -23,6 +24,24 @@ sub history {
 			delete $param{'category'};
 		} else {
 			delete $param{'category_id'};
+		} # end if
+		if ( $param{'source'} ) {
+			if ( $param{'source'} =~ /epicurious\.com/ ) {
+				my $ua = LWP::UserAgent->new;
+				$ua->agent("MyApp/0.1 ");
+# Create a request
+				my $req = HTTP::Request->new(GET => $param{'source'} );
+# Pass request to the user agent and get a response back
+				my $res = $ua->request($req);
+# Check the outcome of the response
+				if ($res->is_success) {
+					$log->debug("Content: " . $res->content );
+					$param{'source_content'} = $res->content;
+				} else {
+					$log->error("Bad status" . $res->status_line );
+					$variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
+				} # end if
+			} # end if
 		} # end if
 		$variable{'error'} .= $Article->save(\%param);
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {

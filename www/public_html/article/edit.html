@@ -47,8 +47,10 @@
 					<label class="radio" for="published0">No</label>
 				</li>
 				<li><label>Published at:</label>
-					<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'published_on', $$variable{'Article'}->published_on(), {'with_today'=>1} ); ) ?>
-					</span>
+					<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'published_on', $$variable{'Article'}->published_on(), {'with_today'=>1} ); ) ?></span>
+				</li>
+				<li><label>Source:</label>
+					<input type="text" id="source" name="source" value="<? echo ( $$variable{'Article'}->source() ) ?>" />
 				</li>
 				<li><label>Title:</label>
 					<input type="text" id="title" name="title" value="<? echo ( $$variable{'Article'}->title() ) ?>" />
