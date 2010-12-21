@@ -67,7 +67,7 @@
 				<label class="radio" for="published_1">Yes</label>
 				<input type="radio" id="published_0" name="published" value="0" <? echo ( ssi::checked( $session{'/article/history.html?published'} eq '0' ); ) ?> onclick="load_articles(this.form);" />
 				<label class="radio" for="published_0">No</label>
-				<input type="radio" id="published_01" name="published" value="0;1" <? echo ( ssi::checked( $session{'/article/history.html?published'} eq '0;1' ) ) ?> onclick="load_articles(this.form);" />
+				<input type="radio" id="published_01" name="published" value="" <? echo ( ssi::checked( $session{'/article/history.html?published'} eq '' ) ) ?> onclick="load_articles(this.form);" />
 				<label class="radio" for="published_01">Both</label>
 			</p>
 			<p>

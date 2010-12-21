@@ -36,7 +36,15 @@ sub history {
 # Check the outcome of the response
 				if ($res->is_success) {
 					$log->debug("Content: " . $res->content );
-					$param{'source_content'} = $res->content;
+					my $content = $res->content;
+					#my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
+					$content =~ s/\n\r//g;
+					$content =~ s/\n//g;
+					my ( $title ) = $content =~ /<h1 class="fn">(.+?)<\/h1>/;
+					my ( $summary ) = $content =~ /<span id="truncatedText" class="summary">(.+?)<\/span>/;
+					my ( $thumb ) = $content =~ /<div id="recipe_thumb">(.+?)<\/div>/;
+					
+					$param{'source_content'} = qq`<div class="Epicurious"><h1>$title</h1><div class="thumb">$thumb</div><div class="summary">$summary</div></div>`;
 				} else {
 					$log->error("Bad status" . $res->status_line );
 					$variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
@@ -90,6 +98,11 @@ sub category {
 		$variable{'error'} .= $Category->delete();
 	} # end if
 } # end sub category
+
+sub _view {
+	my $Article = $variable{'Article'} = new openprint::Article( $param{'article_id'} );
+	$Article->set( \%param );
+} # end sub _view
 
 1;
 __END__

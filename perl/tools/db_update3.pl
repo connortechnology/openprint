@@ -35,6 +35,15 @@ if ( sets::isin( 'article_categories', \@tables ) ) {
 		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
 	} # end if
 }
+if ( sets::isin( 'assets', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '
+} # end if
+
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
+if ( ! exists $$data{'asset_id'} ) {
+	$dbh->do('ALTER TABLE users add asset_id INTEGER');
+	$dbh->do('ALTER TABLE users add FOREIGN KEY (asset_id) REFERENCES Assets (id)');
+} # end if
 $dbh->disconnect();
 1;
 __END__

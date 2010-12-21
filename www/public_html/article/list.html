@@ -1,6 +1,3 @@
-<div class="PageTitle">
-<h1>Articles</h1>
-</div>
 <script type="text/javascript">
 <!--
 	function load_articles( form ) {
@@ -25,49 +22,36 @@
 <div class="Article">
 <? if ( $param{'category_id'} ) ?>
 <div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
-<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
-<div class="image"><img src="/images/aricle_categories/<? echo ( $$variable{'Category'}->image_filename() ) ?>" /></div>
+	<div class="name"><span><? echo ( $$variable{'Category'}->name() ) ?></span></div>
+	<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
+	<? if ( $$variable{'Category'}->image_filename() ) ?>
+	<div class="image"><img src="/images/article_categories/<? echo ( $$variable{'Category'}->image_filename() ) ?>" /></div>
+	<? endif ( $$variable{'Category'}->image_filename() ) ?>
 </div>
 <? endif ( $param{'category_id'} ) ?>
 
 <? if ( @{$$variable{'Articles'}} == 0 ) ?>
 	There are no articles which match your search criteria. 
 <? else ( @{$$variable{'Articles'}} == 0 ) ?>
-	<div class="unprintable">
-		Please click on a <b>Article ID #</b> to view article details.<br/>
-		To delete articles from history check the appropriate article(s) and click delete.<br/>
-	</div>
-	<table class="List">
-		<tr> 
-			<th class="Company">Company</th>
-			<th class="EmployeeName">Employee</th>
-			<th class="DateTime">Created On</th>
-			<th class="DateTime">Published On</th>
-			<th class="Title">Title</th>
-		</tr>
 		<? echo ( 
 			my $html;
-			my $rowclass;
 			foreach my $Article ( @{$$variable{'Articles'}} ) {
 				$html .= sprintf(q` 
-				<tr title="%2$s" %8$s onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
-					<td class="Company"><a href="/article/edit.html?article_id=%1$d">%3$s</a></td>
-					<td class="EmployeeName"><a href="/article/edit.html?article_id=%1$d">%4$s</a></td>
-					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%5$s</a></td>
-					<td class="DateTime"><a href="/article/edit.html?article_id=%1$d">%6$s</a></td>
-					<td class="Title"><a href="/article/edit.html?article_id=%1$d">%7$s</a></td>
-				</tr>
-				`, $Article->id(), ssi::html_escape($Article->body()), ssi::htmlize($Article->Company()->name()), 
-				ssi::htmlize( $Article->Author()->name() ),
-				Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->created_on() ) ),
-				( $Article->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+				<div class="Article" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+					<h1>%2$s</h1>
+					Posted on %6$s by %5$s<br/>
+					<div class="source_content">%3$s</div>
+					<div class="body">%4$s</div>
+				</div>
+				`, $Article->id(), 
 				ssi::htmlize($Article->title()),
-				$rowclass,
+				$Article->source_content(), 
+				ssi::html_escape($Article->body()), 
+				ssi::htmlize( $Article->Author()->name() ),
+				( $Article->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
 				);
-				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Article
 			return $html;
 		) ?>
-	</table>
 <? endif ( @{$$variable{'Articles'}} == 0 ) ?>
 </div><!--Article-->

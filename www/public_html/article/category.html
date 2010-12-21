@@ -32,9 +32,12 @@
 					<li><label>Name:</label>
 						<input type="text" id="name" name="name" value="<? echo ( $$variable{'Category'}->name() ) ?>" />
 					</li>
+					<li><label>Position:</label>
+						<input type="text" id="position" name="position" value="<? echo ( $$variable{'Category'}->position() ) ?>" />
+					</li>
 					<li>
 						<label for="description">Description:</label>
-						<textarea cols="" id="description" name="description" rows="<? echo ( $$variable{'Category'}->description() ? scalar split("\n", $$variable{'Category'}->description()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
+						<textarea cols="" id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
 					</li>
 					<li>
 						<label for="image">Image Upload:</label><input type="file" id="image_filename" name="image_filename"/>
