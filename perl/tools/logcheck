@@ -1,11 +1,12 @@
 #!/usr/bin/perl -w
-use lib '/etc/apache2/lib/perl';
+use lib '/var/www/testing/perl';
 
 use sql;
 use sets;
 
 use strict;
 use Date::Parse;
+use Date::Calc;
 use Socket;
 require openprint::Blacklist;
 require openprint::Host;
@@ -76,10 +77,10 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from ([.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
 );
 
-my %host_counts;
+my %host_counts = map { $_->ip(), $_ } openprint::Host->find();
 my @whitelist = sql::execute( undef, undef, 'SELECT ip FROM whitelist' );
 my $ac = sql::start_transaction( $dbh );
-$dbh->do( 'LOCK TABLE blacklist IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
+$dbh->do( 'LOCK TABLE Hosts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 foreach my $log_file ( @log_files ) {
 	if ( open( FH, "<$log_file" ) ) {
@@ -109,7 +110,8 @@ print "Trying $re against $line\n" if $opts->{debug};
 						print "No ip for $source\n" if $opts->{debug};
 					} else {
 						if ( ! $host_counts{$ip} ) {
-							$host_counts{$ip} = $openprint::dbh->selectrow_hashref( 'SELECT * FROM blacklist WHERE ip=?', {}, $ip );
+							my $Host = openprint::Host->find_one('ip'=>$ip);
+							$host_counts{$Host->ip()} = $Host;
 						} # end if
 						my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip};
 						my $occurrence = Date::Parse::str2time( $when );
@@ -131,14 +133,9 @@ print "Trying $re against $line\n" if $opts->{debug};
 
 foreach my $ip ( sort keys %host_counts ) {
 	next if ! $host_counts{$ip}{'update'};
-	if ( $host_counts{$ip}{'ip'} ) {
-		if ( my $e = sql::update( undef, undef, 'blacklist',['ip=?',$ip], ['updated_on', 'NOW()', 'count', $host_counts{$ip}{'count'}] ) ) {
-			print $e . "\n";
-		} # end if
-	} else {
-		if ( my $e = sql::insert( undef, undef, 'blacklist',['ip',$ip, 'updated_on', 'NOW()', 'count', $host_counts{$ip}{'count'}] ) ) {
-			print $e . "\n";
-		} # end if
+	$_ = $host_counts{$ip}->save();
+	if ( $_ ) {
+		print $_ . "\n";
 	} # end if
 	print "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}\n" if $opts->{debug};
 } # end foreach ip
@@ -148,16 +145,15 @@ if ( $opts->{'blacklist'} ) {
 	if ( ! open( FH, '>'.$opts->{'blacklist'} ) ) {
 		die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
 	} else {
-		foreach my $ip ( sql::execute( undef, undef, q`SELECT ip FROM blacklist WHERE updated_on > NOW()-'2 months'::interval AND count > 5 ORDER BY ip` ) ) {
-			my $Blacklist = new openprint::Blacklist( $ip );
-			if ( my $macs = $Blacklist->Host()->mac() ) {
+		foreach my $Host ( openprint::Host->find('blacklist'=>1, 'count_>' => 5, 'order'=>'ip', 'updated_on_>=' => sprintf('%.4d-%.2d-%.2d 00:00:00', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -60 ) ) ) ) {
+			if ( my $macs = $Host->mac() ) {
 				foreach my $mac ( @{$macs} ) {
 					print FH "~$mac\n";
 				} # end foreach mac
 			} else {
-				print FH "$ip\n";
+				print FH $Host->ip()."\n";
 			} # end if
-		} # end foreach ip
+		} # end foreach Host
 		close(FH);
 	} # end if
 	`/etc/init.d/shorewall restart`;
