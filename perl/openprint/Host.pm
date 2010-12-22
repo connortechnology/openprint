@@ -32,6 +32,8 @@ $serial = 'hosts_id_seq';
 	'hostname'	=>	'undef',
 	'ip'		=>	undef,
 	'dhcp'		=>	0,
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
 );
 sub resolve {
 	my ( $self ) = @_;
