@@ -38,7 +38,8 @@ $param{'order'} ? $param{'order'} : 'lower(hostname)'
 					($Host->mac() ? join('<br/>', @{$Host->mac()} ) : ''), 
 					join(', ', (
 						( $Host->dhcp() ? 'dhcp' : () ),
-						( $Host->block() ? 'blocked' : () ),
+						( $Host->blacklist() ? 'blacklisted' : () ),
+						( $Host->whitelist() ? 'whitelisted' : () ),
 						( $Host->monitor() ? 'monitored' : () ),
 					) ),
 					$Host->description() );

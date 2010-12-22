@@ -363,7 +363,7 @@ sub find {
 					delete $params{$k.'_in'};
 				} # end if
 				if ( exists $params{$k.'_any'} ) {
-					$sql .= " AND ? = ANY( $$f{$k} )";
+					$sql .= " AND ? = ANY($$f{$k})";
 					push @values, $params{$k.'_any'};
 					delete $params{$k.'_any'};
 				} # end if

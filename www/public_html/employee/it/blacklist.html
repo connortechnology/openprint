@@ -12,7 +12,11 @@ function load_content( form, options ) {
 	<fieldset class="filters"><legend>Choose Host</legend>
 		<p>
 			<label for="ip">Host IP</label>
-	 		<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d]/,'');" onkeydown="if(event.keyCode == 13){load_content($('f1'));}"/>
+			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d]/,'');" onkeydown="this.form.hostname.value='';if(event.keyCode == 13){load_content($('f1'));}"/>
+			Hostname:
+			<input type="text" id="hostname" name="hostname" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_content( $('f1') );}" />
+			MAC:
+			<input type="text" id="mac" name="mac" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_content( $('f1') );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "load_content(\$('f1'));",'','Load' ); ) ?>
 		</p>
 	</fieldset>
