@@ -1,0 +1,53 @@
+<? eval (
+	if ( $param{'ip'} ) {
+		@{$$variable{'Blacklist'}} = openprint::Blacklist->find('ip'=>$param{'ip'});
+	} else {
+		@{$$variable{'Blacklist'}} = openprint::Blacklist->find('order'=> ($param{'order'} ? $param{'order'} : 'created_on' ),
+		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/it/blacklist.html?created_on_start_year','/employee/it/blacklist.html?created_on_start_month','/employee/it/blacklist.html?created_on_start_day'} ),
+		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/blacklist.html?created_on_end_year','/employee/it/blacklist.html?created_on_end_month','/employee/it/blacklist.html?created_on_end_day'} ),
+		'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/it/blacklist.html?updated_on_start_year','/employee/it/blacklist.html?updated_on_start_month','/employee/it/blacklist.html?updated_on_start_day'} ),
+		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/blacklist.html?updated_on_end_year','/employee/it/blacklist.html?updated_on_end_month','/employee/it/blacklist.html?updated_on_end_day'} ),
+			);
+	} # end if
+) ?>
+<? if ( @{$$variable{'Blacklist'}} ) ?>
+<table class="List">
+	<thead>
+		<tr>
+			<th class="ip">IP</th>
+			<th>Count</th>
+			<th class="DateTime">Created On</th>
+			<th class="DateTime">Updated On</th>
+		</tr>
+	</thead>
+	<tbody>
+<? echo (
+	my $html;
+	my $rowclass;
+	foreach my $Blacklist ( openprint::Blacklist->find('order'=>$param{'order'} ? $param{'order'} : 'created_on' ) ) {
+		$html .= sprintf('
+		<tr%1$s>
+			<td class="ip">%2$s</td>
+			<td>%3$s</td>
+			<td class="DateTime">%4$s</td>
+			<td class="DateTime">%5$s</td>
+		</tr>
+		<tr%1$s>
+			<td colspan="2">%6$s</td>
+			<td colspan="2">%7$s</td>
+		</tr>
+		', $rowclass,
+		$Blacklist->ip(), $Blacklist->count(), 
+		Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Blacklist->created_on() ) ),
+		Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Blacklist->updated_on() ) ),
+		$Blacklist->Host()->hostname(), $Blacklist->Host()->description(),
+		);
+		$rowclass = $rowclass ? '' : ' class="colRow"';
+	} # end foreach
+	return $html;
+) ?>
+	</tbody>
+</table>
+<? else ( @{$$variable{'Blacklist'}} ) ?>
+No results found.
+<? endif ( @{$$variable{'Blacklist'}} ) ?>

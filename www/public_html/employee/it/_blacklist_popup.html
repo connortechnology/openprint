@@ -1,0 +1,10 @@
+<form id="blacklist_form" name="blacklist_form" method="post" action="blacklist.html">
+<fieldset><legend>Blacklist Entry</legend>
+	<div class="content">
+		<ul>
+			<li><label>IP:</label> <input type="text" name="ip" id="ip" value="<? echo ( $$variable{'Blacklist'}->ip() ) ?>" /> </li>
+			<li><label>Count:</label> <input type="text" name="count" id="count" value="<? echo ( $$variable{'Blacklist'}->count() ) ?>" /> </li>
+		</ul>
+	</div>
+</fieldset>
+</form>

@@ -11,6 +11,7 @@ use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transform
 *config = \%openprint::config;
 
 require openprint::Manifest;
+require openprint::Paper;
 
 $debug = 1;
 
