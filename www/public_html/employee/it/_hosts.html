@@ -6,7 +6,14 @@
 $log->debug("Loaded hosts: " . @{$$variable{'Hosts'}} );
 	} else {
 		@{$$variable{'Hosts'}} = openprint::Host->find('order'=>
-$param{'order'} ? $param{'order'} : 'lower(hostname)'
+$param{'order'} ? $param{'order'} : 'lower(hostname)',
+( $param{'blacklisted'} ne '' ? ( 'blacklist'=>$param{'blacklisted'} ) : () ),
+( $param{'whitelisted'} ne '' ? ( 'whitelist'=>$param{'whitelisted'} ) : () ),
+		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/it/hosts.html?created_on_start_year','/employee/it/hosts.html?created_on_start_month','/employee/it/hosts.html?created_on_start_day'} ),
+		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/hosts.html?created_on_end_year','/employee/it/hosts.html?created_on_end_month','/employee/it/hosts.html?created_on_end_day'} ),
+		'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/it/hosts.html?updated_on_start_year','/employee/it/hosts.html?updated_on_start_month','/employee/it/hosts.html?updated_on_start_day'} ),
+		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/hosts.html?updated_on_end_year','/employee/it/hosts.html?updated_on_end_month','/employee/it/hosts.html?updated_on_end_day'} ),
+			);
 );
 	} 
 ) ?>
