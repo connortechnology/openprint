@@ -61,5 +61,28 @@ sub camera {
 sub cameras {
 } # end sub cameras
 
+sub blacklist {
+	require openprint::Blacklist;
+	ssi::save_params( '/employee/it/blacklist.html', 
+			'created_on_start_year', 'created_on_start_month','created_on_start_day',
+			'created_on_end_year', 'created_on_end_month','created_on_end_day',
+			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day',
+			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day',
+	);
+	ssi::setup_date_select( '/employee/it/blacklist.html', 'created_on_start', 0 );
+	ssi::setup_date_select( '/employee/it/blacklist.html', 'created_on_end', 0 );
+	ssi::setup_date_select( '/employee/it/blacklist.html', 'updated_on_start', 0 );
+	ssi::setup_date_select( '/employee/it/blacklist.html', 'updated_on_end', 0 );
+} # end sub blacklist
+sub _blacklist {
+	require openprint::Blacklist;
+	ssi::save_params( '/employee/it/blacklist.html', 
+			'created_on_start_year', 'created_on_start_month','created_on_start_day',
+			'created_on_end_year', 'created_on_end_month','created_on_end_day',
+			'updated_on_start_year', 'updated_on_start_month','updated_on_start_day',
+			'updated_on_end_year', 'updated_on_end_month','updated_on_end_day',
+	);
+} # end sub _blacklist
+
 1;
 __END__

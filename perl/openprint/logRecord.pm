@@ -4,6 +4,7 @@ require openprint::Object;
 require Date::Handler;
 require openprint::User;
 require openprint::logAction;
+require openprint::Host;
 use strict;
 
 my $debug = 1;
@@ -18,6 +19,10 @@ $serial = 'log_id_seq';
 	'company_id'	=>	'company_id',
 	'date_time'		=>	'date_time',	
 	'action_type'	=>	'action_type',
+	'host_id'		=>	'host_id',
+);
+%defaults = (
+	'host_id'	=>	undef,
 );
 
 
@@ -107,19 +112,24 @@ sub Action {
 
 sub hostname {
 	my ( $self, $new ) = @_;
-	if ( defined $new ) {
-		$$self{'hostname'} = $new;
+	if ( @_ > 1 ) {
+		$self->Host()->save({'hostname'=>$new});
 	} # end if
-if ( 0 ) {
-	if ( ! defined $$self{'hostname'} ) {
-		return $$self{'ip_address'} unless $$self{'ip_address'} =~ /\d+\.\d+\.\d+\.\d+/;
-		my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip_address'})),2);
-		if ( @h ) {
-			$self->save({'hostname' => $h[0] } );
-		} # end if
-	} # end if
-} # end if
-	return $$self{'hostname'} ? $$self{'hostname'} : $$self{'ip_address'};
+	return $self->Host()->hostname();
 } # end sub hostname
+
+sub Host {
+	if ( ! $_[0]{'host_id'} ) {
+		my $Host = openprint::Host->find_one('ip'=>$_[0]{'ip_address'});
+		if ( ! $Host ) {
+			$Host = new openprint::Host();
+			$Host->save({'ip'=>$_[0]{'ip_address'}});
+		} # endif	
+		$_[0]->save({'host_id'=>$Host->id()});
+	} # end if
+		
+	return new openprint::Host( $_[0]{'host_id'} );
+} # end sub Host
+
 1;
 __END__

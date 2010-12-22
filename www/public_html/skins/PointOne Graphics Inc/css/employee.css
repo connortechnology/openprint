@@ -73,10 +73,6 @@ table tr .name {
 	text-align: left;
 	width: 160px;
 }
-table tr .ip {
-	text-align: left;
-	width: 80px;
-}
 
 table tr .mac {
 	text-align: left;
