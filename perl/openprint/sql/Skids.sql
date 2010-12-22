@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS Skid_verifications;
 DROP TABLE IF EXISTS Skid_Contents;
 DROP TABLE IF EXISTS Skids;
-DROP SEQUENCE Skid_id_seq;
+DROP SEQUENCE IF EXISTS Skid_id_seq;
 
 CREATE SEQUENCE Skid_id_seq;
 CREATE TABLE Skids (
@@ -20,7 +20,7 @@ CREATE TABLE Skid_Contents (
 	skid_id	INTEGER NOT NULL, FOREIGN KEY (skid_id) REFERENCES skids (id),
 	paper_id	INTEGER NOT NULL, FOREIGN KEY (paper_id) REFERENCES papers (id),
 	quantity	INTEGER NOT NULL
-)
+);
 
 CREATE TABLE skid_verifications (
 	id SERIAL NOT NULL,

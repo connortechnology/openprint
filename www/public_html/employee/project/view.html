@@ -32,7 +32,7 @@ function open_window( page ) {
 <? echo (
 my $html;
 if ( $$variable{'HiddenSignatures'} ) {
-	if ( ! $openprint::session{'ShowAllSignatures'} ) {
+	if ( ! $session{'ShowAllSignatures'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/employee/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
 	} else {
 			$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/employee/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
@@ -180,7 +180,7 @@ if ( $$variable{'HiddenSignatures'} ) {
 								'service_id'	=>	$service_id,
 								'order'			=>	'id',
 								);
-						$html .= '<br/>' . join('<br/>', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="SignatureCapture"/>`, $_->id(), $_->file_path() ); } @Signatures );
+						$html .= '<br/>' . join('<br/>', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="thumbnail"/>`, $_->id(), $_->file_path() ); } @Signatures );
 					} # end if
 					$html .= '</td>';
                     $html .= "</tr>\n";
@@ -189,7 +189,6 @@ if ( $$variable{'HiddenSignatures'} ) {
             } # end foreach ServiceType
         } # end if Printing or else
     } # end foreach ServiceType_Category
-$log->debug($html);
 
 	if ( ! $$services{'Paper'} ) {
 		my %totals;
@@ -323,7 +322,7 @@ $log->debug($html);
 	<br/>
 	<span style="float: left;">
 		<? echo ( join('',
-		ssi::writeButton( $log, $dbh, 'Docket', 'Docket.gif', "open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket' ),
+		ssi::writeButton( $log, $dbh, 'DocketButton', 'Docket.gif', "open_window('/employee/production/docket_sheet.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket' ),
 		ssi::writeButton( $log, $dbh, 'DocketLabel', 'label.gif', "open_window('/employee/production/label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Docket Label' ),
 		ssi::writeButton( $log, $dbh, 'SkidLabel', 'label.gif', "open_window('/employee/production/skid_label.html?ProjectIndex=$$variable{'ProjectIndex'}');", '', 'Skid Label' ),
 		ssi::writeButton( $log, $dbh, 'Summary', 'summary.gif', '', "summary.html?ProjectIndex=$$variable{'ProjectIndex'}", 'Summary' ),
@@ -377,12 +376,12 @@ $log->debug("Have no job: $Job");
 			if ( @bindery_services ) {
 				$html .= ssi::writeButton( $log, $dbh, 'CompleteBindery', 'completeBindery.gif', "f1.btnFunction.value='BinderyComplete';f1.submit();", '', 'Complete Bindery' );
 			} # end if
-			if ( $$variable{'ShippingType'} eq 'Delivery' and $$variable{'Project'}->status() ne 'Shipped' ) {
-
+			if ( sets::isin( $$variable{'ShippingType'}, [ 'Delivery', 'Shipping' ] ) and $$variable{'Project'}->status() ne 'Shipped' ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Shipped', 'shipped.gif', "f1.btnFunction.value='Shipped';f1.submit();", '', 'Shipped' );
 			} # end if
+
 			if ( $$variable{'ShippingType'} eq 'CustomerPickUp' and $$variable{'Project'}->status() ne 'Picked Up' ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Picked Up', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
+				$html .= ssi::writeButton( $log, $dbh, 'PickedUp', 'pickedUp.gif', "f1.btnFunction.value='Picked Up';f1.submit();", '', 'Picked Up' );
 			} # end if
 			if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'Delete', 'delete.gif', "f1.btnFunction.value='DeleteServices';f1.submit();", '', 'Delete Checked Services' );

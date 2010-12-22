@@ -1,9 +1,8 @@
+use strict;
 package openprint::Blacklist;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
-use openprint ();
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
 $debug = 1;

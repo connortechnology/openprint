@@ -1,11 +1,9 @@
-DROP TABLE tbl_Credit_App;
-DROP SEQUENCE lngCreditAppIndex_seq;
-CREATE SEQUENCE lngCreditAppIndex_seq;
+DROP TABLE IF EXISTS CreditApplications;
 
-CREATE TABLE tbl_Credit_App ( 
-    lngIndex			INT4 NOT NULL DEFAULT nextval('lngCreditAppIndex_seq'),
-    lngCustomerIndex	INT4 NOT NULL,
-	lngUserIndex		INT4 NOT NULL,
+CREATE TABLE CreditApplcations ( 
+	id					SERIAL,
+	company_id			INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
+	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCS USers (id),
 	strSignature		TEXT,
 	ysnFinancialStatementAvailable	CHAR(1) default 'N',
 	strFirstOrderValue	TEXT,
@@ -18,5 +16,5 @@ CREATE TABLE tbl_Credit_App (
 	lngGrantedTerms		INT4,
 	dblGrantedCreditLimit	NUMERIC(10,2),
 	dblGrantedDownpayment	NUMERIC(10,2),
-	PRIMARY KEY (lngIndex)
+	PRIMARY KEY (id)
 );

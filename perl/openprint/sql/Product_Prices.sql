@@ -1,10 +1,8 @@
-DROP SEQUENCE Product_Prices_id_seq;
-CREATE SEQUENCE Product_Prices_id_seq;
-DROP TABLE Product_Prices;
+DROP TABLE IF EXISTS Product_Prices;
 CREATE TABLE Product_Prices (
-	id				INTEGER NOT NULL DEFAULT nextval('Product_Prices_id_seq'),
+	id				SERIAL,
 	product_id		INTEGER NOT NULL, FOREIGN KEY (product_id) REFERENCES Products (id),
-	pricelist_id	INTEGER NOT NULL, FOREIGN KEY (pricelist_id) REFERENCES Pricelists (index),
+	pricelist_id	INTEGER NOT NULL, FOREIGN KEY (pricelist_id) REFERENCES Pricelists (id),
 	min				float,
 	max				float,
 	units			TEXT,

@@ -872,11 +872,6 @@ function getFormObj( formName ) {
 	var form = document.forms[formName];
 	return form;
 }
-
-function getFormObj( formName ) {
-	var form = document.forms[formName];
-	return form;
-}
  
 function disableDiv(elm) {
 
@@ -992,6 +987,42 @@ function update_duration(form, starting_prefix, ending_prefix ) {
         $('duration').innerHTML = days +'days';
     } // end if
 } // end function update_duration
+
+// Defaults to filter weekends out
+function filter_days( form, prefix, options ) {
+	var date = new Date( form.elements[prefix+'_year'].value, form.elements[prefix+'_month'].value-1, form.elements[prefix+'_day'].value );
+	var changed = false;
+	var date_alert = $(prefix+'_alert');
+	if ( date_alert )
+		date_alert.innerHTML = '';
+	if ( options && options.businessonly ) {
+		if ( date.getDay() == 0 ) {
+			date.setDate(date.getDate()+1);
+			if ( date_alert )
+				date_alert.innerHTML = 'Date adjusted to nearest business day.';
+			changed = true;
+		} else if ( date.getDay() == 6 ) {
+			date.setDate(date.getDate()+2);
+			if ( date_alert )
+				date_alert.innerHTML = 'Date adjusted to nearest business day.';
+			changed = true;
+		} // end if
+	} // end if
+	if ( options && options.futureonly ) {
+		var today = new Date();
+		if ( date < today ) {
+			date = today;
+			changed = true;
+			if ( date_alert )
+				date_alert.innerHTML = 'Date adjusted to be in the future.';
+		} // end if	
+	} // end if
+	if ( changed ) {
+		ddm_select_by_value( form.elements[prefix+'_year'], date.getYear() );
+		ddm_select_by_value( form.elements[prefix+'_month'], date.getMonth()+1 );
+		ddm_select_by_value( form.elements[prefix+'_day'], date.getDate() );
+	} // end if
+} // end function filter_days()
 
 function setup_ie_menu() {
 	if (document.all && document.getElementById) {

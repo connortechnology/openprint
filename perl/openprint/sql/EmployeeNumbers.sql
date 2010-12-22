@@ -1,4 +1,4 @@
-DROP TABLE EmployeeNumbers;
+DROP TABLE IF EXISTS EmployeeNumbers;
 
 CREATE TABLE EmployeeNumbers (
 		ID SERIAL NOT NULL,

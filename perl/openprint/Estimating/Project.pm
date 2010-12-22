@@ -39,6 +39,8 @@ my @no_outputs = (
 	'txtQuantity1',
 	'chkOverrideScoreQty',
 );
+sub outputs {
+} # end sub outputs
 sub no_outputs {
 	return @no_outputs;
 } # end sub

@@ -35,6 +35,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 <form name="f1" action="/employee/production/projects.html" method="post">
 	<input type="hidden" name="btnFunction" value="Go"/>
 	<fieldset>
+		<div class="content">
 		<ul>
 		<li>
 			<label>Docket #</label>
@@ -73,6 +74,7 @@ You may use a barcode scanner.  Simply scan the code and click Go.<br/>
 			<? echo ( ssi::writeButton( $log, $dbh, 'GoManifest', 'go.gif', "submit_handler( f1 );", '', 'Go' ); ) ?>
 		</li>
 	</ul>
+		</div>
 	</fieldset>
 </form>
 <script type="text/javascript">document.f1.StartDocket.focus();</script>

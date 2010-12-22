@@ -1,5 +1,5 @@
 <? eval (
-	my @sigs = @{$$variable{'Job'}{'service_id'}};
+	my @sigs = @{$$variable{'Job'}{'service_id'}} if $$variable{'Job'}{'service_id'};
 	my $sig_specs = openprint::service::get_specs_ref( $$variable{'Job'}->Project(), $sigs[0] ) if @sigs;
 	$$variable{'Form'} = $$sig_specs{'SignatureIndex'};
 ) ?>

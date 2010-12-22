@@ -59,6 +59,9 @@ sub variables {
 my @no_outputs = (
 );
 
+sub outputs {
+} # end sub outputs
+
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs, $Paper ) = @_;
 
@@ -126,8 +129,6 @@ sub calc {
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{'txtPrice'.$qty_index} =~ s/[^\d\.]//g;
 		$$specs{'Markup'.$qty_index} =~ s/[^\d\.\-]//g;
-
-
 		$$specs{"txtQuantity$qty_index"} = $Project->quantity($qty_index) if ! $$specs{"txtQuantity$qty_index"};
 		if ( ! $$specs{"txtQuantity$qty_index"} > 0 ) {
 			next;
@@ -185,17 +186,17 @@ sub calc {
 		if ( $qtyTotal ) {
 			$unitPrice = $price / $qty;
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * (1+$Project->markup()/100) );
 
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
 	} # end foreach
 
 	$log->debug("END SCORING!!!!!!!!!!!!!!!!!!");
-	return $status;
+	return $$specs{'Status'} = $status;
 } # end sub calc
 
 sub signature_calc {
@@ -584,7 +585,7 @@ sub get_scores {
 		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, 'PF1Pocket', 'PF2Pocket' ) ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 2;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 0;
-		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '2Panel2Pocket' ) ) {
+		} elsif ( sets::isin( $$sig_specs{'rdbTemplateType'}, '2Panel2Pocket', '2Panel1Pocket' ) ) {
 			$$specs{"txtVerticalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 			$$specs{"txtHorizontalQty-$$sig_specs{'SignatureIndex'}"} = 1;
 		} else {
@@ -684,6 +685,9 @@ sub fits_on_equipment {
 	} # end if	
 	return '';
 } # end sub fits_on_equipment
+
+sub save {
+} # end sub save
 
 1;
 

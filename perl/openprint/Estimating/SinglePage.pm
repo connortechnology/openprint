@@ -53,50 +53,12 @@ sub no_outputs {
 
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-
+$log->debug("Staring SignlePage calc");
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->signatures() ) {
+$log->debug("adding a sig");
 		$Project->add_signature( );
 	} # end if
-
-	my $group_id = '';
-	openprint::Estimating::Printing::get_colours( $specs, 'SideOne', \%variables, $group_id );
-	openprint::Estimating::Printing::get_colours( $specs, 'SideTwo', \%variables, $group_id );
-	openprint::Estimating::Printing::get_inkcoverage( $specs, \%variables, $group_id );
-
-	if ( ! ( $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'alert'} = 'Please select the dimensions.';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
-	$$specs{'txtHeight'} = $$specs{'txtFinalHeight'};
-	if ( $$specs{'txtSpreadSize'} == 2 ) {
-		$$specs{'txtWidth'} = $$specs{'txtFinalWidth'};
-	} elsif ( $$specs{'txtSpreadSize'} == 4 ) {
-		$$specs{'txtWidth'} = 2*$$specs{'txtFinalWidth'};
-	} # end if
-
-	if ( ( $$specs{'txtWidth'} < $$specs{'txtFinalWidth'} ) or ( $$specs{'txtHeight'} < $$specs{'txtFinalHeight'} ) ) {
-		$$specs{'alert'} .= 'Flat size cannot be smaller than finished size!';
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
-
-		if ( sets::isin($$specs{'rdbTemplateType1'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
-			if ( $$specs{'rdbPocketSize1'} and ( $$specs{'rdbPocketSize1'} ne 'Other' ) ) {
-				$$specs{'PocketSize1'} = $$specs{'rdbPocketSize1'};	
-			} else {
-				delete $$specs{'PocketSize1'};
-			} # end if
-			if ( ! $$specs{'rdbPanels1'} ) {
-				$$specs{'alert'} .= 'Please select the number of panels.';
-				return $$specs{'Status'} = 'uncalculated';
-			} elsif ( ! $$specs{'rdbPocketSize1'} ) {
-				$$specs{'alert'} .= 'Please select the size of the pockets.';
-				return $$specs{'Status'} = 'uncalculated';
-			} elsif ( ! ( $$specs{'chkPocketCenter1'} or $$specs{'chkPocketLeft1'} or $$specs{'chkPocketRight1'} ) ) {
-				$$specs{'alert'} .= 'Please select where you would like the pockets.';
-				return $$specs{'Status'} = 'uncalculated';
-			} # end if
-		} # end if
 
 	return $$specs{'Status'} = 'calculated';
 } # end sub calc

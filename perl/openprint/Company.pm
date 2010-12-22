@@ -3,7 +3,7 @@ package openprint::Company;
 use strict;
 use Text::Unaccent;
 
-use vars qw( $log $dbh $table $serial %fields %defaults %transforms );
+use vars qw( $debug $log $dbh $table $serial %fields %defaults %transforms );
 use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -13,6 +13,7 @@ require openprint::Object;
 require openprint::User;
 require openprint::customer_credit;
 
+$debug = 1;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -66,7 +67,7 @@ $serial = 'companies_id_seq';
 		);
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],
-	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
+	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//','s/\///g' ],
 	'discount'	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (
@@ -83,102 +84,6 @@ $serial = 'companies_id_seq';
 	'salesrep_id'	=>	undef,
 	'deleted'		=>	0,
 );
-
-my $debug = 0;
-
-# Returns a paper object specified by the parameters
-sub find {
-	my $self = shift;
-	my %params = @_;
-
-	my $sql;
-	my @values;
-	$sql = q{SELECT * FROM Companies WHERE 1>0};
-
-	if ( $params{'id'} ) {
-		if ( ref $params{'id'} eq 'ARRAY' ) {
-			$sql .= q{ AND id IN (}.join(',', map {'?'} @{$params{'id'}} ).')';
-			push @values, @{$params{'id'}};
-		} else {
-			$sql .= q{ AND id=?};
-			push @values, $params{'id'};
-		} # end if
-	} # end if
-
-	if ( $params{'Name'} ) {
-		$sql .= q{ AND name=?};
-		push @values, $params{'Name'};
-	} # end if
-	if ( exists $params{'name'} ) {
-		$sql .= q{ AND name=?};
-		push @values, $params{'name'};
-	} # end if
-	if ( exists $params{'postalcode'} ) {
-		$sql .= q{ AND postalcode=?};
-		push @values, $params{'postalcode'};
-	} # end if
-	if ( $params{'SalesPerson'} ) {
-		if ( ref $params{'SalesPerson'} eq 'ARRAY' ) {
-			if ( @{$params{'SalesPerson'}} == 1 ) {
-				$sql .= q{ AND lngSalesPerson=?};
-			} elsif ( @{$params{'SalesPerson'}} ) {
-				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'SalesPerson'}} ).')';
-			} # end if
-			push @values, @{$params{'SalesPerson'}};
-		} else {
-			$sql .= q{ AND lngSalesPerson=?};
-			push @values, $params{'SalesPerson'};
-		} # end if
-	} # end if
-	if ( $params{'salesrep_id'} ) {
-		if ( ref $params{'salesrep_id'} eq 'ARRAY' ) {
-			if ( @{$params{'salesrep_id'}} == 1 ) {
-				$sql .= q{ AND lngSalesPerson=?};
-			} elsif ( @{$params{'salesrep_id'}} ) {
-				$sql .= q{ AND lngsalesperson IN (}.join(',', map {'?'} @{$params{'salesrep_id'}} ).')';
-			} # end if
-			push @values, @{$params{'salesrep_id'}};
-		} else {
-			$sql .= q{ AND lngSalesPerson=?};
-			push @values, $params{'salesrep_id'};
-		} # end if
-	} # end if
-	if ( $params{'marketing_category_id'} ) {
-		$sql .= q{ AND id IN (SELECT company_id FROM companies_in_marketing_categories WHERE category_id=?)};
-		push @values, $params{'marketing_category_id'};
-	} # end if
-	if ( $params{'supplier'} ) {
-		$sql .= ' AND ysnSupplier=?';
-		push @values, $params{'supplier'};
-	} # end if
-	if ( $params{'reseller'} ) {
-		$sql .= ' AND ysnReseller=?';
-		push @values, $params{'reseller'};
-	} # end if
-	if ( exists $params{'deleted'} ) {
-		if ( ref $params{'deleted'} eq 'ARRAY' ) {
-			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$params{'deleted'}}) . '))';
-			push @values, @{$params{'deleted'}};
-		} else {
-			$sql .= ' AND deleted=?';
-			push @values, $params{'deleted'};
-		} # end if
-	} else {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
-		push @values, 0;
-	} # end if
-	$sql .= " OR $params{'or'}" if $params{'or'};
-	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->error("Error Loading Companies: ($sql) (@values): " . $dbh->errstr );
-		return;
-	} elsif ( $debug ) {
-		$log->debug("Loading Companies: ($sql) (@values) :" . @$data );
-	} # end if
-	return map { new openprint::Company( $_->{id}, $_ ) } @$data;
-} # end sub find
 
 sub Currency {
 	my $self = shift;

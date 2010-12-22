@@ -224,6 +224,7 @@ sub find {
 sub save {
 	my ( $self, $param ) = @_;
 
+$log->debug("Sacving PO");
 	# force recalculation
 	$self->subtotal(undef);
 	foreach my $Tax ( $self->Taxes() ) {
@@ -234,7 +235,9 @@ sub save {
 		my $Currency = openprint::Currency::get_current();
 		$$self{'currency_id'} = $Currency->id();
 	} # end if
+$log->debug("Sacving PO");
 	my $error = $self->SUPER::save( $param );
+$log->debug("Sacving PO $error");
 
 	# Taxes
 	foreach my $T ( $self->Taxes() ) {

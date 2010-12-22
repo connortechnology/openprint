@@ -54,6 +54,7 @@
 			<hr class="legendUnderline" />
 <? eval (
 	my $Project;
+$log->debug("SEssion: $session{'project_id'} ");
 	if ( $param{'ProjectIndex'} ) {
 		$Project = new openprint::Project( $param{'ProjectIndex'} );
 		$param{'project_id'} = $Project->id();
@@ -88,8 +89,11 @@
 		$$variable{'Quantity'} = $Project->quantity1();
 		if ( $$services{'Turnaround'} ) {
 			my $turnaround_specs = openprint::service::get_specs_ref( $Project, $$services{'Turnaround'}[0] );
-			@$variable{'ddmDueDateYear','ddmDueDateMonth','ddmDueDateDay'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
+			@$variable{'duedate_year','duedate_month','duedate_day'} = misc::add_delta_business_days( Date::Calc::Today(), $$turnaround_specs{'TurnaroundDays'} );
 		} # end if
+	} # end if Project and calculated
+	if ( ! Date::Calc::check_date( @$variable{'duedate_year','duedate_month','duedate_day'} ) ) {
+		@$variable{'duedate_year','duedate_month','duedate_day'} = Date::Calc::Today();
 	} # end if
 ) ?>
 			<p>
@@ -101,10 +105,10 @@
 				<input type="text" id="txtQuotedPrice" name="txtQuotedPrice" value="<?txtQuotedPrice?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 			</p>
 			<p>
-				<label for="ddmDueDateMonth">Due Date:</label>
-				<select style="width: auto;" name="ddmDueDateMonth" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(document.upload.ddmDueDateYear.value,this.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::getmonths( $$variable{'ddmDueDateMonth'} ); ) ?></select>
-				<select style="width: auto;" name="ddmDueDateDay" onchange="off(this.options[this.selectedIndex]);"><? echo ( ssi::getdays( $$variable{'ddmDueDateDay'} ); ) ?></select>
-				<select style="width: auto;" name="ddmDueDateYear" onchange="off(this.options[this.selectedIndex]);setDaysDropDown(this.value,document.upload.ddmDueDateMonth.value,document.upload.ddmDueDateDay,document.upload.ddmDueDateDay.value);"><? echo ( ssi::return_years( (localtime(time))[5] + 1900, (localtime(time))[5] + 1901, (localtime(time))[5] + 1900 ); ) ?></select>
+				<label>Due Date:</label>
+				<span class="DateSelector">
+					<? echo ( ssi::date_select( 'duedate', [@$variable{'duedate_year','duedate_month','duedate_day'}], { 'onchange'=>"filter_days(document.forms['upload'], 'duedate', { futureonly: true, businessonly: true } );" } ); ) ?>
+				</span>
 			</p>
 			<p>
 				<label>Size:</label>

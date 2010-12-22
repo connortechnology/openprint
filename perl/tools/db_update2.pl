@@ -95,10 +95,22 @@ if ( $data ) {
 	$dbh->do('ALTER TABLE Ordered_products drop column hst') if ( exists $$data{'hst'} );
 }
 
+if ( ! sets::isin( 'invoices', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Invoices.sql} ) );
+}
 
 if ( sets::isin( 'taxes', \@tables ) ) {
-	my $data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM taxes LIMIT 1', {} );
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='taxes'", 'column_name');
 	if ( $data ) {
+		if ( exists $$data{'dblfederalpercent'} ) {
+			$dbh->do('ALTER TABLE taxes rename column dblfederalpercent to federaltax');
+		} 
+		if ( exists $$data{'dblstatepercent'} ) {
+			$dbh->do('ALTER TABLE taxes rename column dblstatepercent to statetax');
+		} 
+		if ( exists $$data{'dblharmonisedpercent'} ) {
+			$dbh->do('ALTER TABLE taxes rename column dblharmonisedpercent to harmonizedtax');
+		} 
 		if ( ! exists $$data{'name'} ) {
 			$dbh->do('ALTER TABLE taxes add name text');
 		} # end if
@@ -183,6 +195,9 @@ if ( $data ) {
 	$dbh->do('UPDATE Orders set paid=(SELECT SUM(amount) From Payments WHERE payments.order_id=orders.id)');
 	$dbh->do('ALTER TABLE Orders ADD owing NUMERIC(10,2)') if ( ! exists $$data{'owing'} );
 	$dbh->do('UPDATE orders SET owing=curtotalsale-paid');
+	if ( ! exists $$data{terms_accepted} ) {
+		$dbh->do('ALTER TABLE ORDERS ADD terms_accepted boolean default false');
+	} # end if
 }
 if ( ! sets::isin('order_taxes', \@tables ) ) {
 	$_ = misc::load_file( $log, q{../openprint/sql/Order_Taxes.sql});
@@ -302,6 +317,12 @@ if ( sets::isin( 'email_campaigns', \@tables ) ) {
 	if ( ! $$data{'nextrun'} ) {
 		$dbh->do( 'ALTER TABLE email_campaigns add nextrun timestamp with time zone' );
 	} # end if
+} # end if
+if ( ! sets::isin( 'paycheques', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Paycheques.sql}) );
+} # end if
+if ( ! sets::isin( 'timetracks', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/Timetracks.sql}) );
 } # end if
 $dbh->disconnect();
 1;

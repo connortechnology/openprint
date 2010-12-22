@@ -1,0 +1,136 @@
+<script type="text/javascript">
+<!--
+var tax_ids = [ <? echo ( join(',', map { $_->tax_id() } $$variable{'Expense'}->Taxes() ); ) ?> ];
+
+function calc_amount_from_total( form ) {
+	var tax_rate = 1;
+	for ( var i = 0; i < tax_ids.length; i+= 1 ) {
+		tax_rate += $('tax_rate-'+tax_ids[i]).innerHTML/100;
+	} // end for
+	var amount;
+	if ( form.elements['amount_locked'].value != 1 ) {
+		amount = parseFloat( form.total.value ) / tax_rate;
+		$('amount').value = do_decimals( amount, 2 );
+	} else {
+		amount = parseFloat( form.amount.value );
+	} // end if
+    for ( var i = 0; i < tax_ids.length; i+= 1 ) {
+        if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
+            tax = amount * $('tax_rate-'+tax_ids[i]).innerHTML/100;
+        } else {
+            tax = 0;
+        } // end if
+        $('tax_amount-'+tax_ids[i]).value = do_decimals( tax, 2 );
+	} // end for
+}
+
+
+function update_total( form ) {
+	if ( form.elements['total_locked'].value == 1 ) {
+		return calc_amount_from_total( form );
+	} // end if
+    var total = parseFloat( form.amount.value );
+    for ( var i = 0; i < tax_ids.length; i+= 1 ) {
+        var tax = 0;
+        
+        if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
+            tax = total * $('tax_rate-'+tax_ids[i]).innerHTML/100;
+        } else {
+            tax = 0;
+        } // end if
+        $('tax_amount-'+tax_ids[i]).value = do_decimals( tax, 2 );
+        total += parseFloat( tax );
+    } // end for
+
+    $('total').value = do_decimals( total, 2 );
+} // end function update_total
+-->
+</script>
+<!--#include virtual="/includes/error_reporting.html"-->
+<form name="f1" id="f1" action="expenses.html" method="post">
+	<input type="hidden" name="btnFunction" />
+	<input type="hidden" name="expense_id" value="<? echo ( $$variable{'Expense'}->id() ) ?>" />
+	<fieldset><legend>Editing Expense</legend>
+		<div class="leftColumn">
+			<ul>
+<!--
+				<li><label>Paid On:</label>
+				<span class="DateSelector"><? echo ( ssi::date_select( 'occurred_on', $$variable{'Expense'}->occurred_on() ); ) ?></span>
+				</li>
+-->
+				<li><label onclick="$('recipient').value='';$('recipient_id').selectedIndex=0;$('recipient').toggle();$('recipient_id').toggle();">Recipient:</label>
+					<input type="text" name="recipient" id="recipient" style="display:none;" onkeyup="$('recipient_id').selectedIndex=0;" />
+					<select name="recipient_id" id="recipient_id" onchange="$('recipient').value='';">
+						<option value="">select</option>
+						<? echo ( 
+							return openprint::Company::get_dropdown( $$variable{'Expense'}->recipient_id() );
+						) ?>
+					</select>
+				</li>
+				<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category:</label>
+					<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
+					<select name="category_id" id="category_id" onchange="$('category').value='';">
+						<option value="">select</option>
+						<? echo (
+							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Expense_Category->find('order'=>'lower(name)') ], $$variable{'Expense'}->category_id() );
+						) ?>
+					</select>	
+				</li>
+				<li><label for="amount">Amount (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>):</label>
+					<input type="text" name="amount" id="amount" value="<? echo ( $$variable{'Expense'}->amount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');update_total(this.form);" size="8" />
+					<? echo ( ssi::write_override( 'amount_locked', $$variable{'Expense'}->amount_locked() ) ) ?>
+					<select name="currency_id" id="currency_id">
+						<option value="">select</option>
+						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{'Expense'}->currency_id() ? $$variable{'Expense'}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
+					</select>
+				</li>
+				</ul>
+				<ul id="Taxes">
+				<!--#include virtual="_expense_taxes.html"-->
+				</ul>
+				<ul>
+				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>):</label>
+					<input type="text" name="total" id="total" value="<? echo ( $$variable{'Expense'}->total() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_amount_from_total(this.form);" size="8" />
+					<? echo ( ssi::write_override( 'total_locked', $$variable{'Expense'}->total_locked() ) ) ?>
+				</li>
+				<li><label for="business_use">Business %:</label>
+					<input type="text" name="business_use" id="business_use" value="<? echo ( $$variable{'Expense'}->business_use() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />%
+				</li>
+			</ul>
+		</div>
+		<div class="rightColumn">
+			<ul>
+				<li>
+					<label>Invoiced On:</label>
+					<? echo ( 	
+						return ssi::date_select( 'invoiced_on', $$variable{'Expense'}->invoiced_on(), {
+							'onchange'=>q`new Ajax.Updater('Taxes','_expense_taxes.html', { parameters: { expense_id: '` . $$variable{'Expense'}->id() . q`', invoiced_on_year: $('invoiced_on_year').value, invoiced_on_month: $('invoiced_on_month').value,invoiced_on_day: $('invoiced_on_day').value }, evalScripts: true } );`} ); ) ?>
+				</li>
+				<li>
+					<label>Due On:</label>
+					<? echo ( return ssi::date_select( 'due_on', $$variable{'Expense'}->due_on() ); ) ?>
+				</li>
+				<li>
+					<label for="description">Description</label>
+					<textarea cols="40" id="description" name="description" rows="<? echo ( $$variable{'Expense'}->description() ? scalar split("\n", $$variable{'Expense'}->description()) + 2 : 2 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Expense'}->description() ) ?></textarea>
+				</li>
+			</ul>
+		</div>
+		<br class="spacer"/>
+		<p class="buttons">
+			<? echo (
+				my $html = '';
+				if ( $$variable{'Expense'}->id() ) {
+					if ( $$variable{'Expense'}->deleted() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'destroy', 'destroy.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					} else {
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f1.btnFunction.value='Delete';f1.submit();", '', 'Delete' );
+					} # end if
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<br class="spacer"/>
+</form>

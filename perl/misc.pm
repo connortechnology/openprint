@@ -4,6 +4,7 @@ require Exporter;
 @EXPORT = qw( load_file send_email_with_attached_files send_email_with_attachment build_city_prov_country export_csv export get_destination);
 
 use Text::CSV_XS;
+use Date::Calc qw(Add_Delta_Days);
 
 use MIME::QuotedPrint;
 use Mail::Sendmail;
@@ -89,9 +90,13 @@ sub load_file {
 
 sub save_file {
 	my ( $log, $file, $contents ) = @_;
+	if ( ! $contents ) {
+		$log->warn("Saving empty file $file");
+	} # end if
 	if ( open( F, "> $file" ) ) {
+		binmode F;
 		print F $contents;
-		close( F );
+		close F;
 	} else {
 		$log->warn( "Error opening $file, Reason: $!" );
 		return "Error opening $file, Reason: $!";
@@ -178,7 +183,7 @@ sub get_url {
 	if ( $options and $$options{'exclude'} ) {
 		@keys = sets::exclude( $$options{'exclude'}, \@keys );
 	} # end if	
-	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany' ], \@keys );
+	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany','CompanyFilter','pricelist_id' ], \@keys );
 	my %encoded;
 	foreach my $k ( @keys ) {
 		$encoded{$k} = $$params{$k};
@@ -455,6 +460,20 @@ $openprint::log->debug("Returning " . $$Object{value}) if $debug;
 $openprint::log->debug("Returning nothing") if $debug;
     return;
 } # end sub find_entry
+
+sub add_delta_business_days {
+	my ( $year, $month, $day, $delta ) = @_;
+
+	while ($delta) {
+		( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, $delta > 0 ? 1 : -1 );
+		while ( 6 <= Date::Calc::Day_of_Week( $year, $month, $day ) ) {
+			( $year, $month, $day ) = Date::Calc::Add_Delta_Days( $year, $month, $day, $delta > 0 ? 1 : -1 );
+		} # end while
+		$delta -= ( $delta > 0 ? 1 : -1 );
+	} # end while
+
+	return ( $year, $month, $day );
+} # end sub add_delta_business_days
 
 1;
 

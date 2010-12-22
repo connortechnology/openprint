@@ -28,7 +28,7 @@ BEGIN {
 	use GD::Barcode;
 	use Encode;
 	use JSON;
-	use JSON::XS;
+	#use JSON::XS;
 
 	use Carp (cluck);
 
@@ -48,6 +48,7 @@ BEGIN {
 	use openprint::Object;
 	use openprint::Company;
 	use openprint::User;
+	use openprint::User_Notification;
 	use openprint::Service;
 	use openprint::Paper;
 	use openprint::Material;
@@ -65,6 +66,9 @@ BEGIN {
 	use Number::Format;
 	use	openprint::Ledger;
 	use openprint::Project_Service;
+	use Math::Round;
+	use openprint::Article;
+	use openprint::Article_Category;
 
 #use MapImage;
 

@@ -56,7 +56,6 @@ $serial = 'orders_id_seq';
 	'salesrep_id'				=>	'employeeindex',
 	'invoice_id'				=>	'invoice_id',
 	'invoiced_on'				=>	'invoiced_on',
-	'created_on'				=>	'dtmorderdate',
 	'terms_accepted'			=>	'terms_accepted',
 	);
 
@@ -368,6 +367,7 @@ sub send_cancellation_notice {
 	# Send to inventory and scheduling people.
 	foreach my $Recipient ( openprint::User->find('usergroups'=>['Inventory','Scheduling']) ) {
 		next if $Recipient->id() == $session{'user_id'};
+		next if $Recipient->notification('Docket Cancellations') eq 'No';
 		my %mail = (
 				SMTP	=> $config{'Mail Server'},
 				FROM	=> sprintf('"%s" <%s>', $Me->get('name','email') ),
@@ -501,7 +501,7 @@ sub send_sales_order {
         SMTP    => $config{'Mail Server'},
         FROM    => $sales_person_email,
         TO      => sprintf('"%s %s" <%s>', $self->get('firstname','lastname','email')),
-        BCC     =>  'iconnor@penultima.org',
+        #BCC     =>  'iconnor@penultima.org',
         SUBJECT => "Order $$self{id}",
 );
     misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries );
@@ -545,7 +545,7 @@ sub send_sales_order {
                 'Reply-to'    => $$self{'email'},
                 #FROM   => $config{'OrderingEmail'},
                 TO      => join(',',@admin_emails),
-                BCC     =>  'iconnor@penultima.org',
+                #BCC     =>  'iconnor@penultima.org',
                 SUBJECT => "Order $$self{id}",
                 );
         misc::send_email_with_attachment( $log, \%mail, @body, @sales_order, @project_summaries, @project_dockets );

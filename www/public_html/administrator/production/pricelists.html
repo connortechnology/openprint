@@ -37,7 +37,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist-
 				</li>
 				<li> 
 					<label>Description:</label>
-					<textarea id="description" name="description" rows="5" onchange="textarea_resize(this);"><? echo ( $$variable{'Pricelist'}->description(); ) ?></textarea>
+					<textarea id="description" name="description" rows="<? echo ( ssi:count_lines($$variable{'Pricelist'}->description()); ) ?>" cols="" onchange="textarea_resize(this);"><? echo ( $$variable{'Pricelist'}->description(); ) ?></textarea>
 				</li>
 				<li> 
 					<label>Currency:</label>

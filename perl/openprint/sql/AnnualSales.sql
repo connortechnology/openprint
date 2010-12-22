@@ -1,5 +1,5 @@
-DROP TABLE AnnualSales;
-DROP SEQUENCE AnnualSales_id_seq;
+DROP TABLE IF EXISTS AnnualSales;
+DROP SEQUENCE IF EXISTS AnnualSales_id_seq;
 CREATE SEQUENCE AnnualSales_id_seq;
 
 CREATE TABLE AnnualSales (

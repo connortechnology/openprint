@@ -507,19 +507,23 @@ sub date_select {
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
 	foreach my $o ( split(',', $$options{'order'} ) ) {
 		if ( $o eq 'y' ) {
-			$html .= sprintf('<select name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+			$html .= sprintf('<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= return_years( undef, undef, $year );
 			$html .= '</select>';
 		} elsif ( $o eq 'm' ) {
-			$html .= sprintf('<select name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+			$html .= sprintf('<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
 		} elsif ( $o eq 'd' ) {
-			$html .= sprintf('<select name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getdays( $day, $year, $month );
 			$html .= '</select>';
 		} # endif
 	} # end foreach o
+	if ( $$options{'with_today'} ) {
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', 'set_today( f1.'.$prefix.'_year, f1.'.$prefix.'_month, f1.'.$prefix.'_day );'.$$options{'onchange'}, '', 'T' );
+	} # end if
+	$html .= '<span id="'.$prefix.'_alert"></span>';
 	$html .= '</span>';
 	return $html;
 } # end sub date_select
@@ -553,11 +557,11 @@ sub datetime_select {
 	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
 
 	my $html = '';
-	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf('<span id="%1$s_date"><select name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s">', $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= return_years( undef, undef, $year );
 	$html .= '</select>';
-	$html .= sprintf('<select name="%1$s_month" onchange="%2$s">', $prefix, $$options{'onchange'} );
+	$html .= sprintf('<select name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s">', $prefix, $$options{'onchange'} );
 	$html .= '<option value=""> </option>';
 	$html .= getmonths( $month );
 	$html .= '</select>';
@@ -577,6 +581,10 @@ sub datetime_select {
 	$html .= '<option value=""> </option>';
 	$html .= make_drop_down( [ map { $_, sprintf('%.2d', $_ ) } ( 0 .. 59 ) ], $min );
 	$html .= '</select></span>';
+	if ( $$options{'with_today'} ) {
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', 'set_today( f1.'.$prefix.'_year, f1.'.$prefix.'_month, f1.'.$prefix.'_day );'.$$options{'onchange'}, '', 'T' );
+	} # end if
+	$html .= '<span id="'.$prefix.'_alert"></span>';
 	return $html;
 } # end sub datetime_select
 

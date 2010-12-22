@@ -77,6 +77,26 @@
 			return $html;
 		) ?>
 		</p>
+		<? echo (
+			if ( $$variable{'Company'}->id() ) {
+				my @Companies = openprint::Company->find('name'=>$$variable{'Company'}->name(),'order'=>'id');
+				if ( @Companies > 1 ) {
+					my $html = '<div class="warning">There are duplicate companies!<br/>';
+					foreach my $C ( @Companies ) {
+						next if $C->id() == $$variable{'Company'}->id();	
+						$html .= sprintf(q`<p><a href="/administrator/managerial/company_profiles.html?ddmCustomer=%1$d">%1$d : %2$s</a><br/>
+%3$s<br/>%4$d Users %5$d Projects %6$d Quotes %7$d Orders<br/>%8$s</p>`, $C->id(), $C->name(), join(' ', $C->get('address1','address2','city','state','country','postalcost')),
+scalar openprint::User->find('company_id'=>$C->id()),
+scalar openprint::Project->find('company_id'=>$C->id()),
+scalar openprint::Quote->find('company_id'=>$C->id()),
+scalar openprint::Order->find('company_id'=>$C->id()),
+ssi::writeButton( $log, $dbh, 'merge'.$C->id(), 'merge.gif', '', '/administrator/managerial/company_profiles.html?ddmCustomer='.$$variable{'Company'}->id().'&amp;merge_company_id='.$C->id().'&amp;btnFunction=merge', 'Merge' ) );
+					} # end foreach C
+					return '</div>'.$html;
+				} # end if have dups
+			} # end if
+			return '';
+		) ?>
 	</fieldset>
 	<div class="SalesInformation">
 		<fieldset><legend>Sales Information:</legend>

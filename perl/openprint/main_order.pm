@@ -433,44 +433,51 @@ sub history_details {
 		$Order->pay();
 	} elsif ( $param{'btnFunction'} eq 'Save Payment' ) {
 
-        if ( ( ! $param{'Amount'} ) or $param{'Amount'} =~ /[^-\$\d\.]/ ) {
-            return misc::error( $log, $dbh, \%variable, 'Invalid Amount', 'Please enter a valid monetary amount.' );
-        } # end if
+		if ( ( ! $param{'Amount'} ) or $param{'Amount'} =~ /[^-\$\d\.]/ ) {
+			$variable{'error'} .= 'Invalid Amount<br/>';
+			$variable{'information'} .= 'Please enter a valid monetary amount.';
+		} # end if
+		if ( ! Date::Calc::check_date( @param{'received_on_year','received_on_month','received_on_day'} ) ) {
+			$variable{'error'} .= 'Invalid received on date.';
+			$variable{'information'} .= 'Please enter a valid date.';
+		} # end if
+		if ( ! $variable{'error'} ) {
 
-		my $Payment = new openprint::Payment();
-		my $error .= $Payment->save( {
-				'order_id'		=> $order_id,
-				'payor_id'		=> $Order->company_id(),
-				'recipient_id'	=> new openprint::User( $session{'user_id'} )->company_id(),
-				'amount'		=> $param{'Amount'},
-				'method'		=> 'Manual',
-				'currency_id'	=> $Order->currency_id(),
-				'description'	=> $param{'Description'},
-				'completed'		=> 1,
-				} );
-        if ( $error ) {
-            return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
-        } # end if
+			my $Payment = new openprint::Payment();
+			my $error .= $Payment->save( {
+					'order_id'		=> $order_id,
+					'payor_id'		=> $Order->company_id(),
+					'recipient_id'	=> new openprint::User( $session{'user_id'} )->company_id(),
+					'amount'		=> $param{'Amount'},
+					'method'		=> 'Manual',
+					'currency_id'	=> $Order->currency_id(),
+					'description'	=> $param{'Description'},
+					'completed'		=> 1,
+					} );
+			if ( $error ) {
+				return misc::error( $log, $dbh, \%variable, 'Error Saving Payment', $error );
+			} # end if
 
-        openprint::order::get_misc( \%variable, $Order );
+			openprint::order::get_misc( \%variable, $Order );
 
-        if ( $variable{'DepositDue'} > 0 ) {
-            foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-                sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
-                sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?',$project_index, 'Ordered'], 'strStatus', 'Pending Deposit' );
-            } # end foreach
-        } else {
-            $Order->status('In Production') if $Order->status() eq 'Pending Deposit';
+			if ( $variable{'DepositDue'} > 0 ) {
+				foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
+					sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'In Prepress'], 'strStatus', 'Pending Deposit' );
+					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?',$project_index, 'Ordered'], 'strStatus', 'Pending Deposit' );
+				} # end foreach
+			} else {
+				$Order->status('In Production') if $Order->status() eq 'Pending Deposit';
 
-            foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
-                sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
-                sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
-            } # end foreach
-            if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {
-                $Order->status('Paid') if $Order->status() eq 'Complete';
-            } # end if
-            $Order->save();
-        } # end if
+				foreach my $project_index ( sql::execute( $log, $dbh, 'SELECT lngProjectIndex FROM Order_Contents WHERE OrderIndex=?', $order_id ) ) {
+					sql::update( $log, $dbh, 'Projects', ['id=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'In Prepress' );
+					sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $project_index, 'Pending Deposit'], 'strStatus', 'Ordered' );
+				} # end foreach
+				if ( $variable{'AmountPaid'} >= $variable{'TOTAL'} ) {
+					$Order->status('Paid') if $Order->status() eq 'Complete';
+				} # end if
+				$Order->save();
+			} # end if no error
+        } # end if btnFunction
 	} elsif ( $param{'btnFunction'} eq 'Delete Payment' ) {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		if ( ! $Payment->id() ) {

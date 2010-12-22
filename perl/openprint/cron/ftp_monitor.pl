@@ -10,6 +10,8 @@ require misc;
 require openprint::Company;
 require openprint::User;
 require Email::Valid;
+require openprint::Email;
+require openprint::User_Notification;
 require logger;
 require openprint::Upload;
 use openprint ();
@@ -98,6 +100,7 @@ $openprint::dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::init_cache( $log, $dbh, \%CFG::Config );
+$openprint::dbh->disconnect();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
@@ -198,6 +201,19 @@ if (open($fifoh, "< $config{fifo}")) {
 			check_scoreboard();
 			usleep($config{'sleep'} * 1000* 1000);
 		} # End if $line
+
+		if ( ! $dbh->ping() ) {
+			$log->info("Opening SQL connection");
+			$openprint::dbh = sql::open_sql( $log, 
+					'host'		=> $CFG::Config{'db_host'},
+					'database'	=> $CFG::Config{'db_name'},
+					'driver'	=> 'Pg',
+					'login'		=> $CFG::Config{'db_user'},
+					'password'	=> $CFG::Config{'db_pass'},
+					);
+			die 'Error opening db' if ! $dbh;
+			configuration::init_cache( $log, $dbh, \%CFG::Config );
+		} # end if
 	} # end while <input>
 
 	close($fifoh);
@@ -231,7 +247,9 @@ sub send_email {
 	foreach my $upload ( @uploads ) {
 		my $file = $upload->{file};
 # File should be the full path, relative to filesystem root.
+# Problem is, spaces have been replaced by underscores
 		my $file_str = basename($file);
+		$$upload{'file_str'} = $file_str;
 		my $regexp = $config{'file_path'}.'(.*)'.$file_str;
 		my ( $company_name ) = $file =~ /^$regexp$/;
 		if ( $company_name ) {
@@ -255,7 +273,14 @@ sub send_email {
 	my $Company;
 	my $User;
 
-	if ( $$upload{'company_name'} ) {
+	$openprint::dbh = sql::open_sql( $log, 
+		'host'		=> $CFG::Config{'db_host'},
+		'database'	=> $CFG::Config{'db_name'},
+		'driver'	=> 'Pg',
+		'login'		=> $CFG::Config{'db_user'},
+		'password'	=> $CFG::Config{'db_pass'},
+	);
+	if ( $openprint::dbh and $$upload{'company_name'} ) {
 # Try to figure out the company
 		if ( my @Companies = openprint::Company->find('name'=>$$upload{'company_name'},'limit'=>1) ) {
 $log->debug("Found company $$upload{'company_name'}");
@@ -273,6 +298,10 @@ $log->debug("Found user $$upload{user} with company");
 	if ( ! $User ) {
 		if ( $User = openprint::User->find_one('email'=>lc $upload->{user},'limit'=>1) ) {
 			$Company = $User->Company();
+			foreach my $upload ( @uploads ) {
+				$$upload{'company_name'} = $Company->name();
+				$$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$$upload{'file_str'};
+			} # end foreach upload
 $log->debug("Found user $$upload{user} with out company.  Company is $$Company{name}");
 		} # end if
 	} # end if
@@ -311,17 +340,22 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$from = sprintf('"%s" <%s>', $User->name(), $User->email() );
 		} # end if
 
-		my $to;
+		my @to;
 		if ( $User->email() =~ /^iconnor/ ) {
-			$to = '"Isaac Connor" <iconnor@penultima.org>';
-		} elsif ( $Company->salesrep_id() ) {
-			if ( $Company->CSR()->notification('Client File Uploads') ne 'No' ) {
-				$to = sprintf('"%s %s" <%s>', $Company->CSR()->get('firstname','lastname','email') ),
-			} # end if
+			@to = ( $User );
 		} else {
-			$to = $config{'OrderingEmail'};
+			if ( $Company->salesrep_id() ) {
+				if ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) {
+					@to = ( $Company->CSR() );
+				} # end if
+			} # end if
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
 		} # end if
-		if ( $to ) {
+		
+		if ( ! @to ) {
+			@to = ( $config{'OrderingEmail'} );
+		} # end if
+		if ( @to ) {
 			my %variable;
 			$variable{'Company'} = $Company;
 			$variable{'User'} = $User;
@@ -335,15 +369,17 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 			$variable{'ReplacementText'} = ssi::variable_substitution( \$variable{'ReplacementText'}, \%variable );
 			my $email_template = misc::load_file( $log, $config{'skin_path'} . '/email_template.html' );
 			my $body = ssi::variable_substitution( \$email_template, \%variable );
-			my %mail = (
-							SMTP    => $config{'Mail Server'},
-							FROM    => $from,
-							TO      => $to,
-							BCC		=>	'iconnor@penultima.org',
-							SUBJECT => $subject,
-					   );
-			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
+			my $Mail = new openprint::Email();
+			$Mail->send(
+					SMTP    => $config{'Mail Server'},
+					FROM    => $from,
+					TO      => \@to,
+#BCC		=>	'iconnor@penultima.org',
+					SUBJECT => $subject,
+					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
+				);
 		} # end if
+		$openprint::dbh->disconnect();
 	
 	} elsif ( 1 ) {
 	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';

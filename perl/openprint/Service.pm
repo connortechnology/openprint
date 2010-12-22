@@ -23,6 +23,7 @@ $serial = 'services_id_seq';
 		'description'		=>	'description',
 		'supplier_id'		=>	'supplier_id',
 		'category_id'		=>	'category_id',
+		'category'			=>	undef,
 		'taxexempt1'		=>	'taxexempt1',
 		'taxexempt2'		=>	'taxexempt2',
 		'owner_id'			=>	'owner_id',
@@ -37,9 +38,12 @@ $serial = 'services_id_seq';
 %defaults = (
 		'supplier_id'	=>	undef,
 		'category_id'	=>	undef,
-		'taxexempt1'	=>	'N',
-		'taxexempt2'	=>	'N',
+		'taxexempt1'	=>	q`'N'`,
+		'taxexempt2'	=>	q`'N'`,
 		);
+sub cache_field {
+	return 'name';
+}
 
 sub save {
 	my ( $self, $params ) = @_;

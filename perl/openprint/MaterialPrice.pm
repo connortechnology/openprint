@@ -47,5 +47,14 @@ sub next {
 	return new openprint::MaterialPrice( sql::execute( undef,undef, q{SELECT MIN(id) FROM 'tbl_material_prices WHERE id > ?}, $$self{'id'} ) );
 } # end sub next
 
+sub price {
+	if ( @_ > 1 ) {
+		$_[0]{'price'} = @_[1];
+	} # end if
+	if ( ! defined $_[0]{'price'} ) {
+		$_[0]{'price'} = sprintf( '%.2f', $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+	} # end if
+	return $_[0]{'price'};
+} # end sub price
 1;
 __END__

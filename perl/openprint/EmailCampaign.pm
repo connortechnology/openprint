@@ -4,7 +4,6 @@ package openprint::EmailCampaign;
 use openprint::Object;
 use Email::Valid;
 use MIME::QuotedPrint;
-use DBI;
 use openprint ();
 use vars qw( %config );
 *config = \%openprint::config;
@@ -241,53 +240,12 @@ sub send {
 			next;
 		} # end if
 
-		# First check if a sent row exists
-		$query = q{SELECT (NOW() - EmailSentOn) > ?, NumEmailSent FROM EmailCampaign_Sent WHERE campaign_id=? AND user_id=?};
-		if ( $$self{'interval'} and ( $interval_expired, $num_email_sent ) =  sql::execute( undef, undef, $query, @$self{'interval','id'}, $user_index ) ) {
-
-			# Check if the duration has elapsed	
-			if ($interval_expired == 1) {
-				$self->{log}->debug('interval expired');
-
-				# Check if we have sent this too many times
-				if ( ($self->{'timestosend'} ne '') and $num_email_sent >= $self->{'timestosend'}) {
-					# Email the admin
-					$replacements{ReplacementText} = $self->{'emailtext'};
-					#send_admin_email($openprint::log, $openprint::dbh, \%replacements);
-					sql::update( undef, undef, 'EmailCampaign_Sent', ['campaign_id=? AND user_id=?', $$self{id}, $user_index],
-							'MarkedForDeletion',	'Y',
-							);
-					$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because this email address has been sent to %d times already.</span><br/>', $replacements{'User'}->get('firstname','lastname','email'), $num_email_sent );
-				} else {
-					# Send the email to the user
-					if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
-						$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
-					} else {
-						$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
-						$self->send_email( \%replacements );
-						sql::update( undef, undef, 'EmailCampaign_Sent', ['campaign_id=? AND user_id=?', $self->{'id'}, $user_index],
-								'NumEmailSent',	$num_email_sent+1,
-								'EmailSentOn',	'NOW()',
-								);
-					} # end if email is valid
-				} # if $num_email_sent > num_times to send
-			} # if interval expired
+		if ( ! Email::Valid->address( $replacements{'User'}->email() ) ) {
+			$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>', $replacements{'User'}->get('firstname','lastname','email') );
 		} else {
-			# No record of sent email, we need to send the first one
-			if ( ! Email::Valid->address( $replacements{'EMAIL_ADDRESS'} ) ) {
-				$results .= sprintf('<span class="error">NOT Sending Email to: %s %s at %s because the email address appears to be invalid.</span><br/>',$replacements{'User'}->get('firstname','lastname','email') );
-			} else {
-				$self->send_email( \%replacements);
-				$results .= sprintf('Sending Email to: %s %s at %s<br/>', $replacements{'User'}->get('firstname','lastname','email') );
-				sql::insert( $openprint::log, $openprint::dbh, 'EmailCampaign_Sent', 
-						'NumEmailSent', '1',
-						'campaign_id', $self->{'id'},
-						'user_id', $user_index,
-						'EmailSentOn', 'NOW()',
-						);
-			} # end if
-		} # if row exists
-
+			$results .= sprintf('Sending Email to: %s %s at %s<br/>',$replacements{'User'}->get('firstname','lastname','email') );
+			$self->send_email( \%replacements );
+		} # end if email is valid
 	} # for all mail user ids
 	return $results;
 } # end sub send

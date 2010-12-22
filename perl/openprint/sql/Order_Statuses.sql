@@ -1,3 +1,5 @@
+DROP TABLE IF EXISTS Order_Statuses;
+
 create table order_statuses ( 
 	name text, 
 	primary key (name)

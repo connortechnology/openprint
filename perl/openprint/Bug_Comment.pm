@@ -3,8 +3,8 @@ package openprint::Bug_Comment;
 require openprint::Object;
 use strict;
 
-use vars qw( $debug_comment $table $serial %fields %transforms %defaults );
-$debug_comment = 0;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
 $table = 'bug_comments';
 $serial = 'bug_comments_id_seq';
 %fields = (

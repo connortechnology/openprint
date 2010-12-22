@@ -27,6 +27,14 @@
 					<? echo ( ssi::writeButton( $log, $dbh, 'Reset','reset.gif',"f1.reset();", '', 'Reset' ); ) ?>
 				</p>
 			</fieldset>
+			<div id="ProfilePicture">
+			<? if ( $$variable{'User'}->asset_id() ) ?>
+			<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
+			<? else ( $$variable{'User'}->asset_id() ) ?>
+			No profile picture set.
+			<? endif ( $$variable{'User'}->asset_id() ) ?>
+			</div>
+	
 			<div id="UserInformation">
    			<fieldset><legend>User Information:</legend>
 				<div class="content">

@@ -33,8 +33,10 @@ my @variables = (
 	'Markup1','Markup2','Markup3',
 	'txtPrice1','txtPrice2','txtPrice3',
 	'MPrice1','MPrice2','MPrice3',
-	'DiePrice1','DiePrice2','DiePrice3', 'OverrideDiePrice',
-	'StrippingPrice1','StrippingPrice2','StrippingPrice3', 'OverrideStrippingPrice',
+	'DiePrice1','DiePrice2','DiePrice3', 
+	'OverrideDiePrice1', 'OverrideDiePrice2', 'OverrideDiePrice3',
+	'StrippingPrice1','StrippingPrice2','StrippingPrice3', 
+	'OverrideStrippingPrice1', 'OverrideStrippingPrice2', 'OverrideStrippingPrice3',
 );
 
 sub variables {
@@ -62,7 +64,7 @@ sub variables {
 my @output = (
 		);
 
-sub get_output {
+sub outputs {
 	return @output;
 } # end sub get_output
 
@@ -96,13 +98,13 @@ sub calc_price {
 	} else { 
 		if ( $$sig_specs{'rdbTemplateType'} ) {
 # check for a standard die.
-			if ( my @Materials = openprint::Material->find('name'=>$$sig_specs{'rdbTemplateType'}.'Die') ) {
-				%DiePrice = $Materials[0]->get_price( undef, $Equipment );
+			if ( my $Material = openprint::Material->find_one('name'=>$$sig_specs{'rdbTemplateType'}.'Die') ) {
+				%DiePrice = $Material->get_price( undef, $Equipment );
 			} # end if
 		} # end if
 		if ( ( ! %DiePrice ) and $$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}} ) {
-			if ( my @Materials = openprint::Material->find('name'=>$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}.'Die') ) {
-				%DiePrice = $Materials[0]->get_price( undef, $Equipment );
+			if ( my $Material = openprint::Material->find_one('name'=>$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}.'Die') ) {
+				%DiePrice = $Material->get_price( undef, $Equipment );
 			} # end if
 		} # end if
 			
@@ -112,8 +114,8 @@ sub calc_price {
 			$DiePrice{'Price'} += $BendingPrice{'Total'};
 #$die_price += $bending_price;
 #$log->debug(" ** Adding Bending Cost: $bending_price For $$specs{'txtDieCutBends'} Bends, MakeReady Total: $make_ready ** ");
-			if ( my @Materials = openprint::Material->find('name'=>'DieCuttingDieRule') ) {
-				my %SteelRulePrice = $Materials[0]->get_price( $$specs{'txtSteelRuleLength-'.$$sig_specs{'SignatureIndex'}}*$imposition, undef );
+			if ( my $Material = openprint::Material->find_one('name'=>'DieCuttingDieRule') ) {
+				my %SteelRulePrice = $Material->get_price( $$specs{'txtSteelRuleLength-'.$$sig_specs{'SignatureIndex'}}*$imposition, undef );
 				$SteelRulePrice{'Total'} = $SteelRulePrice{'Price'} * $$specs{'txtSteelRuleLength-'.$$sig_specs{'SignatureIndex'}}*$imposition;
 				$DiePrice{'Price'} += $SteelRulePrice{'Total'};
 			} # end if
@@ -122,8 +124,8 @@ sub calc_price {
 #
 			if ( $$specs{'txtDieCutPunches'} > 0 ) {
 ##punches are optional
-				if ( my @Materials = openprint::Material->find('name'=>'DieCutPunch'.$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}) ) {
-					my %PunchPrice = $Materials[0]->get_price( $$specs{'txtDieCutPunches-'.$$sig_specs{'SignatureIndex'}}*$imposition, $Equipment );
+				if ( my $Material = openprint::Material->find_one('name'=>'DieCutPunch'.$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}) ) {
+					my %PunchPrice = $Material->get_price( $$specs{'txtDieCutPunches-'.$$sig_specs{'SignatureIndex'}}*$imposition, $Equipment );
 					$PunchPrice{'Total'} = $PunchPrice{'Price'} * $$specs{'txtDieCutPunches-'.$$sig_specs{'SignatureIndex'}} * $imposition;
 					$DiePrice{'Price'} += $PunchPrice{'Total'};
 				} # end if
@@ -134,7 +136,7 @@ sub calc_price {
 	} #end if supplied die
 
 	$Total{'DiePrice'} = \%DiePrice;
-	if ( $$specs{'OverrideDiePrice'} eq 'Y' ) {
+	if ( $$specs{'OverrideDiePrice'.$qty_index} eq 'Y' ) {
 		$DiePrice{'Price'} = $$specs{'DiePrice'.$qty_index};
 	} # end if
 	$Total{'Total'} += $DiePrice{'Price'};
@@ -154,7 +156,7 @@ sub calc_price {
 	} # end if
 	$Total{'Impressions'} = $impressions;
 
-	if ( $$specs{'OverrideStrippingPrice'} ne 'Y' ) {
+	if ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) {
 		my %Stripping = openprint::service::get_price_object( 'DieCutting'.$$specs{'rdbDieCutting-'.$$sig_specs{'SignatureIndex'}}.'Stripping' ,undef, $Equipment );
 		if ( ! %Stripping ) {
 			%Stripping = openprint::service::get_price_object( 'DieCuttingStripping' ,undef, $Equipment);
@@ -322,7 +324,7 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Service: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'ServicePrice'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'} );
 				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Hole Clearing: $%1$.2f%2$s * %5$d holes * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'HoleClearingPrice'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'}, $$specs{"txtHoleClearingHoles-$$sig_specs{'SignatureIndex'}"} ) if exists $results{'Price'}{'HoleClearingPrice'};
 
-				if ( $$specs{'OverrideStrippingPrice'} ne 'Y' ) {
+				if ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) {
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('&nbsp;&nbsp;Stripping: $%1$.2f%2$s * %4$d impressions = $%3$.2f<br/>', @{$results{'Price'}{'Stripping'}}{'Price','units','Total'}, $results{'Price'}{'Impressions'} );
 					@no_outputs = sets::exclude( ["StrippingPrice$qty_index"], \@no_outputs );
 				} else {
@@ -334,22 +336,22 @@ sub calc {
 			} # end if
 		} # end foreach Signature
 	
-		if ( $$specs{'OverrideDiePrice'} ne 'Y' ) {
+		if ( $$specs{'OverrideDiePrice'.$qty_index} ne 'Y' ) {
 			$$specs{"DiePrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalDiePrice );
 		} # end if
-		if ( $$specs{'OverrideStrippingPrice'} ne 'Y' ) {
+		if ( $$specs{'OverrideStrippingPrice'.$qty_index} ne 'Y' ) {
 			$$specs{"StrippingPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalStrippingPrice );
 		} else {
 			$$specs{"StrippingPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"StrippingPrice$qty_index"} );
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100)*(1+$Project->markup()/100) );
 			@no_outputs = sets::exclude( ["txtPrice$qty_index"], \@no_outputs );
 		} else {
 			@no_outputs = sets::union( "txtPrice$qty_index", @no_outputs );
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalUnitPrice );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalMPrice*(1+$$specs{'Markup'.$qty_index}/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ($totalUnitPrice*(1+$Project->markup()/100)) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalMPrice*(1+$$specs{'Markup'.$qty_index}/100)*(1+$Project->markup()/100) );
 
 	} # end foreach qty
 

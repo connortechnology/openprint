@@ -18,7 +18,6 @@ package openprint::Estimating::Prepress;
 use strict;
 
 require openprint::service;
-
 require sql;
 
 my @variables = (
@@ -57,10 +56,10 @@ sub calc {
 		$$specs{'txtQuantity'} = 0.25;
 	} # end if
 	my $price = openprint::service::get_price( $ServiceType->name(), $$specs{'txtQuantity'}, undef );
-	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price );
+	$$specs{"txtUnitPrice"} = sprintf( $openprint::config{'UnitPriceFormat'}, $price* (1+$Project->markup()/100) );
 
 	$price *= $$specs{'txtQuantity'};
-	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price );
+	$$specs{"txtPrice"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price * (1+$Project->markup()/100) );
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
 		$$specs{"txtUnitPrice$qty_index"} = $$specs{"txtUnitPrice"};
 		if ( $$specs{"OverridePrice$qty_index"} ne 'Y' ) {

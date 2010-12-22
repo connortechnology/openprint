@@ -1,9 +1,22 @@
-<table class="List sortable">
+<? eval (
+	if ( $param{'mac'} ) {
+		@{$$variable{'Hosts'}} = openprint::Host->find('mac_any'=>$param{'mac'}, 'order'=>'lower(hostname)');
+	} elsif ( $param{'ip'} ) {
+		@{$$variable{'Hosts'}} = openprint::Host->find('ip'=>$param{'ip'}, 'order'=>'lower(hostname)');
+$log->debug("Loaded hosts: " . @{$$variable{'Hosts'}} );
+	} else {
+		@{$$variable{'Hosts'}} = openprint::Host->find('order'=>
+$param{'order'} ? $param{'order'} : 'lower(hostname)'
+);
+	} 
+) ?>
+<table class="List">
 	<thead>
 		<tr>
+			<th class="checkbox">&nbsp;</th>
 			<th class="name">Name</th>
-			<th class="ip">IP</th>
-			<th class="mac">Mac</th>
+			<th class="ip" onclick="load_host(f1, {order:'ip'});">IP</th>
+			<th class="mac" onclick="load_host(f1, {order:'mac'});">Mac</th>
 			<th class="options">Options</th>
 			<th class="description">Description</th>
 		</tr>
@@ -11,9 +24,10 @@
 	<tbody>
 		<? echo (
 			my $html;
-			foreach my $Host ( openprint::Host->find('order'=>'ip,lower(hostname)') ) {
+			foreach my $Host ( @{$$variable{'Hosts'}} ) {
 				$html .= sprintf('
 					<tr>
+						<td><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
 						<td><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
 						<td><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
 						<td><a href="/employee/it/host.html?host_id=%1$d">%4$s</a></td>
@@ -23,6 +37,7 @@
 					', $Host->id(), $Host->hostname(), $Host->ip(), 
 					($Host->mac() ? join('<br/>', @{$Host->mac()} ) : ''), 
 					join(', ', (
+						( $Host->dhcp() ? 'dhcp' : () ),
 						( $Host->block() ? 'blocked' : () ),
 						( $Host->monitor() ? 'monitored' : () ),
 					) ),
@@ -31,6 +46,8 @@
 			return $html;
 		) ?>
 		<tr>
-	
 	</tbody>
 </table>
+<p class="buttons">
+<? echo ( ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "f2.btnFunction.value='Delete';new Ajax.Updater( 'Results','/employee/it/_hosts.html', { method: 'get', parameters: f2.serialize() } );", '', 'Delete Checked' ); ) ?>
+</p>

@@ -9,17 +9,19 @@
 			 'postalcode',
 			 'country',
 			 'phone',
+			 'extension',
 			 'fax'} = $Company->get( 'name','address1','address2','city','state','postalcode','country','phone','extension','fax' );
-		my @Users = openprint::User->find( 
-			 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
-			 'order'=>'lower(lastname),lower(firstname)'
-		);
-		if ( scalar @Users == 1 ) {
-			@$variable{'salutation','firstname','lastname','email'} = $Users[0]->get('salutation','firstname','lastname','email');
-		} # end if
+	} # end if
+	my @Users = @{$$variable{'Users'}} = openprint::User->find( 
+		 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
+		 'order'=>'lower(lastname),lower(firstname)'
+	);
+	if ( scalar @Users == 1 ) {
+		$param{'ddmUsers'} = $Users[0]->id();
+		@$variable{'salutation','firstname','lastname','email'} = $Users[0]->get('salutation','firstname','lastname','email');
 	} # end if
 ) ?>
-<fieldset><legend>Contact Information</legend>
+<fieldset><legend>Billing Information</legend>
 	<div class="content">
 		<ul> 
 			<li class="required">
@@ -42,20 +44,11 @@
 				<label>Name:</label>
 				<select name="ddmUsers" onchange="ddmUsers_onchange(this.form);">
 					<option value="">Please Select</option>
-		<? echo ( 
-			my @Users = openprint::User->find( 
-				'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'}, 
-				'order'=>'lower(LastName),lower(FirstName)'
-			 );
-			if ( scalar @Users == 1 ) {
-				$param{'ddmUsers'} = $Users[0]->id();
-				$$variable{'firstname'} = $Users[0]->firstname();
-				$$variable{'lastname'} = $Users[0]->lastname();
-			} # end if
-			return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Users ],
-					$param{'ddmUsers'} ? $param{'ddmUsers'} : $session{'user_id'} 
-			);
-		) ?>
+					<? echo ( 
+						return ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Users'}} ],
+								$param{'ddmUsers'} ? $param{'ddmUsers'} : $session{'user_id'} 
+						);
+					) ?>
 				</select>
 				<input type="hidden" name="firstname" value="<?firstname?>"/>
 				<input type="hidden" name="lastname" value="<?lastname?>"/>
@@ -75,7 +68,7 @@
 				<input type="text" id="address1" name="address1" value="<?address1?>" /><br/>
 				<input type="text" id="address2" name="address2" value="<?address2?>" />
 			</li>
-			<li class="required"> 
+			<li class="required">
 				<label>Country:</label>
 				<select name="country" onchange="Country_onchange(this, this.form.state);">
 					<option value=""> Select </option>
@@ -84,18 +77,16 @@
 					) ?> 
 				</select>
 			</li>
-			<li class="required"> 
-				<label><span id="country_state">
-<? echo (
+			<li class="required">
+				<label><span id="country_state"><? echo (
 if ( $$variable{'country'} eq 'US' ) {
-    return 'State';
+	return 'State';
 } elsif ( $$variable{'country'} eq 'CA' ) {
-    return 'Province';
+	return 'Province';
 } else {
-    return 'State/Province';
+	return 'State/Province';
 } # end if
-) ?>
-:</span></label>
+) ?>:</span></label>
 				<select name="state">
 					<option value=""> Select </option>
 					<? echo ( 
@@ -109,28 +100,26 @@ if ( $$variable{'country'} eq 'US' ) {
 				<input type="text" id="city" name="city" value="<?city?>" />
 			</li>
 			<li class="required"> 
-				<label><span id="country_postal">
-                    <? echo (
-                       if ( $$variable{'country'} eq 'US' ) {
-                               return 'Zip Code:';
-                       } elsif ( $$variable{'country'} eq 'CA' ) {
-                               return 'Postal Code:';
-                       } else {
-                               return 'Zip/Postal Code:';
-                       } # end if
-					) ?>
-					   </span></label>
+				<label><span id="country_postal"><? echo (
+						if ( $$variable{'country'} eq 'US' ) {
+							return 'Zip Code:';
+						} elsif ( $$variable{'country'} eq 'CA' ) {
+							return 'Postal Code:';
+						} else {
+							return 'Zip/Postal Code:';
+						} # end if
+					) ?></span></label>
 				<input type="text" id="postalcode" name="postalcode" value="<?postalcode?>" />
 			</li>
-			<li> 
+			<li>
 				<label>Phone:</label>
 				<input type="text" id="phone" name="phone" value="<?phone?>" />
 			</li>
-			<li> 
+			<li>
 				<label>Fax:</label>
 				<input type="text" id="fax" name="fax" value="<?fax?>" />
 			</li>
-			<li class="required"> 
+			<li class="required">
 				<label>E-mail:</label>
 				<input type="text" id="email" name="email" value="<?email?>" />
 			</li>

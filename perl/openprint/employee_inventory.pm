@@ -24,6 +24,7 @@ require openprint::ManifestContent;
 require openprint::Manifest_Content_Type;
 require openprint::PaperAllocation;
 require openprint::PurchaseOrder;
+require openprint::Label;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -1294,13 +1295,21 @@ sub manifest {
 					$variable{'information'} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
 					foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
 						foreach my $SkidContent ( $C->Skid()->Contents() ) {
+							# If it has the old type,
 							if ( $SkidContent->paper_id() == $Type->paper_id() ) {
+								my $PI = new openprint::PaperInventory();
+								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Type->paper_id(),
+										'quantity'=>-1*$SkidContent->quantity(),
+										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								# Change the type to the new type
 								$SkidContent->save({'paper_id'=>$Paper->id()});
 								foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
 									$PA->save({'paper_id'=>$Paper->id()});
 								} # end foreach PA
 								my $PI = new openprint::PaperInventory();
-								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Paper->id(),
+										'quantity'=>$SkidContent->quantity(),
+										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
 								
 							} # end if
 						} # end foreach SkidContent
@@ -1816,13 +1825,13 @@ sub purchase_order_view {
 				'reason'	=>	$param{'reason'},
 				});
 		} # end if
-		my @notifications = $PO->notifications();
+		my @notifications = $PO->notifications(); # returns user_ids
 		my @new_notifications = @notifications;
 		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) );
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PSC/PEFC Notifications','value'=>'Yes' ) );
 		} # end if
 		foreach my $type ( keys %types ) {
-			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'PO ' . $type.' Notifications' ) );
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PO ' . $type . ' Notifications','value'=>'Yes' ) );
 		} # end foreach
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);
@@ -1836,8 +1845,44 @@ sub purchase_order_edit {
 
 	my $Me = new openprint::User( $session{'user_id'} );
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
+
+	if ( $param{'btnFunction'} eq 'New' ) {
+$log->debug("Creating PO from label");
+		my $Label = new openprint::Label( $param{'label_id'} );
+		$log->debug("Creating PO from label $$Label{id}");
+		my $C = $Me->Company();
+		$variable{'error'} .= $PO->save( {
+				'created_by'	=>	$session{'user_id'}, 
+				'company_id'=>$Me->company_id(),
+				'currency_id'		=>	openprint::Currency::get_current()->id(),
+				'created_by'		=>	$Me->id(),
+				'shipto_contact'	=>	$Me->name(),
+				'shipto_name'		=>	$C->name(),
+				'shipto_address1'	=>	$C->address1(),
+				'shipto_address2'	=>	$C->address2(),
+				'shipto_city'		=>	$C->city(),
+				'shipto_state'		=>	$C->state(),
+				'shipto_country'	=>	$C->country(),
+				'shipto_postalcode'	=>	$C->postalcode(),
+				'shipto_phone'		=>	$C->phone(),
+				'shipto_mobile'		=>	$Me->mobile(),
+				'shipto_fax'		=>	$C->fax(),
+				'shipto_email'		=>	$Me->email(),
+				'shipto_sms'		=>	$Me->sms(),
+				} );
+$log->debug("Creating PO $$PO{id} from label $variable{error}");
+		
+		my $C = new openprint::PurchaseOrder_Content();
+        $C->save( {
+            'po_id'         => 	$PO->id(),
+            'qty'           =>  1,
+            'item'          =>  'Shipping',
+            'description'   =>  'From: ' . $Label->get_data('from') . ' To: ' . $Label->get_data('to'),
+            'docket'        =>  $Label->Project()->docket(),
+            'type'       	=> 'Other',
+            });
 	
-	if ( $param{'btnFunction'} eq 'Save' ) {
+	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		if ( ! $param{'po_id'} ) {
 			$variable{'error'} .= $PO->save( { 'created_by'	=>	$session{'user_id'}, 'company_id'=>$Me->company_id() } );
 		} # end if
@@ -2116,5 +2161,10 @@ sub _skids_results {
 
 sub _update_taxes {
 } # end sub _update_taxes
+
+sub _paper_log {
+	ssi::save_params( '/employee/inventory/paper_details.html', ( 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','limit' ) );
+} # end _paper_log
+
 1;
 __END__

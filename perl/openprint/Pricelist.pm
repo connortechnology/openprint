@@ -26,6 +26,11 @@ $serial = 'pricelists_id_seq';
 	'description'	=>	'description',
 	'deleted'		=>	'deleted',
 );
+%defaults = (
+	'owner_id'	=>	q`$openprint::session{'company_id'}`,
+	'deleted'	=>	0,
+	'currency_id'	=>	undef,
+);
 
 sub destroy {
 	my $self = shift;

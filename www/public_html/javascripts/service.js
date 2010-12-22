@@ -24,7 +24,14 @@ function calc( formName, force ) {
 				div.innerHTML = 'Calculating';
 			} // end if
 			gettingNewPrice = true;
-			new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: form.serialize(), evalScripts: true } );
+	var h = $H(form.serialize(true));
+	h.each(function(pair) {
+		if ( pair.value == '' ) 
+			h.unset(pair.key);
+		if ( pair.key == 'btnFunction' ) 
+			h.unset(pair.key);
+	});
+			new Ajax.Request( '/main/project/_calc.json', { method: 'post', parameters: h, evalScripts: true } );
 		} // end if
 	} // end if
 } // end calc()
@@ -54,7 +61,9 @@ function cbFillResults( results ) {
 					alert( value );
 				} // end if
 			} // end if
-
+			continue;
+		} else if ( key == 'popup') {
+			alert( value );
 			continue;
 		} else if ( key == 'information') {
 			if (value != '') {

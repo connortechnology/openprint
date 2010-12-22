@@ -1,5 +1,5 @@
 <? if ( openprint::ProjectType->find_one() ) ?>
-<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? if ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 <table class="List">
 	<thead>
 		<tr> 
@@ -61,17 +61,17 @@
 				
 			} # end foreach qty_index
 			$html .= "</table>\n</td>\n</tr>\n";
-			$html .= sprintf('<tr class="totals"><td colspan="4">Subtotal:</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
-				openprint::Currency::format( $subtotal ),
-				openprint::Currency::format( $newsubtotal ),
-);
 			$rowclass = $rowclass ? '' : ' class="colRow"';
 		} # end foreach QP
+		$html .= sprintf('<tr class="totals"><td colspan="4">Subtotal:</td><td class="price">%1$s</td><td class="newprice">%2$s</td></tr>',
+				openprint::Currency::format( $subtotal ),
+				openprint::Currency::format( $newsubtotal ),
+				);
 		return $html
 	) ?>
 	</tbody>
 </table>
-<? else ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? else ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 <table class="List">
 	<thead>
 		<tr> 
@@ -128,5 +128,5 @@
 			return $html;
 		) ?>
 </table>
-<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'} )->reseller() eq 'Y' ) ?>
+<? endif ( sets::isin( $session{'user_type'}, [ 'A', 'E' ] ) or new openprint::Company($session{'company_id'})->reseller() eq 'Y' ) ?>
 <? endif ( openprint::ProjectType->find_one() ) ?>

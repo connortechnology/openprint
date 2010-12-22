@@ -59,5 +59,5 @@ CREATE TABLE Orders (
 	strAdministratorComments	TEXT,
 	strAdministratorName		TEXT,
 	lngDocketNumber			INTEGER,
-	PRIMARY KEY (Index)
+	PRIMARY KEY (id)
 );

@@ -8,7 +8,7 @@ function calc_presentation_folder( formName ) {
 
 function calc_flat_size(formName) {
     var form = getFormObj( formName );
-	var width = form.txtFinalWidth.value * 2;
+	var width = parseFloat(form.txtFinalWidth.value) * 2;
 	var height = parseFloat(form.txtFinalHeight.value);
 	if ( width && height ) {
 
@@ -25,12 +25,11 @@ function calc_flat_size(formName) {
 			height += pocketSize;
 		} // end if
 
-		if ( form.chkLeftPocket.checked ) {
-			width += 0.75;
+		if ( form.chkPocketLeft.checked ) {
+			width = 0.75 + parseFloat(width);
 		} // end if
-		if ( form.chkRightPocket.checked ) {
-			width += 0.75;
-
+		if ( form.chkPocketRight.checked ) {
+			width = 0.75 + parseFloat(width);
 		} // end if
 	} // end if
 

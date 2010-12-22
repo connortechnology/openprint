@@ -3,10 +3,9 @@ package openprint::PurchaseOrder_ContentType;
 require openprint::Object;
 
 use strict;
-use openprint ();
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'PurchaseOrder_ContentTypes';
 $serial = 'PurchaseOrder_ContentTypes_id_seq';

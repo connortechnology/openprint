@@ -1,4 +1,4 @@
-DROP TABLE tbl_Quote_Details;
+DROP TABLE IF EXISTS tbl_Quote_Details;
 
 CREATE TABLE tbl_Quote_Details (
 	quote_id		INTEGER NOT NULL, FOREIGN KEY (quote_id) REFERENCES Quotes (id),

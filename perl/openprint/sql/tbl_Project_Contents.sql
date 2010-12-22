@@ -8,6 +8,7 @@ FOREIGN KEY (lngProjectIndex) REFERENCES Projects (Id),
 	lngServiceIndex INTEGER NOT NULL DEFAULT nextval('ContentsServiceIndex_seq'),		/* An index into the tbl_Products table, which for printquotes is a services table.  */
 	strStatus		TEXT,
 	dtmLastModified	timestamp with time zone,
+	servicetype_id	INTEGER NOT NULL,
 	PRIMARY KEY (lngServiceIndex)
 );
 

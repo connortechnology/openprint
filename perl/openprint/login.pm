@@ -47,6 +47,11 @@ sub verify_login {
 	# convert the email address to lower case. All email addresses stored in DB will be lower case.
 	my $email = lc $openprint::param{'email'};
 	$email =~ s/^\s*(.*?)\s*$/$1/;
+	if ( ! $email ) {
+		$$variable{'details'} = "\"$email\" is not a valid account.	Please try again.";
+		$$variable{'error'} = 'Authentication Failed.';
+		return;
+	} # end if
 
 	$log->debug("** Verifying Login for Email Adress: $email **");
 
@@ -166,7 +171,7 @@ sub verify_login {
 		$$variable{'Redirect'} = $1.'.html';
 		foreach my $p ( split('&', $2 ) ) {
 			my ( $k, $v ) = split('=', $p );
-			$openprint::log->debug("Psrsmd: $p, $k = $v ");
+			$openprint::log->debug("verify_login: Parsmd: $p, $k = $v ");
 			$openprint::param{$k} = $v;
 		} # end foreach
 	} elsif ( $session{'Destination'} =~ /^Click <a href="(.*)\.html\?(.*)">here<\/a> to continue the survey\./ ) {

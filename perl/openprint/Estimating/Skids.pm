@@ -22,8 +22,6 @@ use POSIX qw(ceil);
 
 require openprint::service;
 
-require sql;
-
 my $debug = 1;
 
 my %variables = (
@@ -102,7 +100,12 @@ sub calc {
 	my $serviceCharge = openprint::service::get_price( $ServiceType->name(), undef, undef );
 	my $packingCharge = openprint::service::get_price( $ServiceType->name().'Packing', undef, undef );
 
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	my $printing_specs;
+	if ( $Project->signatures() == 1 ) {
+		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{'Signature'}[0] );
+	} else {
+		$printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+	} # end if
 	@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	if ( ! ( $$specs{'txtFinalWidth'} and $$specs{'txtFinalHeight'} ) ) {
 		@$specs{'txtFinalWidth','txtFinalHeight'} = @$printing_specs{'txtWidth','txtHeight'};
@@ -114,7 +117,7 @@ sub calc {
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
 		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	} # end if
-	if ( ! 1 * $$specs{'txtFinishedCalliper'} ) {
+	if ( ! (1 * $$specs{'txtFinishedCalliper'} ) ) {
 		$$specs{'alert'} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -176,7 +179,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 					my $imposition = $setup1->imposition() > $setup2->imposition() ? $setup1->imposition() : $setup2->imposition();
 					next if ! $imposition;
 
-					$items_by_size = int ( $depth/$$specs{'txtFinishedCalliper'} * $imposition );
+					$items_by_size = int ( ($depth/$$specs{'txtFinishedCalliper'}) * $imposition );
 					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %d<br/>', $items_by_size );
 # Make sure it's not too heavy
 					if ( $items_by_size > $items_by_weight ) {
@@ -224,12 +227,12 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 		my $price = $makeReady + $qty * $unitPrice;
 
 		$$specs{"txtPackageQuantity$qty_index"} = $qty;
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * $m_qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * (1+$Project->markup()/100) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice * $m_qty * (1+$Project->markup()/100) );
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
 			
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"Markup$qty_index"} ? $price*(1+$$specs{"Markup$qty_index"}/100) : $price );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, ( $$specs{"Markup$qty_index"} ? $price*(1+$$specs{"Markup$qty_index"}/100) : $price ) * (1+$Project->markup()/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if

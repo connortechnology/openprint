@@ -12,13 +12,13 @@ use openprint ();
 use MIME::Base64;
 use Image::Magick;
 
-use vars qw( $log $dbh %config $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh %config $table $serial %fields %transforms %defaults );
 
-my $debug = 1;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
 
+$debug = 1;
 $table = 'CIP3_PPF';
 $serial = 'CIP3_PPF_id_seq';
 %fields = (

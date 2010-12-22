@@ -40,7 +40,7 @@ my @fields = (
 		'cuttable', 'multipart', 'doublesided', 'perfecting', 'score_required',
 		'width','height','mweight','sheets_per_package','gsm','wpsi','digital','type','basis_width','basis_height','basis_mweight',
 		'bladecleaning','grade','grain_direction','fsc_code','supplied',
-		'minimum_order','inventory_number','full_packages','message','diescoring','in_stock','parts',
+		'minimum_order','inventory_number','full_packages','message','diescoring','in_stock','parts','message',
 		'material_id',
 		);
 
@@ -815,7 +815,7 @@ sub allocate {
 			} );
 	if ( $project_id ) {
 		new openprint::Project( $project_id )->add_to_log( @openprint::session{'company_id','user_id'}, 
-				qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string()
+				qq`Allocated $quantity$$PA{units} of <a href="/employee/inventory/paper_details.html?paper_id=$$self{'id'}">` . $self->to_string().'</a>'
 				);
 	} # end if project_id
 
@@ -1030,11 +1030,14 @@ sub minimum_order {
 		$$self{'minimum_order'} = shift;
 	} # end if
 
-	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} ) if $$self{'width'} and $$self{'height'};
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
-	return $$self{'minimum_order'} * $factor if $factor;
-	return $$self{'minimum_order'};
+	return $$self{'minimum_order'} * $self->factor();
 } # end minimum_order 
+sub factor {
+	my $factor = int($_[0]{'start_width'} / $_[0]{'width'} ) * int( $_[0]{'start_height'} / $_[0]{'height'} ) if $_[0]{'width'} and $_[0]{'height'};
+	return 1 if ! $factor;
+	return $factor;
+} # end sub factor
 sub minimum_order_weight {
 	my $self = $_[0];
 	if ( $$self{'type'} eq 'Sheet' ) {
@@ -1049,10 +1052,8 @@ sub sheets_per_package {
 		$$self{sheets_per_package} = shift;
 	} # end if
 
-	my $factor = int($$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} ) if $$self{'width'} and $$self{'height'};
 #$openprint::log->debug("SPP: $$self{'start_width'} / $$self{'width'} ) * int( $$self{'start_height'} / $$self{'height'} * spp $$self{'sheets_per_package'} * $factor;");
-	return $$self{'sheets_per_package'} * $factor if $factor;
-	return $$self{'sheets_per_package'};
+	return $$self{'sheets_per_package'} * $self->factor();
 } # end sheets_per_package
 	
 sub gsm {

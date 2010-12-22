@@ -1,10 +1,8 @@
-package openprint::Claim_Tax;
-@ISA = qw(openprint::Object);
-
 use strict;
-use vars qw( $debug $table $serial %fields %defaults %transforms );
+package openprint::Claim_Tax;
+our @ISA = qw(openprint::Object);
 
-require sql;
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 $debug = 1;
 

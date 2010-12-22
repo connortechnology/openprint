@@ -1,8 +1,7 @@
-package openprint::Article;
-@ISA = qw(openprint::Object);
-
 use strict;
-require sql;
+package openprint::Article;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms %config $log $dbh %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
@@ -39,6 +38,10 @@ $serial = 'articles_id_seq';
 	#'author'			=>	'author',
 	'body'				=>	'body',
 	#'state'				=>	'state',
+	'category_id'		=>	'category_id',
+	'category'			=>	undef,
+	'source'			=>	'source',
+	'source_content'	=>	'source_content',
 );
 
 %transforms = (
@@ -48,6 +51,7 @@ $serial = 'articles_id_seq';
 	'updated_on'	=> q`'NOW()'`,
 	'published_on'	=> q`'NOW()'`,
 	'deleted'		=> 0,
+	'category_id'	=>	undef,
 );
 
 sub send_notifications {
@@ -84,6 +88,23 @@ sub Company {
 sub Author {
 	return new openprint::User( $_[0]{'created_by'} );
 } # end sub Author
+
+sub category {
+	if ( @_ > 1 ) {
+		my $Category = openprint::Article_Category->find_one('name_lc'=>lc$_[1]);
+		if ( ! $Category ) {
+			$Category = new openprint::Article_Category();
+			$Category->save({'name'=>$_[1]})
+		} # end if	
+		$_[0]{'category_id'} = $Category->id();
+		return $Category->name();
+	} # end if
+	return new openprint::Article_Category( $_[0]{'category_id'} )->name();
+} # end sub category
+
+sub Category {
+	return new openprint::Article_Category( $_[0]{'category_id'} );
+} # end sub Category
 
 1;
 __END__

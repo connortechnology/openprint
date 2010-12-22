@@ -135,6 +135,9 @@
 			<select name="DueDateEndDay" onchange="load_projects(this.form);"><?DueDateEndDays?></select>
 		</span>
 	</p>
+	<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', q`load_projects($('f1'));`, '', 'Show Results' ); ) ?>
+	</p>
 </fieldset>
 </form>
 <br/>

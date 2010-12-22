@@ -19,6 +19,9 @@ require openprint::Tax;
 require openprint::Email;
 require openprint::Email_Account;
 require openprint::UserGroup;
+require openprint::Invoice;
+require openprint::Payment;
+require openprint::Timetrack;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -146,7 +149,8 @@ sub user_profiles {
 			return misc::error( $log, $dbh, \%variable, "Passwords don't match.", "Your password and verify password fields do not match.");
 		} # end if
 
-		my @Users = openprint::User->find( 'email' => lc $param{'email'} );
+		my @Users = openprint::User->find( 'email_lc' => lc $param{'email'} );
+$log->debug("Users found? " . scalar @Users);
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
@@ -208,23 +212,25 @@ sub user_profiles {
 			} # end foreach
 		} # end if
 
-		foreach my $service_default_id ( sql::execute( undef, undef, 'SELECT id FROM User_Service_Defaults WHERE user_id=?', $user_id ) ) {
-			if ( 'name'=>$param{'name-'.$service_default_id} ) {
-			sql::update( undef, undef, 'User_Service_Defaults', ['id=?'=>$service_default_id], {
-					'servicetype_id'=>$param{'servicetype_id-'.$service_default_id} ? $param{'servicetype_id-'.$service_default_id} : undef,
-					'name'=>$param{'name-'.$service_default_id},
-					'value'=>$param{'value-'.$service_default_id}
-					});
+		foreach my $service_default_id ( sql::execute( undef, undef, 'SELECT id FROM User_Service_Defaults WHERE user_id=?', $User->id() ) ) {
+			if ( $param{'name-'.$service_default_id} ) {
+				sql::update( undef, undef, 'User_Service_Defaults', ['id=?'=>$service_default_id], {
+						'servicetype_id'=>$param{'servicetype_id-'.$service_default_id} ? $param{'servicetype_id-'.$service_default_id} : undef,
+						'name'=>$param{'name-'.$service_default_id},
+						'value'=>$param{'value-'.$service_default_id}
+						});
 			} else {
 				sql::execute( undef, undef, 'DELETE FROM User_Service_Defaults WHERE id=?', $service_default_id );
 			} # end if
 		} # end foreach
-		sql::insert( undef, undef, 'User_Service_Defaults', {
-				'user_id'=>$user_id,
-				'servicetype_id'=>$param{'servicetype_id-'} ? $param{'servicetype_id-'} : undef,
-				'name'=>$param{'name-'},
-				'value'=>$param{'value-'} 
-				} );
+		if ( $param{'name-'} ) {
+			sql::insert( undef, undef, 'User_Service_Defaults', {
+					'user_id'		=>$User->id(),
+					'servicetype_id'=>$param{'servicetype_id-'} ? $param{'servicetype_id-'} : undef,
+					'name'			=>$param{'name-'},
+					'value'			=>$param{'value-'} 
+					} );
+		} # end if
 
 		my %notifications;
 		my %types = sql::execute(undef,undef,'SELECT id,name FROM User_Notification_Types');
@@ -237,7 +243,12 @@ sub user_profiles {
 	} # end if btnFunction
 
 	# if we don't have a selected user, pick the first one returned filtered by company and user type if specified
-	my @Users = openprint::User->find( 'company_id'=>$cust_id, 'type'=>$user_role, 'order'=>'lower(firstname),lower(lastname)' );
+	my @Users = openprint::User->find( 
+		( $cust_id ? ( 'company_id'=>$cust_id ) : () ), 
+		( $user_role ? ( 'type'=>$user_role ) : () ),
+		'order'=>'lower(firstname),lower(lastname)'
+		);
+
 	if ( $User->deleted() ) {
 		unshift @Users, $User;
 	} # end if
@@ -330,6 +341,31 @@ sub company_profiles {
 		if ( $param{'txtSearchAccountNum'} ne '' ) {
 			( $index ) = sql::execute( $log, $dbh, 'SELECT id from Company WHERE strAccountNum=?',$param{'txtSearchAccountNum'}); 
 		} # end if 
+	} elsif ( $param{'btnFunction'} eq 'merge' ) {
+		my $Company = new openprint::Company( $index );
+		foreach my $type ( 'User','Order','Quote','Project', 'Claim', 'Log','Timetrack' ) {
+			eval q`
+				foreach ( openprint::`.$type.q`->find('company_id'=>$param{'merge_company_id'}) ) {
+					$_->save({'company_id'=>$Company->id()});
+				} # end foreach
+			`;
+		} # end foreach type
+		foreach my $Timetrack ( openprint::Timetrack->find('owner_id'=>$param{'merge_company_id'}) ) {
+			$Timetrack->save({'owner_id'=>$Company->id()});
+		} # end foreach Timetrack
+		foreach ( openprint::Invoice->find('invoicer_id'=>$param{'merge_company_id'}) ) {
+			$_->save({'invoicer_id'=>$Company->id()});
+		} # end foreach 
+		foreach ( openprint::Invoice->find('invoicee_id'=>$param{'merge_company_id'}) ) {
+			$_->save({'invoicee_id'=>$Company->id()});
+		} # end foreach 
+		foreach my $Payment ( openprint::Payment->find('payor_id'=>$param{'merge_company_id'}) ) {
+			$Payment->save({'payor_id'=>$Company->id()}) if $Payment->payor_id() == $Company->id();
+		} # end foreach  Payment
+		foreach my $Payment ( openprint::Payment->find('recipient_id'=>$param{'merge_company_id'}) ) {
+			$Payment->save({'recipient_id'=>$Company->id()}) if $_->recipient_id() == $Company->id();
+		} # end foreach  Payment
+		new openprint::Company( $param{'merge_company_id'} )->delete();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 
 		$index = $param{'company_id'};

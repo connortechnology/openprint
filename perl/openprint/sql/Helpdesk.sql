@@ -1,12 +1,10 @@
-DROP TABLE HelpDesk;
+DROP TABLE IF EXISTS HelpDesk;
 
-DROP SEQUENCE HelpDesk_Id_seq;
-CREATE SEQUENCE HelpDesk_Id_seq;
 
 CREATE TABLE HelpDesk (
-	id INTEGER DEFAULT nextval('HelpDesk_id_seq'),
-	company_id		INTEGER, FOREIGN KEY (company_id) REFERENCES company (index),
-	User_Id			INTEGER, FOREIGN KEY (User_Id) REFERENCES Users (index),
+	id SERIAL,
+	company_id		INTEGER, FOREIGN KEY (company_id) REFERENCES companies (id),
+	User_Id			INTEGER, FOREIGN KEY (User_Id) REFERENCES Users (id),
 	dtmRequestDate	timestamp with time zone NOT NULL,
 	blbDescription	TEXT,
 	strCompanyName	TEXT,

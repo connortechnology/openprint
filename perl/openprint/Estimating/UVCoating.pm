@@ -18,7 +18,6 @@ package openprint::Estimating::UVCoating;
 use strict;
 #use warnings;
 
-require sql;
 require openprint::service;
 require openprint::Material;
 require openprint::imposition;
@@ -188,9 +187,9 @@ sub calc {
 				} # end if
 			} # end if uncalculated
 		} # end foreach signature
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $config{'UnitPriceFormat'}, $GrandTotal / $qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $config{'UnitPriceFormat'}, ( $GrandTotal / $qty ) * (1+$Project->markup()/100) );
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $GrandTotal * (1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $GrandTotal * (1+$$specs{"Markup$qty_index"}/100) * (1+$Project->markup()/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $config{'ProjectMoneyFormat'}, $$specs{'txtPrice'.$qty_index} );
 		} # end if

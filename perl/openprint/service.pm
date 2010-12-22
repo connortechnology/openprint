@@ -71,19 +71,19 @@ sub save_service {
 		%{$specs_cache{$service_index}} = sql::execute( $log, $dbh, 
 				'SELECT strName, strValue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND lngServiceIndex=?', $project_index, $service_index );
 	} # end if
+	my $Project = new openprint::Project( $project_index );
 	my $specs = $specs_cache{$service_index};
 
 	my $service_type = $openprint::param{'ServiceType'};
 	if ( ! $service_type ) {
-		my $Project = new openprint::Project( $project_index );
 		my $ServiceType = $Project->ServiceType( $service_index );
 		$service_type = $ServiceType->type();
 	} # end if
 	if ( (! $service_type) and (! $$specs{'ProjectType'}) ) {
 		$log->error( "No serviceType in params for service $service_index.  Trying to recover" );
 	} # end if
-	if ( sets::isin( $service_type, [ '', 'Signature' ] ) ) {
-		$service_type = 'Printing';
+	if ( ! $service_type ) {
+		$service_type = $Project->Type()->type();
 	} # end if
 	eval ( 'require openprint::Estimating::'.$service_type.';' );
 	my @variables = eval( 'openprint::Estimating::'.$service_type.'::variables( $project_index, $service_index, $specs, \%openprint::param )');
@@ -423,7 +423,7 @@ sub external_calc {
 #blah
 	eval 'require openprint::Estimating::'.$service_type;
 		$log->error("Error requiring opepnrint::Estimating::$service_type: $@") if $@;
-	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
+	eval q/$specs{'Status'} = openprint::Estimating::/.$service_type.'::calc( $log, $dbh, $variable, @specs{\'ProjectIndex\', \'ServiceIndex\'}, \%specs, $specs{qty_index} );';
 		$log->error("Error requiring openprint::Estimating::$service_type: in eval: $@") if $@;
 	my @results = ();
 	my @vars = eval( 'openprint::Estimating::'.$service_type.'::outputs()' );
@@ -435,6 +435,7 @@ $log->warn("No outputs: @no_outputs : $@" ) if $debug;
 	@vars = sets::exclude( \@no_outputs, \@vars );
 
 	foreach my $key ( @vars ) {
+#$log->debug( "$key~$specs{$key}" );
 		if ( exists $specs{$key} ) {
 			if ( ( ! exists $initial_specs{$key} ) or ( $specs{$key} ne $initial_specs{$key} ) ) {
 				push @results, "$key~$specs{$key}";
@@ -451,7 +452,7 @@ sub get_type {
 } # end sub get_type
 
 sub internal_calc {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type ) = @_;
+	my ( $log, $dbh, $variable, $project_index, $service_index, $service_type, $qty_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
 	my $specs = get_specs_ref( $Project, $service_index ) if $service_index;
@@ -466,7 +467,7 @@ sub internal_calc {
 	my $starttime = time;
 	eval 'require openprint::Estimating::'.$service_type;
 	$log->error("Error in requiring openprint::Estiamting::$service_type ::calc: $@") if $@;
-	if ( ! eval '$status = openprint::Estimating::'.$service_type.'::calc( $log, $dbh, $variable, $project_index, $service_index, \%specs );' ) {
+	if ( ! eval '$status = openprint::Estimating::'.$service_type.'::calc( $log, $dbh, $variable, $project_index, $service_index, \%specs, $qty_index );' ) {
 		$log->error("Error in openprint::Estiamting::$service_type ::calc: $@") if $@;
 	} # end if
 	$specs{'Status'} = $status;

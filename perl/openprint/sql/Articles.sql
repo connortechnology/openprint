@@ -10,6 +10,7 @@ CREATE TABLE Articles (
     published	BOOLEAN NOT NULL default false,
     title		TEXT,
     body		TEXT,
+	category_id	INTEGER,/* FOREIGN KEY is added in article_categories.sql */
 	PRIMARY KEY (id)
 );
 

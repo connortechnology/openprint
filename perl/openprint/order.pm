@@ -194,9 +194,12 @@ sub add_project_to_order {
 				last;
 			} # end if
 		} # end foreach
+if ( 0 ) {
+# Stop defaulting to CP
 		if ( ! $sql{'ShippingType'} ) {
 			$sql{'ShippingType'} = 'CustomerPickUp';
 		} # end if
+} # end if
 	} else {
 		$sql{'ShippingType'}='CustomerPickUp';
 	} # end if
@@ -369,6 +372,7 @@ $openprint::log->debug("Orered qty: " . $Project->ordered_quantity_index() );
 					push @{$$services{$ShippingType->name()}}, $new_service_index;
 				} # end if
 			} elsif ( $$services{$ShippingType->name()} ) {
+				# Thismight delete bindery shipping 
 				foreach ( @{$$services{$ShippingType->name()}} ) {
 					openprint::print_project::delete_service( $log, $dbh, $project_index, $_ );
 				} # end foreach

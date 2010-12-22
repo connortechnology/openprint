@@ -1,10 +1,10 @@
+use strict;
 package openprint::Host;
-@ISA = qw( openprint::Object );
+our @ISA = qw( openprint::Object );
 require openprint::Object;
 use Net::ARP;
-use strict;
 
-use vars qw( $debug $table $serial %fields %transforms %defaults %types );
+use vars qw( $debug $table $serial %fields %transforms %defaults );
 $debug = 1;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
@@ -24,12 +24,10 @@ $serial = 'hosts_id_seq';
 	'block'		=>	0,
 	'monitor'	=>	0,
 	'mac'		=>	undef,
-	'hostname'	=>	undef,
+	'hostname'	=>	'undef',
 	'ip'		=>	undef,
 	'dhcp'		=>	0,
 );
-use openprint ();
-
 sub resolve {
 	my ( $self ) = @_;
 	my @h = gethostbyaddr(pack('C4',split('\.',$$self{'ip'})),2);

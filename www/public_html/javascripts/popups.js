@@ -84,8 +84,11 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 function LoadContent( divID, page, parameters, message ) {
 	var div = $( divID );
 	if ( div ) {
-		if ( message ) div.innerHTML = message;
-		else div.innerHTML = 'Please wait....';
+		if ( message ) { 
+			div.innerHTML = message;
+		} else { 
+			div.innerHTML = 'Please wait....';
+		} // end if
 	} // end if
 	var method = 'get';
 	//alert( typeof parameters );

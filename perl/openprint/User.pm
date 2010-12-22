@@ -1,14 +1,17 @@
+use strict;
 package openprint::User;
-@ISA = qw( openprint::Object );
+our @ISA = qw( openprint::Object );
 use Text::Unaccent;
 use MIME::QuotedPrint;
 
 require openprint::Company;
 require openprint::logs;
 require openprint::Usergroup;
+require openprint::User_Notification;
+require openprint::Asset;
+
 use openprint ();
-use strict;
-use vars qw( $log $dbh %config %variable %param %fields %transforms %defaults $table $serial );
+use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -17,7 +20,7 @@ use vars qw( $log $dbh %config %variable %param %fields %transforms %defaults $t
 $table = 'Users';
 $serial = 'users_id_seq';
 
-my $debug = 0;
+$debug = 1;
 
 %fields = (
 	'id'				=>	'id',
@@ -50,8 +53,16 @@ my $debug = 0;
 	'purchasing_limit'	=>	'purchasing_limit',
 	'purchasing_total_limit'	=>	'purchasing_total_limit',
 	'notes'				=>	'notes',
+	'asset_id'			=>	'asset_id',
 	'deleted'			=>	'deleted',
 ); # end %fields
+%find_fields = (
+	'name'	=>	q`firstname || '' || lastname`,
+	'usergroup_id'	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
+	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
+
+	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
+);
 
 %transforms = (
 	'commission'		=>	[ 's/[^\d\.\-]//g' ],
@@ -79,44 +90,19 @@ my $debug = 0;
 	'purchasing_total_limit'	=>	undef,
 	'wage'				=>	undef,
 	'deleted'			=>	0,
+	'email_quotes_to_myself'	=>	0,
+	'asset_id'			=>	undef,
 );
-
-sub set {
-	my ( $self, $params ) = @_;
-	my @set_fields = ();
-	if ( exists $$params{password} and $$params{password} eq '' ) {
-		delete $$params{password};
-	} # end if
-
-	foreach my $field ( keys %{$params} ) {
-		if ( defined $fields{$field} ) {
-
-			foreach my $transform ( @{$transforms{$field}} ) {
-				eval '$params->{$field} =~ ' . $transform;
-			} # end foreach
-
-			if ( $params->{$field} eq '' and exists $defaults{$field} ) {
-				$params->{$field} = $defaults{$field};
-			} # end if
-
-# if valid db field
-			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
-# Only make changes to fields that have changed
-				$$self{$field} = $$params{$field};
-				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
-			} # end if
-		} else {
-			$log->warn("User::Set::Invalid field requested: ($field)." );
-		} # end if
-	} # end foreach
-	return @set_fields;
-} # end sub set
 
 # if we have previously loaded info for this customer, and it hasn't changed, that field will not be saved.
 # If we have not previously loaded the info, we will just save it whether it has actually changed or not.
 # We do this for efficiency's sake.	
 sub save {
 	my ( $self, $params ) = @_;
+
+	if ( exists $$params{password} and $$params{password} eq '' ) {
+		delete $$params{password};
+	} # end if
 
 	if ( $params and $$params{type} and $$self{type} and ( $$params{'type'} ne $$self{'type'} ) and ( $$params{'type'} ne 'C' ) ) {
 # Notify someone
@@ -173,7 +159,7 @@ sub destroy {
 	my $self = shift;
 
 	my $ac = sql::start_transaction( $dbh );
-	sql::execute( $log, $dbh, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
+	sql::execute( undef, undef, 'DELETE FROM Users_in_Marketing_Categories WHERE User_Id=?', $$self{'id'} );
 
 	foreach my $Quote ( openprint::Quote->find('user_id'=>$$self{'id'}) ) {
 		$Quote->delete();
@@ -268,114 +254,6 @@ sub name {
 	} # end if
 } # end sub name
 
-sub find {
-	my $self = shift;
-	my %param = @_;
-	my $sql = q{SELECT * FROM Users WHERE 1>0};
-	my @values;
-
-	if ( $param{'id'} ) {
-		if ( ref $param{'id'} eq 'ARRAY' ) {
-			if ( @{$param{'id'}} ) {
-				$sql .= q{ AND id IN (}.join(',', map {'?'} @{$param{'id'}} ).')';
-				push @values, @{$param{'id'}};
-			} else {
-				$sql .= q{ AND id IS NULL };
-			} # end if
-		} else {
-			$sql .= q{ AND id=?};
-			push @values, $param{'id'};
-		} # end if
-	} # end if
-	if ( $param{'name'} ) {
-		my ( $first, $last ) = $param{'name'} =~ /(\S+)\s*(\S*)/;
-		if ( $first and $last ) {
-			$sql .= ' AND firstname=? AND lastname=?';
-			push @values, $first, $last;
-		} elsif ( $first ) {
-			$sql .= ' AND firstname=?';
-			push @values, $first;
-		} # end if
-	} # end if
-
-	if ( $param{'type'} ) {
-		if ( ref $param{'type'} eq 'ARRAY' ) {
-			if ( @{$param{'type'}} ) {
-				$sql .= q{ AND type IN ('} . join("','", @{$param{'type'}}) . q{')};
-			} # end if
-		} else {
-			$sql .= q{ AND type = ?};
-			push @values, $param{'type'};
-		} # end if
-	} # end if
-	if ( $param{'company_id'} ) {
-		$sql .= q{ AND company_id=?};
-		push @values, $param{'company_id'};
-	} # end if
-	if ( $param{'usergroup_id'} ) {
-		$sql .= q{ AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=?)};
-		push @values, $param{'usergroup_id'};
-	} # end if
-	if ( $param{'usergroup'} ) {
-		if ( ref $param{'usergroup'} eq 'ARRAY' ) {
-		$sql .= q{ AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id IN (SELECT id FROM usergroups WHERE name IN ('} . join("','", @{$param{'usergroup'}}) . q{')))};
-		} else {
-		$sql .= q{ AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id=(SELECT id FROM usergroups WHERE name=?))};
-		push @values, $param{'usergroup'};
-		} 
-	} # end if
-	if ( $param{'usergroups'} ) {
-		$sql .= q{ AND id IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id IN (SELECT id FROM usergroups WHERE name IN ('} . join("','", @{$param{'usergroups'}}) . q{')))};
-	} # end if
-	if ( $param{'email'} ) {
-		$sql .= ' AND email=?';
-		push @values, lc $param{'email'};
-	} # end if
-	if ( $param{'password'} ) {
-		$sql .= ' AND password=?';
-		push @values, $param{'password'};
-	} # end if
-	if ( exists $param{'email_like'} ) {
-		$sql .= ' AND email LIKE ?';
-		push @values, lc $param{'email_like'};
-	} # end if
-	if ( exists $param{'purchasing_limit_>='} ) {
-		$sql .= ' AND purchasing_limit >= ?';
-		push @values, $param{'purchasing_limit_>='};
-	} # end if
-	if ( exists $param{'web_active'} ) {
-		if ( ! sets::isin( $param{'web_active'}, ['Y','N'] ) ) {
-		$param{'web_active'} = 'N' if $param{'web_active'} == 0;
-		$param{'web_active'} = 'Y' if $param{'web_active'} == 1;
-		} # end if
-		$sql .= ' AND web_active=?';
-		push @values, $param{'web_active'};
-	} # end if
-	if ( exists $param{'deleted'} ) {
-		if ( ref $param{'deleted'} eq 'ARRAY' ) {
-			$sql .= ' AND (deleted IS NULL OR deleted IN (' . join(',', map {'?'} @{$param{'deleted'}}) . '))';
-			push @values, @{$param{'deleted'}};
-		} else {
-			$sql .= ' AND deleted=?';
-			push @values, $param{'deleted'};
-		} # end if
-	} else {
-		$sql .= ' AND (deleted=? OR deleted IS NULL)';
-		push @values, 0;
-	} # end if
-	if ( $param{'order'} ) {
-		$sql .= " ORDER BY $param{'order'}";
-	} # end if
-	my $data = $dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$log->error( "Error loading Users: ($sql) (@values)" . $dbh->errstr() );
-		return;
-	} elsif ( $debug ) {
-		$log->debug( "loading Users: ($sql) (@values) " . $data );
-	} # end if
-	return map { new openprint::User( $_->{id}, $_ ) } @$data;
-} # end sub find
-
 sub assistant_ids {
 	my $self = shift;
 	if ( @_ ) {
@@ -461,6 +339,10 @@ sub po_limit {
 
 	return $$self{'po_limits'}{$type_id};
 } # end sub po_limit
+
+sub Asset {
+	return new openprint::Asset( $_[0]{'asset_id'} );
+} # end sub Asset
 
 1;
 

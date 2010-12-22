@@ -21,6 +21,12 @@ require ssi;
 require misc;
 require configuration;
 require openprint::login;
+require openprint::Upload;
+require openprint::File;
+require openprint::Company;
+require openprint::User;
+require openprint::User_Notification;
+require openprint::Email;
 
 use openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
@@ -51,12 +57,18 @@ sub handler {
 			'password'	=> $request->dir_config('db_password'),
 			);
 
+	my $serial;
+
 	if ( $request->method eq 'POST' ) {
 		$uploaded = 0;
-		my ($serial) = $request->args() =~ /serial=(\d*)/;
+		($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
 		my $rsize=$request->headers_in->{'Content-Length'};
-		sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
+		if ( $serial ) {
+			sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
+		} else {
+			($serial) = sql::execute( undef, undef, q`SELECT nextval('uploads_id_seq')` );
+		} # end if
 		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'company', $company, 'type', 'Web' ] );
 
 		my $upload_hook = sub {
@@ -101,67 +113,81 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 		} # end foreach
 		configuration::init_cache( $log, $dbh, $r->dir_config() );
 		openprint::session_init();
-		my $serial = $r->param('serial');
 		if ( $serial ) {
 			my $rsize=$request->headers_in->{'Content-Length'};
 			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'size', $rsize ] );
-		} else {
-			$log->error("No serial in upload, dumping session");
-			foreach my $k ( keys %session ) {
-				$log->error( "$k -> $session{$k}" );
-			} # end foreach
+		#} else {
+			#$log->error("No serial in upload, dumping session");
+			#foreach my $k ( keys %session ) {
+				#$log->error( "$k -> $session{$k}" );
+			#} # end foreach
 		} # end if
-		upload_files( $r, $log, $dbh, \%variable );
-		my $page = '/upload/_upload_complete.html';
-		my @page_path = split('/', $page );
-		my $content;
-		if (-e $r->dir_config('SkinPath') . $page) {
-			$page = $r->dir_config('SkinPath') . $page;
+		if ( $param{'UploadType'} ) {
+			my $error;
+			eval(sprintf('require openprint::%1$s;
+				$error = openprint::%1$s->handle_upload( $param{qqfile} );
+			', $param{'UploadType'} ));
+			$log->warn( "Eval error of Upload type  $param{'UploadType'} Reason: " . $@ ) if $@;
+			$r->content_type('application/json');
+			if ( $error ) {
+				$log->debug("Printing success:false $error");
+				$r->print( qq|{ "success": false, "error": "$error" }| );
+			} else {
+				$log->debug("Printing success:true");
+				$r->print( q`{ "success": true }` );
+			} # end if
 		} else {
-			$page = $ENV{'DOCUMENT_ROOT'} . $page;
+$log->debug("Doing standrad upload");
+			upload_files( $r, $log, $dbh, \%variable );
+			my $page = '/upload/_upload_complete.html';
+			my @page_path = split('/', $page );
+			my $content;
+			if (-e $r->dir_config('SkinPath') . $page) {
+				$page = $r->dir_config('SkinPath') . $page;
+			} else {
+				$page = $ENV{'DOCUMENT_ROOT'} . $page;
+			} # end if
+			my $content = misc::load_file( $log, $page );
+			$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
+			my $filename = pop @page_path;
+			my $template;
+
+			while ( @page_path ) {
+				my $file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, $filename );
+				if ( -e $file ) {
+					$template = misc::load_file( $log, $file );
+					last;
+				} # end if
+				$file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, 'default.html' );
+				if ( -e $file ) {
+					$template = misc::load_file( $log, $file );
+					last;
+				} # end if
+				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, $filename );
+				if ( -e $file ) {
+					$template = misc::load_file( $log, $file );
+					last;
+				} # end if
+
+				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
+				if ( -e $file ) {
+					$template = misc::load_file( $log, $file );
+					last;
+				} # end if
+				pop @page_path;
+			} # end while
+
+			if ( $template ) {
+				$_ = ssi::variable_substitution( \$template, \%variable );
+				$r->print( $_ );
+			} else {
+				$r->print( $variable{'PageContent'} );
+			} # end if
 		} # end if
-		my $content = misc::load_file( $log, $page );
-        $variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
-        my $filename = pop @page_path;
-        my $template;
-
-		while ( @page_path ) {
-			my $file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, $filename );
-			if ( -e $file ) {
-				$template = misc::load_file( $log, $file );
-				last;
-			} # end if
-			$file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, 'default.html' );
-			if ( -e $file ) {
-				$template = misc::load_file( $log, $file );
-				last;
-			} # end if
-			$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, $filename );
-			if ( -e $file ) {
-				$template = misc::load_file( $log, $file );
-				last;
-			} # end if
-
-			$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
-			if ( -e $file ) {
-				$template = misc::load_file( $log, $file );
-				last;
-			} # end if
-			pop @page_path;
-		} # end while
-
-        if ( $template ) {
-			$_ = ssi::variable_substitution( \$template, \%variable );
-            $r->print( $_ );
-        } else {
-            $r->print( $variable{'PageContent'} );
-        } # end if
 	} # end if
 
 	untie %session;
 	undef %session;
-	#$dbh->disconnect();# if $dbh->{'thread_id'};
-	#$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	return Apache2::Const::OK;
 } # end sub handler
 
@@ -237,29 +263,29 @@ $log->error("No destdir");
 
 				my $upload = $r->upload( 'fileUpload'.$index );
 				if ( ! $upload->link( "$config{'ProjectFilesPath'}$destdir$filename" ) ) {
-$log->error("There was an error saving file $param{'fileUpload'.$index}: to $config{'ProjectFilesPath'}$destdir$filename : $!");
+					$log->error("There was an error saving file $param{'fileUpload'.$index}: to $config{'ProjectFilesPath'}$destdir$filename : $!");
 					$$variable{'error'} .= "There was an error saving file $param{'fileUpload'.$index}: $!<br/>";
 					next;
 				} else {
 					$$variable{'information'} .= "File $param{'fileUpload'.$index} was uploaded successfully.<br/>";
 				} # end if
 
-				if ( $param{'project_id'} ) {
-					  sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE project_id=? AND filename=?}, 
-					  $param{'project_id'} ? $param{'project_id'} : undef, $destdir.$filename );
-				} else {
-				   sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE filename=?}, $destdir.$filename );
-				} # end if
-				sql::insert( $log, $dbh, 'project_files', [
-						'project_id',	$param{'project_id'} ? $param{'project_id'} : undef,
-						'filename',		$destdir.$filename,
-						'description',	$param{'txtDescription'.$index},
-						'upload_id',	$param{'serial'},
-						] );
+                foreach my $File ( openprint::File->find('project_id'=>$param{'project_id'} ? $param{'project_id'} : undef, 'filename'=>$destdir.$filename) ) {
+                    $File->delete();
+                } # end foreach
+                my $File = new openprint::File();
+                $$variable{'error'} .= $File->save({
+                        'project_id'    =>  ( $param{'project_id'} ? $param{'project_id'} : undef ),
+                        'filename'      =>  $destdir.$filename,
+                        'description'   =>  $param{'txtDescription'.$index},
+                        'upload_id'     =>  $param{'serial'},
+                        'size'          =>  $upload->size(),
+                        } );
 			} # end if
 		} # end foreach file
 		if ( $files ) {
 # Notify CSR, and Customer of upload
+			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
 			$$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
 			if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html') {
 				$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_csr_notification.html' );
@@ -267,8 +293,9 @@ $log->error("There was an error saving file $param{'fileUpload'.$index}: to $con
 				$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_csr_notification.html' );
 			} # end if
 			$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
-			my $csr_id;
-			my $to;
+			my $body = ssi::variable_substitution( \$email_template, $variable );
+			my $Mail = new openprint::Email();
+			my @to;
 			my $from;
 			if ( $session{'user_id'} ) {
 				my $User = new openprint::User( $session{'user_id'} );
@@ -280,52 +307,58 @@ $log->error("There was an error saving file $param{'fileUpload'.$index}: to $con
 				} # end if
 			} # end if
 			if ( $session{'company_id'} ) {
-				$csr_id = new openprint::Company( $session{'company_id'} )->salesrep_id();
-			} # end nif
-			if ( $csr_id ) {
-				my $CSR = new openprint::User( $csr_id );
-				$to = sprintf('"%s %s" <%s>', $CSR->get('firstname','lastname','email') ),
-			} else {
-				$to = $config{'OrderingEmail'};
+				my $Company = new openprint::Company( $session{'company_id'} );
+				if ( $Company->salesrep_id() and ( $Company->CSR()->notification('CSR Client File Uploads') ne 'No' ) ) {
+					push @to, $Company->CSR();
+				} # end if
 			} # end if
-			my $email_template = misc::load_file( $log, $config{'SkinPath'}. '/email_template.html' );
-			my $body = ssi::variable_substitution( \$email_template, $variable );
-			my %mail = (
-					SMTP    => $config{'Mail Server'},
-					FROM    => $from,
-					TO		=> $to,
-					BCC		=>	'iconnor@penultima.org',
-					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
-					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp( Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
+			push @to, map { $_->User() } openprint::User_Notification->find('type'=>'Client File Uploads','value'=>'Yes');
+			if ( ! @to ) {
+				push @to, $config{'OrderingEmail'};
+			} # end if
+			if ( @to ) {
+
+				$_ = $Mail->send(
+						SMTP    => $config{'Mail Server'},
+						FROM    => $from,
+						TO		=> \@to,
+#BCC		=>	'iconnor@penultima.org',
+						SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+						ATTACHMENTS	=>	[ '', encode_qp($body), 'text/html', 'quoted-printable' ],
+						);
 
 # Send transcript to uploader
-			if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
-				$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
-			} else {
-				$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
+				if (-e $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html') {
+					$$variable{'ReplacementText'} = misc::load_file( $log, $r->dir_config('SkinPath') . '/email_content/uploadfiles_client_notification.html' );
+				} else {
+					$$variable{'ReplacementText'} = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . '/email_content/uploadfiles_client_notification.html' );
+				} # end if
+				$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
 			} # end if
-			$$variable{'ReplacementText'} = ssi::variable_substitution( \$$variable{'ReplacementText'}, $variable );
-			$from = $to;
+
+			if ( @to == 1 ) {
+				$from = $to[0];
+			} else {
+				$from = $config{'OrderingEmail'};
+			} # end if
+
 			if ( $session{'user_id'} ) {
 				my $User = new openprint::User( $session{'user_id'} );
-				$to = sprintf('"%s %s" <%s>', $User->get('firstname','lastname','email') ),
+				@to = ( $User );
 			} else {
-				$to = $param{'txtEmailAddress'};
+				@to = ( $param{'txtEmailAddress'} );
 			} # end if
-			$body = ssi::variable_substitution( \$email_template, $variable );
-			%mail = (
+			my $body = ssi::variable_substitution( \$email_template, $variable );
+			$_ = $Mail->send(
 					SMTP    => $config{'Mail Server'},
 					FROM    => $from,
-					TO      => $to,
-					BCC		=>	'iconnor@penultima.org',
+					TO      => \@to,
 					SUBJECT => $param{'docket'} ? "Files uploaded for docket: $param{'docket'}" : 'Files Uploaded',
+					ATTACHMENT => [ '', encode_qp($body), 'text/html', 'quoted-printable' ],
 					);
-			misc::send_email_with_attachment( $log, \%mail, ( '', MIME::QuotedPrint::encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ) );
 		} else {
 			$variable{'error'} .= 'No files were uploaded.';
 		} # end if files
-
 	} # end if btnfunction eq Upload Files
 } # end sub upload_files
 
