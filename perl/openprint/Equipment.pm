@@ -37,6 +37,7 @@ $serial= 'Equipment_Index_seq';
 	'smartscheduling'	=>	'smartscheduling',
 	'servicetype_id'	=>	'servicetype_id',
 	'sorting'			=>	'sorting',
+	'message'			=>	'message',
 );
 
 %defaults = (

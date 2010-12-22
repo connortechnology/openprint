@@ -1,10 +1,10 @@
+Please note: Costs may be auto-filled from PO.  Please verify before saving.<br/>
 <table class="List sortable">
 	<tr>
 <? if ( $config{'RFID'} ) ?>
-		<th width="120" align="left">RFID #</th>
-<? else ( $config{'RFID'} ) ?>
-		<th width="75" align="left">Skid ID</th>
+		<th class="RFID">RFID #</th>
 <? endif ( $config{'RFID'} ) ?>
+		<th class="Skid">Skid ID</th>
 		<th width="60" align="left">Quantity</th>
 		<th align="left">Stock</th>
 		<th width="120" align="left">Supplier</th>
@@ -12,7 +12,7 @@
 		<th width="60" align="left">PO</th>
 		<th class="Date">Received</th>
 		<th width="100">Supplier INV</th>
-		<th width="140">Cost</th>
+		<th width="120">Cost</th>
 	</tr>
 <? echo (
 	require openprint::Manifest_Content_Type;
@@ -22,29 +22,28 @@
 			'received_on_end'	=>	sprintf('%.4d-%.2d-%.2d', @param{'received_on_end_year','received_on_end_month','received_on_end_day'} ), 
 			'order'				=>	'received_on',
 	) ) {
-		foreach my $Type ( openprint::Manifest_Content_Type::find('manifest_id'=>$Manifest->id(), 'cost'=>undef, 'order'=>'id') ) {
+		foreach my $Type ( openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id(), 'cost'=>undef, 'order'=>'id') ) {
 			my $Paper = $Type->Paper();
 			my $skid_html = '';
 			my $rfid_html = '';
 			my $qty_html = '';
-			foreach my $MC ( openprint::ManifestContent::find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
+			foreach my $MC ( openprint::ManifestContent->find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
 				$skid_html .= sprintf('<a href="/employee/inventory/skid_details.html?skid_id=%1$d">%1$d</a><br/>', $MC->skid_id() );
 				$rfid_html .= sprintf('<a href="/employee/inventory/rfidtag_details.html?rfidtag_id=%1$s">%1$s</a><br/>', $MC->Skid()->rfidtag_id() );
 				$qty_html .= sprintf('%1$d%2$s<br/>', $MC->quantity(), $MC->units() );
 			} # end foreach
 			$html .= '<tr>';
 			if ( $config{'RFID'} ) {
-				$html .= '<td>'.$rfid_html.'</td>';
-			} else {
-				$html .= '<td>'.$skid_html.'</td>';
+				$html .= '<td class="RFID">'.$rfid_html.'</td>';
 			} # end if
+			$html .= '<td class="Skid">'.$skid_html.'</td>';
 			$html .= '<td>'.$qty_html.'</td>';
 			if ( $Paper->id() ) {
 				$html .= sprintf('<td><a href="/employee/inventory/paper_details.html?paper_id=%1$d">%2$s</a></td>', $Paper->id(), $Paper->to_string() );
 			} else {
 				my %Papers;
 				$html .= '<td>';
-				foreach my $MC ( openprint::ManifestContent::find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
+				foreach my $MC ( openprint::ManifestContent->find('manifest_id'=>$Type->manifest_id(),'type_id'=>$Type->id()) ) {
 					foreach my $SC ( $MC->Skid()->Contents() ) {
 						$Papers{$SC->paper_id()} = $SC->Paper();
 					} # end foreach SC
@@ -57,7 +56,7 @@
 			} # end if
 			
 			$html .= sprintf('<td>%1$s</td>', $Type->Manifest()->Vendor()->name() );
-			$html .= sprintf('<td><a href="/employee/inventory/manifest.html?manifest_id=%1$s">%1$s</a></td>', $Type->manifest_id() );
+			$html .= sprintf('<td><a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a></td>', $Type->manifest_id(), $Type->Manifest()->name() );
 			$html .= '<td>';
 			$html .= sprintf('<a href="/employee/inventory/purchase_order.html?po_id=%1$d">%1$d</a>', $Type->po_id() ) if $Type->po_id();
 			$html .= '</td>';
@@ -65,7 +64,7 @@
 			$html .= sprintf('<a href="/employee/inventory/manifest.html?manifest_id=%1$d">%2$s</a>', $Type->manifest_id(), Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($Type->Manifest()->received_on() ) ) ) if $Type->Manifest()->received_on();
 			$html .= '</td>';
 			$html .= sprintf('<td><input type="text" id="supplier_invoice-%1$d" name="supplier_invoice-%1$d" value="%2$s"></td>', $Type->id(), $Type->supplier_invoice() );
-			$html .= sprintf(q{<td><input type="text" id="cost-%1$d" name="cost-%1$d" value="%2$s" size="6" style="width:auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"><select id="units-%1$d" name="units-%1$d"><option value="/lb">/lb</option><option value="/cwt">/cwt</option></select></td>}, $Type->id(), $Type->cost() );
+			$html .= sprintf(q{<td><input type="text" id="cost-%1$d" name="cost-%1$d" value="%2$s" size="6" style="width:auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');"><select id="units-%1$d" name="units-%1$d"><option value="/lb">/lb</option><option value="/cwt">/cwt</option></select></td>}, $Type->id(), $Type->cost() ? $Type->cost() : $Type->cost_from_po() );
 			$html .= '</tr>';
 		} # end foreach Type
 	} # end foreach Manifest

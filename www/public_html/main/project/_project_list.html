@@ -112,7 +112,7 @@
 			<td align="right"><? echo ( sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $$variable{'Project'}->price3()*$$variable{'conversion_rate'} ) if $$variable{'Project'}->price3(); ) ?></td>
 			<td align="right"><? echo ( $$variable{'Project'}->status(); ) ?></td>
 			<td align="right"><? echo ( Date::Format::time2str($openprint::config{'DateFormat'}, Date::Parse::str2time($$variable{'Project'}->created_on() ) ); ) ?></td>
-			<td class="unprintable" align="center"><input type="checkbox" name="chkDelete<? echo ( $$variable{'Project'}->id(); ) ?>" /></td>
+			<td class="unprintable" align="center"><input type="checkbox" name="project_id" value="<? echo ( $$variable{'Project'}->id(); ) ?>" /></td>
 		</tr>
 		<tr<?rowclass?>> 
 			<td>&nbsp;</td>
@@ -125,5 +125,11 @@
 	<br class="spacer"/>
 <span class="unprintable" style="float: right;">
 <? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"delete_confirm(document.f1);",'','Delete' ); ) ?>
+<? echo (
+	if ( sets::isin( $session{'user_type'}, [ 'E','A' ] ) ) {
+		return ssi::writeButton( $log, $dbh, 'Copy','copy.gif',"popup_window('_copy_popup.html',f1.serialize() );",'','Copy' );
+	} # end if
+	return;
+) ?>
 </span>
 <? endif ( @{$$variable{'Projects'}} == 0 ) ?>

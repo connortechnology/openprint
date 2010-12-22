@@ -168,13 +168,13 @@ sub Types {
 	if ( %params ) {
 		if ( $$self{'id'} ) {
 			$params{'manifest_id'} = $$self{'id'};
-			return openprint::Manifest_Content_Type::find(%params);
+			return openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if
 	if ( ! $$self{'Types'} ) {
 		if ( $$self{'id'} ) {
 			$params{'manifest_id'} = $$self{'id'};
-			@{$$self{'Types'}} = openprint::Manifest_Content_Type::find(%params);
+			@{$$self{'Types'}} = openprint::Manifest_Content_Type->find(%params);
 		} # end if
 	} # end if
 	return @{$$self{'Types'}} if $$self{'Types'};
@@ -185,12 +185,12 @@ sub Contents {
 	my ( $self, %params ) = @_;
 	if ( %params ) {
 		if ( $$self{'id'} ) {
-			return openprint::ManifestContent::find('manifest_id'=>$$self{id}, %params );
+			return openprint::ManifestContent->find('manifest_id'=>$$self{id}, %params );
 		} # end if
 	} # end if
 	if ( ! $$self{'Contents'} ) {
 		if ( $$self{'id'} ) {
-			@{$$self{'Contents'}} = openprint::ManifestContent::find('manifest_id'=>$$self{id} );
+			@{$$self{'Contents'}} = openprint::ManifestContent->find('manifest_id'=>$$self{id} );
 		} # end if
 	} # end if
 	return @{$$self{'Contents'}} if $$self{'Contents'};

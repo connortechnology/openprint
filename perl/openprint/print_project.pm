@@ -312,13 +312,19 @@ sub history_list {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	my $error = '';
-	foreach my $key ( $r->param() ) {
-		if ( $key =~ /chkDelete(\d*)/ ) {
-			$error = try_to_delete_project( $log, $dbh, $variable, $1 );
-		} elsif ( $key eq 'btnFunction' and $r->param($key) eq 'Delete Project' ) {
-			$error = try_to_delete_project( $log, $dbh, $variable, $r->param('ProjectIndex') );
+	if ( $openprint::param{'btnFunction'} eq 'Delete Project' ) {
+		if ( $openprint::param{'project_id'} ) {
+		foreach my $project_id ( ref $openprint::param{'project_id'} eq 'ARRAY' ? @{$openprint::param{'project_id'}} : $openprint::param{'project_id'} ) {
+			$error .= try_to_delete_project( $log, $dbh, $variable, $project_id );
+		} # end foreach project_id
+		} elsif ( $openprint::param{'ProjectIndex'} ) {
+			$error .= try_to_delete_project( $log, $dbh, $variable, $openprint::param{'ProjectIndex'} );
 		} # end if
-	} # end foreach
+	} elsif ( $openprint::param{'btnFunction'} eq 'Reuse Project' ) {
+		foreach my $project_id ( ref $openprint::param{'project_id'} eq 'ARRAY' ? @{$openprint::param{'project_id'}} : $openprint::param{'project_id'} ) {
+			openprint::print_project::reuse_project( $r, $log, $dbh, $openprint::session{_session_id}, $variable, $project_id );
+		} # end if
+	} # end if
 
 	if ( $error ne '' ) {
 		return misc::error( $log, $dbh, $variable, 'Error',$error );
@@ -794,11 +800,11 @@ sub reuse_project {
 
 	my $Project = new openprint::Project( $project_index );
 	my $NewProject = $Project->copy();
-	$NewProject->quantity1( $openprint::param{'quantity1'} );
-	$NewProject->quantity2( $openprint::param{'quantity2'} );
-	$NewProject->quantity3( $openprint::param{'quantity3'} );
-	$NewProject->reference( $openprint::param{'reference'} );
-	$NewProject->comments( $openprint::param{'comments'} );
+	$NewProject->quantity1( $openprint::param{'quantity1'} ) if exists $openprint::param{'quantity1'};
+	$NewProject->quantity2( $openprint::param{'quantity2'} ) if exists $openprint::param{'quantity2'};
+	$NewProject->quantity3( $openprint::param{'quantity3'} ) if exists $openprint::param{'quantity3'};
+	$NewProject->reference( $openprint::param{'reference'} ) if exists $openprint::param{'reference'};
+	$NewProject->comments( $openprint::param{'comments'} ) if exists $openprint::param{'comments'};
 	$NewProject->docket( '' );
 	$NewProject->due_date( '' );
 	$NewProject->user_id( $openprint::session{'user_id'} );

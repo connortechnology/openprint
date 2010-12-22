@@ -2954,6 +2954,13 @@ sub get_aqueous_price {
 			$aqueous_price{'Setup'} = openprint::service::get_price( $log, $dbh, $variable, 'AqueousMakeReady','',$Press);
 			if ( $aqueous_sides == 1 and ! $is_sheetwork ) {
 				$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
+			} elsif ( $$specs{'txtSignatureType'} ne 'Cover Spreads' ) {
+				my $services = $Project->services();
+				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
+				if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
+					# The grind area shouldn't be coated
+					$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
+				} # end if
 			} # end if
 		} # end if
 		if ( ( $side_one_colour_count and $side_two_colour_count ) and $is_sheetwork ) {

@@ -1280,12 +1280,12 @@ sub manifest {
 
 		$variable{'error'} .= $Manifest->save( \%param );
 
-		my @Types = openprint::Manifest_Content_Type::find('manifest_id'=>$Manifest->id());
+		my @Types = openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id());
 		if ( ! @Types ) {
 			my $Type = new openprint::Manifest_Content_Type();
 			$variable{'error'} .= $Type->save({'manifest_id'=>$Manifest->id()});
 		} else {
-			foreach my $Type ( openprint::Manifest_Content_Type::find('manifest_id'=>$Manifest->id()) ) {
+			foreach my $Type ( openprint::Manifest_Content_Type->find('manifest_id'=>$Manifest->id()) ) {
 				my $Paper = save_Paper('-'.$Type->id());
 				if ( ! $Paper ) {
 					$variable{'error'} .= 'Unable to get Stock.<br/>';
@@ -1297,13 +1297,21 @@ sub manifest {
 					$variable{'information'} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
 					foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
 						foreach my $SkidContent ( $C->Skid()->Contents() ) {
+							# If it has the old type,
 							if ( $SkidContent->paper_id() == $Type->paper_id() ) {
+								my $PI = new openprint::PaperInventory();
+								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Type->paper_id(),
+										'quantity'=>-1*$SkidContent->quantity(),
+										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								# Change the type to the new type
 								$SkidContent->save({'paper_id'=>$Paper->id()});
 								foreach my $PA ( openprint::PaperAllocation::find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
 									$PA->save({'paper_id'=>$Paper->id()});
 								} # end foreach PA
 								my $PI = new openprint::PaperInventory();
-								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Paper->id(),
+										'quantity'=>$SkidContent->quantity(),
+										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
 								
 							} # end if
 						} # end foreach SkidContent
@@ -2151,5 +2159,10 @@ sub _skids_results {
 
 sub _update_taxes {
 } # end sub _update_taxes
+
+sub _paper_log {
+	ssi::save_params( '/employee/inventory/paper_details.html', ( 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','limit' ) );
+} # end _paper_log
+
 1;
 __END__

@@ -152,16 +152,6 @@
 			<label>FSC Code:</label>
 			<input type="text" id="fsc_code-<?type_id?>" name="fsc_code-<?type_id?>" value="<? echo ( $param{'fsc_code-'.$$variable{'type_id'}} ) ?>" size="13" style="width: auto;" />
 		</p>
-		<? if ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
-		<p>
-			<label>Cost (/CWT):</label>
-			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
-		</p>
-		<p>
-			<label>Supplier Invoice#:</label>
-			<input type="text" id="supplier_invoice-<?type_id?>" name="supplier_invoice-<?type_id?>" value="<? echo ( $$variable{'Type'}->supplier_invoice() ) ?>" />
-		</p>
-		<? endif ( openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) ?>
 		<p>
 			<label>Docket:</label>
 			<input type="text" id="docket-<?type_id?>" name="docket-<?type_id?>" value="<? echo ( $$variable{'Type'}->docket() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');new Ajax.Updater('PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>','_manifest_purchase_orders.html', { method: 'get', parameters: { supplier_id: $('supplier_id').value, Docket: $('docket').value} } );"/>
@@ -170,11 +160,29 @@
 			<label>Purchase Order:</label>
 			<input type="text" id="po_id-<?type_id?>" name="po_id-<?type_id?>" value="<? echo ( $$variable{'Type'}->po_id() ) ?>" size="10" style="width: auto;" onkeyup="this.value=this.value.replace(/\D/,'');" /><? echo ( $$variable{'Type'}->po_id() ? ssi::writeButton( $log, $dbh, 'GoPO'.$$variable{'Type'}->id(), 'go.gif', '', '/employee/inventory/purchase_order_view.html?po_id='.$$variable{'Type'}->po_id(), 'Go' ) : '' ) ?>
 		</p>
+		<? if ( $$variable{'Type'}->po_id() ) ?>
+		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<p>
+			<label>Cost from PO (/CWT):</label>
+			<? echo ( openprint::Currency::format( $$variable{'Type'}->cost_from_po() ) ) ?>
+		</p>
+		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<? endif ( $$variable{'Type'}->po_id() ) ?>
 		<div id="PurchaseOrders<? echo ( $$variable{'Type'}->id() ) ?>">
 	<? if ( ! $$variable{'Manifest'}->po_id() ) ?>
 			<!--#include virtual="_manifest_purchase_orders.html"-->
 	<? endif ( ! $$variable{'Manifest'}->po_id() ) ?>
 		</div>
+		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<p>
+			<label>Cost (/CWT):</label>
+			<input type="text" id="cost-<?type_id?>" name="cost-<?type_id?>" value="<? echo ( $$variable{'Type'}->cost() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
+		</p>
+		<p>
+			<label>Supplier Invoice#:</label>
+			<input type="text" id="supplier_invoice-<?type_id?>" name="supplier_invoice-<?type_id?>" value="<? echo ( $$variable{'Type'}->supplier_invoice() ) ?>" />
+		</p>
+		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 	</div>
 	<br class="spacer"/>
 	<br class="spacer"/>

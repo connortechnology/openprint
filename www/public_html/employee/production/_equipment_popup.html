@@ -1,0 +1,16 @@
+<form id="equipment_popup_form" name="equipment_popup_form" action="" >
+	<input type="hidden" name="equipment_id" value="<? echo ( $param{'equipment_id'} ) ?>" />
+	<fieldset><legend>Edit <? echo ( $$variable{'Equipment'}->strid() .' ' . $$variable{'Equipment'}->name() ) ?></legend>
+		<p><label>Message:</label>
+		<textarea name="message" id="message" rows="<? echo ( ssi::count_lines( $$variable{'Equipment'}->message() ); ) ?>" cols="" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Equipment'}->message() ) ?></textarea>
+		</p>
+		<p class="buttons">
+			<? echo ( my $html;
+				$html .= ssi::writeButton( $log, $dbh, 'SaveEquipment', 'save.gif', q`new Ajax.Updater('message`.$param{'equipment_id'}.q`','_equipment_message.html', {parameters:equipment_popup_form.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' );
+				$html .= ssi::writeButton( $log, $dbh, 'CancelEquipment', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' );
+				return $html;
+			) ?>
+		</p>
+	</fieldset>
+	<input type="hidden" name="action" value="Save" />
+</form>

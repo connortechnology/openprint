@@ -4,11 +4,11 @@ package openprint::SkidContent;
 use strict;
 
 require sql;
-use vars qw( $log $dbh %fields %transforms %defaults $table $serial );
+use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 0;
+$debug = 0;
 
 %fields = (
 	'id'			=>	'id',
@@ -123,7 +123,25 @@ sub quality {
     return $$self{'quality'};
 } # end sub quality
 
-1;
+# Looks to find a PO matching this stock and pulls the value from it.
+sub cost {
+	my $self = $_[0];
+	my $MC = openprint::ManifestContent->find_one('skid_id'=>$$self{'skid_id'},'paper_id'=>$$self{'paper_id'});
+	if ( ! $MC ) {
+		#$log->debug("No Manifest Content found for skid_id $$self{'skid_id'}, paper_id $$self{'paper_id'}");
+		return;
+	} # end if
+	if ( ! $MC->Type()->po_id() ) {
+		#$log->debug("No Po_id skid_id $$self{'skid_id'}, paper_id $$self{'paper_id'}");
+		return;
+	} # end if
+ if ( $MC->cost() ) {
+#$log->debug("Returning cost from Manifest");
+	return $MC->cost();
+	} # end if
+#$log->debug("Returning cost from PO");
+	return $MC->Type()->cost_from_po();
+} # end sub cost
 
+1;
 __END__
-~       

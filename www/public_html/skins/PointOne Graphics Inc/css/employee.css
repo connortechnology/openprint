@@ -73,10 +73,6 @@ table tr .name {
 	text-align: left;
 	width: 160px;
 }
-table tr .ip {
-	text-align: left;
-	width: 80px;
-}
 
 table tr .mac {
 	text-align: left;
@@ -93,4 +89,41 @@ table tr .ip {
 
 #Results table tr.totals {
 	margin-bottom: 20px;
+}
+.ZM_Monitors .thumbnail {
+	text-align: left;
+	width: 320px;
+}
+table .RFID {
+	width: 140px;
+	text-align: left;
+}
+table .Skid {
+	width: 70px;
+	text-align: left;
+}
+.ZM_Monitors .name {
+	text-align: left;
+	padding-left: 5px;
+}
+.ZM_Monitors .function {
+	width: 100px;
+	text-align: left;
+	padding-left: 5px;
+}
+.ZM_Monitors .Montage .thumbnail {
+	width: 160px;
+} 
+.ZM_Monitors .Montage ul {
+	list-style: none;
+	margin: 0px;
+	padding: 0px;
+}
+.ZM_Monitors .Montage ul li {
+	width: 160px;
+	height: 120px;
+	float: left;
+	margin: 10px 10px 10px 10px;
+	padding: 0px;
+	list-style: none;
 }

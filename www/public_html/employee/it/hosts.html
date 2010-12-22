@@ -1,7 +1,7 @@
 <script type="text/javascript">
 function load_host( form, options ) {
 	var p = form.serialize(true);
-	if ( options.order )
+	if ( options && options.order )
 		p.order = options.order;
 	
 	new Ajax.Updater( 'Results','/employee/it/_hosts.html', { method: 'get', parameters: p } );
@@ -28,21 +28,21 @@ Please select a host to view/edit.<br>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_start' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_start', { 'with_today' => 1 } ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_end' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_end', { 'with_today' => 1 } ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Last Updated:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start', { 'with_today' => 1 } ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end', { 'with_today' => 1 } ); ) ?>
 			</span>
 		</p>
 <!--

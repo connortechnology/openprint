@@ -1,0 +1,24 @@
+<form name="copy_popup_form" method="post" action="/main/project/history.html">
+	<? echo ( join("\n", map { '<input type="hidden" name="project_id" value="'.$_.'" />' } ( ref $param{'project_id'} eq 'ARRAY' ? @{$param{'project_id'}} : ( $param{'project_id'} ) ) ); ) ?>
+	<? if ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
+	<fieldset>
+			If you would like to assign this project to a different customer, please select them now. You will be logged in as the selected customer and any orders or quotes you make from then on will be recorded in their history.
+		<p>
+			<label>Company:</label>
+			<input type="text" onkeyup="filterDDM(this, this.form.ddmCompany);" size="4" style="width: auto;"/>
+			<select name="ddmCompany">
+				<option value="">Select a Customer</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'company_id'} ); ) ?>
+			</select>
+		</p>
+	</fieldset>
+	<? endif ( $session{'user_type'} eq 'E' or $session{'user_type'} eq 'A' ) ?>
+	Please click &quot;Save &amp; Continue&quot; if you have provided all the relevant project information.
+	<p class="buttons">
+		<? echo ( join('',
+				ssi::writeButton( $log, $dbh, 'Cancel','cancel.gif','popupWin.destroy();','','Cancel'),
+				ssi::writeButton( $log, $dbh, 'SaveAndContinue','save_and_continue.gif','copy_popup_form.submit();','','Save And Continue'),
+		); ) ?>
+	</p>
+	<input type="hidden" name="btnFunction" value="Reuse Project"/>
+</form>
