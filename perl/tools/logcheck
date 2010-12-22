@@ -7,6 +7,8 @@ use sets;
 use strict;
 use Date::Parse;
 use Socket;
+require openprint::Blacklist;
+require openprint::Host;
 
 require logger;
 
@@ -63,6 +65,7 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_(unix|krb5)\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s*$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_(unix|krb5)\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for illegal user [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for illegal user root from ([\._a-zA-Z0-9\-]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: 1 more authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
@@ -82,13 +85,14 @@ foreach my $log_file ( @log_files ) {
 	if ( open( FH, "<$log_file" ) ) {
 		foreach my $line (<FH>) {
 			foreach my $re ( @re ) {
-print "Trying \n$re against\n $line\n" if $opts->{debug};
+print "Trying $re against $line\n" if $opts->{debug};
 				if ( $line =~ /$re/ ) {
 					my ($when, $source ) = ( $1, $2 );
 					print "match for $source\n" if $opts->{debug};
 					my $ip;
 					if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
 						# Is an IP
+					print "$source is an ip\n" if $opts->{debug};
 						$ip = $source;
 					} else {
 						# is a hostname
@@ -98,7 +102,9 @@ print "Trying \n$re against\n $line\n" if $opts->{debug};
 							print "Got $ip for $source\n" if $opts->{debug};
 						} # end if
 					} # end if
-					next if $ip and @whitelist and sets::isin( $ip, \@whitelist );
+					if ( $ip and @whitelist and sets::isin( $ip, \@whitelist ) ) {
+						print "$ip is whitelisted\n" if $opts->{debug};
+					} # end if
 					if ( ! $ip ) {
 						print "No ip for $source\n" if $opts->{debug};
 					} else {
@@ -111,6 +117,8 @@ print "Trying \n$re against\n $line\n" if $opts->{debug};
 						if ( (!$last_seen) or ($last_seen < $occurrence) ) {
 							$host_counts{$ip}{'count'} += 1;
 							$host_counts{$ip}{'update'} = 1;
+						} else {
+						print "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" if $opts->{debug};	
 						} # end if
 					} # end if
 					last;
@@ -141,7 +149,14 @@ if ( $opts->{'blacklist'} ) {
 		die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
 	} else {
 		foreach my $ip ( sql::execute( undef, undef, q`SELECT ip FROM blacklist WHERE updated_on > NOW()-'2 months'::interval AND count > 5 ORDER BY ip` ) ) {
-			print FH "$ip\n";
+			my $Blacklist = new openprint::Blacklist( $ip );
+			if ( my $macs = $Blacklist->Host()->mac() ) {
+				foreach my $mac ( @{$macs} ) {
+					print FH "~$mac\n";
+				} # end foreach mac
+			} else {
+				print FH "$ip\n";
+			} # end if
 		} # end foreach ip
 		close(FH);
 	} # end if
