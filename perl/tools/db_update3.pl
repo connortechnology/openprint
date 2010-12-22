@@ -53,6 +53,15 @@ if ( ! exists $$data{'amount_locked'} ) {
 if ( ! exists $$data{'total_locked'} ) {
 	$dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
 }
+
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='blacklist'", 'column_name');
+if ( ! exists $$data{'id'} ) {
+	$dbh->do('alter table blacklist drop constraint "blacklist_pkey"');
+	$dbh->do('alter table blacklist add id SERIAL');
+	$dbh->do('alter table blacklist add primary key (id);');
+	$dbh->do('create index blacklist_ip_idx on blacklist (ip);');
+} # end if
+
 $dbh->disconnect();
 1;
 __END__
