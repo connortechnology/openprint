@@ -18,6 +18,9 @@ $serial = 'hosts_id_seq';
 	'monitor'		=>	'monitor',
 	'description'	=>	'description',
 	'dhcp'			=>	'dhcp',
+	'created_on'	=>	'created_on',
+	'updated_on'	=>	'updated_on',
+	'count'			=>	'count',
 );
 %transforms = (
 );
