@@ -2954,7 +2954,8 @@ sub get_aqueous_price {
 			$aqueous_price{'Setup'} = openprint::service::get_price( $log, $dbh, $variable, 'AqueousMakeReady','',$Press);
 			if ( $aqueous_sides == 1 and ! $is_sheetwork ) {
 				$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
-			} elsif ( $$specs{'txtSignatureType'} ne 'Cover Spreads' ) {
+			} elsif ( $$specs{'txtSignatureType'} eq 'Cover Spreads' and $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' ) ) {
+				# For inside of COver when AQ coated... can't have AQ on the binding apparently
 				my $services = $Project->services();
 				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 				if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
