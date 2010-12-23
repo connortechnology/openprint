@@ -206,6 +206,7 @@ sub expenses {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
 		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );
+		$param{'paid_on'} = sprintf('%.4d-%.2d-%.2d', @param{'paid_on_year','paid_on_month','paid_on_day'} );
 		$param{'invoiced_on'} = sprintf('%.4d-%.2d-%.2d', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} );
 		if ( ! $param{'recipient_id'} ) {
 			my $Recipient = openprint::Company->find_one('name_lc'=>lc$param{'recipient'});
@@ -220,6 +221,11 @@ sub expenses {
 			delete $param{'category'};
 		} else {
 			delete $param{'category_id'};
+		} # end if
+		if ( $param{'account_id'} ) {
+			delete $param{'account'};
+		} else {
+			delete $param{'account_id'};
 		} # end if
 		my $Expense = new openprint::Expense( $param{'expense_id'} );
 		if ( $variable{'error'} .= $Expense->save( \%param ) ) {

@@ -54,16 +54,36 @@ sub charge {
 	} # end if
 
 	if ( $self->Expense()->owner_id() and ( ! defined $$self{'charge'} ) ) {
+		if ( $self->Tax()->period_end() ) {
+			# See if tax is applicabale
+			my $period_end = Date::Parse::str2time( $self->Tax()->period_end() );
+			my $invoiced_on = Date::Parse::str2time( $self->Expense()->invoiced_on() );
+			if ( $period_end < $invoiced_on ) {
+				$$self{'charge'} = 0;
+				return $$self{'charge'};
+			} # end if
+		} # end if
+		if ( $self->Tax()->period_start() ) {
+			# See if tax is applicabale
+			my $period_start = Date::Parse::str2time( $self->Tax()->period_start() );
+			my $invoiced_on = Date::Parse::str2time( $self->Expense()->invoiced_on() );
+			if ( $period_start < $invoiced_on ) {
+				$$self{'charge'} = 0;
+				return $$self{'charge'};
+			} # end if
+		} # end if
 		if ( sets::isin( $self->name(), ['GST','HST'] ) ) {
 			if ( $self->Expense()->Company()->taxexempt1() eq 'Y' ) {
 				$$self{'charge'} = 0;
+			} else {
+				$$self{'charge'} = 1;
 			} # end if
-			$$self{'charge'} = 1;
 		} elsif ( sets::isin( $self->name(), ['PST'] ) ) {
 			if ( $self->Expense()->Company()->taxexempt2() eq 'Y' ) {
 				$$self{'charge'} = 0;
+			} else {
+				$$self{'charge'} = 1;
 			} # end if
-			$$self{'charge'} = 1;
 		} # end if 
 	} # end if
 	return $$self{'charge'};

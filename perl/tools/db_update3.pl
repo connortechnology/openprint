@@ -36,16 +36,21 @@ if ( sets::isin( 'article_categories', \@tables ) ) {
 		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
 	} # end if
 }
-if ( ! sets::isin( 'assets', \@tables ) ) {
-	$dbh->do( misc::load_file( $log, '../openprint/sql/Assets.sql' ) );
-	die $dbh->errstr() if $dbh->errstr();
-} # end if
-
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 if ( ! exists $$data{'asset_id'} ) {
 	$dbh->do('ALTER TABLE users add asset_id INTEGER');
 	$dbh->do('ALTER TABLE users add FOREIGN KEY (asset_id) REFERENCES Assets (id)');
 } # end if
+if ( ! sets::isin( 'assets', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Assets.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+
+if ( ! sets::isin( 'expenses', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Expenses.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+}
+
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='expenses'", 'column_name');
 if ( ! exists $$data{'amount_locked'} ) {
 	$dbh->do('ALTER TABLE expenses add amount_locked BOOLEAN NOT NULL default false');
@@ -53,23 +58,29 @@ if ( ! exists $$data{'amount_locked'} ) {
 if ( ! exists $$data{'total_locked'} ) {
 	$dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
 }
+if ( ! exists $$data{'account_id'} ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Expense_Accounts.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+	$dbh->do('ALTER TABLE expenses add account_id INTEGER');
+	$dbh->do('ALTER TABLE expenses add FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id)');
+}
 
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
 if ( ! exists $$data{'count'} ) {
-	$dbh->do('ALTER TABLE hosts add count integer';
+	$dbh->do('ALTER TABLE hosts add count integer');
 	$dbh->do('UPDATE hosts set count=(SELECT count FROM blacklist WHERE blacklist.ip=hosts.ip)');
 }
 if ( ! exists $$data{'blacklist'} ) {
-	$dbh->do('ALTER TABLE hosts add blacklist BOOLEAN NOT NULL default false';
+	$dbh->do('ALTER TABLE hosts add blacklist BOOLEAN NOT NULL default false');
 } # end if
 if ( ! exists $$data{'whitelist'} ) {
-	$dbh->do('ALTER TABLE hosts add whitelist BOOLEAN NOT NULL default false';
+	$dbh->do('ALTER TABLE hosts add whitelist BOOLEAN NOT NULL default false');
 } # end if
 if ( ! exists $$data{'created_on'} ) {
-	$dbh->do('ALTER TABLE hosts add created_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()';
+	$dbh->do('ALTER TABLE hosts add created_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
 } # end if
 if ( ! exists $$data{'updated_on'} ) {
-	$dbh->do('ALTER TABLE hosts add updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()';
+	$dbh->do('ALTER TABLE hosts add updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
 } # end if
 
 $dbh->disconnect();
