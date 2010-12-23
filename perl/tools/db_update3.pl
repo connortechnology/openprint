@@ -54,12 +54,22 @@ if ( ! exists $$data{'total_locked'} ) {
 	$dbh->do('ALTER TABLE expenses add total_locked BOOLEAN NOT NULL default false');
 }
 
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='blacklist'", 'column_name');
-if ( ! exists $$data{'id'} ) {
-	$dbh->do('alter table blacklist drop constraint "blacklist_pkey"');
-	$dbh->do('alter table blacklist add id SERIAL');
-	$dbh->do('alter table blacklist add primary key (id);');
-	$dbh->do('create index blacklist_ip_idx on blacklist (ip);');
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='hosts'", 'column_name');
+if ( ! exists $$data{'count'} ) {
+	$dbh->do('ALTER TABLE hosts add count integer';
+	$dbh->do('UPDATE hosts set count=(SELECT count FROM blacklist WHERE blacklist.ip=hosts.ip)');
+}
+if ( ! exists $$data{'blacklist'} ) {
+	$dbh->do('ALTER TABLE hosts add blacklist BOOLEAN NOT NULL default false';
+} # end if
+if ( ! exists $$data{'whitelist'} ) {
+	$dbh->do('ALTER TABLE hosts add whitelist BOOLEAN NOT NULL default false';
+} # end if
+if ( ! exists $$data{'created_on'} ) {
+	$dbh->do('ALTER TABLE hosts add created_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()';
+} # end if
+if ( ! exists $$data{'updated_on'} ) {
+	$dbh->do('ALTER TABLE hosts add updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()';
 } # end if
 
 $dbh->disconnect();
