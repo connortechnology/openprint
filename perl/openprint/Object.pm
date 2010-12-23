@@ -286,7 +286,10 @@ sub find {
 	my $debug = eval '$'.$type.'::debug';
 
 	my %params = @_;
-	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
+	my $sql = 'SELECT ';
+	$sql .= 'DISTINCT' if $params{'distinct'};
+	delete $params{'distinct'};
+	$sql .= ' * FROM '.$table.' WHERE 1>0';
 	my @values;
 	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
 	delete $params{'dbh'};
