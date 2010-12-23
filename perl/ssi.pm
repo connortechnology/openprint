@@ -466,21 +466,21 @@ $log->debug("$year-$month-$day");
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
 	foreach my $o ( split(',', $$options{'order'} ) ) {
 		if ( $o eq 'y' ) {
-			$html .= sprintf('<select name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+			$html .= sprintf('<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= return_years( undef, undef, $year );
 			$html .= '</select>';
 		} elsif ( $o eq 'm' ) {
-			$html .= sprintf('<select name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+			$html .= sprintf('<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
 		} elsif ( $o eq 'd' ) {
-			$html .= sprintf('<select name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getdays( $day, $year, $month );
 			$html .= '</select>';
 		} # endif
 	} # end foreach o
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', 'set_today( f1.'.$prefix.'_year, f1.'.$prefix.'_month, f1.'.$prefix.'_day );'.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'T' );
 	} # end if
 	$html .= '</span>';
 	return $html;
