@@ -67,31 +67,18 @@ sub calculate_signatures {
 	my ( $log, $dbh, $variable, $project_index ) = @_;
 
 	my $status;
-$openprint::log->debug("****************************************************************Starting MultiPage::calculate_signatures");
+$openprint::log->debug("****************************************************************Starting SinglePage::calculate_signatures");
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	my @signatures = sort $Project->signatures({'type'=>'Interior Pages'});
-	push @signatures, sort $Project->signatures({'type'=>'Cover Pages'});
-	push @signatures, sort $Project->signatures({'type'=>'Gate Folded Pages'});
-	@signatures = $Project->signatures() if ! @signatures;
+	@signatures = $Project->signatures();
 $openprint::log->debug( "Signature: @signatures");
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
-
-# Clear these so that when we start recalculating, we get large signatures first.
-if ( 0 ) {
-		# Not neccessary anymore?
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
-				openprint::service::insert_service_specs( $log, $dbh, $project_index, $signatures[$i], 'PageQuantity'.$qty_index, '' );
-			} # end if
-		} # end foreach
-} # end if
 
 		if ( $$printing_specs{'PrintingType'} ) {
 			if ( 
@@ -110,8 +97,8 @@ if ( 0 ) {
 						$j-=1;
 					} # end if
 				} # end for
-			} # end if
-		} # end if
+			} # end if any have a different PrintingType
+		} # end if PrintingType
 	} # end for
 
 	my @groups = sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
@@ -177,7 +164,6 @@ $openprint::log->debug("Sigs in group $group : @sigs " );
 			} # end while Additional Imposition
 
 			# Clean up any leftovers
-$openprint::log->debug("Remaining sigs " . @sigs);
 			while ( my $ss_id = shift @sigs ) {
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $ss_id );
 				@signatures = sets::exclude( [ $ss_id ], \@signatures );
