@@ -2109,11 +2109,7 @@ sub calculate_impositions {
 		} # end if
 	} # end if
 
-<<<<<<< HEAD
- if ( $debug or 0 ) {
-=======
 if ( $debug or 0 ) {
->>>>>>> 9a31f172cdd24d615e2979b56a091589dbf62a41
 $log->debug("Press $$Press{strid} Impositions beforefiltering: " . @impositions );
 	foreach my $imp ( @impositions ) {
 		$imp->display();

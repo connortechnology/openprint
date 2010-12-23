@@ -270,12 +270,8 @@ $openprint::log->warn("Hey, insert_service_spec didn't update the hash!");
 
 		$dbh->do( "SELECT FOR UPDATE * FROM tbl_Projects WHERE id=".$$Project{'id'} ) or $log->error( DBI->errstr );
 # Sets up the book service
-<<<<<<< HEAD
 		openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'MultiPage' );
-=======
-		openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'Multipage' );
 		sql::end_transaction( $dbh, $ac );
->>>>>>> 9a31f172cdd24d615e2979b56a091589dbf62a41
 
 # Setup the colours
 		if ( $$specs{'Colours'} eq '4/4' ) {
