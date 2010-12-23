@@ -284,10 +284,12 @@ if ( $config{'RFID'} ) {
 		
 } # end if
 
+my $log_count;
 foreach my $Log ( openprint::logRecord::find('when_end'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
-$log->debug("deleteing log for " .$Log->date_time() );
-	#$Log->delete();
+	$Log->delete();
+	$log_count += 1;
 } # end foreach Log
+$log->warn("Deleted $log_count log entries");
 
 $dbh->disconnect();
 1;
