@@ -13,11 +13,11 @@ Please select a host to view/edit.<br>
 	<fieldset class="filters"><legend>Choose Host</legend>
 		<p>
 			<label for="ip">Host IP</label>
-			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d]/,'');" onkeydown="this.form.hostname.value='';if(event.keyCode == 13){load_host($('f1'));}"/>
+			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d]/,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event.keyCode == 13){load_host($('f1'));}"/>
 			Hostname:
-			<input type="text" id="hostname" name="hostname" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="hostname" name="hostname" size="16" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
 			MAC:
-			<input type="text" id="mac" name="mac" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="mac" name="mac" size="16" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "load_host(\$('f1'));",'','Load' ); ) ?>
 		</p>
 	</fieldset>
