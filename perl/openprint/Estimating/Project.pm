@@ -256,6 +256,8 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 
 # It's a multi-page publication
 		my $ac = sql::start_transaction( $dbh );
+
+		# This is kinda neccessary, because clicking the recalc button skips over the javascript mutex,  so we need a real one... this seems as good a place as any.
 		foreach my $spec ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalHeight','txtTotalPageQuantity','rdbCover','rdbTemplateType','PrintingType' ) {
 			if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
@@ -265,10 +267,15 @@ $openprint::log->warn("Hey, insert_service_spec didn't update the hash!");
 				} # end if
 			} # end if
 		} # end foreach
-		sql::end_transaction( $dbh, $ac );
 
+		$dbh->do( "SELECT FOR UPDATE * FROM tbl_Projects WHERE id=".$$Project{'id'} ) or $log->error( DBI->errstr );
 # Sets up the book service
+<<<<<<< HEAD
 		openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'MultiPage' );
+=======
+		openprint::service::internal_calc( $log, $dbh, $variable, $$Project{'id'}, $$services{''}[0], 'Multipage' );
+		sql::end_transaction( $dbh, $ac );
+>>>>>>> 9a31f172cdd24d615e2979b56a091589dbf62a41
 
 # Setup the colours
 		if ( $$specs{'Colours'} eq '4/4' ) {
