@@ -109,7 +109,6 @@ sub handler {
 				$variable{'Redirect'} = '';
 			} # end if
 		} # end while
-
 	} # end if
 
 	if ( $variable{'ExternalRedirect'} ) {
@@ -122,10 +121,10 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			$r->print( $_ );
 		} # end foreach
 	} else {
-		$variable{'SiteTitle'} = $r->dir_config('SiteTitle');
-		$variable{'SecureSiteURL'} = $r->dir_config('SecureSiteURL');
-		$variable{'siteURL'} = $r->dir_config('siteURL');
-		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
+		$variable{'SiteTitle'} = $config{'SiteTitle'};
+		$variable{'SecureSiteURL'} = $config{'SecureSiteURL'};
+		$variable{'siteURL'} = $config{'siteURL'};
+		$variable{'PageTitle'} = $config{'SiteTitle'} .' - ' . $page;
 
 	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
 		if ( ! exists $variable{'PageContent'} ) {
@@ -138,7 +137,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			} else {
 				$content = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'} . $page );
 				if ( ! $content ) {
-					$log->error("Found no content at $ENV{'DOCUMENT_ROOT'}$page");
+					$log->error("Found no content at $ENV{'DOCUMENT_ROOT'}$page instead of $config{SkinPath}/$page");
 				} # end if
 			} # end if
 			#$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
