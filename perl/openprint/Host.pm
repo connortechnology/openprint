@@ -18,9 +18,9 @@ $serial = 'hosts_id_seq';
 	'monitor'		=>	'monitor',
 	'description'	=>	'description',
 	'dhcp'			=>	'dhcp',
-	'count'			=>	'count',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
+	'count'			=>	'count',
 );
 %transforms = (
 );
@@ -34,6 +34,7 @@ $serial = 'hosts_id_seq';
 	'dhcp'		=>	0,
 	'created_on'	=>	q`'NOW()'`,
 	'updated_on'	=>	q`'NOW()'`,
+	'count'		=>	undef,
 );
 sub resolve {
 	my ( $self ) = @_;
