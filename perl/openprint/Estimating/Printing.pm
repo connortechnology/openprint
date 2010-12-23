@@ -2060,7 +2060,7 @@ sub calculate_impositions {
 		$SpreadLayout = ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} eq 'Y' ? $$sig_specs{'PageQuantity'.$qty_index} : $$sig_specs{'txtUnspecifiedPageQuantity'.$qty_index} ) / $$sig_specs{'txtSpreadSize'};
 		$cache_string = join('-', $$Press{id}, $SpreadLayout, @$sig_specs{'PrintingTypes', 'PreviousStockType', 'PreviousGrainDirection'} );
 		if ( $SpreadLayout > 0 ) {
-			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 1;
+			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug or 0;
 			if ( $use_converted_imposition_cache and ( $_ = $converted_imposition_cache{$cache_string} ) ) {
 				@impositions = map { $_->copy() } @{$_};
 				#my @c = openprint::imposition::convert_impositions( $SpreadLayout, $$sig_specs{'txtSpreadSize'}, \@impositions );
@@ -2075,10 +2075,12 @@ sub calculate_impositions {
 		} # end if
 	} # end if
 
-$log->debug("Press $$Press{strid} Impositions beforefiltering: " . @impositions ) if $debug or 1;
+if ( $debug or 0 ) {
+$log->debug("Press $$Press{strid} Impositions beforefiltering: " . @impositions );
 	foreach my $imp ( @impositions ) {
 		$imp->display();
 	} # end foreach
+} # end if
 
 	if ( ( $$sig_specs{'chkOverrideSheetSize'.$qty_index} eq 'Y' ) and ! $$sig_specs{"OverrideStockWidth$qty_index"} ) {
 		@$sig_specs{"OverrideStockWidth$qty_index","OverrideStockHeight$qty_index"} = split('x', $$sig_specs{"ddmStockSheetSize$qty_index"} );
@@ -2509,7 +2511,7 @@ $recurse = 1;
 						if ( ( ! $$sig_price{'complete'} ) or ( ! $$sig_price{'Imposition'} ) ) {
 							$$price{'complete'} = $$sig_price{'complete'} = 0;
 							$additional_price = 10000000;
-							$openprint::log->warn('Couldnt calculate full price');
+							$openprint::log->warn('Couldnt calculate full price') if $debug;
 						} else {
 							@{$$price{'Impositions'}} = @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
 
@@ -2613,6 +2615,12 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 						$PaperCounts{$paper_string} = $Paper->minimum_order();
 					} # end if
 				} # end if
+if ( 0 ) {
+$openprint::log->debug("Paper debug: $paper_string");
+$openprint::log->debug("Paper debug: " . $Paper->to_string() );
+$openprint::log->debug("Paper debug: " . $Paper->wpsi() );
+$openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
+}
 				my $weight = $Paper->type() eq 'Sheet' ? ceil($PaperCounts{$paper_string} * $Paper->sheet_weight()) : $PaperCounts{$paper_string};
 				my %paper_price = $Paper->get_price( $weight );
 				$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $weight / 100 );
@@ -2674,7 +2682,7 @@ $openprint::log->error("Different paper in count versus imposition: $paper_strin
 					push @all_impositions, @{$other_impositions}, @{$$price{'Impositions'}};
 					
 #my $starttime = gettimeofday();
-$openprint::log->debug("Stitching::signature_calc");
+#$openprint::log->debug("Stitching::signature_calc");
 					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@all_impositions );
 					if ( $$results{'Status'} eq 'uncalculated' ) {
 						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
