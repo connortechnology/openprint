@@ -101,7 +101,7 @@ sub find {
 			} # end if
 		} # end foreach
 	} # end if
-if ( $params{'servicetype_id'} ) {
+if ( exists $params{'servicetype_id'} ) {
         if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
             $sql .= ' AND servicetype_id={?}';
             push @values, $params{'servicetype_id'};

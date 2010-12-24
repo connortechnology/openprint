@@ -207,7 +207,9 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	} // end if
+	if ( ! ( options && options.content ) ) {
 	popupWin.setHTMLContent('Loading... please wait');
+	} // end if
 	if ( options && options.center != "" ) {
 		if ( options.center == "true" ) {
 			popupWin.showCenter();
@@ -217,10 +219,14 @@ onDestroy: function(eventName, win) {
 	} else {
 		popupWin.showCenter();
 	} // end if
-	if ( parameters ) {
-		url += '?' + parameters;
-	}
-	popupWin.setAjaxContent(url, null , true);
+	if ( options && options.content ) {
+		popupWin.setHTMLContent( options.content );
+	} else {
+		if ( parameters ) {
+			url += '?' + parameters;
+		}
+		popupWin.setAjaxContent(url, null , true);
+	} // end if
 } // end function popup_window
 
 

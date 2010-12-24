@@ -1008,6 +1008,9 @@ $log->debug("No Shift specified!");
 } # end sub _ul
 
 sub _drop {
+
+	# First step, run through and see if we need to do a popup before actually applying
+
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -1017,19 +1020,33 @@ sub _drop {
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
 	@{$variable{'changed'}} = ( $Shift->ul_id() );
 
-if ( 0 ) {
-	if ( $Shift->starttime() and ! $Shift->operator_id() ) {
-		$variable{'alert'} .= 'Shifts must have an operator in order to schedule jobs in them.';
-		reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' ));
-		return;
-	} # end if
-} # end if
-
 	if ( exists $param{'services'} ) {
 		my $services = $param{'services'};
 		$services =~ s/$param{ul_id}\[\]=//g;
 		my @order = split( '&', $services );
 		return if ! @order;
+
+		my $popup_text;
+		foreach my $row_id ( @order ) {
+			my $Job = new openprint::ScheduledJob( $row_id );
+			if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+				my $Project = $Job->Project();
+				my $services = $Project->services();
+				foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
+					my $ST = new openprint::ServiceType( $servicetype_id );
+					if ( ( ! $$services{$ST->name()} ) or ! @{$$services{$ST->name()}} ) {
+						$popup_text .= sprintf('Do you want to add %s for docket %d?<br/>', $ST->name(), $Project->docket() );
+					} # end if
+				} # end foreach servicetype_id
+			} # end if Bindery 
+		} # end foreach row_id
+		if ( $popup_text ) {
+			$variable{'popup_text'} = $popup_text;
+			$variable{'services'} = $param{'services'};
+			$variable{'Redirect'} = '/employee/production/_drop_popup.json';
+			sql::end_transaction( $dbh, $ac );
+			return;
+		} # end if
 
 		# Coalesce Jobs
 $log->debug("Order before coalesce: @order");

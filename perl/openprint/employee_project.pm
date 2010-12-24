@@ -886,6 +886,59 @@ sub _signaturecapture {
     $variable{'Signature'} = new openprint::SignatureCapture( $param{'id'} );
 }
 
+sub _status {
+	@variable{'ProjectIndex','index'} = @param{'project_id','service_id'};
+	my $Service = new openprint::Project_Service( \%param );
+	$variable{'status'} = $Service->status();
+	$variable{'name'} = $Service->ServiceType()->name();
+	$variable{'name'} = 'Printing' if ! $variable{'name'};
+
+	if ( $param{'action'} eq 'removefromschedule' ) {
+		my $Job = openprint::ScheduledJob::find_one('project_id'=>$param{'project_id'}, 'service_id'=>$param{'service_id'});
+		if ( ! $Job ) {
+			$variable{'error'} .= 'Job not found on schedule.';
+		} else {
+			$variable{'error'} .= $Job->delete();
+			if ( ! $variable{'error'} ) {
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Removed " . $Service->ServiceType->name() . " from schedule." );
+			} # end if
+		} # end if
+	} elsif ( $param{'action'} eq 'addtoschedule' ) {
+		my $Job = new openprint::ScheduledJob();
+		$_ = $Job->save({
+				'project_id'    =>  $param{'project_id'},
+				'equipment_id'  =>  $param{'equipment_id'},
+				'starttime'     =>  undef,
+				'service_id'    =>  [ $param{'service_id'} ],
+				'servicetype_id'    =>  $Service->ServiceType->id(),
+				});
+		if ( $_ ) {
+			$variable{'error'} .= 'Error adding to press schedule: ' . $_;
+		} else {
+			if ( sets::isin( $variable{'name'}, 'Printing','AdditionalSignature' ) ) {
+				my $sig_specs = $Service->specs();
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added Form $$sig_specs{'SignatureIndex'} to pending schedule." );
+			} else {
+				$Job->Project()->add_to_log( @session{'company_id','user_id'}, "Added " . $Service->ServiceType->name() . " to pending schedule." );
+			} # end if
+		} # end if
+
+	} # end if
+} # end sub _status
+
+sub _add_to_schedule {
+	@variable{'ProjectIndex','index'} = @param{'project_id','service_id'};
+	my $Service = new openprint::Project_Service( \%param );
+	my $Job = $variable{'Job'} = new openprint::ScheduledJob();
+	$Job->set({
+		'project_id'		=>$param{'project_id'},
+		'service_id'		=>[$param{'service_id'}],
+		'servicetype_id'    =>  $Service->ServiceType->id(),
+
+		});
+	
+	
+} # end sub _add_to_schedule
 
 1;
 
