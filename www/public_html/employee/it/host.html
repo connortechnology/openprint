@@ -25,11 +25,21 @@
 					<textarea id="mac" name="mac" rows="<? echo ( $$variable{'Host'}->mac() ? scalar @{$$variable{'Host'}->mac()} : 1 ) ?>" cols=""><? echo ( $$variable{'Host'}->mac() ? join("\n", @{$$variable{'Host'}->mac()} ) : '' ) ?></textarea>
 				</li>
 				<li>
-					<label>Blocked:</label>
-					<input type="radio" name="block" id="block1" value="1" <? echo ( ssi::checked( $$variable{'Host'}->block() ); ) ?>
-					<label class="radio" for="block1">Yes</label>
-					<input type="radio" name="block" id="block0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->block() ); ) ?>
-					<label class="radio" for="block0">No</label>
+					<label>Blacklist:</label>
+					<input type="radio" name="blacklist" id="blacklist1" value="1" <? echo ( ssi::checked( $$variable{'Host'}->blacklist() ); ) ?>
+					<label class="radio" for="blacklist1">Yes</label>
+					<input type="radio" name="blacklist" id="blacklist0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->blacklist() ); ) ?>
+					<label class="radio" for="blacklist0">No</label>
+				</li>
+				<li>
+					<label>Access violation count:</label><input type="text" name="count" id="count" value="<? echo ( $$variable{'Host'}->count() ) ?>" />
+				</li>
+				<li>
+					<label>Whitelist:</label>
+					<input type="radio" name="whitelist" id="whitelist1" value="1" <? echo ( ssi::checked( $$variable{'Host'}->whitelist() ); ) ?>
+					<label class="radio" for="whitelist1">Yes</label>
+					<input type="radio" name="whitelist" id="whitelist0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->whitelist() ); ) ?>
+					<label class="radio" for="whitelist0">No</label>
 				</li>
 				<li>
 					<label>Monitor:</label>
@@ -38,7 +48,7 @@
 					<input type="radio" name="monitor" id="monitor0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->monitor() ); ) ?>
 					<label class="radio" for="monitor0">No</label>
 				</li>
-				<li><label>Description</label>
+				<li><label>Description:</label>
 					<textarea id="description" name="description" cols="" rows=""><? echo ( $$variable{'Host'}->description() ) ?></textarea>
 				</li>
 				<li class="buttons">

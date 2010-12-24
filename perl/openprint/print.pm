@@ -208,11 +208,17 @@ sub view_services {
 				$Project->save();
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
-				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
-				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+				my $service_index = $$services{''}[0];
+				my $status = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
+				if ( $status ne 'uncalculated' ) {
+					eval ('openprint::Estimating::'.$Project->Type()->type().'::calculate_signatures( $log, $dbh, $variable, $project_index );');
+					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+				} # end if
 				$Project->summary(undef);
 				$Project->save();
+$openprint::log->error("continue_project");
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
+$log->debug("Done Recalc");
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );

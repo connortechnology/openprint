@@ -108,8 +108,8 @@ function calc_price( element ) {
 		form.elements['priceperm-'+index].value = do_decimals( priceperm, 2 ); 
 
 		if ( form.elements['wpsi'] )  {
-			form.elements['costcwt-'+index].value = do_decimals( costperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 1000), 2);
-			form.elements['pricecwt-'+index].value = do_decimals( priceperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 1000), 2);
+			form.elements['costcwt-'+index].value = do_decimals( costperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 10), 2);
+			form.elements['pricecwt-'+index].value = do_decimals( priceperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 10), 2);
 			if ( form.elements['costperfoot-'+index] ) {
 			form.elements['costperfoot-'+index].value = do_decimals( costperm / (form.elements['wpsi'].value * 144 * 1000), 2);
 			form.elements['priceperfoot-'+index].value = do_decimals( priceperm / (form.elements['wpsi'].value * 144 * 1000), 2);
@@ -175,7 +175,7 @@ function calc_price( element ) {
 		var priceperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 		var costperm = parseFloat(form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 		if ( costperm ) {
-			form.elements['markup-'+index].value = do_decimals( ((price / costperm)-1)*100, 2 );
+			form.elements['markup-'+index].value = do_decimals( ((priceperm / costperm)-1)*100, 2 );
 			form.elements['pricecwt-'+index].value = do_decimals( form.elements['costcwt-'+index].value * ( 1 + form.elements['markup-'+index].value/100), 2 );
 			if ( form.elements['costperfoot-'+index] && form.elements['priceperfoot-'+index] ) {
 				form.elements['priceperfoot-'+index].value = do_decimals( form.elements['costcwt-'+index].value * ( 1 + form.elements['markup-'+index].value/100), 2 );

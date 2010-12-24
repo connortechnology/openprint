@@ -16,6 +16,9 @@ $table = 'Monitors';
 	'width'		=>	'Width',
 	'height'	=>	'Height',
 	'max_fps'	=>	'MaxFPS',
+	'alarm_max_fps'	=>	'AlarmMaxFPS',
+	'path'			=>	'Path',
+	'host'			=>	'Host',
 	
 	'server_host'	=>	'ServerHost',
 );

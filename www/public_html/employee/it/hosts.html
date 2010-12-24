@@ -13,11 +13,11 @@ Please select a host to view/edit.<br/>
 	<fieldset class="filters"><legend>Choose Host</legend>
 		<p>
 			<label for="ip">Host IP</label>
-			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d]/,'');" onkeydown="this.form.hostname.value='';if(event.keyCode == 13){load_host($('f1'));}"/>
+			<input type="text" id="ip" name="ip" size="10" onkeyup="this.value=this.value.replace(/[^\.\d]/,'');" onkeydown="this.form.hostname.value='';this.form.mac.value='';if(event.keyCode == 13){load_host($('f1'));}"/>
 			Hostname:
-			<input type="text" id="hostname" name="hostname" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="hostname" name="hostname" size="16" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.mac.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
 			MAC:
-			<input type="text" id="mac" name="mac" size="10" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
+			<input type="text" id="mac" name="mac" size="16" onkeyup="this.value=this.value.replace(/\s/,'');" onkeydown="this.form.ip.value='';this.form.hostname.value='';if(event.keyCode == 13){load_host( $('f1') );}" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'Load', 'load.gif', "load_host(\$('f1'));",'','Load' ); ) ?>
 		</p>
 	</fieldset>
@@ -28,22 +28,40 @@ Please select a host to view/edit.<br/>
 		<p>
 			<label>Date Added:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_start' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_start', { 'with_today' => 1 } ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_end' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_end', { 'with_today' => 1 } ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Last Updated:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start', { 'with_today' => 1 } ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end', { 'with_today' => 1 } ); ) ?>
 			</span>
+		</p>
+		<p>
+			<label>Blacklisted:</label>
+            <input type="radio" id="blacklisted1" name="blacklisted" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?blacklisted'} eq '1' ); ) ?> />
+            <label class="radio" for="blacklisted">Yes</label>
+            <input type="radio" id="blacklisted0" name="blacklisted" value="0" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?blacklisted'} eq '0' ); ) ?> />
+            <label class="radio" for="blacklisted0">No</label>
+            <input type="radio" id="blacklisted" name="blacklisted" value="" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?blacklisted'} eq '' ); ) ?> />
+            <label class="radio" for="blacklisted">Both</label>
+		</p>
+		<p>
+			<label>Whitelisted:</label>
+            <input type="radio" id="whitelisted1" name="whitelisted" value="1" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?whitelisted'} eq '1' ); ) ?> />
+            <label class="radio" for="whitelisted">Yes</label>
+            <input type="radio" id="whitelisted0" name="whitelisted" value="0" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?whitelisted'} eq '0' ); ) ?> />
+            <label class="radio" for="whitelisted0">No</label>
+            <input type="radio" id="whitelisted" name="whitelisted" value="" <? echo ( ssi::checked( $session{'/employee/it/hosts.html?whitelisted'} eq '' ); ) ?> />
+            <label class="radio" for="whitelisted">Both</label>
 		</p>
 <!--
 		<p>
