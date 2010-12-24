@@ -175,7 +175,7 @@ function calc_price( element ) {
 		var priceperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 		var costperm = parseFloat(form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 		if ( costperm ) {
-			form.elements['markup-'+index].value = do_decimals( ((price / costperm)-1)*100, 2 );
+			form.elements['markup-'+index].value = do_decimals( ((priceperm / costperm)-1)*100, 2 );
 			form.elements['pricecwt-'+index].value = do_decimals( form.elements['costcwt-'+index].value * ( 1 + form.elements['markup-'+index].value/100), 2 );
 			if ( form.elements['costperfoot-'+index] && form.elements['priceperfoot-'+index] ) {
 				form.elements['priceperfoot-'+index].value = do_decimals( form.elements['costcwt-'+index].value * ( 1 + form.elements['markup-'+index].value/100), 2 );
