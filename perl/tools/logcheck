@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl 
 use lib '/etc/apache2/lib/perl';
 
 use sql;
