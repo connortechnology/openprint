@@ -39,13 +39,16 @@ if ( sets::isin( 'article_categories', \@tables ) ) {
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 if ( ! exists $$data{'asset_id'} ) {
 	$dbh->do('ALTER TABLE users add asset_id INTEGER');
-	$dbh->do('ALTER TABLE users add FOREIGN KEY (asset_id) REFERENCES Assets (id)');
 } # end if
 if ( ! sets::isin( 'assets', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Assets.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
 
+if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Expense_Accounts.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+}
 if ( ! sets::isin( 'expenses', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Expenses.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();

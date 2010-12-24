@@ -8,8 +8,6 @@ CREATE TABLE Expense_Categories (
 	PRIMARY KEY (id)
 );
 
-\i Expense_Accounts.sql
-
 CREATE TABLE Expenses (
 	id	SERIAL,
 	amount	float,
