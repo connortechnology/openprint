@@ -12,13 +12,13 @@
 			$html .= ' on ' . $Job->Equipment()->strid() . ' ' . $Job->Equipment()->name() . '<br/>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'RemoveFromPressSchedule'.$$variable{'index'}, 'removefrompressschedule.gif', 
-					sprintf(q`new Ajax.Updater('status%1$d', '_status.html', { parameters: { project_id: %2$d, service_id: %1$d, action: 'removefromschedule' } } );`, @$variable{'index','ProjectIndex'} ), '', 'Remove From Schedule' );
+					sprintf(q`new Ajax.Updater('status%1$d', '/employee/project/_status.html', { parameters: { project_id: %2$d, service_id: %1$d, action: 'removefromschedule' } } );`, @$variable{'index','ProjectIndex'} ), '', 'Remove From Schedule' );
 			} # end if
 		} elsif ( $$variable{'status'} eq 'Ordered' ) {
 			$html = 'Not scheduled<br/>';
 			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
 				$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule'.$$variable{'index'}, 'addtopressschedule.gif', 
-					sprintf( q`popup_window( '_add_to_schedule.html', 'project_id=%1$d&amp;service_id=%2$d' );`, @$variable{'ProjectIndex','index'} ), '', 'Add To Schedule' );
+					sprintf( q`popup_window( '/employee/project/_add_to_schedule.html', 'project_id=%1$d&amp;service_id=%2$d' );`, @$variable{'ProjectIndex','index'} ), '', 'Add To Schedule' );
 			} # end if
 		} # end if
 	} elsif ( sets::isin( $$variable{name}, [ 'Shipping','CustomerPickUp' ] ) ) {

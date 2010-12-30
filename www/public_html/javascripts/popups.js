@@ -195,7 +195,7 @@ function popup_window( url, parameters, options ) {
 			if ( options.width ) width = options.width;
 			if ( options.height ) height = options.height;
 		} // end if
-		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height} );
+		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height, recenterAuto:false} );
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
@@ -207,9 +207,7 @@ onDestroy: function(eventName, win) {
 		}
 		Windows.addObserver(myObserver);
 	} // end if
-	if ( ! ( options && options.content ) ) {
 	popupWin.setHTMLContent('Loading... please wait');
-	} // end if
 	if ( options && options.center != "" ) {
 		if ( options.center == "true" ) {
 			popupWin.showCenter();

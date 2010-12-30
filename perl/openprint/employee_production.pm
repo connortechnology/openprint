@@ -2,6 +2,7 @@ package openprint::employee_production;
 use strict;
 use Date::Calc qw(Add_Delta_Days Date_to_Days check_date );
 use MIME::QuotedPrint;
+use URI::Escape;
 
 use openprint ();
 
@@ -1026,27 +1027,35 @@ sub _drop {
 		my @order = split( '&', $services );
 		return if ! @order;
 
-		my $popup_text;
-		foreach my $row_id ( @order ) {
-			my $Job = new openprint::ScheduledJob( $row_id );
-			if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
-				my $Project = $Job->Project();
-				my $services = $Project->services();
-				foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
-					my $ST = new openprint::ServiceType( $servicetype_id );
-					if ( ( ! $$services{$ST->name()} ) or ! @{$$services{$ST->name()}} ) {
-						$popup_text .= sprintf('Do you want to add %s for docket %d?<br/>', $ST->name(), $Project->docket() );
+		if ( $param{'action'} ne 'add_services' ) {
+			my @servicetypes_to_add;
+			foreach my $row_id ( @order ) {
+				my $Job = new openprint::ScheduledJob( $row_id );
+				if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+					my $Project = $Job->Project();
+					my $services = $Project->services();
+					my @PS = openprint::Project_Service->find('project_id'=>$Job->project_id());
+					my @service_type_ids = sets::intersection( @{$Equipment->servicetype_id()}, sets::union( map { $_->servicetype_id() } @PS ) );
+$log->error("Equp: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
+$log->error("PS st: " . join(',', map { $_->servicetype_id() } @PS ) );
+$log->error("service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
+					if ( ! @service_type_ids ) {
+						foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
+							my $ST = new openprint::ServiceType( $servicetype_id );
+							if ( ( ! $$services{$ST->name()} ) or ! @{$$services{$ST->name()}} ) {
+								push @servicetypes_to_add, $servicetype_id;
+							} # end if
+						} # end foreach servicetype_id
 					} # end if
-				} # end foreach servicetype_id
-			} # end if Bindery 
-		} # end foreach row_id
-		if ( $popup_text ) {
-			$variable{'popup_text'} = $popup_text;
-			$variable{'services'} = $param{'services'};
-			$variable{'Redirect'} = '/employee/production/_drop_popup.json';
-			sql::end_transaction( $dbh, $ac );
-			return;
-		} # end if
+				} # end if Bindery 
+			} # end foreach row_id
+			if ( @servicetypes_to_add ) {
+				$variable{'servicetypes_to_add'} = [ sets::union( @servicetypes_to_add ) ];
+				$variable{'Redirect'} = '/employee/production/_drop_popup.json';
+				sql::end_transaction( $dbh, $ac );
+				return;
+			} # end if has servicetypes to add
+		} # end if param{'action'} ne 'add_services'
 
 		# Coalesce Jobs
 $log->debug("Order before coalesce: @order");
@@ -1055,14 +1064,19 @@ $log->debug("Order before coalesce: @order");
 			my $row_id = $order[$i];
 			my $Job = new openprint::ScheduledJob( $row_id );
 			if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
-$log->debug("Bindery:, servicetypes different");
-				my $Project = $Job->Project();
-				my $services = $Project->services();
 				my @Jobs;
+				my $Project = $Job->Project();
+				if ( $param{'action'} eq 'add_services' ) {
+					foreach my $servicetype_id ( ref $param{'servicetype_id'} eq 'ARRAY' ? @{$param{'servicetype_id'}} : $param{'servicetype_id'} ) {
+# Replace the specified Job with a new one for the given servicetype, after adding a service to the project.
+						my $service_id = $Project->add_service( new openprint::ServiceType( $servicetype_id ) );
+					} # end foreach servicetype_id
+				} # end if add_services
+$log->debug("Bindery:, servicetypes different");
+				my $services = $Project->services();
 				foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
 					my $ST = new openprint::ServiceType( $servicetype_id );
 					next if ( ! $$services{$ST->name()} ) or ! @{$$services{$ST->name()}};
-$log->debug("Dong Job for $servicetype_id : " . $ST->name() );
 					# Get all already existing jobs for this servicetype
 					foreach my $service_id ( @{$$services{$ST->name()}} ) {
 						my @J = openprint::ScheduledJob::find('project_id'=>$Project->id(),'service_id'=>$service_id);
@@ -1776,6 +1790,10 @@ sub _equipment_message {
 		$Equipment->save({'message'=>$param{'message'}});
 	} # end if
 } # end sub _equipment_popup
+
+sub _drop_popup {
+	$r->content_type('text/javascript');
+} # end sub _drop_popup
 
 1;
 __END__

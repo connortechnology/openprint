@@ -40,7 +40,7 @@ sub new {
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
-$log->debug("Multi-key Obejct @$id @$data{@$id}" );
+#$log->debug("Multi-key Obejct @$id @$data{@$id}" );
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 	} else {
