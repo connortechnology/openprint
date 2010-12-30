@@ -19,7 +19,7 @@
 	<? echo ( 
 		my $html = '';
 		$html .= ssi::writeButton( $log, $dbh, 'Ok', 'ok.gif', 
-				q`new Ajax.Updater('status`.join(',',@{$$variable{'Job'}->service_id()} ).q`', '_status.html', { parameters: $('bump_form').serialize() } );popupWin.destroy();`, '', 'Add to Schedule' );
+				q`new Ajax.Updater('status`.join(',',@{$$variable{'Job'}->service_id()} ).q`', '/employee/project/_status.html', { parameters: $('bump_form').serialize() } );popupWin.destroy();`, '', 'Add to Schedule' );
 		$html .= ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'popupWin.destroy();', '', 'Cancel' );
 		return $html;
 	) ?>

@@ -885,17 +885,17 @@ sub equipment_id {
 	if ( ! $_[0]{'equipment_id'} ) {
 		# Attempt to guess
 		my $Project = $_[0]->Project();
-		my $Service = $Project->Service( $_[0]{'service_id'}[0] ) if $_[0]{'service_id'} and $_[0]{'service_id'}[0];
+		my $Service = $Project->Service( $_[0]{'service_id'}[0] ) if $_[0]{'service_id'} and @{$_[0]{'service_id'}};
 		my $specs = $Service->specs();
 
 		if ( sets::isin( $Service->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
-			my $Equipment = openprint::Equipment::find_one( 'strid' => $$specs{'UsePress'} ? $$specs{'UsePress'} : $$specs{'ddmPress'.$Project->ordered_quantity_index()} );
+			my $Equipment = openprint::Equipment::find_one( 'strid' => ( $$specs{'UsePress'} ? $$specs{'UsePress'} : $$specs{'ddmPress'.$Project->ordered_quantity_index()} ) );
 			$_[0]{'equipment_id'} = $Equipment->id() if $Equipment;
 		} elsif ( sets::isin( $Service->ServiceType()->name(), ['SaddleStitching','LoopStitching'] ) ) {
 			$_[0]{'equipment_id'} = $$specs{'ddmEquipment'.$Project->ordered_quantity_index()};
 		} # end if
 	} # end if
-	return $_[0]{'equiment_id'};
+	return $_[0]{'equipment_id'};
 } # end sub equipment_id
 
 1;

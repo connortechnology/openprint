@@ -6,7 +6,7 @@
 		</p>
 		<p class="buttons">
 			<? echo ( my $html;
-				$html .= ssi::writeButton( $log, $dbh, 'SaveEquipment', 'save.gif', q`new Ajax.Updater('message`.$param{'equipment_id'}.q`','_equipment_message.html', {parameters:equipment_popup_form.serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' );
+				$html .= ssi::writeButton( $log, $dbh, 'SaveEquipment', 'save.gif', q`new Ajax.Updater('message`.$param{'equipment_id'}.q`','_equipment_message.html', {parameters:$('equipment_popup_form').serialize(), onSuccess:function(){popupWin.destroy();}});`, '', 'Save' );
 				$html .= ssi::writeButton( $log, $dbh, 'CancelEquipment', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' );
 				return $html;
 			) ?>
