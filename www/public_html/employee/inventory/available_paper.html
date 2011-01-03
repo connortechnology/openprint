@@ -78,9 +78,9 @@ Please select a Paper to view/edit.<br>
 		</div>
 		<div class="rightColumn">
 			<p><label>Type:</label>
-				<input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ) ); ) ?> onclick="calc('f1');"/>
+				<input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ) ); ) ?> onclick="calc('f1');"/>
 				<label class="radio" for="TypeSheet">Sheet</label>
-				<input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ) ); ) ?> onclick="calc('f1');"/>
+				<input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ) ); ) ?> onclick="calc('f1');"/>
 				<label class="radio" for="TypeRoll">Roll</label>
 			</p>
 		</div>
@@ -93,7 +93,7 @@ Please select a Paper to view/edit.<br>
 				<option value="">Please select one</option>
 				<? echo (
 					my %sql = (
-						'type'=>[ split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 					);
 					if ( $session{'/employee/inventory/available_paper.html?owner_id_exclude'} ) {
@@ -118,7 +118,7 @@ Please select a Paper to view/edit.<br>
 				<option value="">Please select one</option>
 				<? echo ( 
 					my %sql = (
-						'type'=>[ split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 					);
@@ -144,7 +144,7 @@ Please select a Paper to view/edit.<br>
 				<option value="">Please select one</option>
 			<? echo (
 					my %sql = (
-						'type'=>[ split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 							'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
 							'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
@@ -171,7 +171,7 @@ Please select a Paper to view/edit.<br>
 				<option value="">Please select one</option>
 			<? echo (
 					my %sql = (
-						'type'=>[ split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
 						'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
@@ -199,7 +199,7 @@ Please select a Paper to view/edit.<br>
 				<option value="">Please select one</option>
 			<? echo (
 					my %sql = (
-						'type'=>[ split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
 						'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
@@ -230,7 +230,7 @@ Please select a Paper to view/edit.<br>
 				<option value="">All</option>
 			<? echo ( 
 					my %sql = (
-						'type'=>[ split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
 						'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
@@ -257,7 +257,7 @@ Please select a Paper to view/edit.<br>
 				<option value="">All</option>
 			<? echo ( 
 					my %sql = (
-						'type'=>[ split( ';', $session{'/employee/inventory/available_paper.html?Type'} ) ],
+						'type'=>[ split( ',', $session{'/employee/inventory/available_paper.html?Type'} ) ],
 						#'group_id'=>$session{'/employee/inventory/available_paper.html?Group'},
 						'manufacturer_id'=>$session{'/employee/inventory/available_paper.html?Manufacturer'},
 						'name_id'=>$session{'/employee/inventory/available_paper.html?Name'},
@@ -291,14 +291,14 @@ Please select a Paper to view/edit.<br>
 			<select id="location_id" name="location_id" multiple="multiple" onchange="calc(this.form.name);">
 				<? echo ( 
 					my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') );
-					my @selected = split(';', $session{'/employee/inventory/available_paper.html?location_id'} );
+					my @selected = split(',', $session{'/employee/inventory/available_paper.html?location_id'} );
 					if ( ! @selected ) {
 						foreach my $L ( openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') ) {
 							next if $L->name() eq 'Missing';
 							push @selected, $L->id();
 						} # end foreach $L
 					} # end if
-					$session{'/employee/inventory/available_paper.html?location_id'} = join(';',sets::intersection( @selected, @options ));
+					$session{'/employee/inventory/available_paper.html?location_id'} = join(',',sets::intersection( @selected, @options ));
 					return ssi::make_select( \@options, \@selected );
 				) ?>
 			</select>

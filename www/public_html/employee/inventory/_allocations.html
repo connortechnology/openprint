@@ -46,7 +46,7 @@
 			foreach my $key ( sort keys %allocations ) {
 				my $Allocation = $allocations{$key}[0];
 
-				if ( ! sets::isin( $Allocation->Paper()->type(), split(';', $session{'/employee/inventory/allocations.html?Type'} ) ) ) {
+				if ( ! sets::isin( $Allocation->Paper()->type(), split(',', $session{'/employee/inventory/allocations.html?Type'} ) ) ) {
 					next;
 				} # end if
 				my $quantity = 0;

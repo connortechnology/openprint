@@ -555,7 +555,8 @@ sub save_params {
 
 	foreach ( @keys ) {
 		if ( ref $param{$_} eq 'ARRAY' ) {
-			$session{"$url?$_"} = join(';', @{$param{$_}} );
+			$session{"$url?$_"} = join(',', @{$param{$_}} );
+#$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")");
 		} elsif ( exists $param{$_} ) {
 			$session{"$url?$_"} = $param{$_};
 		} # end if

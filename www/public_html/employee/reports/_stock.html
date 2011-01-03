@@ -12,7 +12,7 @@
 		my $total;
 
 		my @location_ids;
-		foreach ( split(';', $session{'/employee/reports/stock.html?location_id'} ) ) {
+		foreach ( split(',', $session{'/employee/reports/stock.html?location_id'} ) ) {
 			next if $_ eq 'All';
 			push @location_ids, $_;
 		} # end foreach

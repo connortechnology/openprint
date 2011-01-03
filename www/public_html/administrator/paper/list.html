@@ -1,9 +1,9 @@
 <? eval (
 	if ( ! exists $openprint::session{'/administrator/paper/list.html?Types'} ) {
-		$openprint::session{'/administrator/paper/list.html?Types'} = join(';', 'Sheet','Roll' );
+		$openprint::session{'/administrator/paper/list.html?Types'} = join(',', 'Sheet','Roll' );
 	} # end if
 	if ( ! exists $openprint::session{'/administrator/paper/list.html?recommendations'} ) {
-		$openprint::session{'/administrator/paper/list.html?recommendations'} = join(';', 1,0 );
+		$openprint::session{'/administrator/paper/list.html?recommendations'} = join(',', 1,0 );
 	} # end if
 
     $openprint::session{'/administrator/paper/list.html?Owner'} = $openprint::session{'company_id'} if ! exists $openprint::session{'/administrator/paper/list.html?Owner'};
@@ -108,16 +108,16 @@ function body_onLoad() {
 		<div class="column">
 		<p> 
 			<label>Type:</label>
-			<input type="checkbox" name="Types" value="Sheet" <? echo ( 'checked="checked"' if sets::isin( 'Sheet', split(';', $openprint::session{'/administrator/paper/list.html?Types'} ) ); ) ?> onClick="calc(this.form.name);" />
+			<input type="checkbox" name="Types" value="Sheet" <? echo ( 'checked="checked"' if sets::isin( 'Sheet', split(',', $openprint::session{'/administrator/paper/list.html?Types'} ) ); ) ?> onClick="calc(this.form.name);" />
 			<label class="radio" for="TypesSheet">Sheet</label>
-			<input type="checkbox" name="Types" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', split(';', $openprint::session{'/administrator/paper/list.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
+			<input type="checkbox" name="Types" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', split(',', $openprint::session{'/administrator/paper/list.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesRoll">Roll</label>
 		</p>
 		<p> 
 			<label>Recommendations:</label>
-			<input type="checkbox" id="recommendations1" name="recommendations" value="1" <? echo ( ssi::checked( sets::isin( '1', split(';', $openprint::session{'/administrator/paper/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
+			<input type="checkbox" id="recommendations1" name="recommendations" value="1" <? echo ( ssi::checked( sets::isin( '1', split(',', $openprint::session{'/administrator/paper/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="recommendations1">Yes</label>
-			<input type="checkbox" id="recommendations0" name="recommendations" value="0" <? echo ( ssi::checked( sets::isin( '0', split(';', $openprint::session{'/administrator/paper/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
+			<input type="checkbox" id="recommendations0" name="recommendations" value="0" <? echo ( ssi::checked( sets::isin( '0', split(',', $openprint::session{'/administrator/paper/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="recommendations0">No</label>
 		</p>
 		<p>

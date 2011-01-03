@@ -39,7 +39,7 @@
 					} # end if
 				} # end if
 
-				if ( $session{'/employee/reports/stock_usage.html?Type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ';', $session{'/employee/reports/stock_usage.html?Type'} ) ) ) {
+				if ( $session{'/employee/reports/stock_usage.html?Type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ',', $session{'/employee/reports/stock_usage.html?Type'} ) ) ) {
 $log->debug("Wrong type ". $$sig_specs{'StockType'.$qty_index} );
 					next;
 } else {

@@ -2,7 +2,7 @@
 	if ( %openprint::param ) {
 		foreach my $key ( 'Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code', 'Types','recommendations' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-				$openprint::session{'/administrator/paper/list.html?'.$key} = join(';', @{$openprint::param{$key}} );
+				$openprint::session{'/administrator/paper/list.html?'.$key} = join(',', @{$openprint::param{$key}} );
 			} else {
 				$openprint::session{'/administrator/paper/list.html?'.$key} = $openprint::param{$key}; 
 			} # end if
@@ -15,7 +15,7 @@
 		'finish_id'	=> $openprint::session{'/administrator/paper/list.html?Finish'},
 		'colour_id'	=> $openprint::session{'/administrator/paper/list.html?Colour'},
 		'weight_id'	=> $openprint::session{'/administrator/paper/list.html?Weight'}, 
-		'type'		=> [ split(';', $openprint::session{'/administrator/paper/list.html?Types'} ) ],
+		'type'		=> [ split(',', $openprint::session{'/administrator/paper/list.html?Types'} ) ],
 		'fsc_code'	=> $openprint::session{'/administrator/paper/list.html?fsc_code'}, 
 		'order'		=> 'name,finish,colour,weight, width, height'
 		);
@@ -38,8 +38,8 @@
 	<? echo ( my $html = '';
 		my $rowclass;
 		foreach my $Paper ( @{$$variable{'Papers'}} ) {
-			next if $Paper->recommendations() and ! sets::isin( 1, split(';', $openprint::session{'/administrator/paper/list.html?recommendations'} ) );
-			next if ( ! $Paper->recommendations() ) and ! sets::isin( 0, split(';', $openprint::session{'/administrator/paper/list.html?recommendations'} ) );
+			next if $Paper->recommendations() and ! sets::isin( 1, split(',', $openprint::session{'/administrator/paper/list.html?recommendations'} ) );
+			next if ( ! $Paper->recommendations() ) and ! sets::isin( 0, split(',', $openprint::session{'/administrator/paper/list.html?recommendations'} ) );
 			$html .= sprintf('<tr%s>', $rowclass );
 			$html .= sprintf('<td><a href="paper.html?paper_id=%1$d">%2$s</a></td>', $$Paper{id}, $Paper->manufacturer() );
 			$html .= sprintf('<td><a href="paper.html?paper_id=%1$d">%2$s</a></td>', $$Paper{id}, $Paper->name() );

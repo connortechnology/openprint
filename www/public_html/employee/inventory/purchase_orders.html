@@ -101,12 +101,12 @@
 			<? echo (
 				my $html;
 				foreach my $Type ( openprint::PurchaseOrder_ContentType->find('order'=>'name') ) {
-					$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id(), $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(';', $session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! exists $session{'/employee/inventory/purchase_orders.html?types'} ) );
+					$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id(), $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! exists $session{'/employee/inventory/purchase_orders.html?types'} ) );
 				} # end foreach Type
 $log->debug($session{'/employee/inventory/purchase_orders.html?types'});
-$log->debug(join(',',split(';',$session{'/employee/inventory/purchase_orders.html?types'} ) ));
-$log->debug(sets::isin( '', [ split(';',$session{'/employee/inventory/purchase_orders.html?types'} ) ] ) );
-				$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, ' ', 'None', ssi::checked( sets::isin( ' ', [ split(';',$session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! exists $session{'/employee/inventory/purchase_orders.html?types'} ) );
+$log->debug(join(',',split(',',$session{'/employee/inventory/purchase_orders.html?types'} ) ));
+$log->debug(sets::isin( '', [ split(',',$session{'/employee/inventory/purchase_orders.html?types'} ) ] ) );
+				$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, ' ', 'None', ssi::checked( sets::isin( ' ', [ split(',',$session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! exists $session{'/employee/inventory/purchase_orders.html?types'} ) );
 				return $html;
 			) ?>
 		</p>
