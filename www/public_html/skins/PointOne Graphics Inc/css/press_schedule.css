@@ -32,7 +32,7 @@ div.row {
 }
 	div.PressColumn {
 		float: left;
-		margin: 0px 0px 0px 0px;
+		margin: 0px;
 		padding: 0px;
 		border: none;
 		text-align: center;
@@ -41,12 +41,9 @@ div.row {
 	}
 	div.PressColumn ul {
 		padding: 0px;
-		margin: 0px;
-		margin-left: 1px;
-		margin-right: 1px;
+		margin: 0px 1px 0px 1px;
 		border-bottom: 1px solid black;
-		list-style: none none inside;
-		text-indent: 0px;
+		list-style: none;
         font-weight: normal;
         text-align: left;
         font-size: 12px;
@@ -58,7 +55,6 @@ div.row {
 		margin-bottom: 2px;
 		border-top: 1px solid black;
 		list-style: none;
-		text-indent: 0px;
 		background-color: #ffffff;
 		z-index: 0;
 		max-height: 2048px;
@@ -85,7 +81,7 @@ div.PressColumn ul li {display: block;}
 		background-color: #ffffff;
 	}
 	div.PressColumn li.inprepress, li.inprepress {
-		background-color: #99ff99;
+		background-color: #caffc4;
 	}
 	div.PressColumn li.complete, li.complete {
 		background-color: #FAC6FF;
