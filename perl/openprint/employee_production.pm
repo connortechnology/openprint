@@ -1374,11 +1374,6 @@ $log->debug("ES: " . $NextES->name() );
 				} # end if ! NextES
 				$Shift = $NextES->emanantise( $start_time );
 				$start_time = $Shift->starttime_seconds();
-				if ( ! $Shift->operator_id() ) {
-					$start_time = undef;
-					$variable{'alert'} .= 'Not enough shifts to fit all jobs. Please assign an operator to another shift.';
-					last;
-				} # end if
 			} else {
 				$Shift = shift @Shifts;
 				$start_time = $Shift->starttime_seconds() if $start_time < $Shift->starttime_seconds();
