@@ -12,7 +12,7 @@
 	my %filters = (
 		'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
 		'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
-			'status' =>	$param{'status'},
+			( $param{'status'} ? ( 'status' =>	[ split(',', $param{'status'} ) ] ) : () ),
 			'value_start' => $param{'value_start'},
 			'value_end' => $param{'value_end'},
 			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
