@@ -9,6 +9,9 @@ use vars qw( %session %param );
 sub project_history {
 }
 
+sub _order_history_results {
+}
+
 sub stock {
 	ssi::save_params('/employee/reports/stock.html', 'Owner', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'last_seen', 'location_id','width','height','OrLarger' );
 } # end sub stock

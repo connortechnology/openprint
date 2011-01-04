@@ -15,7 +15,7 @@
 			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
 			'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
-			'status' =>	$param{'status'},
+			( $param{'status'} ? ( 'status' =>	[ split(',', $param{'status'} ) ] ) : () ),
 			'value_start' => $param{'value_start'},
 			'value_end' => $param{'value_end'},
 			'order' => ($param{'order'} ? $param{'order'} : 'Index'),

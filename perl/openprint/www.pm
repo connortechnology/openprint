@@ -67,7 +67,7 @@ sub handler {
 		my @values = $r->param($key);
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
-				$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
+				$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = shift @values;
 				$log->debug("Parameter $key is (" . $param{$key} . ")" );
