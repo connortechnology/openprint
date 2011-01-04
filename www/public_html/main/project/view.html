@@ -123,7 +123,7 @@
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
 					$html .= '<td class="price">&nbsp;</td>';
 				} # end foreach
-				$html .= '<td class="status">&nbsp;</td>';
+				$html .= sprintf('<td class="status">%s</td>', $statuses{$$services{''}[0]} );
 				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {
 					$html .= '<td class="unprintable actions">';
 					if ( $Project->Type()->url() ) {
