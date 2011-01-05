@@ -78,12 +78,12 @@ sub edit {
 			return misc::error( $log, $dbh, $variable, 'No pricelist selected.', 'You must select a pricelist before exporting.');
 		} # end if
 	
-		my @header = ( 'Paper Brand', 'Finish','Colour','Weight','Width','Height','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
+		my @header = ( 'Paper Brand', 'Finish','Colour','Weight','Width','Height','Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
 		my @data;
 		foreach my $Paper (openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
 			foreach my $Price ( $Paper->Prices('Pricelist'=>$Pricelist, 'order'=>'lngMin') ) {
 				push @data, $Paper->name(), $Paper->finish(),$Paper->colour(), $Paper->weight(), $Paper->width(), $Paper->height();
-				push @data, $Price->Min(), $Price->Max(), $Price->Units(), $Price->Cost(), $Price->Markup(), $Price->Price(), $Price->Discountable();
+				push @data, $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
 			} # end foreach
 		} # end foreach Paper
 		misc::export_csv( $r, $log, $variable, $Pricelist->name() . 'PaperPrices.csv', \@header, \@data );

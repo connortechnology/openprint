@@ -23,6 +23,8 @@ $serial = 'tbl_equipment_specifications_id_seq';
 %transforms = (
 	'min' => [ 's/[^\d\.]//g' ],
 	'max' => [ 's/[^\d\.]//g' ],
+	'name'	=> [ 's/^\s+//', 's/\s+$//' ],
+	'value'	=> [ 's/^\s+//', 's/\s+$//' ],
 );
 %defaults = (
 	'min'	=>	undef,

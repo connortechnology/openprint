@@ -1,37 +1,60 @@
-<script type="text/javascript" src="/administrator/stock/stock.js"></script>
+<script type="text/javascript" src="/administrator/stock/stock.js?version=1.0"></script>
 <script type="text/javascript" >
-	function newPrice( pricelist_id ) {
-		new Ajax.Updater( 'Prices', '_prices.html', 
+	function newPrice( service, pricelist_id ) {
+		new Ajax.Request( '_price_tr.html',
 			{ 
 				method: 'get', 
 				parameters: { 
 					stock_id: '<?stock_id?>',
+					service: service,
 					pricelist_id: pricelist_id,
 					action: 'Add'
+				},
+				onSuccess: function( transport ) {
+					$('prices-'+service+'-'+pricelist_id).insert({top: transport.responseText} );
 				}
 			} 
 		);
 	} // end function newPrice
 	function copyPrice( id ) {
-		new Ajax.Updater( 'Prices', '_prices.html', 
+		var form = $('f1');
+
+		new Ajax.Request( '_price_tr.html', 
 			{ 
 				method: 'get', 
 				parameters: { 
 					stock_id: '<?stock_id?>',
 					price_id: id,
-					action: 'Copy'
+					action: 'Copy',
+					equipment_id: get_value( form.elements['equipment_id-'+id] ),
+					min: form.elements['min-'+id].getValue(),
+					max: form.elements['max-'+id].getValue(),
+					cost: form.elements['cost-'+id].getValue(),
+					markup: form.elements['markup-'+id].getValue(),
+					price: form.elements['price-'+id].getValue(),
+					units: form.elements['units-'+id].getValue(),
+					discountable: get_value($('f1').elements['discountable-'+id])
+				},
+				onSuccess: function( transport ) {
+					$('paperprice-'+ id).insert({after: transport.responseText} );
 				}
 			} 
 		);
 	}
 	function delPrice( id ) {
-		new Ajax.Updater( 'Prices', '_prices.html', 
+		new Ajax.Request('_price_tr.html', 
 			{ 
 				method: 'get', 
 				parameters: { 
-					stock_id: '<?stock_id?>',
 					price_id: id,
 					action: 'Delete'
+				},
+				onSuccess: function( transport ) {
+					if ( transport.responseText ) {
+						alert( transport.responseText );
+					} else {
+						var tr = $('paperprice-'+id); tr.parentNode.removeChild(tr);
+					} // end if
 				}
 			} 
 		);
@@ -50,7 +73,7 @@
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <div class="Stock">
-<form name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{'Stock'}->id(); ) ?>">
+<form id="f1" name="f1" method="post" action="stock.html?stock_id=<? echo ( $$variable{'Stock'}->id(); ) ?>">
 	<p class="buttons">
 		<? echo ( join('',
 		ssi::writeButton($log, $dbh, 'Prev1','prev.gif',"f1.btnFunction.value='Prev';f1.submit();",'','&lt;&lt;'),
@@ -348,15 +371,12 @@
 		</fieldset>
 	</div>
 	<input type="hidden" name="btnFunction" />
+	<? if ( $$variable{'stock_id'} ) ?>
+	<div class="Pricing">
+		<fieldset><legend>Pricing</legend>
+			<div id="Prices"><!--#include virtual="_prices.html"--></div>
+		</fieldset>
+	</div>
+	<? endif ( $$variable{'stock_id'} ) ?>
 </form>
-<? if ( $$variable{'stock_id'} ) ?>
-<div class="Pricing">
-<fieldset><legend>Pricing</legend>
-	<div id="Prices"><!--#include virtual="_prices.html"--></div>
-	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'SavePrices', 'savePrices.gif', 'savePrices(document.Prices);', '', 'Save All Prices' ); ) ?>
-	</p>
-</fieldset>
-</div>
-<? endif ( $$variable{'stock_id'} ) ?>
 </div><!--Stock-->
