@@ -303,13 +303,13 @@ sub copy {
 	return $New;
 } # end sub copy
 
-sub prices {
+sub Prices {
 	my $self = shift;
 	if ( ! $$self{'Prices'} ) {
-		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'}, 'pricelist_id'=>shift );
+		@{$$self{'Prices'}} = openprint::PaperPrice::find( 'paper_id' => $$self{'id'} );
 	} # end if
 	return @{$$self{'Prices'}};
-} # end sub prices
+} # end sub Prices
 
 sub save {
 	my ( $self, $hash ) = @_;
@@ -967,8 +967,10 @@ sub recommendations {
 
 # From now on, qty is always weight
 sub get_price {
-	my ( $self, $qty ) = @_;
+	my ( $self, %params ) = @_;
+	
     my %price;
+	my $qty = $params{'weight'};
 
     if ( $$self{'Price'} ) {
 		# If custom paper
@@ -977,16 +979,18 @@ sub get_price {
 	} elsif ( $$self{'id'} ) {
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $bestPrice;
-		my @Prices = $self->prices( $list_id );
+		my @Prices = $self->Prices( $list_id );
 		if ( (! $$self{'supplied'} ) and ! @Prices ) {
 			$openprint::log->warn( 'No prices for paper for pricelist ' . $list_id );
 			return %price;
 		} # end if
 		foreach my $Price ( @Prices ) {
-#$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->Min(), $Price->Max(), $Price->Price() ) );
+			next if $Price->pricelist_id() != $list_id;
+			next if $Price->service() ne $params{'service'};
+#$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
 			if ( 
-					( (!(1*$Price->Min())) or $Price->Min() <= $qty ) and
-					( (!(1*$Price->Max())) or $Price->Max() >= $qty )
+					( (!(1*$Price->min())) or $Price->min() <= $qty ) and
+					( (!(1*$Price->max())) or $Price->max() >= $qty )
 			   ) {
 				$bestPrice = $Price;
 				last;
@@ -996,14 +1000,14 @@ sub get_price {
 			$openprint::log->warn("Unable to find price for $qty");
 			return;
 		} # end if
-		$price{'Price'} = $bestPrice->Price();
-		$price{'units'} = $bestPrice->Units();
+		$price{'price'} = $bestPrice->price();
+		$price{'units'} = $bestPrice->units();
 		if ( $openprint::config{'ApplyMarkup'} ) {
 		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
 			$pricingpercent =~ s/[^\d\.\-]//g;
 			$pricingpercent /= 100;
-			$price{'Price'} *= ( 1 + $pricingpercent );
+			$price{'price'} *= ( 1 + $pricingpercent );
 		} # end if
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
@@ -1015,7 +1019,7 @@ sub get_price {
 
 	my $Company = new openprint::Company( $openprint::session{company_id} );
 	if ( $Company->discount() ) {
-		$price{'Price'} *= 1 - ( $Company->discount()/100 );
+		$price{'price'} *= 1 - ( $Company->discount()/100 );
 	} # end if
 
 # Don't need to cut it because the mweight has already byeen cut
@@ -1023,15 +1027,15 @@ sub get_price {
 	# Prices are always stored in cwt now
 	if ( ! $$self{'mweight'} ) {
 		# ROll papers won't have an mweight
-		$price{'100lb'} = $price{'Price'};
-		$price{'100lb Cost'} = $price{'Cost'};
-		$price{'100lb Price'} = $price{'Price'};
+		$price{'100lb'} = $price{'price'};
+		$price{'100lb Cost'} = $price{'cost'};
+		$price{'100lb Price'} = $price{'price'};
 		#$price{'Cost'} *= $$self{'wpsi'} * $self->width() * $self->height();
 		#$price{'Price'} *= $$self{'wpsi'} * $self->width() * $self->height();
 	} else {
-		$price{'100lb'} = $price{'Price'};
-		$price{'100lb Cost'} = $price{'Cost'};
-		$price{'100lb Price'} = $price{'Price'};
+		$price{'100lb'} = $price{'price'};
+		$price{'100lb Cost'} = $price{'cost'};
+		$price{'100lb Price'} = $price{'price'};
 		#$price{'Cost'} *= $$self{'mweight'} / 100000;
 		#$price{'Price'} *= $$self{'mweight'} / 100000;
 	} # end if
@@ -1116,11 +1120,6 @@ sub wpsi {
 	} # end if
 	return $$self{'wpsi'};
 } # end if wpsi
-
-sub Prices {
-	my $self = shift;
-	return openprint::PaperPrice::find('paper_id'=>$$self{'id'}, @_ );
-} # end sub Prices
 
 sub JDF_Media {
 	my ( $self, $doc ) = @_;

@@ -1,0 +1,78 @@
+<? echo (
+	return $variable{'error'} if $variable{'error'};
+	return if ! $$variable{'Price'}->id();
+	my $html = '';
+	my $Pricelist = $$variable{'Pricelist'};
+	my $service = $$variable{'service'};
+	my $Price = $$variable{'Price'};
+
+	if ( $Price->service() ne 'Material' ) {
+		$html .= sprintf(q`<tr id="paperprice-%1$d">
+				<td class="Equipment"><select name="equipment_id-%1$d"><option value=""> all </option>%8$s</select></td>
+				<td class="Range">
+					<input type="text" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
+					<input type="text" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
+				</td>
+				<td><input type="text" name="units-%1$d" value="%4$s" onkeyup="check_price(this);" /></td>
+				<td><input type="text" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);" /></td>
+				<td><input type="text" name="markup-%1$d" value="%6$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				<td><input type="text" name="price-%1$d" value="%7$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+			`,
+			$Price->id(), 
+			( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ),
+			( $Price->max() > 0 ? Number::Format::format_number($Price->max()) : $Price->max() ),
+			$Price->units(),
+			$Price->cost(), $Price->markup(), $Price->price(),
+			ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $Price->equipment_id() ),
+		);
+	} else {
+		$html .= sprintf(q`<tr>
+				<td class="Equipment">&nbsp;</td>
+				<td class="Range">
+					<input class="text" type="text" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
+					<input class="text" type="text" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
+				</td>
+				<td><input type="text" name="units-%1$d" value="%4$s"/></td>
+				<td class="Cost"><input class="text" type="text" name="cost-%1$d" value="%5$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`,
+				$Price->id(), 
+				( $Price->min() > 0 ? Number::Format::format_number($Price->min()) : $Price->min() ),
+				( $Price->max() > 0 ? Number::Format::format_number($Price->max()) : $Price->max() ),
+				$Price->units(),
+				$Price->cost(), 
+			);
+
+		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
+			$html .= sprintf( q`<td class="Cost"><input class="text" type="text" name="costperm-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->costperm() );
+		} else {
+			$html .= sprintf( q`<td class="Cost"><input class="text" type="text" name="costperfoot-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->costperfoot() );
+		} # end if
+		$html .= sprintf(q`
+				<td class="Markup"><input class="text" type="text" name="markup-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				<td class="Price"><input class="text" type="text" name="price-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>
+				`, $Price->id(), $Price->markup(), $Price->price(),
+			);
+
+		if ( $$variable{'Stock'}->type() ne 'Roll' ) {
+				$html .= sprintf( q`<td class="Price"><input class="text" type="text" name="priceperm-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->priceperm() );
+		} else {
+				$html .= sprintf( q`<td class="Price"><input class="text" type="text" name="priceperfoot-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');calc_price(this);check_price(this);"/></td>`, $Price->id(), $Price->priceperfoot() );
+		} # end if
+	} # end if
+	$html .= sprintf(q`
+			<td class="Discount">
+				<input class="radio" type="radio" id="discountable-%1$dY" name="discountable-%1$d" value='Y' %2$s onclick="check_price(this);" />
+				<label class="radio" for="discountable-%1$dY">Yes</label>
+				<input class="radio" type="radio" id="discountable-%1$dN" name="discountable-%1$d" value='N' %3$s onclick="check_price(this);" />
+				<label class="radio" for="discountable-%1$dN">No</label>
+			</td>
+			<td class="buttons">%4$s</td>
+		</tr>`,
+			$Price->id(), 
+			( $Price->discountable() eq 'Y' ? ( 'checked="checked"', '' ) : ( '', 'checked="checked"' ) ),
+			join('', 
+				ssi::writeButton( $log, $dbh, 'x'.$Price->id(), 'delete.gif', qq`delPrice( $$Price{id} );`, '', 'X' ),
+				ssi::writeButton( $log, $dbh, 'c'.$Price->id(), 'copy.gif', qq`copyPrice( $$Price{id} );`, '', 'C' ),
+				),
+		);
+	return $html;
+) ?>
