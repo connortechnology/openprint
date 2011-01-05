@@ -210,6 +210,7 @@ sub starttime_seconds {
 			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] ) );
 		} # end if
 		$$self{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] );
+		delete $$self{'Shift'};
 	} # end if
 	return Date::Parse::str2time( $$self{'starttime'} );
 } # endsub
@@ -615,55 +616,59 @@ sub shift_id {
 
 sub Shift {
 	my ( $self ) = @_;
-	my $Shift;
 
-	if ( ! $$self{'starttime'} ) {
-		$Shift = new openprint::Shift();
-		$Shift->equipment_id( $$self{'equipment_id'} );
-		if ( sets::isin( $self->Project()->status(), ['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
-			$$Shift{'name'} = 'Pending';
+	if ( ! $$self{'Shift'} ) {
+		my $Shift;
+
+		if ( ! $$self{'starttime'} ) {
+			$Shift = new openprint::Shift();
+			$Shift->equipment_id( $$self{'equipment_id'} );
+			if ( sets::isin( $self->Project()->status(), ['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
+				$$Shift{'name'} = 'Pending';
+			} else {
+				$$Shift{'name'} = 'Approved';
+			} # end if
 		} else {
-			$$Shift{'name'} = 'Approved';
-		} # end if
-	} else {
-		my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
-		my @Shifts = openprint::Shift::find(
-				'equipment_id'	=>	$$self{'equipment_id'}, 
-				'endtime_>'		=>	$$self{'starttime'}, 
-				'starttime_<='	=>	$$self{'starttime'},
-				#'limit'			=>	1,
-				);
-		if ( ! @Shifts ) {
-$openprint::log->error('Shouldnt have to instantite here');
-# We really shouldn't have to instantiate Shifts here.
-if ( 0 ) {
-			@Shifts = openprint::Equipment_Shift::find(
-					'equipment_id'  =>  $$self{'equipment_id'},
-					'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-					'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-					'limit'		 =>  1,
+			my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
+			my @Shifts = openprint::Shift::find(
+					'equipment_id'	=>	$$self{'equipment_id'}, 
+					'endtime_>'		=>	$$self{'starttime'}, 
+					'starttime_<='	=>	$$self{'starttime'},
+					#'limit'			=>	1,
 					);
-			@Shifts = openprint::Equipment_Shift::find(
-					'equipment_id'  =>  $$self{'equipment_id'},
-					'starttime_>'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-					'order'		 =>  'starttime',
-					'limit'		 =>  1,
-					) if ! @Shifts;
-			$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
-} # end if
-		} else {
-			$Shift = shift @Shifts;
-			if ( @Shifts ) {
-				$log->warn("Deleting duplicate shifts! " . @Shifts );
-				foreach ( @Shifts ) {
-					$log->error( $_->to_string() );
-					#$_->delete();
-				} # end foreach
+			if ( ! @Shifts ) {
+	$openprint::log->error('Shouldnt have to instantite here');
+	# We really shouldn't have to instantiate Shifts here.
+	if ( 0 ) {
+				@Shifts = openprint::Equipment_Shift::find(
+						'equipment_id'  =>  $$self{'equipment_id'},
+						'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+						'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+						'limit'		 =>  1,
+						);
+				@Shifts = openprint::Equipment_Shift::find(
+						'equipment_id'  =>  $$self{'equipment_id'},
+						'starttime_>'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+						'order'		 =>  'starttime',
+						'limit'		 =>  1,
+						) if ! @Shifts;
+				$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
+	} # end if
+			} else {
+				$Shift = shift @Shifts;
+				if ( @Shifts ) {
+					$log->warn("Deleting duplicate shifts! " . @Shifts );
+					foreach ( @Shifts ) {
+						$log->error( $_->to_string() );
+						#$_->delete();
+					} # end foreach
+				} # end if
 			} # end if
 		} # end if
+		return if ! $Shift;
+		$$self{'Shift'} = $Shift;
 	} # end if
-	return if ! $Shift;
-	return $Shift;
+	return $$self{'Shift'};
 } # end sub Shift
 
 sub start {
@@ -881,6 +886,7 @@ sub ServiceType {
 sub equipment_id {
 	if ( @_ > 1 ) {
 		$_[0]{'equipment_id'} = $_[1];
+		delete $_[0]{'Shift'};
 	} # end if
 	if ( ! $_[0]{'equipment_id'} ) {
 		# Attempt to guess

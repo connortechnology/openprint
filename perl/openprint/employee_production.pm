@@ -1345,7 +1345,7 @@ $log->debug("ES: " . $NextES->name() );
 	while ( @order ) {
 		my $row = shift @order;
 		my $run_time = $row->runtime_seconds();
-$log->debug("Runtime: $run_time");
+$log->debug("Runtime: $run_time seconds");
 		my $old_start_time = $start_time - $run_time;
 
 		while ( @fixed_jobs and ( $fixed_jobs[0]->starttime_seconds() < ($start_time+$run_time) ) ) {
@@ -1510,14 +1510,32 @@ sub _li_change {
 	} elsif ( $param{'action'} eq 'Up' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
 		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
-		my $index;
+		my $index = 0;
 		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
-		if ( $index > 0 ) {
-			$_ = $Jobs[$index-1];
-			$Jobs[$index-1] = $Jobs[$index];
-			$Jobs[$index] = $_;
+		return if ! $index; # was first in the list
+
+		if ( $Job->Equipment()->smartscheduling() ) {
+			if ( $index > 0 ) {
+				$_ = $Jobs[$index-1];
+				$Jobs[$index-1] = $Jobs[$index];
+				$Jobs[$index] = $_;
+			} # end if
+			reorder_jobs( @Jobs );
+		} else {
+			if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index-1]->Shift()->ul_id() ) {
+				if ( ! $Job->Shift()->Previous()->Jobs() ) {
+					push @{$variable{'changed'}}, $Job->ul_id();
+					$Job->starttime( $Jobs[$index-1]->Shift()->Next()->starttime() );
+				} # end if
+			} # end if
+			$_ = $Jobs[$index]{'starttime'};
+			$Jobs[$index]{'starttime'} = $Jobs[$index-1]{'starttime'};
+			$Jobs[$index-1]{'starttime'} = $_;
+			$Jobs[$index]->save();
+			$Jobs[$index-1]->save();
+			push @{$variable{'changed'}}, $Jobs[$index]->Shift()->ul_id();
+			push @{$variable{'changed'}}, $Jobs[$index-1]->Shift()->ul_id();
 		} # end if
-		reorder_jobs( @Jobs );
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		$variable{'error'} .= $Job->delete();
