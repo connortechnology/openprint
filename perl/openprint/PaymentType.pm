@@ -16,6 +16,9 @@ $serial = 'paymenttypes_id_seq';
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
 );
+%defaults = (
+	'created_on'	=>	q`'NOW()'`,
+);
 
 1;
 __END__
