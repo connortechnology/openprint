@@ -26,7 +26,7 @@
 			ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'Equipment'}} ], $Price->equipment_id() ),
 		);
 	} else {
-		$html .= sprintf(q`<tr>
+		$html .= sprintf(q`<tr id="paperprice-%1$d">
 				<td class="Equipment"><input type="hidden" name="equipment_id-%1$d" id="equipment_id-%1$d" /></td>
 				<td class="Range">
 					<input class="text" type="text" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
