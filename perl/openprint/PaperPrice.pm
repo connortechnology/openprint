@@ -26,7 +26,7 @@ $serial = 'paper_prices_id_seq';
 	'stock_id'		=>	undef,
 );
 %find_fields = (
-	'stock_id'	=>	'paper_id',
+	'stock_id'	=>	'lngpaperindex',
 );
 %transforms = (
 	'min' => [ 's/,//g', 's/(\d*)/$1/g' ],
