@@ -1643,14 +1643,14 @@ $i->display();
 								last;
 							} # end if
 
-							my %BiggerPrice = $I->Paper()->get_price('weight'=>$qty/$I->imposition(),'service'=>'Material');
-							my %SmallerPrice = $imp->Paper()->get_price('weight'=>$qty/$imp->imposition(),'service'=>'Material');
+							my $BiggerPrice = $I->Paper()->get_price('weight'=>$qty/$I->imposition(),'service'=>'Material');
+							my $SmallerPrice = $imp->Paper()->get_price('weight'=>$qty/$imp->imposition(),'service'=>'Material');
 							if (
 									( $I->Paper()->area() >= $imp->Paper()->area() )
 									and
 									( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
 									and
-									( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
+									( (1*$$BiggerPrice{'100lb'}) >= (1*$$SmallerPrice{'100lb'}) )
 									and
 									( ! ( ! $I->Paper()->is_cut() and $imp->Paper()->is_cut() ) )
 							   ) {
@@ -1661,7 +1661,7 @@ $i->display();
 									and
 									( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
 									and
-									( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
+									( (1*$$BiggerPrice{'100lb'}) <= (1*$$SmallerPrice{'100lb'}) )
 									and
 									( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
 									) {
@@ -2184,7 +2184,7 @@ $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty
 				$stock_qty *= $Paper->area() * $Paper->wpsi();
 			} # end if
 			$stock_qty += $$PaperCounts{$Paper->to_string()};
-			my %SmallerPrice = $Paper->get_price('weight'=>($stock_qty > $Paper->minimum_order_weight() ? $stock_qty : $Paper->minimum_order_weight()),'service'=>'Material' );
+			my $SmallerPrice = $Paper->get_price('weight'=>($stock_qty > $Paper->minimum_order_weight() ? $stock_qty : $Paper->minimum_order_weight()),'service'=>'Material' );
 
 			if ( $SpreadLayout > 0 ) {
 				my $str = sprintf('%d=%dx%d %dx%d-%s-%s', @$imp{'pages','spread_columns','spread_rows','columns','rows','runstyle','image_orientation'} );
@@ -2197,37 +2197,37 @@ $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty
 						} elsif ( ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$sig_specs{"CutOff$qty_index"} ) ) {
 							next;
 						} # end if
-						my %BiggerPrice = $I->Paper()->get_price(
+						my $BiggerPrice = $I->Paper()->get_price(
 							'weight' => ( $stock_qty > $I->Paper()->minimum_order_weight() ? $stock_qty : $I->Paper()->minimum_order_weight() ),
 							'service'=>'Material'
 							);
 						if ( ( $I->Paper()->area() >= $Paper->area() )
 								and ( $I->Paper()->minimum_order_weight() >= $Paper->minimum_order_weight() )
-								and ( (1*$BiggerPrice{'100lb Total'}) >= (1*$SmallerPrice{'100lb Total'}) )
+								and ( (1*$$BiggerPrice{'100lb Total'}) >= (1*$$SmallerPrice{'100lb Total'}) )
 								and ( $I->Paper()->is_cut() or ! $Paper->is_cut() )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
 if ( 0 ) {
-                            $openprint::log->debug( "Dropping $BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+                            $openprint::log->debug( "Dropping $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
                             $I->display();
                             $imp->display();
 }
 
 						} elsif ( ( $I->Paper()->area() <= $Paper->area() )
 								and ( $I->Paper()->minimum_order_weight() <= $Paper->minimum_order_weight() )
-								and ( (1*$BiggerPrice{'100lb Total'}) <= (1*$SmallerPrice{'100lb Total'}) )
+								and ( (1*$$BiggerPrice{'100lb Total'}) <= (1*$$SmallerPrice{'100lb Total'}) )
 								and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
 								) {
 							$add = 0;
 if ( 0 ) {
-                            $openprint::log->debug( "Not adding $BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
+                            $openprint::log->debug( "Not adding $$BiggerPrice{'100lb Total'} " . $I->Paper()->minimum_order_weight() . " $$SmallerPrice{'100lb Total'}" . $Paper->minimum_order_weight() );
                             $I->display();
                             $imp->display();
 }
 
 						} elsif ( 0 ) {
-							$openprint::log->debug( "Not Dropping $BiggerPrice{'100lb'} $SmallerPrice{'100lb'}");
+							$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb'} $$SmallerPrice{'100lb'}");
 							$I->display();
 							$imp->display();
 						} # end if
@@ -2245,22 +2245,22 @@ if ( 0 ) {
 						} elsif ( ( $$sig_specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $I->Paper()->height() == $$sig_specs{"CutOff$qty_index"} ) ) {
 							next;
 						} # end if
-						my %BiggerPrice = $I->Paper()->get_price('weight'=>$qty/$I->imposition(),'service'=>'Material');
+						my $BiggerPrice = $I->Paper()->get_price('weight'=>$qty/$I->imposition(),'service'=>'Material');
 						if ( ( $I->Paper()->area() >= $Paper->area() )
 								and ( $I->Paper()->minimum_order_weight() >= $Paper->minimum_order_weight() )
-								and ( (1*$BiggerPrice{'100lb'}) >= (1*$SmallerPrice{'100lb'}) )
+								and ( (1*$$BiggerPrice{'100lb'}) >= (1*$$SmallerPrice{'100lb'}) )
 								and ( ! ( ( ! $I->Paper()->is_cut() ) and $Paper->is_cut() ) )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 					$j -= 1;
 				} elsif ( ( $I->Paper()->area() < $imp->Paper()->area() )
 						and ( $I->Paper()->minimum_order_weight() <= $Paper->minimum_order_weight() )
-						and ( (1*$BiggerPrice{'100lb'}) <= (1*$SmallerPrice{'100lb'}) )
+						and ( (1*$$BiggerPrice{'100lb'}) <= (1*$$SmallerPrice{'100lb'}) )
 						and ( ( ! $I->Paper()->is_cut() ) or ( $Paper->is_cut() ) )
 						) {
 					$add = 0;
 				} elsif ( 0 ) {
-					$openprint::log->debug( "Not Dropping $BiggerPrice{'100lb'} $SmallerPrice{'100lb'}");
+					$openprint::log->debug( "Not Dropping $$BiggerPrice{'100lb'} $$SmallerPrice{'100lb'}");
 					$I->display();
 					$imp->display();
 				} # end if
@@ -2626,16 +2626,16 @@ $openprint::log->debug("Paper debug: " . $Paper->wpsi() );
 $openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
 }
 				my $weight = $Paper->type() eq 'Sheet' ? ceil($PaperCounts{$paper_string} * $Paper->sheet_weight()) : $PaperCounts{$paper_string};
-				my %paper_price = $Paper->get_price( 'weight'=>$weight,'service'=>'Material' );
-				$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $weight / 100 );
-				$$price{'Comparison Cost'} += $paper_price{'Total'};
-				$$price{'Stock Total'} += $paper_price{'Total'};
+				my $paper_price = $Paper->get_price( 'weight'=>$weight,'service'=>'Material' );
+				$$paper_price{'Total'} = sprintf('%.2f', $$paper_price{'100lb Price'} * $weight / 100 );
+				$$price{'Comparison Cost'} += $$paper_price{'Total'};
+				$$price{'Stock Total'} += $$paper_price{'Total'};
 				$$price{'Paper Breakdown'} .= sprintf('Stock: %s %s %s %s, %slbs * %.2f/100lbs = $%.2f<br/>', 
 						( $Paper->type() eq 'Sheet' ? $PaperCounts{$paper_string} .'sheets' : $PaperCounts{$paper_string}.'lbs'), 
 						$Paper->to_string(),
 						( $Paper->sheets_per_package() ? 'SPP:'.$Paper->sheets_per_package() : '' ),
 						( $Paper->minimum_order() ? 'Minimum: ' . $Paper->minimum_order() : '' ), 
-						$weight, @paper_price{'100lb Price','Total'} );
+						$weight, @$paper_price{'100lb Price','Total'} );
 			} # end foreach Paper in PaperCounts
 #$openprint::log->debug($$price{'Paper Breakdown'});
 #$openprint::log->debug("Comparison: $$price{'Comparison Cost'}");
@@ -2654,10 +2654,15 @@ $openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
 					$$price{'Total Cost'} += $SuppliedPaperPrice{'Total'};
 				} # end if
 			} elsif ( ! openprint::ServiceType::find('name'=>'Paper') ) {
-				my %paper_price = $Paper->get_price( 'weight'=>$$price{'Stock Weight'},'service'=>'Material' );
-				$paper_price{'Total'} = sprintf('%.2f', $paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
-				@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @paper_price{'100lb Cost', '100lb Price', 'Total'};
+				my $paper_price = $Paper->get_price( 'weight'=>$$price{'Stock Weight'},'service'=>'Material' );
+				$$paper_price{'Total'} = sprintf('%.2f', $$paper_price{'100lb Price'} * $$price{'Stock Weight'} / 100 );
+				@$price{'Paper Cost', 'Paper Price', 'Paper Total'} = @$paper_price{'100lb Cost', '100lb Price', 'Total'};
 				$$price{'Total Cost'} += $$price{'Paper Total'};
+			} # end if
+
+			if ( my $StockSetupPrice = $Paper->get_price( 'weight'=>$$price{'Stock Weight'}, 'service'=>'Setup', 'equipment_id'=>$Press->id() ) ) {
+				$$price{'StockSetup'} = $$StockSetupPrice{'price'};
+				$$price{'Total Cost'} += $$StockSetupPrice{'price'};
 			} # end if
 
 			if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) and ! $$project{'roll2sheetcharged'} ) {

@@ -969,80 +969,79 @@ sub recommendations {
 sub get_price {
 	my ( $self, %params ) = @_;
 	
-    my %price;
+    my $price;
 	my $qty = $params{'weight'};
 
-    if ( $$self{'Price'} ) {
+    if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {
 		# If custom paper
-		%price = ( 'Price' => $$self{'Price'}, 'Cost'=>$$self{'Price'}, 'units'=>$$self{'Units'});
+		$price = { 'price' => $$self{'Price'}, 'cost'=>$$self{'Price'}, 'units'=>$$self{'Units'} };
 #$openprint::log->debug("Usnig custom price $$self{'Price'}$$self{'Units'}");
 	} elsif ( $$self{'id'} ) {
-		my $list_id = openprint::pricing::get_pricelist_id( );
-		my $bestPrice;
-		my @Prices = $self->Prices( $list_id );
+		my @Prices = $self->Prices( );
 		if ( (! $$self{'supplied'} ) and ! @Prices ) {
-			$openprint::log->warn( 'No prices for paper for pricelist ' . $list_id );
-			return %price;
+			$openprint::log->warn( 'No prices for paper ' );
+			return;
 		} # end if
+		my $list_id = openprint::pricing::get_pricelist_id( );
 		foreach my $Price ( @Prices ) {
 			next if $Price->pricelist_id() != $list_id;
+			next if ( $params{'equipment_id'} and $Price->equipment_id() and ( $params{'equipment_id'} != $Price->equipment_id() ) );
 			next if $Price->service() ne $params{'service'};
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
 			if ( 
 					( (!(1*$Price->min())) or $Price->min() <= $qty ) and
 					( (!(1*$Price->max())) or $Price->max() >= $qty )
 			   ) {
-				$bestPrice = $Price;
+				$price = $Price->clone();
 				last;
 			} # end if
 		} # end foreach Price
-		if ( ! $bestPrice ) {
-			$openprint::log->warn("Unable to find price for $qty");
+		if ( ! $price ) {
+			$openprint::log->warn("Unable to find price for $params{service} $params{equipment_id} : $qty");
 			return;
 		} # end if
-		$price{'price'} = $bestPrice->price();
-		$price{'units'} = $bestPrice->units();
 		if ( $openprint::config{'ApplyMarkup'} ) {
 		#$openprint::log->debug("Apply Markup: $openprint::config{'ApplyMarkup'}");	
 			my $pricingpercent = $openprint::config{'ApplyMarkup'};
 			$pricingpercent =~ s/[^\d\.\-]//g;
 			$pricingpercent /= 100;
-			$price{'price'} *= ( 1 + $pricingpercent );
+			$$price{'price'} *= ( 1 + $pricingpercent );
 		} # end if
 
 		my $Pricelist = new openprint::Pricelist( $list_id );
-		$price{'currency_id'} = $Pricelist->currency_id();
-		openprint::Currency::convert( \%price );
+		$$price{'currency_id'} = $Pricelist->currency_id();
+		openprint::Currency::convert( $price );
 	} else {
 		$openprint::log->error("No custom price, and no paper::id");
 	} # end if
 
 	my $Company = new openprint::Company( $openprint::session{company_id} );
 	if ( $Company->discount() ) {
-		$price{'price'} *= 1 - ( $Company->discount()/100 );
+		$$price{'price'} *= 1 - ( $Company->discount()/100 );
 	} # end if
 
-# Don't need to cut it because the mweight has already byeen cut
-	$price{'mweight'} = $self->mweight();
-	# Prices are always stored in cwt now
-	if ( ! $$self{'mweight'} ) {
-		# ROll papers won't have an mweight
-		$price{'100lb'} = $price{'price'};
-		$price{'100lb Cost'} = $price{'cost'};
-		$price{'100lb Price'} = $price{'price'};
-		#$price{'Cost'} *= $$self{'wpsi'} * $self->width() * $self->height();
-		#$price{'Price'} *= $$self{'wpsi'} * $self->width() * $self->height();
-	} else {
-		$price{'100lb'} = $price{'price'};
-		$price{'100lb Cost'} = $price{'cost'};
-		$price{'100lb Price'} = $price{'price'};
-		#$price{'Cost'} *= $$self{'mweight'} / 100000;
-		#$price{'Price'} *= $$self{'mweight'} / 100000;
+	if ( $params{'service'} eq 'Material' ) {
+	# Don't need to cut it because the mweight has already byeen cut
+		$$price{'mweight'} = $self->mweight();
+		# Prices are always stored in cwt now
+		if ( ! $$self{'mweight'} ) {
+			# ROll papers won't have an mweight
+			$$price{'100lb'} = $$price{'price'};
+			$$price{'100lb Cost'} = $$price{'cost'};
+			$$price{'100lb Price'} = $$price{'price'};
+			#$price{'Cost'} *= $$self{'wpsi'} * $self->width() * $self->height();
+			#$price{'Price'} *= $$self{'wpsi'} * $self->width() * $self->height();
+		} else {
+			$$price{'100lb'} = $$price{'price'};
+			$$price{'100lb Cost'} = $$price{'cost'};
+			$$price{'100lb Price'} = $$price{'price'};
+			#$price{'Cost'} *= $$self{'mweight'} / 100000;
+			#$price{'Price'} *= $$self{'mweight'} / 100000;
+		} # end if
+		$$price{'100lb Total'} = $$price{'100lb Price'} * $qty/100;
 	} # end if
-	$price{'100lb Total'} = $price{'100lb Price'} * $qty/100;
 #$openprint::log->debug("Costs: ($price{Cost}) ($price{'100lb'})/100lb ($price{'100lb Cost'}) ($price{'Price'})") if $debug;
-	return %price;
-
+	return $price;
 } # end sub get_price
 
 
