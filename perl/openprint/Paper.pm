@@ -428,7 +428,7 @@ sub save {
 		sql::insert( undef, undef, 'Paper_Recommendations', 'lngPaperIndex', $$self{'id'},'lngProjectTypeIndex', $rec );
 	} # end foreach
 
-	foreach my $Price ( $self->prices() ) {
+	foreach my $Price ( $self->Prices() ) {
 		if ( $$Price{'paper_id'} != $$self{'id'} ) {
 			$$Price{'paper_id'} = $$self{'id'};
 			$$Price{'id'} = undef;

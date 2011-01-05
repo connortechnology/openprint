@@ -50,7 +50,7 @@ sub list {
 		foreach my $Paper ( @Papers ) {
 			my $ac = sql::start_transaction( $dbh );
 			if ( $param{'mode'} eq 'modify' ) {
-				foreach my $Price ( $Paper->prices() ) {
+				foreach my $Price ( $Paper->Prices() ) {
 					if ( $param{'amount'} ne '' ) {
 						if ( $param{'amount'} =~ /^\+(.*)/ ) {
 							$Price->cost( $Price->cost() + $1 );
@@ -73,7 +73,7 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 					$variable{'error'} .= $Price->save();
 				} # end foreach Price
 			} elsif ( $param{'mode'} eq 'new' ) {
-				foreach my $Price ( $Paper->prices() ) {
+				foreach my $Price ( $Paper->Prices() ) {
 					$Price->delete();
 				} # end foreach Price
 				foreach my $key ( keys %param ) {
@@ -182,7 +182,7 @@ sub stock {
 		} # end foreach
 
 # Save prices
-		foreach my $Price ( openprint::PaperPrice::find('stock_id'=>$Paper->id()) ) {
+		foreach my $Price ( $Paper->Prices() ) {
 			if (
 					( $Price->price() != $param{"price-$$Price{id}"} ) 
 					or ( $Price->min() != $param{"min-$$Price{id}"} )
@@ -451,7 +451,7 @@ sub _price_tr {
 		$variable{'Price'} = new openprint::PaperPrice();
 	} elsif ( $param{'action'} eq 'Copy' ) {
 		$variable{'Price'} = $variable{'Price'}->copy();
-		$variable{'error'} .= $variable{'Price'}->save();
+		$variable{'error'} .= $variable{'Price'}->save( \%param );
 	} # end if
 
 } # end sub _price_tr

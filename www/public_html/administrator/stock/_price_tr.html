@@ -8,7 +8,7 @@
 
 	if ( $Price->service() ne 'Material' ) {
 		$html .= sprintf(q`<tr id="paperprice-%1$d">
-				<td class="Equipment"><select name="equipment_id-%1$d"><option value=""> all </option>%8$s</select></td>
+				<td class="Equipment"><select name="equipment_id-%1$d" onchange="check_price(this);"><option value=""> all </option>%8$s</select></td>
 				<td class="Range">
 					<input type="text" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
 					<input type="text" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);"/>
@@ -27,7 +27,7 @@
 		);
 	} else {
 		$html .= sprintf(q`<tr>
-				<td class="Equipment">&nbsp;</td>
+				<td class="Equipment"><input type="hidden" name="equipment_id-%1$d" id="equipment_id-%1$d" /></td>
 				<td class="Range">
 					<input class="text" type="text" name="min-%1$d" value="%2$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />
 					<input class="text" type="text" name="max-%1$d" value="%3$s" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');check_price(this);" />

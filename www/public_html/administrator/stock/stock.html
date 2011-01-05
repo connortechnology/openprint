@@ -17,13 +17,26 @@
 		);
 	} // end function newPrice
 	function copyPrice( id ) {
-		new Ajax.Updater( 'Prices', '_prices.html', 
+		var form = $('f1');
+
+		new Ajax.Request( '_price_tr.html', 
 			{ 
 				method: 'get', 
 				parameters: { 
 					stock_id: '<?stock_id?>',
 					price_id: id,
-					action: 'Copy'
+					action: 'Copy',
+					equipment_id: get_value( form.elements['equipment_id-'+id] ),
+					min: form.elements['min-'+id].getValue(),
+					max: form.elements['max-'+id].getValue(),
+					cost: form.elements['cost-'+id].getValue(),
+					markup: form.elements['markup-'+id].getValue(),
+					price: form.elements['price-'+id].getValue(),
+					units: form.elements['units-'+id].getValue(),
+					discountable: get_value($('f1').elements['discountable-'+id])
+				},
+				onSuccess: function( transport ) {
+					$('paperprice-'+ id).insert({after: transport.responseText} );
 				}
 			} 
 		);
