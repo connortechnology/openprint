@@ -963,7 +963,7 @@ $log->debug("REFERRER ($referer)");
 	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
 	if ( $session{$referer.'?pending_approved'} ) {
-		foreach my $equipment_id ( split(';', $session{$referer.'?Equipment'} ) ) {
+		foreach my $equipment_id ( split(',', $session{$referer.'?Equipment'} ) ) {
 			my $E = new openprint::Equipment( $equipment_id );
 			push @{$variable{'Equipment'}}, $E if $E->id();
 		} # end foreach
@@ -978,7 +978,7 @@ $log->debug("REFERRER ($ENV{'HTTP_REFERER'}) ($referer)");
 	$session{$referer.'?pending'} = $session{$referer.'?pending'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
 	if ( $session{$referer.'?pending'} ) {
-		foreach my $equipment_id ( split(';', $session{$referer.'?Equipment'} ) ) {
+		foreach my $equipment_id ( split(',', $session{$referer.'?Equipment'} ) ) {
 			my $E = new openprint::Equipment( $equipment_id );
 			push @{$variable{'Equipment'}}, $E if $E->id();
 		} # end foreach
