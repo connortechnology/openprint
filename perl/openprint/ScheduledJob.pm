@@ -373,6 +373,9 @@ sub get_li {
 	my $Equipment = $self->Equipment();
 
 	my $colour = '';
+	my @printing_service_type_ids = map { $_->id() } openprint::ServiceType::find('category'=>'Printing');
+	my @bindery_service_type_ids = map { $_->id() } openprint::ServiceType::find('category'=>'Bindery');
+
 
 	if ( $$self{'project_id'} ) {
 		if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
@@ -381,10 +384,12 @@ sub get_li {
 			$colour = 'complete';
 		} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
 			$colour = 'approval';
-		} elsif ( 1 < sql::execute( $log, $dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=? AND servicetype_id=?}, @$self{'project_id','servicetype_id'} ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids ) ) ) {
 			$colour = 'multipress';
-		} elsif ( find( 'project_id'=>$$self{'project_id'}, 'starttime_<'=>$$self{'starttime'} ) ) {
-			$colour = 'earlier_services';
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids ) ) ) {
+			$colour = 'multibindery';
+		#} elsif ( 1 < find( 'project_id'=>$$self{'project_id'} ) ) {
+			#$colour = 'earlier_services';
 		} # end if
 		if ( $Project->rush() ) {
 			$colour .= ' rush';

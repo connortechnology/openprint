@@ -77,6 +77,10 @@ sub find {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
 	} # end if
+	if ( exists $params{'shift_id'} ) {
+		$sql .= ' AND shift_id=?';
+		push @values, $params{'shift_id'};
+	} # end if
 	if ( $params{'startdate'} ) {
 		$sql .= ' AND date(starttime) = ?';
 		push @values, $params{'startdate'};

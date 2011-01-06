@@ -2,7 +2,7 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo ( 
 	my $html;
-	if ( sets::isin( $$variable{'name'},[ 'Signature','Printing','Cutting','Folding','SaddleStitching','LoopStitching' ] ) ) {
+	if ( sets::isin( $$variable{'name'},[ 'Signature','Printing','Cutting','Folding','Saddle Stitching','LoopStitching' ] ) ) {
 		if ( my $Job = openprint::ScheduledJob::find_one('service_id'=>$$variable{'index'}) ) {
 			if ( ! $Job->starttime() ) {
 				$html = 'Scheduled in pending';

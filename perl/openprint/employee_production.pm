@@ -1800,7 +1800,14 @@ sub _equipment_popup {
 sub _equipment_message {
 	my $Equipment = $variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
 	if ( $param{'action'} eq 'Save' ) {
-		$Equipment->save({'message'=>$param{'message'}});
+		if ( $param{'message'} ) {
+			$Equipment->save({
+				'message'=>$param{'message'}. ' ...'.(
+					new openprint::User($session{'user_id'})->firstname()
+					)});
+		} else {
+			$Equipment->save({'message'=>''});
+		} # end if
 	} # end if
 } # end sub _equipment_popup
 
