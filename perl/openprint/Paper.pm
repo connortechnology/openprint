@@ -361,6 +361,7 @@ sub save {
 
 	delete $$self{'in_stock'};
 	$self->in_stock();
+	#$self->wpsi( undef );
 
 	foreach my $key ( @fields ) {
 		$$self{$key} = undef if $$self{$key} eq '';
@@ -721,6 +722,7 @@ sub mweight {
     if ( defined $mweight ) {
         $mweight =~ s/[^\d\.]//g;
         $$self{'mweight'} = 1*$mweight;
+		$self->wpsi(undef) if $$self{'mweight'};
 	} # end if
 	if ( ! $$self{'mweight'} ) {
 		if ( $$self{'gsm'} ) {
@@ -738,6 +740,7 @@ sub mweight {
 #$openprint::log->debug("Auto calcing mweight from " . $self->weight() );
 			$$self{'mweight'} = sprintf('%.0f', ($self->weight()*$$self{'width'}*$$self{'height'})/(25*38));
 		} # end if
+		$self->wpsi(undef);
     } # end if
     return $$self{'mweight'};
 } # end sub mweight
@@ -1093,8 +1096,9 @@ sub gsm {
 	my $self = shift;
 	if ( @_ ) {
 		$$self{'gsm'} = shift;
+		$self->wpsi(undef) if $$self{'gsm'};
 	} elsif ( ! $$self{'gsm'} ) {
-		if ( $self->wpsi() ) {
+		if ( $self->wpsi(undef) ) {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
 			$openprint::log->warn("Can't calculate gsm");
