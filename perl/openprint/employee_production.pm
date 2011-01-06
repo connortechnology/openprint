@@ -1506,7 +1506,31 @@ sub _li_change {
 					openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
+		if ( $param{'servicetype_id'} ) {
+			# The intent is to copy the job
+			foreach my $servicetype_id ( ref $param{'servicetype_id'} eq 'ARRAY' ? @{$param{'servicetype_id'}} : split(',',$param{'servicetype_id'}) ) {
+				my @Services = openprint::Project_Service->find('project_id'=>$Job->project_id(),'servicetype_id'=>$servicetype_id);
+				if ( ! @Services ) {
+					# Add one.
+					push @Services, $Job->Project()->add_Service( new openprint::ServiceType( $servicetype_id ) );
+				} # end if
+				foreach my $Service ( @Services ) {
+					my $J = openprint::ScheduledJob::find_one('project_id'=>$Job->project_id(), 'service_id'=>$Service->service_id());
+					if ( ! $J ) {
+						$J = new openprint::ScheduledJob();
+						$J->save({
+							'project_id'		=>	$Service->project_id(),
+							'service_id'		=>	[$Service->service_id()],
+							'equipment_id'		=>	$param{'equipment_id'},
+							'servicetype_id'	=>	$Service->servicetype_id(),
+						});
+					} # end if
+					$variable{'error'} .= $J->bump( $param{'equipment_id'} );
+				} # end foreach Service
+			} # end foreach servicetype_id
+		} else {
+			$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
+		} # end if
 	} elsif ( $param{'action'} eq 'Up' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
 		my @Jobs = openprint::ScheduledJob::find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
@@ -1814,6 +1838,14 @@ sub _equipment_message {
 sub _drop_popup {
 	$r->content_type('text/javascript');
 } # end sub _drop_popup
+
+sub _bump_job_popup_servicetypes {
+	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+} # end sub _bump_job_popup_servicetypes
+
+sub _add_maintenance {
+} # end sub _add_maintenance
 
 1;
 __END__

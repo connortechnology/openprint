@@ -638,7 +638,7 @@ sub Shift {
 		if ( ! $$self{'starttime'} ) {
 			$Shift = new openprint::Shift();
 			$Shift->equipment_id( $$self{'equipment_id'} );
-			if ( sets::isin( $self->Project()->status(), ['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
+			if ( sets::isin( $self->Project()->status(), ['','In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
 				$$Shift{'name'} = 'Pending';
 			} else {
 				$$Shift{'name'} = 'Approved';

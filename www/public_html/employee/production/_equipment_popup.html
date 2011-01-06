@@ -2,7 +2,11 @@
 	<input type="hidden" name="equipment_id" value="<? echo ( $param{'equipment_id'} ) ?>" />
 	<fieldset><legend>Edit <? echo ( $$variable{'Equipment'}->strid() .' ' . $$variable{'Equipment'}->name() ) ?></legend>
 		<p><label>Message:</label>
-		<textarea name="message" id="message" rows="<? echo ( ssi::count_lines( $$variable{'Equipment'}->message() ); ) ?>" cols="" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Equipment'}->message() ) ?></textarea>
+		<textarea name="message" id="message" rows="<? echo ( ssi::count_lines( $$variable{'Equipment'}->message() ); ) ?>" cols="" onkeyup="textarea_resize(this);"><? echo ( 
+	$_ = $$variable{'Equipment'}->message();
+	$_ =~ s/ \.\.\.\w+$//;
+	return $_;
+ ) ?></textarea>
 		</p>
 		<p class="buttons">
 			<? echo ( my $html;

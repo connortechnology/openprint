@@ -2,7 +2,7 @@
 	<input type="hidden" name="btnFunction" value="Add Docket" />
 	<fieldset><legend>Add Maintenance</legend>
 		<p><label>Comment:</label>
-			<textarea name="Comment" rows="5"></textarea>
+			<textarea name="comment" rows="5"></textarea>
 		</p>
 		<p><label>Press:</label>
 			<select name="press_id">
@@ -31,7 +31,7 @@
 			<input type="text" name="runtime" value="" size="7" />
 		</p>
 		<p class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', 'AddDocketForm.submit();', '', 'Submit' ); ) ?>
+			<? echo ( ssi::writeButton( $log, $dbh, 'Submit', 'submit.gif', "\$('AddDocketForm').submit();", '', 'Submit' ); ) ?>
 			<? echo ( ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'contentWin.destroy();', '', 'Cancel' ); ) ?>
 		</p>
 	</fieldset>

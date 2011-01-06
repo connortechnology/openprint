@@ -1464,5 +1464,10 @@ sub add_service {
     delete $$self{'signatures'};
     return $service_index;
 } # end sub add_service
+
+sub add_Service {
+	my $service_id = $_[0]->add_service( $_[1] );
+	return new openprint::Project_Service( {'project_id'=>$_[0]{'id'},'service_id'=>$service_id} );
+} # end sub add_Service
 1;
 __END__

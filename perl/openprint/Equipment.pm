@@ -525,5 +525,10 @@ sub servicetype_id {
 	return $$self{'servicetype_id'};
 } # end sub servicetype_id
 
+sub ServiceTypes {
+	return () if ! $_[0]{'servicetype_id'};
+	return map { new openprint::ServiceType( $_ ); } @{$_[0]{'servicetype_id'}};
+} # end sub ServiceTypes
+
 1;
 __END__
