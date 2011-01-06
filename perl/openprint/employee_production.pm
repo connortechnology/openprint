@@ -1036,9 +1036,9 @@ sub _drop {
 					my $services = $Project->services();
 					my @PS = openprint::Project_Service->find('project_id'=>$Job->project_id());
 					my @service_type_ids = sets::intersection( @{$Equipment->servicetype_id()}, sets::union( map { $_->servicetype_id() } @PS ) );
-$log->error("Equp: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
-$log->error("PS st: " . join(',', map { $_->servicetype_id() } @PS ) );
-$log->error("service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
+$log->error("Equp dropped on: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
+$log->error("ProjectServices in Project st: " . join(',', map { $_->servicetype_id() } @PS ) );
+$log->error("Shared service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
 					if ( ! @service_type_ids ) {
 						foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
 							my $ST = new openprint::ServiceType( $servicetype_id );

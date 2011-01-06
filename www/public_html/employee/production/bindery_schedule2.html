@@ -320,7 +320,7 @@
 								if ( $Shift->starttime_seconds() < Date::Parse::str2time($tomorrow) ) {
 									push @NewShifts, $Shift;
 								} else {
-									$log->error("Bad shift! " . $Shift->to_string() );
+									$log->error("Bad shift! " . $Shift->to_string()  . " today: $today tomorrow: $tomorrow");
 								} # end if
 							} # end if ! found
 

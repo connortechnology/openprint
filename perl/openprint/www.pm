@@ -65,12 +65,13 @@ sub handler {
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
 	foreach my $key ( sort sets::union( $r->param ) ) {
 		my @values = $r->param($key);
+		next unless scalar @values;
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
 				$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
-			$param{$key} = shift @values;
-				$log->debug("Parameter $key is (" . $param{$key} . ")" );
+			$param{$key} = $values[0];
+			$log->debug("Parameter $key is (" . $param{$key} . ")" . ref $param{$key} );
 		} # end if
 	} # end foreach
 

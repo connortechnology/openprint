@@ -383,6 +383,8 @@ sub get_li {
 			$colour = 'approval';
 		} elsif ( 1 < sql::execute( $log, $dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=? AND servicetype_id=?}, @$self{'project_id','servicetype_id'} ) ) {
 			$colour = 'multipress';
+		} elsif ( find( 'project_id'=>$$self{'project_id'}, 'starttime_<'=>$$self{'starttime'} ) ) {
+			$colour = 'earlier_services';
 		} # end if
 		if ( $Project->rush() ) {
 			$colour .= ' rush';
@@ -637,9 +639,7 @@ sub Shift {
 					#'limit'			=>	1,
 					);
 			if ( ! @Shifts ) {
-	$openprint::log->error('Shouldnt have to instantite here');
-	# We really shouldn't have to instantiate Shifts here.
-	if ( 0 ) {
+				# Things like Bump can push a job to the very end, where a shift might need to be created.
 				@Shifts = openprint::Equipment_Shift::find(
 						'equipment_id'  =>  $$self{'equipment_id'},
 						'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
@@ -653,11 +653,10 @@ sub Shift {
 						'limit'		 =>  1,
 						) if ! @Shifts;
 				$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
-	} # end if
 			} else {
 				$Shift = shift @Shifts;
 				if ( @Shifts ) {
-					$log->warn("Deleting duplicate shifts! " . @Shifts );
+					$log->error("Deleting duplicate shifts! " . @Shifts );
 					foreach ( @Shifts ) {
 						$log->error( $_->to_string() );
 						#$_->delete();
@@ -724,7 +723,7 @@ sub bump {
 		$self->save({'equipment_id'=>$equipment_id});
 		# Shuffle the old list
 		if ( $old_equipment_id and new openprint::Equipment( $old_equipment_id )->smartscheduling() ) {
-		openprint::employee_production::reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$old_equipment_id,'starttime_null'=>0,'order'=>'starttime' ))
+			openprint::employee_production::reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$old_equipment_id,'starttime_null'=>0,'order'=>'starttime' ))
 		} # end if
 	} # end if
 

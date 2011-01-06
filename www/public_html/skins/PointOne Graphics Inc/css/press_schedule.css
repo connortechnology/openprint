@@ -74,26 +74,30 @@ div.PressColumn ul li:after {
 div.PressColumn ul li {display: block;}
 /* End hide from IE-mac */
 
-	div.PressColumn li.multipress, div.PressColumn li.scheduled, li.multipress, li.scheduled {
-		background-color: #ffff99;
-	}
-	div.PressColumn li.regular, div.PressColumn li.unscheduled, li.regular, li.unscheduled {
-		background-color: #ffffff;
-	}
-	div.PressColumn li.inprepress, li.inprepress {
-		background-color: #caffc4;
-	}
-	div.PressColumn li.complete, li.complete {
-		background-color: #FAC6FF;
-	}
-	div.PressColumn li.approval, li.approval {
-		background-color: #FF0000;
-		color: black;
-	}
-	div.PressColumn li.rush, li.rush {
-		border: 2px solid blue;
-	} 
-	.legend li.rush {
+div.PressColumn li.earlier_service,
+div.PressColumn li.multipress, 
+div.PressColumn li.scheduled, 
+li.multipress, 
+li.scheduled {
+	background-color: #ffff99;
+}
+div.PressColumn li.regular, div.PressColumn li.unscheduled, li.regular, li.unscheduled {
+	background-color: #ffffff;
+}
+div.PressColumn li.inprepress, li.inprepress {
+	background-color: #caffc4;
+}
+div.PressColumn li.complete, li.complete {
+	background-color: #FAC6FF;
+}
+div.PressColumn li.approval, li.approval {
+	background-color: #FF0000;
+	color: black;
+}
+div.PressColumn li.rush, li.rush {
+	border: 2px solid blue;
+} 
+.legend li.rush {
 width: 196px;
 } 
 	.When {
