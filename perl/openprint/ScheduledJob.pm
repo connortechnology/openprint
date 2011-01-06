@@ -203,6 +203,14 @@ sub runtime_seconds {
 	return misc::hms2time( $self->runtime() );
 } # end sub runtime_seconds
 
+sub starttime {
+	if ( @_ > 1 ) {
+		$_[0]{'starttime'} = $_[1];
+		delete $_[0]{'Shift'};
+	} # end if
+	return $_[0]{'starttime'};
+} # end sub starttime
+
 sub starttime_seconds {
 	my $self = shift;
 	if ( @_ ) {
@@ -733,32 +741,40 @@ sub bump {
 	} # end if
 
 	my $error;
-	if ( ! $$self{'starttime'} ) {
-		@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime+runtime+'1 second'::interval) FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
-		my $starttime_seconds = $self->starttime_seconds();
-		$starttime_seconds = time if $starttime_seconds < time;
+	if ( $self->Equipment()->smartscheduling() ) {
+		if ( ! $$self{'starttime'} ) {
+			@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime+runtime+'1 second'::interval) FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
+			my $starttime_seconds = $self->starttime_seconds();
+			$starttime_seconds = time if $starttime_seconds < time;
 
-		$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
-		push @{$variable{'changed'}}, $self->Shift()->ul_id();
-	} elsif ( $self->Equipment()->smartscheduling() ) {
-		my @final_order = openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_<'=>$self->starttime(),'order'=>'starttime' );
-		foreach my $Job ( $self->Shift()->Schedule() ) {
-			push @final_order, $Job if $$Job{'id'} != $$self{'id'};
-		} # end foreach job in schift
-		push @final_order, $self->Shift()->Next()->Schedule();
-		push @final_order, $self;
-		push @final_order, openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
-
-		openprint::employee_production::reorder_jobs( @final_order );
-	} else {
-		my $NextShift = $self->Shift()->Next();
-		my @NextSchedule = $NextShift->Schedule();
-		if ( @NextSchedule ) {
-			my $LastJob = pop @NextSchedule;
-			$self->starttime_seconds($LastJob->endtime_seconds()+1);
-			$self->save();
+			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
+			push @{$variable{'changed'}}, $self->Shift()->ul_id();
 		} else {
-			$self->save({'starttime'=>$NextShift->starttime()});
+			my @final_order = openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_<'=>$self->starttime(),'order'=>'starttime' );
+			foreach my $Job ( $self->Shift()->Schedule() ) {
+				push @final_order, $Job if $$Job{'id'} != $$self{'id'};
+			} # end foreach job in schift
+			push @final_order, $self->Shift()->Next()->Schedule();
+			push @final_order, $self;
+			push @final_order, openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
+
+			openprint::employee_production::reorder_jobs( @final_order );
+		} # end if
+	} else {
+		if ( ! $$self{'starttime'} ) {
+			@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime)+'1 second'::interval FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
+			my $starttime_seconds = $self->starttime_seconds();
+			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
+		} else {
+			my $NextShift = $self->Shift()->Next();
+			my @NextSchedule = $NextShift->Schedule();
+			if ( @NextSchedule ) {
+				my $LastJob = pop @NextSchedule;
+				$self->starttime_seconds($LastJob->endtime_seconds()+1);
+				$self->save();
+			} else {
+				$self->save({'starttime'=>$NextShift->starttime()});
+			} # end if
 		} # end if
 		push @{$variable{'changed'}}, $self->Shift()->ul_id();
 	} # end if smartscheduling
