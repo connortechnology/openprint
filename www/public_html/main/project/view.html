@@ -93,11 +93,16 @@ There is no current project.
 				$html .= qq`($$specs{"txtQuantity$qty_index"}) `;
 			} # end if
 			if ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) {
-				$html .= '<b>';
-				if ( $$variable{'price$qty_index'} ne '-' ) {
-					$html .= $$variable{'CurrencySymbol'};
+				my $Service = $$variable{'Project'}->Service($service_ids[0]);
+				if ( $Service->ServiceType()->name() eq 'Shipping' and $$variable{"price$qty_index"} == 0 ) {
+					$html .= '<b>extra<br/></b>';
+				} else {
+					$html .= '<b>';
+					if ( $$variable{"price$qty_index"} ne '-' ) {
+						$html .= $$variable{'CurrencySymbol'};
+					} # end if
+					$html .= $$variable{"price$qty_index"} ."</b><br/>\n";
 				} # end if
-				$html .= $$variable{"price$qty_index"} ."</b><br/>\n";
 			} # end if
 			my $summary = openprint::service::summary( $$variable{'ProjectIndex'}, $service_ids[0], $qty_index );
 			if ( $$variable{'name'} =~ /(\d+) Signatures/ ) {
