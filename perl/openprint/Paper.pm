@@ -1000,7 +1000,9 @@ sub get_price {
 			} # end if
 		} # end foreach Price
 		if ( ! $price ) {
-			$openprint::log->warn("Unable to find price for $params{service} $params{equipment_id} : $qty");
+			if ( $params{'service'} eq 'Material' or $debug ) {
+			$openprint::log->warn("Unable to find price for Stock $params{service} $params{equipment_id} : $qty");
+			} # end if
 			return;
 		} # end if
 		if ( $openprint::config{'ApplyMarkup'} ) {

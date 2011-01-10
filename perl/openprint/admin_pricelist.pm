@@ -31,14 +31,17 @@ sub edit {
 	} elsif ( $r->param('btnFunction') eq 'Copy' ) {
 		my $new = new openprint::Pricelist( );
 		$openprint::param{'name'} = 'Copy of '.$openprint::param{'name'};
-		$new->save( \%openprint::param );
+		$$variable{'error'} .= $new->save( \%openprint::param );
+		if ( $$variable{'error'} ) {
+			return;
+		} # end if
 		openprint::logs::insertLogRecord('32', "Price List: " . $openprint::param{'name'},);
 		my $ac = sql::start_transaction( $dbh );
 		my @prices = $Pricelist->getPrices();
 		foreach my $price (@prices ) {
 			$$price{'id'} = undef;
 			$$price{'pricelist_id'} = $new->id();
-			$price->save();
+			$$variable{'error'} .= $price->save();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 
@@ -314,8 +317,6 @@ $openprint::log->debug("Doing $name");
 		} # end if
 
 	} # end if
-
-	@$variable{'ID', 'Name','Description', 'Currency'} = @$Pricelist{'id','Name','Description','Currency'};
 
 } # end sub edit
 
