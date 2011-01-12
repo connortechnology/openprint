@@ -596,6 +596,14 @@ span.DateSelector {
 	float: left;
 	width: 275px;
 }
+span.DateSelectorC {
+	float: left;
+	width: 275px;
+}
+span.DateSelectorCT {
+	float: left;
+	width: 300px;
+}
 span.DateTimeSelector {
 	float: left;
 	width: 400px;

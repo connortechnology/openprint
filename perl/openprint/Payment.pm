@@ -20,16 +20,16 @@ require sql;
 	'id'				=>	'id',
 	'order_id'			=>	'order_id',
 	'recipient_id'		=>	'owner_id',
-	'payor_id'			=>	'payor_id',
-	'amount'			=>	'amount',
+	'payor_id'			=>	'company_id',
+	'amount'			=>	'curamount',
 	'created_on'		=>	'created_on',
 	'updated_on'		=>	'updated_on',
-	'method'			=>	'method',
+	'method'			=>	'strmethod',
 	'currency_id'		=>	'currency_id',
-	'transaction_id'	=>	'transaction_id',
-	'memo'				=>	'memo',
+	'transaction_id'	=>	'strtransactionid',
+	'memo'				=>	'strdescription',
 	'completed'			=>	'completed',
-	'received_on'		=>	'date',
+	'received_on'		=>	'dtmdate',
 	'remaining'			=>	'remaining',
 	'deleted'			=>	'deleted',
 );
@@ -44,6 +44,12 @@ require sql;
 	'deleted'		=>	0,
 );
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	my %params = @_;
 

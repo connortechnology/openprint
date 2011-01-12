@@ -13,10 +13,12 @@
 	my @Orders = openprint::Order::find(
 		'status'		=>	[ 'In Production','Picked Up','Shipped','Waiting For Customer Approval','Complete','Waiting For Pickup','Order Submitted','Paid','Pending Deposit','Re-Opened' ],
 		'company_id'	=>	( @company_ids ? \@company_ids : '' ),
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00',
-			@session{'/employee/reports/stock_usage.html?ordered_on_start_year','/employee/reports/stock_usage.html?ordered_on_start_month','/employee/reports/stock_usage.html?ordered_on_start_day'} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59',
-			@session{'/employee/reports/stock_usage.html?ordered_on_end_year','/employee/reports/stock_usage.html?ordered_on_end_month','/employee/reports/stock_usage.html?ordered_on_end_day'} ),
+		( Date::Calc::check_date( @session{'/employee/reports/stock_usage.html?ordered_on_start_year','/employee/reports/stock_usage.html?ordered_on_start_month','/employee/reports/stock_usage.html?ordered_on_start_day'} ) ? 
+		  ( 'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00',
+			@session{'/employee/reports/stock_usage.html?ordered_on_start_year','/employee/reports/stock_usage.html?ordered_on_start_month','/employee/reports/stock_usage.html?ordered_on_start_day'} ) ) : () ),
+		( Date::Calc::check_date( @session{'/employee/reports/stock_usage.html?ordered_on_end_year','/employee/reports/stock_usage.html?ordered_on_end_month','/employee/reports/stock_usage.html?ordered_on_end_day'} ) ? (
+'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59',
+			@session{'/employee/reports/stock_usage.html?ordered_on_end_year','/employee/reports/stock_usage.html?ordered_on_end_month','/employee/reports/stock_usage.html?ordered_on_end_day'} ) ) : () ),
 );
 	my %totals;
 	my %Stocks;

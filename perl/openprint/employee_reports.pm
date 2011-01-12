@@ -24,7 +24,8 @@ sub stock_usage {
 $openprint::log->debug("Hello");
 	ssi::save_params('/employee/reports/stock_usage.html', 'company_id', 'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day','ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 'Manufacturer', 'Name', 'Finish', 'Colour', 'Weight', 'Type', 'fsc_code', 'width','height','OrLarger', 'basis_weight','mweight' );
 
-	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on', -31 );
+	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_start', -31 );
+	ssi::setup_date_select( '/employee/reports/stock_usage.html', 'ordered_on_end', '' );
 $openprint::log->debug("Hello $session{'/employee/reports/stock_usage.html?ordered_on_start_year'} $session{'/employee/reports/stock_usage.html?ordered_on_start_day'}");
 } # end sub stock_usage
 

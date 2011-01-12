@@ -403,6 +403,25 @@ sub uploads {
 	require openprint::Upload;
 } # end sub uploads
 
+sub customer_performance {
+	ssi::save_params('/administrator/reports/customer_performance.html', 
+			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
+			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
+			'not_ordered_on_start_year','not_ordered_on_start_month','not_ordered_on_start_day',
+			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
+			'salesrep_id','payment_cycle' );
+	ssi::setup_date_select( '/administrator/reports/customer_performance.html', 'ordered_on_start', -31 );
+	ssi::setup_date_select( '/administrator/reports/customer_performance.html', 'ordered_on_end', 0 );
+} # end sub customer_performance
+sub _customer_performance {
+	ssi::save_params('/administrator/reports/customer_performance.html',  
+			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
+			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
+			'not_ordered_on_start_year','not_ordered_on_start_month','not_ordered_on_start_day',
+			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
+			'salesrep_id','payment_cycle' );
+} # end sub _customer_performance
+
 1;
 
 __END__
