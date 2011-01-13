@@ -127,7 +127,7 @@ sub calc {
 
 		if ( $qtyTotal ) {
 			$price = $totalSetupPrice + $totalServicePrice + $totalMaterialPrice;
-			$unitPrice = $price / $qty;
+			$unitPrice = $price / $qty if $qty;
 		} else {
 			$$specs{'alert'} .= 'Please specify # of perfs';
 			$status = 'uncalculated';

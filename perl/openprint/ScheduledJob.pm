@@ -464,7 +464,9 @@ sub get_li {
 		if ( $$self{'project_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
 			$html .= ssi::writeButton( $log, $dbh, 'Up'.$$self{'id'}, '', "new Ajax.Request( '_li_change.json', {parameters: { schedule_id:$$self{'id'}, action: 'Up' }, evalScripts: true } );", '', 'U' );
+		} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
+		if ( $$self{'project_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", '', 'C' );
 			$html .= ssi::writeButton( $log, $dbh, 'House'.$$self{'id'}, '', "new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{'id'}, action: 'House Stock' } } );", '', 'H' );
 		} # end if

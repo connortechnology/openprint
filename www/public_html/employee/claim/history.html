@@ -49,7 +49,8 @@
 			</select>
 		</p>
 		<? eval (
-				ssi::setup_date_select( '/employee/claim/history.html', 'created_on', -31 );
+				ssi::setup_date_select( '/employee/claim/history.html', 'created_on_start', -31 );
+				ssi::setup_date_select( '/employee/claim/history.html', 'created_on_end', 0 );
         ) ?>
 		<p>
 			<label>Created:</label>

@@ -55,7 +55,8 @@
 			</select>
 		</p>
 		<? eval (
-				ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting', -7 );
+				ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_start', -7 );
+				ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_end', 0 );
         ) ?>
 		<p>
 			<label>Date:</label>

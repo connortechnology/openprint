@@ -1031,6 +1031,7 @@ sub _drop {
 			my @servicetypes_to_add;
 			foreach my $row_id ( @order ) {
 				my $Job = new openprint::ScheduledJob( $row_id );
+				next if ! $Job->project_id(); # Maintenance work, etc
 				if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 					my $Project = $Job->Project();
 					my $services = $Project->services();
@@ -1063,7 +1064,7 @@ $log->debug("Order before coalesce: @order");
 		for ( my $i = 0; $i < @order; $i += 1 ) {
 			my $row_id = $order[$i];
 			my $Job = new openprint::ScheduledJob( $row_id );
-			if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+			if ( $Job->project_id() and ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 				my @Jobs;
 				my $Project = $Job->Project();
 				if ( $param{'action'} eq 'add_services' ) {
@@ -1509,24 +1510,31 @@ sub _li_change {
 		if ( $param{'servicetype_id'} ) {
 			# The intent is to copy the job
 			foreach my $servicetype_id ( ref $param{'servicetype_id'} eq 'ARRAY' ? @{$param{'servicetype_id'}} : split(',',$param{'servicetype_id'}) ) {
-				my @Services = openprint::Project_Service->find('project_id'=>$Job->project_id(),'servicetype_id'=>$servicetype_id);
-				if ( ! @Services ) {
-					# Add one.
-					push @Services, $Job->Project()->add_Service( new openprint::ServiceType( $servicetype_id ) );
-				} # end if
-				foreach my $Service ( @Services ) {
-					my $J = openprint::ScheduledJob::find_one('project_id'=>$Job->project_id(), 'service_id'=>$Service->service_id());
-					if ( ! $J ) {
-						$J = new openprint::ScheduledJob();
-						$J->save({
-							'project_id'		=>	$Service->project_id(),
-							'service_id'		=>	[$Service->service_id()],
-							'equipment_id'		=>	$param{'equipment_id'},
-							'servicetype_id'	=>	$Service->servicetype_id(),
-						});
+				if ( ! $Job->project_id() ) {
+					my $J = $Job->copy();
+					$J->save({
+						'equipment_id'		=>	$param{'equipment_id'},
+					});
+				} else {
+					my @Services = openprint::Project_Service->find('project_id'=>$Job->project_id(),'servicetype_id'=>$servicetype_id);
+					if ( ! @Services ) {
+						# Add one.
+						push @Services, $Job->Project()->add_Service( new openprint::ServiceType( $servicetype_id ) );
 					} # end if
-					$variable{'error'} .= $J->bump( $param{'equipment_id'} );
-				} # end foreach Service
+					foreach my $Service ( @Services ) {
+						my $J = openprint::ScheduledJob::find_one('project_id'=>$Job->project_id(), 'service_id'=>$Service->service_id());
+						if ( ! $J ) {
+							$J = new openprint::ScheduledJob();
+							$J->save({
+								'project_id'		=>	$Service->project_id(),
+								'service_id'		=>	[$Service->service_id()],
+								'equipment_id'		=>	$param{'equipment_id'},
+								'servicetype_id'	=>	$Service->servicetype_id(),
+							});
+						} # end if
+						$variable{'error'} .= $J->bump( $param{'equipment_id'} );
+					} # end foreach Service
+				} # end if project_id
 			} # end foreach servicetype_id
 		} else {
 			$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
@@ -1845,6 +1853,8 @@ sub _bump_job_popup_servicetypes {
 } # end sub _bump_job_popup_servicetypes
 
 sub _add_maintenance {
+	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
+	$variable{'referer'} = $referer;
 } # end sub _add_maintenance
 
 1;

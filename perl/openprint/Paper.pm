@@ -27,7 +27,7 @@ require openprint::StockQuality;
 
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 1;
+my $debug = 0;
 
 my @fields = (
 		'id', 'created_on',
