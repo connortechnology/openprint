@@ -61,7 +61,7 @@ sub calc {
 	} # end if
 	my $ServiceType = $Project->ServiceType( $service_index );
 	my $status = 'calculated';
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 
 	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
 	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
