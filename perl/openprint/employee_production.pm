@@ -1514,7 +1514,7 @@ sub _li_change {
 						push @Services, $Job->Project()->add_Service( new openprint::ServiceType( $servicetype_id ) );
 					} # end if
 					foreach my $Service ( @Services ) {
-						my $J = openprint::ScheduledJob::find_one('project_id'=>$Job->project_id(), 'service_id'=>$Service->service_id());
+						my $J = openprint::ScheduledJob->find_one('project_id'=>$Job->project_id(), 'service_id'=>$Service->service_id());
 						if ( ! $J ) {
 							$J = new openprint::ScheduledJob();
 							$J->save({
