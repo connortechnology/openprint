@@ -26,11 +26,11 @@ return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strca
 	@{$$variable{'Equipment'}} = ();
 	my @presses = openprint::Equipment->find('category'=>$session{'/employee/production/operator_schedule.html?category'},'UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
-		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/operator_schedule.html?Equipment'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/operator_schedule.html?Equipment'} ) ] );
+		push @{$$variable{'Equipment'}}, $_ if ! $session{'/employee/production/operator_schedule.html?Equipment'} or sets::isin( $_->id(), [ split(',', $session{'/employee/production/operator_schedule.html?Equipment'} ) ] );
 	} # end foreach press
 
 	if ( $session{'/employee/production/operator_schedule.html?Equipment'} ) {
-		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/operator_schedule.html?Equipment'} ] );
+		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ',', $session{'/employee/production/operator_schedule.html?Equipment'} ] );
 	} else {
 		return ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
@@ -43,7 +43,7 @@ return ssi::make_drop_down( [ sql::execute( undef, undef, 'SELECT DISTINCT strca
 			<label>Operator</label>
 			<select multiple="multiple" id="operator_id" name="operator_id" size="4">
 <? echo ( 
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>'E', 'order'=>'lower(firstname),lower(lastname)') ], [ split ';', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); 
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>'E', 'order'=>'lower(firstname),lower(lastname)') ], [ split ',', $session{'/employee/production/operator_schedule.html?operator_id'} ] ); 
 ) ?>
 			</select>
 		</p>

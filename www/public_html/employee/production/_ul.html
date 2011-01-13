@@ -2,7 +2,7 @@
 	if ( $$variable{'Shift'} ) {
 		my $filters;
 		if ( $$variable{'Shift'}->name() eq 'Pending' ) {
-			$filters = {'Status'=>['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval']};
+			$filters = {'Status'=>['','In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval']};
 		} elsif ( $$variable{'Shift'}->name() eq 'Approved' ) {
 			$filters = {'Status'=>['Approved','Shipped','Picked Up']};
 		} # end if
@@ -10,8 +10,6 @@
 	} # end if
 ) ?>
 <script type="text/javascript">
-<!--
 	setup_drops();
 	setup_dates();
--->
 </script>

@@ -380,7 +380,8 @@ sub credit_applications {
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
 		} # end if
 	} # end if
-	ssi::setup_date_select( '/employee/accounting/credit_applications.html', 'created_on', -180, 0 );
+	ssi::setup_date_select( '/employee/accounting/credit_applications.html', 'created_on_start', -180 );
+	ssi::setup_date_select( '/employee/accounting/credit_applications.html', 'created_on_end', 0 );
 	ssi::save_params( '/employee/accounting/credit_applications.html',
 			'ddmStatus',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day',

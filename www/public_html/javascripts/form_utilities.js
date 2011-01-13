@@ -915,6 +915,15 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 	if ( e_min )
 		ddm_select_by_value( e_min, d.getMinutes() );
 } // end function set_today
+function date_clear( e_y, e_m, e_d, e_h, e_min ) {
+	ddm_select_by_value( e_y, '' );
+	ddm_select_by_value( e_m, '' );
+	ddm_select_by_value( e_d, '' );
+	if ( e_h )
+		ddm_select_by_value( e_h, '' );
+	if ( e_min )
+		ddm_select_by_value( e_min, '' );
+} // end function date_clear
 
 function set_date( form, from, to ) {
 	ddm_select_by_value( form.elements[to+'_year'], get_ddm_value( form.elements[from+'_year'] ) );

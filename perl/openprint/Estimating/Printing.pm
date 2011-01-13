@@ -1990,6 +1990,9 @@ sub breakdown {
 	$breakdown .= $$price{'Setup Breakdown'};
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f<br/>', $$price{'Roll2SheetMakeReady'} ) if $$price{'Roll2SheetMakeReady'};
 	$breakdown .= sprintf('Stock Setup: $%1$.2f<br/>', $$price{'StockSetup'} ) if $$price{'StockSetup'};
+	if ( my $VersionPrice = $$price{'Version Price'} ) {
+		$breakdown .= sprintf('Version Charge: $%1$.2f %2$s for %4$d versions = $%3$.2f<br/>', @$VersionPrice{'Price','units','Total'}, $$specs{'Versions'} );
+	} # end if
 	my $ImpositionCharge = $$price{'Imposition Price'};
 	if ( $$ImpositionCharge{units} eq 'Per Page' ) {
 		$breakdown .= sprintf('Imposition Charge: $%1$.2f + $%3$.2f*%4$d pages = $%2$.2f<br/>', @$price{'Imposition MakeReady','Imposition Total'}, $$ImpositionCharge{Price}, $Imposition->pages() );
@@ -2956,6 +2959,18 @@ sub calc_price {
 				$imposition = int($imposition / $$specs{'Versions'}) * $$specs{'Versions'};
 			} # end 
 		} # end 
+		my %VersionCharge = openprint::service::get_price_object( 'Version Setup', $$specs{'Versions'} );
+		if ( %VersionCharge ) {
+			if ( $VersionCharge{'units'} eq 'each' ) {
+				$VersionCharge{'Total'} = $VersionCharge{'Price'}*$$specs{'Versions'};
+			} elsif ( $VersionCharge{'units'} eq 'total' ) {
+				$VersionCharge{'Total'} = $VersionCharge{'Price'};
+			} else {
+				$log->error("unknown units  $VersionCharge{'units'} for VersionCharge");
+			} # end if
+			$price{'Version Charge'} = sprintf('%.2f', $VersionCharge{'Total'} );
+			$price{'Version Price'} = \%VersionCharge;
+		} # end if
 	} # end if 
 
 	my $net_sheets;
@@ -3502,7 +3517,7 @@ sub calc_price {
 		$price{'Plate Setup Count'} = $_->{'Plate Count'};
 		$price{'Plate Setup Units'} = $_->{'Plate Units'};
 	} # end if
-	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'};
+	my $setup_cost = $press_setup + $price{'WorkTurn Dry Charge'} + $price{'Plate Total'} + $price{'Ink Mix Charge'} + $price{'Press Wash Total'} + $price{'Version Charge'};
 
 	# Recalculate Overs, etc using Plate Count now
 	if ( $$project{'print_sides'} == 1 ) {
@@ -3684,7 +3699,7 @@ sub calc_price {
 	$setup_cost += $price{'Runstyle Charge'};
 
 	$price{'Comparison Cost'} += $setup_cost;
-	$price{'Setup Total'} = $setup_cost;
+	$price{'Setup Total'} += $setup_cost;
 
 	$price{'Press Setup'} = $press_setup;
 

@@ -114,9 +114,9 @@
 	<tr><td colspan="1">Press:</td><td colspan="9">
 <? echo ( 
 	my $html = '';
-	my @presses = split(';', $$variable{'CAR'}->presses());
+	my @presses = split(',', $$variable{'CAR'}->presses());
 	foreach my $Press ( openprint::Equipment->find('category'=>'Printing','use_in_scheduling'=>1) ) {
-$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d" %3$s/><label for="presses%1$d">%2$s</label>', $Press->id(), $Press->name(), sets::isin( $Press->id(), @presses ) ? 'checked="checked"' : '' );
+		$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d" %3$s/><label for="presses%1$d">%2$s</label>', $Press->id(), $Press->name(), sets::isin( $Press->id(), @presses ) ? 'checked="checked"' : '' );
 	} # end foreach
 	return $html;
 ) ?>
