@@ -54,9 +54,9 @@
 			} # end if
 			my @types = sets::union( map{ $_->type_id() } $PO->Contents() );
 			if ( ! @types ) {
-				next if ! sets::isin( ' ', [ split(';',$session{'/employee/inventory/purchase_orders.html?types'} ) ] );
+				next if ! sets::isin( ' ', [ split(',',$session{'/employee/inventory/purchase_orders.html?types'} ) ] );
 			} else {
-				next if ! sets::intersection( @types, split(';', $session{'/employee/inventory/purchase_orders.html?types'} ) );
+				next if ! sets::intersection( @types, split(',', $session{'/employee/inventory/purchase_orders.html?types'} ) );
 			} # end if
 
 			push @{$$variable{'PurchaseOrders'}}, $PO;

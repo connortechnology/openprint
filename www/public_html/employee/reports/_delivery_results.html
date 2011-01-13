@@ -24,7 +24,11 @@
 		if ( ref $param{'Status'} eq 'ARRAY' ) {
 			$sql .= " AND Projects.strStatus IN ('".join("','",@{$param{'Status'}} )."')";
 		} else {
+<<<<<<< HEAD
 			$sql .= " AND Projects.strStatus = '$param{'Status'}'";
+=======
+			$sql .= " AND tbl_Projects.strStatus IN ('".join("','", split(',', $openprint::param{'Status'} ) )."')";
+>>>>>>> 7d5e7a01a166d490040329d19169f629a80fe81a
 		} # end if
 	} # end if
 	$sql .= " AND (SELECT lngSalesPerson FROM Companies WHERE Companies.id=Projects.company_id) = $param{'CSR'}" if $param{'CSR'};

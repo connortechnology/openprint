@@ -86,6 +86,16 @@ if ( ! exists $$data{'updated_on'} ) {
 	$dbh->do('ALTER TABLE hosts add updated_on TIMESTAMP WITH TIME ZONE NOT NULL default NOW()');
 } # end if
 
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
+if ( ! exists $$data{'equipment_id'} ) {
+	$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
+	$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY(equipment_id) REFERENCES tbl_Equipment (id)');
+} # end if
+if ( ! exists $$data{'service'} ) {
+	$dbh->do('ALTER TABLE paper_prices add service text');
+	$dbh->do("UPDATE paper_prices set service='Material'" );
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

@@ -97,7 +97,7 @@ $log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $
 		$Shift = new openprint::Shift();
 		$Shift->save({
 				'equipment_id'	=>	$$self{'equipment_id'},
-				'operator_id'	=>	$$self{'operator_id'},
+				'operator_id'	=>	( $$self{'operator_id'} ? $$self{'operator_id'} : $openprint::session{'user_id'} ),
 				'shift_id'		=>	$$self{'id'},
 				'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ),
 				'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
@@ -131,7 +131,7 @@ sub Operator {
 
 sub First {
 	my ( $self ) = @_;
-	return find_one( 
+	return openprint::Equipment_Shift->find_one( 
 			'equipment_id'	=>	$$self{'equipment_id'},
 			'order'			=>	'starttime',
 			);
@@ -139,12 +139,20 @@ sub First {
 
 sub Next {
 	my ( $self ) = @_;
-	return find_one( 
+	return openprint::Equipment_Shift->find_one( 
 			'equipment_id'	=>	$$self{'equipment_id'},
 			'starttime_>'	=>	$$self{'starttime'},
 			'order'			=>	'starttime',
 			);
 } # end sub Next
+
+sub delete {
+	foreach my $Shift ( openprint::Shift->find('shift_id'=>$_[0]{'id'}) ) {
+#$log->debug("Delete shift " . $Shift->to_string() );
+		$Shift->delete();
+	} # end foreach
+	my $error = $_[0]->SUPER::delete();
+} # end sub delete
 
 1;
 __END__

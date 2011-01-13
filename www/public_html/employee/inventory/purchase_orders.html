@@ -53,6 +53,10 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/purchase_orders.html?supplier_id'} ); ) ?>
 			</select>
 		</p>
+		<? eval (
+				ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_start', -7 );
+				ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_end', 0 );
+        ) ?>
 		<p>
 			<label>Date:</label>
 			<span class="DateSelector">
@@ -97,9 +101,9 @@
 			<? echo (
 				my $html;
 				foreach my $Type ( openprint::PurchaseOrder_ContentType->find('order'=>'name') ) {
-					$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id(), $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(';', $session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! $session{'/employee/inventory/purchase_orders.html?types'} ) );
+					$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, $Type->id(), $Type->name(), ssi::checked( sets::isin( $Type->id(), [ split(',', $session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! exists $session{'/employee/inventory/purchase_orders.html?types'} ) );
 				} # end foreach Type
-				$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="LoadContent('Results', '_purchase_orders.html', $('f1') );" /><label class="radio" for="types%1$s">%2$s</label>`, ' ', 'None', ssi::checked( sets::isin( ' ', [ split(';',$session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! exists $session{'/employee/inventory/purchase_orders.html?types'} ) );
+				$html .= sprintf(q`<input type="checkbox" id="types%1$s" name="types" value="%1$s" %3$s onclick="page_load('Results',this.form);" /><label class="radio" for="types%1$s">%2$s</label>`, ' ', 'None', ssi::checked( sets::isin( ' ', [ split(',',$session{'/employee/inventory/purchase_orders.html?types'} ) ] ) or ! exists $session{'/employee/inventory/purchase_orders.html?types'} ) );
 				return $html;
 			) ?>
 		</p>

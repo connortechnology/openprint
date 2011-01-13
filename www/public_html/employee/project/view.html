@@ -127,13 +127,8 @@ if ( $$variable{'HiddenSignatures'} ) {
 						);
 				$html .= sprintf('<td class="price"><b>%s</b><br/>%s</td>', openprint::Currency::format( $ProjectCurrency->convert_from( $sig_specs{'txtPrice'.$qty_index} )),openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs, $qty_index ) );
 				$totals[$qty_index] += $ProjectCurrency->convert_form( $sig_specs{'txtPrice'.$qty_index} );
-				$html .= '<td class="status">'.$statuses{$ss_id};
-				my $Job = openprint::ScheduledJob->find_one('service_id'=>$ss_id);
-				if ( $Job and $Job->starttime() ) {
-					$html .= '<br/>Scheduled for: ' . Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Job->starttime() ) );
-				} elsif ( $statuses{$ss_id} eq 'Ordered' ) {
-					$html .= '<br/>Not scheduled';
-				} # end if
+				$html .= '<td class="status" id="status'.$ss_id.'">';
+				$html .= ssi::include( '/employee/project/_status.html' );
 				$html .= '</td>';
 				$html .= "</tr>\n";
 				$rowclass = $rowclass ? '' : ' class="colRow"';
@@ -172,16 +167,8 @@ if ( $$variable{'HiddenSignatures'} ) {
 					$summary =~ s/\n/<br\/>/g;
 					$html .= $summary;
 					$html .= '</td>';
-                    $html .= '<td class="status">'.$statuses{$service_id};
-					if ( $ServiceCategory->name() eq 'Shipping' ) {
-						require openprint::SignatureCapture;
-						my @Signatures = openprint::SignatureCapture->find(
-								'project_id'	=>	$$variable{'Project'}->id(),
-								'service_id'	=>	$service_id,
-								'order'			=>	'id',
-								);
-						$html .= '<br/>' . join('<br/>', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="thumbnail"/>`, $_->id(), $_->file_path() ); } @Signatures );
-					} # end if
+					$html .= '<td class="status" id="status'.$service_id.'">';
+					$html .= ssi::include( '/employee/project/_status.html' );
 					$html .= '</td>';
                     $html .= "</tr>\n";
                     $rowclass = $rowclass ? '' : ' class="colRow"';

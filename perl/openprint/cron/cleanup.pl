@@ -15,6 +15,7 @@ require openprint::Project;
 require openprint::PaperInventory;
 require openprint::CIP3_PPF;
 require openprint::Host;
+require openprint::Log;
 use Date::Calc;
 use Apache::Session::Postgres;
 
@@ -51,26 +52,30 @@ foreach my $session ( @session_ids ) {
         next;
     }
     if ( ! $session{'lastupdated'} ) {
-    $log->debug("Updating time $session");
+		$log->debug("Updating time $session");
         $session{'lastupdated'} = time;
         untie %session;
     } elsif ( time - $session{'lastupdated'} > ( 60*60*24*7 ) ) {
-        untie %session;
-		sql::execute( 0, $dbh, q{DELETE FROM sessions where id=?}, $session );
+		tied(%session)->delete;
+		$deleted_session_count += 1;
+    } elsif ( ( time - $session{'lastupdated'} > ( 60*60*24*1 ) ) and ! $session{'user_id'} ) {
+		tied(%session)->delete;
 		$deleted_session_count += 1;
 	} else {
-		untie %session;
+		undef %session;
 	} # end if
 } # end foreach
+@session_ids = ();
 $log->warn("Deleted $deleted_session_count sessions");
 
-if ( 1 ) {
+if ( 0 ) {
 # Clean out uncalculated projects
 	my @Projects = openprint::Project->find(
 			'status'=>'uncalculated',
 			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'limit'		=>	100,
 			);
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -97,6 +102,7 @@ if ( 1 ) {
 			'order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'limit'		=>	100,
 			);
 	if ( @Projects ) {
 		$log->warn("# of Unordered projects to delete: ".@Projects . ' ids ' . $Projects[0]->id() . ' to ' . $Projects[@Projects-1]->id() );
@@ -127,6 +133,7 @@ if ( 1 ) {
 			'status'=>'Deleted','order'=>'id desc',
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
 			'updated_on_end' => sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -180 ) ),
+			'limit'		=>	100,
 			);
 	if ( @Projects ) {
 		my $ac = sql::start_transaction( $dbh );
@@ -148,7 +155,8 @@ if ( 1 ) {
 	} # end if Projects
 } # end if 1
 if ( 1 ) {
-		my @CIPS = openprint::CIP3_PPF->find('data_null'=>0);
+	# THis sucks RAM like a MOFO
+		my @CIPS = openprint::CIP3_PPF->find('data_null'=>0,'limit'=>100);
 		$log->warn(@CIPS . " cip files to clear the data from" );
 		foreach my $CIP ( @CIPS ) {
 			my @Projects = openprint::Project->find('docket'=>$CIP->docket());
@@ -288,6 +296,13 @@ foreach my $Paper ( openprint::Paper->find() ) {
 		$Paper->save();
 	} # end if
 } # end foreach my Paper
+my $log_count;
+foreach my $Log ( openprint::Log->find('when_end'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
+	$Log->delete();
+	$log_count += 1;
+} # end foreach Log
+$log->warn("Deleted $log_count log entries");
+
 $dbh->disconnect();
 1;
 __END__

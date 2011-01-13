@@ -110,7 +110,7 @@ sub find {
 $openprint::log->debug('Specifications not a hash ref in Equipment->find: ' .  $params{'Specifications'}  );
 		} # end if
 	} # end if
-if ( $params{'servicetype_id'} ) {
+if ( exists $params{'servicetype_id'} ) {
         if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
             $sql .= ' AND servicetype_id={?}';
             push @values, $params{'servicetype_id'};
@@ -538,6 +538,11 @@ sub servicetype_id {
 	return [] if ! $$self{'servicetype_id'};
 	return $$self{'servicetype_id'};
 } # end sub servicetype_id
+
+sub ServiceTypes {
+	return () if ! $_[0]{'servicetype_id'};
+	return map { new openprint::ServiceType( $_ ); } @{$_[0]{'servicetype_id'}};
+} # end sub ServiceTypes
 
 1;
 __END__

@@ -4,14 +4,26 @@
 	} elsif ( $param{'ip'} ) {
 		@{$$variable{'Hosts'}} = openprint::Host->find('ip'=>$param{'ip'}, 'order'=>'lower(hostname)');
 	} else {
-		@{$$variable{'Hosts'}} = openprint::Host->find('order'=>
-$param{'order'} ? $param{'order'} : 'lower(hostname)',
-( $param{'blacklisted'} ne '' ? ( 'blacklist'=>$param{'blacklisted'} ) : () ),
-( $param{'whitelisted'} ne '' ? ( 'whitelist'=>$param{'whitelisted'} ) : () ),
-		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/it/hosts.html?created_on_start_year','/employee/it/hosts.html?created_on_start_month','/employee/it/hosts.html?created_on_start_day'} ),
-		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/hosts.html?created_on_end_year','/employee/it/hosts.html?created_on_end_month','/employee/it/hosts.html?created_on_end_day'} ),
-		'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/it/hosts.html?updated_on_start_year','/employee/it/hosts.html?updated_on_start_month','/employee/it/hosts.html?updated_on_start_day'} ),
-		'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/hosts.html?updated_on_end_year','/employee/it/hosts.html?updated_on_end_month','/employee/it/hosts.html?updated_on_end_day'} ),
+		@{$$variable{'Hosts'}} = openprint::Host->find(
+			'order' => $param{'order'} ? $param{'order'} : 'lower(hostname)',
+			( $param{'blacklisted'} ne '' ? ( 'blacklist'=>$param{'blacklisted'} ) : () ),
+			( $param{'whitelisted'} ne '' ? ( 'whitelist'=>$param{'whitelisted'} ) : () ),
+			( Date::Calc::check_date( @session{
+									  '/employee/it/hosts.html?created_on_start_year',
+									  '/employee/it/hosts.html?created_on_start_month',
+									  '/employee/it/hosts.html?created_on_start_day',
+									  } ) ? 
+											( 'created_on_>=' => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+											 '/employee/it/hosts.html?created_on_start_year',
+											 '/employee/it/hosts.html?created_on_start_month',
+											 '/employee/it/hosts.html?created_on_start_day',
+											 } ) ) : 
+			  () ),
+			( Date::Calc::check_date( @session{'/employee/it/hosts.html?created_on_end_year','/employee/it/hosts.html?created_on_end_month','/employee/it/hosts.html?created_on_end_day'} ) ? ( 'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/hosts.html?created_on_end_year','/employee/it/hosts.html?created_on_end_month','/employee/it/hosts.html?created_on_end_day'} ) ) : () ),
+	( Date::Calc::check_date( @session{'/employee/it/hosts.html?updated_on_start_year','/employee/it/hosts.html?updated_on_start_month','/employee/it/hosts.html?updated_on_start_day'} ) ?
+		( 'updated_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/it/hosts.html?updated_on_start_year','/employee/it/hosts.html?updated_on_start_month','/employee/it/hosts.html?updated_on_start_day'} ) ) : () ),
+	( Date::Calc::check_date(@session{'/employee/it/hosts.html?updated_on_end_year','/employee/it/hosts.html?updated_on_end_month','/employee/it/hosts.html?updated_on_end_day'}) ?
+		( 'updated_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/it/hosts.html?updated_on_end_year','/employee/it/hosts.html?updated_on_end_month','/employee/it/hosts.html?updated_on_end_day'} ) ) : () ),
 			);
 	} 
 ) ?>
@@ -29,9 +41,10 @@ $param{'order'} ? $param{'order'} : 'lower(hostname)',
 	<tbody>
 		<? echo (
 			my $html;
+			my $rowclass;
 			foreach my $Host ( @{$$variable{'Hosts'}} ) {
 				$html .= sprintf('
-					<tr>
+					<tr%7$s>
 						<td><input type="checkbox" id="host_id" name="host_id" value="%1$d"/></td>
 						<td><a href="/employee/it/host.html?host_id=%1$d">%2$s</a></td>
 						<td><a href="/employee/it/host.html?host_id=%1$d">%3$s</a></td>
@@ -47,7 +60,10 @@ $param{'order'} ? $param{'order'} : 'lower(hostname)',
 						( $Host->whitelist() ? 'whitelisted' : () ),
 						( $Host->monitor() ? 'monitored' : () ),
 					) ),
-					$Host->description() );
+					$Host->description(),
+$rowclass,
+ );
+$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Host
 			return $html;
 		) ?>

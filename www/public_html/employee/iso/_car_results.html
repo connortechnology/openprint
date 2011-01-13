@@ -2,7 +2,7 @@
    if ( $openprint::param{StartYear} ) {
 		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','status' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-				$session{'/employee/iso/cars.html?'.$key} = join(';', @{$openprint::param{$key}} );
+				$session{'/employee/iso/cars.html?'.$key} = join(',', @{$openprint::param{$key}} );
 			} else {
 				$session{'/employee/iso/cars.html?'.$key} = $openprint::param{$key};
 			}
@@ -45,8 +45,8 @@
 			my $html;
 			my $rowclass;
 			foreach my $CAR ( @{$$variable{'CARs'}} ) {
-				next if $CAR->part4_signed_on() and $session{'/employee/iso/cars.html?status'} and ! sets::isin( 'Closed', split(';', $session{'/employee/iso/cars.html?status'} ) );
-				next if (!$CAR->part4_signed_on()) and $session{'/employee/iso/cars.html?status'} and ! sets::isin( 'Open', split(';', $session{'/employee/iso/cars.html?status'} ) );
+				next if $CAR->part4_signed_on() and $session{'/employee/iso/cars.html?status'} and ! sets::isin( 'Closed', split(',', $session{'/employee/iso/cars.html?status'} ) );
+				next if (!$CAR->part4_signed_on()) and $session{'/employee/iso/cars.html?status'} and ! sets::isin( 'Open', split(',', $session{'/employee/iso/cars.html?status'} ) );
 				$html .= "<tr$rowclass>";
 				#$html .= sprintf( '<td class="unprintable"><input type="checkbox" name="cars" value="%d"/></td>', $$CAR{'id'} );
 				$html .= sprintf( '<td><a href="car.html?car_id=%d">%d</a></td>', $$CAR{'id'}, $$CAR{'id'} );
