@@ -916,6 +916,12 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 		ddm_select_by_value( e_min, d.getMinutes() );
 } // end function set_today
 
+function set_date( form, from, to ) {
+	ddm_select_by_value( form.elements[to+'_year'], get_ddm_value( form.elements[from+'_year'] ) );
+	ddm_select_by_value( form.elements[to+'_month'], get_ddm_value( form.elements[from+'_month'] ) );
+	ddm_select_by_value( form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
+} // end function set_date
+
 function check_time_starting( form, starting_prefix, ending_prefix ) {
     var start;
     var end;

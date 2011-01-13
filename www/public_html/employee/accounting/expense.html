@@ -118,14 +118,17 @@ function update_total( form ) {
 						return ssi::date_select( 'invoiced_on', $$variable{'Expense'}->invoiced_on(), {
 							'with_today'=>1,
 							'onchange'=>q`new Ajax.Updater('Taxes','_expense_taxes.html', { parameters: { expense_id: '` . $$variable{'Expense'}->id() . q`', invoiced_on_year: $('invoiced_on_year').value, invoiced_on_month: $('invoiced_on_month').value,invoiced_on_day: $('invoiced_on_day').value }, evalScripts: true } );`} ); ) ?>
+					<? echo ( ssi::writeButton( $log, $dbh, 'setall', 'setall.gif', q`var form = $('f1');set_date( form, 'invoiced_on', 'due_on' );set_date( form, 'invoiced_on', 'paid_on' );`, '', 'All' ); ) ?>
 				</li>
 				<li>
 					<label>Due On:</label>
 					<? echo ( return ssi::date_select( 'due_on', $$variable{'Expense'}->due_on(), { 'with_today'=>1 } ); ) ?>
+					<? echo ( ssi::writeButton( $log, $dbh, 'setall', 'setall.gif', q`var form = $('f1');set_date( form, 'due_on', 'invoiced_on' );set_date( form, 'due_on', 'paid_on' );`, '', 'All' ); ) ?>
 				</li>
 				<li>
 					<label>Paid On:</label>
 					<? echo ( return ssi::date_select( 'paid_on', $$variable{'Expense'}->paid_on(), { 'with_today'=>1 } ); ) ?>
+					<? echo ( ssi::writeButton( $log, $dbh, 'setall', 'setall.gif', q`var form = $('f1');set_date( form, 'paid_on', 'due_on' );set_date( form, 'paid_on', 'invoiced_on' );`, '', 'All' ); ) ?>
 				</li>
 				<li>
 					<label for="description">Description</label>
