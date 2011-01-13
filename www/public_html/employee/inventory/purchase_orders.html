@@ -54,20 +54,14 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/inventory/purchase_orders.html?supplier_id'} ); ) ?>
 			</select>
 		</p>
-		<? eval (
-				ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_start', -7 );
-				ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_end', 0 );
-        ) ?>
 		<p>
 			<label>Date:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_start',  { 'onchange'=> "page_load('Results',\$('f1'));" } ); ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'startToday', 't.gif', 'set_today( f1.starting_start_year, f1.starting_start_month, f1.starting_start_day );', '', 'T' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_start',  { 'onchange'=> "page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
             to
             </span>
             <span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_end', { 'onchange'=>"page_load('Results',\$('f1'));" } ); ) ?>
-<? echo ( ssi::writeButton( $log, $dbh, 'endToday', 't.gif', 'set_today( f1.starting_end_year, f1.starting_end_month, f1.starting_end_day );', '', 'T' ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_end', { 'onchange'=>"page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
             </span>
 		</p>
 		<p>

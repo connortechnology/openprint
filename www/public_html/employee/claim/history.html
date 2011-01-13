@@ -48,29 +48,25 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company::find( 'order'=>'lower(strname)', 'supplier'=>'Y') ], $session{'/employee/claim/history.html?supplier_id'} ); ) ?>
 			</select>
 		</p>
-		<? eval (
-				ssi::setup_date_select( '/employee/claim/history.html', 'created_on_start', -31 );
-				ssi::setup_date_select( '/employee/claim/history.html', 'created_on_end', 0 );
-        ) ?>
 		<p>
 			<label>Created:</label>
-			<span class="DateSelector">
+			<span class="DateSelectorT">
 			<? echo ( 
 				ssi::date_select_session( '/employee/claim/history.html', 'created_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} );
 			 ) ?>
             to
             </span>
-            <span class="DateSelector">
+            <span class="DateSelectorT">
 			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'created_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
             </span>
 		</p>
 		<p>
 			<label>Updated:</label>
-			<span class="DateSelector">
+			<span class="DateSelectorT">
 			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'updated_on_start', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
             to
             </span>
-            <span class="DateSelector">
+            <span class="DateSelectorT">
 			<? echo ( ssi::date_select_session( '/employee/claim/history.html', 'updated_on_end', {'onchange'=>"load('Results',\$('f1'));",'with_today'=>1} ); ) ?>
             </span>
 		</p>

@@ -58,6 +58,23 @@
 		<? endif ( $$variable{'uri'} =~ /prepress_schedule/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
+<? echo (
+	my $html;
+	my $css = $$variable{'uri'};
+	$css =~ s/^\///;
+	$css =~ s/\..+$//;
+	my @parts = split '/', $css;
+	while ( @parts ) {
+	$css = join('_', @parts ) . '.css';
+		$log->debug("URI: $$variable{uri} $css");
+		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
+			$html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+		}
+		pop @parts;
+	} # end while
+	return $html;
+) ?>
+
 	</head>
 	<? eval (
 		$session{'menu'} = $param{'menu'} if exists $param{'menu'};
