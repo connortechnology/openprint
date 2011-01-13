@@ -93,7 +93,7 @@ if ( ! exists $$data{'equipment_id'} ) {
 } # end if
 if ( ! exists $$data{'service'} ) {
 	$dbh->do('ALTER TABLE paper_prices add service text');
-	$dbh->do("UPDATE TABLE paper_prices set service='Material'" );
+	$dbh->do("UPDATE paper_prices set service='Material'" );
 } # end if
 
 $dbh->disconnect();
