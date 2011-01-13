@@ -1,4 +1,4 @@
-<script type="text/javascript" src="/administrator/stock/stock.js?version=1.0"></script>
+<script type="text/javascript" src="/administrator/stock/stock.js?version=1.1"></script>
 <script type="text/javascript" >
 	function newPrice( service, pricelist_id ) {
 		new Ajax.Request( '_price_tr.html',
@@ -18,22 +18,19 @@
 	} // end function newPrice
 	function copyPrice( id ) {
 		var form = $('f1');
-
-		new Ajax.Request( '_price_tr.html', 
-			{ 
-				method: 'get', 
+		new Ajax.Request( '_price_tr.html', { 
 				parameters: { 
 					stock_id: '<?stock_id?>',
 					price_id: id,
 					action: 'Copy',
 					equipment_id: get_value( form.elements['equipment_id-'+id] ),
-					min: form.elements['min-'+id].getValue(),
-					max: form.elements['max-'+id].getValue(),
-					cost: form.elements['cost-'+id].getValue(),
-					markup: form.elements['markup-'+id].getValue(),
-					price: form.elements['price-'+id].getValue(),
-					units: form.elements['units-'+id].getValue(),
-					discountable: get_value($('f1').elements['discountable-'+id])
+					min: form.elements['min-'+id].value,
+					max: form.elements['max-'+id].value,
+					cost: form.elements['cost-'+id].value,
+					markup: form.elements['markup-'+id].value,
+					price: form.elements['price-'+id].value,
+					units: form.elements['units-'+id].value,
+					discountable: get_value(form.elements['discountable-'+id])
 				},
 				onSuccess: function( transport ) {
 					$('paperprice-'+ id).insert({after: transport.responseText} );
@@ -218,7 +215,7 @@
 				</p>
 				<p> 
 					<label>WPSI:</label>
-					<? echo ( $$variable{'Stock'}->wpsi(); ) ?>
+					<input type="text" readonly="readonly" name="wpsi" id="wpsi" value="<? echo ( $$variable{'Stock'}->wpsi(); ) ?>" />
 				</p>
 				<p> 
 					<label>Grain Direction:</label>

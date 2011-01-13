@@ -38,6 +38,8 @@ function mweight_to_gsm( form ) {
 
 	var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
 	form.elements['gsm'].value = gsm;
+	form.elements['wpsi'].value = gsm / 703064.5;
+	recalc_prices( form );
 }
 function gsm_to_mweight( form ) {
 	var gsm = parseFloat(1*form.elements['gsm'].value);
@@ -54,9 +56,10 @@ function gsm_to_mweight( form ) {
 	height = parseFloat(1*form.elements['height'].value);
 	mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
 	form.elements['mweight'].value = mweight;
+	form.elements['wpsi'].value = gsm / 703064.5;
+	recalc_prices( form );
 }
-function CommaFormatted(amount)
-{
+function CommaFormatted(amount) {
 	var delimiter = ","; // replace comma if desired
 	var a = amount.split('.',2)
 	var d = a[1];
@@ -81,8 +84,7 @@ function CommaFormatted(amount)
 	return amount;
 }
 // end of function CommaFormatted()
-function CurrencyFormatted(amount)
-{
+function CurrencyFormatted(amount) {
 	var i = parseFloat(amount);
 	if(isNaN(i)) { i = 0.00; }
 	var minus = '';
@@ -97,6 +99,14 @@ function CurrencyFormatted(amount)
 	return s;
 }
 // end of function CurrencyFormatted()
+
+function recalc_prices( form ) {
+	for ( var i = 0; i < form.elements.length; i += 1 ) {
+		if ( form.elements[i].name && ( form.elements[i].name.indexOf('cost-') != -1 ) ) {
+			calc_price( form.elements[i] );
+		} // end if
+	} // end for
+} // end function recalc_prices( form )
 
 function calc_price( element ) {
 	var form = element.form;
