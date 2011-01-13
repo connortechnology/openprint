@@ -30,6 +30,8 @@ sub history {
 		my $Payment = new openprint::Payment( $param{'payment_id'} );
 		$variable{'error'} .= $Payment->destroy();
 	} # end if
+	ssi:setup_date_select( '/payment/history.html', 'received_on_start', -31 );
+	ssi:setup_date_select( '/payment/history.html', 'received_on_end', '' );
 } # end sub history
 
 sub _history {
