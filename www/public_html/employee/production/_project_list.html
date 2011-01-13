@@ -19,7 +19,8 @@
 			);
 
 		my %filters = (
-				'status'			=> [ split ';', $session{'/employee/production/projects.html?ProjectStatus'} ],
+				'used_press_name'	=> [ split ',', $session{'/employee/production/projects.html?ddmPress'} ],
+				'status'			=> [ split ',', $session{'/employee/production/projects.html?ProjectStatus'} ],
 				'due_date_start'	=> $$variable{'DueDateStart'},
 				'due_date_end'		=> $$variable{'DueDateEnd'},
 				#'due_date'			=> undef,

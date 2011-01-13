@@ -1,7 +1,7 @@
 <? echo ( 
 	my $Shift = $$variable{'Shift'};
 
-	my $html .= sprintf( q`<li id="shift_%1$d" onclick="popup_window( '_operator_shift_popup.html', 'shift_id=%1$d', {width:475} );">`, $$Shift{'id'} );
+	my $html .= sprintf( q`<li id="shift_%1$d"><div onclick="popup_window( '_operator_shift_popup.html', 'shift_id=%1$d', {width:475} );">`, $$Shift{'id'} );
 	$html .= $Shift->name();
 	$html .= ' ';
 	$html .= Date::Format::time2str( $config{'DateTimeFormat'}, $Shift->starttime_seconds() );
@@ -14,7 +14,7 @@
 	} else {
 		$html .= 'assign';
 	} # end if
-	$html .= '</span>';
+	$html .= '</span></div>';
 	$html .= '<span class="Buttons">';
 	$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$Shift{'id'}, '', '', 'operator_schedule.html?action=delete&amp;shift_id='.$Shift->id(), 'D' );
 	$html .= '</span>';

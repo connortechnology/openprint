@@ -1,7 +1,6 @@
-	var new_shifts = 0;
+var new_shifts = 0;
 <? echo ( 
 	my @drops = sets::union( @{$$variable{'changed'}} );
-$log->debug("Drops: @drops");
 	$r->content_type('text/javascript');
 	my $html = '';
 	$html .= "alert('$variable{error}');" if $variable{'error'};

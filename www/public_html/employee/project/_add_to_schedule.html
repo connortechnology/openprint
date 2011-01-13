@@ -1,0 +1,27 @@
+<form id="bump_form" name="bump_form" action="" method="post">
+	<input type="hidden" name="action" value="addtoschedule" />
+	<input type="hidden" name="project_id" value="<? echo ( $$variable{'Job'}->project_id() ) ?>" />
+	<input type="hidden" name="service_id" value="<? echo ( join(',',@{$$variable{'Job'}->service_id()} ) ) ?>" />
+	<h3>Add Docket <? echo ( $$variable{'Job'}->Project()->docket() . ' ' . $$variable{'Job'}->ServiceType()->name() ) ?></h3>
+	<p>
+		<label>Equipment:</label>
+		<select name="equipment_id">
+			<? echo ( 
+				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find(
+						'servicetype_id'=>($$variable{'Job'}->servicetype_id() ? $$variable{'Job'}->servicetype_id() : openprint::ServiceType::find_one('name'=>'AdditionalSignature')->id() ),
+						'UseInScheduling'=>1,
+						'order'=>'lower(strname)'
+					) ], $$variable{'Job'}->equipment_id() );
+			) ?>
+		</select>
+	</p>
+	<p class="buttons">
+	<? echo ( 
+		my $html = '';
+		$html .= ssi::writeButton( $log, $dbh, 'Ok', 'ok.gif', 
+				q`new Ajax.Updater('status`.join(',',@{$$variable{'Job'}->service_id()} ).q`', '/employee/project/_status.html', { parameters: $('bump_form').serialize() } );popupWin.destroy();`, '', 'Add to Schedule' );
+		$html .= ssi::writeButton( $log, $dbh, 'Cancel', 'cancel.gif', 'popupWin.destroy();', '', 'Cancel' );
+		return $html;
+	) ?>
+	</p>
+</form>

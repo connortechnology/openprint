@@ -1375,5 +1375,9 @@ sub used_press_names {
 	return sets::union( @results );	
 } # end sub used_press_names
 
+sub add_Service {
+	my $service_id = $_[0]->add_service( $_[1] );
+	return new openprint::Project_Service( {'project_id'=>$_[0]{'id'},'service_id'=>$service_id} );
+} # end sub add_Service
 1;
 __END__

@@ -76,9 +76,9 @@ Please select a CAR to view/edit.<br>
 		</p>
 		<p>
 			<label>Status:</label>
-			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( (( ! exists $openprint::session{'/employee/iso/cars.html?status'} ) or sets::isin( 'Open', split(';',$openprint::session{'/employee/iso/cars.html?status'}) ) ) ? 'checked="checked"' : '' ) ?>
+			<input type="checkbox" name="status" id="statusOpen" value="Open" <? echo ( (( ! exists $openprint::session{'/employee/iso/cars.html?status'} ) or sets::isin( 'Open', split(',',$openprint::session{'/employee/iso/cars.html?status'}) ) ) ? 'checked="checked"' : '' ) ?>
 			<label class="radio" for="statusOpen">Open</label>
-			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( sets::isin( 'Closed', split(';',$openprint::session{'/employee/iso/cars.html?status'}) ) ? 'checked="checked"' : '' ) ?>
+			<input type="checkbox" name="status" id="statusClosed" value="Closed" <? echo ( sets::isin( 'Closed', split(',',$openprint::session{'/employee/iso/cars.html?status'}) ) ? 'checked="checked"' : '' ) ?>
 			<label class="radio" for="statusClosed">Closed</label>
 		</p>
 		<p>

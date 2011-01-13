@@ -153,8 +153,8 @@ sub skids {
     if ( ! exists $session{'/employee/inventory/skids.html?hasmanifest'} ) {
         $session{'/employee/inventory/skids.html?hasmanifest'} = 'B';
     } # end if
-	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start' );
-	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end' );
+	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start', 0 );
+	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end', 0 );
 
 	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type',
 				'created_on_start_year','created_on_start_month','created_on_start_day',

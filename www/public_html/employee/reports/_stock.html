@@ -4,7 +4,7 @@
 		<th align="left">Stock</th>
 		<th width="120" align="left">Age</th>
 		<th width="120" align="left">Last Seen</th>
-		<th width="175" align="right">Value</th>
+		<th width="200" align="right">Value</th>
 	</tr>
 	<? echo (
 		my $html = '';
@@ -12,7 +12,7 @@
 		my $total;
 
 		my @location_ids;
-		foreach ( split(';', $session{'/employee/reports/stock.html?location_id'} ) ) {
+		foreach ( split(',', $session{'/employee/reports/stock.html?location_id'} ) ) {
 			next if $_ eq 'All';
 			push @location_ids, $_;
 		} # end foreach
@@ -25,6 +25,7 @@
 			'finish_id'			=>	$session{'/employee/reports/stock.html?Finish'},
 			'colour_id'			=>	$session{'/employee/reports/stock.html?Colour'},
 			'weight_id'			=>	$session{'/employee/reports/stock.html?Weight'},
+			( $session{'/employee/reports/stock.html?Type'} ? ( 'type' => [ split(',', $session{'/employee/reports/stock.html?Type'} ) ] ) : () ),
 			'order'=>'name,finish,colour,weight' );
 
 		foreach my $Paper ( @Papers ) {

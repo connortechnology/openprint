@@ -73,7 +73,7 @@
 <? eval (
 	my ( $starttime, $endtime );
 	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
-		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/print_overview.html?Equipment'} ) ).')' );
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(',', $session{'/employee/production/print_overview.html?Equipment'} ) ).')' );
 	} else {
 		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 	} # end if
@@ -112,10 +112,10 @@
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
 	my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
-	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(';', $session{'/employee/production/print_overview.html?Equipment'} ) );
+	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {
 		@selected_equipment = map { $_->id() } @presses;
-		$session{'/employee/production/print_overview.html?Equipment'} = join(';', @selected_equipment );
+		$session{'/employee/production/print_overview.html?Equipment'} = join(',', @selected_equipment );
 	}
 
 	foreach (@presses) {

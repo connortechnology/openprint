@@ -1,7 +1,7 @@
-package openprint::CIP3_PPF;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::CIP3_PPF;
+our @ISA = qw(openprint::Object);
+
 
 require sets;
 require misc;
@@ -12,7 +12,7 @@ use openprint ();
 use MIME::Base64;
 use Image::Magick;
 
-use vars qw( $debug $log $dbh %config $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh %config $table $serial %fields %find_fields %transforms %defaults );
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -32,6 +32,9 @@ $serial = 'CIP3_PPF_id_seq';
 	'docket'		=>	'docket',
 	'deleted'		=>	'deleted',
 	'compressed'	=>	'compressed',
+);
+%find_fields = (
+	'status'		=>	'(SELECT strstatus from tbl_Projects WHERE lngdocketnumber=docket)',
 );
 %defaults = (
 	'created_on'	=>	q`'NOW()'`,
@@ -58,6 +61,7 @@ sub runstyle {
 	} 
 	return $WorkStyles{$$self{'WorkStyle'}};
 }
+
 sub parseSheet {
 	my $sheet = shift @_;
 	while ( @_ ) {

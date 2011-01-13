@@ -51,7 +51,8 @@ sub new {
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
-$log->debug("Multi-key Obejct keys(@$id) : " );
+#$log->debug("Multi-key Obejct @$id @$data{@$id}" );
+		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 		$log->debug( $self->to_string() );
 	} else {
@@ -339,6 +340,10 @@ sub find {
 
 	my %params = @_;
 	my @where;
+	my $sql = 'SELECT ';
+	$sql .= 'DISTINCT' if $params{'distinct'};
+	delete $params{'distinct'};
+	$sql .= ' * FROM '.$table.' WHERE 1>0';
 	my @values;
 	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
 	delete $params{'dbh'};
@@ -479,7 +484,6 @@ sub find {
 		push @values, 0;
 	} # end if
 
-	my $sql = 'SELECT * FROM '.$table;
 	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	if ( $params{'or'} ) {
 		$sql .= ' WHERE' if ! @where;

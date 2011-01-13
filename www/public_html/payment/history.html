@@ -41,7 +41,8 @@
 				</select>
 			</p>
 <? eval (
-	ssi:setup_date_select( '/payment/history.html', 'received_on', -31 );
+	ssi:setup_date_select( '/payment/history.html', 'received_on_start', -31 );
+	ssi:setup_date_select( '/payment/history.html', 'received_on_end', '' );
 ) ?>
 			<p>
 				<label>Received On:</label>

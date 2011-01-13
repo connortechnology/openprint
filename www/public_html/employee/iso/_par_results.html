@@ -2,7 +2,7 @@
    if ( $openprint::param{StartYear} ) {
 		foreach my $key ( 'StartYear','StartMonth','StartDay','EndYear','EndMonth','EndDay','Docket','UpdatedStartYear','UpdatedStartMonth','UpdatedStartDay','UpdatedEndYear','UpdatedEndMonth','UpdatedEndDay','status' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-				$openprint::session{'/employee/iso/pars.html?'.$key} = join(';', @{$openprint::param{$key}} );
+				$openprint::session{'/employee/iso/pars.html?'.$key} = join(',', @{$openprint::param{$key}} );
 			} else {
 				$openprint::session{'/employee/iso/pars.html?'.$key} = $openprint::param{$key};
 			}
@@ -43,8 +43,8 @@
 			my $html;
 			my $rowclass;
 			foreach my $PAR ( @{$$variable{'PARs'}} ) {
-				next if $PAR->part4_signed_on() and ! sets::isin( 'Closed', split(';', $openprint::session{'/employee/iso/pars.html?status'} ) );
-				next if (!$PAR->part4_signed_on()) and ! sets::isin( 'Open', split(';', $openprint::session{'/employee/iso/pars.html?status'} ) );
+				next if $PAR->part4_signed_on() and ! sets::isin( 'Closed', split(',', $openprint::session{'/employee/iso/pars.html?status'} ) );
+				next if (!$PAR->part4_signed_on()) and ! sets::isin( 'Open', split(',', $openprint::session{'/employee/iso/pars.html?status'} ) );
 				$html .= "<tr$rowclass>";
 				#$html .= sprintf( '<td class="unprintable"><input type="checkbox" name="pars" value="%d"/></td>', $$PAR{'id'} );
 				$html .= sprintf( '<td><a href="par.html?par_id=%d">%d</a></td>', $$PAR{'id'}, $$PAR{'id'}, );

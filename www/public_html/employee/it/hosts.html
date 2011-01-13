@@ -27,22 +27,22 @@ Please select a host to view/edit.<br/>
 	<fieldset class="filters"><legend>Search Criteria</legend>
 		<p>
 			<label>Date Added:</label>
-			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_start', { 'with_today' => 1 } ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
 			to 
 			</span>
-			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_end', { 'with_today' => 1 } ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'created_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Last Updated:</label>
-			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start', { 'with_today' => 1 } ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
 			to 
 			</span>
-			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end', { 'with_today' => 1 } ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/it/hosts.html', 'updated_on_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p>

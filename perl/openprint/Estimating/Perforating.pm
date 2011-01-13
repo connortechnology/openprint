@@ -162,7 +162,7 @@ sub calc {
 		my $unitPrice = 0;
 
 		if ( $qtyTotal ) {
-			$unitPrice = $price / $qty;
+			$unitPrice = $price / $qty if $qty;
 		} else {
 			$$specs{'alert'} .= 'Please specify # of perfs for quantity ' . $qty_index . '<br/>';
 			$status = 'uncalculated';
