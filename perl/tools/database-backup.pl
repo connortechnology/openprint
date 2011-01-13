@@ -58,7 +58,7 @@ foreach my $db ( @dbs ) {
 	} # end if
 	my $row = $dbh->selectrow_hashref( q{SELECT backup FROM database_info ORDER BY updated_on DESC LIMIT 1} );
 	if ( ! $row ) {
-		print "Error loading row from database_info of $db " . $dbh->errstr()."\n";
+		#print "Error loading row from database_info of $db " . $dbh->errstr()."\n";
 		next;
 	} # end if
 	if ( $$row{'backup'} ) {

@@ -27,8 +27,9 @@
 	<? if ( $$variable{'Category'}->image_filename() ) ?>
 	<div class="image"><img src="/images/article_categories/<? echo ( $$variable{'Category'}->image_filename() ) ?>" /></div>
 	<? endif ( $$variable{'Category'}->image_filename() ) ?>
-</div>
+</div><!--Category-->
 <? endif ( $param{'category_id'} ) ?>
+<div class="Articles">
 
 <? if ( @{$$variable{'Articles'}} == 0 ) ?>
 	There are no articles which match your search criteria. 
@@ -54,4 +55,5 @@
 			return $html;
 		) ?>
 <? endif ( @{$$variable{'Articles'}} == 0 ) ?>
+</div>
 </div><!--Article-->
