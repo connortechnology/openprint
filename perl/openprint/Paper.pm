@@ -298,7 +298,7 @@ sub copy {
 	my $New = new openprint::Paper();
 	@$New{keys %$self} = @$self{keys %$self};
 	$$New{'id'} = '';
-	@{$$New{'Prices'}} = $self->prices();
+	@{$$New{'Prices'}} = $self->Prices();
 	@{$$New{'recommendations'}} = $self->recommendations();
 	return $New;
 } # end sub copy

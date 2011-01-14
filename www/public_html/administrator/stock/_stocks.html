@@ -69,7 +69,7 @@
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Stock'}->gsm() ); ) ?></a></td>
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->sheets_per_package() ) ?></a></td>
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( 
-my @Price = $$variable{'Stock'}->prices();
+my @Price = $$variable{'Stock'}->Prices();
 return sprintf('%.0f*%.0f%=%.0f', @{$Price[0]}{'cost','markup','price'} );
  ) ?></a></td>
 	</tr>
