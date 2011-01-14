@@ -297,7 +297,7 @@ foreach my $Paper ( openprint::Paper->find() ) {
 	} # end if
 } # end foreach my Paper
 my $log_count;
-foreach my $Log ( openprint::Log->find('when_end'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
+foreach my $Log ( openprint::Log->find('date_time_end'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
 	$Log->delete();
 	$log_count += 1;
 } # end foreach Log
