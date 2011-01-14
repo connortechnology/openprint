@@ -174,6 +174,7 @@ my %variables = (
 #
 
 		'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
+		'dutch1'=> ['save'], 'dutch2' => ['save'], 'dutch3' => ['save' ],
 		'chkOverrideImposition1' => ['save'], 'chkOverrideImposition2' => ['save'], 'chkOverrideImposition3' => ['save'],
 		'txtImposition'=>['save'],'txtImposition1' => ['save','output'], 'txtImposition2' => ['save','output'], 'txtImposition3' => ['save','output'],
 		'txtImageWidth1' => ['save','output'], 'txtImageWidth2' => ['save','output'], 'txtImageWidth3' => ['save','output'],
@@ -1245,6 +1246,7 @@ $log->warn("There are no quantities!");
 #I$log->debug("QTY: $qty");
 		} # end if
 
+		$$project{'dutch'} = $$specs{'dutch'.$qty_index};
 		$$specs{'hdnBreakdown'.$qty_index} = "QTY: $qty: ";
 		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
 		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
