@@ -43,12 +43,12 @@
 			</p>
 			<p>
 				<label>Dates:</label>
-				<span class="DateSelector">
-<? echo ( ssi::date_select( 'starting_start', [@session{'/timetrack/history.html?starting_start_year','/timetrack/history.html?starting_start_month','/timetrack/history.html?starting_start_day'}], {onchange=>'load_timetracks(this.form);'} ); ) ?>
-					to 
+				<span class="DateSelectorC">
+<? echo ( ssi::date_select_session( '/timetrack/history.html', 'starting_start', {onchange=>q`load_timetracks($('f1'));`,'with_clear'=>1} ); ) ?>
 				</span>
-				<span class="DateSelector">
-<? echo ( ssi::date_select( 'starting_end', [@session{'/timetrack/history.html?starting_end_year','/timetrack/history.html?starting_end_month','/timetrack/history.html?starting_end_day'}], {onchange=>'load_timetracks(this.form);'} ); ) ?>
+					to 
+				<span class="DateSelectorC">
+<? echo ( ssi::date_select_session( '/timetack/history.html', 'starting_end', {onchange=>q`load_timetracks($('f1'));`, 'with_clear'=>1} ); ) ?>
 				</span>
 			</p>
 			</div>

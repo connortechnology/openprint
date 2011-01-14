@@ -4,14 +4,14 @@
 			<th>Invoice</th>
 			<th class="Price">Total</th>
 			<th class="Price">Remaining</th>
-			<th width="20">&nbsp;</th>
+			<th class="buttons">&nbsp;</th>
 		</tr>
 		<? echo (
 			my $html = '';
 			$$variable{'Currency'} = openprint::Currency::get_current() if ! $$variable{'Currency'};
 			my @Invoices;
 			foreach my $I ( openprint::Invoice->find(
-				'invoicer_id'=>$openprint::session{'company_id'},
+				'invoicer_id'=>$session{'company_id'},
 				'invoicee_id'=>$$variable{'Payment'}->payor_id(),
 				'order'=>'id',
 			) ) {
@@ -28,7 +28,7 @@
 				$html .= sprintf('<td><a href="/invoice/edit.html?invoice_id=%1$d">%1$d</a></td>', $I->id() );
 				$html .= sprintf('<td class="Price">%1$s</td>', openprint::Currency::format( $total ) );
 				$html .= sprintf('<td class="Price">%1$s</td>', openprint::Currency::format( $owing ) );
-				$html .= sprintf('<td>%s</td>', ssi::writeButton( $log, $dbh, 'add'.$I->id(), '', 'pay_invoice('.$I->id().');', '', '+' ) );
+				$html .= sprintf('<td class="buttons">%s</td>', ssi::writeButton( $log, $dbh, 'add'.$I->id(), '', 'pay_invoice('.$I->id().');', '', '+' ) );
 				$html .= '</tr>';
 			} # end foreach $I
 			$html .= sprintf('<tr class="totals"><td>Totals:</td><td class="Price">%s</td><td class="Price">%s</td><td>&nbsp;</td></tr>',

@@ -58,8 +58,10 @@ sub history {
 	} # end if
 
 	# Doing it here will set the defaults if neccessary, but then they will get overriden by the saev_params below.	This is neccessary because save_params will update lastupdated.
-	ssi::setup_date_select( '/main/project/history.html', 'created_on', -180, 0 );
-	ssi::setup_date_select( '/main/project/history.html', 'updated_on', -14, 0 );
+	ssi::setup_date_select( '/main/project/history.html', 'created_on_start', -180 );
+	ssi::setup_date_select( '/main/project/history.html', 'created_on_end', 0 );
+	ssi::setup_date_select( '/main/project/history.html', 'updated_on_start', -14 );
+	ssi::setup_date_select( '/main/project/history.html', 'updated_on_end', 0 );
 	if ( ! exists $session{'/main/project/history.html?ddmStatus'} ) {
 		$session{'/main/project/history.html?ddmStatus'} = join(';', ( 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ) );
 	} # end if

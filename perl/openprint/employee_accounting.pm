@@ -190,7 +190,8 @@ sub expenditures {
 	} else {
 		ssi::save_params( '/employee/accounting/expenditures.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
 	} # end if
-ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on', -31, 365 );
+ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on_start', -31 );
+ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on_end', '' );
 
 } # end sub expenditures
 
@@ -261,7 +262,8 @@ sub expenses {
 			'paid_on_start_year','paid_on_start_month','paid_on_start_day',
 			'paid_on_end_year','paid_on_end_month','paid_on_end_day',
 ) );
-		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on', -31, 365 );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_start', -31 );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_end', '' );
 	} # end if
 } # end sub expenses
 sub _expenses {

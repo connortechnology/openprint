@@ -42,7 +42,8 @@ sub history {
 	} # end if
 
 	if ( ( ! $session{'/timetrack/history.html?lastupdated'} ) or ( time - $session{'/timetrack/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/timetrack/history.html', 'starting', -31 );
+		ssi::setup_date_select( '/timetrack/history.html', 'starting_start', -31 );
+		ssi::setup_date_select( '/timetrack/history.html', 'starting_end', '' );
 	} # end if
 
 	$session{'/timetrack/history.html?invoiced'} = '0' if ! $session{'/timetrack/history.html?invoiced'};

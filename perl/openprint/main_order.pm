@@ -393,7 +393,8 @@ sub confirmation {
 } # end sub confirmation
 
 sub history {
-	ssi::setup_date_select( '/main/order/history.html', 'created_on', -30, 0 );
+	ssi::setup_date_select( '/main/order/history.html', 'created_on_start', -30 );
+	ssi::setup_date_select( '/main/order/history.html', 'created_on', 0 );
 	ssi::save_params( '/main/order/history.html', 
 			'ddmOrderedBy',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
@@ -402,7 +403,6 @@ sub history {
 
 } # end sub history
 sub _history {
-	ssi::setup_date_select( '/main/order/history.html', 'created_on', -30, 0 );
 	ssi::save_params( '/main/order/history.html', 
 			'ddmOrderedBy',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day', 
