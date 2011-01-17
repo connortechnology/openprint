@@ -576,10 +576,12 @@ sub impressions {
 		} # end if
 	} elsif ( $$self{'project_id'} ) {
 		my $Project = $self->Project();
+		if ( $self->service_id() ) {
 		foreach my $sig_id ( @{$self->service_id()} ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			$impressions += $$sig_specs{'ImpressionQuantity'};
 		} # end foreach sig
+		} # end if
 		
 		if ( ! $impressions ) {
 # Pull from printing

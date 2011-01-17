@@ -1491,7 +1491,6 @@ sub _li_change {
 		} # end if
 		$sql{'locked'} = $param{'locked'} if exists $param{'locked'} and $param{'locked'} != $$Job{'locked'};
 		$sql{'comment'} = $param{'comment'} if $param{'comment'} ne $Job->comment();
-		$Job->service_id( $sql{'service_id'} ); # needed for impressions calculation
 		$sql{'impressions'} = $param{'impressions'} if ( exists $param{'impressions'} ) and ( $Job->impressions() != $param{'impressions'} );
 		$sql{'speed'} = $param{'speed'} if ( exists $param{'speed'} ) and ( $Job->speed() != $param{'speed'} );
 		$sql{'stock_verified'} = $param{'stock_verified'} if exists $param{'stock_verified'} and $param{'stock_verified'} != $$Job{'stock_verified'};
@@ -1499,6 +1498,7 @@ sub _li_change {
 
 		if ( keys %sql ) {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+			$Job->service_id( $sql{'service_id'} ) if $sql{'service_id'}; # needed for impressions calculation
 			$variable{'error'} .= $Job->save(\%sql);
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		} # end if
