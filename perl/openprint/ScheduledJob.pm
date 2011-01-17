@@ -84,6 +84,10 @@ sub find {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
 	} # end if
+	if ( exists $params{'equipment_id !='} ) {
+		$sql .= ' AND equipment_id != ?';
+		push @values, $params{'equipment_id !='};
+	} # end if
 	if ( $params{'servicetype_id'} ) {
 		if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
 			$sql .= ' AND servicetype_id IN ('. join(',', map {'?'} @{$params{'servicetype_id'}} ) . ')';
@@ -392,9 +396,9 @@ sub get_li {
 			$colour = 'complete';
 		} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
 			$colour = 'approval';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids ) ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multipress';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids ) ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multibindery';
 		#} elsif ( 1 < find( 'project_id'=>$$self{'project_id'} ) ) {
 			#$colour = 'earlier_services';
