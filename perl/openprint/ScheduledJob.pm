@@ -849,8 +849,10 @@ sub split {
 		} else {
 			my $runtime = int ( $self->runtime_seconds()/@service_ids );
 			$self->runtime_seconds( $runtime );
-			$self->impressions( $self->impressions() / @service_ids );
+			my $impressions = int( $self->impressions() / @service_ids );
 			$$self{'service_id'} = [ shift @service_ids ];
+
+			$self->impressions( $impressions );
 			$self->save();
 			my $starttime = $self->starttime_seconds() + $runtime if $self->starttime();
 			foreach my $s_id ( @service_ids ) {
