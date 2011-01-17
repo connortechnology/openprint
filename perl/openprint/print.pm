@@ -177,9 +177,11 @@ sub view_services {
 				openprint::print_project::delete_service( $log, $dbh, $project_index, $service_id );
 				} # end if
 			} elsif ( $openprint::param{'btnFunction'} eq 'Recalculate Project' ) {
-				$openprint::param{'markup'} =~ s/[^\d\.\-]//mg;
-				$Project->markup( $openprint::param{'markup'} );
-				$Project->save();
+				if ( exists $openprint::param{'markup'} ) {
+					$openprint::param{'markup'} =~ s/[^\d\.\-]//mg;
+					$Project->markup( $openprint::param{'markup'} );
+					$Project->save();
+				} # end if
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
 				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
