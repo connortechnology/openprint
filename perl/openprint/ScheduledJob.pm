@@ -386,6 +386,7 @@ sub get_li {
 
 	my $colour = '';
 	my @printing_service_type_ids = map { $_->id() } openprint::ServiceType::find('category'=>'Printing');
+	push @printing_service_type_ids, undef;
 	my @bindery_service_type_ids = map { $_->id() } openprint::ServiceType::find('category'=>'Bindery');
 
 
@@ -396,9 +397,9 @@ sub get_li {
 			$colour = 'complete';
 		} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
 			$colour = 'approval';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multipress';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment !='=>$$self{'equipment_id'} ) ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multibindery';
 		#} elsif ( 1 < find( 'project_id'=>$$self{'project_id'} ) ) {
 			#$colour = 'earlier_services';
