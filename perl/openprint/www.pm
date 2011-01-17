@@ -239,11 +239,11 @@ $log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
 			$eval .= '_'.$second if $second;
 			eval	'require '.$eval;
-			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
+			$log->error( "Eval error of ($eval), Reason: " . $@ ) if $@;
 			$filename =~ /(.*).html/;
 			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
 			eval $eval;
-			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
+			$log->error( "Eval error of ($eval), Reason: " . $@ ) if $@;
 $log->debug('2');
 		} # end if		
 
@@ -343,10 +343,10 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 			return;
 		} else {
 			eval( 'require openprint::'.join('_', @path ) );
-$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-$log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
+$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
 	} elsif ( sets::isin( $first , [ 'opera', 'handheld' ] ) ) { # Handheld
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
@@ -370,7 +370,7 @@ $log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
 
 	} elsif ( $first eq 'content' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
@@ -385,10 +385,10 @@ $log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 			} # end if
 		} # end if
 		eval( 'require openprint::'.join('_', @path ) );
-		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
@@ -527,10 +527,10 @@ $variable{'ServiceIndex'} = $service_index;
 		} else {
 			my $module = 'openprint::' . join('_', ($first, $second )	);
 			eval( "require $module;" );
-			$log->warn( "Eval error of require, Reason: " . $@ );	# if $@;
+			$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
 			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
+			$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		} # end if main:$second
 
 	} else {
