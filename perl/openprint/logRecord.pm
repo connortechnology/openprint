@@ -7,7 +7,7 @@ require openprint::logAction;
 require openprint::Host;
 use strict;
 
-my $debug = 1;
+my $debug = 0;
 use vars qw( $log $dbh $table $serial %fields %tansforms %defaults );
 $table = 'log';
 $serial = 'log_id_seq';
