@@ -524,7 +524,7 @@ $variable{'ServiceIndex'} = $service_index;
 			openprint::print_project::summary( $r, $log, $dbh, \%variable )						if $filename eq 'summary.html';
 			openprint::print_project::summary( $r, $log, $dbh, \%variable )						if $filename eq 'docket_sheet.html';
 			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 		if $filename eq 'reuse.html';
-		} else {
+		} elsif ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
 			my $module = 'openprint::' . join('_', ($first, $second )	);
 			eval( "require $module;" );
 			$log->error( "Eval error of require, Reason: " . $@ ) if $@;

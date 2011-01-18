@@ -322,6 +322,9 @@ sub confirmation {
 	delete $openprint::session{'quote_id'};
 } # end sub finalise_quote
 
+sub overview {
+} # end sub overview
+
 1;
 
 __END__
