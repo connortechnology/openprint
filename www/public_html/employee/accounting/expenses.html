@@ -22,7 +22,7 @@
 			} // end if
 		} // end if
 	}
-	function load_expensess( form ) {
+	function load_expenses( form ) {
 		$('ExpenseList').innerHTML = 'Please wait...';
 		new Ajax.Updater('ExpenseList','_expenses.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
@@ -33,23 +33,37 @@
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
 		<div class="leftColumn">
-			<p>
-				<label>Due On:</label>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'due_on_start', 'load_expensess(this.form);' ); ) ?>
-					to 
-				</span>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'due_on_end', 'load_expensess(this.form);' ); ) ?>
-				</span>
-			</p>
+			<div class="content">
+				<ul>
+					<li>
+						<label>Due On:</label>
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'due_on_start', { 'onchange'=>'load_expenses(this.form);', 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+							to 
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'due_on_end', { 'onchange'=>'load_expenses(this.form);', 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+					</li>
+					<li>
+						<label>Paid On:</label>
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'paid_on_start', { 'onchange'=>'load_expenses(this.form);', 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+							to 
+						<span class="DateSelectorCT">
+		<? echo ( ssi::date_select_session( '/employee/accounting/expenses.html', 'paid_on_end', { 'onchange'=>'load_expenses(this.form);', 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+						</span>
+					</li>
+				</ul>
+			</div>
 		</div>
 		<div class="rightColumn">
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">
 			<? echo ( join('',
-				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_expensess(f1);", '', 'Show Results' ),
+				ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_expenses(\$('f1'));", '', 'Show Results' ),
 ssi::writeButton( $log, $dbh, 'Download', 'download.gif', "f1.btnFunction.value='Download';f1.submit();", '', 'Download' ),
 				ssi::writeButton( $log, $dbh, 'Reset', 'reset.gif', 'f1.reset();', '', 'Reset' ),
 				ssi::writeButton( $log, $dbh, 'New', 'new.gif', '', 'expense.html', 'New Expense' ),

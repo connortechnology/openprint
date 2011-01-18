@@ -264,6 +264,8 @@ sub expenses {
 ) );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_start', -31 );
 		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_end', '' );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'paid_on_start', -31 );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'paid_on_end', '' );
 	} # end if
 } # end sub expenses
 sub _expenses {
