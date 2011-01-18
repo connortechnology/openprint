@@ -2,9 +2,9 @@
 <script type="text/javascript" >
 	function newPrice( service, pricelist_id ) {
 		new Ajax.Request( '_price_tr.html',
-			{ 
-				method: 'get', 
-				parameters: { 
+			{
+				method: 'get',
+				parameters: {
 					stock_id: '<?stock_id?>',
 					service: service,
 					pricelist_id: pricelist_id,
@@ -13,13 +13,13 @@
 				onSuccess: function( transport ) {
 					$('prices-'+service+'-'+pricelist_id).insert({top: transport.responseText} );
 				}
-			} 
+			}
 		);
 	} // end function newPrice
 	function copyPrice( id ) {
 		var form = $('f1');
-		new Ajax.Request( '_price_tr.html', { 
-				parameters: { 
+		new Ajax.Request( '_price_tr.html', {
+				parameters: {
 					stock_id: '<?stock_id?>',
 					price_id: id,
 					action: 'Copy',
@@ -35,14 +35,14 @@
 				onSuccess: function( transport ) {
 					$('paperprice-'+ id).insert({after: transport.responseText} );
 				}
-			} 
+			}
 		);
 	}
 	function delPrice( id ) {
-		new Ajax.Request('_price_tr.html', 
-			{ 
-				method: 'get', 
-				parameters: { 
+		new Ajax.Request('_price_tr.html',
+			{
+				method: 'get',
+				parameters: {
 					price_id: id,
 					action: 'Delete'
 				},
@@ -53,15 +53,15 @@
 						var tr = $('paperprice-'+id); tr.parentNode.removeChild(tr);
 					} // end if
 				}
-			} 
+			}
 		);
 	}
 
 	function savePrices( form ) {
-		new Ajax.Updater('Prices','_prices.html', 
-			{ 
-				method: 'get', 
-				parameters : Form.serialize( form ), 
+		new Ajax.Updater('Prices','_prices.html',
+			{
+				method: 'get',
+				parameters : Form.serialize( form ),
 				onSuccess: function(){$('Prices').removeClassName('changed');}
 			 }
 		);
@@ -180,7 +180,7 @@
 					) ?>
 					</select>
 				</p>
-				<p> 
+				<p>
 					<label>Calliper:</label>
 					<input type="text" id="calliper" name="calliper" value="<? echo ( $$variable{'Stock'}->calliper(); ) ?>" /> inches
 				</p>
@@ -199,7 +199,7 @@
 				
 					</span> inches
 				</p>
-				<p id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>> 
+				<p id="MWeight" <? echo ( 'style="display: none;"' if $$variable{Stock}->type() eq 'Roll' ) ?>>
 					<label>MWeight:</label>
 					<input type="text" name="mweight" value="<? echo ( $$variable{'Stock'}->mweight(); ) ?>"  size="12" style="width: auto;" onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');mweight_to_gsm( this.form );" />
 				</p>
@@ -209,22 +209,22 @@
 					<input type="text" name="basis_width" size="9" value="<? echo ( $$variable{Stock}->basis_width() ? $$variable{Stock}->basis_width() : 25 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
 					<input type="text" name="basis_height" size="9" value="<? echo ( $$variable{Stock}->basis_height() ?  $$variable{Stock}->basis_height() : 38 ) ?>"  onkeyup="this.value=this.value.replace(/[^\d\.]/g,'');gsm_to_mweight(this.form);" style="width: auto;" />
 				</p>
-				<p> 
+				<p>
 					<label>GSM:</label>
 					<input type="text" name="gsm" value="<? echo ( $$variable{'Stock'}->gsm(); ) ?>"  size="12" style="width: auto;" onkeyup="gsm_to_mweight( this.form );" />
 				</p>
-				<p> 
+				<p>
 					<label>WPSI:</label>
 					<input type="text" readonly="readonly" name="wpsi" id="wpsi" value="<? echo ( $$variable{'Stock'}->wpsi(); ) ?>" />
 				</p>
-				<p> 
+				<p>
 					<label>Grain Direction:</label>
 					<input type="radio" name="grain_direction" id="grain_directionwidth" value="width" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq 'width' ); ) ?> />
 					<label class="radio" for="grain_directionwidth">Width</label>
 					<input type="radio" name="grain_direction" id="grain_directionheight" value="height" <? echo ( ssi::checked( $$variable{'Stock'}->grain_direction() eq 'height' ); ) ?> />
 					<label class="radio" for="grain_directionheight">Height</label>
 				</p>
-				<p> 
+				<p>
 					<label>Customer Supplied:</label>
 					<input type="radio" name="supplied" id="supplied1" value="1" <? echo ( ssi::checked($$variable{'Stock'}->supplied() == 1 ); ) ?> />
 					<label class="radio" for="supplied1">Yes</label>
@@ -233,13 +233,13 @@
 					<input type="radio" name="supplied" id="supplied" value="" <? echo ( ssi::checked($$variable{'Stock'}->supplied() eq '' ); ) ?> />
 					<label class="radio" for="supplied">Both</label>
 				</p>
-				<p> 
+				<p>
 					<label>Quantity Per Package (<span id="QuantityPerPackageUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>):</label>
-					<input type="text" name="sheets_per_package" value="<? echo ( $$variable{'Stock'}->sheets_per_package(); ) ?>"  size="12" style="width: auto;"/> 
+					<input type="text" name="sheets_per_package" value="<? echo ( $$variable{'Stock'}->sheets_per_package(); ) ?>"  size="12" style="width: auto;"/>
 				</p>
 			</div><!--left-->
 			<div class="rightColumn">
-				<p class="full_packages"> 
+				<p class="full_packages">
 					<label>Order Full Packages:</label>
 					<input type="radio" name="full_packages" id="full_packages1" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->full_packages() ); ) ?> />
 					<label class="radio" for="full_packages1">Yes</label>
@@ -250,72 +250,72 @@
 					<label>Minimum Order (<span id="MinimumOrderUnits"><? echo ( $$variable{'Stock'}->type() eq 'Roll' ? 'lbs' : 'sheets' ) ?></span>):</label>
 					<input type="text" id="minimum_order" name="minimum_order" value="<? echo ( $$variable{'Stock'}->minimum_order(); ) ?>" />
 				</p>
-				<p class="fsc_code"> 
+				<p class="fsc_code">
 					<label>FSC Code:</label>
-					<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Stock'}->fsc_code(); ) ?>" /> 
+					<input type="text" id="fsc_code" name="fsc_code" value="<? echo ( $$variable{'Stock'}->fsc_code(); ) ?>" />
 				</p>
-				<p class="inventory_number"> 
+				<p class="inventory_number">
 					<label>Inventory #:</label>
-					<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $$variable{'Stock'}->inventory_number(); ) ?>" /> 
+					<input type="text" id="inventory_number" name="inventory_number" value="<? echo ( $$variable{'Stock'}->inventory_number(); ) ?>" />
 				</p>
-				<p class="message"> 
+				<p class="message">
 					<label>Message:</label>
 					<textarea id="message" name="message" rows="2" cols="" onkeyup="textarea_resize( this );"><? echo ( $$variable{'Stock'}->message(); ) ?></textarea>
 				</p>
-				<p class="cuttable"> 
+				<p class="cuttable">
 					<label>Can this stock be cut?:</label>
 					<input type="radio" id="cuttableY" name="cuttable" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->cuttable() ); ) ?> />
 					<label class="radio" for="cuttableY">Yes</label>
 					<input type="radio" id="cuttableN" name="cuttable" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->cuttable() ); ) ?> />
 					<label class="radio" for="cuttableN">No</label>
 				</p>
-				<p class="doublesided"> 
+				<p class="doublesided">
 					<label>Is this stock double sided?:</label>
 					<input type="radio" id="doublesidedY" name="doublesided" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->doublesided() ); ) ?> />
 					<label class="radio" for="doublesidedY">Yes</label>
 					<input type="radio" id="doublesidedN" name="doublesided" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->doublesided() ); ) ?> />
 					<label class="radio" for="doublesidedN">No</label>
 				</p>
-				<p class="multipart"> 
+				<p class="multipart">
 					<label>Does this stock have multiple parts (eg: forms)?:</label>
 					<input type="radio" id="multipartY" name="multipart" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->multipart() ); ) ?> onclick="$('parts_div').show();" />
 					<label class="radio" for="multipartY">Yes</label>
-					<input type="radio" id="multipartN" name="multipart" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->multipart() ); ) ?> onclick="$('parts_div').hide();" />
+					<input type="radio" id="multipartN" name="multipart" value="0" onclick="$('parts_div').hide();" <? echo ( ssi::checked( ! $$variable{'Stock'}->multipart() ); ) ?> />
 					<label class="radio" for="multipartN">No</label>
 				</p>
 				<p id="parts_div" <? echo ( $$variable{'Stock'}->multipart() ? '' : 'style="display:none;"' ) ?>>
 					<label>How many parts:</label>
 					<input type="text" id="parts" name="parts" value="<? echo ( $$variable{'Stock'}->parts() ) ?>" />
 				</p>
-				<p class="perfecting"> 
+				<p class="perfecting">
 					<label>Is this stock stiff enough to perfect without gutters?:</label>
 					<input type="radio" id="perfectingY" name="perfecting" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->perfecting() ); ) ?> />
 					<label class="radio" for="perfectingY">Yes</label>
 					<input type="radio" id="perfectingN" name="perfecting" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->perfecting() ); ) ?> />
 					<label class="radio" for="perfectingN">No</label>
 				</p>
-				<p class="scoring"> 
+				<p class="scoring">
 					<label>Does this stock require folder scoring before folding?:</label>
 					<input type="radio" id="scoringY" name="scoring" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->score_required() ); ) ?> />
 					<label class="radio" for="scoringY">Yes</label>
 					<input type="radio" id="scoringN" name="scoring" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->score_required() ); ) ?> />
 					<label class="radio" for="scoringN">No</label>
 				</p>
-				<p class="diescoring"> 
+				<p class="diescoring">
 					<label>Does this stock require die scoring before folding?:</label>
 					<input type="radio" id="diescoringY" name="diescoring" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->req_die_scoring() ); ) ?> />
 					<label class="radio" for="diescoringY">Yes</label>
 					<input type="radio" id="diescoringN" name="diescoring" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->req_die_scoring() ); ) ?> />
 					<label class="radio" for="diescoringN">No</label>
 				</p>
-				<p class="digital"> 
+				<p class="digital">
 					<label>Is this stock suitable for digital printing?:</label>
 					<input type="radio" id="digitalY" name="digital" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->digital() ); ) ?> />
 					<label class="radio" for="digitalY">Yes</label>
 					<input type="radio" id="digitalN" name="digital" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->digital() ); ) ?> />
 					<label class="radio" for="digitalN">No</label>
 				</p>
-				<p class="bladecleaning"> 
+				<p class="bladecleaning">
 					<label>Does this stock require blade cleaning after cutting?:</label>
 					<input type="radio" id="bladecleaningY" name="bladecleaning" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->bladecleaning() ); ) ?> />
 					<label class="radio" for="bladecleaningY">Yes</label>
@@ -324,14 +324,14 @@
 				</p>
 				<hr class="spacer"/>
 				<p> <b>Tax Information</b> </p>
-				<p class="taxexempt1"> 
+				<p class="taxexempt1">
 					<label>Federal Tax Exemption?</label>
 						<input type="radio" id="taxexempt1Y" name="taxexempt1" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->taxexempt1() ); ) ?> />
 						<label class="radio" for="taxexempt1Y">Yes</label>
 						<input type="radio" id="taxexempt1N" name="taxexempt1" value="0" <? echo ( ssi::checked( ! $$variable{'Stock'}->taxexempt1() ); ) ?> />
 						<label class="radio" for="taxexempt1N">No</label>
 				</p>
-				<p class="taxexempt2"> 
+				<p class="taxexempt2">
 					<label>Prov/State Tax Exemption?</label>
 						<input type="radio" id="taxexempt2Y" name="taxexempt2" value="1" <? echo ( ssi::checked( $$variable{'Stock'}->taxexempt2() ); ) ?> />
 						<label class="radio" for="taxexempt2Y">Yes</label>
@@ -352,7 +352,7 @@
 	<div class="Recommendations">
 		<fieldset><legend>Recomended For</legend>
 			<ul>
-				<? echo ( 
+				<? echo (
 					my $html;
 					foreach my $ProjectType ( openprint::ProjectType->find('order'=>'lower(name)') ) {
 						$html .= sprintf('<li><input type="checkbox" id="chkPRF%1$d" name="chkPRF%1$d" %4$s /><label class="radio" for="chkPRF%1$d">%3$s</label></li>',
@@ -363,7 +363,7 @@
 							);
 					} # end foreach
 					return $html;
-		) ?>
+				) ?>
 			</ul>
 		</fieldset>
 	</div>
