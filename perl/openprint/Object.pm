@@ -329,6 +329,7 @@ sub Creator {
 } # end sub Creator
 
 sub find {
+
 	my $type = shift;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
@@ -346,6 +347,7 @@ sub find {
 	$sql .= ' * FROM '.$table;
 	my @values;
 	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
+	return () if ! $local_dbh;
 	delete $params{'dbh'};
 
 	if ( $cache_field and $params{$cache_field} and ( ( 1 == keys %params ) or ( 2 == keys %params and exists $params{'limit'} ) ) ) {

@@ -59,8 +59,10 @@ sub history {
 	} # end if
 
 	if ( ( ! $session{'/article/history.html?lastupdated'} ) or ( time - $session{'/article/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/article/history.html', 'published_on', -31 );
-		ssi::setup_date_select( '/article/history.html', 'created_on', -31 );
+		ssi::setup_date_select( '/article/history.html', 'published_on_start', -31 );
+		ssi::setup_date_select( '/article/history.html', 'published_on_end', '' );
+		ssi::setup_date_select( '/article/history.html', 'created_on_start', -31 );
+		ssi::setup_date_select( '/article/history.html', 'created_on_end', '' );
 	} # end if
 	ssi::save_params( '/article/history.html', ( 
 				'created_on_start_year','created_on_start_month','created_on_start_day',

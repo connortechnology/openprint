@@ -272,6 +272,7 @@ sub seconds_to_pretty_interval {
 	$remainder = $remainder % ( 60 * 60 * 24 );
 	if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
 		$string .= '1 month';
+		return $string;
 	} elsif ( $days ) {
 		$string .= sprintf('%dd', $days );
 	} # end if

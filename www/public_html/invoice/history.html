@@ -24,7 +24,7 @@
 	}
 	function load_invoices( form ) {
 		$('InvoiceList').innerHTML = 'Please wait...';
-		new Ajax.Updater('InvoiceList','_history.html', {method:'get',parameters:Form.serialize(form)});
+		new Ajax.Updater('InvoiceList','_history.html', {method:'get',parameters:form.serialize()});
 	} // end function
 -->
 </script>	 
@@ -50,22 +50,22 @@
 			</p>
 			<p>
 				<label>Created:</label>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/invoice/history.html', 'created_on_start', 'load_invoices(this.form);' ); ) ?>
+				<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/invoice/history.html', 'created_on_start', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 					to 
 				</span>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/invoice/history.html', 'created_on_end', 'load_invoices(this.form);' ); ) ?>
+				<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/invoice/history.html', 'created_on_end', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 				</span>
 			</p>
 			<p>
 				<label>Due:</label>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/invoice/history.html', 'due_on_start', 'load_invoices(this.form);' ); ) ?>
+				<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/invoice/history.html', 'due_on_start', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 					to 
 				</span>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/invoice/history.html', 'due_on_end', 'load_invoices(this.form);' ); ) ?>
+				<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/invoice/history.html', 'due_on_end', { 'onchange'=>q`load_invoices($('f1'));`, 'with_today'=>1,'with_clear'=>1 } ); ) ?>
 				</span>
 			</p>
 		</div>

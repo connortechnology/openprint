@@ -393,11 +393,11 @@ $log->debug("Account status($status) redirect($variable{'Redirect'}) error($vari
 
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.
-$log->debug("Not logged in");
+$log->debug("Not logged in $config{'public_URIs'}");
 			if ( ! $config{'public_URIs'} ) {
 $log->error("No public_URIs");
 			} elsif ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
-$log->debug("redirecting");
+$log->debug("redirecting $uri");
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;

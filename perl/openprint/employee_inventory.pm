@@ -1984,7 +1984,8 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 } # end sub purchase_order_edit
 
 sub purchase_orders {
-	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting', -30, 0 );
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_start', -30 );
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_end', '' );
 
 	ssi::save_params( '/employee/inventory/purchase_orders.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types' ) );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
