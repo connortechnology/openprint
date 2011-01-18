@@ -1,6 +1,8 @@
 use strict;
 package openprint::User_Profile;
 
+use vars qw( $AUTOLOAD );
+
 # Not backed by db, this is an abstract object providing a convenient interface to User_Profile_Fields and Values
 
 sub new {
