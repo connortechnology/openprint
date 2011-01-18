@@ -9,6 +9,7 @@ require openprint::logs;
 require openprint::Usergroup;
 require openprint::User_Notification;
 require openprint::Asset;
+require openprint::User_Profile;
 
 use openprint ();
 use vars qw( $log $dbh %config %variable %param $debug %fields %find_fields %transforms %defaults $table $serial );
@@ -343,6 +344,10 @@ sub po_limit {
 sub Asset {
 	return new openprint::Asset( $_[0]{'asset_id'} );
 } # end sub Asset
+
+sub Profile {
+	return new openprint::User_Profile( $_[0]{'id'} );
+}
 
 1;
 

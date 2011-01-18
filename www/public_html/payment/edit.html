@@ -45,38 +45,42 @@
 	<input type="hidden" name="payment_id" value="<? echo ( $$variable{'Payment'}->id() ) ?>" />
 	<fieldset><legend>Editing Payment</legend>
 		<div class="leftColumn">
-			<p><label for="payor_id">Company:</label>
+			<ul>
+			<li><label for="payor_id">Company:</label>
 				<select id="payor_id" name="payor_id">
 					<option value=""> select </option>
 					<? echo ( openprint::Company::get_dropdown( $$variable{'Payment'}->payor_id() ? $$variable{'Payment'}->payor_id() : $session{'company_id'} ); ) ?>
 				</select>
-			</p>
-			<p><label>Received On:</label>
+			</li>
+			<li><label>Received On:</label>
 			<span class="DateSelector"><? echo ( ssi::date_select( 'received_on', $$variable{'Payment'}->received_on() ); ) ?></span>
-			</p>
-			<p><label for="amount">Amount</label>
+			</li>
+			<li><label for="amount">Amount:</label>
 				<input type="text" name="amount" id="amount" value="<? echo ( $$variable{'Payment'}->amount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />
 				<select name="currency_id" id="currency_id">
 					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{'Payment'}->currency_id() ? $$variable{'Payment'}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
 				</select>
-			</p>
-			<p><label for="method">Method</label>
+			</li>
+			<li><label for="method">Method:</label>
 				<select name="method">
 <? echo ( 
 	my @options = ( '', 'Cash','Cheque','Email Transfer','Paypal','Work In Trade' );
 	return ssi::make_drop_down( [ map { $_, $_ } @options ], $$variable{'Payment'}->method() );
 ) ?>
 				</select>
-			</p>
-			<p><label for="transaction_id">Transaction ID</label>
+			</li>
+			<li><label for="transaction_id">Transaction ID:</label>
 				<input type="text" name="transaction_id" id="transaction_id" value="<? echo ( $$variable{'Payment'}->transaction_id() ) ?>" />
-			</p>
+			</li>
+			</ul>
 		</div>
 		<div class="rightColumn">
-			<p>
-				<label for="memo">Memo</label>
-				<textarea cols="40" id="memo" name="memo" rows="<? echo ( $$variable{'Payment'}->memo() ? scalar split("\n", $$variable{'Payment'}->memo()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Payment'}->memo() ) ?></textarea>
-			</p>
+			<ul>
+			<li>
+				<label for="memo">Memo:</label>
+				<textarea cols="" id="memo" name="memo" rows="<? echo ( ssi::count_lines( $$variable{'Payment'}->memo() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Payment'}->memo() ) ?></textarea>
+			</li>
+			</ul>
 		</div>
 		<br class="spacer"/>
 		<p class="buttons">

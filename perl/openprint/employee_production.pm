@@ -1490,6 +1490,7 @@ sub _li_change {
 
 		if ( keys %sql ) {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+			$Job->service_id( $sql{'service_id'} ) if $sql{'service_id'}; # needed for impressions calculation
 			$variable{'error'} .= $Job->save(\%sql);
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		} # end if

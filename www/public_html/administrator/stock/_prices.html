@@ -8,7 +8,7 @@
 		foreach my $service ( 'Setup', 'Supply', 'Material' ) {
 			$$variable{'service'} = $service;
 			$html .= '<fieldset><legend>'.$service.' Prices</legend>';
-			$html .= '<table class="List"><thead><tr>';
+			$html .= '<table class="List"><tr>';
 			$html .= '<th class="Equipment">Equipment</th>';
 			$html .= '
 						<th class="Range">Quantity Range</th>
@@ -43,12 +43,11 @@
 				<th class="buttons">
 				';
 			$html .= ssi::writeButton( $log, $dbh, 'NewPrice'.$service.$Pricelist->id(), 'new.gif', "newPrice( '$service', '$$Pricelist{id}');", '', 'New Price' );
-			$html .= qq`</th>
-					</tr></thead><tbody id="prices-$service-$$Pricelist{id}">
-					`;
+			$html .= q`</th></tr>
+`;
 			$$variable{'Pricelist'} = $Pricelist;
 			$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/stock/_prices_table_body.html', $variable );
-			$html .= '</tbody></table>';
+			$html .= '</table>';
 			$html .= '</fieldset><!--Service-->';
 		} # end foreach Service
 		$html .= '</fieldset><!--Pricelist-->';

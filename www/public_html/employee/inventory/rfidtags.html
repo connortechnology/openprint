@@ -20,33 +20,24 @@ Please select a RFID Tag to view/edit.<br>
 </form>
 <form id="f2" name="f2" method="post" action="rfidtags.html">
 	<fieldset class="filters"><legend>Search Criteria</legend>
-		<? eval (
-			ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on', 0 );
-			if ( ! exists $session{'/employee/inventory/rfidtags.html?assigned'} ) {
-				$session{'/employee/inventory/rfidtags.html?assigned'} = 1;
-			} # end if
-			if ( ! exists $session{'/employee/inventory/rfidtags.html?notassigned'} ) {
-				$session{'/employee/inventory/rfidtags.html?notassigned'} = 1;
-			} # end if
-		) ?>
 		<p>
 			<label>Date Added:</label>
-			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_start', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?created_on_start_year','/employee/inventory/rfidtags.html?created_on_start_month','/employee/inventory/rfidtags.html?created_on_start_day'} ) ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'created_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			to 
 			</span>
-			<span class="DateSelector">
-<? echo ( ssi::date_select( 'created_on_end', sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?created_on_end_year','/employee/inventory/rfidtags.html?created_on_end_month','/employee/inventory/rfidtags.html?created_on_end_day'} ) ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'created_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p>
 			<label>Last Updated:</label>
-			<span class="DateSelector">
-<? echo ( ssi::date_select( 'updated_on_start', $session{'/employee/inventory/rfidtags.html?updated_on_start_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?updated_on_start_year','/employee/inventory/rfidtags.html?updated_on_start_month','/employee/inventory/rfidtags.html?updated_on_start_day'} ) : ' '); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'updated_on_start', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			to 
 			</span>
-			<span class="DateSelector">
-<? echo ( ssi::date_select( 'updated_on_end', $session{'/employee/inventory/rfidtags.html?updated_on_end_year'} ? sprintf('%.4d-%.2d-%.2d', @session{'/employee/inventory/rfidtags.html?updated_on_end_year','/employee/inventory/rfidtags.html?updated_on_end_month','/employee/inventory/rfidtags.html?updated_on_end_day'} ) : ' ' ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/inventory/rfidtags.html', 'updated_on_end', { 'with_today'=>1, 'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p>

@@ -646,5 +646,21 @@ sub usergroup {
 	$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
 } # end sub usergroup
 
+sub user_profile_fields {
+} # end sub user_profile_fields
+sub _field_tr {
+	$variable{'Field'} = new openprint::User_Profile_Field( $param{'field_id'} );
+	if ( $param{'action'} eq 'Add' ) {
+		$variable{'error'} .= $variable{'Field'}->save({
+		});
+	} elsif ( $param{'action'} eq 'Delete' ) {
+		$variable{'error'} = $variable{'Field'}->delete();
+		$variable{'Field'} = new openprint::User_Profile_Field();
+	} elsif ( $param{'action'} eq 'Copy' ) {
+		$variable{'Field'} = $variable{'Field'}->copy();
+		$variable{'error'} .= $variable{'Field'}->save( \%param );
+	} # end if
+} # end sub _field_tr
+
 1;
 __END__

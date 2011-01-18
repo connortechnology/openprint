@@ -2,7 +2,9 @@
 <!--#include virtual="/includes/error_reporting.html"-->
 <? echo ( 
 	my $html;
-	if ( sets::isin( $$variable{'name'},[ 'Signature','Printing','Cutting','Folding','Saddle Stitching','LoopStitching' ] ) ) {
+	my @service_ids = split( ',', $$variable{'index'} );
+	my $Service = $$variable{'Project'}->Service( $service_ids[0] );
+	if ( sets::isin( $Service->ServiceType()->name(),[ '', 'AdditionalSignature','Cutting','Folding','Saddle Stitching','LoopStitching' ] ) ) {
 		if ( my $Job = openprint::ScheduledJob::find_one('service_id'=>$$variable{'index'}) ) {
 			if ( ! $Job->starttime() ) {
 				$html = 'Scheduled in pending';
@@ -21,7 +23,7 @@
 					sprintf( q`popup_window( '/employee/project/_add_to_schedule.html', 'project_id=%1$d&amp;service_id=%2$d' );`, @$variable{'ProjectIndex','index'} ), '', 'Add To Schedule' );
 			} # end if
 		} # end if
-	} elsif ( sets::isin( $$variable{name}, [ 'Shipping','CustomerPickUp' ] ) ) {
+	} elsif ( sets::isin( $Service->ServiceType()->name(), [ 'Shipping','CustomerPickUp' ] ) ) {
 		require openprint::SignatureCapture;
 		my @Signatures = openprint::SignatureCapture->find(
 				'project_id'    =>  $$variable{'ProjectIndex'},
@@ -29,6 +31,8 @@
 				'order'         =>  'id',
 				);
 		$html .= join('', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="thumbnail"/>`, $_->id(), $_->file_path() ); } @Signatures );
+	} else {
+		$html .= $Service->ServiceType()->name();
 	} # end if
 	return $html;
 ) ?>

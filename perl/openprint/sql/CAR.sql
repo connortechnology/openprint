@@ -25,6 +25,8 @@ CREATE TABLE CAR (
 	reprint			text,
 	reprint_approval	text,
 	reprint_charge	text,
+	reprint_quantity	INTEGER,
+	reprint_value		NUMERIC(10,2),
 	artwork			text,
 	reprint_on	date,
 	approved_by_id	INTEGER, FOREIGN KEY (approved_by_id) REFERENCES Users (index),

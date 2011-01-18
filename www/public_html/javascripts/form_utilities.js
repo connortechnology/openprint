@@ -950,6 +950,7 @@ function check_time_starting( form, starting_prefix, ending_prefix ) {
     if ( start > end ) {
         ddm_select_by_value( form.elements[ending_prefix+'_year'], form.elements[starting_prefix+'_year'].value );
         ddm_select_by_value( form.elements[ending_prefix+'_month'], form.elements[starting_prefix+'_month'].value );
+		form.elements[ending_prefix+'_month'].onchange();
         ddm_select_by_value( form.elements[ending_prefix+'_day'], form.elements[starting_prefix+'_day'].value );
 		if ( do_time ){
             ddm_select_by_value( form.elements[ending_prefix+'_hour'], form.elements[starting_prefix+'_hour'].value );
