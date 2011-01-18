@@ -50,6 +50,8 @@ $serial = 'cars_id_seq';
 	'printed_on'		=> 'printed_on',
 	'identified_by'		=> 'identified_by',
 	'deleted'			=> 'deleted',
+	'reprint_quantity'	=>	'reprint_quantity',
+	'reprint_value'		=>	'reprint_value',
 );
 
 %transforms = (
@@ -72,6 +74,8 @@ $serial = 'cars_id_seq';
 	'reprint'		=> undef,
 	'area_id'		=> undef,
 	'reason_id'		=> undef,
+	'reprint_quantity'	=>	undef,
+	'reprint_value'	=>	undef,
 );
 
 sub send_notifications {

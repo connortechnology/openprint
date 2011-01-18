@@ -78,6 +78,10 @@ sub find {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
 	} # end if
+	if ( exists $params{'equipment_id !='} ) {
+		$sql .= ' AND equipment_id != ?';
+		push @values, $params{'equipment_id !='};
+	} # end if
 	if ( $params{'servicetype_id'} ) {
 		if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
 			$sql .= ' AND servicetype_id IN ('. join(',', map {'?'} @{$params{'servicetype_id'}} ) . ')';
@@ -378,7 +382,6 @@ sub get_li {
 	my @printing_service_type_ids = map { $_->id() } openprint::ServiceType->find('category'=>'Printing');
 	my @bindery_service_type_ids = map { $_->id() } openprint::ServiceType->find('category'=>'Bindery');
 
-
 	if ( $$self{'project_id'} ) {
 		if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
 			$colour = 'inprepress';
@@ -386,9 +389,9 @@ sub get_li {
 			$colour = 'complete';
 		} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
 			$colour = 'approval';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids ) ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multipress';
-		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( 1 < find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids ) ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multibindery';
 		#} elsif ( 1 < find( 'project_id'=>$$self{'project_id'} ) ) {
 			#$colour = 'earlier_services';
@@ -566,10 +569,12 @@ sub impressions {
 		} # end if
 	} elsif ( $$self{'project_id'} ) {
 		my $Project = $self->Project();
+		if ( $self->service_id() ) {
 		foreach my $sig_id ( @{$self->service_id()} ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			$impressions += $$sig_specs{'ImpressionQuantity'};
 		} # end foreach sig
+		} # end if
 		
 		if ( ! $impressions ) {
 # Pull from printing
@@ -843,8 +848,10 @@ sub split {
 		} else {
 			my $runtime = int ( $self->runtime_seconds()/@service_ids );
 			$self->runtime_seconds( $runtime );
-			$self->impressions( $self->impressions() / @service_ids );
+			my $impressions = int( $self->impressions() / @service_ids );
 			$$self{'service_id'} = [ shift @service_ids ];
+
+			$self->impressions( $impressions );
 			$self->save();
 			my $starttime = $self->starttime_seconds() + $runtime if $self->starttime();
 			foreach my $s_id ( @service_ids ) {

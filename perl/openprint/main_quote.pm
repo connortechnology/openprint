@@ -415,6 +415,8 @@ sub _products {
 		} # end if
 	} # end if
 } # end sub _products
+sub overview {
+} # end sub overview
 
 1;
 

@@ -2,18 +2,20 @@
 	if ( $param{'asset_id'} ) {
 		@{$$variable{'Assets'}} = openprint::Asset::find( 
 			'id'=>$param{'asset_id'}, 
-			'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
+			#'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'deleted'=>[1,0],
 			'order' => 'id desc');
 	} else {
 		my %search = (
-			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
-			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/asset/history.html?created_on_start_year','/employee/asset/history.html?created_on_start_month','/employee/asset/history.html?created_on_start_day'} ),
-			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/asset/history.html?created_on_end_year','/employee/asset/history.html?created_on_end_month','/employee/asset/history.html?created_on_end_day'} ),
+ #'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
+			( $session{'/employee/assets/history.html?company_id'} ? ( 'company_id' => $session{'/employee/assets/history.html?company_id'} ) : () ),
+( Date::Calc::check_date( @session{'/employee/assets/history.html?created_on_start_year','/employee/assets/history.html?created_on_start_month','/employee/assets/history.html?created_on_start_day'} ) ? (
+			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/assets/history.html?created_on_start_year','/employee/assets/history.html?created_on_start_month','/employee/assets/history.html?created_on_start_day'} ) ) : () ),
+			( Date::Calc::check_date( @session{'/employee/assets/history.html?created_on_end_year','/employee/assets/history.html?created_on_end_month','/employee/assets/history.html?created_on_end_day'} ) ? ( 'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/assets/history.html?created_on_end_year','/employee/assets/history.html?created_on_end_month','/employee/assets/history.html?created_on_end_day'} ) ) : () ),
 			'order',			'id desc',
 		);
-		$search{'type_id'} = $session{'/employee/asset/history.html?type_id'} if $session{'/employee/asset/history.html?type_id'};
-		$search{'created_by'} = $session{'/employee/asset/history.html?created_by'} if $session{'/employee/asset/history.html?created_by'};
+		$search{'type_id'} = $session{'/employee/assets/history.html?type_id'} if $session{'/employee/assets/history.html?type_id'};
+		$search{'created_by'} = $session{'/employee/assets/history.html?created_by'} if $session{'/employee/assets/history.html?created_by'};
 
 		@{$$variable{'Assets'}} = ();
 		foreach my $Asset ( openprint::Asset->find( %search ) ) {
@@ -46,9 +48,9 @@
 				<td><input type="checkbox" id="asset_id" name="asset_id" value="%1$d"/></td>
 				<td class="ID"><a href="view.html?asset_id=%1$d">%1$d</a></td>
 				<td class="Date"><a href="view.html?asset_id=%1$d">%2$s</a></td>
-				<td class="CreatedBy"><a href="view.html?asset_id=%1$d">%4$s</a></td>
-				<td class="Name"><a href="view.html?asset_id=%1$d">%5$s</a></td>
-				<td class="Filename"><a href="view.html?asset_id=%1$d">%6$s</a></td>
+				<td class="CreatedBy"><a href="view.html?asset_id=%1$d">%3$s</a></td>
+				<td class="Name"><a href="view.html?asset_id=%1$d">%4$s</a></td>
+				<td class="Filename"><a href="view.html?asset_id=%1$d">%5$s</a></td>
 			</tr>`, $Asset->id(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Asset->created_on())), 
 			$Asset->Creator()->name(), $Asset->name(), $Asset->filename(),
 				);

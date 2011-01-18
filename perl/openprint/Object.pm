@@ -434,6 +434,11 @@ sub find {
 				push @values, $params{$k.'_>'};
 				delete $params{$k.'_>'};
 			} # end if
+			if ( exists $params{$k.' !='} ) {
+				push @where, "$$f{$k} != ?";
+				push @values, $params{$k.' !='};
+				delete $params{$k.' !='};
+			} # end if
 			if ( exists $params{$k.'_in'} ) {
 				push @where, "? IN $$f{$k}";
 				push @values, $params{$k.'_in'};

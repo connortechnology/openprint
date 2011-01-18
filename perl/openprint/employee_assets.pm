@@ -23,11 +23,14 @@ sub history {
 		} # end foreach asset_id
 		%param = ();
 	} # end if
-	ssi::save_params( '/employee/asset/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','type_id', 'created_by' ) );
+	ssi::save_params( '/employee/assets/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','type_id', 'created_by', 'company_id' ) );
+	ssi::setup_date_select( '/employee/assets/history.html', 'created_on_start', '' );
+	ssi::setup_date_select( '/employee/assets/history.html', 'created_on_end', '' );
+
 } # end sub history
 
 sub _history {
-	ssi::save_params( '/employee/asset/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','type_id', 'created_by' ) );
+	ssi::save_params( '/employee/assets/history.html', ( 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','type_id', 'created_by', 'company_id' ) );
 } # end sub _assets
 
 sub view {
