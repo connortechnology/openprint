@@ -148,7 +148,7 @@ sub find {
 		$openprint::log->debug('Error (' . $openprint::dbh->errstr . ") Loading Orders: $sql @values");
 		return;
 	} else {
-		$openprint::log->debug("Loading Orders: $sql @values #results:" . @$data);
+		#$openprint::log->debug("Loading Orders: $sql @values #results:" . @$data);
 		return map { new openprint::Order( $_->{index}, $_ ) } @$data;
 	} # end if
 } # end sub find

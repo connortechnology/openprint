@@ -6,10 +6,8 @@ use vars qw( %config $log $dbh %session );
 *config = \%openprint::config;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-use MIME::QuotedPrint;
-use MIME::Base64;
 
-my $debug = 1;
+my $debug = 0;
 
 use strict;
 use vars qw( %fields %defaults %transforms );

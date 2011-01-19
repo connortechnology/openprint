@@ -94,7 +94,7 @@ sub quotes {
 sub orders {
 	
 	if ( $param{'btnFunction'} eq 'Download in CSV format' ) {
-		my @header = ('OrderID', 'Docket', 'Order Date', 'Company Name', 'Status', 'Total', 'Currency');
+		my @header = ('OrderID', 'Docket', 'Order Date', 'CSR', 'Company Name', 'Status', 'Total', 'Currency');
 
 		my @Orders = openprint::Order::find(
 				'company_id'		=> $param{'ddmCustomer'},
@@ -109,11 +109,11 @@ sub orders {
 		my @data;
 		my $total = 0;
 		foreach my $Order ( @Orders ) {
-			push @data, $Order->id(), $Order->docket(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Order->created_on())), $Order->Company()->name(), $Order->status(), $Order->total(), $Order->Currency()->name();
+			push @data, $Order->id(), $Order->docket(), Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($Order->created_on())), $Order->Company()->CSR()->name(), $Order->Company()->name(), $Order->status(), openprint::Currency::format( $Order->Currency()->convert_from( $Order->total() ) );
 			next if $Order->status() eq 'Cancelled';
-			$total += $Order->total();
+			$total += $Order->Currency()->convert_from( $Order->total() );
 		} # end foreach Order
-		push @data, '', '', '', '', 'Total:', $total, '';
+		push @data, '', '', '', '', '', 'Total:', openprint::Currency::format( $total ), '';
 
 		misc::export_csv( $r, $log, \%variable, 'order_report.csv', \@header, \@data );
 	} # end if
@@ -495,11 +495,11 @@ sub customer_performance {
 					} # end if
 				} # end if
 				push @data, ( $CSR->name(),
-					 $Company->name(), 
-					 Number::Format::format_number( scalar @Orders ), 
-					 openprint::Currency::format( $order_total ),
-					 $payment_cycle,
-					 );
+						$Company->name(), 
+						Number::Format::format_number( scalar @Orders ), 
+						openprint::Currency::format( $order_total ),
+						$payment_cycle . ' days',
+						);
 			} # end foreach Company
 		} # end foreach CSR
 		misc::export_csv( $r, $log, \%variable, 'customer_performance.csv', \@header, \@data );
@@ -513,6 +513,90 @@ sub _customer_performance {
 			'not_ordered_on_end_year','not_ordered_on_end_month','not_ordered_on_end_day', 
 			'salesrep_id','payment_cycle' );
 } # end sub _customer_performance
+
+sub yearly_sales {
+	ssi::save_params('/administrator/reports/yearly_sales.html',  
+			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
+			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
+			'salesrep_id' );
+	ssi::setup_date_select( '/administrator/reports/yearly_sales.html', 'ordered_on_start', -365 );
+	ssi::setup_date_select( '/administrator/reports/yearly_sales.html', 'ordered_on_end', '' );
+
+
+	if ( exists $param{'Download'} ) {
+		my @header = ( 'CSR', 'Company Name' );
+		my @data;
+		my @csr_ids;
+		if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) {
+			@csr_ids = ( $session{'user_id'} );
+		} elsif ( $param{'salesrep_id'} ) {
+			@csr_ids = ( $param{'salesrep_id'} );
+		} else {
+			@csr_ids = map { $_->id() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+		} # end if
+
+		my ( $y, $m, $d ) = Date::Calc::Today();
+		if ( ! $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} ) {
+			$session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} = $y;
+		} # end if
+		if ( ! $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
+			$session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} = $y;
+		} # end if
+		foreach my $year ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
+			push @header, ( 'Orders ' . $year, 'Value ' . $year, 'Payment Cycle ' . $year );
+		} # end foreach year
+
+		foreach my $csr_id ( @csr_ids ) {
+			my $CSR = new openprint::User( $csr_id );
+			my %totals;
+
+			my @Companies = openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)');
+			foreach my $Company ( @Companies ) {
+				my $order_total;
+				my $payment_cycle;
+
+				push @data, $CSR->name(), $Company->name();
+
+				foreach my $year ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
+
+					my @Orders = openprint::Order::find( 
+							'company_id' => $Company->id(),
+							'created_on_start' => sprintf('%.4d-01-01 00:00:00', $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} ),
+							'created_on_end' => sprintf('%.4d-01-01 23:59:59', $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ),
+							'status' => ['Complete','Picked Up', 'Shipped' ],
+							);
+					last if $dbh->errstr();
+					foreach my $Order ( @Orders ) {
+						$order_total += $Order->Currency()->convert_from( $Order->total() );
+						$payment_cycle += $Order->payment_days();
+					} # end foreach Order
+					$payment_cycle = int( $payment_cycle / scalar @Orders ) if @Orders;
+					push @data, (
+						 Number::Format::format_number( scalar @Orders ), 
+						 openprint::Currency::format( $order_total ),
+						 (1*$payment_cycle) . ' days',
+						 );
+					$totals{$year}[0] += scalar @Orders;
+					$totals{$year}[1] += $order_total;
+					$totals{$year}[2] += $payment_cycle;
+				} # end foreach year
+			} # end foreach Company
+			
+			push @data, ( 'Totals:', '' );
+			foreach my $year ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
+				push @data, $totals{$year}[0], openprint::Currency::format($totals{$year}[1]), (@Companies ? int($totals{$year}[2]/@Companies) : 0). ' days';
+			} # end foreach year
+
+		} # end foreach CSR
+		misc::export_csv( $r, $log, \%variable, 'yearly_sales.csv', \@header, \@data );
+	} # end if Download
+} # end sub yearly_sales
+sub _yearly_sales {
+	ssi::save_params('/administrator/reports/yearly_sales.html',  
+			'ordered_on_start_year','ordered_on_start_month','ordered_on_start_day',
+			'ordered_on_end_year','ordered_on_end_month','ordered_on_end_day', 
+			'salesrep_id' );
+} # end sub _yearly_sales
 
 1;
 
