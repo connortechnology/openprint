@@ -414,6 +414,96 @@ sub customer_performance {
 	ssi::setup_date_select( '/administrator/reports/customer_performance.html', 'ordered_on_end', 0 );
 	ssi::setup_date_select( '/administrator/reports/customer_performance.html', 'not_ordered_on_start', -31 );
 	ssi::setup_date_select( '/administrator/reports/customer_performance.html', 'not_ordered_on_end', 0 );
+	
+
+	if ( exists $param{'Download'} ) {
+		my @header = ( 'CSR', 'Company Name', '# of Orders', 'Order Value', 'Payment Cycle' );
+		my @data;
+		my @csr_ids;
+		if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) {
+			@csr_ids = ( $session{'user_id'} );
+		} elsif ( $param{'salesrep_id'} ) {
+			@csr_ids = ( $param{'salesrep_id'} );
+		} else {
+			@csr_ids = map { $_->id() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+		} # end if
+		foreach my $csr_id ( @csr_ids ) {
+			my $CSR = new openprint::User( $csr_id );
+			foreach my $Company ( openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)') ) {
+				my $order_total;
+				my $payment_cycle;
+
+				my @Orders = openprint::Order::find( 
+						'company_id' => $Company->id(),
+						( Date::Calc::check_date( @session{
+												  '/administrator/reports/customer_performance.html?ordered_on_start_year',
+												  '/administrator/reports/customer_performance.html?ordered_on_start_month',
+												  '/administrator/reports/customer_performance.html?ordered_on_start_day',
+												  } ) ?
+						  ( 'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+														  '/administrator/reports/customer_performance.html?ordered_on_start_year',
+														  '/administrator/reports/customer_performance.html?ordered_on_start_month',
+														  '/administrator/reports/customer_performance.html?ordered_on_start_day',
+														  } ) ) : () ),
+						( Date::Calc::check_date( @session{
+												  '/administrator/reports/customer_performance.html?ordered_on_end_year',
+												  '/administrator/reports/customer_performance.html?ordered_on_end_month',
+												  '/administrator/reports/customer_performance.html?ordered_on_end_day',
+												  } ) ? (
+													  'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+														  '/administrator/reports/customer_performance.html?ordered_on_end_year',
+														  '/administrator/reports/customer_performance.html?ordered_on_end_month',
+														  '/administrator/reports/customer_performance.html?ordered_on_end_day',
+														  } ) ) : () ),
+						'status' => ['Complete','Picked Up', 'Shipped' ],
+						);
+				last if $dbh->errstr();
+				next if ! @Orders;
+				next if openprint::Order::find(
+						'company_id' => $Company->id(),
+						( Date::Calc::check_date( @session{
+												  '/administrator/reports/customer_performance.html?not_ordered_on_start_year',
+												  '/administrator/reports/customer_performance.html?not_ordered_on_start_month',
+												  '/administrator/reports/customer_performance.html?not_ordered_on_start_day',
+												  } ) ? ( 
+
+													  'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+														  '/administrator/reports/customer_performance.html?not_ordered_on_start_year',
+														  '/administrator/reports/customer_performance.html?not_ordered_on_start_month',
+														  '/administrator/reports/customer_performance.html?not_ordered_on_start_day',
+														  } ) ) : () ),
+						( Date::Calc::check_date( @session{
+												  '/administrator/reports/customer_performance.html?not_ordered_on_end_year',
+												  '/administrator/reports/customer_performance.html?not_ordered_on_end_month',
+												  '/administrator/reports/customer_performance.html?not_ordered_on_end_day',
+												  } ) ? ( 
+													  'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+														  '/administrator/reports/customer_performance.html?not_ordered_on_end_year',
+														  '/administrator/reports/customer_performance.html?not_ordered_on_end_month',
+														  '/administrator/reports/customer_performance.html?not_ordered_on_end_day',
+														  } ) ) : () ),
+						'status' => ['Complete','Picked Up', 'Shipped' ],
+						);
+				foreach my $Order ( @Orders ) {
+					$order_total += $Order->Currency()->convert_from( $Order->total() );
+					$payment_cycle += $Order->payment_days();
+				} # end foreach Order
+				$payment_cycle = int( $payment_cycle / scalar @Orders );
+				if ( $param{'payment_cycle'} ) {
+					if ( $payment_cycle > $param{'payment_cycle'} ) {
+						next;
+					} # end if
+				} # end if
+				push @data, ( $CSR->name(),
+					 $Company->name(), 
+					 Number::Format::format_number( scalar @Orders ), 
+					 openprint::Currency::format( $order_total ),
+					 $payment_cycle,
+					 );
+			} # end foreach Company
+		} # end foreach CSR
+		misc::export_csv( $r, $log, \%variable, 'customer_performance.csv', \@header, \@data );
+	} # end if
 } # end sub customer_performance
 sub _customer_performance {
 	ssi::save_params('/administrator/reports/customer_performance.html',  
@@ -427,4 +517,3 @@ sub _customer_performance {
 1;
 
 __END__
-
