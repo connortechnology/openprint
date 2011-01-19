@@ -412,6 +412,8 @@ sub customer_performance {
 			'salesrep_id','payment_cycle' );
 	ssi::setup_date_select( '/administrator/reports/customer_performance.html', 'ordered_on_start', -31 );
 	ssi::setup_date_select( '/administrator/reports/customer_performance.html', 'ordered_on_end', 0 );
+	ssi::setup_date_select( '/administrator/reports/customer_performance.html', 'not_ordered_on_start', -31 );
+	ssi::setup_date_select( '/administrator/reports/customer_performance.html', 'not_ordered_on_end', 0 );
 } # end sub customer_performance
 sub _customer_performance {
 	ssi::save_params('/administrator/reports/customer_performance.html',  
