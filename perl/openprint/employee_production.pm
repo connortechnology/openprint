@@ -927,6 +927,9 @@ sub monthly_schedule {
 	} # end if
 } # end sub monthly_schedule
 
+sub label {
+} # end sub label
+
 sub _labels {
 	my $Label = new openprint::Label( $param{'id'} );
 	if ( $param{'action'} eq 'delete' ) {

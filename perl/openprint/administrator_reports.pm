@@ -552,17 +552,17 @@ sub yearly_sales {
 
 			my @Companies = openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)');
 			foreach my $Company ( @Companies ) {
-				my $order_total;
-				my $payment_cycle;
 
 				push @data, $CSR->name(), $Company->name();
 
 				foreach my $year ( $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} .. $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ) {
+					my $order_total;
+					my $payment_cycle;
 
 					my @Orders = openprint::Order::find( 
 							'company_id' => $Company->id(),
-							'created_on_start' => sprintf('%.4d-01-01 00:00:00', $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} ),
-							'created_on_end' => sprintf('%.4d-12-31 23:59:59', $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ),
+							'created_on_start' => sprintf('%.4d-01-01 00:00:00', $year ),
+							'created_on_end' => sprintf('%.4d-12-31 23:59:59', $year ),
 							'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 							);
 					last if $dbh->errstr();
