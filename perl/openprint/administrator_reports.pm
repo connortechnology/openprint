@@ -455,7 +455,7 @@ sub customer_performance {
 														  '/administrator/reports/customer_performance.html?ordered_on_end_month',
 														  '/administrator/reports/customer_performance.html?ordered_on_end_day',
 														  } ) ) : () ),
-						'status' => ['Complete','Picked Up', 'Shipped' ],
+							'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 						);
 				last if $dbh->errstr();
 				next if ! @Orders;
@@ -482,7 +482,7 @@ sub customer_performance {
 														  '/administrator/reports/customer_performance.html?not_ordered_on_end_month',
 														  '/administrator/reports/customer_performance.html?not_ordered_on_end_day',
 														  } ) ) : () ),
-						'status' => ['Complete','Picked Up', 'Shipped' ],
+							'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 						);
 				foreach my $Order ( @Orders ) {
 					$order_total += $Order->Currency()->convert_from( $Order->total() );
@@ -563,7 +563,7 @@ sub yearly_sales {
 							'company_id' => $Company->id(),
 							'created_on_start' => sprintf('%.4d-01-01 00:00:00', $session{'/administrator/reports/yearly_sales.html?ordered_on_start_year'} ),
 							'created_on_end' => sprintf('%.4d-01-01 23:59:59', $session{'/administrator/reports/yearly_sales.html?ordered_on_end_year'} ),
-							'status' => ['Complete','Picked Up', 'Shipped' ],
+							'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 							);
 					last if $dbh->errstr();
 					foreach my $Order ( @Orders ) {

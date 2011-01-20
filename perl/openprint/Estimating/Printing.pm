@@ -747,7 +747,7 @@ $openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.
 	} # end if override
 
 	push @Papers, @Ps;
-if ( $debug or 1 ) {
+if ( $debug or 0 ) {
 foreach my $P ( @Papers ) {
 $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() . ' Minumum: ' . $P->minimum_order() );
 } 
@@ -1608,19 +1608,21 @@ sub get_project_price {
 		} # end if
 		if ( $SpreadLayout > 0 ) {
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
-if ( $debug or 0 ) {
-$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
-foreach my $imp ( @impositions ) {
-$imp->display();
-}
-}
+			if ( $debug or 0 ) {
+				$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
+				foreach my $imp ( @impositions ) {
+					$imp->display();
+				}
+			}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
-if ( $debug or 1) {
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
-foreach my $imp ( @impositions ) {
-$imp->display();
-}
-}
+			if ( $debug or 1) {
+				$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
+				if ( $debug > 1) {
+					foreach my $imp ( @impositions ) {
+						$imp->display();
+					}
+				}
+			}
 
 
 
