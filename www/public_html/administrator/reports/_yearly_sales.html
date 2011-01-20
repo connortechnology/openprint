@@ -66,7 +66,7 @@
 				$html .= sprintf(q`<td align="right">%1$s</td><td align="right">%2$s</td><td align="right">%3$d days</td>`,
 						Number::Format::format_number( $totals{$year}[0] ), 
 						openprint::Currency::format( $totals{$year}[1] ),
-						$totals{$year}[2]/scalar @Companies,
+						@Companies ? $totals{$year}[2]/scalar @Companies : 0,
 						);
 			} # end foreach
 		$html .= '</tr>';
