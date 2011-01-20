@@ -116,6 +116,8 @@ sub logout {
 	openprint::login::logout( $log, $dbh, \%variable, $session{_session_id}, 'E' );
 }
 
+sub login_confirmation {
+}
 
 1;
 
