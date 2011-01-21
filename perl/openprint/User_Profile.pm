@@ -1,5 +1,6 @@
 use strict;
 package openprint::User_Profile;
+require openprint::User_Profile_Entry;
 
 use vars qw( $AUTOLOAD );
 
@@ -30,11 +31,16 @@ sub AUTOLOAD {
 		} else {
 			# create a new entry
 		} # end if
-	} elsif ( exists $$self{'fields'}{$name} ) {
+	} elsif ( $$self{'fields'} and exists $$self{'fields'}{$name} ) {
 			return $$self{'fields'}{$name}->value( );
 	} # end if
 	return undef;
 } # end sub AUTOLOAD
+
+sub value {
+	return $_[0]{'fields'}{$_[1]} if $_[0]{'fields'};
+	return undef;
+} # end sub value
 1;
 __END__
 

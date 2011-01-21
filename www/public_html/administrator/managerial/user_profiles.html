@@ -144,8 +144,31 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				<label>Fax:</label>
 				<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 			</p>
+
 		</div>
 		<div class="rightColumn">
+<? echo ( 
+	my $html;
+	my $Profile = $$variable{'User'}->Profile();
+	
+	foreach my $Field (  openprint::User_Profile_Field->find('order'=>'sort,name') ) {
+		$html .= '<p><label>'.$Field->name().'</label>';
+		if ( $Field->type() eq 'select-one' ) {
+			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d">`, $Field->id() );
+			$html .= ssi::make_drop_down( $Field->values(), $Profile->value($Field->name()) );
+			$html .= '</select>';
+		} elsif ( $Field->type() eq 'text' ) {
+			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$d" />`, $Field->id(), $Profile->value( $Field->name() ) );
+		} elsif ( $Field->type() eq 'radio' ) {
+			foreach my $value ( ref $Field->values() ? $Field->values() : () ) {
+				$html .= sprintf( q`<input type="radio" name="field-%1$d" id="field-%1$d%2$s" value="%2$d" %3$s />
+					<label for="field-%1$d%2$s">%2$s</label>
+					`, $Field->id(), $value, ssi::checked( $value eq $Profile->value( $Field->name() ) ) );
+			} # end foreach value
+		} # end if
+	} # end foreach Field
+	return $html;
+) ?>
 			<p> 
 				<label>Add to our Mailing List:</label>
 				<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
