@@ -85,11 +85,13 @@ sub handler {
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
-	openprint::session_init();
-	openprint::usergroup::init_cache();
-	openprint::Material::init_cache();
-	openprint::Service::init_cache();
-	openprint::Equipment::init_cache();
+	if ( $dbh ) {
+		openprint::session_init();
+		openprint::usergroup::init_cache();
+		openprint::Material::init_cache();
+		openprint::Service::init_cache();
+		openprint::Equipment::init_cache();
+	} # end if
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -395,7 +397,7 @@ $log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.
-			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
+			if ( $openprint::config{'public_URIs'} and ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
 $log->debug("Dset: $variable{'Destination'}");

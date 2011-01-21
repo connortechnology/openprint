@@ -132,6 +132,7 @@
 				<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 					</ul>
 				</div>
+<? if ( $openprint::dbh ) ?>
 	<? if ( ! $session{'user_id'} ) ?>
 				<div id="QuickLogin">
 					<form name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
@@ -164,6 +165,7 @@
 						</select>
 					</form>
 				</div>
+<? endif ( $openprint::dbh ) ?>
 
 				<div id="DidYouKnow">
 					<div id="DidYouKnowHeader">Did you know?</div>
