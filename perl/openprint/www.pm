@@ -166,7 +166,7 @@ $variable{'uri'} = $page;
 
 	$session{'lastupdated'} = time;
 	untie %session;
-	$dbh->disconnect();
+	$dbh->disconnect() if $dbh;
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client!  This is really smart.
 	openprint::service::init_cache();
