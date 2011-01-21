@@ -151,7 +151,6 @@ sub user_profiles {
 		} # end if
 
 		my @Users = openprint::User->find( 'email_lc' => lc $param{'email'} );
-$log->debug("Users found? " . scalar @Users);
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
@@ -165,8 +164,12 @@ $log->debug("Users found? " . scalar @Users);
 		$param{'csr_ids'} = [] if ! exists $param{'csr_ids'};
 		delete $param{'password'} if ! $param{'password'};
 		my $error = $User->save( \%param );
-
 		if ( ! $error ) {
+			my $Profile = $User->Profile();
+			foreach my $Field ( openprint::User_Profile_Field->find() ) {
+				$Profile->value( $Field->name(), $param{'field-'.$Field->id()} );
+				#$variable{'error'} .= $Entry->value( $param{'field-'.$Field->id()} ) if $Entry;
+			} # end foreach $Field
 			foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
 				$User->po_limit( $Type->id(), $param{'po_limit-'.$Type->id()} );
 			} # end foreach Type

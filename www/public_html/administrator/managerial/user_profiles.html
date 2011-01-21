@@ -151,11 +151,11 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 	my $html;
 	my $Profile = $$variable{'User'}->Profile();
 	
-	foreach my $Field (  openprint::User_Profile_Field->find('order'=>'sort,name') ) {
-		$html .= '<p><label>'.$Field->name().'</label>';
+	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
+		$html .= '<p><label>'.$Field->name().':</label>';
 		if ( $Field->type() eq 'select-one' ) {
-			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d">`, $Field->id() );
-			$html .= ssi::make_drop_down( $Field->values(), $Profile->value($Field->name()) );
+			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value="">choose</option>`, $Field->id() );
+			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $Profile->value($Field->name()) );
 			$html .= '</select>';
 		} elsif ( $Field->type() eq 'text' ) {
 			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$d" />`, $Field->id(), $Profile->value( $Field->name() ) );
@@ -166,6 +166,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 					`, $Field->id(), $value, ssi::checked( $value eq $Profile->value( $Field->name() ) ) );
 			} # end foreach value
 		} # end if
+		$html .= '</p>';
 	} # end foreach Field
 	return $html;
 ) ?>
@@ -199,7 +200,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				<label class="radio" for="ftp_active0">No</label>
 			</p>
 			<p> 
-				<label>Custom Greeting</label>
+				<label>Custom Greeting:</label>
 				<textarea id="greeting" name="greeting" cols="" rows="<? echo ( split("\n", $$variable{'User'}->greeting() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->greeting() ) ?></textarea>
 			</p>
 			<p>
