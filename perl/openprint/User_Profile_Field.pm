@@ -12,9 +12,14 @@ $serial = 'user_profile_fields_id_seq';
 	'description'	=>	'description',
 	'type'			=>	'type',	
 	'sort'			=>	'sort',
+	'values'		=>	'values',
+);
+%transforms = (
+	'sort'	=> [ 's/\D//g' ],
 );
 %defaults = (
 	'required'	=>	0,
+	'sort'		=>	'undef',
 );
 
 1;

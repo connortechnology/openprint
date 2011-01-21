@@ -22,6 +22,7 @@ require openprint::UserGroup;
 require openprint::Invoice;
 require openprint::Payment;
 require openprint::Timetrack;
+require openprint::User_Profile_Field;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -647,11 +648,22 @@ sub usergroup {
 } # end sub usergroup
 
 sub user_profile_fields {
+	if ( $param{'action'} eq 'Save' ) {
+		foreach my $Field ( openprint::User_Profile_Field->find() ) {
+			$variable{'error'} .= $Field->save({
+				'name'	=>	$param{'name-'.$Field->id()},
+				'type'	=>	$param{'type-'.$Field->id()},
+				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+				'required'	=>	$param{'required-'.$Field->id()},
+			});
+		} # end foreach Field
+	} # end if
 } # end sub user_profile_fields
 sub _field_tr {
 	$variable{'Field'} = new openprint::User_Profile_Field( $param{'field_id'} );
 	if ( $param{'action'} eq 'Add' ) {
 		$variable{'error'} .= $variable{'Field'}->save({
+			'name'	=>	'name',
 		});
 	} elsif ( $param{'action'} eq 'Delete' ) {
 		$variable{'error'} = $variable{'Field'}->delete();

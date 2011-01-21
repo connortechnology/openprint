@@ -1,4 +1,24 @@
 <script type="text/javascript">
+	function check_field( element ) {
+		var form = element.form;
+		var matches;
+		if ( matches = element.name.match( /^\w+\-(\d+)$/ ) ) {
+			var id = matches[1];
+			if ( 
+				element_changed( form.elements['required-'+id] ) ||
+				element_changed( form.elements['name-'+id] ) ||
+				element_changed( form.elements['type-'+id] ) ||
+				element_changed( form.elements['values-'+id] ) 
+			   ) {
+				$('field-'+id).addClassName('changed');
+			} else {
+				$('field-'+id).removeClassName('changed');
+			} // end if
+		} else {
+			alert('Not matched' + element.name);
+		} // end if
+	} // end function check_field 
+
 	function newField( ) {
 		new Ajax.Request( '_field_tr.html', { 
 				method: 'get', 
@@ -54,29 +74,33 @@
 	}
 </script>
 <div class="UserProfileFields">
-<form id="f1" name="f1" action="user_profile_fields.html">
-	<table class="List">
-		<thead>
-			<tr>
-				<th>Name</th>
-				<th>Type</th>
-				<th>Values</th>
-				<th>Required</th>
-				<th class="buttons">
-			<? echo ( ssi::writeButton( $log, $dbh, 'New', 'new.gif', "newField( );", '', 'New' ); ) ?>
-				</th>
-			</tr>
-		</thead>
-		<tbody id="fields">
-	<? echo ( 
-		my $html;
-		foreach my $Field ( openprint::User_Profile_Fields->find('order'=>'lower(name)') ) {
-			$$variable{'Field'} = $Field;
-			$html .= ssi::include( '_field_tr.html' );
-		} # end foreach Field
-		return $html;
-	) ?>
-		</tbody>
-	</table>
-</form>
+	<form id="f1" name="f1" action="user_profile_fields.html" method="post">
+		<input type="hidden" name="action" id="action" />
+		<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', q`$('action').value='Save';$('f1').submit();`, '', 'Save' ); ) ?>
+		</p>
+		<table class="List">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Values</th>
+					<th>Required</th>
+					<th class="buttons">
+				<? echo ( ssi::writeButton( $log, $dbh, 'New', 'new.gif', "newField( );", '', 'New' ); ) ?>
+					</th>
+				</tr>
+			</thead>
+			<tbody id="fields">
+		<? echo ( 
+			my $html;
+			foreach my $Field ( openprint::User_Profile_Field->find('order'=>'lower(name)') ) {
+				$$variable{'Field'} = $Field;
+				$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/managerial/_field_tr.html' );
+			} # end foreach Field
+			return $html;
+		) ?>
+			</tbody>
+		</table>
+	</form>
 </div>
