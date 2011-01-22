@@ -147,29 +147,6 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 
 		</div>
 		<div class="rightColumn">
-<? echo ( 
-	my $html;
-	my $Profile = $$variable{'User'}->Profile();
-	
-	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
-		$html .= '<p><label>'.$Field->name().':</label>';
-		if ( $Field->type() eq 'select-one' ) {
-			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value="">choose</option>`, $Field->id() );
-			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $Profile->value($Field->name()) );
-			$html .= '</select>';
-		} elsif ( $Field->type() eq 'text' ) {
-			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$d" />`, $Field->id(), $Profile->value( $Field->name() ) );
-		} elsif ( $Field->type() eq 'radio' ) {
-			foreach my $value ( ref $Field->values() ? $Field->values() : () ) {
-				$html .= sprintf( q`<input type="radio" name="field-%1$d" id="field-%1$d%2$s" value="%2$d" %3$s />
-					<label for="field-%1$d%2$s">%2$s</label>
-					`, $Field->id(), $value, ssi::checked( $value eq $Profile->value( $Field->name() ) ) );
-			} # end foreach value
-		} # end if
-		$html .= '</p>';
-	} # end foreach Field
-	return $html;
-) ?>
 			<p> 
 				<label>Add to our Mailing List:</label>
 				<input type="radio" id="MailingListY" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() eq 'Y' ) ?> value="Y" />
@@ -327,6 +304,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 		</fieldset>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
 		<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
+			<!--#include virtual="/account/_user_profile.html"-->
 		<fieldset><legend>Login Information:</legend> 
 			<p> 
 				<label>E-mail Address:</label>

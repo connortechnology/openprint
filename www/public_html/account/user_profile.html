@@ -122,43 +122,11 @@
    				</li>
 <? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 			<? endif ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
-<? echo ( 
-	my $html;
-	my $Profile = $$variable{'User'}->Profile();
-	
-	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
-		$html .= '<li><label>'.$Field->name().':</label>';
-		if ( $Field->type() eq 'checkbox' ) {
-			foreach my $value ( ref $Field->values() eq 'ARRAY' ? @{$Field->values()} : () ) {
-				$html .= sprintf( q`<input type="checkbox" name="field-%1$d" id="field-%1$d%2$s" value="%2$d" %3$s />
-					<label class="radio" for="field-%1$d%2$s">%2$s</label>
-					`, $Field->id(), $value, ssi::checked( sets::isin( $value, [ split(',', $Profile->value( $Field->name() ) ) ] ) )
-					);
-			} # end foreach value
-		} elsif ( $Field->type() eq 'date' ) {
-			$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id() ) . '</span>';
-		} elsif ( $Field->type() eq 'select-one' ) {
-			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value="">choose</option>`, $Field->id() );
-$openprint::log->debug("Value: " . $Profile->value($Field->name()) );
-			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $Profile->value($Field->name()) );
-			$html .= '</select>';
-		} elsif ( $Field->type() eq 'text' ) {
-			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$d" />`, $Field->id(), $Profile->value( $Field->name() ) );
-		} elsif ( $Field->type() eq 'radio' ) {
-			foreach my $value ( ref $Field->values() ? $Field->values() : () ) {
-				$html .= sprintf( q`<input type="radio" name="field-%1$d" id="field-%1$d%2$s" value="%2$d" %3$s />
-					<label class="radio" for="field-%1$d%2$s">%2$s</label>
-					`, $Field->id(), $value, ssi::checked( $value eq $Profile->value( $Field->name() ) ) );
-			} # end foreach value
-		} # end if
-		$html .= '</li>';
-	} # end foreach Field
-	return $html;
-) ?>
 				</ul>
 				</div>
    			</fieldset>
 			</div>
+			<!--#include virtual="_user_profile.html"-->
 			<div id="LoginInformation">
    			<fieldset><legend>Login Information</legend>
 				<div class="content">
