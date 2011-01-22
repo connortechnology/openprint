@@ -2188,5 +2188,8 @@ sub _paper_log {
 sub _similar_pos {
 } # end sub _similar_pos
 
+sub skid_label {
+} # end sub skid_label
+
 1;
 __END__
