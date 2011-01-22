@@ -390,13 +390,7 @@ sub user_profile {
 		$param{'change_password'} = 'N' if $param{'password'};
 		$variable{'error'} .= $User->save( \%param );
 
-		my $Profile = $User->Profile();
-$log->debug("Saing Profile:" );
-		foreach my $Field ( openprint::User_Profile_Field->find() ) {
-$log->debug("Saing :".$Field->name() );
-			$Profile->value( $Field->name(), $param{'field-'.$Field->id()} );
-		} # end foreach $Field
-$log->debug('After fields');
+		$User->Profile()->save( \%param );
 
 		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
 # Send password change email

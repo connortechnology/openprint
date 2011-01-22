@@ -504,6 +504,8 @@ sub date_select {
 		@fields = split(',', $$options{'fields'} );
 	} 
 	
+	my ( $start_year, $start_month, $start_day ) = split('-', $$options{'start'} ) if $$options{'start'};
+	my ( $end_year, $end_month, $end_day ) = split('-', $$options{'end'} ) if $$options{'end'};
 	
 
 	my $html = '';
@@ -511,7 +513,7 @@ sub date_select {
 	foreach my $o ( split(',', $$options{'order'} ) ) {
 		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin( 'year', \@fields ) ) ) {
 			$html .= sprintf('<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
-			$html .= return_years( undef, undef, $year );
+			$html .= return_years( $start_year, $end_year, $year );
 			$html .= '</select>';
 		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
 			$html .= sprintf('<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );

@@ -165,11 +165,7 @@ sub user_profiles {
 		delete $param{'password'} if ! $param{'password'};
 		my $error = $User->save( \%param );
 		if ( ! $error ) {
-			my $Profile = $User->Profile();
-			foreach my $Field ( openprint::User_Profile_Field->find() ) {
-				$Profile->value( $Field->name(), $param{'field-'.$Field->id()} );
-				#$variable{'error'} .= $Entry->value( $param{'field-'.$Field->id()} ) if $Entry;
-			} # end foreach $Field
+			$User->Profile()->save( \%param );
 			foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
 				$User->po_limit( $Type->id(), $param{'po_limit-'.$Type->id()} );
 			} # end foreach Type

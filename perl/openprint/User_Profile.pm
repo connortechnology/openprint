@@ -61,11 +61,10 @@ sub value {
 } # end sub value
 
 sub save {
-	my $error;
-	foreach my $Field ( values %{$_[0]{'fields'}} ) {
-		$error .= $Field->save();
-	} # end foreach
-	return $error;
+	my ( $self, $param ) = @_;
+	foreach my $Field ( openprint::User_Profile_Field->find() ) {
+		$self->value( $Field->name(), $$param{'field-'.$Field->id()} );
+	} # end foreach $Field
 } # end sub save
 
 1;

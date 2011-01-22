@@ -16,7 +16,8 @@
 					);
 			} # end foreach value
 		} elsif ( $Field->type() eq 'date' ) {
-			$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id() ) . '</span>';
+			my ( $start, $end ) = @{$Field->values()} if $Field->values();
+			$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id(), undef, { 'start'=>$start, 'end'=>$end } ) . '</span>';
 		} elsif ( $Field->type() eq 'select-one' ) {
 			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value="">choose</option>`, $Field->id() );
 $openprint::log->debug("Value: " . $Profile->value($Field->name()) );
