@@ -128,7 +128,16 @@
 	
 	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,name') ) {
 		$html .= '<li><label>'.$Field->name().':</label>';
-		if ( $Field->type() eq 'select-one' ) {
+		if ( $Field->type() eq 'checkbox' ) {
+			foreach my $value ( ref $Field->values() eq 'ARRAY' ? @{$Field->values()} : () ) {
+				$html .= sprintf( q`<input type="checkbox" name="field-%1$d" id="field-%1$d%2$s" value="%2$d" %3$s />
+					<label class="radio" for="field-%1$d%2$s">%2$s</label>
+					`, $Field->id(), $value, ssi::checked( sets::isin( $value, [ split(',', $Profile->value( $Field->name() ) ) ] ) )
+					);
+			} # end foreach value
+		} elsif ( $Field->type() eq 'date' ) {
+			$html .= '<span class="DateSelector">'.ssi::date_select( 'field-'.$Field->id() ) . '</span>';
+		} elsif ( $Field->type() eq 'select-one' ) {
 			$html .= sprintf( q`<select name="field-%1$d" id="field-%1$d"><option value="">choose</option>`, $Field->id() );
 $openprint::log->debug("Value: " . $Profile->value($Field->name()) );
 			$html .= ssi::make_drop_down( [ map { $_, $_ } @{$Field->values()} ], $Profile->value($Field->name()) );
@@ -138,7 +147,7 @@ $openprint::log->debug("Value: " . $Profile->value($Field->name()) );
 		} elsif ( $Field->type() eq 'radio' ) {
 			foreach my $value ( ref $Field->values() ? $Field->values() : () ) {
 				$html .= sprintf( q`<input type="radio" name="field-%1$d" id="field-%1$d%2$s" value="%2$d" %3$s />
-					<label for="field-%1$d%2$s">%2$s</label>
+					<label class="radio" for="field-%1$d%2$s">%2$s</label>
 					`, $Field->id(), $value, ssi::checked( $value eq $Profile->value( $Field->name() ) ) );
 			} # end foreach value
 		} # end if

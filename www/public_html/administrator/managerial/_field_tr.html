@@ -5,16 +5,18 @@
 			<td><input type="text" id="name-%1$d" name="name-%1$d" value="%2$s" onkeyup="check_field(this);" /></td>
 			<td><select name="type-%1$d" id="type-%1$d" onchange="check_field(this);"><option value=""> choose </option>%3$s</select></td>
 			<td><input type="text" id="values-%1$d" name="values-%1$d" value="%4$s" onkeyup="check_field(this);"/></td>
+			<td><input type="text" id="default-%1$d" name="default-%1$d" value="%5$s" onkeyup="check_field(this);"/></td>
 			<td>
-				<input type="radio" name="required-%1$d" id="required-%1$d-1" value="1" %5$s onclick="check_field(this);"/>
+				<input type="radio" name="required-%1$d" id="required-%1$d-1" value="1" %6$s onclick="check_field(this);"/>
 				<label for="required-%1$d-1">Yes</label>
-				<input type="radio" name="required-%1$d" id="required-%1$d-0" value="0" %6$s onclick="check_field(this);"/>
+				<input type="radio" name="required-%1$d" id="required-%1$d-0" value="0" %7$s onclick="check_field(this);"/>
 				<label for="required-%1$d-0">No</label>
 			</td>
-			<td class="buttons">%7$s</td>
+			<td class="buttons">%8$s</td>
 		</tr>`, $Field->id(), $Field->name(), 
-			ssi::make_drop_down( [ map { $_, $_ } ( 'text', 'radio', 'select-one' ) ], $Field->type() ),
+			ssi::make_drop_down( [ map { $_, $_ } ('date','checkbox', 'text', 'radio', 'select-one' ) ], $Field->type() ),
 			( $Field->values() ? join(',', @{$Field->values()} ) : '' ),
+			$Field->default(),
 			ssi::checked( $Field->required() ), ssi::checked( ! $Field->required() ),
 		join('', 
 			ssi::writeButton( $log, $dbh, 'x'.$Field->id(), 'delete.gif', qq`delField( $$Field{id} );`, '', 'X' ),
