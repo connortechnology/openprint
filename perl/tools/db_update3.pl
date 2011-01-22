@@ -96,6 +96,14 @@ if ( ! exists $$data{'service'} ) {
 	$dbh->do("UPDATE paper_prices set service='Material'" );
 } # end if
 
+if ( ! sets::isin( 'user_profile_fields', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profile_Fields.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'user_profiles', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profiles.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 $dbh->disconnect();
 1;
 __END__

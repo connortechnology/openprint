@@ -2,6 +2,7 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
 	<span class="required"></span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
@@ -125,6 +126,7 @@
 				</div>
    			</fieldset>
 			</div>
+			<!--#include virtual="_user_profile.html"-->
 			<div id="LoginInformation">
    			<fieldset><legend>Login Information</legend>
 				<div class="content">

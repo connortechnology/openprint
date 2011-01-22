@@ -13,6 +13,7 @@ require misc;
 require openprint::usergroup;
 require openprint::logs;
 require openprint::MarketingCategory;
+require openprint::User_Profile_Field;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -30,7 +31,7 @@ sub select_company {
 } # end sub select_company
 
 sub registration {
-$log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserAccountActivation} $config{NewNonFirstUserAccountActivation}");
+#$log->debug("Config: $config{NewCustomerAccountActivation} $config{NewFirstUserAccountActivation} $config{NewNonFirstUserAccountActivation}");
 	if ( $param{'btnFunction'} ne 'Register' ) {
 		$log->debug("Not registering");
 		return;
@@ -324,7 +325,7 @@ sub company_profile {
 
 sub user_profile {
 	my $User = new openprint::User( $session{'user_id'} );
-	my $Me = new openprint::User( $session{'user_id'} );
+	my $Me = $variable{'Me'} = new openprint::User( $session{'user_id'} );
 
 	if ( ( $Me->administrator() eq 'Y' ) or sets::isin( new openprint::Company( $session{'company_id'} )->salesrep_id(), [ $Me->id(), $Me->csr_ids()]  ) ) {
 
@@ -358,6 +359,9 @@ sub user_profile {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 
 		my $error = '';
+		if ( ( $User->password() eq $param{'password'} ) and ! $param{'verifypassword'} ) {
+			delete $param{'password'};
+		} # end if
 		$error .= 'Password fields do not match.<br/>' if $param{'password'} ne $param{'verifypassword'};
 		$error .= 'First Name cannot be blank.<br/>' if ! $param{'firstname'};
 		$error .= 'Last Name cannot be blank.<br/>' if ! $param{'lastname'};
@@ -365,12 +369,18 @@ sub user_profile {
 		$error .= 'Phone cannot be blank.<br/>' if ! $param{'phone'};
 		$error .= 'Email Cannot be blank.<br/>' if ! $param{'email'};
 		if ( $error ne '' ) {
-			return misc::error( $log, $dbh, \%variable, 'Bad Field', $error );
+			$variable{'error'} = 'Bad Field';
+			$variable{'information'} = $error;
+			$variable{'User'} = $User;
+			return;
 		} # end if
 
-		foreach my $U ( openprint::User->find('email'=>lc $param{'email'}) ) {
+		foreach my $U ( openprint::User->find('email_lc'=>lc $param{'email'}) ) {
 			if ( $U->id() != $User->id() ) {
-				return misc::error( $log, $dbh, \%variable, 'User already exists.', $param{'email'} . " is already a user." );
+				$variable{'error'} = 'User already exists.';
+				$variable{'information'} = $param{'email'} . ' is already a user.';
+				$variable{'User'} = $User;
+				return;
 			} # end if
 		} # end foreach
 		if ( ! $param{'ddmUser'} ) { # add
@@ -379,6 +389,8 @@ sub user_profile {
 		my $oldpassword = $User->password();
 		$param{'change_password'} = 'N' if $param{'password'};
 		$variable{'error'} .= $User->save( \%param );
+
+		$User->Profile()->save( \%param );
 
 		if ( $param{'ddmUser'} and ( $param{'ddmUser'} != $session{'user_id'} ) and ( $oldpassword ne $User->password() ) ) {
 # Send password change email
@@ -407,7 +419,6 @@ sub user_profile {
 
 	} # end if
 
-	$variable{'Me'} = $Me;
 	if ( $User->company_id() != $session{'company_id'} ) {
 		$User = new openprint::User();
 	} # end if
