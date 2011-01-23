@@ -674,7 +674,15 @@ sub _field_tr {
 } # end sub _field_tr
 
 sub _fields_tbody {
-	
+	if ( $param{'update'} ) {
+		$param{'update'} =~ s/fields\[\]=//g;
+		my $i = 0;
+		foreach my $field_id ( split('&', $param{'update'} ) ) {
+			my $Field = new openprint::User_Profile_Field( $field_id );
+			$Field->save({'sort'=>$i});
+			$i += 1;
+		} # end foreach $feild_id
+	} # end if
 } # end sub _fields_tbody
 
 1;
