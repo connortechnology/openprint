@@ -10,9 +10,9 @@
 				element_changed( form.elements['type-'+id] ) ||
 				element_changed( form.elements['values-'+id] ) 
 			   ) {
-				$('field-'+id).addClassName('changed');
+				$('field_'+id).addClassName('changed');
 			} else {
-				$('field-'+id).removeClassName('changed');
+				$('field_'+id).removeClassName('changed');
 			} // end if
 		} else {
 			alert('Not matched' + element.name);
@@ -40,7 +40,7 @@
 					required: get_value(form.elements['required-'+id])
 				},
 				onSuccess: function( transport ) {
-					$('field-'+ id).insert({after: transport.responseText} );
+					$('field_'+ id).insert({after: transport.responseText} );
 				}
 			} 
 		);
@@ -57,7 +57,7 @@
 					if ( transport.responseText ) {
 						alert( transport.responseText );
 					} else {
-						var tr = $('field-'+id); tr.parentNode.removeChild(tr);
+						var tr = $('field_'+id); tr.parentNode.removeChild(tr);
 					} // end if
 				}
 			} 
@@ -92,16 +92,7 @@
 					</th>
 				</tr>
 			</thead>
-			<tbody id="fields">
-		<? echo ( 
-			my $html;
-			foreach my $Field ( openprint::User_Profile_Field->find('order'=>'lower(name)') ) {
-				$$variable{'Field'} = $Field;
-				$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/managerial/_field_tr.html' );
-			} # end foreach Field
-			return $html;
-		) ?>
-			</tbody>
+			<tbody id="fields"><!--#include virtual="_fields_tbody.html"--></tbody>
 		</table>
 	</form>
 </div>

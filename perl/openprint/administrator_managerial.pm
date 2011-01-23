@@ -665,13 +665,17 @@ sub _field_tr {
 			'name'	=>	'name',
 		});
 	} elsif ( $param{'action'} eq 'Delete' ) {
-		$variable{'error'} = $variable{'Field'}->delete();
-		$variable{'Field'} = new openprint::User_Profile_Field();
+		$variable{'error'} .= $variable{'Field'}->delete();
+		$variable{'Field'} = new openprint::User_Profile_Field() if ! $variable{'error'};
 	} elsif ( $param{'action'} eq 'Copy' ) {
 		$variable{'Field'} = $variable{'Field'}->copy();
 		$variable{'error'} .= $variable{'Field'}->save( \%param );
 	} # end if
 } # end sub _field_tr
+
+sub _fields_tbody {
+	
+} # end sub _fields_tbody
 
 1;
 __END__
