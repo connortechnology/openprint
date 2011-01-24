@@ -123,6 +123,7 @@ sub _specification {
 		$Specification->save();
 	} elsif ( $param{'action'} eq 'update' ) {
 		if ( $param{'field'} ne 'interpolate' ) {
+			$param{'value'} =~ s/\xc2\xa0//mg;
 			if ( $param{'field'} eq 'name' ) {
 			} elsif ( $param{'field'} eq 'min' ) {
 				$param{'value'} =~ s/[^\d\.]//g;
