@@ -1,11 +1,11 @@
-package openprint::PurchaseOrder_ContentType;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-
 use strict;
+require openprint::Object;
+package openprint::PurchaseOrder_ContentType;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 
-$debug = 1;
+$debug = 0;
 
 $table = 'PurchaseOrder_ContentTypes';
 $serial = 'PurchaseOrder_ContentTypes_id_seq';

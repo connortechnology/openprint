@@ -2,6 +2,7 @@
 <h1>ACCOUNT</h1>
 <h2>User Profile</h2>
 </div>
+<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
 	<span class="required"></span> denotes required information.<br/>
 	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
@@ -41,13 +42,13 @@
 					<ul>
    				<li class="required"> 
    					<label>Salutation:</label>
-					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mr.' ) ?> />
+					<input type="radio" id="SalutationMr." name="salutation" value="Mr." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mr.' ); ) ?> />
 					<label class="radio" for="SalutationMr.">Mr.</label>
-					<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Mrs.' ) ?> />
+					<input type="radio" id="SalutationMrs." name="salutation" value="Mrs." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Mrs.' ); ) ?> />
 					<label class="radio" for="SalutationMrs.">Mrs.</label>
-					<input type="radio" id="SalutationMs." name="salutation" value="Ms." <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Ms.' ) ?> />
+					<input type="radio" id="SalutationMs." name="salutation" value="Ms." <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Ms.' ); ) ?> />
 					<label class="radio" for="SalutationMs.">Ms.</label>
-					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( 'checked="checked"' if $$variable{'User'}->salutation() eq 'Miss' ) ?> />
+					<input type="radio" id="SalutationMiss" name="salutation" value="Miss" <? echo ( ssi::checked( $$variable{'User'}->salutation() eq 'Miss' ); ) ?> />
 					<label class="radio" for="SalutationMiss">Miss</label>
    				</li>
    				<li class="required"> 
@@ -84,23 +85,23 @@
 			<? if ( $$variable{'Me'}->administrator() eq 'Y' ) ?>
    				<li>
    					<label>Can login to the web site?</label>
-   					<input type="radio" id="web_activeY" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() eq 'Y' ) ?> value="Y" />
+   					<input type="radio" id="web_activeY" name="web_active" <? echo ( ssi::checked( $$variable{'User'}->web_active() eq 'Y' ); ) ?> value="Y" />
    					<label class="radio" for="web_activeY">Yes</label>
-   					<input type="radio" id="web_activeN" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() ne 'Y' ) ?> value="N" />
+   					<input type="radio" id="web_activeN" name="web_active" <? echo ( ssi::checked( $$variable{'User'}->web_active() ne 'Y' ); ) ?> value="N" />
    					<label class="radio" for="web_activeN">No</label>
    				</li>
 				<li>
 					<label>Can login to the FTP site?</label>
-					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="1" />
+					<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( ssi::checked( $$variable{'User'}->ftp_active() ); ) ?> value="1" />
 					<label class="radio" for="ftp_active1"/>Yes</label>
-					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( 'checked="checked"' if ! $$variable{'User'}->ftp_active() ) ?> value="0" />
+					<input type="radio" id="ftp_active0" name="ftp_active" <? echo ( ssi::checked( ! $$variable{'User'}->ftp_active() ); ) ?> value="0" />
 					<label class="radio" for="ftp_active0"/>No</label>
 				</li>
    				<li>
    					<label>Company administrator?</label>
-   					<input type="radio" id="AdministratorY" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() eq 'Y' ) ?> value="Y" />
+   					<input type="radio" id="AdministratorY" name="administrator" <? echo ( ssi::checked( $$variable{'User'}->administrator() eq 'Y' ); ) ?> value="Y" />
    					<label class="radio" for="AdministratorY">Yes</label>
-   					<input type="radio" id="AdministratorN" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() ne 'Y' ) ?> value="N" /> 
+   					<input type="radio" id="AdministratorN" name="administrator" <? echo ( ssi::checked( $$variable{'User'}->administrator() ne 'Y' ); ) ?> value="N" /> 
    					<label class="radio" for="AdministratorN">No</label>
    				</li>
    				<li>
@@ -125,6 +126,7 @@
 				</div>
    			</fieldset>
 			</div>
+			<!--#include virtual="_user_profile.html"-->
 			<div id="LoginInformation">
    			<fieldset><legend>Login Information</legend>
 				<div class="content">

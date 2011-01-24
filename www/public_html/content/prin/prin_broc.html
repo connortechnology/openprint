@@ -87,6 +87,8 @@
 							<!--#include virtual="/includes/padding.html"-->
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
 							<!--#include virtual="/includes/perfing.html"-->
+					<? else ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
+							<!--#include virtual="_lamination.html"-->
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
 							<!--#include virtual="/includes/shrinkwrapping.html"-->

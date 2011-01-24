@@ -8,7 +8,11 @@ use vars qw( %session %param );
 
 sub project_history {
 }
+sub _project_history_results {
+}
 
+sub order_history {
+}
 sub _order_history_results {
 }
 

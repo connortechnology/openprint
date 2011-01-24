@@ -416,7 +416,7 @@ $log->debug("logged in");
 
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.
-			if ( ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
+			if ( $config{'public_URIs'} and ! sets::isin_regx( $uri, split( ',', $config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $uri );
 				return Apache2::Const::OK;

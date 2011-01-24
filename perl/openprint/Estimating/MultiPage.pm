@@ -395,5 +395,8 @@ $openprint::log->debug("ADding signature");
 	return $new_service_index;
 } # end sub copy_signature
 
+sub save {
+} # end sub save
+
 1;
 __END__

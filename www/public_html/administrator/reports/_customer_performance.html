@@ -40,7 +40,7 @@
 													  '/administrator/reports/customer_performance.html?ordered_on_end_month',
 													  '/administrator/reports/customer_performance.html?ordered_on_end_day',
 													  } ) ) : () ),
-					'status' => ['Complete','Picked Up', 'Shipped' ],
+					'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 					);
 			last if $dbh->errstr();
 			next if ! @Orders;
@@ -67,7 +67,7 @@
 						'/administrator/reports/customer_performance.html?not_ordered_on_end_month',
 						'/administrator/reports/customer_performance.html?not_ordered_on_end_day',
 						} ) ) : () ),
-					'status' => ['Complete','Picked Up', 'Shipped' ],
+					'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
 				);
 			foreach my $Order ( @Orders ) {
 				$order_total += $Order->Currency()->convert_from( $Order->total() );

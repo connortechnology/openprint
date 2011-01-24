@@ -54,7 +54,7 @@ sub new {
 #$log->debug("Multi-key Obejct @$id @$data{@$id}" );
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
-		$log->debug( $self->to_string() );
+		$log->debug( $parent . ': ' .$self->to_string() );
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			if ( my $cache_field = $self->cache_field() ) {
@@ -94,7 +94,7 @@ sub load {
 		if ( @identified_by ) {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 		} else {
-			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
@@ -341,8 +341,8 @@ sub find {
 
 	my %params = @_;
 	my @where;
-	my $sql = 'SELECT ';
-	$sql .= 'DISTINCT' if $params{'distinct'};
+	my $sql = 'SELECT';
+	$sql .= ' DISTINCT' if $params{'distinct'};
 	delete $params{'distinct'};
 	$sql .= ' * FROM '.$table;
 	my @values;
@@ -526,7 +526,9 @@ sub find {
 		if ( ! @identified_by ) {
 			$openprint::log->error("Multi key object $type but no identified by");
 		} # end if
-		return map { $type->new( \@identified_by, $_ ) } @$data;
+		my @objs = map { $type->new( \@identified_by, $_ ) } @$data;
+$openprint::log->debug("Objs: "  . scalar @objs );
+		return @objs;
 	} # end if
 } # end sub find
 
@@ -566,7 +568,7 @@ sub AUTOLOAD {
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return join(' ' , map { $_ . ' => '.$_[0]{$_} } keys %fields );
+    return join(' ' , map { $_ . ' => '.$_[0]{$_} } keys %$fields );
 }
 
 1;

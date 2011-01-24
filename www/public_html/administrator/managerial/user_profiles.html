@@ -144,6 +144,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				<label>Fax:</label>
 				<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 			</p>
+
 		</div>
 		<div class="rightColumn">
 			<p> 
@@ -176,7 +177,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				<label class="radio" for="ftp_active0">No</label>
 			</p>
 			<p> 
-				<label>Custom Greeting</label>
+				<label>Custom Greeting:</label>
 				<textarea id="greeting" name="greeting" cols="" rows="<? echo ( split("\n", $$variable{'User'}->greeting() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->greeting() ) ?></textarea>
 			</p>
 			<p>
@@ -303,6 +304,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 		</fieldset>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
 		<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
+			<!--#include virtual="/account/_user_profile.html"-->
 		<fieldset><legend>Login Information:</legend> 
 			<p> 
 				<label>E-mail Address:</label>

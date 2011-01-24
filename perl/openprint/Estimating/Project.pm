@@ -450,10 +450,14 @@ $openprint::log->warn("Hey, insert_service_spec didn't update the hash!");
 				( $$specs{'SideOneCoatingType'} and ( $$specs{'SideOneCoatingType'} ne 'None' ) ) or
 				( $$specs{'SideTwoCoatingType'} and ( $$specs{'SideTwoCoatingType'} ne 'None' ) ) 
 		   ) {
-			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', 'UVCoating'.$$specs{'SideOneCoatingType'} );
-			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', 'Y' );
-			openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', 'UVCoating'.$$specs{'SideTwoCoatingType'} );
+			if ( $$specs{'SideOneCoatingType'} and ( $$specs{'SideOneCoatingType'} ne 'None' ) ) {
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideOne', 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideOne', 'UVCoating'.$$specs{'SideOneCoatingType'} );
+			} # end if
+			if ( $$specs{'SideTwoCoatingType'} and ( $$specs{'SideTwoCoatingType'} ne 'None' ) ) {
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'chkColourCoating'.$colourindex.'SideTwo', 'Y' );
+				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], 'ColourCoatingType'.$colourindex.'SideTwo', 'UVCoating'.$$specs{'SideTwoCoatingType'} );
+			} # end if
 			if ( ! $$services{'UVCoating'} ) {
 				push @{$$services{'UVCoating'}}, $Project->add_service( 'UVCoating' );
 			} # end if
@@ -764,6 +768,17 @@ $openprint::log->debug('Deleting Folding');
 			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
 		} # end foreach
 	} # end if
+
+	if ( $$specs{'LaminationType'} ) {
+		if ( ! $$services{'Lamination'} ) {
+			push @{$$services{'Lamination'}}, $Project->add_service( 'Lamination' );
+		} # end if
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'LaminationType', $$specs{'LaminationType'} );
+	} else {
+		foreach ( @{$$services{'Lamination'}} ) {
+			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+		} # end foreach
+	} # end if LaminationType
 
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $sid ( @{$$services{'Turnaround'}} ) {

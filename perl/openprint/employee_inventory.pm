@@ -2057,6 +2057,9 @@ sub _purchase_orders {
 sub _po_autocomplete {
 } # end sub _po_autocomplete
 
+sub _po_select_contact {
+} # end sub _po_select_contact
+
 sub _purchase_order_supplier_address {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
 	$PO->supplier_id( $param{'supplier_id'} );
@@ -2181,6 +2184,15 @@ sub _update_taxes {
 sub _paper_log {
 	ssi::save_params( '/employee/inventory/paper_details.html', ( 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','limit' ) );
 } # end _paper_log
+
+sub _similar_pos {
+} # end sub _similar_pos
+
+sub skid_label {
+} # end sub skid_label
+
+sub _check_out_popup {
+} # end sub _check_out_popup
 
 1;
 __END__

@@ -27,11 +27,11 @@ function filter_onChange( element, id, selected ) {
 				//evalScripts:true, 
 	}
 </script>
-<form name="f1" method="post" enctype="multipart/form-data" action="edit.html">
+<form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search Information</legend>
 		<p>
 			<label>Equipment ID:</label>
-			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" />
+			<select name="ddmEquipment" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}" >
 				<option value="">Select Equipment</option>
 <? echo (
     ssi::make_drop_down( [ map { $_->id(), $_->strid() } openprint::Equipment->find( 'order' => 'lower(strID)' ) ], $$variable{'Equipment'}->id() );
@@ -40,8 +40,8 @@ function filter_onChange( element, id, selected ) {
 		</p>
 		<p class="buttons">
 		<? echo ( join( '',
-				ssi::writeButton( $log, $dbh, 'PreviousTop', 'prev.gif',"f1.btnFunction.value='<<';fmCheck(f1);",'','Previous'),
-				ssi::writeButton( $log, $dbh, 'NextTop', 'next.gif', "f1.btnFunction.value='>>';fmCheck(f1);",'','Next'),
+				ssi::writeButton( $log, $dbh, 'PreviousTop', 'prev.gif',"f1.btnFunction.value='Previous';fmCheck(f1);",'','Previous'),
+				ssi::writeButton( $log, $dbh, 'NextTop', 'next.gif', "f1.btnFunction.value='Next';fmCheck(f1);",'','Next'),
 				ssi::writeButton( $log, $dbh, 'NewTop', 'new.gif', "addCheck(f2);",'','New'),
 				ssi::writeButton( $log, $dbh, 'DeleteTop', 'delete.gif', "f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 				ssi::writeButton( $log, $dbh, 'SaveTop', 'save.gif', "document.f2.btnFunction.value='Save';fmChange=3;fmCheck(document.f2);",'','Save'),
@@ -60,208 +60,189 @@ function filter_onChange( element, id, selected ) {
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
 </form>
-<form name="f2" method="post" enctype="multipart/form-data" action="edit.html">
+<form id="f2" name="f2" method="post" enctype="multipart/form-data" action="edit.html">
 	<input type="hidden" id="ddmEquipment" name="ddmEquipment" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
 	<fieldset><legend>Equipment Information</legend>
 		<div class="leftColumn">
-		<p> 
-			<label>ID:</label>
-			<input type="text" name="strid" value="<? hecho ( $$variable{Equipment}->strid(); ) ?>"/>
-		</p>
-		<p> 
-			<label>Name:</label>
-			<input type="text" name="name" value="<? hecho ( $$variable{Equipment}->name(); ) ?>" />
-		</p>
-		<p>
-			<label>Category:</label>
-			<select name="category"/>
-				<option value="">Select a category</option>
-    <? echo ( ssi::fill_drop_down( $log, $dbh, 'SELECT DISTINCT strCategory,strCategory FROM tbl_Equipment ORDER BY strCategory', $$variable{Equipment}->category() ); ) ?>
-			</select>
-		</p>
-		<p> 
-			<label>Description:</label>
-			<input type="text" name="description" value="<? hecho ( $$variable{Equipment}->description(); ) ?>" />
-		</p>
-		<p> 
-			<label>Sort:</label>
-			<input type="text" name="sorting" value="<? echo ( $$variable{Equipment}->sorting(); ) ?>" />
-		</p>
-		<p> 
-			<label>Image:</label>
-			<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
-		</p>
+			<p> 
+				<label>ID:</label>
+				<input type="text" name="strid" value="<? hecho ( $$variable{Equipment}->strid(); ) ?>"/>
+			</p>
+			<p> 
+				<label>Name:</label>
+				<input type="text" name="name" value="<? hecho ( $$variable{Equipment}->name(); ) ?>" />
+			</p>
+			<p>
+				<label>Category:</label>
+				<select name="category">
+					<option value="">Select a category</option>
+		<? echo ( ssi::fill_drop_down( $log, $dbh, 'SELECT DISTINCT strCategory,strCategory FROM tbl_Equipment ORDER BY strCategory', $$variable{Equipment}->category() ); ) ?>
+				</select>
+			</p>
+			<p> 
+				<label>Description:</label>
+				<input type="text" name="description" value="<? hecho ( $$variable{Equipment}->description(); ) ?>" />
+			</p>
+			<p> 
+				<label>Sort:</label>
+				<input type="text" name="sorting" value="<? echo ( $$variable{Equipment}->sorting(); ) ?>" />
+			</p>
+			<p> 
+				<label>Image:</label>
+				<input type="text" name="image" value="<? hecho ( $$variable{Equipment}->image(); ) ?>" />
+			</p>
 		</div>
 		<div class="rightColumn">
-		<p> 
-			<label>Supplier:</label>
-			<input type="text" name="supplier" value="<? hecho ( $$variable{Equipment}->supplier(); ) ?>" />
-		</p>
-		<p>
-			<label>Use in estimating:</label>
-			<input type="radio" id="useinestimatingtrue" name="useinestimating" value="true"  <? echo ( 'checked="checked"' if $$variable{Equipment}->useinestimating(); ) ?> />
-			<label class="radio" for="useinestimatingtrue">Yes</label>
-			<input type="radio" id="useinestimatingfalse" name="useinestimating" value="false"  <? echo ( 'checked="checked"' if ! $$variable{Equipment}->useinestimating(); ) ?> />
-			<label class="radio" for="useinestimatingfalse">No</label>
-		</p>
-		<p>
-			<label>Use in scheduling:</label>
-			<input type="radio" id="useinschedulingtrue" name="useinscheduling" value="true"  <? echo ( ssi::checked( $$variable{'Equipment'}->useinscheduling() ); ) ?> onclick="$('schedulingoptions').show();" />
-			<label class="radio" for="useinschedulingtrue">Yes</label>
-			<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->useinscheduling() ); ) ?> onclick="$('schedulingoptions').hide();" />
-			<label class="radio" for="useinschedulingfalse">No</label>
-		</p>
-<div id="schedulingoptions" <? echo ( $$variable{'Equipment'}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
-        <p>
-            <label>Services:</label>
-            <select name="servicetype_id" id="servicetype_id" multiple="multiple" size="4">
+			<p> 
+				<label>Supplier:</label>
+				<input type="text" name="supplier" value="<? hecho ( $$variable{Equipment}->supplier(); ) ?>" />
+			</p>
+			<p>
+				<label>Use in estimating:</label>
+				<input type="radio" id="useinestimatingtrue" name="useinestimating" value="true"  <? echo ( 'checked="checked"' if $$variable{Equipment}->useinestimating(); ) ?> />
+				<label class="radio" for="useinestimatingtrue">Yes</label>
+				<input type="radio" id="useinestimatingfalse" name="useinestimating" value="false"  <? echo ( 'checked="checked"' if ! $$variable{Equipment}->useinestimating(); ) ?> />
+				<label class="radio" for="useinestimatingfalse">No</label>
+			</p>
+			<p>
+				<label>Use in scheduling:</label>
+				<input type="radio" id="useinschedulingtrue" name="useinscheduling" value="true"  <? echo ( ssi::checked( $$variable{'Equipment'}->useinscheduling() ); ) ?> onclick="$('schedulingoptions').show();" />
+				<label class="radio" for="useinschedulingtrue">Yes</label>
+				<input type="radio" id="useinschedulingfalse" name="useinscheduling" value="false"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->useinscheduling() ); ) ?> onclick="$('schedulingoptions').hide();" />
+				<label class="radio" for="useinschedulingfalse">No</label>
+			</p>
+	<div id="schedulingoptions" <? echo ( $$variable{'Equipment'}->useinscheduling() ? '' : 'style="display:none;"' ) ?>>
+			<p>
+				<label>Services:</label>
+				<select name="servicetype_id" id="servicetype_id" multiple="multiple" size="4">
 
-                <? echo ( ssi::make_drop_down(
-                    [ map { $_->id(), $_->name() } openprint::ServiceType->find('order'=>'lower(name)') ],
-                    $$variable{'Equipment'}->servicetype_id(),
-); ) ?>
-            </select>
-        </p>
-		<p>
-			<label>Smart Scheduling:</label>
-			<input type="radio" id="smartscheduling1" name="smartscheduling" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->smartscheduling() ); ) ?> />
-			<label class="radio" for="useinscheduling1">Yes</label>
-			<input type="radio" id="smartscheduling0" name="smartscheduling" value="0"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->smartscheduling() ); ) ?> />
-			<label class="radio" for="smartscheduling0">No</label>
-		</p>
-</div>
-<? if ( $config{'JMFEnabled'} eq 'Y' ) ?>
-		<p>
-			<label>Use JMF:</label>
-			<input type="radio" id="jmf_enabledtrue" name="jmf_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->jmf_enabled(); ) ?> />
-			<label class="radio" for="jmf_enabledtrue">Yes</label>
-			<input type="radio" id="jmf_enabledfalse" name="jmf_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->jmf_enabled(); ) ?> />
-			<label class="radio" for="jmf_enabledfalse">No</label>
-		</p>
-<? endif ( $config{'JMFEnabled'} eq 'Y' ) ?>
-<? if ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
-		<p>
-			<label>Use InstantGate:</label>
-			<input type="radio" id="instantgate_enabledtrue" name="instantgate_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').show();" />
-			<label class="radio" for="instantgate_enabledtrue">Yes</label>
-			<input type="radio" id="instantgate_enabledfalse" name="instantgate_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').hide();" />
-			<label class="radio" for="instantgate_enabledfalse">No</label>
-		</p>
-<? endif ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
-<? if ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
-		<p id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{'Equipment'}->instantgate_enabled() ) ?>>
-			<label>Cost Center:</label>
-			<input type="text" name="cost_center" value="<? hecho ( $$variable{'Equipment'}->cost_center(); ) ?>"  />
-		</p>
-<? endif ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
-		<p>
-			<label>JDF ID:</label>
-			<input type="text" name="jdf_id" value="<? hecho ( $$variable{'Equipment'}->jdf_id(); ) ?>"  />
-		</p>
-		<p>
-			<label>JDF Name:</label>
-			<input type="text" name="jdf_name" value="<? hecho ( $$variable{'Equipment'}->jdf_name(); ) ?>"  />
-		</p>
-		<p>
-			<label>Location:</label>
-			<select id="location_id" name="location_id">
-				<option value="">select</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') ], $$variable{'Equipment'}->location_id() ); ) ?>
-			</select>
-		</p>
-		<p>
-			<label>CIP3 Integration:</label>
-			<input type="radio" id="cip3_monitor1" name="cip3_monitor" value="1"  <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').show();" />
-			<label class="radio" for="cip3_monitor1">Yes</label>
-			<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').hide();" />
-			<label class="radio" for="cip3_monitor0">No</label>
-		</p>
-		<div id="CIP3" <? echo ( $$variable{'Equipment'}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>	
-		<p>
-			<label>Input Hotfolder:</label>
-			<input type="text" name="cip3_in" value="<? hecho ( $$variable{'Equipment'}->cip3_in(); ) ?>" />
-		</p>
-		<p>
-			<label>Output Hotfolder:</label>
-			<input type="text" name="cip3_out" value="<? hecho ( $$variable{'Equipment'}->cip3_out(); ) ?>" />
-		</p>
-		<p>
-			<label>Hold PPFs?:</label>
-			<input type="radio" id="cip3_hold1" name="cip3_hold" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_hold() ); ) ?> />
-			<label class="radio" for="cip3_hold1">Yes</label>
-			<input type="radio" id="cip3_hold0" name="cip3_hold" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_hold() ); ) ?> />
-			<label class="radio" for="cip3_hold0">No</label>
-		</p>
-		<p>
-			<label>Merge PPFs?:</label>
-			<input type="radio" id="cip3_merge1" name="cip3_merge" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_merge() ); ) ?> />
-			<label class="radio" for="cip3_merge1">Yes</label>
-			<input type="radio" id="cip3_merge0" name="cip3_merge" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_merge() ); ) ?> />
-			<label class="radio" for="cip3_merge0">No</label>
-		</p>
+					<? echo ( ssi::make_drop_down(
+						[ map { $_->id(), $_->name() } openprint::ServiceType->find('order'=>'lower(name)') ],
+						$$variable{'Equipment'}->servicetype_id(),
+	); ) ?>
+				</select>
+			</p>
+			<p>
+				<label>Smart Scheduling:</label>
+				<input type="radio" id="smartscheduling1" name="smartscheduling" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->smartscheduling() ); ) ?> />
+				<label class="radio" for="useinscheduling1">Yes</label>
+				<input type="radio" id="smartscheduling0" name="smartscheduling" value="0"  <? echo ( ssi::checked( ! $$variable{'Equipment'}->smartscheduling() ); ) ?> />
+				<label class="radio" for="smartscheduling0">No</label>
+			</p>
+	</div>
+	<? if ( $config{'JMFEnabled'} eq 'Y' ) ?>
+			<p>
+				<label>Use JMF:</label>
+				<input type="radio" id="jmf_enabledtrue" name="jmf_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->jmf_enabled(); ) ?> />
+				<label class="radio" for="jmf_enabledtrue">Yes</label>
+				<input type="radio" id="jmf_enabledfalse" name="jmf_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->jmf_enabled(); ) ?> />
+				<label class="radio" for="jmf_enabledfalse">No</label>
+			</p>
+	<? endif ( $config{'JMFEnabled'} eq 'Y' ) ?>
+	<? if ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
+			<p>
+				<label>Use InstantGate:</label>
+				<input type="radio" id="instantgate_enabledtrue" name="instantgate_enabled" value="true"  <? echo ( 'checked="checked"' if $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').show();" />
+				<label class="radio" for="instantgate_enabledtrue">Yes</label>
+				<input type="radio" id="instantgate_enabledfalse" name="instantgate_enabled" value="false"  <? echo ( 'checked="checked"' if ! $$variable{'Equipment'}->instantgate_enabled(); ) ?> onclick="$('CostCenter').hide();" />
+				<label class="radio" for="instantgate_enabledfalse">No</label>
+			</p>
+	<? endif ( $config{'InstantGateEnabled'} eq 'Y' ) ?>
+	<? if ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
+			<p id="CostCenter" <? echo ( 'style="display:none;"' if ! $$variable{'Equipment'}->instantgate_enabled() ) ?>>
+				<label>Cost Center:</label>
+				<input type="text" name="cost_center" value="<? hecho ( $$variable{'Equipment'}->cost_center(); ) ?>"  />
+			</p>
+	<? endif ( $config{'InstantGateEnabled'} eq 'Y' or $config{'JDFEnabled'} eq 'Y' ) ?>
+			<p>
+				<label>JDF ID:</label>
+				<input type="text" name="jdf_id" value="<? hecho ( $$variable{'Equipment'}->jdf_id(); ) ?>"  />
+			</p>
+			<p>
+				<label>JDF Name:</label>
+				<input type="text" name="jdf_name" value="<? hecho ( $$variable{'Equipment'}->jdf_name(); ) ?>"  />
+			</p>
+			<p>
+				<label>Location:</label>
+				<select id="location_id" name="location_id">
+					<option value="">select</option>
+					<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Location->find('order'=>'lower(name)') ], $$variable{'Equipment'}->location_id() ); ) ?>
+				</select>
+			</p>
+			<p>
+				<label>CIP3 Integration:</label>
+				<input type="radio" id="cip3_monitor1" name="cip3_monitor" value="1"  <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').show();" />
+				<label class="radio" for="cip3_monitor1">Yes</label>
+				<input type="radio" id="cip3_monitor0" name="cip3_monitor" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_monitor() ); ) ?> onclick="$('CIP3').hide();" />
+				<label class="radio" for="cip3_monitor0">No</label>
+			</p>
+			<div id="CIP3" <? echo ( $$variable{'Equipment'}->cip3_monitor() ? '' : 'style="display: none;"' ) ?>>	
+				<p>
+					<label>Input Hotfolder:</label>
+					<input type="text" name="cip3_in" value="<? hecho ( $$variable{'Equipment'}->cip3_in(); ) ?>" />
+				</p>
+				<p>
+					<label>Output Hotfolder:</label>
+					<input type="text" name="cip3_out" value="<? hecho ( $$variable{'Equipment'}->cip3_out(); ) ?>" />
+				</p>
+				<p>
+					<label>Hold PPFs?:</label>
+					<input type="radio" id="cip3_hold1" name="cip3_hold" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_hold() ); ) ?> />
+					<label class="radio" for="cip3_hold1">Yes</label>
+					<input type="radio" id="cip3_hold0" name="cip3_hold" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_hold() ); ) ?> />
+					<label class="radio" for="cip3_hold0">No</label>
+				</p>
+				<p>
+					<label>Merge PPFs?:</label>
+					<input type="radio" id="cip3_merge1" name="cip3_merge" value="1" <? echo ( ssi::checked( $$variable{'Equipment'}->cip3_merge() ); ) ?> />
+					<label class="radio" for="cip3_merge1">Yes</label>
+					<input type="radio" id="cip3_merge0" name="cip3_merge" value="0"  <? echo ( ssi::checked(! $$variable{'Equipment'}->cip3_merge() ); ) ?> />
+					<label class="radio" for="cip3_merge0">No</label>
+				</p>
+			</div>
 		</div>
 	</fieldset>
 <? if ( $$variable{'Equipment'}->id() ) ?>
 	<fieldset><legend>Specifications</legend>
 		Changes made below take effect immediately.<br/>
 		<table id="specifications" class="List sortable">
-			<tr>
-				<th align="left">Specification</th>
-				<th align="left" width="10%" class="nosort">Min</th>
-				<th align="left" width="10%">Max</th>
-				<th align="left" width="20%">Value</th>
-				<th align="left" width="10%">Units</th>
-				<th align="left" width="95">Interpolate</th>
-				<th align="left" width="125">&nbsp;</th>
-			</tr>
-			<tr id="New"> 
-				<td><input type="text" id="SNameNew" name="SNameNew" /></td>
-				<td><input type="text" id="SMinNew" name="SMinNew" /></td>
-				<td><input type="text" id="SMaxNew" name="SMaxNew" /></td>
-				<td><input type="text" id="SValueNew" name="SValueNew" /></td>
-				<td><input type="text" id="SUnitsNew" name="SUnitsNew" /></td>
-				<td>
-					<input type="radio" id="iNewtrue" name="iNew" value="true"/>
-					<label class="radio" for="iNewtrue">Yes</label>
-					<input type="radio" id="iNewfalse" name="iNew" value="false" checked="checked" />
-					<label class="radio" for="iNewfalse">No</label>
-				</td>
-				<td>
-<? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=add' + 
-'&name=' + encodeURIComponent(\$('SNameNew').value) + 
-'&min=' + encodeURIComponent(\$('SMinNew').value) + 
-'&max=' + encodeURIComponent(\$('SMaxNew').value) + 
-'&value=' + encodeURIComponent(\$('SValueNew').value) + 
-'&units=' + encodeURIComponent(\$('SUnitsNew').value) + 
-'&equipment_id=' + encodeURIComponent(\$('ddmEquipment').value) +
-'&interpolate=' + encodeURIComponent(get_value(f2.elements['iNew'])) + 
-'', { method: 'get', evalScripts:true, onSuccess: function(response){new Insertion.After(\$('New'), response.responseText);SortableTable.load();} } );",'','Add' ); ) ?>
-				</td>
-			</tr>
-			<? eval ( @{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications(); ) ?>
-			<? while ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
-			<tr id="S<? echo ( $$variable{'Spec'}->id(); ) ?>" > 
-				<td><span style="width:100%; float: left;" id="SName<? echo ( $$variable{'Spec'}->id() ) ?>"><? hecho ( $$variable{'Spec'}->name(); ) ?></span></td>
-				<td><span style="width:100%; float: left;" id="SMin<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->min() ? ssi::htmlize($$variable{'Spec'}->min()) : '&nbsp;'; ) ?></span></td>
-				<td><span style="width:100%; float: left;" id="SMax<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->max() ? ssi::htmlize($$variable{'Spec'}->max()) : '&nbsp;'; ) ?></span></td>
-				<td><span style="width:100%; float: left;" id="SValue<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->value() ? ssi::htmlize($$variable{'Spec'}->value()) : '&nbsp;'; ) ?></span></td>
-				<td><span style="width:100%; float: left;" id="SUnits<? echo ( $$variable{'Spec'}->id(); ) ?>"><? echo ( $$variable{'Spec'}->units() ? ssi::htmlize($$variable{'Spec'}->units()) : '&nbsp;'; ) ?></span></td>
-				<td><span style="width:100%; float: left;" id="i<? echo ( $$variable{'Spec'}->id(); ) ?>" onclick="new Ajax.Updater('i<? echo ( $$variable{'Spec'}->id(); ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=interpolate', {} );"><? echo ( $$variable{'Spec'}->interpolate() ? 'Yes' : 'No' ) ?></span></td>
-				<td>
-<? echo ( ssi::writeButton( $log, $dbh, 'delete'.$$variable{'Spec'}->id(), 'delete.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=delete&amp;id=".$$variable{'Spec'}->id()."', { method: 'get', onSuccess: function(){var tr = \$('S".$$variable{'Spec'}->id()."'); tr.parentNode.removeChild(tr);SortableTable.load();} } );",'','Delete' ); ) ?>
-
-<? echo ( ssi::writeButton( $log, $dbh, 'copy'.$$variable{'Spec'}->id(), 'copy.gif',"new Ajax.Request('/administrator/equipment/_specification.html?action=copy&amp;id=".$$variable{'Spec'}->id()."', { method: 'get', onSuccess: function(response){new Insertion.After(\$('S".$$variable{'Spec'}->id()."'), response.responseText); SortableTable.load();} } );",'','Copy' ); ) ?>
-				</td>
-			</tr>
-<script type="text/javascript">
-	  new Ajax.InPlaceEditor( 'SName<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=name',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
-	  new Ajax.InPlaceEditor( 'SMin<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=min',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
-	  new Ajax.InPlaceEditor( 'SMax<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=max',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
-	  new Ajax.InPlaceEditor( 'SValue<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=value',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
-	  new Ajax.InPlaceEditor( 'SUnits<? echo ( $$variable{'Spec'}->id() ) ?>', '/administrator/equipment/_specification.html?id=<? echo ( $$variable{'Spec'}->id() ) ?>&action=update&field=units',{okButton:false,cancelLink:true,submitOnBlur:true,rows:1});
-</script>
-			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-			<? endwhile ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
+			<thead>
+				<tr>
+					<th class="name">Specification</th>
+					<th class="min nosort">Min</th>
+					<th class="max">Max</th>
+					<th class="value">Value</th>
+					<th class="units">Units</th>
+					<th class="interpolate">Interpolate</th>
+					<th class="buttons">
+<? echo ( 
+	ssi::writeButton( $log, $dbh, 'Add', 'add.gif',q`new Ajax.Request('/administrator/equipment/_specification.html', { 
+		parameters: {
+			action: 'add',
+			equipment_id: $('ddmEquipment').value,
+		}, 
+		evalScripts:true, 
+		onSuccess: function(response){
+			$('specifications_body').insert({top: response.responseText} );
+			SortableTable.load();	
+			} 
+	} );`,'','Add' ); 
+) ?>
+</th>
+				</tr>
+			</thead>
+			<tbody id="specifications_body">
+			<? echo ( 
+				my $html;
+				@{$$variable{'Specifications'}} = $$variable{'Equipment'}->Specifications();
+				my $specification_html = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/administrator/equipment/_specification.html' );
+				while ( $$variable{'Specification'} = shift @{$$variable{'Specifications'}} ) {
+					$html .= ssi::variable_substitution( \$specification_html, $variable );
+					$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+				} # end while
+				return $html;
+			) ?>
+			</tbody>
 		</table>
 	</fieldset>
 <? endif ( $$variable{'Equipment'}->id() ) ?>
@@ -288,7 +269,7 @@ foreach ( openprint::Fold->find('equipment_id'=>$$variable{'Equipment'}->id()) )
 		<div id="Folds"> </div>
 	</fieldset>
 <? endif ( $$variable{'Equipment'}->specification('Folding Capable') ) ?>
-<form id="stock_settings_form" name="stock_settings_form">
+<form id="stock_settings_form" name="stock_settings_form" action="">
 	<input type="hidden" id="equipment_id" name="equipment_id" value="<? echo ( $$variable{'Equipment'}->id() ) ?>" />
 	<fieldset><legend>Specific Stock Settings</legend>
 		<div id="StockSettings"><!--#include virtual="_stock_settings.html"--></div>

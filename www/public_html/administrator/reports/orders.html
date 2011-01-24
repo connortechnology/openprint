@@ -125,6 +125,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 			<th align="left" width="60">Docket</th>
 			<th align="left" width="120">Date</th>
 			<th align="left">Company</th>
+			<th align="left">CSR</th>
 			<th align="left" width="100">Status</th>
 			<th class="Price">Total</th>
 			<th class="Price">Balance</th>
@@ -138,6 +139,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on())); ) ?></a></td>
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->Company()->name(); ) ?></a></td>
+			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->Company()->CSR()->name(); ) ?></a></td>
 			<td><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->status(); ) ?></a></td>
 			<td class="Price"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->total() ); ) ?></a></td>
 			<td class="Price"><a href="order_details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( openprint::Currency::format($$variable{'Order'}->balance() ); ) ?></a></td>
@@ -154,7 +156,7 @@ if ( $$variable{'Order'}->status() ne 'Cancelled' ) {
 		 ) ?>
 		<? endwhile ( $$variable{'Order'} = shift @{$$variable{'Orders'}}; ) ?>
 		<tr class="totals"> 
-			<td colspan="5" align="right"><b>Report Total:</b></td>
+			<td colspan="6" align="right"><b>Report Total:</b></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportTotal'} ); ) ?></td>
 			<td align="right"><? echo ( openprint::Currency::format( $$variable{'ReportBalance'} ); ) ?></td>
 <? if ( ! $param{'ddmCurrency'} ) ?>

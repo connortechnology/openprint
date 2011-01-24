@@ -419,6 +419,9 @@ sub _products {
 sub overview {
 } # end sub overview
 
+sub _quote_list {
+} # end sub _quote_list
+
 1;
 
 __END__

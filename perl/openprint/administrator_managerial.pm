@@ -22,6 +22,7 @@ require openprint::UserGroup;
 require openprint::Invoice;
 require openprint::Payment;
 require openprint::Timetrack;
+require openprint::User_Profile_Field;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
@@ -150,7 +151,6 @@ sub user_profiles {
 		} # end if
 
 		my @Users = openprint::User->find( 'email_lc' => lc $param{'email'} );
-$log->debug("Users found? " . scalar @Users);
 		if ( @Users > 1 or ( ( @Users == 1 ) and ( $Users[0]->id() != $User->id() ) ) ) {
 			my $error = "There is already one or more users with the specified email address.  They are listed below:<br/>";
 			foreach my $U ( @Users ) {
@@ -164,8 +164,8 @@ $log->debug("Users found? " . scalar @Users);
 		$param{'csr_ids'} = [] if ! exists $param{'csr_ids'};
 		delete $param{'password'} if ! $param{'password'};
 		my $error = $User->save( \%param );
-
 		if ( ! $error ) {
+			$User->Profile()->save( \%param );
 			foreach my $Type ( openprint::PurchaseOrder_ContentType->find() ) {
 				$User->po_limit( $Type->id(), $param{'po_limit-'.$Type->id()} );
 			} # end foreach Type
@@ -647,20 +647,43 @@ sub usergroup {
 } # end sub usergroup
 
 sub user_profile_fields {
+	if ( $param{'action'} eq 'Save' ) {
+		foreach my $Field ( openprint::User_Profile_Field->find() ) {
+			$variable{'error'} .= $Field->save({
+				'name'	=>	$param{'name-'.$Field->id()},
+				'type'	=>	$param{'type-'.$Field->id()},
+				'values'	=>	[ split(',', $param{'values-'.$Field->id()} ) ],
+				'required'	=>	$param{'required-'.$Field->id()},
+			});
+		} # end foreach Field
+	} # end if
 } # end sub user_profile_fields
 sub _field_tr {
 	$variable{'Field'} = new openprint::User_Profile_Field( $param{'field_id'} );
 	if ( $param{'action'} eq 'Add' ) {
 		$variable{'error'} .= $variable{'Field'}->save({
+			'name'	=>	'name',
 		});
 	} elsif ( $param{'action'} eq 'Delete' ) {
-		$variable{'error'} = $variable{'Field'}->delete();
-		$variable{'Field'} = new openprint::User_Profile_Field();
+		$variable{'error'} .= $variable{'Field'}->delete();
+		$variable{'Field'} = new openprint::User_Profile_Field() if ! $variable{'error'};
 	} elsif ( $param{'action'} eq 'Copy' ) {
 		$variable{'Field'} = $variable{'Field'}->copy();
 		$variable{'error'} .= $variable{'Field'}->save( \%param );
 	} # end if
 } # end sub _field_tr
+
+sub _fields_tbody {
+	if ( $param{'update'} ) {
+		$param{'update'} =~ s/fields\[\]=//g;
+		my $i = 0;
+		foreach my $field_id ( split('&', $param{'update'} ) ) {
+			my $Field = new openprint::User_Profile_Field( $field_id );
+			$Field->save({'sort'=>$i});
+			$i += 1;
+		} # end foreach $feild_id
+	} # end if
+} # end sub _fields_tbody
 
 1;
 __END__

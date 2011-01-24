@@ -256,5 +256,7 @@ sub runtime {
 	return $runtime;
 } # end sub runtime
 
+sub save {
+} # end sub save
 1;
 __END__
