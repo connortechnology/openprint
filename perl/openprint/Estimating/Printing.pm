@@ -3114,7 +3114,9 @@ sub calc_price {
 	} # end if
 
 	my %diecutting_results;
+$openprint::log->debug("Need DieCutting $$project{'NeedDieCutting'}");
 	if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
+$openprint::log->debug("Doing DieCutting");
 		%diecutting_results = openprint::Estimating::DieCutting::signature_calc( $Project, $service_index, $specs, $$project{'DieCuttingSpecs'}, $qty_index, $Imposition );
 		if ( $diecutting_results{'Status'} eq 'uncalculated' ) {
 			$price{'DieCutting Breakdown'} .= "DieCutting error: $diecutting_results{'alert'} $diecutting_results{alert} <br/>";

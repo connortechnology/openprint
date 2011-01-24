@@ -73,6 +73,10 @@ sub find {
 		$sql .= ' AND category_id=(SELECT id FROM ServiceType_Categories WHERE name=?)';
 		push @values, $params{'category'};
 	} # end if
+	if ( $params{'type'} ) {
+		$sql .= ' AND type=?';
+		push @values, $params{'type'};
+	} # end if
 	if ( $params{'category_id'} ) {
 		$sql .= ' AND category_id=?';
 		push @values, $params{'category_id'};
