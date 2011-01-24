@@ -767,6 +767,17 @@ $openprint::log->debug('Deleting Folding');
 		} # end foreach
 	} # end if
 
+	if ( $$specs{'LaminationType'} ) {
+		if ( ! $$services{'Lamination'} ) {
+			push @{$$services{'Lamination'}}, $Project->add_service( 'Lamination' );
+		} # end if
+		openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{'Lamination'}[0], 'LaminationType', $$specs{'LaminationType'} );
+	} else {
+		foreach ( @{$$services{'Lamination'}} ) {
+			openprint::print_project::delete_service( $log, $dbh, $$Project{'id'}, $_ );
+		} # end foreach
+	} # end if LaminationType
+
 	my $ac = sql::start_transaction( $dbh );
 	foreach my $sid ( @{$$services{'Turnaround'}} ) {
 		foreach my $spec ( 'TurnaroundDays' ) {
