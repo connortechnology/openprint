@@ -12,12 +12,12 @@ sub new {
 	my $self = {};
 	bless $self, $parent;
 	$$self{'user_id'} = $user_id;
-$openprint::log->debug("new User_Profile");
+#$openprint::log->debug("new User_Profile");
 	%{$$self{'fields'}} = map { $_->field(), $_ } openprint::User_Profile_Entry->find('user_id'=>$user_id);
-$openprint::log->debug("new User_Profile now listing fields and values");
-foreach my $f ( keys %{$$self{'fields'}} ) {
-$openprint::log->debug("$f => " . $$self{'fields'}{$f}-value() );
-}
+#$openprint::log->debug("new User_Profile now listing fields and values");
+#foreach my $f ( keys %{$$self{'fields'}} ) {
+#$openprint::log->debug("$f => " . $$self{'fields'}{$f}-value() );
+#}
 	return $self;
 } # end sub new
 
@@ -56,14 +56,21 @@ sub value {
 		$openprint::log->debug("Returning Entry");
 		return $Entry->value();
 	}
-	$openprint::log->debug("Returning No Entry");
+	#$openprint::log->debug("Returning No Entry");
 	return undef;
 } # end sub value
 
 sub save {
 	my ( $self, $param ) = @_;
 	foreach my $Field ( openprint::User_Profile_Field->find() ) {
-		$self->value( $Field->name(), $$param{'field-'.$Field->id()} );
+		if ( $Field->type() eq 'date' ) {
+			$self->value( $Field->name(), join('-', @$param{
+						'field-'.$Field->id().'_year',
+						'field-'.$Field->id().'_month',
+						'field-'.$Field->id().'_day'} ) );
+		} else {
+			$self->value( $Field->name(), $$param{'field-'.$Field->id()} );
+		} # end if
 	} # end foreach $Field
 } # end sub save
 

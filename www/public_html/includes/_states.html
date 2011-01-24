@@ -1,0 +1,6 @@
+<option value=""> </option>
+<? echo (
+	my $html;
+	$html .= ssi::make_drop_down( \@states::states );
+	return $html;
+) ?>
