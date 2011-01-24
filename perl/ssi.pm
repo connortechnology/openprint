@@ -140,7 +140,7 @@ sub variable_substitution {
 	my ( $text, $variable ) = @_;
 	if ( $$text =~ /(.*?)<\?\s*(.*?)\s*\?>(.*)/ms ) {
 		my ( $before, $middle, $after ) = ( $1, $2, $3 );
-		$after =~ s/^\s+//m;
+		$after =~ s/^\s+$//m;
 		$before .= do_new_substitution( \$middle, \$after, $variable );
 		return do_include( \$before, $variable );
 	} # end if
