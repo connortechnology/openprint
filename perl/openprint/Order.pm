@@ -241,7 +241,9 @@ sub update_status {
 	if ( sets::isin( 'Pending Deposit', \@statuses ) and $self->status() ne 'Pending Deposit' ) {
 		$self->status( 'Pending Deposit' );
 	} elsif (	sets::isin( 'Waiting For Customer Approval', \@statuses ) ) {
-		$self->status( 'Waiting For Customer Approval' );
+		return $self->status( 'Waiting For Customer Approval' );
+	} elsif (	sets::isin( 'Waiting For QA Approval', \@statuses ) ) {
+		return $self->status( 'Waiting For QA Approval' );
 	} elsif ( sets::intersection( @statuses, 'In Prepress','Proofs Out','Approved','Printed') ) {
 		$self->status( 'In Production' );
 	} else { # Projcets are complete
