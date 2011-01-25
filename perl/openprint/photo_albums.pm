@@ -54,6 +54,12 @@ sub _photos {
 	} elsif ( $param{'action'} eq 'set as profile pic' ) {
 		my $User = new openprint::User( $session{'user_id'} );
 		$variable{'error'} .= $User->save({'asset_id'=>$param{'asset_id'}});
+	} elsif ( $param{'action'} eq 'delete' ) {
+		my $Asset = new openprint::Asset( $param{'asset_id'} );
+		foreach my $Photo ( openprint::Photo_in_Album->find( 'asset_id' => $Asset->id() ) ) {
+			$variable{'error'} .= $Photo->delete();
+		} # end foreach Photo
+		$variable{'error'} .= $Asset->delete();
 	} # end if
 } # end sub photos
 
