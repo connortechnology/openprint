@@ -11,7 +11,12 @@
 			<label>Material:</label>
 			<select name="ddmMaterial" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Material</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find('order'=>'lower(name)', 'category_id'=>$param{'ddmSearchCategory'}) ], $$variable{'Material'}->id() ); ) ?>
+				<? echo ( 
+						ssi::make_drop_down( [ map { $_->id(), $_->name() . ' : ' . $_->description() } openprint::Material->find(
+								'order'=>'lower(name)', 
+								( $param{'category_id'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),
+								) ], $$variable{'Material'}->id() );
+						) ?>
 			</select>
 		</p>
 		<p class="buttons">
