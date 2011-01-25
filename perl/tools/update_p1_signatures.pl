@@ -13,7 +13,7 @@ use vars qw( $log $dbh );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$log = new logger( 'warn' );
+$log = new logger( 'debug' );
 my %sql_server;
 $sql_server{'database'} = $ARGV[0];
 $sql_server{'database'} = 'point-one' if ! $sql_server{'database'};
@@ -25,7 +25,7 @@ $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
 my $projects_count = 100;
-my $project_id = 0;
+my $project_id = 407192;
 my $company_id = 6;
 
 $dbh = sql::open_sql( $log, %sql_server );
@@ -123,9 +123,9 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 					$index += 1;
 				} # end if
 			} # end foreach index
-			if ( sets::isin( $$sig_specs{'rdbAqueous'.$side}, ['Gloss','Matte'] ) ) {
+			if ( sets::isin( $$sig_specs{'rdbAqueous'.$side}, ['Gloss','Matte','Satin','SoftTouch'] ) ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Aqueous '.$$sig_specs{'rdbAqueous'.$side}.' Overall' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Aqueous '.$$sig_specs{'rdbAqueous'.$side} );
 				$index += 1;
 			} # end if
 			if ( $$sig_specs{'chkVarnishOverallGloss'.$side} ) {
@@ -133,9 +133,9 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Gloss Overall' );
 				$index += 1;
 			} # end if	
-			if ( $$sig_specs{'chkVarnishSpotMatte'.$side} ) {
+			if ( $$sig_specs{'chkVarnishSpotGloss'.$side} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'chkColourCoating'.$index.$side, 'Y' );
-				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Matte Spot' );
+				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, 'ColourCoatingType'.$index.$side, 'Varnish Gloss Spot' );
 				$index += 1;
 			} # end if	
 			if ( $$sig_specs{'chkVarnishOverallMatte'.$side} ) {
