@@ -179,7 +179,7 @@ sub calc {
 		
 
 		foreach my $Equipment ( @Equipment ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s<br/>', $Equipment->strid() );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s %s<br/>', $Equipment->strid(), $Equipment->name() );
 
 			if ( $Equipment->specification('Type') eq 'Press' ) {
 # Inline pasting
@@ -215,7 +215,7 @@ sub calc {
 					next;
 				} # end if
 				$imposition = $I->imposition();
-			} # end if
+			} # end if is a press
 			my %Price = calc_price( $qty, $Equipment, $pages, $imposition, undef, $services, $specs );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Run Speed: %d/hr<br/>', $Price{'RunSpeed'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: $%.2f<br/>', $Price{'MakeReady'}{'Price'} );
@@ -256,6 +256,7 @@ sub calc_price {
 	my %Price;
 	my %MakeReady;
 	my %ServicePrice;
+	$Price{'RunSpeed'} = $runspeed;
 
 	if ( $$specs{'Gluing'} ne 'N' ) {
 		if ( ! ( %MakeReady = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable,  'SpinePasteMakeReady'.$pages.'Page'.$imposition.'out', $qty, $Equipment ) ) ) {
@@ -271,17 +272,21 @@ sub calc_price {
 		$openprint::log->debug("Starting Runspeed $runspeed ");
 		if ( ( my $RunSpeed = $Equipment->Specification('SpinePaste RunSpeed') ) ) {
 			if ( $RunSpeed->units() eq 'Percent' ) {
-				$Price{'RunSpeed'} = $runspeed * ( 1 + $RunSpeed->value()/100 );
+				$Price{'Gluing RunSpeed'} = $runspeed * ( 1 + $RunSpeed->value()/100 );
 			} else {
-				$Price{'RunSpeed'} = $RunSpeed->value();
+				$Price{'Gluing RunSpeed'} = $RunSpeed->value();
 			} # end if
 		} else {
 			$openprint::log->debug("No Runspeed set");
 		} # end if Runspeed
 		if ( ( my $MaxRunSpeed = $Equipment->specification('SpinePaste Maximum RunSpeed') ) ) {
-			$Price{'RunSpeed'} = $MaxRunSpeed;
+$openprint::log->debug("Max run speed $MaxRunSpeed");
+			$Price{'Gluing RunSpeed'} = $MaxRunSpeed;
 		} # end if Maximum Run SPeed
-		$openprint::log->debug("Runspeed is " . $Price{'RunSpeed'});
+		$openprint::log->debug("Runspeed is " . $Price{'Gluing RunSpeed'});
+		if ( $Price{'Gluing RunSpeed'} and ( ( ! $Price{'RunSpeed'} ) or ( $Price{'Gluing RunSpeed'} < $Price{'RunSpeed'} ) ) ) {
+			$Price{'RunSpeed'} = $Price{'Gluing RunSpeed'};
+		} #  end if
 		if ( ! ( %ServicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePaste'.$pages.'Pages'.$imposition.'out', $qty, $Equipment ) ) ) {
 			if ( ! ( %ServicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePaste'.$pages.'Pages', $qty, $Equipment ) ) ) {
 				%ServicePrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePaste', $qty, $Equipment );
@@ -295,23 +300,38 @@ sub calc_price {
 	} # end if
 
 	if ( $$specs{'Trimming'} ne 'N' ) {
-		#if ( $$services{'Cutting'} ) {
-			my %TrimmingMakeReady;
-			if ( %TrimmingMakeReady = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePasteTrimmingMakeReady', undef, $Equipment ) ) {
-				$Price{'TrimmingMakeReady'} = \%TrimmingMakeReady;
-				$Price{'Total'} += $TrimmingMakeReady{'Price'};
+		my %TrimmingMakeReady;
+		if ( %TrimmingMakeReady = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePasteTrimmingMakeReady', undef, $Equipment ) ) {
+			$Price{'TrimmingMakeReady'} = \%TrimmingMakeReady;
+			$Price{'Total'} += $TrimmingMakeReady{'Price'};
+		} # end if
+		my %TrimmingPrice;
+		if ( %TrimmingPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePasteTrimming', $qty, $Equipment ) ) {
+			$Price{'TrimmingPrice'} = \%TrimmingPrice;
+			$openprint::log->debug("Trimming price: $TrimmingPrice{'Price'} - $ServicePrice{'Price'}");
+			$TrimmingPrice{'Price'} -= $ServicePrice{'Price'};
+			if ( $TrimmingPrice{'units'} eq 'Per M' ) {
+				$TrimmingPrice{'Total'} = $TrimmingPrice{'Price'} * $qty / 1000;
 			} # end if
-			my %TrimmingPrice;
-			if ( %TrimmingPrice = openprint::service::get_price_object( $openprint::log, $openprint::dbh, $openprint::variable, 'SpinePasteTrimming', $qty, $Equipment ) ) {
-				$Price{'TrimmingPrice'} = \%TrimmingPrice;
-$openprint::log->debug("Trimming price: $TrimmingPrice{'Price'} - $ServicePrice{'Price'}");
-				$TrimmingPrice{'Price'} -= $ServicePrice{'Price'};
-				if ( $TrimmingPrice{'units'} eq 'Per M' ) {
-					$TrimmingPrice{'Total'} = $TrimmingPrice{'Price'} * $qty / 1000;
-				} # end if
-				$Price{'Total'} += $TrimmingPrice{'Total'};
+			$Price{'Total'} += $TrimmingPrice{'Total'};
+		} # end if
+		if ( ( my $RunSpeed = $Equipment->Specification('Trimming RunSpeed') ) ) {
+			if ( $RunSpeed->units() eq 'Percent' ) {
+				$Price{'Trimming RunSpeed'} = $runspeed * ( 1 + $RunSpeed->value()/100 );
+			} else {
+				$Price{'Trimming RunSpeed'} = $RunSpeed->value();
 			} # end if
-		#} # end if
+		} else {
+			$openprint::log->debug("No Runspeed set for Trimmign");
+		} # end if Runspeed
+		if ( ( my $MaxRunSpeed = $Equipment->specification('Trimming Maximum RunSpeed') ) ) {
+$openprint::log->debug("Max run speed $MaxRunSpeed");
+			$Price{'Trimming RunSpeed'} = $MaxRunSpeed;
+		} # end if Maximum Run SPeed
+		$openprint::log->debug("Runspeed is " . $Price{'Trimming RunSpeed'});
+		if ( $Price{'Trimming RunSpeed'} and ( ( ! $Price{'RunSpeed'} ) or ( $Price{'Trimming RunSpeed'} < $Price{'RunSpeed'} ) ) ) {
+			$Price{'RunSpeed'} = $Price{'Trimming RunSpeed'};
+		} #  end if
 	} # end if
 	return %Price;
 } # end sub calc_price
