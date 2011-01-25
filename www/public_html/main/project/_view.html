@@ -1,8 +1,8 @@
 		<!--#include virtual="/includes/project_header.html" -->
-		<table class="List Services" style="table-layout: auto;">
+		<table class="List Services">
 			<thead>
 				<tr> 
-					<th align="left">Services</th>
+					<th class="description">Services</th>
 					<? echo (
 						my $html = '';
 						if ( $$variable{'Project'}->Ordered_Product() ) {
@@ -34,7 +34,7 @@
 			my $summary = eval( 'openprint::Estimating::'.$Project->Type()->type().q`::summary($Project, $$services{''}[0], $printing_specs )` );
             if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
 				if ( $Project->Type()->url() ) {
-					$html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', 
+					$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>Printing</b><br/>%s</a></td>', 
 						$rowclass, $Project->Type()->url(), $Project->id(), $$services{''}[0], $summary );
 				} else {
 					$html .= sprintf('<tr%s><td><b>Printing</b></td>', $rowclass  );
@@ -90,11 +90,11 @@
 						} # end for
 					} # end if
 					if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and ( ! $$variable{'Quote'} ) ) {
-						$html .= sprintf('<tr%s><td><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s</a></td>', $rowclass, 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+						$html .= sprintf('<tr%s><td class="description"><a href="/main/project/%s?ProjectIndex=%d&amp;ServiceIndex=%d"><b>%d %s</b><br/>%s</a></td>', $rowclass, 'prin/Signature.html', $Project->id(), $ss_id, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
 							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
 							);
 					} else {
-						$html .= sprintf('<tr%s><td><b>%d %s</b><br/>%s</td>', $rowclass, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
+						$html .= sprintf('<tr%s><td class="description"><b>%d %s</b><br/>%s</td>', $rowclass, $sig_qty, 'Signature' . ($sig_qty > 1 ? 's' : ''),
 							openprint::Estimating::Printing::summary($Project, $ss_id, \%sig_specs ),
 							);
 					} # end if
@@ -161,7 +161,7 @@
 						$summary = shift @summaries;
 					} # end if
 						
-					$html .= "<tr$rowclass><td>";
+					$html .= qq`<tr$rowclass><td class="description">`;
 					if ( ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) and $ServiceType->url() ) {
 						$html .= sprintf(q`<a href="/main/project/%1$s?ProjectIndex=%2$d&amp;ServiceIndex=%3$d"><b>%4$s</b>%5$s<br/>%6$s</a>`, $ServiceType->url(), $Project->id(), $service_id, 
 							( $$specs{'ServiceName'} ? $$specs{'ServiceName'} : $ServiceType->description() ),

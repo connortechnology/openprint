@@ -10,14 +10,16 @@
     eval q/$specs{'Status'} = openprint::Estimating::/.$param{'ServiceType'}.'::'.$param{method}.'( $log, $dbh, $variable, @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
         $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: in eval: $@") if $@;
     my @results = ();
-    my @vars = eval( 'openprint::Estimating::'.$param{'ServiceType'}.'::outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
-        $log->error("Error openprint::Estimating::$param{'ServiceType'}: $@") if $@;
-$log->debug("vars @vars") if $debug;
-    @vars = keys %specs if ! @vars;
-$log->debug("vars @vars") if $debug;
+    my @vars = sort eval( 'openprint::Estimating::'.$param{'ServiceType'}.'::outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
+	$log->error("Error openprint::Estimating::$param{'ServiceType'}: $@") if $@;
+	$log->debug("outputs @vars") if $debug;
+	if ( ! @vars ) {
+		@vars = keys %specs;
+		$log->debug("no outputs, so using keys @vars") if $debug;
+	} # end if
 
-    my @no_outputs = eval( 'return openprint::Estimating::'.$param{'ServiceType'}.'::no_outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
-        $log->error("Error openprint::Estimating::$param{'ServiceType'}::no_outputs: $@") if $@;
+    my @no_outputs = sort eval( 'return openprint::Estimating::'.$param{'ServiceType'}.'::no_outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
+    $log->error("Error openprint::Estimating::$param{'ServiceType'}::no_outputs: $@") if $@ or $debug;
     @vars = sets::exclude( \@no_outputs, \@vars );
 
 	foreach my $key ( @no_outputs ) {

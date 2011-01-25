@@ -14,7 +14,7 @@
 			'company_id'		=> $session{'company_id'},
 			'order'				=> 'id DESC',
 		);
-		$sql{'status'} = [ split( ';', $session{'/main/project/history.html?ddmStatus'} ) ] if $session{'/main/project/history.html?ddmStatus'};
+		$sql{'status'} = [ split( ',', $session{'/main/project/history.html?ddmStatus'} ) ] if $session{'/main/project/history.html?ddmStatus'};
 		$sql{'type_id'} = $session{'/main/project/history.html?type_id'} if $session{'/main/project/history.html?type_id'};
 		$sql{'predefined'} = $session{'/main/project/history.html?predefined'} if $session{'/main/project/history.html?predefined'};
 		$sql{'reference_like'} = '%'.$param{'reference'}.'%' if $param{'reference'};

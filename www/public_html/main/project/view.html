@@ -34,33 +34,31 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'CopyProject', 'copyProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Copy' ); ) ?>
 		</div>
 		<div style="float: right;">
-			<? if ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
-			<? endif ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) ?>
-			<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>
-				<? if ( ( $session{'user_type'} eq 'A' ) and ! $$variable{'Project'}->predefined() ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Predefined', 'predefined.gif', "f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", '', 'Make into a Product' ); ) ?>
-				<? endif ( ( $session{'user_type'} eq 'A' ) and ! $$variable{'Project'}->predefined() ) ?>
-			<? endif ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
-			<? echo ( 
+			<? echo (
 				my $html = '';
+				if ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' );
+				} # end if
+				if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) {
+					$html .= ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' );
+					$html .= ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' );
+					if ( ( $session{'user_type'} eq 'A' ) and ! $$variable{'Project'}->predefined() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'Predefined', 'predefined.gif', "f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", '', 'Make into a Product' );
+					} # end if
+				} # end if
 				if ( $$variable{'Project'}->order_id() and sets::isin( $$variable{'Project'}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'ContinueOrder', 'continueorder.gif', "f1.action='/main/order/information.html?OrderID=".$$variable{'Project'}->order_id()."';f1.btnFunction.value='';f1.submit();", '', 'Continue Order' );
 				} # end if
-<<<<<<< HEAD
 				if ( sets::isin( $session{'user_type'}, ['A', 'E'] ) and $$variable{'Project'}->Order()->status() ) {
 					$html .= ssi::writeButton( $log, $dbh, 'Docket', 'projectDocket.gif', 'open_project_docket();', '', 'Docket' );
 				} # end if
 				if ( sets::isin( $$variable{'Project'}->status(), 'Proofs Out','Approved','Printed','Complete' ) ) {
-				ssi::writeButton( $log, $dbh, 'ViewPDFs', 'view_pdf.gif', "f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", '', 'View PDFs' );
-=======
+				$html .= ssi::writeButton( $log, $dbh, 'ViewPDFs', 'view_pdf.gif', "f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", '', 'View PDFs' );
 			} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
 			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
-			$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
-			$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?project_id=".$$variable{'ProjectIndex'}."', 800, 600 );", '', 'View Log' );
+				$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
+				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?project_id=".$$variable{'ProjectIndex'}."', 800, 600 );", '', 'View Log' );
 			} # end if
 			return $html;
 		) ?>
@@ -71,78 +69,7 @@
 	the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
 </p>
 	<br class="spacer"/>
-	<!--#include virtual="/includes/project_header.html" -->
-	<table class="List" style="table-layout: auto;">
-		<tr> 
-			<th align="left">Services</th>
-<? if ( $$variable{'Project'}->Ordered_Product() ) ?>
-			<th width="160" align="right"><? echo ( $$variable{'Project'}->Ordered_Product()->quantity() ) ?></th>
-<? else ( $$variable{'Project'}->Ordered_Product() ) ?>
-			<? if ( $$variable{'Quantity1'} ) ?><th width="160" align="right"><?Quantity1?></th><? endif ( $$variable{'Quantity1'} ) ?>
-			<? if ( $$variable{'Quantity2'} ) ?><th width="160" align="right"><?Quantity2?></th><? endif ( $$variable{'Quantity2'} ) ?>
-			<? if ( $$variable{'Quantity3'} ) ?><th width="160" align="right"><?Quantity3?></th><? endif ( $$variable{'Quantity3'} ) ?>
-<? endif ( $$variable{'Project'}->Ordered_Product() ) ?>
-			<th width="90" align="right">Status</th>
-			<th class="unprintable" width="70" align="right">Changes</th>
-		</tr>
-		<? if ( @{$$variable{'SERVICES'}} ) ?>
-		<? while ( @$variable{'index','name','url','price1','price2','price3','status'} = splice @{$$variable{'SERVICES'}},0,7; ) ?>
-		<tr <?rowclass?>> 
-			<td>
-				<? if ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
-				<a href="/main/project/<?url?>?ProjectIndex=<?ProjectIndex?>&amp;ServiceIndex=<?index?>">
-				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
-</a>
-				<? else ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
-				<b><?name?></b><? echo ( ' - '.$$variable{'txtServiceDescription'} if $$variable{'txtServiceDescription'} ) ?><br/><? echo ( openprint::service::summary( @$variable{'ProjectIndex','index'} ); ) ?>
-				<? endif ( ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) and $$variable{'url'} ) ?>
-			</td>
-	<? echo ( 
-		my $html = '';
-		my @service_ids = split(',', $$variable{'index'} );
-		my $specs = openprint::service::get_specs_ref( $$variable{'Project'}, $service_ids[0] );
-		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-			$html .= qq`<td align="right">\n`;
-			if ( $$specs{"txtQuantity$qty_index"} and $$specs{"txtQuantity$qty_index"} != $$variable{"Quantity$qty_index"} ) {
-				$html .= qq`($$specs{"txtQuantity$qty_index"}) `;
-			} # end if
-			if ( $session{'user_type'} eq 'A' or ! $$variable{'Project'}->Ordered_Product() ) {
-				my $Service = $$variable{'Project'}->Service($service_ids[0]);
-				if ( $Service->ServiceType()->name() eq 'Shipping' and $$variable{"price$qty_index"} == 0 ) {
-					$html .= '<b>extra<br/></b>';
-				} else {
-					$html .= '<b>';
-					if ( $$variable{"price$qty_index"} ne '-' ) {
-						$html .= $$variable{'CurrencySymbol'};
-					} # end if
-					$html .= $$variable{"price$qty_index"} ."</b><br/>\n";
-				} # end if
-			} # end if
-			my $summary = openprint::service::summary( $$variable{'ProjectIndex'}, $service_ids[0], $qty_index );
-			if ( $$variable{'name'} =~ /(\d+) Signatures/ ) {
-				my $sig_qty = $1;
-				if ( $summary =~ /(.*)\n(.*Stock Qty: )(\d+) (lbs|sheets)(.*)$/m ) {
-					$summary = $1."\n".$2.$$variable{'SignatureStockQty'.$qty_index.$service_ids[0]}.' '.$4.$5;
->>>>>>> 7d5e7a01a166d490040329d19169f629a80fe81a
-				} # end if
-				if ( sets::isin( $$variable{'Project'}->status(), 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
-					$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?project_id='.$$variable{'ProjectIndex'}, 'Upload Files' );
-				} # end if
-	if ( $$variable{'HiddenSignatures'} ) {
-				$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
-	} elsif ( $session{'ShowAllSignatures'} and $$variable{'Project'}->signatures() > 1 ) {
-				$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
-	} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
-				if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
-				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "popup_window('_view_log.html', 'project_id=".$$variable{'ProjectIndex'}."', {width:800} );", '', 'View Log' );
-				} # end if
-				return $html;
-			) ?>
-		</div>
-		</div>
-		<!--#include virtual="_view.html" -->
+	<!--#include virtual="_view.html" -->
 	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
 	<table>
 		<tr class="totals unprintable">
