@@ -940,6 +940,8 @@ sub _add_to_schedule {
 	
 } # end sub _add_to_schedule
 
-1;
+sub _stock_checkout {
+} # end sub _stock_checkout
 
+1;
 __END__
