@@ -63,7 +63,7 @@ sub history {
 	ssi::setup_date_select( '/main/project/history.html', 'updated_on_start', -14 );
 	ssi::setup_date_select( '/main/project/history.html', 'updated_on_end', 0 );
 	if ( ! exists $session{'/main/project/history.html?ddmStatus'} ) {
-		$session{'/main/project/history.html?ddmStatus'} = join(';', ( 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ) );
+		$session{'/main/project/history.html?ddmStatus'} = join(',', ( 'uncalculated','Unordered','Pending Deposit','Ordered','In Prepress','Proofs Out','Waiting For Customer Approval','Waiting For QA Approval','Approved','Printed','Complete','Waiting For Pickup','Picked Up','Shipped' ) );
 	} # end if
 
 	ssi::save_params( '/main/project/history.html', 

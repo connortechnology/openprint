@@ -9,7 +9,7 @@
 			'colour_id'	=> $session{'/administrator/equipment/edit.html?Colour'},
 			'weight_id'	=> $session{'/administrator/equipment/edit.html?Weight'}, 
 			'material_id'	=> $session{'/administrator/equipment/edit.html?material_id'}, 
-			'type'		=> [ split(';', $session{'/administrator/equipment/edit.html?Types'} ) ],
+			'type'		=> [ split(',', $session{'/administrator/equipment/edit.html?Types'} ) ],
 			'order'		=> 'name,finish,colour,weight, width, height'
 		) ) {
 		next if ( ! $Stock->recommendations() );
