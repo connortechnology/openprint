@@ -194,7 +194,7 @@ sub signature_calc {
 	} # end foreach Equipment
 #$openprint::log->debug("Breakdown: $$specs{'hdnBreakdown'.$qty_index}");
 	$results{'alert'} .= $error;
-	$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . ($bestEquipment ? $bestEquipment->strid() : '' ) . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets ';
+	$results{'alert'} .= $$bestPrice{'Imposition'}.'out on ' . ($bestEquipment ? ($bestEquipment->strid() . ' ' . $bestEquipment->name()) : '' ) . ' ' . $$specs{'txtPockets'.$qty_index} . 'pockets ';
 	$results{'Imposition'} = $$bestPrice{'Imposition'};
 	$results{'Equipment'} = $bestEquipment;
 #$openprint::log->debug( "Stitching Impo REsults: " . $results{'Imposition'} ) if $debug;
@@ -416,14 +416,14 @@ $openprint::log->debug("Overriding imposiion");
 				$bestEquipment = $Equipment;
 				$bestPrice = $price;
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ", Equipment: ".$Equipment->strid() .'<br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Quantity: ' . $$specs{"txtQuantity$qty_index"} .  ', Equipment: '.($Equipment->strid() . ' ' . $Equipment->name() ) .'<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Estimated Run Time: '. sprintf('%.1f', $$price{'RunTime'} ) . ',<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Number of Passes: '. sprintf('%.1f', $$price{'Passes'} ) . ',<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Imposition: '. sprintf('%dout', $$price{'Imposition'} ) . ',<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Discounts: Run %d% Imposition: %d%, SpineLength: %d%<br/>', @$price{'RunCost Discount','Imposition Discount','SpineLength Discount'} );
 			$$specs{'hdnBreakdown'.$qty_index} .= 'MakeReady: $' . sprintf( '%.2f', $$price{'MakeReady'}).',<br/>';
 			$$specs{'hdnBreakdown'.$qty_index} .= 'Service: $' . sprintf( '%.2f', $$price{'Service'}).',<br/>';
-			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', int($$price{'txtPrice'})).'<br/><br/>';
+			$$specs{'hdnBreakdown'.$qty_index} .= 'Total: $'. sprintf('%.2f', $$price{'txtPrice'}).'<br/><br/>';
 		} # end foreach
 		if ( ! $bestEquipment ) {
 			$$specs{'Status'} = 'uncalculated';
