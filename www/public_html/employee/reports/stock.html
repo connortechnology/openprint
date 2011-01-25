@@ -197,13 +197,8 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             <label>Location:</label>
             <select id="location_id" name="location_id" multiple="multiple" onchange="f1.submit();">
                 <? echo ( 
-<<<<<<< HEAD
                     my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') );
-                    my @selected = split(';', $session{'/employee/reports/stock.html?location_id'} );
-=======
-                    my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location::find('parent_id'=>undef, 'order'=>'lower(name)') );
                     my @selected = split(',', $session{'/employee/reports/stock.html?location_id'} );
->>>>>>> 7d5e7a01a166d490040329d19169f629a80fe81a
                     if ( ! @selected ) {
                         foreach my $L ( openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') ) {
                             next if $L->name() eq 'Missing';
