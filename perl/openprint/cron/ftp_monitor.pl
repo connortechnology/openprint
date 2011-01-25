@@ -2,6 +2,7 @@
 use utf8;
 use lib '/etc/apache2/lib/perl';
 use strict;
+use warnings
 
 require configuration;
 require sql;
@@ -234,6 +235,7 @@ sub check_scoreboard {
 			$log->debug( "Sending mail for $user\n" );
 # No longer logged in, so we can process and send emails.
 			send_email( @{$uploads{$user}} );
+			$log->debug( "Done Sending mail for $user\n" );
 			delete $uploads{$user};
 		} else {
 			$log->debug( "Holding mail for $user\n" );
@@ -243,6 +245,10 @@ sub check_scoreboard {
 
 sub send_email {
 	my @uploads = @_;
+	if ( ! @uploads ) {
+		$log->error("No uploads!");
+		return;
+	} # end if
 
 	foreach my $upload ( @uploads ) {
 		my $file = $upload->{file};
@@ -255,7 +261,7 @@ sub send_email {
 		if ( $company_name ) {
 			$company_name =~ s/^\/*//g;
 		   my @parts = split('/', $company_name);
-		   $$upload{'company_name'} = shift @parts;
+		   $$upload{'company_name'} = shift @parts if @parts;
 		} # end if
 	   $$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$file_str;
 	} # end foreach upload

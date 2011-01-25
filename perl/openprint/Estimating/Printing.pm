@@ -304,8 +304,6 @@ sub setup_project {
 			'Add Colour Bar',	$$specs{'rdbColourBar'},
 			'image_width',		$$specs{'txtWidth'},
 			'image_height',		$$specs{'txtHeight'},
-			'final_width',		$$specs{'txtFinalWidth'} ? $$specs{'txtFinalWidth'} : $$specs{'txtWidth'},
-			'final_height',		$$specs{'txtFinalHeight'} ? $$specs{'txtFinalHeight'} : $$specs{'txtHeight'},
 			'BleedLocations',	join(',', @$specs{'BleedBottom','BleedTop','BleedLeft','BleedRight'}),
 			'Calliper',			$$specs{'txtSpecificStockCalliper'},
 			'CropMarkSpace',	$$specs{'txtCropMarkSpace'},
@@ -863,6 +861,8 @@ sub get_impositions {
 	my %impositions;
 # add all the impositions for each press
 	foreach my $Press ( @$Presses ) {
+		#next if $Press->strid() ne 'Web1';
+
 		$openprint::log->debug("Trying press " . $Press->strid()) if $debug;
 		if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 			if ( $Press->specification('Printing Type') ne $$specs{'PrintingType'.$qty_index} ) {

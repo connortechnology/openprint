@@ -9,10 +9,10 @@
 		( $session{'/timetrack/history.html?user_id'} ? ( 'user_id'	=> $session{'/timetrack/history.html?user_id'} ) : () ),
 		'order'				=> 'starting',
 		) ) {
-		next if $Timetrack->paid() and ! sets::isin( 1, split(';', $session{'/timetrack/history.html?paid'} ) );
-		next if ( ! $Timetrack->paid() ) and ! sets::isin( 0, split(';', $session{'/timetrack/history.html?paid'} ) );
-		next if $Timetrack->invoiced() and ! sets::isin( 1, split(';', $session{'/timetrack/history.html?invoiced'} ) );
-		next if ( ! $Timetrack->invoiced() ) and ! sets::isin( 0, split(';', $session{'/timetrack/history.html?invoiced'} ) );
+		next if $Timetrack->paid() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?paid'} ) );
+		next if ( ! $Timetrack->paid() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?paid'} ) );
+		next if $Timetrack->invoiced() and ! sets::isin( 1, split(',', $session{'/timetrack/history.html?invoiced'} ) );
+		next if ( ! $Timetrack->invoiced() ) and ! sets::isin( 0, split(',', $session{'/timetrack/history.html?invoiced'} ) );
 		push @{$$variable{'Timetracks'}}, $Timetrack;
 		$$variable{'elapsed_total'} += $Timetrack->elapsed();
 		$$variable{'value_total'} += $Timetrack->value();

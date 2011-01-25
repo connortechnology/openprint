@@ -5,7 +5,7 @@ use strict;
 
 require openprint::Imposition;
 
-my $debug = 0;
+my $debug = 1;
 
 sub fit {
 	my ( $object_width, $object_height, $space_width, $space_height ) = @_;
@@ -208,13 +208,8 @@ sub calc_setup_object {
 	$setup1->image_orientation('Vertical');
 	$setup1->spread_size( $$specs{'txtSpreadSize'} );
 	$setup1->bleed_size( $$specs{'BleedSize'} );
-	if ( 1 ) {
 	$setup1->spread_rows(1);
 	$setup1->spread_columns(1);
-	} else {
-	$setup1->spread_rows( sprintf('%.0f', $$specs{'image_height'}/$$specs{'final_height'}));
-	$setup1->spread_columns(sprintf('%.0f', $$specs{'image_width'}/$$specs{'final_width'}));
-	}
 	$setup1->object_width( $image_width );
 	$setup1->object_height( $image_height );
 	$setup1->Press( $Press );
@@ -226,13 +221,8 @@ sub calc_setup_object {
 	$setup2->image_orientation('Horizontal');
 	$setup2->spread_size( $$specs{'txtSpreadSize'} );
 	$setup2->bleed_size( $$specs{'BleedSize'} );
-	if ( 1 ) {
 	$setup2->spread_rows(1);
 	$setup2->spread_columns(1);
-	} else {
-	$setup2->spread_rows( sprintf('%.0f', $$specs{'image_height'}/$$specs{'final_height'}));
-	$setup2->spread_columns(sprintf('%.0f', $$specs{'image_width'}/$$specs{'final_width'}));
-	}
 	$setup2->object_width( $image_width );
 	$setup2->object_height( $image_height );
 	$setup2->Press( $Press );

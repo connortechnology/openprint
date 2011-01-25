@@ -51,19 +51,49 @@ sub variables {
 } # end sub variables
 
 sub no_outputs {
+	my ( $project_index, $service_index, $specs );
     my @v;
     foreach my $k ( keys %variables ) {
         push @v, $k, if ! sets::isin( 'output', $variables{$k} );
     } # end foreach;
+	my @outputs = openprint::Estimating::Printing::no_outputs( $project_index, $service_index, $specs );
+$openprint::log->debug("Prinintg no_outputs: @outputs ");
+	foreach my $Group ( groups( $project_index, $specs ) ) {
+		push @v, map { $_.$Group } @outputs;
+	} # end foreach Group
     return @v;
 }
 sub outputs {
+	my ( $project_index, $service_index, $specs );
     my @v;
     foreach my $k ( keys %variables ) {
         push @v, $k, if sets::isin( 'output', $variables{$k} );
     } # end foreach;
+	my @outputs = openprint::Estimating::Printing::outputs( $project_index, $service_index, $specs );
+	foreach my $Group ( groups( $project_index, $specs ) ) {
+		push @v, map { $_.$Group } @outputs;
+	} # end foreach Group
     return @v;
 }
+
+sub groups {
+	my ( $project_index, $specs ) = @_;
+	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
+	if ( $$specs{'rdbCover'} eq 'Different' ) {
+        if ( ! sets::isin( 1, \@Groups ) ) {
+            push @Groups, 1;
+        } # end if
+    } else {
+        @Groups = sets::exclude( [1], \@Groups );
+    } # end if
+    if ( ! sets::isin( 2, \@Groups ) ) {
+        push @Groups, 2;
+    } # end if
+    if ( $$specs{txtGateFoldedSpreadQuantity} and ! sets::isin( 3, \@Groups ) ) {
+        push @Groups, 3;
+    } # end if
+	return @Groups;
+} # end sub groups
 
 
 sub calc {
@@ -80,7 +110,7 @@ sub calc {
 	if ( $$specs{'rdbTemplateType'} eq 'PerfectBound' and $$specs{'rdbCover'} ne 'Different' ) {
 		$variables{'rdbCover'} = [sets::union('output', @{$variables{'rdbCover'}})];
 		$$specs{'rdbCover'} = 'Different';
-	} elsif ( $$specs{'rdbTemplateType'} eq 'SpinePaste' and $$specs{'rdbCover'} eq 'Different' ) {
+	} elsif ( $$specs{'rdbTemplateType'} eq 'SpinePaste' and $$specs{'rdbCover'} ne 'Self' ) {
 		$variables{'rdbCover'} = [sets::union('output', @{$variables{'rdbCover'}})];
 		$$specs{'rdbCover'} = 'Self';
 	} # end if
