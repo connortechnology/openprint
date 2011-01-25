@@ -1615,7 +1615,7 @@ sub get_project_price {
 				}
 			}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
-			if ( $debug or 1) {
+			if ( $debug or 0) {
 				$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
 				if ( $debug > 1) {
 					foreach my $imp ( @impositions ) {
@@ -2302,8 +2302,8 @@ sub calc_price {
 		$price{'FoldingImposition'} = $folding_results{'Imposition'};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
 
+		my $fold_type = sprintf('%dx%d-%dPage-%sSignatureFoldRunSpeed', $$Imposition{spread_columns}, $$Imposition{spread_rows}, $Imposition->pages(), $$Imposition{image_orientation});
 		if ( $folding_results{'Equipment'} and ($folding_results{'Equipment'}->id() eq $Press->id() ) ) {
-			my $fold_type = sprintf('%dx%d-%dPage-%sSignatureFoldRunSpeed', $$Imposition{spread_columns}, $$Imposition{spread_rows}, $Imposition->pages(), $$Imposition{image_orientation});
 
 			if ( ! ( $run_speed = $Press->specification($fold_type, $Paper->gsm() ) ) ) {
 #$openprint::log->debug("No specific fold run speed");
@@ -2315,7 +2315,7 @@ sub calc_price {
 		} # end if
 
 		if ( $folding_results{'Equipment'} ) {
-			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) Price: $%.2f on %s', @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+			$price{'Folding Breakdown'} .= sprintf('Folding %s (%d out) Price: $%.2f on %s', $fold_type, @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 		} else {
 			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
 		} # end if
