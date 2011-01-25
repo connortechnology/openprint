@@ -1763,62 +1763,39 @@ if ( ! openprint::Material->find('name'=>'PerforatingWheel') ) {
 } # end if
 
 foreach my $S ( openprint::Service->find('name'=>'Aqueous') ) {
-	if ( ! openprint::Service->find('name'=>'Aqueous Gloss Overall') ) {
-		print "Converting Service Aqueous\n";
-		my $S2 = $S->copy();
-		$S2->name('Aqueous Gloss Overall');
-		$S2->description('Aqueous Gloss Overall');
-		$S2->category('Coating');
-		$S2->save();
-		foreach my $P ( $S->prices() ) {
-			$P = $P->copy();
-			$P->service_id( $S2->id() );
-			$P->units('per 1000 impressions');
-			$P->save();
-		} # end foreach
-	} # end if
-	if ( ! openprint::Service->find('name'=>'Aqueous Gloss Spot') ) {
-		print "Converting Service Aqueous\n";
-		my $S2 = $S->copy();
-		$S2->name('Aqueous Gloss Spot');
-		$S2->description('Aqueous Gloss Spot');
-		$S2->category('Coating');
-		$S2->save();
-		foreach my $P ( $S->prices() ) {
-			$P = $P->copy();
-			$P->service_id( $S2->id() );
-			$P->units('per 1000 impressions');
-			$P->save();
-		} # end foreach
-	} # end if
-	if ( ! openprint::Service->find('name'=>'Aqueous Matte Overall') ) {
-		my $S2 = $S->copy();
-		$S2->name('Aqueous Matte Overall');
-		$S2->description('Aqueous Matte Overall');
-		$S2->category('Coating');
-		$S2->save();
-		foreach my $P ( $S->prices() ) {
-			$P = $P->copy();
-			$P->service_id( $S2->id() );
-			$P->units('per 1000 impressions');
-			$P->save();
-		} # end foreach
-	} # end if
-	if ( ! openprint::Service->find('name'=>'Aqueous Matte Spot') ) {
-		my $S2 = $S->copy();
-		$S2->name('Aqueous Matte Spot');
-		$S2->description('Aqueous Matte Spot');
-		$S2->category('Coating');
-		$S2->save();
-		foreach my $P ( $S->prices() ) {
-			$P = $P->copy();
-			$P->service_id( $S2->id() );
-			$P->units('per 1000 impressions');
-			$P->save();
-		} # end foreach
-	} # end if
+	foreach my $type ( 'Gloss', 'Matte', 'Satin', 'SoftTouch' ) {
+		if ( ! openprint::Service->find('name'=>"Aqueous $type Overall") ) {
+			print "Converting Service Aqueous\n";
+			my $S2 = $S->copy();
+			$S2->name("Aqueous $type Overall");
+			$S2->description("Aqueous $type Overall");
+			$S2->category('Coating');
+			$S2->save();
+			foreach my $P ( $S->prices() ) {
+				$P = $P->copy();
+				$P->service_id( $S2->id() );
+				$P->units('per 1000 impressions');
+				$P->save();
+			} # end foreach
+		} # end if
+		if ( ! openprint::Service->find('name'=>"Aqueous $type Spot") ) {
+			print "Converting Service Aqueous\n";
+			my $S2 = $S->copy();
+			$S2->name("Aqueous $type Spot");
+			$S2->description("Aqueous $type Spot");
+			$S2->category('Coating');
+			$S2->save();
+			foreach my $P ( $S->prices() ) {
+				$P = $P->copy();
+				$P->service_id( $S2->id() );
+				$P->units('per 1000 impressions');
+				$P->save();
+			} # end foreach
+		} # end if
+	} # end foreach type
 	$S->delete();
 } # end if
+
 foreach my $S ( openprint::Service->find('name'=>'AqueousMakeReady') ) {
 	if ( ! openprint::Service->find('name'=>'Aqueous Gloss Overall MakeReady') ) {
 		print "Converting Service Aqueous MakeReady\n";
@@ -1830,6 +1807,30 @@ foreach my $S ( openprint::Service->find('name'=>'AqueousMakeReady') ) {
 		my $S2 = $S->copy();
 		$S2->name('Aqueous Matte Overall MakeReady');
 		$S2->description('Aqueous Overall Matte MakeReady');
+		$S2->save();
+		foreach my $P ( $S->prices() ) {
+			$P = $P->copy();
+			$P->service_id( $S2->id() );
+			$P->units('per 1000 impressions');
+			$P->save();
+		} # end foreach
+	} # en dif
+	if ( ! openprint::Service->find('name'=>'Aqueous Satin Overall MakeReady') ) {
+		my $S2 = $S->copy();
+		$S2->name('Aqueous Satin Overall MakeReady');
+		$S2->description('Aqueous Overall Satin MakeReady');
+		$S2->save();
+		foreach my $P ( $S->prices() ) {
+			$P = $P->copy();
+			$P->service_id( $S2->id() );
+			$P->units('per 1000 impressions');
+			$P->save();
+		} # end foreach
+	} # en dif
+	if ( ! openprint::Service->find('name'=>'Aqueous SoftTouch Overall MakeReady') ) {
+		my $S2 = $S->copy();
+		$S2->name('Aqueous SoftTouch Overall MakeReady');
+		$S2->description('Aqueous Overall SoftTouch MakeReady');
 		$S2->save();
 		foreach my $P ( $S->prices() ) {
 			$P = $P->copy();
@@ -2523,6 +2524,15 @@ if ( ! sets::isin( 'paper_prices', \@tables ) ) {
 	foreach my $st ( split(';', $_ ) ) {
 		$dbh->do($st);
 	} # end foreach
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
+	if ( ! exists $$data{'equipment_id'} ) {
+		$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
+		$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY (equipment_id) REFERENCS tbl_Equipment index');
+	} # end if
+	if ( ! exists $$data{'service'} ) {
+		$dbh->do('ALTER TABLE paper_prices add service text');
+	} # end if
 } # end if
 foreach my $PP ( openprint::PaperPrice->find('Units'=>'Per M') ) {
 	$PP->Cost( sprintf('%.2f', $PP->Cost() * 100 / $PP->Paper()->mweight() ) );
