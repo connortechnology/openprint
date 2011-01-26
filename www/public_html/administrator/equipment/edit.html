@@ -2,6 +2,22 @@
 <script type="text/javascript" src="/javascripts/paper.js"></script>
 <script type="text/javascript">
 <!--
+function add_stock_setting( stock_id ) {
+	new Ajax.Updater('Stocks','_stocks.html', {
+			parameters: {
+				action:'add',
+				equipment_id: <? echo ( $$variable{Equipment}{id} ) ?>, 
+				stock_id: stock_id
+			}, 
+			onLoading:function(){ $('Stocks').innerHTML='Loading...'; }, 
+			onSuccess: function(){ 
+				new Ajax.Updater('StockSettings', '_stock_settings.html', { parameters: { equipment_id: <? echo ( $$variable{Equipment}{id} ) ?> } } );
+			}
+		}
+	);
+	var tr = $('stock_'+stock_id); if(tr) { tr.parentNode.removeChild(tr) };
+} // end function add_stock_setting
+
 function filter_onChange( element, id, selected ) {
     var form = element.form;
 

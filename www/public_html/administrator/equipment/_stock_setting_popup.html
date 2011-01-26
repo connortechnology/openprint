@@ -111,9 +111,9 @@
 		<div class="rightColumn">
 		<p> 
 			<label>Type:</label>
-			<input type="checkbox" id="TypesSheet" name="Types" value="Sheet" <? echo ( 'checked="checked"' if sets::isin( 'Sheet', split(';', $session{'/administrator/equipment/edit.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
+			<input type="checkbox" id="TypesSheet" name="Types" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split(';', $session{'/administrator/equipment/edit.html?Types'} ) ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesSheet">Sheet</label>
-			<input type="checkbox" id="TypesRoll" name="Types" value="Roll" <? echo ( 'checked="checked"' if sets::isin( 'Roll', split(';', $session{'/administrator/equipment/edit.html?Types'} ) ); ) ?> onclick="calc(this.form.name);" />
+			<input type="checkbox" id="TypesRoll" name="Types" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split(';', $session{'/administrator/equipment/edit.html?Types'} ) ) ); ) ?> onclick="calc(this.form.name);" />
 			<label class="radio" for="TypesRoll">Roll</label>
 		</p>
 	</fieldset>
