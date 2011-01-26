@@ -685,6 +685,9 @@ sub fits_on_equipment {
 	return '';
 } # end sub fits_on_equipment
 
+sub save {
+} # end sub save
+
 1;
 
 __END__

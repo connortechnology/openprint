@@ -42,6 +42,12 @@ require sql;
 	'markup' => 0,
 );
 
+sub find_one {
+	my %params = @_;
+	$params{'limit'}=1;
+	my @Results = find(%params);
+	return $Results[0] if @Results;
+} # end sub find_one
 sub find {
 	my %params = @_;
 
