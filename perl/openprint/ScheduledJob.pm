@@ -467,7 +467,7 @@ sub get_li {
 
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
+			$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { ul_id: '$ul_id', schedule_id: $$self{'id'}, action:'approve'}, evalScripts: true } );", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
 			$html .= ssi::writeButton( $log, $dbh, 'Up'.$$self{'id'}, '', "new Ajax.Request( '_li_change.json', {parameters: { schedule_id:$$self{'id'}, action: 'Up' }, evalScripts: true } );", '', 'U' );
 		} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
@@ -935,5 +935,20 @@ sub equipment_id {
 	return $_[0]{'equipment_id'};
 } # end sub equipment_id
 
+sub approve {
+	my $Project = $_[0]->Project();
+	if ( ! $Project->id() ) {
+		return "Invalid project specified for approve job";
+	} # end if
+	my $services = $Project->services();
+	if ( ! ( $$services{'Proofs'} or $$services{'FilmStripping'} ) ) {
+		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Proofs' );
+	} # end if
+	openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );
+	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $Project->id(), 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from schedule' );
+	$Project->update_status();
+	return;
+} # end sub approve
 1;
 __END__
