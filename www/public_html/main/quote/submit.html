@@ -130,7 +130,7 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 
 	<? echo ( 
 		if ( ! sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) {
-			return ssi::include( $config{'SkinPath'}.'/includes/quote_disclaimer.html'); ) ?>
+			return ssi::include( $config{'SkinPath'}.'/includes/quote_disclaimer.html');
 		} # end if
 		return;
 	) ?>
