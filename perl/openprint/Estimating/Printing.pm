@@ -3148,7 +3148,7 @@ sub calc_price {
 			$price{'Comparison Cost'} += $$results{'Price'};
 #$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 			if ( $$results{'Equipment'}->id() == $Press->id() ) {
-				$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} < $run_speed;
+				$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} and ( $$results{'RunSpeed'} < $run_speed );
 			} # end if
 		} # end if
 	} # end if
