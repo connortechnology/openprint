@@ -116,10 +116,13 @@ sub login {
 
 sub logout {
 	openprint::login::logout( $log, $dbh, \%variable, $session{_session_id}, 'E' );
-}
+} # end sub logout
 
 sub login_confirmation {
-}
+} # end sub login_confirmation
+
+sub change_password {
+} # end sub change_password
 
 1;
 
