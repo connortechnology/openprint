@@ -300,7 +300,7 @@ Please select a Paper to view/edit.<br>
 						} # end foreach $L
 					} # end if
 					$session{'/employee/inventory/available_paper.html?location_id'} = join(',',sets::intersection( @selected, @options ));
-					return ssi::make_select( \@options, \@selected );
+					return ssi::make_drop_down( \@options, \@selected );
 				) ?>
 			</select>
 		</p>
