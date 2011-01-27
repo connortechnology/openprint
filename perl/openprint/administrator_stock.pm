@@ -43,8 +43,12 @@ sub list {
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		foreach my $Paper ( @Papers ) {
-			$Paper = $Paper->copy();
-			$Paper->save();
+			my $NewPaper = $Paper->copy();
+			$NewPaper->save();
+			foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+				$Setting = $Setting->copy();
+				$Setting->save({'stock_id'=>$NewPaper->id()});
+			} # end foreach
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'ApplyChanges' ) {
 		foreach my $Paper ( @Papers ) {
@@ -116,8 +120,13 @@ sub stock {
 		
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been copied.';
-		$Paper = $Paper->copy();
-		$Paper->save();
+		my $NewPaper = $Paper->copy();
+		$NewPaper->save();
+			foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+				$Setting = $Setting->copy();
+				$Setting->save({'stock_id'=>$NewPaper->id()});
+			} # end foreach
+		$Paper = $NewPaper;
 		$param{'stock_id'} = $Paper->id();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$Paper->owner_id( $param{'ddmOwner'} );

@@ -297,6 +297,9 @@ if ( sets::isin( 'project_types', \@tables ) ) {
 		$dbh->do(q`UPDATE project_types SET type='SinglePage'`);
 		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPage'`);
 		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='MultiPagePublication'`);
+		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Magazines'`);
+		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Newsletters'`);
+		$dbh->do(q`UPDATE project_types SET type='MultiPage' WHERE name='Calendars'`);
 		die $dbh->errstr() if $dbh->errstr();
 	} # end if
 } # end if

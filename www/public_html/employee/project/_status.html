@@ -3,7 +3,15 @@
 <? echo ( 
 	my $html;
 	my @service_ids = split( ',', $$variable{'index'} );
+	if ( ! @service_ids ) {
+		$log->error( 'No service_ids in project ' . $$variable{'Project'}->id() . ' index: ' . $$variable{'index'} );
+		return;
+	} 
 	my $Service = $$variable{'Project'}->Service( $service_ids[0] );
+	if ( ! $Service ) {
+		$log->error( 'No Service in project ' . $$variable{'Project'}->id() . ' index: ' . $$variable{'index'} );
+		return;
+	} 
 	if ( sets::isin( $Service->ServiceType()->name(),[ '', 'AdditionalSignature','Cutting','Folding','Saddle Stitching','LoopStitching' ] ) ) {
 		if ( my $Job = openprint::ScheduledJob::find_one('service_id'=>$$variable{'index'}) ) {
 			if ( ! $Job->starttime() ) {
