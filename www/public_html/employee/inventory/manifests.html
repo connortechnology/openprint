@@ -31,15 +31,14 @@ Please select a Manifest to view/edit.<br>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find( 'order'=>'lower(name)', 'supplier'=>'Y') ], $session{'/employee/inventory/manifests.html?supplier_id'} ); ) ?>
 			</select>
 		</p>
-		<? eval ( ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on', -7 ); ) ?>
 		<p>
 			<label>Received On:</label>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'received_on_start', [@session{'/employee/inventory/manifests.html?received_on_start_year','/employee/inventory/manifests.html?received_on_start_month','/employee/inventory/manifests.html?received_on_start_day'}] ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_start' ); ) ?>
 			to 
 			</span>
 			<span class="DateSelector">
-<? echo ( ssi::date_select( 'received_on_end', [@session{'/employee/inventory/manifests.html?received_on_end_year','/employee/inventory/manifests.html?received_on_end_month','/employee/inventory/manifests.html?received_on_end_day'}] ); ) ?>
+<? echo ( ssi::date_select_session( '/employee/inventory/manifests.html','received_on_end' ); ) ?>
 			</span>
 		</p>
 		<p class="buttons">

@@ -73,7 +73,7 @@
 <? eval (
 	my ( $starttime, $endtime );
 	if ( $session{'/employee/production/print_overview.html?Equipment'} ) {
-		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/print_overview.html?Equipment'} ) ).')' );
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(',', $session{'/employee/production/print_overview.html?Equipment'} ) ).')' );
 	} else {
 		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 	} # end if
@@ -112,10 +112,10 @@
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
 	my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
-	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(';', $session{'/employee/production/print_overview.html?Equipment'} ) );
+	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/print_overview.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {
 		@selected_equipment = map { $_->id() } @presses;
-		$session{'/employee/production/print_overview.html?Equipment'} = join(';', @selected_equipment );
+		$session{'/employee/production/print_overview.html?Equipment'} = join(',', @selected_equipment );
 	}
 
 	foreach (@presses) {
@@ -219,7 +219,14 @@
 	<? echo (
 		my $html;
 		foreach my $E ( @{$$variable{'Equipment'}} ) {
-			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a></div>';
+			$html .= '<div class="PressColumn" style="width:'. int (100/(@{$$variable{'Equipment'}})).'%;"><a href="/employee/production/print_overview.html?Equipment='.$E->id().'">'.$E->name().'</a>';
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+                $html .= ssi::writeButton( $log, $dbh, 'Edit'.$E->id(), 'edit.gif', q`popup_window('_equipment_popup.html', 'equipment_id=`.$E->id().q`' );`, '', 'E' );
+            } # end if
+            $html .= '<br/><span id="message'.$E->id().'" class="message">';
+			$html .= $E->message();
+			$html .= '</span>';
+			$html .= '</div>';
 		} # end foreach
 		return $html;
 		) ?>
@@ -324,10 +331,10 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 
 			$html .= '</div>';
 		} # end foreach press
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
 		$html .= '</div></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'Pending', '_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="LoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
 		$html .= '</div></div>';
 		return $html;

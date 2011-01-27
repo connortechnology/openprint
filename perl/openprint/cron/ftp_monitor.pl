@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 use utf8;
-use lib '/var/www/point-one/perl';
+use lib '/etc/apache2/lib/perl';
 use strict;
+use warnings
 
 require configuration;
 require sql;
@@ -100,6 +101,7 @@ $openprint::dbh = sql::open_sql( $log,
 );
 die 'Error opening db' if ! $dbh;
 configuration::init_cache( $log, $dbh, \%CFG::Config );
+$openprint::dbh->disconnect();
 # Cache of recently completed uploads.  keys are username, value is array of upload hashes.  When the user is no longer logged in or
 # older than a certain age, the email notification should go out, and the hash entry cleared.
 my %uploads;
@@ -233,6 +235,7 @@ sub check_scoreboard {
 			$log->debug( "Sending mail for $user\n" );
 # No longer logged in, so we can process and send emails.
 			send_email( @{$uploads{$user}} );
+			$log->debug( "Done Sending mail for $user\n" );
 			delete $uploads{$user};
 		} else {
 			$log->debug( "Holding mail for $user\n" );
@@ -242,6 +245,10 @@ sub check_scoreboard {
 
 sub send_email {
 	my @uploads = @_;
+	if ( ! @uploads ) {
+		$log->error("No uploads!");
+		return;
+	} # end if
 
 	foreach my $upload ( @uploads ) {
 		my $file = $upload->{file};
@@ -254,7 +261,7 @@ sub send_email {
 		if ( $company_name ) {
 			$company_name =~ s/^\/*//g;
 		   my @parts = split('/', $company_name);
-		   $$upload{'company_name'} = shift @parts;
+		   $$upload{'company_name'} = shift @parts if @parts;
 		} # end if
 	   $$upload{'proper_file_path'} = '/'.$$upload{'company_name'}.'/'.$file_str;
 	} # end foreach upload
@@ -272,7 +279,14 @@ sub send_email {
 	my $Company;
 	my $User;
 
-	if ( $$upload{'company_name'} ) {
+	$openprint::dbh = sql::open_sql( $log, 
+		'host'		=> $CFG::Config{'db_host'},
+		'database'	=> $CFG::Config{'db_name'},
+		'driver'	=> 'Pg',
+		'login'		=> $CFG::Config{'db_user'},
+		'password'	=> $CFG::Config{'db_pass'},
+	);
+	if ( $openprint::dbh and $$upload{'company_name'} ) {
 # Try to figure out the company
 		if ( my @Companies = openprint::Company->find('name'=>$$upload{'company_name'},'limit'=>1) ) {
 $log->debug("Found company $$upload{'company_name'}");
@@ -371,6 +385,7 @@ $log->debug("Found user $$upload{user} with out company.  Company is $$Company{n
 					ATTACHMENTS => [ '', encode_qp(Encode::encode('utf-8',$body)), 'text/html', 'quoted-printable' ]
 				);
 		} # end if
+		$openprint::dbh->disconnect();
 	
 	} elsif ( 1 ) {
 	my $bytes_str = $upload->{size} == 1 ? 'byte' : 'bytes';

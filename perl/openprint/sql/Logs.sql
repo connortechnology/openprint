@@ -10,8 +10,8 @@ drop table if exists log;
 CREATE TABLE Log (
 	id SERIAL,
 	action_type	INTEGER NOT NULL,
-	user_id		INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES Users (id),
-	company_id	INTEGER NOT NULL, FOREIGN KEY (company_id) REFERENCES Companies (id),
+	user_id		INTEGER, FOREIGN KEY (user_id) REFERENCES Users (id),
+	company_id	INTEGER, FOREIGN KEY (company_id) REFERENCES Companies (id),
 	date_time	timestamp with time zone NOT NULL,
 	ip_address	TEXT,
 	url			TEXT,

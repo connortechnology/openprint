@@ -190,7 +190,8 @@ sub expenditures {
 	} else {
 		ssi::save_params( '/employee/accounting/expenditures.html', ( 'occurred_on_start_year','occurred_on_start_month','occurred_on_start_day','occurred_on_end_year','occurred_on_end_month','occurred_on_end_day') );
 	} # end if
-ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on', -31, 365 );
+ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on_start', -31 );
+ssi::setup_date_select( '/employee/accounting/expenditures.html', 'occurred_on_end', '' );
 
 } # end sub expenditures
 
@@ -206,6 +207,7 @@ sub expenses {
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$param{'owner_id'} = $session{'company_id'} if ! $param{'owner_id'};
 		$param{'due_on'} = sprintf('%.4d-%.2d-%.2d', @param{'due_on_year','due_on_month','due_on_day'} );
+		$param{'paid_on'} = sprintf('%.4d-%.2d-%.2d', @param{'paid_on_year','paid_on_month','paid_on_day'} );
 		$param{'invoiced_on'} = sprintf('%.4d-%.2d-%.2d', @param{'invoiced_on_year','invoiced_on_month','invoiced_on_day'} );
 		if ( ! $param{'recipient_id'} ) {
 			my $Recipient = openprint::Company->find_one('name_lc'=>lc$param{'recipient'});
@@ -220,6 +222,11 @@ sub expenses {
 			delete $param{'category'};
 		} else {
 			delete $param{'category_id'};
+		} # end if
+		if ( $param{'account_id'} ) {
+			delete $param{'account'};
+		} else {
+			delete $param{'account_id'};
 		} # end if
 		my $Expense = new openprint::Expense( $param{'expense_id'} );
 		if ( $variable{'error'} .= $Expense->save( \%param ) ) {
@@ -236,7 +243,8 @@ sub expenses {
 				$Tax->save();
 			} # end if
         } # end foreach
-		ssi::save_params( '/employee/accounting/expense.html', 'category_id', 'due_on', 'invoiced_on', 'recipient_id', 'business_use' );
+		ssi::save_params( '/employee/accounting/expense.html', 'category_id', 
+				'due_on', 'invoiced_on', 'paid_on', 'recipient_id', 'business_use', 'account_id' );
 
 		$variable{'information'} .= 'Expense saved successfully.<br/>';
 		delete $param{'expense_id'};
@@ -248,12 +256,25 @@ sub expenses {
 		} # end if
 		delete $param{'expense_id'};
 	} else {
-		ssi::save_params( '/employee/accounting/expenses.html', ( 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day') );
-		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on', -31, 365 );
+		ssi::save_params( '/employee/accounting/expenses.html', ( 
+			'due_on_start_year','due_on_start_month','due_on_start_day',
+			'due_on_end_year','due_on_end_month','due_on_end_day',
+			'paid_on_start_year','paid_on_start_month','paid_on_start_day',
+			'paid_on_end_year','paid_on_end_month','paid_on_end_day',
+) );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_start', -31 );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'due_on_end', '' );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'paid_on_start', -31 );
+		ssi::setup_date_select( '/employee/accounting/expenses.html', 'paid_on_end', '' );
 	} # end if
 } # end sub expenses
 sub _expenses {
-	ssi::save_params( '/employee/accounting/expenses.html', ( 'due_on_start_year','due_on_start_month','due_on_start_day','due_on_end_year','due_on_end_month','due_on_end_day') );
+	ssi::save_params( '/employee/accounting/expenses.html', ( 
+				'due_on_start_year','due_on_start_month','due_on_start_day',
+				'due_on_end_year','due_on_end_month','due_on_end_day',
+				'paid_on_start_year','paid_on_start_month','paid_on_start_day',
+				'paid_on_end_year','paid_on_end_month','paid_on_end_day',
+) );
 } # end sub _expenses
 
 sub expense {
@@ -265,8 +286,10 @@ sub expense {
         $variable{'Expense'}->recipient_id( $session{'/employee/accounting/expense.html?recipient_id'} ) if ! $variable{'Expense'}->recipient_id();
         $variable{'Expense'}->due_on( $session{'/employee/accounting/expense.html?due_on'} ) if ! $variable{'Expense'}->due_on();
         $variable{'Expense'}->invoiced_on( $session{'/employee/accounting/expense.html?invoiced_on'} ) if ! $variable{'Expense'}->invoiced_on();
+        $variable{'Expense'}->paid_on( $session{'/employee/accounting/expense.html?invoiced_on'} ) if ! $variable{'Expense'}->paid_on();
         $variable{'Expense'}->category_id( $session{'/employee/accounting/expense.html?category_id'} ) if ! $variable{'Expense'}->category_id();
         $variable{'Expense'}->business_use( $session{'/employee/accounting/expense.html?business_use'} ) if ! $variable{'Expense'}->business_use();
+        $variable{'Expense'}->account_id( $session{'/employee/accounting/expense.html?account_id'} ) if ! $variable{'Expense'}->account_id();
     } # end if
 	
 } # end sub expense
@@ -361,7 +384,8 @@ sub credit_applications {
 			misc::send_email_with_attachment( $log, \%mail, ( '', encode_qp($template), 'text/html', 'quoted-printable' ) );
 		} # end if
 	} # end if
-	ssi::setup_date_select( '/employee/accounting/credit_applications.html', 'created_on', -180, 0 );
+	ssi::setup_date_select( '/employee/accounting/credit_applications.html', 'created_on_start', -180 );
+	ssi::setup_date_select( '/employee/accounting/credit_applications.html', 'created_on_end', 0 );
 	ssi::save_params( '/employee/accounting/credit_applications.html',
 			'ddmStatus',
 			'created_on_start_year', 'created_on_start_month','created_on_start_day',

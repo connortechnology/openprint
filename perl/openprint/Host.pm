@@ -13,20 +13,28 @@ $serial = 'hosts_id_seq';
 	'ip'			=>	'ip',
 	'hostname'		=>	'hostname',
 	'mac'			=>	'mac',	
-	'block'			=>	'block',
+	'blacklist'		=>	'blacklist',
+	'whitelist'		=>	'whitelist',
 	'monitor'		=>	'monitor',
 	'description'	=>	'description',
 	'dhcp'			=>	'dhcp',
+	'created_on'	=>	'created_on',
+	'updated_on'	=>	'updated_on',
+	'count'			=>	'count',
 );
 %transforms = (
 );
 %defaults = (
-	'block'		=>	0,
+	'blacklist'	=>	0,
+	'whitelist'	=>	0,
 	'monitor'	=>	0,
 	'mac'		=>	undef,
 	'hostname'	=>	'undef',
 	'ip'		=>	undef,
 	'dhcp'		=>	0,
+	'created_on'	=>	q`'NOW()'`,
+	'updated_on'	=>	q`'NOW()'`,
+	'count'		=>	undef,
 );
 sub resolve {
 	my ( $self ) = @_;

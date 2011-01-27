@@ -123,27 +123,28 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				<label>Last Name:</label>
 				<input type="text" name="lastname" value="<? hecho ( $$variable{'User'}->lastname() ) ?>" />
 			</p>
-			<p> 
+			<p class="title"> 
 				<label>Title:</label>
 				<input type="text" name="title" value="<? hecho ( $$variable{'User'}->title() ) ?>" />
 			</p>
-			<p> 
+			<p class="phone"> 
 				<label>Phone:</label>
 				<input type="text" name="phone" value="<? hecho ( $$variable{'User'}->phone() ) ?>" style="width: auto;" size="15" />x
 				<input type="text" name="extension" value="<? hecho ( $$variable{'User'}->extension() ) ?>" style="width: auto;" size="4" />
 			</p>
-			<p> 
+			<p class="mobile"> 
 				<label>Mobile:</label>
 				<input type="text" name="mobile" value="<? hecho ( $$variable{'User'}->mobile() ) ?>" style="width: auto;" size="15" />
 			</p>
-			<p> 
+			<p class="sms"> 
 				<label>SMS (email):</label>
 				<input type="text" name="sms" value="<? hecho ( $$variable{'User'}->sms() ) ?>" style="width: auto;" size="15" />
 			</p>
-			<p> 
+			<p class="fax"> 
 				<label>Fax:</label>
 				<input type="text" name="fax" value="<? hecho ( $$variable{'User'}->fax() ) ?>" />
 			</p>
+
 		</div>
 		<div class="rightColumn">
 			<p> 
@@ -153,7 +154,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				<input type="radio" id="MailingListN" name="mailinglist" <? echo ( 'checked="checked"' if $$variable{'User'}->mailinglist() ne 'Y' ) ?> value="N" />
 				<label class="radio" for="MailingListN">No</label>
 			</p>
-			<p> 
+			<p class="administrator"> 
 				<label>Is this account a company administrator?</label>
 			 
 				<input type="radio" id="administratorY" name="administrator" <? echo ( 'checked="checked"' if $$variable{'User'}->administrator() eq 'Y' ) ?> value="Y" />
@@ -168,7 +169,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				<input type="radio" id="web_activeN" name="web_active" <? echo ( 'checked="checked"' if $$variable{'User'}->web_active() ne 'Y' ) ?> value="N" />
 				<label class="radio" for="web_activeN">No</label>
 			</p>
-			<p>
+			<p class="ftp_active">
 				<label>Can this account login to the ftp site?</label>
 				<input type="radio" id="ftp_active1" name="ftp_active" <? echo ( 'checked="checked"' if $$variable{'User'}->ftp_active() ) ?> value="1" />
 				<label class="radio" for="ftp_active1">Yes</label>
@@ -176,7 +177,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 				<label class="radio" for="ftp_active0">No</label>
 			</p>
 			<p> 
-				<label>Custom Greeting</label>
+				<label>Custom Greeting:</label>
 				<textarea id="greeting" name="greeting" cols="" rows="<? echo ( split("\n", $$variable{'User'}->greeting() ) ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'User'}->greeting() ) ?></textarea>
 			</p>
 			<p>
@@ -203,19 +204,19 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 			</p>
 <? endif ( @{$$variable{'QuoteLevels'}} > 1 ) ?>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
-		<p> 
+		<p class="commission">
 			<label>Commission Rate:</label>
 			<input type="text" name="commission" value="<? echo ( $$variable{'User'}->commission() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />%
 		</p>
-		<p> 
+		<p class="wage"> 
 			<label>Wage:</label>
 			<input type="text" name="wage" value="<? echo ( $$variable{'User'}->wage() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');" />/Hr
 		</p>
-		<p>
+		<p class="purchasing_limit">
 			<label>Purchasing Limit (per PO)</label>
 			<input type="text" name="purchasing_limit" value="<? echo ( $$variable{'User'}->purchasing_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 		</p>
-		<p> 
+		<p class="purchasing_total_limit"> 
 			<label>Purchasing Limit (Total)</label>
 			<input type="text" name="purchasing_total_limit" value="<? echo ( $$variable{'User'}->purchasing_total_limit() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" />
 		</p>
@@ -223,29 +224,28 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 			my $html;
 			foreach my $PO_Type ( openprint::PurchaseOrder_ContentType->find('order'=>'lower(name)') ) {
 				
-				$html .= sprintf('<p><label>Limit for %2$s</label><input type="text" name="po_limit-%1$d" value="%3$s" /></p>', $PO_Type->get('id','name'), $$variable{'User'}->po_limit( $PO_Type->id() ) );
+				$html .= sprintf('<p class="po_limit"><label>Limit for %2$s</label><input type="text" name="po_limit-%1$d" value="%3$s" /></p>', $PO_Type->get('id','name'), $$variable{'User'}->po_limit( $PO_Type->id() ) );
 			} # end foreach PO_Type
 			return $html;
 		) ?>
 </div>
 <div class="rightColumn">
-		<p>
+		<p class="csr_ids">
 			<label>Assistant to:</label>
 			<select name="csr_ids" size="4" multiple="multiple">
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)' ) ], [$$variable{'User'}->csr_ids()] ); ) ?>
 			</select>
 		</p>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
-		<p> 
+		<p class="user_categories">
 			<label>User Category:</label>
 			<select name="selectUserCategories" size="4" multiple="multiple">
 			<?selectUserCategories?>
 			</select>
 		</p>
 		</div>
-		<br class="spacer"/>
 		</fieldset>
-		<fieldset><legend><a href="/administrator/managerial/usergroups.html">Groups</a></legend>
+		<fieldset class="groups"><legend><a href="/administrator/managerial/usergroups.html">Groups</a></legend>
 			<? echo (
 				require openprint::Usergroup;
 				my $html = '<ul>';
@@ -257,7 +257,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 			) ?>
 		</fieldset>
 		<? if ( sets::isin( $$variable{'User'}->type(), ['E','A'] ) ) ?>
-		<fieldset><legend>Assistant To</legend>
+		<fieldset class="assistant_to"><legend>Assistant To</legend>
 			<? echo (
 				require openprint::Usergroup;
 				my $html = '<ul>';
@@ -304,6 +304,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } @Companies ], $$varia
 		</fieldset>
 		<? endif ( sets::isin( $$variable{'User'}->type(), ['C','E'] ) or ( $$variable{'User'}->id() == $openprint::session{user_id} ) or ( new openprint::User( $session{'user_id'} )->email() =~ /iconnor/ ) ) ?>
 		<? endif ( $$variable{'User'}->email() =~ /point-one.com/ ) ?>
+			<!--#include virtual="/account/_user_profile.html"-->
 		<fieldset><legend>Login Information:</legend> 
 			<p> 
 				<label>E-mail Address:</label>

@@ -62,18 +62,18 @@
 			<p><label>Due On:</label>
 			<span class="DateSelector"><? echo ( ssi::date_select( 'due_on', $$variable{'Invoice'}->due_on() ); ) ?></span>
 			</p>
-			<p><label for="monthly_interest">Interest Rate</label>
+			<p><label for="monthly_interest">Interest Rate:</label>
 				<input type="text" name="monthly_interest" id="monthly_interest" value="<? echo ( $$variable{'Invoice'}->id() ? $$variable{'Invoice'}->monthly_interest() : $config{'Default Interest'} ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="2" />%
 			</p>
 		</div>
 		<div class="rightColumn">
 			<p>
-				<label for="external_notes">External Notes</label>
-				<textarea cols="40" id="external_notes" name="external_notes" rows="<? echo ( $$variable{'Invoice'}->external_notes() ? scalar split("\n", $$variable{'Invoice'}->external_notes()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->external_notes() ) ?></textarea>
+				<label for="external_notes">External Notes:</label>
+				<textarea cols="" id="external_notes" name="external_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->external_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->external_notes() ) ?></textarea>
 			</p>
 			<p>
-				<label for="internal_notes">Internal Notes</label>
-				<textarea cols="40" id="internal_notes" name="internal_notes" rows="<? echo ( $$variable{'Invoice'}->internal_notes() ? scalar split("\n", $$variable{'Invoice'}->internal_notes()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
+				<label for="internal_notes">Internal Notes:</label>
+				<textarea cols="" id="internal_notes" name="internal_notes" rows="<? echo ( ssi::count_lines( $$variable{'Invoice'}->internal_notes() ); ) ?>" onkeyup="textarea_resize(this);"><? echo ( $$variable{'Invoice'}->internal_notes() ) ?></textarea>
 			</p>
 			<p>
 				<label>Bad Debt?:</label>
@@ -115,7 +115,6 @@
 <div id="InvoicedProducts">
 	<!--#include virtual="_invoiced_products.html"-->
 </div>
-</form>
 <!--#include virtual="_totals.html"-->
 <div class="leftColumn">
 	<div id="Interests">
@@ -142,4 +141,5 @@
 </div>
 <!--#include virtual="_logs.html"-->
 <? endif ( $$variable{'Invoice'}->id() ) ?>
+</form>
 </div></div>

@@ -1,0 +1,12 @@
+<? echo (
+	my $html = '';
+	my $Pricelist = $$variable{'Pricelist'};
+	my $service = $$variable{'service'};
+
+	my @Prices = openprint::PaperPrice->find('stock_id'=>$$variable{'Stock'}->id(), 'service'=>$service, 'pricelist_id'=>$Pricelist->id(),'order'=>'equipment_id,lngmin,lngmax' );
+	foreach my $Price ( @Prices ) {
+		$variable{'Price'} = $Price;
+		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/stock/_price_tr.html', $variable );
+	} # end foreach Price
+	return $html;
+) ?>

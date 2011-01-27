@@ -9,7 +9,7 @@
 			'colour_id'	=> $session{'/administrator/equipment/edit.html?Colour'},
 			'weight_id'	=> $session{'/administrator/equipment/edit.html?Weight'}, 
 			'material_id'	=> $session{'/administrator/equipment/edit.html?material_id'}, 
-			'type'		=> [ split(';', $session{'/administrator/equipment/edit.html?Types'} ) ],
+			'type'		=> [ split(',', $session{'/administrator/equipment/edit.html?Types'} ) ],
 			'order'		=> 'name,finish,colour,weight, width, height'
 		) ) {
 		next if ( ! $Stock->recommendations() );
@@ -27,9 +27,9 @@
 		</thead>
 		<tbody>
 <? while ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
-	<tr>
+	<tr id="stock_<? echo ( $$variable{'Stock'}->id() ) ?>">
 		<td><? echo ( $$variable{'Stock'}->to_string() ) ?></td>
-		<td><? echo ( ssi::writeButton($log,$dbh,'add_stock_setting_'.$$variable{'Stock'}->id(), 'add.gif', "new Ajax.Updater('Stocks','_stocks.html', {parameters: {action:'add',equipment_id: $$variable{Equipment}{id}, stock_id: $$variable{Stock}{id}}, onLoading:function(){ \$('Stocks').innerHTML='Loading...'; } });", '', 'Add' ); ) ?></td>
+		<td><? echo ( ssi::writeButton($log,$dbh,'add_stock_setting_'.$$variable{'Stock'}->id(), 'add.gif', "add_stock_setting( $$variable{Stock}{id} );", '', 'Add' ); ) ?></td>
 	</tr>
 <? endwhile ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>
 		</tbody>

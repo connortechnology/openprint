@@ -2,6 +2,7 @@ package openprint::employee_production;
 use strict;
 use Date::Calc qw(Add_Delta_Days Date_to_Days check_date );
 use MIME::QuotedPrint;
+use URI::Escape;
 
 use openprint ();
 
@@ -120,21 +121,7 @@ sub press_schedule {
 		%param = ();
 	} elsif ( $param{'btnFunction'} eq 'ApproveJob' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		my $Project = $Job->Project();
-		if ( ! $Project->id() ) {
-			$variable{'error'} .= "Invalid project specified for approve job";
-			return;
-		} # end if
-		my $services = $Project->services();
-		if ( ! ( $$services{'Proofs'} or $$services{'FilmStripping'} ) ) {
-			$log->error("No proofs in project $$Project{id} adding them back");
-			$variable{'error'} .= "no proofs in project.  Adding them back ";
-			push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Proofs' );
-		} # end if
-		mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );
-		sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $Project->id(), 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
-		$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from print overview' );
-		$Project->update_status();
+		$variable{'error'} .= $Job->approve();
 	} elsif ( $param{'btnFunction'} eq 'RemoveJob' ) {
 		if ( $param{'schedule_id'} ) {
 			my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
@@ -924,6 +911,9 @@ sub monthly_schedule {
 	} # end if
 } # end sub monthly_schedule
 
+sub label {
+} # end sub label
+
 sub _labels {
 	my $Label = new openprint::Label( $param{'id'} );
 	if ( $param{'action'} eq 'delete' ) {
@@ -960,7 +950,7 @@ $log->debug("REFERRER ($referer)");
 	$session{$referer.'?pending_approved'} = $session{$referer.'?pending_approved'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
 	if ( $session{$referer.'?pending_approved'} ) {
-		foreach my $equipment_id ( split(';', $session{$referer.'?Equipment'} ) ) {
+		foreach my $equipment_id ( split(',', $session{$referer.'?Equipment'} ) ) {
 			my $E = new openprint::Equipment( $equipment_id );
 			push @{$variable{'Equipment'}}, $E if $E->id();
 		} # end foreach
@@ -975,7 +965,7 @@ $log->debug("REFERRER ($ENV{'HTTP_REFERER'}) ($referer)");
 	$session{$referer.'?pending'} = $session{$referer.'?pending'} ? 0 : 1;
     @{$variable{'Equipment'}} = ();
 	if ( $session{$referer.'?pending'} ) {
-		foreach my $equipment_id ( split(';', $session{$referer.'?Equipment'} ) ) {
+		foreach my $equipment_id ( split(',', $session{$referer.'?Equipment'} ) ) {
 			my $E = new openprint::Equipment( $equipment_id );
 			push @{$variable{'Equipment'}}, $E if $E->id();
 		} # end foreach
@@ -983,7 +973,10 @@ $log->debug("REFERRER ($ENV{'HTTP_REFERER'}) ($referer)");
 } # end sub _pending
 
 sub _ul {
-	if ( $param{'action'} eq 'split' ) {
+	if ( $param{'action'} eq 'approve' ) {
+		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
+		$variable{'error'} .= $Job->approve();
+	} elsif ( $param{'action'} eq 'split' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
 		$Job->split( $param{'new_form_count'} );
 		$variable{'Shift'} = $Job->Shift();
@@ -1006,6 +999,9 @@ $log->debug("No Shift specified!");
 } # end sub _ul
 
 sub _drop {
+
+	# First step, run through and see if we need to do a popup before actually applying
+
 	my $ac = sql::start_transaction( $dbh );
 	$dbh->do( 'LOCK TABLE Schedule IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
@@ -1015,19 +1011,42 @@ sub _drop {
 	# Force it to redraw the changed UL, since the runtimes are likely to have changed.
 	@{$variable{'changed'}} = ( $Shift->ul_id() );
 
-if ( 0 ) {
-	if ( $Shift->starttime() and ! $Shift->operator_id() ) {
-		$variable{'alert'} .= 'Shifts must have an operator in order to schedule jobs in them.';
-		reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'order'=>'starttime' ));
-		return;
-	} # end if
-} # end if
-
 	if ( exists $param{'services'} ) {
 		my $services = $param{'services'};
 		$services =~ s/$param{ul_id}\[\]=//g;
 		my @order = split( '&', $services );
 		return if ! @order;
+
+		if ( $param{'action'} ne 'add_services' ) {
+			my @servicetypes_to_add;
+			foreach my $row_id ( @order ) {
+				my $Job = new openprint::ScheduledJob( $row_id );
+				next if ! $Job->project_id(); # Maintenance work, etc
+				if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
+					my $Project = $Job->Project();
+					my $services = $Project->services();
+					my @PS = openprint::Project_Service->find('project_id'=>$Job->project_id());
+					my @service_type_ids = sets::intersection( @{$Equipment->servicetype_id()}, sets::union( map { $_->servicetype_id() } @PS ) );
+$log->error("Equp dropped on: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
+$log->error("ProjectServices in Project st: " . join(',', map { $_->servicetype_id() } @PS ) );
+$log->error("Shared service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
+					if ( ! @service_type_ids ) {
+						foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
+							my $ST = new openprint::ServiceType( $servicetype_id );
+							if ( ( ! $$services{$ST->name()} ) or ! @{$$services{$ST->name()}} ) {
+								push @servicetypes_to_add, $servicetype_id;
+							} # end if
+						} # end foreach servicetype_id
+					} # end if
+				} # end if Bindery 
+			} # end foreach row_id
+			if ( @servicetypes_to_add ) {
+				$variable{'servicetypes_to_add'} = [ sets::union( @servicetypes_to_add ) ];
+				$variable{'Redirect'} = '/employee/production/_drop_popup.json';
+				sql::end_transaction( $dbh, $ac );
+				return;
+			} # end if has servicetypes to add
+		} # end if param{'action'} ne 'add_services'
 
 		# Coalesce Jobs
 $log->debug("Order before coalesce: @order");
@@ -1035,15 +1054,20 @@ $log->debug("Order before coalesce: @order");
 		for ( my $i = 0; $i < @order; $i += 1 ) {
 			my $row_id = $order[$i];
 			my $Job = new openprint::ScheduledJob( $row_id );
-			if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
-$log->debug("Bindery:, servicetypes different");
-				my $Project = $Job->Project();
-				my $services = $Project->services();
+			if ( $Job->project_id() and ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 				my @Jobs;
+				my $Project = $Job->Project();
+				if ( $param{'action'} eq 'add_services' ) {
+					foreach my $servicetype_id ( ref $param{'servicetype_id'} eq 'ARRAY' ? @{$param{'servicetype_id'}} : $param{'servicetype_id'} ) {
+# Replace the specified Job with a new one for the given servicetype, after adding a service to the project.
+						my $service_id = $Project->add_service( new openprint::ServiceType( $servicetype_id ) );
+					} # end foreach servicetype_id
+				} # end if add_services
+$log->debug("Bindery:, servicetypes different");
+				my $services = $Project->services();
 				foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
 					my $ST = new openprint::ServiceType( $servicetype_id );
 					next if ( ! $$services{$ST->name()} ) or ! @{$$services{$ST->name()}};
-$log->debug("Dong Job for $servicetype_id : " . $ST->name() );
 					# Get all already existing jobs for this servicetype
 					foreach my $service_id ( @{$$services{$ST->name()}} ) {
 						my @J = openprint::ScheduledJob->find('project_id'=>$Project->id(),'service_id'=>$service_id);
@@ -1335,11 +1359,6 @@ $log->debug("ES: " . $NextES->name() );
 				} # end if ! NextES
 				$Shift = $NextES->emanantise( $start_time );
 				$start_time = $Shift->starttime_seconds();
-				if ( ! $Shift->operator_id() ) {
-					$start_time = undef;
-					$variable{'alert'} .= 'Not enough shifts to fit all jobs. Please assign an operator to another shift.';
-					last;
-				} # end if
 			} else {
 				$Shift = shift @Shifts;
 				$start_time = $Shift->starttime_seconds() if $start_time < $Shift->starttime_seconds();
@@ -1463,6 +1482,7 @@ sub _li_change {
 
 		if ( keys %sql ) {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
+			$Job->service_id( $sql{'service_id'} ) if $sql{'service_id'}; # needed for impressions calculation
 			$variable{'error'} .= $Job->save(\%sql);
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		} # end if
@@ -1472,18 +1492,67 @@ sub _li_change {
 					openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
-		$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
+		if ( $param{'servicetype_id'} ) {
+			# The intent is to copy the job
+			foreach my $servicetype_id ( ref $param{'servicetype_id'} eq 'ARRAY' ? @{$param{'servicetype_id'}} : split(',',$param{'servicetype_id'}) ) {
+				if ( ! $Job->project_id() ) {
+					my $J = $Job->copy();
+					$J->save({
+						'equipment_id'		=>	$param{'equipment_id'},
+					});
+				} else {
+					my @Services = openprint::Project_Service->find('project_id'=>$Job->project_id(),'servicetype_id'=>$servicetype_id);
+					if ( ! @Services ) {
+						# Add one.
+						push @Services, $Job->Project()->add_Service( new openprint::ServiceType( $servicetype_id ) );
+					} # end if
+					foreach my $Service ( @Services ) {
+						my $J = openprint::ScheduledJob->find_one('project_id'=>$Job->project_id(), 'service_id'=>$Service->service_id());
+						if ( ! $J ) {
+							$J = new openprint::ScheduledJob();
+							$J->save({
+								'project_id'		=>	$Service->project_id(),
+								'service_id'		=>	[$Service->service_id()],
+								'equipment_id'		=>	$param{'equipment_id'},
+								'servicetype_id'	=>	$Service->servicetype_id(),
+							});
+						} # end if
+						$variable{'error'} .= $J->bump( $param{'equipment_id'} );
+					} # end foreach Service
+				} # end if project_id
+			} # end foreach servicetype_id
+		} else {
+			$variable{'error'} .= $Job->bump( $param{'equipment_id'} );
+		} # end if
 	} elsif ( $param{'action'} eq 'Up' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
 		my @Jobs = openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
-		my $index;
+		my $index = 0;
 		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
-		if ( $index > 0 ) {
-			$_ = $Jobs[$index-1];
-			$Jobs[$index-1] = $Jobs[$index];
-			$Jobs[$index] = $_;
+		return if ! $index; # was first in the list
+
+		if ( $Job->Equipment()->smartscheduling() ) {
+			if ( $index > 0 ) {
+				$_ = $Jobs[$index-1];
+				$Jobs[$index-1] = $Jobs[$index];
+				$Jobs[$index] = $_;
+			} # end if
+			reorder_jobs( @Jobs );
+		} else {
+			if ( $Jobs[$index]->Shift()->ul_id() ne $Jobs[$index-1]->Shift()->ul_id() ) {
+				if ( ! $Job->Shift()->Previous()->Jobs() ) {
+					push @{$variable{'changed'}}, $Job->ul_id();
+					$Job->starttime( $Jobs[$index-1]->Shift()->Next()->starttime() );
+				} # end if
+			} # end if
+			$_ = $Jobs[$index]{'starttime'};
+			$Jobs[$index]{'starttime'} = $Jobs[$index-1]{'starttime'};
+			$Jobs[$index-1]{'starttime'} = $_;
+			$Jobs[$index]->save();
+			$Jobs[$index-1]->save();
+			push @{$variable{'changed'}}, $Jobs[$index]->Shift()->ul_id();
+			push @{$variable{'changed'}}, $Jobs[$index-1]->Shift()->ul_id();
 		} # end if
-		reorder_jobs( @Jobs );
 	} elsif ( $param{'action'} eq 'RemoveJob' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		$variable{'error'} .= $Job->delete();
@@ -1741,6 +1810,37 @@ sub _li {
 		} # end if
 	} # end if
 } # end sub _li
+
+sub _equipment_popup {
+	my $Equipment = $variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+} # end sub _equipment_popup
+sub _equipment_message {
+	my $Equipment = $variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+	if ( $param{'action'} eq 'Save' ) {
+		if ( $param{'message'} ) {
+			$Equipment->save({
+				'message'=>$param{'message'}. ' ...'.(
+					new openprint::User($session{'user_id'})->firstname()
+					)});
+		} else {
+			$Equipment->save({'message'=>''});
+		} # end if
+	} # end if
+} # end sub _equipment_popup
+
+sub _drop_popup {
+	$r->content_type('text/javascript');
+} # end sub _drop_popup
+
+sub _bump_job_popup_servicetypes {
+	$variable{'Equipment'} = new openprint::Equipment( $param{'equipment_id'} );
+	$variable{'Job'} = new openprint::ScheduledJob( $param{'schedule_id'} );
+} # end sub _bump_job_popup_servicetypes
+
+sub _add_maintenance {
+	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
+	$variable{'referer'} = $referer;
+} # end sub _add_maintenance
 
 1;
 __END__

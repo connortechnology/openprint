@@ -57,12 +57,18 @@ sub handler {
 			'password'	=> $request->dir_config('db_password'),
 			);
 
+	my $serial;
+
 	if ( $request->method eq 'POST' ) {
 		$uploaded = 0;
-		my ($serial) = $request->args() =~ /serial=(\d*)/;
+		($serial) = $request->args() =~ /serial=(\d*)/;
 		my ($company) = $request->args() =~ /txtCompanyName=([.^&]*)/;
 		my $rsize=$request->headers_in->{'Content-Length'};
-		sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
+		if ( $serial ) {
+			sql::execute( undef, undef, q{DELETE FROM Uploads WHERE id=?}, $serial );
+		} else {
+			($serial) = sql::execute( undef, undef, q`SELECT nextval('uploads_id_seq')` );
+		} # end if
 		sql::insert( $log, $dbh, 'Uploads', ['start', 'NOW()', 'size', 0, 'total', $rsize, 'id', $serial, 'company_id', $session{'company_id'}, 'company', $company, 'type', 'Web' ] );
 
 		my $upload_hook = sub {
@@ -107,67 +113,81 @@ $log->debug("Upload: $rsize = $data_len, $uploaded, " . length $data );
 		} # end foreach
 		configuration::init_cache( $log, $dbh, $r->dir_config() );
 		openprint::session_init();
-		my $serial = $r->param('serial');
 		if ( $serial ) {
 			my $rsize=$request->headers_in->{'Content-Length'};
 			sql::update( undef, undef, 'uploads', ['id=?', $serial], [ 'finished', 'NOW()', 'user_id', $session{'user_id'}, 'size', $rsize ] );
-		} else {
-			$log->error("No serial in upload, dumping session");
-			foreach my $k ( keys %session ) {
-				$log->error( "$k -> $session{$k}" );
-			} # end foreach
+		#} else {
+			#$log->error("No serial in upload, dumping session");
+			#foreach my $k ( keys %session ) {
+				#$log->error( "$k -> $session{$k}" );
+			#} # end foreach
 		} # end if
-		upload_files( $r, $log, $dbh, \%variable );
-		my $page = '/upload/_upload_complete.html';
-		my @page_path = split('/', $page );
-		my $content;
-		if (-e $r->dir_config('SkinPath') . $page) {
-			$page = $r->dir_config('SkinPath') . $page;
+		if ( $param{'UploadType'} ) {
+			my $error;
+			eval(sprintf('require openprint::%1$s;
+				$error = openprint::%1$s->handle_upload( $param{qqfile} );
+			', $param{'UploadType'} ));
+			$log->warn( "Eval error of Upload type  $param{'UploadType'} Reason: " . $@ ) if $@;
+			$r->content_type('application/json');
+			if ( $error ) {
+				$log->debug("Printing success:false $error");
+				$r->print( qq|{ "success": false, "error": "$error" }| );
+			} else {
+				$log->debug("Printing success:true");
+				$r->print( q`{ "success": true }` );
+			} # end if
 		} else {
-			$page = $ENV{'DOCUMENT_ROOT'} . $page;
+$log->debug("Doing standrad upload");
+			upload_files( $r, $log, $dbh, \%variable );
+			my $page = '/upload/_upload_complete.html';
+			my @page_path = split('/', $page );
+			my $content;
+			if (-e $r->dir_config('SkinPath') . $page) {
+				$page = $r->dir_config('SkinPath') . $page;
+			} else {
+				$page = $ENV{'DOCUMENT_ROOT'} . $page;
+			} # end if
+			my $content = misc::load_file( $log, $page );
+			$variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
+			my $filename = pop @page_path;
+			my $template;
+
+			while ( @page_path ) {
+				my $file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, $filename );
+				if ( -e $file ) {
+					$template = misc::load_file( $log, $file );
+					last;
+				} # end if
+				$file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, 'default.html' );
+				if ( -e $file ) {
+					$template = misc::load_file( $log, $file );
+					last;
+				} # end if
+				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, $filename );
+				if ( -e $file ) {
+					$template = misc::load_file( $log, $file );
+					last;
+				} # end if
+
+				$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
+				if ( -e $file ) {
+					$template = misc::load_file( $log, $file );
+					last;
+				} # end if
+				pop @page_path;
+			} # end while
+
+			if ( $template ) {
+				$_ = ssi::variable_substitution( \$template, \%variable );
+				$r->print( $_ );
+			} else {
+				$r->print( $variable{'PageContent'} );
+			} # end if
 		} # end if
-		my $content = misc::load_file( $log, $page );
-        $variable{'PageContent'} = ssi::variable_substitution( \$content, \%variable );
-        my $filename = pop @page_path;
-        my $template;
-
-		while ( @page_path ) {
-			my $file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, $filename );
-			if ( -e $file ) {
-				$template = misc::load_file( $log, $file );
-				last;
-			} # end if
-			$file = join( '/', $r->dir_config('SkinPath'), 'layouts', @page_path, 'default.html' );
-			if ( -e $file ) {
-				$template = misc::load_file( $log, $file );
-				last;
-			} # end if
-			$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, $filename );
-			if ( -e $file ) {
-				$template = misc::load_file( $log, $file );
-				last;
-			} # end if
-
-			$file = join( '/', $ENV{'DOCUMENT_ROOT'}, 'layouts', @page_path, 'default.html' );
-			if ( -e $file ) {
-				$template = misc::load_file( $log, $file );
-				last;
-			} # end if
-			pop @page_path;
-		} # end while
-
-        if ( $template ) {
-			$_ = ssi::variable_substitution( \$template, \%variable );
-            $r->print( $_ );
-        } else {
-            $r->print( $variable{'PageContent'} );
-        } # end if
 	} # end if
 
 	untie %session;
 	undef %session;
-	#$dbh->disconnect();# if $dbh->{'thread_id'};
-	#$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	return Apache2::Const::OK;
 } # end sub handler
 

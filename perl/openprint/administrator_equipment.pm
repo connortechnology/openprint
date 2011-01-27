@@ -89,9 +89,9 @@ sub export_specs {
 sub edit {
 	my $Equipment = new openprint::Equipment( $param{'ddmEquipment'} );
 
-	if ( $param{'btnFunction'} eq '>>' ) {
+	if ( $param{'btnFunction'} eq 'Next' ) {
 		$Equipment = $Equipment->Next();
-	} elsif ( $param{'btnFunction'} eq '<<' ) {
+	} elsif ( $param{'btnFunction'} eq 'Previous' ) {
 		$Equipment = $Equipment->Previous();
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$Equipment = $Equipment->copy();
@@ -115,10 +115,7 @@ sub edit {
 sub _specification {
 	my $Specification = new openprint::EquipmentSpecification( $param{'id'} );
 	if ( $param{'action'} eq 'add' ) {
-		foreach my $k ( 'name','min','max','value','units','interpolate','equipment_id' ) {
-			$param{$k} = ssi::unhtmlize($param{$k});
-		} # end foreach
-		$Specification->save(\%param);
+		$variable{'error'} .= $Specification->save({'name'=>'new','equipment_id'=>$param{'equipment_id'}});
 	} elsif ( $param{'action'} eq 'delete' ) {
 		$Specification->delete();
 		$variable{'PageContent'} = ' ';
@@ -127,6 +124,7 @@ sub _specification {
 		$Specification->save();
 	} elsif ( $param{'action'} eq 'update' ) {
 		if ( $param{'field'} ne 'interpolate' ) {
+			$param{'value'} =~ s/\xc2\xa0//mg;
 			if ( $param{'field'} eq 'name' ) {
 			} elsif ( $param{'field'} eq 'min' ) {
 				$param{'value'} =~ s/[^\d\.]//g;

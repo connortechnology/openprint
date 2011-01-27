@@ -271,7 +271,6 @@ sub try_to_delete_project {
 	return $error;
 } # end sub try_to_delete_project
 
-
 sub view_pdfs {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
@@ -323,6 +322,7 @@ sub summary {
 	
 	$$variable{'OrderId'} = $order_id;
 	my $Project = new openprint::Project( $project_index );
+	$$variable{'Order'} = $Project->Order();
 	$$variable{'Project'} = $Project;
 	my $services = $Project->services();
 	$$variable{'Services'} = $services;
@@ -742,22 +742,32 @@ sub display_reuse_project {
 sub reuse_project {
 	my ( $r, $log, $dbh, $cookie, $variable, $project_index ) = @_;
 
-	$param{'quantity1'} =~ s/\D//g;
-	$param{'quantity2'} =~ s/\D//g;
-	$param{'quantity3'} =~ s/\D//g;
-	@param{'reference','comments'} = misc::trim( @param{'reference','comments'} );
 $openprint::log->debug("reusing $project_index");
 	my $Project = new openprint::Project( $project_index );
 	if ( ! $Project->id() ) {
 		return misc::error( $log, $dbh, $variable, 'Error', "Source project $project_index could not be found." );
 	} # end if
 	my $NewProject = $Project->copy();
-$openprint::log->debug("Have a copy");
-	$NewProject->quantity1( $param{'quantity1'} );
-	$NewProject->quantity2( $param{'quantity2'} );
-	$NewProject->quantity3( $param{'quantity3'} );
-	$NewProject->reference( $param{'reference'} );
-	$NewProject->comments( $param{'comments'} );
+	if ( exists $param{'quantity1'} ) {
+		$param{'quantity1'} =~ s/\D//g;
+		$NewProject->quantity1( $param{'quantity1'} );
+	} # end if
+	if ( exists $param{'quantity2'} ) {
+		$param{'quantity2'} =~ s/\D//g;
+		$NewProject->quantity2( $param{'quantity2'} );
+	} # end if
+	if ( exists $param{'quantity3'} ) {
+		$param{'quantity3'} =~ s/\D//g;
+		$NewProject->quantity3( $param{'quantity3'} );
+	} # end if
+	if ( exists $param{'reference'} ) {
+		( $param{'reference'} ) = misc::trim( $param{'reference'} );
+		$NewProject->reference( $param{'reference'} );
+	} # end if
+	if ( exists $param{'comments'} ) {
+		( $param{'comments'} ) = misc::trim( $param{'comments'} );
+		$NewProject->comments( $param{'comments'} );
+	} # end if
 	$NewProject->docket( '' );
 	$NewProject->due_date( '' );
 	$NewProject->user_id( $session{'user_id'} );

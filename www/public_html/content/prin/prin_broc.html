@@ -14,10 +14,9 @@
 
 	<div class="InstantPricing">
 		<div id="instant_price_section">
-
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 			<div class="shadow_left"><div class="shadow_right">
-				<div class="Questions"><div class="<? echo ( $$variable{'ProjectType'}->name() ) ?>">
+			<div class="Questions"><div class="<? echo ( $$variable{'ProjectType'}->name() ) ?>">
 			<!--#include virtual="_project_name.html"-->
 			<div class="ProjectSpecifications">
 				<h1>Project Specifications</h1>
@@ -57,7 +56,7 @@
 							</ul>
 						</div>
 					</fieldset>
-				</div>
+				</div><!--Colours-->
 				<? else ( ! sets::isin( $$variable{'ProjectType'}->name(), [ 'Banners' ] ) ) ?>
 				<input type="hidden" id="Colours" name="Colours" value="4/0" />
 				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), [ 'Banners' ] ) ) ?>
@@ -88,6 +87,8 @@
 							<!--#include virtual="/includes/padding.html"-->
 					<? endif ( sets::isin( $$variable{'ProjectType'}->name(), ['ScratchPads'] ) ) ?>
 							<!--#include virtual="/includes/perfing.html"-->
+					<? else ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
+							<!--#include virtual="_lamination.html"-->
 					<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['InkjetOutputs'] ) ) ?>
 							<? if ( sets::isin( $$variable{'ProjectType'}->name(), ['Brochures','Postcards','Menus','GreetingCards','RackCards','DoorHangers'] ); ) ?>
 							<!--#include virtual="/includes/shrinkwrapping.html"-->
@@ -96,7 +97,7 @@
 						</ul>
 					</div>
 					</fieldset>
-				</div>
+				</div><!--Finishing-->
 				<? endif ( ! sets::isin( $$variable{'ProjectType'}->name(), ['Letterhead','Posters','Labels','Banners'] ) ) ?>
 				<div class="Production">
 					<fieldset><legend>Production</legend>
@@ -112,13 +113,11 @@
 				</div>
 				<!--#include virtual="_ups.html"-->
 				<div id="AlertDiv" style="display:none;"></div>
-<br class="spacer"/>
+				<br class="spacer"/>
 		  </div><!--ProjectSpecifications-->
 				<!--#include virtual="/includes/prices.html"-->
 				</div></div><!--Questions-->
-		  </div></div>
-           <div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br">
-		  </div></div>
+		  </div></div><div class="bottom_shadow"><div class="shadow_bl"></div><div class="shadow_br"></div></div>
 	   </div><!--instant_price_section-->
 <? echo ( 
 	if ( -e $config{'SkinPath'}.'/content/'.$$variable{'ProjectType'}->name().'.html' ) {

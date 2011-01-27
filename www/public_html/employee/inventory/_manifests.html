@@ -51,10 +51,14 @@
 			<th align="left" width="120">Vendor</th>
 			<th class="Date">Received On</th>
 			<th align="left">Contents</th>
+		<? if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
+		<th class="Price">Value</th>
+		<? endif ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) ?>
 		</tr>
 		<? echo (
 			my $html;
 			my $rowclass;
+			my $value_total;
 			foreach my $Manifest ( @{$$variable{'Manifests'}} ) {
 
 				$html .= '<tr>';
@@ -72,6 +76,8 @@
 				my %real_skids;
 				my %real_weight;
 
+				my $value;
+
 				foreach my $MC ( $Manifest->Contents() ) {
 					$manifest_skids{$MC->Type()->paper_id()} += 1;
 					$manifest_weight{$MC->Type()->paper_id()} += $MC->quantity();
@@ -81,11 +87,19 @@
 						$real_skids{$C->paper_id} += 1;
 						$real_weight{$C->paper_id} += $MC->quantity();
 					} # end foreach paper on skid
+					$value += $MC->value();	
 				} # end foreach MC
 
 				foreach my $paper_id ( keys %manifest_weight ) {
 					my $Paper = new openprint::Paper( $paper_id );
-					$html .= sprintf('%s : %dlbs : %d skids<br/>', $Paper->to_string(), $manifest_weight{$paper_id}, $manifest_skids{$paper_id}  );
+					$html .= sprintf('%s : %dlbs : %d skids', $Paper->to_string(), $manifest_weight{$paper_id}, $manifest_skids{$paper_id}  );
+					if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+						my $Type = openprint::Manifest_Content_Type->find_one('manifest_id'=>$Manifest->id(), 'paper_id'=>$paper_id);
+						if ( $Type ) {
+							$html .= ' @ ' . openprint::Currency::format( $Type->cost_from_po() ) . '/100lbs';
+						} # end if
+					} # end if
+					$html .= '<br/>';
 				} # end foreach
 
 				if ( misc::sum( map { $manifest_skids{$_} } keys %manifest_skids ) != misc::sum( map { $real_skids{$_} } keys %real_skids ) ) {
@@ -98,9 +112,17 @@
 				} # end if
 				
 				$html .= '</td>';	
+				if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+					$html .= '<td class="Price">'.openprint::Currency::format( $value ).'</td>';
+					$value_total += $value;
+				} # end if
 				$html .= '</tr>';
 				$rowclass = $rowclass ? '' : ' class="colRow"';
 			} # end foreach Manifest
+			if ( openprint::usergroup::is_user_in( ['Accounting','InventoryManager'], $session{'user_id'} ) ) {
+				$html .= '<tr class="totals"><td colspan="7">Total:</td><td class="Price">'.openprint::Currency::format( $value_total ).'</td></tr>';
+			} # end if
+			
 			return $html;
 		) ?>
 	</table>

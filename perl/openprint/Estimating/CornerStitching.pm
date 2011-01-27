@@ -49,14 +49,14 @@ sub neccessary {
 	my ( $log, $dbh, $project_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
-	if ( $services{NoBindery} ) {
+	my $services = $Project->services();
+	if ( $$services{NoBindery} ) {
 		$log->debug(" ** Project is marked as No bindery, Folding not needed ! ** ");
 		return 0;
 	} # end if
 
-	if ( $services{''} ) {
-		my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
+	if ( $$services{''} ) {
+		my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 		if ( $$printing_specs{'rdbTemplateType'} eq 'CornerStitching' ) {
 			return 1;
 		} # end if
@@ -171,8 +171,9 @@ sub calc {
 			$$specs{"ddmEquipment$qty_index"} = $bestEquipment->id();
 		} # end if
 
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} );
-		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'txtPrice'} );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, 
+				( $bestPrice{'txtPrice'}/$$specs{"txtQuantity$qty_index"} ) * (1+$Project->markup()/100) );
+		$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $bestPrice{'txtPrice'} * (1+$Project->markup()/100) );
 		$$specs{"txtRunTime$qty_index"} = $bestPrice{'RunTime'};
 	} # end foreach
 	$log->debug("END CORNER STITCHING!!!!!!!");

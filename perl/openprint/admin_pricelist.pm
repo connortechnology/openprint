@@ -17,7 +17,7 @@ sub edit {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
 	my $id = $openprint::param{'ddmPriceList'};
-	my $Pricelist = new openprint::Pricelist( $id );
+	my $Pricelist = $$variable{'Pricelist'} = new openprint::Pricelist( $id );
 
 	if ( $r->param('btnFunction') eq '>>' ) {
 		$Pricelist = $Pricelist->Next();
@@ -27,19 +27,21 @@ sub edit {
 		$Pricelist->delete();
 		$Pricelist = $Pricelist->Next();
 	} elsif ( $r->param('btnFunction') eq 'Save' ) {
-		my $param = $r->param;
-		$Pricelist->save( $param );
+		$Pricelist->save( \%openprint::param );
 	} elsif ( $r->param('btnFunction') eq 'Copy' ) {
 		my $new = new openprint::Pricelist( );
-		$openprint::param{'Name'} = 'Copy of '.$openprint::param{'Name'};
-		$new->save( \%openprint::param );
-		openprint::logs::insertLogRecord('32', "Price List: " . $openprint::param{'Name'},);
+		$openprint::param{'name'} = 'Copy of '.$openprint::param{'name'};
+		$$variable{'error'} .= $new->save( \%openprint::param );
+		if ( $$variable{'error'} ) {
+			return;
+		} # end if
+		openprint::logs::insertLogRecord('32', "Price List: " . $openprint::param{'name'},);
 		my $ac = sql::start_transaction( $dbh );
 		my @prices = $Pricelist->getPrices();
 		foreach my $price (@prices ) {
 			$$price{'id'} = undef;
 			$$price{'pricelist_id'} = $new->id();
-			$price->save();
+			$$variable{'error'} .= $price->save();
 		} # end foreach
 		sql::end_transaction( $dbh, $ac );
 
@@ -47,18 +49,20 @@ sub edit {
 	} elsif ( $r->param('btnFunction') eq 'Markup' ) {
 		my $markup = $r->param('Markup');
 		$markup =~ s/[^\+\-\.\d]//g;
-		my $ac = sql::start_transaction( $dbh );
-		my @prices = $Pricelist->getPrices();
-		foreach my $price (@prices ) {
-			if ( $markup =~ /^[\+\-]/ ) {
-				$$price{'Markup'} += $markup;
-			} else {
-				$$price{'Markup'} = $markup;
-			} # end if
-			$$price{'Price'} = $$price{'Cost'} * (1+$$price{'Markup'}/100);
-			$price->save();
-		} # end foreach
-		sql::end_transaction( $dbh, $ac );
+		if ( $markup ne '' ) {
+			my $ac = sql::start_transaction( $dbh );
+			my @prices = $Pricelist->getPrices();
+			foreach my $price (@prices ) {
+				if ( $markup =~ /^[\+\-]/ ) {
+					$price->markup( $price->markup() + $markup );
+				} else {
+					$price->markup( $markup );
+				} # end if
+				$price->price(undef);
+				$$variable{'error'} .= $price->save();
+			} # end foreach
+			sql::end_transaction( $dbh, $ac );
+		} # end if
 	} elsif ( $r->param('btnFunction') eq 'Export Material Prices' ) {
 		if ( $id eq '' ) {
 			return misc::error( $log, $dbh, $variable, 'No pricelist selected.', 'You must select a pricelist before exporting.');
@@ -77,12 +81,12 @@ sub edit {
 			return misc::error( $log, $dbh, $variable, 'No pricelist selected.', 'You must select a pricelist before exporting.');
 		} # end if
 	
-		my @header = ( 'Paper Brand', 'Finish','Colour','Weight','Width','Height','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
+		my @header = ( 'Paper Brand', 'Finish','Colour','Weight','Width','Height','Service', 'Equipment', 'Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
 		my @data;
 		foreach my $Paper (openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
 			foreach my $Price ( $Paper->Prices('Pricelist'=>$Pricelist, 'order'=>'lngMin') ) {
 				push @data, $Paper->name(), $Paper->finish(),$Paper->colour(), $Paper->weight(), $Paper->width(), $Paper->height();
-				push @data, $Price->Min(), $Price->Max(), $Price->Units(), $Price->Cost(), $Price->Markup(), $Price->Price(), $Price->Discountable();
+				push @data, $Price->service(), $Price->Equipment()->strid(), $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
 			} # end foreach
 		} # end foreach Paper
 		misc::export_csv( $r, $log, $variable, $Pricelist->name() . 'PaperPrices.csv', \@header, \@data );
@@ -314,11 +318,7 @@ $openprint::log->debug("Doing $name");
 
 	} # end if
 
-	@$variable{'ID', 'Name','Description', 'Currency'} = @$Pricelist{'id','Name','Description','Currency'};
-
 } # end sub edit
 
 1;
-
 __END__
-

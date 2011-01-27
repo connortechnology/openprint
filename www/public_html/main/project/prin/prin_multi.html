@@ -101,7 +101,7 @@ if ( 0 ) {
 				<p>
 					<label>Cover:</label>
 					<input type="radio" id="rdbCoverSelf" name="rdbCover" value="Self" onclick="$('SignatureGroup1').hide();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Self' ); ) ?> />
-					<label class="radio" for="rdbCoverSelf">Self Cover</label><br/>
+					<label class="radio" for="rdbCoverSelf">Self Cover</label>
 					<input type="radio" id="rdbCoverDifferent" name="rdbCover" value="Different" onclick="$('SignatureGroup1').show();calc(this.form.name);" <? echo ( ssi::checked( $$variable{'rdbCover'} eq 'Different' ); ) ?> />
 					<label class="radio" for="rdbCoverDifferent">Different Cover</label>
 				</p>

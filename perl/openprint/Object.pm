@@ -51,9 +51,10 @@ sub new {
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
-$log->debug("Multi-key Obejct keys(@$id) : " );
+#$log->debug("Multi-key Obejct @$id @$data{@$id}" );
+		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
-		$log->debug( $self->to_string() );
+		$log->debug( $parent . ': ' .$self->to_string() );
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			if ( my $cache_field = $self->cache_field() ) {
@@ -93,7 +94,7 @@ sub load {
 		if ( @identified_by ) {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 		} else {
-			$data = $d->selectrow_hashref( q{SELECT * FROM } . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
@@ -328,6 +329,7 @@ sub Creator {
 } # end sub Creator
 
 sub find {
+
 	my $type = shift;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
@@ -339,7 +341,14 @@ sub find {
 
 	my %params = @_;
 	my @where;
+	my $sql = 'SELECT';
+	$sql .= ' DISTINCT' if $params{'distinct'};
+	delete $params{'distinct'};
+	$sql .= ' * FROM '.$table;
 	my @values;
+	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
+	return () if ! $local_dbh;
+	delete $params{'dbh'};
 
 	if ( $cache_field and $params{$cache_field} and ( ( 1 == keys %params ) or ( 2 == keys %params and exists $params{'limit'} ) ) ) {
 		if ( exists $name_cache{$type} and exists $name_cache{$type}{$params{$cache_field}} ) {
@@ -427,6 +436,11 @@ sub find {
 				push @values, $params{$k.'_>'};
 				delete $params{$k.'_>'};
 			} # end if
+			if ( exists $params{$k.' !='} ) {
+				push @where, "$$f{$k} != ?";
+				push @values, $params{$k.' !='};
+				delete $params{$k.' !='};
+			} # end if
 			if ( exists $params{$k.'_in'} ) {
 				push @where, "? IN $$f{$k}";
 				push @values, $params{$k.'_in'};
@@ -477,7 +491,6 @@ sub find {
 		push @values, 0;
 	} # end if
 
-	my $sql = 'SELECT * FROM '.$table;
 	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
 	if ( $params{'or'} ) {
 		$sql .= ' WHERE' if ! @where;
@@ -501,8 +514,8 @@ sub find {
 	if ( ! $data ) {
 		$openprint::log->debug('Error ' . $openprint::dbh->errstr() . " loading $type ($sql) (@values) " );
 		return ();
-	} elsif ( ( ! @$data ) and $debug ) {
-		$openprint::log->debug("No $type ($sql) (@values) " );
+	#} elsif ( ( ! @$data ) and $debug ) {
+		#$openprint::log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
 		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds" );
 	} # end if
@@ -513,7 +526,9 @@ sub find {
 		if ( ! @identified_by ) {
 			$openprint::log->error("Multi key object $type but no identified by");
 		} # end if
-		return map { $type->new( \@identified_by, $_ ) } @$data;
+		my @objs = map { $type->new( \@identified_by, $_ ) } @$data;
+$openprint::log->debug("Objs: "  . scalar @objs );
+		return @objs;
 	} # end if
 } # end sub find
 
@@ -553,7 +568,7 @@ sub AUTOLOAD {
 sub to_string {
 	my $type = ref($_[0]);
 	my $fields = eval '\%'.$type.'::fields';
-    return join(' ' , map { $_ . ' => '.$_[0]{$_} } keys %fields );
+    return join(' ' , map { $_ . ' => '.$_[0]{$_} } keys %$fields );
 }
 
 1;

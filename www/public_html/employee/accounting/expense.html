@@ -1,13 +1,22 @@
 <script type="text/javascript">
+<!--
 var tax_ids = [ <? echo ( join(',', map { $_->tax_id() } $$variable{'Expense'}->Taxes() ); ) ?> ];
 
 function calc_amount_from_total( form ) {
 	var tax_rate = 1;
 	for ( var i = 0; i < tax_ids.length; i+= 1 ) {
-	tax_rate += $('tax_rate-'+tax_ids[i]).innerHTML/100;
+		if ( !form.elements['tax_charge-'+tax_ids[i]].checked ) {
+			continue;
+		} // end if
+		tax_rate += $('tax_rate-'+tax_ids[i]).innerHTML/100;
 	} // end for
-	var amount = parseFloat( form.total.value ) / tax_rate;
-	$('amount').value = do_decimals( amount, 2 );
+	var amount;
+	if ( ! form.elements['amount_locked'].value ) {
+		amount = parseFloat( form.total.value ) / tax_rate;
+		$('amount').value = do_decimals( amount, 2 );
+	} else {
+		amount = parseFloat( form.amount.value );
+	} // end if
     for ( var i = 0; i < tax_ids.length; i+= 1 ) {
         if ( form.elements['tax_charge-'+tax_ids[i]].checked ) {
             tax = amount * $('tax_rate-'+tax_ids[i]).innerHTML/100;
@@ -20,6 +29,9 @@ function calc_amount_from_total( form ) {
 
 
 function update_total( form ) {
+	if ( form.elements['total_locked'].value ) {
+		return calc_amount_from_total( form );
+	} // end if
     var total = parseFloat( form.amount.value );
     for ( var i = 0; i < tax_ids.length; i+= 1 ) {
         var tax = 0;
@@ -35,7 +47,7 @@ function update_total( form ) {
 
     $('total').value = do_decimals( total, 2 );
 } // end function update_total
-
+-->
 </script>
 <!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" id="f1" action="expenses.html" method="post">
@@ -49,7 +61,7 @@ function update_total( form ) {
 				<span class="DateSelector"><? echo ( ssi::date_select( 'occurred_on', $$variable{'Expense'}->occurred_on() ); ) ?></span>
 				</li>
 -->
-				<li><label onclick="$('recipient').value='';$('recipient_id').selectedIndex=0;$('recipient').toggle();$('recipient_id').toggle();">Recipient</label>
+				<li><label onclick="$('recipient').value='';$('recipient_id').selectedIndex=0;$('recipient').toggle();$('recipient_id').toggle();">Recipient:</label>
 					<input type="text" name="recipient" id="recipient" style="display:none;" onkeyup="$('recipient_id').selectedIndex=0;" />
 					<select name="recipient_id" id="recipient_id" onchange="$('recipient').value='';">
 						<option value="">select</option>
@@ -58,7 +70,7 @@ function update_total( form ) {
 						) ?>
 					</select>
 				</li>
-				<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category</label>
+				<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category:</label>
 					<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
 					<select name="category_id" id="category_id" onchange="$('category').value='';">
 						<option value="">select</option>
@@ -67,8 +79,18 @@ function update_total( form ) {
 						) ?>
 					</select>	
 				</li>
+				<li><label onclick="$('account').value='';$('account_id').selectedIndex=0;$('account').toggle();$('account_id').toggle();">Account:</label>
+					<input type="text" id="account" name="account" style="display:none;" onkeyup="$('account_id').selectedIndex=0;" />
+					<select name="account_id" id="account_id" onchange="$('account').value='';">
+						<option value="">select</option>
+						<? echo (
+							return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Expense_Account->find('order'=>'lower(name)') ], $$variable{'Expense'}->account_id() );
+						) ?>
+					</select>	
+				</li>
 				<li><label for="amount">Amount (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>):</label>
 					<input type="text" name="amount" id="amount" value="<? echo ( $$variable{'Expense'}->amount() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');update_total(this.form);" size="8" />
+					<? echo ( ssi::write_override( 'amount_locked', $$variable{'Expense'}->amount_locked() ) ) ?>
 					<select name="currency_id" id="currency_id">
 						<option value="">select</option>
 						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Currency->find('order'=>'lower(name)') ], $$variable{'Expense'}->currency_id() ? $$variable{'Expense'}->currency_id() : openprint::Currency::get_current()->id() ); ) ?>
@@ -81,8 +103,9 @@ function update_total( form ) {
 				<ul>
 				<li><label for="total">Total (<? echo ( $$variable{'Expense'}->Currency()->symbol() ) ?>):</label>
 					<input type="text" name="total" id="total" value="<? echo ( $$variable{'Expense'}->total() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');calc_amount_from_total(this.form);" size="8" />
+					<? echo ( ssi::write_override( 'total_locked', $$variable{'Expense'}->total_locked() ) ) ?>
 				</li>
-				<li><label for="business_use">Business %</label>
+				<li><label for="business_use">Business %:</label>
 					<input type="text" name="business_use" id="business_use" value="<? echo ( $$variable{'Expense'}->business_use() ) ?>" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" size="8" />%
 				</li>
 			</ul>
@@ -93,11 +116,19 @@ function update_total( form ) {
 					<label>Invoiced On:</label>
 					<? echo ( 	
 						return ssi::date_select( 'invoiced_on', $$variable{'Expense'}->invoiced_on(), {
+							'with_today'=>1,
 							'onchange'=>q`new Ajax.Updater('Taxes','_expense_taxes.html', { parameters: { expense_id: '` . $$variable{'Expense'}->id() . q`', invoiced_on_year: $('invoiced_on_year').value, invoiced_on_month: $('invoiced_on_month').value,invoiced_on_day: $('invoiced_on_day').value }, evalScripts: true } );`} ); ) ?>
+					<? echo ( ssi::writeButton( $log, $dbh, 'setall', 'setall.gif', q`var form = $('f1');set_date( form, 'invoiced_on', 'due_on' );set_date( form, 'invoiced_on', 'paid_on' );`, '', 'All' ); ) ?>
 				</li>
 				<li>
 					<label>Due On:</label>
-					<? echo ( return ssi::date_select( 'due_on', $$variable{'Expense'}->due_on() ); ) ?>
+					<? echo ( return ssi::date_select( 'due_on', $$variable{'Expense'}->due_on(), { 'with_today'=>1 } ); ) ?>
+					<? echo ( ssi::writeButton( $log, $dbh, 'setall', 'setall.gif', q`var form = $('f1');set_date( form, 'due_on', 'invoiced_on' );set_date( form, 'due_on', 'paid_on' );`, '', 'All' ); ) ?>
+				</li>
+				<li>
+					<label>Paid On:</label>
+					<? echo ( return ssi::date_select( 'paid_on', $$variable{'Expense'}->paid_on(), { 'with_today'=>1 } ); ) ?>
+					<? echo ( ssi::writeButton( $log, $dbh, 'setall', 'setall.gif', q`var form = $('f1');set_date( form, 'paid_on', 'due_on' );set_date( form, 'paid_on', 'invoiced_on' );`, '', 'All' ); ) ?>
 				</li>
 				<li>
 					<label for="description">Description</label>

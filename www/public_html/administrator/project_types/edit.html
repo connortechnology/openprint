@@ -1,18 +1,34 @@
 <form id="f1" name="f1" method="post" action="edit.html" enctype="multipart/form-data">
 	<fieldset class="filters"><legend>Search Information</legend>
-		<p>
-			<label>Project Type:</label>
-			<select name="ddmProjectType" onchange="form.btnFunction.value='';f1.submit();"/>
-				<option value="">select one</option>
-				<? echo ( 
-						ssi::make_drop_down( [ map { $_->id(), ssi::htmlize($_->description()) } openprint::ProjectType->find('order'=>'lower(name)') ], $param{'ddmProjectType'} );
-						) ?>
-			</select>
-		</p>
+		<div class="content">
+			<ul>
+				<li>
+					<label>Category:</label>
+					<select name="search_category_id" id="search_category_id" onchange="this.form.btnFunction.value='';this.form.submit();">
+						<option value=""> All </option>
+						<? echo ( 
+								ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ProjectTypeCategory->find('order'=>'lower(name)') ], $param{'search_category_id'} );
+								) ?>
+					</select>
+				
+				</li>
+				<li>
+					<label>Project Type:</label>
+					<select name="ddmProjectType" onchange="this.form.btnFunction.value='';f1.submit();">
+						<option value="">select one</option>
+						<? echo ( 
+								ssi::make_drop_down( [ map { $_->id(), $_->description() } openprint::ProjectType->find('order'=>'lower(name)',
+								( $param{'search_category_id'} ? ( 'category_id' => $param{'search_category_id'} ) : () ),
+								) ], $param{'ddmProjectType'} );
+								) ?>
+					</select>
+				</li>
+			</ul>
+		</div>
 		<p class="buttons">
 			<? echo ( join('',
-					ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.action='edit.html';f1.btnFunction.value='<<';fmCheck(f1);",'','&lt;&lt;'),
-					ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.action='edit.html';f1.btnFunction.value='>>';fmCheck(f1);",'','&gt;&gt;'),
+					ssi::writeButton( $log, $dbh, 'Prev1','prev.gif',"f1.action='edit.html';f1.btnFunction.value='Previous';fmCheck(f1);",'','&lt;&lt;'),
+					ssi::writeButton( $log, $dbh, 'Next1','next.gif',"f1.action='edit.html';f1.btnFunction.value='Next';fmCheck(f1);",'','&gt;&gt;'),
 					ssi::writeButton( $log, $dbh, 'New1','new.gif',"f1.action='edit.html';addCheck(f1);",'','New'),
 					ssi::writeButton( $log, $dbh, 'Delete1','delete.gif',"f1.action='edit.html';f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);",'','Delete'),
 					ssi::writeButton( $log, $dbh, 'Save1','save.gif',"f1.action='edit.html';f1.btnFunction.value='Save';fmChange=3;fmCheck(f1);",'','Save'),

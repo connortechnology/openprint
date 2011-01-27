@@ -37,6 +37,7 @@ $serial = 'service_types_id_seq';
 sub cache_field {
 	return 'name';
 }
+
 sub next {
 	my $self = shift;
 	($_) = sql::execute( $log, $dbh, q{SELECT id FROM Service_Types WHERE name = (SELECT MIN(name) FROM Service_Types WHERE name>?)}, $$self{'name'} );

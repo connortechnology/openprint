@@ -14,6 +14,7 @@ require openprint::StockFinish;
 require openprint::StockColour;
 require openprint::StockWeight;
 require openprint::Manufacturer;
+require openprint::PaperPrice;
 
 use openprint ();
 use vars qw( %variable %session %param %config $log $dbh $r );
@@ -42,37 +43,41 @@ sub list {
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		foreach my $Paper ( @Papers ) {
-			$Paper = $Paper->copy();
-			$Paper->save();
+			my $NewPaper = $Paper->copy();
+			$NewPaper->save();
+			foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+				$Setting = $Setting->copy();
+				$Setting->save({'stock_id'=>$NewPaper->id()});
+			} # end foreach
 		} # end foreach
 	} elsif ( $param{'btnFunction'} eq 'ApplyChanges' ) {
 		foreach my $Paper ( @Papers ) {
 			my $ac = sql::start_transaction( $dbh );
 			if ( $param{'mode'} eq 'modify' ) {
-				foreach my $Price ( $Paper->prices() ) {
+				foreach my $Price ( $Paper->Prices() ) {
 					if ( $param{'amount'} ne '' ) {
 						if ( $param{'amount'} =~ /^\+(.*)/ ) {
-							$Price->Cost( $Price->Cost() + $1 );
+							$Price->cost( $Price->cost() + $1 );
 						} elsif ( $param{'amount'} =~ /^\-(.*)/ ) {
-							$Price->Cost( $Price->Cost() - $1 );
+							$Price->cost( $Price->cost() - $1 );
 						} else {
 $openprint::log->debug("Setting: $param{'amount'} " );
-							$Price->Cost( $param{'amount'} );
+							$Price->cost( $param{'amount'} );
 						} # end if
 					} elsif ( $param{'markup'} ne '' ) {
 						if ( $param{'markup'} =~ /^\+(.*)/ ) {
-							$Price->Markup( $Price->Markup() + $1 );
+							$Price->markup( $Price->markup() + $1 );
 						} elsif ( $param{'markup'} =~ /^\-(.*)/ ) {
-							$Price->Markup( $Price->Markup() - $1 );
+							$Price->markup( $Price->markup() - $1 );
 						} else {
-							$Price->Markup( $param{'markup'} );
+							$Price->markup( $param{'markup'} );
 						} # end if
 					} # end if
-					$Price->Price( $Price->Cost() * ( 1+($Price->Markup()/100) ) );
+					$Price->price( $Price->cost() * ( 1+($Price->markup()/100) ) );
 					$variable{'error'} .= $Price->save();
 				} # end foreach Price
 			} elsif ( $param{'mode'} eq 'new' ) {
-				foreach my $Price ( $Paper->prices() ) {
+				foreach my $Price ( $Paper->Prices() ) {
 					$Price->delete();
 				} # end foreach Price
 				foreach my $key ( keys %param ) {
@@ -83,13 +88,13 @@ $openprint::log->debug("Setting: $param{'amount'} " );
 						$variable{'error'} .= $Price->save( {
 								'pricelist_id'	=>	$pricelist_id,
 								'paper_id'	=> $Paper->id(),
-								'Min'	=>	$param{"min-$pricelist_id-$id"},
-								'Max'	=>	$param{"max-$pricelist_id-$id"},
-								'Units'	=>	$param{"units-$pricelist_id-$id"},
-								'Cost'	=>	$param{"costcwt-$pricelist_id-$id"},
-								'Markup'	=>	$param{"markup-$pricelist_id-$id"},
-								'Price'	=>	$param{"pricecwt-$pricelist_id-$id"},
-								'Discountable'	=>	$param{"discount-$pricelist_id-$id"},
+								'min'	=>	$param{"min-$pricelist_id-$id"},
+								'max'	=>	$param{"max-$pricelist_id-$id"},
+								'units'	=>	$param{"units-$pricelist_id-$id"},
+								'cost'	=>	$param{"cost-$pricelist_id-$id"},
+								'markup'	=>	$param{"markup-$pricelist_id-$id"},
+								'price'	=>	$param{"price-$pricelist_id-$id"},
+								'discountable'	=>	$param{"discount-$pricelist_id-$id"},
 								} );
 						
 						# Force reload
@@ -115,8 +120,13 @@ sub stock {
 		
 	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been copied.';
-		$Paper = $Paper->copy();
-		$Paper->save();
+		my $NewPaper = $Paper->copy();
+		$NewPaper->save();
+			foreach my $Setting ( openprint::Equipment_Stock_Setting->find('stock_id'=>$Paper->id()) ) {
+				$Setting = $Setting->copy();
+				$Setting->save({'stock_id'=>$NewPaper->id()});
+			} # end foreach
+		$Paper = $NewPaper;
 		$param{'stock_id'} = $Paper->id();
 	} elsif ( $param{'btnFunction'} eq 'Save' ) {
 		$Paper->owner_id( $param{'ddmOwner'} );
@@ -181,20 +191,27 @@ sub stock {
 		} # end foreach
 
 # Save prices
-		foreach my $key ( keys %param ) {
-			if ( $key =~ /min-(\d*)/ ) {
-				my $Price = new openprint::PaperPrice( $1 );
-				$variable{'error'} .= $Price->save({
-						'Min'			=> $param{"min-$1"},
-						'Max'			=> $param{"max-$1"},
-						'Units'			=> $param{"units-$1"},
-						'Cost'			=> $param{"cost-$1"},
-						'Markup'		=> $param{"markup-$1"},
-						'Price'			=> $param{"price-$1"},
-						'Discountable'	=> $param{"discount-$1"},
-						});
-			} # end if
-		} # end foreach
+		foreach my $Price ( $Paper->Prices() ) {
+			if (
+					( $Price->price() != $param{"price-$$Price{id}"} ) 
+					or ( $Price->min() != $param{"min-$$Price{id}"} )
+					or ( $Price->max() != $param{"max-$$Price{id}"} )
+					or ( $Price->units() ne $param{"units-$$Price{id}"} )
+					or ( $Price->discountable() ne $param{"discountable-$$Price{id}"} )
+					or ( $Price->equipment_id() ne $param{"equipment_id-$$Price{id}"} )
+			   ) {
+			$variable{'error'} .= $Price->save({
+					'equipment_id'	=>	$param{"equipment_id-$$Price{id}"},
+					'min'			=> $param{"min-$$Price{id}"},
+					'max'			=> $param{"max-$$Price{id}"},
+					'units'			=> $param{"units-$$Price{id}"},
+					'cost'			=> $param{"cost-$$Price{id}"},
+					'markup'		=> $param{"markup-$$Price{id}"},
+					'price'			=> $param{"price-$$Price{id}"},
+					'discountable'	=> $param{"discountable-$$Price{id}"},
+					});
+			} # end if Price has changed
+		} # end foreach Price
 
 		$variable{'error'} .= $Paper->save();
 		$variable{'information'} .= 'Stock ' . $Paper->id() . ' has been saved.' if ! $variable{'error'};
@@ -213,7 +230,8 @@ sub stock {
 
 sub _prices {
 	if ( $param{'action'} eq 'Delete' ) {
-		sql::execute( $log, $dbh, 'DELETE FROM Paper_Prices WHERE id=?', $param{'price_id'} );
+		my $PaperPrice = new openprint::PaperPrice( $param{'price_id'} );
+		$PaperPrice->delete();
 	} elsif ( $param{'action'} eq 'Add' ) {
 		my $PaperPrice = new openprint::PaperPrice( );
 		$PaperPrice->paper_id( $param{'stock_id'} );
@@ -223,21 +241,6 @@ sub _prices {
 		my $PaperPrice = new openprint::PaperPrice( $param{'price_id'} );
 		my $NewPrice = $PaperPrice->copy();
 		$NewPrice->save();
-	} else { #save
-		foreach my $key ( keys %param ) {
-			if ( $key =~ /min-(\d*)/ ) {
-				my $Price = new openprint::PaperPrice( $1 );
-				$variable{'error'} .= $Price->save( {
-					'Min'	=>	$param{"min-$1"},
-					'Max'	=>	$param{"max-$1"},
-					'Units'	=>	$param{"units-$1"},
-					'Cost'	=>	$param{"costcwt-$1"},
-					'Markup'	=>	$param{"markup-$1"},
-					'Price'	=>	$param{"pricecwt-$1"},
-					'Discountable'	=>	$param{"discount-$1"},
-	} );
-			} # end if
-		} # end foreach
 	} # end if
 } # end sub _prices
 
@@ -439,6 +442,28 @@ sub _filters_load {
 sub _filters_save {
 } # end sub _filters_save
 
-1;
+sub _price_tr {
+	$variable{'Pricelist'} = new openprint::Pricelist( $param{'pricelist_id'} );
+	$variable{'Stock'} = new openprint::Paper( $param{'stock_id'} );
+	$variable{'Price'} = new openprint::PaperPrice( $param{'price_id'} );
+	my @Equipment = openprint::Equipment->find('order'=>'lower(strid)');
+	$variable{'Equipment'} = \@Equipment;
+    $variable{'company_ids'} = [ map { $_->id(), $_->name() } openprint::Company->find( 'supplier'=>'Y', 'order'=>'lower(name)' ) ];
+	if ( $param{'action'} eq 'Add' ) {
+		$variable{'error'} .= $variable{'Price'}->save({
+			'pricelist_id'	=>	$param{'pricelist_id'},
+			'stock_id'		=>	$param{'stock_id'},
+			'service'		=>	$param{'service'},
+		});
+	} elsif ( $param{'action'} eq 'Delete' ) {
+		$variable{'error'} = $variable{'Price'}->delete();
+		$variable{'Price'} = new openprint::PaperPrice();
+	} elsif ( $param{'action'} eq 'Copy' ) {
+		$variable{'Price'} = $variable{'Price'}->copy();
+		$variable{'error'} .= $variable{'Price'}->save( \%param );
+	} # end if
 
+} # end sub _price_tr
+
+1;
 __END__

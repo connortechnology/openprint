@@ -234,8 +234,10 @@ sub auto_calculate {
 	return if ! scalar @signature_indices;
 
 	# If the printing services aren't complete, then there is no sense continuing
-	my @statuses = sql::execute( $log, $dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex IN (}.join(',', @signature_indices).q{)}, $project_index );
-	return if sets::isin( 'uncalculated', \@statuses );
+	if ( @signature_indices ) {
+		my @statuses = sql::execute( $log, $dbh, q{SELECT DISTINCT strStatus FROM tbl_Project_Contents WHERE lngProjectIndex=? AND lngServiceIndex IN (}.join(',', @signature_indices).q{)}, $project_index );
+		return if sets::isin( 'uncalculated', \@statuses );
+	} # end if
 	my $services = $Project->services();
 
 # Folding - first find out if we need it, and make sure we have it or don't as neccessary

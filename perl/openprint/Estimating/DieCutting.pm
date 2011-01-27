@@ -345,13 +345,13 @@ sub calc {
 			$$specs{"StrippingPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"StrippingPrice$qty_index"} );
 		} # end if
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $totalPrice*(1+$$specs{'Markup'.$qty_index}/100)*(1+$Project->markup()/100) );
 			@no_outputs = sets::exclude( ["txtPrice$qty_index"], \@no_outputs );
 		} else {
 			@no_outputs = sets::union( "txtPrice$qty_index", @no_outputs );
 		} # end if
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalUnitPrice );
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalMPrice*(1+$$specs{'Markup'.$qty_index}/100) );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ($totalUnitPrice*(1+$Project->markup()/100)) );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $totalMPrice*(1+$$specs{'Markup'.$qty_index}/100)*(1+$Project->markup()/100) );
 
 	} # end foreach qty
 
@@ -360,11 +360,19 @@ sub calc {
 
 sub signature_needs {
 	my ( $Project, $specs, $sig_specs ) = @_;
-$log->debug("Diecutting::signatureNeeds: for sig $$sig_specs{SignatureIndex} : Needed: ($$specs{'Needed-'.$$sig_specs{SignatureIndex}})" );
+#$log->debug("Diecutting::signatureNeeds: for sig $$sig_specs{SignatureIndex} : Needed: ($$specs{'Needed-'.$$sig_specs{SignatureIndex}})" );
 	if ( ! $$specs{"Needed-$$sig_specs{SignatureIndex}"} ) {
 		if ( sets::isin( $$sig_specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) ) {
 			return 1;
 		} # end if
+		my $ServiceType = openprint::ServiceType::find_one('type'=>'DieCutting');
+		if ( $ServiceType ) {
+			if ( sets::isin( $ServiceType->id(), [ $Project->Type()->required_services() ] ) ) {
+				return 1;
+			} # end if
+		} else {
+			$openprint::log->error("No ServiceType for DieCutting");
+		}
 	} # end if
 	return $$specs{"Needed-$$sig_specs{SignatureIndex}"} eq 'Y' ? 1 : 0;
 } # end sub signature_needs
@@ -419,8 +427,8 @@ sub signature_calc {
 		} # end if
 
 		foreach my $imposition ( @impositions ) {
-			my $width = $$specs{"txtWidth-$$sig_specs{'SignatureIndex'}"} * $$imposition{$imposition->image_orientation() eq 'Vertical' ? 'columns' : 'rows'};
-			my $height = $$specs{"txtHeight-$$sig_specs{'SignatureIndex'}"} * $$imposition{$imposition->image_orientation() eq 'Vertical' ? 'rows' : 'columns'};
+			my $width = $imposition->layout_width();
+			my $height = $imposition->layout_height();
 			if ( $_ = $Equipment->fits( $width, $height, $$sig_specs{'txtSpecificStockCalliper'} ) ) {
 				if ( 1 == @equipment ) {
 					$results{'breakdown'} .= "Doesn't fit. $_<br/>";
@@ -466,6 +474,9 @@ sub summary {
 
 	return '';
 } # end sub summary
+
+sub save {
+} # end sub save
 
 1;
 __END__

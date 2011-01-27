@@ -114,9 +114,9 @@
 	<tr><td colspan="1">Press:</td><td colspan="9">
 <? echo ( 
 	my $html = '';
-	my @presses = split(';', $$variable{'CAR'}->presses());
+	my @presses = split(',', $$variable{'CAR'}->presses());
 	foreach my $Press ( openprint::Equipment->find('category'=>'Printing','use_in_scheduling'=>1) ) {
-$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d" %3$s/><label for="presses%1$d">%2$s</label>', $Press->id(), $Press->name(), sets::isin( $Press->id(), @presses ) ? 'checked="checked"' : '' );
+		$html .= sprintf('<input type="checkbox" id="presses%1$d" name="presses" value="%1$d" %3$s/><label for="presses%1$d">%2$s</label>', $Press->id(), $Press->name(), sets::isin( $Press->id(), @presses ) ? 'checked="checked"' : '' );
 	} # end foreach
 	return $html;
 ) ?>
@@ -171,6 +171,7 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 		<th></th>
 		<th></th>
 		<th></th>
+	</tr>
 	<tr>
 		<td colspan="2">Re-print Approved:</td>
 		<td colspan="3">
@@ -188,6 +189,12 @@ if ( $$variable{'CAR'}->reprint_on() ) {
 			<input type="radio" name="reprint_charge" value="No" id="reprint_chargeNo" <? echo ( $$variable{'CAR'}->reprint_charge() eq 'No' ? 'checked="checked"' : '' ) ?>/>
 			<label class="radio" for="reprint_chargeNo">No</label>
 		</td>
+	</tr>
+	<tr>
+		<td colspan="2">Reprint Quantity:</td>
+		<td colspan="3"><input type="text" name="reprint_quantity" id="reprint_quantity" value="<? echo ( $$variable{'CAR'}->reprint_quantity(); ) ?>" /></td>
+		<td colspan="2">Reprint Value (CAD):</td>
+		<td colspan="3"><input type="text" name="reprint_value" id="reprint_value" value="<? echo ( $$variable{'CAR'}->reprint_value(); ) ?>" /></td>
 	</tr>
 	<tr>
 		<td colspan="2">Approved by:</td>

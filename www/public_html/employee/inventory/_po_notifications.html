@@ -23,6 +23,6 @@
 		 ) ] );
 		) ?>
 		</select>
-		<? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', q`new Ajax.Updater('notification_div', '_po_notifications.html', { method: 'get', parameters: { action: 'add', po_id: ` . $$variable{'PurchaseOrder'}->id().q`, notifications: $('notifications').value, new_notification_id: $('new_notification_id').value } } );`, '', 'Add' ); ) ?>
+		<? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', q`new Ajax.Updater('notification_div', '_po_notifications.html', { parameters: { action: 'add', po_id: ` . $$variable{'PurchaseOrder'}->id().q`, notifications: $('notifications').value, new_notification_id: $('new_notification_id').value } } );`, '', 'Add' ); ) ?>
 	</li>
 </ul>

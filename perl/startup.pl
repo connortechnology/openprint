@@ -66,6 +66,9 @@ BEGIN {
 	use Number::Format;
 	use	openprint::Ledger;
 	use openprint::Project_Service;
+	use Math::Round;
+	use openprint::Article;
+	use openprint::Article_Category;
 
 #use MapImage;
 

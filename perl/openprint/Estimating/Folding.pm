@@ -1107,14 +1107,14 @@ $Breakdown .= $$results{'Breakdown'};
 				} # end if
 			} # end if
 
-				my $comparison_cost = $totalPrice + $stitching_part + $cutting_results{'Price'};
-if ( $cutting_results{'Equipment'} ) {
-$Breakdown .= 'Cutting: ' . $cutting_results{'Price'} . ' on ' . $cutting_results{'Equipment'}->name() . '<br/>';
-} else { 
-$Breakdown .= 'No Cutting: ' . $cutting_results{'Price'} . ' ' . $cutting_results{'alert'} . ' ' . $cutting_results{'Breakdown'}.'<br/>';
-}
+			my $comparison_cost = $totalPrice + $stitching_part + $cutting_results{'Price'};
+			if ( $cutting_results{'Equipment'} ) {
+				$Breakdown .= 'Cutting: ' . $cutting_results{'Price'} . ' on ' . $cutting_results{'Equipment'}->name() . '<br/>';
+			} else { 
+				$Breakdown .= 'No Cutting: ' . $cutting_results{'Price'} . ' ' . $cutting_results{'alert'} . ' ' . $cutting_results{'Breakdown'}.'<br/>';
+			} # end if
 
-				$Breakdown .= 'Total: $' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . ' + stitching: ' . $stitching_part . ' / comparison : ' . $comparison_cost . ' <br/><br/>';
+			$Breakdown .= 'Total: $' . sprintf($openprint::config{'ProjectMoneyFormat'}, $totalPrice ) . ' + stitching: ' . $stitching_part . ' / comparison : ' . $comparison_cost . ' <br/><br/>';
 
 			if ( ( $comparison_cost < $bestComparison ) or ( ! defined $bestComparison ) ) {
 #$openprint::log->debug("Got better prrice $totalPrice < $bestPrice " . $Equipment->name() ) if $debug;
@@ -1325,11 +1325,12 @@ $openprint::log->debug("Unable to fold $qty_index $$sig_specs{SignatureIndex}");
 		} # end if
 
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{'Markup'.$qty_index}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'},
+					$price*(1+$$specs{'Markup'.$qty_index}/100)*(1+$Project->markup()/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
-		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice );
+		$$specs{"MPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $mprice * (1+$Project->markup()/100) );
 	} # end foreach qty
 	$log->debug(" END FOLDING!!!!!!!!!!!!!!!!!! $status");
 	return $$specs{'Status'} = $status;
@@ -1401,28 +1402,32 @@ $openprint::log->debug("Folding runspeed: ($speed)");
 } # end sub runspeed
 
 sub runtime {
-    my ( $Project, $Service, $Equipment, $qty_index, $impressions, $speed, $sig_id ) = @_;
+    my ( $Project, $Service, $Equipment, $qty_index, $impressions, $speed, $pertains_to ) = @_;
 
 	my $specs = $Service->specs();
-	my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
-	$Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) if ! $Equipment;
+	my $runTime;
 
-	# Make ready
-    my $runTime = $Equipment->specification( 'Station Make Ready' ) * 60;
-    foreach my $name ( keys %$specs ) {
-        if ( $name =~ /^txt(\w*)Qty$/ ) {
-            my $type = $1;
-            my $quantity = $$specs{$name} * $impressions;
-            if ( $quantity > 0 ) {
-                $speed = $Equipment->specification( $type.'RunSpeed' ) if ! $speed;
-$openprint::log->debug("Folding runspeed for $type: $speed");
-                if ( $speed ) {
-                    $runTime += $quantity * 3600 / $speed; # Convert to seconds, units is typically per hour
-                } # end if
-            } # end if
-        } # end if
-    } # end foreach
-    return $runTime;
+	foreach my $sig_id ( ref $pertains_to eq 'ARRAY' ? @{$pertains_to} : $pertains_to ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		$Equipment = new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) if ! $Equipment;
+# Make ready
+		$runTime += $Equipment->specification( 'Station Make Ready' ) * 60;
+
+		foreach my $name ( keys %$specs ) {
+			if ( $name =~ /^txt(\w*)Qty$/ ) {
+				my $type = $1;
+				my $quantity = $$specs{$name} * $impressions;
+				if ( $quantity > 0 ) {
+					$speed = $Equipment->specification( $type.'RunSpeed' ) if ! $speed;
+					$openprint::log->debug("Folding runspeed for $type: $speed");
+					if ( $speed ) {
+						$runTime += $quantity * 3600 / $speed; # Convert to seconds, units is typically per hour
+					} # end if
+				} # end if
+			} # end if
+		} # end foreach spec name
+	} # end foreach sig_id
+	return $runTime;
 } # end sub runtime
 
 # The purpose is to cut any Impos > 1 into singletons

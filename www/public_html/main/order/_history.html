@@ -14,8 +14,8 @@
 	} else {
 
 		@{$$variable{'Orders'}} = openprint::Order->find(
-				'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/order/history.html?created_on_start_year','/main/order/history.html?created_on_start_month','/main/order/history.html?created_on_start_day'} ),
-				'created_on_end'	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/order/history.html?created_on_end_year','/main/order/history.html?created_on_end_month','/main/order/history.html?created_on_end_day'} ),
+			( Date::Calc::check_date( @session{'/main/order/history.html?created_on_start_year','/main/order/history.html?created_on_start_month','/main/order/history.html?created_on_start_day'} ) ? ( 'created_on_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/main/order/history.html?created_on_start_year','/main/order/history.html?created_on_start_month','/main/order/history.html?created_on_start_day'} ) ) : () ),
+			( Date::Calc::check_date( @session{'/main/order/history.html?created_on_end_year','/main/order/history.html?created_on_end_month','/main/order/history.html?created_on_end_day'} ) ? ( 'created_on_end'	=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/main/order/history.html?created_on_end_year','/main/order/history.html?created_on_end_month','/main/order/history.html?created_on_end_day'} ) ) : () ),
 				'company_id'		=>	$session{'company_id'},
 				( $session{'/main/order/history.html?ddmOrderedBy'} ? ( 'user_id'			=>	$session{'/main/order/history.html?ddmOrderedBy'} ) : () ),
 				'order'				=>	$openprint::Order::fields{'id'}.' DESC',

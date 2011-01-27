@@ -34,21 +34,18 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'CopyProject', 'copyProject.gif', "f1.action='/main/project/reuse.html';f1.btnFunction.value='Reuse Project';f1.submit();", '', 'Copy' ); ) ?>
 		</div>
 		<div style="float: right;">
-			<? if ( $$variable{'Project'}->status() eq 'uncalculated' ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'ContinueProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Continue Project';f1.submit();", '', 'Continue Project' ); ) ?>
-			<? endif ( $$variable{'Project'}->status() eq 'uncalculated' ) ?>
-			<? if ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' ); ) ?>
-			<? endif ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) ?>
-			<? if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' ); ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' ); ) ?>
-				<? if ( ( $session{'user_type'} eq 'A' ) and ! $$variable{'Project'}->predefined() ) ?>
-				<? echo ( ssi::writeButton( $log, $dbh, 'Predefined', 'predefined.gif', "f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", '', 'Make into a Product' ); ) ?>
-				<? endif ( ( $session{'user_type'} eq 'A' ) and ! $$variable{'Project'}->predefined() ) ?>
-			<? endif ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) ?>
-			<? echo ( 
+			<? echo (
 				my $html = '';
+				if ( sets::isin( $$variable{'Project'}->status(), ['Unordered','uncalculated'] ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'RecalculateProject', 'continueProject.gif', "f1.action='/main/project/view.html';f1.btnFunction.value='Recalculate Project';f1.submit();", '', 'Recalculate' );
+				} # end if
+				if ( $$variable{'Project'}->status() ne 'uncalculated' and ! $$variable{'Project'}->order_id() ) {
+					$html .= ssi::writeButton( $log, $dbh, 'AddToQuote', 'addtoQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process Quote';f1.submit();", '', 'Add To Quote' );
+					$html .= ssi::writeButton( $log, $dbh, 'AddToOrder', 'addToOrder.gif', "f1.action='/main/order/information.html';f1.btnFunction.value='Process Order';f1.submit();", '', 'Add To Order' );
+					if ( ( $session{'user_type'} eq 'A' ) and ! $$variable{'Project'}->predefined() ) {
+						$html .= ssi::writeButton( $log, $dbh, 'Predefined', 'predefined.gif', "f1.action='view.html';f1.btnFunction.value='Make Predefined';f1.submit();", '', 'Make into a Product' );
+					} # end if
+				} # end if
 				if ( $$variable{'Project'}->order_id() and sets::isin( $$variable{'Project'}->Order()->status(), ['Incomplete', 'Re-Opened'] ) ) {
 					$html .= ssi::writeButton( $log, $dbh, 'ContinueOrder', 'continueorder.gif', "f1.action='/main/order/information.html?OrderID=".$$variable{'Project'}->order_id()."';f1.btnFunction.value='';f1.submit();", '', 'Continue Order' );
 				} # end if
@@ -56,28 +53,25 @@
 					$html .= ssi::writeButton( $log, $dbh, 'Docket', 'projectDocket.gif', 'open_project_docket();', '', 'Docket' );
 				} # end if
 				if ( sets::isin( $$variable{'Project'}->status(), 'Proofs Out','Approved','Printed','Complete' ) ) {
-				ssi::writeButton( $log, $dbh, 'ViewPDFs', 'view_pdf.gif', "f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", '', 'View PDFs' );
-				} # end if
-				if ( sets::isin( $$variable{'Project'}->status(), 'Pending Deposit','In Prepress', 'Proofs Out','Approved','Printed','Complete' ) ) {
-					$html .= ssi::writeButton( $log, $dbh, 'Upload', 'uploadFiles.gif', '', '/upload/upload_center.html?project_id='.$$variable{'ProjectIndex'}, 'Upload Files' );
-				} # end if
-	if ( $$variable{'HiddenSignatures'} ) {
-				$html .= ssi::writeButton( $log, $dbh, 'ShowAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=1', 'Show All Signatures' );
-	} elsif ( $session{'ShowAllSignatures'} and $$variable{'Project'}->signatures() > 1 ) {
-				$html .= ssi::writeButton( $log, $dbh, 'HideAllSignatures', '.gif', '', '/main/project/view.html?ProjectIndex='.$$variable{'ProjectIndex'}.'&amp;ShowAllSignatures=0', 'Hide All Signatures' );
-	} # end if
-				$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
-				if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&amp;ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
-				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "popup_window('_view_log.html', 'project_id=".$$variable{'ProjectIndex'}."', {width:800} );", '', 'View Log' );
-				} # end if
-				return $html;
-			) ?>
-		</div>
-		</div>
-		<!--#include virtual="_view.html" -->
+				$html .= ssi::writeButton( $log, $dbh, 'ViewPDFs', 'view_pdf.gif', "f1.action='/main/project/view_pdf.html';f1.btnFunction.value='View PDF';f1.submit();", '', 'View PDFs' );
+			} # end if
+			$html .= ssi::writeButton( $log, $dbh, 'Print', 'print.gif', 'window.print();', '', 'Print' );
+			if ( sets::isin( $openprint::session{'user_type'}, ['A','E'] ) ) {
+				$html .= ssi::writeButton( $log, $dbh, 'JDF', 'jdf.gif', '', '/main/project/view.html?btnFunction=Export%20JDF&ProjectIndex='.$$variable{'ProjectIndex'}, 'JDF' ) if $$variable{'Project'}->docket();
+				$html .= ssi::writeButton( $log, $dbh, 'Log', 'log.gif', "ajax_window('_view_log.html?project_id=".$$variable{'ProjectIndex'}."', 800, 600 );", '', 'View Log' );
+			} # end if
+			return $html;
+		) ?>
+	</span>
+<p class="unprintable">
+	Please confirm services, prices and quantities before clicking &quot;Add to 
+	Quote&quot; or &quot;Add to Order&quot;. If changes are required, please use 
+	the &quot;Edit&quot; or &quot;Remove&quot; links.<br/>
+</p>
+	<br class="spacer"/>
+	<!--#include virtual="_view.html" -->
 	<? if ( sets::isin( $session{'user_type'},'A','E') and ( ( ! $$variable{'Project'}->docket() ) or ( $$variable{'Project'}->Order()->status() eq 'Re-Opened' ) ) ) ?>
-		<table>
+	<table>
 		<tr class="totals unprintable">
 			<td><input type="text" name="txtServiceName"/></td>
 			<? echo (

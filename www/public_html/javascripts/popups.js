@@ -84,8 +84,11 @@ function toggleContent( divID, show_url, inputs, hide_url ) {
 function LoadContent( divID, page, parameters, message ) {
 	var div = $( divID );
 	if ( div ) {
-		if ( message ) div.innerHTML = message;
-		else div.innerHTML = 'Please wait....';
+		if ( message ) { 
+			div.innerHTML = message;
+		} else { 
+			div.innerHTML = 'Please wait....';
+		} // end if
 	} // end if
 	var method = 'get';
 	//alert( typeof parameters );
@@ -130,7 +133,7 @@ function popup_window( url, parameters, options ) {
 			if ( options.width ) width = options.width;
 			if ( options.height ) height = options.height;
 		} // end if
-		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height} );
+		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height, recenterAuto:false} );
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {
@@ -152,10 +155,14 @@ onDestroy: function(eventName, win) {
 	} else {
 		popupWin.showCenter();
 	} // end if
-	if ( parameters ) {
-		url += '?' + parameters;
-	}
-	popupWin.setAjaxContent(url, null , true);
+	if ( options && options.content ) {
+		popupWin.setHTMLContent( options.content );
+	} else {
+		if ( parameters ) {
+			url += '?' + parameters;
+		}
+		popupWin.setAjaxContent(url, null , true);
+	} // end if
 } // end function popup_window
 
 

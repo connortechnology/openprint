@@ -40,6 +40,8 @@ $serial = 'articles_id_seq';
 	#'state'				=>	'state',
 	'category_id'		=>	'category_id',
 	'category'			=>	undef,
+	'source'			=>	'source',
+	'source_content'	=>	'source_content',
 );
 
 %transforms = (

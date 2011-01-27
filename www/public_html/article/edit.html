@@ -9,71 +9,76 @@
 -->
 </script>
 <div class="Article"><div class="Edit">
-<form name="f1" id="f1" action="history.html" method="post">
-	<fieldset><legend>Editing Article<? echo ( $$variable{'Article'}->id() ? '('.$$variable{'Article'}->id().')' : '' ) ?></legend>
-		<? if ( $$variable{'Article'}->deleted() ) ?>
-		<span class="warning">This article has been deleted</span>
-		<? endif ( $$variable{'Article'}->deleted() ) ?>
-		
-		<input type="hidden" name="article_id" value="<? echo ( $param{'article_id'} ) ?>" />
-			<div class="content">
-			<ul>
-				<li><label for="company_id">Company:</label>
-					<select id="company_id" name="company_id">
-						<option value=""> select </option>
-						<? echo ( openprint::Company::get_dropdown( $$variable{'Article'}->company_id() ? $$variable{'Article'}->company_id() : $session{'company_id'} ); ) ?>
-					</select>
-				</li>
-				<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category:</label>
-					<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
-                    <select name="category_id" id="category_id" onchange="$('category').value='';">
-                        <option value="">select</option>
-                        <? echo (
-                            return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $$variable{'Article'}->category_id() );
-                        ) ?>
-                    </select>
-                </li>
-				<li><label for="created_by">Author:</label>
-					<select id="created_by" name="created_by">
-						<option value=""> select </option>
-						<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Article'}->id() ? $$variable{'Article'}->created_by() : $session{'user_id'} ); ) ?>
-					</select>
-				</li>
-				<li>
-					<label>Published:</label>
-					<input type="radio" name="published" value="1" id="published1" <? echo ( ssi::checked( sets::isin( $$variable{'Article'}->published(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('published_on_time').show();$('ending_time').show(); } else { $('published_on_time').hide();$('ending_time').hide(); }" />
-					<label class="radio" for="published1">Yes</label>
-					<input type="radio" name="published" value="0" id="published0" <? echo ( ssi::checked( $$variable{'Article'}->published() eq '0' ); ) ?> onclick="if(!this.checked) { $('published_on_time').show();$('ending_time').show(); } else { $('published_on_time').hide();$('ending_time').hide(); }" />
-					<label class="radio" for="published0">No</label>
-				</li>
-				<li><label>Published at:</label>
-					<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'published_on', $$variable{'Article'}->published_on(), {'with_today'=>1} ); ) ?>
-					</span>
-				</li>
-				<li><label>Title:</label>
-					<input type="text" id="title" name="title" value="<? echo ( $$variable{'Article'}->title() ) ?>" />
-				</li>
-				<li>
-					<label for="body">Body:</label>
-					<textarea cols="" id="body" name="body" rows="<? echo ( $$variable{'Article'}->body() ? scalar split("\n", $$variable{'Article'}->body()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Article'}->body() ) ?></textarea>
-				</li>
-			</ul>
-			</div>
-			<p class="buttons">
-				<? echo (
-					my $html = '';
-					#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
-					
-					if ( $$variable{'Article'}->id() ) {
-					$html = ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();check_time_published_on(f1);', '', 'Reset' );
-					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
-					$html .= ssi::writeButton( $log, $dbh, 'copy', 'copy.gif', "f1.action='edit.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
-					} # end if
-					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
-					return $html;
-				) ?>
-			</p>
-	</fieldset>
-	<input type="hidden" name="btnFunction" />
-</form>
+	<div class="leftColumn">
+		<form name="f1" id="f1" action="history.html" method="post">
+			<fieldset><legend>Editing Article<? echo ( $$variable{'Article'}->id() ? '('.$$variable{'Article'}->id().')' : '' ) ?></legend>
+				<? if ( $$variable{'Article'}->deleted() ) ?>
+				<span class="warning">This article has been deleted</span>
+				<? endif ( $$variable{'Article'}->deleted() ) ?>
+				
+				<input type="hidden" name="article_id" value="<? echo ( $param{'article_id'} ) ?>" />
+					<div class="content">
+					<ul>
+						<li><label for="company_id">Company:</label>
+							<select id="company_id" name="company_id">
+								<option value=""> select </option>
+								<? echo ( openprint::Company::get_dropdown( $$variable{'Article'}->company_id() ? $$variable{'Article'}->company_id() : $session{'company_id'} ); ) ?>
+							</select>
+						</li>
+						<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category:</label>
+							<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
+							<select name="category_id" id="category_id" onchange="$('category').value='';">
+								<option value="">select</option>
+								<? echo (
+									return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Article_Category->find('order'=>'lower(name)') ], $$variable{'Article'}->category_id() );
+								) ?>
+							</select>
+						</li>
+						<li><label for="created_by">Author:</label>
+							<select id="created_by" name="created_by">
+								<option value=""> select </option>
+								<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find('company_id'=>$session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $$variable{'Article'}->id() ? $$variable{'Article'}->created_by() : $session{'user_id'} ); ) ?>
+							</select>
+						</li>
+						<li>
+							<label>Published:</label>
+							<input type="radio" name="published" value="1" id="published1" <? echo ( ssi::checked( sets::isin( $$variable{'Article'}->published(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('published_on_time').show();$('ending_time').show(); } else { $('published_on_time').hide();$('ending_time').hide(); }" />
+							<label class="radio" for="published1">Yes</label>
+							<input type="radio" name="published" value="0" id="published0" <? echo ( ssi::checked( $$variable{'Article'}->published() eq '0' ); ) ?> onclick="if(!this.checked) { $('published_on_time').show();$('ending_time').show(); } else { $('published_on_time').hide();$('ending_time').hide(); }" />
+							<label class="radio" for="published0">No</label>
+						</li>
+						<li><label>Published at:</label>
+							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'published_on', $$variable{'Article'}->published_on(), {'with_today'=>1} ); ) ?></span>
+						</li>
+						<li><label>Source:</label>
+							<input type="text" id="source" name="source" value="<? echo ( $$variable{'Article'}->source() ) ?>" onchange="new Ajax.Updater( 'View', '_view.html', { parameters: f1.serialize() } );" />
+						</li>
+						<li><label>Title:</label>
+							<input type="text" id="title" name="title" value="<? echo ( $$variable{'Article'}->title() ) ?>" />
+						</li>
+						<li>
+							<label for="body">Body:</label>
+							<textarea cols="" id="body" name="body" rows="<? echo ( $$variable{'Article'}->body() ? scalar split("\n", $$variable{'Article'}->body()) + 3 : 3 ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Article'}->body() ) ?></textarea>
+						</li>
+					</ul>
+					</div>
+					<p class="buttons">
+						<? echo (
+							my $html = '';
+							#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+							
+							if ( $$variable{'Article'}->id() ) {
+							$html = ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();check_time_published_on(f1);', '', 'Reset' );
+							$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+							$html .= ssi::writeButton( $log, $dbh, 'copy', 'copy.gif', "f1.action='edit.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
+							} # end if
+							$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+							return $html;
+						) ?>
+					</p>
+			</fieldset>
+			<input type="hidden" name="btnFunction" />
+		</form>
+	</div><!--left-->
+	<div class="rightColumn" id="View"><!--#include virtual="_view.html"--></div>
 </div></div>

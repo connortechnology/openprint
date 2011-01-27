@@ -11,9 +11,12 @@ CREATE TABLE Expense_Categories (
 CREATE TABLE Expenses (
 	id	SERIAL,
 	amount	float,
+	amount_locked 	BOOLEAN NOT NULL default false,
 	total	float,
+	total_locked 	BOOLEAN NOT NULL default false,
 	recipient_id	INTEGER, FOREIGN KEY (recipient_id) REFERENCES companies (id),
 	category_id	INTEGER NOT NULL, FOREIGN KEY (category_id) REFERENCES Expense_Categories (id),
+	account_id	INTEGER NOT NULL, FOREIGN KEY (account_id) REFERENCES Expense_Accounts (id),
 	owner_id	INTEGER NOT NULL, FOREIGN KEY (owner_id) REFERENCES Companies (id),
 	description	TEXT,
 	created_on	TIMESTAMP WITH TIME ZONE NOT NULL default NOW(),

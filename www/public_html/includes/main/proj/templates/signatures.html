@@ -16,17 +16,17 @@
 	</p>
 <? if ( openprint::ProjectType->find_one('name'=>'PresentationFolders') ) ?>
 	<p>
-		<img src="/images/templates/Presentation%20Folders/2Panel1Pocket.gif"> 
+		<img src="/images/templates/PresentationFolders/2Panel1Pocket.gif"> 
 		<input type="radio" id="rdbTemplateTypeSinglePocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="2Panel1Pocket" onclick="$('PresentationFolderQuestions').show();$('rdbPanels2<?Signature?>').checked=true;$('chkPocketCenter<?Signature?>').checked=false;selectProjectTemplate('f1');" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '2Panel1Pocket' ? 'checked="checked"' : '' ) ?> /> 
 		<label for="rdbTemplateTypeSinglePocket<?Signature?>">Single Pocket</label>
 	</p>
 	<p>
-		<img src="/images/templates/Presentation%20Folders/2Panel2Pocket.gif"> 
+		<img src="/images/templates/PresentationFolders/2Panel2Pocket.gif"> 
 		<input type="radio" id="rdbTemplateType2Panel2Pocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="2Panel2Pocket" onclick="$('PresentationFolderQuestions').show();$('rdbPanels2<?Signature?>').checked=true;$('chkPocketCenter<?Signature?>').checked=false;$('chkPocketLeft<?Signature?>').checked=true;$('chkPocketRight<?Signature?>').checked=true;selectProjectTemplate('f1');" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq '2Panel2Pocket' ? 'checked="checked"' : '' ) ?> /> 
 		<label for="rdbTemplateType2Panel2Pocket<?Signature?>">Double Pocket</label>
 	</p>
 	<p>
-		<img src="/images/templates/Presentation%20Folders/3Panel2Pocket.gif">
+		<img src="/images/templates/PresentationFolders/3Panel2Pocket.gif">
 		<input type="radio" id="rdbTemplateTypeTriFoldDoublePocket<?Signature?>" name="rdbTemplateType<?Signature?>" value="TriFoldDoublePocket" onclick="$('PresentationFolderQuestions').show();$('rdbPanels3<?Signature?>').checked=true;selectProjectTemplate(this.form.name);" <? echo ( $$variable{'rdbTemplateType'.$$variable{'Signature'}} eq 'TriFoldDoublePocket' ? 'checked="checked"' : '' ) ?> />
 		<label for="rdbTemplateTypeTriFoldDoublePocket<?Signature?>">TriFold Double Pocket</label>
 	</p>

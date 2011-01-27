@@ -13,7 +13,7 @@ require openprint::Object;
 require openprint::User;
 require openprint::customer_credit;
 
-$debug = 1;
+$debug = 0;
 $table = 'companies';
 $serial = 'companies_id_seq';
 
@@ -67,7 +67,7 @@ $serial = 'companies_id_seq';
 		);
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],
-	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//' ],
+	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//','s/\///g' ],
 	'discount'	=>	[ 's/[^\d\.\-]//g' ],
 );
 %defaults = (

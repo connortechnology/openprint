@@ -153,8 +153,8 @@ sub skids {
     if ( ! exists $session{'/employee/inventory/skids.html?hasmanifest'} ) {
         $session{'/employee/inventory/skids.html?hasmanifest'} = 'B';
     } # end if
-	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start' );
-	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end' );
+	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start', 0 );
+	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end', 0 );
 
 	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type',
 				'created_on_start_year','created_on_start_month','created_on_start_day',
@@ -1131,6 +1131,16 @@ sub rfidtags {
 		} # end foreach rfidtag_id
 	} else {
 		ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
+		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_start', 0 );
+		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_end', '' );
+		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'updated_on_start', '' );
+		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'updated_on_end', '' );
+		if ( ! exists $session{'/employee/inventory/rfidtags.html?assigned'} ) {
+			$session{'/employee/inventory/rfidtags.html?assigned'} = 1;
+		} # end if
+		if ( ! exists $session{'/employee/inventory/rfidtags.html?notassigned'} ) {
+			$session{'/employee/inventory/rfidtags.html?notassigned'} = 1;
+		} # end if
 	} # end if
 } # end sub rfidtags
 
@@ -1295,13 +1305,21 @@ sub manifest {
 					$variable{'information'} .= 'Skid contents have been changed from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string().'<br/>';
 					foreach my $C ( $Manifest->Contents( 'type_id' => $Type->id() ) ) {
 						foreach my $SkidContent ( $C->Skid()->Contents() ) {
+							# If it has the old type,
 							if ( $SkidContent->paper_id() == $Type->paper_id() ) {
+								my $PI = new openprint::PaperInventory();
+								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Type->paper_id(),
+										'quantity'=>-1*$SkidContent->quantity(),
+										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								# Change the type to the new type
 								$SkidContent->save({'paper_id'=>$Paper->id()});
 								foreach my $PA ( openprint::PaperAllocation->find('skid_id'=>$C->skid_id(), 'paper_id'=>$Type->paper_id() ) ) {
 									$PA->save({'paper_id'=>$Paper->id()});
 								} # end foreach PA
 								my $PI = new openprint::PaperInventory();
-								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
+								$PI->save({'user_id'=>$session{'user_id'},'skid_id'=>$C->Skid()->id(), 'paper_id'=>$Paper->id(),
+										'quantity'=>$SkidContent->quantity(),
+										'comment'=>'Changed stock from ' . $Type->Paper()->to_string() . ' to ' . $Paper->to_string()});
 								
 							} # end if
 						} # end foreach SkidContent
@@ -1471,6 +1489,8 @@ sub manifests {
 		} # end foreach manifest_id
 	} # end if
 	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
+	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_start', -7 );
+	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_end', '' );
 } # end sub manifests
 
 sub _manifests {
@@ -1817,13 +1837,13 @@ sub purchase_order_view {
 				'reason'	=>	$param{'reason'},
 				});
 		} # end if
-		my @notifications = $PO->notifications();
+		my @notifications = $PO->notifications(); # returns user_ids
 		my @new_notifications = @notifications;
 		if ( $PO->is_FSC() or $PO->is_PEFC() ) {
-			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'FSC/PEFC Notifications' ) );
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PSC/PEFC Notifications','value'=>'Yes' ) );
 		} # end if
 		foreach my $type ( keys %types ) {
-			@new_notifications = sets::union( @new_notifications, openprint::usergroup::users_in( 'PO ' . $type.' Notifications' ) );
+			@new_notifications = sets::union( @new_notifications, map { $_->user_id() } openprint::User_Notification->find('type'=>'PO ' . $type . ' Notifications','value'=>'Yes' ) );
 		} # end foreach
 		if ( scalar @notifications != scalar @new_notifications ) {
 			$PO->notifications(\@new_notifications);
@@ -1964,7 +1984,8 @@ $log->debug("Creating PO $$PO{id} from label $variable{error}");
 } # end sub purchase_order_edit
 
 sub purchase_orders {
-	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting', -30, 0 );
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_start', -30 );
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_end', '' );
 
 	ssi::save_params( '/employee/inventory/purchase_orders.html', ( 'starting_start_year','starting_start_month','starting_start_day','starting_end_year','starting_end_month','starting_end_day','authorized', 'supplier_id','created_by','deleted','types' ) );
 	if ( $param{'btnFunction'} eq 'Delete' ) {
@@ -2024,6 +2045,9 @@ sub purchase_orders {
 		$variable{'error'} .= $PO->send_to_vendor();
 		delete $param{'po_id'};
 	} # end if
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_start', -7 );
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_end', '' );
+
 } # end sub purchase_orders
 
 sub _purchase_orders {
@@ -2032,6 +2056,9 @@ sub _purchase_orders {
 
 sub _po_autocomplete {
 } # end sub _po_autocomplete
+
+sub _po_select_contact {
+} # end sub _po_select_contact
 
 sub _purchase_order_supplier_address {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
@@ -2153,5 +2180,19 @@ sub _skids_results {
 
 sub _update_taxes {
 } # end sub _update_taxes
+
+sub _paper_log {
+	ssi::save_params( '/employee/inventory/paper_details.html', ( 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','limit' ) );
+} # end _paper_log
+
+sub _similar_pos {
+} # end sub _similar_pos
+
+sub skid_label {
+} # end sub skid_label
+
+sub _check_out_popup {
+} # end sub _check_out_popup
+
 1;
 __END__

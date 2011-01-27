@@ -1,0 +1,98 @@
+<script type="text/javascript">
+	function check_field( element ) {
+		var form = element.form;
+		var matches;
+		if ( matches = element.name.match( /^\w+\-(\d+)$/ ) ) {
+			var id = matches[1];
+			if ( 
+				element_changed( form.elements['required-'+id] ) ||
+				element_changed( form.elements['name-'+id] ) ||
+				element_changed( form.elements['type-'+id] ) ||
+				element_changed( form.elements['values-'+id] ) 
+			   ) {
+				$('field_'+id).addClassName('changed');
+			} else {
+				$('field_'+id).removeClassName('changed');
+			} // end if
+		} else {
+			alert('Not matched' + element.name);
+		} // end if
+	} // end function check_field 
+
+	function newField( ) {
+		new Ajax.Request( '_field_tr.html', { 
+				method: 'get', 
+				parameters: { 
+					action: 'Add'
+				},
+				onSuccess: function( transport ) {
+					$('fields').insert({top: transport.responseText} );
+				}
+			} 
+		);
+	} // end function newField
+	function copyField( id ) {
+		var form = $('f1');
+		new Ajax.Request( '_field_tr.html', { 
+				parameters: { 
+					field_id: id,
+					action: 'Copy',
+					required: get_value(form.elements['required-'+id])
+				},
+				onSuccess: function( transport ) {
+					$('field_'+ id).insert({after: transport.responseText} );
+				}
+			} 
+		);
+	}
+	function delField( id ) {
+		new Ajax.Request('_field_tr.html', 
+			{ 
+				method: 'get', 
+				parameters: { 
+					field_id: id,
+					action: 'Delete'
+				},
+				onSuccess: function( transport ) {
+					if ( transport.responseText ) {
+						alert( transport.responseText );
+					} else {
+						var tr = $('field_'+id); tr.parentNode.removeChild(tr);
+					} // end if
+				}
+			} 
+		);
+	}
+
+	function savePrices( form ) {
+		new Ajax.Updater('fields','_fields.html', { 
+				method: 'get', 
+				parameters : Form.serialize( form ), 
+				onSuccess: function(){$('fields').removeClassName('changed');}
+			 }
+		);
+	}
+</script>
+<div class="UserProfileFields">
+	<form id="f1" name="f1" action="user_profile_fields.html" method="post">
+		<input type="hidden" name="action" id="action" />
+		<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', q`$('action').value='Save';$('f1').submit();`, '', 'Save' ); ) ?>
+		</p>
+		<table class="List">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Values</th>
+					<th>Default Value</th>
+					<th>Required</th>
+					<th class="buttons">
+				<? echo ( ssi::writeButton( $log, $dbh, 'New', 'new.gif', "newField( );", '', 'New' ); ) ?>
+					</th>
+				</tr>
+			</thead>
+			<tbody id="fields"><!--#include virtual="_fields_tbody.html"--></tbody>
+		</table>
+	</form>
+</div>

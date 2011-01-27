@@ -20,9 +20,9 @@ use vars qw( $r $log $dbh %variable %param %session );
 sub edit {
 	my $ProjectType = new openprint::ProjectType( $param{'ddmProjectType'} );
 
-	if ( $param{'btnFunction'} eq '<<' ) {
+	if ( $param{'btnFunction'} eq 'Previous' ) {
 		$ProjectType = $ProjectType->prev();
-	} elsif ( $param{'btnFunction'} eq '>>' ) {
+	} elsif ( $param{'btnFunction'} eq 'Next' ) {
 		$ProjectType = $ProjectType->next();
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$ProjectType->delete();

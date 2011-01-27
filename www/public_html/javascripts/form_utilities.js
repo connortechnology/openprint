@@ -526,6 +526,11 @@ function clearForm(form) {
 } // end function clearForm(form)
 
 function element_changed( element ) {
+	if ( ! element ) {
+//alert('Null element passed to element_changed');
+		return false;
+	}
+
 	if ( element.type == 'select-one' ) {
 		for ( var optionIndex = 0; optionIndex < element.options.length; optionIndex += 1 ) {
 			if ( element.options[optionIndex].selected != element.options[optionIndex].defaultSelected ) {
@@ -533,16 +538,17 @@ function element_changed( element ) {
 			} // end if
 		} // end for
 		return false;
-	} else if ( element.type == 'text' ) {
-		return ! element.value == element.defaultValue;	
-	} else if ( element.type == 'password' ) {
-		return ! element.value == element.defaultValue;	
-	} else if ( element.type == 'textarea' ) {
-		return ! element.value == element.defaultValue;	
-	} else if ( element.type == 'radio' ) {
-		return ! element.checked == element.defaultChecked;
-	} else if ( element.type == 'checkbox' ) {
-		return ! element.checked == element.defaultChecked;
+	} else if ( element.type == 'text' || element.type == 'password' || element.type == 'hidden' || element.type == 'textarea' ) {
+		return ! ( element.value == element.defaultValue );	
+	} else if ( element.type == 'radio' || element.type == 'checkbox' ) {
+		return ! ( element.checked == element.defaultChecked );
+	} else if ( element.length ) {
+		for ( var i = 0; i < element.length; i += 1 ) {
+			if ( element_changed( element[i] ) ) {
+				return true;
+			} // end if
+		} // end for
+		return false;
 	} // end if
 } // end function element_changed
 
@@ -749,14 +755,17 @@ function Country_onchange( country_ddm, state ) {
 	var state_label = $(country_ddm.name + '_state');
 	var postal_label = $(country_ddm.name + '_postal');
 	if ( country == 'US' ) {
-		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @states::states )", jsrs_cbFillDDM );
+		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
+		new Ajax.Updater( state.name, '/includes/_states.html' );
 		if ( state_label ) state_label.innerHTML='State:';
 		if ( postal_label ) postal_label.innerHTML='ZIP Code:';
 	} else if ( country == 'CA' ) {
-		jsrs_FillDDM( country_ddm.form.name, state.name, "('',' Select ', @provinces::provinces )", jsrs_cbFillDDM );
+		$(state.name+'_container').innerHTML = '<select name="' + state.name + '" id="' + state.id + '" />';
+		new Ajax.Updater( state.name, '/includes/_provinces.html' );
 		if ( state_label ) state_label.innerHTML='Province:';
 		if ( postal_label ) postal_label.innerHTML='Postal Code:';
 	} else {
+		$(state.name+'_container').innerHTML = '<input type="text" name="' + state.name + '" id="' + state.id + '" />';
 		if ( state_label ) state_label.innerHTML='State/Province:';
 		if ( postal_label ) postal_label.innerHTML='Postal Code:';
 	} // end if
@@ -909,6 +918,21 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 	if ( e_min )
 		ddm_select_by_value( e_min, d.getMinutes() );
 } // end function set_today
+function date_clear( e_y, e_m, e_d, e_h, e_min ) {
+	ddm_select_by_value( e_y, '' );
+	ddm_select_by_value( e_m, '' );
+	ddm_select_by_value( e_d, '' );
+	if ( e_h )
+		ddm_select_by_value( e_h, '' );
+	if ( e_min )
+		ddm_select_by_value( e_min, '' );
+} // end function date_clear
+
+function set_date( form, from, to ) {
+	ddm_select_by_value( form.elements[to+'_year'], get_ddm_value( form.elements[from+'_year'] ) );
+	ddm_select_by_value( form.elements[to+'_month'], get_ddm_value( form.elements[from+'_month'] ) );
+	ddm_select_by_value( form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
+} // end function set_date
 
 function check_time_starting( form, starting_prefix, ending_prefix ) {
     var start;
@@ -929,6 +953,7 @@ function check_time_starting( form, starting_prefix, ending_prefix ) {
     if ( start > end ) {
         ddm_select_by_value( form.elements[ending_prefix+'_year'], form.elements[starting_prefix+'_year'].value );
         ddm_select_by_value( form.elements[ending_prefix+'_month'], form.elements[starting_prefix+'_month'].value );
+		form.elements[ending_prefix+'_month'].onchange();
         ddm_select_by_value( form.elements[ending_prefix+'_day'], form.elements[starting_prefix+'_day'].value );
 		if ( do_time ){
             ddm_select_by_value( form.elements[ending_prefix+'_hour'], form.elements[starting_prefix+'_hour'].value );

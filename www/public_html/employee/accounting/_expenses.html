@@ -1,7 +1,8 @@
 <? eval (
-	@{$$variable{'Taxes'}} = openprint::Tax->find(
-		'period_end_null_or_>='	=>sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenses.html?due_on_start_year','/employee/accounting/expenses.html?due_on_start_month','/employee/accounting/expenses.html?due_on_start_day'} ),
-		'period_start_null_or_<='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'} ),
+		@{$$variable{'Taxes'}} = openprint::Tax->find(
+			( Date::Calc::check_date( @session{'/employee/accounting/expenses.html?due_on_start_year','/employee/accounting/expenses.html?due_on_start_month','/employee/accounting/expenses.html?due_on_start_day'} ) ? (
+																																																						  'period_end_null_or_>='	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenses.html?due_on_start_year','/employee/accounting/expenses.html?due_on_start_month','/employee/accounting/expenses.html?due_on_start_day'} ) ) : () ),
+			( Date::Calc::check_date(@session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'}) ? ('period_start_null_or_<='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'} ) ) : () ),
 		'order'		=>	'period_start,name',
 	);
 	$$variable{'subtotal'} = $$variable{'federaltax_total'} = $$variable{'total'} = $$variable{'interest_total'} = $$variable{'owing_total'} = 0;
@@ -17,11 +18,13 @@
 		} # end foreach
 	} else {
 		foreach my $Expense ( openprint::Expense->find( 
-			'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenses.html?due_on_start_year','/employee/accounting/expenses.html?due_on_start_month','/employee/accounting/expenses.html?due_on_start_day'} ),
-			'due_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'} ),
-			'owner_id'		=> $session{'company_id'},
-			'order'				=> 'due_on',
-			) ) {
+				( Date::Calc::check_date( @session{'/employee/accounting/expenses.html?due_on_start_year','/employee/accounting/expenses.html?due_on_start_month','/employee/accounting/expenses.html?due_on_start_day'} ) ? ( 'due_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenses.html?due_on_start_year','/employee/accounting/expenses.html?due_on_start_month','/employee/accounting/expenses.html?due_on_start_day'} ) ) : () ),
+				( Date::Calc::check_date(@session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'}) ? ('due_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenses.html?due_on_end_year','/employee/accounting/expenses.html?due_on_end_month','/employee/accounting/expenses.html?due_on_end_day'} ) ) : () ),
+				( Date::Calc::check_date( @session{'/employee/accounting/expenses.html?paid_on_start_year','/employee/accounting/expenses.html?paid_on_start_month','/employee/accounting/expenses.html?paid_on_start_day'} ) ? ( 'paid_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/accounting/expenses.html?paid_on_start_year','/employee/accounting/expenses.html?paid_on_start_month','/employee/accounting/expenses.html?paid_on_start_day'} ) ) : () ),
+				( Date::Calc::check_date(@session{'/employee/accounting/expenses.html?paid_on_end_year','/employee/accounting/expenses.html?paid_on_end_month','/employee/accounting/expenses.html?paid_on_end_day'}) ? ('paid_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/accounting/expenses.html?paid_on_end_year','/employee/accounting/expenses.html?paid_on_end_month','/employee/accounting/expenses.html?paid_on_end_day'} ) ) : () ),
+				'owner_id'		=> $session{'company_id'},
+				'order'				=> 'paid_on,due_on',
+				) ) {
 			push @{$$variable{'Expenses'}}, $Expense;
 			$$variable{'subtotal'} += $Expense->amount();
 			foreach my $Tax ( @{$$variable{'Taxes'}} ) {
@@ -44,11 +47,13 @@
 			<tr> 
 				<th width="50">ID</th>
 				<th class="Company">Recipient</th>
-				<th class="Date">When</th>
+				<th class="Category">Category</th>
+				<th class="Date">Paid</th>
+				<th class="Date">Due</th>
 				<th>Description</th>
 				<th class="Price">Amount</th>
 			<? echo (
-                return join('', map { sprintf('<th class="Price">%s</th>', $_->name() ) } @{$$variable{'Taxes'}} );
+                return join('', map { sprintf('<th class="Price">%s (%s%)</th>', $_->name(), $_->rate() ) } @{$$variable{'Taxes'}} );
             ) ?>
 				<th class="Price">Total</th>
 			</tr>
@@ -59,15 +64,19 @@
 			$html .= sprintf(q`
 				<tr onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
 				<td><a href="/employee/accounting/expense.html?expense_id=%1$d">%1$d</a></td>
-				<td><a href="/employee/accounting/expense.html?expense_id=%1$d">%2$s</a></td>
-				<td><a href="/employee/accounting/expense.html?expense_id=%1$d">%4$s</a></td>
-				<td><a href="/employee/accounting/expense.html?expense_id=%1$d">%3$s</a></td>
-				<td class="Price">%5$s</td>
-				%6$s
+				<td class="Company"><a href="/employee/accounting/expense.html?expense_id=%1$d">%2$s</a></td>
+				<td class="Category"><a href="/employee/accounting/expense.html?expense_id=%1$d">%3$s</a></td>
+				<td class="Date"><a href="/employee/accounting/expense.html?expense_id=%1$d">%4$s</a></td>
+				<td class="Date"><a href="/employee/accounting/expense.html?expense_id=%1$d">%5$s</a></td>
+				<td><a href="/employee/accounting/expense.html?expense_id=%1$d">%6$s</a></td>
 				<td class="Price">%7$s</td>
+				%8$s
+				<td class="Price">%9$s</td>
 				</tr>
-				`, $Expense->id(), $Expense->Recipient()->name(), $Expense->description(), 
+				`, $Expense->id(), $Expense->Recipient()->name(), $Expense->category(), 
+				( $Expense->paid_on() ? Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->paid_on() ) ) : '' ),
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $Expense->due_on() ) ),
+				$Expense->description(),
 				openprint::Currency::format( $Expense->amount() ),
 				join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $Expense->Tax( $_ )->amount() ) ) } @{$$variable{'Taxes'}} ),
 				openprint::Currency::format( $Expense->total() ),
@@ -76,13 +85,13 @@
 			return $html;
 		) ?>
 		<tr class="totals">
-			<td colspan="4">Totals:</td>
+			<td colspan="6">Totals:</td>
 			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'subtotal'} ); ) ?></td>	
 <? echo (
                 return join('', map { sprintf('<td class="Price">%s</td>', openprint::Currency::format( $$variable{'tax_totals'}{$_->id()} ) ) } @{$$variable{'Taxes'}} );
             ) ?>
 
-			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'federaltax_total'} ); ) ?></td>	
+			<td class="Price"><? echo ( openprint::Currency::format( $$variable{'total'} ); ) ?></td>	
 		</tr>
 	</table>
 	<span class="Currency">All prices listed in <? hecho ( new openprint::Currency( $session{'Currency_id'} )->name(); ) ?></span>

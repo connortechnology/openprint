@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 use lib '/etc/apache2/lib/perl';
 
 use sql;
@@ -6,7 +6,10 @@ use sets;
 
 use strict;
 use Date::Parse;
+use Date::Calc;
 use Socket;
+require openprint::Blacklist;
+require openprint::Host;
 
 require logger;
 
@@ -15,7 +18,7 @@ use vars qw( $log $dbh %config);
 *dbh = \$openprint::dbh;
 #*config = \%openprint::config;
 $log = logger->new();
-$log->{level} = "warn";
+$log->{level} = 'warn';
 
 use Getopt::Long;
 use File::Basename qw(basename);
@@ -63,6 +66,7 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_(unix|krb5)\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s*$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: pam_(unix|krb5)\(sshd:auth\): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
+'^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed password for illegal user [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+) port [0-9]+ ssh2$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for illegal user root from ([\._a-zA-Z0-9\-]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: Authentication failure for [\._a-zA-Z0-9\-]+ from ([\._a-zA-Z0-9\-]+)$',
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: error: PAM: 1 more authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=([\._a-zA-Z0-9\-]+)\s+user\=\w+$',
@@ -73,22 +77,23 @@ my @re = (
 '^(\w{3} [ :0-9]{11}) [\._a-zA-Z0-9\-]+ sshd\[[0-9]+\]: Failed keyboard-interactive/pam for invalid user [\.\-A-Za-z0-9]+ from ([.:a-zA-Z0-9]+) port [0-9]+ ssh2$',
 );
 
+my $ac = sql::start_transaction( $dbh );
+$dbh->do( 'LOCK TABLE Hosts IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 my %host_counts;
 my @whitelist = sql::execute( undef, undef, 'SELECT ip FROM whitelist' );
-my $ac = sql::start_transaction( $dbh );
-$dbh->do( 'LOCK TABLE blacklist IN ACCESS EXCLUSIVE MODE' ) or $log->error( DBI->errstr );
 
 foreach my $log_file ( @log_files ) {
 	if ( open( FH, "<$log_file" ) ) {
 		foreach my $line (<FH>) {
 			foreach my $re ( @re ) {
-print "Trying \n$re against\n $line\n" if $opts->{debug};
+print "Trying $re against $line\n" if $opts->{debug};
 				if ( $line =~ /$re/ ) {
 					my ($when, $source ) = ( $1, $2 );
 					print "match for $source\n" if $opts->{debug};
 					my $ip;
 					if ( $source =~ /^\d+\.\d+\.\d+\.\d+$/ ) {
 						# Is an IP
+					print "$source is an ip\n" if $opts->{debug};
 						$ip = $source;
 					} else {
 						# is a hostname
@@ -98,12 +103,19 @@ print "Trying \n$re against\n $line\n" if $opts->{debug};
 							print "Got $ip for $source\n" if $opts->{debug};
 						} # end if
 					} # end if
-					next if $ip and @whitelist and sets::isin( $ip, \@whitelist );
+					if ( $ip and @whitelist and sets::isin( $ip, \@whitelist ) ) {
+						print "$ip is whitelisted\n" if $opts->{debug};
+					} # end if
 					if ( ! $ip ) {
 						print "No ip for $source\n" if $opts->{debug};
 					} else {
 						if ( ! $host_counts{$ip} ) {
-							$host_counts{$ip} = $openprint::dbh->selectrow_hashref( 'SELECT * FROM blacklist WHERE ip=?', {}, $ip );
+							my $Host = openprint::Host->find_one('ip'=>$ip);
+							if ( $Host ) {
+								$host_counts{$Host->ip()} = $Host;
+							} else {
+								$host_counts{$ip} = new openprint::Host();
+							} # end if
 						} # end if
 						my $last_seen = Date::Parse::str2time( $host_counts{$ip}{updated_on} ) if $host_counts{$ip};
 						my $occurrence = Date::Parse::str2time( $when );
@@ -111,6 +123,8 @@ print "Trying \n$re against\n $line\n" if $opts->{debug};
 						if ( (!$last_seen) or ($last_seen < $occurrence) ) {
 							$host_counts{$ip}{'count'} += 1;
 							$host_counts{$ip}{'update'} = 1;
+						} else {
+						print "Not counting because too old " . $host_counts{$ip}{updated_on} . " >= $when" if $opts->{debug};	
 						} # end if
 					} # end if
 					last;
@@ -123,14 +137,12 @@ print "Trying \n$re against\n $line\n" if $opts->{debug};
 
 foreach my $ip ( sort keys %host_counts ) {
 	next if ! $host_counts{$ip}{'update'};
-	if ( $host_counts{$ip}{'ip'} ) {
-		if ( my $e = sql::update( undef, undef, 'blacklist',['ip=?',$ip], ['updated_on', 'NOW()', 'count', $host_counts{$ip}{'count'}] ) ) {
-			print $e . "\n";
-		} # end if
-	} else {
-		if ( my $e = sql::insert( undef, undef, 'blacklist',['ip',$ip, 'updated_on', 'NOW()', 'count', $host_counts{$ip}{'count'}] ) ) {
-			print $e . "\n";
-		} # end if
+	if ( $host_counts{$ip}{'count'} > 5 ) { 
+		$host_counts{$ip}{'blacklist'}=1;
+	} # end if
+	$_ = $host_counts{$ip}->save();
+	if ( $_ ) {
+		print $_ . "\n";
 	} # end if
 	print "$ip $host_counts{$ip}{ip} $host_counts{$ip}{count}\n" if $opts->{debug};
 } # end foreach ip
@@ -140,9 +152,15 @@ if ( $opts->{'blacklist'} ) {
 	if ( ! open( FH, '>'.$opts->{'blacklist'} ) ) {
 		die 'Unable to open blacklist: ' . $opts->{'blacklist'} . "\n";
 	} else {
-		foreach my $ip ( sql::execute( undef, undef, q`SELECT ip FROM blacklist WHERE updated_on > NOW()-'2 months'::interval AND count > 5 ORDER BY ip` ) ) {
-			print FH "$ip\n";
-		} # end foreach ip
+		foreach my $Host ( openprint::Host->find('blacklist'=>1, 'order'=>'ip' ) ) {
+			if ( my $macs = $Host->mac() ) {
+				foreach my $mac ( @{$macs} ) {
+					print FH "~$mac\n";
+				} # end foreach mac
+			} else {
+				print FH $Host->ip()."\n";
+			} # end if
+		} # end foreach Host
 		close(FH);
 	} # end if
 	`/etc/init.d/shorewall restart`;

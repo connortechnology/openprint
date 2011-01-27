@@ -41,6 +41,7 @@ my %find_cache;
 	'smartscheduling'	=>	'smartscheduling',
 	'servicetype_id'	=>	'servicetype_id',
 	'sorting'			=>	'sorting',
+	'message'			=>	'message',
 );
 %transforms = (
 );
@@ -109,7 +110,7 @@ sub find {
 $openprint::log->debug('Specifications not a hash ref in Equipment->find: ' .  $params{'Specifications'}  );
 		} # end if
 	} # end if
-if ( $params{'servicetype_id'} ) {
+if ( exists $params{'servicetype_id'} ) {
         if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
             $sql .= ' AND servicetype_id={?}';
             push @values, $params{'servicetype_id'};
@@ -451,6 +452,7 @@ sub delete {
 	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Service_Prices WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Material_Prices WHERE lngEquipmentIndex=?}, $$self{id} );
+	sql::execute( undef, undef, q{DELETE FROM Schedule WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM Shifts WHERE equipment_id=?}, $$self{id} );
     sql::execute( undef, undef, q{DELETE FROM Equipment_Shifts WHERE equipment_id=?}, $$self{id} );
 	sql::execute( undef, undef, q{DELETE FROM tbl_Equipment WHERE Id=?}, $$self{id} );
@@ -537,6 +539,11 @@ sub servicetype_id {
 	return [] if ! $$self{'servicetype_id'};
 	return $$self{'servicetype_id'};
 } # end sub servicetype_id
+
+sub ServiceTypes {
+	return () if ! $_[0]{'servicetype_id'};
+	return map { new openprint::ServiceType( $_ ); } @{$_[0]{'servicetype_id'}};
+} # end sub ServiceTypes
 
 1;
 __END__

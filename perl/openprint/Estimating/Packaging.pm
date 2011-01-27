@@ -54,14 +54,14 @@ sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my %services = $Project->get_services();
-	if ( ! $services{''} ) {
+	my $services = $Project->services();
+	if ( ! $$services{''} ) {
 		$$specs{'alert'} .= 'Unable to find project service.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 	my $ServiceType = $Project->ServiceType( $service_index );
 	my $status = 'calculated';
-	my $printing_specs = openprint::service::get_specs_ref( $project_index, $services{''}[0] );
+	my $printing_specs = openprint::service::get_specs_ref( $project_index, $$services{''}[0] );
 
 	$$specs{'txtItemsPerPackage'} = int($$specs{'txtItemsPerPackage'});
 	if ( ! $$specs{'txtItemsPerPackage'} ) {	# a zero value is still calculated, just with a zero price.d
@@ -160,11 +160,11 @@ sub calc {
 		$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Total: $%.2f<br/>',$price );
 		$$specs{'txtPackageQuantity'.$qty_index} = $package_qty;
 		if ( $$specs{'OverridePrice'.$qty_index} ne 'Y' ) {
-			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100) );
+			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $price*(1+$$specs{"Markup$qty_index"}/100)*(1+$Project->markup()/100) );
 		} else {
 			$$specs{"txtPrice$qty_index"} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # endif
-		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, $unitPrice/$qty );
+		$$specs{"txtUnitPrice$qty_index"} = sprintf( $openprint::config{'UnitPriceFormat'}, ( $unitPrice/$qty ) * (1+$Project->markup()/100) );
 	} # end foreach
 
 	return $$specs{'Status'} = $status;

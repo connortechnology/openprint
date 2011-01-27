@@ -7,14 +7,17 @@
 <!--
 	function delete_confirm(form) {
 		var number_of_deleted_projects = 0;
-		for ( var index = 0; index < form.elements.length; index += 1 ) {
-			if ( ! form.elements[index].name )
-				continue;
-			if ( form.elements[index].name.substr(0,9) == 'chkDelete' && form.elements[index].checked ) {
+		if ( form.elements['project_id'] ) {
+			if ( form.elements['project_id'].length ) {
+				for ( var index = 0; index < form.elements['project_id'].length; index += 1 ) {
+					if ( form.elements['project_id'][index].checked ) {
+						number_of_deleted_projects += 1;
+					} // end if
+				} // end for
+			} else if ( form.elements['project_id'].checked ) {
 				number_of_deleted_projects += 1;
 			} // end if
-
-		} // end for
+		} // end if
 		if ( number_of_deleted_projects == 0 ) {
 			alert("To Delete Projects, click the checkbox beside the project.");
 		} else if ( number_of_deleted_projects == 1 ) {
@@ -23,6 +26,7 @@
 			} // end if
 		} else {
 			if ( confirm("Are you sure you wish to delete these " + number_of_deleted_projects + " projects from history?\n") ) {
+				form.btnFunction.value='Delete Project';
 				form.submit();
 			} // end if
 		} // end if
@@ -52,7 +56,7 @@
 				<select id="ddmStatus" name="ddmStatus" multiple="multiple" size="4" onchange="load_projects( this.form );">
 <? echo ( 
 		$_ = q{SELECT name, name FROM Project_Statuses ORDER BY sort,lower(name)};
-		ssi::make_drop_down( [ '', 'All', sql::execute( $log, $dbh, $_ )], [ split(';', $session{'/main/project/history.html?ddmStatus'} ) ] );
+		ssi::make_drop_down( [ '', 'All', sql::execute( $log, $dbh, $_ )], [ split(',', $session{'/main/project/history.html?ddmStatus'} ) ] );
 ) ?>
 				</select>
 			</p>
@@ -106,6 +110,7 @@
 		<div id="ProjectList"><!--#include virtual="_history.html"--></div>
 	</div>
 	</div>
+	<input type="hidden" name="btnFunction" />
 </form>
 <? else ( $session{'user_id'} ) ?>
 	Only logged in customers have a project history.

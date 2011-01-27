@@ -183,7 +183,7 @@ sub get_url {
 	if ( $options and $$options{'exclude'} ) {
 		@keys = sets::exclude( $$options{'exclude'}, \@keys );
 	} # end if	
-	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany' ], \@keys );
+	@keys = sets::exclude( [ 'password', 'btnFunction', 'email','select_currency_id','ddmCompany','CompanyFilter','pricelist_id' ], \@keys );
 	my %encoded;
 	foreach my $k ( @keys ) {
 		$encoded{$k} = $$params{$k};
@@ -272,6 +272,7 @@ sub seconds_to_pretty_interval {
 	$remainder = $remainder % ( 60 * 60 * 24 );
 	if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
 		$string .= '1 month';
+		return $string;
 	} elsif ( $days ) {
 		$string .= sprintf('%dd', $days );
 	} # end if

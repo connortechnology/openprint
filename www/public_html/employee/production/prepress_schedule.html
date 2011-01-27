@@ -91,12 +91,12 @@
 	@{$$variable{'Presses'}} = ();
 	my @presses = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
 	foreach (@presses) {
-		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/prepress_schedule.html?Presses'} or sets::isin( $_->id(), [ split(';', $session{'/employee/production/prepress_schedule.html?Presses'} ) ] );
+		push @{$$variable{'Presses'}}, $_ if ! $session{'/employee/production/prepress_schedule.html?Presses'} or sets::isin( $_->id(), [ split(',', $session{'/employee/production/prepress_schedule.html?Presses'} ) ] );
 	} # end foreach press
 
 	my $html = '<select name="Presses" multiple="multiple" size="'. @presses.'">';
 	if ( $session{'/employee/production/prepress_schedule.html?Presses'} ) {
-		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ';', $session{'/employee/production/prepress_schedule.html?Presses'} ] );
+		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ split ',', $session{'/employee/production/prepress_schedule.html?Presses'} ] );
 	} else {
 		$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], [ map { $_->id() } @presses ] );
 	} # end if
@@ -111,7 +111,7 @@
 	my @statuses = ( 'In Prepress', 'Proofs Out', 'Waiting For Customer Approval', 'Waiting For QA Approval' );
 	my $html = '<select name="statuses" multiple="multiple" size="'. @statuses.'">';
 	if ( $session{'/employee/production/prepress_schedule.html?statuses'} ) {
-		@{$$variable{'statuses'}} = split( ';', $session{'/employee/production/prepress_schedule.html?statuses'} );
+		@{$$variable{'statuses'}} = split( ',', $session{'/employee/production/prepress_schedule.html?statuses'} );
 		$html .= ssi::make_drop_down( [ map { $_, $_ } @statuses ], $$variable{'statuses'} ); 
 	} else {
 		@{$$variable{'statuses'}} = @statuses;

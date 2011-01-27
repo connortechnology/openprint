@@ -34,6 +34,11 @@ sub history {
 				'updated_on_start_year','updated_on_start_month','updated_on_start_day',
 				'updated_on_end_year','updated_on_end_month','updated_on_end_day',
 				'supplier_id', 'created_by', 'status' ) );
+	ssi::setup_date_select( '/employee/claim/history.html', 'created_on_start', -31 );
+	ssi::setup_date_select( '/employee/claim/history.html', 'created_on_end', '' );
+	ssi::setup_date_select( '/employee/claim/history.html', 'updated_on_start', '' );
+	ssi::setup_date_select( '/employee/claim/history.html', 'updated_on_end', '' );
+
 } # end sub history
 
 sub _history {

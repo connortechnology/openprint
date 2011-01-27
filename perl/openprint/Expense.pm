@@ -17,6 +17,21 @@ $serial = 'expense_categories_id_seq';
 );
 %defaults = (
 );
+package openprint::Expense_Account;
+our @ISA = qw(openprint::Object);
+
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 1;
+$table = 'expense_accounts';
+$serial = 'expense_accounts_id_seq';
+%fields = (
+	'id'	=>	'id',
+	'name'	=>	'name',
+);
+%transforms = (
+);
+%defaults = (
+);
 
 package openprint::Expense;
 our @ISA = qw(openprint::Object);
@@ -33,11 +48,16 @@ $serial = 'expenses_id_seq';
 	'recipient_id'		=>	'recipient_id',
 	'category_id'		=>	'category_id',
 	'category'			=>	undef,
+	'account_id'		=>	'account_id',
+	'account'			=>	undef,
 	'description'		=>	'description',
 	'amount'			=>	'amount',
+	'amount_locked'		=>	'amount_locked',
 	'total'				=>	'total',
+	'total_locked'		=>	'total_locked',
 	'created_on'		=>	'created_on',
 	'due_on'			=>	'due_on',
+	'paid_on'			=>	'paid_on',
 	'invoiced_on'		=>	'invoiced_on',
 	'currency_id'		=>	'currency_id',
 	'business_use'		=>	'business_use',
@@ -59,6 +79,11 @@ $serial = 'expenses_id_seq';
 	'created_on'	=>	q`'NOW()'`,
 	'recipient_id'	=>	undef,
 	'business_use'	=>	undef,
+	'paid_on'		=>	undef,
+	'amount_locked'	=>	0,
+	'total_locked'	=>	0,
+	'account_id'	=>	undef,
+	'category_id'	=>	undef,
 );
 
 
@@ -93,6 +118,23 @@ sub category {
 sub Category {
 	return new openprint::Expense_Category( $_[0]{'category_id'} );
 } # end sub Category
+
+sub account {
+	if ( @_ > 1 ) {
+		my $Account = openprint::Expense_Account->find_one('name_lc'=>lc$_[1]);
+		if ( ! $Account ) {
+			$Account = new openprint::Expense_Account();
+			$Account->save({'name'=>$_[1]})
+		} # end if	
+		$_[0]{'account_id'} = $Account->id();
+		return $Account->name();
+	} # end if
+	return new openprint::Expense_Account( $_[0]{'account_id'} )->name();
+} # end sub account
+
+sub Account {
+	return new openprint::Expense_Account( $_[0]{'account_id'} );
+} # end sub Account
 
 sub Recipient {
 	return new openprint::Company( $_[0]{'recipient_id'} );

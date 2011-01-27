@@ -4,7 +4,7 @@
 		<th align="left">Stock</th>
 		<th width="120" align="left">Age</th>
 		<th width="120" align="left">Last Seen</th>
-		<th width="175" align="right">Value</th>
+		<th width="200" align="right">Value</th>
 	</tr>
 	<? echo (
 		my $html = '';
@@ -12,11 +12,12 @@
 		my $total;
 
 		my @location_ids;
-		foreach ( split(';', $session{'/employee/reports/stock.html?location_id'} ) ) {
+		foreach ( split(',', $session{'/employee/reports/stock.html?location_id'} ) ) {
 			next if $_ eq 'All';
 			push @location_ids, $_;
 		} # end foreach
 
+		my ( $sign, $last_seen ) = $session{'/employee/reports/stock.html?last_seen'} =~ /^([\+\-])(\d+)$/;
 		my @Papers = openprint::Paper->find( 
 			'owner_id'			=>	$session{'/employee/reports/stock.html?Owner'},
 			'manufacturer_id'	=>	$session{'/employee/reports/stock.html?Manufacturer'},
@@ -24,6 +25,7 @@
 			'finish_id'			=>	$session{'/employee/reports/stock.html?Finish'},
 			'colour_id'			=>	$session{'/employee/reports/stock.html?Colour'},
 			'weight_id'			=>	$session{'/employee/reports/stock.html?Weight'},
+			( $session{'/employee/reports/stock.html?Type'} ? ( 'type' => [ split(',', $session{'/employee/reports/stock.html?Type'} ) ] ) : () ),
 			'order'=>'name,finish,colour,weight' );
 
 		foreach my $Paper ( @Papers ) {
@@ -47,8 +49,10 @@
 			my $skids = 0;
 
 			foreach my $Skid ( $Paper->skids() ) {
-				if ( $session{'/employee/reports/stock.html?last_seen'} ) {
-					next if $Skid->last_seen_days() < $session{'/employee/reports/stock.html?last_seen'};
+				if ( $sign eq '+' ) {
+					next if $Skid->last_seen_days() < $last_seen;
+				} elsif ( $sign eq '-' ) {
+					next if $Skid->last_seen_days() > $last_seen;
 				} # end if
 
 				if ( @location_ids ) {
@@ -62,11 +66,12 @@
 				$skid_age{$Skid->age_days()} += 1;
 				$last_seen{$Skid->last_seen_days()} += 1;
 
-				my @MCs = $Skid->ManifestContents();
-				if ( @MCs ) {
-					$costs{$MCs[0]->cost()} += $Skid->contents($Paper);
-					$total += $MCs[0]->cost() * $Skid->contents($Paper) / 100;
-				} # end if
+				# Costs is per Paper, and holds the quantity at that price.
+				my $SC = $Skid->Content($Paper);
+				$costs{$SC->cost()} += $SC->quantity();
+			
+				# Problem here, sheets... quantity is in sheets, not lbs
+				$total += $SC->cost() * $SC->quantity() / 100;
 				$skids += 1;
 			} # end foreach Skid
 			next if ! $skids;

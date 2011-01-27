@@ -13,7 +13,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                 <select name="Owner" size="1" onchange="f1.submit();">
                 <option value=""> All </option>
                 <? echo ( 
-                    make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(strName)' ) ], exists $session{'/employee/reports/stock.html?Owner'} ? $session{'/employee/reports/stock.html?Owner'} : $session{'company_id'} );
+                    make_drop_down( [ map { $_->id(), $_->name() } openprint::Company->find('id'=>[sql::execute(undef, undef, q{SELECT DISTINCT owner_id FROM papers} )], 'order'=>'lower(name)' ) ], exists $session{'/employee/reports/stock.html?Owner'} ? $session{'/employee/reports/stock.html?Owner'} : $session{'company_id'} );
                 ) ?>
                 </select>
             </p>
@@ -24,8 +24,12 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                         #$session{'/employee/reports/stock.html?last_seen'} = 31 if ! defined $session{'/employee/reports/stock.html?last_seen'};
                         my @options = (
                             '',     'Ever',
-                            '14',   '2 Weeks',
-                            '31',   '1 Month',
+                            '-14',   'Less than 2 Weeks',
+                            '+14',   'More than 2 Weeks',
+                            '-31',   'Less than 1 Month',
+                            '+31',   'More than 1 Month',
+                            '-365',   'Less than 1 Year',
+                            '+365',   'More than 1 Year',
                         );
                         return ssi::make_drop_down( \@options, $session{'/employee/reports/stock.html?last_seen'} );
                     ) ?>
@@ -37,9 +41,9 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
     <? eval (
         $session{'/employee/reports/stock.html?Type'} = 'Roll' if ! $session{'/employee/reports/stock.html?Type'};
     ) ?>
-                <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( sets::isin( 'Sheet', split( ';', $session{'/employee/reports/stock.html?Type'} ) ) ? 'checked="checked"' : '' ) ?> onclick="f1.submit();"/>
+                <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( sets::isin( 'Sheet', split( ',', $session{'/employee/reports/stock.html?Type'} ) ) ? 'checked="checked"' : '' ) ?> onclick="f1.submit();"/>
                 <label class="radio" for="TypeSheet">Sheet</label>
-                <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( sets::isin( 'Roll', split( ';', $session{'/employee/reports/stock.html?Type'} ) ) ? 'checked="checked"' : '' ) ?> onclick="f1.submit();"/>
+                <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( sets::isin( 'Roll', split( ',', $session{'/employee/reports/stock.html?Type'} ) ) ? 'checked="checked"' : '' ) ?> onclick="f1.submit();"/>
                 <label class="radio" for="TypeRoll">Roll</label>
             </p>
         </div>
@@ -55,7 +59,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                     foreach my $Stock ( openprint::Paper->find(
                             'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
                             #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                'type'=>[split(';', $session{'/employee/reports/stock.html?Type'})],
+							'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
                             ) ) {
                         $data{$Stock->manufacturer()} = $Stock->manufacturer_id();
                     } # end foreach
@@ -73,7 +77,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                             'owner_id'=>$session{'/employee/reports/stock.html?Owner'},
                             'manufacturer_id'=>$session{'/employee/reports/stock.html?Manufacturer'},
                             #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                            'type'=>[split(';', $session{'/employee/reports/stock.html?Type'})],
+                            'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
                             ) ) {
                         $names{$Stock->name()} = $Stock->name_id();
                     } # end foreach
@@ -92,7 +96,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                             'manufacturer_id'=>$session{'/employee/reports/stock.html?Manufacturer'},
                             'name_id'=>$session{'/employee/reports/stock.html?Name'},
                             #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                            'type'=>[split(';', $session{'/employee/reports/stock.html?Type'})],
+                            'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
                             ) ) {
                         $finishes{$Stock->finish()} = $Stock->finish_id();
                     } # end foreach
@@ -112,7 +116,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                             'name_id'=>$session{'/employee/reports/stock.html?Name'},
                             'finish_id'=>$session{'/employee/reports/stock.html?Finish'},
                             #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                            'type'=>[split(';', $session{'/employee/reports/stock.html?Type'})],
+                            'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
                             ) ) {
                         $data{$Stock->colour()} = $Stock->colour_id();
                     } # end foreach
@@ -133,7 +137,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                             'finish_id'=>$session{'/employee/reports/stock.html?Finish'},
                             'colour_id'=>$session{'/employee/reports/stock.html?Colour'},
                             #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                'type'=>[split(';', $session{'/employee/reports/stock.html?Type'})],
+                'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
                             ) ) {
                         $data{$Stock->weight()} = $Stock->weight_id();
                     } # end foreach
@@ -157,7 +161,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                             'colour_id'=>$session{'/employee/reports/stock.html?Colour'},
                             'weight_id'=>$session{'/employee/reports/stock.html?Weight'},
                             #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-							'type'=>[split(';', $session{'/employee/reports/stock.html?Type'})],
+							'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
                             ) ) {
                         $data{$Stock->width()} = $Stock->width();
                     } # end foreach
@@ -176,7 +180,7 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
                             'colour_id'=>$session{'/employee/reports/stock.html?Colour'},
                             'weight_id'=>$session{'/employee/reports/stock.html?Weight'},
                             #'group_id'=>$session{'/employee/reports/stock.html?Group'},
-                'type'=>[split(';', $session{'/employee/reports/stock.html?Type'})],
+                'type'=>[split(',', $session{'/employee/reports/stock.html?Type'})],
                             ) ) {
                         $data{$Stock->height()} = $Stock->height();
                     } # end foreach
@@ -194,13 +198,13 @@ LoadContent( 'Results', '/employee/reports/_stock.html', document.forms.f1.seria
             <select id="location_id" name="location_id" multiple="multiple" onchange="f1.submit();">
                 <? echo ( 
                     my @options =  ('All','All','Unknown','Unknown', map { $_->id(), $_->name() } openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') );
-                    my @selected = split(';', $session{'/employee/reports/stock.html?location_id'} );
+                    my @selected = split(',', $session{'/employee/reports/stock.html?location_id'} );
                     if ( ! @selected ) {
                         foreach my $L ( openprint::Location->find('parent_id'=>undef, 'order'=>'lower(name)') ) {
                             next if $L->name() eq 'Missing';
                             push @selected, $L->id();
                         } # end foreach $L
-                         $session{'/employee/reports/stock.html?location_id'} = join(';', @selected);
+                         $session{'/employee/reports/stock.html?location_id'} = join(',', @selected);
                     } # end if
                     return ssi::make_drop_down( \@options, \@selected );
                 ) ?>

@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS hosts;
 CREATE TABLE hosts (
 	id			SERIAL,
-	ip			inet NOT NULL,
+	ip			inet,
 	mac	macaddr[],
 	hostname	text,
 	block	boolean not null default false,

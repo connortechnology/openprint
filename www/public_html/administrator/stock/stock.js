@@ -1,4 +1,27 @@
 
+function check_price( element ) {
+	var form = element.form;
+	var matches;
+	if ( matches = element.name.match( /^\w+\-(\d+)$/ ) ) {
+		var id = matches[1];
+		if ( 
+			element_changed( form.elements['discountable-'+id] ) ||
+			element_changed( form.elements['price-'+id] ) ||
+			element_changed( form.elements['min-'+id] ) ||
+			element_changed( form.elements['max-'+id] ) ||
+			element_changed( form.elements['units-'+id] ) ||
+			element_changed( form.elements['equipment_id-'+id] ) 
+		   ) {
+			$('paperprice-'+id).addClassName('changed');
+		} else {
+alert('not changed');
+			$('paperprice-'+id).removeClassName('changed');
+		} // end if
+	} else {
+		alert('Not matched' + element.name);
+	} // end if
+}
+
 function mweight_to_gsm( form ) {
 	var mweight;
 	var width;
@@ -15,6 +38,8 @@ function mweight_to_gsm( form ) {
 
 	var gsm = Math.round((mweight/1000)/(width*height)*70306450)/100;
 	form.elements['gsm'].value = gsm;
+	form.elements['wpsi'].value = gsm / 703064.5;
+	recalc_prices( form );
 }
 function gsm_to_mweight( form ) {
 	var gsm = parseFloat(1*form.elements['gsm'].value);
@@ -31,9 +56,10 @@ function gsm_to_mweight( form ) {
 	height = parseFloat(1*form.elements['height'].value);
 	mweight = Math.round((gsm/703064.5)*(width*height)*100000)/100;
 	form.elements['mweight'].value = mweight;
+	form.elements['wpsi'].value = gsm / 703064.5;
+	recalc_prices( form );
 }
-function CommaFormatted(amount)
-{
+function CommaFormatted(amount) {
 	var delimiter = ","; // replace comma if desired
 	var a = amount.split('.',2)
 	var d = a[1];
@@ -58,8 +84,7 @@ function CommaFormatted(amount)
 	return amount;
 }
 // end of function CommaFormatted()
-function CurrencyFormatted(amount)
-{
+function CurrencyFormatted(amount) {
 	var i = parseFloat(amount);
 	if(isNaN(i)) { i = 0.00; }
 	var minus = '';
@@ -75,15 +100,23 @@ function CurrencyFormatted(amount)
 }
 // end of function CurrencyFormatted()
 
+function recalc_prices( form ) {
+	for ( var i = 0; i < form.elements.length; i += 1 ) {
+		if ( form.elements[i].name && ( form.elements[i].name.indexOf('cost-') != -1 ) ) {
+			calc_price( form.elements[i] );
+		} // end if
+	} // end for
+} // end function recalc_prices( form )
+
 function calc_price( element ) {
 	var form = element.form;
 	var matches;
-	if ( matches = element.name.match( /^costcwt-(.*)$/ ) ) {
+	if ( matches = element.name.match( /^cost-(.*)$/ ) ) {
 		var index = matches[1];
 		var costcwt = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 		var markup = parseFloat(1*form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
 		var pricecwt = costcwt * ( 1 + markup );
-		form.elements['pricecwt-'+index].value = do_decimals( pricecwt, 2 ); 
+		form.elements['price-'+index].value = do_decimals( pricecwt, 2 ); 
 
 		if ( form.elements['wpsi'] ) {
 			if ( form.elements['costperfoot-'+index] ) {
@@ -108,15 +141,15 @@ function calc_price( element ) {
 		form.elements['priceperm-'+index].value = do_decimals( priceperm, 2 ); 
 
 		if ( form.elements['wpsi'] )  {
-			form.elements['costcwt-'+index].value = do_decimals( costperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 1000), 2);
-			form.elements['pricecwt-'+index].value = do_decimals( priceperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 1000), 2);
+			form.elements['cost-'+index].value = do_decimals( costperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 10), 2);
+			form.elements['pricecwt-'+index].value = do_decimals( priceperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 10), 2);
 			if ( form.elements['costperfoot-'+index] ) {
 			form.elements['costperfoot-'+index].value = do_decimals( costperm / (form.elements['wpsi'].value * 144 * 1000), 2);
 			form.elements['priceperfoot-'+index].value = do_decimals( priceperm / (form.elements['wpsi'].value * 144 * 1000), 2);
 			} // end if
 		} else if ( form.elements['mweight'] && form.elements['mweight'].value ) {
-			form.elements['costcwt-'+index].value = do_decimals( costperm / (form.elements['mweight'].value / 100), 2 );
-			form.elements['pricecwt-'+index].value = do_decimals( priceperm / (form.elements['mweight'].value / 100), 2 );
+			form.elements['cost-'+index].value = do_decimals( costperm / (form.elements['mweight'].value / 100), 2 );
+			form.elements['price-'+index].value = do_decimals( priceperm / (form.elements['mweight'].value / 100), 2 );
 		} // end if
 	} else if ( matches = element.name.match( /costperfoot-(.*)/ ) ) {
 		var index = matches[1];
@@ -130,8 +163,8 @@ function calc_price( element ) {
 		var markup = parseFloat(1*form.elements['markup-'+index].value.replace(/[^\d\-\.]/g, '' )) /100;
 
 		form.elements['priceperfoot-'+index].value = do_decimals( costperfoot * ( 1 + markup ), 2);
-		form.elements['costcwt-'+index].value = do_decimals( costcwt, 5 );
-		form.elements['pricecwt-'+index].value = do_decimals( costcwt * ( 1 + markup ), 2);
+		form.elements['cost-'+index].value = do_decimals( costcwt, 5 );
+		form.elements['price-'+index].value = do_decimals( costcwt * ( 1 + markup ), 2);
 		if ( form.elements['costperm-'+index] ) {
 			form.elements['costperm-'+index].value = do_decimals( costperm, 2);
 			form.elements['priceperm-'+index].value = do_decimals( costperm * ( 1 + markup ), 2 ); 
@@ -141,10 +174,10 @@ function calc_price( element ) {
 
 		var markup = parseFloat( 1*(element.value.replace(/[^\d\-\.]/g, '' ) ) );
 
-		var costcwt = parseFloat( form.elements['costcwt-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+		var costcwt = parseFloat( form.elements['cost-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 		if ( costcwt != '' ) {
 			var newvalue = costcwt * ( markup/100 + 1 );
-			form.elements['pricecwt-'+index].value = do_decimals( newvalue, 2 );
+			form.elements['price-'+index].value = do_decimals( newvalue, 2 );
 		} // end if
 		if ( form.elements['costperm-'+index] ) {
 			var costperm = parseFloat( form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
@@ -157,10 +190,10 @@ function calc_price( element ) {
 			var costperfoot = parseFloat( form.elements['costperfoot-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 			form.elements['priceperfoot-'+index].value = do_decimals( costperfoot * ( 1 + markup/100 ), 2);
 		} // end if
-	} else if ( matches = element.name.match( /pricecwt-(.*)/ ) ) {
+	} else if ( matches = element.name.match( /price-(.*)/ ) ) {
 		var index = matches[1];
 
-		var costcwt = parseFloat(form.elements['costcwt-'+index].value.replace(/[^\d\-\.]/g, '' ) );
+		var costcwt = parseFloat(form.elements['cost-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 		var price = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 		if ( costcwt ) {
 			form.elements['markup-'+index].value = do_decimals( ((price / costcwt)-1)*100, 2 );
@@ -175,8 +208,8 @@ function calc_price( element ) {
 		var priceperm = parseFloat( element.value.replace(/[^\d\-\.]/g, '' ) );
 		var costperm = parseFloat(form.elements['costperm-'+index].value.replace(/[^\d\-\.]/g, '' ) );
 		if ( costperm ) {
-			form.elements['markup-'+index].value = do_decimals( ((price / costperm)-1)*100, 2 );
-			form.elements['pricecwt-'+index].value = do_decimals( form.elements['costcwt-'+index].value * ( 1 + form.elements['markup-'+index].value/100), 2 );
+			form.elements['markup-'+index].value = do_decimals( ((priceperm / costperm)-1)*100, 2 );
+			form.elements['price-'+index].value = do_decimals( form.elements['costcwt-'+index].value * ( 1 + form.elements['markup-'+index].value/100), 2 );
 			if ( form.elements['costperfoot-'+index] && form.elements['priceperfoot-'+index] ) {
 				form.elements['priceperfoot-'+index].value = do_decimals( form.elements['costcwt-'+index].value * ( 1 + form.elements['markup-'+index].value/100), 2 );
 			} // end if

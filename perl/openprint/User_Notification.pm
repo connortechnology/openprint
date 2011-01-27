@@ -1,5 +1,6 @@
 use strict;
 require openprint::Object;
+require openprint::User;
 package openprint::User_Notification_Type;
 our @ISA = qw(openprint::Object);
 use vars qw( $debug $table $serial %fields %defaults %transforms );

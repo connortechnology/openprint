@@ -1,4 +1,5 @@
 <? eval ( $$variable{'Pricelist'} = new openprint::Pricelist( $param{'ddmPriceList'} ); ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="pricelists.html" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction"/>
 	<fieldset class="filter"><legend>Select Price List</legend>
@@ -6,7 +7,7 @@
 		<li> 
 			<label>Price List:</label>
 			<select name="ddmPriceList" onChange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
-			<option value="">- Select -</option>
+			<option value="">select</option>
 <? echo (
 return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist->find( 'order' => 'lower(name)' ) ], $param{'ddmPriceList'} );
 ) ?>
@@ -37,7 +38,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist-
 				</li>
 				<li> 
 					<label>Description:</label>
-					<textarea id="description" name="description" rows="5" onchange="textarea_resize(this);"><? echo ( $$variable{'Pricelist'}->description(); ) ?></textarea>
+					<textarea id="description" name="description" rows="<? echo ( ssi:count_lines($$variable{'Pricelist'}->description()); ) ?>" cols="" onchange="textarea_resize(this);"><? echo ( $$variable{'Pricelist'}->description(); ) ?></textarea>
 				</li>
 				<li> 
 					<label>Currency:</label>

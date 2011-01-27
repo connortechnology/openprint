@@ -28,7 +28,9 @@ Please review the quote below to ensure accuracy.  When ready, click "Submit Quo
 			Prices are subject to applicable taxes.<br/>
 		</div>
 		<br class="spacer"/>
+		<? if ( ! sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 		<? echo ( $config{'QuoteViewDisclaimer'} ) ?>
+		<? endif ( ! sets::isin( $session{'user_type'}, ['A', 'E'] ) ) ?>
 	</div></div><!--Quote-->
 <? echo (
 	my $html = '';

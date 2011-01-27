@@ -12,11 +12,21 @@
 
 	my @Orders = openprint::Order->find(
 		'status'		=>	[ 'In Production','Picked Up','Shipped','Waiting For Customer Approval','Complete','Waiting For Pickup','Order Submitted','Paid','Pending Deposit','Re-Opened' ],
+<<<<<<< HEAD
 		( @company_ids ? ( 'company_id'	=> \@company_ids ) : () ),
 		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00',
 			@session{'/employee/reports/stock_usage.html?ordered_on_start_year','/employee/reports/stock_usage.html?ordered_on_start_month','/employee/reports/stock_usage.html?ordered_on_start_day'} ),
 		'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59',
 			@session{'/employee/reports/stock_usage.html?ordered_on_end_year','/employee/reports/stock_usage.html?ordered_on_end_month','/employee/reports/stock_usage.html?ordered_on_end_day'} ),
+=======
+		'company_id'	=>	( @company_ids ? \@company_ids : '' ),
+		( Date::Calc::check_date( @session{'/employee/reports/stock_usage.html?ordered_on_start_year','/employee/reports/stock_usage.html?ordered_on_start_month','/employee/reports/stock_usage.html?ordered_on_start_day'} ) ? 
+		  ( 'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00',
+			@session{'/employee/reports/stock_usage.html?ordered_on_start_year','/employee/reports/stock_usage.html?ordered_on_start_month','/employee/reports/stock_usage.html?ordered_on_start_day'} ) ) : () ),
+		( Date::Calc::check_date( @session{'/employee/reports/stock_usage.html?ordered_on_end_year','/employee/reports/stock_usage.html?ordered_on_end_month','/employee/reports/stock_usage.html?ordered_on_end_day'} ) ? (
+'created_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59',
+			@session{'/employee/reports/stock_usage.html?ordered_on_end_year','/employee/reports/stock_usage.html?ordered_on_end_month','/employee/reports/stock_usage.html?ordered_on_end_day'} ) ) : () ),
+>>>>>>> 7d5e7a01a166d490040329d19169f629a80fe81a
 );
 	my %totals;
 	my %Stocks;
@@ -39,7 +49,7 @@
 					} # end if
 				} # end if
 
-				if ( $session{'/employee/reports/stock_usage.html?Type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ';', $session{'/employee/reports/stock_usage.html?Type'} ) ) ) {
+				if ( $session{'/employee/reports/stock_usage.html?Type'} and ! sets::isin( $$sig_specs{'StockType'.$qty_index}, split( ',', $session{'/employee/reports/stock_usage.html?Type'} ) ) ) {
 $log->debug("Wrong type ". $$sig_specs{'StockType'.$qty_index} );
 					next;
 } else {

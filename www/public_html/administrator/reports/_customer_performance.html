@@ -1,0 +1,94 @@
+<? echo (
+	my $html;
+	my @csr_ids;
+	if ( ( $session{'user_type'} ne 'A' ) and ! openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) {
+		@csr_ids = ( $session{'user_id'} );
+	} elsif ( $param{'salesrep_id'} ) {
+		@csr_ids = ( $param{'salesrep_id'} );
+	} else {
+		@csr_ids = map { $_->id() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+	} # end if
+	foreach my $csr_id ( @csr_ids ) {
+		my $CSR = new openprint::User( $csr_id );
+		$html .= '<h3>Results for ' . $CSR->name() . '</h3>
+					<table class="List"><thead><tr><th align="left">Company</th><th align="right"># of Orders</th><th align="right">Order Value</th><th align="right">Payment Cycle</th>';
+		$html .= "</tr></thead><tbody>\n";
+		my $rowclass;
+		foreach my $Company ( openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)') ) {
+			my $order_total;
+			my $payment_cycle;
+
+			my @Orders = openprint::Order::find( 
+					'company_id' => $Company->id(),
+					( Date::Calc::check_date( @session{
+											  '/administrator/reports/customer_performance.html?ordered_on_start_year',
+											  '/administrator/reports/customer_performance.html?ordered_on_start_month',
+											  '/administrator/reports/customer_performance.html?ordered_on_start_day',
+											  } ) ?
+					  ( 'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+													  '/administrator/reports/customer_performance.html?ordered_on_start_year',
+													  '/administrator/reports/customer_performance.html?ordered_on_start_month',
+													  '/administrator/reports/customer_performance.html?ordered_on_start_day',
+													  } ) ) : () ),
+					( Date::Calc::check_date( @session{
+											  '/administrator/reports/customer_performance.html?ordered_on_end_year',
+											  '/administrator/reports/customer_performance.html?ordered_on_end_month',
+											  '/administrator/reports/customer_performance.html?ordered_on_end_day',
+											  } ) ? (
+												  'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+													  '/administrator/reports/customer_performance.html?ordered_on_end_year',
+													  '/administrator/reports/customer_performance.html?ordered_on_end_month',
+													  '/administrator/reports/customer_performance.html?ordered_on_end_day',
+													  } ) ) : () ),
+					'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+					);
+			last if $dbh->errstr();
+			next if ! @Orders;
+			next if openprint::Order::find(
+					'company_id' => $Company->id(),
+( Date::Calc::check_date( @session{
+						'/administrator/reports/customer_performance.html?not_ordered_on_start_year',
+						'/administrator/reports/customer_performance.html?not_ordered_on_start_month',
+						'/administrator/reports/customer_performance.html?not_ordered_on_start_day',
+} ) ? ( 
+
+					'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+						'/administrator/reports/customer_performance.html?not_ordered_on_start_year',
+						'/administrator/reports/customer_performance.html?not_ordered_on_start_month',
+						'/administrator/reports/customer_performance.html?not_ordered_on_start_day',
+						} ) ) : () ),
+( Date::Calc::check_date( @session{
+						'/administrator/reports/customer_performance.html?not_ordered_on_end_year',
+						'/administrator/reports/customer_performance.html?not_ordered_on_end_month',
+						'/administrator/reports/customer_performance.html?not_ordered_on_end_day',
+} ) ? ( 
+					'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+						'/administrator/reports/customer_performance.html?not_ordered_on_end_year',
+						'/administrator/reports/customer_performance.html?not_ordered_on_end_month',
+						'/administrator/reports/customer_performance.html?not_ordered_on_end_day',
+						} ) ) : () ),
+					'status' => ['Complete','Picked Up', 'Shipped','Waiting For Customer Approval','Order Submitted','In Production','Waiting For Pickup','Re-Opened','Pending Deposit','Paid','Complete' ],
+				);
+			foreach my $Order ( @Orders ) {
+				$order_total += $Order->Currency()->convert_from( $Order->total() );
+				$payment_cycle += $Order->payment_days();
+			} # end foreach Order
+			$payment_cycle = int( $payment_cycle / scalar @Orders );
+			if ( $param{'payment_cycle'} ) {
+				if ( $payment_cycle > $param{'payment_cycle'} ) {
+					next;
+				} # end if
+			} # end if
+			$html .= sprintf(q`<tr%1$s><td align="left">%2$s</td><td align="right">%3$s</td><td align="right">%4$s</td><td align="right">%5$s days</td></tr>`,
+					$rowclass, $Company->name(), 
+					Number::Format::format_number( scalar @Orders ), 
+					openprint::Currency::format( $order_total ),
+					$payment_cycle,
+					);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+		} # end foreach Company
+		$html .= '</tbody>';
+		$html .= '</table>';
+	} # end foreach CSR
+	return $html;
+) ?>
