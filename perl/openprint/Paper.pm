@@ -32,7 +32,7 @@ require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-my $debug = 0;
+my $debug = 1;
 
 my @fields = (
 		'id', 'created_on',
@@ -209,6 +209,10 @@ sub find {
 	if ( $params{'project_type_id'} ) {
 		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
 		push @values, $params{'project_type_id'};
+	} # end if
+	if ( $params{'stock_settings_equipment_id ='} ) {
+		$sql .= ' AND papers.id IN ( SELECT stock_id FROM Equipment_Stock_Settings WHERE equipment_id=? )';
+		push @values, $params{'stock_settings_equipment_id ='};
 	} # end if
 	if ( exists $params{'fsc_code'} ) {
 		if ( $params{'fsc_code'} ) {
