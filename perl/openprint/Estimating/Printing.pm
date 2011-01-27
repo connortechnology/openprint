@@ -171,6 +171,7 @@ my %variables = (
 		'InkTotalCharge1' =>  ['save','output'], 'InkTotalCharge2' => ['save','output'], 'InkTotalCharge3' => ['save','output'],
 		'InkMixCharge1' =>  ['save','output'], 'InkMixCharge2' => ['save','output'], 'InkMixCharge3' => ['save','output'],
 		'Roll2SheetCharge1'	=> ['save','output'], 'Roll2SheetCharge2'	=> ['save','output'], 'Roll2SheetCharge3'	=> ['save','output'],
+		'StockSetupCharge1'	=> ['save','output'], 'StockSetupCharge2'	=> ['save','output'], 'StockSetupCharge3'	=> ['save','output'],
 #
 
 		'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
@@ -563,6 +564,7 @@ sub calc_from_imposition {
 			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 			$$specs{'PreviousForms'.$qty_index} += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
+			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 		} # end foreach $index
 
 		my $price = calc_price( $Project, $service_id, $Imposition, $project, $services, $specs, $Project->quantity($qty_index), $qty_index, \%PlateCounts, [] );
@@ -1723,6 +1725,7 @@ $log->warn("There are no quantities!");
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
+			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
 		} # end foreach $index
@@ -1874,6 +1877,7 @@ $log->warn("There are no quantities!");
 		$$specs{'InkMixCharge'.$qty_index} = $best_price{'Ink Mix Charge'};
 
 		$$specs{'Roll2SheetCharge'.$qty_index} = $best_price{'Roll2SheetCharge'};
+		$$specs{'StockSetupCharge'.$qty_index} = $best_price{'StockSetup'};
 #
 	
 #	$openprint::log->debug("Testingtext here : Run Charge = $best_price{'Run Total'}");
@@ -2643,9 +2647,11 @@ $openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
 				$$price{'Total Cost'} += $$price{'Paper Total'};
 			} # end if
 
-			if ( my $StockSetupPrice = $Paper->get_price( 'weight'=>$$price{'Stock Weight'}, 'service'=>'Setup', 'equipment_id'=>$Press->id() ) ) {
-				$$price{'StockSetup'} = $$StockSetupPrice{'price'};
-				$$price{'Total Cost'} += $$StockSetupPrice{'price'};
+			if ( ! $$project{'stocksetupcharged'} ) {
+				if ( my $StockSetupPrice = $Paper->get_price( 'weight'=>$$price{'Stock Weight'}, 'service'=>'Setup', 'equipment_id'=>$Press->id() ) ) {
+					$$price{'StockSetup'} = $$StockSetupPrice{'price'};
+					$$price{'Total Cost'} += $$StockSetupPrice{'price'};
+				} # end if
 			} # end if
 
 			if ( $Paper->type() eq 'Roll' and sets::isin('Sheet', split(',', $Press->specification('Feed') ) ) and ! $$project{'roll2sheetcharged'} ) {
