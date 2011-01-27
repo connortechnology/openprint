@@ -16,6 +16,8 @@ sub _breakdown {
 }
 
 sub load_simple {
+	$param{'project_id'} =~ s/\D//g;
+
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 	if ( $variable{'Project'}->id() ) {
 		$variable{'ProjectType'} = $variable{'Project'}->Type();
@@ -29,6 +31,7 @@ sub load_simple {
 			} # end foreach
 		} # end if
 	} else {
+		$param{'projecttype_id'} =~ s/\D//g;
 		if ( $param{'projecttype_id'} ) {
 			$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
 		} elsif ( $param{'ProjectType'} ) {
