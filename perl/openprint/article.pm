@@ -107,6 +107,24 @@ sub category {
 	my $Category = $variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
 	if ( $param{'btnFunction'} eq 'Save' ) {
 		$variable{'error'} .= $Category->save(\%param);
+        if ( $param{'filename'} ) {
+            my $upload = $r->upload('filename');
+            if ( ! $upload ) {
+                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+            } else {
+				my $path = '/images/article_categories/' . $Category->id() . '_' . $param{'filename'};
+                if ( ! $upload->link( $config{'SkinPath'} . $path ) ) {
+                    $variable{'error'} .= "There was an error saving file $param{'filename'} to $config{SkinPath}$path : $!<br/>";
+#$Asset->save({'filename'=>''});
+                } else {
+                    $variable{'error'} .= $Category->save({'image_filename'=>$path});
+                    $variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+                } # end if
+            } # end if
+		} else {
+			$log->debug("No image uploaded");
+        } # end if
+
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Category->delete();
 	} # end if

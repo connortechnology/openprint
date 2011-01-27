@@ -8,8 +8,9 @@
 	});
 -->
 </script>
+<!--#include virtual="/includes/error_reporting.html"-->
 <div class="ArticleCategory"><div class="Edit">
-<form name="f1" id="f1" action="category.html" method="post">
+<form name="f1" id="f1" action="category.html" method="post" enctype="multipart/form-data">
 	<fieldset class="filters">
 		<ul>
 			<li><label>Category:</label>
@@ -40,14 +41,14 @@
 						<textarea cols="" id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
 					</li>
 					<li>
-						<label for="image">Image Upload:</label><input type="file" id="image_filename" name="image_filename"/>
+						<label for="image">Image Upload:</label><input type="file" id="filename" name="filename"/>
 					</li>
 				</ul>
 			</div>
 		</div>
 		<div class="rightColumn">
 			<? if ( $$variable{'Category'}->image_filename() ) ?>
-				<img src="/images/article_categories/<? echo ( $$variable{'Category'}->image_filename() ) ?>" alt="" />
+				<img src="<? echo ( $$variable{'Category'}->image_filename() ) ?>" alt="" />
 			<? endif ( $$variable{'Category'}->image_filename() ) ?>
 		</div>
 		<br class="spacer"/>
