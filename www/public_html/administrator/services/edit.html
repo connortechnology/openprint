@@ -1,4 +1,5 @@
 <!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript" src="/javascripts/pricing.js"></script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search</legend>
 		<p> 
@@ -71,7 +72,9 @@
 	</div>
 	<br class="spacer"/>
 	<? if ( $$variable{'Service'}->id() ) ?>
+	<div id="Prices">
 		<!--#include virtual="_prices.html"-->
+	</div>
 	<? endif ( $$variable{'Service'}->id() ) ?>
 	<input type="hidden" name="btnFunction"/>
 </form>
