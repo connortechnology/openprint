@@ -14,6 +14,7 @@ function FoldType_onchange( select ) {
 
 function calc( formName, force ) {
 	var form = $(formName);
+	if ( ! form ) return;
 
 	if ( form.txtPrice1 ) {
 		form.txtPrice1.value = '';
