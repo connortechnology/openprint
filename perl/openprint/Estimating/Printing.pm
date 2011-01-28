@@ -3464,10 +3464,12 @@ sub calc_price {
 			$press_setup += $_->{'Total'};
 			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
 			$price{'Plate Total'} += $_->{'Plate Total'};
-			$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
-			$press_setup += $_->{'Total'};
-			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
-			$price{'Plate Total'} += $_->{'Plate Total'};
+			if ( $$_{units} ne 'Total' ) {
+				$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+				$press_setup += $_->{'Total'};
+				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
+				$price{'Plate Total'} += $_->{'Plate Total'};
+			} # end if
 			$price{'Plate Setup Price'} = $_->{'Plate Price'};
 			$price{'Plate Setup Count'} = $_->{'Plate Count'};
 			$price{'Plate Setup Units'} = $_->{'Plate Units'};
@@ -4149,6 +4151,7 @@ sub press_setup_cost {
 		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
 			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
 		} # end if
+		
 		$Price{'Total'} = $Price{'Price'};
 	} else { # Per Unit
 		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
