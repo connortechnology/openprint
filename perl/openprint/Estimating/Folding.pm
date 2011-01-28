@@ -1502,6 +1502,9 @@ sub compact_impositions {
 	} # end while @_
 	return @results;
 } # end sub compact_impositions
+
+sub save {
+} # end sub save
 1;
 
 __END__
