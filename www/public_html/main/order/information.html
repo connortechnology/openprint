@@ -105,8 +105,9 @@ function same_as_billing( on, id ) {
 			<? eval ( 
 				@{$$variable{'Projects'}} = $$variable{'Order'}->Projects();
 				@{$$variable{'Products'}} = $$variable{'Order'}->Products();
+				@{$$variable{'Contents'}} = ( @{$$variable{'Projects'}}, @{$$variable{'Products'}} );
 			) ?>
-<? if ( $config{'OrderMode'} eq 'Simple' ) ?>
+<? if ( @{$$variable{'Contents'}} == 1 ) ?>
 			<div id="ShippingInformation">
 				<? echo (
 					my $html = '';
@@ -139,22 +140,19 @@ function same_as_billing( on, id ) {
 					} # end if
 					return $html;
 				) ?>
-			</div>
-<? endif ( $config{'OrderMode'} eq 'Simple' ) ?>
+			</div><!--Shipping-->
+<? endif ( @{$$variable{'Contents'}} == 1 ) ?>
 		</div><!--Header-->
 		<div id="Contents">
-			<? if ( @{$$variable{'Projects'}} or @{$$variable{'Products'}} ) ?>
+			<? if ( @{$$variable{'Contents'}} ) ?>
 				<div id="Projects">
 					<? echo (
 						my $html;
 						foreach my $Project ( @{$$variable{'Projects'}} ) {
 							$$variable{'Project'} = $Project;
-							$html .= '<div class="Project"><h3 class="project_id">Project '.$Project->id().'</h3><p class="buttons">';
-							if ( ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) {
+							$html .= '<div class="Project"><h3 class="project_id"><a href="/main/project/view.html?ProjectIndex='.$Project->id().'">Project '.$Project->id().'</a></h3><p class="buttons">';
+							if ( @{$$variable{'Contents'}} > 1 ) {
 								$html .= ssi::writeButton( $log, $dbh, 'Remove'.$$variable{'Project'}->id(), '', '', "information.html?OrderID=$$variable{'OrderID'}&amp;remove=$$variable{'Project'}{id}", 'Remove' );
-							} # endif
-							if ( $config{'OrderMode'} ne 'Simple' ) {
-								$html .= ssi::writeButton( $log, $dbh, 'Edit'.$$variable{'Project'}->id(), '', '', "/main/project/view.html?ProjectIndex=$$variable{'Project'}{id}", 'Edit Project' );
 							} # endif
 							$html .= '</p><br class="spacer"/>';
 							$html .= ssi::include( $ENV{'DOCUMENT_ROOT'} . '/main/order/_project_information.html' );
@@ -180,10 +178,10 @@ function same_as_billing( on, id ) {
 						return $html;
 					) ?>
 				</div>
-			<? else ( @{$$variable{'Projects'}} or @{$$variable{'Products'}} ) ?>
+			<? else ( @{$$variable{'Contents'}} ) ?>
 				<p>This order appears to be empty.</p>
-			<? endif ( @{$$variable{'Projects'}} or @{$$variable{'Products'}} ) ?>
-		</div>
+			<? endif ( @{$$variable{'Contents'}} ) ?>
+		</div><!--Contents-->
 <div id="Totals">
 	<ul>
 		<li id="SubTotal">

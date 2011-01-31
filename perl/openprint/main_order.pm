@@ -87,6 +87,7 @@ sub information {
 	} # end if
 	$order_id = openprint::order::get_unfinished_order( ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
+	$session{'OrderID'} = $order_id;
 
 	if ( ! $variable{'error'} ) {
 		# Only check for errors if we don't have any yet
@@ -174,6 +175,7 @@ sub submit {
 	my $order_id = $param{'OrderID'};
 	$order_id = openprint::order::get_unfinished_order(  ) if ! $order_id;
 	my $Order = new openprint::Order( $order_id );
+	$session{'OrderID'} = $order_id;
 
 	if ( $param{'btnFunction'} eq 'Continue') { # saving project information
 		
