@@ -1,0 +1,63 @@
+<div class="PageTitle">
+<h1>ACCOUNT</h1>
+<h2>User Profile</h2>
+</div>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $session{'user_id'} ) ?>
+	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
+		<div class="UserProfile">
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) {
+							$html .= ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", '', 'Delete' );
+						} # end if
+						$html .= ssi::writeButton( $log, $dbh, 'edit','edit.gif','', '/account/user_profile.html', 'Edit' );
+						return $html;
+					) ?>
+				</p>
+			<div id="ProfilePicture">
+			<? if ( $$variable{'User'}->asset_id() ) ?>
+			<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
+			<? else ( $$variable{'User'}->asset_id() ) ?>
+			No profile picture set.
+			<? endif ( $$variable{'User'}->asset_id() ) ?>
+			</div>
+	
+			<div id="UserInformation">
+   			<fieldset><legend>User Information:</legend>
+				<div class="content">
+					<ul>
+					<li><? echo ( $$variable{'User'}->name() ) ?></li>
+					</ul>
+				</div>
+   			</fieldset>
+			</div>
+			<!--#include virtual="_user_profile.html"-->
+			<div id="LoginInformation">
+   			<fieldset><legend>Login Information</legend>
+				<div class="content">
+					<ul>
+						<li class="required">
+							<label for="email">E-mail Address:</label>
+							<input type="text" id="email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
+						</li>
+						<li class="required">
+							<label for="password">Password:</label>
+							<input type="password" id="password" name="password" />
+						</li>
+						<li class="required">
+							<label for="verifypassword">Verify Password:</label>
+							<input type="password" id="verifypassword" name="verifypassword" />
+						</li>
+					</ul>
+				</div>
+   			</fieldset>
+			</div>
+		</div><!--UserProfile-->
+		<input type="hidden" name="btnFunction"/>
+	</form>
+	<!--#include virtual="/includes/login_log.html"-->
+<? else ( $session{'user_id'} ) ?>
+You must be logged in to edit user profiles.<br/>
+<? endif ( $session{'user_id'} ) ?>
