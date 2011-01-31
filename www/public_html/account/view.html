@@ -4,7 +4,6 @@
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
-	<form name="f1" method="post" action="user_profile.html" onsubmit='return fmCheck();'>
 		<div class="UserProfile">
 				<p class="buttons">
 					<? echo ( 
@@ -25,39 +24,28 @@
 			</div>
 	
 			<div id="UserInformation">
-   			<fieldset><legend>User Information:</legend>
-				<div class="content">
-					<ul>
-					<li><? echo ( $$variable{'User'}->name() ) ?></li>
-					</ul>
-				</div>
-   			</fieldset>
+				<fieldset><legend>User Information</legend>
+					<div class="content">
+						<ul>
+						<li><label>Name</label><? echo ( $$variable{'User'}->name() ) ?></li>
+						</ul>
+					</div>
+				</fieldset>
 			</div>
-			<!--#include virtual="_user_profile.html"-->
-			<div id="LoginInformation">
-   			<fieldset><legend>Login Information</legend>
-				<div class="content">
-					<ul>
-						<li class="required">
-							<label for="email">E-mail Address:</label>
-							<input type="text" id="email" name="email" value="<? echo ( $$variable{'User'}->email() ) ?>" >
-						</li>
-						<li class="required">
-							<label for="password">Password:</label>
-							<input type="password" id="password" name="password" />
-						</li>
-						<li class="required">
-							<label for="verifypassword">Verify Password:</label>
-							<input type="password" id="verifypassword" name="verifypassword" />
-						</li>
-					</ul>
-				</div>
-   			</fieldset>
+			<div id="Statistics">
+				<fieldset><legend>Statistics</legend>
+					<div class="content">
+						<ul>
+							<li class="created_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?></li>
+							<li class="updated_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?></li>
+						</ul>
+					</div>
+				</fieldset>
+			</div>
+			<!--#include virtual="_user_profile_view.html"-->
+			<div id="Events">
 			</div>
 		</div><!--UserProfile-->
-		<input type="hidden" name="btnFunction"/>
-	</form>
-	<!--#include virtual="/includes/login_log.html"-->
 <? else ( $session{'user_id'} ) ?>
-You must be logged in to edit user profiles.<br/>
+You must be logged in to view user profiles.<br/>
 <? endif ( $session{'user_id'} ) ?>

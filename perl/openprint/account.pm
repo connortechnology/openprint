@@ -654,7 +654,7 @@ sub credit_application {
 
 sub view {
 	$variable{'Me'} = new openprint::User( $session{'user_id'} );
-	$variable{'User'} = new openprint::User( $param{'user_id'} );
+	$variable{'User'} = new openprint::User( $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} );
 } # end sub voew
 
 1;
