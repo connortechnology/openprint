@@ -5,14 +5,15 @@
 	} # end if
 ) ?>
 
-<form id="f1" name="f1" method="post" action="">
-	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
-	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
-	<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
+<? if ( $$variable{'ProjectType'}->id() ) ?>
 
 	<!--#include virtual="/includes/error_reporting.html"-->
 
 	<div class="InstantPricing">
+<form id="f1" name="f1" method="post" action="">
+	<input type="hidden" id="projecttype_id" name="projecttype_id" value="<? echo ( $$variable{'ProjectType'}->id() ) ?>" />
+	<input type="hidden" id="Status" name="Status" value="<?Status?>" />
+	<input type="hidden" id="TemplateType" name="TemplateType" value="<?TemplateType?>" />
 		<div id="instant_price_section">
 			<div class="top_shadow"><div class="shadow_tl"></div><div class="shadow_tr"></div></div>
 			<div class="shadow_left"><div class="shadow_right">
@@ -125,6 +126,7 @@
 	} # end if
 	return '';
 ) ?>
+<? endif ( $$variable{'ProjectType'}->id() ) ?>
+</form>
 		<!--#include virtual="_specials.html"-->
 	</div><!--InstantPricing-->
-</form>

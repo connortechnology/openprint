@@ -191,7 +191,7 @@ sub find {
 		$sql .= ' AND papers.id IN (SELECT lngPaperIndex FROM Paper_Recommendations WHERE lngProjectTypeIndex=?)';
 		push @values, $params{'project_type_id'};
 	} # end if
-	if ( $params{'stock_settings_equipment_id ='} ) {
+	if ( exists $params{'stock_settings_equipment_id ='} ) {
 		$sql .= ' AND papers.id IN ( SELECT stock_id FROM Equipment_Stock_Settings WHERE equipment_id=? )';
 		push @values, $params{'stock_settings_equipment_id ='};
 	} # end if
