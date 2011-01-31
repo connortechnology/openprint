@@ -1,7 +1,8 @@
+<!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $$variable{'ProjectIndex'} eq '' ) ?>
 There is no current project. 
 <? else ( $$variable{'ProjectIndex'} eq '' ) ?>
-	<form name="f1" method="post" enctype="multipart/form-data">
+	<form name="f1" method="post" enctype="multipart/form-data" action="/employee/production/upload_pdfs.html?ProjectIndex=<?ProjectIndex?>">
 		<? if ( @{$$variable{'PDFS'}} ) ?>
 		The following pdfs have been uploaded:<br/>
 		<table class="List">
