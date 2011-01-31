@@ -1167,6 +1167,16 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 					next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
+					if ( sets::isin( 'Sheet', split(',', $Press->specification('Feed') ) ) ) {
+$openprint::log->debug('roll2sheet');
+						if ( my $MinimumWeight = $Press->Specification('Roll2Sheet Minimum Weight') ) {
+$openprint::log->debug("Has Minimum Weight setting $$MinimumWeight{'value'} < " . $Paper->gsm() );
+							if ( $$MinimumWeight{'units'} eq 'gsm' and $$MinimumWeight{'value'} > $Paper->gsm() ) {
+$openprint::log->debug("Next");
+								next;
+							} # end if
+						} # end if
+					} # end if
 
 					my $P = $Paper->clone();
 					#$P->height('');
