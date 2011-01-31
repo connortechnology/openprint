@@ -990,6 +990,13 @@ sub get_impositions {
 				next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 				next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
 #$openprint::log->debug('blah'.$Paper->to_string());
+				if ( sets::isin( 'Sheet', split(',', $Press->specification('Feed') ) ) ) {
+					if ( my $MinimumWeight = $Press->Specification('Roll2Sheet Minimum Weight') ) {
+						if ( $$MinimumWeight{'units'} eq 'gsm' and $$MinimumWeight{'value'} > $Paper->gsm() ) {
+							next;
+						} # end if
+					} # end if
+				} # end if
 
 				my $P = $Paper->clone();
 				my @i;
