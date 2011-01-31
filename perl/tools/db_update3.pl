@@ -104,6 +104,28 @@ if ( ! sets::isin( 'user_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profiles.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='shifts'", 'column_name');
+if ( ! exists $$data{'updated_on'} ) {
+	$dbh->do('ALTER TABLE shifts add updated_on TIMESTAMP WITH TIME ZONE NOT NULL default nOW()');
+} # end if
+if ( ! exists $$data{'created_on'} ) {
+	$dbh->do('ALTER TABLE shifts add created_on TIMESTAMP WITH TIME ZONE NOT NULL default nOW()');
+} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='tbl_equipment'", 'column_name');
+if ( ! exists $$data{'sorting'} ) {
+	$dbh->do('ALTER TABLE tbl_equipment ADD sorting integer');
+} # end if
+if ( ! exists $$data{'message'} ) {
+	$dbh->do('ALTER TABLE tbl_equipment ADD message text');
+} # end if
+if ( ! exists $$data{'servicetype_id'} ) {
+	$dbh->do('ALTER TABLE tbl_equipment ADD servicetype_id INTEGER[]');
+} # end if
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='equipment_shifts'", 'column_name');
+if ( ! exists $$data{'operator_id'} ) {
+	$dbh->do('ALTER TABLE equipment_shifts ADD operator_id INTEGER');
+	$dbh->do('ALTER TABLE equipment_shifts ADD FOREIGN KEY (operator_id) REFERENCES Users (id)');
+} # end if
 $dbh->disconnect();
 1;
 __END__

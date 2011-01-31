@@ -1,4 +1,3 @@
-<? eval ( $$variable{'Pricelist'} = new openprint::Pricelist( $param{'ddmPriceList'} ); ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" method="post" action="pricelists.html" enctype="multipart/form-data">
 	<input type="hidden" name="btnFunction"/>
@@ -6,10 +5,10 @@
 	<ul>	
 		<li> 
 			<label>Price List:</label>
-			<select name="ddmPriceList" onChange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
+			<select name="ddmPriceList" onchange="if(this.options[this.selectedIndex].value != ''){f1.btnFunction.value='';fmCheck(f1);}">
 			<option value="">select</option>
 <? echo (
-return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist->find( 'order' => 'lower(name)' ) ], $param{'ddmPriceList'} );
+return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist->find( 'order' => 'lower(name)' ) ], $$variable{'Pricelist'}->id() );
 ) ?>
 			</select>
 		</li>
@@ -51,6 +50,7 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist-
 				</li>
 			</ul>
 		</div>
+	<? if ( $$variable{'Pricelist'}->id() ) ?>
 		<div class="rightColumn">
 			<ul>
 				<li> 
@@ -71,7 +71,6 @@ return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Pricelist-
 				</li>
 			</ul>
 		</div>
-	<? if ( $$variable{'Pricelist'}->id() ) ?>
 		<br class="spacer"/><hr/>
 		<p> <b>Import/Export Price List</b> </p>
 		<p> 

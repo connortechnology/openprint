@@ -171,6 +171,7 @@ my %variables = (
 		'SteppingCharge1' =>  ['save','output'], 'SteppingCharge2' => ['save','output'], 'SteppingCharge3' => ['save','output'],
 		'InkTotalCharge1' =>  ['save','output'], 'InkTotalCharge2' => ['save','output'], 'InkTotalCharge3' => ['save','output'],
 		'InkMixCharge1' =>  ['save','output'], 'InkMixCharge2' => ['save','output'], 'InkMixCharge3' => ['save','output'],
+		'StockSetupCharge1'	=> ['save','output'], 'StockSetupCharge2'	=> ['save','output'], 'StockSetupCharge3'	=> ['save','output'],
 #
 
 		'txtPressSheetQty1' => ['save','output'], 'txtPressSheetQty2' => ['save','output'], 'txtPressSheetQty3' => ['save','output'],
@@ -570,6 +571,7 @@ sub calc_from_imposition {
 			$PlateCounts{'Blank'.$$specs{'PlateID'.$qty_index}} += $$sig_specs{'BlankPlateQuantity'.$qty_index};
 			$$specs{'PreviousForms'.$qty_index} += 1 if compare_signatures_runstyle( $specs, $sig_specs, $qty_index );
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetCharge'.$qty_index};
+			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 		} # end foreach $index
 
 		my $price = calc_price( $Project, $service_id, $Imposition, $project, $services, $specs, $Project->quantity($qty_index), $qty_index, \%PlateCounts, [] );
@@ -1733,6 +1735,7 @@ $log->error("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) ($$sp
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $index );
 			next if $$sig_specs{'pages_supplied'} eq 'Y';
 			$$project{'roll2sheetcharged'} = 1 if $$sig_specs{'Roll2SheetMakeReady'.$qty_index};
+			$$project{'stocksetupcharged'} = 1 if $$sig_specs{'StockSetupCharge'.$qty_index};
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
 		} # end foreach $index
@@ -1894,6 +1897,7 @@ $log->error("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) ($$sp
 
 		$$specs{'Roll2SheetMakeReady'.$qty_index} = $best_price{'Roll2SheetMakeReady'};
 		$$specs{'Roll2SheetRunCharge'.$qty_index} = $best_price{'Roll2SheetRunCharge'};
+		$$specs{'StockSetupCharge'.$qty_index} = $best_price{'StockSetup'};
 #
 	
 #	$openprint::log->debug("Testingtext here : Run Charge = $best_price{'Run Total'}");
@@ -2702,9 +2706,11 @@ $openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
 				} # end if
 			} # end if
 
-			if ( my $StockSetupPrice = $Paper->get_price( 'weight'=>$$price{'Stock Weight'}, 'service'=>'Setup', 'equipment_id'=>$Press->id() ) ) {
-				$$price{'StockSetup'} = $$StockSetupPrice{'price'};
-				$$price{'Total Cost'} += $$StockSetupPrice{'price'};
+			if ( ! $$project{'stocksetupcharged'} ) {
+				if ( my $StockSetupPrice = $Paper->get_price( 'weight'=>$$price{'Stock Weight'}, 'service'=>'Setup', 'equipment_id'=>$Press->id() ) ) {
+					$$price{'StockSetup'} = $$StockSetupPrice{'price'};
+					$$price{'Total Cost'} += $$StockSetupPrice{'price'};
+				} # end if
 			} # end if
 
 #$openprint::log->debug("After plates: $$price{'Plate Comparison Cost'} $$price{'Comparison Cost'}");
@@ -2771,42 +2777,48 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 					my @side_two_colours = get_colours( $specs, 'SideTwo' );
 					my %inkCoverage = get_inkcoverage( $specs );
 					my @Papers = get_Stocks( $Project, $specs );
+					if ( @Papers ) {
+						my $new_project = setup_project( $Project, $sigs[0], $Project->services(), $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
+						my %presses = select_presses( $Project, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
+						my @possible_presses;
+						foreach my $press_id ( keys %presses ) {
+							if ( ! $presses{$press_id} ) {
+								push @possible_presses, new openprint::Equipment($press_id);
+							} # end if
+						} # end foreach
+						if ( @possible_presses ) {
+							@possible_presses = sort { $a->strid() <=>$b->strid() } @possible_presses;
 
-					my $new_project = setup_project( $Project, $sigs[0], $Project->services(), $specs, \@side_one_colours, \@side_two_colours, \%inkCoverage, $Papers[0] );
-					my %presses = select_presses( $Project, $Papers[0], $specs, \@side_one_colours, \@side_two_colours );
-					my @possible_presses;
-					foreach my $press_id ( keys %presses ) {
-						if ( ! $presses{$press_id} ) {
-							push @possible_presses, new openprint::Equipment($press_id);
-						} # end if
-					} # end foreach
-					if ( @possible_presses ) {
-						@possible_presses = sort { $a->strid() <=>$b->strid() } @possible_presses;
+							my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
+							$$specs{'PrintingTypes'} = get_printing_types( $Project, $sigs[0], $printing_specs, $specs, $qty_index, \@available_printingtypes, $imp );
+	$openprint::log->debug("PrintingTypes: $$specs{'PrintingTypes'}");
+							my %impositions = get_impositions( $Project, $specs, $project, \@side_one_colours, \@side_two_colours, $qty, $qty_index, \@possible_presses, \@Papers );
+							$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
+							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
+							$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 
-						my @available_printingtypes = sets::union( map { $_->specification('Printing Type') } @possible_presses );
-						$$specs{'PrintingTypes'} = get_printing_types( $Project, $sigs[0], $printing_specs, $specs, $qty_index, \@available_printingtypes, $imp );
-$openprint::log->debug("PrintingTypes: $$specs{'PrintingTypes'}");
-						my %impositions = get_impositions( $Project, $specs, $project, \@side_one_colours, \@side_two_colours, $qty, $qty_index, \@possible_presses, \@Papers );
-						$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
-						$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
-						$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
+							my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $Service->specs(), $Service->specs(), $qty, $qty_index, 
+							\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), 0 );
 
-						my $sig_price = get_project_price( $Project, $sigs[0], $new_project, $Service->specs(), $Service->specs(), $qty, $qty_index, 
-						\@possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@sigs, \%impositions, $other_impositions, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), 0 );
-
-						if ( $$sig_price{'Imposition'} ) {
-$openprint::log->debug("Calculating Additional Signatures for other group success");
-							$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
-							$$price{'AdditionalSignature Breakdown'} .= sprintf( ' Additional Sig %dpages %dout %s on %sx%s on %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $$sig_price{'Imposition'}->Paper()->width(), $$sig_price{'Imposition'}->Paper()->height(), $$sig_price{'Imposition'}->Press()->strid(), $$price{'Comparison Cost'} ) . '<br/>';
-							#$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
-						} else {
-$openprint::log->debug("Calculating Additional Signatures for other group failure");
-							$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
+							if ( $$sig_price{'Imposition'} ) {
+	$openprint::log->debug("Calculating Additional Signatures for other group success");
+								$$price{'Comparison Cost'} += $$sig_price{'Comparison Cost'};
+								$$price{'AdditionalSignature Breakdown'} .= sprintf( ' Additional Sig %dpages %dout %s on %sx%s on %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $$sig_price{'Imposition'}->Paper()->width(), $$sig_price{'Imposition'}->Paper()->height(), $$sig_price{'Imposition'}->Press()->strid(), $$price{'Comparison Cost'} ) . '<br/>';
+								#$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
+							} else {
+	$openprint::log->debug("Calculating Additional Signatures for other group failure");
+								$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
+								$$price{'Comparison Cost'} += 1000000;
+							} # end if
+						} else {	
 							$$price{'Comparison Cost'} += 1000000;
 						} # end if
-					} else {	
-						$$price{'Comparison Cost'} += 1000000;
-					} # end if
+					} else {
+						$openprint::log->error("Unable to find stocks for group ");
+						foreach my $k ( keys %$specs ) {
+							$openprint::log->error("$k => $$specs{$k}");
+						} # end if
+					} # end if Has Stocks
 				} # end if has other sigs
 			} # end if Group == 1
 } # end if ! recurse
@@ -3154,9 +3166,9 @@ sub calc_price {
 	} # end if
 
 	my %diecutting_results;
-$openprint::log->debug("Need DieCutting $$project{'NeedDieCutting'}");
+#$openprint::log->debug("Need DieCutting $$project{'NeedDieCutting'}");
 	if ( $$project{'HasDieCutting'} and $$project{'NeedDieCutting'} ) {
-$openprint::log->debug("Doing DieCutting");
+#$openprint::log->debug("Doing DieCutting");
 		%diecutting_results = openprint::Estimating::DieCutting::signature_calc( $Project, $service_index, $specs, $$project{'DieCuttingSpecs'}, $qty_index, $Imposition );
 		if ( $diecutting_results{'Status'} eq 'uncalculated' ) {
 			$price{'DieCutting Breakdown'} .= "DieCutting error: $diecutting_results{'alert'} $diecutting_results{alert} <br/>";

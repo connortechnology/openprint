@@ -48,6 +48,7 @@ my %find_cache;
 %defaults = (
 	'location_id'		=>	undef,
 	'servicetype_id'	=>	undef,
+	'sorting'		=>	undef,
 );
 
 sub cache_field {

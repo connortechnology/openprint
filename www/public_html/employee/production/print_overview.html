@@ -123,7 +123,7 @@
 	} # end foreach press
 
 	my $html = '<select name="Equipment" multiple="multiple" size="'. @presses.'">';
-	$html .= ssi::make_select( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
+	$html .= ssi::make_drop_down( [ map { $_->id(), $_->name() } @presses ], \@selected_equipment );
 	return $html;
 ) ?>
 			</select>

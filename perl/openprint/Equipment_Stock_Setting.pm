@@ -1,9 +1,10 @@
-package openprint::Equipment_Stock_Setting;
-@ISA = qw(openprint::Object);
-
 use strict;
-use vars qw( $table $serial %fields %transforms %defaults );
+package openprint::Equipment_Stock_Setting;
+our @ISA = qw(openprint::Object);
 
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+
+$debug = 1;
 $table = 'Equipment_Stock_Settings';
 $serial= 'equipment_stock_settings_id_seq';
 %fields = (
@@ -18,7 +19,6 @@ $serial= 'equipment_stock_settings_id_seq';
 %defaults = (
 );
 
-require sql;
 require openprint::Equipment;
 require openprint::Paper;
 
@@ -29,7 +29,5 @@ sub Stock {
 	return new openprint::Paper( $_[0]{'stock_id'} );
 } # end sub Stock
 	
-
 1;
-
 __END__

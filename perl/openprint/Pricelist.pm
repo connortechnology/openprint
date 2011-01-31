@@ -79,17 +79,27 @@ sub getPrices {
 
 sub Next {
 	my $self = shift;
-	my $New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MIN(id) FROM pricelists WHERE id > ?}, $$self{'id'} ) );
-	if ( ! $New->id() ) {
-		$New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MAX(id) FROM Pricelists WHERE id <=?},  $$self{'id'} ) );
+	my $New;
+	if ( $$self{'id'} ) {
+		$New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MIN(id) FROM pricelists WHERE id > ?}, $$self{'id'} ) );
+		if ( ! $New->id() ) {
+			$New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MAX(id) FROM Pricelists WHERE id <=?},  $$self{'id'} ) );
+		} # end if
+	} else { 
+		$New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MIN(id) FROM pricelists} ) );
 	} # end if
 	return $New;
 } # end sub next
 sub Previous {
 	my $self = shift;
-	my $New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MAX(Id) FROM pricelists WHERE Id < ?}, $$self{'id'} ) );
-	if ( ! $New->id() ) {
-		$New = new openprint::Pricelist( sql::execute( $openprint::log, $openprint::dbh, q{SELECT MIN(Id) FROM pricelists WHERE Id >=?},  $$self{'id'} ) );
+	my $New;
+	if ( $$self{'id'} ) {
+		$New = new openprint::Pricelist( sql::execute( undef, undef, q{SELECT MAX(Id) FROM pricelists WHERE Id < ?}, $$self{'id'} ) );
+		if ( ! $New->id() ) {
+			$New = new openprint::Pricelist( sql::execute( $openprint::log, $openprint::dbh, q{SELECT MIN(Id) FROM pricelists WHERE Id >=?},  $$self{'id'} ) );
+		} # end if
+	} else {
+		$New = new openprint::Pricelist( sql::execute( $openprint::log, $openprint::dbh, q{SELECT MIN(Id) FROM pricelists} ) );
 	} # end if
 	return $New;
 } # end sub prev

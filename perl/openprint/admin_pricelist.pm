@@ -16,8 +16,20 @@ require openprint::logs;
 sub edit {
 	my ( $r, $log, $dbh, $variable ) = @_;
 
+	my $Pricelist;
+	$openprint::param{'ddmPriceList'} =~ s/\D//g;
 	my $id = $openprint::param{'ddmPriceList'};
-	my $Pricelist = $$variable{'Pricelist'} = new openprint::Pricelist( $id );
+	if ( $id ) {
+		$Pricelist = $$variable{'Pricelist'} = new openprint::Pricelist( $id );
+	} # end if
+	if ( ! ( $Pricelist and $Pricelist->id() ) ) {
+		if ( $Pricelist = openprint::Pricelist->find_one('order'=>'lower(name)') ) {
+			$id = $Pricelist->id();
+			$$variable{'Pricelist'} = $Pricelist;
+		} else {
+			$Pricelist = $$variable{'Pricelist'} = new openprint::Pricelist( );
+		} # end if
+	} # end if
 
 	if ( $r->param('btnFunction') eq '>>' ) {
 		$Pricelist = $Pricelist->Next();
