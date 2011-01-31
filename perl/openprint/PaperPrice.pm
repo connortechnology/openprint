@@ -1,12 +1,11 @@
-package openprint::PaperPrice;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::PaperPrice;
+our @ISA = qw(openprint::Object);
 
 require sql;
 
 use vars qw( $debug $table $serial %find_fields %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'paper_prices';
 $serial = 'paper_prices_id_seq';
 

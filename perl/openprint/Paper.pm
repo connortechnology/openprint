@@ -32,7 +32,7 @@ require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-$debug = 1;
+$debug = 0;
 
 my @fields = (
 		'id', 'created_on',

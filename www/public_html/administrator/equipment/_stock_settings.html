@@ -10,7 +10,7 @@
 	# Prime cache
 	# openprint::Equipment_Stock_Setting->find('equipment_id'=>$$variable{'Equipment'}->id() );
 
-	foreach my $Stock ( openprint::Paper::find( 'stock_settings_equipment_id =' => $$variable{'Equipment'}->id(), 'order'=>'name,finish,colour,weight' ) ) {
+	foreach my $Stock ( openprint::Paper->find( 'stock_settings_equipment_id =' => $$variable{'Equipment'}->id(), 'order'=>'name,finish,colour,weight' ) ) {
 		my $Setting = openprint::Equipment_Stock_Setting->find_one( 'stock_id'=>$Stock->id(), 'equipment_id'=>$$variable{'Equipment'}->id() );
 		if ( ! $Setting ) {
 			$log->error("No setting found");
