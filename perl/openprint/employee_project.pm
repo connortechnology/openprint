@@ -791,7 +791,7 @@ sub _stock_checkout {
 		} else {
 			$variable{'error'} .='Please scan the barcode on the skid label or rfid tag.<br/>';
 		} # end if
-		if ( ! $Skid->id() ) {
+		if ( ! ( $Skid and $Skid->id() ) ) {
 			$variable{'error'} .= 'Unknown skid scanned.<br/>';
 			return;
 		} # end if
