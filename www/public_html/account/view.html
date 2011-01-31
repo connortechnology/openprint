@@ -1,0 +1,51 @@
+<div class="PageTitle">
+<h1>ACCOUNT</h1>
+<h2>User Profile</h2>
+</div>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? if ( $session{'user_id'} ) ?>
+		<div class="UserProfile">
+				<p class="buttons">
+					<? echo ( 
+						my $html;
+						if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) {
+							$html .= ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", '', 'Delete' );
+						} # end if
+						$html .= ssi::writeButton( $log, $dbh, 'edit','edit.gif','', '/account/user_profile.html', 'Edit' );
+						return $html;
+					) ?>
+				</p>
+			<div id="ProfilePicture">
+			<? if ( $$variable{'User'}->asset_id() ) ?>
+			<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
+			<? else ( $$variable{'User'}->asset_id() ) ?>
+			No profile picture set.
+			<? endif ( $$variable{'User'}->asset_id() ) ?>
+			</div>
+	
+			<div id="UserInformation">
+				<fieldset><legend>User Information</legend>
+					<div class="content">
+						<ul>
+						<li><label>Name</label><? echo ( $$variable{'User'}->name() ) ?></li>
+						</ul>
+					</div>
+				</fieldset>
+			</div>
+			<div id="Statistics">
+				<fieldset><legend>Statistics</legend>
+					<div class="content">
+						<ul>
+							<li class="created_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?></li>
+							<li class="updated_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?></li>
+						</ul>
+					</div>
+				</fieldset>
+			</div>
+			<!--#include virtual="_user_profile_view.html"-->
+			<div id="Events">
+			</div>
+		</div><!--UserProfile-->
+<? else ( $session{'user_id'} ) ?>
+You must be logged in to view user profiles.<br/>
+<? endif ( $session{'user_id'} ) ?>

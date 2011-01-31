@@ -49,11 +49,11 @@ sub value {
 			$Entry->set({ 'field_id' => $Field->id(), 'user_id' => $_[0]{'user_id'} } );
 		} # end if
 		$_ = $Entry->save( { 'value' => $_[2] } );
-		$openprint::log->debug("Saving " . $Entry->field() . ': ' . $_[2] . " error: $_ " );
+		#$openprint::log->debug("Saving " . $Entry->field() . ': ' . $_[2] . " error: $_ " );
 	} # end if 
 		
 	if ( $Entry ) {
-		$openprint::log->debug("Returning Entry");
+		#$openprint::log->debug("Returning Entry");
 		return $Entry->value();
 	}
 	#$openprint::log->debug("Returning No Entry");

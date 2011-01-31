@@ -21,9 +21,10 @@
 			require openprint::Log;
 			my $html = '';
 			foreach my $Log ( openprint::Log->find('company_id'=>$session{'company_id'}, 'action_type'=>[2,3,78,79], 'order'=>'date_time DESC','limit'=>10 ) ) {
-			     $html .= sprintf('<tr><td>%s</td><td>%s</td><td style="overflow:hidden;">%s</td><td>%s</td><td>%s</td></tr>',
-					 Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),$Log->User()->name(),
-					 $Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Action()->description(),$Log->note() );
+			     $html .= sprintf('<tr><td>%s</td><td><a href="/account/view.html?user_id=%d">%s</a></td><td style="overflow:hidden;">%s</td><td>%s</td><td>%s</td></tr>',
+					Date::Format::time2str( '%a %b %e, %Y %H:%M', Date::Parse::str2time( $Log->date_time() ) ),
+					$Log->user_id(), $Log->User()->name(),
+					$Log->hostname() ? $Log->hostname(): $Log->ip_address(), $Log->Action()->description(),$Log->note() );
 
 			} # end foreach
 			return $html;
