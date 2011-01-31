@@ -1,7 +1,10 @@
+use strict;
 package openprint::content_prin;
 
 use strict;
 require openprint::main_project;
+require openprint::project;
+require openprint::Project;
 require openprint::ProjectType;
 use openprint ();
 use vars qw( $log $dbh %variable %param %session );
@@ -16,6 +19,8 @@ sub _breakdown {
 }
 
 sub load_simple {
+	$param{'project_id'} =~ s/\D//g;
+
 	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 	if ( $variable{'Project'}->id() ) {
 		$variable{'ProjectType'} = $variable{'Project'}->Type();
@@ -29,17 +34,21 @@ sub load_simple {
 			} # end foreach
 		} # end if
 	} else {
+		$param{'projecttype_id'} =~ s/\D//g;
+		$param{'ProjectType'} =~ s/\s//g;
 		if ( $param{'projecttype_id'} ) {
 			$variable{'ProjectType'} = new openprint::ProjectType( $param{'projecttype_id'} );
 		} elsif ( $param{'ProjectType'} ) {
-			$param{'ProjectType'} =~ s/\s//g;
 			$variable{'ProjectType'} = openprint::ProjectType->find_one( 'name'=>$param{'ProjectType'} );
 			if ( ! $variable{'ProjectType'} ) {
-				$variable{'ProjectType'} = new openprint::ProjectType();
 				$variable{'error'} .= "Invalid Project Type: $param{ProjectType}";
 			} # end if
+		
 		} # end if
 	} # end if
+	if ( ! $variable{'ProjectType'} ) {
+		$variable{'ProjectType'} = new openprint::ProjectType();
+	}
 	if ( ! $variable{'ToCountry'} ) {
 		if ( $session{'company_id'} ) {
 			$variable{'ToCountry'} = new openprint::Company( $session{'company_id'} )->country();
@@ -47,7 +56,6 @@ sub load_simple {
 		if ( ! $variable{'ToCountry'} ) {	
 			$variable{'ToCountry'} = $session{'Country'};
 		} # end if
-$log->debug("Country: Session: $session{'Country'}");
 	} # end if
 	if ( ! $variable{'ToPostalCode'} ) {
 		if ( $session{'company_id'} ) {
@@ -56,12 +64,14 @@ $log->debug("Country: Session: $session{'Country'}");
 	} # end if
 
 	my $services = $variable{'Project'}->services();
+$log->debug('blah' . $variable{'ProjectType'} );
 	if ( $$services{''} ) {
+$log->debug('blah2');
 		my $printing_specs = openprint::service::get_specs_ref( $variable{'Project'}, $$services{''}[0] );
 		foreach my $k ( 'txtFinalWidth','txtFinalHeight','txtWidth','txtHeight','ddmStockFinish','ddmStockBrand','ddmStockWeight','ddmStockColour','ddmStockSheetSize' ) {
 			$variable{$k} = $$printing_specs{$k};
 		} # end foreach
-	} else {
+	} elsif ( $variable{'ProjectType'}->id() ) {
 		# Load defaults
         $_ = q{SELECT strFieldName, strDefaultValue FROM tbl_ProjectType_Defaults WHERE lngProjectTypeIndex=?};
         my %defaults = sql::execute( $log, $dbh, $_, $variable{'ProjectType'}->id() );

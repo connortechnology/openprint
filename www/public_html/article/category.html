@@ -40,6 +40,9 @@
 						<label for="description">Description:</label>
 						<textarea cols="" id="description" name="description" rows="<? echo ( ssi::count_lines($$variable{'Category'}->description() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Category'}->description() ) ?></textarea>
 					</li>
+					<li><label>Image Filename:</label>
+						<input type="text" id="image_filename" name="image_filename" value="<? echo ( $$variable{'Category'}->image_filename() ) ?>" />
+					</li>
 					<li>
 						<label for="image">Image Upload:</label><input type="file" id="filename" name="filename"/>
 					</li>

@@ -30,12 +30,11 @@
 		<!--#include virtual="/includes/main/proj/hdn_fields_printing.html"-->
 		<input type="hidden" name="hdnFolding" value="<?hdnFolding?>"/>
 		<input type="hidden" name="hdnCutting" value="<?hdnCutting?>"/>
-		<fieldset><legend><?ProjectTypeName?></legend>
+		<fieldset><legend><? echo ( $$variable{'ProjectType'}->description() ) ?></legend>
 <? if ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
                 <!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
                 <!--#include virtual="/includes/main/proj/templates/envelopes.html" -->
 <? endif ( $$variable{'ProjectType'}->name() eq 'Envelopes' ) ?>
-<? echo ( $$variable{'ProjectType'}->name() ) ?>
 <? if ( sets::isin( $$variable{'ProjectType'}->name(),['GreetingCards','Postcards','Posters','Signs','Banners','RackCards','Labels','NCR','InkjetOutputs'] ) ) ?>
 		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
@@ -64,11 +63,10 @@
 		<!--#include virtual="/includes/main/proj/templates/cards.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
 <? endif ( $$variable{'ProjectType'}->name() eq 'Cards' ) ?>
-<? if ( $$variable{'ProjectType'}->name() eq 'Pamphlets/Leaflets' ) ?>
-		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
-		<!--#include virtual="/includes/main/proj/templates/brochures.html" -->
+<? if ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Pamphlets/Leaflets', 'Pamphlets_Leaflets' ] ); ) ?>
+		<!--#include virtual="/includes/main/proj/templates/generic.html" -->
 		<!--#include virtual="/includes/main/proj/dimensions.html"-->
-<? endif ( $$variable{'ProjectType'}->name() eq 'Pamphlets/Leaflets' ) ?>
+<? endif ( sets::isin( $$variable{'ProjectType'}->name(), [ 'Pamphlets/Leaflets', 'Pamphlets_Leaflets' ] ); ) ?>
 <? if ( $$variable{'ProjectType'}->name() eq 'NewsLetters' ) ?>
 		<!--#include virtual="/includes/main/proj/templates/project_template_select.html" -->
 		<!--#include virtual="/includes/main/proj/templates/newsletters.html" -->
