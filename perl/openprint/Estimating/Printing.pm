@@ -1217,92 +1217,8 @@ sub get_impositions {
 	return %impositions;
 } # end sub get_impositions
 
-sub calc {
-	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
-
-	# Must clear these
-	%converted_imposition_cache = ();
-	%filtered_imposition_cache = ();
-	my $master_time = gettimeofday();
-#$openprint::log->debug("Starting Printing::calc");
-
-	if ( ! $project_index or ! $service_index ) {
-		$log->debug("No Project Index ($project_index) or Service_index ($service_index)" );
-		return $$specs{'Status'} = 'uncalculated';
-	} # end if
-	$$specs{'Status'} = 'calculated';
-	$$specs{'alert'} = '';
-	$$specs{'information'} = '';
-
-	if ( ( defined $$specs{'PageQuantity'} ) and $$specs{'PageQuantity'} =~ /[^\d\.]/ ) {
-		$variables{'PageQuantity'} = [ sets::exclude( ['output'], $variables{'PageQuantity'} ) ];
-		$$specs{'PageQuantity'} =~ s/[^\d\.]//g;
-	} # end if
-
-	my $Project = new openprint::Project( $project_index );
-	my $services = $Project->services();
-	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-
-# First, clean up all inputs
-	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		my $qty = $$specs{"txtQuantity$qty_index"};
-		$qty =~ s/\D//g;
-		$qty = $Project->quantity( $qty_index ) if ! $qty;
-
-		if ( $qty != $$specs{"txtQuantity$qty_index"} ) {
-			$$specs{"txtQuantity$qty_index"} = $qty;
-			$variables{"txtQuantity$qty_index"} = [sets::union( 'output', @{$variables{"txtQuantity$qty_index"}} ) ];
-		} else {
-			$variables{"txtQuantity$qty_index"} = [sets::exclude( ['output'], $variables{"txtQuantity$qty_index"} ) ];
-		} # end if
-
-		foreach my $k ( 'txtPlateChangeQuantity' ) {
-			if ( $$specs{$k.$qty_index} =~ /[^\d\-]/ ) {
-				$variables{$k.$qty_index} = [ sets::union( 'output', @{$variables{$k.$qty_index}} ) ];
-				$$specs{$k.$qty_index} =~ s/[^\d\-]//g;
-			} else {
-				$variables{$k.$qty_index} = [ sets::exclude( ['output'], $variables{$k.$qty_index} ) ];
-			} # end if
-		} # end foreach
-
-		if ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) {
-			$variables{"OverBase$qty_index"} = [sets::exclude( ['output'], $variables{"OverBase$qty_index"} ) ];
-		} else {
-			$variables{'OverBase'.$qty_index} = [ sets::union( 'output', @{$variables{'OverBase'.$qty_index}} ) ];
-		} # end if
-
-		if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
-			$variables{"OverSetup$qty_index"} = [sets::exclude( ['output'], $variables{"OverSetup$qty_index"} ) ];
-		} else {
-			$variables{'OverSetup'.$qty_index} = [ sets::union( 'output', @{$variables{'OverSetup'.$qty_index}} ) ];
-		} # end if
-
-		if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
-			$variables{"OverRun$qty_index"} = [sets::exclude( ['output'], $variables{"OverRun$qty_index"} ) ];
-		} else {
-			$variables{'OverRun'.$qty_index} = [ sets::union( 'output', @{$variables{'OverRun'.$qty_index}} ) ];
-		} # end if
-
-		# if quantity overriden then the total is total of entered quantity
-		if ( ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
-	 		$$specs{'OverTotal'.$qty_index} = $$specs{'OverBase'.$qty_index} + $$specs{'OverSetup'.$qty_index} + $$specs{'OverRun'.$qty_index};
-		}
-	} # end foreach qty_index
-
-	if ( ($Project->Type()->name() eq 'PresentationFolders') or (($$variable{'Group'} == 1 ) and sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
-		if ( $$specs{'rdbPocketSize'} and ( $$specs{'rdbPocketSize'} ne 'Other' ) ) {
-			$$specs{'PocketSize'} = $$specs{'rdbPocketSize'};	
-			$variables{'PocketSize'} = [ sets::union( 'output', @{$variables{'PocketSize'}} ) ];
-		} else {
-			$variables{'PocketSize'} = [ sets::exclude( ['output'], $variables{'PocketSize'} ) ];
-		} # end if
-		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'PocketSize'} ) ) {
-			return $$specs{'Status'} = 'uncalculated';
-        } elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
-            $$specs{'alert'} .= 'Please select where you would like the pockets.';
-            return $$specs{'Status'} = 'uncalculated';
-		} # end if
-	} # end if
+sub set_size {
+	my ( $Project, $specs, $printing_specs ) = @_;
 
 	if ( $Project->Type()->name() eq 'Banners' ) {
 		my $width = $$specs{'txtFinalWidth'};
@@ -1431,7 +1347,7 @@ sub calc {
 				if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
 # Perfect bound requires more width on th cover to conver the calliiper	
 					my $finished_calliper = 0;
-					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
+					my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $Project->id(), 'Group' );
 					foreach my $group_id ( @Groups ) {
 # Don't include the cover
 						next if $group_id == 1;
@@ -1525,6 +1441,96 @@ sub calc {
 		$variables{'txtFinalWidth'} = [ sets::union( 'output', @{$variables{'txtFinalWidth'}} ) ];
 		$variables{'txtFinalHeight'} = [ sets::union( 'output', @{$variables{'txtFinalHeight'}} ) ];
 	} # end if
+} # end sub set_size
+sub calc {
+	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
+
+	# Must clear these
+	%converted_imposition_cache = ();
+	%filtered_imposition_cache = ();
+	my $master_time = gettimeofday();
+#$openprint::log->debug("Starting Printing::calc");
+
+	if ( ! $project_index or ! $service_index ) {
+		$log->debug("No Project Index ($project_index) or Service_index ($service_index)" );
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
+	$$specs{'Status'} = 'calculated';
+	$$specs{'alert'} = '';
+	$$specs{'information'} = '';
+
+	if ( ( defined $$specs{'PageQuantity'} ) and $$specs{'PageQuantity'} =~ /[^\d\.]/ ) {
+		$variables{'PageQuantity'} = [ sets::exclude( ['output'], $variables{'PageQuantity'} ) ];
+		$$specs{'PageQuantity'} =~ s/[^\d\.]//g;
+	} # end if
+
+	my $Project = new openprint::Project( $project_index );
+	my $services = $Project->services();
+	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
+
+# First, clean up all inputs
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		my $qty = $$specs{"txtQuantity$qty_index"};
+		$qty =~ s/\D//g;
+		$qty = $Project->quantity( $qty_index ) if ! $qty;
+
+		if ( $qty != $$specs{"txtQuantity$qty_index"} ) {
+			$$specs{"txtQuantity$qty_index"} = $qty;
+			$variables{"txtQuantity$qty_index"} = [sets::union( 'output', @{$variables{"txtQuantity$qty_index"}} ) ];
+		} else {
+			$variables{"txtQuantity$qty_index"} = [sets::exclude( ['output'], $variables{"txtQuantity$qty_index"} ) ];
+		} # end if
+
+		foreach my $k ( 'txtPlateChangeQuantity' ) {
+			if ( $$specs{$k.$qty_index} =~ /[^\d\-]/ ) {
+				$variables{$k.$qty_index} = [ sets::union( 'output', @{$variables{$k.$qty_index}} ) ];
+				$$specs{$k.$qty_index} =~ s/[^\d\-]//g;
+			} else {
+				$variables{$k.$qty_index} = [ sets::exclude( ['output'], $variables{$k.$qty_index} ) ];
+			} # end if
+		} # end foreach
+
+		if ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) {
+			$variables{"OverBase$qty_index"} = [sets::exclude( ['output'], $variables{"OverBase$qty_index"} ) ];
+		} else {
+			$variables{'OverBase'.$qty_index} = [ sets::union( 'output', @{$variables{'OverBase'.$qty_index}} ) ];
+		} # end if
+
+		if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
+			$variables{"OverSetup$qty_index"} = [sets::exclude( ['output'], $variables{"OverSetup$qty_index"} ) ];
+		} else {
+			$variables{'OverSetup'.$qty_index} = [ sets::union( 'output', @{$variables{'OverSetup'.$qty_index}} ) ];
+		} # end if
+
+		if ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) {
+			$variables{"OverRun$qty_index"} = [sets::exclude( ['output'], $variables{"OverRun$qty_index"} ) ];
+		} else {
+			$variables{'OverRun'.$qty_index} = [ sets::union( 'output', @{$variables{'OverRun'.$qty_index}} ) ];
+		} # end if
+
+		# if quantity overriden then the total is total of entered quantity
+		if ( ( $$specs{'OverrideBase'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) or ( $$specs{'OverrideRun'.$qty_index} eq 'Y' ) ) {
+	 		$$specs{'OverTotal'.$qty_index} = $$specs{'OverBase'.$qty_index} + $$specs{'OverSetup'.$qty_index} + $$specs{'OverRun'.$qty_index};
+		}
+	} # end foreach qty_index
+
+	if ( ($Project->Type()->name() eq 'PresentationFolders') or (($$variable{'Group'} == 1 ) and sets::isin($$specs{'rdbTemplateType'}, ['2Panel1Pocket','2Panel2Pocket','TriFoldDoublePocket'] ) )) {
+		if ( $$specs{'rdbPocketSize'} and ( $$specs{'rdbPocketSize'} ne 'Other' ) ) {
+			$$specs{'PocketSize'} = $$specs{'rdbPocketSize'};	
+			$variables{'PocketSize'} = [ sets::union( 'output', @{$variables{'PocketSize'}} ) ];
+		} else {
+			$variables{'PocketSize'} = [ sets::exclude( ['output'], $variables{'PocketSize'} ) ];
+		} # end if
+		if ( ! ( $$specs{'rdbPanels'} or $$specs{'txtFinalWidth'} or $$specs{'txtFinalHeight'} or $$specs{'PocketSize'} ) ) {
+			return $$specs{'Status'} = 'uncalculated';
+        } elsif ( ! ( $$specs{'chkPocketCenter'} or $$specs{'chkPocketLeft'} or $$specs{'chkPocketRight'} ) ) {
+            $$specs{'alert'} .= 'Please select where you would like the pockets.';
+            return $$specs{'Status'} = 'uncalculated';
+		} # end if
+	} # end if
+
+	set_size( $Project, $specs, $printing_specs );
+
 
 	if ( ! ( $$specs{'txtWidth'} and $$specs{'txtHeight'} ) ) {
 		$$specs{'alert'} .= 'Please enter Width and Height<br/>';
@@ -2490,19 +2496,31 @@ $openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $
 							$imp->display('Recursion Depth :' . $recursion_depth ) if ( $debug or 1);
 							$$sig_price{'complete'} = 0;
 						} else {
+							# Check to see if we actually should bother recursing
+							if ( %best_price and check_price( $best_price{'Comparison Cost'}, $price, $sig_specs, $qty_index, $imp, 'Sig' ) ) {
+		#$openprint::log->debug("Worse than best: Best is " . $best_price{'Imposition'}->pages() .': ' . $best_price{'Comparison Cost'} . ' ours: ' . $imp->pages() . ': ' . $$price{'Comparison Cost'} );
+		#$best_price{'Imposition'}->display() if $best_price{'Imposition'};
+		#$imp->display();
+								$$price{'complete'} = 0;
+								$upq = 0;
+								last;
+							} # end if
 $recurse = 1;
 #$openprint::log->debug("Equipment override: ".$new_specs{'chkOverridePress'.$qty_index} );
 #$openprint::log->debug("Page QUantity override: ".$new_specs{'chkOverridePageQuantity'.$qty_index} );
 #$imp->display("get_projcetcalc_price this imp $best_price{'Comparison Cost'} $$price{'Comparison Cost'}");
 							$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), $recursion_depth + 1 );
 						} # end if
-						$upq = 0;
+				
 
 # get_project_price is recursive so we are done
 						if ( ( ! $$sig_price{'complete'} ) or ( ! $$sig_price{'Imposition'} ) ) {
+$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, additional price: $additional_price $$sig_price{'Comparison Cost'} pages: " . $imp->pages() . ' of ' . $upq );
 							$$price{'complete'} = $$sig_price{'complete'} = 0;
 							$additional_price = 10000000;
 							$openprint::log->warn('Couldnt calculate full price') if $debug;
+							$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
+							last;
 						} else {
 							@{$$price{'Impositions'}} = @{$$sig_price{'Impositions'}} if $$sig_price{'Impositions'};
 
@@ -2518,15 +2536,8 @@ $recurse = 1;
 							#$$price{'PerfectBound Breakdown'} = $$sig_price{'PerfectBound Breakdown'};
 							$$price{'AdditionalSignature Breakdown'} = $$sig_price{'AdditionalSignature Breakdown'};
 						} # end if sig_price complete
+						$upq = 0;
 					} # end if calc_price or get_project_price
-
-					if ( (! $$sig_price{complete}) or ($additional_price < 0) ) {
-$openprint::log->debug("Unable to calculate additional signatures Complete: $$sig_price{complete}, additional price: $additional_price $$sig_price{'Comparison Cost'}");
-#$imp->display();
-						$$price{'complete'} = 0;
-						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
-						last;
-					} # end if
 
 					#$additional_price -= $$sig_price{'Plate Comparison Cost'};
 					# Fills in the price for breakdown
@@ -4391,18 +4402,20 @@ sub get_weight {
 	my ( $Project, $specs, $qty_index ) = @_;
 
 	my $Paper = openprint::Paper::load_from_signature( $Project, $specs, $qty_index );
+$openprint::log->debug( $Paper->to_string() );
 	my $sig_weight = $$specs{'txtWidth'} * $$specs{'txtHeight'} * $Paper->wpsi();
-#$openprint::log->debug("Get_weight: ($$specs{'txtSignatureSpreadQuantity'.$qty_index} > 0 ? $$specs{'txtSignatureSpreadQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '==='.$Paper->wpsi(undef)."wpsi = $sig_weight * $$specs{'PageQuantity'} = " . $sig_weight * $$specs{'PageQuantity'});
 
+	my $weight = $sig_weight;
 	if ( $$specs{'PageQuantity'.$qty_index} ) {
-		$sig_weight *= $$specs{'PageQuantity'.$qty_index}/$$specs{'txtSpreadSize'};
+		$weight *= $$specs{'PageQuantity'.$qty_index}/$$specs{'txtSpreadSize'};
 	} # end if
 # This is business cards, etc.
 	if ( $$specs{'PageQuantity'} ) {
 # For Scratch Pads
-		$sig_weight *= $$specs{'PageQuantity'};
+		$weight *= $$specs{'PageQuantity'};
 	} # end if
-	return $sig_weight;
+$openprint::log->debug("Get_weight: ($$specs{'PageQuantity'.$qty_index} > 0 ? $$specs{'PageQuantity'.$qty_index} : 1 ) * ( $$specs{'txtWidth'} * $$specs{'txtHeight'} ) * ".$Paper->gsm().'gsm '.$Paper->wpsi() . '==='.$Paper->wpsi(undef)." wpsi = $sig_weight * $$specs{'PageQuantity'.$qty_index} = " . $weight);
+	return $weight;
 } # end sub get_weight
 
 sub group_summary {

@@ -184,8 +184,20 @@ sub view_services {
 				} # end if
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );
-				openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
-				openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+				if ( $$services{''} ) {
+					if ( $Project->Type()->url() eq 'prin/prin_multi.html' ) {
+						my $service_index = $$services{''}[0];
+						my $specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
+						if ( $$specs{'Status'} eq 'calculated' ) {
+
+							openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+							openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+						} # end if
+					} else {
+							openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
+							openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+					} # end if
+				} # end if
 				$Project->summary(undef);
 				$Project->save();
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );

@@ -259,7 +259,7 @@ $log->debug("Presentation folder sizes $$specs{'chkPocketLeft'} $$specs{'chkPock
 			if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
 				openprint::service::insert_service_spec( $log, $dbh, $$Project{'id'}, $$services{''}[0], $spec, $$specs{$spec} );
 				if ( $$printing_specs{$spec} ne $$specs{$spec} ) {
-$openprint::log->warn("Hey, insert_service_spec didn't update the hash!");
+$openprint::log->error("Hey, insert_service_spec didn't update the hash!");
 				$$printing_specs{$spec} = $$specs{$spec};
 				} # end if
 			} # end if

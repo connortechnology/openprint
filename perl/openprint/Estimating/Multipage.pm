@@ -80,7 +80,6 @@ sub calc {
 
 	my @Groups = sql::execute( undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName=?', $project_index, 'Group' );
 	if ( $$specs{'rdbCover'} eq 'Different' ) {
-
 		if ( ! sets::isin( 1, \@Groups ) ) {
 			push @Groups, 1;
 		} # end if
@@ -202,6 +201,15 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 		} # end if
 	} # end if
 
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		my %new_specs = %{$sig_specs};
+		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $specs );
+		foreach my $k ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalSize' ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, $k, $new_specs{$k} );
+		} # end foreach k
+	} # end foreach
+
 	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
@@ -246,7 +254,7 @@ $openprint::log->debug( "Signature: @signatures");
 		} # end if
 	} # end for
 
-	my @groups = sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
+	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' ) );
 	if ( ! @groups ) {
 		foreach my $ss_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
@@ -277,6 +285,7 @@ $openprint::log->debug( "Signature: @signatures");
 					if ( ! @sigs ) {
 						push @sigs, copy_signature( $project_index, $sig_specs );
 					} # endif
+$openprint::log->debug("Saving additional imposition");
 					my $a_ss_id = shift @sigs;
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
 					my %specs = %{$new_sig_specs};
@@ -286,7 +295,7 @@ $openprint::log->debug( "Signature: @signatures");
 					sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
 
 					foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $new_sig_specs, \%specs ) ) {
-						openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $specs{$key} );
+						openprint::service::insert_service_spec( $log, undef, $project_index, $a_ss_id, $key, $specs{$key} );
 					} # end foreach
 					sql::end_transaction( $openprint::dbh, $ac );
 
