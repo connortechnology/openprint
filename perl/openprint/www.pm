@@ -578,7 +578,7 @@ $openprint::log->debug("$1");
 			} # end if
 		} # end if
 
-		if ( $first ) {
+		if ( $first and -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
 			my $module = 'openprint::' . lc $first;
 			$module .= '_'.$second if $second;
 			eval( "require $module;" );

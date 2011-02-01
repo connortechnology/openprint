@@ -931,7 +931,8 @@ function date_clear( e_y, e_m, e_d, e_h, e_min ) {
 function set_date( form, from, to ) {
 	ddm_select_by_value( form.elements[to+'_year'], get_ddm_value( form.elements[from+'_year'] ) );
 	ddm_select_by_value( form.elements[to+'_month'], get_ddm_value( form.elements[from+'_month'] ) );
-	ddm_select_by_value( form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
+	setDaysDropDown(get_ddm_value( form.elements[from+'_year'] ), get_ddm_value( form.elements[from+'_month'] ), form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
+	//ddm_select_by_value( form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
 } // end function set_date
 
 function check_time_starting( form, starting_prefix, ending_prefix ) {

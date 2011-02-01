@@ -10,7 +10,7 @@
 </script>
 <div class="Article"><div class="Edit">
 	<div class="leftColumn">
-		<form name="f1" id="f1" action="history.html" method="post">
+		<form name="f1" id="f1" action="/article/history.html" method="post">
 			<fieldset><legend>Editing Article<? echo ( $$variable{'Article'}->id() ? '('.$$variable{'Article'}->id().')' : '' ) ?></legend>
 				<? if ( $$variable{'Article'}->deleted() ) ?>
 				<span class="warning">This article has been deleted</span>
