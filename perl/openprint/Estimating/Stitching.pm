@@ -174,7 +174,7 @@ sub signature_calc {
 				my ( $pages ) = $type =~ /(\d+)PageFold/;
 				#$results{'Breakdown'} .= "Folding$index: $$sig_specs{SignatureIndex} sig_pages; $sig_pages type: $type pages: $pages qty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . '<br/>';
 				if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
-					$pages{$pages} += $sig_pages / $pages;
+					$pages{$pages} += int($sig_pages / $pages);
 				} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $$sig_specs{'PageQuantity'.$qty_index} ) {
 					$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 				} else {
