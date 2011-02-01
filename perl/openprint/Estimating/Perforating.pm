@@ -497,6 +497,8 @@ sub summary {
 	return '';
 } # end sub summary
 
-1;
+sub save {
+} # end sub save
 
+1;
 __END__
