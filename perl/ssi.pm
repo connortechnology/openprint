@@ -69,7 +69,7 @@ sub do_new_substitution {
 			$replacement_text .= variable_substitution( \$end, $variable ) if $end;
 			return $replacement_text;
 		} else {
-			$log->debug("Unable to find terminating if ( $$command )");
+			$log->debug("Unable to find terminating if ( $$command ) in $$text");
 			return variable_substitution( $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /pop\s*\((.*)\)\s*=\s*([\%\w]*)/i ) {
