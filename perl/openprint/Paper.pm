@@ -970,7 +970,7 @@ sub get_price {
 		} # end foreach Price
 		if ( ! $price ) {
 			if ( $params{'service'} eq 'Material' or $debug ) {
-			$openprint::log->warn("Unable to find price for Stock $params{service} $params{equipment_id} : $qty");
+				$openprint::log->warn("Unable to find price for Stock $params{service} $params{equipment_id} : $qty");
 			} # end if
 			return;
 		} # end if

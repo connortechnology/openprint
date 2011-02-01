@@ -238,6 +238,15 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 		} # end if
 	} # end if
 
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		my %new_specs = %{$sig_specs};
+		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $specs );
+		foreach my $k ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalSize' ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, $k, $new_specs{$k} );
+		} # end foreach k
+	} # end foreach
+
 	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
@@ -261,16 +270,6 @@ $openprint::log->debug( "Signature: @signatures");
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
 
-# Clear these so that when we start recalculating, we get large signatures first.
-if ( 0 ) {
-		# Not neccessary anymore?
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
-				openprint::service::insert_service_specs( $log, $dbh, $project_index, $signatures[$i], 'PageQuantity'.$qty_index, '' );
-			} # end if
-		} # end foreach
-} # end if
-
 		if ( $$printing_specs{'PrintingType'} ) {
 			if ( 
 				 ( $Project->quantity1() and ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} ) )
@@ -292,7 +291,7 @@ if ( 0 ) {
 		} # end if
 	} # end for
 
-	my @groups = sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
+	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' ) );
 	if ( ! @groups ) {
 		foreach my $ss_id ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
@@ -310,21 +309,6 @@ if ( 0 ) {
 			$openprint::log->debug("Calcing $ss_id");
 			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
 			$openprint::log->debug("Done Calcing $ss_id $$sig_specs{'Status'}");
-# If we couldn't calculate, then delete all the other printing types and retry.
-			if ( 0 and $$sig_specs{'Status'} eq 'uncalculated' ) {
-				if ( 1 < @printing_types ) {
-					$openprint::log->debug("Retrying after changing Printing Type");
-					foreach my $ss_id2 ( @signatures ) {
-						foreach my $qty_index ( $Project->quantity_indexes() ) {
-							openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType'.$qty_index, '' ) if $$sig_specs{'txtQuantity1'};
-						} # end foreach
-						my $Service = $Project->Service( $ss_id2 );
-						$Service->save({'status'=>'uncalculated'});
-					} # end foreach Signature
-					$sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
-				$openprint::log->debug("Done Calcing 2 $$sig_specs{'Status'}");
-				} # end if has printingtypes
-			} # end if 
 			
 			if ( $$sig_specs{'Status'} eq 'calculated' ) {
 				$status = $$sig_specs{'Status'};
@@ -338,6 +322,7 @@ if ( 0 ) {
 					if ( ! @sigs ) {
 						push @sigs, copy_signature( $project_index, $sig_specs );
 					} # endif
+$openprint::log->debug("Saving additional imposition");
 					my $a_ss_id = shift @sigs;
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
 					my %specs = %{$new_sig_specs};
@@ -347,7 +332,7 @@ if ( 0 ) {
 					sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
 
 					foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $new_sig_specs, \%specs ) ) {
-						openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $specs{$key} );
+						openprint::service::insert_service_spec( $log, undef, $project_index, $a_ss_id, $key, $specs{$key} );
 					} # end foreach
 					sql::end_transaction( $openprint::dbh, $ac );
 
@@ -363,8 +348,8 @@ if ( 0 ) {
 				$openprint::log->debug("uncomplete status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
 				return 'uncalculated';
 			} # end if
-		} # end foreach grooooup
-	} # end if no gorups
+		} # end foreach group
+	} # end if no groups
 
 	return 'calculated';
 } # end sub calculate_signatures
