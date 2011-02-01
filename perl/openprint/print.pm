@@ -95,11 +95,11 @@ sub view_services {
 				if ( $r->param('NewBook') eq 'Y' ) {
 					multipage_signatures( \%openprint::param, $log, $dbh, $variable, $project_index, $service_index );
 					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, 'Multipage' );
-					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
+					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 					openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, $service_index );
 				} elsif ( $r->param('PrintingService') eq 'Y' or $recalc ) {
 
-					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
+					openprint::Estimating::Multipage::calculate_signatures( $log, $dbh, $variable, $project_index );
 					# Now run code to modify all other services
 					# Only do this if all signatures have been specified, otherwise it is a waste of time
 					$log->info("********* Auto Calculate  ( PrintingService eq 'Y' ) *************");
