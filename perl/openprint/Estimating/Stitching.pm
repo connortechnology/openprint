@@ -245,7 +245,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
 
 	my $bestPrice;
 	my $bestEquipment;
-$results{'alert'} .= $imposition.'out on ';
+#$results{'alert'} .= $imposition.'out on ';
 $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	foreach my $Equipment ( @equipment ) {
 		if ( $$services{'NoOfflineBindery'} ) {

@@ -1769,10 +1769,10 @@ $log->warn("There are no quantities!");
 						'login'		=> $openprint::r->dir_config('db_user'),
 						'password'	=> $openprint::r->dir_config('db_password'),
 						);
-					return get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 1 );
+					return get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
 					} );
 		} else {
-			my $sig_price = get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 1 );
+			my $sig_price = get_project_price( $Project, $service_index, $project, $specs, $specs, $qty, $qty_index, \@possible_presses, $printing_specs, \@versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, \%impositions, \@other_impositions, undef, 0 );
 			$prices{$qty_index} = $sig_price;
 		} # end if
 
@@ -2005,7 +2005,7 @@ sub breakdown {
 	$breakdown .= $$price{'DieCutting Breakdown'} if $$price{'DieCutting Breakdown'};
 	$breakdown .= $$price{'Folding Breakdown'};
 	$breakdown .= $$price{'Perforating Breakdown'} if $$price{'Perforating Breakdown'};
-	$breakdown .= $$price{'AdditionalSignature Breakdown'};
+	$breakdown .= '<p>'.$$price{'AdditionalSignature Breakdown'}.'</p>';
 	$breakdown .= $$price{'Stitching Breakdown'};
 	$breakdown .= $$price{'SpinePaste Breakdown'};
 	$breakdown .= $$price{'PerfectBound Breakdown'};
@@ -2337,11 +2337,10 @@ sub get_project_price {
 			my $hash_key = join(',', $Press->strid(), $imp->runstyle(), $imp->pages(), $imp->imposition() );
 			$$sig_specs{'PreviousForms'.$qty_index} = $previous_forms_cache{$hash_key};
 			$previous_forms_cache{$hash_key} += 1;
-my $recurse = 0;
+			my $recurse = 0;
 
 			my $services = $Project->services();
 			my %PlateCounts = %$PlateCounts;
-			my %PaperCounts = %$PaperCounts;
 
 			# Imp still gets modified in calc_price, Folding adds Folder member
 			$imp = $imp->copy();
@@ -2363,6 +2362,8 @@ my $recurse = 0;
 				} # end if
 				next; # next Impo
 			} # end if
+
+			my %PaperCounts = %$PaperCounts;
 			my $Paper = $imp->Paper();
 
 			if ( $$project{'HasProofs'} ) {
@@ -2421,7 +2422,6 @@ my $recurse = 0;
 					} # end if s_id, meaning dealing with existing sigs
 # If we didn't get a new s_id, then we are using fake services
 					if ( $s_id == $service_index ) {
-							#$openprint::log->debug("Making fake service");
 						$s_id = 0;
 						%new_specs = %$service_specs;
 # These will only have an effect if we get down to call get_project_price. If we get there, we are looking at a smaller # of pages, so might want a different press.
@@ -2452,9 +2452,7 @@ my $recurse = 0;
 
 						if ( int($$sig_price{'Comparison Cost'}) == $last_sig_price ) {
 							$sigs = int($upq/$imp->pages());
-
 							$additional_price *= $sigs;
-
 							$PaperCounts{$Paper->to_string()} += $sigs * $$sig_price{'Stock Qty'};
 							foreach ( 1 .. $sigs ) {
 								push @{$$price{'Impositions'}}, $imp;
@@ -2506,9 +2504,6 @@ $openprint::log->debug("Doing full calc when $upq >= " . $imp->pages() . ' ' . $
 								last;
 							} # end if
 $recurse = 1;
-#$openprint::log->debug("Equipment override: ".$new_specs{'chkOverridePress'.$qty_index} );
-#$openprint::log->debug("Page QUantity override: ".$new_specs{'chkOverridePageQuantity'.$qty_index} );
-#$imp->display("get_projcetcalc_price this imp $best_price{'Comparison Cost'} $$price{'Comparison Cost'}");
 							$sig_price = get_project_price( $Project, $s_id, $project, $service_specs, \%new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, (%best_price ? $best_price{'Comparison Cost'} - $$price{'Comparison Cost'} : 0), $recursion_depth + 1 );
 						} # end if
 				
@@ -2530,26 +2525,20 @@ $openprint::log->debug("Unable to calculate additional signatures Complete: $$si
 							$PlateCounts{$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Plate Count'};
 							$PlateCounts{'Blank'.$$sig_price{'Plate Costs'}{'Plate ID'}} += $$sig_price{'Plate Costs'}{'Blank Plates'};
 							$additional_price = $$sig_price{'Comparison Cost'};
-							#$$price{'Paper Breakdown'} = $$sig_price{'Paper Breakdown'};
 							# Will get included in AdditionalSignature Breakdown
-							#$$price{'Stitching Breakdown'} = $$sig_price{'Stitching Breakdown'};
-							#$$price{'PerfectBound Breakdown'} = $$sig_price{'PerfectBound Breakdown'};
 							$$price{'AdditionalSignature Breakdown'} = $$sig_price{'AdditionalSignature Breakdown'};
 						} # end if sig_price complete
 						$upq = 0;
 					} # end if calc_price or get_project_price
 
-					#$additional_price -= $$sig_price{'Plate Comparison Cost'};
 					# Fills in the price for breakdown
 					plate_cost( $sig_price, \%PlateCounts, $$sig_price{'Imposition'} );
 
 					$$price{'Comparison Cost'} += $additional_price;
-					#$additional_price += $$sig_price{'Plate Price'};
-					#$additional_price += $$sig_price{'Blank Plate Price'};
 
 					if ( $$sig_price{'Imposition'} ) {
-						$$price{'AdditionalSignature Breakdown'} .= sprintf($sigs . ' Additional Sig %dpages %dout %s on %sx%s on %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $$sig_price{'Imposition'}->Paper()->width(), $$sig_price{'Imposition'}->Paper()->height(), $$sig_price{'Imposition'}->Press()->strid(), $$price{'Comparison Cost'} ) . '<br/>';
-						$$sig_price{'Comparison Cost'} = '';
+						$$price{'AdditionalSignature Breakdown'} .= sprintf($sigs . ' Additional Sig %dpages %dout %s on %sx%s on %s %.2f', $$sig_price{'Imposition'}->pages(), $$sig_price{'Imposition'}->imposition(), $$sig_price{'Imposition'}->runstyle(), $$sig_price{'Imposition'}->Paper()->width(), $$sig_price{'Imposition'}->Paper()->height(), $$sig_price{'Imposition'}->Press()->strid(), $$sig_price{'Comparison Cost'} ) . '<br/>';
+						#$$sig_price{'Comparison Cost'} = '';
 						$$price{'AdditionalSignature Breakdown'} .= breakdown( $sig_price, $sig_specs );
 					} else {
 						$$price{'AdditionalSignature Breakdown'} .= 'Unable to calculate additional signatures.<br/>';
@@ -2567,10 +2556,10 @@ $openprint::log->debug("Unable to calculate additional signatures Complete: $$si
 			} # end if UnspecifiedPageQuanitty
 #$openprint::log->debug( 'calc_price: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) . ' Complete: ' . $price{complete} );
 			if ( ! $$price{complete} ) {
-if ( $debug ) {
-$openprint::log->debug("No price complete ");
-$imp->display();
-} # end if
+				if ( $debug ) {
+					$openprint::log->debug("No price complete ");
+					$imp->display();
+				} # end if
 				next;
 			} # end if
 
@@ -2580,7 +2569,7 @@ $imp->display();
 			} # end if
 
 			plate_cost( $price, \%PlateCounts, $imp );
-if ( ! $recurse ) {
+if ( ! $recursion_depth ) {
 			my @paper_strings = keys %PaperCounts;
 			if ( 1 == @paper_strings and $imp->Paper()->to_string() ne $paper_strings[0] ) {
 $openprint::log->error("Different paper in count versus imposition: $paper_strings[0] ne " . $imp->Paper()->to_string() );
@@ -2684,57 +2673,55 @@ $openprint::log->debug("Paper debug: " . $Paper->sheet_weight() );
 			} # end foreach plate_id
 #$openprint::log->debug("After plates: $$price{'Plate Comparison Cost'} $$price{'Comparison Cost'}");
 
-			#if ( ! $upq ) {
-				# The idea is to only calc these on the last sig
-				if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$sig_specs{'txtSignatureType'} ne 'Cover Spreads') ) {
-					my @all_impositions;
-					push @all_impositions, @{$other_impositions}, @{$$price{'Impositions'}};
-					
+			# The idea is to only calc these on the last sig
+			if ( ($$services{'LoopStitching'} or $$services{'SaddleStitching'}) and ($$sig_specs{'txtSignatureType'} ne 'Cover Spreads') ) {
+				my @all_impositions;
+				push @all_impositions, @{$other_impositions}, @{$$price{'Impositions'}};
+				
 #my $starttime = gettimeofday();
 #$openprint::log->debug("Stitching::signature_calc");
-					my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@all_impositions );
-					if ( $$results{'Status'} eq 'uncalculated' ) {
-						$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
+				my $results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@all_impositions );
+				if ( $$results{'Status'} eq 'uncalculated' ) {
+					$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
 #$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>" . $$project{'StitchingSpecs'}{'hdnBreakdown'.$qty_index};
-						$$price{'Comparison Cost'} += 10000000; # Can't stich this on
-							$$price{'Stitching Cost'} = 10000000;
-					} else {
-						$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) Price: $%.2f<br/>', @$results{'Status','alert','Price'} );
-						$$price{'Stitching Cost'} = $$results{'Price'};
-						$$price{'Comparison Cost'} += $$results{'Price'};
+					$$price{'Comparison Cost'} += 10000000; # Can't stich this on
+						$$price{'Stitching Cost'} = 10000000;
+				} else {
+					$$price{'Stitching Breakdown'} .= sprintf('Stitching (%s) (%s) Price: $%.2f<br/>', @$results{'Status','alert','Price'} );
+					$$price{'Stitching Cost'} = $$results{'Price'};
+					$$price{'Comparison Cost'} += $$results{'Price'};
 #$openprint::log->debug("After Stitching $$price{'Comparison Cost'} $$price{'Stitching Cost'}");
-					} # end if
-#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 				} # end if
+#$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
+			} # end if
 
-				if ( $$services{'PerfectBound'} and $$sig_specs{'txtSignatureType'} ne 'Cover Spreads') {
+			if ( $$services{'PerfectBound'} and $$sig_specs{'txtSignatureType'} ne 'Cover Spreads') {
 #my $starttime = gettimeofday();
-					my @Impositions = @{$$price{'Impositions'}};
+				my @Impositions = @{$$price{'Impositions'}};
 
-					foreach my $sig_id ( $Project->signatures() ) {
-						my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+				foreach my $sig_id ( $Project->signatures() ) {
+					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 # Don't try to load uncalculated sigs.  They can't count, might turn it 1 out
-						next if ! $$sig_specs{'txtImposition'.$qty_index};
-						next if $$sig_specs{'Group'} == 1;
-						next if ( ($$sig_specs{'Group'} == $$service_specs{'Group'}) and ($sig_id >= $service_index) );
+					next if ! $$sig_specs{'txtImposition'.$qty_index};
+					next if $$sig_specs{'Group'} == 1;
+					next if ( ($$sig_specs{'Group'} == $$service_specs{'Group'}) and ($sig_id >= $service_index) );
 #$openprint::log->debug("PerfectBond: Group: $$sig_specs{'Group'} == $$service_specs{'Group'} and $sig_id >= $service_index");
-						my $I = new openprint::Imposition();
-						$I->load( $sig_specs, $qty_index );
-						push @Impositions, $I;					
-					} # end foreach sig_id
-					my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{'HasPerfectBound'}, $$project{'PerfectBoundSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @Impositions );
-					if ( $$results{'Status'} eq 'uncalculated' ) {
-						$$price{'PerfectBound Breakdown'} .= "PerfectBound error: $$results{'alert'}<br/>";
-						$$price{'Comparison Cost'} += 1000000;
-						$$price{'PerfectBound Cost'} = 1000000;
-					} else {
-						$$price{'PerfectBound Breakdown'} .= sprintf('PerfectBound (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
-						$$price{'PerfectBound Cost'} = $$results{'Price'};
-						$$price{'Comparison Cost'} += $$results{'Price'};
-					} # end if
+					my $I = new openprint::Imposition();
+					$I->load( $sig_specs, $qty_index );
+					push @Impositions, $I;					
+				} # end foreach sig_id
+				my $results = openprint::Estimating::PerfectBound::signature_calc( $Project, $$project{'HasPerfectBound'}, $$project{'PerfectBoundSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $service_index, @Impositions );
+				if ( $$results{'Status'} eq 'uncalculated' ) {
+					$$price{'PerfectBound Breakdown'} .= "PerfectBound error: $$results{'alert'}<br/>";
+					$$price{'Comparison Cost'} += 1000000;
+					$$price{'PerfectBound Cost'} = 1000000;
+				} else {
+					$$price{'PerfectBound Breakdown'} .= sprintf('PerfectBound (%dout) Price: $%.2f<br/>%s<br/>', @$results{'Imposition','Price','alert'} );
+					$$price{'PerfectBound Cost'} = $$results{'Price'};
+					$$price{'Comparison Cost'} += $$results{'Price'};
+				} # end if
 #$openprint::log->debug( 'PerfectBound Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
-				} # end if PerfectBound
-			#} # end if PerfectBound
+			} # end if PerfectBound
 
 			if ( 1 and $$service_specs{'Group'} == 1 ) {
 				# Add calculations for other Groups
@@ -2792,7 +2779,7 @@ $openprint::log->debug("Calculating Additional Signatures for other group");
 					} # end if Has Stocks
 				} # end if has other sigs
 			} # end if Group == 1
-} # end if ! recurse
+} # end if ! recursion_depth
 
 			if ( $$price{'Comparison Cost'} < 0 ) {
 
@@ -3048,9 +3035,9 @@ sub calc_price {
 	my $std_speed = $Press->Specification('Run Speed' );
 	my $run_speed;
 	if ( lc $$std_speed{'units'} eq 'calliper' ) {
-		$run_speed = $Press->specification('Run Speed', $Paper->calliper(), 1 );
+		$run_speed = $Press->specification('Run Speed', $Paper->calliper(), 0 );
 	} else {
-		$run_speed = $Press->specification('Run Speed', $Paper->gsm(), 1 );
+		$run_speed = $Press->specification('Run Speed', $Paper->gsm(), 0 );
 	} # end if
 
     #my $speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper() );
@@ -4072,7 +4059,7 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	my $std_speed = $Press->Specification('Run Speed', undef, 1 );
+	my $std_speed = $Press->Specification('Run Speed', undef, 0 );
 	
 	my $speed_mod;
 	if ( $std_speed ) {
@@ -4084,10 +4071,10 @@ sub get_run_price {
 			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm() ) );
 		} elsif ( $run_speed == $$std_speed{'value'} ) {
 			#$speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
-			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug or 1;
+			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug or 1;
 			#$speed_mod = $run_speed / $speed_mod if $speed_mod;
 		} else {
-			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug or 1;
+			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug or 1;
 			$speed_mod = $$std_speed{'value'} / $run_speed;
 		} # end if
 	} # end if
@@ -4387,10 +4374,10 @@ sub runspeed {
 			} # end if
 		} # end if
 	} # end if
-    if ( ! $runspeed ) {
-        $runspeed = int( $Equipment->specification( 'Press Additional Run Speed', $$sig_specs{'txtSpecificStockCalliper'} ) );
+    #if ( ! $runspeed ) {
+        #$runspeed = int( $Equipment->specification( 'Press Additional Run Speed', $$sig_specs{'txtSpecificStockCalliper'} ) );
 #$openprint::log->debug("Foudn Additional runspeed for $$Equipment{strid}: $runspeed");
-    } # end if
+    #} # end if
     if ( ! $runspeed ) {
         $runspeed = int( $Equipment->specification('Run Speed', $Imposition->Paper()->gsm() ) );
 #$openprint::log->debug("Foudn Standard runspeed for $$Equipment{strid}: $runspeed");
