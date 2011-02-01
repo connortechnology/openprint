@@ -3047,15 +3047,15 @@ sub calc_price {
 
 	my $std_speed = $Press->Specification('Run Speed' );
 	my $run_speed;
-	if ( $$std_speed{'units'} eq 'Calliper' ) {
-		$run_speed = $Press->specification('Run Speed', $Paper->calliper() );
+	if ( lc $$std_speed{'units'} eq 'calliper' ) {
+		$run_speed = $Press->specification('Run Speed', $Paper->calliper(), 1 );
 	} else {
-		$run_speed = $Press->specification('Run Speed', $Paper->gsm() );
+		$run_speed = $Press->specification('Run Speed', $Paper->gsm(), 1 );
 	} # end if
 
-    my $speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper() );
+    #my $speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper() );
 #$openprint::log->warn("Press ".$Press->strid()." Calliper:". $Imposition->paper()->calliper()." STD: ($run_speed) RUN ($speed_mod),  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $run_speed ) ) if $debug or 1;
-    $run_speed = $speed_mod if $speed_mod;
+    #$run_speed = $speed_mod if $speed_mod;
 
 	my %folding_results;
 
@@ -4072,22 +4072,22 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	my $std_speed = $Press->Specification('Run Speed' );
+	my $std_speed = $Press->Specification('Run Speed', undef, 1 );
 	
 	my $speed_mod;
 	if ( $std_speed ) {
 		my $Paper = $Imposition->Paper();
 
 # Only load this if not already specified by some inline bindery service
-		$run_speed = $Press->specification('Run Speed', ($$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm()), 1 ) if ! $run_speed;
+		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $Paper->calliper() : $Paper->gsm()), 1 ) if ! $run_speed;
 		if ( ! $run_speed ) {
 			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm() ) );
 		} elsif ( $run_speed == $$std_speed{'value'} ) {
-			$speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
-			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug;
-			$speed_mod = $run_speed / $speed_mod if $speed_mod;
+			#$speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
+			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug or 1;
+			#$speed_mod = $run_speed / $speed_mod if $speed_mod;
 		} else {
-			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug;
+			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug or 1;
 			$speed_mod = $$std_speed{'value'} / $run_speed;
 		} # end if
 	} # end if

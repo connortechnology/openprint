@@ -404,6 +404,7 @@ sub find_entry {
 		my $Object = $$array[$i];
 	$openprint::log->debug("Examining: (" . $Object->min() . 	') (' . $Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
 		return $Object if ( (1*$$Object{min}) == $range ) or ((1*$$Object{max}) == $range );
+		return $Object if ( $Object->interpolate() and ( (1*$$Object{min}) < $range ) and ((1*$$Object{max}) > $range ) );
 
 		return $Object if ( 
 			(! $$Object{interpolate})
