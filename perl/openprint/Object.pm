@@ -58,7 +58,7 @@ sub new {
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			if ( my $cache_field = $self->cache_field() ) {
-				if ( exists $name_cache{$parent}{$$self{$cache_field}} and ! defined $name_cache{$parent}{$$self{$cache_field}} ) {
+				if ( ! ( exists $name_cache{$parent}{$$self{$cache_field}} and defined $name_cache{$parent}{$$self{$cache_field}} ) ) {
 					$name_cache{$parent}{$$self{$cache_field}} = $self;
 				} # end if
 			} # end if

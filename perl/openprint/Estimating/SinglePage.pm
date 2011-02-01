@@ -73,7 +73,7 @@ $openprint::log->debug("********************************************************
 
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 
-	@signatures = $Project->signatures();
+	my @signatures = $Project->signatures();
 $openprint::log->debug( "Signature: @signatures");
 
 	# If we have a specified printing type, then .... if any of the sigs aren't of the same printing type is this even neccessary? 

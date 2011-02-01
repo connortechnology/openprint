@@ -986,10 +986,20 @@ sub get_impositions {
 			} # end if
 			my @imps;
 			if ( $Paper->type() eq 'Roll' ) {
+				if ( ! ( $$project{'Runstyles'} = $Press->specification('RunstylesRoll') ) ) {
+					$$project{'Runstyles'} = $Press->specification('Runstyles');
+				} # end if
 				next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 				next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 				next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
 #$openprint::log->debug('blah'.$Paper->to_string());
+				if ( sets::isin( 'Sheet', split(',', $Press->specification('Feed') ) ) ) {
+					if ( my $MinimumWeight = $Press->Specification('Roll2Sheet Minimum Weight') ) {
+						if ( $$MinimumWeight{'units'} eq 'gsm' and $$MinimumWeight{'value'} > $Paper->gsm() ) {
+							next;
+						} # end if
+					} # end if
+				} # end if
 
 				my $P = $Paper->clone();
 				my @i;
@@ -1063,6 +1073,9 @@ sub get_impositions {
 					} # end foreach
 				} # end if start_width or cut for all sizes
 			} else { # Sheet Fed
+				if ( ! i( $$project{'Runstyles'} = $Press->specification('RunstylesSheet') ) ) {
+					$$project{'Runstyles'} = $Press->specification('Runstyles');
+				} # end if
 				next if ! sets::isin( 'Sheet', split(',', $Press->specification('Feed') ) );
 
 				next if ! ( $Paper->width() and $Paper->height() );
@@ -4041,7 +4054,7 @@ sub get_run_price {
 		} # end if
 		$run_price{'units'} = $RunPrice{'units'};
 		$running_price = $RunPrice{'Price'};
-#$openprint::log->debug("Price: $running_price");
+$openprint::log->debug("Price: $running_price");
 	} else {
 		if ( $side_one_colours ) {
 			my $full_runs = int($side_one_colours / $max_colours);
@@ -4093,7 +4106,7 @@ sub get_run_price {
 
 # now work out the press run speed
 
-	my $std_speed = $Press->Specification('Run Speed' );
+	my $std_speed = $Press->Specification('Run Speed', undef, 1 );
 	
 	my $speed_mod;
 	if ( $std_speed ) {
@@ -4104,13 +4117,15 @@ sub get_run_price {
 		if ( ! $run_speed ) {
 			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm() ) );
 		} elsif ( $run_speed == $$std_speed{'value'} ) {
-			$speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
-			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug;
-			$speed_mod = $run_speed / $speed_mod if $speed_mod;
+			#$speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
+			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug or 1;
+			#$speed_mod = $run_speed / $speed_mod if $speed_mod;
 		} else {
-			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug;
 			$speed_mod = $$std_speed{'value'} / $run_speed;
+			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug or 1;
 		} # end if
+	} else {
+		$openprint::log->error("No standard speed on $$Press{strid}");
 	} # end if
 
 	if ( sets::isin( lc $run_price{'units'}, ['per m','per 1000 impressions', 'per 1000'] ) ) {

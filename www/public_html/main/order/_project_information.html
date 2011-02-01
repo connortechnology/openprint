@@ -1,26 +1,4 @@
-<? if ( ($config{'OrderMode'} ne 'Simple') or ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) ?>
+<? if ( @{$$variable{'Contents'}} > 1 ) ?>
 <!--#include virtual="/main/order/_shipping_type_select.html"-->
-<? endif ( ($config{'OrderMode'} ne 'Simple') or ( @{$$variable{'Projects'}} > 1 ) or ( @{$$variable{'Products'}} > 1 ) or ( @{$$variable{'Projects'}} and @{$$variable{'Products'}} ) ) ?>
-<? if ( $config{'OrderMode'} eq 'Simple' ) ?>
+<? endif ( @{$$variable{'Contents'}} > 1 ) ?>
 <!--#include virtual="/main/order/_project_details.html"-->
-<? endif ( $config{'OrderMode'} eq 'Simple' ) ?>
-<div class="PrintingFinishing">
-	<h3>Printing &amp; Finishing</h3>
-	<ul>
-		<li class="SubTotal">
-			<label>Cost:</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Project'}->production_cost() ) ); ) ?>
-		</li>
-	</ul>
-</div>
-<? if ( $$variable{'Project'}->delivery_cost() ) ?>
-<div class="Delivery">
-	<h3>Delivery</h3>
-	<ul>
-		<li class="Cost">
-			<label>Cost:</label>
-			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Project'}->delivery_cost() ) ); ) ?>
-		</li>
-	</ul>
-</div>
-<? endif ( $$variable{'Project'}->delivery_cost() ) ?>

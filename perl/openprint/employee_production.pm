@@ -447,7 +447,7 @@ sub upload_pdfs {
 	my $project_index = $param{'ProjectIndex'};
 	my $Project = new openprint::Project( $project_index );
 
-	my $Company = new openprint::Company( $session{'company_id'} );
+	my $Company = $Project->Company();
 	$variable{'CompanyName'} = $Company->name();
 
 	$variable{'Docket'} = $Project->docket();
@@ -455,21 +455,22 @@ sub upload_pdfs {
 	if ( ! -e $destdir  ) {
 		if ( ! mkdir $destdir ) {
 			$log->error("Cannot create company PDFs dir $destdir : Reason: $!" );
+			$variable{'error'} .= "Cannot create company PDFs dir $destdir : Reason: $!";
 		} # end if
 	} # end if
 	$destdir .= "/$variable{'Docket'}";
 	if ( ! -e $destdir  ) {
 		if ( ! mkdir $destdir ) {
 			$log->error("Cannot create PDFs dir $destdir : Reason: $!" );
+			$variable{'error'} .= "Cannot create company PDFs dir $destdir : Reason: $!";
 		} # end if
 	} # end if
 
 	if ( $param{'btnFunction'} eq 'Delete' ) {
-		my $destdir = $ENV{DOCUMENT_ROOT} . "/pdfs/$project_index";
 		foreach my $filename ( $param{'chkFiles'} ) {
 			sql::execute( $log, $dbh, 'DELETE FROM tbl_Project_PDFs WHERE lngProjectIndex=? AND strFileName=?', $project_index, $filename );
 			if ( ! unlink "$destdir/$filename" ) {
-				$log->debug( "Error deleting file $destdir/$filename");
+				$log->debug( "Error deleting file $destdir/$filename : $!");
 			} # end if
 		} # end foreach
 
@@ -514,7 +515,19 @@ sub upload_pdfs {
 
 	} # end if
 
-	@{$variable{'PDFS'}} = sql::execute( $log, $dbh, 'SELECT strFileName, strDescription FROM tbl_Project_PDFs WHERE lngProjectIndex=?', $project_index );
+	my @filenames;
+	if ( opendir DIRHANDLE, $destdir ) {
+		@filenames = readdir DIRHANDLE;
+		closedir DIRHANDLE;
+	} # end if
+	my %descriptions = sql::execute( $log, $dbh, 'SELECT strFileName, strDescription FROM tbl_Project_PDFs WHERE lngProjectIndex=?', $project_index );
+
+	@{$variable{'PDFS'}} = ();
+	foreach my $filename ( @filenames ) {
+		next if $filename =~ /^\./;
+		next if -d $destdir.$filename;
+		push @{$variable{'PDFS'}}, $filename, $descriptions{$filename};
+	} # end foreach
 
 	$variable{'ProjectIndex'} = $project_index; 
 } # end sub upload_pdfs
@@ -1841,6 +1854,9 @@ sub _add_maintenance {
 	my ( $referer ) = $ENV{'HTTP_REFERER'} =~ /^https?:\/\/[^\/:]+([^?]*).*$/;
 	$variable{'referer'} = $referer;
 } # end sub _add_maintenance
+
+sub skid_label {
+} # end sub skid_label
 
 1;
 __END__
