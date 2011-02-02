@@ -1,6 +1,6 @@
 <? eval (
 	if ( $param{'asset_id'} ) {
-		@{$$variable{'Assets'}} = openprint::Asset::find( 
+		@{$$variable{'Assets'}} = openprint::Asset->find( 
 			'id'=>$param{'asset_id'}, 
 			#'company_id'=>new openprint::User( $session{'user_id'} )->company_id(),
 			'deleted'=>[1,0],

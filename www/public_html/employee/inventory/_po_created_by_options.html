@@ -1,7 +1,7 @@
 <option value="">All</option>
 <? echo ( 
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 
-				'order'=>'lower(strfirstname),lower(strlastname)',
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 
+				'order'=>'lower(firstname),lower(lastname)',
 				'type'=>['A','E'],
 				( $param{'created_by_deleted'} ? ( 'deleted' => $param{'created_by_deleted'} ) : () ),
 				) ], $session{'/employee/inventory/purchase_orders.html?created_by'} );

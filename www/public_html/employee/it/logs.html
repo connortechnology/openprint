@@ -31,31 +31,27 @@
 			<label>User:</label>
 			<select name="user_id">
 			<option value="">All</option>
-			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'},'order'=>'lower(strfirstname),lower(strlastname)') ], $param{'user_id'} ); ) ?>
+			<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'company_id'=>$param{'company_id'} ? $param{'company_id'} : $session{'company_id'},'order'=>'lower(firstname),lower(lastname)') ], $param{'user_id'} ); ) ?>
 			</select>
 		</p>		  
 	<? eval (
-		if ( $param{'StartYear'} ) {
-			@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} =
-				@param{'StartYear','StartMonth','StartDay'};
-			@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} =
-				@param{'EndYear','EndMonth','EndDay'};
+		if ( $param{'datetime_start_year'} ) {
+			@openprint::session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month',$r->uri().'?datetime_start_day'} =
+				@param{'datetime_start_year','datetime_start_month','datetime_start_day'};
+			@openprint::session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month',$r->uri().'?datetime_end_day'} =
+				@param{'datetime_end_year','datetime_end_month','datetime_end_day'};
 		} else {
-			@openprint::session{$r->uri().'?StartYear',$r->uri().'?StartMonth',$r->uri().'?StartDay'} = Date::Calc::Today();
-			@openprint::session{$r->uri().'?EndYear',$r->uri().'?EndMonth',$r->uri().'?EndDay'} = Date::Calc::Today();
+			@openprint::session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month',$r->uri().'?datetime_start_day'} = Date::Calc::Today();
+			@openprint::session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month',$r->uri().'?datetime_end_day'} = Date::Calc::Today();
 		} # end if
 	) ?>
 		<p>
 			<label>Date:</label>
-			<span class="DateSelector">
-			<select name="StartYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?StartYear'} ); ) ?></select>
-			<select name="StartMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?StartMonth'} ); ) ?></select>
-			<select name="StartDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?StartDay'} ); ) ?></select>
-			&nbsp;to&nbsp;</span>
-			<span class="DateSelector">
-			<select name="EndYear"><? echo ( ssi::return_years( undef, undef, $openprint::session{$r->uri().'?EndYear'} ); ) ?></select>
-			<select name="EndMonth"><? echo ( ssi::getmonths( $openprint::session{$r->uri().'?EndMonth'} ); ) ?></select>
-			<select name="EndDay"><? echo ( ssi::getdays( $openprint::session{$r->uri().'?EndDay'} ); ) ?></select>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/it/logs.html', 'datetime_start', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
+			</span> to
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/it/logs.html', 'datetime_end', { 'with_today' => 1, 'with_clear'=>1 } ); ) ?>
 			</span>
 		</p>
 		<p class="buttons">
@@ -77,11 +73,13 @@
 		</tr>
 			<? echo (
 				my $html = '';
-				@{$$variable{'Results'}} = openprint::logRecord::find(
-					'when_start'	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?StartYear',$r->uri().'?StartMonth', $r->uri().'?StartDay'} ),
-					'when_end'		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?EndYear',$r->uri().'?EndMonth', $r->uri().'?EndDay'} ),
-					'company_id'	=>	$param{'company_id'},
-					'user_id'		=>	$param{'user_id'},
+				@{$$variable{'Results'}} = openprint::Log->find(
+( Date::Calc::check_date( @session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month', $r->uri().'?datetime_start_day'} ) ? (
+					'date_time_>='	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month', $r->uri().'?datetime_start_day'} ) ) : () ),
+( Date::Calc::check_date( @session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month', $r->uri().'?datetime_end_day'} ) ? (
+					'date_time_<='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month', $r->uri().'?datetime_end_day'} ) ) : () ),
+					( $param{'company_id'} ? ( 'company_id'	=>	$param{'company_id'} ) : () ),
+					( $param{'user_id'} ? ( 'user_id'		=>	$param{'user_id'} ) : () ),
 					'action_type'	=>	$param{'log_actions'},
 					);
 
