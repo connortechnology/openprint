@@ -82,6 +82,7 @@ $serial = 'lngProjectIndex_seq';
 	'salesrep_id'		=>	'(SELECT employeeindex FROM Orders WHERE orders.id=order_id)',
 	'takenover_on'		=>	q{(SELECT MIN(dtmtimestamp) FROM Project_Log WHERE project_id=projects.id AND description LIKE 'Taken Over by%')},
 	'csr_id'			=>	'(SELECT salesrep_id FROM Companies WHERE companies.id=company_id)',
+	'value'				=>	[ 'price1', 'price2', 'price3' ],
 );
 
 sub delete {

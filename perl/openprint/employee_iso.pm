@@ -66,6 +66,13 @@ sub cars {
 		
 		misc::export_csv( $r, $log, \%variable, 'CARS.csv', \@header, \@data );
 	} # end if
+	ssi::save_params( '/employee/iso/cars.html', ( 
+				'issued_on_start_year','issued_on_start_month','issued_on_start_day',
+				'issued_on_end_year','issued_on_end_month','issued_on_end_day', 'status',
+				'docket',
+				) );
+	ssi::setup_date_select( '/employee/iso/cars.html', 'issued_on_start', -365 );
+	ssi::setup_date_select( '/employee/iso/cars.html', 'issued_on_end', '' );
 } # end sub cars
 
 sub car {
@@ -215,6 +222,13 @@ sub pars {
 		
 		misc::export_csv( $r, $log, \%variable, 'PARS.csv', \@header, \@data );
 	} # end if
+	ssi::save_params( '/employee/iso/pars.html', ( 
+				'issued_on_start_year','issued_on_start_month','issued_on_start_day',
+				'issued_on_end_year','issued_on_end_month','issued_on_end_day', 'status',
+				'docket',
+				) );
+	ssi::setup_date_select( '/employee/iso/pars.html', 'issued_on_start', -365 );
+	ssi::setup_date_select( '/employee/iso/pars.html', 'issued_on_end', '' );
 } # end sub pars
 
 sub par {
