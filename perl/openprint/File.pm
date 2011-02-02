@@ -15,9 +15,14 @@ $serial = 'project_files_id_seq';
 	'upload_id'		=>	'upload_id',
 	'deleted'		=>	'deleted',
 	'size'			=>	'size',
+	'company_id'	=>	'company_id',
+
 );
 %defaults = (
 	'deleted'		=>	0,
+	'company_id'	=>	undef,
+	'project_id'	=>	undef,
+	'upload_id'		=>	undef,
 );
 
 sub find {
@@ -31,6 +36,14 @@ sub find {
 	if ( $params{'project_id'} ) {
 		$sql .= q{ AND project_id=?};
 		push @values, $params{'project_id'};
+	} # end if
+	if ( $params{'company_id'} ) {
+		$sql .= q{ AND company_id=?};
+		push @values, $params{'company_id'};
+	} # end if
+	if ( $params{'filename_like'} ) {
+		$sql .= q{ AND filename LIKE ?};
+		push @values, $params{'filename_like'};
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );

@@ -287,7 +287,7 @@ sub save {
 	$$specs{'txtImageHeight'.$qty_index} = $self->image_height();
 	$$specs{'txtLayoutWidth'.$qty_index} = $self->layout_width();
 	$$specs{'txtLayoutHeight'.$qty_index} = $self->layout_height();
-	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction();
+	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction() if ! $$specs{'chkOverrideGrainDirection'.$qty_index};
 	my $Paper = $self->Paper();
 	if ( $Paper and ($Paper->type() eq 'Roll') and $Paper->height() ) {
 		$$specs{'CutOff'.$qty_index} = $Paper->height();

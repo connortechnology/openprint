@@ -2111,7 +2111,15 @@ $imp->display('Not overriden sheet size! ' . $$sig_specs{"OverrideStockWidth$qty
 			}  # end if
 			if ( $$sig_specs{'chkOverrideGrainDirection'.$qty_index} eq 'Y' ) {
 #$log->debug("Grain Direction override: " . $imp->grain_direction() . " ne " . $$sig_specs{'rdbGrainDirection'.$qty_index} ) if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};
-				next if $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index};	
+				if ( $$sig_specs{'rdbGrainDirection'.$qty_index} eq 'Long' ) {
+					next if ( $imp->grain_direction() eq 'width' ) and ( $imp->object_width() < $imp->object_height() );
+					next if ( $imp->grain_direction() eq 'height' ) and ( $imp->object_width() > $imp->object_height() );
+				} elsif ( $$sig_specs{'rdbGrainDirection'.$qty_index} eq 'Short' ) {
+					next if ( $imp->grain_direction() eq 'width' ) and ( $imp->object_width() > $imp->object_height() );
+					next if ( $imp->grain_direction() eq 'height' ) and ( $imp->object_width() < $imp->object_height() );
+				} elsif ( $imp->grain_direction() ne $$sig_specs{'rdbGrainDirection'.$qty_index} ) {
+					next;
+				} # end if
 			} elsif ( $$sig_specs{'PreviousGrainDirection'} and ( $imp->grain_direction() ne $$sig_specs{'PreviousGrainDirection'} ) ) {
 #$imp->display("PreviousGrainDirection: $$sig_specs{'PreviousGrainDirection'} ne " . $imp->grain_direction() ) if $debug;
 				next;

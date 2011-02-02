@@ -361,7 +361,14 @@ sub calc_setup_object {
 	$setup2->grip( $$specs{'Grip Size'} );
 #$openprint::log->debug("Setup1 after grip $bleed_width " . $setup1->image_width() .'x'.$setup1->image_height() );
 
-	if ( ( ! $grain_direction ) or ( $grain_direction eq $setup1->grain_direction() ) ) {
+	if ( 
+			( ! $grain_direction ) 
+			or ( $grain_direction eq $setup1->grain_direction() ) 
+			or ( ( $grain_direction eq 'Long' ) and ( $setup1->grain_direction() eq 'width' ) and ( $setup1->object_width() >= $setup1->object_height ) ) 
+			or ( ( $grain_direction eq 'Long' ) and ( $setup1->grain_direction() eq 'height' ) and ( $setup1->object_width() <= $setup1->object_height ) ) 
+			or ( ( $grain_direction eq 'Short' ) and ( $setup1->grain_direction() eq 'width' ) and ( $setup1->object_width() <= $setup1->object_height ) ) 
+			or ( ( $grain_direction eq 'Short' ) and ( $setup1->grain_direction() eq 'height' ) and ( $setup1->object_width() >= $setup1->object_height ) ) 
+	) {
 
 # Setup 1. Width to Width
 		if ( $run_style eq 'Perfecting' and ! $Paper->perfecting() ) {
@@ -504,7 +511,13 @@ $openprint::log->debug("P Width gutters: $adjusted_paper_width") if $debug;
 	} # end if grain_direction
 
 # Only consider the rotated view if teh grain direction is unspecified or is correct for this.
-	if ( ( ! $grain_direction ) or ( $grain_direction eq $setup2->grain_direction() ) ) {
+	if ( ( ! $grain_direction ) 
+			or ( $grain_direction eq $setup2->grain_direction() )
+			or ( ( $grain_direction eq 'Long' ) and ( $setup2->grain_direction() eq 'width' ) and ( $setup2->object_width() >= $setup2->object_height ) ) 
+			or ( ( $grain_direction eq 'Long' ) and ( $setup2->grain_direction() eq 'height' ) and ( $setup2->object_width() <= $setup2->object_height ) ) 
+			or ( ( $grain_direction eq 'Short' ) and ( $setup2->grain_direction() eq 'width' ) and ( $setup2->object_width() <= $setup2->object_height ) ) 
+			or ( ( $grain_direction eq 'Short' ) and ( $setup2->grain_direction() eq 'height' ) and ( $setup2->object_width() >= $setup2->object_height ) ) 
+	   ) {
 		my $gutters = $$specs{'Gutter'};
 		$gutters = $bindery_gutters if $gutters < $bindery_gutters;
 		if ( sets::isin( 'Top', \@bleed_locations ) ) {

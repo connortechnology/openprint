@@ -1,4 +1,4 @@
-<? echo (
+<? eval (
 		my $Company = new openprint::Company( $session{'company_id'} );
 		my $company_name = $Company->name();
 		$param{'docket'} =~ s/\D//g;
@@ -16,16 +16,20 @@
 
 		if ( $param{'btnFunction'} eq 'Delete' ) {
 			my $error = '';
-			foreach my $filename ( ref($param{'chkFiles'}) =~ /ARRAY/ ? @{$param{'chkFiles'}} : $param{'chkFiles'} ) {
-				if ( ! unlink "$config{'ProjectFilesPath'}/$destdir$filename" ) {
-					$error .= "Error deleting file $destdir$filename ! Reason: $!";
-				} elsif ( $param{'project_id'} ) {
-					sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE project_id=? AND filename=?}, $param{'project_id'}, $destdir.$filename );
+			if ( $param{'chkFiles'} ) {
+				foreach my $filename ( ref($param{'chkFiles'}) =~ /ARRAY/ ? @{$param{'chkFiles'}} : $param{'chkFiles'} ) {
+					if ( ! unlink "$config{'ProjectFilesPath'}/$destdir$filename" ) {
+						$error .= "Error deleting file $destdir$filename ! Reason: $!";
+					} elsif ( $param{'project_id'} ) {
+						sql::execute( $log, $dbh, q{DELETE FROM project_files WHERE project_id=? AND filename=?}, $param{'project_id'}, $destdir.$filename );
+					} # end if
+				} # end foreach
+				
+				if ( $error ne '' ) {
+					$variable{'error'} .= 'Errors deleting files.';
+					$variable{'information'} .= $error;
 				} # end if
-			} # end foreach
-			if ( $error ne '' ) {
-				return misc::error( $log, $dbh, $variable, "Errors deleting files.", $error );
-			} # end if
+			} # end if chkFiles
 		} # end if
 
 		my @filenames;
@@ -36,6 +40,8 @@
 			$log->error("Couldn't open directory ($config{'ProjectFilesPath'}$destdir)");
         } # end if
 		$log->debug("Looking in directory ($config{'ProjectFilesPath'}$destdir)");
+
+		my %ProjectFiles = map { $_->filename(), $_ } openprint::File::find('company_id'=>$session{'company_id'}, 'filename_like' => $param{'path'}.'%' );
 
         @{$$variable{'PROJECT_FILES'}} = ();
         foreach my $file ( @filenames ) {
@@ -63,6 +69,7 @@
 			} # end if directory or file
         } # end foreach
 	) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form name="f1" action="upload.html" method="post">
 	<table class="List">
 		<thead>
@@ -86,22 +93,30 @@
 		   <td colspan="4">No files have been uploaded.</td>
 		</tr>
 		<? else ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
-		<? while ( @$variable{'path','filename','size', 'description','mtime'} = splice @{$$variable{'PROJECT_FILES'}},0,5; ) ?>
-			<tr<?rowclass?>> 
-			<? if ( $$variable{'size'} ne '' ) ?>
-				<td><a href="/getfile.html?<? if (  $param{'docket'} ) ?>docket=<? echo( $param{'docket'} ) ?><? endif (  $param{'docket'} ) ?><? if (  $param{'project_id'} ) ?>&project_id=<? echo( $param{'project_id'} ) ?><? endif (  $param{'project_id'} ) ?>&filename=<?filename?>" title="<?description?>" target="SendFileFrame"><?filename?></a><br/><?description?></td>
-				<td class="size"><?size?></td>
-				<td class="mtime"><? echo ( Date::Format::time2str( $config{'DateTimeFormat'}, $$variable{'mtime'} ); ) ?></td>
-				<td class="delete"><input type="checkbox" name="chkFiles" value="<?filename?>"/></td>
-			<? else ( $$variable{'size'} ne '' ) ?>
-				<td><a href="/upload/upload_center.html?docket=<?filename?>" title="<?description?>"><img src="/images/folder.gif" alt="Folder" border="0" /> <?filename?></a><br/><?description?></td>
-				<td class="size"><?size?></td>
-				<td class="mtime">&nbsp;</td>
-				<td class="delete"></td>
-			<? endif ( $$variable{'size'} ne '' ) ?>
-			</tr>
-		<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"' ) ?>
-		<? endwhile ( @$variable{'path','filename','size', 'description','mtime'} = splice @{$$variable{'PROJECT_FILES'}},0,5; ) ?>
+			<? echo (
+				my $html;
+				my $rowclass;
+
+				while ( @$variable{'path','filename','size', 'description','mtime'} = splice @{$$variable{'PROJECT_FILES'}},0,5 ) {
+					$html .= "<tr$rowclass>\n";
+					if ( $$variable{'size'} ne '' ) {
+						$html .= sprintf(q`
+						<td><a href="/getfile.html?docket=%1$d&project_id=%2$d&filename=%3$s" title="%4$s" target="SendFileFrame">%3$s</a><br/>%4$s</td>
+						<td class="size">%5$s</td>
+						<td class="mtime">%6$s</td>
+						<td class="delete"><input type="checkbox" name="chkFiles" value="%3$s"/></td>`,
+							@param{'docket','project_id'}, @$variable{'filename','description','size'},
+							Date::Format::time2str( $config{'DateTimeFormat'}, $$variable{'mtime'} )
+							);
+					} else {
+						$html .= sprintf(q`<td colspan="4"><a href="/upload/upload_center.html?pathdocket=%1$s" title="%2$s"><img src="/images/folder.gif" alt="Folder" />%1$s</a><br/>%2$s</td>`, @$variable{'filename','description','size'} );
+					} # end if
+
+					$html .= '</tr>';
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end while
+				return $html;
+			) ?>
 <? endif ( @{$$variable{'PROJECT_FILES'}} == 0 ) ?>
 	</table>
 <p class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"if ( confirm('Are you sure?') ) {f1.btnFunction.value='Delete';LoadContent('FileList', '/upload/_files.html', Serialize(f1));}", '', 'Delete' ); ) ?></p>
