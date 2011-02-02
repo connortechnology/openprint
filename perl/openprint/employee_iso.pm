@@ -68,6 +68,9 @@ sub cars {
 	} # end if
 } # end sub cars
 
+sub _car_results {
+} # end sub _car_results
+
 sub car {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
 } # end sub view_car
@@ -216,6 +219,8 @@ sub pars {
 		misc::export_csv( $r, $log, \%variable, 'PARS.csv', \@header, \@data );
 	} # end if
 } # end sub pars
+sub _par_results {
+} # end sub _par_results
 
 sub par {
 	$variable{'PAR'} = new openprint::PAR( $param{'par_id'} );

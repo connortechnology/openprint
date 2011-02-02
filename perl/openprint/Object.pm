@@ -287,9 +287,9 @@ sub find {
 
 	my %params = @_;
 	my $sql = 'SELECT ';
-	$sql .= 'DISTINCT' if $params{'distinct'};
+	$sql .= 'DISTINCT ' if $params{'distinct'};
 	delete $params{'distinct'};
-	$sql .= ' * FROM '.$table.' WHERE 1>0';
+	$sql .= '* FROM '.$table.' WHERE 1>0';
 	my @values;
 	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
 	delete $params{'dbh'};
