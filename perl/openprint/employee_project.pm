@@ -900,6 +900,7 @@ sub _signaturecapture {
 
 sub _status {
 	@variable{'ProjectIndex','index'} = @param{'project_id','service_id'};
+	$variable{'Project'} = new openprint::Project( $param{'project_id'} );
 	my $Service = new openprint::Project_Service( \%param );
 	$variable{'status'} = $Service->status();
 	$variable{'name'} = $Service->ServiceType()->name();
