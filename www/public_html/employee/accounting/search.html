@@ -26,23 +26,23 @@ Choose criteria and click show results. You may the download the results in CSV 
 	<fieldset class="filters">
 		<p>
 			<label>Docket #:</label>
-			<input type="text" name="StartDocket" value="<? echo ( $param{'StartDocket'} ) ?>" size="6"	onkeypress="return input_handler( this, event);" />
-			- <input type="text" name="EndDocket" value="<? echo ( $param{'EndDocket'} ) ?>" size="6"	onkeypress="return input_handler( this, event);" />
+			<input type="text" id="StartDocket" name="StartDocket" value="<? echo ( $param{'StartDocket'} ) ?>" size="6" onkeypress="$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);" />
+			- <input type="text" id="EndDocket" name="EndDocket" value="<? echo ( $param{'EndDocket'} ) ?>" size="6" onkeypress="$('order_id').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'DocketGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
 			<label>Order ID:</label>
-			<input type="text" name="order_id" value="<? echo ( $param{'order_id'} ) ?>" size="13"	onkeypress="return input_handler( this, event);" />
+			<input type="text" id="order_id" name="order_id" value="<? echo ( $param{'order_id'} ) ?>" size="13" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('invoice_id').value='';$('project_id').value='';return input_handler( this, event);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'OrderGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
 			<label>Invoice ID:</label>
-			<input type="text" name="invoice_id" size="13" value="<? echo ( $param{'invoice_id'} ) ?>"	onkeypress="return input_handler( this, event);" />
+			<input type="text" id="invoice_id" name="invoice_id" size="13" value="<? echo ( $param{'invoice_id'} ) ?>" onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('project_id').value='';return input_handler( this, event);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'InvoiceGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
 		<p>
 			<label>Project ID:</label>
-			<input type="text" name="project_id" size="13" value="<? echo ( $param{'project_id'} ) ?>"	onkeypress="return input_handler( this, event);" />
+			<input type="text" name="project_id" size="13" value="<? echo ( $param{'project_id'} ) ?>"	onkeypress="$('StartDocket').value='';$('EndDocket').value='';$('order_id').value='';$('invoice_id').value='';return input_handler( this, event);" />
 			<? echo ( ssi::writeButton( $log, $dbh, 'ProjectGo', 'go.gif', "f1.btnFunction.value='Go';f1.submit();", '', 'Go' ); ) ?>
 		</p>
 	</fieldset>

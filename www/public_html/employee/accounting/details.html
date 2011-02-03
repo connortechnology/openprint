@@ -81,7 +81,7 @@
 		<tr class="totals">
 			<td colspan="3">Add new payment:</td>
 			<td><input type="text" name="Description" /></td>
-			<td align="right"><input type="text" name="Amount" size="10"/></td>
+			<td align="right"><input type="text" name="Amount" size="10" onkeyup="this.value=this.value.replace(/[^\d\.]/,'');" onkeydown="this.lastValue = this.value;return check_decimal(this,event);"/></td>
 			<td><? echo (ssi::writeButton($log, $dbh, 'AddPayment', 'add', "f1.btnFunction.value='Save';f1.submit();",'','Add' ); ) ?></td>
 		</tr>
 	</table>
