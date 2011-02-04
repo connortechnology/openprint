@@ -483,7 +483,7 @@ sub get_li {
 				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", '', 'S' );
 			} # end if
 			if ( sets::isin( $self->ServiceType()->name(), [ '','AdditionalSignature' ] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
+				$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('/employee/production/_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
 			} else {
 				$log->debug("ServiceType: $$self{'project_id'} $$self{'servicetype_id'}" . $self->ServiceType()->name() );
 			} # end if
@@ -516,7 +516,7 @@ sub get_li {
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
 			if ( sets::isin( $self->ServiceType()->name(), [ '','AdditionalSignature' ] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
+				$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('/employee/production/_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
 			} # end if
 		} # end if
 		if ( $$self{'operator_id'} == $session{'user_id'} ) {
