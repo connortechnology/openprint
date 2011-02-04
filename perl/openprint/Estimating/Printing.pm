@@ -3445,6 +3445,7 @@ sub get_colour_description {
 	$side_one_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideOne'} eq 'Gloss';
 	$side_one_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideOne'} eq 'Matte';
 	$side_one_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideOne'} eq 'Satin';
+	$side_one_coatings .= '+AQ (Soft Touch)' if $$specs{'rdbAqueousSideOne'} eq 'SoftTouch';
 	if ( $$specs{'chkVarnishSpotGlossSideOne'} ) {
 		$side_one_coatings .= '+Varnish (Spot Gloss)';
 		$side_one_colours -= 1;
@@ -3473,6 +3474,7 @@ sub get_colour_description {
 	$side_two_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideTwo'} eq 'Gloss';
 	$side_two_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideTwo'} eq 'Matte';
 	$side_two_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideTwo'} eq 'Satin';
+	$side_two_coatings .= '+AQ (Soft Touch)' if $$specs{'rdbAqueousSideTwo'} eq 'SoftTouch';
 	if ( $$specs{'chkVarnishSpotGlossSideTwo'} ) {
 		$side_two_coatings .= '+Varnish (Spot Gloss)' ;
 		$side_two_colours -= 1;
