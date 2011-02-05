@@ -571,6 +571,10 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+					if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+						$openprint::log->warn("No imposition for sig $$sig_specs{SignatureIndex}");
+						next;
+					} # end if
 					my $Imposition = new openprint::Imposition;
 					$Imposition->load( $sig_specs, $qty_index );
 					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs, [] );

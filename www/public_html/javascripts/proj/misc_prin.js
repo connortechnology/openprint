@@ -8,7 +8,7 @@ function show_breakdown( index ) {
 	if ( gettingNewPrice )
 		return;
     if (breakdownWin[index] == null) {
-		breakdownWin[index] = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: false, className:'alphacube', width:600, height:420 } );
+		breakdownWin[index] = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: false, className:'alphacube', width:600, height:420, recenterAuto:false } );
 		breakdownWin[breakdownWin[index]] = index;
 
 		// Set up a windows observer, check ou debug window to get messages
