@@ -21,6 +21,16 @@
 			<? else ( $$variable{'User'}->asset_id() ) ?>
 			No profile picture set.
 			<? endif ( $$variable{'User'}->asset_id() ) ?>
+				<? echo (
+					my $html = '';
+					foreach my $Album ( openprint::Photo_Album->find( 'user_id' => $variable{'User'}->id() ) ) {
+						foreach my $Photo ( $Album->Photos() ) {
+							$html .= sprintf('<a href="/employee/assets/view.html?asset_id=%d"><img src="%s" alt="%s"/></a>', $Photo->id(), $Photo->filename(), $Photo->name() );
+					
+						} # end foreach Photo
+					} # end foreach Album
+					return $html;
+				) ?>
 			</div>
 	
 			<div id="UserInformation">
@@ -44,6 +54,21 @@
 			</div>
 			<!--#include virtual="_user_profile_view.html"-->
 			<div id="Events">
+				<fieldset><legend>Events</legend>
+					<div class="content">
+						<ul>
+							<? echo (
+								my @Events = openprint::Event->find('user_id'=>$$variable{'User'}->id(), 'occuring >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S-%z', time ) );
+								if ( ! @Events ) {
+									return '<li>No upcoming events</li>';
+								} # end if
+								my $html;
+								return $html;
+							) ?>
+						</ul>
+					</div>
+		
+				</fieldset>
 			</div>
 		</div><!--UserProfile-->
 <? else ( $session{'user_id'} ) ?>

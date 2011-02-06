@@ -14,6 +14,7 @@ require openprint::usergroup;
 require openprint::logs;
 require openprint::MarketingCategory;
 require openprint::User_Profile_Field;
+require openprint::Photo_Album;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);

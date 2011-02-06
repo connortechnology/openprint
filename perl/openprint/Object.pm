@@ -54,7 +54,7 @@ sub new {
 #$log->debug("Multi-key Obejct @$id @$data{@$id}" );
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
-		$log->debug( $parent . ': ' .$self->to_string() );
+		#$log->debug( $parent . ': ' .$self->to_string() );
 	} else {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			if ( my $cache_field = $self->cache_field() ) {
