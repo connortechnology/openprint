@@ -18,9 +18,8 @@
 	} else {
 		my %search = (
 			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
-			( Date::Calc::check_date(@session{'/employee/inventory/purchase_orders.html?created_on_start_year','/employee/inventory/purchase_orders.html?created_on_start_month','/employee/inventory/purchase_orders.html?created_on_start_day'}) ? (
-																																																													  'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/purchase_orders.html?created_on_start_year','/employee/inventory/purchase_orders.html?created_on_start_month','/employee/inventory/purchase_orders.html?created_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date(@session{'/employee/inventory/purchase_orders.html?created_on_end_year','/employee/inventory/purchase_orders.html?created_on_end_month','/employee/inventory/purchase_orders.html?created_on_end_day'}) : ( 'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?created_on_end_year','/employee/inventory/purchase_orders.html?created_on_end_month','/employee/inventory/purchase_orders.html?created_on_end_day'} ) ) : () ),
+			( Date::Calc::check_date(@session{'/employee/inventory/purchase_orders.html?created_on_start_year','/employee/inventory/purchase_orders.html?created_on_start_month','/employee/inventory/purchase_orders.html?created_on_start_day'}) ? ( 'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/inventory/purchase_orders.html?created_on_start_year','/employee/inventory/purchase_orders.html?created_on_start_month','/employee/inventory/purchase_orders.html?created_on_start_day'} ) ) : () ),
+			( Date::Calc::check_date(@session{'/employee/inventory/purchase_orders.html?created_on_end_year','/employee/inventory/purchase_orders.html?created_on_end_month','/employee/inventory/purchase_orders.html?created_on_end_day'}) ? ( 'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/inventory/purchase_orders.html?created_on_end_year','/employee/inventory/purchase_orders.html?created_on_end_month','/employee/inventory/purchase_orders.html?created_on_end_day'} ) ) : () ),
 			'order',			'id desc',
 		);
 		$search{'deleted'} = $session{'/employee/inventory/purchase_orders.html?deleted'} if exists $session{'/employee/inventory/purchase_orders.html?deleted'};

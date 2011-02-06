@@ -1,8 +1,8 @@
 <script type="text/javascript">
 <!--
 	function load_page( form ) {
-var div = $('Results');
-div.innerHTML = 'Please wait, loading.....';
+		var div = $('Results');
+		div.innerHTML = 'Please wait, loading.....';
 		new Ajax.Updater( 'Results', '_history.html', { method: 'get', parameters: form.serialize() } );
 	} // end function load
 -->
@@ -29,7 +29,7 @@ div.innerHTML = 'Please wait, loading.....';
 			<select name="created_by" onchange="load_page($('f1'));">
 				<option value="">All</option>
 				<? echo ( 
-					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User::find( 'order'=>'lower(strfirstname),lower(strlastname)','type'=>['A','E'] ) ], $session{'/employee/asset/history.html?created_by'} ); ) ?>
+					ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User->find( 'order'=>'lower(firstname),lower(lastname)','type'=>['A','E'] ) ], $session{'/employee/asset/history.html?created_by'} ); ) ?>
 			</select>
 		</li>
 		<li><label>Type:</label>
@@ -42,8 +42,8 @@ div.innerHTML = 'Please wait, loading.....';
 			<label>Date:</label>
 			<span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_start', {'onchange'=>"load_page(\$('f1'));", 'with_today'=>1, 'with_clear'=>1} ); ) ?>
-            to
             </span>
+            to
             <span class="DateSelectorCT">
 <? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_end', {'onchange'=>"load_page(\$('f1'));", 'with_today'=>1, 'with_clear'=>1} ); ) ?>
             </span>

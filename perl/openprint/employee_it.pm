@@ -14,6 +14,15 @@ require openprint::Host;
 
 use strict;
 
+sub logs {
+	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_start', -31 );
+	ssi::setup_date_select( '/employee/it/logs.html', 'date_time_end', '' );
+	ssi::save_params( '/employee/it/logs.html', 
+			'date_time_start_year', 'date_time_start_month', 'date_time_start_day', 
+			'date_time_end_year', 'date_time_end_month', 'date_time_end_day', 
+);
+} # end sub logs
+
 sub hosts {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		foreach my $host_id ( ref $param{'host_id'} eq 'ARRAY' ? @{$param{'host_id'}} : $param{'host_id'} ) {

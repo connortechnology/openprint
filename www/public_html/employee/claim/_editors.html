@@ -13,7 +13,7 @@ return $html;
 	<option value=""> select </option>
 <? echo ( 
 	my @Users;
-	foreach my $U ( openprint::User->find( 'company_id'=>new openprint::User( $session{'user_id'} )->company_id(), 'type'=>['E','A'], 'order'=>'lower(strfirstname),lower(strlastname)' ) ) {
+	foreach my $U ( openprint::User->find( 'company_id'=>new openprint::User( $session{'user_id'} )->company_id(), 'type'=>['E','A'], 'order'=>'lower(firstname),lower(lastname)' ) ) {
 		next if sets::isin( $U->id(), $$variable{'Claim'}->editor_id() );
 		next if $U->id() == $session{'user_id'};
 		push @Users, $U;

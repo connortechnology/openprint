@@ -20,7 +20,7 @@
 		$sql{'take_over_end'} = sprintf( '%.4d-%.2d-%.2d 23:59:59', ssi::fix_date(@param{'TakeOverEndYear','TakeOverEndMonth','TakeOverEndDay'}) );
 
 		$sql{'company_id'} = $param{'ddmCustomer'} if $param{'ddmCustomer'};
-		$sql{'order_id_is_null'} = 0;
+		$sql{'order_id_null'} = 0;
 		$sql{'order'} = 'lngDocketnumber';
 		@{$$variable{'PROJECTS'}} = openprint::Project->find(%sql);
 	} # end if

@@ -2194,5 +2194,8 @@ sub skid_label {
 sub _check_out_popup {
 } # end sub _check_out_popup
 
+sub _add_paper_show {
+} # end sub _add_paper_show
+
 1;
 __END__

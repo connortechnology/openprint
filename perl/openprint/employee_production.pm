@@ -1038,10 +1038,11 @@ sub _drop {
 				if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 					my $Project = $Job->Project();
 					my $services = $Project->services();
-					my @PS = openprint::Project_Service->find('project_id'=>$Job->project_id());
-					my @service_type_ids = sets::intersection( @{$Equipment->servicetype_id()}, sets::union( map { $_->servicetype_id() } @PS ) );
 $log->error("Equp dropped on: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
-$log->error("ProjectServices in Project st: " . join(',', map { $_->servicetype_id() } @PS ) );
+					my @PS = openprint::Project_Service->find('project_id'=>$Job->project_id());
+					my @service_type_ids = sets::union( map { $_->servicetype_id() } @PS );
+$log->error("ProjectServices in Project st: " . join(',', @service_type_ids ) );
+					@service_type_ids = sets::intersection( @{$Equipment->servicetype_id()}, @service_type_ids );
 $log->error("Shared service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
 					if ( ! @service_type_ids ) {
 						foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
@@ -1857,6 +1858,12 @@ sub _add_maintenance {
 
 sub skid_label {
 } # end sub skid_label
+
+sub bindery_schedule {
+} # end sub bindery_schedule
+
+sub prepress_overview {
+} # end sub prepress_overview
 
 1;
 __END__

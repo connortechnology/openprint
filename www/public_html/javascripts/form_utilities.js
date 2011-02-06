@@ -1113,3 +1113,19 @@ function radio_all(element) {
 			all_element.checked = ! on;	
 	} // end if
 } // end function radio_all
+
+// prevents the entering of a second decimal place
+function check_decimal( element, e ) {
+	var keynum;
+	if(window.event) {
+		// IE
+		keynum = e.keyCode
+	} else if(e.which) {
+		// Netscape/Firefox/Opera
+		keynum = e.which
+	}
+	if ( keynum == 190 && element.value.indexOf(".") != -1 ) {
+		return false;
+	} 
+	return true;
+}

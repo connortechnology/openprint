@@ -16,10 +16,12 @@
 	my %filters = (
 			'created_on_start' => sprintf('%.4d-%.2d-%.2d 00:00:00', ssi::fix_date( @param{'DateStartYear','DateStartMonth','DateStartDay'} ) ),
 			'created_on_end' => sprintf('%.4d-%.2d-%.2d 23:59:59', ssi::fix_date( @param{'DateEndYear','DateEndMonth','DateEndDay'} ) ),
-<<<<<<< HEAD
 			'company_id' => ( ($param{'company_id'} and exists $companies{$param{'company_id'}} ) ? $param{'company_id'} : [ keys %companies ] ),
 			'order' => ($param{'order'} ? $openprint::fields{$param{'order'}} : 'id'),
-			( $param{'status'} ? ( 'status' =>	$param{'status'} ) : () ),
+			( $param{'status'} ? ( 
+				'status' =>
+				( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
+				) : () ),
 			( $param{'value_start'} ? ( 'value_start' => $param{'value_start'} ) : () ),
 			( $param{'value_end'} ? ( 'value_end' => $param{'value_end'} ) : () ),
 );
@@ -28,17 +30,6 @@ if ( $param{'Estimator'} ) {
 } # end nif
 
 		foreach my $Order ( openprint::Order->find( %filters ) ) {
-=======
-			( $param{'status'} ? ( 
-				'status' =>
-				( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
-				) : () ),
-			'value_start' => $param{'value_start'},
-			'value_end' => $param{'value_end'},
-			'order' => ($param{'order'} ? $param{'order'} : 'Index'),
-			'user_id' => ($param{'Estimator'} eq 'Non Employee' ? q{NOT IN (SELECT Index FROM Users WHERE chrType IN ('E','A') AND Index IN (SELECT user_id FROM users_in_usergroups WHERE usergroup_id = (SELECT id FROM usergroups WHERE name='Sales')))} : $param{'Estimator'}),
-		) ) {
->>>>>>> 7d5e7a01a166d490040329d19169f629a80fe81a
 			if ( $param{'reprint'} ) {
 				my $reprint = 0;
 				foreach my $Project ( $Order->Projects() ) {

@@ -138,6 +138,15 @@ if ( ! exists $$data{'operator_id'} ) {
 	$dbh->do('ALTER TABLE equipment_shifts ADD operator_id INTEGER');
 	$dbh->do('ALTER TABLE equipment_shifts ADD FOREIGN KEY (operator_id) REFERENCES Users (id)');
 } # end if
+if ( ! sets::isin( 'par', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/PAR.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'cars', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/CAR.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

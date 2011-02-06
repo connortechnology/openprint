@@ -13,8 +13,8 @@ use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 
 $debug = 1;
-$table = 'cars';
-$serial = 'cars_id_seq';
+$table = 'car';
+$serial = 'car_id_seq';
 %fields = (
 	'id'			=>	'id',
 	'issued_to_id'	=> 'issued_to_id',
