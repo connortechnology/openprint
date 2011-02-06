@@ -60,7 +60,7 @@
 							$max_age = $age;
 						} # end if
 					} else {
-						foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$A->paper_id(),'quantity_>'=>0) ) {
+						foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$A->paper_id(),'quantity >'=>0) ) {
 							my $age = time - Date::Parse::str2time( $SkidContent->Skid()->created_on() );
 							if ( $age > $max_age ) {
 								$max_age = $age;

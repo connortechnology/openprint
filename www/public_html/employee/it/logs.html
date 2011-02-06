@@ -75,9 +75,9 @@
 				my $html = '';
 				@{$$variable{'Results'}} = openprint::Log->find(
 ( Date::Calc::check_date( @session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month', $r->uri().'?datetime_start_day'} ) ? (
-					'date_time_>='	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month', $r->uri().'?datetime_start_day'} ) ) : () ),
+					'date_time >='	=>	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{$r->uri().'?datetime_start_year',$r->uri().'?datetime_start_month', $r->uri().'?datetime_start_day'} ) ) : () ),
 ( Date::Calc::check_date( @session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month', $r->uri().'?datetime_end_day'} ) ? (
-					'date_time_<='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month', $r->uri().'?datetime_end_day'} ) ) : () ),
+					'date_time <='		=>	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{$r->uri().'?datetime_end_year',$r->uri().'?datetime_end_month', $r->uri().'?datetime_end_day'} ) ) : () ),
 					( $param{'company_id'} ? ( 'company_id'	=>	$param{'company_id'} ) : () ),
 					( $param{'user_id'} ? ( 'user_id'		=>	$param{'user_id'} ) : () ),
 					'action_type'	=>	$param{'log_actions'},

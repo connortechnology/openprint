@@ -28,13 +28,13 @@ sub find {
 	if ( exists $params{'starttime_null'} ) {
 		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
 	} # end if
-	if ( $params{'starttime_<'} ) {
+	if ( $params{'starttime <'} ) {
 		$sql .= ' AND starttime < ?';
-		push @values, $params{'starttime_<'};
+		push @values, $params{'starttime <'};
 	} # end if
-	if ( $params{'starttime_>='} ) {
+	if ( $params{'starttime >='} ) {
 		$sql .= ' AND starttime >= ?';
-		push @values, $params{'starttime_>='};
+		push @values, $params{'starttime >='};
 	} # end if
 	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
 		$sql .= ' AND ( starttime BETWEEN ? AND ? )';

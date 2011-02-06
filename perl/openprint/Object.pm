@@ -344,23 +344,23 @@ sub find_operators {
 	if ( exists $$params{$k.'_end'} ) {
 		push @{$results{'_end'}}, $f.' <= ?', $$params{$k.'_end'};
 	} # end if
-	if ( exists $$params{$k.'_<'} ) {
-		push @{$results{'_<'}}, $f.' < ?', $$params{$k.'_<'};
+	if ( exists $$params{$k.' <'} ) {
+		push @{$results{' <'}}, $f.' < ?', $$params{$k.' <'};
 	} # end if
-	if ( exists $$params{$k.'_<='} ) {
-		push @{$results{'_<='}}, $f.' <= ?', $$params{$k.'_<='};
+	if ( exists $$params{$k.' <='} ) {
+		push @{$results{' <='}}, $f.' <= ?', $$params{$k.' <='};
 	} # end if
 	if ( exists $$params{$k.'_null_or_<='} ) {
 		push @{$results{'_null_or_<='}}, "$f <= ? OR $f IS NULL", $$params{$k.'_null_or_<='};
 	} # end if
-	if ( exists $$params{$k.'_>='} ) {
-		push @{$results{'_>='}}, $f.' >= ?', $$params{$k.'_>='};
+	if ( exists $$params{$k.' >='} ) {
+		push @{$results{' >='}}, $f.' >= ?', $$params{$k.' >='};
 	} # end if
 	if ( exists $$params{$k.'_null_or_>='} ) {
 		push @{$results{'_null_or_>='}}, "( $f >= ? OR $f IS NULL )", $$params{$k.'_null_or_>='};
 	} # end if
-	if ( exists $$params{$k.'_>'} ) {
-		push @{$results{'_>'}}, $f.' > ?', $$params{$k.'_>'};
+	if ( exists $$params{$k.' >'} ) {
+		push @{$results{' >'}}, $f.' > ?', $$params{$k.' >'};
 	} # end if
 	if ( exists $$params{$k.' !='} ) {
 		push @{$results{' !='}}, $f.' != ?', $$params{$k.' !='};

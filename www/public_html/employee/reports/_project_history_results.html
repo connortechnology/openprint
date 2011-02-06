@@ -16,8 +16,8 @@
 				'status' =>
 				( ref $param{'status'} eq 'ARRAY' ? $param{'status'} : [ split(',', $param{'status'} ) ] )
 				) : () ),
-	( $param{'value_start'} ? ( 'value_>=' => $param{'value_start'} ) : () ),
-	( $param{'value_end'} ? ( 'value_<=' => $param{'value_end'} ) : () ),
+	( $param{'value_start'} ? ( 'value >=' => $param{'value_start'} ) : () ),
+	( $param{'value_end'} ? ( 'value <=' => $param{'value_end'} ) : () ),
 			'order' => 'id',
 );
 	if ( $param{'Estimator'} ) {

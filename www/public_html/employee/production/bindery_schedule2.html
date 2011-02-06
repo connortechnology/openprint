@@ -283,8 +283,8 @@
 				# Get the shifts on this day.
 				my @Shifts = openprint::Shift->find( 
 					'equipment_id' 		=>	$E->id(),
-					'starttime_>='		=>	$today,
-					'starttime_<'		=>	$tomorrow,
+					'starttime >='		=>	$today,
+					'starttime <'		=>	$tomorrow,
 					'order'				=>	'starttime',
 					);
 				if ( @Equipment_Shifts ) {

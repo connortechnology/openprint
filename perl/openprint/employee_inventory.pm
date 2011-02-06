@@ -248,7 +248,7 @@ if ( 0 ) {
 	my @data;
 	my $count = 0;
 	my $total_weight = 0;
-foreach my $Skid ( openprint::Skid->find('quantity_>='=>1,'type'=>'Roll') ) {
+foreach my $Skid ( openprint::Skid->find('quantity >='=>1,'type'=>'Roll') ) {
 	next if ! $Skid->rfidtag_id();
 	next if ! $Skid->RFIDTag()->id();
 	foreach my $C ( $Skid->Contents() ) {

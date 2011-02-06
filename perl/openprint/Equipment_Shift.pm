@@ -141,7 +141,7 @@ sub Next {
 	my ( $self ) = @_;
 	return openprint::Equipment_Shift->find_one( 
 			'equipment_id'	=>	$$self{'equipment_id'},
-			'starttime_>'	=>	$$self{'starttime'},
+			'starttime >'	=>	$$self{'starttime'},
 			'order'			=>	'starttime',
 			);
 } # end sub Next

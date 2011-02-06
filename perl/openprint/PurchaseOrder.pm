@@ -282,7 +282,7 @@ sub send_approval_required_notification {
 	$info{'From'} = $Me;
 	$info{'PurchaseOrder'} = $self;
 
-	foreach my $U ( openprint::User->find('company_id'=>$Me->company_id(),'purchasing_limit_>='=>$self->total() ) ) {
+	foreach my $U ( openprint::User->find('company_id'=>$Me->company_id(),'purchasing_limit >='=>$self->total() ) ) {
 		next if $U->id() == $Me->id();
 		next if ! Email::Valid->address($U->email() );
 

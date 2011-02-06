@@ -134,13 +134,13 @@ sub find {
 	if ( exists $params{'starttime_null'} ) {
 		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
 	} # end if
-	if ( $params{'starttime_<'} ) {
+	if ( $params{'starttime <'} ) {
 		$sql .= ' AND starttime < ?';
-		push @values, $params{'starttime_<'};
+		push @values, $params{'starttime <'};
 	} # end if
-	if ( $params{'starttime_>='} ) {
+	if ( $params{'starttime >='} ) {
 		$sql .= ' AND starttime >= ?';
-		push @values, $params{'starttime_>='};
+		push @values, $params{'starttime >='};
 	} # end if
 
 	if ( $params{'starttime_start'} and $params{'starttime_end'} ) {
@@ -166,12 +166,12 @@ sub find {
 	} elsif ( $params{'endtime_end'} ) {
 		$sql .= ' AND endtime <= ?';
 		push @values, $params{'endtime_end'};
-	} elsif ( $params{'endtime_<'} ) {
+	} elsif ( $params{'endtime <'} ) {
 		$sql .= ' AND endtime < ?';
-		push @values, $params{'endtime_<'};
-	} elsif ( $params{'endtime_>'} ) {
+		push @values, $params{'endtime <'};
+	} elsif ( $params{'endtime >'} ) {
 		$sql .= ' AND endtime > ?';
-		push @values, $params{'endtime_>'};
+		push @values, $params{'endtime >'};
 	} elsif ( exists $params{'endtime_start'} and ! $params{'endtime_start'} ) {
 		$sql .= ' AND endtime IS NULL';
 	} elsif ( exists $params{'endtime_end'} and ! $params{'endtime_end'} ) {
@@ -648,21 +648,21 @@ sub Shift {
 			my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
 			my @Shifts = openprint::Shift->find(
 					'equipment_id'	=>	$$self{'equipment_id'}, 
-					'endtime_>'		=>	$$self{'starttime'}, 
-					'starttime_<='	=>	$$self{'starttime'},
+					'endtime >'		=>	$$self{'starttime'}, 
+					'starttime <='	=>	$$self{'starttime'},
 					#'limit'			=>	1,
 					);
 			if ( ! @Shifts ) {
 				# Things like Bump can push a job to the very end, where a shift might need to be created.
 				@Shifts = openprint::Equipment_Shift->find(
 						'equipment_id'  =>  $$self{'equipment_id'},
-						'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-						'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+						'starttime <='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+						'endtime >'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 						'limit'		 =>  1,
 						);
 				@Shifts = openprint::Equipment_Shift->find(
 						'equipment_id'  =>  $$self{'equipment_id'},
-						'starttime_>'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+						'starttime >'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
 						'order'		 =>  'starttime',
 						'limit'		 =>  1,
 						) if ! @Shifts;
@@ -751,7 +751,7 @@ sub bump {
 			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
 			push @{$variable{'changed'}}, $self->Shift()->ul_id();
 		} else {
-			my @final_order = openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime_<'=>$self->starttime(),'order'=>'starttime' );
+			my @final_order = openprint::ScheduledJob->find( 'equipment_id'=>$self->equipment_id(),'starttime <'=>$self->starttime(),'order'=>'starttime' );
 			foreach my $Job ( $self->Shift()->Schedule() ) {
 				push @final_order, $Job if $$Job{'id'} != $$self{'id'};
 			} # end foreach job in schift

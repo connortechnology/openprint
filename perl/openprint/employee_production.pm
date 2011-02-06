@@ -1200,7 +1200,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 			if ( $Shift->starttime() ) {
 				my @final_order;
 # Get jobs before the shift, leave them in order.
-				foreach my $row ( openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' ) ) {
+				foreach my $row ( openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime <'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' ) ) {
 					push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
 				} # end foreach row
 
@@ -1313,7 +1313,7 @@ last;
 			# The logic here should be, grab the ES from the last shift, and then get the next ES.  It should not be based on time
 			$NextES = openprint::Equipment_Shift->find_one( 
 					'equipment_id'	=>	$$row{'equipment_id'}, 
-					'starttime_>='	=>	$PreviousShift->Equipment_Shift()->endtime(),
+					'starttime >='	=>	$PreviousShift->Equipment_Shift()->endtime(),
 					'order'			=>	'starttime',
 					);
 		} # end if
@@ -1360,7 +1360,7 @@ $log->debug("ES: " . $NextES->name() );
 			if ( ! @Shifts ) {
 				my $NextES = openprint::Equipment_Shift->find_one( 
 						'equipment_id'	=>	$$row{'equipment_id'}, 
-						'starttime_>='	=>	$Shift->Equipment_Shift()->endtime(),
+						'starttime >='	=>	$Shift->Equipment_Shift()->endtime(),
 						'order'			=>	'starttime',
 						);
 $log->debug("ES: " . $Shift->Equipment_Shift()->name() );
@@ -1626,8 +1626,8 @@ sub _shift_change {
 
 		# Prevent overlapping shifts
 		foreach my $S ( openprint::Shift->find(
-					'starttime_<='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
-					'endtime_>'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ),
+					'starttime <='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
+					'endtime >'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime DESC' ) ) {
 			next if $S->id() == $Shift->id();
 			$new_starttime = $S->endtime_seconds();
@@ -1636,8 +1636,8 @@ sub _shift_change {
 			last;
 		} # end foreach
 		foreach my $S ( openprint::Shift->find(
-					'starttime_>='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
-					'starttime_<'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_endtime ),
+					'starttime >='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
+					'starttime <'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_endtime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime' ) ) {
 			next if $S->id() == $Shift->id();
 			$new_endtime = $S->starttime_seconds();

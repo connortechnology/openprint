@@ -146,6 +146,14 @@ if ( ! sets::isin( 'cars', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/CAR.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'event_categories', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Categories.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'events', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 
 $dbh->disconnect();
 1;

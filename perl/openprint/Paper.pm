@@ -149,10 +149,10 @@ sub find {
 		$sql .= ' AND width=?';
 		push @values, 1*$params{'width'};
 	} # end if
-	if ( $params{'width_>='} ) {
-		$params{'width_>='} =~ s/[^\d\.]//g;
+	if ( $params{'width >='} ) {
+		$params{'width >='} =~ s/[^\d\.]//g;
 		$sql .= ' AND ( width IS NULL or width>=?)';
-		push @values, 1*$params{'width_>='};
+		push @values, 1*$params{'width >='};
 	} # end if
 	if ( $params{'width_start'} ) {
 		$params{'width_start'} =~ s/[^\d\.]//g;
@@ -169,10 +169,10 @@ sub find {
 		$sql .= ' AND height>=?';
 		push @values, 1*$params{'height_start'};
 	} # end if
-	if ( $params{'height_>='} ) {
-		$params{'height_>='} =~ s/[^\d\.]//g;
+	if ( $params{'height >='} ) {
+		$params{'height >='} =~ s/[^\d\.]//g;
 		$sql .= ' AND ( height IS NULL OR height>=? )';
-		push @values, 1*$params{'height_>='};
+		push @values, 1*$params{'height >='};
 	} # end if
 	if ( $params{'in_stock_start'} ) {
 		$params{'in_stock_start'} =~ s/[^\d\.]//g;
@@ -872,7 +872,7 @@ sub in_stock {
 	} # end if
 
 	if ( ! exists $$self{in_stock} ) {
-		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			$$self{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
@@ -893,7 +893,7 @@ sub available {
 
 	if ( ! exists $$self{available} ) {
 		$$self{available} = 0;
-		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			next if sets::isin( $SkidContent->quality(), [ 'Damaged', 'Used', 'Trial', 'Return', 'Partial' ] );
 			@$self{available} += int $SkidContent->quantity();
@@ -906,7 +906,7 @@ sub available {
 sub skids {
     my $self = shift;
 	return 0 if ! $$self{'id'};
-	return openprint::Skid->find('paper_id'=>$$self{'id'}, 'quantity_>='=>1);
+	return openprint::Skid->find('paper_id'=>$$self{'id'}, 'quantity >='=>1);
     #return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 

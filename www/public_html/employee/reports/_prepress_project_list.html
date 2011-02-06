@@ -2,8 +2,8 @@
 	my %sql;
 	if ( $param{'StartDocket'} and $param{'EndDocket'}) {
 		%sql = (
-			'docket_>='	=>	$param{'StartDocket'},
-			'docket_<='	=>	$param{'EndDocket'},
+			'docket >='	=>	$param{'StartDocket'},
+			'docket <='	=>	$param{'EndDocket'},
 			'order'	=>	'lngdocketnumber',
 		);
 		if (

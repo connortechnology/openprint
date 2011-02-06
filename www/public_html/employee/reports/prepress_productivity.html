@@ -49,7 +49,7 @@
 		} # end if
 		@{$$variable{'Results'}} = openprint::User->find( %params );
 		@{$$variable{'Projects'}} = openprint::Project->find( 
-			'ordered_on_>='	=>	"$$variable{'Start'} 00:00:00", 
+			'ordered_on >='	=>	"$$variable{'Start'} 00:00:00", 
 			'ordered_on_<='	=>	"$$variable{'End'} 23:59:59"
 			);
  ) ?>

@@ -71,8 +71,8 @@
 				</span>
 			</p>
 			</div>
-			<div class="rightColumn">
 <? if ( sets::isin($session{'user_type'}, ['E','A'] ) ) ?>
+			<div class="rightColumn">
 			<p><label>Published?:</label>
 				<input type="radio" id="published_1" name="published" value="1" <? echo ( ssi::checked( $session{'/article/history.html?published'} eq '1' ); ) ?> onclick="load_articles(this.form);" />
 				<label class="radio" for="published_1">Yes</label>
