@@ -1,0 +1,59 @@
+<script type="text/javascript">
+<!--
+	function load_articles( form ) {
+		$('ArticleList').innerHTML = 'Please wait...';
+		new Ajax.Updater('ArticleList','_history.html', {method:'get',parameters:Form.serialize(form)});
+	} // end function
+-->
+</script>	 
+<? eval (
+	@{$$variable{'Articles'}} = ();
+	foreach my $Article ( openprint::Article->find( 
+		'published'			=>	1,
+		'category_id'		=>	$param{'category_id'},
+		'order'				=> 'published_on',
+		) ) {
+		push @{$$variable{'Articles'}}, $Article;
+	} # end foreach Article
+	if ( $param{'category_id'} ) {
+		$$variable{'Category'} = new openprint::Article_Category( $param{'category_id'} );
+	} # end if
+) ?>
+<div class="Article">
+<? if ( $param{'category_id'} ) ?>
+<div class="Category <? echo ( $variable{'Category'}->name() ) ?>">
+	<div class="name"><span><? echo ( $$variable{'Category'}->name() ) ?></span></div>
+	<div class="description"><? echo ( $$variable{'Category'}->description() ) ?></div>
+	<? if ( $$variable{'Category'}->image_filename() ) ?>
+	<div class="image"><img src="/images/article_categories/<? echo ( $$variable{'Category'}->image_filename() ) ?>" /></div>
+	<? endif ( $$variable{'Category'}->image_filename() ) ?>
+</div><!--Category-->
+<? endif ( $param{'category_id'} ) ?>
+<div class="Articles">
+
+<? if ( @{$$variable{'Articles'}} == 0 ) ?>
+	There are no articles which match your search criteria. 
+<? else ( @{$$variable{'Articles'}} == 0 ) ?>
+		<? echo ( 
+			my $html;
+			foreach my $Article ( @{$$variable{'Articles'}} ) {
+				$html .= sprintf(q` 
+				<div class="Article" onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+					<h1>%2$s</h1>
+					Posted on %6$s by %5$s<br/>
+					<div class="source_content">%3$s</div>
+					<div class="body">%4$s</div>
+				</div>
+				`, $Article->id(), 
+				ssi::htmlize($Article->title()),
+				$Article->source_content(), 
+				ssi::html_escape($Article->body()), 
+				ssi::htmlize( $Article->Author()->name() ),
+				( $Article->published() ? Date::Format::time2str($config{'DateTimeFormat'}, Date::Parse::str2time( $Article->published_on() ) ) : '' ),
+				);
+			} # end foreach Article
+			return $html;
+		) ?>
+<? endif ( @{$$variable{'Articles'}} == 0 ) ?>
+</div>
+</div><!--Article-->

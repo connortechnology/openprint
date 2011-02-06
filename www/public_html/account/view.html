@@ -58,11 +58,17 @@
 					<div class="content">
 						<ul>
 							<? echo (
-								my @Events = openprint::Event->find('created_by'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S-%z', time ) );
+								my @Events = openprint::Event->find('created_by'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
 								if ( ! @Events ) {
 									return '<li>No upcoming events</li>';
 								} # end if
 								my $html;
+								foreach my $Event ( @Events ) {
+									$html .= sprintf(q`<li><a href="/events/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
+										$Event->id(), $Event->name(), 
+										Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
+ );
+								} # end foreach Event
 								return $html;
 							) ?>
 						</ul>

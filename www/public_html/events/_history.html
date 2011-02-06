@@ -1,0 +1,46 @@
+<? eval (
+	@{$$variable{'Events'}} = ();
+	foreach my $Event ( openprint::Event->find( 
+			(Date::Calc::check_date( @session{'/event/history.html?starting_on_start_year','/event/history.html?starting_on_start_month','/event/history.html?starting_on_start_day'} ) ? ( 'starting_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/event/history.html?starting_on_start_year','/event/history.html?starting_on_start_month','/event/history.html?starting_on_start_day'} ) ) : () ),
+			( Date::Calc::check_date( @session{'/event/history.html?starting_on_end_year','/event/history.html?starting_on_end_month','/event/history.html?starting_on_end_day'} ) ? ( 'starting_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/event/history.html?starting_on_end_year','/event/history.html?starting_on_end_month','/event/history.html?starting_on_end_day'} ) ) : () ),
+		( $session{'/event/history.html?category_id'} ? ( 'category_id' => $session{'/event/history.html?category_id'} ) : () ),
+		'order'				=> 'starting_on',
+		) ) {
+		push @{$$variable{'Events'}}, $Event;
+	} # end foreach Events
+) ?>
+
+<? if ( @{$$variable{'Events'}} == 0 ) ?>
+	There are no events which match your search criteria. 
+<? else ( @{$$variable{'Events'}} == 0 ) ?>
+	<div class="unprintable">
+		Please click on a <b>Events ID #</b> to view event details.<br/>
+		To delete events from history check the appropriate event(s) and click delete.<br/>
+	</div>
+	<table class="List">
+		<tr> 
+			<th class="Name">Name</th>
+			<th class="Category">Category</th>
+			<th class="DateTime">When</th>
+		</tr>
+		<? echo ( 
+			my $html;
+			my $rowclass;
+			foreach my $Event ( @{$$variable{'Events'}} ) {
+				$html .= sprintf(q` 
+					<tr title="%2$s" %5$s onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
+						<td class="Name"><a href="/event/edit.html?event_id=%1$d">%2$s</a></td>
+						<td class="Category"><a href="/event/edit.html?event_id=%1$d">%3$s</a></td>
+						<td class="DateTime"><a href="/event/edit.html?event_id=%1$d">%4$s</a></td>
+					</tr>
+					`, $Event->id(), ssi::html_escape($Event->name()),
+					$Event->Category()->name(),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
+					$rowclass,
+				);
+				$rowclass = $rowclass ? '' : ' class="colRow"';
+			} # end foreach Events
+			return $html;
+		) ?>
+	</table>
+<? endif ( @{$$variable{'Events'}} == 0 ) ?>
