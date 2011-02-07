@@ -3,7 +3,7 @@
 	<ul>
 		<li id="SubTotal">
 			<label>Sub Total:</label>
-			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->subtotal() ) ); ) ?>
+			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->subtotal() ) ); ) ?>
 		</li>
                 <? echo ( 
                     my $html;
@@ -17,24 +17,24 @@
 		<? if ( $$variable{'Order'}->total() ) ?>
 		<li id="Total">
 			<label>Total:</label>
-			<? echo ( $$variable{'Currency'}->format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->total() ) ); ) ?>
+			<? echo ( openprint::Currency::format( $$variable{'Order'}->Currency()->convert_from( $$variable{'Order'}->total() ) ); ) ?>
 		</li>
 		<? endif ( $$variable{'Order'}->total() ) ?>
 		<? if ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
 		<li>
 			<label>Amount Paid:</label>
-            <? echo ( $$variable{'Currency'}->format( $$variable{'AmountPaid'} ); ) ?>
+            <? echo ( openprint::Currency::format( $$variable{'AmountPaid'} ); ) ?>
 		</li>
         <? if ( $$variable{'DepositDue'} ) ?>
         <li>
             <label>Deposit Due:</label>
-            <? echo ( $$variable{'Currency'}->format( $$variable{'DepositDue'} ); ) ?>
+            <? echo ( openprint::Currency::format( $$variable{'DepositDue'} ); ) ?>
         </li>
         <? endif ( $$variable{'DepositDue'} ) ?>
         <? if ( $$variable{'AmountOutstanding'} ) ?>
         <li>
             <label>Amount Owing:</label>
-            <? echo ( $$variable{'Currency'}->format( $$variable{'AmountOutstanding'} ); ) ?>
+            <? echo ( openprint::Currency::format( $$variable{'AmountOutstanding'} ); ) ?>
         </li>
         <? endif ( $$variable{'AmountOutstanding'} ) ?>
 		<? endif ( $config{'ShowAccountingOnOrder'} ne 'N' ) ?>
@@ -42,7 +42,7 @@
 	</div>
 	<span class="Currency">All prices listed in <? echo ( $$variable{'Currency'}->name() ) ?>.
 	<? echo ( 
-		if ( $$variable{'Currency'}->id() != $$variable{'Order'}->Currency()->id() ) {
+		if ( openprint::Currency::id() != $$variable{'Order'}->Currency()->id() ) {
 			return 'Order originally in ' . $$variable{'Order'}->Currency()->name();
 		} # end if
 		return;

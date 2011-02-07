@@ -88,8 +88,10 @@ sub AUTOLOAD {
 
 sub display {
 	my ( $self, $prefix ) = @_;
-	$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
-	@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
+	#$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
+	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
+	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout pages:%dx%d=%d %s on: %sx%s %s %s', $prefix,
+	@$self{'columns','rows','dutch_columns','dutch_rows','imposition'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, $$self{'Price'} ? $$self{'Price'} : '' ) );
 } # end sub display
 
 sub get {
@@ -287,7 +289,7 @@ sub save {
 	$$specs{'txtImageHeight'.$qty_index} = $self->image_height();
 	$$specs{'txtLayoutWidth'.$qty_index} = $self->layout_width();
 	$$specs{'txtLayoutHeight'.$qty_index} = $self->layout_height();
-	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction();
+	$$specs{'rdbGrainDirection'.$qty_index} = $self->grain_direction() if ! $$specs{'chkOverrideGrainDirection'.$qty_index};
 	my $Paper = $self->Paper();
 	if ( $Paper and ($Paper->type() eq 'Roll') and $Paper->height() ) {
 		$$specs{'CutOff'.$qty_index} = $Paper->height();

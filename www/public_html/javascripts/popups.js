@@ -107,7 +107,7 @@ function bug_report_window() {
 		Dialog.alert("Close the window 'Test' before opening it again!",{width:200, height:130});
 	} else { 
 		contentWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
-className:"alphacube", width:400, height:420
+className:"alphacube", width:400, height:420, recenterAuto:false
 		} );
 		//contentWin.setContent('test_content', true, true)
 		contentWin.setAjaxContent('/bug_report.html', null , true);
@@ -124,16 +124,47 @@ className:"alphacube", width:400, height:420
 	}
 } // end function bug_report
 
+<<<<<<< HEAD
+=======
+
+function ajax_window( url, width, height ) {
+	if ( ! contentWin ) {
+		if ( ! width )
+			width = 400;
+		
+		contentWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
+className:"alphacube", width:width, height:height, recenterAuto:false
+		} );
+		// Set up a windows observer, check ou debug window to get messages
+		myObserver = {
+			onDestroy: function(eventName, win) {
+			   if (win == contentWin) {
+				   contentWin = null;
+				   Windows.removeObserver(this);
+			   }
+		   }
+		}
+		Windows.addObserver(myObserver);
+	} // end if
+	contentWin.setAjaxContent(url, null , true);
+}
+>>>>>>> c186501253a6ded9515d312df288a649b86b5682
 var popupWin;
 function popup_window( url, parameters, options ) {
 	if ( ! popupWin ) {
 		var width = 400;
+<<<<<<< HEAD
 		var height = 400;
 		if ( options ) {
 			if ( options.width ) width = options.width;
 			if ( options.height ) height = options.height;
 		} // end if
 		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, height:height, recenterAuto:false} );
+=======
+		if ( options &&options.width )
+			width = options.width;
+		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, recenterAuto:false} );
+>>>>>>> c186501253a6ded9515d312df288a649b86b5682
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {

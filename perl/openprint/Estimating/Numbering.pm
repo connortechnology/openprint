@@ -309,5 +309,8 @@ sub display {
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 
+sub save {
+} # end sub save
+
 1;
 __END__

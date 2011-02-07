@@ -15,9 +15,14 @@ $serial = 'project_files_id_seq';
 	'upload_id'		=>	'upload_id',
 	'deleted'		=>	'deleted',
 	'size'			=>	'size',
+	'company_id'	=>	'company_id',
+
 );
 %defaults = (
 	'deleted'		=>	0,
+	'company_id'	=>	undef,
+	'project_id'	=>	undef,
+	'upload_id'		=>	undef,
 );
 
 1;

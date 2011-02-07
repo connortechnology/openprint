@@ -90,6 +90,11 @@ sub handler {
 
 	my $lastpage = '';
 	my $page = $r->uri();
+	if ( $page =~ /.html/ ) {
+		$r->content_type('text/html');
+	} elsif ( $page =~ /.json/ ) {
+		$r->content_type('text/javascript');
+	} # end if
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
@@ -214,7 +219,7 @@ sub parse_page {
 $openprint::log->debug("Getfile");
 		$variable{'Download'} = $openprint::param{'filename'};
 		my $sourceDir = $config{'ProjectFilesPath'} . openprint::upload_handler::get_destdir();
-		push @{$variable{'File_Data'}}, misc::load_file( $log, $sourceDir.$variable{'Download'});
+		push @{$variable{'File_Data'}}, misc::load_file( $log, $sourceDir.$param{'path'}.'/'.$variable{'Download'});
 		$r->headers_out->{'Content-Disposition'} = "attachment; filename=\"$variable{'Download'}\"";
 		$r->content_type( "application/octet-stream; name=\"$variable{'Download'}\"" );
 		return;
@@ -594,7 +599,5 @@ $openprint::log->debug("$1");
 	return $status;
 }
 
-
 1;
-
 __END__
