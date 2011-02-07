@@ -17,8 +17,8 @@
 			'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'}, 
 			'order'		=> 'name,finish,colour,weight, width, height'
 		) ) {
-		next if $Stock->recommendations() and ! sets::isin( 1, split(';', $session{'/administrator/stock/list.html?recommendations'} ) );
-		next if ( ! $Stock->recommendations() ) and ! sets::isin( 0, split(';', $session{'/administrator/stock/list.html?recommendations'} ) );
+		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
+		next if $session{'/administrator/stock/list.html?recommendations'} eq '1' and ! $Stock->recommendations();
 		push @{$$variable{'Stocks'}}, $Stock;
 	} # end foreach
 	@{$$variable{'Groups'}} = openprint::StockGroup::find();

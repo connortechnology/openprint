@@ -7,6 +7,7 @@ function check_price( element ) {
 		if ( 
 			element_changed( form.elements['discountable-'+id] ) ||
 			element_changed( form.elements['price-'+id] ) ||
+			element_changed( form.elements['markup-'+id] ) ||
 			element_changed( form.elements['min-'+id] ) ||
 			element_changed( form.elements['max-'+id] ) ||
 			element_changed( form.elements['units-'+id] ) ||
@@ -14,7 +15,6 @@ function check_price( element ) {
 		   ) {
 			$('paperprice-'+id).addClassName('changed');
 		} else {
-alert('not changed');
 			$('paperprice-'+id).removeClassName('changed');
 		} // end if
 	} else {
@@ -142,7 +142,7 @@ function calc_price( element ) {
 
 		if ( form.elements['wpsi'] )  {
 			form.elements['cost-'+index].value = do_decimals( costperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 10), 2);
-			form.elements['pricecwt-'+index].value = do_decimals( priceperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 10), 2);
+			form.elements['price-'+index].value = do_decimals( priceperm / (form.elements['wpsi'].value * form.elements['width'].value * form.elements['height'].value * 10), 2);
 			if ( form.elements['costperfoot-'+index] ) {
 			form.elements['costperfoot-'+index].value = do_decimals( costperm / (form.elements['wpsi'].value * 144 * 1000), 2);
 			form.elements['priceperfoot-'+index].value = do_decimals( priceperm / (form.elements['wpsi'].value * 144 * 1000), 2);

@@ -76,6 +76,10 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( $params{'grain_direction'} ) {
+		$sql .= ' AND grain_direction=?';
+		push @values, $params{'grain_direction'};
+	} # end if
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
@@ -1107,7 +1111,8 @@ sub gsm {
 		if ( $self->wpsi(undef) ) {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
-			$openprint::log->warn("Can't calculate gsm");
+			$$self{'gsm'} = 'unknown';
+			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() );
 		} # end if
 	} # end if
 	return $$self{'gsm'};
