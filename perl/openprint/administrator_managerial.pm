@@ -646,6 +646,7 @@ sub usergroup {
 	$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
 } # end sub usergroup
 
+<<<<<<< HEAD
 sub user_profile_fields {
 	if ( $param{'action'} eq 'Save' ) {
 		foreach my $Field ( openprint::User_Profile_Field->find() ) {
@@ -684,6 +685,9 @@ sub _fields_tbody {
 		} # end foreach $feild_id
 	} # end if
 } # end sub _fields_tbody
+
+sub _search_by_email {
+} # end sub _search_by_email
 
 1;
 __END__
