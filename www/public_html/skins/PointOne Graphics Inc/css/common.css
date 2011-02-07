@@ -323,7 +323,7 @@ fieldset p input[type="text"], fieldset p input[type="password"]  {
 	vertical-align: top;
 }
 fieldset p input[type="radio"] {
-	margin-top: 3px;
+	vertical-align: middle;
 }
 fieldset ul {
 	list-style: none;

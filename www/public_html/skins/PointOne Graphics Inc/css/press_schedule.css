@@ -262,16 +262,6 @@ width: 196px;
 	}
 	}
 
-a.buttonImageOff, a.buttonImageOn {
-	margin: 1px;
-}
-a.buttonImageOff .c {
-	padding: 1px 2px 1px 2px;
-}
-
-a.buttonImageOn .c {
-	padding: 1px 2px 1px 2px;
-}
 span.CSR {
 	font-weight: bold;
 	text-transform: uppercase;
@@ -369,4 +359,21 @@ div.legend ul li ul li label {
 }
 .message {
 	font-size: small;
+}
+div.PressColumn a.buttonImageOff, div.PressColumn a.buttonImageOn {
+	margin: 1px;
+}
+div.PressColumn a.buttonImageOff .c,
+div.PressColumn a.buttonImageOn .c {
+	padding: 2px 4px 2px 4px;
+}
+@media only screen and (max-device-width: 480px) {
+	div.PressColumn a.buttonImageOff, 
+	div.PressColumn a.buttonImageOn {
+		margin: 2px;
+	}
+	div.PressColumn a.buttonImageOff .c,
+	div.PressColumn a.buttonImageOn .c {
+		padding: 4px 6px 4px 6px;
+	}
 }

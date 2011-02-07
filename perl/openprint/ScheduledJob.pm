@@ -468,7 +468,9 @@ sub get_li {
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { ul_id: '$ul_id', schedule_id: $$self{'id'}, action:'approve'}, evalScripts: true } );", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-			$html .= ssi::writeButton( $log, $dbh, 'Up'.$$self{'id'}, '', "new Ajax.Request( '_li_change.json', {parameters: { schedule_id:$$self{'id'}, action: 'Up' }, evalScripts: true } );", '', 'U' );
+			if ( ! $$self{'locked'} ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Up'.$$self{'id'}, '', "new Ajax.Request( '_li_change.json', {parameters: { schedule_id:$$self{'id'}, action: 'Up' }, evalScripts: true } );", '', 'U' );
+			} # end if
 		} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
 		if ( $$self{'project_id'} ) {
