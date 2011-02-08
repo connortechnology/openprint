@@ -256,7 +256,7 @@ $openprint::log->debug( "Signature: @signatures");
 
 	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' ) );
 	if ( ! @groups ) {
-		foreach my $ss_id ( $Project->signatures() ) {
+		foreach my $ss_id ( @signatures ) {
 			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
 			if ( $$sig_specs{'Status'} ne 'calculated' ) {
 				return 'uncalculated';
@@ -265,7 +265,7 @@ $openprint::log->debug( "Signature: @signatures");
 	} else {
 		my @printing_types = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } );
 		foreach my $group ( @groups ) {
-			my @sigs = sort $Project->signatures( {'Group'=>$group} );
+			my @sigs = sort( $Project->signatures( {'Group'=>$group} ) );
 			$openprint::log->debug("Sigs in group $group : @sigs " );
 			next if ! @sigs;
 			my $ss_id = shift @sigs;
@@ -283,14 +283,33 @@ $openprint::log->debug( "Signature: @signatures");
 						( $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}} ) or
 						( $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}} ) ) {
 					if ( ! @sigs ) {
-						push @sigs, copy_signature( $project_index, $sig_specs );
+						push @sigs, $Project->copy_signature( $sig_specs, {
+								'chkOverrideImposition1' => '',
+								'chkOverrideImposition2' => '',
+								'chkOverrideImposition3' => '',
+								'chkOverridePageQuantity1' => '',
+								'chkOverridePageQuantity2' => '',
+								'chkOverridePageQuantity3' => '',
+								'chkOverridePress1' => '',
+								'chkOverridePress2' => '',
+								'chkOverridePress3' => '',
+								'chkOverrideRunStyle1' => '',
+								'chkOverrideRunStyle2' => '',
+								'chkOverrideRunStyle3' => '',
+								'chkOverrideSheetSize1' => '',
+								'chkOverrideSheetSize2' => '',
+								'chkOverrideSheetSize3' => '',
+						},'calculated' );
+
 					} # endif
-$openprint::log->debug("Saving additional imposition");
+$openprint::log->debug("Saving additional impositions1 " . @{$$sig_specs{'Additional Impositions1'}} ) if $$sig_specs{'Additional Impositions1'} and @{$$sig_specs{'Additional Impositions1'}};
+$openprint::log->debug("Saving additional impositions2 " . @{$$sig_specs{'Additional Impositions2'}} ) if $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}};
+$openprint::log->debug("Saving additional impositions3 " . @{$$sig_specs{'Additional Impositions3'}} ) if $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}};
 					my $a_ss_id = shift @sigs;
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
 					my %specs = %{$new_sig_specs};
 					openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $sig_specs );
-
+$openprint::log->debug("After calc_from_imposition" );
 					my $ac = sql::start_transaction( $openprint::dbh );
 					sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
 
@@ -349,30 +368,6 @@ sub status {
 	return;
 } # end sub status
         
-sub copy_signature {
-	my ( $project_index, $sig_specs ) = @_;
-$openprint::log->debug("ADding signature");
-	my $Project = new openprint::Project( $project_index );
-	my $new_service_index = openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'AdditionalSignature' );
-	my $new_specs = openprint::service::get_specs_ref( $Project, $new_service_index );
-	my $ac = sql::start_transaction( $openprint::dbh );
-	$openprint::dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
-	$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-	my ( $sig_index ) = sql::execute( undef, undef, $_, $project_index );
-	$sig_index += 1;
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureIndex', $sig_index );
-
-	# Releases the lock
-	$openprint::dbh->commit();
-
-	foreach my $key ( openprint::Estimating::Printing::variables( $project_index, undef, undef, $sig_specs ) ) {
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
-	} # end foreach
-
-	sql::end_transaction( $openprint::dbh, $ac );
-	return $new_service_index;
-} # end sub copy_signature
-
 sub save {
 } # end sub save
 

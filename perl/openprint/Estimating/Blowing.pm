@@ -1,6 +1,5 @@
 package openprint::Estimating::Blowing;
 use strict;
-use warnings;
 
 require openprint::service;
 use sql;

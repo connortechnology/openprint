@@ -136,7 +136,7 @@ function bug_report_window() {
 		Dialog.alert("Close the window 'Test' before opening it again!",{width:200, height:130});
 	} else { 
 		contentWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
-className:"alphacube", width:400, height:420
+className:"alphacube", width:400, height:420, recenterAuto:false
 		} );
 		//contentWin.setContent('test_content', true, true)
 		contentWin.setAjaxContent('/bug_report.html', null , true);
@@ -160,7 +160,7 @@ function ajax_window( url, width, height ) {
 			width = 400;
 		
 		contentWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
-className:"alphacube", width:width, height:height
+className:"alphacube", width:width, height:height, recenterAuto:false
 		} );
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
@@ -181,7 +181,7 @@ function popup_window( url, parameters, options ) {
 		var width = 400;
 		if ( options &&options.width )
 			width = options.width;
-		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width} );
+		popupWin = new Window({maximizable: false, resizable: true, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true, className:"alphacube", width:width, recenterAuto:false} );
 		// Set up a windows observer, check ou debug window to get messages
 		myObserver = {
 onDestroy: function(eventName, win) {

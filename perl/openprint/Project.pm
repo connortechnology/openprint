@@ -1325,7 +1325,7 @@ sub copy_signature {
 	my $ac = sql::start_transaction( $dbh );
     foreach my $key ( openprint::Estimating::Printing::variables() ) {
 		next if $key eq 'SignatureIndex';
-		if ( $$data{$key} ) {
+		if ( exists $$data{$key} ) {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$data{$key}, ! exists $$new_specs{$key} );
 		} else {
 			openprint::service::insert_service_spec( $log, $dbh, $self->id(), $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );

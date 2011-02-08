@@ -26,6 +26,7 @@ my @fields = (
 	'quantity',
 	'bleed_size',
 	'specs',
+	'pages',
 );
 
 use strict;
@@ -47,9 +48,10 @@ sub AUTOLOAD {
 
     if ( @_ ) {
 		$self->{$name} = shift;
-		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height'] ) ) {
+		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height','spread_size'] ) ) {
 			$$self{'imposition'} = $$self{'rows'} * $$self{'columns'} + $$self{'dutch_rows'} * $$self{'dutch_columns'};
 			$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
+			$$self{'pages'} = $$self{'spreads'} * $$self{'spread_size'};
 			if ( $$self{'image_orientation'} eq 'Vertical' ) {
 				$$self{'layout_width'} = $$self{'columns'} * $$self{'image_width'};
 				$$self{'layout_height'} = $$self{'rows'} * $$self{'image_height'};
@@ -88,8 +90,10 @@ sub AUTOLOAD {
 
 sub display {
 	my ( $self, $prefix ) = @_;
-	$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
-	@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
+	#$openprint::log->debug(sprintf('Imp %s: %dx%dout %dx%d+%dx%d:%dout spreads:%dx%d=%d pages:%dx%d=%d %s on: %sx%s %.3fx%.3f %s I: %.3fx%.3f L:%.3fx%.3f %s %s minimum: %s', $prefix,
+	#@$self{'quantity','start_imposition','columns','rows','dutch_columns','dutch_rows','imposition','spread_columns','spread_rows','spreads'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $$self{paper}->{start_width},$$self{paper}->{start_height},$self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, @$self{'image_width','image_height','layout_width','layout_height','image_orientation'},$self->grain_direction(), $$self{paper}->minimum_order() ) );
+	$openprint::log->debug(sprintf('Imp %s: %dx%d+%dx%d:%dout pages:%dx%d=%d %s on: %sx%s %s %s', $prefix,
+	@$self{'columns','rows','dutch_columns','dutch_rows','imposition'},$self->page_columns(), $self->page_rows(), $self->pages(), $$self{'runstyle'}, $self->{paper}->{width},$self->{paper}->{height},$$self{Press}->{strid}, $$self{'Price'} ? $$self{'Price'} : '' ) );
 } # end sub display
 
 sub get {
@@ -134,25 +138,15 @@ sub set {
 
 } # end sub set
 
-sub get {
-    my $self = shift;
-
-    return map { $self->$_() } @_;
-} # end sub get
-
 sub copy {
-	my $self = shift;
 	my $copy = new openprint::Imposition();
-	foreach my $field ( @fields ) {
-		$$copy{$field} = $$self{$field};
-	} # end foreach
+	@$copy{@fields} = @{$_[0]}{@fields};
 	$$copy{paper} = $$copy{paper}->clone() if $$copy{paper};
 	return $copy
 } # end copy
 
 sub Paper {
-	my $self = shift;
-	return $$self{'paper'};
+	return $_[0]{'paper'};
 } # end sub Paper
 
 sub load_used {
@@ -381,8 +375,8 @@ sub sheet_height {
 } # end sub sheet_height
 
 sub pages {
-	my $self = shift;
-	return $$self{'spreads'} * $$self{'spread_size'};
+	return $_[0]{'pages'};
+	#return $_[0]{'pages'} ? $_[0]{'pages'} : $_[0]{'spreads'} * $_[0]{'spread_size'};
 }
 
 sub grain_direction {

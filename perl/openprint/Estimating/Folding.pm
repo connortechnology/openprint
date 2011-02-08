@@ -325,6 +325,19 @@ sub impositions {
 
 sub signature_calc {
 	my ( $Project, $signature_service_index, $sig_specs, $specs, $qty_index, $Paper, $SignatureImposition, $uv_specs, $aq_specs, $stitching_specs, $Signature_Impositions ) = @_;
+	if ( ! $SignatureImposition->imposition() ) {
+	Carp::cluck( 'Invalid Imposition');
+		       my %results = (
+                'Price'         => 0,
+                'MPrice'        => 0,
+                'Equipment'     => '',
+                'Status'        => 'uncalculated',
+                'Folds'         => '',
+                'Breakdown'     => 'Invalid Signature passed to Folding',
+                );
+        return %results;
+
+	} # end if
 
 	my $services = $Project->services();
 	my $Press = $SignatureImposition->Press();

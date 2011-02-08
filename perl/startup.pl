@@ -7,6 +7,7 @@ BEGIN {
 	#use Apache2 ();
 	use Apache2::Request ();
 	use Apache2::RequestRec ();
+	use Apache2::Connection ();
 	use APR::URI;
 	use Apache2::Const;
 	use Apache2::Log ();

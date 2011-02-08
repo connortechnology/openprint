@@ -330,7 +330,7 @@ sub summary {
 		foreach my $key ( sort keys %Papers ) {
 			my $html = '';
 			my $Paper = $Papers{$key};
-$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
+#$openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id-$qty_index"} );
 			if ( $$specs{"qty-$stock_id-$qty_index"} ) {
 				if ( $Paper->type() eq 'Sheet' ) {
 					$html .= $$specs{"sheets-$stock_id-$qty_index"}.'sheets ';
@@ -338,7 +338,7 @@ $openprint::log->warn("Stock QTY $stock_id $qty_index " . $$specs{"qty-$stock_id
 				$html .= $$specs{"qty-$stock_id-$qty_index"}.'lbs';
 				if ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {
 if ( ! $Paper->sheet_weight() ) {
-$openprint::log->debug("No Sheet Weight: $$Paper{height}:" . $Paper->to_string() );
+$openprint::log->error("No Sheet Weight: $$Paper{height}:" . $Paper->to_string() );
 }
 					$html .= sprintf(' %.0finches',( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() );
 				} # end if

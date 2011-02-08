@@ -16,8 +16,6 @@
 
 package openprint::Estimating::Skids;
 use strict;
-use warnings;
-no warnings qw(uninitialized);
 use POSIX qw(ceil);
 
 require openprint::service;

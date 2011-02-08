@@ -87,6 +87,11 @@ sub handler {
 
 	my $lastpage = '';
 	my $page = $r->uri();
+	if ( $page =~ /.html/ ) {
+		$r->content_type('text/html');
+	} elsif ( $page =~ /.json/ ) {
+		$r->content_type('text/javascript');
+	} # end if
 
 
 		# This one has to go here, because it loads data, the others clear data, so they can go after the requires
@@ -165,7 +170,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 			#$log->debug("parsing template!");
 			$r->print( ssi::variable_substitution( \$template, \%variable ) );
 		} else {
-			$log->warn("No template!" . $r->content_type());
+			#$log->warn("No template!" . $r->content_type());
 			$_ =  ssi::variable_substitution( \$variable{'PageContent'}, \%variable ) if $variable{'PageContent'} ne '';
 			$log->warn($_);
 			$r->print( $_ );

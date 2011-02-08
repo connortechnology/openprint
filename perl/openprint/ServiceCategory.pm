@@ -18,6 +18,15 @@ $serial = 'Service_Categories_id_seq';
 %defaults = (
 );
 
+sub find_one {
+    my @results = find( @_, 'limit', 1 );
+    if ( @results > 1 ) {
+        $openprint::log->error('ServiceCate::find_one more than 1 result!');
+    } elsif ( @results ) {
+        return $results[0];
+    } # end if
+    return;
+} # end sub find_one
 sub find {
 	my %params = @_;
 	my $sql = q{SELECT * FROM Service_Categories WHERE 1>0};
@@ -39,8 +48,12 @@ sub find {
 
 sub Services {
 	my $self = shift;
-	
-	return openprint::Service::find( 'category_id'=>$$self{'id'} );
+	if ( ! $$self{'Services'} ) {
+		@{$$self{'Services'}} = openprint::Service::find( 'category_id'=>$$self{'id'} );
+	} # end if 
+	return @{$$self{'Services'}};
 } # end sub project_types
+
+
 1;
 __END__
