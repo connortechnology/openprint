@@ -450,6 +450,7 @@ sub find {
 				my @d;
 
 				foreach my $field ( @{$$f{$k}} ) {
+$openprint::log->debug("find: $field");
 					my $results = find_operators( \%params, $k, $field );
 					foreach my $operator ( keys %$results ) {
 						push @w, shift @{$$results{$operator}};
@@ -458,7 +459,7 @@ sub find {
 					} # end foreach
 				} # end foreach field
 				foreach ( @d ) { delete $params{$_}; };
-				push @where, '(' . join(' OR ', @w ) . ')';
+				push @where, '(' . join(' OR ', @w ) . ')' if @w;
 			} else {
 				my $results = find_operators( \%params, $k, $$f{$k} );
 				foreach my $operator ( keys %$results ) {

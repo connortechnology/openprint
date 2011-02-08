@@ -32,7 +32,7 @@ require openprint::StockMaterial;
 require openprint::Equipment_Stock_Setting;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
-$debug = 0;
+$debug = 1;
 
 my @fields = (
 		'id', 'created_on',
@@ -64,6 +64,10 @@ sub find {
 			$sql .= ' AND papers.id=?';
 			push @values, $params{'id'};
 		} # end if
+	} # end if
+	if ( $params{'grain_direction'} ) {
+		$sql .= ' AND grain_direction=?';
+		push @values, $params{'grain_direction'};
 	} # end if
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
@@ -1267,7 +1271,7 @@ sub load_from_signature {
 				delete $params{'height'};
 				@Papers = openprint::Paper->find( %params );
 			} elsif ( $qty_index and ( @Papers > 1 ) ) {
-				Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'}");
+				Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'} : Params: " . join(',', map { $_ . ' => ' . $params{$_} } keys %params ) );
 			} # end if
 #$log->debug("Found " . @Papers );
 			if ( ! @Papers ) {

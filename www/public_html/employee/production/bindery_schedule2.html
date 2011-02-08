@@ -101,7 +101,7 @@
 	} # end if
 ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
-<form name="f1" method="post" action="bindery_schedule2.html">
+<form name="f1" method="post" action="/employee/production/bindery_schedule2.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
 	<input type="hidden" name="ServiceIndex" />
@@ -210,7 +210,7 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddMaintenance', 'add.gif', "ajax_window('_add_maintenance.html', 600, 400 );", '', 'Add Maintenance' ); ) ?>
 			<? echo (
 				if ( @{$$variable{'Equipment'}} == 1 and $$variable{'Equipment'}[0]->smartscheduling() ) {
-					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', 'bindery_schedule2.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', 'Reflow Jobs' );
+					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', '/employee/production/bindery_schedule2.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', 'Reflow Jobs' );
 				} # end if
 				return;
 			) ?>

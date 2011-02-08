@@ -1543,12 +1543,27 @@ sub _li_change {
 		my @Jobs = openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
 		my $index = 0;
 		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
-		return if ! $index; # was first in the list
+		if ( ! $index ) {
+			# was first in the list
+			$log->debug("Was first in list.");
+		} elsif ( $index == @Jobs ) {
+			$log->warn("Job not found.");
+		} # end if
 
 		if ( $Job->Equipment()->smartscheduling() ) {
-			if ( $index > 0 ) {
-				$_ = $Jobs[$index-1];
-				$Jobs[$index-1] = $Jobs[$index];
+			if ( $index == 1 and $Jobs[$index-1]->locked() ) {
+$log->debug("second job can't move");
+				$variable{'error'} .= "Cant move locked job " . $Jobs[$index-1]->Project()->docket();
+				return;
+			} elsif ( $index > 0 ) {
+				my $switch_index = $index-1;
+				while ( ( $switch_index >= 0 ) and $Jobs[$switch_index]->locked() ) { $switch_index -= 1; }
+				if ( $switch_index < 0 ) {
+					$variable{'error'} .= "Cant move locked jobs";
+					return;
+				} # end if
+				$_ = $Jobs[$switch_index];
+				$Jobs[$switch_index] = $Jobs[$index];
 				$Jobs[$index] = $_;
 			} # end if
 			reorder_jobs( @Jobs );
