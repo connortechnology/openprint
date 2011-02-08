@@ -1,6 +1,5 @@
 package openprint::Estimating::RoundCornering;
 use strict;
-use warnings;
 
 require openprint::service;
 use POSIX           qw(ceil);

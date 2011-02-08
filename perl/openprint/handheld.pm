@@ -1,7 +1,7 @@
 package openprint::handheld;
 
 use strict;
-use warnings;
+#use warnings;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
