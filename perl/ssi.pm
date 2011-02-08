@@ -641,26 +641,18 @@ sub count_lines {
 } # end sub count_lines
 
 sub radio {
-	my ( $name, $values, $selected, $options ) = @_;
+    my ( $name, $values, $selected, $options ) = @_;
 
-	my $onclick = $$options{'onclick'} if $options;
-	my $html;
-	my %values;
-	if ( ref $values eq 'ARRAY' ) {
-		%values = map { $_, $_ } @{$values};
-	} elsif ( ref $values eq 'HASH' ) {
-		*values = $values;
-	} else {
-		$values{$values} = $values;
-	} # end if
+    my $onclick = $$options{'onclick'} if $options;
+    my $html;
 
-	foreach my $value ( keys %values ) {
-		$html .= sprintf(q`
-				<input type="radio" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s %5$s />
-				<label class="radio" for="%1$s%2$s">%3$s</label>
-				`, $name, $value, $values{$value}, checked( sets::isin( $value, $selected ) ), $onclick );
-	} # end foreach value
-	return $html;
+	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+        $html .= sprintf(q`
+                <input type="radio" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
+                <label class="radio" for="%1$s%2$s">%3$s</label>
+                `, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+    } # end foreach value
+    return $html;
 } # end sub radio
 
 1;

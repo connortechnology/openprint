@@ -16,7 +16,6 @@
 
 package openprint::Estimating::UVCoating;
 use strict;
-#use warnings;
 
 require openprint::service;
 require openprint::Material;

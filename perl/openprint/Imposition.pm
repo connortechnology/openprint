@@ -26,6 +26,7 @@ my @fields = (
 	'quantity',
 	'bleed_size',
 	'specs',
+	'pages',
 );
 
 use strict;
@@ -47,9 +48,10 @@ sub AUTOLOAD {
 
     if ( @_ ) {
 		$self->{$name} = shift;
-		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height'] ) ) {
+		if ( sets::isin( $name, ['rows','columns','dutch_rows','dutch_columns','spread_rows','spread_columns','spreads','image_width','image_height','spread_size'] ) ) {
 			$$self{'imposition'} = $$self{'rows'} * $$self{'columns'} + $$self{'dutch_rows'} * $$self{'dutch_columns'};
 			$$self{'spreads'} = $$self{'spread_rows'} * $$self{'spread_columns'};
+			$$self{'pages'} = $$self{'spreads'} * $$self{'spread_size'};
 			if ( $$self{'image_orientation'} eq 'Vertical' ) {
 				$$self{'layout_width'} = $$self{'columns'} * $$self{'image_width'};
 				$$self{'layout_height'} = $$self{'rows'} * $$self{'image_height'};
@@ -136,25 +138,15 @@ sub set {
 
 } # end sub set
 
-sub get {
-    my $self = shift;
-
-    return map { $self->$_() } @_;
-} # end sub get
-
 sub copy {
-	my $self = shift;
 	my $copy = new openprint::Imposition();
-	foreach my $field ( @fields ) {
-		$$copy{$field} = $$self{$field};
-	} # end foreach
+	@$copy{@fields} = @{$_[0]}{@fields};
 	$$copy{paper} = $$copy{paper}->clone() if $$copy{paper};
 	return $copy
 } # end copy
 
 sub Paper {
-	my $self = shift;
-	return $$self{'paper'};
+	return $_[0]{'paper'};
 } # end sub Paper
 
 sub load_used {
@@ -383,8 +375,8 @@ sub sheet_height {
 } # end sub sheet_height
 
 sub pages {
-	my $self = shift;
-	return $$self{'spreads'} * $$self{'spread_size'};
+	return $_[0]{'pages'};
+	#return $_[0]{'pages'} ? $_[0]{'pages'} : $_[0]{'spreads'} * $_[0]{'spread_size'};
 }
 
 sub grain_direction {

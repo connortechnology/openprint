@@ -175,10 +175,11 @@
 		</p>
 		<p>
 			<label>Recommendations:</label>
-			<input type="checkbox" id="recommendations1" name="recommendations" value="1" <? echo ( ssi::checked( sets::isin( '1', split(',', $session{'/administrator/stock/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
-			<label class="radio" for="recommendations1">Yes</label>
-			<input type="checkbox" id="recommendations0" name="recommendations" value="0" <? echo ( ssi::checked( sets::isin( '0', split(',', $session{'/administrator/stock/list.html?recommendations'} ) ) ); ) ?> onclick="calc(this.form.name);" />
-			<label class="radio" for="recommendations0">No</label>
+			<? echo ( ssi::radio( 'recommendations', [ '1','Yes','0','No', '', 'All' ], $session{'/administrator/stock/list.html?recommendations'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
+		</p>
+		<p>
+			<label>Grain Direction:</label>
+			<? echo ( ssi::radio( 'grain_direction', [ 'width', 'Width','height', 'Height', '', 'Both' ], $session{'/administrator/stock/list.html?grain_direction'}, { 'onclick'=>'calc(this.form.name);' } ); ) ?>
 		</p>
 		<p>
 			<label>FSC Code:</label>

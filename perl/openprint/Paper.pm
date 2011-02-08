@@ -1052,10 +1052,14 @@ sub factor {
 } # end sub factor
 sub minimum_order_weight {
 	my $self = $_[0];
-	if ( $$self{'type'} eq 'Sheet' ) {
-		return $self->minimum_order() * $self->sheet_weight();
+	if ( ! exists $$self{'minimum_order_weight'} ) {
+		if ( $$self{'type'} eq 'Sheet' ) {
+			$$self{'minimum_order_weight'} = $self->minimum_order() * $self->sheet_weight();
+		} else {
+			$$self{'minimum_order_weight'} = $self->minimum_order();
+		} # end if
 	} # end if
-	return $self->minimum_order();
+	return $$self{'minimum_order_weight'};
 } # end sub minimum_order_weight
 
 sub sheets_per_package {
@@ -1077,7 +1081,8 @@ sub gsm {
 		if ( $self->wpsi(undef) ) {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
-			$openprint::log->warn("Can't calculate gsm");
+			$$self{'gsm'} = 'unknown';
+			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() );
 		} # end if
 	} # end if
 	return $$self{'gsm'};

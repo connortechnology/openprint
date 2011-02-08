@@ -1,6 +1,5 @@
 package openprint::Estimating::ClipSealing;
 use strict;
-use warnings;
 
 use POSIX            qw(ceil);
 require openprint::service;

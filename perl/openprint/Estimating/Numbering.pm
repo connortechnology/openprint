@@ -1,10 +1,7 @@
 package openprint::Estimating::Numbering;
 use strict;
-use warnings;
-no warnings qw(uninitialized);
 
 require openprint::service;
-use sql;
 use POSIX           qw(ceil);
 
 my $debug = 1;
