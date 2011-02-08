@@ -919,7 +919,7 @@ sub get_impositions {
 		my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
 		if ( $do_work_turn ) {
 # Coatings like AQ and Varnish are done in a separate pass.  So we don't count them in this check
-			my $CoatingsCategory = openprint::ServiceCategory::find_one( 'name' => 'Coating' );
+			my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
 			my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 			if ( ! $$Papers[0]->doublesided() ) {
 				$openprint::log->debug("No W&T due to doublesided" . $$Papers[0]->name() );
@@ -3855,7 +3855,7 @@ sub select_presses {
 			$varnish = 1;
 		} # end if
 	} # end if
-	my $CoatingsCategory = openprint::ServiceCategory::find_one( 'name' => 'Coating' );
+	my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
 	my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 	my @side_one_colours = sets::exclude( \@Coatings, $side_one_colours );
 	my @side_two_colours = sets::exclude( \@Coatings, $side_one_colours );

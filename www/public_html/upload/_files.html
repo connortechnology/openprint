@@ -56,7 +56,7 @@ if ( 0 ) {
 	} # end if
 	$log->debug("Looking in directory ($config{'ProjectFilesPath'}$destdir$path)");
 
-	my %ProjectFiles = map { $_->filename(), $_ } openprint::File::find('company_id'=>$session{'company_id'}, 'filename_like' => $path.'%' );
+	my %ProjectFiles = map { $_->filename(), $_ } openprint::File->find('company_id'=>$session{'company_id'}, 'filename_like' => $path.'%' );
 
 	foreach my $file ( sort @filenames ) {
 		# Do not show hidden files 

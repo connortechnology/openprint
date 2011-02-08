@@ -17,7 +17,7 @@
 			<select name="salesrep_id" size="1">
 			<? echo (
 					my @options = ( '', 'All' );
-					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+					push @options, map { $_->id(), $_->name() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
 					return ssi::make_drop_down( \@options, $session{'/administrator/reports/yearly_sales.html?salesrep_id'} );
 					) ?>
 
