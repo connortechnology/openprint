@@ -258,23 +258,23 @@ if ( ( exists $config{'RFID'} ) and $config{'RFID'} ) {
 	require openprint::RFIDTagHistory;
 	require openprint::RFIDScannerHistory;
 	my @Hs = openprint::RFIDScannerHistory->find(
-			'updated_on_<'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
-			'updated_on_>'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
+			'updated_on <'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
+			'updated_on >'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
 	$log->warn( "Scanner History Entries: " . @Hs );
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
 	@Hs = openprint::RFIDTagHistory->find(
-			'updated_on_<'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
-			'updated_on_>'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
+			'updated_on <'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -31 ) ),
+			'updated_on >'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -62 ) ),
 			);
 	$log->warn( "Tag History Entries: " . @Hs );
 	foreach my $H ( @Hs ) {
 		$H->delete();
 	} # end foreach H
 	my @old_unassigned_tags = openprint::RFIDTag->find(
-			'updated_on_<'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -60 ) ),
+			'updated_on <'=>sprintf('%.4d-%.2d-%.2d 23:59:59', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -60 ) ),
 			'type'			=>	'Skid',
 			);
 	$log->warn( "Tag History Entries (unassigned and old): " . @old_unassigned_tags );
@@ -297,7 +297,7 @@ foreach my $Paper ( openprint::Paper->find() ) {
 	} # end if
 } # end foreach my Paper
 my $log_count = 0;
-foreach my $Log ( openprint::Log->find('date_time_<'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
+foreach my $Log ( openprint::Log->find('date_time <'=>sprintf('%.4d-%.2d-%.2d', Date::Calc::Add_Delta_Days( Date::Calc::Today(), -365 ) ) ) ) {
 	$Log->delete();
 	$log_count += 1;
 } # end foreach Log

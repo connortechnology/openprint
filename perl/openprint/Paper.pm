@@ -65,6 +65,10 @@ sub find {
 			push @values, $params{'id'};
 		} # end if
 	} # end if
+	if ( $params{'grain_direction'} ) {
+		$sql .= ' AND grain_direction=?';
+		push @values, $params{'grain_direction'};
+	} # end if
 	if ( $params{'owner_id'} ) {
 		$sql .= ' AND owner_id=?';
 		push @values, $params{'owner_id'};
@@ -149,10 +153,10 @@ sub find {
 		$sql .= ' AND width=?';
 		push @values, 1*$params{'width'};
 	} # end if
-	if ( $params{'width_>='} ) {
-		$params{'width_>='} =~ s/[^\d\.]//g;
+	if ( $params{'width >='} ) {
+		$params{'width >='} =~ s/[^\d\.]//g;
 		$sql .= ' AND ( width IS NULL or width>=?)';
-		push @values, 1*$params{'width_>='};
+		push @values, 1*$params{'width >='};
 	} # end if
 	if ( $params{'width_start'} ) {
 		$params{'width_start'} =~ s/[^\d\.]//g;
@@ -169,10 +173,10 @@ sub find {
 		$sql .= ' AND height>=?';
 		push @values, 1*$params{'height_start'};
 	} # end if
-	if ( $params{'height_>='} ) {
-		$params{'height_>='} =~ s/[^\d\.]//g;
+	if ( $params{'height >='} ) {
+		$params{'height >='} =~ s/[^\d\.]//g;
 		$sql .= ' AND ( height IS NULL OR height>=? )';
-		push @values, 1*$params{'height_>='};
+		push @values, 1*$params{'height >='};
 	} # end if
 	if ( $params{'in_stock_start'} ) {
 		$params{'in_stock_start'} =~ s/[^\d\.]//g;
@@ -872,7 +876,7 @@ sub in_stock {
 	} # end if
 
 	if ( ! exists $$self{in_stock} ) {
-		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			$$self{in_stock} += $SkidContent->quantity();
 		} # end foreach SkidContent
@@ -893,7 +897,7 @@ sub available {
 
 	if ( ! exists $$self{available} ) {
 		$$self{available} = 0;
-		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity_>'=>0) ) {
+		foreach my $SkidContent ( openprint::SkidContent->find('paper_id'=>$$self{'id'},'quantity >'=>0) ) {
 			next if $SkidContent->Skid()->Location()->name() eq 'Missing';
 			next if sets::isin( $SkidContent->quality(), [ 'Damaged', 'Used', 'Trial', 'Return', 'Partial' ] );
 			@$self{available} += int $SkidContent->quantity();
@@ -906,7 +910,7 @@ sub available {
 sub skids {
     my $self = shift;
 	return 0 if ! $$self{'id'};
-	return openprint::Skid->find('paper_id'=>$$self{'id'}, 'quantity_>='=>1);
+	return openprint::Skid->find('paper_id'=>$$self{'id'}, 'quantity >='=>1);
     #return map { new openprint::Skid( $_ ) } sql::execute( undef, undef, q{SELECT skid_id FROM skid_contents WHERE paper_id=? and quantity > 0}, $$self{'id'} );
 } # end sub skids
 
@@ -970,7 +974,7 @@ sub get_price {
 		} # end foreach Price
 		if ( ! $price ) {
 			if ( $params{'service'} eq 'Material' or $debug ) {
-			$openprint::log->warn("Unable to find price for Stock $params{service} $params{equipment_id} : $qty");
+				$openprint::log->warn("Unable to find price for Stock $params{service} $params{equipment_id} : $qty");
 			} # end if
 			return;
 		} # end if
@@ -1048,10 +1052,14 @@ sub factor {
 } # end sub factor
 sub minimum_order_weight {
 	my $self = $_[0];
-	if ( $$self{'type'} eq 'Sheet' ) {
-		return $self->minimum_order() * $self->sheet_weight();
+	if ( ! exists $$self{'minimum_order_weight'} ) {
+		if ( $$self{'type'} eq 'Sheet' ) {
+			$$self{'minimum_order_weight'} = $self->minimum_order() * $self->sheet_weight();
+		} else {
+			$$self{'minimum_order_weight'} = $self->minimum_order();
+		} # end if
 	} # end if
-	return $self->minimum_order();
+	return $$self{'minimum_order_weight'};
 } # end sub minimum_order_weight
 
 sub sheets_per_package {
@@ -1073,7 +1081,8 @@ sub gsm {
 		if ( $self->wpsi(undef) ) {
 			$$self{'gsm'} = sprintf('%.2f', $$self{'wpsi'} * 703064.5 );
 		} else { 
-			$openprint::log->warn("Can't calculate gsm");
+			$$self{'gsm'} = 'unknown';
+			$openprint::log->warn("Can't calculate gsm for " . $self->to_string() );
 		} # end if
 	} # end if
 	return $$self{'gsm'};
@@ -1267,7 +1276,7 @@ sub load_from_signature {
 				delete $params{'height'};
 				@Papers = openprint::Paper->find( %params );
 			} elsif ( $qty_index and ( @Papers > 1 ) ) {
-				Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'}");
+				Carp::cluck("More than 1 paper found in load_from_signature S:$$specs{rdbSuppliedStock} B:$$specs{'ddmStockBrand'} F:$$specs{'ddmStockFinish'} C:$$specs{'ddmStockColour'} W:$$specs{'ddmStockWeight'} : Params: " . join(',', map { $_ . ' => ' . $params{$_} } keys %params ) );
 			} # end if
 #$log->debug("Found " . @Papers );
 			if ( ! @Papers ) {

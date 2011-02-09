@@ -29,7 +29,7 @@
 -->
 </script>	 
 <? if ( $session{'user_id'} ) ?>
-<? if ( $$variable{'error'} ) ?><div class="error"><?error?></div><? endif ( $$variable{'error'} ) ?>
+<!--#include virtual="/includes/error_reporting.html"-->
 <form id="f1" name="f1" method="post" action="/payment/history.html">
    <div class="PaymentHistory">
 		<fieldset class="filters unprintable"><legend>Select Search Criteria:</legend>
@@ -42,15 +42,14 @@
 			</p>
 			<p>
 				<label>Received On:</label>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_start', {'onchange'=>'load_payments(this.form);'} ); ) ?>
-					to 
+				<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_start', {'onchange'=>'load_payments(this.form);', 'with_today'=>1, 'with_clear'=>1} ); ) ?>
 				</span>
-				<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_end', {'onchange'=>'load_payments(this.form);'} ); ) ?>
+					to 
+				<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/payment/history.html', 'received_on_end', {'onchange'=>'load_payments(this.form);', 'with_today'=>1, 'with_clear'=>1} ); ) ?>
 				</span>
 			</p>
-			<br class="spacer"/>
 			<p class="buttons">
 				<? echo ( join('',
 					ssi::writeButton( $log, $dbh, 'ShowResults', 'showResults.gif', "load_payments(f1);", '', 'Show Results' ),

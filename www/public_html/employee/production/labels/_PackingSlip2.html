@@ -7,7 +7,7 @@
 		if ( $$variable{'Project'} ) {
 			my $services = $$variable{'Project'}->services();
 
-			foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+			foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 
 				next if $ServiceType->name() eq 'CustomerPickUp';
 				next if ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} );
@@ -48,7 +48,7 @@
 	if ( ( ! $$variable{'Label'}->get_data('to') ) and $$variable{'Project'} ) {
 		my $services = $$variable{'Project'}->services();
 
-		foreach my $ServiceType ( openprint::ServiceType::find('category'=>'Shipping') ) {
+		foreach my $ServiceType ( openprint::ServiceType->find('category'=>'Shipping') ) {
 
 			next if $ServiceType->name() eq 'CustomerPickUp';
 			next if ! ( $$services{$ServiceType->name()} and @{$$services{$ServiceType->name()}} );

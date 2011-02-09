@@ -9,8 +9,8 @@
             ( sets::isin( $param{'Selected'}, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'  => $param{'Finish'} ) : () ),
             ( sets::isin( $param{'Selected'}, [ 'Colour','Weight' ] ) ? ( 'colour_id'   => $param{'Colour'} ) : () ),
             ( sets::isin( $param{'Selected'}, [ 'Weight' ] ) ? ( 'weight_id'    => $param{'Weight'} ) : () ),
-            ( $param{'width'} ? ( 'width_>='=>$param{'width'} ) : () ),
-            ( $param{'height'} ? ( 'height_>='=>$param{'height'} ) : () ),
+            ( $param{'width'} ? ( 'width >='=>$param{'width'} ) : () ),
+            ( $param{'height'} ? ( 'height >='=>$param{'height'} ) : () ),
             'type'=>$param{'Types'},
 		);
 

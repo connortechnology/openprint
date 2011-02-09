@@ -95,6 +95,11 @@ function Fold_onchange( element, signature, qty_index, index ) {
 				$html .= "<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:";
 				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
 				$html .= '</legend>';
+				$html .= '<p><label>Printed:</label>';
+				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
+					$html .= openprint::service::summary( $$variable{'Project'}, $ss_id, $qty_index );
+				} # end foreach
+				$html .= '</p>';
 				$html .= '<p><label>Equipment:</label>';
 				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';

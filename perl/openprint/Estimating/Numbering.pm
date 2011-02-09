@@ -1,10 +1,7 @@
 package openprint::Estimating::Numbering;
 use strict;
-use warnings;
-no warnings qw(uninitialized);
 
 require openprint::service;
-use sql;
 use POSIX           qw(ceil);
 
 my $debug = 1;
@@ -308,6 +305,9 @@ sub display {
 	#my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'ClipSealing Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
+
+sub save {
+} # end sub save
 
 1;
 __END__

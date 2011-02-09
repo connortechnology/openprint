@@ -86,9 +86,9 @@ sub find {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE paper_id=?)';
 		push @values, $params{'paper_id'};
 	} # end if
-	if ( $params{'quantity_>='} ) {
+	if ( $params{'quantity >='} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quantity >= ?)';
-		push @values, $params{'quantity_>='};
+		push @values, $params{'quantity >='};
 	} # end if
 	if ( $params{'quality_id'} ) {
 		$sql .= ' AND id IN (SELECT skid_id FROM skid_contents WHERE quality_id = ?)';
@@ -485,7 +485,7 @@ sub allocate {
 
 sub empty {
 	my ( $self ) = @_;
-	my @Contents = $self->Contents('quantity_>'=>0);
+	my @Contents = $self->Contents('quantity >'=>0);
 	return ! @Contents;
 } # end sub empty
 

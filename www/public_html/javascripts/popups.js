@@ -107,7 +107,7 @@ function bug_report_window() {
 		Dialog.alert("Close the window 'Test' before opening it again!",{width:200, height:130});
 	} else { 
 		contentWin = new Window({maximizable: false, resizable: false, hideEffect:Element.hide, showEffect:Element.show, destroyOnClose: true,
-className:"alphacube", width:400, height:420
+className:"alphacube", width:400, height:420, recenterAuto:false
 		} );
 		//contentWin.setContent('test_content', true, true)
 		contentWin.setAjaxContent('/bug_report.html', null , true);

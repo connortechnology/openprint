@@ -1,6 +1,6 @@
 <? eval (
 	if ( %param and ! $param{'btnFunction'} ) {
-		ssi::save_params('/administrator/stock/list.html', 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations' );
+		ssi::save_params('/administrator/stock/list.html', 'Group','Owner','Manufacturer','Name','Finish','Colour','Weight','fsc_code','material_id', 'Types', 'recommendations','grain_direction' );
 	} # end if
 
 	@{$$variable{'Stocks'}} = ();
@@ -15,10 +15,11 @@
 			'material_id'	=> $session{'/administrator/stock/list.html?material_id'}, 
 			'type'		=> [ split(',', $session{'/administrator/stock/list.html?Types'} ) ],
 			'fsc_code'	=> $session{'/administrator/stock/list.html?fsc_code'}, 
+			( $session{'/administrator/stock/list.html?grain_direction'} ? ( 'grain_direction' => $session{'/administrator/stock/list.html?grain_direction'} ) : () ),
 			'order'		=> 'name,finish,colour,weight, width, height'
 		) ) {
-		next if $Stock->recommendations() and ! sets::isin( 1, split(',', $session{'/administrator/stock/list.html?recommendations'} ) );
-		next if ( ! $Stock->recommendations() ) and ! sets::isin( 0, split(',', $session{'/administrator/stock/list.html?recommendations'} ) );
+		next if $session{'/administrator/stock/list.html?recommendations'} eq '0' and $Stock->recommendations();
+		next if $session{'/administrator/stock/list.html?recommendations'} eq '1' and ! $Stock->recommendations();
 		push @{$$variable{'Stocks'}}, $Stock;
 	} # end foreach
 	@{$$variable{'Groups'}} = openprint::StockGroup->find();
@@ -69,8 +70,9 @@
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( sprintf('%.2f', $$variable{'Stock'}->gsm() ); ) ?></a></td>
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( $$variable{'Stock'}->sheets_per_package() ) ?></a></td>
 		<td align="right"><a href="stock.html?stock_id=<? echo ( $$variable{'Stock'}{'id'} ) ?>"><? echo ( 
-my $Price = openprint::PaperPrice::find_one('stock_id'=>$$variable{'Stock'}->id(), 'service'=>'Material', 'order'=>$openprint::PaperPrice::fields{'pricelist_id'} );
-return sprintf('%.0f*%.0f%=%.0f', @$Price{'cost','markup','price'} );
+my $Price = openprint::PaperPrice->find_one('stock_id'=>$$variable{'Stock'}->id(), 'service'=>'Material', 'order'=>$openprint::PaperPrice::fields{'pricelist_id'} );
+return sprintf('%.0f*%.0f%=%.0f', @$Price{'cost','markup','price'} ) if $Price;
+return 'No price';
  ) ?></a></td>
 	</tr>
 <? endwhile ( $$variable{'Stock'} = shift @{$$variable{'Stocks'}} ) ?>

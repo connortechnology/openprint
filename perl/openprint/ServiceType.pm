@@ -9,7 +9,7 @@ use vars qw( $log $dbh $debug $table $serial %find_fields %fields %transforms %d
 
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-$debug = 1;
+$debug = 0;
 $table = 'service_types';
 $serial = 'service_types_id_seq';
 

@@ -173,7 +173,7 @@ sub signature_calc {
 				my ( $pages ) = $type =~ /(\d+)PageFold/;
 				#$results{'Breakdown'} .= "Folding$index: $$sig_specs{SignatureIndex} sig_pages; $sig_pages type: $type pages: $pages qty: " . $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} . '<br/>';
 				if ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages > $sig_pages ) {
-					$pages{$pages} += $sig_pages / $pages;
+					$pages{$pages} += int($sig_pages / $pages);
 				} elsif ( $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"} * $pages == $$sig_specs{'PageQuantity'.$qty_index} ) {
 					$pages{$pages} += $$folding_specs{"FoldQty-$$sig_specs{SignatureIndex}-$qty_index-$index"};
 				} else {
@@ -244,7 +244,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
 
 	my $bestPrice;
 	my $bestEquipment;
-$results{'alert'} .= $imposition.'out on ';
+#$results{'alert'} .= $imposition.'out on ';
 $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
 	foreach my $Equipment ( @equipment ) {
 		if ( $$services{'NoOfflineBindery'} ) {
@@ -570,6 +570,10 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 
 				foreach my $sig_id ( $Project->signatures() ) {
 					my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+					if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
+						$openprint::log->warn("No imposition for sig $$sig_specs{SignatureIndex}");
+						next;
+					} # end if
 					my $Imposition = new openprint::Imposition;
 					$Imposition->load( $sig_specs, $qty_index );
 					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs, [] );

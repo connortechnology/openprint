@@ -931,7 +931,8 @@ function date_clear( e_y, e_m, e_d, e_h, e_min ) {
 function set_date( form, from, to ) {
 	ddm_select_by_value( form.elements[to+'_year'], get_ddm_value( form.elements[from+'_year'] ) );
 	ddm_select_by_value( form.elements[to+'_month'], get_ddm_value( form.elements[from+'_month'] ) );
-	ddm_select_by_value( form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
+	setDaysDropDown(get_ddm_value( form.elements[from+'_year'] ), get_ddm_value( form.elements[from+'_month'] ), form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
+	//ddm_select_by_value( form.elements[to+'_day'], get_ddm_value( form.elements[from+'_day'] ) );
 } // end function set_date
 
 function check_time_starting( form, starting_prefix, ending_prefix ) {
@@ -1112,3 +1113,19 @@ function radio_all(element) {
 			all_element.checked = ! on;	
 	} // end if
 } // end function radio_all
+
+// prevents the entering of a second decimal place
+function check_decimal( element, e ) {
+	var keynum;
+	if(window.event) {
+		// IE
+		keynum = e.keyCode
+	} else if(e.which) {
+		// Netscape/Firefox/Opera
+		keynum = e.which
+	}
+	if ( keynum == 190 && element.value.indexOf(".") != -1 ) {
+		return false;
+	} 
+	return true;
+}

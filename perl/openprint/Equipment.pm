@@ -346,7 +346,7 @@ $openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint:
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'strname, dblmin::int', @_ );
+	return openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'strname, dblmin::float', @_ );
 } # end sub Specifications
 
 sub specification {
@@ -363,7 +363,7 @@ sub Specification {
 	return if ! $$self{'id'};
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'dblmin::int,dblmax::int' ) ) {
+		foreach my $Spec ( openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'dblmin::float,dblmax::float' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
 	} # end if
@@ -380,6 +380,14 @@ sub Specification {
 	if ( ! defined $range ) {
 $openprint::log->debug("Looking for $name : $range") if $debug;
 		if ( $$self{'Specifications'}{$name} and @{$$self{'Specifications'}{$name}} ) {
+			if ( ( @{$$self{'Specifications'}{$name}} > 1 ) and ( $$self{'Specifications'}{$name}[0]{'min'} ne '' ) ) {
+$openprint::log->debug("scanning");
+				foreach ( @{$$self{'Specifications'}{$name}} ) {
+$openprint::log->debug("Spec: " . $_->to_string() );
+					return $_ if $$_{'min'} eq '';
+$openprint::log->debug("Spec: " . $_->to_string() );
+				} # end foreach
+			} # end if
 			return $$self{'Specifications'}{$name}[0];
 		} # end if
 		return;

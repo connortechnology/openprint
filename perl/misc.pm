@@ -409,13 +409,7 @@ sub find_entry {
 	for ( ; $i < @{$array}; $i += 1 ) {
 		my $Object = $$array[$i];
 	$openprint::log->debug("Examining: (" . $Object->min() . 	') (' . $Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
-		return $Object if ( (1*$$Object{min}) == $range ) or ((1*$$Object{max}) == $range );
-
-		return $Object if ( 
-			(! $$Object{interpolate})
-			and (($$Object{min} eq '') or ($$Object{min} <= $range))
-			and (($$Object{max} eq '') or ($$Object{max} >= $range))
-			);
+		return $Object if ( (1*$$Object{min}) <= $range ) and ( ( $$Object{max} eq '' ) or ( (1*$$Object{max}) >= $range ) );
 
 		# first step, find one less than the min
 		last if 1*$$Object{min} > $range;

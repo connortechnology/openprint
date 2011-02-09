@@ -20,8 +20,12 @@ $serial = 'Service_Categories_id_seq';
 
 sub Services {
 	my $self = shift;
-	
-	return openprint::Service->find( 'category_id'=>$$self{'id'} );
-} # end sub project_types
+	if ( ! $$self{'Services'} ) {
+		@{$$self{'Services'}} = openprint::Service->find( 'category_id'=>$$self{'id'} );
+	} # end if 
+	return @{$$self{'Services'}};
+} # end sub Services
+
+
 1;
 __END__

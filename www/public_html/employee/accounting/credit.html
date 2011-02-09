@@ -60,7 +60,7 @@
 <? eval (
 	@{$$variable{'UnpaidOrders'}} = openprint::Order->find(
 		'company_id'	=> $param{'ddmCustomer'},
-		'owing_>'	=>	0,
+		'owing >'	=>	0,
 		'order'		=> 'created_on',
 		);
 

@@ -6,7 +6,7 @@
 	} elsif ( $param{'salesrep_id'} ) {
 		@csr_ids = ( $param{'salesrep_id'} );
 	} else {
-		@csr_ids = map { $_->id() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+		@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
 	} # end if
 
 	my ( $y, $m, $d ) = Date::Calc::Today();
@@ -30,7 +30,7 @@
 			} # end foreach year
 		$html .= "</tr></thead><tbody>\n";
 		my $rowclass;
-		my @Companies = openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)');
+		my @Companies = openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(name)');
 		foreach my $Company ( @Companies ) {
 
 			$html .= sprintf(q`<tr%1$s><td align="left">%2$s</td>`, $rowclass, $Company->name() );
@@ -39,7 +39,7 @@
 			my $order_total;
 			my $payment_cycle;
 
-				my @Orders = openprint::Order::find( 
+				my @Orders = openprint::Order->find( 
 						'company_id' => $Company->id(),
 						'created_on_start' => sprintf('%.4d-01-01 00:00:00', $year ),
 						'created_on_end' => sprintf('%.4d-12-31 23:59:59', $year ),

@@ -32,7 +32,7 @@
 <? echo ( ssi::writeButton( $log, $dbh, 'Add', 'add.gif', "add_content( \$('f1') );", '', 'Add' ); ) ?>
 		<td colspan="6">
 		<select name="type_id"><option value="">select</option>
-		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Claim_ContentType::find('order'=>'lower(name)') ] ); ) ?>
+		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Claim_ContentType->find('order'=>'lower(name)') ] ); ) ?>
 		</select>
 		</td>	
 	</tr>

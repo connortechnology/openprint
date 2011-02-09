@@ -1,7 +1,5 @@
 package openprint::Estimating::ThreeKnifeTrim;
 use strict;
-use warnings;
-no warnings qw(uninitialized);
 
 require openprint::service;
 use POSIX           qw(ceil);

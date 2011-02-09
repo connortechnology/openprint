@@ -1,0 +1,86 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+
+<script type="text/javascript">
+<!--
+	tinyMCE.init({
+		mode : "textareas",
+		theme : "advanced"
+	});
+-->
+</script>
+<div class="Events"><div class="Edit">
+		<form name="f1" id="f1" action="/events/history.html" method="post">
+			<fieldset><legend>Editing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
+				<? if ( $$variable{'Event'}->deleted() ) ?>
+				<span class="warning">This event has been deleted</span>
+				<? endif ( $$variable{'Event'}->deleted() ) ?>
+				
+				<input type="hidden" name="event_id" value="<? echo ( $param{'event_id'} ) ?>" />
+				<div class="content">
+					<ul>
+						<li>
+							<label>Time Associated:</label>
+							<input type="radio" name="time_associated" value="1" id="time_associated1" <? echo ( ssi::checked( sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ) ); ) ?> onclick="if(this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
+							<label class="radio" for="time_associated1">Yes</label>
+							<input type="radio" name="time_associated" value="0" id="time_associated0" <? echo ( ssi::checked( $$variable{'Event'}->time_associated() eq '0' ); ) ?> onclick="if(!this.checked) { $('starting_on_time').show();$('ending_on_time').show(); } else { $('starting_on_time').hide();$('ending_on_time').hide(); }update_duration(this.form,'starting_on','ending_on');" />
+							<label class="radio" for="time_associated0">No</label>
+						</li>
+						<li><label>Start:</label>
+							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'starting_on', $$variable{'Event'}->starting_on(),
+										{
+										'onchange'	=>	q`check_time_starting(this.form,'starting_on','ending_on'); update_duration(this.form,'starting_on','ending_on');`,
+										'showtime'	=>	sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ),
+										'with_today'	=>	1,
+										} ); ) ?>
+							</span>
+						</li>
+						<li><label>End:</label>
+							<span class="DateTimeSelector"><? echo ( ssi::datetime_select( 'ending_on', $$variable{'Event'}->ending_on(), 
+										{
+											'onchange'	=>	q`update_duration(this.form,'starting_on','ending_on');`,
+											'showtime'	=>	sets::isin( $$variable{'Event'}->time_associated(), [ '', 1 ] ),
+											'with_today'	=>	1,
+							} ); ) ?>
+							</span>
+						</li>
+						<li><label>Duration:</label>
+							<span id="duration">
+							</span>
+							<script type="text/javascript">update_duration(document.forms['f1'],'starting_on','ending_on');</script>
+						</li>
+						<li><label onclick="$('category').value='';$('category_id').selectedIndex=0;$('category').toggle();$('category_id').toggle();">Category:</label>
+							<input type="text" id="category" name="category" style="display:none;" onkeyup="$('category_id').selectedIndex=0;" />
+							<select name="category_id" id="category_id" onchange="$('category').value='';">
+								<option value="">select</option>
+								<? echo (
+									return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Event_Category->find('order'=>'lower(name)') ], $$variable{'Event'}->category_id() );
+								) ?>
+							</select>
+						</li>
+						<li><label>Name:</label>
+							<input type="text" id="name" name="name" value="<? echo ( $$variable{'Event'}->name() ) ?>" />
+						</li>
+						<li>
+							<label for="info">More info:</label>
+							<textarea cols="" id="info" name="info" rows="<? echo ( ssi::count_lines( $$variable{'Event'}->info() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Event'}->info() ) ?></textarea>
+						</li>
+					</ul>
+				</div>
+				<p class="buttons">
+					<? echo (
+						my $html = '';
+						#$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'history.html', 'Back' );
+						
+						if ( $$variable{'Event'}->id() ) {
+						$html = ssi::writeButton( $log, $dbh, 'reset', 'reset.gif', 'f1.reset();check_time_published_on(f1);', '', 'Reset' );
+						$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+						#$html .= ssi::writeButton( $log, $dbh, 'copy', 'copy.gif', "f1.action='edit.html';f1.btnFunction.value='Copy';f1.submit();", '', 'Copy' );
+						} # end if
+						$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save' );
+						return $html;
+					) ?>
+				</p>
+			</fieldset>
+			<input type="hidden" name="btnFunction" />
+		</form>
+</div></div>

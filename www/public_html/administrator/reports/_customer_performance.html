@@ -6,7 +6,7 @@
 	} elsif ( $param{'salesrep_id'} ) {
 		@csr_ids = ( $param{'salesrep_id'} );
 	} else {
-		@csr_ids = map { $_->id() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+		@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
 	} # end if
 	foreach my $csr_id ( @csr_ids ) {
 		my $CSR = new openprint::User( $csr_id );
@@ -14,11 +14,11 @@
 					<table class="List"><thead><tr><th align="left">Company</th><th align="right"># of Orders</th><th align="right">Order Value</th><th align="right">Payment Cycle</th>';
 		$html .= "</tr></thead><tbody>\n";
 		my $rowclass;
-		foreach my $Company ( openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)') ) {
+		foreach my $Company ( openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(name)') ) {
 			my $order_total;
 			my $payment_cycle;
 
-			my @Orders = openprint::Order::find( 
+			my @Orders = openprint::Order->find( 
 					'company_id' => $Company->id(),
 					( Date::Calc::check_date( @session{
 											  '/administrator/reports/customer_performance.html?ordered_on_start_year',
@@ -44,7 +44,7 @@
 					);
 			last if $dbh->errstr();
 			next if ! @Orders;
-			next if openprint::Order::find(
+			next if openprint::Order->find(
 					'company_id' => $Company->id(),
 ( Date::Calc::check_date( @session{
 						'/administrator/reports/customer_performance.html?not_ordered_on_start_year',

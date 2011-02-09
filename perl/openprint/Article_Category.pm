@@ -20,6 +20,7 @@ $serial = 'article_categories_id_seq';
 %transforms = (
 );
 %defaults = (
+	'position'		=>	undef,
 );
 
 1;

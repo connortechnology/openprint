@@ -420,15 +420,15 @@ sub customer_performance {
 		} elsif ( $param{'salesrep_id'} ) {
 			@csr_ids = ( $param{'salesrep_id'} );
 		} else {
-			@csr_ids = map { $_->id() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+			@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
 		} # end if
 		foreach my $csr_id ( @csr_ids ) {
 			my $CSR = new openprint::User( $csr_id );
-			foreach my $Company ( openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)') ) {
+			foreach my $Company ( openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(name)') ) {
 				my $order_total;
 				my $payment_cycle;
 
-				my @Orders = openprint::Order::find( 
+				my @Orders = openprint::Order->find( 
 						'company_id' => $Company->id(),
 						( Date::Calc::check_date( @session{
 												  '/administrator/reports/customer_performance.html?ordered_on_start_year',
@@ -454,7 +454,7 @@ sub customer_performance {
 						);
 				last if $dbh->errstr();
 				next if ! @Orders;
-				next if openprint::Order::find(
+				next if openprint::Order->find_one(
 						'company_id' => $Company->id(),
 						( Date::Calc::check_date( @session{
 												  '/administrator/reports/customer_performance.html?not_ordered_on_start_year',
@@ -527,7 +527,7 @@ sub yearly_sales {
 		} elsif ( $param{'salesrep_id'} ) {
 			@csr_ids = ( $param{'salesrep_id'} );
 		} else {
-			@csr_ids = map { $_->id() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+			@csr_ids = map { $_->id() } openprint::User->find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(firstname),lower(lastname)');
 		} # end if
 
 		my ( $y, $m, $d ) = Date::Calc::Today();
@@ -545,7 +545,7 @@ sub yearly_sales {
 			my $CSR = new openprint::User( $csr_id );
 			my %totals;
 
-			my @Companies = openprint::Company::find('salesrep_id'=>$csr_id, 'order'=>'lower(strname)');
+			my @Companies = openprint::Company->find('salesrep_id'=>$csr_id, 'order'=>'lower(name)');
 			foreach my $Company ( @Companies ) {
 
 				push @data, $CSR->name(), $Company->name();
@@ -554,7 +554,7 @@ sub yearly_sales {
 					my $order_total;
 					my $payment_cycle;
 
-					my @Orders = openprint::Order::find( 
+					my @Orders = openprint::Order->find( 
 							'company_id' => $Company->id(),
 							'created_on_start' => sprintf('%.4d-01-01 00:00:00', $year ),
 							'created_on_end' => sprintf('%.4d-12-31 23:59:59', $year ),

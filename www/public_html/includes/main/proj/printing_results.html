@@ -393,6 +393,15 @@
 <? echo ( ssi::checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'height' ); ) ?>
  />
 		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Height">Height</label>
+		<br/>
+		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Long" name="rdbGrainDirection<?QTYIndex?>" value="Long" onclick="calc(this.form.name);"
+<? echo ( ssi::checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'Long' ); ) ?>
+ />
+		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Long">Long</label>
+		<input type="radio" id="rdbGrainDirection<?QTYIndex?>Short" name="rdbGrainDirection<?QTYIndex?>" value="Short" onclick="calc(this.form.name);"
+<? echo ( ssi::checked( $$variable{'rdbGrainDirection'.$$variable{'QTYIndex'}} eq 'Short' ); ) ?>
+ />
+		<label class="radio" for="rdbGrainDirection<?QTYIndex?>Short">Short</label>
 		<? echo ( ssi::write_override( 'chkOverrideGrainDirection'.$$variable{'QTYIndex'}, $$variable{'chkOverrideGrainDirection'.$$variable{'QTYIndex'}},'',"calc('f1');" ); ) ?>
 	</span>
 <? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>

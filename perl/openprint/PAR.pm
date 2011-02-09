@@ -1,5 +1,6 @@
+use strict;
 package openprint::PAR;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 
 use openprint ();
 use vars qw( %config $log $dbh %session );
@@ -11,14 +12,15 @@ use vars qw( %config $log $dbh %session );
 require openprint::PAR_Area;
 require openprint::PAR_Reason;
 
-my $debug = 1;
+use vars qw( $debug $table $serial %fields %defaults %transforms );
 
-use strict;
-use vars qw( %fields %defaults %transforms );
+$debug = 1;
 
-require sql;
+$table = 'par';
+$serial = 'par_id_seq';
 
 %fields = (
+	'id'					=>	'id',
 	'issued_to_id'	=> 'issued_to_id',
 	'issued_on'		=> 'issued_on',
 	'issued_by_id'	=> 'issued_by_id',

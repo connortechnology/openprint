@@ -12,7 +12,7 @@ use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'services';
 $serial = 'services_id_seq';

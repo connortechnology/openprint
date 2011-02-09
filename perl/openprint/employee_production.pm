@@ -1038,10 +1038,11 @@ sub _drop {
 				if ( ( $Equipment->category() eq 'Bindery' ) and ! sets::isin( $Job->servicetype_id(), $Equipment->servicetype_id() ) ) {
 					my $Project = $Job->Project();
 					my $services = $Project->services();
-					my @PS = openprint::Project_Service->find('project_id'=>$Job->project_id());
-					my @service_type_ids = sets::intersection( @{$Equipment->servicetype_id()}, sets::union( map { $_->servicetype_id() } @PS ) );
 $log->error("Equp dropped on: " . $Equipment->strid() . ' : ' . join(',', @{$Equipment->servicetype_id()} ) );
-$log->error("ProjectServices in Project st: " . join(',', map { $_->servicetype_id() } @PS ) );
+					my @PS = openprint::Project_Service->find('project_id'=>$Job->project_id());
+					my @service_type_ids = sets::union( map { $_->servicetype_id() } @PS );
+$log->error("ProjectServices in Project st: " . join(',', @service_type_ids ) );
+					@service_type_ids = sets::intersection( @{$Equipment->servicetype_id()}, @service_type_ids );
 $log->error("Shared service_type_ids: @service_type_ids : " . join( ',', map { new openprint::ServiceType( $_ )->name() } @service_type_ids ) );
 					if ( ! @service_type_ids ) {
 						foreach my $servicetype_id ( @{$Equipment->servicetype_id()} ) {
@@ -1199,7 +1200,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 			if ( $Shift->starttime() ) {
 				my @final_order;
 # Get jobs before the shift, leave them in order.
-				foreach my $row ( openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_<'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' ) ) {
+				foreach my $row ( openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime <'=>$Shift->starttime(),'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' ) ) {
 					push @final_order, $row if ! sets::isin( $$row{'id'}, \@order );
 				} # end foreach row
 
@@ -1312,7 +1313,7 @@ last;
 			# The logic here should be, grab the ES from the last shift, and then get the next ES.  It should not be based on time
 			$NextES = openprint::Equipment_Shift->find_one( 
 					'equipment_id'	=>	$$row{'equipment_id'}, 
-					'starttime_>='	=>	$PreviousShift->Equipment_Shift()->endtime(),
+					'starttime >='	=>	$PreviousShift->Equipment_Shift()->endtime(),
 					'order'			=>	'starttime',
 					);
 		} # end if
@@ -1359,7 +1360,7 @@ $log->debug("ES: " . $NextES->name() );
 			if ( ! @Shifts ) {
 				my $NextES = openprint::Equipment_Shift->find_one( 
 						'equipment_id'	=>	$$row{'equipment_id'}, 
-						'starttime_>='	=>	$Shift->Equipment_Shift()->endtime(),
+						'starttime >='	=>	$Shift->Equipment_Shift()->endtime(),
 						'order'			=>	'starttime',
 						);
 $log->debug("ES: " . $Shift->Equipment_Shift()->name() );
@@ -1542,12 +1543,27 @@ sub _li_change {
 		my @Jobs = openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
 		my $index = 0;
 		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
-		return if ! $index; # was first in the list
+		if ( ! $index ) {
+			# was first in the list
+			$log->debug("Was first in list.");
+		} elsif ( $index == @Jobs ) {
+			$log->warn("Job not found.");
+		} # end if
 
 		if ( $Job->Equipment()->smartscheduling() ) {
-			if ( $index > 0 ) {
-				$_ = $Jobs[$index-1];
-				$Jobs[$index-1] = $Jobs[$index];
+			if ( $index == 1 and $Jobs[$index-1]->locked() ) {
+$log->debug("second job can't move");
+				$variable{'error'} .= "Cant move locked job " . $Jobs[$index-1]->Project()->docket();
+				return;
+			} elsif ( $index > 0 ) {
+				my $switch_index = $index-1;
+				while ( ( $switch_index >= 0 ) and $Jobs[$switch_index]->locked() ) { $switch_index -= 1; }
+				if ( $switch_index < 0 ) {
+					$variable{'error'} .= "Cant move locked jobs";
+					return;
+				} # end if
+				$_ = $Jobs[$switch_index];
+				$Jobs[$switch_index] = $Jobs[$index];
 				$Jobs[$index] = $_;
 			} # end if
 			reorder_jobs( @Jobs );
@@ -1625,8 +1641,8 @@ sub _shift_change {
 
 		# Prevent overlapping shifts
 		foreach my $S ( openprint::Shift->find(
-					'starttime_<='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
-					'endtime_>'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ),
+					'starttime <='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
+					'endtime >'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime DESC' ) ) {
 			next if $S->id() == $Shift->id();
 			$new_starttime = $S->endtime_seconds();
@@ -1635,8 +1651,8 @@ sub _shift_change {
 			last;
 		} # end foreach
 		foreach my $S ( openprint::Shift->find(
-					'starttime_>='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
-					'starttime_<'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_endtime ),
+					'starttime >='	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_starttime ), 
+					'starttime <'	=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S%z', $new_endtime ),
 					'equipment_id'	=>	$Shift->equipment_id(), 'order'=>'starttime' ) ) {
 			next if $S->id() == $Shift->id();
 			$new_endtime = $S->starttime_seconds();
@@ -1857,6 +1873,12 @@ sub _add_maintenance {
 
 sub skid_label {
 } # end sub skid_label
+
+sub bindery_schedule {
+} # end sub bindery_schedule
+
+sub prepress_overview {
+} # end sub prepress_overview
 
 1;
 __END__

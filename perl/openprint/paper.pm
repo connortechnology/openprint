@@ -22,15 +22,15 @@ sub get_paper {
 			( sets::isin( $specs{'Selected'}, [ 'Finish','Colour','Weight' ] ) ? ( 'finish_id'	=> $specs{'Finish'} ) : () ),
 			( sets::isin( $specs{'Selected'}, [ 'Colour','Weight' ] ) ? ( 'colour_id'	=> $specs{'Colour'} ) : () ),
 			( sets::isin( $specs{'Selected'}, [ 'Weight' ] ) ? ( 'weight_id'	=> $specs{'Weight'} ) : () ),
-			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
-			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
+			( $specs{'width'} ? ( 'width >='=>$specs{'width'} ) : () ),
+			( $specs{'height'} ? ( 'height >='=>$specs{'height'} ) : () ),
 			'type'=>\@types,
 				);
 	if ( ! @papers ) {
 		@papers = openprint::Paper->find( 
 			( $specs{'Selected'} eq 'Name' ? ( 'name_id'=> $specs{'name_id'} ? $specs{'name_id'} : $specs{'Name'} ) : ()  ),
-			( $specs{'width'} ? ( 'width_>='=>$specs{'width'} ) : () ),
-			( $specs{'height'} ? ( 'height_>='=>$specs{'height'} ) : () ),
+			( $specs{'width'} ? ( 'width >='=>$specs{'width'} ) : () ),
+			( $specs{'height'} ? ( 'height >='=>$specs{'height'} ) : () ),
 			'type'=>\@types,
 				);
 	} # end if
@@ -82,8 +82,8 @@ sub select_paper {
 			( sets::isin( $selected, [ 'Weight' ] ) ? ( 'weight'	=> $weight ) : () ),
 			'supplied'	=>	[undef,$supplied eq 'Y' ? 1 : 0],
 			'type'		=>	\@types,
-			( $flat_width ? ( (sets::isin($type,[ 'Envelopes','NCR' ]) ? 'width' : 'width_>=')=>$flat_width ) : () ),
-			( $flat_height ? ( (sets::isin($type,[ 'Envelopes','NCR']) ? 'height' : 'height_>=')=>$flat_height ) : () ),
+			( $flat_width ? ( (sets::isin($type,[ 'Envelopes','NCR' ]) ? 'width' : 'width >=')=>$flat_width ) : () ),
+			( $flat_height ? ( (sets::isin($type,[ 'Envelopes','NCR']) ? 'height' : 'height >=')=>$flat_height ) : () ),
 			);
     if ( $selected eq 'Name' and ! @papers ) {
         @papers = openprint::Paper->find(

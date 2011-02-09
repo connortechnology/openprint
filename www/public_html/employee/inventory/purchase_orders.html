@@ -55,12 +55,12 @@
 		</p>
 		<p>
 			<label>Date:</label>
-			<span class="DateSelector">
+			<span class="DateSelectorT">
             to
 <? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_start',  { 'onchange'=> "page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
             to
             </span>
-            <span class="DateSelector">
+            <span class="DateSelectorT">
 <? echo ( ssi::date_select_session( '/employee/inventory/purchase_orders.html', 'starting_end', { 'onchange'=>"page_load('Results',\$('f1'));",'with_today'=>1 } ); ) ?>
             </span>
 		</p>

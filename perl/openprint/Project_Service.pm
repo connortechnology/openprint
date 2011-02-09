@@ -8,7 +8,7 @@ require openprint::Project;
 require openprint::User;
 require openprint::ServiceType;
 
-use vars qw( $log $dbh $debug %fields %transforms %defaults $table $serial @identified_by );
+use vars qw( $log $dbh $debug %fields %find_fields %transforms %defaults $table $serial @identified_by );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
@@ -20,6 +20,9 @@ $debug = 1;
 	'status'		=>	'strstatus',
 	'servicetype_id'	=>	'servicetype_id',
 	'created_on'	=>	'dtmlastmodified',
+);
+%find_fields = (
+	'category'	=>	'(SELECT ServiceType_Categories.name FROM ServiceType_Categories,Service_Types WHERE ServiceType_Categories.id=Service_Types.category_id AND Service_Types.id=servicetype_id)',
 );
 %transforms = (
 );

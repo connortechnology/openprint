@@ -27,6 +27,16 @@ configuration::init_cache( $log, $dbh );
 my @tables = sql::execute( undef, undef, q`SELECT table_name FROM information_schema.tables where table_schema='public'`);
 my @sequences = sql::execute( undef, undef, q`SELECT sequence_name FROM information_schema.sequences where sequence_schema='public'`);
 
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='articles'", 'column_name');
+if ( ! exists $$data{'source'} ) {
+		$dbh->do('ALTER TABLE articles ADD source TEXT');
+} # end if
+if ( ! exists $$data{'source_content'} ) {
+		$dbh->do('ALTER TABLE articles ADD source_content TEXT');
+} # end if
+if ( ! exists $$data{'category_id'} ) {
+		$dbh->do('ALTER TABLE articles ADD category_id INTEGER');
+} # end if
 if ( sets::isin( 'article_categories', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='article_categories'", 'column_name');
 	if ( ! exists $$data{'image_filename'} ) {
@@ -35,6 +45,8 @@ if ( sets::isin( 'article_categories', \@tables ) ) {
 	if ( ! exists $$data{'description'} ) {
 		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
 	} # end if
+} else {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Categories.sql' ) );
 }
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='users'", 'column_name');
 if ( ! exists $$data{'asset_id'} ) {
@@ -126,6 +138,23 @@ if ( ! exists $$data{'operator_id'} ) {
 	$dbh->do('ALTER TABLE equipment_shifts ADD operator_id INTEGER');
 	$dbh->do('ALTER TABLE equipment_shifts ADD FOREIGN KEY (operator_id) REFERENCES Users (id)');
 } # end if
+if ( ! sets::isin( 'par', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/PAR.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'cars', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/CAR.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'event_categories', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Event_Categories.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'events', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
+
 $dbh->disconnect();
 1;
 __END__

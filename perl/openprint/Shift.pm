@@ -99,22 +99,22 @@ sub find {
 		$sql .= ' AND starttime IS NULL';
 	} # end if
 	
-	if ( $params{'starttime_>='} ) {
+	if ( $params{'starttime >='} ) {
 		$sql .= ' AND starttime >= ?';
-		push @values, $params{'starttime_>='};
+		push @values, $params{'starttime >='};
 	} 
-	if ( $params{'starttime_<='} ) {
+	if ( $params{'starttime <='} ) {
 		$sql .= ' AND starttime <= ?';
-		push @values, $params{'starttime_<='};
+		push @values, $params{'starttime <='};
 	} # endif
 
-	if ( $params{'starttime_<'} ) {
+	if ( $params{'starttime <'} ) {
 		$sql .= ' AND starttime < ?';
-		push @values, $params{'starttime_<'};
+		push @values, $params{'starttime <'};
 	} 
-	if ( $params{'starttime_>'} ) {
+	if ( $params{'starttime >'} ) {
 		$sql .= ' AND starttime > ?';
-		push @values, $params{'starttime_>'};
+		push @values, $params{'starttime >'};
 	} # end if
 
 	if ( $params{'endtime_start'} and $params{'endtime_end'} ) {
@@ -132,21 +132,21 @@ sub find {
 		$sql .= ' AND endtime IS NULL';
 	} # end if
 
-	if ( $params{'endtime_<'} ) {
+	if ( $params{'endtime <'} ) {
 		$sql .= ' AND endtime < ?';
-		push @values, $params{'endtime_<'};
+		push @values, $params{'endtime <'};
 	} 
-	if ( $params{'endtime_<='} ) {
+	if ( $params{'endtime <='} ) {
 		$sql .= ' AND endtime <= ?';
-		push @values, $params{'endtime_<='};
+		push @values, $params{'endtime <='};
 	} 
-	if ( $params{'endtime_>'} ) {
+	if ( $params{'endtime >'} ) {
 		$sql .= ' AND endtime > ?';
-		push @values, $params{'endtime_>'};
+		push @values, $params{'endtime >'};
 	} # end if
-	if ( $params{'endtime_>='} ) {
+	if ( $params{'endtime >='} ) {
 		$sql .= ' AND endtime >= ?';
-		push @values, $params{'endtime_>='};
+		push @values, $params{'endtime >='};
 	} # end if
 
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
@@ -216,8 +216,8 @@ sub schedule {
 sub Schedule {
 	return openprint::ScheduledJob->find( 
 			'starttime_null'	=>	$_[0]{'starttime'} ? 0 : 1,
-			'starttime_>='		=>	$_[0]{'starttime'}, 
-			'starttime_<'		=>	$_[0]{'endtime'}, 
+			'starttime >='		=>	$_[0]{'starttime'}, 
+			'starttime <'		=>	$_[0]{'endtime'}, 
 			'equipment_id'		=>	$_[0]{'equipment_id'},
 			'order'				=>	'starttime,projectindex,service_id',
 			);
@@ -367,7 +367,7 @@ sub get {
 sub Previous {
 	my ( $self ) = @_;
 	if ( ! $$self{'Previous'} ) {
-		my $Previous = find_one('starttime_<' => $self->starttime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime DESC' );
+		my $Previous = find_one('starttime <' => $self->starttime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime DESC' );
 		$log->debug( 'Previous: ' . $Previous->to_string() );
 		$$self{'Previous'} = $Previous;
 	} # end if
@@ -376,7 +376,7 @@ sub Previous {
 sub Next {
 	my ( $self ) = @_;
 	if ( ! $$self{'Next'} ) {
-		my $Next = openprint::Shift->find_one('starttime_>=' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
+		my $Next = openprint::Shift->find_one('starttime >=' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
 		$log->debug( 'Next: ' . $Next->to_string() );
 		if ( ! $Next ) {
 			my $ES = openprint::Equipment_Shift->find_one(

@@ -69,7 +69,7 @@ sub do_new_substitution {
 			$replacement_text .= variable_substitution( \$end, $variable ) if $end;
 			return $replacement_text;
 		} else {
-			$log->debug("Unable to find terminating if ( $$command )");
+			$log->debug("Unable to find terminating if ( $$command ) in $$text");
 			return variable_substitution( $text, $variable );
 		} # end if
 	} elsif ( $$command =~ /pop\s*\((.*)\)\s*=\s*([\%\w]*)/i ) {
@@ -639,6 +639,21 @@ sub count_lines {
 		return 2;
 	} # end if
 } # end sub count_lines
+
+sub radio {
+    my ( $name, $values, $selected, $options ) = @_;
+
+    my $onclick = $$options{'onclick'} if $options;
+    my $html;
+
+	while ( my ( $value, $label ) = splice @{$values}, 0, 2 ) {
+        $html .= sprintf(q`
+                <input type="radio" name="%1$s" value="%2$s" id="%1$s%2$s" %4$s%5$s />
+                <label class="radio" for="%1$s%2$s">%3$s</label>
+                `, $name, $value, $label, checked( sets::isin( $value, $selected ) ), $onclick ? ' onclick="'.$onclick.'"' : '' );
+    } # end foreach value
+    return $html;
+} # end sub radio
 
 1;
 __END__

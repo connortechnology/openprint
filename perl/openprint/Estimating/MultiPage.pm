@@ -238,6 +238,15 @@ $openprint::log->debug("Group: $group_id, remaining: $remaining_pages, $override
 		} # end if
 	} # end if
 
+	foreach my $sig_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
+		my %new_specs = %{$sig_specs};
+		openprint::Estimating::Printing::set_size( $Project, \%new_specs, $specs );
+		foreach my $k ( 'txtWidth','txtHeight','txtFinalWidth','txtFinalSize' ) {
+			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $sig_id, $k, $new_specs{$k} );
+		} # end foreach k
+	} # end foreach
+
 	return $$specs{'Status'} = 'calculated';
 } # end sub calc
 
@@ -261,16 +270,6 @@ $openprint::log->debug( "Signature: @signatures");
 	for ( my $i = 0; $i < @signatures; $i += 1 ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signatures[$i] );
 
-# Clear these so that when we start recalculating, we get large signatures first.
-if ( 0 ) {
-		# Not neccessary anymore?
-		foreach my $qty_index ( $Project->quantity_indexes() ) {
-			if ( $$sig_specs{'chkOverridePageQuantity'.$qty_index} ne 'Y' ) {
-				openprint::service::insert_service_specs( $log, $dbh, $project_index, $signatures[$i], 'PageQuantity'.$qty_index, '' );
-			} # end if
-		} # end foreach
-} # end if
-
 		if ( $$printing_specs{'PrintingType'} ) {
 			if ( 
 				 ( $Project->quantity1() and ( $$sig_specs{'PrintingType1'} ne $$printing_specs{'PrintingType'} ) )
@@ -292,9 +291,9 @@ if ( 0 ) {
 		} # end if
 	} # end for
 
-	my @groups = sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' );
+	my @groups = sort( sql::execute(undef, undef, 'SELECT DISTINCT strvalue FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strname=?', $Project->id(), 'Group' ) );
 	if ( ! @groups ) {
-		foreach my $ss_id ( $Project->signatures() ) {
+		foreach my $ss_id ( @signatures ) {
 			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
 			if ( $$sig_specs{'Status'} ne 'calculated' ) {
 				return 'uncalculated';
@@ -303,28 +302,13 @@ if ( 0 ) {
 	} else {
 		my @printing_types = sql::execute( undef, undef, q{SELECT DISTINCT strValue FROM tbl_Equipment_Specifications WHERE strName='Printing Type' } );
 		foreach my $group ( @groups ) {
-			my @sigs = sort $Project->signatures( {'Group'=>$group} );
+			my @sigs = sort( $Project->signatures( {'Group'=>$group} ) );
 			$openprint::log->debug("Sigs in group $group : @sigs " );
 			next if ! @sigs;
 			my $ss_id = shift @sigs;
 			$openprint::log->debug("Calcing $ss_id");
 			my $sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
 			$openprint::log->debug("Done Calcing $ss_id $$sig_specs{'Status'}");
-# If we couldn't calculate, then delete all the other printing types and retry.
-			if ( 0 and $$sig_specs{'Status'} eq 'uncalculated' ) {
-				if ( 1 < @printing_types ) {
-					$openprint::log->debug("Retrying after changing Printing Type");
-					foreach my $ss_id2 ( @signatures ) {
-						foreach my $qty_index ( $Project->quantity_indexes() ) {
-							openprint::service::insert_service_specs( $log, $dbh, $project_index, $ss_id2, 'PrintingType'.$qty_index, '' ) if $$sig_specs{'txtQuantity1'};
-						} # end foreach
-						my $Service = $Project->Service( $ss_id2 );
-						$Service->save({'status'=>'uncalculated'});
-					} # end foreach Signature
-					$sig_specs = openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $ss_id, 'Printing' );
-				$openprint::log->debug("Done Calcing 2 $$sig_specs{'Status'}");
-				} # end if has printingtypes
-			} # end if 
 			
 			if ( $$sig_specs{'Status'} eq 'calculated' ) {
 				$status = $$sig_specs{'Status'};
@@ -336,18 +320,38 @@ if ( 0 ) {
 						( $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}} ) or
 						( $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}} ) ) {
 					if ( ! @sigs ) {
-						push @sigs, copy_signature( $project_index, $sig_specs );
+						push @sigs, $Project->copy_signature( $sig_specs, {
+								'chkOverrideImposition1' => '',
+								'chkOverrideImposition2' => '',
+								'chkOverrideImposition3' => '',
+								'chkOverridePageQuantity1' => '',
+								'chkOverridePageQuantity2' => '',
+								'chkOverridePageQuantity3' => '',
+								'chkOverridePress1' => '',
+								'chkOverridePress2' => '',
+								'chkOverridePress3' => '',
+								'chkOverrideRunStyle1' => '',
+								'chkOverrideRunStyle2' => '',
+								'chkOverrideRunStyle3' => '',
+								'chkOverrideSheetSize1' => '',
+								'chkOverrideSheetSize2' => '',
+								'chkOverrideSheetSize3' => '',
+						},'calculated' );
+
 					} # endif
+$openprint::log->debug("Saving additional impositions1 " . @{$$sig_specs{'Additional Impositions1'}} ) if $$sig_specs{'Additional Impositions1'} and @{$$sig_specs{'Additional Impositions1'}};
+$openprint::log->debug("Saving additional impositions2 " . @{$$sig_specs{'Additional Impositions2'}} ) if $$sig_specs{'Additional Impositions2'} and @{$$sig_specs{'Additional Impositions2'}};
+$openprint::log->debug("Saving additional impositions3 " . @{$$sig_specs{'Additional Impositions3'}} ) if $$sig_specs{'Additional Impositions3'} and @{$$sig_specs{'Additional Impositions3'}};
 					my $a_ss_id = shift @sigs;
 					my $new_sig_specs = openprint::service::get_specs_ref( $Project, $a_ss_id );
 					my %specs = %{$new_sig_specs};
 					openprint::Estimating::Printing::calc_from_imposition( $Project, $a_ss_id, \%specs, $sig_specs );
-
+$openprint::log->debug("After calc_from_imposition" );
 					my $ac = sql::start_transaction( $openprint::dbh );
 					sql::update( undef, undef, 'tbl_Project_Contents', ['lngProjectIndex=? AND lngServiceIndex=?', $project_index, $a_ss_id], 'strStatus', $status );
 
 					foreach my $key ( openprint::Estimating::Printing::variables( $project_index, $a_ss_id, $new_sig_specs, \%specs ) ) {
-						openprint::service::insert_service_spec( undef, undef, $project_index, $a_ss_id, $key, $specs{$key} );
+						openprint::service::insert_service_spec( $log, undef, $project_index, $a_ss_id, $key, $specs{$key} );
 					} # end foreach
 					sql::end_transaction( $openprint::dbh, $ac );
 
@@ -363,8 +367,8 @@ if ( 0 ) {
 				$openprint::log->debug("uncomplete status: $$sig_specs{'Status'} alert: $$sig_specs{'alert'}");
 				return 'uncalculated';
 			} # end if
-		} # end foreach grooooup
-	} # end if no gorups
+		} # end foreach group
+	} # end if no groups
 
 	return 'calculated';
 } # end sub calculate_signatures
@@ -401,30 +405,6 @@ sub status {
 	return;
 } # end sub status
         
-sub copy_signature {
-	my ( $project_index, $sig_specs ) = @_;
-$openprint::log->debug("ADding signature");
-	my $Project = new openprint::Project( $project_index );
-	my $new_service_index = openprint::print_project::insert_service( $openprint::log, $openprint::dbh, $project_index, 'Signature' );
-	my $new_specs = openprint::service::get_specs_ref( $Project, $new_service_index );
-	my $ac = sql::start_transaction( $openprint::dbh );
-	$openprint::dbh->do( 'LOCK TABLE tbl_Service_Specifications IN SHARE ROW EXCLUSIVE MODE' ) or $openprint::log->error( DBI->errstr );
-	$_ = q{SELECT MAX(strValue::integer) FROM tbl_Service_Specifications WHERE lngProjectIndex=? AND strName='SignatureIndex'};
-	my ( $sig_index ) = sql::execute( undef, undef, $_, $project_index );
-	$sig_index += 1;
-	openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, 'SignatureIndex', $sig_index );
-
-	# Releases the lock
-	$openprint::dbh->commit();
-
-	foreach my $key ( openprint::Estimating::Printing::variables( $project_index, undef, undef, $sig_specs ) ) {
-		openprint::service::insert_service_spec( $openprint::log, $openprint::dbh, $project_index, $new_service_index, $key, $$sig_specs{$key}, ! exists $$new_specs{$key} );
-	} # end foreach
-
-	sql::end_transaction( $openprint::dbh, $ac );
-	return $new_service_index;
-} # end sub copy_signature
-
 sub save {
 } # end sub save
 

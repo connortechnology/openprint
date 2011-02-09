@@ -171,7 +171,7 @@
 				'order'		=>	'lngdocketnumber',
 				);
 
-			$sql{'takenover_on_>='} = sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
+			$sql{'takenover_on >='} = sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
 				'/employee/production/prepress_schedule.html?takenover_on_start_year',
 				'/employee/production/prepress_schedule.html?takenover_on_start_month',
 				'/employee/production/prepress_schedule.html?takenover_on_start_day'} )
@@ -180,7 +180,7 @@
 			and $session{'/employee/production/prepress_schedule.html?takenover_on_start_day'};
 $openprint::log->debug("$session{'/employee/production/prepress_schedule.html?takenover_on_start_year'} $session{'/employee/production/prepress_schedule.html?takenover_on_start_month'} $session{'/employee/production/prepress_schedule.html?takenover_on_start_day'}");
 
-			$sql{'takenover_on_<='} = sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
+			$sql{'takenover_on <='} = sprintf('%.4d-%.2d-%.2d 23:59:59', @session{
 				'/employee/production/prepress_schedule.html?takenover_on_end_year',
 				'/employee/production/prepress_schedule.html?takenover_on_end_month',
 				'/employee/production/prepress_schedule.html?takenover_on_end_day',} )

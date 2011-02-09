@@ -42,5 +42,10 @@ sub _stock_usage {
 sub prepress_productivity {
 } # end sub
 
+sub delivery {
+} # end sub delivery
+sub efficiency {
+} # end sub efficiency
+
 1;
 __END__
