@@ -92,7 +92,7 @@ if ( ! exists $$data{'equipment_id'} ) {
 	$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY(equipment_id) REFERENCES tbl_Equipment (id)');
 } # end if
 if ( ! exists $$data{'service'} ) {
-	$dbh->do('ALTER TABLE paper_prices add service text');
+	$dbh->do('ALTER TABLE paper_prices ADD service TEXT');
 	$dbh->do("UPDATE paper_prices set service='Material'" );
 } # end if
 

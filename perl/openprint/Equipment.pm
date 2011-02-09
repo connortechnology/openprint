@@ -346,7 +346,7 @@ $openprint::log->debug("Didn't find runspeed for $$params{gsm}gsm(" . openprint:
 
 sub Specifications {
 	my $self = shift;
-	return openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'strname, dblmin', @_ );
+	return openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'strname, dblmin::int', @_ );
 } # end sub Specifications
 
 sub specification {
@@ -363,7 +363,7 @@ sub Specification {
 	return if ! $$self{'id'};
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax' ) ) {
+		foreach my $Spec ( openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'dblmin::int,dblmax::int' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
 	} # end if
