@@ -17,15 +17,15 @@
 	<ul>
 		<li>
 			<label for="Quantity1">Quantity 1:</label>
-			<input id="Quantity1" name="txtQuantity1" value="<?txtQuantity1?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>4294967296){this.value=this.value.substr(0,this.value.length-1);}" onchange="calc(this.form.name);" />
+			<input id="Quantity1" name="txtQuantity1" value="<?txtQuantity1?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>2147483647){this.value=2147483647;}" onchange="calc(this.form.name);" />
 		</li>
 		<li>
 			<label for="Quantity2">Quantity 2:</label>
-			<input id="Quantity2" name="txtQuantity2" value="<?txtQuantity2?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>4294967296){this.value=this.value.substr(0,this.value.length-1);}" onchange="calc(this.form.name);" />
+			<input id="Quantity2" name="txtQuantity2" value="<?txtQuantity2?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>2147483647){this.value=2147483647;}" onchange="calc(this.form.name);" />
 		</li>
 		<li>
 			<label for="Quantity3">Quantity 3:</label>
-			<input id="Quantity3" name="txtQuantity3" value="<?txtQuantity3?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>4294967296){this.value=this.value.substr(0,this.value.length-1);}" onchange="calc(this.form.name);" />
+			<input id="Quantity3" name="txtQuantity3" value="<?txtQuantity3?>" type="text" size="12" onkeyup="this.value=this.value.replace(/\D/,'');if(parseInt(this.value)>2147483647){this.value=2147483647;}" onchange="calc(this.form.name);" />
 		</li>
 	</ul>
 </fieldset>
