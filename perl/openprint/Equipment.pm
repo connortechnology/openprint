@@ -363,8 +363,8 @@ sub Specification {
 	return if ! $$self{'id'};
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( sort { $$a{min} <=> $$b{min} } openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax NULLS FIRST' ) ) {
-			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
+		foreach ( openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax NULLS FIRST' ) ) {
+			push @{$$self{'Specifications'}{$_->name()}}, $_;
 		} # end foreach
 	} # end if
 

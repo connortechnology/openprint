@@ -29,7 +29,7 @@ BEGIN {
 	use GD::Barcode;
 	use Encode;
 	use JSON;
-	#use JSON::XS;
+	use JSON::XS;
 
 	use Carp (cluck);
 
@@ -45,6 +45,8 @@ BEGIN {
 	use Date::Calc;
 	use Date::Format;
 	use Date::Parse;
+	use Math::Round;
+	use Number::Format;
 
 	use openprint::Object;
 	use openprint::Company;
@@ -64,17 +66,16 @@ BEGIN {
 	use openprint::JDF;
 	use	openprint::Timetrack;
 	use	openprint::Currency;
-	use Number::Format;
 	use	openprint::Ledger;
 	use openprint::Project_Service;
-	use Math::Round;
 	use openprint::Article;
 	use openprint::Article_Category;
+	use openprint::Host;
+	use openprint::Log;
 
 #use MapImage;
 
 }
 
 1;
-
 __END__

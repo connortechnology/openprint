@@ -80,7 +80,7 @@ sub new {
 sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
-	my %fields = eval '%'.$type.'::fields';
+	my $fields = eval '\%'.$type.'::fields';
 	if ( ! $data ) {
 		my $table = eval '$'.$type.'::table';
 		if ( ! $table ) {
@@ -92,17 +92,17 @@ sub load {
 		$d = $dbh if ! $d;
 
 		if ( @identified_by ) {
-			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
 		} else {
-			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $fields{id}=?", {}, $$self{'id'} );
+			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
 		} # end if
 	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
+	@$self{keys %$fields} = @$data{@$fields{keys %$fields}};
 	if ( my $cache_field = $self->cache_field() ) {
-		if ( $fields{$cache_field} and $$self{$cache_field} ) {
+		if ( $$fields{$cache_field} and $$self{$cache_field} ) {
 			$name_cache{$type}{$$self{$cache_field}} = $self;
 		} # end if
 	} # end if

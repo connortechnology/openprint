@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 my %folding_cache;
@@ -901,17 +901,18 @@ sub get_impositions {
 			next;
 		} # end if
 
+		$$project{'Runstyles'} = $Press->specification('Runstyles');
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 		my $do_perfecting = 1;
-		if ( ! sets::isin('Perfecting', split(',',$Press->specification('Runstyles') ) ) ) {
-			$openprint::log->debug("** This Press Can't Perfect - Missing \'Perfecting Press\' = Y equipment spec ***") if $debug;
+		if ( $$project{print_sides} == 1 ) {
+			$do_perfecting = 0;
+			$openprint::log->debug("** One sided:  Perfect  ***") if $debug;
+		} elsif ( ! sets::isin('Perfecting', [ split(',',$$project{'Runstyles'} ) ] ) ) {
+			$openprint::log->debug("** This Press Can't Perfect - Perfecting not in runstyles ***") if $debug;
 			$do_perfecting = 0;
 		} elsif ( @$side_one_colours > int($Press->specification('Number of Colours')/2) or @$side_two_colours > int($Press->specification('Number of Colours')/2) ) {
 			$openprint::log->debug("** This to many colours to  Perfect  ***") if $debug;
 			$do_perfecting = 0;
-		} elsif ( $$project{print_sides} == 1 ) {
-			$do_perfecting = 0;
-			$openprint::log->debug("** One sided:  Perfect  ***") if $debug;
 		} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{'txtSpecificStockCalliper'} > $_ ) ) {
 			$do_perfecting = 0;
 			$openprint::log->debug("** Too thick to:  Perfect  ***") if $debug;
@@ -966,15 +967,16 @@ sub get_impositions {
 				$$project{'colour_bar_size'} = 0;
 			} # end if
 			$$project{'Colour Bar Orientation'} = $Press->specification('Colour Bar Orientation');
-			$$project{'Perfecting Single Gutter Size'} = $Press->specification('Perfecting Single Gutter Size');
-			$$project{'Perfecting Double Gutter Size'} = $Press->specification('Perfecting Double Gutter Size');
+			if ( $do_perfecting ) {
+				$$project{'Perfecting Single Gutter Size'} = $Press->specification('Perfecting Single Gutter Size');
+				$$project{'Perfecting Double Gutter Size'} = $Press->specification('Perfecting Double Gutter Size');
+			} # end if
 		} else {
 			$$project{'colour_bar_size'} = 0;
 		} # end if Envelopes
 		$$project{'Orientation'} = $Press->specification('Orientation');
 		$$project{'Maximum Image Area Length'} = $Press->specification('Maximum Image Area Length');
 		$$project{'Maximum Image Area Width'} = $Press->specification('Maximum Image Area Width');
-		$$project{'Runstyles'} = $Press->specification('Runstyles');
 		$$project{'txtSpreadSize'} = $$specs{'txtSpreadSize'};
 
 		my @impositions;
@@ -986,8 +988,8 @@ sub get_impositions {
 		my $maximum_sheet_length = $Press->specification('Maximum Sheet Length');
 
 		foreach my $Paper ( @$Papers ) {
-#Paper might have different callipers
-			$$project{'Calliper'} = $Paper->calliper();
+#Paper might have different calliperso# Is this needed anymore
+			#$$project{'Calliper'} = $Paper->calliper();
 			if ( ( $$specs{'OverrideStockType'.$qty_index} eq 'Y' ) and ( $Paper->type() ne $$specs{'StockType'.$qty_index} ) ) {
 				next;
 			} # end if
@@ -997,14 +999,14 @@ sub get_impositions {
 			} # end if
 			my @imps;
 			if ( $Paper->type() eq 'Roll' ) {
+				next if ! sets::isin( 'Roll', \@feeds );
 				if ( ! ( $$project{'Runstyles'} = $Press->specification('RunstylesRoll') ) ) {
 					$$project{'Runstyles'} = $Press->specification('Runstyles');
 				} # end if
-				next if ! sets::isin( 'Roll', \@feeds );
-				next if $Paper->width() > $Press->specification('Maximum Sheet Width');
+				next if $Paper->width() > $maximum_sheet_width;
 				next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
 #$openprint::log->debug('blah'.$Paper->to_string());
-				if ( sets::isin( 'Sheet', split(',', $Press->specification('Feed') ) ) ) {
+				if ( sets::isin( 'Sheet', \@feeds ) ) {
 					if ( my $MinimumWeight = $Press->Specification('Roll2Sheet Minimum Weight') ) {
 						if ( $$MinimumWeight{'units'} eq 'gsm' and $$MinimumWeight{'value'} > $Paper->gsm() ) {
 							next;
@@ -1084,13 +1086,12 @@ sub get_impositions {
 					} # end foreach
 				} # end if start_width or cut for all sizes
 			} else { # Sheet Fed
+				next if ! sets::isin( 'Sheet', \@feeds );
+				next if ! ( $Paper->width() and $Paper->height() );
+				next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
 				if ( ! ( $$project{'Runstyles'} = $Press->specification('RunstylesSheet') ) ) {
 					$$project{'Runstyles'} = $Press->specification('Runstyles');
 				} # end if
-				next if ! sets::isin( 'Sheet', \@feeds );
-
-				next if ! ( $Paper->width() and $Paper->height() );
-				next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
 
 				my $P = $Paper->clone();
 
@@ -1145,11 +1146,6 @@ sub get_impositions {
 					$i->display();
 				}
 			}
-			if ( $debug or 0 ) {
-				foreach my $P ( @$Papers ) {
-					$openprint::log->debug("Paper: " . $P->to_string() );
-				} # end foreach
-			} # end if
 			foreach my $imp ( @imps ) {
 				if ( $imp->imposition() > $qty ) {
 					$openprint::log->debug("Next because $$imp{imposition} > $qty");
@@ -1157,16 +1153,16 @@ sub get_impositions {
 				} # end if
 				my $add = 1;
 				my $str = sprintf('%dx%d+%dx%d-%s-%s', @$imp{'columns','rows','dutch_columns','dutch_rows','runstyle','image_orientation'} );
-				my $P = $imp->Paper();
+				my $SmallerPaper = $imp->Paper();
 				
-				if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->type() eq 'Sheet' )
-						and ( $P->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
-						and ( $P->height() == $$specs{"OverrideStockHeight$qty_index"} )
+				if ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $SmallerPaper->type() eq 'Sheet' )
+						and ( $SmallerPaper->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
+						and ( $SmallerPaper->height() == $$specs{"OverrideStockHeight$qty_index"} )
 				   ) {
-				} elsif ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $P->type() eq 'Roll' )
-						and ( $P->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
+				} elsif ( ($$specs{'chkOverrideSheetSize'.$qty_index} eq 'Y') and ( $SmallerPaper->type() eq 'Roll' )
+						and ( $SmallerPaper->width() == $$specs{"OverrideStockWidth$qty_index"} ) 
 						) {
-				} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $P->height() == $$specs{"CutOff$qty_index"} ) ) {
+				} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $SmallerPaper->height() == $$specs{"CutOff$qty_index"} ) ) {
 #$add = 1;
 				} elsif ( ! $imps{$str} ) {
 #$add = 1;
@@ -1183,24 +1179,24 @@ sub get_impositions {
 						my $BiggerPrice = $I->Paper()->get_price('weight'=>$qty/$I->imposition(),'service'=>'Material');
 						my $SmallerPrice = $imp->Paper()->get_price('weight'=>$qty/$imp->imposition(),'service'=>'Material');
 						if (
-								( $I->Paper()->area() >= $imp->Paper()->area() )
+								( $I->Paper()->area() >= $SmallerPaper->area() )
 								and
-								( $I->Paper()->minimum_order() >= $imp->Paper()->minimum_order() )
+								( $I->Paper()->minimum_order() >= $SmallerPaper->minimum_order() )
 								and
 								( (1*$$BiggerPrice{'100lb'}) >= (1*$$SmallerPrice{'100lb'}) )
 								and
-								( ! ( ! $I->Paper()->is_cut() and $imp->Paper()->is_cut() ) )
+								( ! ( ! $I->Paper()->is_cut() and $SmallerPaper->is_cut() ) )
 						   ) {
 							splice @{$imps{$str}}, $j, 1;
 							$j -= 1;
 						} elsif (
-								( $I->Paper()->area() < $imp->Paper()->area() )
+								( $I->Paper()->area() < $SmallerPaper->area() )
 								and
-								( $I->Paper()->minimum_order() <= $imp->Paper()->minimum_order() )
+								( $I->Paper()->minimum_order() <= $SmallerPaper->minimum_order() )
 								and
 								( (1*$$BiggerPrice{'100lb'}) <= (1*$$SmallerPrice{'100lb'}) )
 								and
-								( ( ! $I->Paper()->is_cut() ) or ( $imp->Paper()->is_cut() ) )
+								( ( ! $I->Paper()->is_cut() ) or ( $SmallerPaper->is_cut() ) )
 								) {
 # Already have a much better sheet
 							$add = 0;
