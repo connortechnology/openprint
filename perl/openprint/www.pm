@@ -13,6 +13,7 @@ use Apache2::ServerUtil ();
 use Apache2::RequestIO ();
 use Apache::Session::Postgres;
 use Apache2::Cookie;
+use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 require openprint::quote;
 require openprint::main_quote;
@@ -55,8 +56,8 @@ sub handler {
 	# Don't do any caching.  This makes the back button not work.
 	$r->no_cache(1);
 
-	my $starttime = time;
-	$r->log->debug( "Beginning of Request: Time (seconds) : $starttime Page: " . $r->uri() );
+	my $starttime = gettimeofday();
+	$r->log->debug( "Beginning of Request: Time (nanoseconds) : $starttime Page: " . $r->uri() );
 
 	$log	= $r->log;
 
@@ -134,7 +135,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		$variable{'siteURL'} = $r->dir_config('siteURL');
 		$variable{'PageTitle'} = $r->dir_config('SiteTitle') .' - ' . $page;
 
-	$log->debug( "Before loading content: ($page) Elapsed seconds: " . ( time - $starttime ) );
+	$log->debug( "Before loading content: ($page) Elapsed time: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 		if ( ! exists $variable{'PageContent'} ) {
 			my $content;
 			if ( -e ($_ = join('/', $config{'SkinPath'}, $page )) ) {
@@ -188,7 +189,7 @@ $log->debug("Redirecting to " . $variable{'ExternalRedirect'} );
 		untie %session;
 		$dbh->disconnect();
 	} # end if
-	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
+	$log->debug( "Elapsed seconds: " . sprintf('%.4f', tv_interval([$starttime])*1000).' usecs' );
 	# Clear all the caches AFTER we send the data to client! I'm hoping this allows browsers to render before we actually send the OK< the microsecond probably doesn't matter.
 	openprint::service::init_cache();
 	openprint::pricing::clear_cache();
