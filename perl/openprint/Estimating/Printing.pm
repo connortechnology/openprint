@@ -857,6 +857,7 @@ sub get_Stocks {
 	} # end if override
 
 	foreach my $P ( @Papers ) {
+		$P->Prices();
 		$openprint::log->debug("Paper: " . $P->to_string() . ' Minimum: ' . $P->minimum_order() ) if ( $debug );
 		$Papers{$P->to_string()} = $P;
 	} # end foreach
