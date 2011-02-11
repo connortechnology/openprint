@@ -2528,10 +2528,11 @@ if ( ! sets::isin( 'paper_prices', \@tables ) ) {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='paper_prices'", 'column_name');
 	if ( ! exists $$data{'equipment_id'} ) {
 		$dbh->do('ALTER TABLE paper_prices add equipment_id INTEGER');
-		$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY (equipment_id) REFERENCS tbl_Equipment index');
+		$dbh->do('ALTER TABLE paper_prices add FOREIGN KEY (equipment_id) REFERENCES tbl_Equipment index');
 	} # end if
 	if ( ! exists $$data{'service'} ) {
 		$dbh->do('ALTER TABLE paper_prices add service text');
+		$dbh->do(q`UPDATE paper_prices set service='Material'`);
 	} # end if
 } # end if
 foreach my $PP ( openprint::PaperPrice->find('Units'=>'Per M') ) {
