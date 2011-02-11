@@ -3533,19 +3533,20 @@ $openprint::log->debug("Using cached folding");
 	my $press_setup = 0;
 	if ( $$Imposition{runstyle} eq 'Sheet Work' ) {
 		if ( @{$$project{'side_one_colours'}} and @{$$project{'side_two_colours'}} ) {
-			$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
-			$press_setup += $_->{'Total'};
-			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
-			$price{'Plate Total'} += $_->{'Plate Total'};
-			if ( $$_{units} ne 'Total' ) {
-				$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
-				$press_setup += $_->{'Total'};
-				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$_{'Unit Count','Price','units','Total'} );
-				$price{'Plate Total'} += $_->{'Plate Total'};
+			my $press_setup_front = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+			$press_setup += $press_setup_front->{'Total'};
+			$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$press_setup_front{'Unit Count','Price','units','Total'} );
+			$price{'Plate Total'} += $press_setup_front->{'Plate Total'};
+			$price{'Plate Setup Price'} = $press_setup_front->{'Plate Price'};
+			$price{'Plate Setup Count'} = $press_setup_front->{'Plate Count'};
+			$price{'Plate Setup Units'} = $press_setup_front->{'Plate Units'};
+			if ( $$press_setup_front{units} ne 'Total' ) {
+				my $back_press_setup = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}/2, $plate_setup{'Plate Runs'}, $$project{'side_two_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
+				$press_setup += $back_press_setup->{'Total'};
+				$price{'Setup Breakdown'} .= sprintf('%d units * $%.2f%s = $%.2f<br/>', @$back_press_setup{'Unit Count','Price','units','Total'} );
+				$price{'Plate Total'} += $back_press_setup->{'Plate Total'};
+				$price{'Plate Setup Count'} += $back_press_setup->{'Plate Count'};
 			} # end if
-			$price{'Plate Setup Price'} = $_->{'Plate Price'};
-			$price{'Plate Setup Count'} = $_->{'Plate Count'};
-			$price{'Plate Setup Units'} = $_->{'Plate Units'};
 		} elsif ( @{$$project{'side_one_colours'}} ) {
 			$_ = press_setup_cost( $Press, $$specs{'txtPlateChangeQuantity'.$qty_index}, $plate_setup{'Plate Runs'}, $$project{'side_one_colours'}, $$Paper{calliper}, $specs, $qty_index, $service_index, $Imposition );
 			$press_setup += $_->{'Total'};
@@ -4227,6 +4228,11 @@ sub press_setup_cost {
 		} # end if
 		
 		$Price{'Total'} = $Price{'Price'};
+	} elsif ( $Price{'units'} eq 'Per Side' ) {
+		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
+			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
+		} # end if
+		
 	} else { # Per Unit
 		if ( ! ( %Price = openprint::service::get_price_object( 'PressUnitMakeReady'.$Imposition->runstyle(), $setup_count, $Press ) ) ) {
 			%Price = openprint::service::get_price_object( 'PressUnitMakeReady', $setup_count, $Press );
