@@ -9,7 +9,7 @@
 	} else {
 		@Companies = openprint::Company->find(
 			ssi::date_filter( 'created_on' ),
-			#ssi::date_filter( '_on' ),
+			ssi::date_filter( 'last_online' ),
 			);
 	} # end if
 	if ( ! @Companies ) {
