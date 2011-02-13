@@ -3,7 +3,7 @@ package openprint::Company;
 use strict;
 use Text::Unaccent;
 
-use vars qw( $debug $log $dbh $table $serial %fields %defaults %transforms );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms );
 use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -65,6 +65,9 @@ $serial = 'companies_id_seq';
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
 		);
+%find_fields = (
+	'last_online'	=>	'(SELECT MAX(date_time) FROM Log WHERE company_id=companies.id)',
+);
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],
 	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//','s/\///g' ],

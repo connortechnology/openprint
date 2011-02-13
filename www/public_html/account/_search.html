@@ -2,14 +2,16 @@
 	my @Companies;
 
 	if ( $param{'company_name'} ) {
-		if ( ! $param{'company_name'} =~ /%/ ) {
+		if ( ! ( $param{'company_name'} =~ /%/ ) ) {
 			$param{'company_name'} .= '%';
 		} # end if
-		@Companies = openprint::Company->find('name_like'=>$param{'company_name'});
+		@Companies = openprint::Company->find('name_ilike'=>$param{'company_name'});
 	} else {
 		@Companies = openprint::Company->find(
-			ssi::date_filter( 'created_on' ),
-			ssi::date_filter( 'last_online' ),
+			ssi::date_filter( '/account/search.html?created_on_start', 'created_on_start' ),
+			ssi::date_filter( '/account/search.html?created_on_end', 'created_on_end' ),
+			ssi::date_filter( '/account/search.html?last_online_start', 'last_online_start' ),
+			ssi::date_filter( '/account/search.html?last_online_end', 'last_online_end' ),
 			);
 	} # end if
 	if ( ! @Companies ) {
@@ -19,17 +21,22 @@
 	my $html;
 	foreach my $Company ( @Companies ) {
 		$html .= '<div class="Company">';
-		$html .= '<div class="Info">
-		$html .= '<div class="Name">'.$Company->name().'</div>';
-		$html .= '<div class="Address">'.$Company->city() . ', ' . $Company->state() . '</div>';
-		$html .= '</div><!--Info-->';
+		$html .= sprintf(q`<div class="Info">
+								<div class="Name">%1$s</div>
+								<div class="Address">%2$s</div>
+							</div>`, $Company->name(), $Company->city() . ', ' . $Company->state() );
 		foreach my $User ( $Company->Users( 'asset_id_null' => 0 ) ) {
 			my $Profile = $User->Profile();
-			$html .= '<div class="User">';
-			$html .= '<img class="thumbnail" src="'.$User->Asset()->thumbnail_filename().'"/>';
-			$html .= '<div class="Age"><label>Age:</label>'. int(Date::Calc::Delta_Days( split('-', $Profile->Birthday() ), Date::Calc::Today() ) /365). '</div>';
-			$html .= '<div class="Joined"><label>Joined:</label>'. Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ) . '</div>';
-			$html .= '</div>';
+			$html .= sprintf(q`
+				<div class="User">
+					<img class="thumbnail" src="%1$s"/>
+					<div class="Age"><label>Age:</label>%2$s</div>
+					<div class="Joined"><label>Joined:</label>%3$s</div>
+				</div>`,
+				$User->Asset()->thumbnail_filename(),
+				int(Date::Calc::Delta_Days( split('-', $Profile->Birthday() ), Date::Calc::Today() ) /365),
+				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
+				);
 		} # end foreach User
 		$html .= '</div>';
 	} # end foreach Company

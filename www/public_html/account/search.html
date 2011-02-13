@@ -1,3 +1,9 @@
+<script type="text/javascript">
+	function load_results() {
+		$('Results').innerHTML = 'Please wait. Loading...';
+		new Ajax.Updater( 'Results', '_search.html', { parameters: $('f1').serialize() } );
+	} // end function load_results
+</script>
 <div class="Account">
 	<div class="Search">
 		<form name="f1" id="f1" action="/account/search.html" method="post">
@@ -5,7 +11,7 @@
 				<div class="content">
 					<ul>
 						<li><label>Nickname:</label>
-							<input type="text" name="company_name" id="company_name" />
+							<input type="text" name="company_name" id="company_name" onkeyup="if(this.value.length > 2){load_results();};" />
 						</li>
 						<li><label>Distance:</label>
 							<select name="distance" id="distance">
@@ -16,21 +22,21 @@
 						<li>
 							<label>Registered:</label>
 							<span class="DateSelector">
-							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q``} ); ) ?>
+							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q`load_results();`} ); ) ?>
 							</span>
 								to 
 							<span class="DateSelector">
-							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_end', {onchange=>q``} ); ) ?>
+							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_end', {onchange=>q`load_results();`} ); ) ?>
 							</span>
 						</li>
 						<li>
 							<label>Last Online:</label>
 							<span class="DateSelector">
-							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_start', {onchange=>q``} ); ) ?>
+							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_start', {onchange=>q`load_results();`} ); ) ?>
 							</span>
 								to 
 							<span class="DateSelector">
-							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_end', {onchange=>q``} ); ) ?>
+							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_end', {onchange=>q`load_results();`} ); ) ?>
 							</span>
 						</li>
 					</ul>
