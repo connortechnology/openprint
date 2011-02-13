@@ -61,6 +61,7 @@ $debug = 1;
 	'name'	=>	q`firstname || '' || lastname`,
 	'usergroup_id'	=>	'(SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id)',
 	'usergroup'		=>	'(SELECT name from usergroups WHERE id IN (SELECT usergroup_id FROM users_in_usergroups WHERE user_id=users.id))',
+	'last_online'	=>	'(SELECT MAX(date_time) FROM Log WHERE user_id=users.id)',
 );
 
 %transforms = (
