@@ -19,8 +19,10 @@
 	my $html;
 	foreach my $Company ( @Companies ) {
 		$html .= '<div class="Company">';
+		$html .= '<div class="Info">
 		$html .= '<div class="Name">'.$Company->name().'</div>';
 		$html .= '<div class="Address">'.$Company->city() . ', ' . $Company->state() . '</div>';
+		$html .= '</div><!--Info-->';
 		foreach my $User ( $Company->Users( 'asset_id_null' => 0 ) ) {
 			my $Profile = $User->Profile();
 			$html .= '<div class="User">';
