@@ -75,7 +75,7 @@ sub ip_address {
 } # end sub ip_address
 
 sub Host {
-	if ( ! $_[0]{'host_id'} ) {
+	if ( ( ! $_[0]{'host_id'} ) and ( $_[0]=>$_[0]{'ip_address'} ) ) {
 		my $Host = openprint::Host->find_one('ip'=>$_[0]{'ip_address'});
 		if ( ! $Host ) {
 			$Host = new openprint::Host();
@@ -86,7 +86,6 @@ sub Host {
 		
 	return new openprint::Host( $_[0]{'host_id'} );
 } # end sub Host
-
 
 1;
 __END__

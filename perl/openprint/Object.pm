@@ -383,8 +383,8 @@ sub find_operators {
 	} # end if
 	return \%results;
 } # end sub
-sub find {
 
+sub find {
 	my $type = shift;
 	my $table = eval '$'.$type.'::table';
 	my %fields = eval '%'.$type.'::fields';
@@ -394,29 +394,35 @@ sub find {
 	$debug = $debug_all if ! $debug;
 	my $starttime = [gettimeofday] if $debug;
 
-	my %params = @_;
+	my $params;
+	if ( @_ == 1 ) {
+		$params = $_[0];
+	} else {
+		$params = { @_ };
+	} # end if
+
 	my @where;
 	my $sql = 'SELECT';
-	$sql .= ' DISTINCT' if $params{'distinct'};
-	delete $params{'distinct'};
+	$sql .= ' DISTINCT' if $$params{'distinct'};
+	delete $$params{'distinct'};
 	$sql .= ' * FROM '.$table;
 	my @values;
-	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
+	my $local_dbh = $$params{'dbh'} ? $$params{'dbh'} : $openprint::dbh;
 	return () if ! $local_dbh;
-	delete $params{'dbh'};
+	delete $$params{'dbh'};
 
-	if ( $cache_field and $params{$cache_field} and ( ( 1 == keys %params ) or ( 2 == keys %params and exists $params{'limit'} ) ) ) {
-		if ( exists $name_cache{$type} and exists $name_cache{$type}{$params{$cache_field}} ) {
-			if ( $name_cache{$type}{$params{$cache_field}} ) {
+	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{'limit'} ) ) ) {
+		if ( exists $name_cache{$type} and exists $name_cache{$type}{$$params{$cache_field}} ) {
+			if ( $name_cache{$type}{$$params{$cache_field}} ) {
 #$openprint::log->debug("returning " . $name_cache{$type}{$params{$cache_field}} . " for $type $cache_field $params{$cache_field}");
-				return $name_cache{$type}{$params{$cache_field}} 
+				return $name_cache{$type}{$$params{$cache_field}} 
 			} else {
 #$openprint::log->debug("returning nothing for $type $cache_field $params{$cache_field}");
 				return ();
 			} # end if
 		} else {
 #$openprint::log->debug("Undefing $type $cache_field $params{$cache_field}");
-			$name_cache{$type}{$params{$cache_field}} = undef;
+			$name_cache{$type}{$$params{$cache_field}} = undef;
 		} # end if
 	} # end if
 
@@ -424,25 +430,25 @@ sub find {
 		my $f = eval '\%'.$type.'::'.$_;
 		next if ! $f;
 
-		foreach my $k ( keys %params ) {
+		foreach my $k ( keys %$params ) {
 			next if sets::isin( $k,[ 'order','limit','or' ] );
 			next if ! $$f{$k};
 
 			# This allows mainly for find_fields to reference multiple values, like in Project, value
 			foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
-				if ( ref $params{$k} eq 'ARRAY' ) {
-					push @where, "$field IN (".join(',', map {'?'} @{$params{$k}} ) . ')';
-					push @values, @{$params{$k}};
-				} elsif ( ! defined $params{$k} ) {
+				if ( ref $$params{$k} eq 'ARRAY' ) {
+					push @where, "$field IN (".join(',', map {'?'} @{$$params{$k}} ) . ')';
+					push @values, @{$$params{$k}};
+				} elsif ( ! defined $$params{$k} ) {
 					push @where, "$field IS NULL";
 				} else {
 					push @where, "$field=?";
-					push @values, $params{$k};
+					push @values, $$params{$k};
 				} # end if
 			} # end foreach field
-			delete $params{$k};
+			delete $$params{$k};
 		} # end foreach k
-		last if ! %params;
+		last if ! %$params;
 
 		foreach my $k ( keys %$f ) {
 			if ( ref $$f{$k} eq 'ARRAY' ) {
@@ -451,66 +457,66 @@ sub find {
 
 				foreach my $field ( @{$$f{$k}} ) {
 $openprint::log->debug("find: $field");
-					my $results = find_operators( \%params, $k, $field );
+					my $results = find_operators( $params, $k, $field );
 					foreach my $operator ( keys %$results ) {
 						push @w, shift @{$$results{$operator}};
 						push @d, $k.$operator;
 						push @values, @{$$results{$operator}};
 					} # end foreach
 				} # end foreach field
-				foreach ( @d ) { delete $params{$_}; };
+				foreach ( @d ) { delete $$params{$_}; };
 				push @where, '(' . join(' OR ', @w ) . ')' if @w;
 			} else {
-				my $results = find_operators( \%params, $k, $$f{$k} );
+				my $results = find_operators( $params, $k, $$f{$k} );
 				foreach my $operator ( keys %$results ) {
-					delete $params{$k.$operator};
+					delete $$params{$k.$operator};
 					push @where, shift @{$$results{$operator}};
 					push @values, @{$$results{$operator}};
 				} # end foraech
 			} # end if
 		} # end foreach k in fields
-		last if ! %params;
+		last if ! %$params;
 	} # end foreach set of fields
 
 	# Check for Object references
-	if ( %params ) {
-		foreach my $k ( keys %params ) {
-			next if sets::isin( ref $params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
+	if ( %$params ) {
+		foreach my $k ( keys %$params ) {
+			next if sets::isin( ref $$params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
 			my $f = (lc $k).'_id';
 			if ( exists $fields{$f} ) {
-				if ( $params{$k}->id() ) {
+				if ( $$params{$k}->id() ) {
 					push @where, "$fields{$f} = ?";
 	#$openprint::log->debug("$params{$k}" . ref $params{$k});
-					push @values, $params{$k}->id();
+					push @values, $$params{$k}->id();
 				} else {
 					push @where, "$fields{$f} IS NULL";
 				} # en dif
-				delete $params{$k};
+				delete $$params{$k};
 			} # end if
 		} # end foreach
 	} # end if
 
-	if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
+	if ( $fields{'deleted'} and ! exists $$params{'deleted'} ) {
 		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
 
 	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;
-	if ( $params{'or'} ) {
+	if ( $$params{'or'} ) {
 		$sql .= ' WHERE' if ! @where;
-		$sql .= " OR $params{'or'}";
-		delete $params{'or'};
+		$sql .= " OR $$params{'or'}";
+		delete $$params{'or'};
 	} # end if
-	if ( $params{'order'} ) {
-		$sql .= " ORDER BY $params{'order'}";
-		delete $params{'order'};
+	if ( $$params{'order'} ) {
+		$sql .= " ORDER BY $$params{'order'}";
+		delete $$params{'order'};
 	} # end if
-	if ( exists $params{'limit'} ) {
-		$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-		delete $params{'limit'};
+	if ( exists $$params{'limit'} ) {
+		$sql .= " LIMIT $$params{'limit'}" if $$params{'limit'};
+		delete $$params{'limit'};
 	} # end if
-	foreach my $k ( keys %params ) {
-		$log->error("Extra parameters in $type ::find $k => $params{$k}");
+	foreach my $k ( keys %$params ) {
+		$log->error("Extra parameters in $type ::find $k => $$params{$k}");
 	} # end foreach
 	
 #$openprint::log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
@@ -540,7 +546,7 @@ sub find_one {
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;
-	my @Results = eval($type.'->find(%params);');
+	my @Results = eval($type.'->find(\%params);');
 	return $Results[0] if @Results;
 } # end sub find_one
 

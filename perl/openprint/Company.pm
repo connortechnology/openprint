@@ -265,7 +265,9 @@ sub CSR {
 
 sub Users {
 	my $self = shift;
-	return openprint::User->find('company_id'=>$$self{'id'} );
+	my %params = @_;
+	$params{'company_id'} = $$self{'id'};
+	return openprint::User->find( \%params );
 } # end sub Users
 sub taxexempt1 {
 	return $_[0]{gst_exempt};

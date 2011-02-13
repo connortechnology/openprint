@@ -1,0 +1,35 @@
+<? echo (
+	my @Companies;
+
+	if ( $param{'company_name'} ) {
+		if ( ! $param{'company_name'} =~ /%/ ) {
+			$param{'company_name'} .= '%';
+		} # end if
+		@Companies = openprint::Company->find('name_like'=>$param{'company_name'});
+	} else {
+		@Companies = openprint::Company->find(
+			ssi::date_filter( 'created_on' ),
+			#ssi::date_filter( '_on' ),
+			);
+	} # end if
+	if ( ! @Companies ) {
+		return 'No results found.';
+	} # end if
+
+	my $html;
+	foreach my $Company ( @Companies ) {
+		$html .= '<div class="Company">';
+		$html .= '<div class="Name">'.$Company->name().'</div>';
+		$html .= '<div class="Address">'.$Company->city() . ', ' . $Company->state() . '</div>';
+		foreach my $User ( $Company->Users( 'asset_id_null' => 0 ) ) {
+			my $Profile = $User->Profile();
+			$html .= '<div class="User">';
+			$html .= '<img class="thumbnail" src="'.$User->Asset()->thumbnail_filename().'"/>';
+			$html .= '<div class="Age"><label>Age:</label>'. int(Date::Calc::Delta_Days( split('-', $Profile->Birthday() ), Date::Calc::Today() ) /365). '</div>';
+			$html .= '<div class="Joined"><label>Joined:</label>'. Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ) . '</div>';
+			$html .= '</div>';
+		} # end foreach User
+		$html .= '</div>';
+	} # end foreach Company
+	return $html;
+) ?>

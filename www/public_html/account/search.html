@@ -1,0 +1,43 @@
+<div class="Account">
+	<div class="Search">
+		<form name="f1" id="f1" action="/account/search.html" method="post">
+			<fieldset class="filters"><legend>Search for account</legend>
+				<div class="content">
+					<ul>
+						<li><label>Nickname:</label>
+							<input type="text" name="company_name" id="company_name" />
+						</li>
+						<li><label>Distance:</label>
+							<select name="distance" id="distance">
+								<option value="">select</option>
+								<? echo ( ssi::make_drop_down( [ map { $_, $_.'km' } ( 5, 10, 50, 100 ) ], $session{'/account/search.html?distance'} ); ) ?>
+							</select>
+						</li>
+						<li>
+							<label>Registered:</label>
+							<span class="DateSelector">
+							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_start', {onchange=>q``} ); ) ?>
+							</span>
+								to 
+							<span class="DateSelector">
+							<? echo ( ssi::date_select_session( '/account/search.html', 'created_on_end', {onchange=>q``} ); ) ?>
+							</span>
+						</li>
+						<li>
+							<label>Last Online:</label>
+							<span class="DateSelector">
+							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_start', {onchange=>q``} ); ) ?>
+							</span>
+								to 
+							<span class="DateSelector">
+							<? echo ( ssi::date_select_session( '/account/search.html', 'last_online_end', {onchange=>q``} ); ) ?>
+							</span>
+						</li>
+					</ul>
+				</div>
+			</fieldset>
+		</form>
+		<div id="Results"><!--#include virtual="/account/_search.html"-->
+		</div>
+	</div>
+</div>
