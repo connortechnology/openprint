@@ -1,6 +1,6 @@
 <? echo ( 
 	my $html;
-	foreach my $Field ( openprint::User_Profile_Field->find('order'=>'sort,lower(name)') ) {
+	foreach my $Field ( openprint::Company_Profile_Field->find('order'=>'sort,lower(name)') ) {
 		$$variable{'Field'} = $Field;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/administrator/managerial/_field_tr.html' );
 	} # end foreach Field
@@ -11,7 +11,7 @@
 		tag: 'tr',
 		constraint: 'vertical',
 		onUpdate: function( container ) {
-				new Ajax.Updater( 'fields', '_fields_tbody.html', { parameters: { update: Sortable.serialize(container) }, evalScripts: true } );
+				new Ajax.Updater( 'fields', '_company_fields_tbody.html', { parameters: { update: Sortable.serialize(container) }, evalScripts: true } );
 			}
 	} );
 </script>

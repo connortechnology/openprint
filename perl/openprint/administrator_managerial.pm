@@ -646,7 +646,6 @@ sub usergroup {
 	$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
 } # end sub usergroup
 
-<<<<<<< HEAD
 sub user_profile_fields {
 	if ( $param{'action'} eq 'Save' ) {
 		foreach my $Field ( openprint::User_Profile_Field->find() ) {
@@ -674,8 +673,25 @@ sub _field_tr {
 	} # end if
 } # end sub _field_tr
 
-sub _fields_tbody {
-	if ( $param{'update'} ) {
+sub _user_fields_tbody {
+	if ( $param{'action'} eq 'up' ) {
+		my @Fields = openprint::User_Profile_Field->find('order'=>'sort');
+		my $i = 0;
+		while ( $i < @Fields ) {
+			last if $Fields[$i]->id() == $param{'field_id'};
+			$i += 1;
+		} # end while
+		if ( $i and $i < @Fields ) {
+			$_ = $Fields[$i-1];
+			$Fields[$i-1] = $Fields[$i];
+			$Fields[$i] = $_;
+			$i = 0;
+			foreach my $Field ( @Fields ) {
+				$Field->save({'sort'=>$i});
+				$i += 1;
+			} # end foreach Field
+		} # end if
+	} elsif ( $param{'update'} ) {
 		$param{'update'} =~ s/fields\[\]=//g;
 		my $i = 0;
 		foreach my $field_id ( split('&', $param{'update'} ) ) {
@@ -684,7 +700,36 @@ sub _fields_tbody {
 			$i += 1;
 		} # end foreach $feild_id
 	} # end if
-} # end sub _fields_tbody
+} # end sub _user_fields_tbody
+
+sub _company_fields_tbody {
+	if ( $param{'action'} eq 'up' ) {
+		my @Fields = openprint::Company_Profile_Field->find('order'=>'sort');
+		my $i = 0;
+		while ( $i < @Fields ) {
+			last if $Fields[$i]->id() == $param{'field_id'};
+			$i += 1;
+		} # end while
+		if ( $i and $i < @Fields ) {
+			$_ = $Fields[$i-1];
+			$Fields[$i-1] = $Fields[$i];
+			$Fields[$i] = $_;
+			$i = 0;
+			foreach my $Field ( @Fields ) {
+				$Field->save({'sort'=>$i});
+				$i += 1;
+			} # end foreach Field
+		} # end if
+	} elsif ( $param{'update'} ) {
+		$param{'update'} =~ s/fields\[\]=//g;
+		my $i = 0;
+		foreach my $field_id ( split('&', $param{'update'} ) ) {
+			my $Field = new openprint::Company_Profile_Field( $field_id );
+			$Field->save({'sort'=>$i});
+			$i += 1;
+		} # end foreach $feild_id
+	} # end if
+} # end sub _user_fields_tbody
 
 sub _search_by_email {
 } # end sub _search_by_email

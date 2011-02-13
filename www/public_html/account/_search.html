@@ -29,9 +29,9 @@
 			my $Profile = $User->Profile();
 			$html .= sprintf(q`
 				<div class="User">
-					<img class="thumbnail" src="%1$s"/>
-					<div class="Age"><label>Age:</label>%2$s</div>
-					<div class="Joined"><label>Joined:</label>%3$s</div>
+					<img class="thumbnail" src="%1$s" alt="%2$s" />
+					<div class="Age"><label>Age:</label>%3$s</div>
+					<div class="Joined"><label>Joined:</label>%4$s</div>
 				</div>`,
 				$User->Asset()->thumbnail_filename(),
 				int(Date::Calc::Delta_Days( split('-', $Profile->Birthday() ), Date::Calc::Today() ) /365),

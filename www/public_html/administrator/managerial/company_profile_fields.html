@@ -1,6 +1,6 @@
 <script type="text/javascript" src="/administrator/managerial/profile.js"></script>
-<div class="UserProfileFields">
-	<form id="f1" name="f1" action="user_profile_fields.html" method="post">
+<div class="CompanyProfileFields">
+	<form id="f1" name="f1" action="company_profile_fields.html" method="post">
 		<input type="hidden" name="action" id="action" />
 		<p class="buttons">
 		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', q`$('action').value='Save';$('f1').submit();`, '', 'Save' ); ) ?>
@@ -18,7 +18,7 @@
 					</th>
 				</tr>
 			</thead>
-			<tbody id="fields"><!--#include virtual="_user_fields_tbody.html"--></tbody>
+			<tbody id="fields"><!--#include virtual="_company_fields_tbody.html"--></tbody>
 		</table>
 	</form>
 </div>

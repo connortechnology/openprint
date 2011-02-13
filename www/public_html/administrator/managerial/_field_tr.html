@@ -22,7 +22,7 @@
 		join('', 
 			ssi::writeButton( $log, $dbh, 'x'.$Field->id(), 'delete.gif', qq`delField( $$Field{id} );`, '', 'X' ),
 			ssi::writeButton( $log, $dbh, 'c'.$Field->id(), 'copy.gif', qq`copyField( $$Field{id} );`, '', 'C' ),
-			ssi::writeButton( $log, $dbh, 'u'.$Field->id(), 'up.gif', qq`upField( $$Field{id} );`, '', 'U' ),
+			( $Field->sort() ? ( ssi::writeButton( $log, $dbh, 'u'.$Field->id(), 'up.gif', qq`upField( $$Field{id} );`, '', 'U' ) ) : () ),
 			),
 		);
 	} elsif ( $$variable{'error'} ) {

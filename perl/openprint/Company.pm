@@ -327,5 +327,8 @@ sub load_shipping {
 	return $address->get( @params );
 } # end sub save_shipping
 
+sub Profile {
+	return new openprint::Company_Profile( $_[0]{'id'} );
+}
 1;
 __END__
