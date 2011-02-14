@@ -2435,7 +2435,7 @@ my @Is = calculate_impositions( $Project, $P, $sig_specs, $qty_index, $qty, $Pap
 #my $time = gettimeofday();
 #$imp->display($recursion_depth . ' Starting');
 			my $price = calc_price( $Project, $service_index, $imp, $project, $services, $sig_specs, $qty, $qty_index, \%PlateCounts, $other_impositions );
-$imp->display("Actually calculating this imp $$price{'Comparison Cost'}") if ! $recursion_depth;
+#$imp->display("Actually calculating this imp $$price{'Comparison Cost'}") if ! $recursion_depth;
 				#$openprint::log->debug( breakdown( $price, $sig_specs ) ) if ! $recursion_depth;
 #$openprint::log->debug("Main Calc Price time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 #$openprint::log->debug( breakdown( $price, $sig_specs ) );
@@ -2577,6 +2577,7 @@ if ( 0 ) {
  #= %best_price;
 							$b{'Comparison Cost'} = $best_price{'Comparison Cost'} - $$price{'Comparison Cost'};
 							$b{'Impositions'} = $best_price{'Impositions'};
+							$b{'Imposition'} = $best_price{'Imposition'};
 		#$openprint::log->debug("recursing with reduce best price from $best_price{'Comparison Cost'} to $b{'Comparison Cost'}");	
 								#$openprint::log->debug( breakdown( $price, $sig_specs ) );
 						$sig_price = get_project_price( $Project, $$new_specs{'ServiceIndex'}, $project, $service_specs, $new_specs, $qty, $qty_index, $possible_presses, $printing_specs, $versions, \%PlateCounts, \%PaperCounts, \%previous_forms_cache, \@signatures, $impositions, $other_impositions, \%b, $recursion_depth + 1 );
