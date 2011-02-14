@@ -3,22 +3,22 @@
 ) ?>
 <? if ( @{$$variable{'PackageTypes'}} ) ?>
 <p>
-	<label><?ServiceTypeName?> dimensions:</label>
-		<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
-		<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
-		<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<span class="<?Columns?>Columns">
-	<select name="ddmPackageType<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
-<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'PackageTypes'}} ], $$variable{'ddmPackageType'} ); ) ?>
-	</select>
-	<input type="checkbox" id="OverridePackageType<?QTYIndex?>" name="OverridePackageType<?QTYIndex?>" value="Y" onclick="if (!this.checked) calc(this.form.name);"
-	<? echo ( $$variable{'OverridePackageType'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?>
-	/> 
-	<label class="radio" for="OverridePackageType<?QTYIndex?>">Override</label>
-		</span>
-		<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
-		<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
-		<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<label>Package Type:</label>
+	<? eval ( $$variable{'QTYIndex'} = 1 ) ?>
+	<? while ( $$variable{'QTYIndex'} <= 3 ) ?>
+	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<span class="<?Columns?>Columns">
+		<select name="ddmPackageType<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
+		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'PackageTypes'}} ], $$variable{'ddmPackageType'} ); ) ?>
+		</select>
+		<input type="checkbox" id="OverridePackageType<?QTYIndex?>" name="OverridePackageType<?QTYIndex?>" value="Y" onclick="if (!this.checked) calc(this.form.name);"
+		<? echo ( $$variable{'OverridePackageType'.$$variable{'QTYIndex'}} eq 'Y' ? 'checked="checked"' : '' ) ?>
+		/> 
+		<label class="radio" for="OverridePackageType<?QTYIndex?>">Override</label>
+	</span>
+	<? endif ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
+	<? eval ( $$variable{'QTYIndex'} += 1 ) ?>
+	<? endwhile ( $$variable{'QTYIndex'} <= 3 ) ?>
 </p>
 <? endif ( @{$$variable{'PackageTypes'}} ) ?>
 <input type="hidden" name="txtPackageWidth" />
