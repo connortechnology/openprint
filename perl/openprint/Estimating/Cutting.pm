@@ -147,7 +147,7 @@ sub neccessary {
 my @signature_calc_stock_cutting_equipment;
 sub signature_calc_stock_cutting_equipment {
 	my ( $Project ) = @_;
-	my @signature_calc_stock_cutting_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	my @signature_calc_stock_cutting_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 	return @signature_calc_stock_cutting_equipment;
 } # end sub signature_calc_stock_cutting
 
@@ -340,7 +340,7 @@ sub signature_calc_folding_cutting {
 		$log->debug("Overriding Equipment! " . $$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"});
 		@my_equipment = ( new openprint::Equipment( @$specs{"ddmFoldCutEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
 	} else {
-		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 	} # end if
 
 	if ( ! @my_equipment ) {
@@ -404,7 +404,7 @@ sub signature_calc_load_equipment {
 	if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
 		push @capabilities, 'Large Format';
 	} # end if
-	@equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	@equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)');
 	return @equipment;
 } # end sub signature_calc_load_equipment
 
@@ -945,7 +945,7 @@ sub display {
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 
-	@{$$variable{'StockCutEquipmentArray'}} = map { $_->id(), $_->name() } openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	@{$$variable{'StockCutEquipmentArray'}} = map { $_->id(), $_->name() } openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 
 	my @capabilities = ('Y','When Printing','When Folding');
 	if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} ) {
@@ -955,7 +955,7 @@ sub display {
 		push @capabilities, 'Large Format';
 	} # end if
 
-	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'lower(strName)');
 
 
 	@{$$variable{'CuttingGroups'}} = ();

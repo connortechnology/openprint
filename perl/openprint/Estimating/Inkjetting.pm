@@ -55,9 +55,9 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @Equipment = openprint::Equipment->find('Specifications'=>{'Inkjetting Capable'=>'Y'},'use_in_estimating'=>1);
-	push @Equipment, openprint::Equipment->find('Specifications'=>{'Inkjetting Capable'=>'When PerfectBound'},'use_in_estimating'=>1) if $$services{'PerfectBind'};
-	push @Equipment, openprint::Equipment->find('Specifications'=>{'Inkjetting Capable'=>'When Stitching'},'use_in_estimating'=>1) if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'Inkjetting Capable'=>'Y'},'useinestimating'=>1);
+	push @Equipment, openprint::Equipment->find('Specifications'=>{'Inkjetting Capable'=>'When PerfectBound'},'useinestimating'=>1) if $$services{'PerfectBind'};
+	push @Equipment, openprint::Equipment->find('Specifications'=>{'Inkjetting Capable'=>'When Stitching'},'useinestimating'=>1) if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no equipment for inkjetting.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -194,10 +194,10 @@ sub display {
 
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
-	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'Inkjetting Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'Inkjetting Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 $openprint::log->debug("Equipment: @possible_equipment");
-	push @possible_equipment, openprint::Equipment->find( 'Specifications' => {'Inkjetting Capable'=>'When Stitching'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
-	push @possible_equipment, openprint::Equipment->find( 'Specifications' => {'Inkjetting Capable'=>'When PerfectBound'}, 'use_in_estimating'=>1,'order'=>'lower(strName)') if $$services{'PerfectBound'};
+	push @possible_equipment, openprint::Equipment->find( 'Specifications' => {'Inkjetting Capable'=>'When Stitching'}, 'useinestimating'=>1,'order'=>'lower(strName)') if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
+	push @possible_equipment, openprint::Equipment->find( 'Specifications' => {'Inkjetting Capable'=>'When PerfectBound'}, 'useinestimating'=>1,'order'=>'lower(strName)') if $$services{'PerfectBound'};
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 

@@ -188,7 +188,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
 	$$error .= 'There are no perfect binders in the system.<br/>' if ! @all_equipment;
 
 	foreach my $Equipment ( @all_equipment ) {
@@ -564,7 +564,7 @@ sub get_price {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'PerfectBound Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
 
 } # end sub display
 

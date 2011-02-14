@@ -633,7 +633,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'useinestimating'=>1,'order'=>'lower(strName)');
 
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
@@ -645,7 +645,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'useinestimating'=>1,'order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {

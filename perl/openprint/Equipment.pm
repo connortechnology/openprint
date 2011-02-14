@@ -15,7 +15,7 @@ use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
-$debug = 0;
+$debug = 1;
 my %find_cache;
 %fields = (
 	'id'	=>	'id',
@@ -111,7 +111,7 @@ sub find {
 $openprint::log->debug('Specifications not a hash ref in Equipment->find: ' .  $params{'Specifications'}  );
 		} # end if
 	} # end if
-if ( exists $params{'servicetype_id'} ) {
+	if ( exists $params{'servicetype_id'} ) {
         if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
             $sql .= ' AND servicetype_id={?}';
             push @values, $params{'servicetype_id'};
@@ -121,16 +121,12 @@ if ( exists $params{'servicetype_id'} ) {
         } # end if
     } # end if
 
-	if ( $params{'UseInEstimating'} ) {
-		$sql .= ' AND UseInEstimating=?';
+	if ( $params{'useinestimating'} ) {
+		$sql .= ' AND useinestimating=?';
 		push @values, 1;
 	} # end if
-	if ( $params{'UseInScheduling'} ) {
-		$sql .= ' AND UseInScheduling=?';
-		push @values, 1;
-	} # end if
-	if ( $params{'use_in_scheduling'} ) {
-		$sql .= ' AND UseInScheduling=?';
+	if ( $params{'useinscheduling'} ) {
+		$sql .= ' AND useinscheduling=?';
 		push @values, 1;
 	} # end if
 	if ( $params{'jmf_enabled'} ) {

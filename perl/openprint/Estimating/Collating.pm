@@ -90,7 +90,7 @@ $log->debug("COLLATING!!!!!!!!!!!!!!!!!!");
 	} # end if
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Collating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Collating Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
 	my $error = '';
 	if ( ! @all_equipment ) {
 		$error .= 'We have no collating equipment.<br/>';
@@ -179,7 +179,7 @@ sub display {
     my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-	my @equipment = openprint::Equipment->find( 'Specifications' => {'Collating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @equipment = openprint::Equipment->find( 'Specifications' => {'Collating Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
 	foreach my $qty_index ( $Project->quantity_indexes() ) {	
 		$$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 	} # end foreach qty_index

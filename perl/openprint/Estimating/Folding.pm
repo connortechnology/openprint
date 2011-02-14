@@ -399,7 +399,7 @@ sub signature_calc {
 			push @folding_capable, 'For Pocket Folders' if $Project->Type()->name() eq 'PresentationFolders';
 			push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
 			push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
-			@my_equipment = openprint::Equipment->find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable} );
+			@my_equipment = openprint::Equipment->find( 'useinestimating'=>1, 'Specifications'=>{'Folding Capable'=>\@folding_capable} );
 		} elsif ( $debug ) {
 			$openprint::log->debug("No sheeter");
 		} # end if
@@ -1359,7 +1359,7 @@ sub display {
 	push @folding_capable, 'When PerfectBound' if $$services{'PerfectBound'};
 	push @folding_capable, 'When Stitching' if ( $$services{'SaddleStitching'} or $$services{'LoopStitching'} );
 
-	my @equipment = openprint::Equipment->find( 'UseInEstimating'=>'true', 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
+	my @equipment = openprint::Equipment->find( 'useinestimating'=>1, 'Specifications'=>{'Folding Capable'=>\@folding_capable}, 'order'=>'lower(strname)' );
 	@{$$variable{'EquipmentArray'}} = map { $_->id(), $_->name() } @equipment;
 } # end sub display
 

@@ -107,7 +107,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $project_index );
 
-	@all_equipment = openprint::Equipment->find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	@all_equipment = openprint::Equipment->find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 	if ( ! @all_equipment ) {
 		$$specs{'alert'} = 'We have no equipment for UV Coating.<br/>';
 		return $$specs{'Status'} = 'uncalculated';
@@ -332,7 +332,7 @@ sub signature_calc {
 		$qty *= $$sig_specs{'Versions'};
 	} # end if
 
-	@all_equipment = openprint::Equipment->find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)') if ! @all_equipment;
+	@all_equipment = openprint::Equipment->find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)') if ! @all_equipment;
 	my @equipment;	
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
@@ -548,7 +548,7 @@ if ( ! $setupPrice ) {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'UVCoating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 } # end sub display
 
 # Copies the UV settings back into the printing service, because that is where we have chosen to store them.

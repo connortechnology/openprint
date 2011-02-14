@@ -63,7 +63,7 @@ sub calc {
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
 
-	my @Equipment = openprint::Equipment->find('Specifications'=>{'ThreeKnifeTrim Capable'=>'Y'},'use_in_estimating'=>1);
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'ThreeKnifeTrim Capable'=>'Y'},'useinestimating'=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no three knife trimmers.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -162,7 +162,7 @@ sub display {
 
 	@{$$variable{'Equipment'}} = openprint::Equipment->find( 
 			'Specifications'	=>	{'ThreeKnifeTrim Capable'=>'Y'},
-			'use_in_estimating'	=>	1,
+			'useinestimating'	=>	1,
 			'order'				=>	'lower(strName)'
 			);
 $openprint::log->warn("ThreeKnifeTrim Equipment: " . @{$$variable{'Equipment'}} );

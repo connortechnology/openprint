@@ -245,7 +245,7 @@ sub signature_calc {
 		push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
 		push @capabilities, 'When Stitching' if $stitching_service_index;
 		
-		@equipment = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
+		@equipment = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'strName');
 	} # endif
 	#foreach my $E ( @equipment ) {
 		#$openprint::log->debug( "Equipment: " . $E->strid() );
@@ -622,7 +622,7 @@ sub get_specs {
 	push @capabilities, 'When PerfectBinding' if $$services{'PerfectBound'};
 	push @capabilities, 'When Stitching' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
 	
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'strName');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Scoring Capable'=>\@capabilities}, 'useinestimating'=>1,'order'=>'strName');
 
 	foreach my $signature_service_index ( $Project->signatures() ) {
 		my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );

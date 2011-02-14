@@ -9,7 +9,7 @@
 			<? echo ( 
 				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment->find(
 						'servicetype_id'=>($$variable{'Job'}->servicetype_id() ? $$variable{'Job'}->servicetype_id() : openprint::ServiceType->find_one('name'=>'AdditionalSignature')->id() ),
-						'UseInScheduling'=>1,
+						'useinscheduling'=>1,
 						'order'=>'lower(strname)'
 					) ], $$variable{'Job'}->equipment_id() );
 			) ?>

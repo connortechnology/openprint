@@ -389,7 +389,7 @@ sub signature_calc {
 		$log->debug("Overriding Equipment!");
 		@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} ) );
 	} else {
-		@equipment = openprint::Equipment->find( 'use_in_estimating'=>1, 'Specifications'=>{'Die Cutting Capable'=>'Y'} );
+		@equipment = openprint::Equipment->find( 'useinestimating'=>1, 'Specifications'=>{'Die Cutting Capable'=>'Y'} );
 	} # end if
 
 	if ( $$specs{"chkOverrideImposition-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -452,7 +452,7 @@ sub signature_calc {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;	
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find('order'=>'lower(strname)', 'use_in_estimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} );
+	@{$$variable{'Equipment'}} = openprint::Equipment->find('order'=>'lower(strname)', 'useinestimating'=>1,'Specifications'=>{'Die Cutting Capable'=>'Y'} );
 
 	if ( $$variable{'rdbTemplateTypePresentationFolderStandard1Pocket'} ne '' or $$variable{'rdbTemplateTypePresentationFolderStandard2Pocket'} ne '' ) {
 		$$variable{'ShowPresentationFolderDieCutting'} = 'Y';

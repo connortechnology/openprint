@@ -44,7 +44,7 @@ sub calc {
 
 	my $Project = new openprint::Project( $pid );
 
-	my @Equipment = openprint::Equipment->find('Specifications'=>{'DTaping Capable'=>'Y'},'use_in_estimating'=>1);
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'DTaping Capable'=>'Y'},'useinestimating'=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no dtaping equipment.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -216,7 +216,7 @@ sub summary {
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'DTaping Capable'=>'Y'}, 'use_in_estimating'=>1,'order'=>'lower(strName)');
+	my @possible_equipment = openprint::Equipment->find( 'Specifications' => {'DTaping Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 	@{$$variable{'Equipment'}} = @possible_equipment;
 } # end sub display
 
