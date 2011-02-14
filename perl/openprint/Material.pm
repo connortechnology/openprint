@@ -30,6 +30,7 @@ $debug = 1;
 		);	
 %find_fields = (
 		'category'	=>	'(SELECT name FROM Material_Categories WHERE id=category_id)',
+		'equipment_id'	=> '(SELECT lngequipmentindex FROM tbl_material_prices WHERE lngmaterialindex=materials.id)',
 );
 
 %transforms = (

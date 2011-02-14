@@ -895,5 +895,8 @@ sub runtime {
 	return $runTime;
 } # end sub get_runtime
 
+sub save {
+} # end sub save
+
 1;
 __END__
