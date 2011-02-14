@@ -147,6 +147,10 @@ sub find {
 		$sql .= ' AND category_id=(SELECT id FROM Material_Categories WHERE name=?)';
 		push @values, $params{'category'};
 	} # end if
+	if ( $params{'equipment_id'} ) {
+		$sql .= ' AND id IN (SELECT lngmaterialindex FROM tbl_material_prices WHERE lngequipmentindex=?)';
+		push @values, $params{'equipment_id'};
+	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	
