@@ -109,6 +109,10 @@ sub find {
 		$sql .= ' AND category_id=(SELECT id FROM Service_Categories WHERE name=?)';
 		push @values, $params{'category'};
 	} # end if
+	if ( $params{'equipment_id'} ) {
+		$sql .= ' AND id IN (SELECT service_id FROM service_prices WHERE equipment_id=?)';
+		push @values, $params{'equipment_id'};
+	} # end if
 	$sql .= " ORDER BY $params{'order'}" if $params{'order'};
 	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
 	

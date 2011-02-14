@@ -2,20 +2,33 @@
 <script type="text/javascript" src="/javascripts/pricing.js"></script>
 <form id="f1" name="f1" method="post" enctype="multipart/form-data" action="edit.html">
 	<fieldset class="filters"><legend>Search</legend>
-		<p> 
+		<div class="content">
+		<ul>
+		<li> 
 			<label>Category:</label>
 			<select name="ddmSearchCategory" onchange="form.btnFunction.value='';f1.submit();">
 				<option value="">All Categories</option>
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::ServiceCategory::find('order'=>'lower(name)') ], $param{'ddmSearchCategory'} ); ) ?>
 			</select>
-		</p>
-		<p> 
+		</li>
+		<li><label>Equipment:</label>
+			<select name="equipment_id" onchange="form.btnFunction.value='';f1.submit();">
+				<option value="">All</option>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find('order'=>'lower('.$openprint::Equipment::fields{'name'}.')') ], $param{'equipment_id'} ); ) ?>
+			</select>
+		</li>	
+		<li> 
 			<label>Service:</label>
 			<select name="ddmService" onchange="if(this.options[this.selectedIndex].value != ''){this.form.btnFunction.value='';this.form.submit();}">
 				<option value="">Select a Service</option>
-				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service::find('category_id'=>$param{'ddmSearchCategory'},'order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
+				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() . ' : '.$_->description() } openprint::Service::find(
+					( $param{'ddmSearchCategory'} ? ( 'category_id'=>$param{'ddmSearchCategory'} ) : () ),
+					( $param{'equipment_id'} ? ( 'equipment_id' => $param{'equipment_id'} ) : () ),
+					'order'=>'lower(name)') ], $$variable{'Service'}->id() ); ) ?>
 			</select>
-		</p>
+		</li>
+		</ul>
+		</div>
 		<p class="buttons">
 			<? echo ( 
 				my $html = '';
