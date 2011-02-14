@@ -79,6 +79,27 @@
 		
 				</fieldset>
 			</div>
+			<div id="Relationships">
+				<fieldset><legend>Relationships</legend>
+					<? echo ( 
+						my $html;
+						foreach my $Type ( openprint::User_Relationship_Type->find('order'=>'sort,lower(name)') ) {
+							my @Relations = openprint::User_Relationship->find('type_id'=>$Type->id(), 'user_id1'=>$$variable{'User'}->id() );
+							next if ! @Relations;
+							$html .= '<h3>'.$Type->name() .'</h3>';
+							foreach my $Relation ( @Relations ) {
+								$html .= sprintf(q`
+									<div class="User">
+										<img class="thumbnail" src="%1$s" alt="%2$s" />%3$s
+									</div>`,
+									$User->Asset()->thumbnail_filename(), $User->Asset()->caption(), $User->name() 
+									);
+							} # end foreach Relation
+						} # end foreach Type
+						return $html;
+					) ?>
+				</fieldset>
+			</div>
 		</div><!--UserProfile-->
 <? else ( $session{'user_id'} ) ?>
 You must be logged in to view user profiles.<br/>

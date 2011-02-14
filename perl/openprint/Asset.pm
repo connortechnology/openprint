@@ -60,6 +60,10 @@ sub url {
 
 sub on_disk_thumbnail_path {
 	my $src = $_[0]->on_disk_path();
+	if ( ! $src ) {
+		$openprint::log->error( "No src for Asset: " . $_[0]->to_string() );
+		return '';
+	} # end if
 #$openprint::log->debug("Asset::on_disk_thumbnail_path: $src");
 	if ( ! -e $openprint::config{'AssetPath'}.'/thumbnails/' ) {
 #$openprint::log->debug("Asset::on_disk_thumbnail_path: makeing $openprint::config{'AssetPath'}/thumbnails");
@@ -83,6 +87,7 @@ sub on_disk_thumbnail_path {
 } # end sub on_disk_thumbnail_path
 
 sub thumbnail_filename {
+	return '' if ! $_[0]{'id'};
 	my $path = $_[0]->on_disk_thumbnail_path();
 	if ( $path =~ /thumbnails/ ) {
 		return '/thumbnails/'.$_[0]->on_disk_filename();

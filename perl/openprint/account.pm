@@ -16,6 +16,7 @@ require openprint::MarketingCategory;
 require openprint::User_Profile_Field;
 require openprint::Photo_Album;
 require openprint::Event;
+require openprint::User_Relationship;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -666,7 +667,7 @@ sub search {
 				'last_online_start_year', 'last_online_start_month','last_online_start_day',
 				'last_online_end_year','last_online_end_month','last_online_end_day',
 				) );
-	ssi::setup_date_select( '/account/search.html', 'created_on_start', -31 );
+	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
 	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
 	ssi::setup_date_select( '/account/search.html', 'last_online_start', -31 );
 	ssi::setup_date_select( '/account/search.html', 'last_online_end', '' );

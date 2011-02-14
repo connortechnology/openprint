@@ -536,9 +536,9 @@ $openprint::log->debug("find: $field");
 		if ( ! @identified_by ) {
 			$openprint::log->error("Multi key object $type but no identified by");
 		} # end if
-		my @objs = map { $type->new( \@identified_by, $_ ) } @$data;
-$openprint::log->debug("Objs: "  . scalar @objs );
-		return @objs;
+		return map { $type->new( \@identified_by, $_ ) } @$data;
+#$openprint::log->debug("Objs: "  . scalar @objs );
+		#return @objs;
 	} # end if
 } # end sub find
 

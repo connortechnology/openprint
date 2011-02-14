@@ -1,44 +1,47 @@
 <? echo (
-	my @Companies;
+	my @Users;
 
-	if ( $param{'company_name'} ) {
-		if ( ! ( $param{'company_name'} =~ /%/ ) ) {
-			$param{'company_name'} .= '%';
+	if ( $param{'name'} ) {
+		if ( ! ( $param{'name'} =~ /%/ ) ) {
+			$param{'name'} .= '%';
 		} # end if
-		@Companies = openprint::Company->find('name_ilike'=>$param{'company_name'});
+		@Users = openprint::User->find('name_ilike'=>$param{'name'});
 	} else {
-		@Companies = openprint::Company->find(
+		@Users = openprint::User->find(
 			ssi::date_filter( '/account/search.html?created_on_start', 'created_on_start' ),
 			ssi::date_filter( '/account/search.html?created_on_end', 'created_on_end' ),
 			ssi::date_filter( '/account/search.html?last_online_start', 'last_online_start' ),
 			ssi::date_filter( '/account/search.html?last_online_end', 'last_online_end' ),
 			);
 	} # end if
-	if ( ! @Companies ) {
+	if ( ! @Users ) {
 		return 'No results found.';
 	} # end if
 
 	my $html;
-	foreach my $Company ( @Companies ) {
-		$html .= '<div class="Company">';
+	foreach my $User ( @Users ) {
+		my $Profile = $User->Profile();
+		$html .= '<div class="Result">';
 		$html .= sprintf(q`<div class="Info">
 								<div class="Name">%1$s</div>
 								<div class="Address">%2$s</div>
-							</div>`, $Company->name(), $Company->city() . ', ' . $Company->state() );
-		foreach my $User ( $Company->Users( 'asset_id_null' => 0 ) ) {
-			my $Profile = $User->Profile();
-			$html .= sprintf(q`
+							</div>`, $User->name(), $Profile->City() . ', ' . $Profile->State() );
+if ( 0 ) {
+		$html .= sprintf(q`
 				<div class="User">
 					<img class="thumbnail" src="%1$s" alt="%2$s" />
 					<div class="Age"><label>Age:</label>%3$s</div>
-					<div class="Joined"><label>Joined:</label>%4$s</div>
+					<div class="Gender"><label>Gender:</label>%4$s</div>
+					<div class="Joined"><label>Joined:</label>%5$s</div>
 				</div>`,
-				$User->Asset()->thumbnail_filename(),
+				( $User->Asset()->thumbnail_filename() ? $User->Asset()->thumbnail_filename() : 'no_image.gif' ), '',
 				int(Date::Calc::Delta_Days( split('-', $Profile->Birthday() ), Date::Calc::Today() ) /365),
+				$Profile->Gender(),
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
-				);
-		} # end foreach User
+			);
+}
 		$html .= '</div>';
-	} # end foreach Company
+$openprint::log->debug($html);
+	} # end foreach User
 	return $html;
 ) ?>
