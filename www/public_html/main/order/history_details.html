@@ -79,7 +79,8 @@ Projects listed in red have changed price from the time this order was originall
 			$html .= '<div class="AcceptTerms">';
 			if ( $$variable{'Order'}->terms_accepted() ) {
 				$html .= '<br/>Terms have been accepted.';
-			} elsif( sets::isin( $$variable{'Order'}->status(), [ 'Complete','Pending Deposit', 'In Production' ] ) ) {
+			} else {
+				$html .= '<span class="unprintable">The terms and conditions have not yet been accepted.<br/></span>';
 				my $Me = new openprint::User( $session{'user_id'} );
 				if ( $Me->company_id() == $session{'company_id'} and $Me->company_id() == $$variable{'Order'}->company_id() ) {
 					$html .= '<input type="checkbox" id="accept_terms" name="accept_terms" value="1" />
@@ -87,7 +88,7 @@ Projects listed in red have changed price from the time this order was originall
 
 					$html .= ssi::writeButton( $log, $dbh, 'Accept', 'accept.gif', "f1.btnFunction.value='AcceptTerms';f1.submit();", '', 'Accept' );
 				} else {
-					$html .= "The terms and conditions have not yet been accepted.";
+					$html .= 'You cannot accept the terms on behalf of ' . $$variable{'Order'}->Company()->name().'<br/>';
 				} # end if
 			} # end if 
 			$html .= '</div>';
