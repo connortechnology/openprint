@@ -121,7 +121,7 @@
 <li><label>Equipment:</label>
 <? echo ( 
 	@{$$variable{'Equipment'}} = ();
-	my @presses = openprint::Equipment->find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'UseInScheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
+	my @presses = openprint::Equipment->find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'useinscheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
 
 	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {

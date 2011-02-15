@@ -41,11 +41,7 @@
 		} elsif ( $Field->type() eq 'text' ) {
 			$html .= sprintf( q`<input type="text" name="field-%1$d" id="field-%1$d" value="%2$s" />`, $Field->id(), $value ? $value : $Field->default() );
 		} elsif ( $Field->type() eq 'radio' ) {
-			foreach my $v ( ref $Field->values() ? $Field->values() : () ) {
-				$html .= sprintf( q`<input type="radio" name="field-%1$d" id="field-%1$d%2$s" value="%2$d" %3$s />
-					<label class="radio" for="field-%1$d%2$s">%2$s</label>
-					`, $Field->id(), $v, $v ? ssi::checked( $v eq $value ) : ssi::checked( $v eq $Field->default() ) );
-			} # end foreach value
+			$html .= ssi::radio( 'field-'.$Field->id(), $Field->values(), $value ? $value : $Field->default() );
 		} # end if
 		$html .= "</span></li>\n";
 	} # end foreach Field

@@ -9,14 +9,13 @@ require openprint::Location;
 require openprint::Equipment_Stock_Setting;
 require sql;
 
-use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 $table = 'tbl_Equipment';
 $serial = 'Equipment_Index_seq';
 
 $debug = 0;
-my %find_cache;
 %fields = (
 	'id'	=>	'id',
 	'strid'	=>	'strid',
@@ -43,6 +42,9 @@ my %find_cache;
 	'sorting'			=>	'sorting',
 	'message'			=>	'message',
 );
+%find_fields = (
+	'Specifications' => '(SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)',
+);
 %transforms = (
 );
 %defaults = (
@@ -54,112 +56,6 @@ my %find_cache;
 sub cache_field {
 	return 'name';
 }
-sub init_cache {
-	%find_cache = ();
-} # end sub init_cache
-
-# Returns a paper object specified by the parameters
-sub find {
-	my $self = shift;
-	my %params = @_;
-
-	my $hash_key = join(';',map { $_, ref $params{$_} eq 'HASH' ? join(';',%{$params{$_}}) :$params{$_} } sort keys %params );
-#$openprint::log->debug("Hash key: $hash_key");
-	return @{$find_cache{$hash_key}} if $find_cache{$hash_key};
-	my $sql;
-	my @values;
-	$sql = q{SELECT * FROM tbl_Equipment WHERE 1>0};
-
-	if ( exists $params{'id'} ) {
-		if ( ref $params{id} eq 'ARRAY' ) {
-			if ( @{$params{id}} > 1 ) {
-				$sql .= ' AND id IN (' . join(',', map {'?'} @{$params{id}}	) . ')';
-				push @values, @{$params{id}};
-			} elsif ( @{$params{id}} == 1 ) {
-				$sql .= ' AND id=?';
-				push @values, $params{id};
-			} else {
-				$sql .= ' AND id=?';
-				push @values, $params{id};
-			} # en dif
-		} else {
-			$sql .= ' AND id=?';
-			push @values, $params{id};
-		} # end if
-	} # end if
-	if ( $params{'strid'} ) {
-		$sql .= q{ AND strID=?};
-		push @values, $params{'strid'};
-	} # end if
-	if ( $params{'Name'} ) {
-		$sql .= q{ AND strName=?};
-		push @values, $params{'Name'};
-	} # end if
-	if ( $params{'Specifications'} ) {
-# Assume specificatiosn is a hash of key/values to match
-		if ( ref $params{'Specifications'} eq 'HASH' ) {
-			foreach my $name ( keys %{$params{'Specifications'}} ) {
-				if ( ref $params{'Specifications'}{$name} eq 'ARRAY' ) {
-					$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1) IN ( } . join(',', map {'?'} @{$params{'Specifications'}{$name}}	) . ' )';
-					push @values, $name, @{$params{'Specifications'}{$name}};
-				} else {
-					$sql .= q{ AND (SELECT strValue FROM tbl_Equipment_Specifications WHERE lngEquipmentIndex=tbl_Equipment.Id AND strName=? LIMIT 1)=?};
-					push @values, $name, $params{'Specifications'}{$name};
-				} # end if
-			} # end foreach
-		} else {
-$openprint::log->debug('Specifications not a hash ref in Equipment->find: ' .  $params{'Specifications'}  );
-		} # end if
-	} # end if
-if ( exists $params{'servicetype_id'} ) {
-        if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
-            $sql .= ' AND servicetype_id={?}';
-            push @values, $params{'servicetype_id'};
-        } else {
-            $sql .= ' AND ? = ANY(servicetype_id)';
-            push @values, $params{'servicetype_id'};
-        } # end if
-    } # end if
-
-	if ( $params{'UseInEstimating'} ) {
-		$sql .= ' AND UseInEstimating=?';
-		push @values, 1;
-	} # end if
-	if ( $params{'UseInScheduling'} ) {
-		$sql .= ' AND UseInScheduling=?';
-		push @values, 1;
-	} # end if
-	if ( $params{'use_in_scheduling'} ) {
-		$sql .= ' AND UseInScheduling=?';
-		push @values, 1;
-	} # end if
-	if ( $params{'jmf_enabled'} ) {
-		$sql .= ' AND jmf_enabled=?';
-		push @values, 1;
-	} # end if
-	if ( $params{'cip3_monitor'} ) {
-		$sql .= ' AND cip3_monitor=?';
-		push @values, $params{'cip3_monitor'};
-	} # end if
-	if ( $params{'category'} ) {
-		$sql .= q{ AND strCategory=?};
-		push @values, $params{'category'};
-	} # end if
-
-	$sql .= " LIMIT $params{'limit'}" if $params{'limit'};
-	$sql .= " OR $params{'or'}" if $params{'or'};
-	$sql .= " ORDER BY $params{'order'}" if ( $params{'order'} );
-	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
-	if ( ! $data ) {
-		$openprint::log->error( "Error loading Equipment ($sql) (@values) :" . $openprint::dbh->errstr );
-		return;
-	} elsif ( $debug ) {
-		$openprint::log->debug( "openprint::Equipment->find : SQL($sql) VALUES(". join(',',@values).") # Results: " . @$data );
-	} # end if
-	
-	@{$find_cache{$hash_key}} = map { new openprint::Equipment( $_->{id}, $_ ) } @$data;
-	return @{$find_cache{$hash_key}};
-} # end sub find
 
 sub fits {
 	my ( $self, $width, $height, $calliper, $service ) = @_;

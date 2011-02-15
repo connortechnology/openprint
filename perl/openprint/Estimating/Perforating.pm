@@ -206,10 +206,10 @@ sub signature_calc {
 	$stitching_service_index = $$services{'LoopStitching'}[0] if ( ! $stitching_service_index) and $$services{'LoopStitching'};
 
 	if ( ! @all_equipment ) {
-		@all_equipment = openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y');
+		@all_equipment = openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'useinestimating'=>1);
 	} # end if
 
-	@stitchers = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y') if ! @stitchers;
+	@stitchers = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'useinestimating'=>1) if ! @stitchers;
 	my @equipment;
 
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -445,10 +445,10 @@ sub get_specs {
 	my $services = $Project->services();
 	@{$$variable{'SignatureGroups'}} = ();
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'UseInEstimating'=>'Y','order'=>'strName');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>['Y','When Printing']}, 'useinestimating'=>1,'order'=>'strName');
 
 	if ( $$services{'Folding'} ) {
-		push @{$$variable{'Equipment'}}, openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>'When Folding'}, 'UseInEstimating'=>'Y','order'=>'strName');
+		push @{$$variable{'Equipment'}}, openprint::Equipment->find( 'Specifications' => {'Perforating Capable'=>'When Folding'}, 'useinestimating'=>1,'order'=>'strName');
 	} # end if
 
 	foreach my $signature_service_index ( $Project->signatures() ) {

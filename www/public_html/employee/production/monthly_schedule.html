@@ -71,7 +71,7 @@ a.buttonImageOn .c {
 				<option value=""> select </option>
 <? echo (
 	$openprint::session{'/employee/production/monthly_schedule.html?Press'} = $openprint::param{'Press'} if $openprint::param{'Press'};
-    my @presses = map { $_->id(), $_->name() } openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)');
+    my @presses = map { $_->id(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)');
 	return ssi::make_drop_down( \@presses, $openprint::session{'/employee/production/monthly_schedule.html?Press'} );
 ) ?>
                 </select>

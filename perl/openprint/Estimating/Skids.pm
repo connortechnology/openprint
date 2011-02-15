@@ -207,7 +207,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 				$best_price = $compare_price;
 				@$specs{'ddmPackageType'.$qty_index,'txtItemsPerPackage'.$qty_index} = ( $Material->id(), $items_per_package );
 			} # end if
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: %.2f, Packing Charge: %.2f: Service Charge: %.2f, Material Charge: %.2f<br/>', $makeReady, $packingCharge, $serviceCharge, $material_charge );
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('MakeReady: %.2f, Packing Charge: %.2f: Service Charge: %.2f, Material Charge: %.2f<br/></fieldset>', $makeReady, $packingCharge, $serviceCharge, $material_charge );
 		} # end foreach Material
 
 

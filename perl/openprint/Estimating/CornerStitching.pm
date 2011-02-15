@@ -93,7 +93,7 @@ sub calc {
 	my @possible_equipment;
 
 	my $error = '';
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 

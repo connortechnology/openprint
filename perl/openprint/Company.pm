@@ -3,7 +3,7 @@ package openprint::Company;
 use strict;
 use Text::Unaccent;
 
-use vars qw( $debug $log $dbh $table $serial %fields %defaults %transforms );
+use vars qw( $debug $log $dbh $table $serial %fields %find_fields %defaults %transforms );
 use openprint ();
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -65,6 +65,9 @@ $serial = 'companies_id_seq';
 		'notes'						=>	'notes',
 		'deleted'					=>	'deleted',
 		);
+%find_fields = (
+	'last_online'	=>	'(SELECT MAX(date_time) FROM Log WHERE company_id=companies.id)',
+);
 %transforms = (
 	'established'	=> [ 's/[^\d\-]//g' ],
 	'name' => [ 's/\.//g', 's/^\s+//', 's/\s+$//','s/\///g' ],
@@ -265,7 +268,9 @@ sub CSR {
 
 sub Users {
 	my $self = shift;
-	return openprint::User->find('company_id'=>$$self{'id'} );
+	my %params = @_;
+	$params{'company_id'} = $$self{'id'};
+	return openprint::User->find( \%params );
 } # end sub Users
 sub taxexempt1 {
 	return $_[0]{gst_exempt};
@@ -322,5 +327,8 @@ sub load_shipping {
 	return $address->get( @params );
 } # end sub save_shipping
 
+sub Profile {
+	return new openprint::Company_Profile( $_[0]{'id'} );
+}
 1;
 __END__

@@ -142,11 +142,17 @@ sub signature_calc {
 
 	my $plusCover = $$printing_specs{'rdbCover'} eq 'Different' ? 1 : 0;
 
-	if ( ! $Impositions ) {
-	Carp::cluck ('No Impositions');
+	if ( ! ( $Impositions and @{$Impositions} ) ) {
+		Carp::cluck ('No Impositions');
+		$results{'alert'} .= 'No impositions to stitch type!<br/>';
+		$results{'Status'} = 'uncalculated';
+		return \%results;
 	} # end if
 	if ( ! $printing_specs ) {
-	Carp::cluck ('No printing_specs');
+		Carp::cluck ('No printing_specs');
+		$results{'alert'} .= 'No books specifications!<br/>';
+		$results{'Status'} = 'uncalculated';
+		return \%results;
 	} # end if
 
 	# Need to figure out which dimension the spine bisects
@@ -210,7 +216,6 @@ sub signature_calc {
 	} # end foreach Imposition
 #$results{'Breakdown'} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
 #$openprint::log->debug("Imp: $imposition");
-	my $I = $$Impositions[0];
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
@@ -246,6 +251,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
 	my $bestEquipment;
 #$results{'alert'} .= $imposition.'out on ';
 $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
+	my $I = $$Impositions[0];
 	foreach my $Equipment ( @equipment ) {
 		if ( $$services{'NoOfflineBindery'} ) {
 			if ( $I->Press()->id() != $Equipment->id() ) {
@@ -633,7 +639,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 sub display {
 	my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
-	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	@{$$variable{'Equipment'}} = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'useinestimating'=>1,'order'=>'lower(strName)');
 
 	my $Project = new openprint::Project( $project_index );
 	my $ProjectType = $Project->Type();
@@ -645,7 +651,7 @@ sub get_equipment {
 	my ( $specs, $error ) = @_;
 
 	my @possible_equipment;
-	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'useinestimating'=>1,'order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
 		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
@@ -894,6 +900,9 @@ sub runtime {
 	} # end if
 	return $runTime;
 } # end sub get_runtime
+
+sub save {
+} # end sub save
 
 1;
 __END__

@@ -62,7 +62,7 @@ sub signature_calc {
 
 	my $services = $Project->services();
 	my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
-	my @Equipment = openprint::Equipment->find('Specifications'=>{'SpinePaste Capable'=>'Y'},'UseInEstimating'=>'Y');
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'SpinePaste Capable'=>'Y'},'useinestimating'=>1);
 	my %Results;
 	if ( ! @Equipment ) {
 		$Results{'Status'} = 'uncalculated';
@@ -411,7 +411,7 @@ sub display {
     my ( $log, $dbh, $variable, $project_index, $service_index ) = @_;
 
 	my $Project = new openprint::Project( $project_index );
-    my @equipment = openprint::Equipment->find( 'Specifications' => {'SpinePaste Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+    my @equipment = openprint::Equipment->find( 'Specifications' => {'SpinePaste Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
     foreach my $qty_index ( $Project->quantity_indexes() ) {
         $$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->id(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
     } # end foreach qty_index

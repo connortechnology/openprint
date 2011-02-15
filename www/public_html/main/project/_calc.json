@@ -7,7 +7,7 @@
     eval 'require openprint::Estimating::'.$param{'ServiceType'};
         $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: $@") if $@;
     eval q/$specs{'Status'} = openprint::Estimating::/.$param{'ServiceType'}.'::'.$param{method}.'( $log, $dbh, $variable, @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs );';
-        $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}: in eval: $@") if $@;
+        $log->error("Error requiring openprint::Estimating::$param{'ServiceType'}::calc in eval: $@") if $@;
     my @results = ();
     my @vars = sort eval( 'openprint::Estimating::'.$param{'ServiceType'}.'::outputs( @param{\'ProjectIndex\', \'ServiceIndex\'}, \%specs )' );
 	$log->error("Error openprint::Estimating::$param{'ServiceType'}: $@") if $@;

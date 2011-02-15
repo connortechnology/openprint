@@ -16,6 +16,7 @@ require openprint::MarketingCategory;
 require openprint::User_Profile_Field;
 require openprint::Photo_Album;
 require openprint::Event;
+require openprint::User_Relationship;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -657,7 +658,41 @@ sub credit_application {
 sub view {
 	$variable{'Me'} = new openprint::User( $session{'user_id'} );
 	$variable{'User'} = new openprint::User( $param{'user_id'} ? $param{'user_id'} : $session{'user_id'} );
+	if ( exists $param{'relationship_type_id'} ) {
+		if ( $variable{'User'}->id() == $variable{'Me'}->id() ) {
+			$variable{'error'} .= "We already know you love yourself.  Frequently.";
+			return;
+		} # endif
+		my $Relationship = openprint::User_Relationship->find_one('user_id1'=>$session{'user_id'}, 'user_id2'=>$variable{'User'}->id() );
+		if ( ! $Relationship ) {
+			$Relationship = new openprint::User_Relationship();
+			$Relationship->set({'user_id1'=>$session{'user_id'}, 'user_id2'=>$variable{'User'}->id()});
+		} # end if
+		$variable{'error'} .= $Relationship->save({'type_id'=>$param{'relationship_type_id'}});
+	} # end if
 } # end sub voew
+
+sub search {
+	ssi::save_params( '/account/search.html', ( 
+				'created_on_start_year', 'created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'last_online_start_year', 'last_online_start_month','last_online_start_day',
+				'last_online_end_year','last_online_end_month','last_online_end_day',
+				) );
+	ssi::setup_date_select( '/account/search.html', 'created_on_start', '' );
+	ssi::setup_date_select( '/account/search.html', 'created_on_end', '' );
+	ssi::setup_date_select( '/account/search.html', 'last_online_start', -31 );
+	ssi::setup_date_select( '/account/search.html', 'last_online_end', '' );
+} # end sub search
+
+sub _search {
+	ssi::save_params( '/account/search.html', ( 
+				'created_on_start_year', 'created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'last_online_start_year', 'last_online_start_month','last_online_start_day',
+				'last_online_end_year','last_online_end_month','last_online_end_day',
+				) );
+} # end sub _search
 
 1;
 __END__

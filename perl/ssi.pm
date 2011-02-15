@@ -655,5 +655,27 @@ sub radio {
     return $html;
 } # end sub radio
 
+sub date_filter {
+	my ( $field, $sql_field, $hash ) = @_;
+	$sql_field = $field if ! $sql_field;
+	if ( ! $hash ) {
+		$hash = \%openprint::session;
+		#$log->debug('ssi::date_filter: using session for hash');
+	} # end if
+		#foreach my $k ( keys %$hash ) {
+			#$log->debug("ssi::date_filter hash{$k} => $$hash{$k}");
+		#} # end foreach
+	if ( ! ( $$hash{$field.'_year'} or $$hash{$field.'_month'} or $$hash{$field.'_day'} ) ) {
+#$log->debug("ssi::date_filter: No date specified for $field");
+		return ();
+	} # end if
+	my ( $year, $month, $day ) = @$hash{$field.'_year',$field.'_month',$field.'_day'};
+	$month = 1 if ! $month;
+	$day = 1 if ! $day;
+#$log->debug("ssi::date_filter: $year $month $day");
+		
+	return ( $sql_field, sprintf('%.4d-%.2d-%.2d %.2d:%.2d:%.2d', ( $year, $month, $day ), ( $field =~ /end$/ ? ( 23,59,59 ) : ( 0, 0, 0 ) ) ) );
+} # end sub date_filter
+
 1;
 __END__

@@ -4,82 +4,118 @@
 </div>
 <!--#include virtual="/includes/error_reporting.html"-->
 <? if ( $session{'user_id'} ) ?>
-		<div class="UserProfile">
-				<p class="buttons">
-					<? echo ( 
-						my $html;
-						if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) {
-							$html .= ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", '', 'Delete' );
-						} # end if
-						$html .= ssi::writeButton( $log, $dbh, 'edit','edit.gif','', '/account/user_profile.html', 'Edit' );
-						return $html;
-					) ?>
-				</p>
-			<div id="ProfilePicture">
-			<? if ( $$variable{'User'}->asset_id() ) ?>
-			<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
-			<? else ( $$variable{'User'}->asset_id() ) ?>
-			No profile picture set.
-			<? endif ( $$variable{'User'}->asset_id() ) ?>
-				<? echo (
-					my $html = '';
-					foreach my $Album ( openprint::Photo_Album->find( 'user_id' => $variable{'User'}->id() ) ) {
-						foreach my $Photo ( $Album->Photos() ) {
-							$html .= sprintf('<a href="/employee/assets/view.html?asset_id=%d"><img src="%s" alt="%s"/></a>', $Photo->id(), $Photo->filename(), $Photo->name() );
-					
-						} # end foreach Photo
-					} # end foreach Album
+	<div class="UserProfile">
+		<p class="buttons">
+			<? echo ( 
+				my $html;
+				if ( ( $$variable{'Me'}->administrator() eq 'Y' ) or ( new openprint::Company( $session{'company_id'} )->salesrep_id() == $$variable{'Me'}->id() ) ) {
+					$html .= ssi::writeButton( $log, $dbh, 'Delete','delete.gif',"f1.btnFunction.value='Delete';fmChange=2;fmCheck(f1);", '', 'Delete' );
+				} # end if
+				$html .= ssi::writeButton( $log, $dbh, 'edit','edit.gif','', '/account/user_profile.html', 'Edit' );
+				return $html;
+			) ?>
+		</p>
+		<? if ( $$variable{'User'}->id() != $session{'user_id'} ) ?>
+		<form id="f1" name="f1" action="/account/view.html?user_id=<? echo ( $$variable{'User'}->id() ) ?>" method="post">
+		<p><label>Your relationship to <? echo ( $$variable{'User'}->name() ) ?>:</label>
+			<select name="relationship_type_id" id="relationship_type_id" onchange="f1.submit();">
+				<option value="">select</option>
+				<? echo ( 
+					my $Relationship = openprint::User_Relationship->find_one('user_id1'=>$session{'user_id'}, 'user_id2'=>$$variable{'User'}->id() );
+					return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User_Relationship_Type->find('order'=>'sort,lower(name)') ], $Relationship ? $Relationship->type_id() : undef );
+				) ?>
+			</select>
+		</p>
+		</form>
+		<? endif ( $$variable{'User'}->id() != $session{'user_id'} ) ?>
+		
+		<div id="ProfilePicture">
+		<? if ( $$variable{'User'}->asset_id() ) ?>
+		<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
+		<? else ( $$variable{'User'}->asset_id() ) ?>
+		No profile picture set.
+		<? endif ( $$variable{'User'}->asset_id() ) ?>
+			<? echo (
+				my $html = '';
+				foreach my $Album ( openprint::Photo_Album->find( 'user_id' => $variable{'User'}->id() ) ) {
+					foreach my $Photo ( $Album->Photos() ) {
+						$html .= sprintf('<a href="/employee/assets/view.html?asset_id=%d"><img src="%s" alt="%s"/></a>', $Photo->id(), $Photo->filename(), $Photo->name() );
+				
+					} # end foreach Photo
+				} # end foreach Album
+				return $html;
+			) ?>
+		</div>
+
+		<div id="UserInformation">
+			<fieldset><legend>User Information</legend>
+				<div class="content">
+					<ul>
+					<li><label>Name</label><? echo ( $$variable{'User'}->name() ) ?></li>
+					</ul>
+				</div>
+			</fieldset>
+		</div>
+		<div id="Statistics">
+			<fieldset><legend>Statistics</legend>
+				<div class="content">
+					<ul>
+						<li class="created_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?></li>
+						<li class="updated_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?></li>
+					</ul>
+				</div>
+			</fieldset>
+		</div>
+		<!--#include virtual="_user_profile_view.html"-->
+		<div id="Events">
+			<fieldset><legend>Events</legend>
+				<div class="content">
+					<ul>
+						<? echo (
+							my @Events = openprint::Event->find('created_by'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
+							if ( ! @Events ) {
+								return '<li>No upcoming events</li>';
+							} # end if
+							my $html;
+							foreach my $Event ( @Events ) {
+								$html .= sprintf(q`<li><a href="/events/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
+									$Event->id(), $Event->name(), 
+									Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
+);
+							} # end foreach Event
+							return $html;
+						) ?>
+					</ul>
+					<p class="buttons">
+						<? echo ( ssi::writeButton( $log, $dbh, 'NewEvent', 'new.gif', '', '/events/edit.html', 'New' ); ) ?>
+					</p>
+				</div>
+	
+			</fieldset>
+		</div>
+		<div id="Relationships">
+			<fieldset><legend>Relationships</legend>
+				<? echo ( 
+					my $html;
+					foreach my $Type ( openprint::User_Relationship_Type->find('order'=>'sort,lower(name)') ) {
+						my @Relations = openprint::User_Relationship->find('type_id'=>$Type->id(), 'user_id ='=>$$variable{'User'}->id() );
+						next if ! @Relations;
+						$html .= '<h3>'.$Type->name() .'</h3>';
+						foreach my $Relation ( @Relations ) {
+							my $User = $Relation->User2();
+							$html .= sprintf(q`
+								<div class="User">
+									<img class="thumbnail" src="%1$s" alt="%2$s" />%3$s
+								</div>`,
+								$User->Asset()->thumbnail_filename(), $User->Asset()->caption(), $User->name() 
+								);
+						} # end foreach Relation
+					} # end foreach Type
 					return $html;
 				) ?>
-			</div>
-	
-			<div id="UserInformation">
-				<fieldset><legend>User Information</legend>
-					<div class="content">
-						<ul>
-						<li><label>Name</label><? echo ( $$variable{'User'}->name() ) ?></li>
-						</ul>
-					</div>
-				</fieldset>
-			</div>
-			<div id="Statistics">
-				<fieldset><legend>Statistics</legend>
-					<div class="content">
-						<ul>
-							<li class="created_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?></li>
-							<li class="updated_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?></li>
-						</ul>
-					</div>
-				</fieldset>
-			</div>
-			<!--#include virtual="_user_profile_view.html"-->
-			<div id="Events">
-				<fieldset><legend>Events</legend>
-					<div class="content">
-						<ul>
-							<? echo (
-								my @Events = openprint::Event->find('created_by'=>$$variable{'User'}->id(), 'starting_on >'=>Date::Format::time2str( '%Y-%m-%d %H:%M:%S%z', time ) );
-								if ( ! @Events ) {
-									return '<li>No upcoming events</li>';
-								} # end if
-								my $html;
-								foreach my $Event ( @Events ) {
-									$html .= sprintf(q`<li><a href="/events/view.html?event_id=%1$d">%2$s on %3$s</a></li>`,
-										$Event->id(), $Event->name(), 
-										Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
- );
-								} # end foreach Event
-								return $html;
-							) ?>
-						</ul>
-						<p class="buttons">
-							<? echo ( ssi::writeButton( $log, $dbh, 'NewEvent', 'new.gif', '', '/events/edit.html', 'New' ); ) ?>
-						</p>
-					</div>
-		
-				</fieldset>
-			</div>
-		</div><!--UserProfile-->
+			</fieldset>
+		</div>
+	</div><!--UserProfile-->
 <? else ( $session{'user_id'} ) ?>
 You must be logged in to view user profiles.<br/>
 <? endif ( $session{'user_id'} ) ?>

@@ -1,7 +1,7 @@
-package openprint::Order_Tax;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::Order_Tax;
+our @ISA = qw(openprint::Object);
+
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 require sql;
@@ -9,7 +9,7 @@ require openprint::Order;
 require openprint::Tax;
 require openprint::OrderedProject;
 
-$debug = 1;
+$debug = 0;
 
 $table = 'order_taxes';
 $serial = 'order_taxes_id_seq';
@@ -43,9 +43,7 @@ sub amount {
 	if ( ! defined $$self{'amount'} ) {
 		if ( $self->charge() ) {
 			$$self{'amount'} = 0;
-$openprint::log->debug($self->Order());
 			foreach my $Project ( $self->Order()->Ordered_Projects() ) {
-$openprint::log->debug("Order Project price " . $Project->price() );
 				$$self{'amount'} += $Project->price() * ($$self{'rate'}/100);
 			} # end foreach Project
 			foreach my $Product ( $self->Order()->Products() ) {

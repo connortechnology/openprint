@@ -295,7 +295,7 @@ sub print_prices {
 
 	$$variable{'Mode'} = $Project->mode();
 
-	@{$$variable{'ddmPressOptions'}} = sql::execute( $log, $dbh, q{SELECT strID, strName FROM tbl_Equipment WHERE strcategory='Printing' AND (UseInEstimating IS true) ORDER BY lower(strName)} );
+	@{$$variable{'ddmPressOptions'}} = map { $_->name(), $_->description() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)');
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 } # end sub print_prices
@@ -627,7 +627,7 @@ sub publication_pages {
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION PAGES *******************************");
 
-	@{$$variable{'ddmPressOptions'}} = map { $_->name(), $_->description() } openprint::Equipment->find('category'=>'Printing','use_in_estimating'=>1, 'order'=>'lower(strname)');
+	@{$$variable{'ddmPressOptions'}} = map { $_->name(), $_->description() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)');
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	

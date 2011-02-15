@@ -216,7 +216,7 @@ onDestroy: function(eventName, win) {
 			<label>Presses:</label>
 				<select name="Presses" multiple size="4">
 <? echo ( 
-	@{$$variable{'Presses'}} = openprint::Equipment->find('category'=>'Printing','UseInScheduling'=>1,'order'=>'lower(strname)', 'id'=>{$param{'Presses'} );
+	@{$$variable{'Presses'}} = openprint::Equipment->find('category'=>'Printing','useinscheduling'=>1,'order'=>'lower(strname)', 'id'=>{$param{'Presses'} );
 	my @selected_presses;
 	if ( ref $param{'Presses'} eq 'ARRAY' ) {
 		@selected_presses = @{$param{'Presses'}};

@@ -47,7 +47,7 @@ sub calc {
 		#return $$specs{'Status'} = 'uncalculated';
 	#} # end if
 
-	my @Equipment = openprint::Equipment->find('Specifications'=>{'SoftFolding Capable'=>'Y'},'use_in_estimating'=>1);
+	my @Equipment = openprint::Equipment->find('Specifications'=>{'SoftFolding Capable'=>'Y'},'useinestimating'=>1);
 	if ( ! @Equipment ) {
 		$$specs{'alert'} = 'We have no soft folding equipment.';
 		return $$specs{'Status'} = 'uncalculated';
@@ -155,7 +155,7 @@ sub display {
 
 	@{$$variable{'Equipment'}} = openprint::Equipment->find( 
 			'Specifications'	=>	{'SoftFolding Capable'=>'Y'},
-			'use_in_estimating'	=>	1,
+			'useinestimating'	=>	1,
 			'order'				=>	'lower(strName)'
 			);
 $openprint::log->warn("SoftFolding Equipment: " . @{$$variable{'Equipment'}} );

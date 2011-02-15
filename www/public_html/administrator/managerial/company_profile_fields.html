@@ -1,0 +1,24 @@
+<script type="text/javascript" src="/administrator/managerial/profile.js"></script>
+<div class="CompanyProfileFields">
+	<form id="f1" name="f1" action="company_profile_fields.html" method="post">
+		<input type="hidden" name="action" id="action" />
+		<p class="buttons">
+		<? echo ( ssi::writeButton( $log, $dbh, 'Save', 'save.gif', q`$('action').value='Save';$('f1').submit();`, '', 'Save' ); ) ?>
+		</p>
+		<table class="List">
+			<thead>
+				<tr>
+					<th>Name</th>
+					<th>Type</th>
+					<th>Values</th>
+					<th>Default Value</th>
+					<th>Required</th>
+					<th class="buttons">
+				<? echo ( ssi::writeButton( $log, $dbh, 'New', 'new.gif', "newField( );", '', 'New' ); ) ?>
+					</th>
+				</tr>
+			</thead>
+			<tbody id="fields"><!--#include virtual="_company_fields_tbody.html"--></tbody>
+		</table>
+	</form>
+</div>

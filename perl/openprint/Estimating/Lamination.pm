@@ -81,7 +81,7 @@ sub calc {
 	} # en if
 
    my @possible_equipment;
-   my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+   my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
 
     if ( ! @all_equipment ) {
       	$$specs{'alert'} = 'We have no laminating equipment.';
@@ -198,7 +198,7 @@ sub calc {
 sub display {
 	my ( $log, $dbh, $variable ) = @_;
 
-	my @equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'strName');
+	my @equipment = openprint::Equipment->find( 'Specifications' => {'Laminating Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'strName');
 	foreach my $qty_index ( 1 .. 3 ) {	
 	$$variable{'ddmEquipment'.$qty_index} = ssi::make_drop_down( [ map { $_->strid(), $_->name() } @equipment ], $$variable{'ddmEquipment'.$qty_index} );
 	} # end foreach qty_index

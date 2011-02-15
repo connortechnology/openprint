@@ -116,6 +116,14 @@ if ( ! sets::isin( 'user_profiles', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/User_Profiles.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'company_profile_fields', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profile_Fields.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
+if ( ! sets::isin( 'company_profiles', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, '../openprint/sql/Company_Profiles.sql' ) );
+	die $dbh->errstr() if $dbh->errstr();
+} # end if
 my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='shifts'", 'column_name');
 if ( ! exists $$data{'updated_on'} ) {
 	$dbh->do('ALTER TABLE shifts add updated_on TIMESTAMP WITH TIME ZONE NOT NULL default nOW()');
