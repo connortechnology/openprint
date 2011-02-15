@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS User_Relationships;
 CREATE TABLE User_Relationship_Types (
 	id SERIAL,
 	name	TEXT,
+	sort	INTEGER,
 	PRIMARY KEY (id)
 );
 
