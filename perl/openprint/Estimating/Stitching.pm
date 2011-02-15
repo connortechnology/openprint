@@ -142,11 +142,17 @@ sub signature_calc {
 
 	my $plusCover = $$printing_specs{'rdbCover'} eq 'Different' ? 1 : 0;
 
-	if ( ! $Impositions ) {
-	Carp::cluck ('No Impositions');
+	if ( ! ( $Impositions and @{$Impositions} ) ) {
+		Carp::cluck ('No Impositions');
+		$results{'alert'} .= 'No impositions to stitch type!<br/>';
+		$results{'Status'} = 'uncalculated';
+		return \%results;
 	} # end if
 	if ( ! $printing_specs ) {
-	Carp::cluck ('No printing_specs');
+		Carp::cluck ('No printing_specs');
+		$results{'alert'} .= 'No books specifications!<br/>';
+		$results{'Status'} = 'uncalculated';
+		return \%results;
 	} # end if
 
 	# Need to figure out which dimension the spine bisects
@@ -210,7 +216,6 @@ sub signature_calc {
 	} # end foreach Imposition
 #$results{'Breakdown'} .= 'Initial pockets: 	' . $$specs{"txtPockets$qty_index"} . '<br/>';
 #$openprint::log->debug("Imp: $imposition");
-	my $I = $$Impositions[0];
 
 #$openprint::log->debug( "Stitching Impo: " . $imposition ) if $debug;
 	if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
@@ -246,6 +251,7 @@ $results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
 	my $bestEquipment;
 #$results{'alert'} .= $imposition.'out on ';
 $$specs{'hdnBreakdown'.$qty_index} = 'Imposition: ' . $$specs{'Imposition'.$qty_index} .'<br/>';
+	my $I = $$Impositions[0];
 	foreach my $Equipment ( @equipment ) {
 		if ( $$services{'NoOfflineBindery'} ) {
 			if ( $I->Press()->id() != $Equipment->id() ) {

@@ -10,7 +10,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *dbh = \$openprint::dbh;
 
 my $debug = 0;
-my $debug_all = 1;
+my $debug_all = 0;
 $no_cache = 0;
 
 sub init_cache {
@@ -431,14 +431,25 @@ sub find {
 		next if ! $f;
 
 		foreach my $k ( keys %$params ) {
-			next if sets::isin( $k,[ 'order','limit','or' ] );
 			next if ! $$f{$k};
+			next if sets::isin( $k,[ 'order','limit','or' ] );
 
 			# This allows mainly for find_fields to reference multiple values, like in Project, value
 			foreach my $field ( ref $$f{$k} eq 'ARRAY' ? @{$$f{$k}} : $$f{$k} ) {
 				if ( ref $$params{$k} eq 'ARRAY' ) {
 					push @where, "$field IN (".join(',', map {'?'} @{$$params{$k}} ) . ')';
 					push @values, @{$$params{$k}};
+				} elsif ( ref $$params{$k} eq 'HASH' ) {
+					foreach my $p_k ( keys %{$$params{$k}} ) {
+						my $v = $$params{$k}{$p_k};
+						if ( ref $v eq 'ARRAY' ) {
+							push @where, "$field IN (".join(',', map {'?'} @{$v} ) . ')';
+							push @values, $p_k, @{$v};
+						} else {
+							push @where, "$field=?";
+							push @values, $p_k, $v;
+						} # end if
+					} # end foreach p_k
 				} elsif ( ! defined $$params{$k} ) {
 					push @where, "$field IS NULL";
 				} else {
@@ -456,7 +467,7 @@ sub find {
 				my @d;
 
 				foreach my $field ( @{$$f{$k}} ) {
-$openprint::log->debug("find: $field");
+#$openprint::log->debug("find: $field");
 					my $results = find_operators( $params, $k, $field );
 					foreach my $operator ( keys %$results ) {
 						push @w, shift @{$$results{$operator}};
@@ -527,7 +538,7 @@ $openprint::log->debug("find: $field");
 	#} elsif ( ( ! @$data ) and $debug ) {
 		#$openprint::log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds" );
+		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $fields{'id'} ) {
 		return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
