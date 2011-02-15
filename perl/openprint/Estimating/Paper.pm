@@ -337,9 +337,6 @@ sub summary {
 				} # end if
 				$html .= $$specs{"qty-$stock_id-$qty_index"}.'lbs';
 				if ( sets::isin( $Project->Type()->name(), [ 'Banners' ] ) ) {
-if ( ! $Paper->sheet_weight() ) {
-$openprint::log->error("No Sheet Weight: $$Paper{height}:" . $Paper->to_string() );
-}
 					$html .= sprintf(' %.0finches',( $$specs{"qty-$stock_id-$qty_index"} / $Paper->wpsi() ) / $Paper->width() );
 				} # end if
 			} else {
