@@ -20,6 +20,7 @@
 
 	my $html;
 	foreach my $User ( @Users ) {
+		next if $User->id() == $session{'user_id'};
 		my $Profile = $User->Profile();
 		$html .= '<div class="Result">';
 		$html .= sprintf(q`<div class="Info">
