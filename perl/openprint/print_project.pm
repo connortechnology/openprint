@@ -593,7 +593,9 @@ sub create_edit_process {
 		} # end foreach
 	} # end foreach
 
+	my $recalc = 0;
 	if ( $openprint::param{'txtQuantity1'} != $Project->quantity1() ) {
+		$recalc = 1;
 		if ( ! $Project->quantity1() ) {
 			if ( $Project->quantity2() ) {
 				foreach my $service_id ( @service_ids ) {
@@ -629,6 +631,7 @@ sub create_edit_process {
 		$Project->quantity1( int $openprint::param{'txtQuantity1'} );
 	} # end if
 	if ( $openprint::param{'txtQuantity2'} != $Project->quantity2() ) {
+		$recalc = 1;
 		if ( ! $Project->quantity2() ) {
 			if ( $Project->quantity1() ) {
 				foreach my $service_id ( @service_ids ) {
@@ -664,6 +667,7 @@ sub create_edit_process {
 		$Project->quantity2( int $openprint::param{'txtQuantity2'} );
 	} # end if
 	if ( $openprint::param{'txtQuantity3'} != $Project->quantity3() ) {
+		$recalc = 1;
 		if ( ! $Project->quantity3() ) {
 			if ( $Project->quantity1() ) {
 				foreach my $service_id ( @service_ids ) {
@@ -716,6 +720,7 @@ sub create_edit_process {
 
 # Handle ProjectType
 	if ( $OldProjectType->strid() ne $ProjectType->strid() ) {
+		$recalc = 1;
 		if ( $services{''} ) {
 			foreach ( @{$services{''}} ) { delete_service( $log, $dbh, $Project->id(), $_ ); };
 		} # end if
@@ -723,6 +728,7 @@ sub create_edit_process {
 		$Project->Type( $ProjectType );
 	} # end if
 	if ( ! $services{''} ) {
+		$recalc = 1;
 		my $printing_service_index = insert_project_type( $r, $log, $dbh, $Project->id(), $r->param('rdbProjectType') );
 		push @{$services{''}}, $printing_service_index;
 	} # end if
@@ -730,6 +736,7 @@ sub create_edit_process {
 
 	# take care of the Graphic Design service
 	if ( $r->param('rdbGraphicDesign') eq 'Y' ) {
+		$recalc = 1;
 		push @{$services{'GraphicDesign'}}, insert_service( $log, $dbh, $project_index, 'GraphicDesign') if ! $services{'GraphicDesign'};
 	} # end if
 
@@ -740,6 +747,7 @@ sub create_edit_process {
 	foreach my $ServiceType ( openprint::ServiceType::find( 'create_visible'=>'Y') ) {
 		if ( $openprint::param{'chkServices'.$ServiceType->name()} eq $ServiceType->name() ) {
 			if ( ! $services{$ServiceType->name()} ) {	
+				$recalc = 1;
 				push @{$services{$ServiceType->name()}}, insert_service( $log, $dbh, $Project->id(), $ServiceType->name() ) if ! $services{$ServiceType->name() };
 			} # end if
 		} else {
@@ -749,12 +757,20 @@ sub create_edit_process {
 						delete_service( $log, $dbh, $Project->id(), $s_id );
 					} # end if
 				} # end foreach
+				$recalc = 1;
 				delete $services{$ServiceType->name()};
 			} # end if
 		} # end if
 	} # end foreach
 
 	$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Edited' );
+	if ( $recalc ) {
+		foreach my $signature_service_index ( $Project->signatures() ) {
+			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
+		} # end foreach
+		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
+	} # end if
+	$Project->save();
 	return $Project->id();
 } # end sub create_edit_process
 
