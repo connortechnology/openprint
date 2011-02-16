@@ -295,8 +295,6 @@ sub print_prices {
 
 	$$variable{'Mode'} = $Project->mode();
 
-	@{$$variable{'ddmPressOptions'}} = map { $_->name(), $_->description() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)');
-
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 } # end sub print_prices
 
@@ -626,8 +624,6 @@ sub publication_pages {
     my $project_index = $openprint::param{'ProjectIndex'};
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION PAGES *******************************");
-
-	@{$$variable{'ddmPressOptions'}} = map { $_->name(), $_->description() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)');
 
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	
