@@ -1,7 +1,7 @@
 package openprint::Service;
 @ISA = qw( openprint::Object );
 use strict;
-use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field );
 
 require sql;
 require openprint::Object;
@@ -42,8 +42,10 @@ $serial = 'services_id_seq';
 		'taxexempt1'	=>	q`'N'`,
 		'taxexempt2'	=>	q`'N'`,
 		);
+
+$cache_field = 'name';
 sub cache_field {
-	return 'name';
+	return $cache_field;
 }
 
 sub save {

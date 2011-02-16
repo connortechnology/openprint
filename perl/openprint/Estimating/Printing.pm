@@ -870,10 +870,22 @@ sub get_impositions {
 	my %impositions;
 	my $services = $Project->services();
 	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @$side_one_colours, @$side_two_colours ] );
+	my @Coatings;
+
+	if ( $$project{print_sides} == 2 ) {
+		# We will be considering W&T, so we will need the coatings array
+		my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
+		@Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
+	} # end if
+	if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
+		$variables{'PrintingType'.$qty_index} = [ sets::exclude( ['output'], $variables{'PrintingType'.$qty_index} ) ];
+	} else {
+		$variables{'PrintingType'.$qty_index} = [ sets::union( 'output', @{$variables{'PrintingType'.$qty_index}} ) ];
+	} # end if
+
 # add all the impositions for each press
 	foreach my $Press ( @$Presses ) {
 		my $printing_type = $Press->specification('Printing Type');
-		$openprint::log->debug("Trying press " . $Press->strid()) if $debug or 1;
 		if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 			if ( $printing_type ne $$specs{'PrintingType'.$qty_index} ) {
 				$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) is not the overriden type " . $$specs{'PrintingType'.$qty_index} ) if $debug;
@@ -881,9 +893,7 @@ sub get_impositions {
 			} else {
 				$openprint::log->warn("QTY $qty_index Press $$Press{strid} Printing Type ($printing_type) IS the overriden type " . $$specs{'PrintingType'.$qty_index} ) if $debug;
 			} # end if
-			$variables{'PrintingType'.$qty_index} = [ sets::exclude( ['output'], $variables{'PrintingType'.$qty_index} ) ];
 		} else {
-			$variables{'PrintingType'.$qty_index} = [ sets::union( 'output', @{$variables{'PrintingType'.$qty_index}} ) ];
 			if ( $$specs{'PrintingTypes'} and ! sets::isin( $printing_type, $$specs{'PrintingTypes'} ) ) {
 				if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' and $$specs{'ddmPress'.$qty_index} eq $Press->strid() ) {
 					$$specs{'alert'} .= 'Press ' . $Press->strid() . " Printing Type ($printing_type) is not in PrintingTypes  ". join(',', @{$$specs{'PrintingTypes'}} ) . '<br/>';
@@ -892,7 +902,7 @@ sub get_impositions {
 			} # end if
 		} # end if
 # If we have a plate type override, then make sure that this press can do it.
-		if ( ( $$specs{'chkOverridePlateType'.$qty_index} eq 'Y' ) and ( $Press->specifcation('Plate Type') ne $$specs{'rdbPlateType'.$qty_index} ) ) {
+		if ( ( $$specs{'chkOverridePlateType'.$qty_index} eq 'Y' ) and ( $Press->specification('Plate Type') ne $$specs{'rdbPlateType'.$qty_index} ) ) {
 			$openprint::log->warn("Press Plate Type ");
 			next;
 		} # end if
@@ -901,6 +911,7 @@ sub get_impositions {
 			next;
 		} # end if
 
+		my $number_of_colours = $Press->specification('Number of Colours');
 		$$project{'Runstyles'} = $Press->specification('Runstyles');
 # This perfecting stuff: default to on, turn off if press can't do it, or the job is single sided.
 		my $do_perfecting = 1;
@@ -910,7 +921,7 @@ sub get_impositions {
 		} elsif ( ! sets::isin('Perfecting', [ split(',',$$project{'Runstyles'} ) ] ) ) {
 			$openprint::log->debug("** This Press Can't Perfect - Perfecting not in runstyles ***") if $debug;
 			$do_perfecting = 0;
-		} elsif ( @$side_one_colours > int($Press->specification('Number of Colours')/2) or @$side_two_colours > int($Press->specification('Number of Colours')/2) ) {
+		} elsif ( @$side_one_colours > int($number_of_colours/2) or @$side_two_colours > int($number_of_colours/2) ) {
 			$openprint::log->debug("** This to many colours to  Perfect  ***") if $debug;
 			$do_perfecting = 0;
 		} elsif ( ( $_ = $Press->specification('Maximum Calliper Perfecting') ) and ( $$specs{'txtSpecificStockCalliper'} > $_ ) ) {
@@ -920,12 +931,10 @@ sub get_impositions {
 		my $do_work_turn = $$project{print_sides} == 2 ? 1 : 0;
 		if ( $do_work_turn ) {
 # Coatings like AQ and Varnish are done in a separate pass.  So we don't count them in this check
-			my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
-			my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 			if ( ! $$Papers[0]->doublesided() ) {
 				$openprint::log->debug("No W&T due to doublesided" . $$Papers[0]->name() );
 				$do_work_turn = 0;
-			} elsif ( sets::exclude( \@Coatings, $$project{'filtered_colours'} ) > $Press->specification('Number of Colours') and $Press->specification('Multipass', $$Papers[0]->gsm() ) ne 'Y' ) {
+			} elsif ( sets::exclude( \@Coatings, $$project{'filtered_colours'} ) > $number_of_colours and $Press->specification('Multipass', $$Papers[0]->gsm() ) ne 'Y' ) {
 				$openprint::log->debug("No W&T due to multipass" . $$Papers[0]->gsm() );
 				$do_work_turn = 0;
 			} elsif ( $$specs{'sides_the_same'} eq 'Y' ) {
@@ -933,15 +942,16 @@ sub get_impositions {
 			} # end if
 		} # end if
 
+		my $ProjectTypeName = $Project->Type()->name();
 # not all of the presses have a gutter spec so we will continue to use Grip for Width and Height
-		if ( ! sets::isin( $Project->Type()->name(), [ 'Envelopes', 'NCR' ] ) ) {
+		if ( ! sets::isin( $ProjectTypeName, [ 'Envelopes', 'NCR' ] ) ) {
 			$$project{'Grip'} = $Press->specification('Grip');
 			$$project{'Gutter'} = $Press->specification('Gutter');
 			if ( $$specs{'chkOverrideBleedSize'.$qty_index} eq 'Y' ) {
 				$$project{'BleedSize'} = 1*$$specs{'ddmBleedSize'.$qty_index};
 				$variables{'ddmBleedSize'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmBleedSize'.$qty_index} ) ];
 			} else {
-				$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size'.$Project->Type()->name() );
+				$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size'.$ProjectTypeName );
 				$$project{'BleedSize'} = 1*$Press->specification('Default Bleed Size' ) if ! $$project{'BleedSize'};
 				$variables{'ddmBleedSize'.$qty_index} = [ sets::union( 'output', @{$variables{'ddmBleedSize'.$qty_index}} ) ];
 			} # end if
@@ -1664,13 +1674,13 @@ $log->warn("There are no quantities!");
 # Figure out how many spreads we need!
 		if ( $$specs{'txtSignatureType'} ) {
 			$$specs{'totalSpreads'} = $$specs{'GroupPageQuantity'};
+$openprint::log->debug("Master time before get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = get_unspecified_pages( $Project, $service_index, $printing_specs, $specs, $qty_index );
+$openprint::log->debug("Master time after get_unspecified_pages: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 			$$specs{'txtUnspecifiedPageQuantity'.$qty_index} = 0 if $$specs{'txtUnspecifiedPageQuantity'.$qty_index} < 0;
 		} # end if
-$openprint::log->debug("Needed Pages: " . $$specs{'txtUnspecifiedPageQuantity'.$qty_index} . ' of ' . $$specs{'GroupPageQuantity'} );
-$openprint::log->debug("Needed pages time: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
-
+$openprint::log->debug("Master time before Previous Stock Type and Grain: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		# We have to match the stock type and grain direction of previous sigs
 		delete $$specs{'PreviousStockType'};
 		delete $$specs{'PreviousGrainDirection'};
@@ -1681,6 +1691,7 @@ $openprint::log->debug("Needed pages time: " . ( sprintf('%.4f', tv_interval( [$
 			$$specs{'PreviousGrainDirection'} = $$sig_specs{'rdbGrainDirection'.$qty_index};
 			last;
 		} # end foreach
+$openprint::log->debug("Master time after Previous Stock Type and Grain: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
 		$$specs{'PrintingTypes'} = get_printing_types( $Project, $service_index, $printing_specs, $specs, $qty_index, \@available_printingtypes );
 		if ( $debug or 1 ) {
@@ -1708,6 +1719,7 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 			my $hash_key = join(',', @$sig_specs{'ddmPress'.$qty_index,'ddmRunStyle'.$qty_index,'PageQuantity'.$qty_index,'txtImposition'.$qty_index} );
 			$previous_forms_cache{$hash_key} += 1;
 		} # end foreach $index
+$openprint::log->debug("Master time after platecounts,roll2sheetsetup,etc, previous forms cache: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 
 		if ( $$specs{'chkOverridePress'.$qty_index} eq 'Y' ) {
 			$variables{'ddmPress'.$qty_index} = [ sets::exclude( ['output'], $variables{'ddmPress'.$qty_index} ) ];
@@ -1765,9 +1777,6 @@ $openprint::log->debug("aftger get printing_types: " . ( sprintf('%.4f', tv_inte
 $openprint::log->debug("before get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
 		my %impositions = get_impositions( $Project, $specs, $project, \@side_one_colours, \@side_two_colours, $qty, $qty_index, \@possible_presses, \@Papers );
 $openprint::log->debug("after get_impositions: " . ( sprintf('%.4f', tv_interval( [$master_time])*1000) ) .' usecs' );
-foreach my $p_id ( keys %impositions ) {
- $openprint::log->debug("Press $p_id " . scalar @{$impositions{$p_id}} );
-}
 
 		if ( ! values %impositions ) {
 			$$specs{'alert'} .= 'There were no possible impositions for your specifications.<br/>';
@@ -1794,10 +1803,6 @@ foreach my $p_id ( keys %impositions ) {
 			$I->load( $sig_specs, $qty_index );
 			push @other_impositions, $I;					
 		} # end foreach sig_id
-
-		# Prime caches for speed
-		openprint::Material->find();
-		openprint::Service->find();
 
 		%stitching_cache = ();
 		my @versions = get_versions( $specs, $qty_index );

@@ -960,9 +960,9 @@ sub get_price {
 		} # end if
 		my $list_id = openprint::pricing::get_pricelist_id( );
 		foreach my $Price ( @Prices ) {
-			next if $Price->pricelist_id() != $list_id;
-			next if ( $params{'equipment_id'} and $Price->equipment_id() and ( $params{'equipment_id'} != $Price->equipment_id() ) );
-			next if $Price->service() ne $params{'service'};
+			next if $$Price{'pricelist_id'} != $list_id;
+			next if ( $params{'equipment_id'} and $$Price{'equipment_id'} and ( $params{'equipment_id'} != $$Price{'equipment_id'} ) );
+			next if $$Price{'service'} ne $params{'service'};
 #$openprint::log->warn(sprintf('Price: %s - %s : %s',$Price->min(), $Price->max(), $Price->price() ) );
 			if ( 
 					( (!(1*$Price->min())) or $Price->min() <= $qty ) and

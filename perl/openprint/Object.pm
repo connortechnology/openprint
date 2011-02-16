@@ -10,7 +10,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *dbh = \$openprint::dbh;
 
 my $debug = 0;
-my $debug_all = 0;
+my $debug_all = 1;
 $no_cache = 0;
 
 sub init_cache {
@@ -42,28 +42,15 @@ sub debug {
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
-	my $self = {};
-	bless $self, $parent;
 
-	if ( ref $id eq 'HASH' ) {
-		# First off, for now, don't cache figure that out later
-		my @keys = keys %{$id};
-		@$self{@keys} = @$id{@keys};
-		$self->load( $data );
-	} elsif ( ref $id eq 'ARRAY' and $data ) {
-#$log->debug("Multi-key Obejct @$id @$data{@$id}" );
-		@$self{@$id} = @$data{@$id};
-		$self->load( $data );
-		#$log->debug( $parent . ': ' .$self->to_string() );
-	} else {
+	my $ref = ref $id;
+	if ( ! $ref ) {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
-			if ( my $cache_field = $self->cache_field() ) {
-				if ( ! ( exists $name_cache{$parent}{$$self{$cache_field}} and defined $name_cache{$parent}{$$self{$cache_field}} ) ) {
-					$name_cache{$parent}{$$self{$cache_field}} = $self;
-				} # end if
-			} # end if
+			# If the object is cached
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
+	my $self = {};
+	bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
 			$self->load( $data );
@@ -73,8 +60,24 @@ sub new {
 				$openprint::Object::cache{$parent}{$id} = $self;
 			} # end if
 		} # end if
-	} # end if ref id
 	return $self;
+	} elsif ( ref $id eq 'HASH' ) {
+	my $self = {};
+	bless $self, $parent;
+		# First off, for now, don't cache figure that out later
+		my @keys = keys %{$id};
+		@$self{@keys} = @$id{@keys};
+		$self->load( $data );
+	return $self;
+	} elsif ( ref $id eq 'ARRAY' and $data ) {
+	my $self = {};
+	bless $self, $parent;
+#$log->debug("Multi-key Obejct @$id @$data{@$id}" );
+		@$self{@$id} = @$data{@$id};
+		$self->load( $data );
+		#$log->debug( $parent . ': ' .$self->to_string() );
+	return $self;
+	} # end if ref id
 } # end sub new
 
 sub load {
@@ -387,8 +390,6 @@ sub find_operators {
 sub find {
 	my $type = shift;
 	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
-	my $cache_field = eval $type.'->cache_field()';
 
 	my $debug = eval '$'.$type.'::debug';
 	$debug = $debug_all if ! $debug;
@@ -411,19 +412,25 @@ sub find {
 	return () if ! $local_dbh;
 	delete $$params{'dbh'};
 
+	my $cache_field = eval '$'.$type.'::cache_field;';
 	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{'limit'} ) ) ) {
+
+#$openprint::log->debug("have cache field $cache_field flr $$params{$cache_field}");
 		if ( exists $name_cache{$type} and exists $name_cache{$type}{$$params{$cache_field}} ) {
+#$openprint::log->debug("There is an object in the cache");
 			if ( $name_cache{$type}{$$params{$cache_field}} ) {
-#$openprint::log->debug("returning " . $name_cache{$type}{$params{$cache_field}} . " for $type $cache_field $params{$cache_field}");
+#$openprint::log->debug("returning " . $name_cache{$type}{$$params{$cache_field}} . " for $type $cache_field $$params{$cache_field}");
 				return $name_cache{$type}{$$params{$cache_field}} 
 			} else {
-#$openprint::log->debug("returning nothing for $type $cache_field $params{$cache_field}");
+#$openprint::log->debug("returning nothing for $type $cache_field $$params{$cache_field}");
 				return ();
 			} # end if
 		} else {
 #$openprint::log->debug("Undefing $type $cache_field $params{$cache_field}");
 			$name_cache{$type}{$$params{$cache_field}} = undef;
 		} # end if
+	#} else {
+		#$openprint::log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
 	} # end if
 
 	foreach ( 'find_fields', 'fields' ) {
@@ -489,25 +496,26 @@ sub find {
 		last if ! %$params;
 	} # end foreach set of fields
 
+	my $fields = eval '\%'.$type.'::fields';
 	# Check for Object references
 	if ( %$params ) {
 		foreach my $k ( keys %$params ) {
 			next if sets::isin( ref $$params{$k}, [ '', 'SCALAR','ARRAY','HASH' ] );
 			my $f = (lc $k).'_id';
-			if ( exists $fields{$f} ) {
+			if ( exists $$fields{$f} ) {
 				if ( $$params{$k}->id() ) {
-					push @where, "$fields{$f} = ?";
+					push @where, "$$fields{$f} = ?";
 	#$openprint::log->debug("$params{$k}" . ref $params{$k});
 					push @values, $$params{$k}->id();
 				} else {
-					push @where, "$fields{$f} IS NULL";
+					push @where, "$$fields{$f} IS NULL";
 				} # en dif
 				delete $$params{$k};
 			} # end if
 		} # end foreach
 	} # end if
 
-	if ( $fields{'deleted'} and ! exists $$params{'deleted'} ) {
+	if ( $$fields{'deleted'} and ! exists $$params{'deleted'} ) {
 		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
 	} # end if
@@ -540,8 +548,17 @@ sub find {
 	} elsif ( $debug ) {
 		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
-	if ( $fields{'id'} ) {
-		return map { $type->new( $_->{$fields{'id'}}, $_ ) } @$data;
+	if ( $$fields{'id'} ) {
+		if ( $cache_field and 1 ) {
+			my @results;
+			foreach ( @$data ) {
+				my $result = $type->new( $_->{$$fields{'id'}}, $_ );
+				$name_cache{$type}{$$result{$$fields{$cache_field}}} = $result;
+				push @results, $result;
+			} # end foreach results
+			return @results;
+		} # end if
+		return map { $type->new( $_->{$$fields{'id'}}, $_ ) } @$data;
 	} else {
 		my @identified_by = eval '@'.$type.'::identified_by';
 		if ( ! @identified_by ) {
