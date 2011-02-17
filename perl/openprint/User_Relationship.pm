@@ -10,6 +10,10 @@ $serial = 'user_relationship_types_id_seq';
 %fields = (
 	'id'	=>	'id',
 	'name'	=>	'name',
+	'sort'	=>	'sort',
+);
+%defaults = (
+	'sort'	=>	undef,
 );
 
 package openprint::User_Relationship;
@@ -27,10 +31,18 @@ $table = 'user_relationships';
 );
 %find_fields = (
 	'type'		=>	'(SELECT name from user_relationship_types WHERE id=type_id)',
+	'user_id'	=>	[ 'user_id1', 'user_id2' ],
 );
 
 sub User {
+$openprint::log->error("Be more specified");
 	return new openprint::User( $_[0]{'user_id1'} );
+}
+sub User1 {
+	return new openprint::User( $_[0]{'user_id1'} );
+}
+sub User2 {
+	return new openprint::User( $_[0]{'user_id2'} );
 }
 sub type {
 	if ( @_ > 1 ) {

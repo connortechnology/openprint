@@ -20,20 +20,22 @@
 
 	my $html;
 	foreach my $User ( @Users ) {
+		next if $User->id() == $session{'user_id'};
 		my $Profile = $User->Profile();
 		$html .= '<div class="Result">';
 		$html .= sprintf(q`<div class="Info">
-								<div class="Name">%1$s</div>
-								<div class="Address">%2$s</div>
-							</div>`, $User->name(), $Profile->City() . ', ' . $Profile->State() );
+								<div class="Name"><a href="/account/view.html?user_id=%1$d">%2$s</a></div>
+								<div class="Address">%3$s</div>
+							</div>`, $User->id(), $User->name(), $Profile->City() . ', ' . $Profile->State() );
 if ( 0 ) {
 		$html .= sprintf(q`
 				<div class="User">
-					<img class="thumbnail" src="%1$s" alt="%2$s" />
-					<div class="Age"><label>Age:</label>%3$s</div>
-					<div class="Gender"><label>Gender:</label>%4$s</div>
-					<div class="Joined"><label>Joined:</label>%5$s</div>
+					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%2$s" alt="%3$s" /></a>
+					<div class="Age"><label>Age:</label>%4$s</div>
+					<div class="Gender"><label>Gender:</label>%5$s</div>
+					<div class="Joined"><label>Joined:</label>%6$s</div>
 				</div>`,
+				$User->id(),
 				( $User->Asset()->thumbnail_filename() ? $User->Asset()->thumbnail_filename() : 'no_image.gif' ), '',
 				int(Date::Calc::Delta_Days( split('-', $Profile->Birthday() ), Date::Calc::Today() ) /365),
 				$Profile->Gender(),
