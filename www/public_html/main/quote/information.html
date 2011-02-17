@@ -282,10 +282,10 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 		<table class="List"> 
 			<tr> 
 				<th class="projects">Project</th>
-				<th width="90">Markup %</th>
-				<th width="60" align="right">Qty</th>
-				<th width="70" align="right">Price</th>
-				<th width="115" align="right">New Price</th>
+				<th class="markup">Markup %</th>
+				<th class="quantity">Qty</th>
+				<th class="price">Price</th>
+				<th class="newprice">New Price</th>
 				<th width="100" align="right">Changes</th>
 			</tr>
 			<? while ( @$variable{'project_index','reference'} = splice @{$$variable{'PROJECTS'}},0,2; ) ?>
@@ -295,15 +295,15 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			) ?>
 			<tr<?rowclass?>> 
 				<td class="projects" rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
-				<td align="center"> 
+				<td class="markup"> 
 					<input type="text" name="txtMarkup<?index?>_<?project_index?>" size="5" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
 				</td>
-				<td align="right"><?qty?></td>
-				<td align="right"> 
+				<td class="quantity"><?qty?></td>
+				<td class="price"> 
 					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?>
 				</td>
-				<td align="right"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
+				<td class="newprice"><? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?> 
 					<input type="text" name="txtNewPrice<?index?><?project_index?>" size="9" style="width: auto; text-align: right;" value="<?newprice?>" onkeyup="calc_from_price( f1, this );" />
 				</td>
 				<td align="right"><a href="/main/project/view.html?ProjectIndex=<?project_index?>">Edit</a>/<a href="information.html?quote_id=<? echo ( $$variable{'Quote'}->id() ) ?>&amp;remove=<?project_index?>">Remove</a></td>

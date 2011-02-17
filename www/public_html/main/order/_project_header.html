@@ -28,6 +28,16 @@
 		<!--#include virtual="_quantity_select.html"-->
 		<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ( $$variable{'Project'}->quantity_indexes() > 1 ) ) ?>
 <? endif ( $config{'OrderMode'} ne 'Simple' ) ?>
+<? if ( $$variable{'Product'} and $$variable{'Product'}->project_id() == $$variable{'Project'}->id() ) ?>
+		<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Product'}->requested_for() ) ?>
+		<!--#include virtual="_required_by.html"-->
+		<? else ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Product'}->requested_for() ) ?>
+			<? if ( $$variable{'Product'}->requested_for() ) ?>
+			<li class="requested_for"><label>Requested For:</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Product'}->requested_for() ) ); ) ?></li>
+			<? endif ( $$variable{'Product'}->requested_for() ) ?>
+		<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Product'}->requested_for() ) ?>
+		
+<? else ( $$variable{'Product'} and $$variable{'Product'}->project_id() == $$variable{'Project'}->id() ) ?>
 		<? if ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
 		<!--#include virtual="_required_by.html"-->
 		<? else ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
@@ -35,6 +45,7 @@
 			<li class="requested_for"><label>Requested For:</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></li>
 			<? endif ( $$variable{'Project'}->requested_date() ) ?>
 		<? endif ( ( $$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date() ) ?>
+<? endif ( $$variable{'Product'} and $$variable{'Product'}->project_id() == $$variable{'Project'}->id() ) ?>
 				</ul>
 			</div>
 		</fieldset>

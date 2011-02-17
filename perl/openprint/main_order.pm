@@ -110,6 +110,18 @@ $openprint::log->debug("Making order from quote");
 			#$openprint::log->error( "Order Error: $variable{'error'}" );
 		} # end if
 	} # end if
+	if ( ! $variable{'error'} ) {
+		# Only check for errors if we don't have any yet
+		my @errors;
+		foreach my $Product ( $Order->Products() ) {
+			if ( ! $Product->shippingtype() ) {
+				push @errors, "Please select a shipping type.<br/>";
+			} # end if
+		} # end foreach Project
+		if ( @errors ) {
+			$variable{'error'} = join('<br/>', @errors );
+		} # end if
+	} # end if
 
 # First thing to do is to try to load info directly from the order.
 	 @variable{'companyname',
