@@ -89,7 +89,7 @@ sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist ) = @_;
 
 	if ( ! $Pricelist ) {
-		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $log, $dbh, $openprint::variable ));
+		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id());
 	} # end if
     my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
     return if ! %price;

@@ -345,11 +345,6 @@ sub setup_project {
 		} # end if	
 	} # end foreach
 
-	if ( $$services{'Cutting'} ) {
-		openprint::Estimating::Cutting::signature_calc_load_equipment( $Project );
-		openprint::Estimating::Cutting::signature_calc_stock_cutting_equipment( $Project );
-	} # end if
-
 	$project{'Binding'} = openprint::print::get_book_type( $Project );
 	if ( ! $$services{'NoBindery'} ) {
 		$project{'NeedFolding'} = openprint::Estimating::Folding::signature_needs( $Project, $specs );
@@ -2830,7 +2825,7 @@ $openprint::log->debug($$price{'Paper Breakdown'}) if $debug;
 					foreach my $I ( @all_impositions ) {
 					$I->display( "all_impsoitions" );
 					} # end while
-					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@all_impositions );
+					$results = openprint::Estimating::Stitching::signature_calc( $Project, $$project{'HasStitching'}, $$project{'StitchingSpecs'}, $qty_index, $$project{'FoldingSpecs'}, $sig_specs, \@all_impositions, $project );
 				#} # end if cached
 				if ( $$results{'Status'} eq 'uncalculated' ) {
 					$$price{'Stitching Breakdown'} .= "Stitching error: $$results{'alert'} <br/>";
@@ -3197,7 +3192,7 @@ sub calc_price {
 $openprint::log->debug("Using cached folding");
 		} else {
 			my @all_impositions = ( @{$other_impositions}, $Imposition );
-			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, \@all_impositions );
+			%folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $specs, $$project{'FoldingSpecs'}, $qty_index, $Paper, $Imposition, @$project{'UVCoatingSpecs','AqueousSpecs','StitchingSpecs'}, \@all_impositions, $project );
 			#$$Imposition{'folding_results'} = \%folding_results;
 		} # end if
 
@@ -3215,6 +3210,7 @@ $openprint::log->debug("Using cached folding");
 				$run_speed = $folding_results{'RunSpeed'} if $folding_results{'RunSpeed'};
 			} # end if
 			$$Imposition{'Folder'} = $folding_results{'Equipment'};
+			#$$Imposition{'FoldingCost'} = $folding_results{'Price'};
 
 			foreach my $k ( keys %{$folding_results{'Folds'}} ) {
 				my ( $fold_type, $imposition ) = $k =~ /(.*)-(\d+)out$/;
@@ -3228,7 +3224,7 @@ $openprint::log->debug("Using cached folding");
 				$$project{'FoldingSpecs'}{"ddmEquipment-$$specs{'SignatureIndex'}-$qty_index"} = $folding_results{'Equipment'}->id();
 			} # end if
 		} # end if
-		if ( 0 and tv_interval( [$time])*1000 > 10 ) {
+		if ( 0 and tv_interval([$time])*1000 > 10 ) {
 			$openprint::log->debug("Folding Calculation time: " . ( sprintf('%.4f', tv_interval( [$time])*1000) ) .' usecs' );
 			$Imposition->display('Slow Folding');
 			$openprint::log->debug( $folding_results{'Breakdown'} );
@@ -3352,7 +3348,7 @@ $openprint::log->debug("Using cached folding");
 # Cutting has to go up here, because it adds overs.ABut we will calculate pre-press stock cutting afterwards
 	if ( $$project{'HasCutting'} ) {
 #my $time = gettimeofday();
-		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
+		my %cutting_results = openprint::Estimating::Cutting::signature_calc( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition, $project, $project );
 #foreach my $k ( keys %cutting_results ) {
 #$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 #}
@@ -3731,7 +3727,7 @@ $openprint::log->debug("Using cached folding");
 	if ( $$project{'HasCutting'} ) {
 		if ( ($Paper->type() ne 'Roll') and ($Paper->start_width() != $Paper->width() or $Paper->start_height() != $Paper->height() ) ) {
 #my $time = gettimeofday();
-			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition );
+			my %cutting_results = openprint::Estimating::Cutting::signature_calc_stock_cutting( $Project, undef, $specs, $$project{'CuttingSpecs'}, $qty_index, $Paper, $Imposition, $project, $project );
 #foreach my $k ( keys %cutting_results ) {
 #$openprint::log->debug("Cutting: $k => $cutting_results{$k}");
 #}

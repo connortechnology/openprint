@@ -96,13 +96,17 @@ sub convert {
 
 sub get_current {
 
+	if ( $openprint::session{'Currency_id'} ) {
+		return new openprint::Currency( $openprint::session{'Currency_id'} );
+	} # end if
+
 	if ( ( ! $openprint::session{'Currency_id'} ) and $openprint::session{'company_id'} ) {
 		my $Company = new openprint::Company( $openprint::session{'company_id'} );
 		$openprint::session{'Currency_id'} = $Company->currency_id();
 	} # end if
 
 	if ( ! $openprint::session{'Currency_id'} ) {
-		my $list_id = openprint::pricing::get_pricelist_id( $openprint::log, $openprint::dbh, $openprint::variable );
+		my $list_id = openprint::pricing::get_pricelist_id( );
 		my $Pricelist = new openprint::Pricelist( $list_id );
 		$openprint::session{'Currency_id'} = $Pricelist->currency_id();
 	} # end if
@@ -114,11 +118,11 @@ sub get_current {
 			} # end if
 		} # end if
 	} # end if
-
 	if ( $openprint::session{'Currency_id'} ) {
 		return new openprint::Currency( $openprint::session{'Currency_id'} );
 	} # end if
-} # end sub get_currenct
+
+} # end sub get_currency
 
 sub format {
 	my ( $Currency, $price, $precision );

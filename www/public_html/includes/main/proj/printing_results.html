@@ -183,7 +183,7 @@
 	<label>Press:</label>
 	<? echo (
 		my $html;
-		my @options = map { $_->name(), $_->description() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)');
+		my @options = map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)');
 		foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 			$html .= sprintf( q`
 	<span class="%sColumns"><select name="ddmPress%d" size="1" onchange="calc(this.form.name);"><option value="">Press Options</option>%s</select>%s</span>`,
