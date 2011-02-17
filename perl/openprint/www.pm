@@ -71,7 +71,7 @@ sub handler {
 				$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
-			$log->debug("Parameter $key is (" . $param{$key} . ")" . ref $param{$key} );
+			$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
 	} # end foreach
 
