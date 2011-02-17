@@ -86,9 +86,9 @@ sub neccessary {
 sub calc {
 	my ( $log, $dbh, $variable, $project_index, $service_index, $specs ) = @_;
 
-	$log->debug( " ********************** START OF CALC SKIDS type:($$specs{'ServiceType'})**********************");
 	my $status = 'calculated';
 
+	$log->debug( " ********************** START OF CALC SKIDS type:($$specs{'ServiceType'})**********************");
 	my $Project = new openprint::Project( $project_index );
 	my $services = $Project->services();
 	my $ServiceType = $Project->ServiceType( $service_index );
@@ -213,6 +213,9 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 			$m_qty = ceil( 1000/$$specs{'txtItemsPerPackage'.$qty_index} );
 		} else {
 			$qty = 0;
+		} # end if
+		if ( ! $qty ) {
+			$status = 'uncalculated';
 		} # end if
 
 		my $unitPrice = $material_charge + $serviceCharge + $packingCharge;
