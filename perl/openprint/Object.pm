@@ -436,7 +436,7 @@ sub find {
 } # end sub find
 
 sub find_one {
-$openprint::log->debug("find_one @_ ");
+#$openprint::log->debug("find_one @_ ");
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;

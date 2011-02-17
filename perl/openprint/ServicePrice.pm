@@ -5,10 +5,12 @@ use strict;
 require sql;
 require openprint::Object;
 require openprint::logs;
+use Math::Round qw(nearest);
 
-my $debug = 1;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
 
-my %fields = (
+%fields = (
 	'pricelist_id'	=>	'lnglistindex',
 	'service_id'	=>	'lngserviceindex',
 	'equipment_id'	=>	'lngequipmentindex',
@@ -20,6 +22,23 @@ my %fields = (
 	'price'			=>	'dblprice',
 	'discountable'	=>	'ysndiscountable',
 	'interpolate'	=>	'interpolate',
+);
+%defaults = (
+	'min'	=>	undef,
+	'max'	=>	undef,
+	'cost'	=>	undef,
+	'markup'	=>	undef,
+	'price'		=>	undef,
+	'discountable'	=>	1,
+	'interpolate'	=>	0,
+);
+
+%transforms = (
+	'min'	=>	[ 's/[^\d\.\-]//g' ],
+	'max'	=>	[ 's/[^\d\.\-]//g' ],
+	'cost'	=>	[ 's/[^\d\.\-]//g' ],
+	'markup'	=>	[ 's/[^\d\.\-]//g' ],
+	'price'	=>	[ 's/[^\d\.\-]//g' ],
 );
 
 sub find {
@@ -132,7 +151,7 @@ sub price {
         $_[0]{'price'} = $_[1];
     } # end if
     if ( ! defined $_[0]{'price'} ) {
-        $_[0]{'price'} = sprintf( '%.2f', $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+        $_[0]{'price'} = Math::Round::nearest( 0.01, $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
     } # end if
     return $_[0]{'price'};
 } # end sub price

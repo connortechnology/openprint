@@ -142,9 +142,7 @@ sub get {
 sub copy {
 	my $self = shift;
 	my $copy = new openprint::Imposition();
-	foreach my $field ( @fields ) {
-		$$copy{$field} = $$self{$field};
-	} # end foreach
+	@$copy{@fields} = @$self{@fields};
 	$$copy{paper} = $$copy{paper}->clone() if $$copy{paper};
 	return $copy
 } # end copy

@@ -5,10 +5,11 @@ our @ISA = qw( openprint::Object );
 require sql;
 require openprint::Object;
 require openprint::logs;
+use Math::Round qw(nearest);
 
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'tbl_material_prices';
 $serial = 'materialprices_id_seq';
 
@@ -109,6 +110,7 @@ sub next {
 sub markup {
     if ( @_ > 1 ) {
         $_[0]{'markup'} = $_[1];
+		$_[0]{'markup'} =~ s/[^\d\.\-]//g;
         $_[0]->price( undef );
     } # end if
     return $_[0]{'markup'};
@@ -116,10 +118,23 @@ sub markup {
 sub cost {
     if ( @_ > 1 ) {
         $_[0]{'cost'} = $_[1];
+		$_[0]{'cost'} =~ s/[^\d\.\-]//g;
         $_[0]->price( undef );
     } # end if
     return $_[0]{'cost'};
 } # end sub cost
+sub price {
+
+    if ( @_ > 1 ) {
+        $_[0]{'price'} = $_[1];
+    } # end if
+	my $self = $_[0];
+    if ( ! defined $_[0]{'price'} ) {
+        $_[0]{'price'} = Math::Round::nearest( .01, $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+    } # end if
+    return $_[0]{'price'};
+} # end sub price
+
 
 sub Equipment {
 	return new openprint::Equipment( $_[0]{'equipment_id'} );

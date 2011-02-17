@@ -69,12 +69,12 @@ sub colour_import_export {
 			while ( <$io> ) {
 				my $status = $csv->parse($_);		 # parse a CSV string into fields
 
-				my ( $pms_id, $service, $material, $desc, $washups, $equipment, $service_cost, $service_markup, $material_cost, $material_markup ) = misc::trim($csv->fields());
+				my ( $pms_id, $service, $material, $desc, $washups, $equipment, $service_cost, $service_units,$service_markup, $material_cost, $material_units, $material_markup ) = misc::trim($csv->fields());
 				if ( ! $pms_id ) {
 					$variable{'error'} .= "Bad record: $pms_id, $service, $material, $desc, $washups, $equipment, $service_cost, $service_markup, $material_cost, $material_markup";
 					last;
 				} # end if
-				if ( ! $services{$service} ) {
+				if ( $service and ! $services{$service} ) {
 					my $Service = new openprint::Service();
 					$variable{'error'} .= $Service->save({
 						'name'	=>	$service,
@@ -82,7 +82,7 @@ sub colour_import_export {
 					});
 					$services{$service} = $Service->id();
 				} # end if
-				if ( ! $materials{$material} ) {
+				if ( $material and ! $materials{$material} ) {
 					my $Material = new openprint::Material();
 					$variable{'error'} .= $Material->save({
 						'name'	=>	$material,
@@ -109,7 +109,7 @@ sub colour_import_export {
 					last;
 				} # end if
 
-				if ( $service_cost or $service_markup ) {
+				if ( $service_cost or $service_markup or $service_units ) {
 					my $Service = new openprint::Service( $services{$service} );
 					foreach my $e_id ( misc::trim( split(',', $equipment ) ) ) {
 						if ( my $Equipment = openprint::Equipment->find_one('strid'=>$e_id) ) {
@@ -121,16 +121,19 @@ sub colour_import_export {
 									push @Prices, $Price;
 								} # end if no Prices;
 								foreach my $Price ( @Prices ) {
-									$Price->cost( $service_cost ) if $service_cost;
-									$Price->markup( $service_markup ) if $service_markup;
-									$variable{'error'} .= $Price->save();
+									if ( $$Price{'cost'} != $service_cost or $$Price{'markup'} != $service_markup or ( $$Price{'units'} ne $service_units ) ) {
+										$Price->cost( $service_cost ) if $service_cost;
+										$Price->markup( $service_markup ) if $service_markup;
+										$Price->units( $service_units ) if $service_units;
+										$variable{'error'} .= $Price->save();
+									} # en dnif
 								} # end foreach Price
 							} # end foreach Pricelist
 						} # end if has equipment
 					} # end foreach Equipment
 				} # end if service_cost or service_markup
 				if ( $material_cost or $material_markup ) {
-					my $Material = new openprint::Service( $materials{$material} );
+					my $Material = new openprint::Material( $materials{$material} );
 					foreach my $e_id ( misc::trim( split(',', $equipment ) ) ) {
 						if ( my $Equipment = openprint::Equipment->find_one('strid'=>$e_id) ) {
 							foreach my $Pricelist ( openprint::Pricelist->find() ) {
@@ -141,9 +144,12 @@ sub colour_import_export {
 									push @Prices, $Price;
 								} # end if no Prices;
 								foreach my $Price ( @Prices ) {
-									$Price->cost( $material_cost ) if $material_cost;
-									$Price->markup( $service_markup ) if $material_markup;
-									$variable{'error'} .= $Price->save();
+									if ( ( 1*$$Price{'cost'} != $material_cost ) or ( 1*$$Price{'markup'} != 1*$material_markup ) or ( $$Price{'units'} ne $material_units ) ) {
+										$Price->cost( $material_cost ) if $material_cost;
+										$Price->markup( $material_markup ) if $material_markup;
+										$Price->units( $material_units ) if $material_units;
+										$variable{'error'} .= $Price->save();
+									} # end if
 								} # end foreach Price
 							} # end foreach Pricelist
 						} # end if has equipment
