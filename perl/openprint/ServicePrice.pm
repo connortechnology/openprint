@@ -23,12 +23,15 @@ my %fields = (
 );
 
 sub find {
+	if ( $_[0] eq 'openprint::ServicePrice' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	my $sql = 'SELECT * FROM tbl_Service_Prices WHERE 1>0';
 	my @values;
 
 	if ( $params{'pricelist_id'} ) {
-		$sql .= ' AND lngpricelistindex=?';
+		$sql .= ' AND lnglistindex=?';
 		push @values, $params{'pricelist_id'};
 	} # end if
 	if ( $params{'Pricelist'} ) {
@@ -124,7 +127,33 @@ sub next {
 	return new openprint::ServicePrice( sql::execute( undef,undef, q{SELECT MIN(Index) WHERE Index > ?}, $$self{'id'} ) );
 } # end sub next
 
-1;
+sub price {
+    if ( @_ > 1 ) {
+        $_[0]{'price'} = $_[1];
+    } # end if
+    if ( ! defined $_[0]{'price'} ) {
+        $_[0]{'price'} = sprintf( '%.2f', $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+    } # end if
+    return $_[0]{'price'};
+} # end sub price
 
+sub markup {
+	if ( @_ > 1 ) {
+		$_[0]{'markup'} = $_[1];
+		$_[0]->price( undef );
+	} # end if
+	return $_[0]{'markup'};
+} # end sub markup
+sub cost {
+	if ( @_ > 1 ) {
+		$_[0]{'cost'} = $_[1];
+		$_[0]->price( undef );
+	} # end if
+	return $_[0]{'cost'};
+} # end sub cost
+sub Equipment {
+	return new openprint::Equipment( $_[0]{'equipment_id'} );
+} # end sub Equipment
+
+1;
 __END__
-~       

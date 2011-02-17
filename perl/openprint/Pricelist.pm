@@ -25,6 +25,9 @@ $serial = 'pricelistindex_seq';
 );
 
 sub find {
+	if ( $_[0] eq 'openprint::Pricelist' ) {
+		shift;
+	} # end if
 	my %params = @_;
 
 	if ( $params{'id'} ) {

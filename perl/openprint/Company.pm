@@ -77,6 +77,9 @@ my $debug = 1;
 
 # Returns a paper object specified by the parameters
 sub find {
+	if ( $_[0] eq 'openprint::Company' ) {
+		shift;
+	}
 	my %params = @_;
 
 	my $sql;
