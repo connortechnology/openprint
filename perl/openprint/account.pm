@@ -17,6 +17,7 @@ require openprint::User_Profile_Field;
 require openprint::Photo_Album;
 require openprint::Event;
 require openprint::User_Relationship;
+require openprint::Wall;
 
 use openprint ();
 use vars qw( $r $log $dbh %variable %param %session %config);
@@ -693,6 +694,17 @@ sub _search {
 				'last_online_end_year','last_online_end_month','last_online_end_day',
 				) );
 } # end sub _search
+
+sub _wall { 
+	$variable{'User'} = new openprint::User( $param{'user_id'} );
+	if ( $param{'message'} ) {
+		my $Wall = new openprint::Wall();
+		$variable{'error'} = $Wall->save({'user_id'=>$param{'user_id'},
+			'author_id'	=>	$session{'user_id'},
+			'message'	=>	$param{'message'},
+			});
+	} # end if
+} # end sub _wall
 
 1;
 __END__

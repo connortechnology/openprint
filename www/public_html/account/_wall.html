@@ -1,0 +1,18 @@
+<!--#include virtual="/includes/error_reporting.html"-->
+<fieldset><legend>Wall</legend>
+	<textarea id="message" name="message" cols="" rows="1" onkeyup="textarea_resize(this);"></textarea>
+	<p class="buttons"><? echo ( ssi::writeButton( $log, $dbh, 'WriteOnWall', 'writeonwall.gif', qq`new Ajax.Updater( 'Wall', '/account/_wall.html', { parameters: { user_id: '$$variable{User}{id}', message: \$('message').value } } );`, '', 'Write on wall' ); ) ?></p>
+	<hr/>
+	<ul>
+<? echo (
+	my $html = '';
+	foreach my $Wall ( openprint::Wall->find( 'user_id' => $variable{'User'}->id(), 'order'=>'created_on DESC' ) ) {
+		$html .= sprintf(q`<li>At %s %s wrote:%s</li>`, 
+			Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Wall->created_on() ) ),
+			$Wall->Author()->name(), $Wall->message() );
+	} # end foreach Wall
+	return $html;
+) ?>
+	</ul>
+	
+</fieldset>
