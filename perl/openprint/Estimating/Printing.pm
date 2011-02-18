@@ -1640,10 +1640,10 @@ $log->warn("There are no quantities!");
 		$$project{'dutch'} = $$specs{'dutch'.$qty_index};
 		$qty *= $$specs{'PageQuantity'} if $$specs{'PageQuantity'};
 		$qty *= $$specs{'txtNameQuantity'} if $$specs{'txtNameQuantity'};
-		if ( $$specs{'Versions'} ) {
-			$qty *= $$specs{'Versions'};
-			$$specs{'hdnBreakdown'.$qty_index} .= " * $$specs{'Versions'} versions = $qty: ";
-		} # end if
+		#if ( $$specs{'Versions'} ) {
+			#$qty *= $$specs{'Versions'};
+			#$$specs{'hdnBreakdown'.$qty_index} .= " * $$specs{'Versions'} versions = $qty: ";
+		#} # end if
 
 #$log->debug("Page QTY $$specs{'PageQuantity'} ($$specs{'txtNameQuantity'}) $qty");
 
