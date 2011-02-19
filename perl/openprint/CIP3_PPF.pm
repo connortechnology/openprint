@@ -13,7 +13,7 @@ use MIME::Base64;
 use Image::Magick;
 use Number::Format;
 
-use vars qw( $log $dbh %config $table $serial %fields %transforms %defaults );
+use vars qw( $log $dbh %config $table $serial %fields %find_fields %transforms %defaults );
 
 my $debug = 1;
 *log = \$openprint::log;
@@ -33,6 +33,9 @@ $serial = 'CIP3_PPF_id_seq';
 	'docket'		=>	'docket',
 	'deleted'		=>	'deleted',
 	'compressed'	=>	'compressed',
+);
+%find_fields = (
+	'status'		=>	'(SELECT strstatus from tbl_Projects WHERE lngdocketnumber=docket)',
 );
 %defaults = (
 	'created_on'	=>	'NOW()',
@@ -59,61 +62,6 @@ sub runstyle {
 	} 
 	return $WorkStyles{$$self{'WorkStyle'}};
 }
-sub find {
-	my %params = @_;
-
-	my $sql = 'SELECT ';
-	$sql .= 'DISTINCT' if $params{'distinct'};
-	$sql .= ' * FROM ' . $table . ' WHERE 1>0';
-	my @values;
-
-	if ( exists $params{'data_null'} ) {
-		if ( $params{'data_null'} ) {
-			$sql .= ' AND data IS NULL';
-		} else {
-			$sql .= ' AND data IS NOT NULL';
-		} # end if
-	} # end if
-	if ( exists $params{'docket'} ) {
-		$sql .= ' AND docket=?';
-		push @values, $params{'docket'};
-	} # end if
-	if ( exists $params{'signature'} ) {
-		$sql .= ' AND signature=?';
-		push @values, $params{'signature'};
-	} # end if
-	if ( exists $params{'side'} ) {
-		$sql .= ' AND side=?';
-		push @values, $params{'side'};
-	} # end if
-	if ( exists $params{'compressed'} ) {
-		$sql .= ' AND compressed=?';
-		push @values, $params{'compressed'};
-		if ( ! $params{'compressed'} ) {
-			$sql .= ' OR compressed IS NULL';	
-		} # end if
-	} # end if
-	if ( $params{'deleted'} ) {
-		$sql .= ' AND deleted=?';
-		push @values, $params{'deleted'};
-	} else {
-		$sql .= ' AND deleted=?';
-		push @values, 0;
-	} # end if
-
-	$sql .= " ORDER BY $params{order}" if $params{'order'};
-	$sql .= " LIMIT $params{limit}" if $params{'limit'};
-	my $data = $dbh->selectall_arrayref( $sql, {Slice=>{}}, @values );
-	if ( ! $data ) {
-		$log->debug("openprint::CIP3_PPF::find( $sql) @values reason:" . $dbh->errstr);
-		return;
-	} # end if
-
-	if ( $debug ) {
-		$log->debug("openprint::CIP3_PPF::find($sql) (@values): #of records:" . @$data );
-	} # end if
-	return map { new openprint::CIP3_PPF( $_->{id}, $_ ); } @$data;
-} # end sub find
 
 sub parseSheet {
 	my $sheet = shift @_;

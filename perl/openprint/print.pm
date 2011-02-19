@@ -61,14 +61,7 @@ sub view_services {
 		$log->debug("*** Time to Save Project - View Services Function ***");
 		$project_index = openprint::print_project::create_edit_process( $r, $log, $dbh, $variable );
 		$log->debug("*** Time to Save Project - View Services Function *** $project_index $openprint::session{'project_id'}");
-		my $Project = new openprint::Project( $project_index );
-		$Project->Currency( openprint::Currency::get_current() );
-		foreach my $signature_service_index ( $Project->signatures() ) {
-			openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $signature_service_index, 'Printing' );
-		} # end foreach
-		openprint::service::auto_calculate( $r, $log, $dbh, $variable, $project_index, undef );
 		openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-		$Project->save();
 	} # end if
 
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
@@ -437,6 +430,8 @@ sub multipage_signatures {
 				'chkSpecialSideTwoColour8', 'txtSpecialSideTwoColour8', 'txtSpecialSideTwoColourInkPercent8',
 				'rdbAqueousSideTwo',
 				'chkVarnishSpotGlossSideTwo','chkVarnishSpotMatteSideTwo','chkVarnishOverallGlossSideTwo','chkVarnishOverallMatteSideTwo','chkVarnishDryTrapSideTwo',
+				'VarnishSpotGlossSideOneCoverage', 'VarnishSpotMatteSideOneCoverage',
+				'VarnishSpotGlossSideTwoCoverage', 'VarnishSpotMatteSideTwoCoverage',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				) {
 			openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, $spec, $$param{$spec.$type} );
@@ -566,6 +561,8 @@ sub publication_pages {
 				'CyanSideTwoCoverage', 'MagentaSideTwoCoverage', 'YellowSideTwoCoverage', 'BlackSideTwoCoverage',
 				'chkBleedLeft','chkBleedRight','chkBleedTop','chkBleedBottom','rdbColourBar','txtCropMarkSpace',
 				'SideOneUVCoatingType','SideTwoUVCoatingType',
+				'VarnishSpotGlossSideOneCoverage', 'VarnishSpotMatteSideOneCoverage',
+				'VarnishSpotGlossSideTwoCoverage', 'VarnishSpotMatteSideTwoCoverage',
 				) {
 			$$variable{$spec.$type} = $$sig_specs{$spec};
 		} # end foreach spec

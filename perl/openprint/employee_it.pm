@@ -26,13 +26,22 @@ sub hosts {
 		$variable{'error'} .= $Host->save(\%param);
 		%param = ();
 	} # end if
-	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on', 0 );
+	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_start', '' );
+	ssi::setup_date_select( '/employee/it/hosts.html', 'created_on_end', '' );
+	ssi::setup_date_select( '/employee/it/hosts.html', 'updated_on_start', '' );
+	ssi::setup_date_select( '/employee/it/hosts.html', 'updated_on_end', '' );
 	if ( ! exists $session{'/employee/it/hosts.html?assigned'} ) {
 		$session{'/employee/it/hosts.html?assigned'} = 1;
 	} # end if
 	if ( ! exists $session{'/employee/it/hosts.html?notassigned'} ) {
 		$session{'/employee/it/hosts.html?notassigned'} = 1;
 	} # end if
+	ssi::save_params( '/employee/it/hosts.html', 
+			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
+			'created_on_end_year', 'created_on_end_month', 'created_on_endt_day', 
+			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
+			'updated_on_end_year', 'updated_on_end_month', 'updated_on_endt_day', 
+			);
 
 } # end sub hosts
 
@@ -43,7 +52,12 @@ sub _hosts {
 			$variable{'error'} .= $Host->delete();
 		} # end foreach host_id
 	} # end if
-	ssi::save_params( '/employee/it/hosts.html', 'created_on', 'updated_on' );
+	ssi::save_params( '/employee/it/hosts.html', 
+			'created_on_start_year', 'created_on_start_month', 'created_on_start_day', 
+			'created_on_end_year', 'created_on_end_month', 'created_on_endt_day', 
+			'updated_on_start_year', 'updated_on_start_month', 'updated_on_start_day', 
+			'updated_on_end_year', 'updated_on_end_month', 'updated_on_endt_day', 
+			);
 } # end sub _hosts
 
 sub host {

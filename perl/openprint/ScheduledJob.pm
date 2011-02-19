@@ -84,6 +84,10 @@ sub find {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
 	} # end if
+	if ( exists $params{'equipment_id !='} ) {
+		$sql .= ' AND equipment_id != ?';
+		push @values, $params{'equipment_id !='};
+	} # end if
 	if ( $params{'servicetype_id'} ) {
 		if ( ref $params{'servicetype_id'} eq 'ARRAY' ) {
 			$sql .= ' AND servicetype_id IN ('. join(',', map {'?'} @{$params{'servicetype_id'}} ) . ')';
@@ -203,6 +207,14 @@ sub runtime_seconds {
 	return misc::hms2time( $self->runtime() );
 } # end sub runtime_seconds
 
+sub starttime {
+	if ( @_ > 1 ) {
+		$_[0]{'starttime'} = $_[1];
+		delete $_[0]{'Shift'};
+	} # end if
+	return $_[0]{'starttime'};
+} # end sub starttime
+
 sub starttime_seconds {
 	my $self = shift;
 	if ( @_ ) {
@@ -210,6 +222,7 @@ sub starttime_seconds {
 			$log->error( 'ScheduledJob: startime_seconds < NOW() ' . Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] ) );
 		} # end if
 		$$self{'starttime'} = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', $_[0] );
+		delete $$self{'Shift'};
 	} # end if
 	return Date::Parse::str2time( $$self{'starttime'} );
 } # endsub
@@ -372,6 +385,10 @@ sub get_li {
 	my $Equipment = $self->Equipment();
 
 	my $colour = '';
+	my @printing_service_type_ids = map { $_->id() } openprint::ServiceType::find('category'=>'Printing');
+	push @printing_service_type_ids, undef;
+	my @bindery_service_type_ids = map { $_->id() } openprint::ServiceType::find('category'=>'Bindery');
+
 
 	if ( $$self{'project_id'} ) {
 		if ( sets::isin( $Project->status(), ['In Prepress', 'Proofs Out','Waiting For QA Approval'] ) ) {
@@ -380,8 +397,12 @@ sub get_li {
 			$colour = 'complete';
 		} elsif ( sets::isin( $Project->status(), ['Waiting For Customer Approval'] ) ) {
 			$colour = 'approval';
-		} elsif ( 1 < sql::execute( $log, $dbh, q{SELECT DISTINCT equipment_id FROM Schedule WHERE projectindex=? AND servicetype_id=?}, @$self{'project_id','servicetype_id'} ) ) {
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@printing_service_type_ids ) and ( find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@printing_service_type_ids, 'equipment_id !='=>$$self{'equipment_id'} ) ) ) {
 			$colour = 'multipress';
+		} elsif ( sets::isin( $$self{'servicetype_id'}, \@bindery_service_type_ids ) and ( find( 'project_id'=>$$self{'project_id'}, 'servicetype_id'=>\@bindery_service_type_ids, 'equipment !='=>$$self{'equipment_id'} ) ) ) {
+			$colour = 'multibindery';
+		#} elsif ( 1 < find( 'project_id'=>$$self{'project_id'} ) ) {
+			#$colour = 'earlier_services';
 		} # end if
 		if ( $Project->rush() ) {
 			$colour .= ' rush';
@@ -446,9 +467,13 @@ sub get_li {
 
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
-			$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "if(confirm('Are you sure?')){f1.schedule_id.value=$$self{'id'};f1.btnFunction.value='ApproveJob';f1.submit();}", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
-			$html .= ssi::writeButton( $log, $dbh, 'Up'.$$self{'id'}, '', "new Ajax.Request( '_li_change.json', {parameters: { schedule_id:$$self{'id'}, action: 'Up' }, evalScripts: true } );", '', 'U' );
+			$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { ul_id: '$ul_id', schedule_id: $$self{'id'}, action:'approve'}, evalScripts: true } );", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
+			if ( ! $$self{'locked'} ) {
+				$html .= ssi::writeButton( $log, $dbh, 'Up'.$$self{'id'}, '', "new Ajax.Request( '_li_change.json', {parameters: { schedule_id:$$self{'id'}, action: 'Up' }, evalScripts: true } );", '', 'U' );
+			} # end if
+		} # end if
 			$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
+		if ( $$self{'project_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", '', 'C' );
 			$html .= ssi::writeButton( $log, $dbh, 'House'.$$self{'id'}, '', "new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{'id'}, action: 'House Stock' } } );", '', 'H' );
 		} # end if
@@ -460,9 +485,9 @@ sub get_li {
 				$html .= ssi::writeButton( $log, $dbh, 'Split'.$$self{'id'}, '', "popup_window('_split_popup.html', 'schedule_id=$$self{'id'}' );", '', 'S' );
 			} # end if
 			if ( sets::isin( $self->ServiceType()->name(), [ '','AdditionalSignature' ] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
-} else {
-$log->debug("ServiceType: $$self{'project_id'} $$self{'servicetype_id'}" . $self->ServiceType()->name() );
+				$html .= ssi::writeButton( $log, $dbh, 'Stock'.$$self{'id'}, '', "popup_window('/employee/production/_stock_details.html','project_id='+$$self{'project_id'} );", '', 'P' );
+			} else {
+				$log->debug("ServiceType: $$self{'project_id'} $$self{'servicetype_id'}" . $self->ServiceType()->name() );
 			} # end if
 		} # end if
 		if ( ( $self->starttime_seconds() > time ) or ( $$self{'project_id'} and ( $self->status() ne 'In Production' ) ) ) {
@@ -493,7 +518,7 @@ $log->debug("ServiceType: $$self{'project_id'} $$self{'servicetype_id'}" . $self
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
 			if ( sets::isin( $self->ServiceType()->name(), [ '','AdditionalSignature' ] ) ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
+				$html .= ssi::writeButton( $log, $dbh, 'Paper'.$$self{'id'}, '', "popup_window('/employee/production/_stock_details.html','project_id=$$self{'project_id'}' );", '', 'P' );
 			} # end if
 		} # end if
 		if ( $$self{'operator_id'} == $session{'user_id'} ) {
@@ -554,10 +579,12 @@ sub impressions {
 		} # end if
 	} elsif ( $$self{'project_id'} ) {
 		my $Project = $self->Project();
+		if ( $self->service_id() ) {
 		foreach my $sig_id ( @{$self->service_id()} ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $sig_id );
 			$impressions += $$sig_specs{'ImpressionQuantity'};
 		} # end foreach sig
+		} # end if
 		
 		if ( ! $impressions ) {
 # Pull from printing
@@ -615,55 +642,56 @@ sub shift_id {
 
 sub Shift {
 	my ( $self ) = @_;
-	my $Shift;
 
-	if ( ! $$self{'starttime'} ) {
-		$Shift = new openprint::Shift();
-		$Shift->equipment_id( $$self{'equipment_id'} );
-		if ( sets::isin( $self->Project()->status(), ['In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
-			$$Shift{'name'} = 'Pending';
+	if ( ! $$self{'Shift'} ) {
+		my $Shift;
+
+		if ( ! $$self{'starttime'} ) {
+			$Shift = new openprint::Shift();
+			$Shift->equipment_id( $$self{'equipment_id'} );
+			if ( sets::isin( $self->Project()->status(), ['','In Prepress','Proofs Out','Waiting For QA Approval','Waiting For Customer Approval','Printed','Complete'] ) ) {
+				$$Shift{'name'} = 'Pending';
+			} else {
+				$$Shift{'name'} = 'Approved';
+			} # end if
 		} else {
-			$$Shift{'name'} = 'Approved';
-		} # end if
-	} else {
-		my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
-		my @Shifts = openprint::Shift::find(
-				'equipment_id'	=>	$$self{'equipment_id'}, 
-				'endtime_>'		=>	$$self{'starttime'}, 
-				'starttime_<='	=>	$$self{'starttime'},
-				#'limit'			=>	1,
-				);
-		if ( ! @Shifts ) {
-$openprint::log->error('Shouldnt have to instantite here');
-# We really shouldn't have to instantiate Shifts here.
-if ( 0 ) {
-			@Shifts = openprint::Equipment_Shift::find(
-					'equipment_id'  =>  $$self{'equipment_id'},
-					'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-					'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-					'limit'		 =>  1,
+			my $starttime_seconds = Date::Parse::str2time( $$self{'starttime'} );
+			my @Shifts = openprint::Shift::find(
+					'equipment_id'	=>	$$self{'equipment_id'}, 
+					'endtime_>'		=>	$$self{'starttime'}, 
+					'starttime_<='	=>	$$self{'starttime'},
+					#'limit'			=>	1,
 					);
-			@Shifts = openprint::Equipment_Shift::find(
-					'equipment_id'  =>  $$self{'equipment_id'},
-					'starttime_>'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
-					'order'		 =>  'starttime',
-					'limit'		 =>  1,
-					) if ! @Shifts;
-			$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
-} # end if
-		} else {
-			$Shift = shift @Shifts;
-			if ( @Shifts ) {
-				$log->warn("Deleting duplicate shifts! " . @Shifts );
-				foreach ( @Shifts ) {
-					$log->error( $_->to_string() );
-					#$_->delete();
-				} # end foreach
+			if ( ! @Shifts ) {
+				# Things like Bump can push a job to the very end, where a shift might need to be created.
+				@Shifts = openprint::Equipment_Shift::find(
+						'equipment_id'  =>  $$self{'equipment_id'},
+						'starttime_<='  =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+						'endtime_>'	 =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+						'limit'		 =>  1,
+						);
+				@Shifts = openprint::Equipment_Shift::find(
+						'equipment_id'  =>  $$self{'equipment_id'},
+						'starttime_>'   =>  Date::Format::time2str('%H:%M',$starttime_seconds ),
+						'order'		 =>  'starttime',
+						'limit'		 =>  1,
+						) if ! @Shifts;
+				$Shift = $Shifts[0]->emanantise( Date::Parse::str2time( Date::Format::time2str('%Y-%m-%d', $starttime_seconds ) ) ) if @Shifts;
+			} else {
+				$Shift = shift @Shifts;
+				if ( @Shifts ) {
+					$log->error("Deleting duplicate shifts! " . @Shifts );
+					foreach ( @Shifts ) {
+						$log->error( $_->to_string() );
+						#$_->delete();
+					} # end foreach
+				} # end if
 			} # end if
 		} # end if
+		return if ! $Shift;
+		$$self{'Shift'} = $Shift;
 	} # end if
-	return if ! $Shift;
-	return $Shift;
+	return $$self{'Shift'};
 } # end sub Shift
 
 sub start {
@@ -719,37 +747,45 @@ sub bump {
 		$self->save({'equipment_id'=>$equipment_id});
 		# Shuffle the old list
 		if ( $old_equipment_id and new openprint::Equipment( $old_equipment_id )->smartscheduling() ) {
-		openprint::employee_production::reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$old_equipment_id,'starttime_null'=>0,'order'=>'starttime' ))
+			openprint::employee_production::reorder_jobs(openprint::ScheduledJob::find( 'equipment_id'=>$old_equipment_id,'starttime_null'=>0,'order'=>'starttime' ))
 		} # end if
 	} # end if
 
 	my $error;
-	if ( ! $$self{'starttime'} ) {
-		@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime+runtime+'1 second'::interval) FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
-		my $starttime_seconds = $self->starttime_seconds();
-		$starttime_seconds = time if $starttime_seconds < time;
+	if ( $self->Equipment()->smartscheduling() ) {
+		if ( ! $$self{'starttime'} ) {
+			@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime+runtime+'1 second'::interval) FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
+			my $starttime_seconds = $self->starttime_seconds();
+			$starttime_seconds = time if $starttime_seconds < time;
 
-		$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
-		push @{$variable{'changed'}}, $self->Shift()->ul_id();
-	} elsif ( $self->Equipment()->smartscheduling() ) {
-		my @final_order = openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_<'=>$self->starttime(),'order'=>'starttime' );
-		foreach my $Job ( $self->Shift()->Schedule() ) {
-			push @final_order, $Job if $$Job{'id'} != $$self{'id'};
-		} # end foreach job in schift
-		push @final_order, $self->Shift()->Next()->Schedule();
-		push @final_order, $self;
-		push @final_order, openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
-
-		openprint::employee_production::reorder_jobs( @final_order );
-	} else {
-		my $NextShift = $self->Shift()->Next();
-		my @NextSchedule = $NextShift->Schedule();
-		if ( @NextSchedule ) {
-			my $LastJob = pop @NextSchedule;
-			$self->starttime_seconds($LastJob->endtime_seconds()+1);
-			$self->save();
+			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
+			push @{$variable{'changed'}}, $self->Shift()->ul_id();
 		} else {
-			$self->save({'starttime'=>$NextShift->starttime()});
+			my @final_order = openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_<'=>$self->starttime(),'order'=>'starttime' );
+			foreach my $Job ( $self->Shift()->Schedule() ) {
+				push @final_order, $Job if $$Job{'id'} != $$self{'id'};
+			} # end foreach job in schift
+			push @final_order, $self->Shift()->Next()->Schedule();
+			push @final_order, $self;
+			push @final_order, openprint::ScheduledJob::find( 'equipment_id'=>$self->equipment_id(),'starttime_start'=>$self->Shift()->Next()->endtime(),'order'=>'starttime' );
+
+			openprint::employee_production::reorder_jobs( @final_order );
+		} # end if
+	} else {
+		if ( ! $$self{'starttime'} ) {
+			@$self{'starttime'} = sql::execute( $log, $dbh, q{SELECT MAX(starttime)+'1 second'::interval FROM Schedule WHERE equipment_id=? AND id != ?}, @$self{'equipment_id','id'} );
+			my $starttime_seconds = $self->starttime_seconds();
+			$error .= $self->save({'starttime_seconds'=>$starttime_seconds});
+		} else {
+			my $NextShift = $self->Shift()->Next();
+			my @NextSchedule = $NextShift->Schedule();
+			if ( @NextSchedule ) {
+				my $LastJob = pop @NextSchedule;
+				$self->starttime_seconds($LastJob->endtime_seconds()+1);
+				$self->save();
+			} else {
+				$self->save({'starttime'=>$NextShift->starttime()});
+			} # end if
 		} # end if
 		push @{$variable{'changed'}}, $self->Shift()->ul_id();
 	} # end if smartscheduling
@@ -822,8 +858,10 @@ sub split {
 		} else {
 			my $runtime = int ( $self->runtime_seconds()/@service_ids );
 			$self->runtime_seconds( $runtime );
-			$self->impressions( $self->impressions() / @service_ids );
+			my $impressions = int( $self->impressions() / @service_ids );
 			$$self{'service_id'} = [ shift @service_ids ];
+
+			$self->impressions( $impressions );
 			$self->save();
 			my $starttime = $self->starttime_seconds() + $runtime if $self->starttime();
 			foreach my $s_id ( @service_ids ) {
@@ -878,5 +916,41 @@ sub ServiceType {
 	return new openprint::ServiceType( $_[0]{'servicetype_id'} );
 } # end sub ServiceType
 
+sub equipment_id {
+	if ( @_ > 1 ) {
+		$_[0]{'equipment_id'} = $_[1];
+		delete $_[0]{'Shift'};
+	} # end if
+	if ( ! $_[0]{'equipment_id'} ) {
+		# Attempt to guess
+		my $Project = $_[0]->Project();
+		my $Service = $Project->Service( $_[0]{'service_id'}[0] ) if $_[0]{'service_id'} and @{$_[0]{'service_id'}};
+		my $specs = $Service->specs();
+
+		if ( sets::isin( $Service->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
+			my $Equipment = openprint::Equipment::find_one( 'strid' => ( $$specs{'UsePress'} ? $$specs{'UsePress'} : $$specs{'ddmPress'.$Project->ordered_quantity_index()} ) );
+			$_[0]{'equipment_id'} = $Equipment->id() if $Equipment;
+		} elsif ( sets::isin( $Service->ServiceType()->name(), ['SaddleStitching','LoopStitching'] ) ) {
+			$_[0]{'equipment_id'} = $$specs{'ddmEquipment'.$Project->ordered_quantity_index()};
+		} # end if
+	} # end if
+	return $_[0]{'equipment_id'};
+} # end sub equipment_id
+
+sub approve {
+	my $Project = $_[0]->Project();
+	if ( ! $Project->id() ) {
+		return "Invalid project specified for approve job";
+	} # end if
+	my $services = $Project->services();
+	if ( ! ( $$services{'Proofs'} or $$services{'FilmStripping'} ) ) {
+		push @{$$services{'Proofs'}}, openprint::print_project::insert_service( $log, $dbh, $Project->id(), 'Proofs' );
+	} # end if
+	openprint::employee_production::mark_proofs_approved( $log, $dbh, \%variable, $Project->id() );
+	#sql::update( $log, $dbh, 'tbl_Project_Contents', ['lngProjectIndex=? AND strStatus=?', $Project->id(), 'Waiting For Customer Approval'], 'strStatus', 'Complete' );
+	$Project->add_to_log( @session{'company_id','user_id'}, 'Approved from schedule' );
+	$Project->update_status();
+	return;
+} # end sub approve
 1;
 __END__

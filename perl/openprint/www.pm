@@ -65,12 +65,13 @@ sub handler {
 	# Here we copy the param data into a hash that is sligthly more useful to use.  Wish we didn't have to do this.
 	foreach my $key ( sort sets::union( $r->param ) ) {
 		my @values = $r->param($key);
+		next unless scalar @values;
 		if ( @values > 1 ) {
 			$param{$key} = \@values;
-				$log->debug("Parameter $key is (" . join(',',@{$param{$key}}) . ')' );
+				$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
-			$param{$key} = shift @values;
-				$log->debug("Parameter $key is (" . $param{$key} . ")" );
+			$param{$key} = $values[0];
+			$log->debug("Parameter $key is (" . $param{$key} . ")" . ref $param{$key} );
 		} # end if
 	} # end foreach
 
@@ -84,11 +85,13 @@ sub handler {
 
 	# This one has to go here, because it loads data, the others clear data, so they can go after the requires
 	configuration::init_cache( $log, $dbh, $r->dir_config() );
-	openprint::session_init();
-	openprint::usergroup::init_cache();
-	openprint::Material::init_cache();
-	openprint::Service::init_cache();
-	openprint::Equipment::init_cache();
+	if ( $dbh ) {
+		openprint::session_init();
+		openprint::usergroup::init_cache();
+		openprint::Material::init_cache();
+		openprint::Service::init_cache();
+		openprint::Equipment::init_cache();
+	} # end if
 
 	my $lastpage = '';
 	my $page = $r->uri();
@@ -163,7 +166,7 @@ $variable{'uri'} = $page;
 
 	$session{'lastupdated'} = time;
 	untie %session;
-	$dbh->disconnect();
+	$dbh->disconnect() if $dbh;
 	$log->debug( "Elapsed seconds: " . ( time - $starttime ) );
 	# Clear all the caches AFTER we send the data to client!  This is really smart.
 	openprint::service::init_cache();
@@ -238,11 +241,11 @@ $log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";
 			$eval .= '_'.$second if $second;
 			eval	'require '.$eval;
-			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
+			$log->error( "Eval error of ($eval), Reason: " . $@ ) if $@;
 			$filename =~ /(.*).html/;
 			$eval .= '::'.$1.'( $r, $log, $dbh, \%variable );';
 			eval $eval;
-			$log->warn( "Eval error of ($eval), Reason: " . $@ ) if $@;
+			$log->error( "Eval error of ($eval), Reason: " . $@ ) if $@;
 $log->debug('2');
 		} # end if		
 
@@ -342,10 +345,10 @@ $log->error("Unable to load equipment.  No PPF for you for signature $$PPF{'sign
 			return;
 		} else {
 			eval( 'require openprint::'.join('_', @path ) );
-$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 			eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-$log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
+$log->error( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		} # end if
 	} elsif ( sets::isin( $first , [ 'opera', 'handheld' ] ) ) { # Handheld
 		openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'E' );
@@ -369,7 +372,7 @@ $log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
 
 	} elsif ( $first eq 'content' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
@@ -384,17 +387,17 @@ $log->warn( "Eval error of $filename => ($proc), Reason: " . $@ ) if $@;
 			} # end if
 		} # end if
 		eval( 'require openprint::'.join('_', @path ) );
-		$log->warn( "Eval error of require, Reason: " . $@ ) if $@;
+		$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 		my ( $proc ) = $filename =~ /(.*)\.\w*$/;
 		eval( 'openprint::'.join('_',@path).'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-		$log->warn( "Eval error of ($proc), Reason: " . $@ ) if $@;
+		$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
 	} elsif ( $first eq 'main' ) { # main
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'C' );
 		return $status if $variable{'Redirect'};	
 
 		if ( ! $session{'user_id'} ) {
 			# if not logged in, determine if they are allowed to see this page or not.
-			if ( ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
+			if ( $openprint::config{'public_URIs'} and ! sets::isin_regx( $uri, split( ',', $openprint::config{'public_URIs'} ) ) ) {
 				$variable{'Redirect'} = '/error/error_login.html';
 				$variable{'Destination'} = misc::get_destination( $r, $log, $uri );
 $log->debug("Dset: $variable{'Destination'}");
@@ -523,13 +526,13 @@ $variable{'ServiceIndex'} = $service_index;
 			openprint::print_project::summary( $r, $log, $dbh, \%variable )						if $filename eq 'summary.html';
 			openprint::print_project::summary( $r, $log, $dbh, \%variable )						if $filename eq 'docket_sheet.html';
 			openprint::print_project::display_reuse_project( $r, $log, $dbh, \%variable ) 		if $filename eq 'reuse.html';
-		} else {
+		} elsif ( -e $ENV{'DOCUMENT_ROOT'}.$uri ) {
 			my $module = 'openprint::' . join('_', ($first, $second )	);
 			eval( "require $module;" );
-			$log->warn( "Eval error of require, Reason: " . $@ );	# if $@;
+			$log->error( "Eval error of require, Reason: " . $@ ) if $@;
 			my ( $proc ) = $filename =~ /(.*).html/;
 			eval( $module.'::'.$proc.'( $r, $log, $dbh, \%variable );' );
-			$log->warn( "Eval error of ($proc), Reason: " . $@ ); # if $@;
+			$log->error( "Eval error of ($proc), Reason: " . $@ ) if $@;
 		} # end if main:$second
 
 	} else {

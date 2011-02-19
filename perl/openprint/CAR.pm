@@ -52,6 +52,8 @@ require openprint::CAR_Reason;
 	'printed_on'		=> 'printed_on',
 	'identified_by'		=> 'identified_by',
 	'deleted'			=> 'deleted',
+	'reprint_quantity'	=>	'reprint_quantity',
+	'reprint_value'		=>	'reprint_value',
 );
 
 %transforms = (
@@ -74,6 +76,8 @@ require openprint::CAR_Reason;
 	'reprint'		=> undef,
 	'area_id'		=> undef,
 	'reason_id'		=> undef,
+	'reprint_quantity'	=>	undef,
+	'reprint_value'	=>	undef,
 );
 
 sub find {

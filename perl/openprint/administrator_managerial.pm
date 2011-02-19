@@ -714,5 +714,9 @@ sub usergroup {
 	$variable{'UserGroup'} = new openprint::UserGroup( $param{'id'} );
 } # end sub usergroup
 
+sub _search_by_email {
+} # end sub _search_by_email
+
+
 1;
 __END__

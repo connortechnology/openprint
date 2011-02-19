@@ -152,8 +152,8 @@ sub skids {
     if ( ! exists $session{'/employee/inventory/skids.html?hasmanifest'} ) {
         $session{'/employee/inventory/skids.html?hasmanifest'} = 'B';
     } # end if
-	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start' );
-	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end' );
+	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_start', 0 );
+	ssi::setup_date_select( '/employee/inventory/skids.html', 'created_on_end', 0 );
 
 	ssi::save_params( '/employee/inventory/skids.html', ( 'PaperManufacturer','PaperBrand','PaperFinish','PaperColour','PaperWeight','Type',
 				'created_on_start_year','created_on_start_month','created_on_start_day',
@@ -1133,6 +1133,16 @@ sub rfidtags {
 		} # end foreach rfidtag_id
 	} else {
 		ssi::save_params( '/employee/inventory/rfidtags.html', 'Type', 'created_on_start_year','created_on_start_month','created_on_start_day','created_on_end_year','created_on_end_month','created_on_end_day','updated_on_start_year','updated_on_start_month','updated_on_start_day','updated_on_end_year','updated_on_end_month','updated_on_end_day', 'assigned', 'notassigned','valid' );
+		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_start', 0 );
+		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'created_on_end', '' );
+		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'updated_on_start', '' );
+		ssi::setup_date_select( '/employee/inventory/rfidtags.html', 'updated_on_end', '' );
+		if ( ! exists $session{'/employee/inventory/rfidtags.html?assigned'} ) {
+			$session{'/employee/inventory/rfidtags.html?assigned'} = 1;
+		} # end if
+		if ( ! exists $session{'/employee/inventory/rfidtags.html?notassigned'} ) {
+			$session{'/employee/inventory/rfidtags.html?notassigned'} = 1;
+		} # end if
 	} # end if
 } # end sub rfidtags
 
@@ -1481,6 +1491,8 @@ sub manifests {
 		} # end foreach manifest_id
 	} # end if
 	ssi::save_params( '/employee/inventory/manifests.html', ( 'received_on_start_year','received_on_start_month','received_on_start_day','received_on_end_year','received_on_end_month','received_on_end_day','supplier_id' ) );
+	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_start', -7 );
+	ssi::setup_date_select( '/employee/inventory/manifests.html', 'received_on_end', '' );
 } # end sub manifests
 
 sub _manifests {
@@ -2032,6 +2044,9 @@ sub purchase_orders {
 		$variable{'error'} .= $PO->send_to_vendor();
 		delete $param{'po_id'};
 	} # end if
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_start', -7 );
+	ssi::setup_date_select( '/employee/inventory/purchase_orders.html', 'starting_end', '' );
+
 } # end sub purchase_orders
 
 sub _purchase_orders {
@@ -2040,6 +2055,9 @@ sub _purchase_orders {
 
 sub _po_autocomplete {
 } # end sub _po_autocomplete
+
+sub _po_select_contact {
+} # end sub _po_select_contact
 
 sub _purchase_order_supplier_address {
 	my $PO = new openprint::PurchaseOrder( $param{'po_id'} );
@@ -2163,6 +2181,18 @@ sub _update_taxes {
 sub _paper_log {
 	ssi::save_params( '/employee/inventory/paper_details.html', ( 'ddmStartYear','ddmStartMonth','ddmStartDay','ddmEndYear','ddmEndMonth','ddmEndDay','limit' ) );
 } # end _paper_log
+
+sub _similar_pos {
+} # end sub _similar_pos
+
+sub skid_label {
+} # end sub skid_label
+
+sub _check_out_popup {
+} # end sub _check_out_popup
+
+sub _add_paper_show {
+} # end sub _add_paper_show
 
 1;
 __END__

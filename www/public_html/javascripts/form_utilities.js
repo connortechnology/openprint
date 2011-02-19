@@ -772,6 +772,15 @@ function set_today( e_y, e_m, e_d, e_h, e_min ) {
 	if ( e_min )
 		ddm_select_by_value( e_min, d.getMinutes() );
 } // end function set_today
+function date_clear( e_y, e_m, e_d, e_h, e_min ) {
+	ddm_select_by_value( e_y, '' );
+	ddm_select_by_value( e_m, '' );
+	ddm_select_by_value( e_d, '' );
+	if ( e_h )
+		ddm_select_by_value( e_h, '' );
+	if ( e_min )
+		ddm_select_by_value( e_min, '' );
+} // end function date_clear
 
 Ajax.Autocompleter.extract_value = 
 function (value, className) {
@@ -926,3 +935,19 @@ function radio_all(element) {
 			all_element.checked = ! on;	
 	} // end if
 } // end function radio_all
+
+// prevents the entering of a second decimal place
+function check_decimal( element, e ) {
+	var keynum;
+	if(window.event) {
+		// IE
+		keynum = e.keyCode
+	} else if(e.which) {
+		// Netscape/Firefox/Opera
+		keynum = e.which
+	}
+	if ( keynum == 190 && element.value.indexOf(".") != -1 ) {
+		return false;
+	} 
+	return true;
+}

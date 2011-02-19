@@ -323,7 +323,7 @@ fieldset p input[type="text"], fieldset p input[type="password"]  {
 	vertical-align: top;
 }
 fieldset p input[type="radio"] {
-	margin-top: 3px;
+	vertical-align: middle;
 }
 fieldset ul {
 	list-style: none;
@@ -595,6 +595,14 @@ td.Cost, th.Cost {
 span.DateSelector {
 	float: left;
 	width: 275px;
+}
+span.DateSelectorC {
+	float: left;
+	width: 275px;
+}
+span.DateSelectorCT {
+	float: left;
+	width: 300px;
 }
 span.DateTimeSelector {
 	float: left;

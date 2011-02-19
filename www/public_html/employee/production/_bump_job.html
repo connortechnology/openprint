@@ -2,6 +2,7 @@
 	my @sigs = @{$$variable{'Job'}{'service_id'}} if $$variable{'Job'}{'service_id'};
 	my $sig_specs = openprint::service::get_specs_ref( $$variable{'Job'}->Project(), $sigs[0] ) if @sigs;
 	$$variable{'Form'} = $$sig_specs{'SignatureIndex'};
+	$$variable{'Equipment'} = $$variable{'Job'}->Equipment();
 ) ?>
 <form id="bump_form" name="bump_form" action="_li_change.json" method="post">
 	<input type="hidden" name="schedule_id" value="<? echo ( $param{'schedule_id'} ) ?>" />
@@ -9,21 +10,24 @@
 	<h3>Bump Docket <? echo ( $$variable{'Job'}->Project()->docket() ) ?> Form <?Form?></h3>
 	<p>
 		<label>Press:</label>
-		<select name="equipment_id">
+		<select name="equipment_id" onchange="new Ajax.Updater( 'other_servicetypes', '_bump_job_popup_servicetypes.html', { parameters: { equipment_id: this.getValue(), schedule_id: this.form.schedule_id.value} } );">
 			<option value="">Unknown</option>
 			<? echo ( 
 				return ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Equipment::find(
-						'servicetype_id'=>$$variable{'Job'}->servicetype_id(),
 						'UseInScheduling'=>1,
 						'order'=>'lower(strname)'
 					) ], $$variable{'Job'}->equipment_id() );
 			) ?>
 		</select>
 	</p>
+	<br/>
+	<div id="other_servicetypes"><!--#include virtual="_bump_job_popup_servicetypes.html"--></div>
+	<br/>
 	<p class="buttons">
 	<? echo ( 
 		my $html = '';
-		$html .= ssi::writeButton( $log, $dbh, 'Ok', 'ok.gif', "new Ajax.Request( '_li_change.json', {parameters: bump_form.serialize(), evalScripts: true } );popupWin.destroy();", '', 'Ok' );
+		$html .= ssi::writeButton( $log, $dbh, 'BumpOk', 'ok.gif', "new Ajax.Request( '_li_change.json', {parameters: \$('bump_form').serialize(), evalScripts: true } );popupWin.destroy();", '', 'Ok' );
+		$html .= ssi::writeButton( $log, $dbh, 'BumpCancel', 'cancel.gif', "popupWin.destroy();", '', 'Cancel' );
 		return $html;
 	) ?>
 	</p>

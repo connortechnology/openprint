@@ -77,6 +77,10 @@ sub find {
 		$sql .= ' AND equipment_id=?';
 		push @values, $params{'equipment_id'};
 	} # end if
+	if ( exists $params{'shift_id'} ) {
+		$sql .= ' AND shift_id=?';
+		push @values, $params{'shift_id'};
+	} # end if
 	if ( $params{'startdate'} ) {
 		$sql .= ' AND date(starttime) = ?';
 		push @values, $params{'startdate'};
@@ -365,19 +369,31 @@ sub get {
 	return $_[0]->Shift();
 } # end sub get
 
+sub Previous {
+	my ( $self ) = @_;
+	if ( ! $$self{'Previous'} ) {
+		my $Previous = find_one('starttime_<' => $self->starttime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime DESC' );
+		$log->debug( 'Previous: ' . $Previous->to_string() );
+		$$self{'Previous'} = $Previous;
+	} # end if
+	return $$self{'Previous'};
+} # end sub Previous
 sub Next {
 	my ( $self ) = @_;
-	my $Next = find_one('starttime_>=' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
-$log->debug( $Next->to_string() );
-	if ( ! $Next ) {
-		my $ES = openprint::Equipment_Shift::find_one(
-				'equipment_id'	  =>  $$self{'equipment_id'},
-				'starttime_start'   =>  $self->Shift()->Equipment_Shift()->endtime(),
-				'order'			 =>  'starttime',
-				);
-		$Next = $ES->emanantise( $self->endtime_seconds() );
+	if ( ! $$self{'Next'} ) {
+		my $Next = find_one('starttime_>=' => $self->endtime(), 'equipment_id'=>$$self{'equipment_id'}, 'order'=>'starttime' );
+		$log->debug( 'Next: ' . $Next->to_string() );
+		if ( ! $Next ) {
+			my $ES = openprint::Equipment_Shift::find_one(
+					'equipment_id'	  =>  $$self{'equipment_id'},
+					'starttime_start'   =>  $self->Shift()->Equipment_Shift()->endtime(),
+					'order'			 =>  'starttime',
+					);
+			$Next = $ES->emanantise( $self->endtime_seconds() );
+		} # end if
+		$$self{'Next'} = $Next;
 	} # end if
-	return $Next;
+	return $$self{'Next'};
 } # end sub Next
 
 sub delete {

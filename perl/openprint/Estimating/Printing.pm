@@ -747,7 +747,7 @@ $openprint::log->debug("Looking at " . $P->type() . ' ' . $P->start_width().'x'.
 	} # end if override
 
 	push @Papers, @Ps;
-if ( $debug or 1 ) {
+if ( $debug or 0 ) {
 foreach my $P ( @Papers ) {
 $openprint::log->debug("Got Paper " . $P->width() . 'x'.$P->height() . ' from ' . $P->start_width() . 'x' . $P->start_height() . ' Minumum: ' . $P->minimum_order() );
 } 
@@ -1167,6 +1167,16 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
 					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
 					next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
+					if ( sets::isin( 'Sheet', split(',', $Press->specification('Feed') ) ) ) {
+$openprint::log->debug('roll2sheet');
+						if ( my $MinimumWeight = $Press->Specification('Roll2Sheet Minimum Weight') ) {
+$openprint::log->debug("Has Minimum Weight setting $$MinimumWeight{'value'} < " . $Paper->gsm() );
+							if ( $$MinimumWeight{'units'} eq 'gsm' and $$MinimumWeight{'value'} > $Paper->gsm() ) {
+$openprint::log->debug("Next");
+								next;
+							} # end if
+						} # end if
+					} # end if
 
 					my $P = $Paper->clone();
 					#$P->height('');
@@ -1608,19 +1618,21 @@ sub get_project_price {
 		} # end if
 		if ( $SpreadLayout > 0 ) {
 			$openprint::log->debug("Converting Impositions spread Layout: $SpreadLayout : imps:" . @impositions) if $debug;
-if ( $debug or 0 ) {
-$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
-foreach my $imp ( @impositions ) {
-$imp->display();
-}
-}
+			if ( $debug or 0 ) {
+				$openprint::log->debug("Impositions for Press: " . $P->strid() . ' before convert:' . @impositions);
+				foreach my $imp ( @impositions ) {
+					$imp->display();
+				}
+			}
 			@impositions = openprint::imposition::convert_impositions( $SpreadLayout, $$specs{'txtSpreadSize'}, \@impositions );
-if ( $debug or 1) {
-$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
-foreach my $imp ( @impositions ) {
-$imp->display();
-}
-}
+			if ( $debug or 0) {
+				$openprint::log->debug("Impositions for Press: " . $Press->strid() . ' after convert:' . @impositions);
+				if ( $debug > 1) {
+					foreach my $imp ( @impositions ) {
+						$imp->display();
+					}
+				}
+			}
 
 
 
@@ -2300,8 +2312,8 @@ sub calc_price {
 		$price{'FoldingImposition'} = $folding_results{'Imposition'};
 #$openprint::log->debug("FOlding IMPOSITION $folding_results{'Imposition'}");
 
+		my $fold_type = sprintf('%dx%d-%dPage-%sSignatureFoldRunSpeed', $$Imposition{spread_columns}, $$Imposition{spread_rows}, $Imposition->pages(), $$Imposition{image_orientation});
 		if ( $folding_results{'Equipment'} and ($folding_results{'Equipment'}->id() eq $Press->id() ) ) {
-			my $fold_type = sprintf('%dx%d-%dPage-%sSignatureFoldRunSpeed', $$Imposition{spread_columns}, $$Imposition{spread_rows}, $Imposition->pages(), $$Imposition{image_orientation});
 
 			if ( ! ( $run_speed = $Press->specification($fold_type, $Paper->gsm() ) ) ) {
 #$openprint::log->debug("No specific fold run speed");
@@ -2313,7 +2325,7 @@ sub calc_price {
 		} # end if
 
 		if ( $folding_results{'Equipment'} ) {
-			$price{'Folding Breakdown'} .= sprintf('Folding (%d out) Price: $%.2f on %s', @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
+			$price{'Folding Breakdown'} .= sprintf('Folding %s (%d out) Price: $%.2f on %s', $fold_type, @folding_results{'Imposition','Price'}, $folding_results{'Equipment'}->name() ) .'<br/>' if $folding_results{'Equipment'};
 		} else {
 			$price{'Folding Breakdown'} .= sprintf('Unable to fold<br/>');
 		} # end if
@@ -2341,7 +2353,7 @@ sub calc_price {
 			$price{'Comparison Cost'} += $$results{'Price'};
 #$openprint::log->debug( 'Stitching Calc: ' . sprintf('%.4f', tv_interval( [$starttime])*1000) );
 			if ( $$results{'Equipment'}->id() == $Press->id() ) {
-				$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} < $run_speed;
+				$run_speed = $$results{'RunSpeed'} if $$results{'RunSpeed'} and ( $$results{'RunSpeed'} < $run_speed );
 			} # end if
 		} # end if
 
@@ -2458,7 +2470,7 @@ sub calc_price {
 	$impressions *= $$project{print_sides} if (sets::isin($$Imposition{runstyle},['Sheet Work','Work & Turn','Work & Tumble'] ));
 	
 	my %run_price;
-	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs, scalar @$side_one_colours, scalar @$side_two_colours ); 
+	my %aqueous = get_aqueous_price( $openprint::log, $openprint::dbh, $openprint::variable, $impressions, $Press, $$Imposition{runstyle}, $qty_index, $Project, $service_index, $specs, scalar @$side_one_colours, scalar @$side_two_colours ); 
 	my %varnish_price;
 	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
 		%run_price = get_run_price( $impressions, scalar(@colours), 0, $Imposition, $Press, $run_speed ); 
@@ -2927,7 +2939,7 @@ sub get_varnish_run_price {
 
 
 sub get_aqueous_price {
-	my ( $log, $dbh, $variable, $impressions, $Press, $is_sheetwork, $qty_index, $Project, $service_index, $specs, $side_one_colour_count, $side_two_colour_count ) = @_;
+	my ( $log, $dbh, $variable, $impressions, $Press, $runstyle, $qty_index, $Project, $service_index, $specs, $side_one_colour_count, $side_two_colour_count ) = @_;
 
 	my %aqueous_price;
 
@@ -2952,9 +2964,10 @@ sub get_aqueous_price {
 		} # end foreach
 		if ( $do_setup ) {
 			$aqueous_price{'Setup'} = openprint::service::get_price( $log, $dbh, $variable, 'AqueousMakeReady','',$Press);
-			if ( $aqueous_sides == 1 and ! $is_sheetwork ) {
+			if ( $aqueous_sides == 1 and sets::isin( $runstyle, ['Work & Turn', 'Work & Tumble'] ) ) {
 				$aqueous_price{'Setup'} += openprint::service::get_price( $log, $dbh, $variable, 'AqueousBlanketCut','',$Press);
-			} elsif ( $$specs{'txtSignatureType'} ne 'Cover Spreads' ) {
+			} elsif ( $$specs{'txtSignatureType'} eq 'Cover Spreads' and $$specs{'rdbAqueousSideTwo'} and ( $$specs{'rdbAqueousSideTwo'} ne 'None' ) ) {
+				# For inside of COver when AQ coated... can't have AQ on the binding apparently
 				my $services = $Project->services();
 				my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] ) if $$services{''};
 				if ( $$printing_specs{'rdbTemplateType'} eq 'PerfectBound' ) {
@@ -2963,7 +2976,7 @@ sub get_aqueous_price {
 				} # end if
 			} # end if
 		} # end if
-		if ( ( $side_one_colour_count and $side_two_colour_count ) and $is_sheetwork ) {
+		if ( ( $side_one_colour_count and $side_two_colour_count ) and $runstyle ne 'Perfecting' ) {
 			$impressions = int($impressions/2);
 		} # end if
 		foreach my $side ( 'One', 'Two' ) {
@@ -2986,7 +2999,7 @@ sub get_aqueous_price {
 					( $$specs{'rdbAqueousSideTwo'} ne 'None' ) 
 					and 
 					( $$specs{'rdbAqueousSideOne'} ne $$specs{'rdbAqueousSideTwo'} ) 
-					and ( ! $is_sheetwork ) ) {
+					and ( sets::isin( $runstyle, ['Work & Turn', 'Work & Tumble'] ) ) ) {
 				$aqueous_price{"Side$side Total"} += 1000000;
 			} # end if
 		} # end if
@@ -3432,6 +3445,7 @@ sub get_colour_description {
 	$side_one_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideOne'} eq 'Gloss';
 	$side_one_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideOne'} eq 'Matte';
 	$side_one_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideOne'} eq 'Satin';
+	$side_one_coatings .= '+AQ (Soft Touch)' if $$specs{'rdbAqueousSideOne'} eq 'SoftTouch';
 	if ( $$specs{'chkVarnishSpotGlossSideOne'} ) {
 		$side_one_coatings .= '+Varnish (Spot Gloss)';
 		$side_one_colours -= 1;
@@ -3460,6 +3474,7 @@ sub get_colour_description {
 	$side_two_coatings .= '+AQ (Gloss)' if $$specs{'rdbAqueousSideTwo'} eq 'Gloss';
 	$side_two_coatings .= '+AQ (Matte)' if $$specs{'rdbAqueousSideTwo'} eq 'Matte';
 	$side_two_coatings .= '+AQ (Satin)' if $$specs{'rdbAqueousSideTwo'} eq 'Satin';
+	$side_two_coatings .= '+AQ (Soft Touch)' if $$specs{'rdbAqueousSideTwo'} eq 'SoftTouch';
 	if ( $$specs{'chkVarnishSpotGlossSideTwo'} ) {
 		$side_two_coatings .= '+Varnish (Spot Gloss)' ;
 		$side_two_colours -= 1;

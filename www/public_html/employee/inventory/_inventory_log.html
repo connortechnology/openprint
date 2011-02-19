@@ -2,7 +2,7 @@
 	if ( %openprint::param ) {
 		foreach my $key ( 'StartYear','StartMonth','StartDay','StartHour','StartMinute','EndYear','EndMonth','EndDay','EndHour','EndMinute','ins','outs', 'Type' ) {
 			if ( ref $openprint::param{$key} eq 'ARRAY' ) {
-				$openprint::session{'/employee/inventory/inventory_log.html?'.$key} = join(';', @{$openprint::param{$key}} );
+				$openprint::session{'/employee/inventory/inventory_log.html?'.$key} = join(',', @{$openprint::param{$key}} );
 			} else {
 				$openprint::session{'/employee/inventory/inventory_log.html?'.$key} = $openprint::param{$key};
 			}
@@ -57,8 +57,8 @@
 			next if $PI->delta <= 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?outs'};
 			next if $PI->delta > 0 and ! $openprint::session{'/employee/inventory/inventory_log.html?ins'};
 			my $Paper = $PI->Paper();
-			next if $Paper->type() and ! sets::isin( $Paper->type(), split(';', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
-			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', split(';',  $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
+			next if $Paper->type() and ! sets::isin( $Paper->type(), split(',', $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
+			next if ( ! $Paper->type() ) and ! sets::isin( 'Unknown', split(',',  $openprint::session{'/employee/inventory/inventory_log.html?Type'} ) );
 			my $Skid = $PI->Skid();
 			
 			$html .= sprintf( '<tr%1$s><td>%2$s</td><td><a href="skid_details.html?skid_id=%3$d">%3$d</a></td><td><a href="rfidtag_details.html?rfidtag_id=%4$s">%4$s</a></td><td><a href="paper_details.html?paper_id=%5$d">%6$s</a></td><td>%7$d</td><td>%8$s</td><td>%9$d</td><td>%10$s</td><td>%11$s</td><td>%12$s</td></tr>',

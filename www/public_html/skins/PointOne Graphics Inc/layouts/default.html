@@ -82,6 +82,7 @@
 								<li><a href="/main/services/delivery.html;NOSSL">&raquo; Delivery</a></li>
 							</ul>
 						</li>
+<? if ( $dbh ) ?>
 						<li id="MenuAccount" class="<? echo ( $r->uri() =~ /main\/account/ ? 'on' : 'off' ) ?>" ><a href="#" onclick="toggleMenu($('MenuAccount'), 'off', 'on');return false;">ACCOUNT</a>
 							<ul>
 	<? if ( $session{'user_id'} ) ?>
@@ -119,12 +120,15 @@
 								<li><a href="/main/order/history.html;NOSSL">&raquo; History</a></li>
 							</ul>
 						</li>
+<? endif ( $dbh ) ?>
 						<li id="MenuSupport" class="<? echo ( ( $r->uri() =~ /site_map/  or  $r->uri() =~ /support/ ) ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('MenuSupport'), 'off', 'on');return false;">SUPPORT</a>
 							<ul>
 								<li><a href="/support/colour_profiles.html;NOSSL">&raquo; Colour Profiles</a></li>
 								<li><a href="/site_map.html;NOSSL">&raquo; Site Map</a></li>
+<? if ( $dbh ) ?>
 								<li><a href="/support/help_desk.html;NOSSL">&raquo; Help Desk</a></li>
 								<li><a href="/support/returns.html;NOSSL">&raquo; Returns</a></li>
+<? endif ( $dbh ) ?>
 							</ul>
 						</li>
 				<? if ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
@@ -132,6 +136,7 @@
 				<? endif ( sets::isin( $session{user_type}, ['A','E'] ) ) ?>
 					</ul>
 				</div>
+<? if ( $openprint::dbh ) ?>
 	<? if ( ! $session{'user_id'} ) ?>
 				<div id="QuickLogin">
 					<form name="QuickLoginForm" method="post" action="<?SecureSiteURL?>/main/account/login.html">
@@ -164,6 +169,7 @@
 						</select>
 					</form>
 				</div>
+<? endif ( $openprint::dbh ) ?>
 
 				<div id="DidYouKnow">
 					<div id="DidYouKnowHeader">Did you know?</div>

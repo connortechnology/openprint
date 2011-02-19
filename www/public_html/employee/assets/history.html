@@ -1,6 +1,8 @@
 <script type="text/javascript">
 <!--
-	function load_page( div, form ) {
+	function load_page( form ) {
+var div = $('Results');
+div.innerHTML = 'Please wait, loading.....';
 		new Ajax.Updater( 'Results', '_history.html', { method: 'get', parameters: form.serialize() } );
 	} // end function load
 -->
@@ -17,6 +19,12 @@
 		</ul>
 		<hr/>
 		<ul>
+		<li><label>Company:</label>
+			<select name="company_id" onchange="load_page($('f1'));">
+				<option value="">All</option>
+				<? echo ( openprint::Company::get_dropdown( $session{'/employee/asset/history.html?company_id'} ); ) ?>
+			</select>
+		</li>
 		<li><label>Created By:</label>
 			<select name="created_by" onchange="load_page($('f1'));">
 				<option value="">All</option>
@@ -30,17 +38,14 @@
 				<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::Asset_Type->find( 'order'=>'lower(name)' ) ], $session{'/employee/asset/history.html?type_id'} ); ) ?>
 			</select>
 		</li>
-		<? eval (
-				ssi::setup_date_select( '/employee/asset/history.html', 'created_on', -31 );
-        ) ?>
 		<li>
 			<label>Date:</label>
-			<span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_start', {'onchange'=>"load_page(\$('f1'));"} ); ) ?>
+			<span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_start', {'onchange'=>"load_page(\$('f1'));", 'with_today'=>1, 'with_clear'=>1} ); ) ?>
             to
             </span>
-            <span class="DateSelector">
-<? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_end', {'onchange'=>"load_page(\$('f1'));"} ); ) ?>
+            <span class="DateSelectorCT">
+<? echo ( ssi::date_select_session( '/employee/asset/history.html', 'created_on_end', {'onchange'=>"load_page(\$('f1'));", 'with_today'=>1, 'with_clear'=>1} ); ) ?>
             </span>
 		</li>
 		</ul>

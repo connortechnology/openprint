@@ -5,18 +5,16 @@ require openprint::Shift;
 
 use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw( $log $dbh %session $debug $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*config = \%openprint::config;
 *session = \%openprint::session;
 
 require sql;
 require ssi;
 require misc;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'equipment_shifts';
 $serial = 'equipment_shifts_id_seq';
@@ -184,7 +182,7 @@ $log->debug("Emanentise: Date: " . Date::Format::time2str('%Y-%m-%d %H:%M:%S', $
 		$Shift = new openprint::Shift();
 		$Shift->save({
 				'equipment_id'	=>	$$self{'equipment_id'},
-				'operator_id'	=>	$$self{'operator_id'},
+				'operator_id'	=>	( $$self{'operator_id'} ? $$self{'operator_id'} : $openprint::session{'user_id'} ),
 				'shift_id'		=>	$$self{'id'},
 				'starttime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $starttime_seconds ),
 				'endtime'		=>	Date::Format::time2str('%Y-%m-%d %H:%M:%S', $endtime_seconds ),
@@ -233,6 +231,14 @@ sub Next {
 			'order'			=>	'starttime',
 			);
 } # end sub Next
+
+sub delete {
+	foreach my $Shift ( openprint::Shift::find('shift_id'=>$_[0]{'id'}) ) {
+#$log->debug("Delete shift " . $Shift->to_string() );
+		$Shift->delete();
+	} # end foreach
+	my $error = $_[0]->SUPER::delete();
+} # end sub delete
 
 1;
 __END__

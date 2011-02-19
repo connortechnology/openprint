@@ -26,25 +26,26 @@ div.PopupWindow fieldset p label {
 #Allocate fieldset p, #CheckOut fieldset p {
 	padding-left: 100px;
 }
-#JobForm fieldset p {
-	padding-left: 70px;
-}
-#JobForm fieldset p span.DateTimeSelector {
-	float: left;
-	width: 380px;
-}
 #Allocate fieldset p label, #CheckOut fieldset p label {
 	width: 100px;
 	margin-left: -95px;
 }
-#JobForm fieldset p label {
-	width: 70px;
-	margin-left: -65px;
+#JobForm fieldset ul li {
+	padding-left: 95px;
+}
+#JobForm fieldset span.DateTimeSelector {
+	float: left;
+	width: 380px;
+}
+#JobForm fieldset ul li label {
+	width: 90px;
+	margin-left: -95px;
 }
 
-#JobForm fieldset p label.radio, fieldset p label.radio, #Allocate fieldset p label.radio, #CheckOut fieldset p label.radio {
+#JobForm fieldset ul li label.radio, fieldset p label.radio, #Allocate fieldset p label.radio, #CheckOut fieldset p label.radio {
 	width: auto;
 	margin-left: 0px;
+	vertical-align: middle;
 }
 
 .Manifest #PurchaseOrders ul {

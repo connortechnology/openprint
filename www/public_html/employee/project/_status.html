@@ -1,0 +1,46 @@
+<?status?><br/>
+<!--#include virtual="/includes/error_reporting.html"-->
+<? echo ( 
+	my $html;
+	my @service_ids = split( ',', $$variable{'index'} );
+	if ( ! @service_ids ) {
+		$log->error( 'No service_ids in project ' . $$variable{'Project'}->id() . ' index: ' . $$variable{'index'} );
+		return;
+	} 
+	my $Service = $$variable{'Project'}->Service( $service_ids[0] );
+	if ( ! $Service ) {
+		$log->error( 'No Service in project ' . $$variable{'Project'}->id() . ' index: ' . $$variable{'index'} );
+		return;
+	} 
+	if ( sets::isin( $Service->ServiceType()->name(),[ '', 'AdditionalSignature','Cutting','Folding','Saddle Stitching','LoopStitching' ] ) ) {
+		if ( my $Job = openprint::ScheduledJob::find_one('service_id'=>$$variable{'index'}) ) {
+			if ( ! $Job->starttime() ) {
+				$html = 'Scheduled in pending';
+			} else {
+				$html = 'Scheduled for ' . Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Job->starttime() ) );
+			} # end if
+			$html .= ' on ' . $Job->Equipment()->strid() . ' ' . $Job->Equipment()->name() . '<br/>';
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+				$html .= ssi::writeButton( $log, $dbh, 'RemoveFromPressSchedule'.$$variable{'index'}, 'removefrompressschedule.gif', 
+					sprintf(q`new Ajax.Updater('status%1$d', '/employee/project/_status.html', { parameters: { project_id: %2$d, service_id: %1$d, action: 'removefromschedule' } } );`, @$variable{'index','ProjectIndex'} ), '', 'Remove From Schedule' );
+			} # end if
+		} elsif ( $$variable{'status'} eq 'Ordered' ) {
+			$html = 'Not scheduled<br/>';
+			if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
+				$html .= ssi::writeButton( $log, $dbh, 'AddToPressSchedule'.$$variable{'index'}, 'addtopressschedule.gif', 
+					sprintf( q`popup_window( '/employee/project/_add_to_schedule.html', 'project_id=%1$d&amp;service_id=%2$d' );`, @$variable{'ProjectIndex','index'} ), '', 'Add To Schedule' );
+			} # end if
+		} # end if
+	} elsif ( sets::isin( $Service->ServiceType()->name(), [ 'Shipping','CustomerPickUp' ] ) ) {
+		require openprint::SignatureCapture;
+		my @Signatures = openprint::SignatureCapture->find(
+				'project_id'    =>  $$variable{'ProjectIndex'},
+				'service_id'    =>  $$variable{'index'},
+				'order'         =>  'id',
+				);
+		$html .= join('', map { sprintf(q`<img onclick="popup_window('/employee/project/_signaturecapture.html?id=%1$d');" src="%2$s" alt="Signature" class="thumbnail"/>`, $_->id(), $_->file_path() ); } @Signatures );
+	} else {
+		$html .= $Service->ServiceType()->name();
+	} # end if
+	return $html;
+) ?>

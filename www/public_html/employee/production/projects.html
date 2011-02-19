@@ -65,7 +65,7 @@
 			'Shipped',
 			);
 
-		my @status_filter = split(';', $session{'/employee/production/projects.html?ProjectStatus'} );
+		my @status_filter = split(',', $session{'/employee/production/projects.html?ProjectStatus'} );
 
 		if ( ! @status_filter ) {
 			if ( openprint::usergroup::is_user_in( ['Prepress'], $session{'user_id'} ) ) {
@@ -77,7 +77,7 @@
 			} else {
 				@status_filter = @statuses;
 			} # end if
-			$session{'/employee/production/projects.html?ProjectStatus'} = join(';',@status_filter );
+			$session{'/employee/production/projects.html?ProjectStatus'} = join(',',@status_filter );
 		} # end if
 		return ssi::make_select( [ map { $_, $_ } @statuses ], \@status_filter );
 ) ?>

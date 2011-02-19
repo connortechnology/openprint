@@ -614,6 +614,14 @@ if ( ! $data ) {
 	} # end foreach
 } # end if
 
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='car'", 'column_name');
+if ( ! exists $$data{'reprint_quantity'} ) {
+	$dbh->do('ALTER TABLE car ADD reprint_quantity INTEGER');
+}
+if ( ! exists $$data{'reprint_value'} ) {
+	$dbh->do('ALTER TABLE car ADD reprint_value NUMERIC(10,2)');
+}
+
 $dbh->disconnect();
 1;
 __END__

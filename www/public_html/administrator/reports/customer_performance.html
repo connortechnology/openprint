@@ -1,0 +1,52 @@
+<div class="PageTitle">
+<h1>REPORTS</h1>
+<h2>Customer Performance</h2>
+</div>
+<form id="f1" name="f1" method="post" action="customer_performance.html">
+	<input type="hidden" name="btnFunction" />
+	<fieldset class="filters"><legend>Report Criteria</legend>
+		 <p>
+			 <label>Ordered On:</label>
+			<? echo ( ssi::date_select_session( '/administrator/reports/customer_performance.html', 'ordered_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			to 
+			<? echo ( ssi::date_select_session( '/administrator/reports/customer_performance.html', 'ordered_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+		</p>
+		 <p>
+			 <label>Not Ordered Since:</label>
+			<? echo ( ssi::date_select_session( '/administrator/reports/customer_performance.html', 'not_ordered_on_start', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+			to 
+			<? echo ( ssi::date_select_session( '/administrator/reports/customer_performance.html', 'not_ordered_on_end', { 'with_today'=>1,'with_clear'=>1 } ); ) ?>
+		</p>
+		<p>
+			<label>Payment Cycle:</label>
+			<select name="payment_cycle">
+				<option value="">All</option>
+				<? echo (
+					ssi::make_drop_down( [ map { $_, 'Less than ' . $_ . ' Days' } ( 30, 60, 90 ) ], $session{'/administrator/reports/customer_performance.html?payment_cycle'} );
+				) ?>
+			</select>
+		</p>
+		<? if ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		<p>
+			<label>CSR:</label>
+			<select name="salesrep_id" size="1">
+			<? echo (
+					my @options = ( '', 'All' );
+					push @options, map { $_->id(), $_->name() } openprint::User::find('type'=>['E','A'], 'usergroup'=>'Sales', 'order'=>'lower(strfirstname),lower(strlastname)');
+					return ssi::make_drop_down( \@options, $session{'/administrator/reports/customer_performance.html?salesrep_id'} );
+					) ?>
+
+			 </select>
+		</p>
+		<? endif ( $session{'user_type'} eq 'A' or openprint::usergroup::is_user_in( ['Sales Admin','Reporting'], $session{'user_id'} ) ) ?>
+		 <p class="buttons">
+			<? echo ( 
+				my $html;
+				$html .= ssi::writeButton( $log, $dbh, 'Go', 'go.gif', "AjaxLoadContent('Results','_customer_performance.html', f1.serialize() );", '', 'Show Results' );
+				$html .= ssi::writeButton( $log, $dbh, 'DownloadCSV', 'downloadCSVFormat.gif', "f1.action='customer_performance.html?Download';f1.btnFunction.value='Download in CSV format';f1.submit();", '', 'Download in CSV Format' );
+				return $html;
+			) ?>
+		 </p>
+	</fieldset>
+</form>
+<div id="Results">Select filters, and click Show Results.</div>

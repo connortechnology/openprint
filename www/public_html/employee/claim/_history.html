@@ -18,8 +18,9 @@
 	} else {
 		my %search = (
 			'company_id',		new openprint::User( $session{'user_id'} )->company_id(),
-			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/claim/history.html?created_on_start_year','/employee/claim/history.html?created_on_start_month','/employee/claim/history.html?created_on_start_day'} ),
-			'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/claim/history.html?created_on_end_year','/employee/claim/history.html?created_on_end_month','/employee/claim/history.html?created_on_end_day'} ),
+( Date::Calc::check_date( @session{'/employee/claim/history.html?created_on_start_year','/employee/claim/history.html?created_on_start_month','/employee/claim/history.html?created_on_start_day'} ) ? (
+			'created_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/claim/history.html?created_on_start_year','/employee/claim/history.html?created_on_start_month','/employee/claim/history.html?created_on_start_day'} ) ) : () ),
+			( Date::Calc::check_date( @session{'/employee/claim/history.html?created_on_end_year','/employee/claim/history.html?created_on_end_month','/employee/claim/history.html?created_on_end_day'} ) ? ( 'created_on_end',	sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/employee/claim/history.html?created_on_end_year','/employee/claim/history.html?created_on_end_month','/employee/claim/history.html?created_on_end_day'} ) ) : () ),
 			(
 			 ( $session{'/employee/claim/history.html?updated_on_start_year'} and $session{'/employee/claim/history.html?updated_on_start_month'} and $session{'/employee/claim/history.html?updated_on_start_day'} ) ? (
 				 'updated_on_start',	sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/employee/claim/history.html?updated_on_start_year','/employee/claim/history.html?updated_on_start_month','/employee/claim/history.html?updated_on_start_day'} ) 

@@ -34,9 +34,9 @@ Please select an allocation to view/edit.<br>
 			</span>
 		</p>
 		<p><label>Type:</label>
-            <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( ( ! $session{'/employee/inventory/allocations.html?Type'} ) or sets::isin( 'Sheet', split(';', $session{'/employee/inventory/allocations.html?Type'} ) ) ); ) ?> />
+            <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( ( ! $session{'/employee/inventory/allocations.html?Type'} ) or sets::isin( 'Sheet', split(',', $session{'/employee/inventory/allocations.html?Type'} ) ) ); ) ?> />
             <label class="radio" for="TypeSheet">Sheet</label>
-            <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( ( ! $session{'/employee/inventory/allocations.html?Type'} ) or sets::isin( 'Roll', split(';', $session{'/employee/inventory/allocations.html?Type'} ) ) ); ) ?> />
+            <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( ( ! $session{'/employee/inventory/allocations.html?Type'} ) or sets::isin( 'Roll', split(',', $session{'/employee/inventory/allocations.html?Type'} ) ) ); ) ?> />
             <label class="radio" for="TypeRoll">Roll</label>
         </p>
 		<p class="buttons">

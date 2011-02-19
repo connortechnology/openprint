@@ -3,17 +3,17 @@
 	<head>
 		<title><?PageTitle?> - Employee</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.6.0.3"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.7"></script>
 		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.8.2"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.9.0"></script>
 		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.3"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.4"></script>
 		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
 		<script type="text/javascript" src="/javascripts/popups.js?version=1.1"></script>
 		<script type="text/javascript" src="/javascripts/fastinit.js"></script>
 		<script type="text/javascript" src="/javascripts/tablekit.js?version=1.2.1"></script>
-		<script type="text/javascript" src="/javascripts/window.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/window.js?version=1.1"></script>
 		<script type="text/javascript" src="/javascripts/barcode.js?version=1.3"></script>
 		<!-- calendar stylesheet -->
 		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
@@ -58,6 +58,23 @@
 		<? endif ( $$variable{'uri'} =~ /prepress_schedule/ ) ?>
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
+<? echo (
+	my $html;
+	my $css = $$variable{'uri'};
+	$css =~ s/^\///;
+	$css =~ s/\..+$//;
+	my @parts = split '/', $css;
+	while ( @parts ) {
+	$css = join('_', @parts ) . '.css';
+		$log->debug("URI: $$variable{uri} $css");
+		if ( -e $config{'SkinPath'}.'/css/'.$css ) {
+			$html .= '<link type="text/css" rel="stylesheet" href="/css/'.$css.'"/>'."\n";
+		}
+		pop @parts;
+	} # end while
+	return $html;
+) ?>
+
 	</head>
 	<? eval (
 		$session{'menu'} = $param{'menu'} if exists $param{'menu'};

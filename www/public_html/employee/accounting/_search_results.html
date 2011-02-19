@@ -6,6 +6,19 @@
 			$session{'/employee/accounting/search.html?ddmStatus'} = [ 'Complete','In Production',' Order Submitted', 'Pending Deposit', 'Paid', 'Picked Up','Re-Opened', 'Shipped', 'Waiting For Customer Approval', 'Waiting For Pickup' ];
 		} # end if
 
+	if ( $param{'order_id'} ) {
+		@{$$variable{'Orders'}} = openprint::Order::find(
+			'id'		=>	$param{'order_id'},
+			'order'		=> 'created_on',
+			);
+	} elsif ( $param{'invoice_id'} ) {
+		s/^\s+//, s/\s+$// for $param{'invoice_id'};
+		
+		@{$$variable{'Orders'}} = openprint::Order::find(
+			'invoice_id'		=>	$param{'invoice_id'},
+			'order'		=> 'created_on',
+			);
+	} else {
 	@{$$variable{'Orders'}} = openprint::Order::find(
 		'created_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{
 			'/employee/accounting/search.html?ddmStartYear',
@@ -26,6 +39,7 @@
 		'owing_>'	=>	0,
 		'order'		=> 'created_on',
 		);
+	} # end if
 
 ) ?>
 	<? if ( @{$$variable{'Orders'}} ) ?>
@@ -33,7 +47,7 @@
 	<tr> 
 		<th align="left" width="65">Order ID</th>
 		<th align="left" width="60">Docket</th>
-		<th align="center" width="75">Date</th>
+		<th class="Date">Date</th>
 		<th align="left">Company</th>
 		<th align="left" width="100">Status</th>
 		<th align="right" width="90">Invoice #</th>
@@ -48,7 +62,7 @@
 	<tr<?rowclass?>> 
 		<td><a href="details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->id(); ) ?></a></td>
 		<td><a href="details.html?order_id=<? echo ( $$variable{'Order'}->id(); ) ?>"><? echo ( $$variable{'Order'}->docket(); ) ?></a></td>
-		<td align="center"><? echo ( Date::Format::time2str('%Y-%m-%d', Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></td>
+		<td class="Date"><? echo ( Date::Format::time2str($config{'DateFormat'}, Date::Parse::str2time($$variable{'Order'}->created_on() ) ); ) ?></td>
 		<td align="left"><? echo ( ssi::htmlize( $$variable{'Order'}->Company->name() ); ) ?></td>
 		<td align="left"><? echo ( $$variable{'Order'}->status(); ) ?></td>
 		<td align="right">&nbsp;<? echo ( ssi::htmlize( $$variable{'Order'}->invoice_id() ); ) ?></td>

@@ -40,7 +40,7 @@ sub new {
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
-$log->debug("Multi-key Obejct @$id @$data{@$id}" );
+#$log->debug("Multi-key Obejct @$id @$data{@$id}" );
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
 	} else {
@@ -286,7 +286,10 @@ sub find {
 	my $debug = eval '$'.$type.'::debug';
 
 	my %params = @_;
-	my $sql = 'SELECT * FROM '.$table.' WHERE 1>0';
+	my $sql = 'SELECT ';
+	$sql .= 'DISTINCT ' if $params{'distinct'};
+	delete $params{'distinct'};
+	$sql .= '* FROM '.$table.' WHERE 1>0';
 	my @values;
 	my $local_dbh = $params{'dbh'} ? $params{'dbh'} : $openprint::dbh;
 	delete $params{'dbh'};
@@ -361,6 +364,11 @@ sub find {
 					$sql .= " AND ? IN $$f{$k}";
 					push @values, $params{$k.'_in'};
 					delete $params{$k.'_in'};
+				} # end if
+				if ( exists $params{$k.' !='} ) {
+					$sql .= " AND $$f{$k} != ?";
+					push @values, $params{$k.' !='};
+					delete $params{$k.' !='};
 				} # end if
 				if ( exists $params{$k.'_any'} ) {
 					$sql .= " AND ? = ANY($$f{$k})";

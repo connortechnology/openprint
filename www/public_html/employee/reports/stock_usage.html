@@ -38,9 +38,9 @@ function load() {
     <? eval (
         $session{'/employee/reports/stock_usage.html?Type'} = 'Roll' if ! $session{'/employee/reports/stock_usage.html?Type'};
     ) ?>
-                <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split( ';', $session{'/employee/reports/stock_usage.html?Type'} ) ) ); ) ?> />
+                <input type="checkbox" id="TypeSheet" name="Type" value="Sheet" <? echo ( ssi::checked( sets::isin( 'Sheet', split( ',', $session{'/employee/reports/stock_usage.html?Type'} ) ) ); ) ?> />
                 <label class="radio" for="TypeSheet">Sheet</label>
-                <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split( ';', $session{'/employee/reports/stock_usage.html?Type'} ) ) ); ) ?> />
+                <input type="checkbox" id="TypeRoll" name="Type" value="Roll" <? echo ( ssi::checked( sets::isin( 'Roll', split( ',', $session{'/employee/reports/stock_usage.html?Type'} ) ) ); ) ?> />
                 <label class="radio" for="TypeRoll">Roll</label>
             </p>
         <p>
@@ -51,7 +51,7 @@ function load() {
                     my %data;
                     foreach my $Stock ( openprint::Paper::find(
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
-							'type'=>[split(';', $session{'/employee/reports/stock_usage.html?Type'})],
+							'type'=>[split(',', $session{'/employee/reports/stock_usage.html?Type'})],
                             ) ) {
                         $data{$Stock->manufacturer()} = $Stock->manufacturer_id();
                     } # end foreach
@@ -68,7 +68,7 @@ function load() {
                     foreach my $Stock ( openprint::Paper::find(
                             'manufacturer_id'=>$session{'/employee/reports/stock_usage.html?Manufacturer'},
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
-                            'type'=>[split(';', $session{'/employee/reports/stock_usage.html?Type'})],
+                            'type'=>[split(',', $session{'/employee/reports/stock_usage.html?Type'})],
                             ) ) {
                         $names{$Stock->name()} = $Stock->name_id();
                     } # end foreach
@@ -86,7 +86,7 @@ function load() {
                             'manufacturer_id'=>$session{'/employee/reports/stock_usage.html?Manufacturer'},
                             'name_id'=>$session{'/employee/reports/stock_usage.html?Name'},
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
-                            'type'=>[split(';', $session{'/employee/reports/stock_usage.html?Type'})],
+                            'type'=>[split(',', $session{'/employee/reports/stock_usage.html?Type'})],
                             ) ) {
                         $finishes{$Stock->finish()} = $Stock->finish_id();
                     } # end foreach
@@ -105,7 +105,7 @@ function load() {
                             'name_id'=>$session{'/employee/reports/stock_usage.html?Name'},
                             'finish_id'=>$session{'/employee/reports/stock_usage.html?Finish'},
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
-                            'type'=>[split(';', $session{'/employee/reports/stock_usage.html?Type'})],
+                            'type'=>[split(',', $session{'/employee/reports/stock_usage.html?Type'})],
                             ) ) {
                         $data{$Stock->colour()} = $Stock->colour_id();
                     } # end foreach
@@ -125,7 +125,7 @@ function load() {
                             'finish_id'=>$session{'/employee/reports/stock_usage.html?Finish'},
                             'colour_id'=>$session{'/employee/reports/stock_usage.html?Colour'},
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
-                'type'=>[split(';', $session{'/employee/reports/stock_usage.html?Type'})],
+                'type'=>[split(',', $session{'/employee/reports/stock_usage.html?Type'})],
                             ) ) {
                         $data{$Stock->weight()} = $Stock->weight_id();
                     } # end foreach
@@ -146,7 +146,7 @@ function load() {
                             'colour_id'=>$session{'/employee/reports/stock_usage.html?Colour'},
                             'weight_id'=>$session{'/employee/reports/stock_usage.html?Weight'},
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
-							'type'=>[split(';', $session{'/employee/reports/stock_usage.html?Type'})],
+							'type'=>[split(',', $session{'/employee/reports/stock_usage.html?Type'})],
                             ) ) {
                         $data{$Stock->width()} = $Stock->width();
                     } # end foreach
@@ -165,7 +165,7 @@ function load() {
                             'colour_id'=>$session{'/employee/reports/stock_usage.html?Colour'},
                             'weight_id'=>$session{'/employee/reports/stock_usage.html?Weight'},
                             #'group_id'=>$session{'/employee/reports/stock_usage.html?Group'},
-                'type'=>[split(';', $session{'/employee/reports/stock_usage.html?Type'})],
+                'type'=>[split(',', $session{'/employee/reports/stock_usage.html?Type'})],
                             ) ) {
                         $data{$Stock->height()} = $Stock->height();
                     } # end foreach

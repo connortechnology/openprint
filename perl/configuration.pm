@@ -13,10 +13,12 @@ sub init_cache {
 	
 	%cache = ();
 	#%cache = sql::execute( undef, undef, 'SELECT Name, Value FROM Configuration' );
+	if ( $openprint::dbh ) {
     my $data = $openprint::dbh->selectall_arrayref( 'SELECT Name, Value FROM Configuration', {Slice=>{}} );
     foreach (@{$data}) {
         $cache{$_->{name}} = $_->{value};
     } # end foreach
+	} # end if
 
 	# Anything specified in dir_config override configuration
 	if ( $apr_table ) {

@@ -32,6 +32,9 @@
 					<label class="radio" for="blacklist0">No</label>
 				</li>
 				<li>
+					<label>Access violation count:</label><input type="text" name="count" id="count" value="<? echo ( $$variable{'Host'}->count() ) ?>" />
+				</li>
+				<li>
 					<label>Whitelist:</label>
 					<input type="radio" name="whitelist" id="whitelist1" value="1" <? echo ( ssi::checked( $$variable{'Host'}->whitelist() ); ) ?>
 					<label class="radio" for="whitelist1">Yes</label>
@@ -45,7 +48,7 @@
 					<input type="radio" name="monitor" id="monitor0" value="0" <? echo ( ssi::checked( ! $$variable{'Host'}->monitor() ); ) ?>
 					<label class="radio" for="monitor0">No</label>
 				</li>
-				<li><label>Description</label>
+				<li><label>Description:</label>
 					<textarea id="description" name="description" cols="" rows=""><? echo ( $$variable{'Host'}->description() ) ?></textarea>
 				</li>
 				<li class="buttons">

@@ -22,7 +22,7 @@ sub cars {
 			$variable{'error'} .= $CAR->delete();
 		} # end foreach car_id
 	} elsif ( $param{'btnFunction'} eq 'Download in CSV Format' ) {
-		my @header = ('Issued To','Issued On','Issued By','Reply By', 'Docket','Customer','Identified By','Printed On','Presses','Area','Reason','Problem','Cause','Action','Effectiveness', 'Part2 Recipient', 'Part2 Signed On', 'Part3 Recipient', 'Part3 Signed On', 'Part4 QS Mgt Rep/Designate', 'Part4 Signed On','Reprint Requested','Reprint Approved','Reprint Charge','Reprint On','Reprint Approved By', 'Approved On','Artwork' );
+		my @header = ('Issued To','Issued On','Issued By','Reply By', 'Docket','Customer','Identified By','Printed On','Presses','Area','Reason','Problem','Cause','Action','Effectiveness', 'Part2 Recipient', 'Part2 Signed On', 'Part3 Recipient', 'Part3 Signed On', 'Part4 QS Mgt Rep/Designate', 'Part4 Signed On','Reprint Requested','Reprint Approved','Reprint Charge','Reprint Quantity', 'Reprint Value', 'Reprint On','Reprint Approved By', 'Approved On','Artwork' );
 		my @data;
 		my %params = (
 				'issued_on_start'   =>  sprintf('%.4d-%.2d-%.2d', @param{'StartYear','StartMonth','StartDay'} ),
@@ -54,6 +54,8 @@ sub cars {
 					$CAR->reprint(),
 					$CAR->reprint_approval(),
 					$CAR->reprint_charge(),
+					$CAR->reprint_quantity(),
+					$CAR->reprint_value(),
 					$CAR->reprint_on(),
 					new openprint::User( $CAR->approved_by_id() )->name(),
 					$CAR->approved_on(),
@@ -65,6 +67,9 @@ sub cars {
 		misc::export_csv( $r, $log, \%variable, 'CARS.csv', \@header, \@data );
 	} # end if
 } # end sub cars
+
+sub _car_results {
+} # end sub _car_results
 
 sub car {
 	$variable{'CAR'} = new openprint::CAR( $param{'car_id'} );
@@ -214,6 +219,8 @@ sub pars {
 		misc::export_csv( $r, $log, \%variable, 'PARS.csv', \@header, \@data );
 	} # end if
 } # end sub pars
+sub _par_results {
+} # end sub _par_results
 
 sub par {
 	$variable{'PAR'} = new openprint::PAR( $param{'par_id'} );

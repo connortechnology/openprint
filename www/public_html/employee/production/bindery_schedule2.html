@@ -73,7 +73,7 @@
 <? eval (
 	my ( $starttime, $endtime );
 	if ( $session{'/employee/production/bindery_schedule2.html?Equipment'} ) {
-		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) ).')' );
+		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule WHERE equipment_id IN ('.join(',',split(',', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) ).')' );
 	} else {
 		($starttime, $endtime) = sql::execute( $log, $dbh, 'SELECT date(MIN(StartTime)),date(MAX(starttime)) FROM Schedule' );
 	} # end if
@@ -101,7 +101,7 @@
 	} # end if
 ) ?>
 <!--#include virtual="/includes/error_reporting.html"-->
-<form name="f1" method="post" action="bindery_schedule2.html">
+<form name="f1" method="post" action="/employee/production/bindery_schedule2.html">
 	<input type="hidden" name="btnFunction"/>
 	<input type="hidden" name="ProjectIndex" />
 	<input type="hidden" name="ServiceIndex" />
@@ -123,10 +123,10 @@
 	@{$$variable{'Equipment'}} = ();
 	my @presses = openprint::Equipment::find('category'=>$session{'/employee/production/bindery_schedule2.html?category'},'UseInScheduling'=>1,'order'=>'sorting,lower(strcategory),lower(strname)');
 
-	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(';', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) );
+	my @selected_equipment = sets::intersection( ( map { $_->id() } @presses) , split(',', $session{'/employee/production/bindery_schedule2.html?Equipment'} ) );
 	if ( ! @selected_equipment ) {
 		@selected_equipment = map { $_->id() } @presses;
-		$session{'/employee/production/bindery_schedule2.html?Equipment'} = join(';', @selected_equipment );
+		$session{'/employee/production/bindery_schedule2.html?Equipment'} = join(',', @selected_equipment );
 	}
 
 	foreach (@presses) {
@@ -210,7 +210,7 @@
 			<? echo ( ssi::writeButton( $log, $dbh, 'AddMaintenance', 'add.gif', "ajax_window('_add_maintenance.html', 600, 400 );", '', 'Add Maintenance' ); ) ?>
 			<? echo (
 				if ( @{$$variable{'Equipment'}} == 1 and $$variable{'Equipment'}[0]->smartscheduling() ) {
-					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', 'bindery_schedule2.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', 'Reflow Jobs' );
+					return ssi::writeButton( $log, $dbh, 'ReFlow', 'reflow.gif', '', '/employee/production/bindery_schedule2.html?Equipment='.$$variable{'Equipment'}[0]->id().'&amp;btnFunction=Reflow', 'Reflow Jobs' );
 				} # end if
 				return;
 			) ?>
@@ -320,7 +320,7 @@
 								if ( $Shift->starttime_seconds() < Date::Parse::str2time($tomorrow) ) {
 									push @NewShifts, $Shift;
 								} else {
-									$log->error("Bad shift! " . $Shift->to_string() );
+									$log->error("Bad shift! " . $Shift->to_string()  . " today: $today tomorrow: $tomorrow");
 								} # end if
 							} # end if ! found
 
@@ -352,10 +352,10 @@ $log->error("Removing duplicate shift" . $Shifts[$i]->to_string() . ' ' . $Shift
 			$html .= '</div>';
 $log->debug("html for $$E{name} : $html");
 		} # end foreach press
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'PendingApproved', '/employee/production/_pending_approved.html' );">Pending Approved (click to hide/unhide):</h3><div id="PendingApproved">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending_approved.html' );
 		$html .= '</div></div>';
-		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
+		$html .= q`<div class="unprintable"><hr class="spacer"/><h3 onclick="AjaxLoadContent( 'Pending', '/employee/production/_pending.html' );">Pending (click to hide/unhide):</h3><div id="Pending">`;
 		$html .= ssi::include( $ENV{'DOCUMENT_ROOT'}.'/employee/production/_pending.html' );
 		$html .= '</div></div>';
 		return $html;

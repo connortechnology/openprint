@@ -26,7 +26,8 @@ sub history {
 		ssi::save_params( '/articles/history.html', ( 'published_on_start_year','published_on_start_month','published_on_start_day','published_on_end_year','published_on_end_month','published_on_end_day') );
 	} # end if
 	if ( ( ! $session{'/articles/history.html?lastupdated'} ) or ( time - $session{'/articles/history.html?lastupdated'} ) < ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/articles/history.html', 'published_on', -31 );
+		ssi::setup_date_select( '/articles/history.html', 'published_on_start', -31 );
+		ssi::setup_date_select( '/articles/history.html', 'published_on_end', '' );
 	} # end if
 } # end sub history
 

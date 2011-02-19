@@ -32,7 +32,7 @@ div.row {
 }
 	div.PressColumn {
 		float: left;
-		margin: 0px 0px 0px 0px;
+		margin: 0px;
 		padding: 0px;
 		border: none;
 		text-align: center;
@@ -41,12 +41,9 @@ div.row {
 	}
 	div.PressColumn ul {
 		padding: 0px;
-		margin: 0px;
-		margin-left: 1px;
-		margin-right: 1px;
+		margin: 0px 1px 0px 1px;
 		border-bottom: 1px solid black;
-		list-style: none none inside;
-		text-indent: 0px;
+		list-style: none;
         font-weight: normal;
         text-align: left;
         font-size: 12px;
@@ -58,7 +55,6 @@ div.row {
 		margin-bottom: 2px;
 		border-top: 1px solid black;
 		list-style: none;
-		text-indent: 0px;
 		background-color: #ffffff;
 		z-index: 0;
 		max-height: 2048px;
@@ -78,26 +74,30 @@ div.PressColumn ul li:after {
 div.PressColumn ul li {display: block;}
 /* End hide from IE-mac */
 
-	div.PressColumn li.multipress, div.PressColumn li.scheduled, li.multipress, li.scheduled {
-		background-color: #ffff99;
-	}
-	div.PressColumn li.regular, div.PressColumn li.unscheduled, li.regular, li.unscheduled {
-		background-color: #ffffff;
-	}
-	div.PressColumn li.inprepress, li.inprepress {
-		background-color: #99ff99;
-	}
-	div.PressColumn li.complete, li.complete {
-		background-color: #FAC6FF;
-	}
-	div.PressColumn li.approval, li.approval {
-		background-color: #FF0000;
-		color: black;
-	}
-	div.PressColumn li.rush, li.rush {
-		border: 2px solid blue;
-	} 
-	.legend li.rush {
+div.PressColumn li.multibindery,
+div.PressColumn li.multipress, 
+div.PressColumn li.scheduled, 
+li.multipress, 
+li.scheduled {
+	background-color: #ffff99;
+}
+div.PressColumn li.regular, div.PressColumn li.unscheduled, li.regular, li.unscheduled {
+	background-color: #ffffff;
+}
+div.PressColumn li.inprepress, li.inprepress {
+	background-color: #caffc4;
+}
+div.PressColumn li.complete, li.complete {
+	background-color: #FAC6FF;
+}
+div.PressColumn li.approval, li.approval {
+	background-color: #FF0000;
+	color: black;
+}
+div.PressColumn li.rush, li.rush {
+	border: 2px solid blue;
+} 
+.legend li.rush {
 width: 196px;
 } 
 	.When {
@@ -262,16 +262,6 @@ width: 196px;
 	}
 	}
 
-a.buttonImageOff, a.buttonImageOn {
-	margin: 1px;
-}
-a.buttonImageOff .c {
-	padding: 1px 2px 1px 2px;
-}
-
-a.buttonImageOn .c {
-	padding: 1px 2px 1px 2px;
-}
 span.CSR {
 	font-weight: bold;
 	text-transform: uppercase;
@@ -369,4 +359,21 @@ div.legend ul li ul li label {
 }
 .message {
 	font-size: small;
+}
+div.PressColumn a.buttonImageOff, div.PressColumn a.buttonImageOn {
+	margin: 1px;
+}
+div.PressColumn a.buttonImageOff .c,
+div.PressColumn a.buttonImageOn .c {
+	padding: 2px 4px 2px 4px;
+}
+@media only screen and (max-device-width: 480px) {
+	div.PressColumn a.buttonImageOff, 
+	div.PressColumn a.buttonImageOn {
+		margin: 2px;
+	}
+	div.PressColumn a.buttonImageOff .c,
+	div.PressColumn a.buttonImageOn .c {
+		padding: 4px 6px 4px 6px;
+	}
 }

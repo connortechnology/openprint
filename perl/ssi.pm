@@ -433,12 +433,14 @@ return qq{<span class="TipLink" onmouseover="if ( typeof(tipOn) == 'function' ) 
 
 sub setup_date_select {
     my ( $page, $prefix, $delta ) = @_;
-    if ( ( ! ( $session{$page.'?'.$prefix.'_start_year'} and $session{$page.'?'.$prefix.'_start_month'} and $session{$page.'?'.$prefix.'_start_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
-        @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*$delta );
-        @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = Date::Calc::Today();
+    if ( ( ! ( $session{$page.'?'.$prefix.'_year'} and $session{$page.'?'.$prefix.'_month'} and $session{$page.'?'.$prefix.'_day'} ) ) or ( time - $session{$page.'?lastupdated'} > 3600 ) ) {
+		if ( $delta ne '' ) {
+			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = Date::Calc::Add_Delta_Days( Date::Calc::Today(), 1*$delta );
+		} else {
+			@session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ( '', '', '' );
+		} # end if
     } else {
-        @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_start_year',$page.'?'.$prefix.'_start_month',$page.'?'.$prefix.'_start_day'} );
-        @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_end_year',$page.'?'.$prefix.'_end_month',$page.'?'.$prefix.'_end_day'} );
+        @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} = ssi::fix_date( @session{$page.'?'.$prefix.'_year',$page.'?'.$prefix.'_month',$page.'?'.$prefix.'_day'} );
     } # end if
 } # end sub setup_date_select
 
@@ -461,26 +463,35 @@ $log->debug("$year-$month-$day");
 	} # end if
 #$openprint::log->debug(" date_select: $value : ($year,$month,$day), order: $$options{order}");
 	$$options{'order'} = 'y,m,d' if ! $$options{'order'};
+	my @fields;
+	if ( $$options{'fields'} ) {
+		@fields = split(',', $$options{'fields'} );
+	} 
+	
+	
 
 	my $html = '';
 	$html .= sprintf('<span id="%1$s_date">', $prefix );
 	foreach my $o ( split(',', $$options{'order'} ) ) {
-		if ( $o eq 'y' ) {
-			$html .= sprintf('<select name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+		if ( ( $o eq 'y' ) and ( (!@fields) or sets::isin( 'year', \@fields ) ) ) {
+			$html .= sprintf('<select id="%1$s_year" name="%1$s_year" onchange="setDaysDropDown(this.value,this.form.%1$s_month.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= return_years( undef, undef, $year );
 			$html .= '</select>';
-		} elsif ( $o eq 'm' ) {
-			$html .= sprintf('<select name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+		} elsif ( ( $o eq 'm' ) and ( (!@fields) or sets::isin( 'month', \@fields ) ) ) {
+			$html .= sprintf('<select id="%1$s_month" name="%1$s_month" onchange="setDaysDropDown(this.form.%1$s_year.value,this.value,this.form.%1$s_day,this.form.%1$s_day.value);%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getmonths( $month );
 			$html .= '</select>';
-		} elsif ( $o eq 'd' ) {
-			$html .= sprintf('<select name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
+		} elsif ( ( $o eq 'd' ) and ( (!@fields) or sets::isin( 'day', \@fields ) ) ) {
+			$html .= sprintf('<select id="%1$s_day" name="%1$s_day" onchange="%2$s"><option value=""></option>', $prefix, $$options{'onchange'} );
 			$html .= getdays( $day, $year, $month );
 			$html .= '</select>';
 		} # endif
 	} # end foreach o
+	if ( $$options{'with_clear'} ) {
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_clear', 'c.gif', q`date_clear( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'C' );
+	} # end if
 	if ( $$options{'with_today'} ) {
-		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', 'set_today( f1.'.$prefix.'_year, f1.'.$prefix.'_month, f1.'.$prefix.'_day );'.$$options{'onchange'}, '', 'T' );
+		$html .= ssi::writeButton( $openprint::log, $openprint::dbh, $prefix.'_today', 't.gif', q`set_today( $('`.$prefix.q`_year'), $('`.$prefix.q`_month'), $('`.$prefix.q`_day') );`.$$options{'onchange'}, '', 'T' );
 	} # end if
 	$html .= '</span>';
 	return $html;
@@ -555,7 +566,8 @@ sub save_params {
 
 	foreach ( @keys ) {
 		if ( ref $param{$_} eq 'ARRAY' ) {
-			$session{"$url?$_"} = join(';', @{$param{$_}} );
+			$session{"$url?$_"} = join(',', @{$param{$_}} );
+#$openprint::log->debug("Storing ARRAY ($_) (".$session{"$url?$_"}.")");
 		} elsif ( exists $param{$_} ) {
 			$session{"$url?$_"} = $param{$_};
 		} # end if
