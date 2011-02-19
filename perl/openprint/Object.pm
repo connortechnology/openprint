@@ -357,7 +357,7 @@ sub find_operators {
 		push @{$results{' <='}}, $f.' <= ?', $$params{$k.' <='};
 	} # end if
 	if ( exists $$params{$k.'_null_or_<='} ) {
-		push @{$results{'_null_or_<='}}, "$f <= ? OR $f IS NULL", $$params{$k.'_null_or_<='};
+		push @{$results{'_null_or_<='}}, "( $f <= ? OR $f IS NULL )", $$params{$k.'_null_or_<='};
 	} # end if
 	if ( exists $$params{$k.' >='} ) {
 		push @{$results{' >='}}, $f.' >= ?', $$params{$k.' >='};
