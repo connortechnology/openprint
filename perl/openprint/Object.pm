@@ -220,7 +220,7 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 			my %defaults = eval('%'.$type.'::defaults');
 
 			if ( ( ( ! defined $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
-				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug or 1;
+				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 				$$self{$field} = $defaults{$field};
 			} # end if
 		} # end if
@@ -436,7 +436,7 @@ sub find {
 } # end sub find
 
 sub find_one {
-$openprint::log->debug("find_one @_ ");
+#$openprint::log->debug("find_one @_ ");
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;

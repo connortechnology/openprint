@@ -5,7 +5,7 @@
 		var div = $(div_id);
 		if ( div )
 			div.innerHTML = 'Please wait. Loading...';
-		new Ajax.Updater( div_id, '_purchase_orders.html', { method: 'get', parameters: form.serialize() } );
+		new Ajax.Updater( div_id, '/employee/inventory/_purchase_orders.html', { method: 'get', parameters: form.serialize() } );
 	} // end function load
 	function open_decline_window( form ) {
 		var po_ids;
@@ -122,5 +122,5 @@ $log->debug(sets::isin( '', [ split(',',$session{'/employee/inventory/purchase_o
 		</p>
 	</fieldset>
 	<input type="hidden" name="btnFunction"/>
-	<div id="Results"><!--#include virtual="_purchase_orders.html"--></div>
+	<div id="Results"><!--#include virtual="/employee/inventory/_purchase_orders.html"--></div>
 </form>
