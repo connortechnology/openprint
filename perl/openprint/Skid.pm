@@ -208,7 +208,9 @@ sub save {
 	my ( $self, $data ) = @_;
 	$$self{'created_by_id'} = $session{'user_id'} if ! $$self{'created_by_id'};
 	$self->type() if ! $$self{'type'};
-	$self->location_id();
+
+	# Why?
+	#$self->location_id();
 	return $self->SUPER::save( $data );
 } # end sub save
 
