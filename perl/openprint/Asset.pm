@@ -52,6 +52,7 @@ sub on_disk_path {
 	return $openprint::config{'AssetPath'}.'/'.$_[0]->on_disk_filename();
 } # end sub on_disk_path
 sub on_disk_filename {
+	return '' if ! $_[0]{'id'};
 	return $_[0]{'id'}.'_'.$_[0]{'filename'};
 } # end sub on_disk_filename
 sub url {
@@ -59,6 +60,7 @@ sub url {
 }
 
 sub on_disk_thumbnail_path {
+	return '' if ! $_[0]{'id'};
 	my $src = $_[0]->on_disk_path();
 	if ( ! $src ) {
 		$openprint::log->error( "No src for Asset: " . $_[0]->to_string() );

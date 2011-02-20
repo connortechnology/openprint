@@ -42,17 +42,17 @@ sub debug {
 sub new {
 	my ( $parent, $id, $data ) = @_;
 
-
 	my $ref = ref $id;
 	if ( ! $ref ) {
 		if ( $id and $openprint::Object::cache{$parent} and $openprint::Object::cache{$parent}{$id} ) {
 			# If the object is cached
 			return $openprint::Object::cache{$parent}{$id};
 		} # end if
-	my $self = {};
-	bless $self, $parent;
+		my $self = {};
+		bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
+$log->debug("loading $parent $id");
 			$self->load( $data );
 		} # end if
 		if ( ! $no_cache ) {
@@ -60,24 +60,25 @@ sub new {
 				$openprint::Object::cache{$parent}{$id} = $self;
 			} # end if
 		} # end if
-	return $self;
+		return $self;
 	} elsif ( ref $id eq 'HASH' ) {
-	my $self = {};
-	bless $self, $parent;
-		# First off, for now, don't cache figure that out later
+		my $self = {};
+		bless $self, $parent;
+# First off, for now, don't cache figure that out later
 		my @keys = keys %{$id};
 		@$self{@keys} = @$id{@keys};
 		$self->load( $data );
-	return $self;
+		return $self;
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
-	my $self = {};
-	bless $self, $parent;
+		my $self = {};
+		bless $self, $parent;
 #$log->debug("Multi-key Obejct @$id @$data{@$id}" );
 		@$self{@$id} = @$data{@$id};
 		$self->load( $data );
-		#$log->debug( $parent . ': ' .$self->to_string() );
-	return $self;
+#$log->debug( $parent . ': ' .$self->to_string() );
+		return $self;
 	} # end if ref id
+$log->debug("test");
 } # end sub new
 
 sub load {
