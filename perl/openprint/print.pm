@@ -625,11 +625,6 @@ sub publication_pages {
 	$project_index = $openprint::session{'project_id'} if ! $project_index;
 	$log->debug("********************************** STARTING MULTIPAGE PUBLICATION PAGES *******************************");
 
-<<<<<<< HEAD
-	@{$$variable{'ddmPressOptions'}} = map { $_->strid(), $_->name() } openprint::Equipment->find('category'=>'Printing','useinestimating'=>1, 'order'=>'lower(strname)');
-
-=======
->>>>>>> de58b0917a1898af377827742664095e650e87e6
 	@{$$variable{'RunStyleOptions'}} = ( 'Sheet Work', 'Sheet Work', 'Work & Turn', 'Work & Turn', 'Work & Tumble', 'Work & Tumble', 'Perfecting','Perfecting','Web','Web');
 	
 	$$variable{'rdbGateFoldNo'} = $$variable{'rdbGateFoldYes'} eq '' ? 'checked' : '';
