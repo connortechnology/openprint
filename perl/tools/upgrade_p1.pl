@@ -145,8 +145,8 @@ be found at:<br/>
 <br/>
 <a href="http://www.idealliance.org/industry_resources/branding_media_and_color/gracol">
 http://www.idealliance.org/industry_resources/branding_media_and_color/gracol</a><br/>
-<a href="http://files.idealliance.org/GRACoL/ICC/2006%20GRACoL%20&%20SWOP%20Profiles.zip">
-http://files.idealliance.org/GRACoL/ICC/2006%20GRACoL%20&%20SWOP%20Profiles.zip</a><br/>'
+<a href="http://files.idealliance.org/GRACoL/ICC/2006%20GRACoL%20&amp;%20SWOP%20Profiles.zip">
+http://files.idealliance.org/GRACoL/ICC/2006%20GRACoL%20&amp;%20SWOP%20Profiles.zip</a><br/>'
 ,'description', 'Disclaimer to show at bottom of project.', 'category','Miscellaneous Settings' ) if ! exists $config{'ProjectViewDisclaimer'};
 	sql::insert( undef, undef, 'configuration', 'name', 'OrderViewDisclaimer','value',
 '

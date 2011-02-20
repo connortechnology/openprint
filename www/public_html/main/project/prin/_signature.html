@@ -48,14 +48,14 @@
 			</select>
 		</p>
 		<p>
-			<label>Customer Supplied?</label>
+			<label>Customer supplied?</label>
 			<input type="radio" name="pages_supplied<?Signature?>" id="pages_supplied<?Signature?>Y" value="Y" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Signature'}} eq 'Y' ); ) ?> onclick="$('Inks<?Signature?>').hide();$('SuppliedFormat<?Signature?>').show();$('BleedsColourBars<?Signature?>').hide();" />
 			<label class="radio" for="pages_supplied<?Signature?>Y">Yes</label>
 			<input type="radio" name="pages_supplied<?Signature?>" id="pages_supplied<?Signature?>N" value="N" <? echo ( ssi::checked( $$variable{'pages_supplied'.$$variable{'Signature'}} ne 'Y' ); ) ?> onclick="$('Inks<?Signature?>').show();$('SuppliedFormat<?Signature?>').hide();$('BleedsColourBars<?Signature?>').show();" />
 			<label class="radio" for="pages_supplied<?Signature?>N">No</label>
 		</p>
 		<p id="SuppliedFormat<?Signature?>" <? echo ( $$variable{'pages_supplied'.$$variable{'Signature'}} eq 'Y' ? '' : 'style="display:none;"' ) ?>>
-			<label>Supplied Format:</label>
+			<label>Supplied format:</label>
 			<input type="radio" name="supplied_format<?Signature?>" id="supplied_format<?Signature?>Sheets" value="Sheets" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Signature'}} ne 'Folded' ); ) ?> />
 			<label class="radio" for="supplied_format<?Signature?>Sheets">Flat Sheets</label>
 			<input type="radio" name="supplied_format<?Signature?>" id="supplied_format<?Signature?>Folded" value="Folded" <? echo ( ssi::checked( $$variable{'supplied_format'.$$variable{'Signature'}} eq 'Folded' ); ) ?> />
