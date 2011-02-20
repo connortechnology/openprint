@@ -1,7 +1,7 @@
 package openprint::Service;
 @ISA = qw( openprint::Object );
 use strict;
-use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh );
+use vars qw($debug $table $serial %fields %find_fields %transforms %defaults %session $log $dbh $cache_field );
 
 require sql;
 require openprint::Object;
@@ -42,8 +42,10 @@ $serial = 'services_id_seq';
 		'taxexempt1'	=>	q`'N'`,
 		'taxexempt2'	=>	q`'N'`,
 		);
+
+$cache_field = 'name';
 sub cache_field {
-	return 'name';
+	return $cache_field;
 }
 
 sub save {
@@ -87,7 +89,7 @@ sub get_price {
     my ( $self, $quantity, $Equipment, $Pricelist ) = @_;
 
 	if ( ! $Pricelist ) {
-		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id( $log, $dbh, $openprint::variable ));
+		$Pricelist = new openprint::Pricelist( openprint::pricing::get_pricelist_id());
 	} # end if
     my %price = openprint::pricing::get_best_price_object( $log, $dbh, $openprint::session{'company_id'}, $$self{id}, $$Pricelist{'id'}, 'openprint::service_priceset', $quantity, $$Equipment{'id'} );
     return if ! %price;

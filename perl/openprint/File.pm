@@ -1,6 +1,6 @@
-package openprint::File;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::File;
+our @ISA = qw( openprint::Object );
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
 

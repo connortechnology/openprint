@@ -9,7 +9,7 @@ require openprint::logs;
 require openprint::MaterialSpecification;
 require openprint::MaterialCategory;
 
-use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults };
+use vars qw{ $debug $log $dbh %session $table $serial %fields %find_fields %transforms %defaults $cache_field };
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *session = \$openprint::session;
@@ -43,6 +43,7 @@ $debug = 1;
 		'taxexempt2'	=>	'N',
 		);
 
+$cache_field = 'name';
 sub cache_field {
 	return 'name';
 }

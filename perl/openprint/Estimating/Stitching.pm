@@ -21,8 +21,6 @@ my $debug = 0;
 
 require openprint::Equipment;
 require openprint::service;
-
-require openprint::Equipment;
 use Time::HiRes qw{ time gettimeofday tv_interval }; 
 
 # This is an array of all the variables that need to be saved to the database for this service.
@@ -128,7 +126,7 @@ sub get_imposition {
 # Calculates the cost of stitching a signature... which is not realistic, but will hopefully help when deciding between 1up or 2up stitching
 # includes teh cost of folding...
 sub signature_calc {
-	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, $Impositions ) = @_;
+	my ( $Project, $service_index, $specs, $qty_index, $folding_specs, $sig_specs, $Impositions, $calc_hash ) = @_;
 
 	my %results;
 	my $services = $Project->services();
@@ -230,21 +228,23 @@ sub signature_calc {
 $results{'Breakdown'} .= 'Imposition: ' . $imposition . '<br/>';
 
 	my $error;
-	# THe Equipment->find call gets cached... and the rest is impo-specific... so we can't really cache this.
-	my @possible_equipment = get_equipment( $specs, \$error );
 	my @equipment = ();
 
 	if ( $$specs{"chkOverrideEquipment$qty_index"} eq 'Y' ) {
 		if ( ! $$specs{"ddmEquipment$qty_index"} ) {
 			$results{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
 		} else {
-			@equipment = openprint::Equipment->find( 'id'=> $$specs{"ddmEquipment$qty_index"} );
-			if ( ! @equipment ) {
+			@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment$qty_index"} ) );
+			if ( ! $equipment[0]->id() ) {
 				$results{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
 			} # end if
 		} # end if
 	} else {
-		@equipment = @possible_equipment;
+		if ( $$calc_hash{'Stitching::signature_calc::equipment'} ) {
+			@equipment = @{$$calc_hash{'Stitching::signature_calc::equipment'}};
+		} else {
+			@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @equipment = get_equipment( $specs, \$error );
+		} # end if
 	} # end if
 
 	my $bestPrice;
@@ -366,7 +366,7 @@ sub calc {
 
 		foreach my $signature_service_index ( $Project->signatures() ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if $debug;
+#$openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{'txtSignatureType','ddmRunStyle'.$qty_index,'txtImposition'.$qty_index,'hdnImpositionColumns'.$qty_index,'hdnImpositionRows'.$qty_index,'hdnImageOrientation'.$qty_index} ) ) if $debug;
 			next if $$sig_specs{'txtSignatureType'} eq 'Cover Pages';
 			if ( 
 				($$sig_specs{'txtImposition'.$qty_index}%2) or 
@@ -379,13 +379,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 				$imposition = 1 
 			} # end if
 			last if $imposition == 1;
-			# Why is this here, does the above not take care of it?
-			#if ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Vertical' ) {
-				#$imposition = 1 if $$sig_specs{'hdnImpositionRows'.$qty_index} % 2;
-			#} elsif ( $$sig_specs{'hdnImageOrientation'.$qty_index} eq 'Horizontal' ) {
-				#$imposition = 1 if $$sig_specs{'hdnImpositionColumns'.$qty_index} % 2;
-			#} # end if
-		} # end foreach
+		} # end foreach signature_service_index
 
 		if ( $$specs{'OverrideImposition'.$qty_index} eq 'Y' ) {
 #$openprint::log->debug("Overriding imposiion");
@@ -396,11 +390,12 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 		} else {
 			$$specs{'Imposition'.$qty_index} = $imposition;
 		} # end if
-	} # end foreach
+	} # end foreach qty_index
 
+	my $calc_hash = {};
 	my $folding_specs = 0;
 	if ( $$services{'Folding'} ) {
-		$folding_specs = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
+		$folding_specs = $$calc_hash{'folding_specs'} = openprint::service::get_specs_ref( $Project, $$services{'Folding'}[0] );
 	} # end if
 	$$specs{'txtCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	my $plusCover = 0;
@@ -477,6 +472,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 	#At this point, if the job supports 2out impo, our setup is 2out.  This may change later, depending on the equipment's ability to support 2out stitching
 	my $error;
 	my @possible_equipment = get_equipment( $specs, \$error );
+	@{$$calc_hash{'Stitching::signature_calc::equipment'}} = @possible_equipment;
 
 	if ( ! @possible_equipment ) {
 		$error =~ s/\n/<br\/>/g;
@@ -517,7 +513,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 			if ( ! $$specs{"ddmEquipment$qty_index"} ) {
 				$$specs{'alert'} .= 'Please select a piece of equipment to stitch your job.<br/>';
 			} else {
-				@equipment = openprint::Equipment->find( 'id'=>$$specs{"ddmEquipment$qty_index"} );
+				@equipment = ( new openprint::Equipment( $$specs{"ddmEquipment$qty_index"} ) );
 				if ( ! @equipment ) {
 					$$specs{'alert'} .= 'Your selected equipment was not found. Please select another.<br/>';
 				} # end if
@@ -582,7 +578,7 @@ $openprint::log->debug(sprintf('%d %s %s %d %dx%d %s', $imposition, @$sig_specs{
 					} # end if
 					my $Imposition = new openprint::Imposition;
 					$Imposition->load( $sig_specs, $qty_index );
-					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs, [] );
+					my %folding_results = openprint::Estimating::Folding::signature_calc( $Project, $service_index, $sig_specs, $folding_specs, $qty_index, $Imposition->Paper(), $Imposition, {}, {}, $specs, [], {} );
 				#$$specs{'hdnBreakdown'.$qty_index} .= $folding_results{'Breakdown'};
 					$folding_cost += $folding_results{'Price'};
 				} # end foreach sig
@@ -654,19 +650,19 @@ sub get_equipment {
 	my @all_equipment = openprint::Equipment->find( 'Specifications' => {'Stitching Capable'=>['Y','When Printing','When Digital']}, 'useinestimating'=>1,'order'=>'strName');
 
 	foreach my $Equipment ( @all_equipment ) {
-		if ( $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $Equipment->specification('Maximum Spread Width') ) ) {
+		if ( $_ = $Equipment->specification('Maximum Spread Width') and ( $$specs{'Width'} > $_ ) ) {
 			$$error .= "For " . $Equipment->name() . ": Too big.<br/>";
 			next;
 		} # end if
-		if ( $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $Equipment->specification('Minimum Spread Width') ) ) {
+		if ( $_ = $Equipment->specification('Minimum Spread Width') and ( $$specs{'Width'} < $_ ) ) {
 			$$error .= "For " . $Equipment->name() . ": Too small.<br/>";
 			next;
 		} # end if
-		if ( $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $Equipment->specification('Maximum Calliper') ) ) {
+		if ( $_ = $Equipment->specification('Maximum Calliper') and ( $$specs{'txtCalliper'} > $_ ) ) {
 			$$error .= "For " . $Equipment->name() . ": Too Thick.<br/>";
 			next;
 		} # end if
-		if ( $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $Equipment->specification('Minimum Calliper') ) ) {
+		if ( $_ = $Equipment->specification('Minimum Calliper') and ( $$specs{'txtCalliper'} < $_ ) ) {
 			$$error .= "For " . $Equipment->name() . ": Too Thick.<br/>";
 			next;
 		} # end if

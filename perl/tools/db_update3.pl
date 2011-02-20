@@ -162,6 +162,10 @@ if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'user_relationships', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 
 $dbh->disconnect();
 1;

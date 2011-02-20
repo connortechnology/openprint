@@ -114,8 +114,7 @@ sub include {
 sub do_include {
 	my ( $text, $variable ) = @_;
 	if ( $$text =~ /(.*?)<!--\s*#include\s+virtual="(.*?)"\s*-->(.*)/ms ) {
-		my ( $before, $middle, $after ) = ( $1, $2, $3 );
-		my $file = $middle;
+		my ( $before, $file, $after ) = ( $1, $2, $3 );
 		if ( ! ( $file =~ /^\// ) ) {
 # Use a path relative to the current page
 			my $path = $$variable{'uri'};

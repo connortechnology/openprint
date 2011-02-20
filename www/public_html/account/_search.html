@@ -20,13 +20,22 @@
 
 	my $html;
 	foreach my $User ( @Users ) {
+		next if $User->id() == $session{'user_id'};
 		my $Profile = $User->Profile();
 		$html .= '<div class="Result">';
 		$html .= sprintf(q`<div class="Info">
 								<div class="Name"><a href="/account/view.html?user_id=%1$d">%2$s</a></div>
 								<div class="Address">%3$s</div>
 							</div>`, $User->id(), $User->name(), $Profile->City() . ', ' . $Profile->State() );
-if ( 0 ) {
+if ( 1 ) {
+		my $age = 0;
+		if ( $Profile->Birthday() and $Profile->Birthday() ne '--' ) {
+			my @Birthday = split('-', $Profile->Birthday() );
+			$log->debug("Birthday (@Birthday) " . $Profile->Birthday() );
+			$age = Date::Calc::check_date( @Birthday ) ? int(Date::Calc::Delta_Days( @Birthday, Date::Calc::Today() )/365) : 0;
+			$log->debug("Birthday $age years @Birthday");
+		} 
+			$log->debug($User->to_string() );
 		$html .= sprintf(q`
 				<div class="User">
 					<a href="/account/view.html?user_id=%1$d"><img class="thumbnail" src="%2$s" alt="%3$s" /></a>
@@ -35,14 +44,14 @@ if ( 0 ) {
 					<div class="Joined"><label>Joined:</label>%6$s</div>
 				</div>`,
 				$User->id(),
-				( $User->Asset()->thumbnail_filename() ? $User->Asset()->thumbnail_filename() : 'no_image.gif' ), '',
-				int(Date::Calc::Delta_Days( split('-', $Profile->Birthday() ), Date::Calc::Today() ) /365),
+				( $_ = $User->Asset()->thumbnail_filename() ? $_ : 'no_image.gif' ), '',
+				$age,
 				$Profile->Gender(),
 				Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $User->created_on() ) ),
 			);
+$log->debug($html);
 }
 		$html .= '</div>';
-$openprint::log->debug($html);
 	} # end foreach User
 	return $html;
 ) ?>

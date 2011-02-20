@@ -341,6 +341,7 @@ sub po_limit {
 } # end sub po_limit
 
 sub Asset {
+$log->debug("loading asset");
 	return new openprint::Asset( $_[0]{'asset_id'} );
 } # end sub Asset
 

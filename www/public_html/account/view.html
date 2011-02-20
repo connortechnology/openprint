@@ -46,6 +46,7 @@
 				return $html;
 			) ?>
 		</div>
+		<div id="Wall"><!--#include virtual="/account/_wall.html"--></div>
 
 		<div id="UserInformation">
 			<fieldset><legend>User Information</legend>
@@ -90,7 +91,6 @@
 						<? echo ( ssi::writeButton( $log, $dbh, 'NewEvent', 'new.gif', '', '/events/edit.html', 'New' ); ) ?>
 					</p>
 				</div>
-	
 			</fieldset>
 		</div>
 		<div id="Relationships">
