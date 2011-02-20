@@ -10,7 +10,7 @@ use vars qw( $log $dbh $AUTOLOAD %cache %name_cache %fields %defaults %transform
 *dbh = \$openprint::dbh;
 
 my $debug = 0;
-my $debug_all = 1;
+my $debug_all = 0;
 $no_cache = 0;
 
 sub init_cache {
@@ -114,13 +114,13 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
-if ( $data ) {
+#if ( $data ) {
 #foreach my $k ( keys %$data ) {
 #$log->debug("$type ::save $k => $$data{$k}");
 #}
 #} else {
 #$log->debug("No data");
-}
+#}
 	$self->set( $data ? $data : {} );
 #if ( $data ) {
 #foreach my $k ( keys %$data ) {
@@ -132,19 +132,19 @@ if ( $data ) {
 #$debug = 0;
 
 	my $table = eval '$'.$type.'::table';
-	my %fields = eval '%'.$type.'::fields';
+	my $fields = eval '\%'.$type.'::fields';
 
 	my %sql;
-	foreach my $k ( keys %fields ) {
-		$sql{$fields{$k}} = $$self{$k} if defined $fields{$k};
+	foreach my $k ( keys %$fields ) {
+		$sql{$$fields{$k}} = $$self{$k} if defined $$fields{$k};
 	} # end foreach
-	$sql{$fields{'updated_by'}} = $openprint::session{'user_id'} if exists $fields{'updated_by'};
-	$sql{$fields{'updated_on'}} = 'NOW()' if exists $fields{'updated_on'};
-	if ( $debug ) {
-		foreach my $k ( keys %sql ) {
-			$openprint::log->debug("Saving $k => $sql{$k}");
-		} # end foreach
-	} # end if
+	$sql{$$fields{'updated_by'}} = $openprint::session{'user_id'} if exists $$fields{'updated_by'};
+	$sql{$$fields{'updated_on'}} = 'NOW()' if exists $$fields{'updated_on'};
+	#if ( 0 or $debug or $debug_all ) {
+		#foreach my $k ( keys %sql ) {
+			#$log->debug("Saving $k => $sql{$k}");
+		#} # end foreach
+	#} # end if
 	my @identified_by = eval '@'.$type.'::identified_by';
 	my $ac = sql::start_transaction( $dbh );
 	if ( @identified_by ) {
@@ -152,47 +152,83 @@ if ( $data ) {
 		my %serial = eval '%'.$type.'::serial';
 		if ( ! %serial ) {
 			# No serial columns defined, which means that we will do saving by delete/insert instead of insert/update
-			my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
-			sql::execute( undef, undef, 'DELETE FROM ' . $table. ' WHERE ' . $where, @$self{@identified_by} );  
+			my $where = join(' AND ', map { $$fields{$_}.'=?' } @identified_by );
+			if ( ! ( ( $_ = $dbh->prepare("DELETE FROM $table WHERE $where") ) and $_->execute( @$self{@identified_by} ) ) ) {
+				$log->error('Error deleting: ' . $dbh->errstr);
+				$dbh->rollback();
+				sql::end_transaction( $dbh, $ac );
+				return $dbh->errstr;
+			} # end if
 			$insert = 1;
 		} else {
 			foreach my $id ( @identified_by ) {
 				next if ! $serial{$id};
-				($$self{$id}) = ($sql{$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
+				($$self{$id}) = ($sql{$$fields{$id}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial{$id} . q{')} );
 				$insert = 1;
 			} # end foreach
 		} # end if
 		if ( $insert ) {
-			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
+			my @keys = keys %sql;
+			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
+			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
+				$command =~ s/\?/\%s/g;
+				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $dbh->errstr);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $error;
+				return $dbh->errstr;
+			} # end if
+			if ( $debug or $debug_all ) {
+				$command =~ s/\?/\%s/g;
+				$log->error('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
 		} else {
-			my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
-			if ( my $error = sql::update( undef, undef, $table, [$where, @$self{@identified_by}], \%sql ) ) {
+			my @keys = keys %sql;
+			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . ' WHERE ' . join(' AND ', map { $_ . ' = ?' } @$fields{@identified_by} );
+			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys,@identified_by} ) ) ) {
+				$command =~ s/\?/\%s/g;
+				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys, @identified_by}) ).'):' . $dbh->errstr);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $error;
+				return $dbh->errstr;
+			} # end if
+			if ( $debug or $debug_all ) {
+				$command =~ s/\?/\%s/g;
+				$log->error('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys,@identified_by} ) ).'):' );
 			} # end if
 		} # end if
 	} else {
 		if ( ! $$self{'id'} ) {
 			my $serial = eval '$'.$type.'::serial';
 			if ( $serial ) {
-				($$self{'id'}) = ($sql{$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
+				($$self{'id'}) = ($sql{$$fields{'id'}}) = sql::execute( undef, undef, q{SELECT nextval('} . $serial . q{')} );
 			} # end if
-			if ( my $error = sql::insert( undef, undef, $table, \%sql ) ) {
+			my @keys = keys %sql;
+			my $command = "INSERT INTO $table (" . join(',', @keys ) . ') VALUES (' . join(',', map { '?' } @sql{@keys} ) . ')';
+			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys} ) ) ) {
+				$command =~ s/\?/\%s/g;
+				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}) ).'):' . $dbh->errstr);
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $error;
+				return $dbh->errstr;
+			} # end if
+			if ( $debug or $debug_all ) {
+				$command =~ s/\?/\%s/g;
+				$log->error('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys} ) ).'):' );
 			} # end if
 		} else {
 			delete $sql{'created_on'};
-			if ( my $error = sql::update( undef, undef, $table, [$fields{'id'}.'=?', $$self{id}], \%sql ) ) {
+			my @keys = keys %sql;
+			my $command = "UPDATE $table SET " . join(',', map { $_ . ' = ?' } @keys ) . " WHERE $$fields{id} = ?";
+			if ( ! ( $_ = $dbh->prepare($command) and $_->execute( @sql{@keys}, $sql{$$fields{'id'}} ) ) ) {
+				$command =~ s/\?/\%s/g;
+				$log->error('SQL statement execution failed: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' . $dbh->errstr) if $log;
 				$dbh->rollback();
 				sql::end_transaction( $dbh, $ac );
-				return $error;
+				return $dbh->errstr;
+			} # end if
+			if ( $debug or $debug_all ) {
+				$command =~ s/\?/\%s/g;
+				$log->error('SQL statement execution: ('.sprintf($command, , map { defined $_ ? $_ : 'undef' } ( @sql{@keys}, $$fields{'id'} ) ).'):' );
 			} # end if
 		} # end if
 	} # end if
@@ -218,25 +254,25 @@ sub set {
 	my @set_fields = ();
 
 	my $type = ref $self;
-	my %fields = eval ('%'.$type.'::fields');
-	if ( ! %fields ) {
-$openprint::log->warn('Object::set called on an object with no fields');
+	my $fields = eval ('\%'.$type.'::fields');
+	if ( ! $fields ) {
+$log->warn('Object::set called on an object with no fields');
 	} # end if
 
-	foreach my $field ( keys %fields ) {
-$openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
+	foreach my $field ( keys %$fields ) {
+$log->debug("field: $field, param: ".$$params{$field}) if $debug;
 		if ( exists $$params{$field} ) {
 			if ( ( ! defined $$self{$field} ) or ($$self{$field} ne $params->{$field}) ) {
 # Only make changes to fields that have changed
-				$$self{$field} = $$params{$field} if defined $fields{$field};
+				$$self{$field} = $$params{$field} if defined $$fields{$field};
 				eval "\$self->$field( \$\$params{\$field} );";
-				push @set_fields, $fields{$field}, $$params{$field};	#mark for sql updating
+				push @set_fields, $$fields{$field}, $$params{$field};	#mark for sql updating
 			} # end if
 		} # end if
 
-		if ( defined $fields{$field} ) {
+		if ( defined $$fields{$field} ) {
 			my @transforms = eval('@{$'.$type.'::transforms{$field}}');
-			$openprint::log->debug("Transforms: @transforms") if $debug;
+			$log->debug("Transforms: @transforms") if $debug;
 
 			foreach my $transform ( @transforms ) {
 				eval '$$self{$field} =~ ' . $transform;
@@ -245,12 +281,12 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 			my %defaults = eval('%'.$type.'::defaults');
 
 			if ( ( ( ! exists $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
-				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
+				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 				$$self{$field} = eval($defaults{$field});
-				$openprint::log->error( "Eval error of object default $field Reason: " . $@ ) if $@;
-				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
+				$log->error( "Eval error of object default $field Reason: " . $@ ) if $@;
+				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 			#} else {
-	#$openprint::log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
+	#$log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			} # end if
 		} # end if
 	} # end foreach
@@ -418,22 +454,22 @@ sub find {
 	my $cache_field = eval '$'.$type.'::cache_field;';
 	if ( $cache_field and $$params{$cache_field} and ( ( 1 == keys %$params ) or ( 2 == keys %$params and exists $$params{'limit'} ) ) ) {
 
-#$openprint::log->debug("have cache field $cache_field flr $$params{$cache_field}");
+#$log->debug("have cache field $cache_field flr $$params{$cache_field}");
 		if ( exists $name_cache{$type} and exists $name_cache{$type}{$$params{$cache_field}} ) {
-#$openprint::log->debug("There is an object in the cache");
+#$log->debug("There is an object in the cache");
 			if ( $name_cache{$type}{$$params{$cache_field}} ) {
-#$openprint::log->debug("returning " . $name_cache{$type}{$$params{$cache_field}} . " for $type $cache_field $$params{$cache_field}");
+#$log->debug("returning " . $name_cache{$type}{$$params{$cache_field}} . " for $type $cache_field $$params{$cache_field}");
 				return $name_cache{$type}{$$params{$cache_field}} 
 			} else {
-#$openprint::log->debug("returning nothing for $type $cache_field $$params{$cache_field}");
+#$log->debug("returning nothing for $type $cache_field $$params{$cache_field}");
 				return ();
 			} # end if
 		} else {
-#$openprint::log->debug("Undefing $type $cache_field $params{$cache_field}");
+#$log->debug("Undefing $type $cache_field $params{$cache_field}");
 			$name_cache{$type}{$$params{$cache_field}} = undef;
 		} # end if
 	#} else {
-		#$openprint::log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
+		#$log->debug("Not doing caching using $cache_field with params $$params{$cache_field} ");
 	} # end if
 
 	foreach ( 'find_fields', 'fields' ) {
@@ -477,7 +513,7 @@ sub find {
 				my @d;
 
 				foreach my $field ( @{$$f{$k}} ) {
-#$openprint::log->debug("find: $field");
+#$log->debug("find: $field");
 					my $results = find_operators( $params, $k, $field );
 					foreach my $operator ( keys %$results ) {
 						push @w, shift @{$$results{$operator}};
@@ -508,7 +544,7 @@ sub find {
 			if ( exists $$fields{$f} ) {
 				if ( $$params{$k}->id() ) {
 					push @where, "$$fields{$f} = ?";
-	#$openprint::log->debug("$params{$k}" . ref $params{$k});
+	#$log->debug("$params{$k}" . ref $params{$k});
 					push @values, $$params{$k}->id();
 				} else {
 					push @where, "$$fields{$f} IS NULL";
@@ -541,15 +577,15 @@ sub find {
 		$log->error("Extra parameters in $type ::find $k => $$params{$k}");
 	} # end foreach
 	
-#$openprint::log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
+#$log->debug( 'find prepare: ' . sprintf('%.4f', tv_interval($starttime)*1000) ." useconds") if $debug;
 	my $data = $openprint::dbh->selectall_arrayref( $sql, { Slice => {} }, @values );
 	if ( ! $data ) {
-		$openprint::log->debug('Error ' . $openprint::dbh->errstr() . " loading $type ($sql) (@values) " );
+		$log->debug('Error ' . $openprint::dbh->errstr() . " loading $type ($sql) (@values) " );
 		return ();
 	#} elsif ( ( ! @$data ) and $debug ) {
-		#$openprint::log->debug("No $type ($sql) (@values) " );
+		#$log->debug("No $type ($sql) (@values) " );
 	} elsif ( $debug ) {
-		$openprint::log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
+		$log->debug("Loading $debug $type ($sql) (@values) # of results:" . @$data . ' in ' . sprintf('%.4f', tv_interval($starttime)*1000) .' useconds' );
 	} # end if
 	if ( $$fields{'id'} ) {
 		if ( $cache_field and 1 ) {
@@ -565,10 +601,10 @@ sub find {
 	} else {
 		my @identified_by = eval '@'.$type.'::identified_by';
 		if ( ! @identified_by ) {
-			$openprint::log->error("Multi key object $type but no identified by");
+			$log->error("Multi key object $type but no identified by");
 		} # end if
 		return map { $type->new( \@identified_by, $_ ) } @$data;
-#$openprint::log->debug("Objs: "  . scalar @objs );
+#$log->debug("Objs: "  . scalar @objs );
 		#return @objs;
 	} # end if
 } # end sub find
@@ -586,14 +622,14 @@ sub AUTOLOAD {
 	my $type = ref($self);
 	my $name = $AUTOLOAD;
 #if ( $self eq 'supplier' ) {
-#$openprint::log->debug("Autoload $type $name");
+#$log->debug("Autoload $type $name");
 #}
 	$name =~ s/.*://;
 	if ( @_ ) {
 		return $self->{$name} = shift;
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
-#$openprint::log->debug("Autoload $self $type $name $field $$fields{$field} ($$self{$field}) " );
+#$log->debug("Autoload $self $type $name $field $$fields{$field} ($$self{$field}) " );
 		if ( $fields ) {
 			my $field = (lc $name) . '_id';
 			if ( exists $$fields{$field} ) {
@@ -602,7 +638,7 @@ sub AUTOLOAD {
 				} # end if
 			} # end if
 		} # end if
-#$openprint::log->debug("NO Autoload $type $name $field $$fields{$field}" );
+#$log->debug("NO Autoload $type $name $field $$fields{$field}" );
 		return $$self{$name};
 	} # end if
 } # end sub AUTOLOAD
