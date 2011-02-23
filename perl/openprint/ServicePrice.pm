@@ -6,20 +6,13 @@ require sql;
 require openprint::Object;
 require openprint::logs;
 use openprint;
-use vars qw( %variable %session %param %config $log $dbh %fields %transforms %defaults );
-*variable = \%openprint::variable;
-*session = \%openprint::session;
-*param = \%openprint::param;
-*config = \%openprint::config;
+
+
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 
-my $debug = 1;
-
-use vars qw( $log $dbh $table $serial %fields %transforms %defaults );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
-
+$debug = 1;
 $table = 'Service_Prices';
 $serial = 'serviceprices_id_seq';
 
@@ -58,6 +51,9 @@ $serial = 'serviceprices_id_seq';
 );
 
 sub find {
+	if ( $_[0] eq 'openprint::ServicePrice' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	my $sql = 'SELECT * FROM Service_Prices WHERE 1>0';
 	my @values;
@@ -124,14 +120,13 @@ return new openprint::Service( $_[0]{'service_id'} );
 
 sub price {
 	if ( @_ > 1 ) {
-		$_[0]{'price'} = @_[1];
+		$_[0]{'price'} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{'price'} ) {
 		$_[0]{'price'} = sprintf( '%.2f', $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
 	} # end if
 	return $_[0]{'price'};
 } # end sub price
-1;
 
+1;
 __END__
-~       

@@ -304,7 +304,7 @@ sub get_services_in_category {
 	} else { 
 		$_ = "SELECT lngServiceIndex, Service_Types.id FROM tbl_Service_Specifications, Service_Types WHERE lngProjectIndex=?
 			  AND tbl_Service_Specifications.strName='ServiceType'
-			  AND strValue IN ( SELECT name FROM Service_Types WHERE category = ? )
+			  AND strValue IN ( SELECT name FROM Service_Types WHERE category_id = (SELECT id FROM Servicetype_categories WHERE name=? ) )
 			  AND strValue = name
 			  ORDER BY sorting";
 		@services = sql::execute( $log, $dbh, $_, $project_index, $category );

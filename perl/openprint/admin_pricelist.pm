@@ -68,13 +68,7 @@ sub edit {
 			return misc::error( $log, $dbh, $variable, 'No pricelist selected.', 'You must select a pricelist before exporting.');
 		} # end if
 		my @header = ( 'Material ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
-        $_ = "SELECT (SELECT name FROM Materials WHERE id = lngMaterialIndex) AS strID,\n".
-				"(SELECT strID FROM tbl_Equipment WHERE Id = lngEquipmentIndex) AS EquipmentID,\n".
-				"lngMin, lngMax, strUnits, dblCost, dblMarkup, dblPrice, ysnDiscountable\n".
-                "FROM tbl_Material_Prices\n".
-                "WHERE lngListIndex = '$id'\n".
-				"ORDER BY strID, EquipmentID, lngMin";
-        my @data = sql::execute( $log, $dbh, $_ );
+		my @data = map { $_->Material()->name(), $_->Equipment()->name(), $_->min(), $_->max(), $_->units(), $_->cost(), $_->markup(), $_->price(), $_->discountable() } openprint::MaterialPrice->find('pricelist_id'=>$id, 'order'=>join(',',@openprint::MaterialPrice::fields{'min','max'}));
 		misc::export_csv( $r, $log, $variable, $Pricelist->name() . 'MaterialPrices.csv', \@header, \@data );
 	} elsif ( $openprint::param{'btnFunction'} eq 'Export Paper Prices' ) {
 		if ( $id eq '' ) {
@@ -107,13 +101,7 @@ sub edit {
 			return misc::error( $log, $dbh, $variable, 'No pricelist selected.', 'You must select a pricelist before exporting.');
 		} # end if
 		my @header = ( 'Service ID', 'Equipment ID','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
-        $_ = "SELECT (SELECT name FROM Services WHERE id = service_id) AS strID,\n".
-				"(SELECT strID FROM tbl_Equipment WHERE Id = equipment_id) AS EquipmentID,\n".
-				"lngMin, lngMax, Units, Cost, Markup, Price, ysnDiscountable\n".
-                "FROM Service_Prices\n".
-                "WHERE pricelist_id = '$id'\n".
-				"ORDER BY strID, EquipmentID, lngMin";
-        my @data = sql::execute( $log, $dbh, $_ );
+		my @data = map { $_->Service()->name(), $_->Equipment()->name(), $_->min(), $_->max(), $_->units(), $_->cost(), $_->markup(), $_->price(), $_->discountable() } openprint::ServicePrice->find('pricelist_id'=>$id, 'order'=>join(',',@openprint::ServicePrice::fields{'min','max'}));
 		misc::export_csv( $r, $log, $variable, $Pricelist->name() . 'ServicePrices.csv', \@header, \@data );
 
 
