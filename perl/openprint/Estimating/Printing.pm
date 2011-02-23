@@ -16,7 +16,7 @@
 
 package openprint::Estimating::Printing;
 my $threading = 0;
-my $debug = 0;
+my $debug = 1;
 my $master_time;
 
 my %folding_cache;
@@ -1596,6 +1596,8 @@ $openprint::log->debug("Before select presses: " . ( sprintf('%.4f', tv_interval
 	foreach my $press_id ( keys %presses ) {
 		if ( ! $presses{$press_id} ) {
 			push @possible_presses, new openprint::Equipment($press_id);
+		} elsif ( $debug ) {
+			$openprint::log->debug("Press: $presses{$press_id}");
 		} # end if
 	} # end foreach
 	if ( ! @possible_presses ) {
