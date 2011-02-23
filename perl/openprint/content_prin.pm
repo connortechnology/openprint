@@ -100,3 +100,11 @@ sub envelopes {
 sub presentationfolders {
 	load_simple();
 } # end sub presentationfolders
+
+sub banners {
+	load_simple();
+	$variable{'Redirect'} = '/content/'.$variable{'ProjectType'}->url();
+} # end sub banners
+
+1;
+__END__

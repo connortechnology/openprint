@@ -50,13 +50,13 @@ sub next {
 } # end sub next
 
 sub Pricelist {
-return new openprint::Pricelist( $_[0]{'pricelist_id'} );
+	return new openprint::Pricelist( $_[0]{'pricelist_id'} );
 }
 sub Equipment {
-return new openprint::Equipment( $_[0]{'equipment_id'} );
+	return new openprint::Equipment( $_[0]{'equipment_id'} );
 }
 sub Service {
-return new openprint::Service( $_[0]{'service_id'} );
+	return new openprint::Service( $_[0]{'service_id'} );
 }
 
 sub price {
@@ -68,5 +68,6 @@ sub price {
 	} # end if
 	return $_[0]{'price'};
 } # end sub price
+
 1;
 __END__

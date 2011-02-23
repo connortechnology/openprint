@@ -19,7 +19,7 @@
     <? while ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
     <tr<?rowclass?>>
         <td><? echo ( $$variable{'Product'}->Product()->name(); ) ?></td>
-        <td><? echo ( Date::Format::time2str( $openprint::config{'DateFormat'}, Date::Parse::str2time( $$variable{'Product'}->requested_for() ) ); ) ?></td>
+        <td><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Product'}->requested_for() ) ); ) ?></td>
         <td align="left"><? echo ( $$variable{'Product'}->quantity(); ) ?></td>
         <td align="right">
 <? echo (
@@ -58,11 +58,11 @@
                     ).'<br/>';
             } # end if
 
-            $shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td>$summary<br/>$$specs{'alert'}</td><td align="left">&nbsp;</td><td align="right">`.sprintf('%s%.2f', $$variable{'Currency'}->symbol(), $price).'</td></tr>';
+            $shipping_html .= qq`<tr$$variable{'rowclass'}><td>`.$ServiceType->description().qq`</td><td>$summary<br/>$$specs{'alert'}</td><td align="left">&nbsp;</td><td align="right">`.openprint::Currency::format($price).'</td></tr>';
         } # end foreach
     } # end foreach
     $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
-return sprintf( '%s%.2f</td></tr>', $$variable{'Currency'}->symbol(), $$variable{'price'} ).$shipping_html;
+return sprintf( '%s</td></tr>', openprint::Currency::format( $$variable{'price'} ) ).$shipping_html;
     ) ?>
     <? endwhile ( $$variable{'Product'} = shift @{$$variable{'Products'}} ) ?>
 </table>

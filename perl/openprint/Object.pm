@@ -115,13 +115,6 @@ sub load {
 sub save {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
-#if ( $data ) {
-#foreach my $k ( keys %$data ) {
-#$log->debug("$type ::save $k => $$data{$k}");
-#}
-#} else {
-#$log->debug("No data");
-#}
 	$self->set( $data ? $data : {} );
 #if ( $data ) {
 #foreach my $k ( keys %$data ) {
@@ -286,8 +279,6 @@ $log->debug("field: $field, param: ".$$params{$field}) if $debug;
 				$$self{$field} = eval($defaults{$field});
 				$log->error( "Eval error of object default $field Reason: " . $@ ) if $@;
 				$log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
-			#} else {
-	#$log->debug("Not Setting default ($field) ($$self{$field}) ($defaults{$field}) ");
 			} # end if
 		} # end if
 	} # end foreach
@@ -514,7 +505,6 @@ sub find {
 				my @d;
 
 				foreach my $field ( @{$$f{$k}} ) {
-#$log->debug("find: $field");
 					my $results = find_operators( $params, $k, $field );
 					foreach my $operator ( keys %$results ) {
 						push @w, shift @{$$results{$operator}};
@@ -545,7 +535,6 @@ sub find {
 			if ( exists $$fields{$f} ) {
 				if ( $$params{$k}->id() ) {
 					push @where, "$$fields{$f} = ?";
-	#$log->debug("$params{$k}" . ref $params{$k});
 					push @values, $$params{$k}->id();
 				} else {
 					push @where, "$$fields{$f} IS NULL";
@@ -630,7 +619,6 @@ sub AUTOLOAD {
 		return $self->{$name} = shift;
 	} else {
 		my $fields = eval '\%'.$type.'::fields';
-#$log->debug("Autoload $self $type $name $field $$fields{$field} ($$self{$field}) " );
 		if ( $fields ) {
 			my $field = (lc $name) . '_id';
 			if ( exists $$fields{$field} ) {
@@ -639,7 +627,6 @@ sub AUTOLOAD {
 				} # end if
 			} # end if
 		} # end if
-#$log->debug("NO Autoload $type $name $field $$fields{$field}" );
 		return $$self{$name};
 	} # end if
 } # end sub AUTOLOAD

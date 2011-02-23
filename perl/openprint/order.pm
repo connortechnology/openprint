@@ -109,6 +109,8 @@ sub add_product {
 	} # end if	
 	$Product->quantity( $quantity );
 	$error .= $Product->save();
+
+	# Make the object reload its stored cache of Products
 	delete $$Order{'Products'};
 
 	my $Project = $Product->Project();
