@@ -30,29 +30,32 @@
 		<? endif ( $$variable{'User'}->id() != $session{'user_id'} ) ?>
 		
 		<div id="ProfilePicture">
-		<? if ( $$variable{'User'}->asset_id() ) ?>
-		<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>"/>
-		<? else ( $$variable{'User'}->asset_id() ) ?>
-		No profile picture set.
-		<? endif ( $$variable{'User'}->asset_id() ) ?>
+			<? if ( $$variable{'User'}->asset_id() ) ?>
+			<img src="<? echo ( $$variable{'User'}->Asset()->url() ) ?>" alt="<? echo ( $$variable{'User'}->Asset()->caption() ) ?>" />
+			<? else ( $$variable{'User'}->asset_id() ) ?>
+			No profile picture set.
+			<? endif ( $$variable{'User'}->asset_id() ) ?>
+			<div id="Albums">
 			<? echo (
 				my $html = '';
 				foreach my $Album ( openprint::Photo_Album->find( 'user_id' => $variable{'User'}->id() ) ) {
-					foreach my $Photo ( $Album->Photos() ) {
-						$html .= sprintf('<a href="/employee/assets/view.html?asset_id=%d"><img src="%s" alt="%s"/></a>', $Photo->id(), $Photo->filename(), $Photo->name() );
+					my $Photo = $Album->Thumbnail();
+					if ( $Photo->asset_id() ) {
+						$html .= sprintf('<a href="/employee/assets/view.html?asset_id=%d"><img src="%s" alt="%s" class="thumbnail"/></a>', $Photo->asset_id(), $Photo->thumbnail_url(), $Photo->name() );
 				
-					} # end foreach Photo
+					} # end if Thumbnail
 				} # end foreach Album
 				return $html;
 			) ?>
-		</div>
+			</div><!--Albums-->
+		</div><!--ProfilePicture-->
 		<div id="Wall"><!--#include virtual="/account/_wall.html"--></div>
 
 		<div id="UserInformation">
 			<fieldset><legend>User Information</legend>
 				<div class="content">
 					<ul>
-					<li><label>Name</label><? echo ( $$variable{'User'}->name() ) ?></li>
+						<li><label>Name</label><? echo ( $$variable{'User'}->name() ) ?></li>
 					</ul>
 				</div>
 			</fieldset>
@@ -62,7 +65,7 @@
 				<div class="content">
 					<ul>
 						<li class="created_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->created_on() ) ); ) ?></li>
-						<li class="updated_on"><label>Created on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?></li>
+						<li class="updated_on"><label>Updated on</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'User'}->updated_on() ) ); ) ?></li>
 					</ul>
 				</div>
 			</fieldset>

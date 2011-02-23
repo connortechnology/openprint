@@ -21,7 +21,7 @@
 			</li>
 		</ul>
 	</fieldset>
-	<fieldset><legend></legend>
+	<fieldset><legend><? echo ( $$variable{'Category'}->id() ? 'Edit category ' . $$variable{'Category'}->id() : 'New category' ) ?></legend>
 		<? if ( $$variable{'Category'}->deleted() ) ?>
 		<span class="warning">This category has been deleted</span>
 		<? endif ( $$variable{'Category'}->deleted() ) ?>
