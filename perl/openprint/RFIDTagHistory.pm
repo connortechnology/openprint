@@ -1,20 +1,16 @@
+use strict;
 package openprint::RFIDTagHistory;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*config = \%openprint::config;
 
 require sql;
-require ssi;
-require misc;
 
-my $debug = 1;
+$debug = 1;
 
 $table = 'rfidtaghistory';
 $serial = 'rfidtaghistory_id_seq';
@@ -36,13 +32,11 @@ $serial = 'rfidtaghistory_id_seq';
 );
 
 sub Location {
-	my ( $self ) = @_;
-	return new openprint::Location( $$self{'location_id'} );
+	return new openprint::Location( $_[0]{'location_id'} );
 } # end sub Location
 
 sub Scanner {
-	my ( $self ) = @_;
-	return new openprint::RFIDScanner( $$self{'scanner_id'} );
+	return new openprint::RFIDScanner( $_[0]{'scanner_id'} );
 } # end sub Scanner
 	
 

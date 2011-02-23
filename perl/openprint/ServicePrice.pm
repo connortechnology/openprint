@@ -1,6 +1,8 @@
 use strict;
 require sql;
 require openprint::Object;
+require openprint::logs;
+use Math::Round qw(nearest);
 package openprint::ServicePrice;
 our @ISA = qw( openprint::Object );
 
@@ -26,22 +28,22 @@ $serial = 'service_prices_id_seq';
 	'interpolate'	=>	'interpolate',
 	'supplier_id'	=>	'supplier_id',
 );
+%defaults = (
+	'min'	=>	undef,
+	'max'	=>	undef,
+	'cost'	=>	undef,
+	'markup'	=>	undef,
+	'price'		=>	undef,
+	'discountable'	=>	1,
+	'interpolate'	=>	0,
+);
 
 %transforms = (
-	'min' => [ 's/(\d*)/$1/g' ],
-	'max' => [ 's/(\d*)/$1/g' ],
-	'cost' => [ 's/[^\d\.]//g' ],
-	'price' => [ 's/[^\d\.]//g' ],
-	'markup' => [ 's/[^\d\.]//g' ],
-);
-%defaults = (
-	'min'			=>	undef,
-	'max'			=>	undef,
-	'equipment_id'	=>	undef,
-	'supplier_id'	=>	undef,
-	'cost'			=>	0,
-	'markup'		=>	0,
-	'price'			=>	0,
+	'min'	=>	[ 's/[^\d\.\-]//g' ],
+	'max'	=>	[ 's/[^\d\.\-]//g' ],
+	'cost'	=>	[ 's/[^\d\.\-]//g' ],
+	'markup'	=>	[ 's/[^\d\.\-]//g' ],
+	'price'	=>	[ 's/[^\d\.\-]//g' ],
 );
 
 sub next {
@@ -60,14 +62,29 @@ sub Service {
 }
 
 sub price {
-	if ( @_ > 1 ) {
-		$_[0]{'price'} = $_[1];
-	} # end if
-	if ( ! defined $_[0]{'price'} ) {
-		$_[0]{'price'} = sprintf( '%.2f', $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
-	} # end if
-	return $_[0]{'price'};
+    if ( @_ > 1 ) {
+        $_[0]{'price'} = $_[1];
+    } # end if
+    if ( ! defined $_[0]{'price'} ) {
+        $_[0]{'price'} = Math::Round::nearest( 0.01, $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+    } # end if
+    return $_[0]{'price'};
 } # end sub price
+
+sub markup {
+	if ( @_ > 1 ) {
+		$_[0]{'markup'} = $_[1];
+		$_[0]->price( undef );
+	} # end if
+	return $_[0]{'markup'};
+} # end sub markup
+sub cost {
+	if ( @_ > 1 ) {
+		$_[0]{'cost'} = $_[1];
+		$_[0]->price( undef );
+	} # end if
+	return $_[0]{'cost'};
+} # end sub cost
 
 1;
 __END__

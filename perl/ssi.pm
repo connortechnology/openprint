@@ -548,6 +548,9 @@ sub datetime_select {
 		($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( time );
 	} elsif ( $value ) {
 		($year,$month,$day, $hour,$min,$sec) = Date::Calc::Localtime( Date::Parse::str2time( $value ) );
+		if ( ! $year ) {
+$openprint::log->error("No date from $value");
+		}
 	} else {
 		$year = '';
 		$month = '';

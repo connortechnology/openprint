@@ -1,14 +1,10 @@
-package openprint::MaterialCategory;
-@ISA = qw( openprint::Object );
-require openprint::Material;
-
 use strict;
-
+package openprint::MaterialCategory;
+our @ISA = qw( openprint::Object );
+require openprint::Material;
 use openprint;
 
-use vars qw( $table $serial $log $dbh %fields );
-*log = \$openprint::log;
-*dbh = \$openprint::dbh;
+use vars qw( $table $serial %fields );
 
 $table = 'Material_Categories';
 $serial = 'material_categories_id_seq';

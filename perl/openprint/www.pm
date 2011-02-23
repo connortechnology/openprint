@@ -70,7 +70,7 @@ sub handler {
 			$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
-			$log->debug("Parameter $key is (" . $param{$key} . ")" . ref $param{$key} );
+			$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
 	} # end foreach
 	foreach my $key ( sort keys %param ) {
@@ -225,8 +225,7 @@ $openprint::log->debug("Getfile");
 		$r->content_type( "application/octet-stream; name=\"$variable{'Download'}\"" );
 		return;
 	} elsif ( $first eq 'administrator' ) {
-		require openprint::admin_colours;
-		require openprint::admin_pricelist;
+		require openprint::admin_quote;
 
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'A' );
 		return $status if $variable{'Redirect'};	
@@ -257,13 +256,6 @@ $log->debug("User Type: $session{'user_type'}");
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
 			openprint::login::login_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password.html';
 			openprint::login::change_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password_confirmation.html';
-		} elsif ( $second eq 'production' ) {
-			# services and equipment
-
-			openprint::admin_colours::import_export( $r, $log, $dbh, \%variable ) if $filename eq 'colour_import_export.html';
-
-			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
-
 		} elsif ( $first ) {
 			eval( 'require openprint::'.join('_', @path ) );
 $log->error( "Eval error of require, Reason: " . $@ ) if $@;

@@ -673,6 +673,7 @@ sub create_edit_process {
 						delete_service( $log, $dbh, $Project->id(), $s_id );
 					} # end if
 				} # end foreach
+				$recalc = 1;
 				delete $services{$ServiceType->name()};
 				$recalculate = 1;
 			} # end if
