@@ -225,8 +225,6 @@ $openprint::log->debug("Getfile");
 		$r->content_type( "application/octet-stream; name=\"$variable{'Download'}\"" );
 		return;
 	} elsif ( $first eq 'administrator' ) {
-		require openprint::admin_quote;
-
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'A' );
 		return $status if $variable{'Redirect'};	
 		$status = Apache2::Const::OK;
