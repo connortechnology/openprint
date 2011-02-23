@@ -54,6 +54,7 @@ function open_window( page ) {
 	my $qty_index = $Project->ordered_quantity_index();
 
     foreach my $ServiceCategory ( openprint::ServiceType_Category::find('order'=>'sorting,name') ) {
+$log->debug("Category $$ServiceCategory{'name'} $html");
         if ( $ServiceCategory->name() eq 'Printing' ) {
             my $printing_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			$html .= "<tr$rowclass>";
@@ -187,74 +188,78 @@ function open_window( page ) {
             } # end foreach ServiceType
         } # end if Printing or else
     } # end foreach ServiceType_Category
-	my %totals;
-	my %sheets;
-	my %prices;
 
-	foreach my $ss_id ( $Project->signatures() ) {
-		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+	if ( ! $$services{'Paper'} ) {
+		my %totals;
+		my %sheets;
+		my %prices;
 
-		my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
-		if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
-			$impressions /= 2
-		} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
-			my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
-			my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
-			if ( @side_one_colours and @side_two_colours ) {
-				$impressions /= 2
-			} # end if
-		} # end if
+		foreach my $ss_id ( $Project->signatures() ) {
+			my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
 
-		my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
-		if ( $Paper->type() eq 'Roll' ) {
-			$totals{$Paper->to_string()} += POSIX::ceil($impressions * $Paper->area() * $Paper->wpsi());
-		} elsif ( $Paper->type() eq 'Sheet' ) {
-			my $sheets = $impressions;
-			if ( $Paper->start_area() and $Paper->area() ) {
-				$sheets /= ( $Paper->start_area() / $Paper->area() );
-				$sheets = ceil( $sheets );
-			} else {
-				$log->debug("No area in project view: " . $Paper->to_string() );
-			} # end if
-			$totals{$Paper->to_string()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
-			$sheets{$Paper->to_string()} += $sheets;
-		} # end if
-		if ( ! $Paper->supplied() ) {
-			if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
-				my %price = $Paper->get_price( $totals{$Paper->to_string()} );
-				$price{'Total'} = $price{'100lb Price'} * $totals{$Paper->to_string()} / 100;
-				$prices{$Paper->to_string()} = sprintf('* $%.2f/100lb = $%.2f', @price{'100lb Price','Total'} );
-			} # end if in Accounting
-		} # endif Supplied
-	} # end foreach signature
-
-	if ( keys %totals ) {
-		$html .= '<tr class="totals">';
-		if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) {
-			$html .= '<td class="unprintable">&nbsp;</td>';
-		} # end if
-		$html .= '<td><b>Stock:</b><br/>';
-		foreach my $string ( sort keys %totals ) {
-			$html .= $string . '<br/>';
-		} # end foreach string
-	
-		$html .= '</td><td colspan="2" align="right"><br/>';
-		foreach my $string ( sort keys %totals ) {
-			if ( $totals{$string} ) {
-				if ( $sheets{$string} ) {
-					$html .= $sheets{$string}.'sheets '.$totals{$string}.'lbs';
-				} else {
-					$html .= $totals{$string}.'lbs';
+			my $impressions = $$sig_specs{'hdnImpressionQuantity'.$qty_index};
+			if ( sets::isin( $$sig_specs{'ddmRunStyle'.$qty_index}, ['Work & Turn','Work & Tumble'] ) ) {
+				$impressions /= 2;
+			} elsif ( $$sig_specs{'ddmRunStyle'.$qty_index} eq 'Sheet Work' ) {
+				my @side_one_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' );
+				my @side_two_colours = openprint::Estimating::Printing::get_colours( $sig_specs, 'SideTwo' );
+				if ( @side_one_colours and @side_two_colours ) {
+					$impressions /= 2;
 				} # end if
-			} else {
-				$html .= 'none';
 			} # end if
-			$html .= $prices{$string};
-			$html .= '<br/>';
-		} # end foreach key
-		$html .= '</td>';
-		$html .= '</tr>';
-	} # end if
+
+			my $Paper = openprint::Paper::load_from_signature( $Project, $sig_specs, $qty_index );
+			if ( $Paper->type() eq 'Roll' ) {
+				$totals{$Paper->to_string()} += POSIX::ceil($impressions * $Paper->area() * $Paper->wpsi());
+			} elsif ( $Paper->type() eq 'Sheet' ) {
+				my $sheets = $impressions;
+				if ( $Paper->start_area() and $Paper->area() ) {
+					$sheets /= ( $Paper->start_area() / $Paper->area() );
+					$sheets = ceil( $sheets );
+				} else {
+					$log->debug("No area in project view: " . $Paper->to_string() );
+				} # end if
+				$totals{$Paper->to_string()} += sprintf('%.0f', $sheets * $Paper->start_area() * $Paper->wpsi() );
+				$sheets{$Paper->to_string()} += $sheets;
+			} # end if
+			if ( ! $Paper->supplied() ) {
+				if ( ( $session{'user_type'} eq 'A' ) or openprint::usergroup::is_user_in( ['Accounting'], $session{'user_id'} ) ) {
+					my %price = $Paper->get_price( $totals{$Paper->to_string()} );
+					$price{'Total'} = $price{'100lb Price'} * $totals{$Paper->to_string()} / 100;
+					$prices{$Paper->to_string()} = sprintf('* $%.2f/100lb = $%.2f', @price{'100lb Price','Total'} );
+				} # end if in Accounting
+			} # endif Supplied
+		} # end foreach signature
+
+		my @keys = sort keys %totals;
+		if ( @keys ) {
+			$html .= '<tr class="totals">';
+			if ( openprint::usergroup::is_user_in( ['Sales Admin','Scheduling'], $session{'user_id'} ) ) {
+				$html .= '<td class="unprintable">&nbsp;</td>';
+			} # end if
+			$html .= '<td><b>Stock:</b><br/>';
+			foreach my $string ( @keys ) {
+				$html .= $string . '<br/>';
+			} # end foreach string
+		
+			$html .= '</td><td colspan="2" align="right"><br/>';
+			foreach my $string ( @keys ) {
+				if ( $totals{$string} ) {
+					if ( $sheets{$string} ) {
+						$html .= $sheets{$string}.'sheets '.$totals{$string}.'lbs';
+					} else {
+						$html .= $totals{$string}.'lbs';
+					} # end if
+				} else {
+					$html .= 'none';
+				} # end if
+				$html .= $prices{$string};
+				$html .= '<br/>';
+			} # end foreach key
+			$html .= '</td>';
+			$html .= '</tr>';
+		} # end if
+	} # end if $$services{Paper}
 	return $html;
 ) ?>
 		<? if ( openprint::usergroup::is_user_in( ['Prepress','Sales Admin'], $session{'user_id'} ) ) ?>
