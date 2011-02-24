@@ -409,6 +409,11 @@ sub find {
         } # end foreach
     } # end if
 
+	foreach my $k ( keys %params ) {
+		next if $k eq 'order';
+		$log->error("Unknown paramter in find: $k => $params{$k}");
+	} # end foreach k
+
     if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
         $sql .= ' AND (deleted=? OR deleted IS NULL)';
         push @values, 0;
