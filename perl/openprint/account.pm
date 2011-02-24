@@ -706,5 +706,8 @@ sub _wall {
 	} # end if
 } # end sub _wall
 
+sub forgotten_password {
+} # end sub forgotten_password
+
 1;
 __END__
