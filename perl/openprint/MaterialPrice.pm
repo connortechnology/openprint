@@ -1,14 +1,19 @@
-package openprint::MaterialPrice;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::MaterialPrice;
+our @ISA = qw( openprint::Object );
 
 require sql;
 require openprint::Object;
 require openprint::logs;
+use Math::Round qw(nearest);
 
-my $debug = 1;
 
-my %fields = (
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
+$table = 'tbl_material_prices';
+$serial = 'materialprices_id_seq';
+
+%fields = (
 	'id'			=>  'id',
 	'pricelist_id'	=>	'lnglistindex',
 	'material_id'	=>	'lngmaterialindex',
@@ -23,13 +28,34 @@ my %fields = (
 	'interpolate'	=>	'interpolate',
 );
 
+%defaults = (
+	'min'	=>	undef,
+	'max'	=>	undef,
+	'cost'	=>	undef,
+	'markup'	=>	undef,
+	'price'		=>	undef,
+	'discountable'	=>	1,
+	'interpolate'	=>	0,
+);
+
+%transforms = (
+	'min'	=>	[ 's/[^\d\.\-]//g' ],
+	'max'	=>	[ 's/[^\d\.\-]//g' ],
+	'cost'	=>	[ 's/[^\d\.\-]//g' ],
+	'markup'	=>	[ 's/[^\d\.\-]//g' ],
+	'price'	=>	[ 's/[^\d\.\-]//g' ],
+);
+
 sub find {
+	if ( $_[0] eq 'openprint::MaterialPrice' ) {
+		shift;
+	}
 	my %params = @_;
 	my $sql = 'SELECT * FROM tbl_Material_Prices WHERE 1>0';
 	my @values;
 
 	if ( $params{'pricelist_id'} ) {
-		$sql .= ' AND lngpricelistindex=?';
+		$sql .= ' AND lnglistindex=?';
 		push @values, $params{'pricelist_id'};
 	} # end if
 	if ( $params{'Pricelist'} ) {
@@ -69,16 +95,6 @@ sub find {
 	return map { new openprint::MaterialPrice( $_->{id}, $_ ) } @$data;
 } # end sub find
 
-sub load {
-	my ( $self, $data ) = @_;
-
-	if ( ! $data ) {
-		$data = $openprint::dbh->selectrow_hashref( 'SELECT * FROM tbl_Material_Prices WHERE id=?', {}, $$self{'id'} );
-	} # end if
-	@$self{keys %fields} = @$data{@fields{keys %fields}};
-
-} # end sub load
-
 sub delete {
 	my $self = shift;
 
@@ -86,44 +102,44 @@ sub delete {
 	openprint::logs::insertLogRecord('13', "Material Price ID: " . $$self{'id'},);
 } # end sub delete
 
-sub save {
-	my ( $self, $param ) = @_;
-
-	if ( ! $$self{'id'} ) {
-		@$self{'id'} = sql::execute( undef, undef, "SELECT nextval('materialprices_id_seq')" );
-		sql::insert( undef, undef, 'tbl_Material_Prices',
-				'id',					$$self{'id'},
-				'lngListIndex',			$$self{'pricelist_id'},
-				'lngMaterialIndex',		$$self{'material_id'},
-				'lngEquipmentIndex', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
-				'lngMin',				$$self{'min'} eq '' ? undef : $$self{'min'},
-				'lngMax',				$$self{'max'} eq '' ? undef : $$self{'max'},
-				'strUnits',				$$self{'units'},
-				'dblCost',				1*$$self{'cost'},
-				'dblMarkup',			1*$$self{'markup'},
-				'dblPrice',				1*$$self{'price'},
-				'ysnDiscountable',		$$self{'discountable'},
-				);
-	} else {
-		sql::update( undef, undef, 'tbl_Material_Prices', ['id=?', $$self{'id'}],
-				'lngListIndex',			$$self{'pricelist_id'},
-				'lngMaterialIndex',		$$self{'material_id'},
-				'lngEquipmentIndex', 	$$self{'equipment_id'} eq '' ? undef : $$self{'equipment_id'},
-				'lngMin',				$$self{'min'} eq '' ? undef : $$self{'min'},
-				'lngMax',				$$self{'max'} eq '' ? undef : $$self{'max'},
-				'strUnits',				$$self{'units'},
-				'dblCost',				1*$$self{'cost'},
-				'dblMarkup',			1*$$self{'markup'},
-				'dblPrice',				1*$$self{'price'},
-				'ysnDiscountable',		$$self{'discountable'},
-				);
-	} # end if
-} # end sub save
-
 sub next {
 	my $self = shift;
 	return new openprint::MaterialPrice( sql::execute( undef,undef, q{SELECT MIN(Index) WHERE Index > ?}, $$self{'id'} ) );
 } # end sub next
+
+sub markup {
+    if ( @_ > 1 ) {
+        $_[0]{'markup'} = $_[1];
+		$_[0]{'markup'} =~ s/[^\d\.\-]//g;
+        $_[0]->price( undef );
+    } # end if
+    return $_[0]{'markup'};
+} # end sub markup
+sub cost {
+    if ( @_ > 1 ) {
+        $_[0]{'cost'} = $_[1];
+		$_[0]{'cost'} =~ s/[^\d\.\-]//g;
+        $_[0]->price( undef );
+    } # end if
+    return $_[0]{'cost'};
+} # end sub cost
+sub price {
+
+    if ( @_ > 1 ) {
+        $_[0]{'price'} = $_[1];
+    } # end if
+	my $self = $_[0];
+    if ( ! defined $_[0]{'price'} ) {
+        $_[0]{'price'} = Math::Round::nearest( .01, $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+    } # end if
+    return $_[0]{'price'};
+} # end sub price
+
+
+sub Equipment {
+	return new openprint::Equipment( $_[0]{'equipment_id'} );
+} # end sub Equipment
+
 
 1;
 

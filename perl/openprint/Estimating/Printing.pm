@@ -1153,6 +1153,11 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 
 			my @impositions;
 			my %imps;
+			my @feed = split(',', $Press->specification('Feed') );
+			my $MinimumWeight = $Press->Specification('Roll2Sheet Minimum Weight');
+			my $RunstylesRoll = $Press->specification('RunstylesRoll') ;
+			my $Runstyles = $Press->specification('Runstyles');
+			my $Maximum_Sheet_Width = $Press->specification('Maximum Sheet Width');
 
 			foreach my $Paper ( @Papers ) {
 				if ( $$specs{'PreviousStockType'} and ( $Paper->type() ne $$specs{'PreviousStockType'} ) ) {
@@ -1161,18 +1166,13 @@ $openprint::log->debug("Not adding GRIP and GUTTER");
 				} # end if
 				my @imps;
 				if ( $Paper->type() eq 'Roll' ) {
-					if ( ! ( $project{'Runstyles'} = $Press->specification('RunstylesRoll') ) ) {
-						$project{'Runstyles'} = $Press->specification('Runstyles');
-					} # end if
-					next if ! sets::isin( 'Roll', split(',', $Press->specification('Feed') ) );
-					next if $Paper->width() > $Press->specification('Maximum Sheet Width');
+					next if ! sets::isin( 'Roll', \@feed );
+					$project{'Runstyles'} = $RunstylesRoll ? $RunstylesRoll : $Runstyles;
+					next if $Paper->width() > $Maximum_Sheet_Width;
 					next if $Press->specification('Maximum Roll Width') and ( $Paper->width() > $Press->specification('Maximum Roll Width') );
-					if ( sets::isin( 'Sheet', split(',', $Press->specification('Feed') ) ) ) {
-$openprint::log->debug('roll2sheet');
-						if ( my $MinimumWeight = $Press->Specification('Roll2Sheet Minimum Weight') ) {
-$openprint::log->debug("Has Minimum Weight setting $$MinimumWeight{'value'} < " . $Paper->gsm() );
+					if ( sets::isin( 'Sheet', \@feed ) ) {
+						if ( $MinimumWeight ) {
 							if ( $$MinimumWeight{'units'} eq 'gsm' and $$MinimumWeight{'value'} > $Paper->gsm() ) {
-$openprint::log->debug("Next");
 								next;
 							} # end if
 						} # end if
@@ -1215,11 +1215,11 @@ $log->debug("getting impositions for " . $Paper->to_string() );
 						} # end foreach
 					} # end if has a defined width
 				} else { # Sheet Fed
-					next if ! sets::isin( 'Sheet', split(',', $Press->specification('Feed') ) );
+					next if ! sets::isin( 'Sheet', \@feed );
 
 					next if ! ( $Paper->width() and $Paper->height() );
 					next if ( $Press->specification('Printing Type') eq 'Digital' and ! $Paper->digital() );
-					$project{'Runstyles'} = $Press->specification('Runstyles');
+					$project{'Runstyles'} = $Runstyles;
 
 					my $P = $Paper->clone();
 

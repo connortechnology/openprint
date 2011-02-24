@@ -5,10 +5,12 @@ use strict;
 require sql;
 require openprint::Object;
 require openprint::logs;
+use Math::Round qw(nearest);
 
-my $debug = 1;
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
 
-my %fields = (
+%fields = (
 	'pricelist_id'	=>	'lnglistindex',
 	'service_id'	=>	'lngserviceindex',
 	'equipment_id'	=>	'lngequipmentindex',
@@ -21,14 +23,34 @@ my %fields = (
 	'discountable'	=>	'ysndiscountable',
 	'interpolate'	=>	'interpolate',
 );
+%defaults = (
+	'min'	=>	undef,
+	'max'	=>	undef,
+	'cost'	=>	undef,
+	'markup'	=>	undef,
+	'price'		=>	undef,
+	'discountable'	=>	1,
+	'interpolate'	=>	0,
+);
+
+%transforms = (
+	'min'	=>	[ 's/[^\d\.\-]//g' ],
+	'max'	=>	[ 's/[^\d\.\-]//g' ],
+	'cost'	=>	[ 's/[^\d\.\-]//g' ],
+	'markup'	=>	[ 's/[^\d\.\-]//g' ],
+	'price'	=>	[ 's/[^\d\.\-]//g' ],
+);
 
 sub find {
+	if ( $_[0] eq 'openprint::ServicePrice' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	my $sql = 'SELECT * FROM tbl_Service_Prices WHERE 1>0';
 	my @values;
 
 	if ( $params{'pricelist_id'} ) {
-		$sql .= ' AND lngpricelistindex=?';
+		$sql .= ' AND lnglistindex=?';
 		push @values, $params{'pricelist_id'};
 	} # end if
 	if ( $params{'Pricelist'} ) {
@@ -124,7 +146,33 @@ sub next {
 	return new openprint::ServicePrice( sql::execute( undef,undef, q{SELECT MIN(Index) WHERE Index > ?}, $$self{'id'} ) );
 } # end sub next
 
-1;
+sub price {
+    if ( @_ > 1 ) {
+        $_[0]{'price'} = $_[1];
+    } # end if
+    if ( ! defined $_[0]{'price'} ) {
+        $_[0]{'price'} = Math::Round::nearest( 0.01, $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+    } # end if
+    return $_[0]{'price'};
+} # end sub price
 
+sub markup {
+	if ( @_ > 1 ) {
+		$_[0]{'markup'} = $_[1];
+		$_[0]->price( undef );
+	} # end if
+	return $_[0]{'markup'};
+} # end sub markup
+sub cost {
+	if ( @_ > 1 ) {
+		$_[0]{'cost'} = $_[1];
+		$_[0]->price( undef );
+	} # end if
+	return $_[0]{'cost'};
+} # end sub cost
+sub Equipment {
+	return new openprint::Equipment( $_[0]{'equipment_id'} );
+} # end sub Equipment
+
+1;
 __END__
-~       

@@ -20,26 +20,15 @@ $serial = 'pricelistindex_seq';
 %fields = (
 	'id'	=>	'index',
 	'name'	=>	'name',
-	'Description'	=>	'description',
+	'description'	=>	'description',
 	'currency_id'	=>	'currencyindex',
 );
 
 sub find {
-	my %params = @_;
-
-	if ( $params{'id'} ) {
-		return new openprint::Pricelist( $params{'id'} );
-	} else {
-		my @values;
-		my $sql = q{SELECT index FROM Pricelists WHERE 1>0};
-		if ( $params{'name'} ) {
-			$sql .= q{ AND name =?};
-			push @values, $params{'name'};
-		} # end if
-		$sql .= " ORDER BY $params{'order'}" if $params{'order'};
-		return map { new openprint::Pricelist( $_ ) } sql::execute( $openprint::log, $openprint::dbh, $sql, @values );
+	if ( $_[0] eq 'openprint::Pricelist' ) {
+		shift;
 	} # end if
-
+	return openprint::Object::find( 'openprint::Pricelist', @_ );
 } # end sub find
 
 sub delete {
