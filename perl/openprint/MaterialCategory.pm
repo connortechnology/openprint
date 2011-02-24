@@ -7,6 +7,9 @@ my @fields = (
 );
 
 sub find {
+	if ( $_[0] eq 'openprint::MaterialCategory' ) {
+		shift;
+	} # end if
 	my %params = @_;
 	my $sql = q{SELECT * FROM Material_Categories WHERE 1>0};
 	my @values;

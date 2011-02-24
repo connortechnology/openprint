@@ -71,7 +71,7 @@ sub handler {
 				$log->debug("Parameter $key is ARRAY(" . join(',',@{$param{$key}}) . ')' );
 		} else {
 			$param{$key} = $values[0];
-			$log->debug("Parameter $key is (" . $param{$key} . ")" . ref $param{$key} );
+			$log->debug("Parameter $key is (" . $param{$key} . ") ref: " . ref $param{$key} );
 		} # end if
 	} # end foreach
 
@@ -198,8 +198,6 @@ $openprint::log->debug("Getfile");
 		return;
 	} elsif ( $first eq 'administrator' ) {
 		require openprint::admin_quote;
-		require openprint::admin_colours;
-		require openprint::admin_pricelist;
 
 		$status = openprint::login::verify_user( $r, $log, $dbh, $session{_session_id}, \%variable, 'A' );
 		return $status if $variable{'Redirect'};	
@@ -229,13 +227,6 @@ $openprint::log->debug("Getfile");
 			openprint::login::email_password( $r, $log, $dbh, \%variable )			if $filename eq 'password_confirmation.html';
 			openprint::login::login_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password.html';
 			openprint::login::change_password( $r, $log, $dbh, \%variable )			if $filename eq 'change_password_confirmation.html';
-		} elsif ( $second eq 'production' ) {
-			# services and equipment
-
-			openprint::admin_colours::import_export( $r, $log, $dbh, \%variable ) if $filename eq 'colour_import_export.html';
-
-			openprint::admin_pricelist::edit( $r, $log, $dbh, \%variable )	if $filename eq 'pricelists.html';
-
 		} elsif ( $first ) {
 $log->debug("1 $first _ $second $filename");
 			my $eval = "openprint::$first";

@@ -220,7 +220,7 @@ $openprint::log->debug("field: $field, param: ".$$params{$field}) if $debug;
 			my %defaults = eval('%'.$type.'::defaults');
 
 			if ( ( ( ! defined $$self{$field} ) or ( $$self{$field} eq '' ) ) and exists $defaults{$field} ) {
-				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug or 1;
+				$openprint::log->debug("Setting default ($field) ($$self{$field}) ($defaults{$field}) ") if $debug;
 				$$self{$field} = $defaults{$field};
 			} # end if
 		} # end if
@@ -409,6 +409,11 @@ sub find {
         } # end foreach
     } # end if
 
+	foreach my $k ( keys %params ) {
+		next if $k eq 'order';
+		$log->error("Unknown paramter in find: $k => $params{$k}");
+	} # end foreach k
+
     if ( $fields{'deleted'} and ! exists $params{'deleted'} ) {
         $sql .= ' AND (deleted=? OR deleted IS NULL)';
         push @values, 0;
@@ -436,7 +441,7 @@ sub find {
 } # end sub find
 
 sub find_one {
-$openprint::log->debug("find_one @_ ");
+#$openprint::log->debug("find_one @_ ");
 	my $type = shift;
 	my %params = @_;
 	$params{'limit'}=1;

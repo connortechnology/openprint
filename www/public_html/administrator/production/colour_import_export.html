@@ -1,24 +1,52 @@
-<form name="f1" method="post" action="colour_import_export.html" enctype="multipart/form-data">
+<!--#include virtual="/includes/error_reporting.html"-->
+<script type="text/javascript">
+	function load_ddm( type, ink_id ) {
+		new Ajax.Updater( type+'_id-'+ink_id, '_'+type+'_id_ddm.html', { parameters: { ink_id: ink_id } } );
+		$(type+'_id-'+ink_id).onclick="";
+	} // end function load_ddm
+</script>
+<form id="f1" name="f1" method="post" action="colour_import_export.html" enctype="multipart/form-data">
 	<fieldset><legend>Colour Definitions:</legend>
 		<? eval ( 
-			$$variable{'ColourDefinitions'} = $dbh->selectall_arrayref( 'SELECT * FROM Inks ORDER BY lower(pmsid)', { Slice => {} } );
 			@{$$variable{'Materials'}} = map { $_->id(), $_->name() } openprint::Material::find('order'=>'lower(name)');
 			@{$$variable{'Services'}} = map { $_->id(), $_->name() } openprint::Service::find('order'=>'lower(name)');
+			@{$$variable{'Pricelists'}} = openprint::Pricelist->find('order'=>'lower(name)');
 		 ) ?>
 		<table class="List">
-			<tr><th>Colour</th><th>Material</th><th>Service</th><th width="40">Washups</th><th width="20"></th></tr>
-		<? while ( $$variable{'Colour'} = shift @{$$variable{'ColourDefinitions'}} ) ?>
-			<tr>
-				<td><input type="text" name="pmsid-<? echo ( $$variable{'Colour'}{id} ) ?>" value="<? echo ( $$variable{'Colour'}{pmsid} ) ?>"/></td>
-				<td><select name="material_id-<? echo ( $$variable{'Colour'}{id} ) ?>"><option value="">None</option><? echo ( ssi::make_drop_down( $$variable{'Materials'}, $$variable{'Colour'}{material_id} ); ) ?></select></td>
-				<td><select name="service_id-<? echo ( $$variable{'Colour'}{id} ) ?>"><option value="">None</option><? echo ( ssi::make_drop_down( $$variable{'Services'}, $$variable{'Colour'}{service_id} ); ) ?></select></td>
-				<td><input type="text" name="washups-<? echo ( $$variable{'Colour'}{id} ) ?>" value="<? echo ( $$variable{'Colour'}{washups} ) ?>"/></td>
-				<td><input type="checkbox" name="colours" value="<? echo ( $$variable{'Colour'}{id} ) ?>"/></td>
-			</tr>
-			<? eval ( 
-				$$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"';
+			<tr><th align="left" width="75">PMS #</th><th align="left">Name</th><th align="left">Material</th><th align="left">Service</th><th width="75" align="left">Washups</th><th width="20"><input type="checkbox" onclick="select_all($('f1'), 'colours', this.checked );"/></th></tr>
+			<? echo ( 
+				my $html;
+				my $rowclass;
+				foreach my $Ink ( openprint::Ink->find('order'=>'pmsid') ) {
+					$html .= sprintf(q`<tr%6$s>
+						<td><a href="/administrator/production/ink.html?ink_id=%1$d">%2$s</a></td>
+						<td><a href="/administrator/production/ink.html?ink_id=%1$d">%3$s</a></td>
+						<td><a href="/administrator/materials/edit.html?ddmMaterial=%4$d">%5$s</a><br/>
+					`, $Ink->id(), $Ink->pmsid(), $Ink->name(), $Ink->material_id(), $Ink->Material()->name(), $rowclass );
+					if ( $Ink->material_id() ) {
+						foreach my $Pricelist ( @{$$variable{'Pricelists'}} ) {
+							$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';
+							foreach my $Price ( openprint::MaterialPrice->find('pricelist_id'=>$Pricelist->id(), 'material_id'=>$Ink->material_id() ) ) {
+								$html .= $Price->Equipment()->name().': ' if $Price->equipment_id();
+								$html .= sprintf( '$%.2f*%.2f% = $%.2f%s<br/>', $Price->cost(), $Price->markup(), $Price->price(), $Price->units() );
+							} # end foreach Price
+						} # end foreach Pricelist
+					} # end if
+					$html .= sprintf(q`</td><td><a href="/administrator/services/edit.html?ddmService=%2$d">%3$s</a><br/>`, $Ink->id(), $Ink->service_id(), $Ink->Service()->name() );
+					if ( $Ink->service_id() ) {
+						foreach my $Pricelist ( @{$$variable{'Pricelists'}} ) {
+							$html .= 'Prices for pricelist: ' . $Pricelist->name(). '<br/>';
+							foreach my $Price ( openprint::ServicePrice->find('pricelist_id'=>$Pricelist->id(), 'service_id'=>$Ink->service_id() ) ) {
+								$html .= $Price->Equipment()->name().': ' if $Price->equipment_id();
+								$html .= sprintf( '$%.2f*%.2f% = $%.2f%s<br/>', $Price->cost(), $Price->markup(), $Price->price(), $Price->units() );
+							} # end foreach Price
+						} # end foreach Pricelist
+					} # end if
+					$html .= sprintf(q`</td><td>%2$s</td><td><input type="checkbox" name="colours" value="%1$d"/></td></tr>`, $Ink->id(), $Ink->washups() );
+					$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end foreach Ink
+				return $html;
 			) ?>
-		<? endwhile ( $$variable{'Colour'} = shift @{$$variable{'ColourDefinitions'}} ) ?>
 			<tr class="totals">
 				<td><input type="text" name="pmsid-New" value=""/></td>
 				<td><select name="material_id-New"><? echo ( ssi::make_drop_down( $$variable{'Materials'} ); ) ?></select></td>
@@ -40,7 +68,7 @@
 	a comma separated values (CSV) format and the columns must be in the 
 	following order:</p>
 	<p>
-	PMSID, ServiceID, MaterialID, Colour Name, Washes
+	PMSID, ServiceID, MaterialID, Colour Name, Washes, Equipment, Service Cost, Service Markup, Material Cost, Material Markup
 	</p>
 	<p>
 	Click <a href="colour_example.csv">here</a> to view an example of data 
