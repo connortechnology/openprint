@@ -106,6 +106,8 @@ sub calc {
 		# First, build a hash containing the quantities of each proof.  The reason for this is to honour quantity discounts.
 		foreach my $signature_service_index ( @signature_service_indices ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $qty_index );
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -136,7 +138,7 @@ sub calc {
 							);
 
 					if ( $proof_index == 1 ) {
-						insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs );
+						insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs, $Imposition );
 					} elsif ( $proof_index == 2 ) {
 						insert_colour_proof( $Project, $sig_specs, 2, $qty_index, $specs );
 					} elsif ( $proof_index == 3 ) {
@@ -145,7 +147,7 @@ sub calc {
 				} else {
 					if ( ($proof_index == 1) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux') and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
 						$$specs{'alert'} .= "We require Dylux Proofs<br/>";
-						insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs );
+						insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs, $Imposition );
 						@output = sets::union( @output,
 								"txtProofIndex-$signature_index-$proof_index-$qty_index",
 								"txtProofWidth-$signature_index-$proof_index-$qty_index",
