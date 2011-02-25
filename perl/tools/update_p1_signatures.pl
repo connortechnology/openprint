@@ -25,10 +25,10 @@ $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
 my $projects_count = 100;
-my $project_id = 0;
+my $project_id = 411449;
 #
 #my $project_id = 407192;
-my $company_id = 6;
+my $company_id = 0;
 
 $dbh = sql::open_sql( $log, %sql_server );
 my @projects;
@@ -194,8 +194,9 @@ if ( 1 ) {
 
 	if ( $Type ) {
 		foreach my $Project ( openprint::Project->find( 'order'=>'id desc',
-( $company_id ? ( 'company_id'=>$company_id ) : () ),
-'limit'=>$projects_count  ) ) {
+					( $project_id ? ( 'id'=>$project_id) : () ),
+					( $company_id ? ( 'company_id'=>$company_id ) : () ),
+					'limit'=>$projects_count  ) ) {
 			# Skip multipage projects
 			next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
 			my $services = $Project->services();
@@ -204,7 +205,7 @@ if ( 1 ) {
 			next if ! $$services{''}[0];
 			my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
-			foreach my $qty_index ( $Project->quantity_indexes() ) {
+			foreach my $qty_index ( 1 .. 3 ) {
 				openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $$services{''}[0], 'txtPrice'.$qty_index, 0 );
 			} # end foreach
 			if ( $$services{'Folding'} ) {
