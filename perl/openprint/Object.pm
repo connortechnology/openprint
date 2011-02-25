@@ -411,6 +411,7 @@ sub find {
 
 	foreach my $k ( keys %params ) {
 		next if $k eq 'order';
+		next if $k eq 'limit';
 		$log->error("Unknown paramter in find: $k => $params{$k}");
 	} # end foreach k
 
