@@ -301,8 +301,8 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			<thead>
 				<tr> 
 					<th class="projects">Project</th>
-					<th width="90">Markup %</th>
-					<th width="60" align="right">Qty</th>
+					<th class="markup">Markup %</th>
+					<th class="quantity">Qty</th>
 					<th class="price">Price</th>
 					<th class="newprice">New Price</th>
 					<th width="100" align="right">Changes</th>
@@ -316,10 +316,10 @@ if ( $$variable{'ForCountry'} eq 'US' ) {
 			) ?>
 			<tr<?rowclass?>> 
 				<td class="projects" rowspan="<? echo ( scalar $$variable{'Project'}->quantity_indexes() ) ?>"><a href="/main/project/view.html?ProjectIndex=<?project_index?>"><span class="reference"><?reference?></span><? echo ( $$variable{'Project'}->summary(); ) ?></a></td>
-				<td align="center"> 
+				<td class="markup"> 
 					<input type="text" name="markup<?index?>_<?project_index?>" size="5" value="<?markup?>" onkeyup="this.value=this.value.replace(/[^\d\.\-]/,'');calc_from_markup(f1, this);"/>
 				</td>
-				<td align="right"><?qty?></td>
+				<td class="quantity"><?qty?></td>
 				<td class="price"> 
 					<input type="hidden" name="txtPrice<?index?>" value="<?stdprice?>" />
 					<? echo ( $$variable{'Quote'}->Currency()->symbol(); ) ?><?stdprice?>

@@ -21,7 +21,7 @@ $serial = 'ServiceType_Categories_id_seq';
 	'sorting'	=>	undef,
 );
 
-my $debug = 0;
+my $debug = 1;
 
 1;
 __END__

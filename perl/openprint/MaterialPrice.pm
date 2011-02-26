@@ -1,15 +1,16 @@
-package openprint::MaterialPrice;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::MaterialPrice;
+our @ISA = qw( openprint::Object );
 
 require sql;
 require openprint::Object;
+use Math::Round qw(nearest);
+
 require openprint::logs;
 
-
-use vars qw( $debug $table $serial %defaults %transforms %fields );
-$debug = 1;
-$table = 'tbl_Material_Prices';
+use vars qw( $debug $table $serial %fields %transforms %defaults );
+$debug = 0;
+$table = 'tbl_material_prices';
 $serial = 'materialprices_id_seq';
 
 %fields = (
@@ -36,10 +37,12 @@ $serial = 'materialprices_id_seq';
 %defaults = (
 	'min'			=>	undef,
 	'max'			=>	undef,
-	'cost'			=>	0,
-	'markup'		=>	0,
-	'price'			=>	0,
+	'cost'	=>	undef,
+	'markup'	=>	undef,
+	'price'		=>	undef,
 	'equipment_id'	=>	undef,
+	'discountable'	=>	1,
+	'interpolate'	=>	0,
 );
 
 sub next {
@@ -49,12 +52,52 @@ sub next {
 
 sub price {
 	if ( @_ > 1 ) {
-		$_[0]{'price'} = @_[1];
+		$_[0]{'price'} = $_[1];
 	} # end if
 	if ( ! defined $_[0]{'price'} ) {
 		$_[0]{'price'} = sprintf( '%.2f', $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
 	} # end if
 	return $_[0]{'price'};
 } # end sub price
+
+sub Pricelist {
+	return new openprint::Pricelist( $_[0]{'pricelist_id'} );
+}
+sub Equipment {
+	return new openprint::Equipment( $_[0]{'equipment_id'} );
+} # end sub Equipment
+
+sub Material {
+	return new openprint::Material( $_[0]{'material_id'} );
+} # end sub Material
+
+sub markup {
+    if ( @_ > 1 ) {
+        $_[0]{'markup'} = $_[1];
+		$_[0]{'markup'} =~ s/[^\d\.\-]//g;
+        $_[0]->price( undef );
+    } # end if
+    return $_[0]{'markup'};
+} # end sub markup
+sub cost {
+    if ( @_ > 1 ) {
+        $_[0]{'cost'} = $_[1];
+		$_[0]{'cost'} =~ s/[^\d\.\-]//g;
+        $_[0]->price( undef );
+    } # end if
+    return $_[0]{'cost'};
+} # end sub cost
+sub price {
+
+    if ( @_ > 1 ) {
+        $_[0]{'price'} = $_[1];
+    } # end if
+	my $self = $_[0];
+    if ( ! defined $_[0]{'price'} ) {
+        $_[0]{'price'} = Math::Round::nearest( .01, $_[0]{'cost'} * ( 1+($_[0]{'markup'}/100) ) );
+    } # end if
+    return $_[0]{'price'};
+} # end sub price
+
 1;
 __END__

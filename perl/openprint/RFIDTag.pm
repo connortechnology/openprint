@@ -1,23 +1,19 @@
+use strict;
 package openprint::RFIDTag;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config %fields %transforms %defaults $table $serial );
-*variable = \%openprint::variable;
+use vars qw($debug $log $dbh %fields %transforms %defaults $table $serial );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*config = \%openprint::config;
 
 require sql;
-require ssi;
-require misc;
 
 require openprint::RFIDTagType;
 require openprint::Location;
 
-my $debug = 1;
+$debug = 1;
 $table = 'rfidtags';
 $serial = 'rfidtags_id_seq';
 %fields = (
@@ -125,31 +121,24 @@ sub save {
 	} # end if
 
 	if ( ! $$self{'type_id'} ) {
-		my $type;
-		if ( $$hash{'type'} ) {
-			$type = $$hash{'type'};
-		} elsif ( $$self{'type'} ) {
-			$type = $$self{'type'};
-		} # end if
-		if ( ! $type ) {
+		if ( ! $$self{'type'} ) {
 			my $type_digit = substr( $$self{'id'}, 0, 1 );
 			if ( $type_digit == 1 ) {
-				$type='Location';
+				$$self{'type'} = 'Location';
 			} elsif ( $type_digit == 2 ) {
-				$type='Skid';
+				$$self{'type'} = 'Skid';
 			} # end if
 		} # end if
                     
-		if ( $type ) {
-			my ( $type_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?)', $type );
+		if ( $$self{'type'} ) {
+			my ( $type_id ) = sql::execute( undef, undef, 'SELECT id FROM RFIDTagTypes WHERE lower(name)=lower(?)', $$self{'type'} );
 			if ( ! $type_id ) {
 				my $Type = new openprint::RFIDTagType();
-				$Type->save( {'name'=>$type } );
+				$Type->save( {'name' => $$self{'type'} } );
 				$$self{'type_id'} = $Type->id();
 			} else {
 				$$self{'type_id'} = $type_id;
 			} # end if
-			$$self{'type'} = $type;
 		} # end if
 	} # end if
 	$$self{'updated_on'} = 'NOW()';
@@ -158,7 +147,6 @@ sub save {
 		$self->Skid()->save({location_id=>$$self{'location_id'}});
 	} # end if
 
-	delete $$self{'type'};
 	$$self{'updated_on'} = 'NOW()';
 	
 	my $ac = sql::start_transaction( $dbh );

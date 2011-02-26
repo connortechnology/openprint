@@ -9,6 +9,7 @@
 	<? if ( $$variable{'Project'}->{'quantity'.$$variable{'QTYIndex'}} ) ?>
 	<span class="<?Columns?>Columns">
 		<select name="ddmPackageType<?QTYIndex?>" size="1" onchange="calc(this.form.name);">
+			<option value="">select</option>
 		<? echo ( ssi::make_drop_down( [ map { $_->id(), $_->name() } @{$$variable{'PackageTypes'}} ], $$variable{'ddmPackageType'} ); ) ?>
 		</select>
 		<input type="checkbox" id="OverridePackageType<?QTYIndex?>" name="OverridePackageType<?QTYIndex?>" value="Y" onclick="if (!this.checked) calc(this.form.name);"

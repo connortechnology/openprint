@@ -1,23 +1,19 @@
+use strict;
 package openprint::RFIDScanner;
-@ISA = qw(openprint::Object);
+our @ISA = qw(openprint::Object);
 require openprint::Object;
 
-use strict;
 use openprint ();
-use vars qw(%variable $log $dbh %config $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw( $debug $log $dbh $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*config = \%openprint::config;
 
 require sql;
-require ssi;
-require misc;
 require openprint::Location;
 require openprint::RFIDTagHistory;
 require openprint::RFIDScannerHistory;
 
-my $debug = 1;
+$debug = 1;
 
 %fields = (
 	'id'		=>	'id',

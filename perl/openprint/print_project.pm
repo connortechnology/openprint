@@ -299,12 +299,6 @@ sub get_services_in_category {
 	} else { 
 		my @ServiceTypes = openprint::ServiceType->find('category'=>$category);
 		@services = map { $_->service_id(), $_->servicetype_id() } openprint::Project_Service->find( 'servicetype_id'=>[ map { $_->id() } @ServiceTypes ], 'project_id'=>$project_index );
-		#$_ = "SELECT lngServiceIndex, Service_Types.id FROM tbl_Service_Specifications, Service_Types WHERE lngProjectIndex=?
-			  #AND tbl_Service_Specifications.strName='ServiceType'
-			  #AND strValue IN ( SELECT name FROM Service_Types WHERE category = ? )
-			  #AND strValue = name
-			  #ORDER BY sorting";
-		#@services = sql::execute( $log, $dbh, $_, $project_index, $category );
 	} # end if
 	return @services;
 } # end sub get_services_in_category

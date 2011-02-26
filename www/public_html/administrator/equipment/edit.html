@@ -5,7 +5,7 @@ function add_stock_setting( stock_id ) {
 	new Ajax.Updater('Stocks','_stocks.html', {
 			parameters: {
 				action:'add',
-				equipment_id: <? echo ( $$variable{Equipment}{id} ) ?>, 
+				equipment_id: '<? echo ( $$variable{Equipment}{id} ) ?>', 
 				stock_id: stock_id
 			}, 
 			onLoading:function(){ $('Stocks').innerHTML='Loading...'; }, 

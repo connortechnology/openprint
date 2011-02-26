@@ -35,7 +35,7 @@
 			<? if ( $$variable{'Project'}->requested_date() ) ?>
 			<li class="requested_for"><label>Requested For:</label><? echo ( Date::Format::time2str( $config{'DateFormat'}, Date::Parse::str2time( $$variable{'Project'}->requested_date() ) ); ) ?></li>
 			<? endif ( $$variable{'Project'}->requested_date() ) ?>
-		<? endif ( ($$variable{'Order'}->status() eq 'Re-Opened' ) or (  ($$variable{'Order'}->status() eq 'Incomplete' ) and ! $$variable{'Project'}->requested_date()  ) ) ?>
+		<? endif ( sets::isin( $$variable{'Order'}->status(), [ 'Incomplete', 'Re-Opened' ] ) and ! $$variable{'Project'}->requested_date() ) ?>
 				</ul>
 			</div>
 		</fieldset>

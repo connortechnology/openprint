@@ -87,6 +87,14 @@ $log->debug("Carton Status: $carton_status");
 	} else {
 		$carton_specs = openprint::service::get_specs_ref( $Project, $$services{'PlainCartons'}[0] );
 	} # end if
+	foreach my $qty_i ( $Project->quantity_indexes() ) {
+		if ( ! $$carton_specs{"txtItemsPerPackage$qty_i"} ) {
+			$$specs{'alert'} .= "Unable to determine the number of items in each package for quantity $qty_i.";
+		} # end if
+	} # end foreach
+	if ( $$specs{'alert'} ) {
+		return $$specs{'Status'} = 'uncalculated';
+	} # end if
 
 	if ( $$specs{'chkOverridePackageWeight'} ne 'Y' ) {
 		# Load from skids or cartons

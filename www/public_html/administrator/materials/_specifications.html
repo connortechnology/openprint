@@ -8,23 +8,31 @@
 				<th width="10%">Units</th>
 				<th width="100">Interpolate</th>
 			</tr>
-			<? eval ( @{$$variable{'Specifications'}} = $$variable{'Material'}->Specifications(); ) ?>
-			<? while ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
-			<tr<?rowclass?>> 
-				<td><input type="text" name="txtSpecificationName<? echo ( $$variable{'Spec'}->id() ) ?>" value="<? echo ( $$variable{'Spec'}->name(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationMin<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->min(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationMax<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->max(); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationValue<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( HTML::Entities::encode_entities($$variable{'Spec'}->value()); ) ?>" /></td>
-				<td><input type="text" name="txtSpecificationUnits<? echo ( $$variable{'Spec'}->id(); ) ?>" value="<? echo ( $$variable{'Spec'}->units(); ) ?>" /></td>
-				<td>
-					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="true" <? echo ( 'checked="checked"' if $$variable{'Spec'}->interpolate() ) ?> />
-					<label class="radio" for="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>true">Yes</label>
-					<input type="radio" id="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>false" name="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>" value="false" <? echo ( 'checked="checked"' if ! $$variable{'Spec'}->interpolate() ) ?> />
-					<label class="radio" for="interpolate<? echo ( $$variable{'Spec'}->id(); ) ?>false">No</label>
-				</td>
-			</tr>
-			<? eval ( $$variable{'rowclass'} = $$variable{'rowclass'} ? '' : ' class="colRow"'; ) ?>
-			<? endwhile ( $$variable{'Spec'} = shift @{$$variable{'Specifications'}}; ) ?>
+			<? echo ( 
+				my $html = '';
+				my $rowclass;
+				foreach my $Spec ( $$variable{'Material'}->Specifications() ) {
+					$html .= sprintf( q`
+					<tr%1$s> 
+						<td><input type="text" name="txtSpecificationName%2$d" value="%3$s" /></td>
+						<td><input type="text" name="txtSpecificationMin%2$d" value="%4$s" /></td>
+						<td><input type="text" name="txtSpecificationMax%2$d" value="%5$s" /></td>
+						<td><input type="text" name="txtSpecificationValue%2$d" value="%6$s" /></td>
+						<td><input type="text" name="txtSpecificationUnits%2$d" value="%7$s" /></td>
+						<td>
+							<input type="radio" id="interpolate%2$dtrue" name="interpolate%2$d" value="true" %8$s />
+							<label class="radio" for="interpolate%2$dtrue">Yes</label>
+							<input type="radio" id="interpolate%2$dfalse" name="interpolate%2$d" value="false" %9$s />
+							<label class="radio" for="interpolate%2$dfalse">No</label>
+						</td>
+					</tr>
+				`, $rowclass, $Spec->id(), $Spec->name(), $Spec->min(), $Spec->max(), HTML::Entities::encode_entities($Spec->value()), $Spec->units(),
+				ssi::checked( $Spec->interpolate() ), ssi::checked( ! $Spec->interpolate() ),
+);
+			$rowclass = $rowclass ? '' : ' class="colRow"';
+				} # end foreach Spec
+				return $html;
+			) ?>
 			<tr> 
 				<td><input type="text" name="txtSpecificationNameNew" /></td>
 				<td><input type="text" name="txtSpecificationMinNew" /></td>
