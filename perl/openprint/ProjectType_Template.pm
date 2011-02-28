@@ -1,16 +1,12 @@
-package openprint::ProjectType_Template;
-@ISA = qw(openprint::Object);
-require openprint::Object;
-use MIME::QuotedPrint;
-
 use strict;
+package openprint::ProjectType_Template;
+our @ISA = qw(openprint::Object);
+require openprint::Object;
+
 use openprint ();
-use vars qw(%variable $log $dbh %config %session $table $serial %fields %transforms %defaults );
-*variable = \%openprint::variable;
+use vars qw($debug $log $dbh %config %session $table $serial %fields %transforms %defaults );
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
-*config = \%openprint::config;
-*session = \%openprint::session;
 
 require sql;
 require ssi;
@@ -19,7 +15,7 @@ require misc;
 my $debug = 0;
 
 $table = 'ProjectTemplate';
-$serial = 'taxes_id_seq';
+$serial = 'projecttemplate_id_seq';
 
 %fields = (
 	'id'				=>	'id',

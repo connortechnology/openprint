@@ -76,6 +76,20 @@ sub camera {
 sub cameras {
 } # end sub cameras
 
+sub camera_viewer {
+} # end sub camera_viewer
+
+sub _cameras_viewing {
+	if ( $param{'camera_id'} ) {
+		$session{'cameras_viewing'} = join(',', sets::union( split( ',', $session{'cameras_viewing'} ), $param{'camera_id'} ) );
+	} # end if
+} # end sub _cameras_viewing
+sub _cameras_available {
+	if ( $param{'camera_id'} ) {
+		$session{'cameras_viewing'} = join(',', sets::exclude( [ $param{'camera_id'} ], [ split( ',', $session{'cameras_viewing'} ) ] ) );
+	} # end if
+} # end sub _cameras_available
+
 sub blacklist {
 	my $Blacklist = $variable{'Blacklist'} = new openprint::Blacklist( $param{'id'} );
 	if ( $param{'action'} eq 'Delete' ) {
