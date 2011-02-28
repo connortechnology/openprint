@@ -47,7 +47,11 @@
 				my @totals;
 
 				foreach my $qty_index ( $Project->quantity_indexes() ) {
+					if ( $$printing_specs{"txtPrice$qty_index"} ) {
+					$html .= '<td class="price">'.$$printing_specs{"txtPrice$qty_index"}.'</td>';
+					} else {
 					$html .= '<td class="price">&nbsp;</td>';
+					} 
 				} # end foreach
 				$html .= '<td class="status">'.$statuses{$$services{''}[0]}.'</td>';
 				if ( ( ! $Project->docket() ) or ( $Project->Order()->status() eq 'Re-Opened' ) ) {

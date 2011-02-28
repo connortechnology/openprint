@@ -677,7 +677,7 @@ sub signature_calc {
 						push @{$folds{$Imposition->pages().'PageFold-'.$Imposition->imposition().'out'}}, $Fold;
 						$openprint::log->debug(sprintf('Found: %dx%d,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->imposition() ) ) if $debug;
 					} else {
-						$Breakdown .= sprintf('Didnt find fold %dx%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->page_width(), $Imposition->page_height(), $Imposition->image_orientation(), $Imposition->imposition(), $Imposition->Paper()->gsm() );
+						$Breakdown .= sprintf('Didnt find fold %dx%d %.3fx%.3f %s, %dout %dgsm<br/>', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->page_width(), $Imposition->page_height(), $Imposition->image_orientation(), $Imposition->imposition(), $Paper->gsm() );
 						$openprint::log->debug(sprintf('Didnt find: %dx%d %s,%dout', $Imposition->page_columns(), $Imposition->page_rows(), $Imposition->image_orientation(), $Imposition->imposition() ) ) if $debug;
 						%folds = ();
 						last;
@@ -686,8 +686,8 @@ sub signature_calc {
 # FIgure out the fold.  Because this isn't the press, we have to figure out how it cuts...
 					if ( $$sig_specs{'rdbTemplateType'} and $fold_types{$$sig_specs{'rdbTemplateType'}} ) {
 #$openprint::log->debug("Templatetype: $$sig_specs{'rdbTemplateType'}") if $debug;
-						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Imposition->Paper()->calliper() );
-						$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc );
+						my $rc = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Paper->calliper() );
+						#$openprint::log->debug("Trying to fit " . $Imposition->layout_width() . 'x' . $Imposition->layout_height() . ' on ' . $Equipment->strid(). ' ' . $rc );
 						if ( $rc ) {
 							if ( @my_equipment == 1 ) {
 								$Breakdown .= "Doesn't fit: $rc<br/>";
@@ -758,7 +758,7 @@ sub signature_calc {
 						#$openprint::log->debug(sprintf('Trying %dx%d=%dout spreads: %dx%d=%d %sx%s',$Imposition->get('columns','rows','imposition','spread_columns','spread_rows','spreads','image_width','image_height') ).' on ' . $Equipment->name()) if $debug;
 
 # See if it fits
-						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Imposition->Paper()->calliper() );
+						$_ = $Equipment->fits( $Imposition->layout_width(), $Imposition->layout_height(), $Paper->calliper() );
 
 						if ( ! $_ )  {
 
@@ -975,7 +975,7 @@ $openprint::log->debug("Folds: $set_index : $key " . $impo_qty );
 					} # end if
 				} # end if
 
-				$Breakdown .= sprintf( '%s: %dx%dout layout: %sx%s qty: %d StockWeight %.2fgsm<br/>', $Fold->name(), $impo_qty, $imposition, $Imposition->get('layout_width', 'layout_height'), $run_qty, $Imposition->Paper()->gsm() );
+				$Breakdown .= sprintf( '%s: %dx%dout layout: %sx%s qty: %d StockWeight %.2fgsm<br/>', $Fold->name(), $impo_qty, $imposition, $Imposition->get('layout_width', 'layout_height'), $run_qty, $Paper->gsm() );
 
 				my %setupPrice = openprint::service::get_price_object( $Fold->type().'MakeReady', $imposition, $Equipment );
 				if ( ! %setupPrice ) {

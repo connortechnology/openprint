@@ -2045,10 +2045,11 @@ sub breakdown {
 	$breakdown .= sprintf('Plate Make Ready: $%.2f%s * %dplates * %d runs = $%.2f<br/>', @$price{'Plate Setup Price','Plate Setup Units','Plate Setup Count', 'Plate Runs', 'Plate Total'} );
 	$breakdown .= sprintf("\tSetup Total:\t\t\$%.2f<br/><b>Run Charges:</b><br/>", $$price{'Setup Total'} );
 	$breakdown .= sprintf('Roll2Sheet Charge: $%1$.2f%2$s=%3$.2f<br/>', @$price{'Roll2SheetRunCost','Roll2SheetUnits','Roll2SheetRunCharge'} ) if $$price{'Roll2SheetRunCharge'};
+	my $run_price = $$price{'Run Price'};
 	if ( $Press->specification('Charge for setup overs') eq 'N' ) {
-		$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed','Impression Cost','Impression Units','Impression Price'} );
+		$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', ( $$price{'Impressions'}-$$stock_qty{'Setup Overs'} ),@$price{'Run Speed'}, @$run_price{'Cost','Units','Price'} );
 	} else {
-		$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', @$price{'Impressions','Run Speed','Impression Cost','Impression Units','Impression Price'} );
+		$breakdown .= sprintf('Impression Charge: %d/%d Per Hour * $%.2f%s = $%.2f<br/>', $$price{'Impressions'},@$price{'Run Speed'},@$run_price{'Cost','Units','Price'} );
 	} # end if
 
 	$breakdown .= sprintf("\tMinimum Run Charge: \$%.2f<br/>", $$price{'Minimum Run Charge'} );
@@ -2955,13 +2956,12 @@ if ( 0 and ! $recursion_depth ) {
 }
 			} # end if 
 		} # end foreach imposition
-$openprint::log->debug('end of press '. $Press->strid() );
 	} # end foreach Press
 	if ( ! %best_price ) {
 		$openprint::log->debug("Returning from get_project_price with no best price");
 		return {};
 	} # end if
-	if ( 1 and ! $recursion_depth ) {
+	if ( $debug and ! $recursion_depth ) {
 		$openprint::log->debug("Returning from get_project_price");
 		if ( $best_price{'Impositions'} ) {
 			foreach my $I ( reverse @{ $best_price{'Impositions'} } ) {
@@ -3569,7 +3569,6 @@ $openprint::log->debug("Using cached folding");
 			$price{'Ink Price'} += $ink_price{'Price'} * $impressions/1000;
 			$price{'Ink breakdown'} .= sprintf( ' %d * $%.2f%s = %.2f', $impressions, @ink_price{'Price','units'}, $ink_price{'Price'} * $impressions/1000 );
 		} else {
-#$run_price = 0;
 			$openprint::log->error("Unknown units for $colour: $ink_price{'units'}" . $Press->strid() );
 		} # end if
 		$price{'Ink breakdown'} .= '<br/>';
@@ -3750,15 +3749,15 @@ $openprint::log->debug("Using cached folding");
 			$price{'Comparison Cost'} += $aq_results{'Total'};
 		} # end if
 	} # end if Aqueous
-	my %run_price;
 
+	my $run_price;
 	if ( sets::isin( $$Imposition{runstyle}, ['Work & Turn','Work & Tumble'] ) ) {
 		my @c = filter_coatings_from_colours( \@colours );
-		%run_price = get_run_price( $impressions, scalar(@c), 0, $Imposition, $Press, $run_speed ); 
+		$run_price = get_run_price( $impressions, scalar(@c), 0, $Imposition, $Press, $run_speed ); 
 	} else {
 		my @c1 = filter_coatings_from_colours( $$project{'side_one_colours'} );
 		my @c2 = filter_coatings_from_colours( $$project{'side_two_colours'} );
-		%run_price = get_run_price( $impressions, scalar @c1, scalar @c2, $Imposition, $Press, $run_speed );
+		$run_price = get_run_price( $impressions, scalar @c1, scalar @c2, $Imposition, $Press, $run_speed );
 	} # end if
 
 	if ( $plate_setup{'Plate Type'} ne 'Conventional' ) {
@@ -3836,13 +3835,11 @@ $openprint::log->debug("Using cached folding");
 
 	$price{'Press Setup'} = $press_setup;
 
-	my $run_cost = $run_price{'Price'};
+	my $run_cost = $$run_price{'Price'};
+	$price{'Run Price'} = $run_price;
 
 	$price{'Impressions'} = $impressions;
-	$price{'Impression Cost'} = $run_price{'Cost'};
-	$price{'Impression Units'} = $run_price{'units'};
-	$price{'Impression Price'} = $run_price{'Price'};
-	$price{'Impression MPrice'} = $run_price{'MPrice'};
+	$price{'Impression MPrice'} = $$run_price{'MPrice'};
 
 	$price{'Minimum Run Charge'} = openprint::service::get_price( 'PressRunChargeMinimum',undef,$Press );
 
@@ -4133,12 +4130,12 @@ sub get_run_price {
 	my $max_colours = $Press->specification('Number of Colours');
 	if ( ! $max_colours ) {
 		$openprint::log->error(" ***** FATAL ERROR: Could Not Get 'Number of Colours' for Press: $Press->strid() ***********");
-		return %run_price;
+		return \%run_price;
 	} # end if
-	my $impression_service = $Imposition->runstyle() eq 'Perfecting' ? 'ColourImpressionPerfecting' : 'ColourImpression';
+	my $impression_service = $$Imposition{'runstyle'} eq 'Perfecting' ? 'ColourImpressionPerfecting' : 'ColourImpression';
 	my %RunPrice;
 
-	if ( sets::isin( $Imposition->runstyle(), [ 'Web', 'Perfecting' ] ) ) {
+	if ( sets::isin( $$Imposition{'runstyle'}, [ 'Web', 'Perfecting' ] ) ) {
 # A web does both sides at once, and cannot do multipass
 		$impression_service = $Imposition->runstyle().'Impression'.$side_one_colours.'/'.$side_two_colours;
 		if ( ! ( %RunPrice = openprint::service::get_price_object( $Imposition->runstyle().'Impression'.$side_one_colours.'/'.$side_two_colours, $impressions, $Press ) ) ) {
@@ -4146,7 +4143,6 @@ sub get_run_price {
 		} # end if
 		$run_price{'units'} = $RunPrice{'units'};
 		$running_price = $RunPrice{'Price'};
-$openprint::log->debug("Price: $running_price");
 	} else {
 		if ( $side_one_colours ) {
 			my $full_runs = int($side_one_colours / $max_colours);
@@ -4205,17 +4201,12 @@ $openprint::log->debug("Price: $running_price");
 		my $Paper = $Imposition->Paper();
 
 # Only load this if not already specified by some inline bindery service
-		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $Paper->calliper() : $Paper->gsm()), 1 ) if ! $run_speed;
+		$run_speed = $Press->specification('Run Speed', (lc $$std_speed{'units'} eq 'calliper' ? $$Paper{'calliper'} : $Paper->gsm()), 1 ) if ! $run_speed;
 		if ( ! $run_speed ) {
-			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $Paper->calliper() : $Paper->gsm() ) );
-		} elsif ( $run_speed == $$std_speed{'value'} ) {
-			#$speed_mod = $Press->specification('Press Additional Run Speed',$Paper->calliper());
-			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{value}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $$std_speed{'value'}/$run_speed ) ) if $debug or 1;
-			#$speed_mod = $run_speed / $speed_mod if $speed_mod;
-		} else {
+			$openprint::log->error("No run sped on $$Press{strid} for $$std_speed{'units'} " . ($$std_speed{'units'} eq 'Calliper' ? $$Paper{'calliper'} : $Paper->gsm() ) );
+		} elsif ( $run_speed != $$std_speed{'value'} ) {
+			$speed_mod = Math::Round::nearest( .01, $$std_speed{'value'} / $run_speed );
 			#$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug or 1;
-			$speed_mod = $$std_speed{'value'} / $run_speed;
-			$openprint::log->warn("1Press ".$Press->strid()." Calliper: $$Paper{calliper} gsm: $$Paper{gsm} ($running_price) ($run_price{'units'}) STD: ($$std_speed{'value'}) RUN ($run_speed), mod: $speed_mod,  std/run: " . ( $speed_mod ? $run_speed/$speed_mod : $std_speed/$run_speed ) ) if $debug or 1;
 		} # end if
 	} else {
 		$openprint::log->error("No standard speed on $$Press{strid}");
@@ -4252,7 +4243,7 @@ $openprint::log->debug("Price: $running_price");
 		$openprint::log->warn("Unknown Units for $$Imposition{runstyle} ($side_one_colours/$side_two_colours) $impression_service: ($run_price{'units'}) on " . $Press->strid() );
 	} # end if
 #$openprint::log->debug("Impresion price: $run_price{'Cost'} $run_price{'units'} = $run_price{'Price'}");
-	return %run_price;
+	return \%run_price;
 } # end sub get_run_price
 
 # This is called once perside, or just once for W&T
