@@ -431,40 +431,40 @@ sub get_li {
 	} # end if
 
 	if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-		$html .= sprintf( q`<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
-		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->stock() );
+		$html .= sprintf( q`<div class="Comment" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->comment() );
+		$html .= sprintf( q`<div class="Stock" onclick="popup_window( '/employee/production/_stock_popup.html', 'schedule_id=%1$d', {width:475} );">%2$s</div>`, $$self{'id'}, $self->stock() );
 		if ( $$self{'project_id'} ) {
 			$html .= sprintf(q`<input type="hidden" name="ScheduleDate-%1$d" id="ScheduleDate-%1$d" value="%2$s"/>`, $$self{'id'}, $Project->due_date() );
 			if ( sets::isin( $self->ServiceType()->name(), [ '', 'AdditionalSignature' ] ) ) {
-				$html .= sprintf( q`<span class="Forms" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
+				$html .= sprintf( q`<span class="Forms" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d %3$s</span>`, $$self{'id'}, $self->forms(), 'form'.($self->forms() > 1 ? 's' : '') );
 			} # end if
 			if ( $Equipment->smartscheduling() ) {
-				$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $self->impressions(), $self->speed() );
+				$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps @ %3$d/Hr</span>`, $$self{'id'}, $self->impressions(), $self->speed() );
 			} else {
-				$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps</span>`, $$self{'id'}, $self->impressions() );
+				$html .= sprintf( q`<span class="Impressions" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">%2$d imps</span>`, $$self{'id'}, $self->impressions() );
 			} # end if
 		} # end if
 		if ( $Equipment->smartscheduling() or $$self{'locked'} ) {
-			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d', {width:475} );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
+			$html .= sprintf( q`<span class="StartTime" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d', {width:475} );">Start: %2$s<img src="/images/small-%3$s.gif" alt="%3$s"/></span>`, $$self{'id'},
 					Date::Format::time2str( '%H:%M', Date::Parse::str2time( $$self{'starttime'} ) ),
 					$$self{'locked'} ? 'locked' : 'unlocked',
 					);
 		} # end if
 
-		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
+		$html .= sprintf( q`<span class="RunTime" onclick="popup_window( '/employee/production/_job_popup.html','schedule_id=%1$d', {width:475} );">Total Hr: %2$.2d:%3$.2d</span>`, $$self{'id'}, split(':',$self->runtime()) );
 
 		if ( $Equipment->specification('DoStockVerification') eq 'Y' ) {
-			$html .= sprintf( q`<span class="StockVerified" onclick="popup_window( '_job_popup.html','schedule_id=%1$d', {width:475} );">Stock: %2$s</span>`, $$self{'id'}, $self->stock_verified() ? 'Yes' : 'No' );
+			$html .= sprintf( q`<span class="StockVerified" onclick="popup_window( '/employee/production/_job_popup.html','schedule_id=%1$d', {width:475} );">Stock: %2$s</span>`, $$self{'id'}, $self->stock_verified() ? 'Yes' : 'No' );
 		} # end if
 
 		$html .= '<span class="Buttons">';
 		if ( $$self{'project_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Approve'.$$self{'id'}, '', "new Ajax.Updater( '$ul_id', '_ul.html', { parameters: { ul_id: '$ul_id', schedule_id: $$self{'id'}, action:'approve'}, evalScripts: true } );", '', 'A' ) if sets::isin( $Project->status(), 'In Prepress', 'Proofs Out','Waiting For Customer Approval','Waiting For QA Approval' );
 			if ( ! $$self{'locked'} ) {
-				$html .= ssi::writeButton( $log, $dbh, 'Up'.$$self{'id'}, '', "new Ajax.Request( '_li_change.json', {parameters: { schedule_id:$$self{'id'}, action: 'Up' }, evalScripts: true } );", '', 'U' );
+				$html .= ssi::writeButton( $log, $dbh, 'Up'.$$self{'id'}, '', "new Ajax.Request( '/employee/production/_li_change.json', {parameters: { schedule_id:$$self{'id'}, action: 'Up' }, evalScripts: true } );", '', 'U' );
 			} # end if
 		} # end if
-			$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
+			$html .= ssi::writeButton( $log, $dbh, 'Bump'.$$self{'id'}, '', "popup_window('/employee/production/_bump_job.html','schedule_id=$$self{id}');", '', 'B' );
 		if ( $$self{'project_id'} ) {
 			$html .= ssi::writeButton( $log, $dbh, 'Complete'.$$self{'id'}, '', "popup_window('_signature_completion_popup.html', 'schedule_id=$$self{'id'}', { height: '100px', center: 'false' } );", '', 'C' );
 			$html .= ssi::writeButton( $log, $dbh, 'House'.$$self{'id'}, '', "new Ajax.Updater('item_$$self{id}','_li.html', {parameters: {schedule_id:$$self{'id'}, action: 'House Stock' } } );", '', 'H' );
