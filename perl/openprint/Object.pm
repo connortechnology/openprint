@@ -52,6 +52,7 @@ sub new {
 		bless $self, $parent;
 
 		if ( ( $$self{'id'} = $id ) or $data ) {
+#$log->debug("loading $parent $id");
 			$self->load( $data );
 		} # end if
 		if ( ! $no_cache ) {
@@ -77,7 +78,7 @@ sub new {
 #$log->debug( $parent . ': ' .$self->to_string() );
 		return $self;
 	} # end if ref id
-$log->debug("test");
+$log->error("test");
 } # end sub new
 
 sub load {
@@ -104,11 +105,12 @@ sub load {
 		} # end if
 	} # end if
 	@$self{keys %$fields} = @$data{@$fields{keys %$fields}};
-	if ( my $cache_field = $self->cache_field() ) {
-		if ( $$fields{$cache_field} and $$self{$cache_field} ) {
-			$name_cache{$type}{$$self{$cache_field}} = $self;
-		} # end if
-	} # end if
+	# do cacihning in find
+	#if ( my $cache_field = $self->cache_field() ) {
+		#if ( $$fields{$cache_field} and $$self{$cache_field} ) {
+			#$name_cache{$type}{$$self{$cache_field}} = $self;
+		#} # end if
+	#} # end if
 } # end sub load
 
 sub save {

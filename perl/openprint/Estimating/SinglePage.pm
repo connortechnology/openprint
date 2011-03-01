@@ -59,6 +59,11 @@ $log->debug("Staring SignlePage calc");
 $log->debug("adding a sig");
 		$Project->add_signature( );
 	} # end if
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		if ( $$specs{'txtPrice'.$qty_index} ) {
+			delete $$specs{'txtPrice'.$qty_index};
+		} # end if
+	}# end foreach
 
 	return $$specs{'Status'} = 'calculated';
 } # end sub calc
