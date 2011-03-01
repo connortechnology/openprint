@@ -251,7 +251,7 @@ sub pricelist {
 	
 		my @header = ( 'Paper Brand', 'Finish','Colour','Weight','Width','Height','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
 		my @data;
-		foreach my $Paper (openprint::Paper::find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
+		foreach my $Paper (openprint::Paper->find( 'order'=>'name,finish,colour,weight,width,height' ) ) {
 			foreach my $Price ( $Paper->Prices('Pricelist'=>$Pricelist, 'order'=>'lngMin') ) {
 				push @data, $Paper->name(), $Paper->finish(),$Paper->colour(), $Paper->weight(), $Paper->width(), $Paper->height();
 				push @data, $Price->Min(), $Price->Max(), $Price->Units(), $Price->Cost(), $Price->Markup(), $Price->Price(), $Price->Discountable();
@@ -263,7 +263,7 @@ sub pricelist {
 	
 		my @header = ( 'Name','Min', 'Max', 'Units', 'Cost', 'Markup', 'Price', 'Discountable' );
 		my @data;
-		foreach my $Product (openprint::Product::find( 'order'=>'name' ) ) {
+		foreach my $Product (openprint::Product->find( 'order'=>'name' ) ) {
 			foreach my $Price ( $Product->Prices('Pricelist'=>$Pricelist, 'order'=>'lngMin') ) {
 				push @data, $Product->name();
 				push @data, $Price->min(), $Price->max(), $Price->units(), $Price->cost(), $Price->markup(), $Price->price(), $Price->discountable();
@@ -306,7 +306,7 @@ sub pricelist {
 		my $io = $upload->io();
 		$_ = <$io>;
 		my $csv = Text::CSV_XS->new();
-		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment::find();
+		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
@@ -366,8 +366,8 @@ sub pricelist {
 		$_ = <$io>;
 		my $csv = Text::CSV_XS->new();
 
-		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment::find();
-		my %materials = map { $_->name(), $_->id() } openprint::Material::find();
+		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
+		my %materials = map { $_->name(), $_->id() } openprint::Material->find();
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
@@ -431,7 +431,7 @@ sub pricelist {
 		while ( <$io> ) {
 			my $status = $csv->parse($_);         # parse a CSV string into fields
 			my ( $name, $finish, $colour, $weight, $width, $height, @data ) = misc::trim( $csv->fields());
-			my @Papers = openprint::Paper::find('name'=>$name, 'finish'=>$finish, 'colour'=>$colour, 'weight'=>$weight, 'width'=>$width, 'height'=>$height );
+			my @Papers = openprint::Paper->find('name'=>$name, 'finish'=>$finish, 'colour'=>$colour, 'weight'=>$weight, 'width'=>$width, 'height'=>$height );
 			if ( ! @Papers ) {
 				$error .= "No Paper found for $name, $finish, $colour, $weight, $width, $height<br/>";
 				next;
@@ -463,7 +463,7 @@ sub pricelist {
 		my $csv = Text::CSV_XS->new();
 
 		my %products = sql::execute( undef, undef, q{SELECT name,id FROM Products} );
-		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment::find();
+		my %equipment = map { $_->strid(), $_->id() } openprint::Equipment->find();
 
 		while ( <$io> ) {
 			my $status = $csv->parse($_);
