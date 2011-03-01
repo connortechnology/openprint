@@ -1,0 +1,26 @@
+<ul>
+	<? echo (
+		if ( ! $$variable{'Monitors'} ) {
+			my $zm_dbh = sql::open_sql( $log,
+				  'database'  => $config{'zm_db_name'},
+				  'driver'    => $config{'zm_db_driver'},
+				  'host'      => $config{'zm_db_hostname'},
+				  'login'     => $config{'zm_db_username'},
+				  'password'  => $config{'zm_db_password'},
+				);
+			return 'Unable to connect to ZM database<br/>' if ! $zm_dbh;
+			require openprint::ZM_Monitor;
+			@{$$variable{'Monitors'}} = openprint::ZM_Monitor->find('dbh'=>$zm_dbh, 'order'=>'Sequence', 'function !=' => 'None' );
+			$zm_dbh->disconnect();
+		} # end if
+		my $html;
+		my @monitor_ids = split(',', $session{'cameras_viewing'} );
+		foreach my $Monitor ( @{$$variable{'Monitors'}} ) {
+			next if ! sets::isin( $Monitor->id(), \@monitor_ids );
+			$html .= sprintf('<li id="camera_%1$d" onclick="stop_stream( %1$d );"><img src="%3$s" class="stream" alt="%2$s" /></li>',
+				$Monitor->id(), $Monitor->name(), $Monitor->source_stream_url(),
+				);
+		} # end foreach Monitor	
+		return $html;
+	) ?>
+</ul>

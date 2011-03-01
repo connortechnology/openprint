@@ -34,7 +34,7 @@ force install Math::Units
 force install Business::PayPal
 EOF
 
-echo > /etc/apache2/conf.d/perl << EOF
+echo > /etc/apache2/conf.d/perl << EOF2
 PerlRequire      startup.pl
 APREQ2_ReadLimit 1024M
-EOF
+EOF2

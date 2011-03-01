@@ -155,9 +155,10 @@ if ( $opts->{'blacklist'} ) {
 		foreach my $Host ( openprint::Host->find('blacklist'=>1, 'order'=>'ip' ) ) {
 			if ( my $macs = $Host->mac() ) {
 				foreach my $mac ( @{$macs} ) {
+					$mac =~ s/:/\-/g;
 					print FH "~$mac\n";
 				} # end foreach mac
-			} else {
+			} elsif ( $Host->ip() ) {
 				print FH $Host->ip()."\n";
 			} # end if
 		} # end foreach Host
