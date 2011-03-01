@@ -25,7 +25,7 @@ $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
 my $projects_count = 100;
-my $project_id = 411449;
+my $project_id = 0;
 #
 #my $project_id = 407192;
 my $company_id = 0;
@@ -200,9 +200,9 @@ if ( 1 ) {
 			# Skip multipage projects
 			next if sets::isin( $Project->Type()->name(), [ 'MultiPage', 'Newsletters','Magazines','Calendars' ] );
 			my $services = $Project->services();
-			next if $$services{'Signature'};
 			next if ! $$services{''};
 			next if ! $$services{''}[0];
+			next if $$services{'Signature'};
 			my $print_specs = openprint::service::get_specs_ref( $Project, $$services{''}[0] );
 			my $new_signature = $Project->copy_signature( $print_specs, {}, openprint::service::status( $Project->id(), $$services{''}[0] ) );
 			foreach my $qty_index ( 1 .. 3 ) {
