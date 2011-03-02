@@ -28,19 +28,21 @@
 						$$variable{'Reference'} = openprint::service::summary( $$variable{'Project'}->id(), $s_id );
 						$$variable{'Reference'} .= '<br/>Running ' . openprint::service::summary( $$variable{'Project'}->id(), $s_id, $qty_index );
 					} # end if
+					$html .= $$variable{'Reference'};
+
 					$html .= sprintf( q`
 						<table>
-							<tr><td valign="top" rowspan="%1$d"><br/>%2$s</td>
+							<tr>
 								<th width="40">Qty</th>
 								<th width="170">Dimensions</th>
 								<th width="105" align="left">Type</th>
-								<th class="Price">MR (%3$s)</th>
-								<th class="Price">Service (%3$s)</th>
+								<th class="Price">MR (%1$s)</th>
+								<th class="Price">Service (%1$s)</th>
 								<th class="Units">&nbsp;</th>
-								<th class="Price">Total (%3$s)</th>
+								<th class="Price">Total (%1$s)</th>
 								<th class="Override">&nbsp;</th>
 							</tr>
-							`, int(@{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}}/6)+2, $$variable{'Reference'}, $$variable{'CurrencySymbol'} );
+							`, $$variable{'CurrencySymbol'} );
 
 					while ( my ( $proof_index,$proof_quantity,$proof_width,$proof_height,$proof_type, $ddmProofType ) = splice @{$$variable{'Proofs-'.$signature_index.'-'.$qty_index}},0,6 ) {
 						$html .= sprintf( q`
@@ -91,12 +93,11 @@
 					<table>
 						<tr>
 							<td align="right"><b>Total Service Price (%2$s):</b></td>
-							<td class="Price"><input name="txtPrice%1$d" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
+							<td class="Price"><input type="text" name="txtPrice%1$d" value="" size="9" readonly="readonly" onfocus="this.blur();" /></td>
 							<td class="Override">&nbsp;</td>
 						</tr>
 						<tr>
-							<td colspan="2" align="right">%4$s
-</td>
+							<td colspan="2" align="right">%4$s</td>
 							<td class="Override">&nbsp;</td>
 						</tr>
 					</table>

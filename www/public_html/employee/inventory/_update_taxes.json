@@ -6,8 +6,8 @@
 	my $created_on = $PO->created_on();
 	$created_on = Date::Format::time2str( '%Y-%m-%d %H:%M:%S', time );
 	my @new_taxes = openprint::Tax->find(
-                'period_start_null_or_<='   =>  $created_on,
-                'period_end_null_or_>='     =>  $created_on,
+                #'period_start_null_or_<='   =>  $created_on,
+                #'period_end_null_or_>='     =>  $created_on,
                 'country'   =>  $param{'vendor_country'},
                 'state'     =>  $param{'vendor_state'},
            );

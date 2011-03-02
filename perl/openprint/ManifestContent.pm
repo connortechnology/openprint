@@ -5,7 +5,7 @@ require openprint::Object;
 use strict;
 use Math::Round qw( nearest );
 use openprint ();
-use vars qw(%variable $log $dbh %config $debug $table $serial %fields %transforms %defaults );
+use vars qw(%variable $log $dbh %config $debug $table $serial %fields %find_fields %transforms %defaults );
 *variable = \%openprint::variable;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
@@ -24,6 +24,9 @@ $serial = 'manifestcontents_id_seq';
 	'skid_id'			=>	'skid_id',
 	'quantity'			=>	'quantity',
 	'type_id'			=>	'type_id',
+);
+%find_fields = (
+	'paper_id'	=>	'(SELECT paper_id FROM Manifest_Content_Types WHERE manifest_content_types.manifest_id = manifestcontents.manifest_id)',
 );
 
 %transforms = (
