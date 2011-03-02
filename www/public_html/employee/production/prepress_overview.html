@@ -69,10 +69,10 @@
 						$html .= qq` $day</span>`;
 				} # end if
 				if ( openprint::usergroup::is_user_in( ['Scheduling'], $session{'user_id'} ) ) {
-					$html .= sprintf( q{<div class="Comment" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">%2$s</div>}, $Project->id(), $Project->summary() );
+					$html .= sprintf( q{<div class="Comment" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d' );">%2$s</div>}, $Project->id(), $Project->summary() );
 
 					$html .= sprintf( q{<span id="%1$dForms" class="Forms" onclick="openPopup( 'Forms', '%1$d' );">%2$d %3$s</span>}, $Project->id(), $forms, 'form'.($forms > 1 ? 's' : '') );
-					$html .= sprintf( q{<span class="Impressions" onclick="popup_window( '_job_popup.html', 'schedule_id=%1$d' );">%2$d imps</span>}, $Project->id(), $impressions );
+					$html .= sprintf( q{<span class="Impressions" onclick="popup_window( '/employee/production/_job_popup.html', 'schedule_id=%1$d' );">%2$d imps</span>}, $Project->id(), $impressions );
 					$html .= '<span class="Services">';
 					$html .= '<span class="Service">fold</span>' if $$services{'Folding'};
 					$html .= '<span class="Service">stitch</span>' if $$services{'SaddleStitching'} or $$services{'LoopStitching'};
