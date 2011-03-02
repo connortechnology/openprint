@@ -13,7 +13,7 @@ use vars qw( $log $dbh $debug %fields %find_fields %transforms %defaults $table 
 *dbh = \$openprint::dbh;
 
 %fields = (
-	'service_iid'	=>	'lngserviceindex',
+	'service_id'	=>	'lngserviceindex',
 	'project_id'	=>	'lngprojectindex',
 	'operator_id'	=>	'operator_id',
 	'status'		=>	'strstatus',
