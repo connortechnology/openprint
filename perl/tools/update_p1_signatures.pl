@@ -46,6 +46,16 @@ if ( ! $ServiceType ) {
 	$ServiceType = new openprint::ServiceType();
 	$ServiceType->save({'name'=>'Signature','description'=>'Signature','url'=>'prin/Signature.html','view_visible'=>1,'category'=>'Printing','type'=>'Printing'});
 }
+my $BrochureType = openprint::ProjectType->find_one('name'=>'Brochures');
+if ( $BrochureType ) {
+    foreach my $PT ( openprint::ProjectType_Template->find( 'projecttype_id'=>$BrochureType->id(), 'type'=>'8PageSignatureFold') ) {
+        $_ = $PT->save({'type'=>'8PageFold'});
+        $log->error($_) if $_;
+    }
+} else {
+    $log->error("No Brochures");
+}
+
 
 if ( 1 ) {
 $log->warn("Updating $projects_count projects for $company_id");
@@ -162,6 +172,9 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 						if ( my $Material = openprint::Material->find_one( 'name'=>$$specs{'ddmPackageType'.$qty_index} ) ) {
 							openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'ddmPackageType'.$qty_index, $Material->id() );
 						} # end if
+					} # end if
+					if ( $$specs{'chkOverrideItemsPerPackage'} ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverrideItemsPerPackage'.$qty_index, $$specs{'chkOverrideItemsPerPackage'} );
 					} # end if
 				} # end foreach
 			} # end foreach

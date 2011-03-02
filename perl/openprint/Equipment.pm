@@ -259,7 +259,7 @@ sub Specification {
 	return if ! $$self{'id'};
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach ( openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'dblmin,dblmax NULLS FIRST' ) ) {
+		foreach ( openprint::EquipmentSpecification->find( 'Equipment'=>$self, 'order'=>'dblmin NULLS FIRST,dblmax NULLS FIRST' ) ) {
 			push @{$$self{'Specifications'}{$_->name()}}, $_;
 		} # end foreach
 	} # end if
@@ -273,7 +273,7 @@ sub Specification {
 		return;
 	} # end if
 
-$openprint::log->debug("Looking for $name : $range") if $debug;
+#$openprint::log->debug("Looking for $name : $range") if $debug or 1;
 
 	return misc::find_entry( $range, $$self{'Specifications'}{$name}, $debug );
 } # end sub specification

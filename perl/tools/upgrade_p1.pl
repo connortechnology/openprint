@@ -104,9 +104,12 @@ foreach my $E ( openprint::Equipment->find('strid'=>'Web1') ) {
 
 my $BrochureType = openprint::ProjectType->find_one('name'=>'Brochures');
 if ( $BrochureType ) {
-foreach my $PT ( openprint::ProjectType_Template->find( 'projecttype_id'=>$BrochureType->id(), 'type'=>'8PageSignatureFold') ) {
-	$PT->save({'type'=>'8PageFold'});
-}
+	foreach my $PT ( openprint::ProjectType_Template->find( 'projecttype_id'=>$BrochureType->id(), 'type'=>'8PageSignatureFold') ) {
+		$_ = $PT->save({'type'=>'8PageFold'});
+		$log->error($_) if $_;
+	}
+} else {
+	$log->error("No Brochures");
 }
 if ( 0 ) {
 new openprint::ProjectType_Template()->save({

@@ -945,7 +945,7 @@ sub recommendations {
 sub get_price {
 	my ( $self, %params ) = @_;
 	
-    my $price;
+	my $price;
 	my $qty = $params{'weight'};
 
     if ( $$self{'Price'} and ($params{'service'} eq 'Material') ) {
@@ -974,7 +974,7 @@ sub get_price {
 		} # end foreach Price
 		if ( ! $price ) {
 			if ( $params{'service'} eq 'Material' or $debug ) {
-				$openprint::log->warn("Unable to find price for Stock $params{service} $params{equipment_id} : $qty");
+				$openprint::log->warn("Unable to find price for Stock id:$$self{id} $params{service} equip: $params{equipment_id} : $qty");
 			} # end if
 			return;
 		} # end if
@@ -1247,6 +1247,7 @@ sub load_from_signature {
 	} else {
 		if ( $qty_index and $$specs{'paper_id'.$qty_index} ) {
 			$Paper = new openprint::Paper( $$specs{'paper_id'.$qty_index} );
+$openprint::log->debug("Loading paper using paper_id") if $debug;
 			$Paper = $Paper->id() ? $Paper : undef;
 		} elsif ( ! ( $$specs{'ddmStockBrand'} and $$specs{'ddmStockFinish'} and $$specs{'ddmStockColour'} and $$specs{'ddmStockWeight'} ) ) {
 			return new openprint::Paper();
@@ -1337,7 +1338,7 @@ sub load_from_signature {
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			$Paper->start_width( $Paper->width() ) if ! $Paper->start_width();
-			$Paper->height( $$specs{'StockHeight'.$qty_index} ) if $Paper->type() ne 'Roll';
+			$Paper->height( $Paper->type() ne 'Roll' ? $$specs{'CutOff'.$qty_index} : $$specs{'StockHeight'.$qty_index} );
 			$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
 		} # end if
 	} # end if
