@@ -396,6 +396,9 @@ sub find_entry {
 
 	if ( ! defined $range ) {
 		if ( @{$array} ) {
+#foreach my $k ( @{$array} ) {
+#$openprint::log->debug("Looking for undef range, sending back first entry which is " . $k->to_string() );
+#}
 			return $$array[0];
 		} # end if
 		return;

@@ -106,8 +106,7 @@ sub calc {
 		# First, build a hash containing the quantities of each proof.  The reason for this is to honour quantity discounts.
 		foreach my $signature_service_index ( @signature_service_indices ) {
 			my $sig_specs = openprint::service::get_specs_ref( $Project, $signature_service_index );
-			my $Imposition = new openprint::Imposition();
-			$Imposition->load( $sig_specs, $qty_index );
+
 			my $signature_index = $$sig_specs{'SignatureIndex'};
 			$$specs{'hdnBreakdown'.$qty_index} .= "Signature $signature_index<br/>";
 			if ( ! $$sig_specs{'txtImposition'.$qty_index} ) {
@@ -116,6 +115,9 @@ sub calc {
 				$$specs{'hdnBreakdown'.$qty_index} .= 'No proofs needed because there is no imposition';
 				next;
 			} # end if
+$openprint::log->debug("Loading imposition");
+			my $Imposition = new openprint::Imposition();
+			$Imposition->load( $sig_specs, $qty_index );
 
 			if ( ( ! sets::isin( 1, $proof_indexes{$signature_index} ) ) and $openprint::config{'Add Default Layout Proof'} eq 'Y' ) {
 				push @{$proof_indexes{$signature_index}}, 1;
@@ -385,12 +387,19 @@ sub insert_colour_proof {
 sub insert_layout_proof {
 	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs, $Imposition ) = @_;
 
+$Imposition->display('insert_layout_proof');
 	my $Equipment = $Imposition->Press();
-	my $Equipment = openprint::Equipment->find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
-	return if ! $Equipment;
+	$Equipment = openprint::Equipment->find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
+	if ( ! $Equipment ) {
+		$openprint::log->warn("No equipment in insert_layout_proof");
+		return;
+	} # end if
 
 	my ( $default_proof_type ) = $Equipment->specification( 'Default Layout Proof' );
-	return if ! $default_proof_type;
+	if ( ! $default_proof_type ) {
+		$openprint::log->debug("No Default Layout Proof for " . $Equipment->strid() );
+		return;
+	} # end if
 
 	my $quantity = 0;
 	if ( sets::isin( $Imposition->runstyle(), ['Web','Sheet Work', 'Perfecting'] ) ) {
