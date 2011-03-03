@@ -1,6 +1,7 @@
 package openprint::events;
 
 use strict;
+use LWP::UserAgent;
 use openprint;
 use vars qw( $r %variable %session %param %config $log $dbh );
 *variable = \%openprint::variable;
@@ -16,42 +17,124 @@ require openprint::Event_Category;
 
 sub history {
 	if ( $param{'btnFunction'} eq 'Save' ) {
+		$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
 		$param{'starting_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
 		$param{'ending_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
-		if ( ! $param{'event_id'} ) {
-			if ( openprint::Event->find_one('created_by'=>$session{'user_id'},'starting_on'=>$param{'starting_on'},'ending_on'=>$param{'ending_on'}, 'name'=>$param{'name'} ) ) {
-				$variable{'error'} = 'Not creating duplicate.<br/>';
-				return;
+		my $Event = new openprint::Event( $param{'event_id'} );
+		if ( $param{'category_id'} ) {
+			delete $param{'category'};
+		} else {
+			delete $param{'category_id'};
+		} # end if
+		if ( $param{'source'} ) {
+			if ( $param{'source'} =~ /epicurious\.com/ ) {
+				my $ua = LWP::UserAgent->new;
+				$ua->agent("MyApp/0.1 ");
+# Create a request
+				my $req = HTTP::Request->new(GET => $param{'source'} );
+# Pass request to the user agent and get a response back
+				my $res = $ua->request($req);
+# Check the outcome of the response
+				if ($res->is_success) {
+					$log->debug("Content: " . $res->content );
+					my $content = $res->content;
+					#my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
+					$content =~ s/\n\r//g;
+					$content =~ s/\n//g;
+					my ( $title ) = $content =~ /<h1 class="fn">(.+?)<\/h1>/;
+					my ( $summary ) = $content =~ /<span id="truncatedText" class="summary">(.+?)<\/span>/;
+					my ( $thumb ) = $content =~ /<div id="recipe_thumb">(.+?)<\/div>/;
+					
+					$param{'source_content'} = qq`<div class="Epicurious"><h1>$title</h1><div class="thumb">$thumb</div><div class="summary">$summary</div></div>`;
+				} else {
+					$log->error("Bad status" . $res->status_line );
+					$variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
+				} # end if
 			} # end if
 		} # end if
-		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->save(\%param);
 	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->destroy();
 	} elsif ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/event/history.html', ( 'starting_on_start_year','starting_on_start_month','starting_on_start_day','starting_on_end_year','starting_on_end_month','starting_on_end_day') );
 	} # end if
 
 	if ( ( ! $session{'/event/history.html?lastupdated'} ) or ( time - $session{'/event/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/event/history.html', 'starting_on_start', -31 );
-		ssi::setup_date_select( '/event/history.html', 'starting_on_end', '' );
+		ssi::setup_date_select( '/event/history.html', 'published_on_start', -31 );
+		ssi::setup_date_select( '/event/history.html', 'published_on_end', '' );
+		ssi::setup_date_select( '/event/history.html', 'created_on_start', -31 );
+		ssi::setup_date_select( '/event/history.html', 'created_on_end', '' );
 	} # end if
+	ssi::save_params( '/event/history.html', ( 
+				'created_on_start_year','created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'published_on_start_year','published_on_start_month','published_on_start_day',
+				'published_on_end_year','published_on_end_month','published_on_end_day',
+				'published','employee_id','company_id', 'category_id' ) );
+
+	$session{'/event/history.html?published'} = '0' if ! $session{'/event/history.html?published'};
 } # end sub history
 
 sub _history {
 	if ( ! $param{'btnFunction'} ) {
-		ssi::save_params( '/event/history.html', ( 'starting_on_start_year','starting_on_start_month','starting_on_start_day','starting_on_end_year','starting_on_end_month','starting_on_end_day') );
+		ssi::save_params( '/event/history.html', ( 
+				'created_on_start_year','created_on_start_month','created_on_start_day',
+				'created_on_end_year','created_on_end_month','created_on_end_day',
+				'published_on_start_year','published_on_start_month','published_on_start_day',
+				'published_on_end_year','published_on_end_month','published_on_end_day',
+				'published','employee_id','company_id', 'category_id' ) );
 	} # end if
 } # end sub _history
 
 sub edit {
 	$variable{'Event'} = new openprint::Event( $param{'event_id'} );
-	if ( $param{'btnFunction'} eq 'Copy' ) {
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $variable{'Event'}->save(\%param);
+		$variable{'Redirect'} = '/event/history.html';
+	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
 		$variable{'Event'} = $variable{'Event'}->copy();
 		$variable{'error'} .= $variable{'Event'}->save();
 	} # end if
+	if ( time - $session{'/event/edit.html?lastupdated'} < ( 12*60*60 ) ) {
+		$variable{'Event'}->company_id( $session{'/event/edit.html?company_id'} ) if ! $variable{'Event'}->company_id();
+		$variable{'Event'}->published_on( $session{'/event/edit.html?ending'} ) if ! $variable{'Event'}->published_on();
+	} # end if
 } # end sub edit
+
+sub list {
+} # end sub list
+
+sub category {
+	my $Category = $variable{'Category'} = new openprint::Event_Category( $param{'category_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$variable{'error'} .= $Category->save(\%param);
+        if ( $param{'filename'} ) {
+            my $upload = $r->upload('filename');
+            if ( ! $upload ) {
+                $variable{'error'} .= "There was no upload for $param{'filename'}<br/>";
+            } else {
+				my $path = '/images/event_categories/' . $Category->id() . '_' . $param{'filename'};
+                if ( ! $upload->link( $config{'SkinPath'} . $path ) ) {
+                    $variable{'error'} .= "There was an error saving file $param{'filename'} to $config{SkinPath}$path : $!<br/>";
+#$Asset->save({'filename'=>''});
+                } else {
+                    $variable{'error'} .= $Category->save({'image_filename'=>$path});
+                    $variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+                } # end if
+            } # end if
+		} else {
+			$log->debug("No image uploaded");
+        } # end if
+
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		$variable{'error'} .= $Category->delete();
+	} # end if
+} # end sub category
+
+sub _view {
+	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	$Event->set( \%param );
+} # end sub _view
 
 1;
 __END__
