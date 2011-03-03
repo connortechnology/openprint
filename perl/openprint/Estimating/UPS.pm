@@ -28,7 +28,7 @@ use vars qw( $log $dbh %variable %config %session );
 *session = \%openprint::session;
 *config = \%openprint::config;
 *log = \$openprint::log;
-*dbh = \$openprint::log;
+*dbh = \$openprint::dbh;
 
 my $debug = 1;
 
