@@ -27,13 +27,17 @@ $table = 'photo_albums';
 	'deleted'		=>	0,
 );
 
-sub thumbnail_url {
-	# if no thumbnail set, then choose randomal
+
+sub Thumbnail {
 	if ( ! $_[0]{'thumbnail_id'} ) {
 		my @Photos = $_[0]->Photos();
-$openprint::log->debug("Type: " . ref $Photos[0] ) if @Photos;
-		return $Photos[0]->thumbnail_url() if @Photos;
+		return $Photos[0] if @Photos;
 	} # end if
+	return new openprint::Photo_in_Album( { 'asset_id'=>$_[0]{'thumbnail_id'}, 'album_id'=>$_[0]{'id'} } );
+} # end sub Thumbnail
+
+sub thumbnail_url {
+	return $_[0]->Thumbnail()->thumbnail_url();
 } # end sub thumbnail_url
 
 sub Photos {
