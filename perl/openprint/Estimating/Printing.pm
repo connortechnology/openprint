@@ -864,13 +864,12 @@ sub get_impositions {
 	my ( $Project, $specs, $project, $side_one_colours, $side_two_colours, $qty, $qty_index, $Presses, $Papers ) = @_;
 	my %impositions;
 	my $services = $Project->services();
-	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @$side_one_colours, @$side_two_colours ] );
-	my @Coatings;
+		my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
+		my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
+	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall', @Coatings ], [ @$side_one_colours, @$side_two_colours ] );
 
 	if ( $$project{print_sides} == 2 ) {
 		# We will be considering W&T, so we will need the coatings array
-		my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
-		@Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 	} # end if
 	if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 		$variables{'PrintingType'.$qty_index} = [ sets::exclude( ['output'], $variables{'PrintingType'.$qty_index} ) ];
