@@ -1,4 +1,4 @@
-package openprint::events;
+package openprint::event;
 
 use strict;
 use LWP::UserAgent;
@@ -60,8 +60,8 @@ sub history {
 	} # end if
 
 	if ( ( ! $session{'/event/history.html?lastupdated'} ) or ( time - $session{'/event/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
-		ssi::setup_date_select( '/event/history.html', 'published_on_start', -31 );
-		ssi::setup_date_select( '/event/history.html', 'published_on_end', '' );
+		ssi::setup_date_select( '/event/history.html', 'starting_on_start', -31 );
+		ssi::setup_date_select( '/event/history.html', 'starting_on_end', '' );
 		ssi::setup_date_select( '/event/history.html', 'created_on_start', -31 );
 		ssi::setup_date_select( '/event/history.html', 'created_on_end', '' );
 	} # end if
@@ -80,9 +80,28 @@ sub _history {
 		ssi::save_params( '/event/history.html', ( 
 				'created_on_start_year','created_on_start_month','created_on_start_day',
 				'created_on_end_year','created_on_end_month','created_on_end_day',
-				'published_on_start_year','published_on_start_month','published_on_start_day',
-				'published_on_end_year','published_on_end_month','published_on_end_day',
-				'published','employee_id','company_id', 'category_id' ) );
+				'employee_id','company_id', 'category_id' ) );
+	} # end if
+} # end sub _history
+
+sub search {
+	if ( ! $param{'btnFunction'} ) {
+		ssi::save_params( '/event/search.html', ( 
+				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+				'user_id', 'category_id' ) );
+	} # end if
+	if ( ( ! $session{'/event/search.html?lastupdated'} ) or ( time - $session{'/event/search.html?lastupdated'} ) > ( 12*60*60 ) ) {
+		ssi::setup_date_select( '/event/search.html', 'starting_on_start', 0 );
+		ssi::setup_date_select( '/event/search.html', 'starting_on_end', '' );
+	} # end if
+} # end sub search
+sub _search {
+	if ( ! $param{'btnFunction'} ) {
+		ssi::save_params( '/event/search.html', ( 
+				'starting_on_start_year','starting_on_start_month','starting_on_start_day',
+				'starting_on_end_year','starting_on_end_month','starting_on_end_day',
+				'user_id', 'category_id' ) );
 	} # end if
 } # end sub _history
 
