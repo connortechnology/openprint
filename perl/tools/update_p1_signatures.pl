@@ -25,7 +25,7 @@ $sql_server{'password'} = $sql_server{'login'} if ! $sql_server{'password'};
 
 $openprint::Object::no_cache = 1;
 my $projects_count = 100;
-my $project_id = 0;
+my $project_id = 411579;
 #
 #my $project_id = 407192;
 my $company_id = 0;
@@ -174,7 +174,10 @@ $log->warn("Updating sig $sig_id of project $$Project{'id'} adding SignatureInde
 						} # end if
 					} # end if
 					if ( $$specs{'chkOverrideItemsPerPackage'} ) {
-						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'chkOverrideItemsPerPackage'.$qty_index, $$specs{'chkOverrideItemsPerPackage'} );
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'OverrideItemsPerPackage'.$qty_index, $$specs{'chkOverrideItemsPerPackage'} );
+					} # end if
+					if ( $$specs{'txtItemsPerPackage'} ) {
+						openprint::service::insert_service_spec( $log, $dbh, $Project->id(), $ss_id, 'txtItemsPerPackage'.$qty_index, $$specs{'txtItemsPerPackage'} );
 					} # end if
 				} # end foreach
 			} # end foreach
