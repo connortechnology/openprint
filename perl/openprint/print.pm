@@ -218,9 +218,7 @@ sub view_services {
 				} # end if
 				$Project->summary(undef);
 				$Project->save();
-$openprint::log->error("continue_project");
 				openprint::print_project::continue_project( $log, $dbh, $variable, $project_index );
-$log->debug("Done Recalc");
 			} elsif ( $openprint::param{'btnFunction'} eq 'Continue Project' ) {
 				$openprint::session{'project_id'} = $project_index;
 				$Project->currency_id( $openprint::session{Currency_id} );

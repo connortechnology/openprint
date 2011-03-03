@@ -33,16 +33,13 @@ my @variables = (
 		'RequireColourProofs',
 		);
 
-my @output = (
-);
-
 sub variables {
 	my ( $p_id, $s_id, $specs ) = @_;
 
 	my $Project = new openprint::Project( $p_id );
 	my @v = @variables;
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
-		push @v, 'txtPrice'.$qty_index if $Project->quantity( $qty_index );
+		push @v, 'txtPrice'.$qty_index;
 	} # end foreach qty_index
 
 	foreach my $ss_id ( $Project->signatures() ) {
@@ -68,7 +65,36 @@ sub variables {
 } # end sub variables
 
 sub outputs {
+	my ( $p_id, $s_id, $specs ) = @_;
+
+	my $Project = new openprint::Project( $p_id );
+	my @v;
+	foreach my $qty_index ( $Project->quantity_indexes() ) {
+		push @v, 'txtPrice'.$qty_index;
+	} # end foreach qty_index
+
+	foreach my $ss_id ( $Project->signatures() ) {
+		my $sig_specs = openprint::service::get_specs_ref( $Project, $ss_id );
+		my $signature_index = $$sig_specs{'SignatureIndex'};
+		foreach my $key ( keys %{$specs} ) {
+			if ( $key =~ /^txtProofIndex-$signature_index-(\d*)-(\d*)$/ ) {
+				my ( $proof_index, $qty_index ) = ( $1, $2 );
+
+				push @v,	(
+						"txtProofWidth-$signature_index-$proof_index-$qty_index",
+						"txtProofHeight-$signature_index-$proof_index-$qty_index", 
+						"txtProofQuantity-$signature_index-$proof_index-$qty_index",
+						"ddmProofType-$signature_index-$proof_index-$qty_index",
+						"txtProofUnitPrice-$signature_index-$proof_index-$qty_index",
+						"txtProofIndex-$signature_index-$proof_index-$qty_index",
+						"chkOverride-$signature_index-$proof_index-$qty_index",
+						);
+			} # end if
+		} # end foreach key
+	} # end foreach signature
+	return @v;
 } # end sub outputs
+
 sub no_outputs {
 } # end sub no_outputs
 
@@ -131,14 +157,6 @@ $openprint::log->debug("Loading imposition");
 				
 			foreach my $proof_index ( @{$proof_indexes{$signature_index}} ) {
 				if ( $$specs{"chkOverride-$signature_index-$proof_index-$qty_index"} ne 'Y' ) {
-					@output = sets::union( @output,
-							"txtProofIndex-$signature_index-$proof_index-$qty_index",
-							"txtProofWidth-$signature_index-$proof_index-$qty_index",
-							"txtProofHeight-$signature_index-$proof_index-$qty_index",
-							"txtProofQuantity-$signature_index-$proof_index-$qty_index",
-							"ddmProofType-$signature_index-$proof_index-$qty_index",
-							);
-
 					if ( $proof_index == 1 ) {
 						insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs, $Imposition );
 					} elsif ( $proof_index == 2 ) {
@@ -150,21 +168,6 @@ $openprint::log->debug("Loading imposition");
 					if ( ($proof_index == 1) and ($$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} eq 'DigitalDylux') and ( $$specs{"txtProofQuantity-$signature_index-$proof_index-$qty_index"} < $openprint::config{'ForceDigitalDyluxQuantity'} ) ) {
 						$$specs{'alert'} .= "We require Dylux Proofs<br/>";
 						insert_layout_proof( $Project, $sig_specs, 1, $qty_index, $specs, $Imposition );
-						@output = sets::union( @output,
-								"txtProofIndex-$signature_index-$proof_index-$qty_index",
-								"txtProofWidth-$signature_index-$proof_index-$qty_index",
-								"txtProofHeight-$signature_index-$proof_index-$qty_index",
-								"txtProofQuantity-$signature_index-$proof_index-$qty_index",
-								"ddmProofType-$signature_index-$proof_index-$qty_index",
-								);
-					} else {
-						@output = sets::xor( @output,
-								"txtProofIndex-$signature_index-$proof_index-$qty_index",
-								"txtProofWidth-$signature_index-$proof_index-$qty_index",
-								"txtProofHeight-$signature_index-$proof_index-$qty_index",
-								"txtProofQuantity-$signature_index-$proof_index-$qty_index",
-								"ddmProofType-$signature_index-$proof_index-$qty_index",
-								);
 					} # end if
 				} # end if
 
@@ -387,7 +390,7 @@ sub insert_colour_proof {
 sub insert_layout_proof {
 	my ( $Project, $sig_specs, $proof_index, $qty_index, $specs, $Imposition ) = @_;
 
-$Imposition->display('insert_layout_proof');
+#$Imposition->display('insert_layout_proof');
 	my $Equipment = $Imposition->Press();
 	$Equipment = openprint::Equipment->find_one( 'strid'=>$$sig_specs{'ddmPress'.$qty_index} ) if ! $Equipment;
 	if ( ! $Equipment ) {
@@ -402,7 +405,7 @@ $Imposition->display('insert_layout_proof');
 	} # end if
 
 	my $quantity = 0;
-	if ( sets::isin( $Imposition->runstyle(), ['Web','Sheet Work', 'Perfecting'] ) ) {
+	if ( sets::isin( $$Imposition{'runstyle'}, ['Web','Sheet Work', 'Perfecting'] ) ) {
 		if ( openprint::Estimating::Printing::get_colours( $sig_specs, 'SideOne' ) ) {
 			$quantity += 1;
 		} # end if
@@ -426,13 +429,6 @@ sub insert_new_proof {
 	$$specs{"txtProofHeight-$signature_index-$proof_index-$qty_index"} = 1*$height;
 	$$specs{"ddmProofType-$signature_index-$proof_index-$qty_index"} = $type;
 	$$specs{"txtProofIndex-$signature_index-$proof_index-$qty_index"} = $proof_index;
-	@output = sets::union( @output,
-			"txtProofWidth-$signature_index-$proof_index-$qty_index",
-			"txtProofHeight-$signature_index-$proof_index-$qty_index",
-			"txtProofQuantity-$signature_index-$proof_index-$qty_index",
-			"ddmProofType-$signature_index-$proof_index-$qty_index",
-			"txtProofUnitPrice-$signature_index-$proof_index-$qty_index",
-			);
 } # end sub insert_new_proof
 
 sub load_proof_info {

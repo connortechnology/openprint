@@ -2545,7 +2545,7 @@ sub get_project_price {
 	my $services = $Project->services();
 
 	foreach my $Press ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : @$possible_presses ) {
-$openprint::log->debug("Press: $$Press{strid}");
+#$openprint::log->debug("Press: $$Press{strid}");
 		next if ! $Press;
 
 		# When calculating the get_project_price for remaining sigs, we must make sure that we stay with the same type
