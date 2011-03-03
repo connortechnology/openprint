@@ -990,7 +990,7 @@ sub get_price {
 		$$price{'currency_id'} = $Pricelist->currency_id();
 		openprint::Currency::convert( $price );
 	} else {
-		$openprint::log->error("No custom price, and no paper::id");
+		Carp::cluck("No custom price, and no paper::id");
 	} # end if
 
 	my $Company = new openprint::Company( $openprint::session{company_id} );

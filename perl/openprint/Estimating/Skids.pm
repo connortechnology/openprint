@@ -175,10 +175,24 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 					openprint::imposition::calc_setup( $setup1, @$specs{'txtFinalWidth','txtFinalHeight'}, $width, $height );
 					openprint::imposition::calc_setup( $setup2, @$specs{'txtFinalHeight','txtFinalWidth'}, $width, $height );
 					my $imposition = $setup1->imposition() > $setup2->imposition() ? $setup1->imposition() : $setup2->imposition();
-					next if ! $imposition;
+					if ( $imposition ) {
+						# Fits flat
+						$items_by_size = int ( ($depth/$$specs{'txtFinishedCalliper'}) * $imposition );
+						$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %d<br/>', $items_by_size );
+					} else {
+						# Try Rolling
+						my ( $item_width, $item_length ) = sort @$specs{'txtFinalWidth','txtFinalHeight'};
+						if ( $width == $height and $depth >= $item_width ) {
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Rolling %sx%s on %s<br/>', $item_width, $item_length, $depth );
+							# L = pi * N * (D+d)/2 where N=(D-d)/(2*t)
+							my $l = 3.14 * ( .5 ) / ( 2 * $$specs{'txtFinishedCalliper'} ) * ( $width + .5 )/2;
+							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Max Length: %d<br/>', $l );
+							$items_by_size = int($l/$item_length);
+						} else {
+				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant Roll<br/>';
+						} # end if
+					} # end if
 
-					$items_by_size = int ( ($depth/$$specs{'txtFinishedCalliper'}) * $imposition );
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items by size: %d<br/>', $items_by_size );
 # Make sure it's not too heavy
 					if ( $items_by_size > $items_by_weight ) {
 						$items_per_package = $items_by_weight;
@@ -192,7 +206,10 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 				$items_per_package = int $$specs{'txtItemsPerPackage'.$qty_index};
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Items per: %d<br/>', $items_per_package );
-			next if ! $items_per_package;
+			if ( ! $items_per_package ) {
+				$$specs{'hdnBreakdown'.$qty_index} .= '</fieldset>';
+				next;
+			} # end if
 
 			my $package_qty = ceil($qty/$items_per_package);
 
