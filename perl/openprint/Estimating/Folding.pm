@@ -268,7 +268,7 @@ sub impositions {
 
 	my $services = $Project->services();
 
-	my $Fold = $Imposition->Equipment()->Fold(
+	my $Fold = $Imposition->Equipment()->Fold({
 			'pages'				=>	$Imposition->pages(),
 			'page_columns'		=>	$Imposition->page_columns(),
 			'page_rows'			=>	$Imposition->page_rows(),
@@ -281,11 +281,11 @@ sub impositions {
 			'gsm'				=>	$Imposition->Paper()->gsm(),
 			'imposition'		=>	$$Imposition{'imposition'},
 			'calliper'			=>	$Imposition->Paper()->calliper(),
-			);
+			});
 	return @imps if $Fold;
 
 # Now look it up without the width
-	$Fold = $Imposition->Equipment()->Fold(
+	$Fold = $Imposition->Equipment()->Fold({
 			'pages'				=>	$Imposition->pages(),
 			'page_columns'		=>	$Imposition->page_columns(),
 			'page_rows'			=>	$Imposition->page_rows(),
@@ -297,7 +297,7 @@ sub impositions {
 			'gsm'				=>	$Imposition->Paper()->gsm(),
 			'imposition'		=>	$$Imposition{'imposition'},
 			'calliper'			=>	$Imposition->Paper()->calliper(),
-			);
+			});
 	return @imps if ! $Fold;
 
 	if ( $Fold->min_width() and $Fold->min_width() > ( $Imposition->image_orientation() eq 'Vertical' ? $Imposition->image_width() : $Imposition->image_height() ) ) {
@@ -654,8 +654,9 @@ sub signature_calc {
 # Each piece of equipment can do different folds.  So we have to calculate what we can do as well.
 				if ( $$Equipment{id} == $$Press{id} ) {
 # Special case because we can't cut it in the middle of printing.  This case is basically for web presses
+$Imposition->display("Folding on press");
 
-					my $Fold = $Equipment->Fold(
+					my $Fold = $Equipment->Fold( {
 							'pages'				=>	$Imposition->pages(),
 							'page_columns'		=>	$Imposition->page_columns(),
 							'page_rows'			=>	$Imposition->page_rows(),
@@ -669,7 +670,7 @@ sub signature_calc {
 							'imposition'		=>	$$Imposition{'imposition'},
 							'calliper'			=>	$Paper->calliper(),
 							'printing_type'		=>	$Press->specification('Printing Type'),
-							);
+							} );
 					if ( $Fold ) {
 						$Fold = $Fold->clone();
 						$Fold->Imposition( $Imposition );
@@ -694,13 +695,13 @@ sub signature_calc {
 							} # end if
 						} else {
 							
-							my $Fold = $Equipment->Fold(
+							my $Fold = $Equipment->Fold({
 									'type'				=>	$$sig_specs{'rdbTemplateType'},
 									'gsm'				=>	$Paper->gsm(),
 									'calliper'			=>	$Paper->calliper(),
 									'imposition'		=>	$$Imposition{'imposition'},
 									'printing_type'		=>	$Press->specification('Printing Type'),
-									);
+									});
 							if ( $Fold ) {
 								# Need to check feed width
 								if ( my $max_feed_width = $Equipment->specification('Maximum Feed Width') ) {
@@ -762,7 +763,7 @@ sub signature_calc {
 
 						if ( ! $_ )  {
 
-							my $Fold = $Equipment->Fold(
+							my $Fold = $Equipment->Fold({
 									'pages'				=>	$Imposition->pages(),
 									'page_columns'		=>	$Imposition->page_columns(),
 									'page_rows'			=>	$Imposition->page_rows(),
@@ -774,7 +775,7 @@ sub signature_calc {
 									'calliper'			=>	$Paper->calliper(),
 									'imposition'		=>	$$Imposition{'imposition'},
 									'printing_type'		=>	$Press->specification('Printing Type'),
-									);
+									});
 							if ( $Fold ) {
 								$Fold = $Fold->clone();
 								$Fold->Imposition( $Imposition );

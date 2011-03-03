@@ -108,7 +108,7 @@ sub view_services {
 				$openprint::session{'project_id'} = $project_index;
 				$log->debug("** Save Service in View Services Function **");
 
-				my $service_index = $r->param('ServiceIndex');
+				my $service_index = $openprint::param{'ServiceIndex'};
 				my $Currency = openprint::Currency::get_current();
 				my $recalc = 0;	
 				save_service( $r, $log, $dbh, $variable, $Project, $service_index );
@@ -124,8 +124,8 @@ sub view_services {
 					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
 					$recalc = 1;
 				} elsif ( $openprint::param{'ServiceType'} eq 'Printing' ) {
-					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index, $service_index );
-					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $service_index, $Project->Type()->type() );
+					openprint::Estimating::MultiPage::calculate_signatures( $log, $dbh, $variable, $project_index );
+					openprint::service::internal_calc( $log, $dbh, $variable, $project_index, $$services{''}[0], $Project->Type()->type() );
 # Might need to test for status of project service
 					$recalc = 1;
 				} elsif (sets::isin(  $r->param('ServiceType'), [ 'Scoring', 'Perforating','SpinePaste','Stitching'] ) ) {

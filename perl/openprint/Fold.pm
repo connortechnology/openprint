@@ -121,7 +121,7 @@ sub Equipment {
 sub Specifications {
 	my $self = shift;
 	if ( ! $$self{'Specifications'} ) {
-		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
+		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'Fold'=>$self,'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
 	} # end if
 	return @{$$self{'Specifications'}};
 } # end sub Equipment
@@ -130,7 +130,7 @@ sub Specification {
 	my ( $self, $range ) = @_;
 
     if ( ! $$self{'Specifications'} ) {
-		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'Fold'=>$self,'order'=>'min_weight,max_weight' );
+		@{$$self{'Specifications'}} = openprint::FoldSpecification->find( 'Fold'=>$self,'order'=>'min_weight NULLS FIRST,max_weight NULLS FIRST' );
     } # end if
 
     if ( ! @{$$self{'Specifications'}} ) {

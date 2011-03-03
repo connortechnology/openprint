@@ -1232,9 +1232,9 @@ sub get_impositions {
 			#} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $SmallerPaper->height() == $$specs{"CutOff$qty_index"} ) ) {
 #$add = 1;
 			if ( $imps{$str} ) {
-					my $SmallerPrice = $SmallerPaper->get_price('weight'=>$$imp{'stock_weight'},'service'=>'Material');
-					$$imp{'PaperPrice'} = $SmallerPrice;
-					$imp->display('Comparing A QTY ' . $$imp{'stock_weight'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 2;
+				my $SmallerPrice = $SmallerPaper->get_price('weight'=>$$imp{'stock_weight'},'service'=>'Material');
+				$$imp{'PaperPrice'} = $SmallerPrice;
+#$imp->display('Comparing A QTY ' . $$imp{'stock_weight'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 2;
 				for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 					my $I = $imps{$str}[$j];
 
@@ -1246,7 +1246,7 @@ sub get_impositions {
 
 					my $BiggerPrice = $$I{'PaperPrice'} ? $$I{'PaperPrice'} : $I->Paper()->get_price('weight'=>$$I{'stock_weight'},'service'=>'Material');
 					$$I{'PaperPrice'} = $BiggerPrice;
-$I->display('Comparing B QTY ' . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 2;
+#$I->display('Comparing B QTY ' . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 2;
 					
 					if (
 							( $I->Paper()->area() >= $SmallerPaper->area() )
@@ -1257,7 +1257,7 @@ $I->display('Comparing B QTY ' . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice
 							and
 							( ! ( ! $I->Paper()->is_cut() and $SmallerPaper->is_cut() ) )
 					   ) {
-$openprint::log->debug('removing B larger') if $$imp{'imposition'} == 2;
+#$openprint::log->debug('removing B larger') if $$imp{'imposition'} == 2;
 						splice @{$imps{$str}}, $j, 1;
 						$j -= 1;
 					} elsif (
@@ -1270,7 +1270,7 @@ $openprint::log->debug('removing B larger') if $$imp{'imposition'} == 2;
 							( ! ( ! $I->Paper()->is_cut() and $SmallerPaper->is_cut() ) )
 					   ) {
 						$add = 0;
-$openprint::log->debug('removing A larger') if $$imp{'imposition'} == 2;
+#$openprint::log->debug('removing A larger') if $$imp{'imposition'} == 2;
 					} elsif (
 							( $I->Paper()->area() < $SmallerPaper->area() )
 							and
@@ -1282,7 +1282,7 @@ $openprint::log->debug('removing A larger') if $$imp{'imposition'} == 2;
 							) {
 # Already have a much better sheet
 						$add = 0;
-$openprint::log->debug('removing A smaller') if $$imp{'imposition'} == 2;
+#$openprint::log->debug('removing A smaller') if $$imp{'imposition'} == 2;
 					} elsif (
 							( $I->Paper()->area() < $SmallerPaper->area() )
 							and
@@ -1293,7 +1293,7 @@ $openprint::log->debug('removing A smaller') if $$imp{'imposition'} == 2;
 							( ( ! $I->Paper()->is_cut() ) or ( $SmallerPaper->is_cut() ) )
 							) {
 # Already have a much better sheet
-$openprint::log->debug('removing B smaller') if $$imp{'imposition'} == 2;
+#$openprint::log->debug('removing B smaller') if $$imp{'imposition'} == 2;
 						splice @{$imps{$str}}, $j, 1;
 						$j -= 1;
 					} # end if
