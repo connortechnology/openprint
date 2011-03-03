@@ -19,6 +19,8 @@ $serial = 'events_id_seq';
 	'location_id'	=>	'location_id',
 	'info'			=>	'info',
 	'time_associated'	=>	'time_associated',
+	'category_id'	=>	'category_id',
+	'category'		=>	undef,
 );
 
 %defaults = (

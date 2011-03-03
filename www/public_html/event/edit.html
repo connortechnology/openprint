@@ -8,8 +8,8 @@
 	});
 -->
 </script>
-<div class="Events"><div class="Edit">
-		<form name="f1" id="f1" action="/events/history.html" method="post">
+<div class="Event"><div class="Edit">
+		<form name="f1" id="f1" action="/event/history.html" method="post">
 			<fieldset><legend>Editing Event<? echo ( $$variable{'Event'}->id() ? '('.$$variable{'Event'}->id().')' : '' ) ?></legend>
 				<? if ( $$variable{'Event'}->deleted() ) ?>
 				<span class="warning">This event has been deleted</span>
