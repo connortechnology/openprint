@@ -205,7 +205,7 @@ sub user_profiles {
 			} # end foreach
 		} # end if
 
-		foreach my $service_default_id ( sql::execute( undef, undef, 'SELECT id FROM User_Service_Defaults WHERE user_id=?', $user_id ) ) {
+		foreach my $service_default_id ( sql::execute( undef, undef, 'SELECT id FROM User_Service_Defaults WHERE user_id=?', $User->id() ) ) {
 			if ( 'name'=>$param{'name-'.$service_default_id} ) {
 			sql::update( undef, undef, 'User_Service_Defaults', ['id=?'=>$service_default_id], {
 					'servicetype_id'=>$param{'servicetype_id-'.$service_default_id} ? $param{'servicetype_id-'.$service_default_id} : undef,
@@ -217,7 +217,7 @@ sub user_profiles {
 			} # end if
 		} # end foreach
 		sql::insert( undef, undef, 'User_Service_Defaults', {
-				'user_id'=>$user_id,
+				'user_id'=>$User->id(),
 				'servicetype_id'=>$param{'servicetype_id-'} ? $param{'servicetype_id-'} : undef,
 				'name'=>$param{'name-'},
 				'value'=>$param{'value-'} 
