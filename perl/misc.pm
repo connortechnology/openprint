@@ -157,18 +157,18 @@ sub export {
 } # end sub export
 
 sub get_destination {
-    my ( $r, $log, $uri ) = @_;
-    my $dest = $uri ? $uri : $r->uri();
-    my @keys = $r->param();
-    if ( @keys ) {
-        $dest .= '?';
-        my @params;
-        foreach my $key ( @keys ) {
-            push @params, join( '=', ($key, $r->param($key)));
-        } # end foreach
-        $dest .=  join( '&', @params );
-    } # end if
-    return $dest;
+	my ( $r, $log, $uri ) = @_;
+	my $dest = $uri ? $uri : $r->uri();
+	my @keys = $r->param();
+	if ( @keys ) {
+		$dest .= '?';
+		my @params;
+		foreach my $key ( @keys ) {
+			push @params, join( '=', ($key, $r->param($key)));
+		} # end foreach
+		$dest .=  join( '&', @params );
+	} # end if
+	return $dest;
 } # end sub get_destination
 
 sub get_url {
@@ -188,7 +188,7 @@ sub get_url {
 			$encoded{$k} = $$options{'include'}{$k};
 		} # end foreach
 	} # end if	
-	
+
 	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } keys %encoded ) );
 } # end sub get_url
 
@@ -201,14 +201,14 @@ sub sum {
 } # end sub sum
 
 sub error {
-    my ( $log, $dbh, $variable, $error, $details ) = @_;
-    
-    $log->debug("Error: $error");
-    $log->debug("Details: $details");
+	my ( $log, $dbh, $variable, $error, $details ) = @_;
 
-    $$variable{'error'} = $error;
-    $$variable{'details'} = $details;
-    $$variable{'Redirect'} = $openprint::config{'errorpage'};
+	$log->debug("Error: $error");
+	$log->debug("Details: $details");
+
+	$$variable{'error'} = $error;
+	$$variable{'details'} = $details;
+	$$variable{'Redirect'} = $openprint::config{'errorpage'};
 } # end sub error
 
 sub trim {
@@ -233,52 +233,52 @@ sub moneyfilter {
 } # end sub moneyfilter
 
 sub seconds_to_interval {
-    $_[0] = int $_[0];
-    my $h = int ($_[0]/3600);
-    my $m = $_[0] - ($h*3600);
-    return ( $h, int($m/60), $m%60 );
+	$_[0] = int $_[0];
+	my $h = int ($_[0]/3600);
+	my $m = $_[0] - ($h*3600);
+	return ( $h, int($m/60), $m%60 );
 }
 
 sub seconds_to_JDF_interval {
-    $_[0] = int $_[0];
+	$_[0] = int $_[0];
 	my $d = int ($_[0]/86400);
 	$_[0] -= $d*86400;
-    my $h = int ($_[0]/3600);
-    my $m = $_[0] - ($h*3600);
+	my $h = int ($_[0]/3600);
+	my $m = $_[0] - ($h*3600);
 	my $return;
 	$return .= $d.'D' if $d;
 	$return .= $h.'H' if $h;
 	$return .= int($m/60).'M' if int($m/60);
 	$return .= ($m%60).'S' if $m%60;
 
-    return $return;
+	return $return;
 }
 
 sub interval_to_seconds {
-    my $interval = shift;
-    my ( $h, $m, $s ) = split ':', $interval;
-    return ($h*3600) + ($m*60) + $s;
+	my $interval = shift;
+	my ( $h, $m, $s ) = split ':', $interval;
+	return ($h*3600) + ($m*60) + $s;
 } # end sub interval_to_seconds
 
 sub seconds_to_pretty_interval {
-    my ( $seconds ) = @_;
-    my $string;
-    my $years = int($seconds / ( 60 * 60 * 24 * 365 ));
-    my $remainder = $seconds % ( 60*60*24*365 );
-    $string .= sprintf('%dy', $years) if $years;
-    return $string if ! $remainder;
+	my ( $seconds ) = @_;
+	my $string;
+	my $years = int($seconds / ( 60 * 60 * 24 * 365 ));
+	my $remainder = $seconds % ( 60*60*24*365 );
+	$string .= sprintf('%dy', $years) if $years;
+	return $string if ! $remainder;
 
-    my $days = int ( $remainder / ( 60* 60 * 24 ) );
-    $remainder = $remainder % ( 60 * 60 * 24 );
-    if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
-        $string .= '1 month';
-    } elsif ( $days ) {
-        $string .= sprintf('%dd', $days );
-    } # end if
-    return $string if ! $remainder;
+	my $days = int ( $remainder / ( 60* 60 * 24 ) );
+	$remainder = $remainder % ( 60 * 60 * 24 );
+	if ( sets::isin( $days, [ 28,29,30,31 ] ) ) {
+		$string .= '1 month';
+	} elsif ( $days ) {
+		$string .= sprintf('%dd', $days );
+	} # end if
+	return $string if ! $remainder;
 
 	$string .= seconds2hms( $remainder );
-    return $string;
+	return $string;
 
 } # end sub seconds_to_pretty_interval
 
@@ -287,31 +287,31 @@ sub rle_decode {
 	my ( $source, $width, $height ) = @_;
 	my $result = '';
 	my $position = 0;
-    while ( $source ) {
-        my $l = unpack( 'C', $source );
-        if ( $l == 128 ) {
-			# Could be end of scan line
-            substr($source, 0, 1) = '';
+	while ( $source ) {
+		my $l = unpack( 'C', $source );
+		if ( $l == 128 ) {
+# Could be end of scan line
+			substr($source, 0, 1) = '';
 #$openprint::log->warn("scanline length: $position");
 #$position = 0;
-        } elsif ($l > 128) {
-            if (length($source) < 2) {
-                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
-                return $result;
-            } # end if
-            $result .= substr($source, 1, 1) x (257 - $l);
-            substr($source, 0, 2) = '';
+		} elsif ($l > 128) {
+			if (length($source) < 2) {
+				$openprint::log->warn("Premature end to data in RunLengthEncoded data");
+				return $result;
+			} # end if
+			$result .= substr($source, 1, 1) x (257 - $l);
+			substr($source, 0, 2) = '';
 			$position += 2;
-        } else {
-            if (length($source) < $l + 1) {
-                $openprint::log->warn("Premature end to data in RunLengthEncoded data");
-                return $result;
-            }
-            $result .= substr($source, 1, $l+1);
-            substr($source, 0, $l + 2) = '';
+		} else {
+			if (length($source) < $l + 1) {
+				$openprint::log->warn("Premature end to data in RunLengthEncoded data");
+				return $result;
+			}
+			$result .= substr($source, 1, $l+1);
+			substr($source, 0, $l + 2) = '';
 			$position += $l+2;
-        }
-    } # end while source
+		}
+	} # end while source
 	return $result;
 } # end sub rle_decode
 
@@ -375,16 +375,85 @@ sub format_bytes {
 
 sub seconds2hms {
 	my ( $seconds ) = @_;
-    my $hours = int( $seconds / (60*60) );
-    $seconds = $seconds % ( 60*60 );
-    my $minutes = int ( $seconds / 60 );
-    $seconds = $seconds % 60;
+	my $hours = int( $seconds / (60*60) );
+	$seconds = $seconds % ( 60*60 );
+	my $minutes = int ( $seconds / 60 );
+	$seconds = $seconds % 60;
 
-    if ( $seconds ) {
-        return sprintf('%d:%.2d:%.2d', $hours, $minutes, $seconds );
-    } # end if
+	if ( $seconds ) {
+		return sprintf('%d:%.2d:%.2d', $hours, $minutes, $seconds );
+	} # end if
 	return sprintf('%d:%.2d', $hours, $minutes );
 } # end sub seconds2hms
+
+sub find_entry {
+	my ( $range, $array, $debug ) = @_;
+
+	if ( ! defined $range ) {
+		if ( @{$array} ) {
+#foreach my $k ( @{$array} ) {
+#$openprint::log->debug("Looking for undef range, sending back first entry which is " . $k->to_string() );
+#}
+			return $$array[0];
+		} # end if
+		return;
+	} # end if
+	my $name = $$array[0]{'name'};
+	$openprint::log->debug("Looking for $name : $range") if $debug;
+
+	my $i = 0;
+	my $x;
+	my $y;
+	for ( ; $i < @{$array}; $i += 1 ) {
+		my $Object = $$array[$i];
+		$openprint::log->debug("Examining: (" . $Object->min() .        ') (' . $Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
+		return $Object if ( (1*$$Object{min}) <= $range ) and ( ( $$Object{max} eq '' ) or ( (1*$$Object{max}) >= $range ) );
+
+# first step, find one less than the min
+		last if 1*$$Object{min} > $range;
+#last if ( $Object->max() eq '' and ! $Object->interpolate() );
+	} # end if
+
+	if ( $i and $i <= @{$array} ) {
+		$i -= 1;
+# back up
+		$x = $$array[$i];
+		$openprint::log->debug("Found spec for $range:" . $x->min() . ' ' . $x->max() . ' : ' . $x->value() ) if $debug;
+		return if ( (1*$$x{max}) and ( $$x{max} < $range ) and ! $$x{interpolate} );
+	} else {
+		$openprint::log->debug("Couldn't find monimum for $name : $range on " . ( $$array[0]->Equipment() ? $$array[0]->Equipment()->name() : '' ) ) if $debug;
+		return;
+	}
+
+	for ( ; $i < @{$array}; $i += 1 ) {
+		my $Object = $$array[$i];
+		return $Object if ( (1*$$Object{min}) <= $range ) and ( ( (1*$$Object{max}) >= $range ) or ! (1*$$Object{max}) );
+
+		$openprint::log->debug("Examining: ($range) (" . $Object->min() .       ') (' . 1*$Object->max() . ') (' . $Object->value() . ') ('.$Object->interpolate() ) if $debug;
+# first step, find one less than the min
+		last if ( ( (1*$$Object{max}) > $range) or ( ! (1*$$Object{max}) ) );
+	} # end foreach
+	if ( $i and $i < @{$array} ) {
+		$y = $$array[$i];
+		$openprint::log->debug("Found spec max " . $y->min() . ' ' . $y->max() . ' : ' . $y->value() ) if $debug;
+	} else {
+		$openprint::log->debug("Couldn't find maximum for $name") if $debug;
+		return;
+	} # end if
+
+	if ( $x == $y ) {
+		return $x;
+	} elsif ( $$x{interpolate} ) {
+		my $Object = $x->copy();
+		$$Object{min} = $$Object{max} = $range;
+		$$Object{value} = $$x{value} + ($range - $$x{min})*($$y{value}-$$x{value})/($$y{min}-$$x{min});
+		$openprint::log->debug("Returning " . $$Object{value}) if $debug;
+		return $Object;
+	} # end if
+	$openprint::log->debug("Returning nothing") if $debug;
+	return;
+} # end sub find_entry
+
 
 1;
 
