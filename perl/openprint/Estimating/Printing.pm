@@ -864,13 +864,12 @@ sub get_impositions {
 	my ( $Project, $specs, $project, $side_one_colours, $side_two_colours, $qty, $qty_index, $Presses, $Papers ) = @_;
 	my %impositions;
 	my $services = $Project->services();
-	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall'], [ @$side_one_colours, @$side_two_colours ] );
-	my @Coatings;
+		my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
+		my @Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
+	my @c = sets::exclude( ['Cyan','Magenta','Yellow','Black','Cyan Spot Colour','Magenta Spot Colour','Black Spot Colour','Yellow Spot Colour','Varnish Gloss Overall','Varnish Matte Overall','Varnish Gloss Spot','Varnish Matte Spot','Aqueous Gloss Spot','Aqueous Gloss Overall', @Coatings ], [ @$side_one_colours, @$side_two_colours ] );
 
 	if ( $$project{print_sides} == 2 ) {
 		# We will be considering W&T, so we will need the coatings array
-		my $CoatingsCategory = openprint::ServiceCategory->find_one( 'name' => 'Coating' );
-		@Coatings = map { $_->name() } $CoatingsCategory->Services() if $CoatingsCategory;
 	} # end if
 	if ( $$specs{'OverridePrintingType'.$qty_index} eq 'Y' ) {
 		$variables{'PrintingType'.$qty_index} = [ sets::exclude( ['output'], $variables{'PrintingType'.$qty_index} ) ];
@@ -1232,9 +1231,9 @@ sub get_impositions {
 			#} elsif ( ( $$specs{'OverrideCutOff'.$qty_index} eq 'Y' ) and ( $SmallerPaper->height() == $$specs{"CutOff$qty_index"} ) ) {
 #$add = 1;
 			if ( $imps{$str} ) {
-					my $SmallerPrice = $SmallerPaper->get_price('weight'=>$$imp{'stock_weight'},'service'=>'Material');
-					$$imp{'PaperPrice'} = $SmallerPrice;
-					$imp->display('Comparing A QTY ' . $$imp{'stock_weight'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 2;
+				my $SmallerPrice = $SmallerPaper->get_price('weight'=>$$imp{'stock_weight'},'service'=>'Material');
+				$$imp{'PaperPrice'} = $SmallerPrice;
+#$imp->display('Comparing A QTY ' . $$imp{'stock_weight'} . 'lbs $' . $$imp{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 2;
 				for ( my $j = 0; $j < @{$imps{$str}}; $j += 1 ) {
 					my $I = $imps{$str}[$j];
 
@@ -1246,7 +1245,7 @@ sub get_impositions {
 
 					my $BiggerPrice = $$I{'PaperPrice'} ? $$I{'PaperPrice'} : $I->Paper()->get_price('weight'=>$$I{'stock_weight'},'service'=>'Material');
 					$$I{'PaperPrice'} = $BiggerPrice;
-$I->display('Comparing B QTY ' . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 2;
+#$I->display('Comparing B QTY ' . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice'}{'100lb Total'}) if $$imp{'imposition'} == 2;
 					
 					if (
 							( $I->Paper()->area() >= $SmallerPaper->area() )
@@ -1257,7 +1256,7 @@ $I->display('Comparing B QTY ' . $$I{'stock_weight'} . 'lbs $' . $$I{'PaperPrice
 							and
 							( ! ( ! $I->Paper()->is_cut() and $SmallerPaper->is_cut() ) )
 					   ) {
-$openprint::log->debug('removing B larger') if $$imp{'imposition'} == 2;
+#$openprint::log->debug('removing B larger') if $$imp{'imposition'} == 2;
 						splice @{$imps{$str}}, $j, 1;
 						$j -= 1;
 					} elsif (
@@ -1270,7 +1269,7 @@ $openprint::log->debug('removing B larger') if $$imp{'imposition'} == 2;
 							( ! ( ! $I->Paper()->is_cut() and $SmallerPaper->is_cut() ) )
 					   ) {
 						$add = 0;
-$openprint::log->debug('removing A larger') if $$imp{'imposition'} == 2;
+#$openprint::log->debug('removing A larger') if $$imp{'imposition'} == 2;
 					} elsif (
 							( $I->Paper()->area() < $SmallerPaper->area() )
 							and
@@ -1282,7 +1281,7 @@ $openprint::log->debug('removing A larger') if $$imp{'imposition'} == 2;
 							) {
 # Already have a much better sheet
 						$add = 0;
-$openprint::log->debug('removing A smaller') if $$imp{'imposition'} == 2;
+#$openprint::log->debug('removing A smaller') if $$imp{'imposition'} == 2;
 					} elsif (
 							( $I->Paper()->area() < $SmallerPaper->area() )
 							and
@@ -1293,7 +1292,7 @@ $openprint::log->debug('removing A smaller') if $$imp{'imposition'} == 2;
 							( ( ! $I->Paper()->is_cut() ) or ( $SmallerPaper->is_cut() ) )
 							) {
 # Already have a much better sheet
-$openprint::log->debug('removing B smaller') if $$imp{'imposition'} == 2;
+#$openprint::log->debug('removing B smaller') if $$imp{'imposition'} == 2;
 						splice @{$imps{$str}}, $j, 1;
 						$j -= 1;
 					} # end if
@@ -2546,7 +2545,7 @@ sub get_project_price {
 	my $services = $Project->services();
 
 	foreach my $Press ( $$sig_specs{'chkOverridePress'.$qty_index} eq 'Y' ? openprint::Equipment->find_one('strid'=>$$sig_specs{'ddmPress'.$qty_index} ) : @$possible_presses ) {
-$openprint::log->debug("Press: $$Press{strid}");
+#$openprint::log->debug("Press: $$Press{strid}");
 		next if ! $Press;
 
 		# When calculating the get_project_price for remaining sigs, we must make sure that we stay with the same type

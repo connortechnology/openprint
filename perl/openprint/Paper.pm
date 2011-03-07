@@ -990,7 +990,7 @@ sub get_price {
 		$$price{'currency_id'} = $Pricelist->currency_id();
 		openprint::Currency::convert( $price );
 	} else {
-		$openprint::log->error("No custom price, and no paper::id");
+		Carp::cluck("No custom price, and no paper::id");
 	} # end if
 
 	my $Company = new openprint::Company( $openprint::session{company_id} );
@@ -1338,7 +1338,7 @@ $openprint::log->debug("Loading paper using paper_id") if $debug;
 #Carp::cluck("Custom size $$specs{'StockWidth'.$qty_index}x$$specs{'StockHeight'.$qty_index}");
 			$Paper->width( $$specs{'StockWidth'.$qty_index} );
 			$Paper->start_width( $Paper->width() ) if ! $Paper->start_width();
-			$Paper->height( $Paper->type() ne 'Roll' ? $$specs{'CutOff'.$qty_index} : $$specs{'StockHeight'.$qty_index} );
+			$Paper->height( $Paper->type() eq 'Roll' ? $$specs{'CutOff'.$qty_index} : $$specs{'StockHeight'.$qty_index} );
 			$Paper->mweight($Paper->mweight()/( ($Paper->start_width()/$Paper->width())*($Paper->start_height()/$Paper->height()))) if $Paper->start_width() and $Paper->start_height() and $Paper->width() and $Paper->height(); # force recalc
 		} # end if
 	} # end if

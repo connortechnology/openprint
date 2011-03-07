@@ -1,5 +1,6 @@
 <script type="text/javascript" src="/javascripts/service.js"></script>
 <script type="text/javascript">
+<!--
     function calc( formName, force ) {
         var form = getFormObj( formName );
         if ( gettingNewPrice ) {
@@ -74,7 +75,7 @@ function Fold_onchange( element, signature, qty_index, index ) {
 	if ( do_calc ) 
 		calc(element.form.name);
 } // end function
-	
+-->
 </script>
 <? eval (
     if ( $$variable{'Project'}->quantity1() and $$variable{'Project'}->quantity2() and $$variable{'Project'}->quantity3() ) {
@@ -83,7 +84,7 @@ function Fold_onchange( element, signature, qty_index, index ) {
 		$$variable{'Columns'} = 'Two';
     } # end if
 ) ?>
-<div class="Service">
+<div class="Service <?ServiceTypeID?>">
 	<form name="f1" method="post" action="/main/project/view.html">
 		<fieldset><legend><?ServiceTypeName?></legend>
 		<? echo ( 
@@ -94,13 +95,13 @@ function Fold_onchange( element, signature, qty_index, index ) {
 				my $sig_specs = openprint::service::get_specs_ref( $$variable{'Project'}, $ss_id );
 				$html .= "<fieldset><legend>For Signature $$sig_specs{'SignatureIndex'}:";
 				$html .= openprint::service::summary( $$variable{'Project'}, $ss_id );
-				$html .= '</legend>';
-				$html .= '<p><label>Printed:</label>';
+				$html .= '</legend><ul>';
+				$html .= '<li><label>Printed:</label>';
 				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 					$html .= openprint::service::summary( $$variable{'Project'}, $ss_id, $qty_index );
 				} # end foreach
-				$html .= '</p>';
-				$html .= '<p><label>Equipment:</label>';
+				$html .= '</li>';
+				$html .= '<li><label>Equipment:</label>';
 				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
 					$html .= '<span class="'.$$variable{Columns}.'Columns">';
 					$html .= sprintf('<select name="ddmEquipment-%1$d-%2$d" size="1" onchange="calc(this.form.name);">', $$sig_specs{'SignatureIndex'}, $qty_index );
@@ -115,10 +116,10 @@ function Fold_onchange( element, signature, qty_index, index ) {
 					} # end if
 					$html .= '</span>';
 				} # end foreach qty_index
-				$html .= '</p>';
-				$html .= '<p><label>Fold Types:</label>';
+				$html .= '</li>';
+				$html .= '<li><label>Fold Types:</label>';
 				foreach my $qty_index ( $$variable{'Project'}->quantity_indexes() ) {
-					$html .= '<span class="'.$$variable{Columns}.'Columns">';
+					$html .= '<div class="'.$$variable{Columns}.'Columns">';
 					if ( sets::isin( $session{'user_type'}, ['A','E'] ) ) {
 						$html .= sprintf('<input type="checkbox" id="chkOverrideFold-%1$d-%2$d" name="chkOverrideFold-%1$d-%2$d" %3$s value="Y" onclick="if ( ! this.checked ) calc(this.form.name);" /><label class="radio" for="chkOverrideFold-%1$d-%2$d">Override</label><br/>', $$sig_specs{'SignatureIndex'}, $qty_index, $$variable{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ? 'checked="checked"' : '' );
 					} elsif ( $$variable{"chkOverrideFold-$$sig_specs{'SignatureIndex'}-$qty_index"} eq 'Y' ) {
@@ -127,7 +128,7 @@ function Fold_onchange( element, signature, qty_index, index ) {
 					$$variable{'SignatureIndex'} = $$sig_specs{'SignatureIndex'};
 					$$variable{'QTYIndex'} = $qty_index;
 
-					$html .= '<table style="width: auto;"><tr><th width="30">Qty</th><th width="35">Imp</th><th align="left">Type</th><th width="40">Folds</th><th width="40">Angles</th><th>Speed</th></tr>';
+					$html .= '<table><tr><th class="Qty">Qty</th><th class="Imp">Imp</th><th class="Type">Type</th><th class="Folds">Folds</th><th class="Angles">Angles</th><th class="Speed">Speed</th></tr>';
 					my $fragment = misc::load_file( $log, $ENV{'DOCUMENT_ROOT'}.'/main/project/bind/_fold.html' );
 					foreach my $index ( 1 .. 4 ) {
 						$$variable{'index'} = $index;
@@ -135,11 +136,11 @@ function Fold_onchange( element, signature, qty_index, index ) {
 					} # end foreach
 					$html .= '</table>';
 
-					$html .= '</span>';
+					$html .= '</div>';
 
 				} # end foreach qty_index
-				$html .= '</p>';
-				$html .= '</fieldset>';
+				$html .= '</li>';
+				$html .= '</ul></fieldset>';
 			} # end foreach signature
 			return $html;
 			) ?>

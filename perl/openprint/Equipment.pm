@@ -130,8 +130,7 @@ sub Folds {
 
 sub Fold {
 	my $self = shift;
-	my %params = @_;
-	my $params = \%params;
+	my $params = shift;
 
 	$self->Folds() if ! $$self{'Folds'};
 #$openprint::log->debug("Param" . ref $params );
@@ -187,7 +186,7 @@ sub Fold {
 			next;
 		} # end if
 
-		if ( $params{page_width} and (
+		if ( $$params{page_width} and (
 				( $$Fold{min_width} and $$Fold{min_width} > $$params{page_width} ) or
 				( $$Fold{max_width} and $$Fold{max_width} < $$params{page_width} )
 				)) {
