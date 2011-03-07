@@ -29,9 +29,9 @@
 			foreach my $Event ( @{$$variable{'Events'}} ) {
 				$html .= sprintf(q` 
 					<tr title="%2$s" %5$s onmouseover="this.addClassName('highlightOn');" onmouseout="this.removeClassName('highlightOn');"> 
-						<td class="Name"><a href="/event/edit.html?event_id=%1$d">%2$s</a></td>
-						<td class="Category"><a href="/event/edit.html?event_id=%1$d">%3$s</a></td>
-						<td class="DateTime"><a href="/event/edit.html?event_id=%1$d">%4$s</a></td>
+						<td class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></td>
+						<td class="Category"><a href="/event/view.html?event_id=%1$d">%3$s</a></td>
+						<td class="DateTime"><a href="/event/view.html?event_id=%1$d">%4$s</a></td>
 					</tr>
 					`, $Event->id(), ssi::html_escape($Event->name()),
 					$Event->Category()->name(),

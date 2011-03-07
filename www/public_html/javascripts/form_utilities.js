@@ -1129,3 +1129,27 @@ function check_decimal( element, e ) {
 	} 
 	return true;
 }
+
+
+function click(e) {
+	if (document.all) {
+		if (event.button==2||event.button==3) {
+			return false;
+		}
+	} else if (document.layers || document.getElementById ) {
+		if (e.which == 3) {
+			return false;
+		}
+	}
+}
+
+function disable_rightclick() {
+	if (document.layers) {
+		document.captureEvents(Event.MOUSEDOWN);
+	} else {
+		document.onmouseup=click;
+		document.oncontextmenu=click;
+	}
+	
+	document.onmousedown=click;
+} // end function disable_rightclick

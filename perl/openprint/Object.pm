@@ -129,6 +129,8 @@ sub save {
 
 	my $table = eval '$'.$type.'::table';
 	my $fields = eval '\%'.$type.'::fields';
+	my $debug = eval '$'.$type.'::debug';
+	$debug = $debug_all if ! $debug;
 
 	my %sql;
 	foreach my $k ( keys %$fields ) {

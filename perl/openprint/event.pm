@@ -14,49 +14,17 @@ use vars qw( $r %variable %session %param %config $log $dbh );
 
 require openprint::Event;
 require openprint::Event_Category;
+require openprint::Asset;
+require openprint::Photo_Album;
+require openprint::Photo_in_Album;
 
 sub history {
-	if ( $param{'btnFunction'} eq 'Save' ) {
-		$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
-		$param{'starting_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
-		$param{'ending_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
-		my $Event = new openprint::Event( $param{'event_id'} );
-		if ( $param{'category_id'} ) {
-			delete $param{'category'};
-		} else {
-			delete $param{'category_id'};
-		} # end if
-		if ( $param{'source'} ) {
-			if ( $param{'source'} =~ /epicurious\.com/ ) {
-				my $ua = LWP::UserAgent->new;
-				$ua->agent("MyApp/0.1 ");
-# Create a request
-				my $req = HTTP::Request->new(GET => $param{'source'} );
-# Pass request to the user agent and get a response back
-				my $res = $ua->request($req);
-# Check the outcome of the response
-				if ($res->is_success) {
-					$log->debug("Content: " . $res->content );
-					my $content = $res->content;
-					#my ( $title, $summary ) = $res->content =~ /<h1 class="fn">(.+)<\/h1>.*<span id="truncatedText" class="summary">(.*)<\/span>/m;
-					$content =~ s/\n\r//g;
-					$content =~ s/\n//g;
-					my ( $title ) = $content =~ /<h1 class="fn">(.+?)<\/h1>/;
-					my ( $summary ) = $content =~ /<span id="truncatedText" class="summary">(.+?)<\/span>/;
-					my ( $thumb ) = $content =~ /<div id="recipe_thumb">(.+?)<\/div>/;
-					
-					$param{'source_content'} = qq`<div class="Epicurious"><h1>$title</h1><div class="thumb">$thumb</div><div class="summary">$summary</div></div>`;
-				} else {
-					$log->error("Bad status" . $res->status_line );
-					$variable{'information'} .= 'Unable to grab content from source.: ' . $res->status_line . '<br/>';
-				} # end if
-			} # end if
-		} # end if
-		$variable{'error'} .= $Event->save(\%param);
-	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+	if ( $param{'btnFunction'} eq 'Destroy' ) {
 		my $Event = new openprint::Event( $param{'event_id'} );
 		$variable{'error'} .= $Event->destroy();
-	} elsif ( ! $param{'btnFunction'} ) {
+	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
+		my $Event = new openprint::Event( $param{'event_id'} );
+		$variable{'error'} .= $Event->destroy();
 	} # end if
 
 	if ( ( ! $session{'/event/history.html?lastupdated'} ) or ( time - $session{'/event/history.html?lastupdated'} ) > ( 12*60*60 ) ) {
@@ -107,16 +75,9 @@ sub _search {
 
 sub edit {
 	$variable{'Event'} = new openprint::Event( $param{'event_id'} );
-	if ( $param{'btnFunction'} eq 'Save' ) {
-		$variable{'error'} .= $variable{'Event'}->save(\%param);
-		$variable{'Redirect'} = '/event/history.html';
-	} elsif ( $param{'btnFunction'} eq 'Copy' ) {
+	if ( $param{'btnFunction'} eq 'Copy' ) {
 		$variable{'Event'} = $variable{'Event'}->copy();
 		$variable{'error'} .= $variable{'Event'}->save();
-	} # end if
-	if ( time - $session{'/event/edit.html?lastupdated'} < ( 12*60*60 ) ) {
-		$variable{'Event'}->company_id( $session{'/event/edit.html?company_id'} ) if ! $variable{'Event'}->company_id();
-		$variable{'Event'}->published_on( $session{'/event/edit.html?ending'} ) if ! $variable{'Event'}->published_on();
 	} # end if
 } # end sub edit
 
@@ -150,10 +111,43 @@ sub category {
 	} # end if
 } # end sub category
 
+sub view {
+	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	if ( $param{'btnFunction'} eq 'Save' ) {
+		$param{'company_id'} = $session{'company_id'} if ! $param{'company_id'};
+		$param{'starting_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'starting_on_year','starting_on_month','starting_on_day','starting_on_hour','starting_on_minute'} );
+		$param{'ending_on'} = sprintf('%.4d-%.2d-%.2d %.2d:%.2d:00', @param{'ending_on_year','ending_on_month','ending_on_day','ending_on_hour','ending_on_minute'} );
+		if ( $param{'category_id'} ) {
+			delete $param{'category'};
+		} else {
+			delete $param{'category_id'};
+		} # end if
+		$variable{'error'} .= $Event->save(\%param);
+	} elsif ( $param{'filename'} ) {
+		my $Album = $Event->Album();
+		if ( ! $Album->id() ) {
+			$variable{'error'} .= $Album->save({'name'=>'Photos for ' . $Event->name()});
+			$variable{'error'} .= $Event->save({'album_id'=>$Album->id()});
+		} # end if
+		$variable{'error'} = $Album->upload( 'filename' );
+		if ( ! $variable{'error'} ) {
+			$variable{'information'} .= "File $param{'filename'} was uploaded successfully.<br/>";
+		} # end if
+	} # end if
+} # end sub view
+
 sub _view {
 	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
 	$Event->set( \%param );
 } # end sub _view
+
+sub _photos {
+	my $Event = $variable{'Event'} = new openprint::Event( $param{'event_id'} );
+	if ( $param{'action'} eq 'delete' ) {
+		my $Photo = new openprint::Photo_in_Album( {'album_id'=>$$Event{'album_id'}, 'asset_id'=>$param{'asset_id'} } );
+		$Photo->delete();
+	} # end if
+} # end sub _photos
 
 1;
 __END__

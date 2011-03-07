@@ -21,6 +21,9 @@ $serial = 'events_id_seq';
 	'time_associated'	=>	'time_associated',
 	'category_id'	=>	'category_id',
 	'category'		=>	undef,
+	'asset_id'		=>	'asset_id',
+	# Photo album for the event, created on first photo upload
+	'album_id'		=>	'album_id', 
 );
 
 %defaults = (
@@ -29,6 +32,7 @@ $serial = 'events_id_seq';
 	'starting_on'	=>	undef,
 	'ending_on'		=>	undef,
 	'location_id'	=>	undef,
+	'asset_id'		=>	undef,
 	'time_associated'	=> 0,
 	'created_by'		=> q`$openprint::session{'user_id'}`,
 	'deleted'			=> 0,
@@ -49,5 +53,38 @@ sub category {
 sub Category {
 	return new openprint::Event_Category( $_[0]{'category_id'} );
 } # end sub Category
+
+sub where {
+	return join(',', map { $_->name() } $_[0]->Location(), $_[0]->Location()->Parents() );
+} # end sub where
+
+sub Asset {
+	return new openprint::Asset( $_[0]{'asset_id'} );
+} # end sub Asset
+
+sub location {
+	if ( @_ > 1 ) {
+		my $Location = openprint::Location->find_one('name_lc'=>lc $_[1]);
+		if ( ! $Location ) {
+			$Location = new openprint::Location();
+			$Location->save({'name'=>$_[1]});
+		} # end if
+		$_[0]{'location_id'} = $Location->id();
+		return $Location->name();
+	} # end if
+	return new openprint::Location( $_[0]{'location_id'} )->name();
+} # end if
+
+sub Photos {
+	if ( ! $_[0]{'album_id'} ) {
+		return ();
+	} # end if
+	return $_[0]->Album()->Photos( );
+} # end sub Photos
+
+sub Album {
+	return new openprint::Photo_Album( $_[0]{'album_id'} );
+} # end sub Album
+
 1;
 __END__

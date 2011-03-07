@@ -55,6 +55,11 @@ if ( ! exists $$data{'asset_id'} ) {
 if ( ! sets::isin( 'assets', \@tables ) ) {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Assets.sql' ) );
 	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='assets'", 'column_name');
+	if ( ! exists $$data{'md5'} ) {
+		$dbh->do('ALTER TABLE Assets ADD md5 char(32)');
+	} # end if
 } # end if
 
 if ( ! sets::isin( 'expense_accounts', \@tables ) ) {
@@ -161,6 +166,16 @@ if ( ! sets::isin( 'event_categories', \@tables ) ) {
 if ( ! sets::isin( 'events', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Events.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='events'", 'column_name');
+	if ( ! exists $$data{'album_id'} ) {
+		$dbh->do(q`ALTER TABLE events add album_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (album_id) REFERENCES photo_albums (id)` );
+	} # end if
+	if ( ! exists $$data{'asset_id'} ) {
+		$dbh->do(q`ALTER TABLE events add asset_id INTEGER` );
+		$dbh->do(q`ALTER TABLE events add FOREIGN KEY (asset_id) REFERENCES assets (id)` );
+	} # end if
 } # end if
 if ( ! sets::isin( 'user_relationships', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );

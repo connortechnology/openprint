@@ -29,6 +29,7 @@ $debug = 1;
 	'data'			=>	'data',
 	'created_on'	=>	'created_on',
 	'updated_on'	=>	'updated_on',
+	'md5'			=>	'md5',
 );
 %defaults = (
 	'data'		=>	undef,
