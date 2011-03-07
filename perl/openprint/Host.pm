@@ -5,7 +5,7 @@ require openprint::Object;
 use Net::ARP;
 
 use vars qw( $debug $table $serial %fields %transforms %defaults );
-$debug = 1;
+$debug = 0;
 $table = 'hosts';
 $serial = 'hosts_id_seq';
 %fields = (
