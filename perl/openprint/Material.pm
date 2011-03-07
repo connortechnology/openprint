@@ -114,11 +114,36 @@ sub prices {
 	return openprint::MaterialPrice::find('material_id'=>$$self{id});
 } # end sub prices
 
+sub Specification {
+	my ( $self, $name, $range ) = @_;
+
+	if ( ! $$self{'Specifications'} ) {
+		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'min NULLS FIRST' ) ) {
+			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
+		} # end foreach
+	} # end if
+
+	if ( ! $$self{'Specifications'} ) {
+#$openprint::log->warn("No specfications for " . $self->name() );
+		return;
+	}
+	if ( ! $$self{'Specifications'}{$name} ) {
+#$openprint::log->warn("No specfications for ($name) " . $self->name() );
+		return;
+	}
+
+	return $$self{'Specifications'}{$name}[0] if ! defined $range;
+#$openprint::log->debug("Looking for $name : $range") if $debug;
+
+	return misc::find_entry( $range, $$self{'Specifications'}{$name} );
+} # end sub Specification
+
+
 sub specification {
 	my ( $self, $name, $range ) = @_;
 
 	if ( ! $$self{'Specifications'} ) {
-		foreach my $Spec ( openprint::MaterialSpecification::find( 'Material'=>$self, 'order'=>'min' ) ) {
+		foreach my $Spec ( openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'min NULLS FIRST' ) ) {
 			push @{$$self{'Specifications'}{$Spec->name()}}, $Spec;
 		} # end foreach
 	} # end if
@@ -196,7 +221,7 @@ $openprint::log->debug("Returning " . $value);
 
 sub Specifications {
 	my $self = shift;
-	return openprint::MaterialSpecification::find( 'Material'=>$self, 'order'=>'name,min' );
+	return openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'name,min NULLS FIRST' );
 } # end sub Specifications
 
 sub find_one {

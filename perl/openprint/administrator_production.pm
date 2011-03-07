@@ -10,6 +10,7 @@ require openprint::Ink;
 require openprint::pricing;
 require openprint::Equipment;
 require openprint::Material;
+require openprint::MaterialSpecification;
 require openprint::Pricelist;
 require openprint::Product;
 require openprint::Paper;
@@ -68,27 +69,39 @@ sub colour_import_export {
 			my $ac = sql::start_transaction( $dbh );
 			while ( <$io> ) {
 				my $status = $csv->parse($_);		 # parse a CSV string into fields
+				my @data = misc::trim($csv->fields());
 
-				my ( $pms_id, $service, $material, $desc, $washups, $equipment, $service_cost, $service_units,$service_markup, $material_cost, $material_units, $material_markup ) = misc::trim($csv->fields());
+				my ( $pms_id, $service, $material, $desc, $washups, $equipment, $service_cost, $service_units,$service_markup, $material_cost, $material_units, $material_markup, $gloss_coverage, $matte_coverage, $uncoated_coverage ) = @data;
 				if ( ! $pms_id ) {
 					$variable{'error'} .= "Bad record: $pms_id, $service, $material, $desc, $washups, $equipment, $service_cost, $service_markup, $material_cost, $material_markup";
 					last;
 				} # end if
-				if ( $service and ! $services{$service} ) {
-					my $Service = new openprint::Service();
-					$variable{'error'} .= $Service->save({
-						'name'	=>	$service,
-						'description'	=>	$desc,
-					});
-					$services{$service} = $Service->id();
+$log->debug("Ink $pms_id Service: $service Material: $material $desc");
+				my $Service;
+				if ( $service ) {
+					if ( ! $services{$service} ) {
+						$Service = new openprint::Service();
+						$variable{'error'} .= $Service->save({
+								'name'			=>	$service,
+								'description'	=>	$desc,
+								});
+						$services{$service} = $Service->id();
+					} else {
+						$Service = new openprint::Service( $services{$service} );
+					} # end if
 				} # end if
-				if ( $material and ! $materials{$material} ) {
-					my $Material = new openprint::Material();
-					$variable{'error'} .= $Material->save({
-						'name'	=>	$material,
-						'description'	=>	$desc,
-					});
-					$materials{$material} = $Material->id();
+				my $Material;
+				if ( $material ) {
+					if ( ! $materials{$material} ) {
+						$Material = new openprint::Material();
+						$variable{'error'} .= $Material->save({
+								'name'	=>	$material,
+								'description'	=>	$desc,
+								});
+						$materials{$material} = $Material->id();
+					} else {
+						$Material = new openprint::Material( $materials{$material} );
+					} # end if
 				} # end if
 				if ( $variable{'error'} ) {
 					$dbh->rollback();
@@ -99,18 +112,18 @@ sub colour_import_export {
 				$Ink = new openprint::Ink() if ! $Ink;
 				$variable{'error'} .= $Ink->save({
 					'pmsid',			$pms_id,
-					'service_id',		$services{$service},
-					'material_id',		$materials{$material},
+					'service_id',		( $Service ? $Service->id() : undef ),
+					'material_id',		( $Material ? $Material->id() : undef ),
 					'name',				$desc,
 					'washups',			$washups,
 				});
 				if ( $variable{'error'} ) {
+$log->error( $variable{'error'} );
 					$dbh->rollback();
 					last;
 				} # end if
-
-				if ( $service_cost or $service_markup or $service_units ) {
-					my $Service = new openprint::Service( $services{$service} );
+				
+				if ( $Service and ( $service_cost or $service_markup or $service_units ) ) {
 					foreach my $e_id ( misc::trim( split(',', $equipment ) ) ) {
 						if ( my $Equipment = openprint::Equipment->find_one('strid'=>$e_id) ) {
 							foreach my $Pricelist ( openprint::Pricelist->find() ) {
@@ -132,34 +145,93 @@ sub colour_import_export {
 						} # end if has equipment
 					} # end foreach Equipment
 				} # end if service_cost or service_markup
-				if ( $material_cost or $material_markup ) {
-					my $Material = new openprint::Material( $materials{$material} );
-					foreach my $e_id ( misc::trim( split(',', $equipment ) ) ) {
-						if ( my $Equipment = openprint::Equipment->find_one('strid'=>$e_id) ) {
-							foreach my $Pricelist ( openprint::Pricelist->find() ) {
-								my @Prices = openprint::MaterialPrice->find('material_id'=>$materials{$material}, 'equipment_id'=>$Equipment->id(), 'pricelist_id'=>$Pricelist->id() );
-								if ( ! @Prices ) {
-									my $Price = new openprint::MaterialPrice();
-									$Price->set({'material_id'=>$materials{$material}, 'equipment_id'=>$Equipment->id(), 'pricelist_id'=>$Pricelist->id() } );
-									push @Prices, $Price;
-								} # end if no Prices;
-								foreach my $Price ( @Prices ) {
-									if ( ( 1*$$Price{'cost'} != $material_cost ) or ( 1*$$Price{'markup'} != 1*$material_markup ) or ( $$Price{'units'} ne $material_units ) ) {
-										$Price->cost( $material_cost ) if $material_cost;
-										$Price->markup( $material_markup ) if $material_markup;
-										$Price->units( $material_units ) if $material_units;
-										$variable{'error'} .= $Price->save();
-									} # end if
-								} # end foreach Price
-							} # end foreach Pricelist
-						} # end if has equipment
-					} # end foreach Equipment
-				} # end if service_cost or service_markup
+				if ( $Material ) {
+					if ( $material_cost or $material_markup ) {
+						foreach my $e_id ( misc::trim( split(',', $equipment ) ) ) {
+							if ( my $Equipment = openprint::Equipment->find_one('strid'=>$e_id) ) {
+								foreach my $Pricelist ( openprint::Pricelist->find() ) {
+									my @Prices = openprint::MaterialPrice->find('material_id'=>$materials{$material}, 'equipment_id'=>$Equipment->id(), 'pricelist_id'=>$Pricelist->id() );
+									if ( ! @Prices ) {
+										my $Price = new openprint::MaterialPrice();
+										$Price->set({'material_id'=>$materials{$material}, 'equipment_id'=>$Equipment->id(), 'pricelist_id'=>$Pricelist->id() } );
+										push @Prices, $Price;
+									} # end if no Prices;
+									foreach my $Price ( @Prices ) {
+										if ( ( 1*$$Price{'cost'} != $material_cost ) or ( 1*$$Price{'markup'} != 1*$material_markup ) or ( $$Price{'units'} ne $material_units ) ) {
+											$Price->cost( $material_cost ) if $material_cost;
+											$Price->markup( $material_markup ) if $material_markup;
+											$Price->units( $material_units ) if $material_units;
+											$variable{'error'} .= $Price->save();
+										} # end if
+									} # end foreach Price
+								} # end foreach Pricelist
+							} # end if has equipment
+						} # end foreach Equipment
+					} # end if material_cost or material_markup
+					if ( $gloss_coverage ) {
+						my $Spec = $Material->Specification('Coverage', 1 );
+						if ( ! $Spec ) {
+							$Spec = new openprint::MaterialSpecification();
+							$Spec->set({
+									'material_id'=>$Material->id(),
+									'name'		=>	'Coverage',
+									'min'		=>	1,
+									'max'		=>	1,
+									});
+						} # end if
+						if ( $gloss_coverage != $Spec->value() ) {
+							$variable{'error'} .= $Spec->save({'value'=>$gloss_coverage});
+						} # end if
+						$Spec = $Material->Specification('Coverage', 3 );
+						if ( ! $Spec ) {
+							$Spec = new openprint::MaterialSpecification();
+							$Spec->set({
+									'material_id'=>$Material->id(),
+									'name'		=>	'Coverage',
+									'min'		=>	3,
+									'max'		=>	3,
+									});
+						} # end if
+						if ( $gloss_coverage != $Spec->value() ) {
+							$variable{'error'} .= $Spec->save({'value'=>$gloss_coverage});
+						} # end if
+					} # end if
+					if ( $matte_coverage ) {
+						my $Spec = $Material->Specification('Coverage', 2 );
+						if ( ! $Spec ) {
+							$Spec = new openprint::MaterialSpecification();
+							$Spec->set({
+									'material_id'	=>	$Material->id(),
+									'name'		=>	'Coverage',
+									'min'		=>	2,
+									'max'		=>	2,
+									});
+						} # end if
+						if ( $matte_coverage != $Spec->value() ) {
+							$variable{'error'} .= $Spec->save({'value'=>$matte_coverage});
+						} # end if
+					} # end if
+					if ( $uncoated_coverage ) {
+						my $Spec = $Material->Specification('Coverage', 4 );
+						if ( ! $Spec ) {
+							$Spec = new openprint::MaterialSpecification();
+							$Spec->set({
+									'material_id'	=>	$Material->id(),
+									'name'		=>	'Coverage',
+									'min'		=>	4,
+									'max'		=>	5,
+									});
+						} # end if
+						if ( $uncoated_coverage != $Spec->value() ) {
+							$variable{'error'} .= $Spec->save({'value'=>$uncoated_coverage});
+						} # end if
+					} # end if
+				} # end if
 
 			} # end while
+			sql::end_transaction( $dbh, $ac );
       		# Add record to audit log - action "Import Colour Definitions".
          	openprint::logs::insertLogRecord('56', '');
-			sql::end_transaction( $dbh, $ac );
 		} else {
 			$log->warn( "No file given to upload." );
 		} # end if
