@@ -121,10 +121,13 @@ sub signature_calc {
 	my $plusCover = $$printing_specs{'rdbCover'} eq 'Different' ? 1 : 0;
 
 	# Need to figure out which dimension the spine bisects
-	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
+	if ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+	} elsif ( ( $$printing_specs{'txtFinalWidth'} != $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} == $$printing_specs{'txtHeight'} ) ) {
+		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
 	} else {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+		$$specs{'alert'} .= 'Unable to determine spine direction. Calculations may be invalid.';
 	} # end if
 
 	my $imposition = 2;
@@ -298,9 +301,13 @@ $openprint::log->debug("Overriding imposiion");
 	} # end if
 
 	# Need to figure out which dimension the spine bisects
-	@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
-	if ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) {
+	if ( ( $$printing_specs{'txtFinalWidth'} == $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} != $$printing_specs{'txtHeight'} ) ) {
 		@$specs{'Width','Height'} = @$printing_specs{'txtFinalHeight','txtFinalWidth'};
+	} elsif ( ( $$printing_specs{'txtFinalWidth'} != $$printing_specs{'txtWidth'} ) and ( $$printing_specs{'txtFinalHeight'} == $$printing_specs{'txtHeight'} ) ) {
+		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+	} else {
+		@$specs{'Width','Height'} = @$printing_specs{'txtFinalWidth','txtFinalHeight'};
+		$$specs{'alert'} .= 'Unable to determine spine length.  Calculations may be wrong.';
 	} # end if
 
 	foreach my $qty_index ( $Project->quantity_indexes() ) {
