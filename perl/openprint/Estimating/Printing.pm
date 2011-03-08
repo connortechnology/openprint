@@ -189,6 +189,7 @@ my %variables = (
 		'chkOverrideGrainDirection1' => ['save'], 'chkOverrideGrainDirection2' => ['save'], 'chkOverrideGrainDirection3' => ['save'],
 		'txtPressSheetComboItems'=>['save'],
 		'txtSpreadSize' => ['save'],
+		'hdnBreakdown1'	=> ['save'], 'hdnBreakdown2'	=> ['save'], 'hdnBreakdown3'	=> ['save'], 
 		);
 
 sub variables {
@@ -3277,7 +3278,7 @@ sub filter_colours {
 sub compare_signatures_runstyle {
 	my ( $sig1, $sig2, $qty_index ) = @_;
 	foreach my $q_i ( $qty_index ? ( $qty_index ) : ( 1 .. 3 ) ) {
-		foreach my $key ( 'ddmRunStyle', 'ddmPress','txtSignatureSpreadQuantity' ) {
+		foreach my $key ( 'ddmRunStyle', 'ddmPress','txtSignatureSpreadQuantity','txtPlateChangeQuantity' ) {
 			if ( $$sig1{$key.$q_i} ne $$sig2{$key.$q_i} ) {
 				$openprint::log->debug("Compare_signatures not equal due to $key$q_i $$sig1{$key.$q_i} ne $$sig2{$key.$q_i}") if $debug;
 				return 0;
