@@ -1,7 +1,23 @@
+# Copyright (C) 2007 Isaac Connor <isaac@connortechnology.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 package openprint::Estimating::Numbering;
 use strict;
 
 require openprint::service;
+require openprint::Project;
 use POSIX           qw(ceil);
 
 my $debug = 1;
@@ -47,6 +63,7 @@ sub calc {
 	my $Project = new openprint::Project( $pid );
 	my $services = $Project->services();
 
+	$$specs{'Status'} = 'calculated';
 	$$specs{'SetsOfNumbers'} =~ s/\D//g;
 	if ( ! $$specs{'SetsOfNumbers'} ) {
 		$$specs{'alert'} = 'Please enter the # of sets of numbers.';
@@ -99,7 +116,7 @@ sub calc {
 			$$specs{'txtPrice'.$qty_index} = sprintf( $openprint::config{'ProjectMoneyFormat'}, $$specs{"txtPrice$qty_index"} );
 		} # end if
     } # end foreach qty_index
-	return $$specs{'Status'} = 'calculated';
+	return $$specs{'Status'};
 
 } # end sub calc
 
@@ -140,7 +157,7 @@ sub signature_calc {
 
 	my @Equipment;
 	if ( $$specs{"chkOverrideEquipment-$$sig_specs{SignatureIndex}-$qty_index"} eq 'Y' ) {
-		@Equipment = openprint::Equipment::find('id'=>$$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"},'limit'=>1 );
+		@Equipment = ( new openprint::Equipment($$specs{"ddmEquipment-$$sig_specs{SignatureIndex}-$qty_index"}) );
 	} else {
 		@Equipment = openprint::Equipment::find( 'Specifications'=>{'Numbering Capable'=>'Y'}, 'use_in_estimating'=>1 );
 	} # end if
@@ -165,7 +182,7 @@ sub signature_calc {
 		$Results{'Breakdown'} .= sprintf('Colours: %s<br/>', join(', ', @colours ) );
 
 		if ( @colours and ! sets::isin( $$specs{'colour'}, \@colours ) ) {
-			$Results{'Breakdown'} .= $$specs{'colour'} . ' not in supported colours.<br/>';
+			$Results{'Breakdown'} .= $$specs{'colour'} . ' not in supported colours.<br/></fieldset>';
 			next;
 		} # end if
 
@@ -185,6 +202,11 @@ sub signature_calc {
 					$last_run = $$specs{'SetsOfNumbers'} * $I->imposition();
 				} # end if
 			} else {
+				if ( $I->Paper()->calliper() > $Equipment->specification('Maximum Calliper') ) {
+					$Results{'Breakdown'} .= "Too thick<br/>";
+					$last_run = $$specs{'SetsOfNumbers'};
+					last;
+				} # end if
 				if ( $_ = $Equipment->fits( $I->layout_width(), $I->layout_height(), $I->Paper()->calliper() ) ) {
 					$Results{'Breakdown'} .= "$_<br/>";
 					$last_run = $$specs{'SetsOfNumbers'};
