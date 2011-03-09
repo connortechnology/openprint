@@ -189,7 +189,7 @@ my %variables = (
 		'chkOverrideGrainDirection1' => ['save'], 'chkOverrideGrainDirection2' => ['save'], 'chkOverrideGrainDirection3' => ['save'],
 		'txtPressSheetComboItems'=>['save'],
 		'txtSpreadSize' => ['save'],
-		'hdnBreakdown1'	=> ['save'], 'hdnBreakdown2'	=> ['save'], 'hdnBreakdown3'	=> ['save'], 
+		'hdnBreakdown1'	=> ['save','output'], 'hdnBreakdown2'	=> ['save','output'], 'hdnBreakdown3'	=> ['save','output'], 
 		);
 
 sub variables {
