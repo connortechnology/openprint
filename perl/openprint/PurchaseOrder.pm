@@ -575,8 +575,8 @@ sub Taxes {
     } # end if
     if ( $$self{'vendor_country'} and $$self{'vendor_state'} and ! @{$$self{'Taxes'}} ) {
         foreach my $Tax ( openprint::Tax->find(
-                    'period_start_null_or_<='   =>  $$self{'created_on'},
-                    'period_end_null_or_>='     =>  $$self{'created_on'},
+                    #'period_start_null_or_<='   =>  $$self{'created_on'},
+                    #'period_end_null_or_>='     =>  $$self{'created_on'},
                     'country'   =>  $self->Supplier()->country(),
                     'state'     =>  $self->Supplier()->state(),
                 ) ) {
@@ -591,8 +591,8 @@ sub Taxes {
     } # end if
 	if ( @_ > 1 ) {
 		my @new_taxes = openprint::Tax->find(
-				'period_start_null_or_<='   =>  $$self{'created_on'},
-				'period_end_null_or_>='     =>  $$self{'created_on'},
+				#'period_start_null_or_<='   =>  $$self{'created_on'},
+				#'period_end_null_or_>='     =>  $$self{'created_on'},
 				'country'   =>  $self->Supplier()->country(),
 				'state'     =>  $self->Supplier()->state(),
 		   );
