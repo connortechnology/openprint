@@ -27,9 +27,13 @@ sub projects {
 	$filters{'user_id'}	= $param{'ddmEstimator'} if $param{'ddmEstimator'};
 	$filters{'status'}	= $param{'ddmStatus'} if $param{'ddmStatus'};
 	$filters{'csr_id'}	= $param{'ddmEmployees'} if $param{'ddmEmployees'};
-	$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
-	$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
 	$filters{'type_id'} = $param{'type_id'} if $param{'type_id'};
+	if ( Date::Calc::check_date( @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} ) ) {
+		$filters{'created_on_start'} = sprintf('%.4d-%.2d-%.2d 00:00:00' , @param{'ddmStartYear','ddmStartMonth','ddmStartDay'} );
+	} # end if
+	if ( Date::Calc::check_date( @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} ) ) {
+		$filters{'created_on_end'} = sprintf('%.4d-%.2d-%.2d 23:59:59' , @param{'ddmEndYear','ddmEndMonth','ddmEndDay'} );
+	} # end if
 
 	@{$variable{'Projects'}} = openprint::Project->find( %filters );
 

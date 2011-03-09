@@ -1,6 +1,6 @@
-package openprint::MaterialSpecification;
-@ISA = qw( openprint::Object );
 use strict;
+package openprint::MaterialSpecification;
+our @ISA = qw( openprint::Object );
 use openprint ();
 use openprint::Material;
 
