@@ -57,7 +57,7 @@ sub handler {
 	$r->no_cache(1);
 
 	my $starttime = gettimeofday();
-	$r->log->debug( "Beginning of Request: Time (nanoseconds) : $starttime Page: " . $r->uri() );
+	$r->log->debug( "Beginning of Request: $ENV{HTTP_USER_AGENT} Page: " . $r->uri() );
 
 	$log	= $r->log;
 

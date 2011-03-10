@@ -194,7 +194,7 @@ sub get_url {
 			$encoded{$k} = $$options{'include'}{$k};
 		} # end foreach
 	} # end if	
-	
+
 	return join( '?', $uri, join('&amp;', map { $_.'='.$encoded{$_} } keys %encoded ) );
 } # end sub get_url
 
@@ -208,7 +208,6 @@ sub sum {
 
 sub error {
 	my ( $log, $dbh, $variable, $error, $details ) = @_;
-	
 	$log->debug("Error: $error");
 	$log->debug("Details: $details");
 
@@ -474,5 +473,4 @@ sub add_delta_business_days {
 } # end sub add_delta_business_days
 
 1;
-
 __END__

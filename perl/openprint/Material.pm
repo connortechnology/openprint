@@ -99,7 +99,11 @@ sub specification {
 
 sub Specifications {
 	my $self = shift;
+<<<<<<< HEAD
 	return openprint::MaterialSpecification->find( 'Material'=>$self, 'order'=>'name,min' );
+=======
+	return openprint::MaterialSpecification->find( 'material_id'=>$$self{'id'}, 'order'=>'name,min NULLS FIRST' );
+>>>>>>> 45ad5b59462aa667ba5c096ab0145e0822c545b7
 } # end sub Specifications
 
 sub get_price {
