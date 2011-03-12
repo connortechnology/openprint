@@ -1,0 +1,52 @@
+<script type="text/javascript" src="/javascripts/tiny_mce/tiny_mce.js"></script>
+
+<script type="text/javascript">
+<!--
+	tinyMCE.init({
+		mode : "textareas",
+		theme : "advanced"
+	});
+-->
+</script>
+<div class="Message"><div class="Edit">
+	<form name="f1" id="f1" action="/messaging/inbox.html" method="post" enctype="multipart/form-data">
+		<fieldset><legend>Editing Message <? echo ( $$variable{'Message'}->id() ? '('.$$variable{'Message'}->id().')' : '' ) ?></legend>
+			<? if ( $$variable{'Message'}->deleted() ) ?>
+			<span class="warning">This messaging has been deleted</span>
+			<? endif ( $$variable{'Message'}->deleted() ) ?>
+			
+			<input type="hidden" name="message_id" value="<? echo ( $param{'message_id'} ) ?>" />
+
+			<fieldset><legend></legend>
+				<div class="content">
+					<ul>
+						<li><label>To:</label>
+							<div id="To"><!--#include virtual="_to.html"--></div>
+						</li>
+						<li><label>Subject:</label>
+							<input type="text" id="subject" name="subject" />
+						</li>
+						<li>
+							<label for="body">Body:</label>
+							<textarea cols="" id="body" name="body" rows="<? echo ( ssi::count_lines( $$variable{'Message'}->body() ); ) ?>" onkeyup="textarea_resize(this);"><? hecho ( $$variable{'Message'}->body() ) ?></textarea>
+						</li>
+					</ul>
+				</div>
+			</fieldset>
+			<p class="buttons">
+				<? echo (
+					my $html = '';
+					$html = ssi::writeButton( $log, $dbh, 'back', 'back.gif', '', 'inbox.html', 'Cancel' );
+					
+					if ( $$variable{'Message'}->id() ) {
+					$html .= ssi::writeButton( $log, $dbh, 'delete', 'delete.gif', "if(confirm('Are you sure?')){f1.btnFunction.value='Destroy';f1.submit();}", '', 'Destroy' );
+					} # end if
+					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Save';f1.submit();", '', 'Save (Draft)' );
+					$html .= ssi::writeButton( $log, $dbh, 'save', 'save.gif', "f1.btnFunction.value='Send';f1.submit();", '', 'Send' );
+					return $html;
+				) ?>
+			</p>
+		</fieldset>
+		<input type="hidden" name="btnFunction" />
+	</form>
+</div></div>

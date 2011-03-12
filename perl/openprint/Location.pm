@@ -10,15 +10,20 @@ use vars qw( %variable $log $dbh );
 
 require sql;
 
-use vars qw( $table $serial %fields %transforms %defaults );
+use vars qw( $table $serial %fields %find_fields %transforms %defaults );
 $table = 'locations';
 $serial = 'locations_id_seq';
 %fields = (
-	'id'	=>	'id',
-	'name'	=>	'name',
-	'parent_id'	=>	'parent_id',
+	'id'			=>	'id',
+	'name'			=>	'name',
+	'parent_id'		=>	'parent_id',
 	'coordinates'	=>	'coordinates',
 	'updated_on'	=>	'updated_on',
+	# type refers to state/country/postalcode, etc... to help search the location db in other ways
+	'type_id'		=>	'type_id',
+);
+%find_fields = (
+	'type'	=>	'(SELECT name FROM Location_Types WHERE location_types.id = locations.type_id)',
 );
 
 sub children {

@@ -181,6 +181,20 @@ if ( ! sets::isin( 'user_relationships', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/User_Relationships.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
 } # end if
+if ( ! sets::isin( 'locations', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Locations.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='locations'", 'column_name');
+	if ( ! exists $$data{'type_id'} ) {
+if ( ! sets::isin( 'location_types', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Location_Types.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+}
+	$dbh->do('ALTER TABLE Locations add type_id INTEGER');
+	$dbh->do('ALTER TABLE Locations add FOREIGN KEY(type_id) REFERENCES Location_types (id)');
+	} # end if
+} # end if
 
 $dbh->disconnect();
 1;

@@ -1,8 +1,18 @@
+
 DROP TABLE IF EXISTS Locations;
+DROP TABLE IF EXISTS Location_Types;
+
+CREATE TABLE Location_Types (
+	id SERIAL,
+	name	TEXT,
+	PRIMARY KEY (id)
+);
+
 CREATE TABLE Locations (
 	id SERIAL NOT NULL,
 	name	TEXT,UNIQUE(name),
 	coordinates	TEXT,
+	type_id		INTEGER, FOREIGN KEY (type_id) REFERENCES Location_types (id),
 	created_on	timestamp with time zone not null default NOW(),
 	updated_on	timestamp with time zone not null default NOW(),
 	PRIMARY KEY (id)
