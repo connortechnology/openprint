@@ -1,0 +1,16 @@
+<ul>
+<? echo ( 
+	my $html;
+	foreach my $User ( $$variable{'Message'}->To() ) {
+		$html .= '<li>'.$User->name().writeButton( $log, $dbh, 'X'.$User->id(), 'delete.gif', "delete_to($$User{id});", '', 'X' ).'</li>';
+	} # end foreach user
+	return $html;
+) ?>
+</ul>
+<input type="text" id="to_filter" name="to_filter"/>
+<select name="to_id" id="to_id">
+	<? echo ( 
+		# List of friends, not frenemies.
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User_Relationship->find( 'type'=>'Friend', 'user_id1'=>$session{'user_id'}, 'user_id2 not in' => $$variable{'Message'}->to_id() ) ], );
+	) ?>
+</select>
