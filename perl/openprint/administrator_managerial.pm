@@ -17,9 +17,9 @@ require openprint::Company;
 require openprint::customer_credit;
 require openprint::Tax;
 require openprint::Email;
-		require openprint::Invoice;
-		require openprint::Payment;
-		require openprint::Timetrack;
+require openprint::Invoice;
+require openprint::Payment;
+require openprint::Timetrack;
 
 use vars qw( $r $log $dbh %variable %param %session %config );
 *r = \$openprint::r;
