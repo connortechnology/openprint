@@ -28,13 +28,6 @@ sub try_to_delete {
 	return '';
 } # end sub try_to_delete
 
-sub make_quote_from_quote {
-    my ( $r, $log, $dbh, $customer, $user, $quote_id ) = @_;
-
-	return 0;
-} # End sub make_quote_from_quote
-
-
 sub details {
 	my ( $r, $log, $dbh, $variable ) = @_;
 	my $quote_id;
