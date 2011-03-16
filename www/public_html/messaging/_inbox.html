@@ -1,35 +1,35 @@
 <? eval (
-	@{$$variable{'Events'}} = ();
-	foreach my $Event ( openprint::Event->find( 
-			(Date::Calc::check_date( @session{'/event/history.html?starting_on_start_year','/event/history.html?starting_on_start_month','/event/history.html?starting_on_start_day'} ) ? ( 'starting_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/event/history.html?starting_on_start_year','/event/history.html?starting_on_start_month','/event/history.html?starting_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/event/history.html?starting_on_end_year','/event/history.html?starting_on_end_month','/event/history.html?starting_on_end_day'} ) ? ( 'starting_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/event/history.html?starting_on_end_year','/event/history.html?starting_on_end_month','/event/history.html?starting_on_end_day'} ) ) : () ),
-			( $session{'/event/history.html?category_id'} ? ( 'category_id' => $session{'/event/history.html?category_id'} ) : () ),
-			'order'				=> 'starting_on',
+	@{$$variable{'Messages'}} = ();
+	foreach my $Message ( openprint::Message->find( 
+			(Date::Calc::check_date( @session{'/messaging/history.html?sent_on_start_year','/messaging/history.html?sent_on_start_month','/messaging/history.html?sent_on_start_day'} ) ? ( 'sent_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/messaging/history.html?sent_on_start_year','/messaging/history.html?sent_on_start_month','/messaging/history.html?sent_on_start_day'} ) ) : () ),
+			( Date::Calc::check_date( @session{'/messaging/history.html?sent_on_end_year','/messaging/history.html?sent_on_end_month','/messaging/history.html?sent_on_end_day'} ) ? ( 'sent_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/messaging/history.html?sent_on_end_year','/messaging/history.html?sent_on_end_month','/messaging/history.html?sent_on_end_day'} ) ) : () ),
+			( $session{'/messaging/history.html?category_id'} ? ( 'category_id' => $session{'/messaging/history.html?category_id'} ) : () ),
+			'order'				=> 'sent_on',
 		) ) {
-		push @{$$variable{'Events'}}, $Event;
-	} # end foreach Events
+		push @{$$variable{'Messages'}}, $Message;
+	} # end foreach Messages
 ) ?>
 
-<? if ( @{$$variable{'Events'}} == 0 ) ?>
-	There are no events which match your search criteria. 
-<? else ( @{$$variable{'Events'}} == 0 ) ?>
+<? if ( @{$$variable{'Messages'}} == 0 ) ?>
+	There are no messagings which match your search criteria. 
+<? else ( @{$$variable{'Messages'}} == 0 ) ?>
 		<? echo ( 
 			my $html;
-			foreach my $Event ( @{$$variable{'Events'}} ) {
+			foreach my $Message ( @{$$variable{'Messages'}} ) {
 				$html .= sprintf(q` 
-					<div title="%2$s" class="Event"> 
-						<a href="/event/view.html?event_id=%1$s"><img src="%6$s"/></a>
-						<div class="Name"><a href="/event/view.html?event_id=%1$d">%2$s</a></div>
+					<div title="%2$s" class="Message"> 
+						<a href="/messaging/view.html?message_id=%1$s"><img src="%6$s"/></a>
+						<div class="Name"><a href="/messaging/view.html?message_id=%1$d">%2$s</a></div>
 						<div class="Category">%3$s</div>
 						<div class="DateTime">%4$s</div>
 						<div class="Where">%5$s</div>
 					</div>
-					`, $Event->id(), ssi::html_escape($Event->name()),
-					$Event->Category()->name(),
-					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Event->starting_on() ) ),
-					$Event->where(),
+					`, $Message->id(), ssi::html_escape($Message->name()),
+					$Message->Category()->name(),
+					Date::Format::time2str( $config{'DateTimeFormat'}, Date::Parse::str2time( $Message->sent_on() ) ),
+					$Message->where(),
 				);
-			} # end foreach Events
+			} # end foreach Messages
 			return $html;
 		) ?>
-<? endif ( @{$$variable{'Events'}} == 0 ) ?>
+<? endif ( @{$$variable{'Messages'}} == 0 ) ?>

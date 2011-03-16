@@ -195,6 +195,10 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 	$dbh->do('ALTER TABLE Locations add FOREIGN KEY(type_id) REFERENCES Location_types (id)');
 	} # end if
 } # end if
+if ( ! sets::isin( 'messages', \@tables ) ) {
+    $dbh->do( misc::load_file( $log, '../openprint/sql/Messages.sql' ) );
+    die $dbh->errstr() if $dbh->errstr();
+} # end if
 
 $dbh->disconnect();
 1;

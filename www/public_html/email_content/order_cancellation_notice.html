@@ -8,6 +8,9 @@ This order contained the following Projects:<br/>
 	foreach my $Project ( $$variable{'Order'}->Projects() ) {
 		$html .= sprintf('<a href="/employee/project/view.html?project_id=%1$d">%1$d - %2$s</a><br/>', $Project->id(), $Project->summary() );
 	} # end foreach Project
+	foreach my $Product ( $$variable{'Order'}->Projects() ) {
+		$html .= sprintf('<a href="/employee/project/view.html?project_id=%1$d">%1$d - %2$s</a><br/>', $Product->project_id(), $Product->Project()->summary() );
+	} # end foreach Product
 	return $html;
 ) ?>
 <br/>

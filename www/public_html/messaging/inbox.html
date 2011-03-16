@@ -24,7 +24,7 @@
 	}
 	function load_events( form ) {
 		$('EventsList').innerHTML = 'Please wait...';
-		new Ajax.Updater('EventsList','_search.html', {method:'get',parameters:Form.serialize(form)});
+		new Ajax.Updater('EventsList','_inbox.html', {method:'get',parameters:Form.serialize(form)});
 	} // end function
 -->
 </script>	 
@@ -64,7 +64,7 @@
 					); ) ?>
 			</p>
 		</fieldset>
-		<div id="EventsList"><!--#include virtual="_search.html"--></div>
+		<div id="EventsList"><!--#include virtual="_inbox.html"--></div>
 	</form>
 	</div>
 </div>

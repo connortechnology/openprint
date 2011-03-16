@@ -1,8 +1,8 @@
 use strict;
-our package openprint::Message;
+package openprint::Message;
 our @ISA = qw( openprint::Object );
 
-use vars qw( $debug $table $serial %fields %transforms %defaults );
+use vars qw( $debug $table $serial %fields %find_fields %transforms %defaults );
 $table = 'messages';
 $serial = 'messages_id_seq';
 
