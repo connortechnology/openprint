@@ -259,6 +259,18 @@ span.buttons {
 p.buttons {
 	float: right;
 }
+.buttons:after {
+    content: "."; 
+    display: block; 
+    height: 0; 
+	font-size: 0;
+    clear: both; 
+    visibility: hidden;
+}
+/* Hides from IE-mac \*/
+* html .buttons {height: 1%;}
+.buttons {display: block;}
+/* End hide from IE-mac */
 
 fieldset p {
 	margin: 0px;
