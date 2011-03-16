@@ -28,20 +28,56 @@ sub try_to_delete {
 	return '';
 } # end sub try_to_delete
 
-sub make_quote_from_quote {
-    my ( $r, $log, $dbh, $customer, $user, $quote_id ) = @_;
+sub details {
+	my ( $r, $log, $dbh, $variable ) = @_;
+	my $quote_id;
 
-    my $Quote = new openprint::Quote( $quote_id );
-# check that the specified quote actually exists.
-	if ( $Quote->id() and ( $Quote->company_id() == $customer ) ) {
-# pull info for the quote we are duplicating
-		my $new_quote_id = create_quote( $log, $dbh, \%openprint::variable );
-		
-		my @data = sql::execute( $log, $dbh, 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE QuoteIndex=?', $quote_id );
+	if ( ($openprint::param{'btnFunction'} eq 'Process New Quote') and $openprint::param{'quote_id'} ) {
+		my $Quote = new openprint::Quote( $openprint::param{'quote_id'} );
+		if ( ! $Quote->id() ) {
+			$$variable{'error'} .= 'Invalid quote id: ' . $openprint::param{'quote_id'}.'<br/>';
+		} # end if
+		my $NewQuote = new openprint::Quote();
+		$NewQuote->user_id( $openprint::session{'user_id'} );
+		if ( $openprint::param{'company_id'} and 
+				( $openprint::param{'company_id'} != $openprint::session{'company_id'} ) and 
+				sets::isin( $openprint::session{'user_type'}, ['A','E'] ) 
+		   ) {
+				openprint::switch_company( new openprint::Company( $openprint::param{'company_id'} ) ) if sets::isin( $openprint::session{'user_type'}, ['A','E'] );
+		} # end if
+		$NewQuote->company_id( $openprint::session{'company_id'} );
+		$NewQuote->status( 'Incomplete' );
+		$NewQuote->Currency( openprint::Currency::get_current() );
+		$NewQuote->save();
+		if ( ! $NewQuote->id() ) {
+			$$variable{'error'} .= 'Unable to create new quote.<br/>';
+			$log->error('Unable to create new quote.');
+			return;
+		} # end if
+
+		my @data = sql::execute( $log, $dbh, 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE QuoteIndex=?', $Quote->id() );
 		while ( @data ) {
 			my ( $project_index, $markup1, $markup2, $markup3 ) = splice @data, 0, 4;
-			add_project_to_quote( $r, $log, $dbh, \%openprint::variable, $new_quote_id, $project_index );
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $new_quote_id, $project_index],[
+			my $Project = new openprint::Project( $project_index );
+			my $NewProject = $Project;
+			if ( $Quote->company_id() != $NewQuote->company_id() ) {
+				$NewProject = $Project->copy();
+				$NewProject->docket( '' );
+				$NewProject->due_date( '' );
+				$NewProject->user_id( $openprint::session{'user_id'} );
+				$NewProject->order_id( '' );
+# This allows uncalc->uncalc, everything else to UnOrdered
+				if ( sets::isin( $Project->status(), [ 'Pending Deposit', 'In Prepress', 'Proofs Out', 'Approved', 'Printed', 'Complete','Shipped','Picked Up' ] ) ) {
+					$NewProject->status('Unordered');
+				} # end if
+				$NewProject->company_id( $openprint::session{'company_id'} );
+				$NewProject->save();
+				$NewProject->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
+				$Project->add_to_log( @openprint::session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
+			} # end if
+
+			add_project_to_quote( $r, $log, $dbh, \%openprint::variable, $NewQuote->id(), $NewProject->id() );
+			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $NewQuote->id(), $NewProject->id()],[
 					'dblMarkup1', 1*$markup1,
 					'dblMarkup2', 1*$markup2,
 					'dblMarkup3', 1*$markup3,
@@ -50,25 +86,13 @@ sub make_quote_from_quote {
 
 		my %for;
 		my %by;
-		openprint::quote::get_user_by_info( $log, $dbh, \%by, $quote_id );
-		openprint::quote::get_user_for_info( $log, $dbh, \%for, $quote_id );
-		my $NewQuote = new openprint::Quote( $new_quote_id );
+		openprint::quote::get_user_by_info( $log, $dbh, \%by, $Quote->id() );
+		openprint::quote::get_user_for_info( $log, $dbh, \%for, $Quote->id() );
 		$NewQuote->store_user_by_info( \%by );
 		$NewQuote->store_user_for_info( \%for );
-		$NewQuote->add_log( 'Copied from quote ' . $quote_id );
-		$Quote->add_log( 'Copied to quote ' . $new_quote_id );
-		return $new_quote_id;
-	} # end if
-	return 0;
-} # End sub make_quote_from_quote
-
-
-sub details {
-	my ( $r, $log, $dbh, $variable ) = @_;
-	my $quote_id;
-
-	if ( ($openprint::param{'btnFunction'} eq 'Process New Quote') and $openprint::param{'quote_id'} ) {
-		$quote_id = make_quote_from_quote( $r, $log, $dbh, @openprint::session{'company_id','user_id'}, $openprint::param{'quote_id'} );
+		$NewQuote->add_log( 'Copied from quote ' . $Quote->id() );
+		$Quote->add_log( 'Copied to quote ' . $NewQuote->id() );
+		$quote_id = $NewQuote->id();
 	} elsif ( $openprint::param{'remove'} ) {
 		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?', @openprint::param{'quote_id','remove'} );
 		my $Quote = new openprint::Quote( $openprint::param{'quote_id'} );	
