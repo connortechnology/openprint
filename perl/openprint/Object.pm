@@ -412,7 +412,7 @@ sub find_operators {
 	if ( exists $$params{$k.'_any'} ) {
 		push @{$results{'_any'}}, "? = ANY($f)", $$params{$k.'_any'};
 	} # end if
-	if ( defined $$params{$k.'_null'} ) {
+	if ( exists $$params{$k.'_null'} ) {
 		if ( $$params{$k.'_null'} ) {
 			push @{$results{'_null'}}, "$f IS NULL";
 		} else {
