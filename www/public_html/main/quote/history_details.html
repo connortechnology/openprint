@@ -22,7 +22,7 @@ function delete_confirm(form) {
 			$html .= ssi::writeButton( $log, $dbh, 'Delete', 'deleteFromHist.gif', "f1.action='/main/quote/history.html';delete_confirm(f1);", '', 'Delete' );
 			if ( $$variable{'Quote'}->status() eq 'Complete' ) {
 				if ( sets::isin( $session{'user_type'}, [ 'E', 'A' ] ) ) {
-					$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/details.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy to' );
+					$html .= ssi::writeButton( $log, $dbh, 'Reuse', 'reUseQuote.gif', "f1.action='/main/quote/information.html';f1.btnFunction.value='Process New Quote';f1.submit();", '', 'Copy to' );
 					$html .= '<select name="company_id" id="company_id">';
 					$html .= openprint::Company::get_dropdown( $session{'company_id'} );
 					$html .= '</select>';

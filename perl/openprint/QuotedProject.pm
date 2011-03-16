@@ -96,6 +96,6 @@ sub quantity {
 	} # end if
 	return $$self{'quantity'.$qty_index};
 } # end sub total
-1;
 
+1;
 __END__

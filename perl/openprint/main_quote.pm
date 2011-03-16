@@ -36,31 +36,6 @@ sub try_to_delete {
 	return '';
 } # end sub try_to_delete
 
-sub details {
-	my ( $r, $log, $dbh, $variable ) = @_;
-	my $quote_id;
-
-	if ( ($openprint::param{'btnFunction'} eq 'Process New Quote') and $openprint::param{'quote_id'} ) {
-	} elsif ( $openprint::param{'remove'} ) {
-		sql::execute($log, $dbh, 'DELETE FROM tbl_Quote_Details WHERE QuoteIndex=? AND ProjectIndex=?', @openprint::param{'quote_id','remove'} );
-		my $Quote = new openprint::Quote( $openprint::param{'quote_id'} );	
-		$Quote->add_log( 'Remove project ' . $openprint::param{'remove'} );
-	} elsif ( $openprint::param{'btnFunction'} eq 'Process Quote' ) {
-		$quote_id = add_project_to_quote( $r, $log, $dbh, $variable );
-	} elsif ( $openprint::param{'btnFunction'} eq 'Continue' ) {
-		$quote_id = $openprint::param{'quote_id'};
-	} # end if
-
-# this should only happen if there was an error creating the quote
-	$quote_id = $openprint::session{'quote_id'} if ! $quote_id;
-	$$variable{'Quote'} = new openprint::Quote( $quote_id );
-	$openprint::session{'quote_id'} = $quote_id;
-	if ( $quote_id ) {
-		#get_misc_info( $log, $dbh, $variable, $quote_id );
-		openprint::quote::get_unfinished_quote_contents( $log, $dbh, $variable, $quote_id );
-	} # end if
-} # end sub details
-
 sub history {
 	if ( $param{'btnFunction'} eq 'Delete' ) {
 		if ( ref $param{'chkDelete'} eq 'ARRAY' ) {
@@ -164,7 +139,7 @@ sub information {
 	} elsif ( ($param{'btnFunction'} eq 'Process New Quote') and $param{'quote_id'} ) {
 		my $Quote = new openprint::Quote( $param{'quote_id'} );
 		if ( ! $Quote->id() ) {
-			$$variable{'error'} .= 'Invalid quote id: ' . $param{'quote_id'}.'<br/>';
+			$variable{'error'} .= 'Invalid quote id: ' . $param{'quote_id'}.'<br/>';
 		} # end if
 		my $NewQuote = new openprint::Quote();
 		$NewQuote->user_id( $session{'user_id'} );
@@ -184,10 +159,9 @@ sub information {
 			return;
 		} # end if
 
-		my @data = sql::execute( $log, $dbh, 'SELECT ProjectIndex, dblMarkup1, dblMarkup2, dblMarkup3 FROM tbl_Quote_Details WHERE QuoteIndex=?', $Quote->id() );
-		while ( @data ) {
-			my ( $project_index, $markup1, $markup2, $markup3 ) = splice @data, 0, 4;
-			my $Project = new openprint::Project( $project_index );
+		foreach my $QP ( $Quote->Quoted_Projects() ) {
+			my $NewQP = $QP->copy();
+			my $Project = $QP->Project();
 			my $NewProject = $Project;
 			if ( $Quote->company_id() != $NewQuote->company_id() ) {
 				$NewProject = $Project->copy();
@@ -204,14 +178,11 @@ sub information {
 				$NewProject->add_to_log( @session{'company_id','user_id'}, 'Reused from project '.$Project->id() );
 				$Project->add_to_log( @session{'company_id','user_id'}, 'Reused to project '.$NewProject->id() );
 			} # end if
-
-			add_project_to_quote( $NewQuote->id(), $NewProject->id() );
-			sql::update( $log, $dbh, 'tbl_Quote_Details', ['QuoteIndex=? AND ProjectIndex=?', $NewQuote->id(), $NewProject->id()],[
-					'dblMarkup1', 1*$markup1,
-					'dblMarkup2', 1*$markup2,
-					'dblMarkup3', 1*$markup3,
-					] );
-		} # end while
+			$variable{'error'} .= $NewQP->save({
+					'quote_id'		=> $NewQuote->id(),
+					'project_id'	=> $NewProject->id(),
+					});
+		} # end foreach QP
 
 		my %for;
 		my %by;
