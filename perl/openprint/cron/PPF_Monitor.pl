@@ -97,7 +97,7 @@ foreach my $Equipment ( @Equipment ) {
 			my ( $file_base, $side, $extension ) = $file =~ /^(.*)([AB])\.(ppf)$/i;
 $log->warn("Parsed to $file_base, $side, $extension from $file") if $debug;
 			if ( $side ne 'B' ) {
-$log->warn("Not a b") if $debug;
+$log->warn("Not a B") if $debug;
 				next;
 			} # end if
 
@@ -209,6 +209,10 @@ if ( $mangle ) {
 				$log->error("File was not complete! $file_base");
 				next;
 			} # end if
+			if ( ! $data ) {
+				$log->error("No data! $file_base $docket $sig $side");
+				next;
+			} # end if
 			my $PPF = store_PPF( $docket, $sig, $side, $data );
 			$PPF->send_ppf( $Equipment ) if ! $$Equipment{'cip3_hold'};
 			unlink $$Equipment{'cip3_in'}.'/'.$file_base.'A.'.$extension;
@@ -292,7 +296,7 @@ sub store_PPF {
 	my $compressed_data;
 	if ( $use_compression ) {
 		$compressed_data = Compress::Zlib::compress($data);
-		$log->debug("Compressed PPF from " . length $data . " to " . length $compressed_data );
+		$log->warn("Compressed PPF from " . (length $data) . " to " . (length $compressed_data) ) if $debug;
 	} # end if
 	my $PPF = new openprint::CIP3_PPF();
 	$PPF->set({
@@ -300,7 +304,7 @@ sub store_PPF {
 			'signature' 	=>  $sig,
 			'side'      	=>  $side,
 			'data'      	=>  encode_base64($compressed_data ? $compressed_data : $data),
-			'compressed'	=>	$compressed_data ? 1 : 0,
+			'compressed'	=>	($compressed_data ? 1 : 0),
 			});
 
 	if ( $docket ) {

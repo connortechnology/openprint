@@ -1,7 +1,6 @@
-package openprint::CIP3_PPF;
-@ISA = qw(openprint::Object);
-
 use strict;
+package openprint::CIP3_PPF;
+our @ISA = qw(openprint::Object);
 
 require sets;
 require misc;
@@ -13,9 +12,9 @@ use MIME::Base64;
 use Image::Magick;
 use Number::Format;
 
-use vars qw( $log $dbh %config $table $serial %fields %find_fields %transforms %defaults );
+use vars qw( $debug $log $dbh %config $table $serial %fields %find_fields %transforms %defaults );
 
-my $debug = 1;
+$debug = 0;
 *log = \$openprint::log;
 *dbh = \$openprint::dbh;
 *config = \%openprint::config;
@@ -183,7 +182,9 @@ sub parse {
 	$$self{'parsed'} = 1;
 	
 	$_ = decode_base64($$self{'data'});
+$openprint::log->error("Unable to decode") if $$self{'data'} and ! $_;
 	$_ = Compress::Zlib::uncompress($_) if $$self{'compressed'};
+$openprint::log->error("Unable to uncompress" . length $$self{'data'} ) if $$self{'data'} and ! $_;
 	my @data = split("\r\n", $_ );
 #$log->debug("# of lines: " . @data ) if $debug;
 	while ( @data ) {
@@ -385,7 +386,15 @@ sub send_ppf {
 	my ( $self, $Equipment ) = @_;
 	
 	my $data = decode_base64($$self{'data'});
+	if ( ! $data ) {
+		$log->error("No data in send_ppf" . $self->to_string() );
+		return;
+	} # end if
 	$data = Compress::Zlib::uncompress($data) if $self->compressed();
+	if ( ! $data ) {
+		$log->error("No uncompressed data in send_ppf");
+		return;
+	} # end if
 
 	if ( 0 ){
 		$log->debug('PPF DATA: ' . $data . "uncomressed: " . decode_base64($$self{'data'}) );

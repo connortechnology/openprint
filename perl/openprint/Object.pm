@@ -380,7 +380,7 @@ sub find {
 					push @values, lc $params{$k.'_lc'};
 					delete $params{$k.'_lc'};
 				} # end if
-				if ( defined $params{$k.'_null'} ) {
+				if ( exists $params{$k.'_null'} ) {
 					if ( $params{$k.'_null'} ) {
 						$sql .= " AND $$f{$k} IS NULL";
 					} else {
