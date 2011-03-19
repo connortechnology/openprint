@@ -370,6 +370,9 @@ sub summary {
 	} # end if
 } # end sub summary
 
+sub save {
+} # end sub save
+
 1;
 
 __END__
