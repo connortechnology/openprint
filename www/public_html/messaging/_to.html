@@ -8,9 +8,13 @@
 ) ?>
 </ul>
 <input type="text" id="to_filter" name="to_filter"/>
-<select name="to_id" id="to_id">
+<select name="to_id" id="to_id" onchange="new Ajax.Updater( 'To', '_to.html', { parameters: { message_id: <? echo ( $$variable{'Message'}->id() ) ?>, to_id: this.getValue() } } );">
 	<? echo ( 
 		# List of friends, not frenemies.
-		ssi::make_drop_down( [ map { $_->id(), $_->name() } openprint::User_Relationship->find( 'type'=>'Friend', 'user_id1'=>$session{'user_id'}, 'user_id2 not in' => $$variable{'Message'}->to_id() ) ], );
+		my @To = map { $_->user_id1() == $session{'user_id'} ? $_->User2() : $_->User1() } openprint::User_Relationship->find( 
+			#'type'=>'Friend', 
+			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
+			'user_id2 not in' => $$variable{'Message'}->to_id() );
+		ssi::make_drop_down( [ map { $_->id(), $_->name() } sort { $a->name() <=> $b->name() } @To ], );
 	) ?>
 </select>

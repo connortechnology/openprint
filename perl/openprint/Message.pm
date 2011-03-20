@@ -1,4 +1,14 @@
 use strict;
+package openprint::Message_To;
+our @ISA = qw( openprint::Message_To );
+use vars qw( $table %fields @identified_by );
+$table = 'message_to';
+@identified_by = ( 'message_id', 'user_id' );
+%fields = (
+	'message_id'	=>	'message_id',
+	'user_id'	=>	'user_id',
+	'viewed'	=>	'viewed',
+);
 package openprint::Message;
 our @ISA = qw( openprint::Object );
 
@@ -7,7 +17,7 @@ $table = 'messages';
 $serial = 'messages_id_seq';
 
 %fields = (
-    'id'    		=>  'id',
+	'id'    		=>  'id',
 	'subject'		=>	'subject',
 	'body'			=>	'body',
 	'from_id'		=>	'from_id',
@@ -16,7 +26,7 @@ $serial = 'messages_id_seq';
 	'sent_on'		=>	'sent_on',
 );
 %find_fields = (
-	'to_id'			=>	'(SELECT to_id FROM Messages_to WHERE message_id=messages.id)',
+	'to_id'			=>	'(SELECT user_id FROM Messages_to WHERE message_id=messages.id)',
 );
 %transforms = (
 );

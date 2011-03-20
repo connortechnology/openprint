@@ -1,9 +1,9 @@
 <? eval (
 	@{$$variable{'Messages'}} = ();
 	foreach my $Message ( openprint::Message->find( 
-			(Date::Calc::check_date( @session{'/messaging/history.html?sent_on_start_year','/messaging/history.html?sent_on_start_month','/messaging/history.html?sent_on_start_day'} ) ? ( 'sent_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/messaging/history.html?sent_on_start_year','/messaging/history.html?sent_on_start_month','/messaging/history.html?sent_on_start_day'} ) ) : () ),
-			( Date::Calc::check_date( @session{'/messaging/history.html?sent_on_end_year','/messaging/history.html?sent_on_end_month','/messaging/history.html?sent_on_end_day'} ) ? ( 'sent_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/messaging/history.html?sent_on_end_year','/messaging/history.html?sent_on_end_month','/messaging/history.html?sent_on_end_day'} ) ) : () ),
-			( $session{'/messaging/history.html?category_id'} ? ( 'category_id' => $session{'/messaging/history.html?category_id'} ) : () ),
+			(Date::Calc::check_date( @session{'/messaging/inbox.html?sent_on_start_year','/messaging/inbox.html?sent_on_start_month','/messaging/inbox.html?sent_on_start_day'} ) ? ( 'sent_on_start'	=> sprintf('%.4d-%.2d-%.2d 00:00:00', @session{'/messaging/inbox.html?sent_on_start_year','/messaging/inbox.html?sent_on_start_month','/messaging/inbox.html?sent_on_start_day'} ) ) : () ),
+			( Date::Calc::check_date( @session{'/messaging/inbox.html?sent_on_end_year','/messaging/inbox.html?sent_on_end_month','/messaging/inbox.html?sent_on_end_day'} ) ? ( 'sent_on_end'	=> sprintf('%.4d-%.2d-%.2d 23:59:59', @session{'/messaging/inbox.html?sent_on_end_year','/messaging/inbox.html?sent_on_end_month','/messaging/inbox.html?sent_on_end_day'} ) ) : () ),
+			( $session{'/messaging/inbox.html?category_id'} ? ( 'category_id' => $session{'/messaging/inbox.html?category_id'} ) : () ),
 			'order'				=> 'sent_on',
 		) ) {
 		push @{$$variable{'Messages'}}, $Message;

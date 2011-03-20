@@ -406,6 +406,15 @@ sub find_operators {
 	if ( exists $$params{$k.'_in'} ) {
 		push @{$results{'_in'}}, "? IN $f", $$params{$k.'_in'};
 	} # end if
+	if ( exists $$params{$k.' not in'} ) {
+		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
+			push @{$results{' not in'}}, $f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', @{$$params{$k.' not in'}};
+		} elsif ( $$params{$k.' not in'} ) {
+			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
+		} else {
+			delete $$params{$k.' not in'};
+		} # end if
+	} # end if
 	if ( exists $$params{$k.'_lc'} ) {
 		push @{$results{'_lc'}}, "lower($f) = ?", $$params{$k.'_lc'};
 	} # end if
@@ -530,6 +539,8 @@ sub find {
 		last if ! %$params;
 	} # end foreach set of fields
 
+$log->debug("Where: (@where)");
+
 	my $fields = eval '\%'.$type.'::fields';
 	# Check for Object references
 	if ( %$params ) {
@@ -551,6 +562,11 @@ sub find {
 	if ( $$fields{'deleted'} and ! exists $$params{'deleted'} ) {
 		push @where, '(deleted=? OR deleted IS NULL)';
 		push @values, 0;
+	} # end if
+	if ( $$params{'custom'} ) {
+		push @where, shift @{$$params{'custom'}};
+		push @values, @{$$params{'custom'}};
+		delete $$params{'custom'};
 	} # end if
 
 	$sql .= ' WHERE ' . join(' AND ', @where ) if @where;

@@ -10,8 +10,8 @@
 		@Users = openprint::User->find(
 			ssi::date_filter( '/account/search.html?created_on_start', 'created_on_start' ),
 			ssi::date_filter( '/account/search.html?created_on_end', 'created_on_end' ),
-			ssi::date_filter( '/account/search.html?last_online_start', 'last_online_start' ),
-			ssi::date_filter( '/account/search.html?last_online_end', 'last_online_end' ),
+			ssi::date_filter( '/account/search.html?last_online_start', 'last_online_null_or_>=' ),
+			ssi::date_filter( '/account/search.html?last_online_end', 'last_online_null_or_<=' ),
 			);
 	} # end if
 	if ( ! @Users ) {
