@@ -148,7 +148,12 @@ sub neccessary {
 my @signature_calc_stock_cutting_equipment;
 sub signature_calc_stock_cutting_equipment {
 	my ( $Project ) = @_;
-	my @signature_calc_stock_cutting_equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
+	my @capabilities = ('Y');
+    if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
+        push @capabilities, 'Large Format';
+    } # end if
+
+	my @signature_calc_stock_cutting_equipment = openprint::Equipment::find( 'Specifications' => {'Cutting Capable'=>\@capabilities}, 'UseInEstimating'=>'Y','order'=>'lower(strName)');
 	return @signature_calc_stock_cutting_equipment;
 } # end sub signature_calc_stock_cutting
 
@@ -247,7 +252,6 @@ sub signature_calc_stock_cutting {
 
 		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', undef );
 		# no lift depth means 1 at a time.
-		next if ! $liftDepth;
 #		my $sheets = int( $$sig_specs{'txtPressSheetQty'.$qty_index} / ( ($$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"}*$$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"}) / ($sheet_width*$sheet_height) ) );
 
 		my $width_cuts = int( $$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"} / $$specs{"txtSheetSizeWidth-$signature_index-$qty_index"} );
@@ -267,7 +271,7 @@ sub signature_calc_stock_cutting {
 		foreach my $cuts ( $width_cuts -1, $height_cuts-1 ) {
 			next if ! $cuts;
 $openprint::log->warn("Negative CUTS!") if $cuts < 1;
-			my $runs = ceil( $sheets*$calliper/$liftDepth );
+			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			$price += ( $runs * $cuts * $ServicePrice{'Price'} );
 			$results{'Breakdown'} .= sprintf('Cutting %d sheets into %d sheets in %d runs: %.2f<br/>', $sheets, $sheets*($cuts+1), $runs, $price );
 			$sheets *= $cuts+1;
@@ -293,6 +297,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 	$results{'Equipment'}	= $bestEquipment;
 
 	if ( ! $bestEquipment ) {
+		$results{'Breakdown'} .= 'No equipment found for stock cutting.<br/>';
 		$results{'alert'} .= 'No equipment found for stock cutting.<br/>';
 		$results{'Status'} = 'uncalculated';
 	} # end if
