@@ -1885,5 +1885,8 @@ sub skid_label {
 sub bindery_schedule {
 } # end sub bindery_schedule
 
+sub prepress_overview {
+} # end sub prepress_overview
+
 1;
 __END__
