@@ -297,7 +297,6 @@ sub copy {
 	my %fields = eval ('%'.$type.'::fields');
 	@$new{keys %fields} = @$self{keys %fields};
 	delete $$new{id};
-	#$$new{'name'} = 'Copy of ' . $$new{'name'} if $fields{'name'};
 
 	return $new;
 } # end sub copy

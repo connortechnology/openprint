@@ -2035,7 +2035,7 @@ if ( ! sets::isin( 'order_contents', \@tables ) ) {
 
 if ( ! sets::isin( 'payments', \@tables ) ) {
 	$_ = $dbh->do( misc::load_file( $log, q{../openprint/sql/Payments.sql}) );
-	die i$_ if $_;
+	die $_ if $_;
 } else {
 	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='payments'", 'column_name');
 	if ( ! $data ) {
@@ -2535,10 +2535,10 @@ if ( ! sets::isin( 'paper_prices', \@tables ) ) {
 		$dbh->do(q`UPDATE paper_prices set service='Material'`);
 	} # end if
 } # end if
-foreach my $PP ( openprint::PaperPrice->find('Units'=>'Per M') ) {
-	$PP->Cost( sprintf('%.2f', $PP->Cost() * 100 / $PP->Paper()->mweight() ) );
-	$PP->Price( sprintf('%.2f', $PP->Price() * 100 / $PP->Paper()->mweight() ) );
-	$PP->Units('Per 100lbs');
+foreach my $PP ( openprint::PaperPrice->find('units'=>'Per M') ) {
+	$PP->cost( sprintf('%.2f', $PP->cost() * 100 / $PP->Paper()->mweight() ) );
+	$PP->price( sprintf('%.2f', $PP->price() * 100 / $PP->Paper()->mweight() ) );
+	$PP->units('Per 100lbs');
 	$PP->save();
 }
 if ( ! sets::isin( 'companies_accountingcontacts', \@tables ) ) {
@@ -2658,13 +2658,18 @@ foreach my $S ( openprint::Service->find('name'=>'Aqueous '.$aq) ) {
 	} # end if
 } # end foreach
 }
-my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='car'", 'column_name');
-if ( ! exists $$data{'reprint_quantity'} ) {
-	$dbh->do('ALTER TABLE car ADD reprint_quantity INTEGER');
-}
-if ( ! exists $$data{'reprint_value'} ) {
-	$dbh->do('ALTER TABLE car ADD reprint_value NUMERIC(10,2)');
-}
+if ( ! sets::isin( 'car', \@tables ) ) {
+	$dbh->do( misc::load_file( $log, q{../openprint/sql/CAR.sql}) );
+	die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='car'", 'column_name');
+	if ( ! exists $$data{'reprint_quantity'} ) {
+		$dbh->do('ALTER TABLE car ADD reprint_quantity INTEGER');
+	}
+	if ( ! exists $$data{'reprint_value'} ) {
+		$dbh->do('ALTER TABLE car ADD reprint_value NUMERIC(10,2)');
+	}
+} # en dif
 
 $dbh->disconnect();
 print "Finished\n";
