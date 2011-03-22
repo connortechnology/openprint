@@ -10,7 +10,7 @@ require openprint::Service;
 
 use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
-$debug = 1;
+$debug = 0;
 
 $table = 'timetracks';
 $serial = 'timetracks_id_seq';

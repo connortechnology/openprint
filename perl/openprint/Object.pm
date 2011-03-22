@@ -539,7 +539,7 @@ sub find {
 		last if ! %$params;
 	} # end foreach set of fields
 
-$log->debug("Where: (@where)");
+#$log->debug("Where: (@where)");
 
 	my $fields = eval '\%'.$type.'::fields';
 	# Check for Object references

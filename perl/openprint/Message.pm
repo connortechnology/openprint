@@ -1,6 +1,6 @@
 use strict;
 package openprint::Message_To;
-our @ISA = qw( openprint::Message_To );
+our @ISA = qw( openprint::Object );
 use vars qw( $table %fields @identified_by );
 $table = 'message_to';
 @identified_by = ( 'message_id', 'user_id' );

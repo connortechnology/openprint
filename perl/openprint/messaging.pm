@@ -70,7 +70,7 @@ sub _inbox {
 
 sub edit {
 	$variable{'Message'} = new openprint::Message( $param{'message_id'} );
-	$variable{'Message'}->save() if ! $variable{'Message'};
+	$variable{'Message'}->save() if ! $variable{'Message'}->id();
 } # end sub edit
 
 sub view {

@@ -23,7 +23,7 @@ use strict;
 use vars qw( $debug $table $serial %fields %defaults %transforms );
 
 require sql;
-$debug = 1;
+$debug = 0;
 
 $table = 'invoices';
 $serial = 'invoices_id_seq';
