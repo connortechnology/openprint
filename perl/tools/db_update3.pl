@@ -202,6 +202,11 @@ if ( ! sets::isin( 'location_types', \@tables ) ) {
 if ( ! sets::isin( 'messages', \@tables ) ) {
     $dbh->do( misc::load_file( $log, '../openprint/sql/Messages.sql' ) );
     die $dbh->errstr() if $dbh->errstr();
+} else {
+	my $data = $openprint::dbh->selectall_hashref( "SELECT column_name, data_type, column_default, is_nullable FROM information_schema.columns WHERE table_name='messages'", 'column_name');
+	if ( ! exists $$data{'conversation_id'} ) {
+		$dbh->do('ALTER TABLE Messages add conversation_id INTEGER');
+	} # end if
 } # end if
 
 $dbh->disconnect();

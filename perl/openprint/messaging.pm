@@ -90,6 +90,16 @@ sub _view {
 
 sub _to {
 	my $Message = $variable{'Message'} = new openprint::Message( $param{'message_id'} );
+	if ( $param{'action'} eq 'add' ) {
+		my $To = new openprint::Message_To(\%param);
+		$variable{'error'} .= $To->save({
+			'message_id'=>	$param{'message_id'},
+			'user_id'	=>	$param{'user_id'},
+			});
+	} elsif ( $param{'action'} eq 'remove' ) {
+		my $To = new openprint::Message_To(\%param);
+		$To->delete();
+	} # end if
 	
 } # end sub _to
 

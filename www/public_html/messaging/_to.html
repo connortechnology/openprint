@@ -1,7 +1,8 @@
 <ul>
 <? echo ( 
 	my $html;
-	foreach my $User ( $$variable{'Message'}->To() ) {
+	foreach my $To ( $$variable{'Message'}->To() ) {
+		my $User = $To->User();
 		$html .= '<li>'.$User->name().writeButton( $log, $dbh, 'X'.$User->id(), 'delete.gif', "delete_to($$User{id});", '', 'X' ).'</li>';
 	} # end foreach user
 	return $html;
