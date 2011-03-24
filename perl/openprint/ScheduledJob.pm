@@ -131,8 +131,8 @@ sub find {
 		$sql .= ' AND starttime = ?';
 		push @values, $params{'starttime'};
 	} 
-	if ( exists $params{'starttime_null'} ) {
-		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
+	if ( exists $params{'starttime is null'} ) {
+		$sql .= ' AND starttime IS ' . ($params{'starttime is null'} ? '' : 'NOT ' ) . ' NULL';
 	} # end if
 	if ( $params{'starttime <'} ) {
 		$sql .= ' AND starttime < ?';
@@ -739,7 +739,7 @@ sub bump {
 		$self->save({'equipment_id'=>$equipment_id});
 		# Shuffle the old list
 		if ( $old_equipment_id and new openprint::Equipment( $old_equipment_id )->smartscheduling() ) {
-			openprint::employee_production::reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$old_equipment_id,'starttime_null'=>0,'order'=>'starttime' ));
+			openprint::employee_production::reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$old_equipment_id,'starttime is null'=>0,'order'=>'starttime' ));
 		} # end if
 	} # end if
 

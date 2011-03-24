@@ -25,8 +25,8 @@ sub find {
 		$sql .= ' AND starttime = ?';
 		push @values, $params{'starttime'};
 	} # end if
-	if ( exists $params{'starttime_null'} ) {
-		$sql .= ' AND starttime IS ' . ($params{'starttime_null'} ? '' : 'NOT ' ) . ' NULL';
+	if ( exists $params{'starttime is null'} ) {
+		$sql .= ' AND starttime IS ' . ($params{'starttime is null'} ? '' : 'NOT ' ) . ' NULL';
 	} # end if
 	if ( $params{'starttime <'} ) {
 		$sql .= ' AND starttime < ?';

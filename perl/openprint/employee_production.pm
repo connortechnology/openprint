@@ -62,7 +62,7 @@ sub press_schedule {
 	if ( $param{'btnFunction'} eq 'Reflow' ) {
 		my $Equipment = new openprint::Equipment( $param{'Equipment'} );
 		if ( $Equipment->smartscheduling() ) {
-			my @Jobs = openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$param{'Equipment'},'order'=>'starttime' );
+			my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$param{'Equipment'},'order'=>'starttime' );
 			if ( @Jobs ) {
 				reorder_jobs( @Jobs );
 			} else {
@@ -1236,7 +1236,7 @@ $log->debug("Order after coalesce: @order : " . join(',', map { new openprint::S
 					$Job->save({starttime=>undef,equipment_id=>$Shift->equipment_id()}) if $Job->starttime() or ( $Job->equipment_id() != $Shift->equipment_id() );
 				} # end foreach row_id
 # If it was a formerly scheduled job, then shuffle
-				reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime_null'=>0,'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' )) if $was_scheduled;
+				reorder_jobs(openprint::ScheduledJob->find( 'equipment_id'=>$Shift->equipment_id(),'starttime is null'=>0,'servicetype_id'=>$Equipment->servicetype_id(), 'order'=>'starttime' )) if $was_scheduled;
 			} # end if	has starttime
 		} # end if
 
@@ -1414,7 +1414,7 @@ sub _li_change {
 	if ( $param{'action'} eq 'start' ) {
 
 		# Stop any currently running jobs, which will be the first job on the schedule, right?
-		foreach my $J ( openprint::ScheduledJob->find('equipment_id'=>$Job->equipment_id(),'order'=>'starttime','starttime_null'=>0,'limit'=>1) ) {
+		foreach my $J ( openprint::ScheduledJob->find('equipment_id'=>$Job->equipment_id(),'order'=>'starttime','starttime is null'=>0,'limit'=>1) ) {
 			if ( $J->status() eq 'In Production' ) {
 				$variable{'error'} .= $J->stop();
 				$variable{'alert'} .= 'Stopped previous running job docket ' . $J->Project()->docket();
@@ -1426,7 +1426,7 @@ sub _li_change {
 		$variable{'error'} .= $Job->start();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
-					openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+					openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} else {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		} # end if
@@ -1435,7 +1435,7 @@ sub _li_change {
 		$variable{'error'} .= $Job->stop();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
-					openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+					openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} else {
 			push @{$variable{'changed'}}, $Job->Shift()->ul_id();
 		} # end if
@@ -1503,7 +1503,7 @@ sub _li_change {
 
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
-					openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+					openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'btnFunction'} eq 'BumpJob' ) {
 		if ( $param{'servicetype_id'} ) {
@@ -1540,7 +1540,7 @@ sub _li_change {
 		} # end if
 	} elsif ( $param{'action'} eq 'Up' ) {
 		my $Job = new openprint::ScheduledJob( $param{'schedule_id'} );
-		my @Jobs = openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
+		my @Jobs = openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' );
 		my $index = 0;
 		for(;$index < @Jobs and $Jobs[$index]{id} != $$Job{id}; $index += 1 ) {};
 		if ( ! $index ) {
@@ -1587,7 +1587,7 @@ $log->debug("second job can't move");
 		$variable{'error'} .= $Job->delete();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
-					openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+					openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 	} elsif ( $param{'action'} eq 'SetForms' ) {
 		push @{$variable{'changed'}}, $Job->Shift()->ul_id();
@@ -1602,7 +1602,7 @@ $log->debug("second job can't move");
 		$variable{'error'} .= $Job->delete();
 		if ( $Equipment->smartscheduling() ) {
 			reorder_jobs(
-					openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
+					openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$$Job{'equipment_id'},'order'=>'starttime' ) );
 		} # end if smartscheduling
 		
 		
@@ -1673,7 +1673,7 @@ sub _shift_change {
 
 	if ( $Shift->Equipment()->smartscheduling() ) {
 		reorder_jobs(
-				openprint::ScheduledJob->find( 'starttime_null'=>0, 'equipment_id'=>$$Shift{'equipment_id'},'order'=>'starttime' ) );
+				openprint::ScheduledJob->find( 'starttime is null'=>0, 'equipment_id'=>$$Shift{'equipment_id'},'order'=>'starttime' ) );
 	} else {
 		push @{$variable{'changed'}}, $Shift->ul_id();
 	} # end if smartscheduling

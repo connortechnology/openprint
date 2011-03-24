@@ -6,6 +6,9 @@
 		mode : "textareas",
 		theme : "advanced"
 	});
+	function delete_to( user_id ) {
+		new Ajax.Updater( 'To', '_to.html', { parameters: { user_id: user_id, message_id: <? echo ( $$variable{'Message'}->id() ) ?>, action: 'remove' } } );
+	} // end function delete_to
 -->
 </script>
 <div class="Message"><div class="Edit">

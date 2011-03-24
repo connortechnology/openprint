@@ -45,7 +45,7 @@
 				} # end foreach sig
 
 				my $colour = 'blue';
-				if ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'starttime_null'=>0 ) ) {
+				if ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'starttime is null'=>0 ) ) {
 					$colour = 'yellow';
 				} # end if
 				if ( $Project->rush() ) {

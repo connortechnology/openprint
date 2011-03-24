@@ -215,7 +215,7 @@ sub schedule {
 } # end sub schedule
 sub Schedule {
 	return openprint::ScheduledJob->find( 
-			'starttime_null'	=>	$_[0]{'starttime'} ? 0 : 1,
+			'starttime is null'	=>	$_[0]{'starttime'} ? 0 : 1,
 			'starttime >='		=>	$_[0]{'starttime'}, 
 			'starttime <'		=>	$_[0]{'endtime'}, 
 			'equipment_id'		=>	$_[0]{'equipment_id'},

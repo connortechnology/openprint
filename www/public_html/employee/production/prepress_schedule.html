@@ -222,7 +222,7 @@ $openprint::log->debug("$session{'/employee/production/prepress_schedule.html?ta
 					next if ! $onpress;
 
 					my $colour = 'unscheduled';
-					if ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'starttime_null'=>0 ) ) {
+					if ( openprint::ScheduledJob->find('project_id'=>$Project->id(), 'starttime is null'=>0 ) ) {
 						$colour = 'scheduled';
 					} # end if
 					if ( $Project->rush() ) {
