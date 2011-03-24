@@ -360,7 +360,7 @@ sub update_schedule {
 
     my $starttime_seconds = Date::Parse::str2time( sql::execute( undef, undef, q{SELECT NOW()} ) );
 	my $runtime;
-	foreach my $Job ( openprint::ScheduledJob( 'equipment_id'=>$$self{'id'}, 'order'=>'starttime', 'starttime_null'=>0 ) ) {
+	foreach my $Job ( openprint::ScheduledJob( 'equipment_id'=>$$self{'id'}, 'order'=>'starttime', 'starttime is null'=>0 ) ) {
 		$Job->save({'starttime_seconds'	=> $starttime_seconds });
 		$runtime = $Job->runtime_seconds();
 	} # end foreach Job

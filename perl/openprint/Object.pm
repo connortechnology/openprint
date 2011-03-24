@@ -407,7 +407,11 @@ sub find_operators {
 	} # end if
 	if ( exists $$params{$k.' not in'} ) {
 		if ( ref $$params{$k.' not in'} eq 'ARRAY' ) {
-			push @{$results{' not in'}}, $f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', @{$$params{$k.' not in'}};
+			if ( @{$$params{$k.' not in'}} ) {
+				push @{$results{' not in'}}, $f.' NOT IN (' . join(',', map { '?' } @{$$params{$k.' not in'}} ).')', @{$$params{$k.' not in'}};
+			} else {
+				delete $$params{$k.' not in'};
+			} # end if
 		} elsif ( $$params{$k.' not in'} ) {
 			push @{$results{' not in'}}, $f.' != ?', $$params{$k.' not in'};
 		} else {
@@ -420,11 +424,11 @@ sub find_operators {
 	if ( exists $$params{$k.'_any'} ) {
 		push @{$results{'_any'}}, "? = ANY($f)", $$params{$k.'_any'};
 	} # end if
-	if ( exists $$params{$k.'_null'} ) {
-		if ( $$params{$k.'_null'} ) {
-			push @{$results{'_null'}}, "$f IS NULL";
+	if ( exists $$params{$k.' is null'} ) {
+		if ( $$params{$k.' is null'} ) {
+			push @{$results{' is null'}}, "$f IS NULL";
 		} else {
-			push @{$results{'_null'}}, "$f IS NOT NULL";
+			push @{$results{' is null'}}, "$f IS NOT NULL";
 		} # end if
 	} # end if
 	return \%results;

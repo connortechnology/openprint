@@ -156,7 +156,7 @@ if ( 0 ) {
 } # end if 1
 if ( 1 ) {
 	# THis sucks RAM like a MOFO
-		my @CIPS = openprint::CIP3_PPF->find('data_null'=>0,'limit'=>100);
+		my @CIPS = openprint::CIP3_PPF->find('data is null'=>0,'limit'=>100);
 		$log->warn(@CIPS . " cip files to clear the data from" );
 		foreach my $CIP ( @CIPS ) {
 			my @Projects = openprint::Project->find('docket'=>$CIP->docket());

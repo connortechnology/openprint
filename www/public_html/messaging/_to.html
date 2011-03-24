@@ -1,3 +1,4 @@
+<!--#include virtual="/includes/error_reporting.html"-->
 <ul>
 <? echo ( 
 	my $html;
@@ -9,14 +10,14 @@
 ) ?>
 </ul>
 <input type="text" id="to_filter" name="to_filter"/>
-<select name="to_id" id="to_id" onchange="new Ajax.Updater( 'To', '_to.html', { parameters: { message_id: <? echo ( $$variable{'Message'}->id() ) ?>, to_id: this.getValue(), action: 'add' } } );">
+<select name="user_id" id="user_id" onchange="new Ajax.Updater( 'To', '_to.html', { parameters: { message_id: <? echo ( $$variable{'Message'}->id() ) ?>, user_id: this.getValue(), action: 'add' } } );">
 	<option value="">select</option>
 	<? echo ( 
 		# List of friends, not frenemies.
 		my @to_ids = map { $_->user_id1() == $session{'user_id'} ? $_->user_id2() : $_->user_id1() } openprint::User_Relationship->find( 
 			#'type'=>'Friend', 
 			'custom'=>[ '(user_id1=? OR user_id2=?)', @session{'user_id','user_id'} ],
-			'user_id2 not in' => $$variable{'Message'}->to_id(),
+			'user_id2 not in' => [ map { $_->user_id() } $$variable{'Message'}->To() ],
 			'distinct' => 1,
 			);
 		my @To = map { new openprint::User( $_ ); } sets::union( @to_ids );
