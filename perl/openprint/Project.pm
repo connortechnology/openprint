@@ -1018,7 +1018,7 @@ sub summary {
 		$$self{'summary'} = shift;
 	} # end if
 	if ( ! $$self{'summary'} ) {
-		my $summary = $self->Type()->name() . ' ';
+		my $summary = $self->Type()->description() . ' ';
 
 		my $services = $self->services();
 		if ( $$services{''} ) {
