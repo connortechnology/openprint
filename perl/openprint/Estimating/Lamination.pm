@@ -124,12 +124,13 @@ sub calc {
 		} # end if
 
 		foreach my $Equipment ( @equipment ) {
-			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s Width: %s<br/>', $Equipment->name(), $Equipment->specification('Maximum Sheet Width') );
+			my $maximum_sheet_width = $Equipment->specification('Maximum Sheet Width');
+			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Equipment: %s Width: %s<br/>', $Equipment->name(), $maximum_sheet_width );
 
 			my $imposition = new openprint::Imposition( );
 			# How many can we fit in the width?
-			my $imposition1 = int( $Equipment->specification('Maximum Sheet Width') / $item_width );
-			my $imposition2 = int( $Equipment->specification('Maximum Sheet Width') / $item_height );
+			my $imposition1 = int( $maximum_sheet_width / $item_width );
+			my $imposition2 = int( $maximum_sheet_width / $item_height );
 			if ( $imposition2 > $imposition1 ) {
 				$imposition->rows($qty/$imposition2);
 				$imposition->columns($imposition2);
@@ -142,17 +143,21 @@ sub calc {
 				# doesn't fit?
 			} # end if
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf( 'Items across: ( %s x %s ) %d<br/>', $item_width, $item_height, $imposition->columns() );
-			my %ServicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, $Equipment );
 			my %SetupPrice = openprint::service::get_price_object( $$specs{'ServiceType'}.'MakeReady', undef, $Equipment );
-
 			my $price = $SetupPrice{'Price'};
 			$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Setup: $%.2f<br/>', $SetupPrice{'Price'});
-			if ( $ServicePrice{'units'} eq 'Per M' ) {
-				my $serviceprice = ($ServicePrice{Price} * $qty)/1000;
-				$price += $serviceprice;
-				$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
+
+			my %ServicePrice = openprint::service::get_price_object( $$specs{'ServiceType'}, undef, $Equipment );
+			if ( %ServicePrice ) {
+				if ( $ServicePrice{'units'} eq 'Per M' ) {
+					my $serviceprice = ($ServicePrice{'Price'} * $qty)/1000;
+					$price += $serviceprice;
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Service: $%.2f %s * %f = $%.2f<br/>', @ServicePrice{'Price','units'}, $qty, $serviceprice );
+				} else {
+					$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ($ServicePrice{'units'}) for $$specs{'ServiceType'}<br/>";
+				} # end if
 			} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= "Unknown units ($ServicePrice{'units'}) for $$specs{'ServiceType'}\n";
+					$$specs{'hdnBreakdown'.$qty_index} .= "No Service price for $$specs{'ServiceType'}<br/>";
 			} # end if
 			if ( $MaterialPrice{'units'} eq 'per square foot' ) {
 				my $area;
@@ -161,10 +166,10 @@ sub calc {
 				} else {
 					$area = $item_width * $imposition->rows();
 				} # end if
-				if ( $_ = $Equipment->specification('Maximum Sheet Width') ) {
-					$area = ($area * $_) / 144;
+				if ( $maximum_sheet_width ) {
+					$area = ($area * $maximum_sheet_width) / 144;
 				} else {
-					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("No Maximum Sheet Width set for %s\n", $Equipment->strid() );
+					$$specs{'hdnBreakdown'.$qty_index} .= sprintf("No Maximum Sheet Width set for %s<br/>", $Equipment->strid() );
 				} # end if
 
 				# have to reload price to get one with quantity discounts
