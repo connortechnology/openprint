@@ -84,8 +84,8 @@ sub drafts {
 } # end sub drafts
 sub _drafts {
 	if ( $param{'action'} eq 'delete' ) {
-		my $To = new openprint::Message_To( { 'message_id'=>$param{'message_id'},'user_id'=>$session{'user_id'} } );
-		$variable{'error'} .= $To->delete();	
+		my $Message = new openprint::Message( $param{'message_id'} );
+		$variable{'error'} .= $Message->delete();	
 	} elsif ( ! $param{'btnFunction'} ) {
 		ssi::save_params( '/messaging/drafts.html', ( 
 				'starting_on_start_year','starting_on_start_month','starting_on_start_day',

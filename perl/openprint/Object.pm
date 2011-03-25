@@ -68,7 +68,9 @@ sub new {
 # First off, for now, don't cache figure that out later
 		my @keys = keys %{$id};
 		@$self{@keys} = @$id{@keys};
+$log->debug("New by hash @keys : " . $self->to_string() );
 		$self->load( $data );
+$log->debug("New by hash @keys : " . $self->to_string() );
 		return $self;
 	} elsif ( ref $id eq 'ARRAY' and $data ) {
 		my $self = {};
@@ -86,6 +88,8 @@ sub load {
 	my ( $self, $data ) = @_;
 	my $type = ref $self;
 	my $fields = eval '\%'.$type.'::fields';
+	my $debug = eval '$'.$type.'::debug';
+	$debug = $debug_all if ! $debug;
 	if ( ! $data ) {
 		my $table = eval '$'.$type.'::table';
 		if ( ! $table ) {
@@ -97,21 +101,19 @@ sub load {
 		$d = $dbh if ! $d;
 
 		if ( @identified_by ) {
+			$log->debug('SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ) ) if $debug;
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . ' WHERE ' . join(' AND ', map { $$fields{$_} . '=?' } @identified_by ), {}, @$self{@identified_by} );
+			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} else {
 			$data = $d->selectrow_hashref( 'SELECT * FROM ' . $table . " WHERE $$fields{id}=?", {}, $$self{'id'} );
 		} # end if
 		if ( ! $data ) {
 			$log->error( 'Failure to load ' . $type . " $$self{id}: Reason: " . $d->errstr ) if $d->errstr;
+		} elsif ( $debug ) {
+			$log->debug("Got $type: " . join(',', map { $_ . '=>' . $$data{$_} } keys %$data ) );
 		} # end if
 	} # end if
 	@$self{keys %$fields} = @$data{@$fields{keys %$fields}};
-	# do cacihning in find
-	#if ( my $cache_field = $self->cache_field() ) {
-		#if ( $$fields{$cache_field} and $$self{$cache_field} ) {
-			#$name_cache{$type}{$$self{$cache_field}} = $self;
-		#} # end if
-	#} # end if
 } # end sub load
 
 sub save {
@@ -316,8 +318,8 @@ sub delete {
 	my @identified_by = eval '@'.$type.'::identified_by';
 	@identified_by = ( 'id' ) if ! @identified_by;
 	if ( ! $$self{$identified_by[0]} ) {
-		$log->error("Called delete on object with no id of type $type");
-		return;
+		$log->error("Called delete on object with no id of type $type : " . $self->to_string());
+		return "Object::delete: No id in object: " . $self->to_string();
 	} # end if
 
 	my $where = join(' AND ', map { $fields{$_}.'=?' } @identified_by );
