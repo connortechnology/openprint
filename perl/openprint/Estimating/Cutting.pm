@@ -169,8 +169,12 @@ sub signature_calc_stock_cutting {
     } elsif ( $$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'} ) {
         @my_equipment = @{$$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'}};
 	} else {
+		my @capabilities = ('Y');
+		if ( sets::isin( $Project->Type()->name(), ['Banners','InkjetOutputs'] ) ) {
+			push @capabilities, 'Large Format';
+		} # end if
 $openprint::log->warn("No clac_hash? $calc_hash");
-		@my_equipment = openprint::Equipment->find( 'Specifications' => {'Cutting Capable'=>'Y'}, 'useinestimating'=>1,'order'=>'lower(strName)');
+		@my_equipment = openprint::Equipment->find( 'Specifications' => \@capabilities, 'useinestimating'=>1,'order'=>'lower(strName)');
 		@{$$calc_hash{'Cutting::signature_calc_stock_cutting::equipment'}} = @my_equipment;
 	} # end if
 
@@ -241,7 +245,6 @@ $openprint::log->warn("No clac_hash? $calc_hash");
 
 		my $liftDepth = $Equipment->specification( 'Maximum Lift Depth', $Paper->calliper() );
 		# no lift depth means 1 at a time.
-		next if ! $liftDepth;
 #		my $sheets = int( $$sig_specs{'txtPressSheetQty'.$qty_index} / ( ($$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"}*$$specs{"txtSuppliedStockHeight-$signature_index-$qty_index"}) / ($sheet_width*$sheet_height) ) );
 
 		my $width_cuts = int( $$specs{"txtSuppliedStockWidth-$signature_index-$qty_index"} / $$specs{"txtSheetSizeWidth-$signature_index-$qty_index"} );
@@ -261,7 +264,7 @@ $openprint::log->warn("No clac_hash? $calc_hash");
 		foreach my $cuts ( $width_cuts -1, $height_cuts-1 ) {
 			next if ! $cuts;
 $openprint::log->warn("Negative CUTS!") if $cuts < 1;
-			my $runs = ceil( $sheets*$calliper/$liftDepth );
+			my $runs = $liftDepth ? ceil( $sheets*$calliper/$liftDepth ) : $sheets;
 			$price += ( $runs * $cuts * $ServicePrice{'Price'} );
 			$results{'Breakdown'} .= sprintf('Cutting %d sheets into %d sheets in %d runs: %.2f<br/>', $sheets, $sheets*($cuts+1), $runs, $price );
 			$sheets *= $cuts+1;
@@ -287,6 +290,7 @@ $openprint::log->warn("Negative CUTS!") if $cuts < 1;
 	$results{'Equipment'}	= $bestEquipment;
 
 	if ( ! $bestEquipment ) {
+		$results{'Breakdown'} .= 'No equipment found for stock cutting.<br/>';
 		$results{'alert'} .= 'No equipment found for stock cutting.<br/>';
 		$results{'Status'} = 'uncalculated';
 	} # end if

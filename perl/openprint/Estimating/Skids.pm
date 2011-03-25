@@ -115,7 +115,7 @@ sub calc {
 	if ( $$specs{'chkOverrideFinishedCalliper'} ne 'Y' ) {
 		$$specs{'txtFinishedCalliper'} = openprint::print::get_finished_calliper( $project_index );
 	} # end if
-	if ( ! (1 * $$specs{'txtFinishedCalliper'} ) ) {
+	if ( ! ( 1*$$specs{'txtFinishedCalliper'} ) ) {
 		$$specs{'alert'} .= 'Unable to calculate the calliper of the project.  Please recalculate printing services.';
 		return $$specs{'Status'} = 'uncalculated';
 	} # end if
@@ -189,7 +189,7 @@ $log->debug("Materials: " . map { $_->name() } @Materials ) if $debug;
 							$$specs{'hdnBreakdown'.$qty_index} .= sprintf('Max Length: %d<br/>', $l );
 							$items_by_size = int($l/$item_length);
 						} else {
-				$$specs{'hdnBreakdown'.$qty_index} .= 'Cant Roll<br/>';
+							$$specs{'hdnBreakdown'.$qty_index} .= 'Cant Roll<br/>';
 						} # end if
 					} # end if
 
