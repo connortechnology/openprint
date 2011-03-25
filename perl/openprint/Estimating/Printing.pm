@@ -1825,11 +1825,12 @@ $openprint::log->debug("Other impositions: " . @other_impositions );
 		my %best_price = %{$b_price};
 		#*best_price = $b_price;
 
-
 		my $Imposition = $best_price{'Imposition'};
 		if ( ! $Imposition ) {
 	$openprint::log->error("No imposition in best_price");
-				next;
+			$$specs{'alert'} .= "Unable to calculate a price for printing for qty $qty_index.<br/>";
+			$$specs{'Status'} = 'uncalculated';
+			next;
 		} # end if
 		my $Paper = $Imposition->Paper();
 		my $Press = $Imposition->Press();
@@ -3043,7 +3044,8 @@ sub calc_price {
 		$net_sheets *= $Paper->parts() if $Paper->parts();
 	} # end if
 #Initially we calculate based on colours, but really we need to calculate based on plates, which we will do once we figure out how many plates we need.
-	my $min_overs = $Press->specification( 'Overs Minimum', scalar @colours );
+	my $min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), scalar @colours );
+	$min_overs = $Press->specification( 'Overs Minimum', scalar @colours ) if ! $min_overs;
 	my $overs = 0;
 
 	my $setup_rate;
@@ -3052,6 +3054,7 @@ sub calc_price {
 	} else {
 		$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $$Imposition{'runstyle'}, scalar @colours );
 	} # end if
+	$setup_rate = $Press->specification( 'MakeReady Overs Rate ' . $Paper->material(), scalar @colours ) if ! $setup_rate;
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', scalar @colours ) if ! $setup_rate;
 
 	my $setup_overs;
@@ -3589,8 +3592,10 @@ $openprint::log->debug("Using cached folding");
 	# Recalculate Overs, etc using Plate Count now
 	if ( $$project{'print_sides'} == 1 ) {
 		$setup_rate = $Press->specification( 'MakeReady Overs Rate One Side', $plate_setup{'Plate Count'} );
+		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$Paper->material(), $plate_setup{'Plate Count'} ) if ! $setup_rate;
 	} else {
-		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$$Imposition{'runstyle'}, $plate_setup{'Plate Count'} );
+		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$Paper->material(), $plate_setup{'Plate Count'} );
+		$setup_rate = $Press->specification( 'MakeReady Overs Rate '.$$Imposition{'runstyle'}, $plate_setup{'Plate Count'} ) if ! $setup_rate;
 	} # end if
 	$setup_rate = $Press->specification( 'MakeReady Overs Rate', $plate_setup{'Plate Count'} ) if ! $setup_rate;
 	if ( $$specs{'OverrideSetup'.$qty_index} eq 'Y' ) {
@@ -3598,7 +3603,9 @@ $openprint::log->debug("Using cached folding");
 	} elsif ( $setup_rate ) {
 		$setup_overs = int( $setup_rate * $plate_setup{'Plate Count'} );
  	} else {
-		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} );
+		$setup_overs = $Press->specification( 'MakeReady Overs ' . $Paper->material(), $plate_setup{'Plate Count'} );
+$log->debug("Overs rate " . $Paper->material() . " $setup_overs");
+		$setup_overs = $Press->specification( 'MakeReady Overs ' . $$Imposition{'runstyle'}, $plate_setup{'Plate Count'} ) if ! $setup_overs;
 		$setup_overs = $Press->specification( 'MakeReady Overs', $plate_setup{'Plate Count'} ) if ! $setup_overs;
  	} # end if
 	$setup_overs += $fm_overs;
@@ -3620,7 +3627,9 @@ $openprint::log->debug("Using cached folding");
 	} # end if
 	$total_overs += $bindery_overs - $total_overs if $bindery_overs > $total_overs;
 
-	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} );
+	$min_overs = $Press->specification( 'Overs Minimum ' . $Paper->material(), $plate_setup{'Plate Count'} );
+$log->debug("Overs min " . $Paper->material() . " $min_overs");
+	$min_overs = $Press->specification( 'Overs Minimum', $plate_setup{'Plate Count'} ) if ! $min_overs;
 	#$total_overs *= $Paper->parts() if $Paper->parts();
 	$total_overs = $min_overs if $total_overs < $min_overs;
 
