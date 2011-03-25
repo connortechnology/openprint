@@ -11,6 +11,6 @@
 </table>
 <? if ( $$variable{'CAR'}->part4_user_id() == $openprint::session{'user_id'} ) ?>
 	<p class="buttons">
-		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart4', 'edit.gif', sprintf(q`new Ajax.Updater('Part4', '_car_edit_part4.html', { method: 'get', parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), '', 'Edit' ); ) ?>.
+		<? echo ( ssi::writeButton( $log, $dbh, 'EditPart4', 'edit.gif', sprintf(q`new Ajax.Updater('Part4', '/employee/iso/_car_edit_part4.html', { method: 'get', parameters: {car_id:%1$d} } );`, $$variable{'CAR'}->id() ), '', 'Edit' ); ) ?>.
 	</p>
 <? endif ( $$variable{'CAR'}->part4_user_id() == $openprint::session{'user_id'} ) ?>

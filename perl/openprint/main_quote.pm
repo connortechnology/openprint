@@ -184,12 +184,14 @@ sub information {
 					});
 		} # end foreach QP
 
-		my %for;
 		my %by;
 		openprint::quote::get_user_by_info( $log, $dbh, \%by, $Quote->id() );
-		openprint::quote::get_user_for_info( $log, $dbh, \%for, $Quote->id() );
 		$NewQuote->store_user_by_info( \%by );
-		$NewQuote->store_user_for_info( \%for );
+		if ( $Quote->company_id() == $NewQuote->company_id() ) {
+			my %for;
+			openprint::quote::get_user_for_info( $log, $dbh, \%for, $Quote->id() );
+			$NewQuote->store_user_for_info( \%for );
+		} # end if
 		$NewQuote->add_log( 'Copied from quote ' . $Quote->id() );
 		$Quote->add_log( 'Copied to quote ' . $NewQuote->id() );
 		$quote_id = $NewQuote->id();
