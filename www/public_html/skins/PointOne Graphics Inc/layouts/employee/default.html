@@ -3,36 +3,14 @@
 	<head>
 		<title><?PageTitle?> - Employee</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.7"></script>
-		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
-		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.9.0"></script>
-		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.4"></script>
-		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
-		<script type="text/javascript" src="/javascripts/popups.js?version=1.1"></script>
-		<script type="text/javascript" src="/javascripts/fastinit.js"></script>
-		<script type="text/javascript" src="/javascripts/tablekit.js?version=1.2.1"></script>
-		<script type="text/javascript" src="/javascripts/window.js?version=1.1"></script>
-		<script type="text/javascript" src="/javascripts/barcode.js?version=1.3"></script>
-		<!-- calendar stylesheet -->
-		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
-		<script type="text/javascript" src="/javascripts/jscalendar/calendar.js"></script>
-		<script type="text/javascript" src="/javascripts/jscalendar/lang/calendar-en.js"></script>
-		<script type="text/javascript" src="/javascripts/jscalendar/calendar-setup.js"></script>
-
-		<link href="/css/common.css?version=1.0" rel="stylesheet" type="text/css" />
+		<link href="/css/common.css" rel="stylesheet" type="text/css" />
 		<link href="/css/common-handheld.css" rel="stylesheet" type="text/css" media="handheld"/>
 		<link href="/css/common-print.css" rel="stylesheet" type="text/css" media="print"/>
 		<link href="/css/menu.css" rel="stylesheet" type="text/css" />
-		<link href="/css/employee.css?version=1.0" rel="stylesheet" type="text/css" />
 		<link href="/css/button.css" rel="stylesheet" type="text/css" />
 		<link href="/css/pwc.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alphacube.css" rel="stylesheet" type="text/css" media="screen"/>
 		<link href="/css/alert.css" rel="stylesheet" type="text/css" media="screen"/>
-		<? if ( $$variable{'uri'} =~ /purchase_order/ ) ?>
-		<link href="/css/purchase_order.css" rel="stylesheet" type="text/css"/>
-		<? endif ( $$variable{'uri'} =~ /purchase_order/ ) ?>
 		<? if ( $$variable{'uri'} =~ /claim/ ) ?>
 		<link href="/css/claim.css" rel="stylesheet" type="text/css"/>
 		<? endif ( $$variable{'uri'} =~ /claim/ ) ?>
@@ -56,6 +34,27 @@
 		<link href="/css/press_schedule.css" rel="stylesheet" type="text/css"/>
 		<meta http-equiv="refresh" content="300">
 		<? endif ( $$variable{'uri'} =~ /prepress_schedule/ ) ?>
+		<? if ( $$variable{'uri'} =~ /purchase_order/ ) ?>
+		<link href="/css/purchase_order.css" rel="stylesheet" type="text/css"/>
+		<? endif ( $$variable{'uri'} =~ /purchase_order/ ) ?>
+		<!-- calendar stylesheet -->
+		<link rel="stylesheet" type="text/css" media="all" href="/javascripts/jscalendar/calendar-win2k-cold-1.css" title="win2k-cold-1" />
+		<script type="text/javascript" src="/javascripts/scriptaculous/prototype.js?version=1.7"></script>
+		<script type="text/javascript" src="/javascripts/tinymce/jscripts/tiny_mce/tiny_mce.js"></script>
+		<script type="text/javascript" src="/javascripts/scriptaculous/scriptaculous.js?version=1.9.0"></script>
+		<script type="text/javascript" src="/javascripts/proj/misc_prin.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/buttons.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/form_utilities.js?version=1.4"></script>
+		<script type="text/javascript" src="/javascripts/jsrsClient.js?version=1.0"></script>
+		<script type="text/javascript" src="/javascripts/popups.js?version=1.1"></script>
+		<script type="text/javascript" src="/javascripts/fastinit.js"></script>
+		<script type="text/javascript" src="/javascripts/tablekit.js?version=1.2.1"></script>
+		<script type="text/javascript" src="/javascripts/window.js?version=1.1"></script>
+		<script type="text/javascript" src="/javascripts/barcode.js?version=1.3"></script>
+		<script type="text/javascript" src="/javascripts/jscalendar/calendar.js"></script>
+		<script type="text/javascript" src="/javascripts/jscalendar/lang/calendar-en.js"></script>
+		<script type="text/javascript" src="/javascripts/jscalendar/calendar-setup.js"></script>
+
 		<link rel="shortcut icon" href="/images/favicon.ico" />
 		<link rel="apple-touch-icon" href="/images/apple-touch-icon.png"/>
 <? echo (
@@ -84,7 +83,7 @@
 		<div id="Header">	
 			<div id="Logo">
 				<table><tr>
-				<td><a href="/index.html"><img src="/images/header/logo.gif" alt="PointOne Graphics Inc"/></a></td>
+				<td><a href="/index.html"><img src="/images/header/logo.png" alt="PointOne Graphics Inc"/></a></td>
 				<td><a href="/index.html"><span id="PointOne">PointOne</span><br/><span id="GraphicsInc">GRAPHICS INC</span></a></td>
 				</tr></table>
 			</div>
@@ -204,6 +203,7 @@
 								<li><a href="/employee/it/cameras.html;NOSSL">&raquo; Camera Admin</a></li>
 								<li><a href="/employee/it/camera_viewer.html;NOSSL">&raquo; Camera Viewer</a></li>
 								<li><a href="/employee/it/logs.html;NOSSL">&raquo; Login Log</a></li>
+								<li><a href="/employee/it/locations.html;NOSSL">&raquo; Locations</a></li>
 							</ul>
 						</li>
 						<li id="SupportMenu" class="<? echo ( $$variable{'uri'} =~ /employee\/support/ ? 'on' : 'off' ) ?>"><a href="#" onclick="toggleMenu($('SupportMenu'), 'off', 'on');return false;">SUPPORT</a>
