@@ -45,6 +45,9 @@ if ( sets::isin( 'article_categories', \@tables ) ) {
 	if ( ! exists $$data{'description'} ) {
 		$dbh->do('ALTER TABLE article_categories ADD description TEXT');
 	} # end if
+	if ( ! exists $$data{'deleted'} ) {
+		$dbh->do('ALTER TABLE article_categories ADD deleted BOOLEAN NOT NULL default false');
+	} # end if
 } else {
 	$dbh->do( misc::load_file( $log, '../openprint/sql/Article_Categories.sql' ) );
 }
