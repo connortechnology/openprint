@@ -127,6 +127,8 @@ sub category {
 
 	} elsif ( $param{'btnFunction'} eq 'Delete' ) {
 		$variable{'error'} .= $Category->delete();
+	} elsif ( $param{'btnFunction'} eq 'Destroy' ) {
+		$variable{'error'} .= $Category->destroy();
 	} # end if
 } # end sub category
 
